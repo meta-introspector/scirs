@@ -3,9 +3,26 @@
 //! This module provides efficient memory management for GPU-accelerated optimization,
 //! including memory pools, workspace allocation, and automatic memory optimization.
 
+use crate::error::{ScirsError, ScirsResult};
+
+// Implement error conversion for GPU errors
+impl From<scirs2_core::gpu::GpuError> for ScirsError {
+    fn from(error: scirs2_core::gpu::GpuError) -> Self {
+        match error {
+            scirs2_core::gpu::GpuError::OutOfMemory(msg) => ScirsError::OutOfMemory(msg),
+            scirs2_core::gpu::GpuError::InvalidOperation(msg) => ScirsError::InvalidInput(msg),
+            scirs2_core::gpu::GpuError::ComputationError(msg) => ScirsError::ComputationError(msg),
+            _ => ScirsError::ComputationError(format!("GPU error: {}", error)),
+        }
+    }
+}
 use ndarray::{Array1, Array2};
-use scirs2_core::error::{ScirsError, ScirsResult};
-use scirs2_core::gpu::{GpuContext, GpuArray, GpuMemoryInfo};
+use scirs2_core::gpu::{GpuArray, GpuBuffer, GpuDevice, GpuMemoryInfo};
+
+// Real GPU types from scirs2-core
+pub type GpuContext = GpuDevice;
+pub type OptimGpuArray<T> = GpuArray<T>;
+pub type OptimGpuBuffer<T> = GpuBuffer<T>;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
@@ -32,6 +49,20 @@ impl GpuMemoryPool {
         })
     }
 
+    /// Create a stub GPU memory pool (fallback for incomplete implementations)
+    pub fn new_stub() -> Self {
+        use scirs2_core::gpu::GpuBackend;
+        let device = GpuDevice::new(GpuBackend::Cpu, 0);
+        Self {
+            context: Arc::new(device),
+            pools: Arc::new(Mutex::new(HashMap::new())),
+            allocated_blocks: Arc::new(Mutex::new(Vec::new())),
+            memory_limit: None,
+            current_usage: Arc::new(Mutex::new(0)),
+            allocation_stats: Arc::new(Mutex::new(AllocationStats::new())),
+        }
+    }
+
     /// Allocate a workspace for optimization operations
     pub fn allocate_workspace(&mut self, size: usize) -> ScirsResult<GpuWorkspace> {
         let block = self.allocate_block(size)?;
@@ -51,9 +82,10 @@ impl GpuMemoryPool {
                 self.garbage_collect()?;
                 let current = *self.current_usage.lock().unwrap();
                 if current + size > limit {
-                    return Err(ScirsError::OutOfMemory(
-                        format!("Would exceed memory limit: {} + {} > {}", current, size, limit)
-                    ));
+                    return Err(ScirsError::OutOfMemory(format!(
+                        "Would exceed memory limit: {} + {} > {}",
+                        current, size, limit
+                    )));
                 }
             }
         }
@@ -69,11 +101,12 @@ impl GpuMemoryPool {
 
         // Allocate new block
         stats.new_allocations += 1;
-        let gpu_array = self.context.allocate_raw_memory(size)?;
+        let gpu_buffer = OptimGpuBuffer::<u8>::zeros(&self.context, size)?;
+        let ptr = gpu_buffer.as_ptr();
         let block = GpuMemoryBlock {
             size,
-            ptr: gpu_array.as_ptr(),
-            gpu_array: Some(gpu_array),
+            ptr,
+            gpu_buffer: Some(gpu_buffer),
         };
 
         // Update current usage
@@ -85,7 +118,10 @@ impl GpuMemoryPool {
     /// Return a block to the pool for reuse
     fn return_block(&self, block: GpuMemoryBlock) {
         let mut pools = self.pools.lock().unwrap();
-        pools.entry(block.size).or_insert_with(VecDeque::new).push_back(block);
+        pools
+            .entry(block.size)
+            .or_insert_with(VecDeque::new)
+            .push_back(block);
     }
 
     /// Perform garbage collection to free unused memory
@@ -101,7 +137,11 @@ impl GpuMemoryPool {
         }
 
         // Update current usage
-        *self.current_usage.lock().unwrap() = self.current_usage.lock().unwrap().saturating_sub(freed_memory);
+        *self.current_usage.lock().unwrap() = self
+            .current_usage
+            .lock()
+            .unwrap()
+            .saturating_sub(freed_memory);
 
         // Update stats
         let mut stats = self.allocation_stats.lock().unwrap();
@@ -115,7 +155,10 @@ impl GpuMemoryPool {
     pub fn memory_stats(&self) -> MemoryStats {
         let current_usage = *self.current_usage.lock().unwrap();
         let allocation_stats = self.allocation_stats.lock().unwrap().clone();
-        let pool_sizes: HashMap<usize, usize> = self.pools.lock().unwrap()
+        let pool_sizes: HashMap<usize, usize> = self
+            .pools
+            .lock()
+            .unwrap()
             .iter()
             .map(|(&size, pool)| (size, pool.len()))
             .collect();
@@ -134,7 +177,7 @@ impl GpuMemoryPool {
 pub struct GpuMemoryBlock {
     size: usize,
     ptr: *mut u8,
-    gpu_array: Option<GpuArray<u8>>,
+    gpu_buffer: Option<OptimGpuBuffer<u8>>,
 }
 
 unsafe impl Send for GpuMemoryBlock {}
@@ -152,12 +195,16 @@ impl GpuMemoryBlock {
     }
 
     /// Cast to a specific type
-    pub fn as_typed<T>(&self) -> ScirsResult<&GpuArray<T>> {
-        if let Some(ref array) = self.gpu_array {
-            // This would need proper casting implementation
-            Ok(unsafe { std::mem::transmute(array) })
+    pub fn as_typed<T>(&self) -> ScirsResult<&OptimGpuBuffer<T>> {
+        if let Some(ref buffer) = self.gpu_buffer {
+            // Safe casting through scirs2-core's type system
+            buffer
+                .cast_type::<T>()
+                .map_err(|e| ScirsError::ComputationError(format!("Type casting failed: {}", e)))
         } else {
-            Err(ScirsError::InvalidInput("Memory block not available".to_string()))
+            Err(ScirsError::InvalidInput(
+                "Memory block not available".to_string(),
+            ))
         }
     }
 }
@@ -191,16 +238,29 @@ impl GpuWorkspace {
         // Need to allocate new block
         // For simplicity, we'll just return an error here
         // In a full implementation, this would allocate from the pool
-        Err(ScirsError::OutOfMemory("No suitable block available".to_string()))
+        Err(ScirsError::OutOfMemory(
+            "No suitable block available".to_string(),
+        ))
     }
 
-    /// Get a typed array view of the specified size
-    pub fn get_array<T>(&mut self, dimensions: &[usize]) -> ScirsResult<&GpuArray<T>> {
-        let total_elements: usize = dimensions.iter().product();
-        let size_bytes = total_elements * std::mem::size_of::<T>();
-        
+    /// Get a typed buffer view of the specified size
+    pub fn get_buffer<T>(&mut self, size: usize) -> ScirsResult<&OptimGpuBuffer<T>> {
+        let size_bytes = size * std::mem::size_of::<T>();
         let block = self.get_block(size_bytes)?;
         block.as_typed::<T>()
+    }
+
+    /// Create a GPU array view from the workspace
+    pub fn create_array<T>(&mut self, dimensions: &[usize]) -> ScirsResult<OptimGpuArray<T>>
+    where
+        T: Clone + Default + 'static,
+    {
+        let total_elements: usize = dimensions.iter().product();
+        let buffer = self.get_buffer::<T>(total_elements)?;
+
+        // Convert buffer to array using scirs2-core's reshape functionality
+        OptimGpuArray::from_buffer(buffer, dimensions)
+            .map_err(|e| ScirsError::ComputationError(format!("Array creation failed: {}", e)))
     }
 
     /// Get total workspace size
@@ -214,7 +274,9 @@ impl Drop for GpuWorkspace {
         // Return all blocks to the pool
         let mut pool = self.pool.lock().unwrap();
         for block in self.blocks.drain(..) {
-            pool.entry(block.size).or_insert_with(VecDeque::new).push_back(block);
+            pool.entry(block.size)
+                .or_insert_with(VecDeque::new)
+                .push_back(block);
         }
     }
 }
@@ -292,15 +354,19 @@ impl MemoryStats {
         let mut report = String::from("GPU Memory Usage Report\n");
         report.push_str("=======================\n\n");
 
-        report.push_str(&format!("Current Usage: {} bytes ({:.2} MB)\n", 
-            self.current_usage, 
-            self.current_usage as f64 / 1024.0 / 1024.0));
+        report.push_str(&format!(
+            "Current Usage: {} bytes ({:.2} MB)\n",
+            self.current_usage,
+            self.current_usage as f64 / 1024.0 / 1024.0
+        ));
 
         if let Some(limit) = self.memory_limit {
-            report.push_str(&format!("Memory Limit: {} bytes ({:.2} MB)\n", 
-                limit, 
-                limit as f64 / 1024.0 / 1024.0));
-            
+            report.push_str(&format!(
+                "Memory Limit: {} bytes ({:.2} MB)\n",
+                limit,
+                limit as f64 / 1024.0 / 1024.0
+            ));
+
             if let Some(util) = self.utilization() {
                 report.push_str(&format!("Utilization: {:.1}%\n", util * 100.0));
             }
@@ -308,13 +374,27 @@ impl MemoryStats {
 
         report.push('\n');
         report.push_str("Allocation Statistics:\n");
-        report.push_str(&format!("  Total Allocations: {}\n", self.allocation_stats.total_allocations));
-        report.push_str(&format!("  Pool Hits: {} ({:.1}%)\n", 
+        report.push_str(&format!(
+            "  Total Allocations: {}\n",
+            self.allocation_stats.total_allocations
+        ));
+        report.push_str(&format!(
+            "  Pool Hits: {} ({:.1}%)\n",
             self.allocation_stats.pool_hits,
-            self.allocation_stats.hit_rate() * 100.0));
-        report.push_str(&format!("  New Allocations: {}\n", self.allocation_stats.new_allocations));
-        report.push_str(&format!("  Garbage Collections: {}\n", self.allocation_stats.garbage_collections));
-        report.push_str(&format!("  Total Freed: {} bytes\n", self.allocation_stats.total_freed_memory));
+            self.allocation_stats.hit_rate() * 100.0
+        ));
+        report.push_str(&format!(
+            "  New Allocations: {}\n",
+            self.allocation_stats.new_allocations
+        ));
+        report.push_str(&format!(
+            "  Garbage Collections: {}\n",
+            self.allocation_stats.garbage_collections
+        ));
+        report.push_str(&format!(
+            "  Total Freed: {} bytes\n",
+            self.allocation_stats.total_freed_memory
+        ));
 
         if !self.pool_sizes.is_empty() {
             report.push('\n');
@@ -378,7 +458,7 @@ pub mod optimization {
         /// Optimize memory usage based on current statistics
         pub fn optimize(&mut self) -> ScirsResult<()> {
             let stats = self.pool.memory_stats();
-            
+
             // Check if we need garbage collection
             if let Some(utilization) = stats.utilization() {
                 if utilization > self.config.gc_threshold {
@@ -452,7 +532,7 @@ pub mod utils {
         available_memory: usize,
     ) -> AllocationStrategy {
         let estimated_usage = estimate_memory_usage(problem_size, batch_size);
-        
+
         if estimated_usage > available_memory {
             AllocationStrategy::Chunked {
                 chunk_size: available_memory / 2,
@@ -475,7 +555,7 @@ pub mod utils {
         let input_size = batch_size * problem_size * 8; // f64
         let output_size = batch_size * 8; // f64
         let temp_size = input_size; // Temporary arrays
-        
+
         input_size + output_size + temp_size
     }
 
@@ -498,7 +578,7 @@ pub mod utils {
         let available = memory_info.free;
         let safety_margin = 0.1; // Keep 10% free
         let usable = (available as f64 * (1.0 - safety_margin)) as usize;
-        
+
         Ok(required_memory <= usable)
     }
 }
@@ -512,7 +592,7 @@ mod tests {
         let mut stats = AllocationStats::new();
         stats.total_allocations = 100;
         stats.pool_hits = 70;
-        
+
         assert_eq!(stats.hit_rate(), 0.7);
     }
 
@@ -524,7 +604,7 @@ mod tests {
             allocation_stats: AllocationStats::new(),
             pool_sizes: HashMap::new(),
         };
-        
+
         assert_eq!(stats.utilization(), Some(0.8));
     }
 
@@ -532,7 +612,7 @@ mod tests {
     fn test_memory_usage_estimation() {
         let usage = utils::estimate_memory_usage(10, 100);
         assert!(usage > 0);
-        
+
         // Should scale with problem size and batch size
         let larger_usage = utils::estimate_memory_usage(20, 200);
         assert!(larger_usage > usage);
@@ -541,11 +621,11 @@ mod tests {
     #[test]
     fn test_allocation_strategy() {
         let strategy = utils::calculate_allocation_strategy(
-            1000,     // Large problem
-            1000,     // Large batch
-            500_000   // Limited memory
+            1000,    // Large problem
+            1000,    // Large batch
+            500_000, // Limited memory
         );
-        
+
         match strategy {
             utils::AllocationStrategy::Chunked { .. } => {
                 // Expected for large problems with limited memory

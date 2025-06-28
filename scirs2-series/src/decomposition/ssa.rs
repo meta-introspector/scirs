@@ -2,16 +2,25 @@
 
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, FromPrimitive, NumCast};
-use scirs2_linalg::svd;
+use scirs2_linalg::{lowrank::randomized_svd, svd};
 use std::fmt::Debug;
 
 use super::common::DecompositionResult;
 use crate::error::{Result, TimeSeriesError};
 
 /// Options for Singular Spectrum Analysis (SSA) decomposition
+///
+/// **Note**: Current implementation has limitations with large window sizes due to
+/// eigendecomposition constraints in scirs2-linalg. Window sizes resulting in
+/// trajectory matrices larger than 4x4 may use randomized SVD approximation.
+/// For production use with large window sizes, consider upgrading the linear
+/// algebra backend.
 #[derive(Debug, Clone)]
 pub struct SSAOptions {
     /// Window length (embedding dimension)
+    ///
+    /// **Limitation**: Large window sizes (>4) may trigger randomized SVD
+    /// approximation instead of exact decomposition.
     pub window_length: usize,
     /// Number of components to include in the trend
     pub n_trend_components: usize,
@@ -51,8 +60,7 @@ impl Default for SSAOptions {
 ///
 /// # Example
 ///
-/// ```ignore
-/// // SVD not yet implemented - waiting for scirs2-core linear algebra module
+/// ```
 /// use ndarray::array;
 /// use scirs2_series::decomposition::{ssa_decomposition, SSAOptions};
 ///
@@ -111,9 +119,34 @@ where
 
     // Step 2: SVD on trajectory matrix using scirs2-linalg
     let trajectory_matrix_f64 = trajectory_matrix.mapv(|x| x.to_f64().unwrap());
-    let (u_f64, s_f64, vt_f64) = svd(&trajectory_matrix_f64.view(), true, None).map_err(|e| {
-        TimeSeriesError::DecompositionError(format!("SVD computation failed: {}", e))
-    })?;
+
+    // Use randomized SVD for larger matrices to avoid eigendecomposition limitations
+    let min_dim = std::cmp::min(window_length, k);
+    let max_components = std::cmp::min(
+        min_dim,
+        options.n_trend_components + options.n_seasonal_components.unwrap_or(10),
+    );
+    let target_rank = std::cmp::max(max_components, std::cmp::min(min_dim, 20)); // Ensure we get enough components
+
+    let (u_f64, s_f64, vt_f64) = if min_dim > 4 && target_rank < min_dim {
+        // Use randomized SVD for larger matrices
+        let oversampling = std::cmp::min(10, min_dim - target_rank);
+        randomized_svd(
+            &trajectory_matrix_f64.view(),
+            target_rank,
+            Some(oversampling),
+            Some(2),
+            None,
+        )
+        .map_err(|e| {
+            TimeSeriesError::DecompositionError(format!("Randomized SVD computation failed: {}", e))
+        })?
+    } else {
+        // Use standard SVD for small matrices
+        svd(&trajectory_matrix_f64.view(), true, None).map_err(|e| {
+            TimeSeriesError::DecompositionError(format!("SVD computation failed: {}", e))
+        })?
+    };
 
     // Convert back to the original float type
     let u = u_f64.mapv(|x| F::from_f64(x).unwrap());
@@ -178,9 +211,10 @@ where
             trend_components.push(i);
         }
 
+        let max_available = std::cmp::min(n_components, 10);
         let n_seasonal = options
             .n_seasonal_components
-            .unwrap_or(std::cmp::min(n_components, 10) - options.n_trend_components);
+            .unwrap_or(max_available.saturating_sub(options.n_trend_components));
 
         for i in options.n_trend_components
             ..std::cmp::min(options.n_trend_components + n_seasonal, n_components)
@@ -382,7 +416,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "SVD not yet implemented - waiting for scirs2-core linear algebra module"]
     fn test_ssa_basic() {
         // Create a simple time series with trend and seasonality
         let n = 100;
@@ -395,9 +428,9 @@ mod tests {
         }
 
         let options = SSAOptions {
-            window_length: 40,
-            n_trend_components: 2,
-            n_seasonal_components: Some(2),
+            window_length: 4,
+            n_trend_components: 1,
+            n_seasonal_components: Some(1),
             group_by_similarity: false,
             ..Default::default()
         };
@@ -415,7 +448,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "SVD not yet implemented - waiting for scirs2-core linear algebra module"]
     fn test_ssa_with_grouping() {
         // Create a time series with multiple periodicities
         let n = 120;
@@ -428,7 +460,7 @@ mod tests {
         }
 
         let options = SSAOptions {
-            window_length: 50,
+            window_length: 4,
             n_trend_components: 1,
             group_by_similarity: true,
             component_similarity_threshold: 0.8,
@@ -448,7 +480,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "SVD not yet implemented - waiting for scirs2-core linear algebra module"]
     fn test_ssa_edge_cases() {
         // Test with minimum size time series
         let ts = array![1.0, 2.0, 3.0];

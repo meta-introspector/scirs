@@ -454,11 +454,75 @@ where
     F: Fn(&ArrayView1<f64>) -> S,
     S: Into<f64>,
 {
-    // TODO: Implement sparse gradient computation when function is available
-    // For now, return a placeholder gradient norm
-    let _sparse_options = &options.sparse_options;
-    let _fun_val = fun(x).into();
-    Ok(1e-6) // Placeholder gradient norm
+    let n = x.len();
+
+    // For very large problems, use sampling to estimate gradient norm
+    if n > options.max_variables_in_memory {
+        // Sample a subset of variables for gradient estimation
+        let sample_size = (options.max_variables_in_memory / 10).min(1000).max(10);
+        let step_size = options.sparse_options.rel_step.unwrap_or(1e-8);
+
+        let mut gradient_norm_squared = 0.0;
+        let f0 = fun(x).into();
+
+        // Sample variables uniformly across the space
+        let step = n / sample_size;
+        for i in (0..n).step_by(step).take(sample_size) {
+            // Compute finite difference for this variable
+            let mut x_pert = x.to_owned();
+            let h = step_size * (1.0 + x[i].abs());
+            x_pert[i] += h;
+
+            let f_pert = fun(&x_pert.view()).into();
+            let grad_i = (f_pert - f0) / h;
+            gradient_norm_squared += grad_i * grad_i;
+        }
+
+        // Scale by the sampling ratio to estimate full gradient norm
+        let scaling_factor = n as f64 / sample_size as f64;
+        Ok((gradient_norm_squared * scaling_factor).sqrt())
+    } else {
+        // For smaller problems, compute a more accurate sparse gradient
+        compute_sparse_gradient_norm(fun, x, &options.sparse_options)
+    }
+}
+
+/// Compute sparse gradient norm using finite differences
+fn compute_sparse_gradient_norm<F, S>(
+    fun: &F,
+    x: &ArrayView1<f64>,
+    sparse_options: &SparseFiniteDiffOptions,
+) -> Result<f64, OptimizeError>
+where
+    F: Fn(&ArrayView1<f64>) -> S,
+    S: Into<f64>,
+{
+    let n = x.len();
+    let step_size = sparse_options.rel_step.unwrap_or(1e-8);
+    let f0 = fun(x).into();
+
+    // Use central differences for better accuracy
+    let mut gradient_norm_squared = 0.0;
+
+    for i in 0..n {
+        let h = step_size * (1.0 + x[i].abs());
+
+        // Forward difference
+        let mut x_forward = x.to_owned();
+        x_forward[i] += h;
+        let f_forward = fun(&x_forward.view()).into();
+
+        // Backward difference
+        let mut x_backward = x.to_owned();
+        x_backward[i] -= h;
+        let f_backward = fun(&x_backward.view()).into();
+
+        // Central difference
+        let grad_i = (f_forward - f_backward) / (2.0 * h);
+        gradient_norm_squared += grad_i * grad_i;
+    }
+
+    Ok(gradient_norm_squared.sqrt())
 }
 
 /// Create ultra-scale optimizer with automatic parameter selection

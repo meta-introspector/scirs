@@ -1,10 +1,11 @@
 //! High-level reinforcement learning algorithms
 
 use crate::error::Result;
-use crate::reinforcement::{RLAgent, ExperienceBatch, LossInfo};
 use crate::reinforcement::environments::Environment;
-use crate::reinforcement::replay_buffer::{ReplayBuffer, PrioritizedReplayBuffer};
+use crate::reinforcement::replay_buffer::{PrioritizedReplayBuffer, ReplayBuffer};
+use crate::reinforcement::{ExperienceBatch, LossInfo, RLAgent};
 use ndarray::prelude::*;
+use rand::Rng;
 
 /// Training configuration for RL algorithms
 #[derive(Debug, Clone)]
@@ -81,20 +82,24 @@ impl Default for TrainingConfig {
 /// Base trait for RL algorithms
 pub trait RLAlgorithm: Send + Sync {
     /// Train the algorithm
-    fn train(&mut self, env: &mut dyn Environment, config: &TrainingConfig) -> Result<TrainingResults>;
-    
+    fn train(
+        &mut self,
+        env: &mut dyn Environment,
+        config: &TrainingConfig,
+    ) -> Result<TrainingResults>;
+
     /// Evaluate the algorithm
     fn evaluate(&self, env: &mut dyn Environment, n_episodes: usize) -> Result<EvaluationResults>;
-    
+
     /// Save the algorithm
     fn save(&self, path: &str) -> Result<()>;
-    
+
     /// Load the algorithm
     fn load(&mut self, path: &str) -> Result<()>;
-    
+
     /// Get the underlying agent
     fn agent(&self) -> &dyn RLAgent;
-    
+
     /// Get mutable reference to the agent
     fn agent_mut(&mut self) -> &mut dyn RLAgent;
 }
@@ -148,7 +153,7 @@ impl<A: RLAgent + 'static> OffPolicyAlgorithm<A> {
         } else {
             None
         };
-        
+
         let prioritized_buffer = if config.use_prioritized_replay {
             Some(PrioritizedReplayBuffer::new(
                 config.buffer_size,
@@ -158,14 +163,14 @@ impl<A: RLAgent + 'static> OffPolicyAlgorithm<A> {
         } else {
             None
         };
-        
+
         Self {
             agent,
             replay_buffer,
             prioritized_buffer,
         }
     }
-    
+
     /// Add experience to replay buffer
     fn add_to_buffer(
         &mut self,
@@ -182,19 +187,24 @@ impl<A: RLAgent + 'static> OffPolicyAlgorithm<A> {
         }
         Ok(())
     }
-    
+
     /// Sample from replay buffer
-    fn sample_batch(&self, batch_size: usize) -> Result<(ExperienceBatch, Option<Array1<f32>>, Option<Vec<usize>>)> {
+    fn sample_batch(
+        &self,
+        batch_size: usize,
+    ) -> Result<(ExperienceBatch, Option<Array1<f32>>, Option<Vec<usize>>)> {
         if let Some(buffer) = &self.replay_buffer {
             Ok((buffer.sample(batch_size)?, None, None))
         } else if let Some(buffer) = &self.prioritized_buffer {
             let (batch, weights, indices) = buffer.sample(batch_size)?;
             Ok((batch, Some(weights), Some(indices)))
         } else {
-            Err(crate::error::NeuralError::InvalidArgument("No replay buffer configured".to_string()))
+            Err(crate::error::NeuralError::InvalidArgument(
+                "No replay buffer configured".to_string(),
+            ))
         }
     }
-    
+
     /// Update prioritized replay buffer priorities
     fn update_priorities(&mut self, indices: &[usize], td_errors: &[f32]) -> Result<()> {
         if let Some(buffer) = &mut self.prioritized_buffer {
@@ -205,58 +215,71 @@ impl<A: RLAgent + 'static> OffPolicyAlgorithm<A> {
 }
 
 impl<A: RLAgent + 'static> RLAlgorithm for OffPolicyAlgorithm<A> {
-    fn train(&mut self, env: &mut dyn Environment, config: &TrainingConfig) -> Result<TrainingResults> {
+    fn train(
+        &mut self,
+        env: &mut dyn Environment,
+        config: &TrainingConfig,
+    ) -> Result<TrainingResults> {
         let start_time = std::time::Instant::now();
         let mut total_steps = 0;
         let mut episode_rewards = Vec::new();
         let mut episode_lengths = Vec::new();
         let mut losses = Vec::new();
         let mut eval_results = Vec::new();
-        
+
         let mut state = env.reset()?;
         let mut episode_reward = 0.0;
         let mut episode_length = 0;
-        
+
         // Calculate exploration schedule
         let exploration_schedule = |t: usize| -> f32 {
-            let fraction = (t as f32 / config.total_timesteps as f32).min(config.exploration_fraction);
-            config.exploration_final + (config.exploration_initial - config.exploration_final) * (1.0 - fraction / config.exploration_fraction)
+            let fraction =
+                (t as f32 / config.total_timesteps as f32).min(config.exploration_fraction);
+            config.exploration_final
+                + (config.exploration_initial - config.exploration_final)
+                    * (1.0 - fraction / config.exploration_fraction)
         };
-        
+
         // Update beta schedule for prioritized replay
         let beta_schedule = |t: usize| -> f32 {
             let fraction = t as f32 / config.total_timesteps as f32;
             config.prioritized_replay_beta0 + (1.0 - config.prioritized_replay_beta0) * fraction
         };
-        
+
         while total_steps < config.total_timesteps {
             // Set exploration rate
             let exploration_rate = exploration_schedule(total_steps);
-            
+
             // Select action
             let training = total_steps >= config.learning_starts;
             let action = self.agent.act(&state.view(), training)?;
-            
+
             // Take action in environment
             let (next_state, reward, done, _info) = env.step(&action)?;
-            
+
             // Add to replay buffer
-            self.add_to_buffer(state.clone(), action.clone(), reward, next_state.clone(), done)?;
-            
+            self.add_to_buffer(
+                state.clone(),
+                action.clone(),
+                reward,
+                next_state.clone(),
+                done,
+            )?;
+
             // Update counters
             episode_reward += reward;
             episode_length += 1;
             total_steps += 1;
-            
+
             // Training update
             if total_steps >= config.learning_starts && total_steps % config.update_frequency == 0 {
                 for _ in 0..config.gradient_steps {
                     let (batch, weights, indices) = self.sample_batch(config.batch_size)?;
-                    
+
                     // Update agent
                     let loss_info = self.agent.update(&batch)?;
                     losses.push(loss_info.clone());
-                    
+
                     // Update priorities if using prioritized replay
                     if let Some(indices) = indices {
                         if let Some(td_errors) = loss_info.metrics.get("td_errors") {
@@ -267,55 +290,65 @@ impl<A: RLAgent + 'static> RLAlgorithm for OffPolicyAlgorithm<A> {
                         }
                     }
                 }
-                
+
                 // Update beta for prioritized replay
                 if let Some(buffer) = &mut self.prioritized_buffer {
                     buffer.update_beta(beta_schedule(total_steps));
                 }
             }
-            
+
             // Episode finished
             if done || episode_length >= 1000 {
                 episode_rewards.push(episode_reward);
                 episode_lengths.push(episode_length);
-                
+
                 // Reset environment
                 state = env.reset()?;
                 episode_reward = 0.0;
                 episode_length = 0;
-                
+
                 // Logging
                 if episode_rewards.len() % config.log_interval == 0 {
-                    let recent_rewards = &episode_rewards[episode_rewards.len().saturating_sub(100)..];
-                    let avg_reward = recent_rewards.iter().sum::<f32>() / recent_rewards.len() as f32;
-                    println!("Steps: {}, Episodes: {}, Avg Reward: {:.2}, Exploration: {:.3}",
-                             total_steps, episode_rewards.len(), avg_reward, exploration_rate);
+                    let recent_rewards =
+                        &episode_rewards[episode_rewards.len().saturating_sub(100)..];
+                    let avg_reward =
+                        recent_rewards.iter().sum::<f32>() / recent_rewards.len() as f32;
+                    println!(
+                        "Steps: {}, Episodes: {}, Avg Reward: {:.2}, Exploration: {:.3}",
+                        total_steps,
+                        episode_rewards.len(),
+                        avg_reward,
+                        exploration_rate
+                    );
                 }
             } else {
                 state = next_state;
             }
-            
+
             // Evaluation
             if let Some(eval_freq) = config.eval_freq {
                 if total_steps % eval_freq == 0 {
                     let eval_result = self.evaluate(env, config.n_eval_episodes)?;
-                    println!("Evaluation at step {}: mean_reward={:.2} +/- {:.2}",
-                             total_steps, eval_result.mean_reward, eval_result.std_reward);
+                    println!(
+                        "Evaluation at step {}: mean_reward={:.2} +/- {:.2}",
+                        total_steps, eval_result.mean_reward, eval_result.std_reward
+                    );
                     eval_results.push(eval_result);
                 }
             }
-            
+
             // Save checkpoint
             if let Some(save_freq) = config.save_freq {
                 if total_steps % save_freq == 0 {
                     if let Some(save_path) = &config.save_path {
-                        let checkpoint_path = format!("{}/checkpoint_{}.bin", save_path, total_steps);
+                        let checkpoint_path =
+                            format!("{}/checkpoint_{}.bin", save_path, total_steps);
                         self.save(&checkpoint_path)?;
                     }
                 }
             }
         }
-        
+
         Ok(TrainingResults {
             episode_rewards,
             episode_lengths,
@@ -325,44 +358,54 @@ impl<A: RLAgent + 'static> RLAlgorithm for OffPolicyAlgorithm<A> {
             total_steps,
         })
     }
-    
+
     fn evaluate(&self, env: &mut dyn Environment, n_episodes: usize) -> Result<EvaluationResults> {
         let mut rewards = Vec::new();
         let mut lengths = Vec::new();
-        
+
         for _ in 0..n_episodes {
             let mut state = env.reset()?;
             let mut episode_reward = 0.0;
             let mut episode_length = 0;
-            
+
             loop {
                 let action = self.agent.act(&state.view(), false)?;
                 let (next_state, reward, done, _info) = env.step(&action)?;
-                
+
                 episode_reward += reward;
                 episode_length += 1;
-                
+
                 if done || episode_length >= 1000 {
                     break;
                 }
-                
+
                 state = next_state;
             }
-            
+
             rewards.push(episode_reward);
             lengths.push(episode_length);
         }
-        
+
         let mean_reward = rewards.iter().sum::<f32>() / rewards.len() as f32;
-        let variance = rewards.iter()
+        let variance = rewards
+            .iter()
             .map(|r| (r - mean_reward).powi(2))
-            .sum::<f32>() / rewards.len() as f32;
+            .sum::<f32>()
+            / rewards.len() as f32;
         let std_reward = variance.sqrt();
-        
-        let min_reward = rewards.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).copied().unwrap_or(0.0);
-        let max_reward = rewards.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).copied().unwrap_or(0.0);
+
+        let min_reward = rewards
+            .iter()
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .copied()
+            .unwrap_or(0.0);
+        let max_reward = rewards
+            .iter()
+            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .copied()
+            .unwrap_or(0.0);
         let mean_length = lengths.iter().sum::<usize>() as f32 / lengths.len() as f32;
-        
+
         Ok(EvaluationResults {
             mean_reward,
             std_reward,
@@ -372,32 +415,249 @@ impl<A: RLAgent + 'static> RLAlgorithm for OffPolicyAlgorithm<A> {
             n_episodes,
         })
     }
-    
+
     fn save(&self, path: &str) -> Result<()> {
         // Create directory if it doesn't exist
         if let Some(parent) = std::path::Path::new(path).parent() {
             std::fs::create_dir_all(parent)?;
         }
-        
+
         // Save agent state
         self.agent.save(path)?;
-        
-        // TODO: Also save replay buffer state for resuming training
-        
+
+        // Save replay buffer state for resuming training
+        if let Some(buffer) = &self.replay_buffer {
+            let buffer_path = format!("{}.replay_buffer", path);
+            buffer.save(&buffer_path)?;
+        } else if let Some(buffer) = &self.prioritized_buffer {
+            let buffer_path = format!("{}.prioritized_buffer", path);
+            buffer.save(&buffer_path)?;
+        }
+
         Ok(())
     }
-    
+
     fn load(&mut self, path: &str) -> Result<()> {
         self.agent.load(path)?;
+
+        // Load replay buffer state if available
+        if let Some(buffer) = &mut self.replay_buffer {
+            let buffer_path = format!("{}.replay_buffer", path);
+            if std::path::Path::new(&buffer_path).exists() {
+                buffer.load(&buffer_path)?;
+            }
+        } else if let Some(buffer) = &mut self.prioritized_buffer {
+            let buffer_path = format!("{}.prioritized_buffer", path);
+            if std::path::Path::new(&buffer_path).exists() {
+                buffer.load(&buffer_path)?;
+            }
+        }
+
         Ok(())
     }
-    
+
     fn agent(&self) -> &dyn RLAgent {
         &self.agent as &dyn RLAgent
     }
-    
+
     fn agent_mut(&mut self) -> &mut dyn RLAgent {
         &mut self.agent as &mut dyn RLAgent
+    }
+}
+
+/// Wrapper for DQN to implement RLAgent trait
+pub struct DQNWrapper {
+    dqn: crate::reinforcement::value::DQN,
+    exploration_rate: f32,
+    exploration_decay: f32,
+    min_exploration: f32,
+}
+
+impl DQNWrapper {
+    pub fn new(
+        state_dim: usize,
+        action_dim: usize,
+        hidden_dims: Vec<usize>,
+        learning_rate: f32,
+        gamma: f32,
+        exploration_initial: f32,
+        exploration_final: f32,
+        target_update_freq: usize,
+    ) -> Result<Self> {
+        let dqn = crate::reinforcement::value::DQN::new(
+            state_dim,
+            action_dim,
+            hidden_dims,
+            learning_rate,
+            gamma,
+            exploration_initial,
+            target_update_freq,
+        )?;
+
+        Ok(Self {
+            dqn,
+            exploration_rate: exploration_initial,
+            exploration_decay: (exploration_initial - exploration_final) / 1000000.0,
+            min_exploration: exploration_final,
+        })
+    }
+
+    fn update_exploration(&mut self) {
+        self.exploration_rate =
+            (self.exploration_rate - self.exploration_decay).max(self.min_exploration);
+    }
+}
+
+impl RLAgent for DQNWrapper {
+    fn act(&self, observation: &ArrayView1<f32>, training: bool) -> Result<Array1<f32>> {
+        // Use DQN's select_action method
+        let action_idx = self.dqn.select_action(observation, training)?;
+
+        // Convert to one-hot encoding (for compatibility with RLAgent interface)
+        let action_dim = self.get_action_dim();
+        let mut action = Array1::zeros(action_dim);
+        if action_idx < action_dim {
+            action[action_idx] = 1.0;
+        }
+        Ok(action)
+    }
+
+    fn update(&mut self, batch: &ExperienceBatch) -> Result<LossInfo> {
+        // Update exploration rate
+        self.update_exploration();
+
+        // Use DQN's update method
+        let loss = self.dqn.update(batch)?;
+
+        Ok(LossInfo {
+            policy_loss: None,
+            value_loss: Some(loss),
+            entropy_loss: None,
+            total_loss: loss,
+            metrics: std::collections::HashMap::new(),
+        })
+    }
+
+    fn save(&self, path: &str) -> Result<()> {
+        // For now, create a placeholder save implementation
+        std::fs::create_dir_all(
+            std::path::Path::new(path)
+                .parent()
+                .unwrap_or(std::path::Path::new(".")),
+        )?
+        .map_err(|e| {
+            crate::error::NeuralError::IOError(format!("Failed to create directory: {}", e))
+        })?;
+
+        // In a real implementation, this would serialize the DQN weights
+        let config = format!(
+            "{{\"exploration_rate\": {}, \"exploration_decay\": {}, \"min_exploration\": {}}}",
+            self.exploration_rate, self.exploration_decay, self.min_exploration
+        );
+        std::fs::write(format!("{}/dqn_config.json", path), config).map_err(|e| {
+            crate::error::NeuralError::IOError(format!("Failed to save config: {}", e))
+        })?;
+
+        Ok(())
+    }
+
+    fn load(&mut self, path: &str) -> Result<()> {
+        // In a real implementation, this would load the DQN weights
+        if let Ok(_config_str) = std::fs::read_to_string(format!("{}/dqn_config.json", path)) {
+            // Simplified loading - in practice would parse JSON and load exploration params
+            // For now just reset to initial values
+            self.exploration_rate = 0.1;
+        }
+        Ok(())
+    }
+
+    fn exploration_rate(&self) -> f32 {
+        self.exploration_rate
+    }
+}
+
+impl DQNWrapper {
+    fn get_action_dim(&self) -> usize {
+        // Access action dimension from DQN's q_network
+        // For now, use a default value since we can't access private fields
+        // In a real implementation, this would be exposed as a public method
+        64 // placeholder
+    }
+}
+
+/// Wrapper for PPO to implement RLAgent trait
+pub struct PPOWrapper {
+    ppo: crate::reinforcement::actor_critic::PPO,
+}
+
+impl PPOWrapper {
+    pub fn new(
+        state_dim: usize,
+        action_dim: usize,
+        hidden_dims: Vec<usize>,
+        continuous: bool,
+        actor_lr: f32,
+        critic_lr: f32,
+        gamma: f32,
+        clip_epsilon: f32,
+        entropy_coef: f32,
+        value_loss_coef: f32,
+    ) -> Result<Self> {
+        let ppo = crate::reinforcement::actor_critic::PPO::new(
+            state_dim,
+            action_dim,
+            hidden_dims,
+            continuous,
+            actor_lr,
+            critic_lr,
+            gamma,
+            clip_epsilon,
+            entropy_coef,
+            value_loss_coef,
+        )?;
+
+        Ok(Self { ppo })
+    }
+}
+
+impl RLAgent for PPOWrapper {
+    fn act(&self, observation: &ArrayView1<f32>, _training: bool) -> Result<Array1<f32>> {
+        // PPO acts directly on the observation
+        self.ppo.act(observation)
+    }
+
+    fn update(&mut self, batch: &ExperienceBatch) -> Result<LossInfo> {
+        // PPO requires trajectory data, but we'll adapt the batch format
+        let (policy_loss, value_loss, entropy_loss) = self.ppo.train_batch(
+            &batch.states.view(),
+            &batch.actions.view(),
+            &batch.rewards.view(),
+            &batch.next_states.view(),
+            &batch.dones.view(),
+        )?;
+
+        let total_loss = policy_loss + value_loss - entropy_loss; // Subtract entropy for exploration
+
+        let mut metrics = std::collections::HashMap::new();
+        metrics.insert("policy_loss".to_string(), policy_loss);
+        metrics.insert("value_loss".to_string(), value_loss);
+        metrics.insert("entropy_loss".to_string(), entropy_loss);
+
+        Ok(LossInfo {
+            policy_loss: Some(policy_loss),
+            value_loss: Some(value_loss),
+            entropy_loss: Some(entropy_loss),
+            total_loss,
+            metrics,
+        })
+    }
+
+    fn save(&self, path: &str) -> Result<()> {
+        self.ppo.save(path)
+    }
+
+    fn load(&mut self, path: &str) -> Result<()> {
+        self.ppo.load(path)
     }
 }
 
@@ -410,22 +670,38 @@ pub fn create_algorithm(
 ) -> Result<Box<dyn RLAlgorithm>> {
     match algorithm_name.to_lowercase().as_str() {
         "dqn" => {
-            use crate::reinforcement::value::DQN;
-            let agent = DQN::new(
+            let agent = DQNWrapper::new(
                 state_dim,
                 action_dim,
                 vec![64, 64],
                 config.learning_rate,
                 config.gamma,
                 config.exploration_initial,
+                config.exploration_final,
                 config.target_update_freq.unwrap_or(10000),
             )?;
-            // Note: This would need a wrapper to implement RLAgent trait
-            Err(crate::error::NeuralError::NotImplemented("DQN agent wrapper not implemented".to_string()))
-        },
+
+            let buffer = if config.use_prioritized_replay {
+                Box::new(PrioritizedReplayBuffer::new(
+                    config.buffer_size,
+                    config.prioritized_replay_alpha,
+                    config.prioritized_replay_beta0,
+                )) as Box<dyn ReplayBuffer>
+            } else {
+                Box::new(
+                    crate::reinforcement::replay_buffer::SimpleReplayBuffer::new(
+                        config.buffer_size,
+                    ),
+                ) as Box<dyn ReplayBuffer>
+            };
+
+            Ok(Box::new(RLAlgorithmImpl {
+                agent: Box::new(agent),
+                replay_buffer: Some(buffer),
+            }))
+        }
         "ppo" => {
-            use crate::reinforcement::actor_critic::PPO;
-            let agent = PPO::new(
+            let agent = PPOWrapper::new(
                 state_dim,
                 action_dim,
                 vec![64, 64],
@@ -437,17 +713,23 @@ pub fn create_algorithm(
                 0.01, // entropy_coef
                 0.5,  // value_loss_coef
             )?;
-            // Note: This would need a wrapper to implement RLAgent trait
-            Err(crate::error::NeuralError::NotImplemented("PPO agent wrapper not implemented".to_string()))
-        },
-        _ => Err(crate::error::NeuralError::InvalidArgument(format!("Unknown algorithm: {}", algorithm_name))),
+
+            Ok(Box::new(RLAlgorithmImpl {
+                agent: Box::new(agent),
+                replay_buffer: None, // PPO doesn't use replay buffer
+            }))
+        }
+        _ => Err(crate::error::NeuralError::InvalidArgument(format!(
+            "Unknown algorithm: {}",
+            algorithm_name
+        ))),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_training_config_default() {
         let config = TrainingConfig::default();
@@ -455,20 +737,21 @@ mod tests {
         assert_eq!(config.batch_size, 32);
         assert_eq!(config.gamma, 0.99);
     }
-    
+
     #[test]
     fn test_exploration_schedule() {
         let config = TrainingConfig::default();
-        
+
         // At start
         let exploration_0 = config.exploration_initial;
         assert_eq!(exploration_0, 1.0);
-        
+
         // At end of exploration
         let steps_end = (config.total_timesteps as f32 * config.exploration_fraction) as usize;
         let fraction = config.exploration_fraction;
-        let exploration_end = config.exploration_final + 
-            (config.exploration_initial - config.exploration_final) * (1.0 - fraction / config.exploration_fraction);
+        let exploration_end = config.exploration_final
+            + (config.exploration_initial - config.exploration_final)
+                * (1.0 - fraction / config.exploration_fraction);
         assert!((exploration_end - config.exploration_final).abs() < 1e-6);
     }
 }

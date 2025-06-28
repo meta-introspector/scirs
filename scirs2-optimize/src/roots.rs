@@ -405,74 +405,9 @@ where
 
 /// Solves a linear system Ax = b using LU decomposition
 fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
-    let n = a.shape()[0];
-    if n != a.shape()[1] || n != b.len() {
-        return None;
-    }
+    use scirs2_linalg::solve::solve;
 
-    // Create augmented matrix [A|b]
-    let mut aug = Array2::zeros((n, n + 1));
-    for i in 0..n {
-        for j in 0..n {
-            aug[[i, j]] = a[[i, j]];
-        }
-        aug[[i, n]] = b[i];
-    }
-
-    // Gaussian elimination with partial pivoting
-    for i in 0..n {
-        // Find pivot
-        let mut max_row = i;
-        let mut max_val = aug[[i, i]].abs();
-
-        for j in i + 1..n {
-            if aug[[j, i]].abs() > max_val {
-                max_row = j;
-                max_val = aug[[j, i]].abs();
-            }
-        }
-
-        // Check for singularity
-        if max_val < 1e-10 {
-            return None;
-        }
-
-        // Swap rows if needed
-        if max_row != i {
-            for j in 0..=n {
-                let temp = aug[[i, j]];
-                aug[[i, j]] = aug[[max_row, j]];
-                aug[[max_row, j]] = temp;
-            }
-        }
-
-        // Eliminate below
-        for j in i + 1..n {
-            let c = aug[[j, i]] / aug[[i, i]];
-            aug[[j, i]] = 0.0;
-
-            for k in i + 1..=n {
-                aug[[j, k]] -= c * aug[[i, k]];
-            }
-        }
-    }
-
-    // Back substitution
-    let mut x = Array1::zeros(n);
-    for i in (0..n).rev() {
-        let mut sum = aug[[i, n]];
-        for j in i + 1..n {
-            sum -= aug[[i, j]] * x[j];
-        }
-
-        if aug[[i, i]].abs() < 1e-10 {
-            return None;
-        }
-
-        x[i] = sum / aug[[i, i]];
-    }
-
-    Some(x)
+    solve(&a.view(), &b.view(), None).ok()
 }
 
 /// Implements Broyden's first method (good Broyden) for root finding

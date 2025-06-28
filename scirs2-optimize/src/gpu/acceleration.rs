@@ -3,16 +3,18 @@
 //! This module provides convenient interfaces for accelerating various optimization
 //! algorithms using GPU computation, hiding the complexity of low-level GPU operations.
 
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::error::{ScirsError, ScirsResult};
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::{
-    GpuOptimizationConfig, GpuOptimizationContext, GpuFunction, GpuPrecision,
-    cuda_kernels::{FunctionEvaluationKernel, GradientKernel, DifferentialEvolutionKernel, ParticleSwarmKernel},
-    tensor_core_optimization::{TensorCoreOptimizer, TensorCoreOptimizationConfig, AMPManager},
+    cuda_kernels::{
+        DifferentialEvolutionKernel, FunctionEvaluationKernel, GradientKernel, ParticleSwarmKernel,
+    },
     memory_management::GpuMemoryPool,
+    tensor_core_optimization::{AMPManager, TensorCoreOptimizationConfig, TensorCoreOptimizer},
+    GpuFunction, GpuOptimizationConfig, GpuOptimizationContext, GpuPrecision,
 };
 use crate::result::OptimizeResults;
 
@@ -73,8 +75,11 @@ impl AccelerationManager {
     /// Create a new acceleration manager
     pub fn new(config: AccelerationConfig) -> ScirsResult<Self> {
         let context = GpuOptimizationContext::new(config.gpu_config.clone())?;
-        
-        let tensor_optimizer = if matches!(config.strategy, AccelerationStrategy::TensorCore | AccelerationStrategy::MixedPrecision) {
+
+        let tensor_optimizer = if matches!(
+            config.strategy,
+            AccelerationStrategy::TensorCore | AccelerationStrategy::MixedPrecision
+        ) {
             if let Some(tensor_config) = &config.tensor_config {
                 Some(TensorCoreOptimizer::new(
                     Arc::clone(context.context()),
@@ -131,7 +136,12 @@ impl AccelerationManager {
         match self.config.strategy {
             AccelerationStrategy::Adaptive => {
                 if is_matrix_intensive && self.tensor_optimizer.is_some() {
-                    if self.context.context().supports_tensor_cores().unwrap_or(false) {
+                    if self
+                        .context
+                        .context()
+                        .supports_tensor_cores()
+                        .unwrap_or(false)
+                    {
                         AccelerationStrategy::TensorCore
                     } else {
                         AccelerationStrategy::MixedPrecision
@@ -160,9 +170,7 @@ impl AccelerationManager {
         self.performance_stats.start_timer("function_evaluation");
 
         let result = match strategy {
-            AccelerationStrategy::Basic => {
-                self.accelerate_basic_function_batch(function, points)
-            }
+            AccelerationStrategy::Basic => self.accelerate_basic_function_batch(function, points),
             AccelerationStrategy::TensorCore => {
                 if let Some(ref tensor_optimizer) = self.tensor_optimizer {
                     self.accelerate_tensor_function_batch(function, points, tensor_optimizer)
@@ -197,9 +205,7 @@ impl AccelerationManager {
         self.performance_stats.start_timer("gradient_computation");
 
         let result = match strategy {
-            AccelerationStrategy::Basic => {
-                self.accelerate_basic_gradient_batch(function, points)
-            }
+            AccelerationStrategy::Basic => self.accelerate_basic_gradient_batch(function, points),
             AccelerationStrategy::TensorCore => {
                 if let Some(ref tensor_optimizer) = self.tensor_optimizer {
                     self.accelerate_tensor_gradient_batch(function, points, tensor_optimizer)
@@ -236,7 +242,7 @@ impl AccelerationManager {
         self.performance_stats.start_timer("differential_evolution");
 
         let mut algorithm = super::algorithms::GpuDifferentialEvolution::new(
-            self.context.clone(),  // This would need to be implemented
+            self.context.clone(), // This would need to be implemented
             population_size,
             max_iterations,
         )
@@ -266,7 +272,7 @@ impl AccelerationManager {
         self.performance_stats.start_timer("particle_swarm");
 
         let mut algorithm = super::algorithms::GpuParticleSwarm::new(
-            self.context.clone(),  // This would need to be implemented
+            self.context.clone(), // This would need to be implemented
             swarm_size,
             max_iterations,
         )
@@ -281,6 +287,11 @@ impl AccelerationManager {
     /// Get performance statistics
     pub fn performance_stats(&self) -> &PerformanceStats {
         &self.performance_stats
+    }
+
+    /// Generate performance report
+    pub fn generate_performance_report(&self) -> String {
+        self.performance_stats.generate_report()
     }
 
     /// Reset performance statistics
@@ -326,11 +337,11 @@ impl AccelerationManager {
         if let Some(ref mut amp_manager) = self.amp_manager {
             // Check for overflow and adjust loss scale
             let result = self.accelerate_basic_function_batch(function, points)?;
-            
+
             // Check for overflow (simplified)
             let has_overflow = result.iter().any(|&x| !x.is_finite());
             amp_manager.update(has_overflow);
-            
+
             Ok(result)
         } else {
             self.accelerate_basic_function_batch(function, points)
@@ -372,11 +383,11 @@ impl AccelerationManager {
         // Implement mixed precision gradient computation
         if let Some(ref mut amp_manager) = self.amp_manager {
             let result = self.accelerate_basic_gradient_batch(function, points)?;
-            
+
             // Check for overflow in gradients
             let has_overflow = result.iter().any(|&x| !x.is_finite());
             amp_manager.update(has_overflow);
-            
+
             Ok(result)
         } else {
             self.accelerate_basic_gradient_batch(function, points)
@@ -412,7 +423,7 @@ pub struct PerformanceStats {
 }
 
 impl PerformanceStats {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             timers: HashMap::new(),
             counters: HashMap::new(),
@@ -421,7 +432,8 @@ impl PerformanceStats {
     }
 
     fn start_timer(&mut self, name: &str) {
-        self.start_times.insert(name.to_string(), std::time::Instant::now());
+        self.start_times
+            .insert(name.to_string(), std::time::Instant::now());
     }
 
     fn end_timer(&mut self, name: &str) {
@@ -486,10 +498,13 @@ impl PerformanceStats {
         // Calculate throughput metrics
         if let (Some(func_time), Some(func_count)) = (
             self.timers.get("function_evaluation"),
-            self.counters.get("function_evaluations")
+            self.counters.get("function_evaluations"),
         ) {
             let throughput = *func_count as f64 / func_time;
-            report.push_str(&format!("Function Evaluation Throughput: {:.2} evals/s\n", throughput));
+            report.push_str(&format!(
+                "Function Evaluation Throughput: {:.2} evals/s\n",
+                throughput
+            ));
         }
 
         report
@@ -514,7 +529,7 @@ pub mod utils {
 
         let memory_per_point = problem_dims * element_size * 4; // Input, output, gradient, temp
         let batch_size = available_memory / memory_per_point / 2; // Use half available memory
-        
+
         batch_size.max(1).min(10000)
     }
 
@@ -527,7 +542,7 @@ pub mod utils {
     ) -> bool {
         let total_cpu_time = batch_size as f64 * cpu_time_per_eval;
         let estimated_gpu_time = gpu_overhead + (batch_size as f64 * cpu_time_per_eval * 0.1);
-        
+
         estimated_gpu_time < total_cpu_time
     }
 
@@ -584,14 +599,14 @@ mod tests {
     #[test]
     fn test_performance_stats() {
         let mut stats = PerformanceStats::new();
-        
+
         stats.start_timer("test");
         std::thread::sleep(std::time::Duration::from_millis(10));
         stats.end_timer("test");
-        
+
         stats.increment_counter("test_count");
         stats.increment_counter("test_count");
-        
+
         assert!(stats.get_timer("test").unwrap() > 0.0);
         assert_eq!(stats.get_counter("test_count").unwrap(), 2);
     }
@@ -599,9 +614,9 @@ mod tests {
     #[test]
     fn test_batch_size_estimation() {
         let batch_size = utils::estimate_batch_size(
-            10,           // 10-dimensional problem
-            1024 * 1024,  // 1MB memory
-            GpuPrecision::F64
+            10,          // 10-dimensional problem
+            1024 * 1024, // 1MB memory
+            GpuPrecision::F64,
         );
         assert!(batch_size > 0);
         assert!(batch_size <= 10000);

@@ -3,9 +3,10 @@
 //! This benchmark suite covers tensor contraction, decompositions, Einstein summation,
 //! and higher-order tensor operations used in machine learning and scientific computing.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Array3, Array4, Axis};
 use scirs2_linalg::prelude::*;
+use std::hint::black_box;
 use std::time::Duration;
 
 /// Create a test tensor of given dimensions with deterministic values

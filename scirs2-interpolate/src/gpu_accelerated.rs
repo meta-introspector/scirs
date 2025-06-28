@@ -658,6 +658,174 @@ pub struct GpuDeviceInfo {
     pub max_blocks_per_grid: usize,
 }
 
+/// Memory management utilities for GPU operations
+pub struct GpuMemoryManager {
+    /// Maximum memory usage threshold (bytes)
+    max_memory_usage: u64,
+    /// Current memory usage tracking
+    current_usage: u64,
+    /// Memory pool for reusing allocations
+    memory_pool: Vec<u64>, // Placeholder for actual GPU memory handles
+}
+
+impl GpuMemoryManager {
+    /// Create a new GPU memory manager
+    pub fn new(max_memory_bytes: u64) -> Self {
+        Self {
+            max_memory_usage: max_memory_bytes,
+            current_usage: 0,
+            memory_pool: Vec::new(),
+        }
+    }
+
+    /// Check if allocation would exceed memory limits
+    pub fn can_allocate(&self, size_bytes: u64) -> bool {
+        self.current_usage + size_bytes <= self.max_memory_usage
+    }
+
+    /// Estimate optimal batch size based on available memory
+    pub fn optimal_batch_size(&self, item_size_bytes: u64) -> usize {
+        let available = self.max_memory_usage - self.current_usage;
+        let safety_factor = 0.8; // Leave 20% safety margin
+        let usable = (available as f64 * safety_factor) as u64;
+
+        if item_size_bytes > 0 {
+            (usable / item_size_bytes) as usize
+        } else {
+            1024 // Default fallback
+        }
+    }
+
+    /// Get memory usage statistics
+    pub fn get_usage_stats(&self) -> (u64, u64, f32) {
+        let usage_fraction = if self.max_memory_usage > 0 {
+            self.current_usage as f32 / self.max_memory_usage as f32
+        } else {
+            0.0
+        };
+        (self.current_usage, self.max_memory_usage, usage_fraction)
+    }
+}
+
+/// Kernel launch configuration for GPU operations
+#[derive(Debug, Clone)]
+pub struct GpuKernelConfig {
+    /// Block size for GPU kernels
+    pub block_size: usize,
+    /// Grid size for GPU kernels
+    pub grid_size: usize,
+    /// Shared memory size per block (bytes)
+    pub shared_memory_size: usize,
+    /// Stream ID for asynchronous execution
+    pub stream_id: usize,
+}
+
+impl Default for GpuKernelConfig {
+    fn default() -> Self {
+        Self {
+            block_size: 256,
+            grid_size: 1,
+            shared_memory_size: 0,
+            stream_id: 0,
+        }
+    }
+}
+
+impl GpuKernelConfig {
+    /// Calculate optimal kernel configuration for a given problem size
+    pub fn optimal_for_size(problem_size: usize) -> Self {
+        // Basic heuristic for kernel configuration
+        let block_size = 256.min(problem_size);
+        let grid_size = (problem_size + block_size - 1) / block_size;
+
+        Self {
+            block_size,
+            grid_size,
+            shared_memory_size: block_size * 8, // 8 bytes per thread
+            stream_id: 0,
+        }
+    }
+
+    /// Update configuration for specific GPU architecture
+    pub fn tune_for_architecture(mut self, compute_capability: &str) -> Self {
+        // Placeholder for architecture-specific tuning
+        match compute_capability {
+            cap if cap.starts_with("8.") => {
+                // Ampere architecture tuning
+                self.block_size = 512;
+                self.shared_memory_size = self.block_size * 16;
+            }
+            cap if cap.starts_with("7.") => {
+                // Turing/Volta architecture tuning
+                self.block_size = 256;
+                self.shared_memory_size = self.block_size * 12;
+            }
+            _ => {
+                // Default/older architecture
+                self.block_size = 128;
+                self.shared_memory_size = self.block_size * 8;
+            }
+        }
+        self
+    }
+}
+
+/// Utility functions for GPU operations
+pub mod gpu_utils {
+    use super::*;
+
+    /// Estimate memory requirements for RBF interpolation
+    pub fn estimate_rbf_memory_requirements(n_points: usize, n_eval: usize) -> u64 {
+        let float_size = std::mem::size_of::<f64>() as u64;
+
+        // RBF matrix: n_points x n_points
+        let matrix_size = (n_points * n_points) as u64 * float_size;
+
+        // Input points and values
+        let data_size = (n_points * 2) as u64 * float_size;
+
+        // Evaluation points and results
+        let eval_size = (n_eval * 2) as u64 * float_size;
+
+        // Temporary buffers (estimated at 50% overhead)
+        let overhead = (matrix_size + data_size + eval_size) / 2;
+
+        matrix_size + data_size + eval_size + overhead
+    }
+
+    /// Check if problem size is suitable for GPU acceleration
+    pub fn is_gpu_worthwhile(n_points: usize, n_eval: usize) -> bool {
+        // Heuristic: GPU acceleration typically worthwhile for larger problems
+        let total_operations = n_points * n_eval;
+        total_operations > 10000 // Threshold for GPU benefit
+    }
+
+    /// Get recommended GPU configuration for interpolation problem
+    pub fn recommend_gpu_config(n_points: usize, n_eval: usize) -> GpuConfig {
+        let mut config = GpuConfig::default();
+
+        // Adjust memory fraction based on problem size
+        let memory_req = estimate_rbf_memory_requirements(n_points, n_eval);
+        if memory_req > 1_000_000_000 {
+            // > 1GB
+            config.max_memory_fraction = 0.9;
+        } else if memory_req > 100_000_000 {
+            // > 100MB
+            config.max_memory_fraction = 0.7;
+        } else {
+            config.max_memory_fraction = 0.5;
+        }
+
+        // Enable mixed precision for large problems
+        config.use_mixed_precision = n_points > 50000;
+
+        // Adjust stream count based on problem complexity
+        config.num_streams = if n_eval > 100000 { 8 } else { 4 };
+
+        config
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

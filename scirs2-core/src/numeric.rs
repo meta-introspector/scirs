@@ -62,6 +62,22 @@ pub trait ScientificNumber:
     /// Convert from f64
     #[must_use]
     fn from_f64(value: f64) -> Option<Self>;
+
+    /// Convert from little-endian bytes
+    #[must_use]
+    fn from_le_bytes(bytes: &[u8]) -> Self;
+
+    /// Convert from big-endian bytes
+    #[must_use]
+    fn from_be_bytes(bytes: &[u8]) -> Self;
+
+    /// Convert to little-endian bytes
+    #[must_use]
+    fn to_le_bytes(self) -> Vec<u8>;
+
+    /// Convert to big-endian bytes
+    #[must_use]
+    fn to_be_bytes(self) -> Vec<u8>;
 }
 
 /// A trait for real-valued floating point types
@@ -265,6 +281,26 @@ impl ScientificNumber for f32 {
             None
         }
     }
+
+    fn from_le_bytes(bytes: &[u8]) -> Self {
+        let mut array = [0u8; 4];
+        array.copy_from_slice(&bytes[..4]);
+        f32::from_le_bytes(array)
+    }
+
+    fn from_be_bytes(bytes: &[u8]) -> Self {
+        let mut array = [0u8; 4];
+        array.copy_from_slice(&bytes[..4]);
+        f32::from_be_bytes(array)
+    }
+
+    fn to_le_bytes(self) -> Vec<u8> {
+        self.to_le_bytes().to_vec()
+    }
+
+    fn to_be_bytes(self) -> Vec<u8> {
+        self.to_be_bytes().to_vec()
+    }
 }
 
 // Implement RealNumber for f32
@@ -386,6 +422,26 @@ impl ScientificNumber for f64 {
 
     fn from_f64(value: f64) -> Option<Self> {
         Some(value)
+    }
+
+    fn from_le_bytes(bytes: &[u8]) -> Self {
+        let mut array = [0u8; 8];
+        array.copy_from_slice(&bytes[..8]);
+        f64::from_le_bytes(array)
+    }
+
+    fn from_be_bytes(bytes: &[u8]) -> Self {
+        let mut array = [0u8; 8];
+        array.copy_from_slice(&bytes[..8]);
+        f64::from_be_bytes(array)
+    }
+
+    fn to_le_bytes(self) -> Vec<u8> {
+        self.to_le_bytes().to_vec()
+    }
+
+    fn to_be_bytes(self) -> Vec<u8> {
+        self.to_be_bytes().to_vec()
     }
 }
 
@@ -512,6 +568,26 @@ impl ScientificNumber for i32 {
         } else {
             None
         }
+    }
+
+    fn from_le_bytes(bytes: &[u8]) -> Self {
+        let mut array = [0u8; 4];
+        array.copy_from_slice(&bytes[..4]);
+        i32::from_le_bytes(array)
+    }
+
+    fn from_be_bytes(bytes: &[u8]) -> Self {
+        let mut array = [0u8; 4];
+        array.copy_from_slice(&bytes[..4]);
+        i32::from_be_bytes(array)
+    }
+
+    fn to_le_bytes(self) -> Vec<u8> {
+        self.to_le_bytes().to_vec()
+    }
+
+    fn to_be_bytes(self) -> Vec<u8> {
+        self.to_be_bytes().to_vec()
     }
 }
 

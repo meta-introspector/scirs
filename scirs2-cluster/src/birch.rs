@@ -223,10 +223,10 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
         // Try to absorb the point into the closest CF
         if cf_idx < self.leaf_entries.len() {
             let closest_cf = &self.leaf_entries[cf_idx];
-            
+
             // Create a temporary merged CF to check if it would satisfy the threshold
             let merged_cf = closest_cf.merge(&new_cf);
-            
+
             // Check if the merged CF would have an acceptable radius
             if merged_cf.radius() <= self.options.threshold {
                 // Absorb the point into the existing CF
@@ -264,7 +264,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
             for j in (i + 1)..self.leaf_entries.len() {
                 let centroid1 = self.leaf_entries[i].centroid();
                 let centroid2 = self.leaf_entries[j].centroid();
-                
+
                 let mut distance = F::zero();
                 for k in 0..centroid1.len() {
                     let diff = centroid1[k] - centroid2[k];
@@ -316,7 +316,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
         for (i, existing_cf) in self.leaf_entries.iter().enumerate() {
             let centroid1 = cf.centroid();
             let centroid2 = existing_cf.centroid();
-            
+
             // Calculate Euclidean distance between centroids
             let mut distance = F::zero();
             for k in 0..centroid1.len() {
@@ -399,7 +399,11 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
     }
 
     /// Apply clustering on CF entries to reduce to desired number of clusters
-    fn cluster_cf_entries(&self, n_clusters: usize, n_features: usize) -> Result<(Array2<F>, Array1<i32>)> {
+    fn cluster_cf_entries(
+        &self,
+        n_clusters: usize,
+        n_features: usize,
+    ) -> Result<(Array2<F>, Array1<i32>)> {
         // Extract centroids from CFs
         let mut cf_centroids = Array2::zeros((self.leaf_entries.len(), n_features));
         for (i, cf) in self.leaf_entries.iter().enumerate() {
@@ -409,7 +413,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
 
         // Apply simple k-means-like clustering on CF centroids
         let cluster_assignments = self.simple_kmeans_on_cfs(&cf_centroids, n_clusters)?;
-        
+
         // Compute final cluster centroids weighted by CF sizes
         let mut final_centroids = Array2::zeros((n_clusters, n_features));
         let mut cluster_weights = vec![F::zero(); n_clusters];
@@ -420,9 +424,9 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
             let cf_weight = F::from_usize(cf.n).unwrap();
 
             cluster_weights[cluster_id as usize] = cluster_weights[cluster_id as usize] + cf_weight;
-            
+
             for j in 0..n_features {
-                final_centroids[[cluster_id as usize, j]] = 
+                final_centroids[[cluster_id as usize, j]] =
                     final_centroids[[cluster_id as usize, j]] + cf_centroid[j] * cf_weight;
             }
         }
@@ -443,7 +447,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
     fn simple_kmeans_on_cfs(&self, centroids: &Array2<F>, k: usize) -> Result<Array1<i32>> {
         let n_points = centroids.shape()[0];
         let n_features = centroids.shape()[1];
-        
+
         if k >= n_points {
             // Each CF gets its own cluster
             return Ok(Array1::from_iter(0..(n_points as i32)));
@@ -458,7 +462,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
         }
 
         let mut assignments = Array1::zeros(n_points);
-        
+
         // Simple iteration - just one pass for efficiency
         for point_idx in 0..n_points {
             let mut min_dist = F::infinity();
@@ -467,7 +471,8 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
             for cluster_idx in 0..k {
                 let mut dist = F::zero();
                 for feature_idx in 0..n_features {
-                    let diff = centroids[[point_idx, feature_idx]] - cluster_centers[[cluster_idx, feature_idx]];
+                    let diff = centroids[[point_idx, feature_idx]]
+                        - cluster_centers[[cluster_idx, feature_idx]];
                     dist = dist + diff * diff;
                 }
                 dist = dist.sqrt();
@@ -494,7 +499,11 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
         };
 
         let avg_radius = if !self.leaf_entries.is_empty() {
-            let total_radius: F = self.leaf_entries.iter().map(|cf| cf.radius()).fold(F::zero(), |acc, x| acc + x);
+            let total_radius: F = self
+                .leaf_entries
+                .iter()
+                .map(|cf| cf.radius())
+                .fold(F::zero(), |acc, x| acc + x);
             total_radius / F::from_usize(self.leaf_entries.len()).unwrap()
         } else {
             F::zero()

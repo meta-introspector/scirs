@@ -45,13 +45,31 @@ pub enum Scale {
 /// Type of stability issue detected
 #[derive(Debug, Clone)]
 pub enum StabilityIssue {
-    Overflow { params: Vec<(String, f64)> },
-    Underflow { params: Vec<(String, f64)> },
-    CatastrophicCancellation { params: Vec<(String, f64)>, relative_error: f64 },
-    LossOfSignificance { params: Vec<(String, f64)>, bits_lost: u32 },
-    SlowConvergence { params: Vec<(String, f64)>, iterations: usize },
-    NonConvergence { params: Vec<(String, f64)> },
-    NumericalInstability { params: Vec<(String, f64)>, condition_number: f64 },
+    Overflow {
+        params: Vec<(String, f64)>,
+    },
+    Underflow {
+        params: Vec<(String, f64)>,
+    },
+    CatastrophicCancellation {
+        params: Vec<(String, f64)>,
+        relative_error: f64,
+    },
+    LossOfSignificance {
+        params: Vec<(String, f64)>,
+        bits_lost: u32,
+    },
+    SlowConvergence {
+        params: Vec<(String, f64)>,
+        iterations: usize,
+    },
+    NonConvergence {
+        params: Vec<(String, f64)>,
+    },
+    NumericalInstability {
+        params: Vec<(String, f64)>,
+        condition_number: f64,
+    },
 }
 
 /// Accuracy metrics for the function
@@ -68,10 +86,10 @@ pub struct AccuracyMetrics {
 pub trait StabilityAnalyzable {
     /// Analyze stability across parameter ranges
     fn analyze_stability(&self) -> StabilityAnalysis;
-    
+
     /// Check condition number at specific parameters
     fn condition_number(&self, params: &[(String, f64)]) -> f64;
-    
+
     /// Find safe parameter ranges
     fn find_safe_ranges(&self) -> Vec<ParameterRange>;
 }
@@ -84,13 +102,13 @@ pub mod gamma_stability {
     pub fn analyze_gamma_stability() -> StabilityAnalysis {
         let mut issues = Vec::new();
         let mut condition_numbers = HashMap::new();
-        
+
         // Test near zero
         for x in [1e-10, 1e-8, 1e-6, 1e-4, 1e-2] {
             let g: f64 = gamma(x);
             let expected: f64 = 1.0 / x; // Leading term
             let rel_error = ((g - expected).abs() / expected) as f64;
-            
+
             if rel_error > 0.1 {
                 issues.push(StabilityIssue::LossOfSignificance {
                     params: vec![("x".to_string(), x)],
@@ -98,13 +116,13 @@ pub mod gamma_stability {
                 });
             }
         }
-        
+
         // Test near negative integers
         for n in 1..=5 {
             for eps in [1e-10, 1e-8, 1e-6] {
                 let x = -n as f64 + eps;
                 let g = gamma(x);
-                
+
                 if g.is_nan() || g.abs() > 1e10 {
                     issues.push(StabilityIssue::NumericalInstability {
                         params: vec![("x".to_string(), x)],
@@ -113,49 +131,55 @@ pub mod gamma_stability {
                 }
             }
         }
-        
+
         // Test large positive values
         for x in [100.0, 150.0, 170.0, 171.0, 172.0] {
             let g: f64 = gamma(x);
-            
+
             if g.is_infinite() {
                 issues.push(StabilityIssue::Overflow {
                     params: vec![("x".to_string(), x)],
                 });
             }
         }
-        
+
         // Test condition number
         for x in [0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0] {
             let h = 1e-8;
             let g: f64 = gamma(x);
             let g_plus: f64 = gamma(x + h);
             let g_minus: f64 = gamma(x - h);
-            
+
             let derivative = (g_plus - g_minus) / (2.0 * h);
             let condition = ((x * derivative / g).abs()) as f64;
-            
+
             condition_numbers.insert(format!("x={}", x), condition);
         }
-        
+
         StabilityAnalysis {
             function_name: "gamma".to_string(),
-            parameter_ranges: vec![
-                ParameterRange { name: "x".to_string(), min: -170.0, max: 171.0, scale: Scale::Linear },
-            ],
+            parameter_ranges: vec![ParameterRange {
+                name: "x".to_string(),
+                min: -170.0,
+                max: 171.0,
+                scale: Scale::Linear,
+            }],
             issues,
             condition_numbers,
-            safe_ranges: vec![
-                ParameterRange { name: "x".to_string(), min: 0.1, max: 170.0, scale: Scale::Linear },
-            ],
+            safe_ranges: vec![ParameterRange {
+                name: "x".to_string(),
+                min: 0.1,
+                max: 170.0,
+                scale: Scale::Linear,
+            }],
             accuracy_metrics: compute_gamma_accuracy(),
         }
     }
-    
+
     fn compute_gamma_accuracy() -> AccuracyMetrics {
         let mut rel_errors = Vec::new();
         let mut abs_errors = Vec::new();
-        
+
         // Test against known values
         let test_cases = [
             (0.5, f64::consts::PI.sqrt()),
@@ -165,16 +189,16 @@ pub mod gamma_stability {
             (4.0, 6.0),
             (5.0, 24.0),
         ];
-        
+
         for (x, expected) in test_cases {
             let computed = gamma(x);
             let rel_err = (computed - expected).abs() / expected;
             let abs_err = (computed - expected).abs();
-            
+
             rel_errors.push(rel_err);
             abs_errors.push(abs_err);
         }
-        
+
         AccuracyMetrics {
             max_relative_error: rel_errors.iter().cloned().fold(f64::NEG_INFINITY, f64::max),
             mean_relative_error: rel_errors.iter().sum::<f64>() / rel_errors.len() as f64,
@@ -194,20 +218,20 @@ pub mod bessel_stability {
         let mut issues = Vec::new();
         #[allow(unused_mut)]
         let mut condition_numbers = HashMap::new();
-        
+
         // Test small arguments
         for x in [1e-10, 1e-8, 1e-6, 1e-4] {
             let j0_val: f64 = j0(x);
             let j1_val: f64 = j1(x);
-            
+
             // J_0(x) ≈ 1 - x²/4 for small x
             let j0_expected: f64 = 1.0 - x * x / 4.0;
             let j0_error = ((j0_val - j0_expected).abs() / j0_expected.abs()) as f64;
-            
+
             // J_1(x) ≈ x/2 for small x
             let j1_expected: f64 = x / 2.0;
             let j1_error = ((j1_val - j1_expected).abs() / j1_expected.abs()) as f64;
-            
+
             if j0_error > 1e-6 || j1_error > 1e-6 {
                 issues.push(StabilityIssue::LossOfSignificance {
                     params: vec![("x".to_string(), x)],
@@ -215,14 +239,14 @@ pub mod bessel_stability {
                 });
             }
         }
-        
+
         // Test large arguments
         for x in [100.0, 500.0, 1000.0, 5000.0] {
             let j0_val = j0(x);
-            
+
             // Asymptotic form should be ~ sqrt(2/(π*x)) * cos(x - π/4)
             let expected_amplitude = (2.0 / (f64::consts::PI * x)).sqrt();
-            
+
             if j0_val.abs() > 10.0 * expected_amplitude {
                 issues.push(StabilityIssue::NumericalInstability {
                     params: vec![("x".to_string(), x)],
@@ -230,12 +254,12 @@ pub mod bessel_stability {
                 });
             }
         }
-        
+
         // Test high-order Bessel functions
         for n in [10, 20, 50, 100] {
             for x in [1.0, 5.0, 10.0, 20.0] {
                 let jn_val = jn(n, x);
-                
+
                 // For n > x, J_n(x) decreases exponentially
                 if n as f64 > x && jn_val.abs() > 1e-10 {
                     issues.push(StabilityIssue::NumericalInstability {
@@ -245,23 +269,43 @@ pub mod bessel_stability {
                 }
             }
         }
-        
+
         StabilityAnalysis {
             function_name: "bessel_j".to_string(),
             parameter_ranges: vec![
-                ParameterRange { name: "x".to_string(), min: 0.0, max: 1000.0, scale: Scale::Logarithmic },
-                ParameterRange { name: "n".to_string(), min: 0.0, max: 100.0, scale: Scale::Linear },
+                ParameterRange {
+                    name: "x".to_string(),
+                    min: 0.0,
+                    max: 1000.0,
+                    scale: Scale::Logarithmic,
+                },
+                ParameterRange {
+                    name: "n".to_string(),
+                    min: 0.0,
+                    max: 100.0,
+                    scale: Scale::Linear,
+                },
             ],
             issues,
             condition_numbers,
             safe_ranges: vec![
-                ParameterRange { name: "x".to_string(), min: 1e-6, max: 100.0, scale: Scale::Linear },
-                ParameterRange { name: "n".to_string(), min: 0.0, max: 50.0, scale: Scale::Linear },
+                ParameterRange {
+                    name: "x".to_string(),
+                    min: 1e-6,
+                    max: 100.0,
+                    scale: Scale::Linear,
+                },
+                ParameterRange {
+                    name: "n".to_string(),
+                    min: 0.0,
+                    max: 50.0,
+                    scale: Scale::Linear,
+                },
             ],
             accuracy_metrics: compute_bessel_accuracy(),
         }
     }
-    
+
     fn compute_bessel_accuracy() -> AccuracyMetrics {
         // Placeholder - would compare against high-precision reference values
         AccuracyMetrics {
@@ -281,15 +325,15 @@ pub mod erf_stability {
 
     pub fn analyze_erf_stability() -> StabilityAnalysis {
         let mut issues = Vec::new();
-        
+
         // Test erfc for large positive x
         for x in [5.0, 10.0, 20.0, 30.0, 40.0] {
             let erfc_val: f64 = erfc(x);
-            
+
             // erfc(x) ~ exp(-x²)/(x*sqrt(π)) for large x
             let expected = (-x * x).exp() / (x * f64::consts::PI.sqrt());
             let rel_error = (erfc_val - expected).abs() / expected;
-            
+
             if erfc_val == 0.0 {
                 issues.push(StabilityIssue::Underflow {
                     params: vec![("x".to_string(), x)],
@@ -301,11 +345,11 @@ pub mod erf_stability {
                 });
             }
         }
-        
+
         // Test erfinv near ±1
         for p in [0.9999, 0.99999, 0.999999, -0.9999, -0.99999, -0.999999] {
             let x: f64 = erfinv(p);
-            
+
             if x.is_infinite() || x.abs() > 10.0 {
                 issues.push(StabilityIssue::NumericalInstability {
                     params: vec![("p".to_string(), p)],
@@ -313,16 +357,16 @@ pub mod erf_stability {
                 });
             }
         }
-        
+
         // Test catastrophic cancellation in erf(x) - 1 for large x
         for x in [2.0, 3.0, 4.0, 5.0] {
             let erf_val: f64 = erf(x);
             let diff = erf_val - 1.0;
-            
+
             // This difference should equal -erfc(x)
             let expected: f64 = -erfc(x);
             let rel_error = ((diff - expected).abs() / expected.abs()) as f64;
-            
+
             if rel_error > 1e-10 {
                 issues.push(StabilityIssue::CatastrophicCancellation {
                     params: vec![("x".to_string(), x)],
@@ -330,23 +374,43 @@ pub mod erf_stability {
                 });
             }
         }
-        
+
         StabilityAnalysis {
             function_name: "error_functions".to_string(),
             parameter_ranges: vec![
-                ParameterRange { name: "x".to_string(), min: -40.0, max: 40.0, scale: Scale::Linear },
-                ParameterRange { name: "p".to_string(), min: -0.999999, max: 0.999999, scale: Scale::Linear },
+                ParameterRange {
+                    name: "x".to_string(),
+                    min: -40.0,
+                    max: 40.0,
+                    scale: Scale::Linear,
+                },
+                ParameterRange {
+                    name: "p".to_string(),
+                    min: -0.999999,
+                    max: 0.999999,
+                    scale: Scale::Linear,
+                },
             ],
             issues,
             condition_numbers: HashMap::new(),
             safe_ranges: vec![
-                ParameterRange { name: "x".to_string(), min: -6.0, max: 6.0, scale: Scale::Linear },
-                ParameterRange { name: "p".to_string(), min: -0.999, max: 0.999, scale: Scale::Linear },
+                ParameterRange {
+                    name: "x".to_string(),
+                    min: -6.0,
+                    max: 6.0,
+                    scale: Scale::Linear,
+                },
+                ParameterRange {
+                    name: "p".to_string(),
+                    min: -0.999,
+                    max: 0.999,
+                    scale: Scale::Linear,
+                },
             ],
             accuracy_metrics: compute_erf_accuracy(),
         }
     }
-    
+
     fn compute_erf_accuracy() -> AccuracyMetrics {
         AccuracyMetrics {
             max_relative_error: 1e-15,
@@ -361,25 +425,27 @@ pub mod erf_stability {
 /// Generate stability report for all functions
 pub fn generate_stability_report() -> String {
     let mut report = String::from("# Numerical Stability Analysis Report\n\n");
-    
+
     // Analyze each function family
     let analyses = vec![
         gamma_stability::analyze_gamma_stability(),
         bessel_stability::analyze_bessel_j_stability(),
         erf_stability::analyze_erf_stability(),
     ];
-    
+
     for analysis in analyses {
         report.push_str(&format!("## {}\n\n", analysis.function_name));
-        
+
         // Parameter ranges
         report.push_str("### Parameter Ranges Tested\n");
         for range in &analysis.parameter_ranges {
-            report.push_str(&format!("- {}: [{}, {}] ({:?} scale)\n", 
-                range.name, range.min, range.max, range.scale));
+            report.push_str(&format!(
+                "- {}: [{}, {}] ({:?} scale)\n",
+                range.name, range.min, range.max, range.scale
+            ));
         }
         report.push('\n');
-        
+
         // Issues found
         if !analysis.issues.is_empty() {
             report.push_str("### Stability Issues\n");
@@ -388,7 +454,7 @@ pub fn generate_stability_report() -> String {
             }
             report.push('\n');
         }
-        
+
         // Condition numbers
         if !analysis.condition_numbers.is_empty() {
             report.push_str("### Condition Numbers\n");
@@ -397,23 +463,38 @@ pub fn generate_stability_report() -> String {
             }
             report.push('\n');
         }
-        
+
         // Safe ranges
         report.push_str("### Recommended Safe Ranges\n");
         for range in &analysis.safe_ranges {
-            report.push_str(&format!("- {}: [{}, {}]\n", range.name, range.min, range.max));
+            report.push_str(&format!(
+                "- {}: [{}, {}]\n",
+                range.name, range.min, range.max
+            ));
         }
         report.push('\n');
-        
+
         // Accuracy metrics
         report.push_str("### Accuracy Metrics\n");
-        report.push_str(&format!("- Max relative error: {:.2e}\n", analysis.accuracy_metrics.max_relative_error));
-        report.push_str(&format!("- Mean relative error: {:.2e}\n", analysis.accuracy_metrics.mean_relative_error));
-        report.push_str(&format!("- Max absolute error: {:.2e}\n", analysis.accuracy_metrics.max_absolute_error));
-        report.push_str(&format!("- Mean absolute error: {:.2e}\n", analysis.accuracy_metrics.mean_absolute_error));
+        report.push_str(&format!(
+            "- Max relative error: {:.2e}\n",
+            analysis.accuracy_metrics.max_relative_error
+        ));
+        report.push_str(&format!(
+            "- Mean relative error: {:.2e}\n",
+            analysis.accuracy_metrics.mean_relative_error
+        ));
+        report.push_str(&format!(
+            "- Max absolute error: {:.2e}\n",
+            analysis.accuracy_metrics.max_absolute_error
+        ));
+        report.push_str(&format!(
+            "- Mean absolute error: {:.2e}\n",
+            analysis.accuracy_metrics.mean_absolute_error
+        ));
         report.push('\n');
     }
-    
+
     report
 }
 
@@ -425,28 +506,49 @@ fn format_issue(issue: &StabilityIssue) -> String {
         StabilityIssue::Underflow { params } => {
             format!("Underflow at {}", format_params(params))
         }
-        StabilityIssue::CatastrophicCancellation { params, relative_error } => {
-            format!("Catastrophic cancellation at {} (relative error: {:.2e})", 
-                format_params(params), relative_error)
+        StabilityIssue::CatastrophicCancellation {
+            params,
+            relative_error,
+        } => {
+            format!(
+                "Catastrophic cancellation at {} (relative error: {:.2e})",
+                format_params(params),
+                relative_error
+            )
         }
         StabilityIssue::LossOfSignificance { params, bits_lost } => {
-            format!("Loss of {} bits of significance at {}", bits_lost, format_params(params))
+            format!(
+                "Loss of {} bits of significance at {}",
+                bits_lost,
+                format_params(params)
+            )
         }
         StabilityIssue::SlowConvergence { params, iterations } => {
-            format!("Slow convergence ({} iterations) at {}", iterations, format_params(params))
+            format!(
+                "Slow convergence ({} iterations) at {}",
+                iterations,
+                format_params(params)
+            )
         }
         StabilityIssue::NonConvergence { params } => {
             format!("Non-convergence at {}", format_params(params))
         }
-        StabilityIssue::NumericalInstability { params, condition_number } => {
-            format!("Numerical instability at {} (condition number: {:.2e})", 
-                format_params(params), condition_number)
+        StabilityIssue::NumericalInstability {
+            params,
+            condition_number,
+        } => {
+            format!(
+                "Numerical instability at {} (condition number: {:.2e})",
+                format_params(params),
+                condition_number
+            )
         }
     }
 }
 
 fn format_params(params: &[(String, f64)]) -> String {
-    params.iter()
+    params
+        .iter()
         .map(|(name, value)| format!("{}={}", name, value))
         .collect::<Vec<_>>()
         .join(", ")
@@ -455,16 +557,16 @@ fn format_params(params: &[(String, f64)]) -> String {
 /// Run comprehensive stability tests
 pub fn run_stability_tests() -> SpecialResult<()> {
     println!("Running numerical stability analysis...\n");
-    
+
     let report = generate_stability_report();
     println!("{}", report);
-    
+
     // Save report to file
     std::fs::write("STABILITY_ANALYSIS.md", report)
         .map_err(|e| crate::error::SpecialError::ComputationError(e.to_string()))?;
-    
+
     println!("Stability analysis complete. Report saved to STABILITY_ANALYSIS.md");
-    
+
     Ok(())
 }
 

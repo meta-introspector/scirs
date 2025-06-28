@@ -65,7 +65,7 @@ pub mod eigen;
 pub mod factorizations;
 
 // Re-export commonly used functions
-pub use eigen::{extended_eig, extended_eigvals, extended_eigvalsh};
+pub use eigen::{extended_eig, extended_eigvals, extended_eigvalsh, ultra_precision_eigh};
 pub use factorizations::{extended_cholesky, extended_lu, extended_qr, extended_svd};
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};

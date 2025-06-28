@@ -27,7 +27,7 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     {
         return crate::simd_ops::SimdEditDistance::levenshtein(s1, s2);
     }
-    
+
     #[cfg(not(feature = "simd"))]
     {
         if s1.is_empty() {
@@ -166,19 +166,19 @@ pub fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> Result<f64
     #[cfg(feature = "simd")]
     {
         use scirs2_core::simd_ops::SimdUnifiedOps;
-        
+
         // Use SIMD operations for dot product and norms
         let dot_product = f64::simd_dot(&v1, &v2);
         let norm1 = f64::simd_norm(&v1);
         let norm2 = f64::simd_norm(&v2);
-        
+
         if norm1 == 0.0 || norm2 == 0.0 {
             return Ok(if norm1 == norm2 { 1.0 } else { 0.0 });
         }
-        
+
         Ok(dot_product / (norm1 * norm2))
     }
-    
+
     #[cfg(not(feature = "simd"))]
     {
         // Calculate dot product manually since direct multiplication isn't implemented for ArrayView1

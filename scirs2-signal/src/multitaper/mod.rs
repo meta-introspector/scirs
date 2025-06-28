@@ -21,9 +21,7 @@ pub use adaptive::adaptive_psd;
 pub use dpss_enhanced::{dpss_enhanced, validate_dpss_implementation};
 pub use enhanced::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
 pub use ftest::{harmonic_ftest, multitaper_ftest, multitaper_ftest_complex};
-pub use jackknife::{
-    cross_spectrum_jackknife, jackknife_confidence_intervals, weighted_jackknife,
-};
+pub use jackknife::{cross_spectrum_jackknife, jackknife_confidence_intervals, weighted_jackknife};
 pub use psd::{multitaper_spectrogram, pmtm};
 pub use utils::{coherence, multitaper_filtfilt};
 pub use validation::{

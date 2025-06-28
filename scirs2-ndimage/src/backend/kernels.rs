@@ -10,11 +10,204 @@ use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion of hardcoded constants
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
+/// Helper function for safe usize conversion
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
+    T::from_usize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+    })
+}
+
+/// Helper function for safe array to slice conversion
+fn safe_as_slice<T, D: Dimension>(array: &ArrayView<T, D>) -> NdimageResult<&[T]> {
+    array.as_slice().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert array to contiguous slice".to_string())
+    })
+}
+
 // Kernel source code constants
 const GAUSSIAN_BLUR_KERNEL: &str = include_str!("kernels/gaussian_blur.kernel");
 const CONVOLUTION_KERNEL: &str = include_str!("kernels/convolution.kernel");
 const MEDIAN_FILTER_KERNEL: &str = include_str!("kernels/median_filter.kernel");
 const MORPHOLOGY_KERNEL: &str = include_str!("kernels/morphology.kernel");
+
+// Advanced kernel source code constants
+const ADVANCED_MORPHOLOGY_KERNEL: &str = include_str!("kernels/advanced_morphology.kernel");
+const ADVANCED_EDGE_DETECTION_KERNEL: &str = include_str!("kernels/advanced_edge_detection.kernel");
+const TEXTURE_ANALYSIS_KERNEL: &str = include_str!("kernels/texture_analysis.kernel");
+const ADVANCED_SEGMENTATION_KERNEL: &str = include_str!("kernels/advanced_segmentation.kernel");
+
+// Advanced GPU kernels - inline definitions for enhanced operations
+const SEPARABLE_GAUSSIAN_KERNEL: &str = r#"
+__kernel void separable_gaussian_1d(
+    __global const float* input,
+    __global float* output,
+    __global const float* weights,
+    const int size,
+    const int radius,
+    const int direction, // 0 for horizontal, 1 for vertical
+    const int width,
+    const int height
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    float sum = 0.0f;
+    
+    if (direction == 0) {
+        // Horizontal pass
+        for (int i = -radius; i <= radius; i++) {
+            int px = clamp(x + i, 0, width - 1);
+            sum += input[y * width + px] * weights[i + radius];
+        }
+    } else {
+        // Vertical pass
+        for (int i = -radius; i <= radius; i++) {
+            int py = clamp(y + i, 0, height - 1);
+            sum += input[py * width + x] * weights[i + radius];
+        }
+    }
+    
+    output[y * width + x] = sum;
+}
+"#;
+
+const BILATERAL_FILTER_KERNEL: &str = r#"
+__kernel void bilateral_filter_2d(
+    __global const float* input,
+    __global float* output,
+    const float sigma_spatial,
+    const float sigma_intensity,
+    const int radius,
+    const int width,
+    const int height
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    float center_val = input[y * width + x];
+    float sum = 0.0f;
+    float weight_sum = 0.0f;
+    
+    float spatial_coeff = -0.5f / (sigma_spatial * sigma_spatial);
+    float intensity_coeff = -0.5f / (sigma_intensity * sigma_intensity);
+    
+    for (int dy = -radius; dy <= radius; dy++) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            int px = clamp(x + dx, 0, width - 1);
+            int py = clamp(y + dy, 0, height - 1);
+            
+            float pixel_val = input[py * width + px];
+            
+            // Spatial weight
+            float spatial_dist = dx * dx + dy * dy;
+            float spatial_weight = exp(spatial_dist * spatial_coeff);
+            
+            // Intensity weight
+            float intensity_dist = (pixel_val - center_val) * (pixel_val - center_val);
+            float intensity_weight = exp(intensity_dist * intensity_coeff);
+            
+            float total_weight = spatial_weight * intensity_weight;
+            
+            sum += pixel_val * total_weight;
+            weight_sum += total_weight;
+        }
+    }
+    
+    output[y * width + x] = sum / weight_sum;
+}
+"#;
+
+const SOBEL_FILTER_KERNEL: &str = r#"
+__kernel void sobel_filter_2d(
+    __global const float* input,
+    __global float* output_x,
+    __global float* output_y,
+    __global float* magnitude,
+    const int width,
+    const int height
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    // Sobel X kernel: [-1, 0, 1; -2, 0, 2; -1, 0, 1]
+    float gx = 0.0f;
+    gx += -1.0f * input[clamp(y-1, 0, height-1) * width + clamp(x-1, 0, width-1)];
+    gx += -2.0f * input[y * width + clamp(x-1, 0, width-1)];
+    gx += -1.0f * input[clamp(y+1, 0, height-1) * width + clamp(x-1, 0, width-1)];
+    gx += 1.0f * input[clamp(y-1, 0, height-1) * width + clamp(x+1, 0, width-1)];
+    gx += 2.0f * input[y * width + clamp(x+1, 0, width-1)];
+    gx += 1.0f * input[clamp(y+1, 0, height-1) * width + clamp(x+1, 0, width-1)];
+    
+    // Sobel Y kernel: [-1, -2, -1; 0, 0, 0; 1, 2, 1]
+    float gy = 0.0f;
+    gy += -1.0f * input[clamp(y-1, 0, height-1) * width + clamp(x-1, 0, width-1)];
+    gy += -2.0f * input[clamp(y-1, 0, height-1) * width + x];
+    gy += -1.0f * input[clamp(y-1, 0, height-1) * width + clamp(x+1, 0, width-1)];
+    gy += 1.0f * input[clamp(y+1, 0, height-1) * width + clamp(x-1, 0, width-1)];
+    gy += 2.0f * input[clamp(y+1, 0, height-1) * width + x];
+    gy += 1.0f * input[clamp(y+1, 0, height-1) * width + clamp(x+1, 0, width-1)];
+    
+    output_x[y * width + x] = gx;
+    output_y[y * width + x] = gy;
+    magnitude[y * width + x] = sqrt(gx * gx + gy * gy);
+}
+"#;
+
+const LAPLACIAN_KERNEL: &str = r#"
+__kernel void laplacian_filter_2d(
+    __global const float* input,
+    __global float* output,
+    const int width,
+    const int height,
+    const int connectivity // 4 or 8
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    float center = input[y * width + x];
+    float sum = 0.0f;
+    
+    if (connectivity == 4) {
+        // 4-connected Laplacian: [0, -1, 0; -1, 4, -1; 0, -1, 0]
+        sum += 4.0f * center;
+        sum += -1.0f * input[clamp(y-1, 0, height-1) * width + x]; // top
+        sum += -1.0f * input[clamp(y+1, 0, height-1) * width + x]; // bottom
+        sum += -1.0f * input[y * width + clamp(x-1, 0, width-1)]; // left
+        sum += -1.0f * input[y * width + clamp(x+1, 0, width-1)]; // right
+    } else {
+        // 8-connected Laplacian: [-1, -1, -1; -1, 8, -1; -1, -1, -1]
+        sum += 8.0f * center;
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                if (dx == 0 && dy == 0) continue;
+                int px = clamp(x + dx, 0, width - 1);
+                int py = clamp(y + dy, 0, height - 1);
+                sum += -1.0f * input[py * width + px];
+            }
+        }
+    }
+    
+    output[y * width + x] = sum;
+}
+"#;
 
 /// GPU kernel registry for managing kernel implementations
 pub struct KernelRegistry {
@@ -62,8 +255,199 @@ impl KernelRegistry {
 
         // Morphological operations
         self.register_kernel("morphology_erosion", MORPHOLOGY_KERNEL, "erosion_2d", 2);
-
         self.register_kernel("morphology_dilation", MORPHOLOGY_KERNEL, "dilation_2d", 2);
+
+        // Advanced filter kernels
+        self.register_kernel(
+            "separable_gaussian_1d",
+            SEPARABLE_GAUSSIAN_KERNEL,
+            "separable_gaussian_1d",
+            2,
+        );
+        self.register_kernel(
+            "bilateral_filter_2d",
+            BILATERAL_FILTER_KERNEL,
+            "bilateral_filter_2d",
+            2,
+        );
+        self.register_kernel("sobel_filter_2d", SOBEL_FILTER_KERNEL, "sobel_filter_2d", 2);
+        self.register_kernel(
+            "laplacian_filter_2d",
+            LAPLACIAN_KERNEL,
+            "laplacian_filter_2d",
+            2,
+        );
+
+        // Advanced morphological operations
+        self.register_kernel(
+            "hit_or_miss_2d",
+            ADVANCED_MORPHOLOGY_KERNEL,
+            "hit_or_miss_2d",
+            2,
+        );
+        self.register_kernel(
+            "morphological_gradient_2d",
+            ADVANCED_MORPHOLOGY_KERNEL,
+            "morphological_gradient_2d",
+            2,
+        );
+        self.register_kernel(
+            "tophat_transform_2d",
+            ADVANCED_MORPHOLOGY_KERNEL,
+            "tophat_transform_2d",
+            2,
+        );
+        self.register_kernel("skeleton_2d", ADVANCED_MORPHOLOGY_KERNEL, "skeleton_2d", 2);
+        self.register_kernel(
+            "distance_transform_chamfer_2d",
+            ADVANCED_MORPHOLOGY_KERNEL,
+            "distance_transform_chamfer_2d",
+            2,
+        );
+
+        // Advanced edge detection
+        self.register_kernel(
+            "canny_gradient_2d",
+            ADVANCED_EDGE_DETECTION_KERNEL,
+            "canny_gradient_2d",
+            2,
+        );
+        self.register_kernel(
+            "canny_non_maximum_suppression_2d",
+            ADVANCED_EDGE_DETECTION_KERNEL,
+            "canny_non_maximum_suppression_2d",
+            2,
+        );
+        self.register_kernel(
+            "canny_double_threshold_2d",
+            ADVANCED_EDGE_DETECTION_KERNEL,
+            "canny_double_threshold_2d",
+            2,
+        );
+        self.register_kernel(
+            "canny_edge_tracking_2d",
+            ADVANCED_EDGE_DETECTION_KERNEL,
+            "canny_edge_tracking_2d",
+            2,
+        );
+        self.register_kernel(
+            "laplacian_of_gaussian_2d",
+            ADVANCED_EDGE_DETECTION_KERNEL,
+            "laplacian_of_gaussian_2d",
+            2,
+        );
+        self.register_kernel(
+            "zero_crossing_2d",
+            ADVANCED_EDGE_DETECTION_KERNEL,
+            "zero_crossing_2d",
+            2,
+        );
+        self.register_kernel(
+            "harris_corner_response_2d",
+            ADVANCED_EDGE_DETECTION_KERNEL,
+            "harris_corner_response_2d",
+            2,
+        );
+        self.register_kernel(
+            "oriented_fast_keypoints_2d",
+            ADVANCED_EDGE_DETECTION_KERNEL,
+            "oriented_fast_keypoints_2d",
+            2,
+        );
+
+        // Texture analysis
+        self.register_kernel(
+            "local_binary_pattern_2d",
+            TEXTURE_ANALYSIS_KERNEL,
+            "local_binary_pattern_2d",
+            2,
+        );
+        self.register_kernel(
+            "uniform_local_binary_pattern_2d",
+            TEXTURE_ANALYSIS_KERNEL,
+            "uniform_local_binary_pattern_2d",
+            2,
+        );
+        self.register_kernel(
+            "glcm_cooccurrence_2d",
+            TEXTURE_ANALYSIS_KERNEL,
+            "glcm_cooccurrence_2d",
+            2,
+        );
+        self.register_kernel(
+            "glcm_features_2d",
+            TEXTURE_ANALYSIS_KERNEL,
+            "glcm_features_2d",
+            1,
+        );
+        self.register_kernel(
+            "gabor_filter_2d",
+            TEXTURE_ANALYSIS_KERNEL,
+            "gabor_filter_2d",
+            2,
+        );
+        self.register_kernel(
+            "laws_texture_energy_2d",
+            TEXTURE_ANALYSIS_KERNEL,
+            "laws_texture_energy_2d",
+            2,
+        );
+        self.register_kernel(
+            "fractal_dimension_2d",
+            TEXTURE_ANALYSIS_KERNEL,
+            "fractal_dimension_2d",
+            2,
+        );
+
+        // Advanced segmentation
+        self.register_kernel(
+            "watershed_labels_init_2d",
+            ADVANCED_SEGMENTATION_KERNEL,
+            "watershed_labels_init_2d",
+            2,
+        );
+        self.register_kernel(
+            "watershed_propagation_2d",
+            ADVANCED_SEGMENTATION_KERNEL,
+            "watershed_propagation_2d",
+            2,
+        );
+        self.register_kernel(
+            "region_growing_2d",
+            ADVANCED_SEGMENTATION_KERNEL,
+            "region_growing_2d",
+            2,
+        );
+        self.register_kernel(
+            "mean_shift_2d",
+            ADVANCED_SEGMENTATION_KERNEL,
+            "mean_shift_2d",
+            2,
+        );
+        self.register_kernel(
+            "level_set_evolution_2d",
+            ADVANCED_SEGMENTATION_KERNEL,
+            "level_set_evolution_2d",
+            2,
+        );
+        self.register_kernel(
+            "chan_vese_energy_2d",
+            ADVANCED_SEGMENTATION_KERNEL,
+            "chan_vese_energy_2d",
+            2,
+        );
+        self.register_kernel(
+            "active_contour_evolution_2d",
+            ADVANCED_SEGMENTATION_KERNEL,
+            "active_contour_evolution_2d",
+            1,
+        );
+        self.register_kernel(
+            "superpixel_slic_2d",
+            ADVANCED_SEGMENTATION_KERNEL,
+            "superpixel_slic_2d",
+            2,
+        );
     }
 
     pub fn register_kernel(&mut self, name: &str, source: &str, entry_point: &str, dims: usize) {
@@ -117,15 +501,15 @@ where
 
     // Allocate GPU buffers
     // This is pseudo-code - actual implementation would use backend-specific allocations
-    let input_buffer = allocate_gpu_buffer(input.as_slice().unwrap())?;
+    let input_buffer = allocate_gpu_buffer(safe_as_slice(input)?)?;
     let mut output_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
 
     // Prepare kernel parameters
     let params = vec![
         sigma[0],
         sigma[1],
-        T::from_usize(h).unwrap(),
-        T::from_usize(w).unwrap(),
+        safe_usize_to_float(h)?,
+        safe_usize_to_float(w)?,
     ];
 
     // Get kernel from registry
@@ -163,16 +547,16 @@ where
     let (kh, kw) = kernel.dim();
 
     // Allocate GPU buffers
-    let input_buffer = allocate_gpu_buffer(input.as_slice().unwrap())?;
-    let kernel_buffer = allocate_gpu_buffer(kernel.as_slice().unwrap())?;
+    let input_buffer = allocate_gpu_buffer(safe_as_slice(input)?)?;
+    let kernel_buffer = allocate_gpu_buffer(safe_as_slice(kernel)?)?;
     let mut output_buffer = allocate_gpu_buffer_empty::<T>(ih * iw)?;
 
     // Prepare kernel parameters
     let params = vec![
-        T::from_usize(ih).unwrap(),
-        T::from_usize(iw).unwrap(),
-        T::from_usize(kh).unwrap(),
-        T::from_usize(kw).unwrap(),
+        safe_usize_to_float(ih)?,
+        safe_usize_to_float(iw)?,
+        safe_usize_to_float(kh)?,
+        safe_usize_to_float(kw)?,
     ];
 
     // Get kernel from registry
@@ -209,15 +593,15 @@ where
     let (h, w) = input.dim();
 
     // Allocate GPU buffers
-    let input_buffer = allocate_gpu_buffer(input.as_slice().unwrap())?;
+    let input_buffer = allocate_gpu_buffer(safe_as_slice(input)?)?;
     let mut output_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
 
     // Prepare kernel parameters
     let params = vec![
-        T::from_usize(h).unwrap(),
-        T::from_usize(w).unwrap(),
-        T::from_usize(size[0]).unwrap(),
-        T::from_usize(size[1]).unwrap(),
+        safe_usize_to_float(h)?,
+        safe_usize_to_float(w)?,
+        safe_usize_to_float(size[0])?,
+        safe_usize_to_float(size[1])?,
     ];
 
     // Get kernel from registry
@@ -261,16 +645,16 @@ where
         .collect();
 
     // Allocate GPU buffers
-    let input_buffer = allocate_gpu_buffer(input.as_slice().unwrap())?;
+    let input_buffer = allocate_gpu_buffer(safe_as_slice(input)?)?;
     let structure_buffer = allocate_gpu_buffer(&structure_t)?;
     let mut output_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
 
     // Prepare kernel parameters
     let params = vec![
-        T::from_usize(h).unwrap(),
-        T::from_usize(w).unwrap(),
-        T::from_usize(sh).unwrap(),
-        T::from_usize(sw).unwrap(),
+        safe_usize_to_float(h)?,
+        safe_usize_to_float(w)?,
+        safe_usize_to_float(sh)?,
+        safe_usize_to_float(sw)?,
     ];
 
     // Get kernel from registry
@@ -283,6 +667,255 @@ where
     executor.execute_kernel(
         kernel,
         &[&input_buffer, &structure_buffer],
+        &[&mut output_buffer],
+        &[h, w],
+        &params,
+    )?;
+
+    // Copy result back to host
+    let mut output_data = vec![T::zero(); h * w];
+    output_buffer.copy_to_host(&mut output_data)?;
+
+    Ok(Array::from_shape_vec((h, w), output_data)?)
+}
+
+/// GPU-accelerated separable Gaussian filter implementation
+pub fn gpu_separable_gaussian_filter_2d<T>(
+    input: &ArrayView2<T>,
+    sigma: [T; 2],
+    executor: &dyn GpuKernelExecutor<T>,
+) -> NdimageResult<Array<T, ndarray::Ix2>>
+where
+    T: Float + FromPrimitive + Debug + Clone,
+{
+    let (h, w) = input.dim();
+
+    // Calculate Gaussian weights for separable filter
+    let radius_x = (safe_f64_to_float(3.0)? * sigma[0])
+        .to_usize()
+        .ok_or_else(|| {
+            NdimageError::ComputationError("Failed to convert radius_x to usize".to_string())
+        })?;
+    let radius_y = (safe_f64_to_float(3.0)? * sigma[1])
+        .to_usize()
+        .ok_or_else(|| {
+            NdimageError::ComputationError("Failed to convert radius_y to usize".to_string())
+        })?;
+
+    let max_radius = radius_x.max(radius_y);
+    let weights_size = 2 * max_radius + 1;
+
+    // Gaussian weights for horizontal pass
+    let weights_x: Result<Vec<T>, NdimageError> = (0..weights_size)
+        .map(|i| -> NdimageResult<T> {
+            let offset = safe_usize_to_float(i)? - safe_usize_to_float(max_radius)?;
+            let exp_arg = -safe_f64_to_float(0.5)? * offset * offset / (sigma[0] * sigma[0]);
+            Ok(exp_arg.exp())
+        })
+        .collect();
+    let weights_x = weights_x?;
+
+    // Gaussian weights for vertical pass
+    let weights_y: Result<Vec<T>, NdimageError> = (0..weights_size)
+        .map(|i| -> NdimageResult<T> {
+            let offset = safe_usize_to_float(i)? - safe_usize_to_float(max_radius)?;
+            let exp_arg = -safe_f64_to_float(0.5)? * offset * offset / (sigma[1] * sigma[1]);
+            Ok(exp_arg.exp())
+        })
+        .collect();
+    let weights_y = weights_y?;
+
+    // Allocate GPU buffers
+    let input_buffer = allocate_gpu_buffer(safe_as_slice(input)?)?;
+    let weights_x_buffer = allocate_gpu_buffer(&weights_x)?;
+    let weights_y_buffer = allocate_gpu_buffer(&weights_y)?;
+    let mut temp_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
+    let mut output_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
+
+    let registry = KernelRegistry::new();
+    let kernel = registry
+        .get_kernel("separable_gaussian_1d")
+        .ok_or_else(|| NdimageError::ComputationError("Kernel not found".into()))?;
+
+    // Horizontal pass (direction = 0)
+    let params_h = vec![
+        safe_usize_to_float(h * w)?,
+        safe_usize_to_float(radius_x)?,
+        T::zero(), // direction = 0 for horizontal
+        safe_usize_to_float(w)?,
+        safe_usize_to_float(h)?,
+    ];
+
+    executor.execute_kernel(
+        kernel,
+        &[&input_buffer, &weights_x_buffer],
+        &[&mut temp_buffer],
+        &[h, w],
+        &params_h,
+    )?;
+
+    // Vertical pass (direction = 1)
+    let params_v = vec![
+        safe_usize_to_float(h * w)?,
+        safe_usize_to_float(radius_y)?,
+        T::one(), // direction = 1 for vertical
+        safe_usize_to_float(w)?,
+        safe_usize_to_float(h)?,
+    ];
+
+    executor.execute_kernel(
+        kernel,
+        &[&temp_buffer, &weights_y_buffer],
+        &[&mut output_buffer],
+        &[h, w],
+        &params_v,
+    )?;
+
+    // Copy result back to host
+    let mut output_data = vec![T::zero(); h * w];
+    output_buffer.copy_to_host(&mut output_data)?;
+
+    Ok(Array::from_shape_vec((h, w), output_data)?)
+}
+
+/// GPU-accelerated bilateral filter implementation
+pub fn gpu_bilateral_filter_2d<T>(
+    input: &ArrayView2<T>,
+    sigma_spatial: T,
+    sigma_intensity: T,
+    radius: usize,
+    executor: &dyn GpuKernelExecutor<T>,
+) -> NdimageResult<Array<T, ndarray::Ix2>>
+where
+    T: Float + FromPrimitive + Debug + Clone,
+{
+    let (h, w) = input.dim();
+
+    // Allocate GPU buffers
+    let input_buffer = allocate_gpu_buffer(safe_as_slice(input)?)?;
+    let mut output_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
+
+    // Prepare kernel parameters
+    let params = vec![
+        sigma_spatial,
+        sigma_intensity,
+        safe_usize_to_float(radius)?,
+        safe_usize_to_float(w)?,
+        safe_usize_to_float(h)?,
+    ];
+
+    // Get kernel from registry
+    let registry = KernelRegistry::new();
+    let kernel = registry
+        .get_kernel("bilateral_filter_2d")
+        .ok_or_else(|| NdimageError::ComputationError("Kernel not found".into()))?;
+
+    // Execute kernel
+    executor.execute_kernel(
+        kernel,
+        &[&input_buffer],
+        &[&mut output_buffer],
+        &[h, w],
+        &params,
+    )?;
+
+    // Copy result back to host
+    let mut output_data = vec![T::zero(); h * w];
+    output_buffer.copy_to_host(&mut output_data)?;
+
+    Ok(Array::from_shape_vec((h, w), output_data)?)
+}
+
+/// GPU-accelerated Sobel filter implementation
+pub fn gpu_sobel_filter_2d<T>(
+    input: &ArrayView2<T>,
+    executor: &dyn GpuKernelExecutor<T>,
+) -> NdimageResult<(
+    Array<T, ndarray::Ix2>,
+    Array<T, ndarray::Ix2>,
+    Array<T, ndarray::Ix2>,
+)>
+where
+    T: Float + FromPrimitive + Debug + Clone,
+{
+    let (h, w) = input.dim();
+
+    // Allocate GPU buffers
+    let input_buffer = allocate_gpu_buffer(safe_as_slice(input)?)?;
+    let mut output_x_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
+    let mut output_y_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
+    let mut magnitude_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
+
+    // Prepare kernel parameters
+    let params = vec![safe_usize_to_float(w)?, safe_usize_to_float(h)?];
+
+    // Get kernel from registry
+    let registry = KernelRegistry::new();
+    let kernel = registry
+        .get_kernel("sobel_filter_2d")
+        .ok_or_else(|| NdimageError::ComputationError("Kernel not found".into()))?;
+
+    // Execute kernel
+    executor.execute_kernel(
+        kernel,
+        &[&input_buffer],
+        &[
+            &mut output_x_buffer,
+            &mut output_y_buffer,
+            &mut magnitude_buffer,
+        ],
+        &[h, w],
+        &params,
+    )?;
+
+    // Copy results back to host
+    let mut output_x_data = vec![T::zero(); h * w];
+    let mut output_y_data = vec![T::zero(); h * w];
+    let mut magnitude_data = vec![T::zero(); h * w];
+
+    output_x_buffer.copy_to_host(&mut output_x_data)?;
+    output_y_buffer.copy_to_host(&mut output_y_data)?;
+    magnitude_buffer.copy_to_host(&mut magnitude_data)?;
+
+    Ok((
+        Array::from_shape_vec((h, w), output_x_data)?,
+        Array::from_shape_vec((h, w), output_y_data)?,
+        Array::from_shape_vec((h, w), magnitude_data)?,
+    ))
+}
+
+/// GPU-accelerated Laplacian filter implementation
+pub fn gpu_laplacian_filter_2d<T>(
+    input: &ArrayView2<T>,
+    connectivity: usize,
+    executor: &dyn GpuKernelExecutor<T>,
+) -> NdimageResult<Array<T, ndarray::Ix2>>
+where
+    T: Float + FromPrimitive + Debug + Clone,
+{
+    let (h, w) = input.dim();
+
+    // Allocate GPU buffers
+    let input_buffer = allocate_gpu_buffer(safe_as_slice(input)?)?;
+    let mut output_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
+
+    // Prepare kernel parameters
+    let params = vec![
+        safe_usize_to_float(w)?,
+        safe_usize_to_float(h)?,
+        safe_usize_to_float(connectivity)?,
+    ];
+
+    // Get kernel from registry
+    let registry = KernelRegistry::new();
+    let kernel = registry
+        .get_kernel("laplacian_filter_2d")
+        .ok_or_else(|| NdimageError::ComputationError("Kernel not found".into()))?;
+
+    // Execute kernel
+    executor.execute_kernel(
+        kernel,
+        &[&input_buffer],
         &[&mut output_buffer],
         &[h, w],
         &params,

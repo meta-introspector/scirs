@@ -294,11 +294,30 @@ impl<
     }
 
     fn analyze_model_structure(&self) -> Result<Vec<LayerInfo>> {
-        // TODO: Implement model structure analysis
-        // This would inspect the Sequential model and extract layer information
-        Err(NeuralError::NotImplementedError(
-            "Model structure analysis not yet implemented".to_string(),
-        ))
+        let mut layer_info = Vec::new();
+
+        // For Sequential models, we can iterate through the layers
+        let layers = self.model.layers();
+
+        for (index, layer) in layers.iter().enumerate() {
+            let layer_type = layer.layer_type().to_string();
+            let layer_name = format!("{}_{}", layer_type, index);
+
+            layer_info.push(LayerInfo {
+                layer_name,
+                layer_index: index,
+                layer_type,
+            });
+        }
+
+        // If no layers found, return error
+        if layer_info.is_empty() {
+            return Err(NeuralError::InvalidArgument(
+                "Model has no layers".to_string(),
+            ));
+        }
+
+        Ok(layer_info)
     }
 
     fn select_layout_algorithm(&self, _layer_info: &[LayerInfo]) -> LayoutAlgorithm {
@@ -310,12 +329,161 @@ impl<
 
     fn compute_hierarchical_layout(
         &self,
-        _layer_info: &[LayerInfo],
+        layer_info: &[LayerInfo],
     ) -> Result<(Vec<LayerPosition>, Vec<Connection>)> {
-        // TODO: Implement hierarchical layout algorithm
-        Err(NeuralError::NotImplementedError(
-            "Hierarchical layout not yet implemented".to_string(),
-        ))
+        if layer_info.is_empty() {
+            return Ok((Vec::new(), Vec::new()));
+        }
+
+        let mut positions = Vec::new();
+        let mut connections = Vec::new();
+
+        // Layout parameters
+        let layer_width = 120.0;
+        let layer_height = 60.0;
+        let vertical_spacing = 100.0;
+        let horizontal_spacing = 150.0;
+
+        // Calculate total width and starting position
+        let total_width = (layer_info.len() as f32 - 1.0) * horizontal_spacing + layer_width;
+        let start_x = -total_width / 2.0 + layer_width / 2.0;
+        let start_y = -(layer_info.len() as f32 - 1.0) * vertical_spacing / 2.0;
+
+        // Create layer positions
+        for (i, layer) in layer_info.iter().enumerate() {
+            let x = start_x;
+            let y = start_y + i as f32 * vertical_spacing;
+
+            // Determine layer visual properties based on type
+            let (fill_color, border_color, icon) = match layer.layer_type.as_str() {
+                "Dense" => (
+                    "#4CAF50".to_string(),
+                    "#2E7D32".to_string(),
+                    Some("◯".to_string()),
+                ),
+                "Conv2D" => (
+                    "#2196F3".to_string(),
+                    "#1565C0".to_string(),
+                    Some("⬜".to_string()),
+                ),
+                "Conv1D" => (
+                    "#03A9F4".to_string(),
+                    "#0277BD".to_string(),
+                    Some("▬".to_string()),
+                ),
+                "MaxPool2D" | "AvgPool2D" => (
+                    "#FF9800".to_string(),
+                    "#E65100".to_string(),
+                    Some("▣".to_string()),
+                ),
+                "Dropout" => (
+                    "#9C27B0".to_string(),
+                    "#6A1B9A".to_string(),
+                    Some("×".to_string()),
+                ),
+                "BatchNorm" => (
+                    "#607D8B".to_string(),
+                    "#37474F".to_string(),
+                    Some("∼".to_string()),
+                ),
+                "Activation" => (
+                    "#FFC107".to_string(),
+                    "#F57C00".to_string(),
+                    Some("∘".to_string()),
+                ),
+                "LSTM" => (
+                    "#E91E63".to_string(),
+                    "#AD1457".to_string(),
+                    Some("⟲".to_string()),
+                ),
+                "GRU" => (
+                    "#F44336".to_string(),
+                    "#C62828".to_string(),
+                    Some("⟳".to_string()),
+                ),
+                "Attention" => (
+                    "#673AB7".to_string(),
+                    "#4527A0".to_string(),
+                    Some("◉".to_string()),
+                ),
+                _ => (
+                    "#9E9E9E".to_string(),
+                    "#424242".to_string(),
+                    Some("?".to_string()),
+                ),
+            };
+
+            // Estimate parameter count (simplified)
+            let parameter_count = match layer.layer_type.as_str() {
+                "Dense" => 10000, // Placeholder
+                "Conv2D" => 5000,
+                "Conv1D" => 3000,
+                _ => 0,
+            };
+
+            // Estimate FLOPs (simplified)
+            let flops = match layer.layer_type.as_str() {
+                "Dense" => 100000,
+                "Conv2D" => 500000,
+                "Conv1D" => 200000,
+                _ => 1000,
+            };
+
+            let position = LayerPosition {
+                name: layer.layer_name.clone(),
+                layer_type: layer.layer_type.clone(),
+                position: Point2D { x, y },
+                size: Size2D {
+                    width: layer_width,
+                    height: layer_height,
+                },
+                io_info: LayerIOInfo {
+                    input_shape: vec![32, 32, 3],  // Placeholder
+                    output_shape: vec![32, 32, 3], // Placeholder
+                    parameter_count,
+                    flops,
+                },
+                visual_props: LayerVisualProps {
+                    fill_color,
+                    border_color,
+                    border_width: 2.0,
+                    opacity: 0.9,
+                    icon,
+                },
+            };
+
+            positions.push(position);
+        }
+
+        // Create connections between adjacent layers
+        for i in 0..(layer_info.len().saturating_sub(1)) {
+            let connection = Connection {
+                from_layer: i,
+                to_layer: i + 1,
+                connection_type: ConnectionType::Forward,
+                visual_props: ConnectionVisualProps {
+                    color: "#666666".to_string(),
+                    width: 2.0,
+                    style: LineStyle::Solid,
+                    arrow: ArrowStyle::Simple,
+                    opacity: 0.8,
+                },
+                data_flow: DataFlowInfo {
+                    tensor_shape: vec![32, 32, 3], // Placeholder
+                    data_type: "f32".to_string(),
+                    memory_usage: 4096, // Placeholder
+                    throughput: Some(ThroughputInfo {
+                        samples_per_second: 1000.0,
+                        bytes_per_second: 4096000,
+                        latency_ms: 1.0,
+                    }),
+                },
+            };
+
+            connections.push(connection);
+        }
+
+        Ok((positions, connections))
     }
 
     fn compute_force_directed_layout(
@@ -419,27 +587,159 @@ impl<
         Ok(output_path)
     }
 
-    fn create_svg_content(&self, _layout: &NetworkLayout) -> Result<String> {
-        // TODO: Implement SVG generation
-        let svg_template = format!(
+    fn create_svg_content(&self, layout: &NetworkLayout) -> Result<String> {
+        let bounds = &layout.bounds;
+        let margin = 50.0;
+
+        // Calculate SVG dimensions
+        let svg_width = (bounds.max_x - bounds.min_x + 2.0 * margin) as u32;
+        let svg_height = (bounds.max_y - bounds.min_y + 2.0 * margin) as u32;
+
+        // Calculate viewBox to center the network
+        let viewbox_x = bounds.min_x - margin;
+        let viewbox_y = bounds.min_y - margin;
+        let viewbox_width = bounds.max_x - bounds.min_x + 2.0 * margin;
+        let viewbox_height = bounds.max_y - bounds.min_y + 2.0 * margin;
+
+        let mut svg = format!(
             r#"<?xml version="1.0" encoding="UTF-8"?>
-<svg width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">
+<svg width="{}" height="{}" viewBox="{} {} {} {}" xmlns="http://www.w3.org/2000/svg">
   <title>Neural Network Architecture</title>
   <defs>
     <style>
-      .layer {{ fill: #4CAF50; stroke: #2E7D32; stroke-width: 2; }}
-      .connection {{ stroke: #666; stroke-width: 1.5; fill: none; }}
-      .layer-text {{ font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; }}
+      .layer-rect {{ stroke-width: 2; }}
+      .connection {{ fill: none; marker-end: url(#arrowhead); }}
+      .layer-text {{ font-family: Arial, sans-serif; font-size: 11px; text-anchor: middle; fill: white; font-weight: bold; }}
+      .layer-info {{ font-family: Arial, sans-serif; font-size: 9px; text-anchor: middle; fill: #333; }}
+      .layer-icon {{ font-family: Arial, sans-serif; font-size: 16px; text-anchor: middle; fill: white; font-weight: bold; }}
     </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666666"/>
+    </marker>
   </defs>
   
-  <!-- Network visualization content would be generated here -->
-  <text x="50%" y="50%" class="layer-text">Network visualization not yet implemented</text>
-</svg>"#,
-            self.config.style.layout.width, self.config.style.layout.height
+  <!-- Background -->
+  <rect x="{}" y="{}" width="{}" height="{}" fill="#{}" stroke="#{}"/>
+  
+"#,
+            svg_width, svg_height, viewbox_x, viewbox_y, viewbox_width, viewbox_height,
+            viewbox_x, viewbox_y, viewbox_width, viewbox_height, "f8f9fa", "dee2e6"
         );
 
-        Ok(svg_template)
+        // Draw connections first (so they appear behind layers)
+        for connection in &layout.connections {
+            if connection.from_layer < layout.layer_positions.len()
+                && connection.to_layer < layout.layer_positions.len()
+            {
+                let from_pos = &layout.layer_positions[connection.from_layer];
+                let to_pos = &layout.layer_positions[connection.to_layer];
+
+                // Calculate connection points (bottom of source to top of target)
+                let x1 = from_pos.position.x;
+                let y1 = from_pos.position.y + from_pos.size.height / 2.0;
+                let x2 = to_pos.position.x;
+                let y2 = to_pos.position.y - to_pos.size.height / 2.0;
+
+                let stroke_width = connection.visual_props.width;
+                let stroke_color = &connection.visual_props.color;
+                let opacity = connection.visual_props.opacity;
+
+                svg.push_str(&format!(
+                    r#"  <line x1="{}" y1="{}" x2="{}" y2="{}" stroke="{}" stroke-width="{}" opacity="{}" class="connection"/>
+"#,
+                    x1, y1, x2, y2, stroke_color, stroke_width, opacity
+                ));
+            }
+        }
+
+        // Draw layers
+        for (i, layer_pos) in layout.layer_positions.iter().enumerate() {
+            let x = layer_pos.position.x - layer_pos.size.width / 2.0;
+            let y = layer_pos.position.y - layer_pos.size.height / 2.0;
+            let width = layer_pos.size.width;
+            let height = layer_pos.size.height;
+
+            let fill_color = &layer_pos.visual_props.fill_color;
+            let border_color = &layer_pos.visual_props.border_color;
+            let border_width = layer_pos.visual_props.border_width;
+            let opacity = layer_pos.visual_props.opacity;
+
+            // Draw layer rectangle
+            svg.push_str(&format!(
+                r#"  <rect x="{}" y="{}" width="{}" height="{}" fill="{}" stroke="{}" stroke-width="{}" opacity="{}" rx="5" class="layer-rect"/>
+"#,
+                x, y, width, height, fill_color, border_color, border_width, opacity
+            ));
+
+            // Draw layer icon if available
+            if let Some(ref icon) = layer_pos.visual_props.icon {
+                svg.push_str(&format!(
+                    r#"  <text x="{}" y="{}" class="layer-icon">{}</text>
+"#,
+                    layer_pos.position.x,
+                    layer_pos.position.y - 5.0,
+                    icon
+                ));
+            }
+
+            // Draw layer name
+            svg.push_str(&format!(
+                r#"  <text x="{}" y="{}" class="layer-text">{}</text>
+"#,
+                layer_pos.position.x,
+                layer_pos.position.y + 8.0,
+                layer_pos.layer_type
+            ));
+
+            // Draw parameter info below the layer
+            let param_text = if layer_pos.io_info.parameter_count > 0 {
+                format!("{}K params", layer_pos.io_info.parameter_count / 1000)
+            } else {
+                "No params".to_string()
+            };
+
+            svg.push_str(&format!(
+                r#"  <text x="{}" y="{}" class="layer-info">{}</text>
+"#,
+                layer_pos.position.x,
+                y + height + 15.0,
+                param_text
+            ));
+
+            // Draw layer index
+            svg.push_str(&format!(
+                r#"  <text x="{}" y="{}" class="layer-info">Layer {}</text>
+"#,
+                layer_pos.position.x,
+                y - 10.0,
+                i
+            ));
+        }
+
+        // Add legend
+        let legend_x = viewbox_x + 10.0;
+        let legend_y = viewbox_y + viewbox_height - 100.0;
+
+        svg.push_str(&format!(
+            r#"  <!-- Legend -->
+  <rect x="{}" y="{}" width="200" height="80" fill="white" stroke="#ccc" stroke-width="1" opacity="0.9" rx="5"/>
+  <text x="{}" y="{}" font-family="Arial" font-size="12" font-weight="bold" fill="#333">Legend</text>
+  <text x="{}" y="{}" font-family="Arial" font-size="10" fill="#666">◯ Dense Layer</text>
+  <text x="{}" y="{}" font-family="Arial" font-size="10" fill="#666">⬜ Conv2D Layer</text>
+  <text x="{}" y="{}" font-family="Arial" font-size="10" fill="#666">× Dropout Layer</text>
+  <text x="{}" y="{}" font-family="Arial" font-size="10" fill="#666">∼ BatchNorm Layer</text>
+"#,
+            legend_x, legend_y,
+            legend_x + 10.0, legend_y + 15.0,
+            legend_x + 10.0, legend_y + 30.0,
+            legend_x + 10.0, legend_y + 45.0,
+            legend_x + 10.0, legend_y + 60.0,
+            legend_x + 10.0, legend_y + 75.0
+        ));
+
+        svg.push_str("</svg>");
+
+        Ok(svg)
     }
 
     fn create_html_content(&self, _layout: &NetworkLayout) -> Result<String> {

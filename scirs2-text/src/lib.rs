@@ -16,6 +16,7 @@ pub mod ml_integration;
 pub mod ml_sentiment;
 pub mod multilingual;
 pub mod parallel;
+pub mod pos_tagging;
 pub mod preprocess;
 pub mod semantic_similarity;
 pub mod sentiment;
@@ -51,8 +52,8 @@ pub use embeddings::{Word2Vec, Word2VecAlgorithm, Word2VecConfig};
 pub use enhanced_vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer};
 pub use error::{Result, TextError};
 pub use information_extraction::{
-    Entity, EntityType, RuleBasedNER, KeyPhraseExtractor, PatternExtractor, RelationExtractor,
-    Relation, InformationExtractionPipeline, ExtractedInformation,
+    Entity, EntityType, ExtractedInformation, InformationExtractionPipeline, KeyPhraseExtractor,
+    PatternExtractor, Relation, RelationExtractor, RuleBasedNER,
 };
 pub use ml_integration::{
     BatchTextProcessor, FeatureExtractionMode, MLTextPreprocessor, TextFeatures, TextMLPipeline,
@@ -67,18 +68,22 @@ pub use multilingual::{
 pub use parallel::{
     ParallelCorpusProcessor, ParallelTextProcessor, ParallelTokenizer, ParallelVectorizer,
 };
+pub use pos_tagging::{
+    PosAwareLemmatizer, PosTagResult, PosTagger, PosTaggerConfig, PosTaggingResult,
+};
 pub use preprocess::{BasicNormalizer, BasicTextCleaner, TextCleaner, TextNormalizer};
 pub use semantic_similarity::{
-    WordMoversDistance, SoftCosineSimilarity, WeightedJaccard, LcsSimilarity, 
-    SemanticSimilarityEnsemble,
+    LcsSimilarity, SemanticSimilarityEnsemble, SoftCosineSimilarity, WeightedJaccard,
+    WordMoversDistance,
 };
 pub use sentiment::{
     LexiconSentimentAnalyzer, RuleBasedSentimentAnalyzer, Sentiment, SentimentLexicon,
     SentimentResult, SentimentRules, SentimentWordCounts,
 };
-pub use sparse::{CsrMatrix, DokMatrix, SparseVector, SparseMatrixBuilder};
+pub use simd_ops::{SimdEditDistance, SimdStringOps, SimdTextAnalyzer};
+pub use sparse::{CsrMatrix, DokMatrix, SparseMatrixBuilder, SparseVector};
 pub use sparse_vectorize::{
-    SparseCountVectorizer, SparseTfidfVectorizer, sparse_cosine_similarity, MemoryStats,
+    sparse_cosine_similarity, MemoryStats, SparseCountVectorizer, SparseTfidfVectorizer,
 };
 pub use spelling::{
     DictionaryCorrector, DictionaryCorrectorConfig, EditOp, ErrorModel, NGramModel,
@@ -88,10 +93,9 @@ pub use stemming::{
     LancasterStemmer, LemmatizerConfig, PorterStemmer, PosTag, RuleLemmatizer,
     RuleLemmatizerBuilder, SimpleLemmatizer, SnowballStemmer, Stemmer,
 };
-pub use simd_ops::{SimdStringOps, SimdTextAnalyzer, SimdEditDistance};
 pub use streaming::{
-    MemoryMappedCorpus, StreamingTextProcessor, StreamingVectorizer, ChunkedCorpusReader,
-    ProgressTracker,
+    ChunkedCorpusReader, MemoryMappedCorpus, ProgressTracker, StreamingTextProcessor,
+    StreamingVectorizer,
 };
 pub use string_metrics::{
     AlignmentResult, DamerauLevenshteinMetric, Metaphone, NeedlemanWunsch, Nysiis,

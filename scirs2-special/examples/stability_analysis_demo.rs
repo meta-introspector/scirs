@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn demonstrate_edge_cases() {
-    use scirs2_special::{gamma, gamma_safe, bessel::j0, erf, erfc};
+    use scirs2_special::{bessel::j0, erf, erfc, gamma, gamma_safe};
 
     println!("\n\nEdge Cases and Numerical Issues");
     println!("================================\n");
@@ -50,7 +50,10 @@ fn demonstrate_edge_cases() {
     for x in [100.0, 1000.0, 10000.0] {
         let j = j0(x);
         let expected_amplitude = (2.0 / (std::f64::consts::PI * x)).sqrt();
-        println!("   j0({}) = {:e} (expected amplitude ~ {:e})", x, j, expected_amplitude);
+        println!(
+            "   j0({}) = {:e} (expected amplitude ~ {:e})",
+            x, j, expected_amplitude
+        );
     }
 
     // Error function underflow
@@ -67,19 +70,21 @@ fn demonstrate_edge_cases() {
         let diff_bad = erf_x - 1.0;
         let diff_good = -erfc(x);
         let rel_error = (diff_bad - diff_good).abs() / diff_good.abs();
-        println!("   x={}: bad={:e}, good={:e}, rel_error={:e}", 
-                 x, diff_bad, diff_good, rel_error);
+        println!(
+            "   x={}: bad={:e}, good={:e}, rel_error={:e}",
+            x, diff_bad, diff_good, rel_error
+        );
     }
 }
 
 fn demonstrate_safe_usage() {
-    use scirs2_special::{gamma_safe, beta_safe, digamma_safe};
+    use scirs2_special::{beta_safe, digamma_safe, gamma_safe};
 
     println!("\n\nSafe Usage Patterns");
     println!("===================\n");
 
     println!("1. Using safe versions with error handling:");
-    
+
     // Safe gamma function
     match gamma_safe(-1.0) {
         Ok(val) => println!("   gamma_safe(-1.0) = {}", val),

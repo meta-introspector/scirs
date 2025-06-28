@@ -800,14 +800,14 @@ mod tests {
         // Check that the derivatives have reasonable magnitudes
         let du_magnitude = (du[0] * du[0] + du[1] * du[1] + du[2] * du[2]).sqrt();
         let dv_magnitude = (dv[0] * dv[0] + dv[1] * dv[1] + dv[2] * dv[2]).sqrt();
-        
+
         assert!(du_magnitude > 0.1); // Should be non-zero
         assert!(dv_magnitude > 0.1); // Should be non-zero
-        
+
         // Verify the surface itself evaluates correctly at the center
         let center = surface.evaluate(0.5, 0.5).unwrap();
         assert_eq!(center.len(), 3);
-        
+
         // The center point should be approximately at (1, 1, z) for some z value
         assert_relative_eq!(center[0], 1.0, epsilon = 0.1);
         assert_relative_eq!(center[1], 1.0, epsilon = 0.1);

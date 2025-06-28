@@ -34,12 +34,22 @@ impl fmt::Display for OptimError {
             OptimError::InvalidConfig(msg) => write!(f, "Invalid configuration: {}", msg),
             OptimError::OptimizationError(msg) => write!(f, "Optimization error: {}", msg),
             OptimError::DimensionMismatch(msg) => write!(f, "Dimension mismatch: {}", msg),
-            OptimError::PrivacyBudgetExhausted { consumed_epsilon, target_epsilon } => {
-                write!(f, "Privacy budget exhausted: consumed ε={:.4}, target ε={:.4}", 
-                       consumed_epsilon, target_epsilon)
-            },
-            OptimError::InvalidPrivacyConfig(msg) => write!(f, "Invalid privacy configuration: {}", msg),
-            OptimError::PrivacyAccountingError(msg) => write!(f, "Privacy accounting error: {}", msg),
+            OptimError::PrivacyBudgetExhausted {
+                consumed_epsilon,
+                target_epsilon,
+            } => {
+                write!(
+                    f,
+                    "Privacy budget exhausted: consumed ε={:.4}, target ε={:.4}",
+                    consumed_epsilon, target_epsilon
+                )
+            }
+            OptimError::InvalidPrivacyConfig(msg) => {
+                write!(f, "Invalid privacy configuration: {}", msg)
+            }
+            OptimError::PrivacyAccountingError(msg) => {
+                write!(f, "Privacy accounting error: {}", msg)
+            }
             OptimError::Other(msg) => write!(f, "Error: {}", msg),
         }
     }

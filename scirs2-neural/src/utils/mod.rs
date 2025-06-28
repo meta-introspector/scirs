@@ -239,24 +239,51 @@ pub fn train_test_split<F: Float + Debug, R: Rng>(
         }
     }
 
-    // TODO: Implement actual splitting code once ndarray's slice functionality is better understood
-    // This is a placeholder that just returns empty arrays of the right shapes
+    // Actually split the data using the shuffled indices
+    let train_indices = &indices[..n_train];
+    let test_indices = &indices[n_train..];
 
-    // Create empty arrays with the correct shapes
+    // Create output arrays
     let mut x_shape = x.shape().to_vec();
     let mut y_shape = y.shape().to_vec();
 
     x_shape[0] = n_train;
-    let x_train = ndarray::Array::zeros(x_shape.clone());
+    let mut x_train = ndarray::Array::zeros(x_shape.clone());
 
     x_shape[0] = n_test;
-    let x_test = ndarray::Array::zeros(x_shape);
+    let mut x_test = ndarray::Array::zeros(x_shape);
 
     y_shape[0] = n_train;
-    let y_train = ndarray::Array::zeros(y_shape.clone());
+    let mut y_train = ndarray::Array::zeros(y_shape.clone());
 
     y_shape[0] = n_test;
-    let y_test = ndarray::Array::zeros(y_shape);
+    let mut y_test = ndarray::Array::zeros(y_shape);
+
+    // Copy training data
+    for (new_idx, &orig_idx) in train_indices.iter().enumerate() {
+        // Copy x data
+        let x_slice = x.slice(ndarray::s![orig_idx, ..]);
+        let mut x_train_slice = x_train.slice_mut(ndarray::s![new_idx, ..]);
+        x_train_slice.assign(&x_slice);
+
+        // Copy y data
+        let y_slice = y.slice(ndarray::s![orig_idx, ..]);
+        let mut y_train_slice = y_train.slice_mut(ndarray::s![new_idx, ..]);
+        y_train_slice.assign(&y_slice);
+    }
+
+    // Copy test data
+    for (new_idx, &orig_idx) in test_indices.iter().enumerate() {
+        // Copy x data
+        let x_slice = x.slice(ndarray::s![orig_idx, ..]);
+        let mut x_test_slice = x_test.slice_mut(ndarray::s![new_idx, ..]);
+        x_test_slice.assign(&x_slice);
+
+        // Copy y data
+        let y_slice = y.slice(ndarray::s![orig_idx, ..]);
+        let mut y_test_slice = y_test.slice_mut(ndarray::s![new_idx, ..]);
+        y_test_slice.assign(&y_slice);
+    }
 
     Ok((x_train, x_test, y_train, y_test))
 }

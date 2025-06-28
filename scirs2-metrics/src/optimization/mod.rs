@@ -82,12 +82,18 @@
 //! ```
 
 // Re-export submodules
+pub mod distributed;
+pub mod gpu_acceleration;
 pub mod hardware;
 pub mod memory;
 pub mod numeric;
 pub mod parallel;
 
 // Re-export common functionality
+pub use distributed::{
+    DistributedConfig, DistributedMetricsBuilder, DistributedMetricsCoordinator,
+};
+pub use gpu_acceleration::{GpuAccelConfig, GpuMetricsComputer};
 pub use hardware::{
     HardwareAccelConfig, HardwareAcceleratedMatrix, HardwareCapabilities, SimdDistanceMetrics,
     SimdStatistics, VectorWidth,

@@ -10,6 +10,7 @@ use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use crate::error::{MetricsError, Result};
 
 // Re-export evaluation submodules
+pub mod advanced_statistical;
 pub mod cross_validation;
 pub mod statistical;
 pub mod workflow;

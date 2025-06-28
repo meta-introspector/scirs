@@ -1094,16 +1094,17 @@ fn estimate_homography(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Resu
     // Solve for homography using SVD via eigenvalue decomposition of A^T*A
     let ata = compute_ata(&a);
     let h_vec = find_smallest_eigenvector_homography(&ata)?;
-    
+
     // Reshape to 3x3 matrix
-    let mut h_norm = Array2::from_shape_vec((3, 3), h_vec)
-        .map_err(|e| VisionError::OperationFailed(format!("Failed to reshape homography: {}", e)))?;
-    
+    let mut h_norm = Array2::from_shape_vec((3, 3), h_vec).map_err(|e| {
+        VisionError::OperationFailed(format!("Failed to reshape homography: {}", e))
+    })?;
+
     // Denormalize: H = T_dst^(-1) * H_norm * T_src
     let dst_inv = matrix_inverse_3x3(&dst_transform)?;
     h_norm = matrix_multiply_3x3(&dst_inv, &h_norm);
     let h = matrix_multiply_3x3(&h_norm, &src_transform);
-    
+
     // Normalize so that h[2,2] = 1 if possible
     if h[[2, 2]].abs() > 1e-8 {
         let h_normalized = h.mapv(|v| v / h[[2, 2]]);
@@ -1137,35 +1138,35 @@ fn estimate_affine(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<A
     }
 
     let n = src_points.len();
-    
+
     // Set up the linear system: A * x = b
     // For affine transformation: [a b c; d e f; 0 0 1]
     // We solve two separate 3x1 systems for [a b c] and [d e f]
-    
+
     let mut a_matrix = Array2::zeros((n, 3));
     let mut bx = vec![0.0f32; n];
     let mut by = vec![0.0f32; n];
-    
+
     for i in 0..n {
         let [x, y] = src_points[i];
         let [xp, yp] = dst_points[i];
-        
+
         // Fill coefficient matrix: [x y 1]
         a_matrix[[i, 0]] = x;
         a_matrix[[i, 1]] = y;
         a_matrix[[i, 2]] = 1.0;
-        
+
         // Fill target vectors
         bx[i] = xp;
         by[i] = yp;
     }
-    
+
     // Solve for x-coefficients: [a b c]
     let x_coeffs = solve_least_squares(&a_matrix, &bx)?;
-    
+
     // Solve for y-coefficients: [d e f]
     let y_coeffs = solve_least_squares(&a_matrix, &by)?;
-    
+
     // Construct affine transformation matrix
     let mut affine = Array2::zeros((3, 3));
     affine[[0, 0]] = x_coeffs[0]; // a
@@ -1175,7 +1176,7 @@ fn estimate_affine(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<A
     affine[[1, 1]] = y_coeffs[1]; // e
     affine[[1, 2]] = y_coeffs[2]; // f
     affine[[2, 2]] = 1.0;
-    
+
     Ok(affine)
 }
 
@@ -1325,15 +1326,22 @@ fn normalize_points(points: &[[f32; 2]]) -> (Vec<[f32; 2]>, Array2<f32>) {
     let cy = points.iter().map(|p| p[1]).sum::<f32>() / n;
 
     // Compute average distance from centroid
-    let avg_dist = points.iter()
+    let avg_dist = points
+        .iter()
         .map(|p| ((p[0] - cx).powi(2) + (p[1] - cy).powi(2)).sqrt())
-        .sum::<f32>() / n;
+        .sum::<f32>()
+        / n;
 
     // Scale factor for unit average distance
-    let scale = if avg_dist > 1e-8 { (2.0_f32).sqrt() / avg_dist } else { 1.0 };
+    let scale = if avg_dist > 1e-8 {
+        (2.0_f32).sqrt() / avg_dist
+    } else {
+        1.0
+    };
 
     // Apply normalization transformation
-    let normalized: Vec<[f32; 2]> = points.iter()
+    let normalized: Vec<[f32; 2]> = points
+        .iter()
         .map(|p| [(p[0] - cx) * scale, (p[1] - cy) * scale])
         .collect();
 
@@ -1414,11 +1422,13 @@ fn find_smallest_eigenvector_homography(matrix: &Array2<f32>) -> Result<Vec<f32>
 fn matrix_inverse_3x3(matrix: &Array2<f32>) -> Result<Array2<f32>> {
     let m = matrix;
     let det = m[[0, 0]] * (m[[1, 1]] * m[[2, 2]] - m[[1, 2]] * m[[2, 1]])
-            - m[[0, 1]] * (m[[1, 0]] * m[[2, 2]] - m[[1, 2]] * m[[2, 0]])
-            + m[[0, 2]] * (m[[1, 0]] * m[[2, 1]] - m[[1, 1]] * m[[2, 0]]);
+        - m[[0, 1]] * (m[[1, 0]] * m[[2, 2]] - m[[1, 2]] * m[[2, 0]])
+        + m[[0, 2]] * (m[[1, 0]] * m[[2, 1]] - m[[1, 1]] * m[[2, 0]]);
 
     if det.abs() < 1e-10 {
-        return Err(VisionError::OperationFailed("Matrix is singular".to_string()));
+        return Err(VisionError::OperationFailed(
+            "Matrix is singular".to_string(),
+        ));
     }
 
     let mut inv = Array2::zeros((3, 3));
@@ -1451,7 +1461,7 @@ fn matrix_multiply_3x3(a: &Array2<f32>, b: &Array2<f32>) -> Array2<f32> {
 /// Solve least squares problem using normal equations
 fn solve_least_squares(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
     let (m, n) = a.dim();
-    
+
     // Compute A^T * A
     let mut ata = Array2::zeros((n, n));
     for i in 0..n {
@@ -1461,7 +1471,7 @@ fn solve_least_squares(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
             }
         }
     }
-    
+
     // Compute A^T * b
     let mut atb = vec![0.0f32; n];
     for i in 0..n {
@@ -1469,7 +1479,7 @@ fn solve_least_squares(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
             atb[i] += a[[k, i]] * b[k];
         }
     }
-    
+
     // Solve using simple Gaussian elimination
     solve_linear_system(&ata, &atb)
 }
@@ -1479,7 +1489,7 @@ fn solve_linear_system(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
     let n = a.shape()[0];
     let mut a_copy = a.clone();
     let mut b_copy = b.to_vec();
-    
+
     // Forward elimination with partial pivoting
     for i in 0..n {
         // Find pivot
@@ -1489,7 +1499,7 @@ fn solve_linear_system(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
                 max_row = k;
             }
         }
-        
+
         // Swap rows
         if max_row != i {
             for j in 0..n {
@@ -1499,12 +1509,12 @@ fn solve_linear_system(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
             }
             b_copy.swap(i, max_row);
         }
-        
+
         // Check for singular matrix
         if a_copy[[i, i]].abs() < 1e-10 {
             return Err(VisionError::OperationFailed("Singular matrix".to_string()));
         }
-        
+
         // Eliminate column
         for k in (i + 1)..n {
             let factor = a_copy[[k, i]] / a_copy[[i, i]];
@@ -1514,7 +1524,7 @@ fn solve_linear_system(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
             b_copy[k] -= factor * b_copy[i];
         }
     }
-    
+
     // Back substitution
     let mut x = vec![0.0f32; n];
     for i in (0..n).rev() {
@@ -1524,12 +1534,15 @@ fn solve_linear_system(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
         }
         x[i] /= a_copy[[i, i]];
     }
-    
+
     Ok(x)
 }
 
 /// Estimate fundamental matrix using 8-point algorithm
-fn estimate_fundamental_matrix(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
+fn estimate_fundamental_matrix(
+    src_points: &[[f32; 2]],
+    dst_points: &[[f32; 2]],
+) -> Result<Array2<f32>> {
     if src_points.len() != dst_points.len() || src_points.len() < 8 {
         return Err(VisionError::InvalidParameter(
             "Need at least 8 point correspondences for fundamental matrix".to_string(),
@@ -1562,24 +1575,28 @@ fn estimate_fundamental_matrix(src_points: &[[f32; 2]], dst_points: &[[f32; 2]])
     // Solve using SVD approximation
     let ata = compute_ata(&a);
     let f_vec = find_smallest_eigenvector_homography(&ata)?;
-    
+
     // Reshape to 3x3 matrix
-    let mut f_norm = Array2::from_shape_vec((3, 3), f_vec)
-        .map_err(|e| VisionError::OperationFailed(format!("Failed to reshape fundamental matrix: {}", e)))?;
-    
+    let mut f_norm = Array2::from_shape_vec((3, 3), f_vec).map_err(|e| {
+        VisionError::OperationFailed(format!("Failed to reshape fundamental matrix: {}", e))
+    })?;
+
     // Enforce rank-2 constraint by setting smallest singular value to 0
     // (Simplified approach - in practice use proper SVD)
-    
+
     // Denormalize: F = T_dst^T * F_norm * T_src
     let dst_t = transpose_3x3(&dst_transform);
     f_norm = matrix_multiply_3x3(&dst_t, &f_norm);
     let f = matrix_multiply_3x3(&f_norm, &src_transform);
-    
+
     Ok(f)
 }
 
 /// Estimate essential matrix (simplified using fundamental matrix)
-fn estimate_essential_matrix(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
+fn estimate_essential_matrix(
+    src_points: &[[f32; 2]],
+    dst_points: &[[f32; 2]],
+) -> Result<Array2<f32>> {
     // For calibrated cameras, essential matrix is similar to fundamental matrix
     // In practice, use proper 5-point algorithm with camera calibration
     estimate_fundamental_matrix(src_points, dst_points)
@@ -1594,13 +1611,13 @@ fn compute_epipolar_error(matrix: &Array2<f32>, p1: &[f32; 3], p2: &[f32; 3]) ->
             fp1[i] += matrix[[i, j]] * p1[j];
         }
     }
-    
+
     // Compute p2^T * F * p1
     let mut error = 0.0f32;
     for i in 0..3 {
         error += p2[i] * fp1[i];
     }
-    
+
     // Normalize by the norm of the epipolar line
     let line_norm = (fp1[0] * fp1[0] + fp1[1] * fp1[1]).sqrt();
     if line_norm > 1e-8 {

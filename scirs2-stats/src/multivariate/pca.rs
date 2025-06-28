@@ -3,8 +3,8 @@
 //! PCA is a dimensionality reduction technique that finds the directions of maximum variance
 //! in high-dimensional data and projects the data onto a lower-dimensional subspace.
 
+use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
-use crate::error::{StatsResult as Result, StatsError};
 use scirs2_core::validation::*;
 
 /// Principal Component Analysis
@@ -107,10 +107,14 @@ impl PCA {
         check_array_finite(&data, "data")?;
         let (n_samples, n_features) = data.dim();
         if n_samples < 2 {
-            return Err(StatsError::InvalidArgument("n_samples must be at least 2".to_string()));
+            return Err(StatsError::InvalidArgument(
+                "n_samples must be at least 2".to_string(),
+            ));
         }
         if n_features < 1 {
-            return Err(StatsError::InvalidArgument("n_features must be at least 1".to_string()));
+            return Err(StatsError::InvalidArgument(
+                "n_features must be at least 1".to_string(),
+            ));
         }
 
         // Determine number of components
@@ -119,9 +123,10 @@ impl PCA {
             Some(k) => {
                 check_positive(k, "n_components")?;
                 if k > max_components {
-                    return Err(StatsError::InvalidArgument(
-                        format!("n_components ({}) cannot be larger than min(n_samples, n_features) = {}", k, max_components)
-                    ));
+                    return Err(StatsError::InvalidArgument(format!(
+                        "n_components ({}) cannot be larger than min(n_samples, n_features) = {}",
+                        k, max_components
+                    )));
                 }
                 k
             }
@@ -147,7 +152,7 @@ impl PCA {
             let std = centered_data.std_axis(Axis(0), 1.0);
             // Avoid division by zero
             let std = std.mapv(|s| if s > 1e-10 { s } else { 1.0 });
-            
+
             for (mut col, &s) in centered_data.columns_mut().into_iter().zip(std.iter()) {
                 col /= s;
             }
@@ -171,7 +176,9 @@ impl PCA {
         // Perform PCA
         let result = match solver {
             SvdSolver::Full => self.pca_svd(&centered_data, n_components, n_samples)?,
-            SvdSolver::Randomized => self.pca_randomized(&centered_data, n_components, n_samples)?,
+            SvdSolver::Randomized => {
+                self.pca_randomized(&centered_data, n_components, n_samples)?
+            }
             _ => unreachable!(),
         };
 
@@ -195,24 +202,30 @@ impl PCA {
         n_samples: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
         use ndarray_linalg::SVD;
-        
+
         // Perform SVD: X = U * S * V^T
-        let (_u, s, vt) = data.svd(true, true)
+        let (_u, s, vt) = data
+            .svd(true, true)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
         let v = vt.unwrap().t().to_owned();
-        
+
         // Extract components
         let components = v.slice(ndarray::s![.., ..n_components]).to_owned();
-        
+
         // Compute explained variance
         let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
         let explained_variance = &singular_values * &singular_values / (n_samples - 1) as f64;
-        
+
         // Compute explained variance ratio
         let total_variance = explained_variance.sum();
         let explained_variance_ratio = &explained_variance / total_variance;
-        
-        Ok((components.t().to_owned(), explained_variance, explained_variance_ratio, singular_values))
+
+        Ok((
+            components.t().to_owned(),
+            explained_variance,
+            explained_variance_ratio,
+            singular_values,
+        ))
     }
 
     /// Perform PCA using randomized SVD
@@ -222,14 +235,14 @@ impl PCA {
         n_components: usize,
         n_samples: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
-        use rand::{SeedableRng, rngs::StdRng};
-        use rand_distr::{Normal, Distribution};
         use ndarray_linalg::{QR, SVD};
-        
+        use rand::{rngs::StdRng, SeedableRng};
+        use rand_distr::{Distribution, Normal};
+
         let n_features = data.ncols();
         let n_oversamples = 10.min((n_features - n_components) / 2);
         let n_random = n_components + n_oversamples;
-        
+
         // Initialize RNG
         let mut rng = match self.random_state {
             Some(seed) => StdRng::seed_from_u64(seed),
@@ -243,67 +256,79 @@ impl PCA {
                 StdRng::seed_from_u64(seed)
             }
         };
-        
+
         // Generate random matrix
-        let normal = Normal::new(0.0, 1.0).map_err(|e| 
-            StatsError::ComputationError(format!("Failed to create normal distribution: {}", e)))?;
+        let normal = Normal::new(0.0, 1.0).map_err(|e| {
+            StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
+        })?;
         let omega = Array2::from_shape_fn((n_features, n_random), |_| normal.sample(&mut rng));
-        
+
         // Power iterations for better approximation
         let n_iter = 4;
         let mut q = data.dot(&omega);
-        
+
         for _ in 0..n_iter {
             // QR decomposition
-            let (_q_mat, _r) = q.qr()
-                .map_err(|e| StatsError::ComputationError(format!("QR decomposition failed: {}", e)))?;
+            let (_q_mat, _r) = q.qr().map_err(|e| {
+                StatsError::ComputationError(format!("QR decomposition failed: {}", e))
+            })?;
             q = _q_mat;
-            
+
             // Project back
             let z = data.t().dot(&q);
-            let (_q_mat, _r) = z.qr()
-                .map_err(|e| StatsError::ComputationError(format!("QR decomposition failed: {}", e)))?;
+            let (_q_mat, _r) = z.qr().map_err(|e| {
+                StatsError::ComputationError(format!("QR decomposition failed: {}", e))
+            })?;
             q = data.dot(&_q_mat);
         }
-        
+
         // Final QR decomposition
-        let (q_final, _) = q.qr()
-            .map_err(|e| StatsError::ComputationError(format!("Final QR decomposition failed: {}", e)))?;
-        
+        let (q_final, _) = q.qr().map_err(|e| {
+            StatsError::ComputationError(format!("Final QR decomposition failed: {}", e))
+        })?;
+
         // Project data onto subspace
         let b = q_final.t().dot(data);
-        
+
         // SVD of small matrix B
-        let (_u_small, s, vt) = b.svd(true, true)
-            .map_err(|e| StatsError::ComputationError(format!("SVD of projected matrix failed: {}", e)))?;
-        
+        let (_u_small, s, vt) = b.svd(true, true).map_err(|e| {
+            StatsError::ComputationError(format!("SVD of projected matrix failed: {}", e))
+        })?;
+
         let v = vt.unwrap().t().to_owned();
-        
+
         // Extract components
         let components = v.slice(ndarray::s![.., ..n_components]).to_owned();
-        
+
         // Compute explained variance
         let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
         let explained_variance = &singular_values * &singular_values / (n_samples - 1) as f64;
-        
+
         // Compute explained variance ratio
         let total_variance = explained_variance.sum();
         let explained_variance_ratio = &explained_variance / total_variance;
-        
-        Ok((components.t().to_owned(), explained_variance, explained_variance_ratio, singular_values))
+
+        Ok((
+            components.t().to_owned(),
+            explained_variance,
+            explained_variance_ratio,
+            singular_values,
+        ))
     }
 
     /// Transform data using the fitted PCA model
     pub fn transform(&self, data: ArrayView2<f64>, result: &PCAResult) -> Result<Array2<f64>> {
         check_array_finite(&data, "data")?;
         if data.ncols() != result.n_features {
-            return Err(StatsError::DimensionMismatch(
-                format!("data has {} features, expected {}", data.ncols(), result.n_features)
-            ));
+            return Err(StatsError::DimensionMismatch(format!(
+                "data has {} features, expected {}",
+                data.ncols(),
+                result.n_features
+            )));
         }
 
         let mut transformed = data.to_owned();
-        
+
         // Center
         if self.center {
             for mut row in transformed.rows_mut() {
@@ -323,13 +348,19 @@ impl PCA {
     }
 
     /// Inverse transform from component space back to original space
-    pub fn inverse_transform(&self, data: ArrayView2<f64>, result: &PCAResult) -> Result<Array2<f64>> {
+    pub fn inverse_transform(
+        &self,
+        data: ArrayView2<f64>,
+        result: &PCAResult,
+    ) -> Result<Array2<f64>> {
         check_array_finite(&data, "data")?;
         let n_components = result.components.nrows();
         if data.ncols() != n_components {
-            return Err(StatsError::DimensionMismatch(
-                format!("data has {} components, expected {}", data.ncols(), n_components)
-            ));
+            return Err(StatsError::DimensionMismatch(format!(
+                "data has {} components, expected {}",
+                data.ncols(),
+                n_components
+            )));
         }
 
         // Project back to original space
@@ -364,43 +395,44 @@ impl PCA {
 pub fn mle_components(data: ArrayView2<f64>, max_components: Option<usize>) -> Result<usize> {
     check_array_finite(&data, "data")?;
     let (n_samples, n_features) = data.dim();
-    
+
     let pca = PCA::new().with_n_components(max_components.unwrap_or(n_features.min(n_samples)));
     let result = pca.fit(data)?;
-    
+
     let eigenvalues = &result.explained_variance;
     let n = n_samples as f64;
     let p = n_features as f64;
-    
+
     // Minka's MLE for PCA
     let mut best_k = 0;
     let mut best_ll = f64::NEG_INFINITY;
-    
+
     for k in 0..eigenvalues.len() {
         let k_f64 = k as f64;
-        
+
         // Average of remaining eigenvalues
         let sigma2 = if k < eigenvalues.len() - 1 {
-            eigenvalues.slice(ndarray::s![k+1..]).sum() / (p - k_f64 - 1.0)
+            eigenvalues.slice(ndarray::s![k + 1..]).sum() / (p - k_f64 - 1.0)
         } else {
             1e-10
         };
-        
+
         // Log-likelihood
-        let ll = -n / 2.0 * (eigenvalues.slice(ndarray::s![..=k]).mapv(f64::ln).sum()
+        let ll = -n / 2.0
+            * (eigenvalues.slice(ndarray::s![..=k]).mapv(f64::ln).sum()
                 + (p - k_f64 - 1.0) * sigma2.ln()
                 + p * (2.0 * std::f64::consts::PI).ln());
-        
+
         // AIC penalty
         let aic_penalty = k_f64 * (2.0 * p - k_f64 - 1.0);
         let aic = ll - aic_penalty;
-        
+
         if aic > best_ll {
             best_ll = aic;
             best_k = k + 1;
         }
     }
-    
+
     Ok(best_k)
 }
 
@@ -430,7 +462,7 @@ impl IncrementalPCA {
     pub fn new(n_components: usize, batch_size: usize) -> Result<Self> {
         check_positive(n_components, "n_components")?;
         check_positive(batch_size, "batch_size")?;
-        
+
         Ok(Self {
             pca: PCA::new().with_n_components(n_components),
             batch_size,
@@ -448,44 +480,48 @@ impl IncrementalPCA {
     pub fn partial_fit(&mut self, batch: ArrayView2<f64>) -> Result<()> {
         check_array_finite(&batch, "batch")?;
         let (batch_size, n_features) = batch.dim();
-        
+
         // Update mean incrementally
         let batch_mean = batch.mean_axis(Axis(0)).unwrap();
         let old_n = self.n_samples_seen;
         self.n_samples_seen += batch_size;
-        
+
         self.mean = match &self.mean {
             None => Some(batch_mean.clone()),
             Some(mean) => {
-                let updated = (mean * old_n as f64 + &batch_mean * batch_size as f64) 
-                            / self.n_samples_seen as f64;
+                let updated = (mean * old_n as f64 + &batch_mean * batch_size as f64)
+                    / self.n_samples_seen as f64;
                 Some(updated)
             }
         };
-        
+
         // Center the batch
         let mut centered_batch = batch.to_owned();
         for mut row in centered_batch.rows_mut() {
             row -= &batch_mean;
         }
-        
+
         // Incremental SVD update using Brand's algorithm
-        let n_components = self.pca.n_components.unwrap_or(n_features.min(self.n_samples_seen));
-        
+        let n_components = self
+            .pca
+            .n_components
+            .unwrap_or(n_features.min(self.n_samples_seen));
+
         if self.svd_u.is_none() {
             // First batch - initialize with standard SVD
             use ndarray_linalg::SVD;
-            let (u, s, vt) = centered_batch.svd(true, true)
+            let (u, s, vt) = centered_batch
+                .svd(true, true)
                 .map_err(|e| StatsError::ComputationError(format!("Initial SVD failed: {}", e)))?;
-            
+
             let u = u.unwrap();
             let vt = vt.unwrap();
-            
+
             // Keep only n_components
             self.svd_u = Some(u.slice(ndarray::s![.., ..n_components]).to_owned());
             self.svd_s = Some(s.slice(ndarray::s![..n_components]).to_owned());
             self.svd_v = Some(vt.slice(ndarray::s![..n_components, ..]).t().to_owned());
-            
+
             self.components = Some(self.svd_v.as_ref().unwrap().t().to_owned());
             self.singular_values = Some(self.svd_s.as_ref().unwrap().clone());
         } else {
@@ -493,20 +529,21 @@ impl IncrementalPCA {
             let u_old = self.svd_u.as_ref().unwrap();
             let s_old = self.svd_s.as_ref().unwrap();
             let v_old = self.svd_v.as_ref().unwrap();
-            
+
             // Project new data onto existing components
             let projection = centered_batch.dot(v_old);
             let residual = &centered_batch - &projection.dot(&v_old.t());
-            
+
             // QR decomposition of residual
             use ndarray_linalg::QR;
-            let (q_res, r_res) = residual.qr()
-                .map_err(|e| StatsError::ComputationError(format!("QR decomposition failed: {}", e)))?;
-            
+            let (q_res, r_res) = residual.qr().map_err(|e| {
+                StatsError::ComputationError(format!("QR decomposition failed: {}", e))
+            })?;
+
             // Build augmented matrix
             let k = s_old.len();
             let p = r_res.ncols();
-            
+
             // Create block matrix [diag(s_old), projection^T; 0, r_res]
             let mut augmented = Array2::zeros((k + p, k + p));
             for i in 0..k {
@@ -522,45 +559,54 @@ impl IncrementalPCA {
                     augmented[[k + i, k + j]] = r_res[[i, j]];
                 }
             }
-            
+
             // SVD of augmented matrix
             use ndarray_linalg::SVD;
-            let (u_aug, s_aug, vt_aug) = augmented.svd(true, true)
-                .map_err(|e| StatsError::ComputationError(format!("Augmented SVD failed: {}", e)))?;
-            
+            let (u_aug, s_aug, vt_aug) = augmented.svd(true, true).map_err(|e| {
+                StatsError::ComputationError(format!("Augmented SVD failed: {}", e))
+            })?;
+
             let u_aug = u_aug.unwrap();
             let vt_aug = vt_aug.unwrap();
-            
+
             // Update U
             let mut u_new = Array2::zeros((old_n + batch_size, n_components));
             let u_aug_slice = u_aug.slice(ndarray::s![..n_components, ..n_components]);
-            
+
             // Update old samples part
             let u_old_part = u_old.dot(&u_aug_slice.t());
-            u_new.slice_mut(ndarray::s![..old_n, ..]).assign(&u_old_part);
-            
-            // Update new samples part  
+            u_new
+                .slice_mut(ndarray::s![..old_n, ..])
+                .assign(&u_old_part);
+
+            // Update new samples part
             let u_batch_part = projection.dot(&u_aug_slice.slice(ndarray::s![.., ..k]).t());
             let u_res_part = q_res.dot(&u_aug_slice.slice(ndarray::s![.., k..]).t());
-            u_new.slice_mut(ndarray::s![old_n.., ..]).assign(&(&u_batch_part + &u_res_part));
-            
+            u_new
+                .slice_mut(ndarray::s![old_n.., ..])
+                .assign(&(&u_batch_part + &u_res_part));
+
             // Update singular values
             self.svd_s = Some(s_aug.slice(ndarray::s![..n_components]).to_owned());
-            
+
             // Update V
             let v_aug_slice = vt_aug.slice(ndarray::s![..n_components, ..n_components]);
             let mut v_new = Array2::zeros((n_features, n_components));
-            
+
             let v_old_part = v_old.dot(&v_aug_slice.slice(ndarray::s![.., ..k]).t());
-            let v_res_part = q_res.t().dot(&centered_batch).t().dot(&v_aug_slice.slice(ndarray::s![.., k..]).t());
+            let v_res_part = q_res
+                .t()
+                .dot(&centered_batch)
+                .t()
+                .dot(&v_aug_slice.slice(ndarray::s![.., k..]).t());
             v_new.assign(&(&v_old_part + &v_res_part));
-            
+
             self.svd_u = Some(u_new);
             self.svd_v = Some(v_new.clone());
             self.components = Some(v_new.t().to_owned());
             self.singular_values = Some(self.svd_s.as_ref().unwrap().clone());
         }
-        
+
         Ok(())
     }
 
@@ -568,15 +614,15 @@ impl IncrementalPCA {
     pub fn transform(&self, data: ArrayView2<f64>) -> Result<Array2<f64>> {
         if self.components.is_none() || self.mean.is_none() {
             return Err(StatsError::ComputationError(
-                "IncrementalPCA must be fitted before transform".to_string()
+                "IncrementalPCA must be fitted before transform".to_string(),
             ));
         }
-        
+
         let mut centered = data.to_owned();
         for mut row in centered.rows_mut() {
             row -= self.mean.as_ref().unwrap();
         }
-        
+
         Ok(centered.dot(&self.components.as_ref().unwrap().t()))
     }
 }

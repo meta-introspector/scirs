@@ -4,8 +4,8 @@
 //! statistical functions that can benefit significantly from vectorization.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2, Axis};
-use num_traits::{Float, NumCast, FromPrimitive};
+use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix1, Ix2};
+use num_traits::{Float, FromPrimitive, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 
 /// SIMD-optimized t-test computation
@@ -53,7 +53,8 @@ where
                 let diff = x - mean1;
                 diff * diff
             })
-            .fold(F::zero(), |acc, x| acc + x) / F::from(n1 - 1).unwrap()
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(n1 - 1).unwrap()
     };
 
     let var2 = if n2 > 16 {
@@ -67,16 +68,18 @@ where
                 let diff = x - mean2;
                 diff * diff
             })
-            .fold(F::zero(), |acc, x| acc + x) / F::from(n2 - 1).unwrap()
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(n2 - 1).unwrap()
     };
 
     // Compute t-statistic
     let (t_stat, df) = if equal_var {
         // Pooled variance
-        let pooled_var = ((F::from(n1 - 1).unwrap() * var1) + (F::from(n2 - 1).unwrap() * var2)) 
+        let pooled_var = ((F::from(n1 - 1).unwrap() * var1) + (F::from(n2 - 1).unwrap() * var2))
             / F::from(n1 + n2 - 2).unwrap();
-        
-        let se = (pooled_var * (F::one() / F::from(n1).unwrap() + F::one() / F::from(n2).unwrap())).sqrt();
+
+        let se = (pooled_var * (F::one() / F::from(n1).unwrap() + F::one() / F::from(n2).unwrap()))
+            .sqrt();
         let t = (mean1 - mean2) / se;
         let df = F::from(n1 + n2 - 2).unwrap();
         (t, df)
@@ -86,11 +89,11 @@ where
         let se2_sq = var2 / F::from(n2).unwrap();
         let se = (se1_sq + se2_sq).sqrt();
         let t = (mean1 - mean2) / se;
-        
+
         // Welch-Satterthwaite equation for degrees of freedom
         let num = (se1_sq + se2_sq) * (se1_sq + se2_sq);
-        let den = (se1_sq * se1_sq) / F::from(n1 - 1).unwrap() + 
-                  (se2_sq * se2_sq) / F::from(n2 - 1).unwrap();
+        let den = (se1_sq * se1_sq) / F::from(n1 - 1).unwrap()
+            + (se2_sq * se2_sq) / F::from(n2 - 1).unwrap();
         let df = num / den;
         (t, df)
     };
@@ -104,15 +107,13 @@ where
 /// SIMD-optimized matrix multiplication for correlation matrices
 ///
 /// Efficiently computes correlation matrices using SIMD operations.
-pub fn corrcoef_matrix_simd<F, D>(
-    data: &ArrayBase<D, Ix2>,
-) -> StatsResult<Array2<F>>
+pub fn corrcoef_matrix_simd<F, D>(data: &ArrayBase<D, Ix2>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + FromPrimitive + Clone,
     D: Data<Elem = F>,
 {
     let (n_samples, n_features) = data.dim();
-    
+
     if n_samples < 2 {
         return Err(StatsError::invalid_argument("Need at least 2 samples"));
     }
@@ -182,9 +183,8 @@ where
 /// SIMD-optimized robust statistics computation
 ///
 /// Computes robust statistics using SIMD acceleration where applicable.
-pub fn robust_statistics_simd<F, D>(
-    data: &ArrayBase<D, Ix1>,
-) -> StatsResult<(F, F, F)> // (median, mad, iqr)
+pub fn robust_statistics_simd<F, D>(data: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F)>
+// (median, mad, iqr)
 where
     F: Float + NumCast + SimdUnifiedOps,
     D: Data<Elem = F>,
@@ -215,7 +215,7 @@ where
         // For now, use standard approach
         let mut dev_sorted = deviations.to_vec();
         dev_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         if n % 2 == 0 {
             (dev_sorted[n / 2 - 1] + dev_sorted[n / 2]) / F::from(2).unwrap()
         } else {
@@ -224,7 +224,7 @@ where
     } else {
         let mut dev_sorted = deviations.to_vec();
         dev_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         if n % 2 == 0 {
             (dev_sorted[n / 2 - 1] + dev_sorted[n / 2]) / F::from(2).unwrap()
         } else {
@@ -258,8 +258,8 @@ where
         return Err(StatsError::invalid_argument("Data cannot be empty"));
     }
 
-    use rand::{SeedableRng, Rng};
     use rand::rngs::StdRng;
+    use rand::{Rng, SeedableRng};
 
     let mut rng = match seed {
         Some(s) => StdRng::seed_from_u64(s),
@@ -303,14 +303,17 @@ where
 pub fn linear_regression_simd<F, D1, D2>(
     x: &ArrayBase<D1, Ix1>,
     y: &ArrayBase<D2, Ix1>,
-) -> StatsResult<(F, F)> // (slope, intercept)
+) -> StatsResult<(F, F)>
+// (slope, intercept)
 where
     F: Float + NumCast + SimdUnifiedOps,
     D1: Data<Elem = F>,
     D2: Data<Elem = F>,
 {
     if x.len() != y.len() {
-        return Err(StatsError::dimension_mismatch("x and y must have same length"));
+        return Err(StatsError::dimension_mismatch(
+            "x and y must have same length",
+        ));
     }
 
     if x.len() < 2 {
@@ -334,33 +337,35 @@ where
     let (numerator, denominator) = if n > 16 {
         let mean_x_array = Array1::from_elem(n, mean_x);
         let mean_y_array = Array1::from_elem(n, mean_y);
-        
+
         let x_diff = F::simd_sub(&x.view(), &mean_x_array.view());
         let y_diff = F::simd_sub(&y.view(), &mean_y_array.view());
-        
+
         let xy_prod = F::simd_mul(&x_diff.view(), &y_diff.view());
         let x_sq = F::simd_mul(&x_diff.view(), &x_diff.view());
-        
+
         let numerator = F::simd_sum(&xy_prod.view());
         let denominator = F::simd_sum(&x_sq.view());
-        
+
         (numerator, denominator)
     } else {
         let mut numerator = F::zero();
         let mut denominator = F::zero();
-        
+
         for (&xi, &yi) in x.iter().zip(y.iter()) {
             let x_diff = xi - mean_x;
             let y_diff = yi - mean_y;
             numerator = numerator + x_diff * y_diff;
             denominator = denominator + x_diff * x_diff;
         }
-        
+
         (numerator, denominator)
     };
 
     if denominator.abs() < F::epsilon() {
-        return Err(StatsError::computation("Cannot compute slope: zero variance in x"));
+        return Err(StatsError::computation(
+            "Cannot compute slope: zero variance in x",
+        ));
     }
 
     let slope = numerator / denominator;
@@ -395,9 +400,13 @@ fn erf_approx<F: Float>(x: F) -> F {
     // Simple rational approximation
     let a = F::from(0.3275911).unwrap();
     let p = F::from(0.254829592).unwrap();
-    
+
     let t = F::one() / (F::one() + a * x.abs());
     let y = F::one() - p * t * (-x * x).exp();
-    
-    if x >= F::zero() { y } else { -y }
+
+    if x >= F::zero() {
+        y
+    } else {
+        -y
+    }
 }

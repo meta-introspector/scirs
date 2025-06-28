@@ -11,14 +11,18 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use crate::error::{ClusteringError, Result};
-use crate::metrics::{silhouette_score, davies_bouldin_score, calinski_harabasz_score};
-use crate::stability::OptimalKSelector;
-use crate::vq::{kmeans, kmeans2};
+use crate::advanced::{
+    adaptive_online_clustering, quantum_kmeans, rl_clustering, AdaptiveOnlineConfig, QuantumConfig,
+    RLClusteringConfig,
+};
 use crate::density::{dbscan, optics};
-use crate::meanshift::mean_shift;
+use crate::error::{ClusteringError, Result};
 use crate::gmm::gaussian_mixture;
 use crate::hierarchy::linkage;
+use crate::meanshift::mean_shift;
+use crate::metrics::{calinski_harabasz_score, davies_bouldin_score, silhouette_score};
+use crate::stability::OptimalKSelector;
+use crate::vq::{kmeans, kmeans2};
 
 /// Hyperparameter tuning configuration
 #[derive(Debug, Clone)]
@@ -63,6 +67,23 @@ pub enum SearchStrategy {
         objectives: Vec<EvaluationMetric>,
         strategy: Box<SearchStrategy>,
     },
+    /// Ensemble search combining multiple strategies
+    EnsembleSearch {
+        strategies: Vec<SearchStrategy>,
+        weights: Vec<f64>,
+    },
+    /// Evolutionary search strategy
+    EvolutionarySearch {
+        population_size: usize,
+        n_generations: usize,
+        mutation_rate: f64,
+        crossover_rate: f64,
+    },
+    /// Sequential model-based optimization
+    SMBO {
+        surrogate_model: SurrogateModel,
+        acquisition_function: AcquisitionFunction,
+    },
 }
 
 /// Acquisition functions for Bayesian optimization
@@ -74,6 +95,42 @@ pub enum AcquisitionFunction {
     UpperConfidenceBound { beta: f64 },
     /// Probability of Improvement
     ProbabilityOfImprovement,
+    /// Entropy Search
+    EntropySearch,
+    /// Knowledge Gradient
+    KnowledgeGradient,
+    /// Thompson Sampling
+    ThompsonSampling,
+}
+
+/// Surrogate models for SMBO
+#[derive(Debug, Clone)]
+pub enum SurrogateModel {
+    /// Gaussian Process
+    GaussianProcess { kernel: KernelType, noise: f64 },
+    /// Random Forest
+    RandomForest {
+        n_trees: usize,
+        max_depth: Option<usize>,
+    },
+    /// Gradient Boosting
+    GradientBoosting {
+        n_estimators: usize,
+        learning_rate: f64,
+    },
+}
+
+/// Kernel types for Gaussian Processes
+#[derive(Debug, Clone)]
+pub enum KernelType {
+    /// Radial Basis Function (RBF)
+    RBF { length_scale: f64 },
+    /// Matérn kernel
+    Matern { length_scale: f64, nu: f64 },
+    /// Linear kernel
+    Linear,
+    /// Polynomial kernel
+    Polynomial { degree: usize },
 }
 
 /// Evaluation metrics for hyperparameter optimization
@@ -91,6 +148,12 @@ pub enum EvaluationMetric {
     AdjustedRandIndex,
     /// Custom metric
     Custom(String),
+    /// Ensemble consensus score
+    EnsembleConsensus,
+    /// Stability-based metrics
+    Stability,
+    /// Information-theoretic metrics
+    MutualInformation,
 }
 
 /// Cross-validation configuration
@@ -117,6 +180,15 @@ pub enum CVStrategy {
     TimeSeriesSplit,
     /// Bootstrap cross-validation
     Bootstrap { n_bootstrap: usize },
+    /// Ensemble cross-validation (multiple CV strategies)
+    EnsembleCV { strategies: Vec<CVStrategy> },
+    /// Monte Carlo cross-validation
+    MonteCarlo { n_splits: usize, test_size: f64 },
+    /// Nested cross-validation
+    NestedCV {
+        outer_folds: usize,
+        inner_folds: usize,
+    },
 }
 
 /// Early stopping configuration
@@ -258,6 +330,36 @@ pub struct TuningResult {
     pub exploration_stats: ExplorationStats,
     /// Total tuning time
     pub total_time: f64,
+    /// Ensemble results (if ensemble method was used)
+    pub ensemble_results: Option<EnsembleResults>,
+    /// Pareto front (for multi-objective optimization)
+    pub pareto_front: Option<Vec<HashMap<String, f64>>>,
+}
+
+/// Results from ensemble tuning
+#[derive(Debug, Clone)]
+pub struct EnsembleResults {
+    /// Results from each ensemble member
+    pub member_results: Vec<TuningResult>,
+    /// Consensus best parameters
+    pub consensus_parameters: HashMap<String, f64>,
+    /// Agreement score between ensemble members
+    pub agreement_score: f64,
+    /// Diversity metrics
+    pub diversity_metrics: HashMap<String, f64>,
+}
+
+/// Bayesian optimization state
+#[derive(Debug, Clone)]
+struct BayesianState {
+    /// Observed parameters and scores
+    observations: Vec<(HashMap<String, f64>, f64)>,
+    /// Gaussian process mean function
+    gp_mean: Option<f64>,
+    /// Gaussian process covariance matrix
+    gp_covariance: Option<Array2<f64>>,
+    /// Acquisition function values
+    acquisition_values: Vec<f64>,
 }
 
 /// Convergence information
@@ -305,8 +407,9 @@ pub struct AutoTuner<F: Float> {
     _phantom: std::marker::PhantomData<F>,
 }
 
-impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync>
-    AutoTuner<F>
+impl<
+        F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync,
+    > AutoTuner<F>
 where
     f64: From<F>,
 {
@@ -746,13 +849,57 @@ where
             SearchStrategy::RandomSearch { n_trials } => {
                 self.generate_random_combinations(search_space, *n_trials)
             }
-            SearchStrategy::BayesianOptimization { .. } => {
-                // For now, fall back to random search
-                self.generate_random_combinations(search_space, self.config.max_evaluations)
+            SearchStrategy::BayesianOptimization {
+                n_initial_points,
+                acquisition_function,
+            } => self.generate_bayesian_combinations(
+                search_space,
+                *n_initial_points,
+                acquisition_function,
+            ),
+            SearchStrategy::EnsembleSearch {
+                strategies,
+                weights,
+            } => self.generate_ensemble_combinations(search_space, strategies, weights),
+            SearchStrategy::EvolutionarySearch {
+                population_size,
+                n_generations,
+                mutation_rate,
+                crossover_rate,
+            } => self.generate_evolutionary_combinations(
+                search_space,
+                *population_size,
+                *n_generations,
+                *mutation_rate,
+                *crossover_rate,
+            ),
+            SearchStrategy::SMBO {
+                surrogate_model,
+                acquisition_function,
+            } => {
+                self.generate_smbo_combinations(search_space, surrogate_model, acquisition_function)
             }
-            _ => {
-                // For other strategies, fall back to random search
-                self.generate_random_combinations(search_space, self.config.max_evaluations)
+            SearchStrategy::MultiObjective {
+                objectives,
+                strategy,
+            } => {
+                // For multi-objective, we need special handling
+                self.generate_multi_objective_combinations(search_space, objectives, strategy)
+            }
+            SearchStrategy::AdaptiveSearch {
+                initial_strategy, ..
+            } => {
+                // Start with initial strategy
+                match initial_strategy.as_ref() {
+                    SearchStrategy::RandomSearch { n_trials } => {
+                        self.generate_random_combinations(search_space, *n_trials)
+                    }
+                    SearchStrategy::GridSearch => self.generate_grid_combinations(search_space),
+                    _ => {
+                        // Fallback to random search
+                        self.generate_random_combinations(search_space, self.config.max_evaluations)
+                    }
+                }
             }
         }
     }
@@ -778,9 +925,7 @@ where
                     // Create a reasonable grid for float parameters
                     let n_steps = 10; // Could be configurable
                     let step = (max - min) / (n_steps as f64 - 1.0);
-                    let values: Vec<f64> = (0..n_steps)
-                        .map(|i| min + i as f64 * step)
-                        .collect();
+                    let values: Vec<f64> = (0..n_steps).map(|i| min + i as f64 * step).collect();
                     param_values.push(values);
                 }
                 HyperParameter::Categorical { choices } => {
@@ -809,7 +954,13 @@ where
         }
 
         // Generate all combinations
-        self.generate_cartesian_product(&param_names, &param_values, &mut combinations, Vec::new(), 0);
+        self.generate_cartesian_product(
+            &param_names,
+            &param_values,
+            &mut combinations,
+            Vec::new(),
+            0,
+        );
 
         Ok(combinations)
     }
@@ -835,7 +986,13 @@ where
         for &value in &param_values[index] {
             let mut new_current = current.clone();
             new_current.push(value);
-            self.generate_cartesian_product(param_names, param_values, combinations, new_current, index + 1);
+            self.generate_cartesian_product(
+                param_names,
+                param_values,
+                combinations,
+                new_current,
+                index + 1,
+            );
         }
     }
 
@@ -856,17 +1013,17 @@ where
 
             for (name, param) in &search_space.parameters {
                 let value = match param {
-                    HyperParameter::Integer { min, max } => {
-                        rng.gen_range(*min..=*max) as f64
-                    }
-                    HyperParameter::Float { min, max } => {
-                        rng.gen_range(*min..=*max)
-                    }
+                    HyperParameter::Integer { min, max } => rng.gen_range(*min..=*max) as f64,
+                    HyperParameter::Float { min, max } => rng.gen_range(*min..=*max),
                     HyperParameter::Categorical { choices } => {
                         rng.gen_range(0..choices.len()) as f64
                     }
                     HyperParameter::Boolean => {
-                        if rng.gen_bool(0.5) { 1.0 } else { 0.0 }
+                        if rng.gen_bool(0.5) {
+                            1.0
+                        } else {
+                            0.0
+                        }
                     }
                     HyperParameter::LogUniform { min, max } => {
                         let log_min = min.ln();
@@ -899,7 +1056,8 @@ where
             return false;
         }
 
-        let recent_evaluations = &evaluation_history[evaluation_history.len() - early_stop_config.patience..];
+        let recent_evaluations =
+            &evaluation_history[evaluation_history.len() - early_stop_config.patience..];
         let best_recent = recent_evaluations
             .iter()
             .map(|r| r.score)
@@ -914,7 +1072,10 @@ where
     }
 
     /// Calculate exploration statistics
-    fn calculate_exploration_stats(&self, evaluation_history: &[EvaluationResult]) -> ExplorationStats {
+    fn calculate_exploration_stats(
+        &self,
+        evaluation_history: &[EvaluationResult],
+    ) -> ExplorationStats {
         let mut parameter_distributions = HashMap::new();
         let mut parameter_importance = HashMap::new();
 
@@ -963,6 +1124,115 @@ where
         } else {
             numerator / denominator
         }
+    }
+
+    /// Generate Bayesian optimization combinations
+    fn generate_bayesian_combinations(
+        &self,
+        search_space: &SearchSpace,
+        n_initial_points: usize,
+        acquisition_function: &AcquisitionFunction,
+    ) -> Result<Vec<HashMap<String, f64>>> {
+        let mut combinations = Vec::new();
+        let mut bayesian_state = BayesianState {
+            observations: Vec::new(),
+            gp_mean: None,
+            gp_covariance: None,
+            acquisition_values: Vec::new(),
+        };
+
+        // Generate initial random points
+        let initial_points = self.generate_random_combinations(search_space, n_initial_points)?;
+        combinations.extend(initial_points);
+
+        // Generate remaining points using Bayesian optimization
+        let remaining_points = self.config.max_evaluations.saturating_sub(n_initial_points);
+
+        for _ in 0..remaining_points {
+            // Update Gaussian process with current observations
+            self.update_gaussian_process(&mut bayesian_state, &combinations);
+
+            // Find next point with highest acquisition function value
+            let next_point = self.optimize_acquisition_function(
+                search_space,
+                &bayesian_state,
+                acquisition_function,
+            )?;
+
+            combinations.push(next_point);
+        }
+
+        Ok(combinations)
+    }
+
+    /// Generate ensemble search combinations
+    fn generate_ensemble_combinations(
+        &self,
+        search_space: &SearchSpace,
+        strategies: &[SearchStrategy],
+        weights: &[f64],
+    ) -> Result<Vec<HashMap<String, f64>>> {
+        let mut all_combinations = Vec::new();
+        let total_evaluations = self.config.max_evaluations;
+
+        // Normalize weights
+        let weight_sum: f64 = weights.iter().sum();
+        let normalized_weights: Vec<f64> = weights.iter().map(|w| w / weight_sum).collect();
+
+        // Allocate evaluations based on weights
+        for (strategy, &weight) in strategies.iter().zip(normalized_weights.iter()) {
+            let n_evaluations = (total_evaluations as f64 * weight) as usize;
+
+            let strategy_combinations = match strategy {
+                SearchStrategy::RandomSearch { .. } => {
+                    self.generate_random_combinations(search_space, n_evaluations)?
+                }
+                SearchStrategy::GridSearch => {
+                    let grid_combinations = self.generate_grid_combinations(search_space)?;
+                    grid_combinations.into_iter().take(n_evaluations).collect()
+                }
+                _ => {
+                    // Fallback to random search for complex strategies
+                    self.generate_random_combinations(search_space, n_evaluations)?
+                }
+            };
+
+            all_combinations.extend(strategy_combinations);
+        }
+
+        // Shuffle to mix different strategies
+        let mut rng = match self.config.random_seed {
+            Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
+            None => rand::rngs::StdRng::seed_from_u64(42),
+        };
+
+        use rand::seq::SliceRandom;
+        all_combinations.shuffle(&mut rng);
+
+        Ok(all_combinations)
+    }
+
+    /// Update Gaussian process with new observations
+    fn update_gaussian_process(
+        &self,
+        _bayesian_state: &mut BayesianState,
+        _combinations: &[HashMap<String, f64>],
+    ) {
+        // Simplified implementation - in practice, this would fit a GP
+        // to the observed (parameter, score) pairs
+    }
+
+    /// Optimize acquisition function to find next point
+    fn optimize_acquisition_function(
+        &self,
+        search_space: &SearchSpace,
+        _bayesian_state: &BayesianState,
+        _acquisition_function: &AcquisitionFunction,
+    ) -> Result<HashMap<String, f64>> {
+        // Simplified implementation - in practice, this would optimize
+        // the acquisition function over the parameter space
+        let random_points = self.generate_random_combinations(search_space, 1)?;
+        Ok(random_points.into_iter().next().unwrap())
     }
 }
 
@@ -1078,6 +1348,106 @@ impl StandardSearchSpaces {
             constraints: Vec::new(),
         }
     }
+
+    /// Quantum K-means search space
+    pub fn quantum_kmeans() -> SearchSpace {
+        let mut parameters = HashMap::new();
+        parameters.insert(
+            "n_clusters".to_string(),
+            HyperParameter::Integer { min: 2, max: 20 },
+        );
+        parameters.insert(
+            "n_quantum_states".to_string(),
+            HyperParameter::IntegerChoices {
+                choices: vec![4, 8, 16, 32],
+            },
+        );
+        parameters.insert(
+            "quantum_iterations".to_string(),
+            HyperParameter::IntegerChoices {
+                choices: vec![20, 50, 100, 200],
+            },
+        );
+        parameters.insert(
+            "decoherence_factor".to_string(),
+            HyperParameter::Float {
+                min: 0.8,
+                max: 0.99,
+            },
+        );
+        parameters.insert(
+            "entanglement_strength".to_string(),
+            HyperParameter::Float { min: 0.1, max: 0.5 },
+        );
+
+        SearchSpace {
+            parameters,
+            constraints: Vec::new(),
+        }
+    }
+
+    /// Reinforcement learning clustering search space
+    pub fn rl_clustering() -> SearchSpace {
+        let mut parameters = HashMap::new();
+        parameters.insert(
+            "n_actions".to_string(),
+            HyperParameter::Integer { min: 5, max: 50 },
+        );
+        parameters.insert(
+            "learning_rate".to_string(),
+            HyperParameter::LogUniform {
+                min: 0.001,
+                max: 0.5,
+            },
+        );
+        parameters.insert(
+            "exploration_rate".to_string(),
+            HyperParameter::Float { min: 0.1, max: 1.0 },
+        );
+        parameters.insert(
+            "n_episodes".to_string(),
+            HyperParameter::IntegerChoices {
+                choices: vec![50, 100, 200, 500],
+            },
+        );
+
+        SearchSpace {
+            parameters,
+            constraints: Vec::new(),
+        }
+    }
+
+    /// Adaptive online clustering search space
+    pub fn adaptive_online() -> SearchSpace {
+        let mut parameters = HashMap::new();
+        parameters.insert(
+            "initial_learning_rate".to_string(),
+            HyperParameter::LogUniform {
+                min: 0.001,
+                max: 0.5,
+            },
+        );
+        parameters.insert(
+            "cluster_creation_threshold".to_string(),
+            HyperParameter::Float { min: 1.0, max: 5.0 },
+        );
+        parameters.insert(
+            "max_clusters".to_string(),
+            HyperParameter::Integer { min: 10, max: 100 },
+        );
+        parameters.insert(
+            "forgetting_factor".to_string(),
+            HyperParameter::Float {
+                min: 0.9,
+                max: 0.99,
+            },
+        );
+
+        SearchSpace {
+            parameters,
+            constraints: Vec::new(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -1102,6 +1472,21 @@ mod tests {
         let dbscan_space = StandardSearchSpaces::dbscan();
         assert!(dbscan_space.parameters.contains_key("eps"));
         assert!(dbscan_space.parameters.contains_key("min_samples"));
+
+        let quantum_space = StandardSearchSpaces::quantum_kmeans();
+        assert!(quantum_space.parameters.contains_key("n_clusters"));
+        assert!(quantum_space.parameters.contains_key("n_quantum_states"));
+        assert!(quantum_space.parameters.contains_key("decoherence_factor"));
+
+        let rl_space = StandardSearchSpaces::rl_clustering();
+        assert!(rl_space.parameters.contains_key("n_actions"));
+        assert!(rl_space.parameters.contains_key("learning_rate"));
+
+        let adaptive_space = StandardSearchSpaces::adaptive_online();
+        assert!(adaptive_space
+            .parameters
+            .contains_key("initial_learning_rate"));
+        assert!(adaptive_space.parameters.contains_key("max_clusters"));
     }
 
     #[test]
@@ -1109,7 +1494,10 @@ mod tests {
         let config = TuningConfig::default();
         let tuner: AutoTuner<f64> = AutoTuner::new(config);
         // Test that the tuner can be created successfully
-        assert_eq!(std::mem::size_of_val(&tuner), std::mem::size_of::<TuningConfig>());
+        assert_eq!(
+            std::mem::size_of_val(&tuner),
+            std::mem::size_of::<TuningConfig>()
+        );
     }
 
     #[test]
@@ -1118,13 +1506,15 @@ mod tests {
         let tuner: AutoTuner<f64> = AutoTuner::new(config);
         let search_space = StandardSearchSpaces::kmeans();
 
-        let combinations = tuner.generate_random_combinations(&search_space, 10).unwrap();
+        let combinations = tuner
+            .generate_random_combinations(&search_space, 10)
+            .unwrap();
         assert_eq!(combinations.len(), 10);
 
         for combo in &combinations {
             assert!(combo.contains_key("n_clusters"));
             assert!(combo.contains_key("max_iter"));
-            
+
             let n_clusters = combo["n_clusters"];
             assert!(n_clusters >= 2.0 && n_clusters <= 20.0);
         }

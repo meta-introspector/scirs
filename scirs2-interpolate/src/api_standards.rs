@@ -13,7 +13,7 @@ use ndarray::{ArrayView1, ArrayView2};
 /// 1. Name: `make_<interpolator_name>`
 /// 2. Parameters: points, values, config (optional)
 /// 3. Return: InterpolateResult<Interpolator>
-/// 
+///
 /// # Example Implementation
 /// ```ignore
 /// pub fn make_example_interpolator<T: InterpolationFloat>(
@@ -34,23 +34,23 @@ use ndarray::{ArrayView1, ArrayView2};
 /// ```
 pub mod factory_pattern {
     use super::*;
-    
+
     /// Example configuration structure
     #[derive(Debug, Clone)]
     pub struct StandardConfig<T: InterpolationFloat> {
         /// Smoothing parameter
         pub smoothing: Option<T>,
-        
+
         /// Regularization parameter
         pub regularization: Option<T>,
-        
+
         /// Maximum iterations for iterative methods
         pub max_iterations: usize,
-        
+
         /// Convergence tolerance
         pub tolerance: T,
     }
-    
+
     impl<T: InterpolationFloat> Default for StandardConfig<T> {
         fn default() -> Self {
             Self {
@@ -61,26 +61,26 @@ pub mod factory_pattern {
             }
         }
     }
-    
+
     impl<T: InterpolationFloat> InterpolationConfig for StandardConfig<T> {
         fn validate(&self) -> InterpolateResult<()> {
             if self.max_iterations == 0 {
                 return Err(InterpolateError::invalid_input(
-                    "max_iterations must be greater than 0"
+                    "max_iterations must be greater than 0",
                 ));
             }
-            
+
             if let Some(s) = self.smoothing {
                 if s <= T::zero() {
                     return Err(InterpolateError::invalid_input(
-                        "smoothing parameter must be positive"
+                        "smoothing parameter must be positive",
                     ));
                 }
             }
-            
+
             Ok(())
         }
-        
+
         fn default() -> Self {
             <Self as std::default::Default>::default()
         }
@@ -91,7 +91,7 @@ pub mod factory_pattern {
 ///
 /// For more complex interpolators, use a builder pattern that follows
 /// these conventions:
-/// 
+///
 /// # Example
 /// ```ignore
 /// let interpolator = ExampleInterpolatorBuilder::new()
@@ -102,13 +102,13 @@ pub mod factory_pattern {
 /// ```
 pub mod builder_pattern {
     use super::*;
-    
+
     /// Example builder structure
     #[derive(Debug, Clone)]
     pub struct StandardInterpolatorBuilder<T: InterpolationFloat> {
         config: factory_pattern::StandardConfig<T>,
     }
-    
+
     impl<T: InterpolationFloat> StandardInterpolatorBuilder<T> {
         /// Create a new builder with default configuration
         pub fn new() -> Self {
@@ -116,31 +116,31 @@ pub mod builder_pattern {
                 config: Default::default(),
             }
         }
-        
+
         /// Set smoothing parameter
         pub fn with_smoothing(mut self, smoothing: T) -> Self {
             self.config.smoothing = Some(smoothing);
             self
         }
-        
+
         /// Set regularization parameter  
         pub fn with_regularization(mut self, regularization: T) -> Self {
             self.config.regularization = Some(regularization);
             self
         }
-        
+
         /// Set maximum iterations
         pub fn with_max_iterations(mut self, max_iterations: usize) -> Self {
             self.config.max_iterations = max_iterations;
             self
         }
-        
+
         /// Set convergence tolerance
         pub fn with_tolerance(mut self, tolerance: T) -> Self {
             self.config.tolerance = tolerance;
             self
         }
-        
+
         /// Build the interpolator
         pub fn build<I>(
             self,
@@ -148,15 +148,19 @@ pub mod builder_pattern {
             values: &ArrayView1<T>,
         ) -> InterpolateResult<I>
         where
-            for<'a> I: From<(ArrayView2<'a, T>, ArrayView1<'a, T>, factory_pattern::StandardConfig<T>)>,
+            for<'a> I: From<(
+                ArrayView2<'a, T>,
+                ArrayView1<'a, T>,
+                factory_pattern::StandardConfig<T>,
+            )>,
         {
             validation::validate_data_consistency(points, values)?;
             self.config.validate()?;
-            
+
             Ok(I::from((points.view(), values.view(), self.config)))
         }
     }
-    
+
     impl<T: InterpolationFloat> Default for StandardInterpolatorBuilder<T> {
         fn default() -> Self {
             Self::new()
@@ -169,7 +173,7 @@ pub mod builder_pattern {
 /// All interpolators should implement consistent evaluation methods
 pub mod evaluation_pattern {
     use super::*;
-    
+
     /// Standard batch evaluation with options
     pub fn evaluate_batch<T, I>(
         interpolator: &I,
@@ -181,13 +185,13 @@ pub mod evaluation_pattern {
         I: Interpolator<T>,
     {
         let _options = options.unwrap_or_default();
-        
+
         // Validate query dimension
         // validation::validate_query_dimension(interpolator.data_dim(), query_points)?;
-        
+
         // Perform evaluation
         let values = interpolator.evaluate(query_points)?;
-        
+
         Ok(BatchEvaluationResult {
             values,
             uncertainties: None,
@@ -201,37 +205,37 @@ pub mod evaluation_pattern {
 /// Consistent error creation and messages across the library
 pub mod error_handling {
     use crate::InterpolateError;
-    
+
     /// Create standard dimension mismatch error using structured error type
     pub fn dimension_mismatch(expected: usize, actual: usize, context: &str) -> InterpolateError {
         InterpolateError::dimension_mismatch(expected, actual, context)
     }
-    
+
     /// Create standard empty data error using structured error type
     pub fn empty_data(context: &str) -> InterpolateError {
         InterpolateError::empty_data(context)
     }
-    
+
     /// Create standard invalid parameter error using structured error type
     pub fn invalid_parameter<T: std::fmt::Display>(
-        param: &str, 
-        expected: &str, 
+        param: &str,
+        expected: &str,
         actual: T,
-        context: &str
+        context: &str,
     ) -> InterpolateError {
         InterpolateError::invalid_parameter(param, expected, actual, context)
     }
-    
+
     /// Create standard convergence failure error using structured error type
     pub fn convergence_failure(method: &str, iterations: usize) -> InterpolateError {
         InterpolateError::convergence_failure(method, iterations)
     }
-    
+
     /// Create standard numerical instability error
     pub fn numerical_instability(context: &str, details: &str) -> InterpolateError {
         InterpolateError::numerical_instability(context, details)
     }
-    
+
     /// Create standard insufficient points error
     pub fn insufficient_points(required: usize, provided: usize, method: &str) -> InterpolateError {
         InterpolateError::insufficient_points(required, provided, method)
@@ -242,9 +246,9 @@ pub mod error_handling {
 ///
 /// Comprehensive validation utilities for consistent input checking
 pub mod input_validation {
-    use crate::{InterpolateError, InterpolateResult, traits::InterpolationFloat};
+    use crate::{traits::InterpolationFloat, InterpolateError, InterpolateResult};
     use ndarray::{ArrayView1, ArrayView2};
-    
+
     /// Validate that data points are finite and well-formed
     pub fn validate_finite_data<T: InterpolationFloat>(
         points: &ArrayView2<T>,
@@ -264,7 +268,7 @@ pub mod input_validation {
                 }
             }
         }
-        
+
         // Check for NaN or infinite values in function values
         for (i, &val) in values.iter().enumerate() {
             if !val.is_finite() {
@@ -276,10 +280,10 @@ pub mod input_validation {
                 });
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Validate that data has sufficient points for the method
     pub fn validate_sufficient_points<T: InterpolationFloat>(
         points: &ArrayView2<T>,
@@ -290,14 +294,14 @@ pub mod input_validation {
         let n_points = points.nrows();
         if n_points < minimum_required {
             return Err(InterpolateError::insufficient_points(
-                minimum_required, 
-                n_points, 
-                method_name
+                minimum_required,
+                n_points,
+                method_name,
             ));
         }
         Ok(())
     }
-    
+
     /// Validate query points have correct dimensions and are finite
     pub fn validate_query_points<T: InterpolationFloat>(
         query_points: &ArrayView2<T>,
@@ -308,10 +312,10 @@ pub mod input_validation {
             return Err(InterpolateError::dimension_mismatch(
                 expected_dim,
                 query_points.ncols(),
-                &format!("{} query points", context)
+                &format!("{} query points", context),
             ));
         }
-        
+
         // Check for finite values
         for (i, point_slice) in query_points.outer_iter().enumerate() {
             for (j, &val) in point_slice.iter().enumerate() {
@@ -325,10 +329,10 @@ pub mod input_validation {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Validate parameter is positive
     pub fn validate_positive<T: InterpolationFloat>(
         value: T,
@@ -345,7 +349,7 @@ pub mod input_validation {
         }
         Ok(())
     }
-    
+
     /// Validate parameter is non-negative
     pub fn validate_non_negative<T: InterpolationFloat>(
         value: T,
@@ -362,7 +366,7 @@ pub mod input_validation {
         }
         Ok(())
     }
-    
+
     /// Validate parameter is within a specific range
     pub fn validate_range<T: InterpolationFloat>(
         value: T,
@@ -388,7 +392,7 @@ pub mod input_validation {
 /// Examples of how to migrate existing APIs to the new standard
 pub mod migration_examples {
     use super::*;
-    
+
     // Old API:
     // pub fn make_rbf_interpolator<F>(
     //     x: &ArrayView2<F>,
@@ -396,14 +400,14 @@ pub mod migration_examples {
     //     kernel: RBFKernel,
     //     epsilon: F,
     // ) -> InterpolateResult<RBFInterpolator<F>>
-    
+
     // New standardized API:
     #[derive(Debug, Clone)]
     pub struct RBFConfig<T: InterpolationFloat> {
         pub kernel: RBFKernel,
         pub epsilon: T,
     }
-    
+
     #[derive(Debug, Clone)]
     pub enum RBFKernel {
         Gaussian,
@@ -411,7 +415,7 @@ pub mod migration_examples {
         InverseMultiquadric,
         ThinPlate,
     }
-    
+
     impl<T: InterpolationFloat> Default for RBFConfig<T> {
         fn default() -> Self {
             Self {
@@ -420,22 +424,20 @@ pub mod migration_examples {
             }
         }
     }
-    
+
     impl<T: InterpolationFloat> InterpolationConfig for RBFConfig<T> {
         fn validate(&self) -> InterpolateResult<()> {
             if self.epsilon <= T::zero() {
-                return Err(InterpolateError::invalid_input(
-                    "epsilon must be positive"
-                ));
+                return Err(InterpolateError::invalid_input("epsilon must be positive"));
             }
             Ok(())
         }
-        
+
         fn default() -> Self {
             <Self as std::default::Default>::default()
         }
     }
-    
+
     /// Standardized RBF factory function
     pub fn make_rbf_interpolator<T: InterpolationFloat, I>(
         points: &ArrayView2<T>,
@@ -446,10 +448,10 @@ pub mod migration_examples {
         for<'a> I: From<(ArrayView2<'a, T>, ArrayView1<'a, T>, RBFConfig<T>)>,
     {
         validation::validate_data_consistency(points, values)?;
-        
+
         let config = config.unwrap_or_default();
         config.validate()?;
-        
+
         Ok(I::from((points.view(), values.view(), config)))
     }
 }

@@ -3,9 +3,9 @@
 //! This module leverages NVIDIA Tensor Cores for accelerated matrix operations
 //! in optimization algorithms, providing significant speedup for suitable workloads.
 
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView2};
-use scirs2_core::error::{ScirsError, ScirsResult};
-use scirs2_core::gpu::{GpuContext, GpuArray, GpuKernel, TensorCoreConfig};
+use scirs2_core::gpu::{GpuArray, GpuContext, GpuKernel, TensorCoreConfig};
 use std::sync::Arc;
 
 /// Tensor Core acceleration configuration
@@ -53,7 +53,7 @@ impl TensorCoreOptimizer {
         // Check Tensor Core capability
         if !context.supports_tensor_cores()? {
             return Err(ScirsError::NotSupported(
-                "Tensor Cores not available on this device".to_string()
+                "Tensor Cores not available on this device".to_string(),
             ));
         }
 
@@ -76,7 +76,8 @@ impl TensorCoreOptimizer {
         config: &TensorCoreOptimizationConfig,
     ) -> ScirsResult<GpuKernel> {
         let kernel_source = if config.mixed_precision {
-            format!(r#"
+            format!(
+                r#"
                 #include <cuda_fp16.h>
                 #include <mma.h>
                 
@@ -127,9 +128,11 @@ impl TensorCoreOptimizer {
                         wmma::store_matrix_sync(C + cRow * N + cCol, c_frag, N, wmma::mem_row_major);
                     }}
                 }}
-            "#, )
+            "#,
+            )
         } else {
-            format!(r#"
+            format!(
+                r#"
                 #include <mma.h>
                 
                 using namespace nvcuda;
@@ -180,7 +183,8 @@ impl TensorCoreOptimizer {
                         wmma::store_matrix_sync(C + cRow * N + cCol, c_frag, N, wmma::mem_row_major);
                     }}
                 }}
-            "#, )
+            "#,
+            )
         };
 
         let kernel_name = if config.mixed_precision {
@@ -335,10 +339,10 @@ impl TensorCoreOptimizer {
     ) -> ScirsResult<()> {
         let (m, k1) = a.shape();
         let (k2, n) = b.shape();
-        
+
         if k1 != k2 {
             return Err(ScirsError::InvalidInput(
-                "Matrix dimensions don't match for multiplication".to_string()
+                "Matrix dimensions don't match for multiplication".to_string(),
             ));
         }
 
@@ -346,7 +350,7 @@ impl TensorCoreOptimizer {
             // Convert to FP16 for computation
             let a_fp16 = self.context.convert_to_fp16(a)?;
             let b_fp16 = self.context.convert_to_fp16(b)?;
-            
+
             // Calculate grid and block dimensions
             let tile_size = self.config.tile_size;
             let grid_x = (m + tile_size - 1) / tile_size;
@@ -405,10 +409,10 @@ impl TensorCoreOptimizer {
         beta_batch: &[f64],
     ) -> ScirsResult<()> {
         let batch_count = a_batch.len();
-        
+
         if batch_count != b_batch.len() || batch_count != c_batch.len() {
             return Err(ScirsError::InvalidInput(
-                "Batch sizes must match".to_string()
+                "Batch sizes must match".to_string(),
             ));
         }
 
@@ -423,11 +427,12 @@ impl TensorCoreOptimizer {
         for i in 0..batch_count {
             let (m, k1) = a_batch[i].shape();
             let (k2, n) = b_batch[i].shape();
-            
+
             if k1 != k2 {
-                return Err(ScirsError::InvalidInput(
-                    format!("Matrix dimensions don't match for batch {}", i)
-                ));
+                return Err(ScirsError::InvalidInput(format!(
+                    "Matrix dimensions don't match for batch {}",
+                    i
+                )));
             }
 
             a_ptrs.push(a_batch[i].as_ptr());
@@ -445,12 +450,21 @@ impl TensorCoreOptimizer {
         let gpu_m_array = self.context.upload_array(&Array1::from(m_array))?;
         let gpu_n_array = self.context.upload_array(&Array1::from(n_array))?;
         let gpu_k_array = self.context.upload_array(&Array1::from(k_array))?;
-        let gpu_alpha_array = self.context.upload_array(&Array1::from(alpha_batch.iter().map(|&x| x as f32).collect::<Vec<_>>()))?;
-        let gpu_beta_array = self.context.upload_array(&Array1::from(beta_batch.iter().map(|&x| x as f32).collect::<Vec<_>>()))?;
+        let gpu_alpha_array = self.context.upload_array(&Array1::from(
+            alpha_batch.iter().map(|&x| x as f32).collect::<Vec<_>>(),
+        ))?;
+        let gpu_beta_array = self.context.upload_array(&Array1::from(
+            beta_batch.iter().map(|&x| x as f32).collect::<Vec<_>>(),
+        ))?;
 
         // Launch batch kernel
         let tile_size = self.config.tile_size;
-        let max_dim = m_array.iter().zip(n_array.iter()).map(|(&m, &n)| m.max(n)).max().unwrap_or(1) as usize;
+        let max_dim = m_array
+            .iter()
+            .zip(n_array.iter())
+            .map(|(&m, &n)| m.max(n))
+            .max()
+            .unwrap_or(1) as usize;
         let grid_x = (max_dim + tile_size - 1) / tile_size;
         let grid_y = grid_x;
         let block_size = 256;

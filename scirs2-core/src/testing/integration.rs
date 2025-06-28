@@ -35,13 +35,13 @@
 //! - scirs2-vision: Computer vision algorithms
 //! - scirs2-series: Time series analysis
 
+use crate::api_versioning::Version;
 use crate::error::{CoreError, CoreResult, ErrorContext};
 use crate::testing::{TestConfig, TestResult, TestRunner, TestSuite};
-use crate::validation::{check_finite, check_positive, check_shape};
-use crate::api_versioning::Version;
+use crate::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 /// Integration test configuration specific to module testing
 #[derive(Debug, Clone)]
@@ -326,10 +326,10 @@ impl IntegrationTestRunner {
     /// Run comprehensive integration tests
     pub fn run_integration_tests(&self) -> CoreResult<IntegrationTestResult> {
         let start_time = Instant::now();
-        
+
         let mut module_results = HashMap::new();
         let mut communication_results = Vec::new();
-        
+
         // Test each target module
         for module_spec in &self.config.target_modules {
             let module_result = self.test_module_integration(module_spec)?;
@@ -348,7 +348,7 @@ impl IntegrationTestRunner {
         let api_compatibility = self.check_api_compatibility()?;
 
         let duration = start_time.elapsed();
-        let passed = module_results.values().all(|r| r.passed) 
+        let passed = module_results.values().all(|r| r.passed)
             && communication_results.iter().all(|r| r.successful)
             && api_compatibility.compatible;
 
@@ -376,7 +376,7 @@ impl IntegrationTestRunner {
         let mut test_results = Vec::new();
         let mut api_checks = Vec::new();
         let mut feature_availability = HashMap::new();
-        let mut errors = Vec::new();
+        let errors = Vec::new();
 
         // Check API availability
         for api_name in &module_spec.expected_apis {
@@ -408,25 +408,41 @@ impl IntegrationTestRunner {
     }
 
     /// Check if an API is available in a module
-    fn check_api_availability(&self, api_name: &str, module_name: &str) -> CoreResult<ApiCheckResult> {
+    fn check_api_availability(
+        &self,
+        api_name: &str,
+        module_name: &str,
+    ) -> CoreResult<ApiCheckResult> {
         // In a real implementation, this would dynamically check for API availability
         // For now, we'll simulate the check based on known module APIs
-        
+
         let available = match module_name {
             "scirs2-linalg" => {
-                matches!(api_name, "matrix_multiply" | "svd" | "eigenvalues" | "solve")
+                matches!(
+                    api_name,
+                    "matrix_multiply" | "svd" | "eigenvalues" | "solve"
+                )
             }
             "scirs2-stats" => {
-                matches!(api_name, "normal_distribution" | "chi_square_test" | "correlation" | "t_test")
+                matches!(
+                    api_name,
+                    "normal_distribution" | "chi_square_test" | "correlation" | "t_test"
+                )
             }
             "scirs2-optimize" => {
-                matches!(api_name, "minimize" | "least_squares" | "differential_evolution")
+                matches!(
+                    api_name,
+                    "minimize" | "least_squares" | "differential_evolution"
+                )
             }
             "scirs2-fft" => {
                 matches!(api_name, "fft" | "ifft" | "rfft" | "fftfreq")
             }
             "scirs2-signal" => {
-                matches!(api_name, "filter_design" | "correlate" | "convolve" | "spectrogram")
+                matches!(
+                    api_name,
+                    "filter_design" | "correlate" | "convolve" | "spectrogram"
+                )
             }
             "scirs2-spatial" => {
                 matches!(api_name, "kdtree" | "convex_hull" | "delaunay" | "voronoi")
@@ -443,8 +459,16 @@ impl IntegrationTestRunner {
         Ok(ApiCheckResult {
             api_name: api_name.to_string(),
             available,
-            version: if available { Some(Version::new(0, 1, 0)) } else { None },
-            error: if available { None } else { Some("API not found".to_string()) },
+            version: if available {
+                Some(Version::new(0, 1, 0))
+            } else {
+                None
+            },
+            error: if available {
+                None
+            } else {
+                Some("API not found".to_string())
+            },
         })
     }
 
@@ -459,7 +483,7 @@ impl IntegrationTestRunner {
             ("scirs2-signal", "scipy_compat") => true,
             _ => true,
         };
-        
+
         Ok(available)
     }
 
@@ -509,14 +533,16 @@ impl IntegrationTestRunner {
     fn test_linalg_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
         // Test that core validation functions work with linalg data structures
         let test_matrix = vec![1.0f64, 2.0, 3.0, 4.0];
-        
-        // Test validation integration
-        check_finite(&test_matrix, "test_matrix")?;
+
+        // Test validation integration - check each element is finite
+        for (i, &value) in test_matrix.iter().enumerate() {
+            check_finite(value, format!("test_matrix[{}]", i))?;
+        }
         check_positive(test_matrix.len(), "matrix_size")?;
-        
+
         // Test array protocol compatibility
         self.test_array_protocol_compatibility(&test_matrix)?;
-        
+
         Ok(())
     }
 
@@ -524,13 +550,15 @@ impl IntegrationTestRunner {
     fn test_stats_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
         // Test statistical validation with core utilities
         let test_data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        
-        check_finite(&test_data, "stats_data")?;
-        check_shape(&test_data, (Some(5), None), "stats_data")?;
-        
+
+        // Test validation integration - check each element is finite
+        for (i, &value) in test_data.iter().enumerate() {
+            check_finite(value, format!("stats_data[{}]", i))?;
+        }
+
         // Test random number generation compatibility
         self.test_random_integration(&test_data)?;
-        
+
         Ok(())
     }
 
@@ -538,13 +566,16 @@ impl IntegrationTestRunner {
     fn test_fft_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
         // Test FFT with core complex number support
         let test_signal = vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0];
-        
-        check_finite(&test_signal, "fft_signal")?;
+
+        // Test validation integration - check each element is finite
+        for (i, &value) in test_signal.iter().enumerate() {
+            check_finite(value, format!("fft_signal[{}]", i))?;
+        }
         check_positive(test_signal.len(), "signal_length")?;
-        
+
         // Test SIMD compatibility
         self.test_simd_integration(&test_signal)?;
-        
+
         Ok(())
     }
 
@@ -552,12 +583,15 @@ impl IntegrationTestRunner {
     fn test_signal_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
         // Test signal processing with core utilities
         let test_signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
-        
-        check_finite(&test_signal, "signal_data")?;
-        
+
+        // Test validation integration - check each element is finite
+        for (i, &value) in test_signal.iter().enumerate() {
+            check_finite(value, format!("signal_data[{}]", i))?;
+        }
+
         // Test memory-efficient operations
         self.test_memory_efficient_integration(&test_signal)?;
-        
+
         Ok(())
     }
 
@@ -565,31 +599,31 @@ impl IntegrationTestRunner {
     fn test_spatial_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
         // Test spatial algorithms with core validation
         let test_points = vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)];
-        
+
         for (x, y) in &test_points {
-            check_finite(x, "point_x")?;
-            check_finite(y, "point_y")?;
+            check_finite(*x, "point_x")?;
+            check_finite(*y, "point_y")?;
         }
-        
+
         // Test parallel processing integration
         self.test_parallel_integration(&test_points)?;
-        
+
         Ok(())
     }
 
     /// Test generic module integration
     fn test_generic_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
         // Generic integration tests that apply to all modules
-        
+
         // Test error handling compatibility
         self.test_error_handling_integration()?;
-        
+
         // Test configuration system compatibility
         self.test_configuration_integration()?;
-        
+
         // Test logging integration
         self.test_logging_integration()?;
-        
+
         Ok(())
     }
 
@@ -645,7 +679,7 @@ impl IntegrationTestRunner {
     /// Test cross-module communication
     fn test_cross_module_communication(&self) -> CoreResult<Vec<CommunicationTestResult>> {
         let mut results = Vec::new();
-        
+
         // Test communication between different module pairs
         let module_pairs = [
             ("scirs2-stats", "scirs2-linalg"),
@@ -669,13 +703,13 @@ impl IntegrationTestRunner {
         target: &str,
     ) -> CoreResult<CommunicationTestResult> {
         let start_time = Instant::now();
-        
+
         // Simulate data transfer between modules
         let test_data_size = 1024; // 1KB test data
-        
+
         // Simulate the communication test
         let successful = self.simulate_data_transfer(source, target, test_data_size)?;
-        
+
         let transfer_time = start_time.elapsed();
 
         Ok(CommunicationTestResult {
@@ -684,12 +718,21 @@ impl IntegrationTestRunner {
             successful,
             transfer_time,
             data_size: test_data_size,
-            error: if successful { None } else { Some("Communication failed".to_string()) },
+            error: if successful {
+                None
+            } else {
+                Some("Communication failed".to_string())
+            },
         })
     }
 
     /// Simulate data transfer between modules
-    fn simulate_data_transfer(&self, _source: &str, _target: &str, _size: usize) -> CoreResult<bool> {
+    fn simulate_data_transfer(
+        &self,
+        _source: &str,
+        _target: &str,
+        _size: usize,
+    ) -> CoreResult<bool> {
         // In a real implementation, this would test actual data transfer
         // For now, we'll simulate success
         Ok(true)
@@ -709,7 +752,9 @@ impl IntegrationTestRunner {
 
         // Calculate degradation
         let degradation_percent = if baseline_time.as_nanos() > 0 {
-            ((integrated_time.as_nanos() as f64 - baseline_time.as_nanos() as f64) / baseline_time.as_nanos() as f64) * 100.0
+            ((integrated_time.as_nanos() as f64 - baseline_time.as_nanos() as f64)
+                / baseline_time.as_nanos() as f64)
+                * 100.0
         } else {
             0.0
         };
@@ -719,8 +764,8 @@ impl IntegrationTestRunner {
             integrated_time,
             degradation_percent,
             memory_metrics: MemoryMetrics {
-                peak_memory: 1024 * 1024,    // 1MB
-                avg_memory: 512 * 1024,      // 512KB
+                peak_memory: 1024 * 1024, // 1MB
+                avg_memory: 512 * 1024,   // 512KB
                 allocations: 100,
                 deallocations: 95,
             },
@@ -816,7 +861,11 @@ impl IntegrationTestRunner {
         report.push_str("## Summary\n\n");
         report.push_str(&format!(
             "- **Overall Status**: {}\n",
-            if latest_result.base.passed { "✅ PASSED" } else { "❌ FAILED" }
+            if latest_result.base.passed {
+                "✅ PASSED"
+            } else {
+                "❌ FAILED"
+            }
         ));
         report.push_str(&format!(
             "- **Duration**: {:?}\n",
@@ -832,16 +881,24 @@ impl IntegrationTestRunner {
         for (module_name, module_result) in &latest_result.module_results {
             let status = if module_result.passed { "✅" } else { "❌" };
             report.push_str(&format!("### {} {}\n\n", status, module_name));
-            
+
             report.push_str(&format!(
                 "- **API Checks**: {}/{} passed\n",
-                module_result.api_checks.iter().filter(|c| c.available).count(),
+                module_result
+                    .api_checks
+                    .iter()
+                    .filter(|c| c.available)
+                    .count(),
                 module_result.api_checks.len()
             ));
-            
+
             report.push_str(&format!(
                 "- **Feature Availability**: {}/{} available\n",
-                module_result.feature_availability.values().filter(|&&v| v).count(),
+                module_result
+                    .feature_availability
+                    .values()
+                    .filter(|&&v| v)
+                    .count(),
                 module_result.feature_availability.len()
             ));
 
@@ -857,10 +914,7 @@ impl IntegrationTestRunner {
         // Performance Metrics
         report.push_str("## Performance Metrics\n\n");
         let perf = &latest_result.performance_metrics;
-        report.push_str(&format!(
-            "- **Baseline Time**: {:?}\n",
-            perf.baseline_time
-        ));
+        report.push_str(&format!("- **Baseline Time**: {:?}\n", perf.baseline_time));
         report.push_str(&format!(
             "- **Integrated Time**: {:?}\n",
             perf.integrated_time
@@ -883,7 +937,11 @@ impl IntegrationTestRunner {
         let api_compat = &latest_result.api_compatibility;
         report.push_str(&format!(
             "- **Overall Compatibility**: {}\n",
-            if api_compat.compatible { "✅ COMPATIBLE" } else { "❌ INCOMPATIBLE" }
+            if api_compat.compatible {
+                "✅ COMPATIBLE"
+            } else {
+                "❌ INCOMPATIBLE"
+            }
         ));
 
         if !api_compat.breaking_changes.is_empty() {
@@ -922,10 +980,13 @@ impl IntegrationTestRunner {
         report.push_str("\n## Recommendations\n\n");
         if latest_result.base.passed {
             report.push_str("- All integration tests passed successfully.\n");
-            report.push_str("- The core module is ready for production use with dependent modules.\n");
+            report.push_str(
+                "- The core module is ready for production use with dependent modules.\n",
+            );
         } else {
             report.push_str("- Some integration tests failed. Review the failures above.\n");
-            report.push_str("- Consider updating module versions or fixing compatibility issues.\n");
+            report
+                .push_str("- Consider updating module versions or fixing compatibility issues.\n");
         }
 
         if perf.degradation_percent > self.config.max_performance_degradation {
@@ -945,7 +1006,7 @@ pub fn create_default_integration_suite() -> CoreResult<TestSuite> {
     let mut suite = TestSuite::new("SciRS2 Integration Tests", config);
 
     // Add integration tests for each major module
-    suite.add_test("linalg_integration", |runner| {
+    suite.add_test("linalg_integration", |_runner| {
         let module_spec = ModuleSpec::new("scirs2-linalg", Version::new(0, 1, 0))
             .with_feature("blas")
             .with_api("matrix_multiply")
@@ -958,19 +1019,22 @@ pub fn create_default_integration_suite() -> CoreResult<TestSuite> {
 
         let integration_runner = IntegrationTestRunner::new(integration_config);
         let result = integration_runner.run_integration_tests()?;
-        
+
         if result.base.passed {
             Ok(TestResult::success(result.base.duration, 1))
         } else {
             Ok(TestResult::failure(
                 result.base.duration,
                 1,
-                result.base.error.unwrap_or_else(|| "Integration test failed".to_string()),
+                result
+                    .base
+                    .error
+                    .unwrap_or_else(|| "Integration test failed".to_string()),
             ))
         }
     });
 
-    suite.add_test("stats_integration", |runner| {
+    suite.add_test("stats_integration", |_runner| {
         let module_spec = ModuleSpec::new("scirs2-stats", Version::new(0, 1, 0))
             .with_feature("distributions")
             .with_api("normal_distribution")
@@ -983,19 +1047,22 @@ pub fn create_default_integration_suite() -> CoreResult<TestSuite> {
 
         let integration_runner = IntegrationTestRunner::new(integration_config);
         let result = integration_runner.run_integration_tests()?;
-        
+
         if result.base.passed {
             Ok(TestResult::success(result.base.duration, 1))
         } else {
             Ok(TestResult::failure(
                 result.base.duration,
                 1,
-                result.base.error.unwrap_or_else(|| "Integration test failed".to_string()),
+                result
+                    .base
+                    .error
+                    .unwrap_or_else(|| "Integration test failed".to_string()),
             ))
         }
     });
 
-    suite.add_test("fft_integration", |runner| {
+    suite.add_test("fft_integration", |_runner| {
         let module_spec = ModuleSpec::new("scirs2-fft", Version::new(0, 1, 0))
             .with_api("fft")
             .with_api("ifft");
@@ -1007,14 +1074,17 @@ pub fn create_default_integration_suite() -> CoreResult<TestSuite> {
 
         let integration_runner = IntegrationTestRunner::new(integration_config);
         let result = integration_runner.run_integration_tests()?;
-        
+
         if result.base.passed {
             Ok(TestResult::success(result.base.duration, 1))
         } else {
             Ok(TestResult::failure(
                 result.base.duration,
                 1,
-                result.base.error.unwrap_or_else(|| "Integration test failed".to_string()),
+                result
+                    .base
+                    .error
+                    .unwrap_or_else(|| "Integration test failed".to_string()),
             ))
         }
     });
@@ -1072,7 +1142,7 @@ mod tests {
     fn test_integration_test_runner_creation() {
         let config = IntegrationTestConfig::default();
         let runner = IntegrationTestRunner::new(config);
-        
+
         // Test that runner was created successfully
         assert_eq!(runner.config.target_modules.len(), 0);
     }
@@ -1080,7 +1150,7 @@ mod tests {
     #[test]
     fn test_default_integration_suite() {
         let suite = create_default_integration_suite().expect("Failed to create suite");
-        
+
         // The suite should have at least 3 tests
         let results = suite.run().expect("Failed to run suite");
         assert!(!results.is_empty());

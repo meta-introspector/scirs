@@ -3,8 +3,8 @@
 //! This module implements personalized federated learning algorithms that
 //! adapt global models to individual client preferences and data distributions.
 
-use crate::error::{Result, NeuralError};
-use crate::federated::{ClientUpdate, AggregationStrategy};
+use crate::error::{NeuralError, Result};
+use crate::federated::{AggregationStrategy, ClientUpdate};
 use crate::models::sequential::Sequential;
 use ndarray::prelude::*;
 use std::collections::HashMap;
@@ -156,21 +156,58 @@ impl PersonalizedFL {
         validation_data: Option<(&ArrayView2<f32>, &ArrayView1<usize>)>,
     ) -> Result<Sequential<f32>> {
         match &self.strategy {
-            PersonalizationStrategy::FineTuning { epochs, learning_rate } => {
-                self.fine_tune_for_client(client_id, client_data, client_labels, *epochs, *learning_rate)
-            },
-            PersonalizationStrategy::MetaLearning { inner_steps, outer_lr, inner_lr } => {
-                self.meta_learn_for_client(client_id, client_data, client_labels, *inner_steps, *outer_lr, *inner_lr)
-            },
-            PersonalizationStrategy::MultiTask { shared_layers, task_head_sizes } => {
-                self.multi_task_for_client(client_id, client_data, client_labels, *shared_layers, task_head_sizes)
-            },
-            PersonalizationStrategy::Clustering { num_clusters, method } => {
-                self.cluster_based_personalization(client_id, client_data, client_labels, *num_clusters, method)
-            },
-            PersonalizationStrategy::MixtureOfExperts { num_experts, gating_hidden_size } => {
-                self.mixture_of_experts_for_client(client_id, client_data, client_labels, *num_experts, *gating_hidden_size)
-            },
+            PersonalizationStrategy::FineTuning {
+                epochs,
+                learning_rate,
+            } => self.fine_tune_for_client(
+                client_id,
+                client_data,
+                client_labels,
+                *epochs,
+                *learning_rate,
+            ),
+            PersonalizationStrategy::MetaLearning {
+                inner_steps,
+                outer_lr,
+                inner_lr,
+            } => self.meta_learn_for_client(
+                client_id,
+                client_data,
+                client_labels,
+                *inner_steps,
+                *outer_lr,
+                *inner_lr,
+            ),
+            PersonalizationStrategy::MultiTask {
+                shared_layers,
+                task_head_sizes,
+            } => self.multi_task_for_client(
+                client_id,
+                client_data,
+                client_labels,
+                *shared_layers,
+                task_head_sizes,
+            ),
+            PersonalizationStrategy::Clustering {
+                num_clusters,
+                method,
+            } => self.cluster_based_personalization(
+                client_id,
+                client_data,
+                client_labels,
+                *num_clusters,
+                method,
+            ),
+            PersonalizationStrategy::MixtureOfExperts {
+                num_experts,
+                gating_hidden_size,
+            } => self.mixture_of_experts_for_client(
+                client_id,
+                client_data,
+                client_labels,
+                *num_experts,
+                *gating_hidden_size,
+            ),
         }
     }
 
@@ -189,7 +226,9 @@ impl PersonalizedFL {
         } else if let Some(ref global) = self.global_model {
             global.clone()
         } else {
-            return Err(NeuralError::InvalidArgument("No global model available".to_string()));
+            return Err(NeuralError::InvalidArgument(
+                "No global model available".to_string(),
+            ));
         };
 
         // Fine-tune on client data
@@ -200,7 +239,7 @@ impl PersonalizedFL {
             for batch_idx in 0..num_batches {
                 let start = batch_idx * batch_size;
                 let end = ((batch_idx + 1) * batch_size).min(client_data.nrows());
-                
+
                 let batch_data = client_data.slice(s![start..end, ..]);
                 let batch_labels = client_labels.slice(s![start..end]);
 
@@ -212,8 +251,9 @@ impl PersonalizedFL {
         }
 
         // Store personalized model
-        self.client_models.insert(client_id, personalized_model.clone());
-        
+        self.client_models
+            .insert(client_id, personalized_model.clone());
+
         Ok(personalized_model)
     }
 
@@ -228,7 +268,9 @@ impl PersonalizedFL {
         inner_lr: f32,
     ) -> Result<Sequential<f32>> {
         if self.global_model.is_none() {
-            return Err(NeuralError::InvalidArgument("No global model for meta-learning".to_string()));
+            return Err(NeuralError::InvalidArgument(
+                "No global model for meta-learning".to_string(),
+            ));
         }
 
         let global_model = self.global_model.as_ref().unwrap();
@@ -250,11 +292,11 @@ impl PersonalizedFL {
 
         // Evaluate on query set for meta-update
         let query_loss = self.compute_loss(&adapted_model, &query_data, &query_labels)?;
-        
+
         // In practice, would compute meta-gradients and update global model
         // For now, just return the adapted model
         self.client_models.insert(client_id, adapted_model.clone());
-        
+
         Ok(adapted_model)
     }
 
@@ -276,7 +318,7 @@ impl PersonalizedFL {
 
         // Add task-specific layers for this client
         // In practice, would modify the model architecture
-        
+
         // Train with shared representation frozen (initially)
         let epochs = 10;
         for _epoch in 0..epochs {
@@ -284,7 +326,8 @@ impl PersonalizedFL {
             // Update only task-specific parameters
         }
 
-        self.client_models.insert(client_id, personalized_model.clone());
+        self.client_models
+            .insert(client_id, personalized_model.clone());
         Ok(personalized_model)
     }
 
@@ -306,7 +349,11 @@ impl PersonalizedFL {
         }
 
         // Get cluster assignment for this client
-        let cluster_id = self.cluster_assignments.get(&client_id).copied().unwrap_or(0);
+        let cluster_id = self
+            .cluster_assignments
+            .get(&client_id)
+            .copied()
+            .unwrap_or(0);
 
         // Get or create cluster model
         let cluster_model = if let Some(model) = self.cluster_models.get(&cluster_id) {
@@ -317,12 +364,15 @@ impl PersonalizedFL {
             self.cluster_models.insert(cluster_id, model.clone());
             model
         } else {
-            return Err(NeuralError::InvalidArgument("No model available for clustering".to_string()));
+            return Err(NeuralError::InvalidArgument(
+                "No model available for clustering".to_string(),
+            ));
         };
 
         // Fine-tune cluster model on client data
-        let personalized_model = self.fine_tune_for_client(client_id, client_data, client_labels, 5, 0.01)?;
-        
+        let personalized_model =
+            self.fine_tune_for_client(client_id, client_data, client_labels, 5, 0.01)?;
+
         Ok(personalized_model)
     }
 
@@ -337,7 +387,7 @@ impl PersonalizedFL {
     ) -> Result<Sequential<f32>> {
         // Create mixture of experts model
         // In practice, would have multiple expert networks and a gating network
-        
+
         // For simplification, just return fine-tuned model
         self.fine_tune_for_client(client_id, client_data, client_labels, 10, 0.01)
     }
@@ -358,20 +408,21 @@ impl PersonalizedFL {
             }
         }
         let total = label_counts.iter().sum::<usize>() as f32;
-        let label_distribution: Vec<f32> = label_counts.iter()
+        let label_distribution: Vec<f32> = label_counts
+            .iter()
             .map(|&count| count as f32 / total)
             .collect();
 
         // Compute parameter statistics (simplified)
         let param_stats = ParameterStatistics {
-            layer_norms: vec![1.0; 5], // Placeholder
-            layer_means: vec![0.0; 5], // Placeholder
+            layer_norms: vec![1.0; 5],     // Placeholder
+            layer_means: vec![0.0; 5],     // Placeholder
             layer_variances: vec![1.0; 5], // Placeholder
         };
 
         // Compute gradient statistics (simplified)
         let gradient_stats = GradientStatistics {
-            layer_norms: vec![0.1; 5], // Placeholder
+            layer_norms: vec![0.1; 5],         // Placeholder
             global_similarities: vec![0.8; 5], // Placeholder
         };
 
@@ -389,27 +440,31 @@ impl PersonalizedFL {
     /// Perform clustering of clients
     fn perform_clustering(&mut self, num_clusters: usize, method: &ClusteringMethod) -> Result<()> {
         let client_ids: Vec<usize> = self.client_stats.keys().cloned().collect();
-        
+
         match method {
             ClusteringMethod::KMeansParameters => {
                 self.kmeans_clustering_parameters(&client_ids, num_clusters)?;
-            },
+            }
             ClusteringMethod::KMeansLoss => {
                 self.kmeans_clustering_loss(&client_ids, num_clusters)?;
-            },
+            }
             ClusteringMethod::Hierarchical => {
                 self.hierarchical_clustering(&client_ids, num_clusters)?;
-            },
+            }
             ClusteringMethod::Spectral => {
                 self.spectral_clustering(&client_ids, num_clusters)?;
-            },
+            }
         }
 
         Ok(())
     }
 
     /// K-means clustering based on label distributions
-    fn kmeans_clustering_parameters(&mut self, client_ids: &[usize], num_clusters: usize) -> Result<()> {
+    fn kmeans_clustering_parameters(
+        &mut self,
+        client_ids: &[usize],
+        num_clusters: usize,
+    ) -> Result<()> {
         // Simple k-means on label distributions
         use rand::prelude::*;
         let mut rng = rand::rng();
@@ -429,7 +484,7 @@ impl PersonalizedFL {
             for &client_id in client_ids {
                 if let (Some(cluster), Some(stats)) = (
                     self.cluster_assignments.get(&client_id),
-                    self.client_stats.get(&client_id)
+                    self.client_stats.get(&client_id),
                 ) {
                     cluster_counts[*cluster] += 1;
                     for (i, &val) in stats.label_distribution.iter().enumerate() {
@@ -456,10 +511,8 @@ impl PersonalizedFL {
                     let mut best_distance = f32::INFINITY;
 
                     for (cluster_id, centroid) in centroids.iter().enumerate() {
-                        let distance = self.compute_distribution_distance(
-                            &stats.label_distribution, 
-                            centroid
-                        );
+                        let distance =
+                            self.compute_distribution_distance(&stats.label_distribution, centroid);
                         if distance < best_distance {
                             best_distance = distance;
                             best_cluster = cluster_id;
@@ -549,8 +602,8 @@ impl PersonalizedFL {
         }
 
         let latest_round = self.personalization_history.last().unwrap();
-        let avg_improvement = latest_round.improvements.values().sum::<f32>() 
-                           / latest_round.improvements.len() as f32;
+        let avg_improvement = latest_round.improvements.values().sum::<f32>()
+            / latest_round.improvements.len() as f32;
 
         let total_clients_personalized = self.client_models.len();
 
@@ -657,16 +710,14 @@ mod tests {
             learning_rate: 0.01,
         };
         let mut aggregator = PersonalizedAggregation::new(0.7, 0.3, strategy);
-        
-        let updates = vec![
-            ClientUpdate {
-                client_id: 0,
-                weight_updates: vec![Array2::ones((2, 2))],
-                num_samples: 100,
-                loss: 0.5,
-                accuracy: 0.9,
-            },
-        ];
+
+        let updates = vec![ClientUpdate {
+            client_id: 0,
+            weight_updates: vec![Array2::ones((2, 2))],
+            num_samples: 100,
+            loss: 0.5,
+            accuracy: 0.9,
+        }];
         let weights = vec![1.0];
 
         let result = aggregator.aggregate(&updates, &weights).unwrap();

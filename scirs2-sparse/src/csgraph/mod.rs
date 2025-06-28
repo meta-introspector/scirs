@@ -52,17 +52,17 @@ use num_traits::Float;
 use std::cmp::Ordering;
 use std::fmt::Debug;
 
-pub mod shortest_path;
 pub mod connected_components;
-pub mod traversal;
 pub mod laplacian;
 pub mod minimum_spanning_tree;
+pub mod shortest_path;
+pub mod traversal;
 
-pub use shortest_path::*;
 pub use connected_components::*;
-pub use traversal::*;
 pub use laplacian::*;
 pub use minimum_spanning_tree::*;
+pub use shortest_path::*;
+pub use traversal::*;
 
 /// Graph representation modes
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -92,11 +92,7 @@ where
     }
 }
 
-impl<T> Eq for PriorityQueueNode<T>
-where
-    T: Float + PartialOrd,
-{
-}
+impl<T> Eq for PriorityQueueNode<T> where T: Float + PartialOrd {}
 
 impl<T> PartialOrd for PriorityQueueNode<T>
 where
@@ -133,14 +129,14 @@ where
     S: SparseArray<T>,
 {
     let (rows, cols) = matrix.shape();
-    
+
     // Graph matrices must be square
     if rows != cols {
         return Err(SparseError::ValueError(
             "Graph matrix must be square".to_string(),
         ));
     }
-    
+
     // Check for negative weights (not allowed in some algorithms)
     let (row_indices, col_indices, values) = matrix.find();
     for &value in values.iter() {
@@ -150,14 +146,14 @@ where
             ));
         }
     }
-    
+
     // For undirected graphs, check symmetry
     if !directed {
         for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
             if row != col {
                 let weight = values[i];
                 let reverse_weight = matrix.get(col, row);
-                
+
                 if (weight - reverse_weight).abs() > T::from(1e-10).unwrap() {
                     return Err(SparseError::ValueError(
                         "Undirected graph matrix must be symmetric".to_string(),
@@ -166,7 +162,7 @@ where
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -187,22 +183,22 @@ where
 {
     let (n, _) = matrix.shape();
     let mut adj_list = vec![Vec::new(); n];
-    
+
     let (row_indices, col_indices, values) = matrix.find();
-    
+
     for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         let weight = values[i];
-        
+
         if !weight.is_zero() {
             adj_list[row].push((col, weight));
-            
+
             // For undirected graphs, add the reverse edge
             if !directed && row != col {
                 adj_list[col].push((row, weight));
             }
         }
     }
-    
+
     Ok(adj_list)
 }
 
@@ -222,7 +218,7 @@ where
     S: SparseArray<T>,
 {
     let nnz = matrix.nnz();
-    
+
     if directed {
         Ok(nnz)
     } else {
@@ -230,7 +226,7 @@ where
         let (row_indices, col_indices, _) = matrix.find();
         let mut diagonal_count = 0;
         let mut off_diagonal_count = 0;
-        
+
         for (&row, &col) in row_indices.iter().zip(col_indices.iter()) {
             if row == col {
                 diagonal_count += 1;
@@ -238,7 +234,7 @@ where
                 off_diagonal_count += 1;
             }
         }
-        
+
         // Off-diagonal edges are counted twice in the matrix (i,j) and (j,i)
         Ok(diagonal_count + off_diagonal_count / 2)
     }
@@ -258,17 +254,17 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2, 3, 3];
         let cols = vec![1, 2, 0, 3, 0, 3, 1, 2];
         let data = vec![1.0, 2.0, 1.0, 3.0, 2.0, 1.0, 3.0, 1.0];
-        
+
         CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
     }
 
     #[test]
     fn test_validate_graph_symmetric() {
         let graph = create_test_graph();
-        
+
         // Should be valid as undirected graph
         assert!(validate_graph(&graph, false).is_ok());
-        
+
         // Should also be valid as directed graph
         assert!(validate_graph(&graph, true).is_ok());
     }
@@ -279,12 +275,12 @@ mod tests {
         let rows = vec![0, 1];
         let cols = vec![1, 0];
         let data = vec![1.0, 2.0]; // Different weights
-        
+
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
-        
+
         // Should be valid as directed graph
         assert!(validate_graph(&graph, true).is_ok());
-        
+
         // Should fail as undirected graph due to asymmetry
         assert!(validate_graph(&graph, false).is_err());
     }
@@ -294,9 +290,9 @@ mod tests {
         let rows = vec![0, 1];
         let cols = vec![1, 0];
         let data = vec![-1.0, 1.0]; // Negative weight
-        
+
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
-        
+
         // Should fail due to negative weights
         assert!(validate_graph(&graph, true).is_err());
         assert!(validate_graph(&graph, false).is_err());
@@ -306,14 +302,14 @@ mod tests {
     fn test_to_adjacency_list() {
         let graph = create_test_graph();
         let adj_list = to_adjacency_list(&graph, false).unwrap();
-        
+
         assert_eq!(adj_list.len(), 4);
-        
+
         // Vertex 0 should be connected to 1 and 2
         assert_eq!(adj_list[0].len(), 2);
         assert!(adj_list[0].contains(&(1, 1.0)));
         assert!(adj_list[0].contains(&(2, 2.0)));
-        
+
         // Vertex 1 should be connected to 0 and 3
         assert_eq!(adj_list[1].len(), 2);
         assert!(adj_list[1].contains(&(0, 1.0)));
@@ -329,11 +325,11 @@ mod tests {
     #[test]
     fn test_num_edges() {
         let graph = create_test_graph();
-        
+
         // Directed: all 8 edges
         assert_eq!(num_edges(&graph, true).unwrap(), 8);
-        
-        // Undirected: 4 unique edges  
+
+        // Undirected: 4 unique edges
         assert_eq!(num_edges(&graph, false).unwrap(), 4);
     }
 }

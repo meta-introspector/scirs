@@ -646,6 +646,7 @@ pub mod dashboard;
 pub mod domains;
 pub mod error;
 pub mod evaluation;
+pub mod explainability;
 pub mod fairness;
 
 // Integration modules with conditional compilation

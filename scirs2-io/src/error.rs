@@ -26,6 +26,8 @@ pub enum IoError {
     ConversionError(String),
     /// File not found
     FileNotFound(String),
+    /// Record/resource not found
+    NotFound(String),
     /// Parse error
     ParseError(String),
     /// Standard I/O error
@@ -59,6 +61,7 @@ impl fmt::Display for IoError {
             IoError::UnsupportedFormat(fmt) => write!(f, "Unsupported format: {}", fmt),
             IoError::ConversionError(msg) => write!(f, "Conversion error: {}", msg),
             IoError::FileNotFound(path) => write!(f, "File not found: {}", path),
+            IoError::NotFound(msg) => write!(f, "Not found: {}", msg),
             IoError::ParseError(msg) => write!(f, "Parse error: {}", msg),
             IoError::Io(e) => write!(f, "I/O error: {}", e),
             IoError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
@@ -72,6 +75,40 @@ impl fmt::Display for IoError {
 }
 
 impl Error for IoError {}
+
+impl Clone for IoError {
+    fn clone(&self) -> Self {
+        match self {
+            IoError::FileError(msg) => IoError::FileError(msg.clone()),
+            IoError::FormatError(msg) => IoError::FormatError(msg.clone()),
+            IoError::SerializationError(msg) => IoError::SerializationError(msg.clone()),
+            IoError::DeserializationError(msg) => IoError::DeserializationError(msg.clone()),
+            IoError::CompressionError(msg) => IoError::CompressionError(msg.clone()),
+            IoError::DecompressionError(msg) => IoError::DecompressionError(msg.clone()),
+            IoError::UnsupportedCompressionAlgorithm(algo) => {
+                IoError::UnsupportedCompressionAlgorithm(algo.clone())
+            }
+            IoError::UnsupportedFormat(fmt) => IoError::UnsupportedFormat(fmt.clone()),
+            IoError::ConversionError(msg) => IoError::ConversionError(msg.clone()),
+            IoError::FileNotFound(path) => IoError::FileNotFound(path.clone()),
+            IoError::NotFound(msg) => IoError::NotFound(msg.clone()),
+            IoError::ParseError(msg) => IoError::ParseError(msg.clone()),
+            IoError::Io(e) => IoError::Io(std::io::Error::new(e.kind(), e.to_string())),
+            IoError::ValidationError(msg) => IoError::ValidationError(msg.clone()),
+            IoError::ChecksumError(msg) => IoError::ChecksumError(msg.clone()),
+            IoError::IntegrityError(msg) => IoError::IntegrityError(msg.clone()),
+            IoError::ConfigError(msg) => IoError::ConfigError(msg.clone()),
+            IoError::NetworkError(msg) => IoError::NetworkError(msg.clone()),
+            IoError::Other(msg) => IoError::Other(msg.clone()),
+        }
+    }
+}
+
+impl From<std::io::Error> for IoError {
+    fn from(err: std::io::Error) -> Self {
+        IoError::Io(err)
+    }
+}
 
 /// Result type for IO operations
 pub type Result<T> = std::result::Result<T, IoError>;

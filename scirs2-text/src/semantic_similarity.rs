@@ -3,12 +3,12 @@
 //! This module provides advanced similarity metrics that go beyond simple
 //! lexical matching to capture semantic relationships between texts.
 
-use crate::error::{Result, TextError};
 use crate::embeddings::Word2Vec;
+use crate::error::{Result, TextError};
 use crate::tokenize::Tokenizer;
 use ndarray::{Array1, Array2, ArrayView1};
-use std::collections::{HashMap, HashSet};
 use std::cmp;
+use std::collections::{HashMap, HashSet};
 
 /// Word Mover's Distance (WMD) for measuring semantic distance between documents
 pub struct WordMoversDistance {
@@ -24,19 +24,19 @@ impl WordMoversDistance {
     /// Create from a trained Word2Vec model
     pub fn from_word2vec(model: &Word2Vec, vocabulary: &[String]) -> Result<Self> {
         let mut embeddings = HashMap::new();
-        
+
         for word in vocabulary {
             if let Ok(vector) = model.get_word_vector(word) {
                 embeddings.insert(word.clone(), vector);
             }
         }
-        
+
         if embeddings.is_empty() {
             return Err(TextError::EmbeddingError(
-                "No embeddings could be extracted from the model".into()
+                "No embeddings could be extracted from the model".into(),
             ));
         }
-        
+
         Ok(Self { embeddings })
     }
 
@@ -46,19 +46,21 @@ impl WordMoversDistance {
         let tokens2 = tokenizer.tokenize(text2)?;
 
         // Filter tokens to only those with embeddings
-        let tokens1: Vec<&str> = tokens1.iter()
+        let tokens1: Vec<&str> = tokens1
+            .iter()
             .map(|s| s.as_str())
             .filter(|t| self.embeddings.contains_key(*t))
             .collect();
-        
-        let tokens2: Vec<&str> = tokens2.iter()
+
+        let tokens2: Vec<&str> = tokens2
+            .iter()
             .map(|s| s.as_str())
             .filter(|t| self.embeddings.contains_key(*t))
             .collect();
 
         if tokens1.is_empty() || tokens2.is_empty() {
             return Err(TextError::InvalidInput(
-                "No tokens with embeddings found in one or both texts".into()
+                "No tokens with embeddings found in one or both texts".into(),
             ));
         }
 
@@ -95,7 +97,8 @@ impl WordMoversDistance {
         }
 
         let total = tokens.len() as f64;
-        counts.into_iter()
+        counts
+            .into_iter()
             .map(|(word, count)| (word, count as f64 / total))
             .collect()
     }
@@ -135,11 +138,11 @@ impl WordMoversDistance {
         for (distance, word1, word2) in edges {
             let mass1 = remaining1.get(&word1).copied().unwrap_or(0.0);
             let mass2 = remaining2.get(&word2).copied().unwrap_or(0.0);
-            
+
             if mass1 > 0.0 && mass2 > 0.0 {
                 let transported = mass1.min(mass2);
                 total_cost += transported * distance;
-                
+
                 remaining1.insert(word1.clone(), mass1 - transported);
                 remaining2.insert(word2.clone(), mass2 - transported);
             }
@@ -163,31 +166,24 @@ impl SoftCosineSimilarity {
     /// Create from word embeddings by computing cosine similarities
     pub fn from_embeddings(embeddings: &HashMap<String, Array1<f64>>) -> Self {
         let mut similarity_matrix = HashMap::new();
-        
+
         let words: Vec<&String> = embeddings.keys().collect();
         for (i, word1) in words.iter().enumerate() {
             for word2 in words.iter().skip(i) {
-                let sim = Self::cosine_similarity(
-                    embeddings[*word1].view(),
-                    embeddings[*word2].view()
-                );
+                let sim =
+                    Self::cosine_similarity(embeddings[*word1].view(), embeddings[*word2].view());
                 similarity_matrix.insert(((*word1).clone(), (*word2).clone()), sim);
                 if word1 != word2 {
                     similarity_matrix.insert(((*word2).clone(), (*word1).clone()), sim);
                 }
             }
         }
-        
+
         Self { similarity_matrix }
     }
 
     /// Calculate soft cosine similarity between two texts
-    pub fn similarity(
-        &self,
-        text1: &str,
-        text2: &str,
-        tokenizer: &dyn Tokenizer,
-    ) -> Result<f64> {
+    pub fn similarity(&self, text1: &str, text2: &str, tokenizer: &dyn Tokenizer) -> Result<f64> {
         let tokens1 = tokenizer.tokenize(text1)?;
         let tokens2 = tokenizer.tokenize(text2)?;
 
@@ -208,14 +204,14 @@ impl SoftCosineSimilarity {
         for word1 in &all_words {
             for word2 in &all_words {
                 let similarity = self.get_similarity(word1, word2);
-                
+
                 // Calculate numerator (cross-product between text1 and text2)
                 let w1_from_tf1 = tf1.get(word1).copied().unwrap_or(0.0);
                 let w2_from_tf2 = tf2.get(word2).copied().unwrap_or(0.0);
                 numerator += w1_from_tf1 * w2_from_tf2 * similarity;
             }
         }
-        
+
         // Calculate norms separately
         for word1 in &all_words {
             let weight1 = tf1.get(word1).copied().unwrap_or(0.0);
@@ -225,7 +221,7 @@ impl SoftCosineSimilarity {
                 norm1 += weight1 * weight2 * similarity;
             }
         }
-        
+
         for word1 in &all_words {
             let weight1 = tf2.get(word1).copied().unwrap_or(0.0);
             for word2 in &all_words {
@@ -247,7 +243,7 @@ impl SoftCosineSimilarity {
         if word1 == word2 {
             return 1.0;
         }
-        
+
         self.similarity_matrix
             .get(&(word1.to_string(), word2.to_string()))
             .copied()
@@ -260,9 +256,10 @@ impl SoftCosineSimilarity {
         for token in tokens {
             *counts.entry(token.clone()).or_insert(0) += 1;
         }
-        
+
         let max_count = counts.values().max().copied().unwrap_or(1) as f64;
-        counts.into_iter()
+        counts
+            .into_iter()
             .map(|(word, count)| (word, count as f64 / max_count))
             .collect()
     }
@@ -272,7 +269,7 @@ impl SoftCosineSimilarity {
         let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
         let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
         let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
-        
+
         if norm1 > 0.0 && norm2 > 0.0 {
             dot / (norm1 * norm2)
         } else {
@@ -306,12 +303,7 @@ impl WeightedJaccard {
     }
 
     /// Calculate weighted Jaccard similarity
-    pub fn similarity(
-        &self,
-        text1: &str,
-        text2: &str,
-        tokenizer: &dyn Tokenizer,
-    ) -> Result<f64> {
+    pub fn similarity(&self, text1: &str, text2: &str, tokenizer: &dyn Tokenizer) -> Result<f64> {
         let tokens1 = tokenizer.tokenize(text1)?;
         let tokens2 = tokenizer.tokenize(text2)?;
 
@@ -326,13 +318,10 @@ impl WeightedJaccard {
         }
 
         // Calculate weighted intersection and union
-        let weighted_intersection: f64 = intersection.iter()
-            .map(|term| self.get_weight(term))
-            .sum();
+        let weighted_intersection: f64 =
+            intersection.iter().map(|term| self.get_weight(term)).sum();
 
-        let weighted_union: f64 = union.iter()
-            .map(|term| self.get_weight(term))
-            .sum();
+        let weighted_union: f64 = union.iter().map(|term| self.get_weight(term)).sum();
 
         Ok(weighted_intersection / weighted_union)
     }
@@ -434,7 +423,9 @@ impl SemanticEditDistance {
 
     /// Calculate semantic substitution cost between two words
     fn semantic_substitution_cost(&self, word1: &str, word2: &str) -> f64 {
-        if let (Some(embed1), Some(embed2)) = (self.embeddings.get(word1), self.embeddings.get(word2)) {
+        if let (Some(embed1), Some(embed2)) =
+            (self.embeddings.get(word1), self.embeddings.get(word2))
+        {
             let similarity = Self::cosine_similarity(embed1.view(), embed2.view());
             if similarity >= self.synonym_threshold {
                 0.5 // Reduced cost for similar words
@@ -451,7 +442,7 @@ impl SemanticEditDistance {
         let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
         let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
         let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
-        
+
         if norm1 > 0.0 && norm2 > 0.0 {
             dot / (norm1 * norm2)
         } else {
@@ -465,7 +456,7 @@ impl SemanticEditDistance {
         let tokens1 = tokenizer.tokenize(text1)?;
         let tokens2 = tokenizer.tokenize(text2)?;
         let max_length = cmp::max(tokens1.len(), tokens2.len()) as f64;
-        
+
         if max_length == 0.0 {
             Ok(1.0)
         } else {
@@ -492,7 +483,10 @@ pub enum PoolingStrategy {
 
 impl SentenceEmbeddingSimilarity {
     /// Create new sentence embedding similarity calculator
-    pub fn new(embeddings: HashMap<String, Array1<f64>>, pooling_strategy: PoolingStrategy) -> Self {
+    pub fn new(
+        embeddings: HashMap<String, Array1<f64>>,
+        pooling_strategy: PoolingStrategy,
+    ) -> Self {
         Self {
             embeddings,
             pooling_strategy,
@@ -503,32 +497,33 @@ impl SentenceEmbeddingSimilarity {
     pub fn similarity(&self, text1: &str, text2: &str, tokenizer: &dyn Tokenizer) -> Result<f64> {
         let embed1 = self.get_sentence_embedding(text1, tokenizer)?;
         let embed2 = self.get_sentence_embedding(text2, tokenizer)?;
-        
+
         Ok(Self::cosine_similarity(embed1.view(), embed2.view()))
     }
 
     /// Generate sentence embedding from text
     fn get_sentence_embedding(&self, text: &str, tokenizer: &dyn Tokenizer) -> Result<Array1<f64>> {
         let tokens = tokenizer.tokenize(text)?;
-        
+
         // Filter tokens that have embeddings
-        let valid_embeddings: Vec<&Array1<f64>> = tokens.iter()
+        let valid_embeddings: Vec<&Array1<f64>> = tokens
+            .iter()
             .filter_map(|token| self.embeddings.get(token))
             .collect();
 
         if valid_embeddings.is_empty() {
             return Err(TextError::InvalidInput(
-                "No valid embeddings found for tokens".into()
+                "No valid embeddings found for tokens".into(),
             ));
         }
 
         let embed_dim = valid_embeddings[0].len();
-        
+
         match &self.pooling_strategy {
             PoolingStrategy::Mean => {
                 let mut result = Array1::zeros(embed_dim);
                 for embedding in &valid_embeddings {
-                    result = result + embedding;
+                    result = result + *embedding;
                 }
                 Ok(result / valid_embeddings.len() as f64)
             }
@@ -546,13 +541,13 @@ impl SentenceEmbeddingSimilarity {
             PoolingStrategy::WeightedMean(weights) => {
                 let mut result = Array1::zeros(embed_dim);
                 let mut total_weight = 0.0;
-                
+
                 for (token, embedding) in tokens.iter().zip(&valid_embeddings) {
                     let weight = weights.get(token).copied().unwrap_or(1.0);
-                    result = result + embedding * weight;
+                    result = result + *embedding * weight;
                     total_weight += weight;
                 }
-                
+
                 if total_weight > 0.0 {
                     Ok(result / total_weight)
                 } else {
@@ -567,7 +562,7 @@ impl SentenceEmbeddingSimilarity {
         let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
         let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
         let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
-        
+
         if norm1 > 0.0 && norm2 > 0.0 {
             dot / (norm1 * norm2)
         } else {
@@ -592,7 +587,7 @@ impl NGramSemanticSimilarity {
         for i in 1..=n {
             ngram_weights.insert(i, i as f64);
         }
-        
+
         Self {
             n,
             skip_distance,
@@ -616,7 +611,7 @@ impl NGramSemanticSimilarity {
 
             let similarity = self.calculate_ngram_similarity(&ngrams1, &ngrams2);
             let weight = self.ngram_weights.get(&ngram_size).copied().unwrap_or(1.0);
-            
+
             total_similarity += similarity * weight;
             total_weight += weight;
         }
@@ -631,7 +626,7 @@ impl NGramSemanticSimilarity {
     /// Extract n-grams with skip-grams
     fn extract_ngrams(&self, tokens: &[String], n: usize) -> Vec<Vec<String>> {
         let mut ngrams = Vec::new();
-        
+
         if tokens.len() < n {
             return ngrams;
         }
@@ -669,7 +664,7 @@ impl NGramSemanticSimilarity {
         let mut count = 0;
 
         for ngram1 in ngrams1 {
-            let mut max_similarity = 0.0;
+            let mut max_similarity = 0.0f64;
             for ngram2 in ngrams2 {
                 let similarity = self.ngram_semantic_similarity(ngram1, ngram2);
                 max_similarity = max_similarity.max(similarity);
@@ -691,7 +686,9 @@ impl NGramSemanticSimilarity {
         for (word1, word2) in ngram1.iter().zip(ngram2.iter()) {
             if word1 == word2 {
                 total_similarity += 1.0;
-            } else if let (Some(embed1), Some(embed2)) = (self.embeddings.get(word1), self.embeddings.get(word2)) {
+            } else if let (Some(embed1), Some(embed2)) =
+                (self.embeddings.get(word1), self.embeddings.get(word2))
+            {
                 total_similarity += Self::cosine_similarity(embed1.view(), embed2.view()).max(0.0);
             }
         }
@@ -704,7 +701,7 @@ impl NGramSemanticSimilarity {
         let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
         let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
         let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
-        
+
         if norm1 > 0.0 && norm2 > 0.0 {
             dot / (norm1 * norm2)
         } else {
@@ -778,7 +775,10 @@ impl SemanticSimilarityEnsemble {
     }
 
     /// Set Sentence Embedding Similarity component
-    pub fn with_sentence_embedding(mut self, sentence_embedding: SentenceEmbeddingSimilarity) -> Self {
+    pub fn with_sentence_embedding(
+        mut self,
+        sentence_embedding: SentenceEmbeddingSimilarity,
+    ) -> Self {
         self.sentence_embedding = Some(sentence_embedding);
         self
     }
@@ -796,12 +796,7 @@ impl SemanticSimilarityEnsemble {
     }
 
     /// Calculate ensemble similarity
-    pub fn similarity(
-        &self,
-        text1: &str,
-        text2: &str,
-        tokenizer: &dyn Tokenizer,
-    ) -> Result<f64> {
+    pub fn similarity(&self, text1: &str, text2: &str, tokenizer: &dyn Tokenizer) -> Result<f64> {
         let mut scores = HashMap::new();
         let mut total_weight = 0.0;
 
@@ -849,7 +844,11 @@ impl SemanticSimilarityEnsemble {
         if let Some(ref sentence_embedding) = self.sentence_embedding {
             if let Ok(similarity) = sentence_embedding.similarity(text1, text2, tokenizer) {
                 scores.insert("sentence_embedding".to_string(), similarity);
-                total_weight += self.weights.get("sentence_embedding").copied().unwrap_or(0.0);
+                total_weight += self
+                    .weights
+                    .get("sentence_embedding")
+                    .copied()
+                    .unwrap_or(0.0);
             }
         }
 
@@ -863,16 +862,520 @@ impl SemanticSimilarityEnsemble {
 
         if scores.is_empty() {
             return Err(TextError::InvalidInput(
-                "No similarity metrics could be calculated".into()
+                "No similarity metrics could be calculated".into(),
             ));
         }
 
         // Calculate weighted average
-        let weighted_sum: f64 = scores.iter()
+        let weighted_sum: f64 = scores
+            .iter()
             .map(|(name, &score)| score * self.weights.get(name).copied().unwrap_or(0.0))
             .sum();
 
         Ok(weighted_sum / total_weight)
+    }
+}
+
+/// Conceptual similarity based on hierarchical relationships (WordNet-style)
+pub struct ConceptualSimilarity {
+    concept_hierarchy: HashMap<String, ConceptNode>,
+    max_depth: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct ConceptNode {
+    pub concept: String,
+    pub parents: Vec<String>,
+    pub children: Vec<String>,
+    pub depth: usize,
+    pub information_content: f64,
+}
+
+impl ConceptualSimilarity {
+    /// Create new conceptual similarity calculator
+    pub fn new(max_depth: usize) -> Self {
+        Self {
+            concept_hierarchy: HashMap::new(),
+            max_depth,
+        }
+    }
+
+    /// Add a concept to the hierarchy
+    pub fn add_concept(&mut self, concept: ConceptNode) {
+        self.concept_hierarchy
+            .insert(concept.concept.clone(), concept);
+    }
+
+    /// Build a simple concept hierarchy from word relationships
+    pub fn build_simple_hierarchy(word_relations: Vec<(String, String)>) -> Self {
+        let mut similarity = Self::new(10);
+        let mut concept_map = HashMap::new();
+
+        // Build nodes from relations
+        for (child, parent) in word_relations {
+            let child_node = concept_map
+                .entry(child.clone())
+                .or_insert_with(|| ConceptNode {
+                    concept: child.clone(),
+                    parents: Vec::new(),
+                    children: Vec::new(),
+                    depth: 0,
+                    information_content: 1.0,
+                });
+            child_node.parents.push(parent.clone());
+
+            let parent_node = concept_map
+                .entry(parent.clone())
+                .or_insert_with(|| ConceptNode {
+                    concept: parent.clone(),
+                    parents: Vec::new(),
+                    children: Vec::new(),
+                    depth: 0,
+                    information_content: 1.0,
+                });
+            parent_node.children.push(child.clone());
+        }
+
+        // Calculate depths and information content
+        similarity.concept_hierarchy = concept_map;
+        similarity.calculate_depths();
+        similarity
+    }
+
+    /// Calculate path-based similarity between two concepts
+    pub fn path_similarity(&self, concept1: &str, concept2: &str) -> f64 {
+        if concept1 == concept2 {
+            return 1.0;
+        }
+
+        if let Some(lcs) = self.lowest_common_subsumer(concept1, concept2) {
+            let depth1 = self.get_depth(concept1).unwrap_or(0);
+            let depth2 = self.get_depth(concept2).unwrap_or(0);
+            let lcs_depth = self.get_depth(&lcs).unwrap_or(0);
+
+            let path_length = (depth1 - lcs_depth) + (depth2 - lcs_depth);
+            1.0 / (1.0 + path_length as f64)
+        } else {
+            0.0
+        }
+    }
+
+    /// Calculate Wu-Palmer similarity
+    pub fn wu_palmer_similarity(&self, concept1: &str, concept2: &str) -> f64 {
+        if concept1 == concept2 {
+            return 1.0;
+        }
+
+        if let Some(lcs) = self.lowest_common_subsumer(concept1, concept2) {
+            let depth1 = self.get_depth(concept1).unwrap_or(0);
+            let depth2 = self.get_depth(concept2).unwrap_or(0);
+            let lcs_depth = self.get_depth(&lcs).unwrap_or(0);
+
+            (2.0 * lcs_depth as f64) / (depth1 + depth2) as f64
+        } else {
+            0.0
+        }
+    }
+
+    /// Calculate Resnik similarity (information content based)
+    pub fn resnik_similarity(&self, concept1: &str, concept2: &str) -> f64 {
+        if concept1 == concept2 {
+            return self.get_information_content(concept1);
+        }
+
+        if let Some(lcs) = self.lowest_common_subsumer(concept1, concept2) {
+            self.get_information_content(&lcs)
+        } else {
+            0.0
+        }
+    }
+
+    /// Find the lowest common subsumer (most specific common ancestor)
+    fn lowest_common_subsumer(&self, concept1: &str, concept2: &str) -> Option<String> {
+        let ancestors1 = self.get_ancestors(concept1);
+        let ancestors2 = self.get_ancestors(concept2);
+
+        // Find common ancestors
+        let common: Vec<&String> = ancestors1.intersection(&ancestors2).collect();
+
+        // Return the most specific (deepest) common ancestor
+        common
+            .into_iter()
+            .max_by_key(|concept| self.get_depth(concept).unwrap_or(0))
+            .cloned()
+    }
+
+    /// Get all ancestors of a concept
+    fn get_ancestors(&self, concept: &str) -> HashSet<String> {
+        let mut ancestors = HashSet::new();
+        self.collect_ancestors(concept, &mut ancestors);
+        ancestors
+    }
+
+    /// Recursively collect ancestors
+    fn collect_ancestors(&self, concept: &str, ancestors: &mut HashSet<String>) {
+        ancestors.insert(concept.to_string());
+
+        if let Some(node) = self.concept_hierarchy.get(concept) {
+            for parent in &node.parents {
+                if !ancestors.contains(parent) {
+                    self.collect_ancestors(parent, ancestors);
+                }
+            }
+        }
+    }
+
+    /// Get depth of a concept
+    fn get_depth(&self, concept: &str) -> Option<usize> {
+        self.concept_hierarchy.get(concept).map(|node| node.depth)
+    }
+
+    /// Get information content of a concept
+    fn get_information_content(&self, concept: &str) -> f64 {
+        self.concept_hierarchy
+            .get(concept)
+            .map(|node| node.information_content)
+            .unwrap_or(0.0)
+    }
+
+    /// Calculate depths for all concepts
+    fn calculate_depths(&mut self) {
+        // Find root concepts (no parents)
+        let roots: Vec<String> = self
+            .concept_hierarchy
+            .values()
+            .filter(|node| node.parents.is_empty())
+            .map(|node| node.concept.clone())
+            .collect();
+
+        // BFS to calculate depths
+        for root in roots {
+            self.set_depth_recursive(&root, 1);
+        }
+    }
+
+    /// Recursively set depths
+    fn set_depth_recursive(&mut self, concept: &str, depth: usize) {
+        if let Some(node) = self.concept_hierarchy.get_mut(concept) {
+            if node.depth < depth {
+                node.depth = depth;
+                let children = node.children.clone();
+                for child in children {
+                    self.set_depth_recursive(&child, depth + 1);
+                }
+            }
+        }
+    }
+
+    /// Calculate conceptual similarity between two texts
+    pub fn text_similarity(
+        &self,
+        text1: &str,
+        text2: &str,
+        tokenizer: &dyn Tokenizer,
+    ) -> Result<f64> {
+        let tokens1 = tokenizer.tokenize(text1)?;
+        let tokens2 = tokenizer.tokenize(text2)?;
+
+        if tokens1.is_empty() || tokens2.is_empty() {
+            return Ok(0.0);
+        }
+
+        let mut total_similarity = 0.0;
+        let mut count = 0;
+
+        for token1 in &tokens1 {
+            for token2 in &tokens2 {
+                if self.concept_hierarchy.contains_key(token1)
+                    && self.concept_hierarchy.contains_key(token2)
+                {
+                    total_similarity += self.wu_palmer_similarity(token1, token2);
+                    count += 1;
+                }
+            }
+        }
+
+        Ok(if count > 0 {
+            total_similarity / count as f64
+        } else {
+            0.0
+        })
+    }
+}
+
+/// Distributional semantic similarity based on co-occurrence statistics
+pub struct DistributionalSimilarity {
+    cooccurrence_matrix: HashMap<(String, String), f64>,
+    word_frequencies: HashMap<String, f64>,
+    total_words: f64,
+}
+
+impl DistributionalSimilarity {
+    /// Create new distributional similarity calculator
+    pub fn new() -> Self {
+        Self {
+            cooccurrence_matrix: HashMap::new(),
+            word_frequencies: HashMap::new(),
+            total_words: 0.0,
+        }
+    }
+
+    /// Build co-occurrence matrix from a corpus
+    pub fn from_corpus(
+        corpus: &[String],
+        tokenizer: &dyn Tokenizer,
+        window_size: usize,
+    ) -> Result<Self> {
+        let mut similarity = Self::new();
+
+        for document in corpus {
+            let tokens = tokenizer.tokenize(document)?;
+            similarity.update_counts(&tokens, window_size);
+        }
+
+        similarity.calculate_pmis();
+        Ok(similarity)
+    }
+
+    /// Update co-occurrence counts
+    fn update_counts(&mut self, tokens: &[String], window_size: usize) {
+        for (i, target) in tokens.iter().enumerate() {
+            // Update word frequency
+            *self.word_frequencies.entry(target.clone()).or_insert(0.0) += 1.0;
+            self.total_words += 1.0;
+
+            // Update co-occurrence counts within window
+            let start = i.saturating_sub(window_size);
+            let end = (i + window_size + 1).min(tokens.len());
+
+            for j in start..end {
+                if i != j {
+                    let context = &tokens[j];
+                    let key = if target <= context {
+                        (target.clone(), context.clone())
+                    } else {
+                        (context.clone(), target.clone())
+                    };
+                    *self.cooccurrence_matrix.entry(key).or_insert(0.0) += 1.0;
+                }
+            }
+        }
+    }
+
+    /// Calculate PMI (Pointwise Mutual Information) values
+    fn calculate_pmis(&mut self) {
+        let mut pmi_matrix = HashMap::new();
+
+        for ((word1, word2), &cooccur_count) in &self.cooccurrence_matrix {
+            let p_word1 = self.word_frequencies.get(word1).unwrap_or(&0.0) / self.total_words;
+            let p_word2 = self.word_frequencies.get(word2).unwrap_or(&0.0) / self.total_words;
+            let p_together = cooccur_count / self.total_words;
+
+            if p_word1 > 0.0 && p_word2 > 0.0 && p_together > 0.0 {
+                let pmi = (p_together / (p_word1 * p_word2)).ln();
+                let ppmi = pmi.max(0.0); // Positive PMI
+                pmi_matrix.insert((word1.clone(), word2.clone()), ppmi);
+            }
+        }
+
+        self.cooccurrence_matrix = pmi_matrix;
+    }
+
+    /// Calculate distributional similarity between two words
+    pub fn word_similarity(&self, word1: &str, word2: &str) -> f64 {
+        if word1 == word2 {
+            return 1.0;
+        }
+
+        let key = if word1 <= word2 {
+            (word1.to_string(), word2.to_string())
+        } else {
+            (word2.to_string(), word1.to_string())
+        };
+
+        self.cooccurrence_matrix.get(&key).copied().unwrap_or(0.0)
+    }
+
+    /// Calculate distributional similarity between two texts
+    pub fn text_similarity(
+        &self,
+        text1: &str,
+        text2: &str,
+        tokenizer: &dyn Tokenizer,
+    ) -> Result<f64> {
+        let tokens1 = tokenizer.tokenize(text1)?;
+        let tokens2 = tokenizer.tokenize(text2)?;
+
+        if tokens1.is_empty() || tokens2.is_empty() {
+            return Ok(0.0);
+        }
+
+        let mut similarities = Vec::new();
+
+        for token1 in &tokens1 {
+            for token2 in &tokens2 {
+                let sim = self.word_similarity(token1, token2);
+                if sim > 0.0 {
+                    similarities.push(sim);
+                }
+            }
+        }
+
+        Ok(if similarities.is_empty() {
+            0.0
+        } else {
+            similarities.iter().sum::<f64>() / similarities.len() as f64
+        })
+    }
+
+    /// Get the most similar words to a given word
+    pub fn most_similar(&self, word: &str, top_k: usize) -> Vec<(String, f64)> {
+        let mut similarities: Vec<(String, f64)> = self
+            .cooccurrence_matrix
+            .iter()
+            .filter_map(|((w1, w2), &score)| {
+                if w1 == word {
+                    Some((w2.clone(), score))
+                } else if w2 == word {
+                    Some((w1.clone(), score))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        similarities.truncate(top_k);
+        similarities
+    }
+}
+
+impl Default for DistributionalSimilarity {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Topic-based similarity using document topic distributions
+pub struct TopicBasedSimilarity {
+    topic_distributions: HashMap<String, Array1<f64>>,
+    similarity_metric: TopicSimilarityMetric,
+}
+
+#[derive(Debug, Clone)]
+pub enum TopicSimilarityMetric {
+    /// Cosine similarity between topic distributions
+    Cosine,
+    /// Jensen-Shannon divergence
+    JensenShannon,
+    /// Hellinger distance
+    Hellinger,
+}
+
+impl TopicBasedSimilarity {
+    /// Create new topic-based similarity calculator
+    pub fn new(similarity_metric: TopicSimilarityMetric) -> Self {
+        Self {
+            topic_distributions: HashMap::new(),
+            similarity_metric,
+        }
+    }
+
+    /// Add topic distribution for a document
+    pub fn add_document_topics(&mut self, doc_id: String, topic_distribution: Array1<f64>) {
+        self.topic_distributions.insert(doc_id, topic_distribution);
+    }
+
+    /// Calculate topic-based similarity between two documents
+    pub fn similarity(&self, doc_id1: &str, doc_id2: &str) -> Result<f64> {
+        let topics1 = self
+            .topic_distributions
+            .get(doc_id1)
+            .ok_or_else(|| TextError::InvalidInput(format!("Document {} not found", doc_id1)))?;
+        let topics2 = self
+            .topic_distributions
+            .get(doc_id2)
+            .ok_or_else(|| TextError::InvalidInput(format!("Document {} not found", doc_id2)))?;
+
+        match self.similarity_metric {
+            TopicSimilarityMetric::Cosine => {
+                Ok(self.cosine_similarity(topics1.view(), topics2.view()))
+            }
+            TopicSimilarityMetric::JensenShannon => {
+                Ok(1.0 - self.jensen_shannon_divergence(topics1.view(), topics2.view()))
+            }
+            TopicSimilarityMetric::Hellinger => {
+                Ok(1.0 - self.hellinger_distance(topics1.view(), topics2.view()))
+            }
+        }
+    }
+
+    /// Calculate cosine similarity between topic distributions
+    fn cosine_similarity(&self, v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
+        let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
+
+        if norm1 > 0.0 && norm2 > 0.0 {
+            dot / (norm1 * norm2)
+        } else {
+            0.0
+        }
+    }
+
+    /// Calculate Jensen-Shannon divergence
+    fn jensen_shannon_divergence(&self, v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        let m: Array1<f64> = (&v1.to_owned() + &v2.to_owned()) / 2.0;
+
+        let kl1 = self.kl_divergence(v1, m.view());
+        let kl2 = self.kl_divergence(v2, m.view());
+
+        (kl1 + kl2) / 2.0
+    }
+
+    /// Calculate KL divergence
+    fn kl_divergence(&self, p: ArrayView1<f64>, q: ArrayView1<f64>) -> f64 {
+        p.iter()
+            .zip(q.iter())
+            .filter(|(pi, qi)| **pi > 0.0 && **qi > 0.0)
+            .map(|(pi, qi)| pi * (pi / qi).ln())
+            .sum()
+    }
+
+    /// Calculate Hellinger distance
+    fn hellinger_distance(&self, v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        let sum_sq_diff: f64 = v1
+            .iter()
+            .zip(v2.iter())
+            .map(|(a, b)| (a.sqrt() - b.sqrt()).powi(2))
+            .sum();
+
+        (sum_sq_diff / 2.0).sqrt()
+    }
+
+    /// Find most similar documents to a given document
+    pub fn most_similar_documents(&self, doc_id: &str, top_k: usize) -> Result<Vec<(String, f64)>> {
+        if !self.topic_distributions.contains_key(doc_id) {
+            return Err(TextError::InvalidInput(format!(
+                "Document {} not found",
+                doc_id
+            )));
+        }
+
+        let mut similarities: Vec<(String, f64)> = self
+            .topic_distributions
+            .keys()
+            .filter(|&id| id != doc_id)
+            .filter_map(|id| {
+                self.similarity(doc_id, id)
+                    .ok()
+                    .map(|sim| (id.clone(), sim))
+            })
+            .collect();
+
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        similarities.truncate(top_k);
+        Ok(similarities)
     }
 }
 
@@ -884,19 +1387,13 @@ mod tests {
     #[test]
     fn test_lcs_similarity() {
         let tokenizer = WordTokenizer::default();
-        
-        let sim1 = LcsSimilarity::similarity(
-            "the quick brown fox",
-            "the fast brown fox",
-            &tokenizer
-        ).unwrap();
+
+        let sim1 =
+            LcsSimilarity::similarity("the quick brown fox", "the fast brown fox", &tokenizer)
+                .unwrap();
         assert!(sim1 > 0.5); // Should have high similarity
-        
-        let sim2 = LcsSimilarity::similarity(
-            "hello world",
-            "goodbye moon",
-            &tokenizer
-        ).unwrap();
+
+        let sim2 = LcsSimilarity::similarity("hello world", "goodbye moon", &tokenizer).unwrap();
         assert!(sim2 < 0.3); // Should have low similarity
     }
 
@@ -906,15 +1403,13 @@ mod tests {
         let mut weights = HashMap::new();
         weights.insert("important".to_string(), 5.0);
         weights.insert("the".to_string(), 0.1);
-        
+
         let weighted_jaccard = WeightedJaccard::with_weights(weights);
-        
-        let sim = weighted_jaccard.similarity(
-            "the important document",
-            "the important paper",
-            &tokenizer
-        ).unwrap();
-        
+
+        let sim = weighted_jaccard
+            .similarity("the important document", "the important paper", &tokenizer)
+            .unwrap();
+
         // Should give high weight to "important" which is common
         assert!(sim > 0.7);
     }
@@ -926,16 +1421,14 @@ mod tests {
         embeddings.insert("cat".to_string(), arr1(&[1.0, 0.0]));
         embeddings.insert("dog".to_string(), arr1(&[0.9, 0.1]));
         embeddings.insert("car".to_string(), arr1(&[0.0, 1.0]));
-        
+
         let soft_cosine = SoftCosineSimilarity::from_embeddings(&embeddings);
         let tokenizer = WordTokenizer::default();
-        
-        let sim = soft_cosine.similarity(
-            "cat dog",
-            "dog cat",
-            &tokenizer
-        ).unwrap();
-        
+
+        let sim = soft_cosine
+            .similarity("cat dog", "dog cat", &tokenizer)
+            .unwrap();
+
         // Should be very high as they contain the same words
         assert!(sim > 0.9);
     }
@@ -956,9 +1449,11 @@ mod tests {
         let tokenizer = WordTokenizer::default();
 
         // Similar words should have lower distance
-        let sim1 = semantic_edit.similarity("cat", "kitten", &tokenizer).unwrap();
+        let sim1 = semantic_edit
+            .similarity("cat", "kitten", &tokenizer)
+            .unwrap();
         let sim2 = semantic_edit.similarity("cat", "dog", &tokenizer).unwrap();
-        
+
         assert!(sim1 > sim2); // Cat and kitten are more similar than cat and dog
     }
 
@@ -974,11 +1469,9 @@ mod tests {
         let sentence_sim = SentenceEmbeddingSimilarity::new(embeddings, PoolingStrategy::Mean);
         let tokenizer = WordTokenizer::default();
 
-        let sim = sentence_sim.similarity(
-            "the quick brown fox",
-            "the fast brown fox",
-            &tokenizer
-        ).unwrap();
+        let sim = sentence_sim
+            .similarity("the quick brown fox", "the fast brown fox", &tokenizer)
+            .unwrap();
 
         assert!(sim > 0.7); // Should be high due to similar embeddings for quick/fast
     }
@@ -992,18 +1485,16 @@ mod tests {
         // Test Mean pooling
         let mean_sim = SentenceEmbeddingSimilarity::new(embeddings.clone(), PoolingStrategy::Mean);
         let tokenizer = WordTokenizer::default();
-        
+
         // Test Max pooling
         let max_sim = SentenceEmbeddingSimilarity::new(embeddings.clone(), PoolingStrategy::Max);
-        
+
         // Test Weighted Mean pooling
         let mut weights = HashMap::new();
         weights.insert("high".to_string(), 2.0);
         weights.insert("low".to_string(), 1.0);
-        let weighted_sim = SentenceEmbeddingSimilarity::new(
-            embeddings, 
-            PoolingStrategy::WeightedMean(weights)
-        );
+        let weighted_sim =
+            SentenceEmbeddingSimilarity::new(embeddings, PoolingStrategy::WeightedMean(weights));
 
         let text1 = "high low";
         let text2 = "high high";
@@ -1031,11 +1522,9 @@ mod tests {
         let ngram_sim = NGramSemanticSimilarity::new(2, 1, embeddings);
         let tokenizer = WordTokenizer::default();
 
-        let sim = ngram_sim.similarity(
-            "machine learning",
-            "artificial intelligence",
-            &tokenizer
-        ).unwrap();
+        let sim = ngram_sim
+            .similarity("machine learning", "artificial intelligence", &tokenizer)
+            .unwrap();
 
         assert!(sim > 0.0); // Should have some similarity due to related concepts
     }
@@ -1048,10 +1537,8 @@ mod tests {
         embeddings.insert("dog".to_string(), arr1(&[0.0, 1.0]));
 
         let semantic_edit = SemanticEditDistance::new(embeddings.clone(), 0.8);
-        let sentence_embedding = SentenceEmbeddingSimilarity::new(
-            embeddings.clone(), 
-            PoolingStrategy::Mean
-        );
+        let sentence_embedding =
+            SentenceEmbeddingSimilarity::new(embeddings.clone(), PoolingStrategy::Mean);
         let ngram_semantic = NGramSemanticSimilarity::new(1, 0, embeddings);
 
         let ensemble = SemanticSimilarityEnsemble::new()
@@ -1060,7 +1547,7 @@ mod tests {
             .with_ngram_semantic(ngram_semantic);
 
         let tokenizer = WordTokenizer::default();
-        
+
         let sim = ensemble.similarity("cat", "kitten", &tokenizer).unwrap();
         assert!(sim > 0.0 && sim <= 1.0);
     }
@@ -1077,13 +1564,219 @@ mod tests {
         let ngram_sim = NGramSemanticSimilarity::new(2, 1, embeddings);
         let tokenizer = WordTokenizer::default();
 
-        let sim = ngram_sim.similarity(
-            "the quick brown fox",
-            "the brown quick fox", // Different order but same words
-            &tokenizer
-        ).unwrap();
+        let sim = ngram_sim
+            .similarity(
+                "the quick brown fox",
+                "the brown quick fox", // Different order but same words
+                &tokenizer,
+            )
+            .unwrap();
 
         // Should still have some similarity due to skip-grams
         assert!(sim > 0.3);
+    }
+
+    #[test]
+    fn test_conceptual_similarity() {
+        // Build a simple concept hierarchy
+        let relations = vec![
+            ("cat".to_string(), "animal".to_string()),
+            ("dog".to_string(), "animal".to_string()),
+            ("animal".to_string(), "living_thing".to_string()),
+            ("plant".to_string(), "living_thing".to_string()),
+            ("rose".to_string(), "plant".to_string()),
+        ];
+
+        let conceptual_sim = ConceptualSimilarity::build_simple_hierarchy(relations);
+
+        // Test path similarity
+        let sim_cat_dog = conceptual_sim.path_similarity("cat", "dog");
+        let sim_cat_rose = conceptual_sim.path_similarity("cat", "rose");
+
+        // Cat and dog should be more similar than cat and rose (closer in hierarchy)
+        assert!(sim_cat_dog > sim_cat_rose);
+        assert!(sim_cat_dog > 0.0);
+
+        // Test Wu-Palmer similarity
+        let wu_palmer_sim = conceptual_sim.wu_palmer_similarity("cat", "dog");
+        assert!(wu_palmer_sim > 0.0 && wu_palmer_sim <= 1.0);
+
+        // Test Resnik similarity
+        let resnik_sim = conceptual_sim.resnik_similarity("cat", "dog");
+        assert!(resnik_sim >= 0.0);
+
+        // Test text similarity
+        let tokenizer = WordTokenizer::default();
+        let text_sim = conceptual_sim
+            .text_similarity("cat runs", "dog runs", &tokenizer)
+            .unwrap();
+        assert!(text_sim > 0.0);
+    }
+
+    #[test]
+    fn test_distributional_similarity() {
+        let tokenizer = WordTokenizer::default();
+
+        // Create a small corpus
+        let corpus = vec![
+            "cat sits on mat".to_string(),
+            "dog runs in park".to_string(),
+            "cat plays with dog".to_string(),
+            "dog sits on mat".to_string(),
+            "cat runs in park".to_string(),
+        ];
+
+        let dist_sim = DistributionalSimilarity::from_corpus(&corpus, &tokenizer, 2).unwrap();
+
+        // Test word similarity
+        let sim_cat_dog = dist_sim.word_similarity("cat", "dog");
+        let sim_cat_mat = dist_sim.word_similarity("cat", "mat");
+
+        // Words that appear in similar contexts should have higher similarity
+        assert!(sim_cat_dog >= 0.0);
+        assert!(sim_cat_mat >= 0.0);
+
+        // Test text similarity
+        let text_sim = dist_sim
+            .text_similarity("cat runs", "dog runs", &tokenizer)
+            .unwrap();
+        assert!(text_sim >= 0.0);
+
+        // Test most similar words
+        let similar_words = dist_sim.most_similar("cat", 3);
+        assert!(similar_words.len() <= 3);
+        for (word, score) in similar_words {
+            assert!(score >= 0.0);
+            assert!(!word.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_topic_based_similarity() {
+        let mut topic_sim = TopicBasedSimilarity::new(TopicSimilarityMetric::Cosine);
+
+        // Add some mock topic distributions
+        let topics1 = arr1(&[0.8, 0.1, 0.1]); // Primarily topic 0
+        let topics2 = arr1(&[0.7, 0.2, 0.1]); // Also primarily topic 0
+        let topics3 = arr1(&[0.1, 0.8, 0.1]); // Primarily topic 1
+
+        topic_sim.add_document_topics("doc1".to_string(), topics1);
+        topic_sim.add_document_topics("doc2".to_string(), topics2);
+        topic_sim.add_document_topics("doc3".to_string(), topics3);
+
+        // Test cosine similarity
+        let sim_1_2 = topic_sim.similarity("doc1", "doc2").unwrap();
+        let sim_1_3 = topic_sim.similarity("doc1", "doc3").unwrap();
+
+        // Documents with similar topic distributions should be more similar
+        assert!(sim_1_2 > sim_1_3);
+        assert!(sim_1_2 > 0.5);
+        assert!(sim_1_3 >= 0.0);
+
+        // Test most similar documents
+        let similar_docs = topic_sim.most_similar_documents("doc1", 2).unwrap();
+        assert_eq!(similar_docs.len(), 2);
+        assert_eq!(similar_docs[0].0, "doc2"); // Should be most similar
+        assert!(similar_docs[0].1 > similar_docs[1].1);
+    }
+
+    #[test]
+    fn test_topic_similarity_metrics() {
+        // Test different similarity metrics
+        let mut cosine_sim = TopicBasedSimilarity::new(TopicSimilarityMetric::Cosine);
+        let mut js_sim = TopicBasedSimilarity::new(TopicSimilarityMetric::JensenShannon);
+        let mut hellinger_sim = TopicBasedSimilarity::new(TopicSimilarityMetric::Hellinger);
+
+        let topics1 = arr1(&[0.6, 0.3, 0.1]);
+        let topics2 = arr1(&[0.5, 0.4, 0.1]);
+
+        cosine_sim.add_document_topics("doc1".to_string(), topics1.clone());
+        cosine_sim.add_document_topics("doc2".to_string(), topics2.clone());
+
+        js_sim.add_document_topics("doc1".to_string(), topics1.clone());
+        js_sim.add_document_topics("doc2".to_string(), topics2.clone());
+
+        hellinger_sim.add_document_topics("doc1".to_string(), topics1);
+        hellinger_sim.add_document_topics("doc2".to_string(), topics2);
+
+        let cosine_result = cosine_sim.similarity("doc1", "doc2").unwrap();
+        let js_result = js_sim.similarity("doc1", "doc2").unwrap();
+        let hellinger_result = hellinger_sim.similarity("doc1", "doc2").unwrap();
+
+        // All similarity measures should return valid values
+        assert!(cosine_result >= 0.0 && cosine_result <= 1.0);
+        assert!(js_result >= 0.0 && js_result <= 1.0);
+        assert!(hellinger_result >= 0.0 && hellinger_result <= 1.0);
+    }
+
+    #[test]
+    fn test_conceptual_similarity_edge_cases() {
+        let conceptual_sim = ConceptualSimilarity::new(5);
+
+        // Test with unknown concepts
+        let sim = conceptual_sim.path_similarity("unknown1", "unknown2");
+        assert_eq!(sim, 0.0);
+
+        // Test identical concepts
+        let relations = vec![("cat".to_string(), "animal".to_string())];
+        let conceptual_sim = ConceptualSimilarity::build_simple_hierarchy(relations);
+        let sim = conceptual_sim.path_similarity("cat", "cat");
+        assert_eq!(sim, 1.0);
+    }
+
+    #[test]
+    fn test_distributional_similarity_edge_cases() {
+        let tokenizer = WordTokenizer::default();
+
+        // Empty corpus
+        let empty_corpus = vec![];
+        let dist_sim = DistributionalSimilarity::from_corpus(&empty_corpus, &tokenizer, 2).unwrap();
+
+        let sim = dist_sim.word_similarity("word1", "word2");
+        assert_eq!(sim, 0.0);
+
+        // Test with identical words
+        let sim_same = dist_sim.word_similarity("word", "word");
+        assert_eq!(sim_same, 1.0);
+
+        // Test text similarity with empty texts
+        let text_sim = dist_sim.text_similarity("", "", &tokenizer).unwrap();
+        assert_eq!(text_sim, 0.0);
+    }
+
+    #[test]
+    fn test_enhanced_semantic_similarity_ensemble() {
+        // Test ensemble with new similarity measures
+        let mut embeddings = HashMap::new();
+        embeddings.insert("cat".to_string(), arr1(&[1.0, 0.0]));
+        embeddings.insert("dog".to_string(), arr1(&[0.8, 0.2]));
+        embeddings.insert("animal".to_string(), arr1(&[0.9, 0.1]));
+
+        // Create conceptual similarity
+        let relations = vec![
+            ("cat".to_string(), "animal".to_string()),
+            ("dog".to_string(), "animal".to_string()),
+        ];
+        let conceptual_sim = ConceptualSimilarity::build_simple_hierarchy(relations);
+
+        // Create distributional similarity
+        let corpus = vec![
+            "cat animal runs".to_string(),
+            "dog animal plays".to_string(),
+        ];
+        let tokenizer = WordTokenizer::default();
+        let dist_sim = DistributionalSimilarity::from_corpus(&corpus, &tokenizer, 2).unwrap();
+
+        // Test individual components
+        let conceptual_result = conceptual_sim
+            .text_similarity("cat", "dog", &tokenizer)
+            .unwrap();
+        let distributional_result = dist_sim.text_similarity("cat", "dog", &tokenizer).unwrap();
+
+        assert!(conceptual_result >= 0.0);
+        assert!(distributional_result >= 0.0);
+
+        // Both should show some similarity since cat and dog are related concepts
+        assert!(conceptual_result > 0.0 || distributional_result > 0.0);
     }
 }

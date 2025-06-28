@@ -285,12 +285,12 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
         // For interior points, use PCHIP formula
         let two = F::from_f64(2.0).ok_or_else(|| {
             InterpolateError::ComputationError(
-                "Failed to convert constant 2.0 to float type".to_string()
+                "Failed to convert constant 2.0 to float type".to_string(),
             )
         })?;
         let three = F::from_f64(3.0).ok_or_else(|| {
             InterpolateError::ComputationError(
-                "Failed to convert constant 3.0 to float type".to_string()
+                "Failed to convert constant 3.0 to float type".to_string(),
             )
         })?;
 
@@ -411,7 +411,7 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
         // Apply Hyman filtering to ensure monotonicity
         let three = F::from_f64(3.0).ok_or_else(|| {
             InterpolateError::ComputationError(
-                "Failed to convert constant 3.0 to float type".to_string()
+                "Failed to convert constant 3.0 to float type".to_string(),
             )
         })?;
 
@@ -511,7 +511,7 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
                 // Bound the derivative to ensure monotonicity
                 let two = F::from_f64(2.0).ok_or_else(|| {
                     InterpolateError::ComputationError(
-                        "Failed to convert constant 2.0 to float type".to_string()
+                        "Failed to convert constant 2.0 to float type".to_string(),
                     )
                 })?;
                 derivatives[i] = F::min(a.abs(), min_slope * two) * a.signum();

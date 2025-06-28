@@ -3,9 +3,9 @@
 //! This module provides various matrix decomposition algorithms optimized
 //! for sparse matrices, including LU, QR, Cholesky, and incomplete variants.
 
+use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
-use crate::csr_array::CsrArray;
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::HashMap;
@@ -127,10 +127,7 @@ impl Default for ICOptions {
 ///
 /// let lu_result = lu_decomposition(&matrix, 0.1).unwrap();
 /// ```
-pub fn lu_decomposition<T, S>(
-    matrix: &S,
-    pivot_threshold: f64,
-) -> SparseResult<LUResult<T>>
+pub fn lu_decomposition<T, S>(matrix: &S, pivot_threshold: f64) -> SparseResult<LUResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
@@ -141,27 +138,32 @@ where
             "Matrix must be square for LU decomposition".to_string(),
         ));
     }
-    
+
     // Convert to working format (simplified sparse representation)
     let (row_indices, col_indices, values) = matrix.find();
-    let mut working_matrix = SparseWorkingMatrix::from_triplets(row_indices.as_slice().unwrap(), col_indices.as_slice().unwrap(), values.as_slice().unwrap(), n);
-    
+    let mut working_matrix = SparseWorkingMatrix::from_triplets(
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
+        n,
+    );
+
     // Initialize permutation
     let mut p: Vec<usize> = (0..n).collect();
-    
+
     // Gaussian elimination with partial pivoting
     for k in 0..n - 1 {
         // Find pivot
         let pivot_row = find_pivot(&working_matrix, k, &p, pivot_threshold)?;
-        
+
         // Swap rows in permutation
         if pivot_row != k {
             p.swap(k, pivot_row);
         }
-        
+
         let actual_pivot_row = p[k];
         let pivot_value = working_matrix.get(actual_pivot_row, k);
-        
+
         if pivot_value.abs() < T::from(1e-14).unwrap() {
             return Ok(LUResult {
                 l: CsrArray::from_triplets(&[], &[], &[], (n, n), false)?,
@@ -170,16 +172,16 @@ where
                 success: false,
             });
         }
-        
+
         // Eliminate below pivot
         for i in (k + 1)..n {
             let actual_row_i = p[i];
             let factor = working_matrix.get(actual_row_i, k) / pivot_value;
-            
+
             if !factor.is_zero() {
                 // Store multiplier in L
                 working_matrix.set(actual_row_i, k, factor);
-                
+
                 // Update row i
                 let pivot_row_data = working_matrix.get_row(actual_pivot_row);
                 for (col, &value) in &pivot_row_data {
@@ -191,13 +193,14 @@ where
             }
         }
     }
-    
+
     // Extract L and U matrices
-    let (l_rows, l_cols, l_vals, u_rows, u_cols, u_vals) = extract_lu_factors(&working_matrix, &p, n);
-    
+    let (l_rows, l_cols, l_vals, u_rows, u_cols, u_vals) =
+        extract_lu_factors(&working_matrix, &p, n);
+
     let l = CsrArray::from_triplets(&l_rows, &l_cols, &l_vals, (n, n), false)?;
     let u = CsrArray::from_triplets(&u_rows, &u_cols, &u_vals, (n, n), false)?;
-    
+
     Ok(LUResult {
         l,
         u,
@@ -238,20 +241,20 @@ where
     S: SparseArray<T>,
 {
     let (m, n) = matrix.shape();
-    
+
     // Convert to dense for QR (sparse QR is complex)
     let dense_matrix = matrix.to_array();
-    
+
     // Simple Gram-Schmidt QR decomposition
     let mut q = Array2::zeros((m, n));
     let mut r = Array2::zeros((n, n));
-    
+
     for j in 0..n {
         // Copy column j
         for i in 0..m {
             q[[i, j]] = dense_matrix[[i, j]];
         }
-        
+
         // Orthogonalize against previous columns
         for k in 0..j {
             let mut dot = T::zero();
@@ -259,12 +262,12 @@ where
                 dot = dot + q[[i, k]] * dense_matrix[[i, j]];
             }
             r[[k, j]] = dot;
-            
+
             for i in 0..m {
                 q[[i, j]] = q[[i, j]] - dot * q[[i, k]];
             }
         }
-        
+
         // Normalize
         let mut norm = T::zero();
         for i in 0..m {
@@ -272,18 +275,18 @@ where
         }
         norm = norm.sqrt();
         r[[j, j]] = norm;
-        
+
         if !norm.is_zero() {
             for i in 0..m {
                 q[[i, j]] = q[[i, j]] / norm;
             }
         }
     }
-    
+
     // Convert back to sparse
     let q_sparse = dense_to_sparse(&q)?;
     let r_sparse = dense_to_sparse(&r)?;
-    
+
     Ok(QRResult {
         q: q_sparse,
         r: r_sparse,
@@ -329,11 +332,16 @@ where
             "Matrix must be square for Cholesky decomposition".to_string(),
         ));
     }
-    
+
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
-    let mut working_matrix = SparseWorkingMatrix::from_triplets(row_indices.as_slice().unwrap(), col_indices.as_slice().unwrap(), values.as_slice().unwrap(), n);
-    
+    let mut working_matrix = SparseWorkingMatrix::from_triplets(
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
+        n,
+    );
+
     // Cholesky decomposition algorithm
     for k in 0..n {
         // Compute diagonal element
@@ -342,41 +350,38 @@ where
             let l_kj = working_matrix.get(k, j);
             sum = sum + l_kj * l_kj;
         }
-        
+
         let a_kk = working_matrix.get(k, k);
         let diag_val = a_kk - sum;
-        
+
         if diag_val <= T::zero() {
             return Ok(CholeskyResult {
                 l: CsrArray::from_triplets(&[], &[], &[], (n, n), false)?,
                 success: false,
             });
         }
-        
+
         let l_kk = diag_val.sqrt();
         working_matrix.set(k, k, l_kk);
-        
+
         // Compute below-diagonal elements
         for i in (k + 1)..n {
             let mut sum = T::zero();
             for j in 0..k {
                 sum = sum + working_matrix.get(i, j) * working_matrix.get(k, j);
             }
-            
+
             let a_ik = working_matrix.get(i, k);
             let l_ik = (a_ik - sum) / l_kk;
             working_matrix.set(i, k, l_ik);
         }
     }
-    
+
     // Extract lower triangular matrix
     let (l_rows, l_cols, l_vals) = extract_lower_triangular(&working_matrix, n);
     let l = CsrArray::from_triplets(&l_rows, &l_cols, &l_vals, (n, n), false)?;
-    
-    Ok(CholeskyResult {
-        l,
-        success: true,
-    })
+
+    Ok(CholeskyResult { l, success: true })
 }
 
 /// Compute incomplete LU decomposition (ILU)
@@ -392,56 +397,58 @@ where
 /// # Returns
 ///
 /// Incomplete LU decomposition result
-pub fn incomplete_lu<T, S>(
-    matrix: &S,
-    options: Option<ILUOptions>,
-) -> SparseResult<LUResult<T>>
+pub fn incomplete_lu<T, S>(matrix: &S, options: Option<ILUOptions>) -> SparseResult<LUResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
     let (n, m) = matrix.shape();
-    
+
     if n != m {
         return Err(SparseError::ValueError(
             "Matrix must be square for ILU decomposition".to_string(),
         ));
     }
-    
+
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
-    let mut working_matrix = SparseWorkingMatrix::from_triplets(row_indices.as_slice().unwrap(), col_indices.as_slice().unwrap(), values.as_slice().unwrap(), n);
-    
+    let mut working_matrix = SparseWorkingMatrix::from_triplets(
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
+        n,
+    );
+
     // ILU(0) algorithm - no fill-in beyond original sparsity pattern
     for k in 0..n - 1 {
         let pivot_val = working_matrix.get(k, k);
-        
+
         if pivot_val.abs() < T::from(1e-14).unwrap() {
             continue; // Skip singular pivot
         }
-        
+
         // Get all non-zero entries in column k below diagonal
         let col_k_entries = working_matrix.get_column_below_diagonal(k);
-        
+
         for &row_i in &col_k_entries {
             let factor = working_matrix.get(row_i, k) / pivot_val;
-            
+
             // Drop small factors
             if factor.abs() < T::from(opts.drop_tol).unwrap() {
                 working_matrix.set(row_i, k, T::zero());
                 continue;
             }
-            
+
             working_matrix.set(row_i, k, factor);
-            
+
             // Update row i (only existing non-zeros)
             let row_k_entries = working_matrix.get_row_after_column(k, k);
             for (col_j, &val_kj) in &row_k_entries {
                 if working_matrix.has_entry(row_i, *col_j) {
                     let old_val = working_matrix.get(row_i, *col_j);
                     let new_val = old_val - factor * val_kj;
-                    
+
                     // Drop small values
                     if new_val.abs() < T::from(opts.drop_tol).unwrap() {
                         working_matrix.set(row_i, *col_j, T::zero());
@@ -452,14 +459,15 @@ where
             }
         }
     }
-    
+
     // Extract L and U factors
     let identity_p: Vec<usize> = (0..n).collect();
-    let (l_rows, l_cols, l_vals, u_rows, u_cols, u_vals) = extract_lu_factors(&working_matrix, &identity_p, n);
-    
+    let (l_rows, l_cols, l_vals, u_rows, u_cols, u_vals) =
+        extract_lu_factors(&working_matrix, &identity_p, n);
+
     let l = CsrArray::from_triplets(&l_rows, &l_cols, &l_vals, (n, n), false)?;
     let u = CsrArray::from_triplets(&u_rows, &u_cols, &u_vals, (n, n), false)?;
-    
+
     Ok(LUResult {
         l,
         u,
@@ -491,17 +499,22 @@ where
 {
     let opts = options.unwrap_or_default();
     let (n, m) = matrix.shape();
-    
+
     if n != m {
         return Err(SparseError::ValueError(
             "Matrix must be square for IC decomposition".to_string(),
         ));
     }
-    
+
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
-    let mut working_matrix = SparseWorkingMatrix::from_triplets(row_indices.as_slice().unwrap(), col_indices.as_slice().unwrap(), values.as_slice().unwrap(), n);
-    
+    let mut working_matrix = SparseWorkingMatrix::from_triplets(
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
+        n,
+    );
+
     // IC(0) algorithm - no fill-in beyond original sparsity pattern
     for k in 0..n {
         // Compute diagonal element
@@ -510,37 +523,37 @@ where
         for (col_j, &val_kj) in &row_k_before_k {
             sum = sum + val_kj * val_kj;
         }
-        
+
         let a_kk = working_matrix.get(k, k);
         let diag_val = a_kk - sum;
-        
+
         if diag_val <= T::zero() {
             return Ok(CholeskyResult {
                 l: CsrArray::from_triplets(&[], &[], &[], (n, n), false)?,
                 success: false,
             });
         }
-        
+
         let l_kk = diag_val.sqrt();
         working_matrix.set(k, k, l_kk);
-        
+
         // Compute below-diagonal elements (only existing entries)
         let col_k_below = working_matrix.get_column_below_diagonal(k);
         for &row_i in &col_k_below {
             let mut sum = T::zero();
             let row_i_before_k = working_matrix.get_row_before_column(row_i, k);
             let row_k_before_k = working_matrix.get_row_before_column(k, k);
-            
+
             // Compute dot product of L[i, :k] and L[k, :k]
             for (col_j, &val_ij) in &row_i_before_k {
                 if let Some(&val_kj) = row_k_before_k.get(col_j) {
                     sum = sum + val_ij * val_kj;
                 }
             }
-            
+
             let a_ik = working_matrix.get(row_i, k);
             let l_ik = (a_ik - sum) / l_kk;
-            
+
             // Drop small values
             if l_ik.abs() < T::from(opts.drop_tol).unwrap() {
                 working_matrix.set(row_i, k, T::zero());
@@ -549,15 +562,12 @@ where
             }
         }
     }
-    
+
     // Extract lower triangular matrix
     let (l_rows, l_cols, l_vals) = extract_lower_triangular(&working_matrix, n);
     let l = CsrArray::from_triplets(&l_rows, &l_cols, &l_vals, (n, n), false)?;
-    
-    Ok(CholeskyResult {
-        l,
-        success: true,
-    })
+
+    Ok(CholeskyResult { l, success: true })
 }
 
 /// Simple sparse working matrix for decomposition algorithms
@@ -575,18 +585,18 @@ where
 {
     fn from_triplets(rows: &[usize], cols: &[usize], values: &[T], n: usize) -> Self {
         let mut data = HashMap::new();
-        
+
         for (i, (&row, &col)) in rows.iter().zip(cols.iter()).enumerate() {
             data.insert((row, col), values[i]);
         }
-        
+
         Self { data, n }
     }
-    
+
     fn get(&self, row: usize, col: usize) -> T {
         self.data.get(&(row, col)).copied().unwrap_or(T::zero())
     }
-    
+
     fn set(&mut self, row: usize, col: usize, value: T) {
         if value.is_zero() {
             self.data.remove(&(row, col));
@@ -594,11 +604,11 @@ where
             self.data.insert((row, col), value);
         }
     }
-    
+
     fn has_entry(&self, row: usize, col: usize) -> bool {
         self.data.contains_key(&(row, col))
     }
-    
+
     fn get_row(&self, row: usize) -> HashMap<usize, T> {
         let mut result = HashMap::new();
         for (&(r, c), &value) in &self.data {
@@ -608,7 +618,7 @@ where
         }
         result
     }
-    
+
     fn get_row_after_column(&self, row: usize, col: usize) -> HashMap<usize, T> {
         let mut result = HashMap::new();
         for (&(r, c), &value) in &self.data {
@@ -618,7 +628,7 @@ where
         }
         result
     }
-    
+
     fn get_row_before_column(&self, row: usize, col: usize) -> HashMap<usize, T> {
         let mut result = HashMap::new();
         for (&(r, c), &value) in &self.data {
@@ -628,7 +638,7 @@ where
         }
         result
     }
-    
+
     fn get_column_below_diagonal(&self, col: usize) -> Vec<usize> {
         let mut result = Vec::new();
         for (&(r, c), _) in &self.data {
@@ -653,7 +663,7 @@ where
 {
     let mut max_val = T::zero();
     let mut pivot_row = k;
-    
+
     for i in k..matrix.n {
         let actual_row = p[i];
         let val = matrix.get(actual_row, k).abs();
@@ -662,7 +672,7 @@ where
             pivot_row = i;
         }
     }
-    
+
     Ok(pivot_row)
 }
 
@@ -671,7 +681,14 @@ fn extract_lu_factors<T>(
     matrix: &SparseWorkingMatrix<T>,
     p: &[usize],
     n: usize,
-) -> (Vec<usize>, Vec<usize>, Vec<T>, Vec<usize>, Vec<usize>, Vec<T>)
+) -> (
+    Vec<usize>,
+    Vec<usize>,
+    Vec<T>,
+    Vec<usize>,
+    Vec<usize>,
+    Vec<T>,
+)
 where
     T: Float + Debug + Copy,
 {
@@ -681,15 +698,15 @@ where
     let mut u_rows = Vec::new();
     let mut u_cols = Vec::new();
     let mut u_vals = Vec::new();
-    
+
     for i in 0..n {
         let actual_row = p[i];
-        
+
         // Add diagonal 1 to L
         l_rows.push(i);
         l_cols.push(i);
         l_vals.push(T::one());
-        
+
         for j in 0..n {
             let val = matrix.get(actual_row, j);
             if !val.is_zero() {
@@ -707,7 +724,7 @@ where
             }
         }
     }
-    
+
     (l_rows, l_cols, l_vals, u_rows, u_cols, u_vals)
 }
 
@@ -722,7 +739,7 @@ where
     let mut rows = Vec::new();
     let mut cols = Vec::new();
     let mut vals = Vec::new();
-    
+
     for i in 0..n {
         for j in 0..=i {
             let val = matrix.get(i, j);
@@ -733,7 +750,7 @@ where
             }
         }
     }
-    
+
     (rows, cols, vals)
 }
 
@@ -746,7 +763,7 @@ where
     let mut rows = Vec::new();
     let mut cols = Vec::new();
     let mut vals = Vec::new();
-    
+
     for i in 0..m {
         for j in 0..n {
             let val = matrix[[i, j]];
@@ -757,7 +774,7 @@ where
             }
         }
     }
-    
+
     CsrArray::from_triplets(&rows, &cols, &vals, (m, n), false)
 }
 
@@ -772,7 +789,7 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![2.0, 1.0, 1.0, 3.0, 2.0, 4.0];
-        
+
         CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap()
     }
 
@@ -781,7 +798,7 @@ mod tests {
         let rows = vec![0, 1, 1, 2, 2, 2];
         let cols = vec![0, 0, 1, 0, 1, 2];
         let data = vec![4.0, 2.0, 5.0, 1.0, 3.0, 6.0];
-        
+
         CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap()
     }
 
@@ -789,7 +806,7 @@ mod tests {
     fn test_lu_decomposition() {
         let matrix = create_test_matrix();
         let lu_result = lu_decomposition(&matrix, 0.1).unwrap();
-        
+
         assert!(lu_result.success);
         assert_eq!(lu_result.l.shape(), (3, 3));
         assert_eq!(lu_result.u.shape(), (3, 3));
@@ -802,9 +819,9 @@ mod tests {
         let cols = vec![0, 0, 1];
         let data = vec![1.0, 2.0, 3.0];
         let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).unwrap();
-        
+
         let qr_result = qr_decomposition(&matrix).unwrap();
-        
+
         assert!(qr_result.success);
         assert_eq!(qr_result.q.shape(), (3, 2));
         assert_eq!(qr_result.r.shape(), (2, 2));
@@ -814,7 +831,7 @@ mod tests {
     fn test_cholesky_decomposition() {
         let matrix = create_spd_matrix();
         let chol_result = cholesky_decomposition(&matrix).unwrap();
-        
+
         assert!(chol_result.success);
         assert_eq!(chol_result.l.shape(), (3, 3));
     }
@@ -826,9 +843,9 @@ mod tests {
             drop_tol: 1e-6,
             ..Default::default()
         };
-        
+
         let ilu_result = incomplete_lu(&matrix, Some(options)).unwrap();
-        
+
         assert!(ilu_result.success);
         assert_eq!(ilu_result.l.shape(), (3, 3));
         assert_eq!(ilu_result.u.shape(), (3, 3));
@@ -841,9 +858,9 @@ mod tests {
             drop_tol: 1e-6,
             ..Default::default()
         };
-        
+
         let ic_result = incomplete_cholesky(&matrix, Some(options)).unwrap();
-        
+
         assert!(ic_result.success);
         assert_eq!(ic_result.l.shape(), (3, 3));
     }
@@ -853,17 +870,17 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let vals = vec![1.0, 2.0, 3.0];
-        
+
         let mut matrix = SparseWorkingMatrix::from_triplets(&rows, &cols, &vals, 3);
-        
+
         assert_eq!(matrix.get(0, 0), 1.0);
         assert_eq!(matrix.get(1, 1), 2.0);
         assert_eq!(matrix.get(2, 2), 3.0);
         assert_eq!(matrix.get(0, 1), 0.0);
-        
+
         matrix.set(0, 1, 5.0);
         assert_eq!(matrix.get(0, 1), 5.0);
-        
+
         matrix.set(0, 1, 0.0);
         assert_eq!(matrix.get(0, 1), 0.0);
         assert!(!matrix.has_entry(0, 1));
@@ -873,7 +890,7 @@ mod tests {
     fn test_dense_to_sparse_conversion() {
         let dense = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 2.0, 3.0]).unwrap();
         let sparse = dense_to_sparse(&dense).unwrap();
-        
+
         assert_eq!(sparse.nnz(), 3);
         assert_eq!(sparse.get(0, 0), 1.0);
         assert_eq!(sparse.get(0, 1), 0.0);

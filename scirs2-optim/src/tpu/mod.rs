@@ -8,9 +8,9 @@ use num_traits::Float;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-pub mod xla_compilation;
-pub mod tpu_backend;
 pub mod pod_coordination;
+pub mod tpu_backend;
+pub mod xla_compilation;
 
 use crate::error::{OptimError, OptimizerError};
 use crate::optimizers::Optimizer;
@@ -20,37 +20,37 @@ use crate::optimizers::Optimizer;
 pub struct TPUConfig {
     /// TPU version (v2, v3, v4, v5e)
     pub tpu_version: TPUVersion,
-    
+
     /// Number of TPU cores
     pub num_cores: usize,
-    
+
     /// Enable XLA compilation
     pub enable_xla: bool,
-    
+
     /// XLA optimization level
     pub xla_optimization_level: XLAOptimizationLevel,
-    
+
     /// Enable mixed precision on TPU
     pub mixed_precision: bool,
-    
+
     /// Batch size per core
     pub batch_size_per_core: usize,
-    
+
     /// Enable TPU pod coordination
     pub enable_pod_coordination: bool,
-    
+
     /// Pod topology
     pub pod_topology: PodTopology,
-    
+
     /// Memory optimization strategy
     pub memory_optimization: TPUMemoryOptimization,
-    
+
     /// Enable gradient compression for TPU communication
     pub gradient_compression: bool,
-    
+
     /// Prefetch depth for input pipeline
     pub prefetch_depth: usize,
-    
+
     /// Enable experimental features
     pub experimental_features: bool,
 }
@@ -97,12 +97,12 @@ pub enum XLAOptimizationLevel {
 /// TPU pod topologies
 #[derive(Debug, Clone, Copy)]
 pub enum PodTopology {
-    Single,         // Single TPU device
-    Pod2x2,         // 4 TPUs in 2x2 grid
-    Pod4x4,         // 16 TPUs in 4x4 grid
-    Pod8x8,         // 64 TPUs in 8x8 grid
-    Pod16x16,       // 256 TPUs in 16x16 grid
-    Pod32x32,       // 1024 TPUs in 32x32 grid
+    Single,   // Single TPU device
+    Pod2x2,   // 4 TPUs in 2x2 grid
+    Pod4x4,   // 16 TPUs in 4x4 grid
+    Pod8x8,   // 64 TPUs in 8x8 grid
+    Pod16x16, // 256 TPUs in 16x16 grid
+    Pod32x32, // 1024 TPUs in 32x32 grid
 }
 
 /// TPU memory optimization strategies
@@ -119,32 +119,32 @@ pub enum TPUMemoryOptimization {
 }
 
 /// TPU-optimized optimizer wrapper
-pub struct TPUOptimizer<O, A> 
+pub struct TPUOptimizer<O, A>
 where
     A: Float,
     O: Optimizer<A>,
 {
     /// Base optimizer
     base_optimizer: O,
-    
+
     /// TPU configuration
     config: TPUConfig,
-    
+
     /// XLA computation graph
     xla_graph: Option<XLAComputationGraph<A>>,
-    
+
     /// TPU memory allocator
     memory_allocator: TPUMemoryAllocator<A>,
-    
+
     /// Pod coordinator for multi-TPU setups
     pod_coordinator: Option<TPUPodCoordinator>,
-    
+
     /// Performance profiler
     profiler: TPUProfiler,
-    
+
     /// Current step count
     step_count: usize,
-    
+
     /// Compiled computation cache
     computation_cache: HashMap<String, CompiledComputation>,
 }
@@ -154,16 +154,16 @@ where
 struct XLAComputationGraph<A: Float> {
     /// Graph nodes
     nodes: Vec<XLANode<A>>,
-    
+
     /// Computation builder
     builder: XLAComputationBuilder,
-    
+
     /// Input placeholders
     inputs: HashMap<String, XLAOperand>,
-    
+
     /// Output operations
     outputs: Vec<XLAOperand>,
-    
+
     /// Graph optimization passes
     optimization_passes: Vec<XLAOptimizationPass>,
 }
@@ -173,13 +173,13 @@ struct XLAComputationGraph<A: Float> {
 struct XLANode<A: Float> {
     /// Operation type
     operation: XLAOperation,
-    
+
     /// Input operands
     inputs: Vec<XLAOperand>,
-    
+
     /// Output shape
     output_shape: XLAShape,
-    
+
     /// Node metadata
     metadata: XLANodeMetadata,
 }
@@ -241,10 +241,10 @@ enum XLAElementType {
 struct XLAComputationBuilder {
     /// Current instruction count
     instruction_count: usize,
-    
+
     /// Optimization level
     optimization_level: XLAOptimizationLevel,
-    
+
     /// Target TPU configuration
     target_config: TPUConfig,
 }
@@ -265,13 +265,13 @@ enum XLAOptimizationPass {
 struct XLANodeMetadata {
     /// Estimated FLOPs
     flops: u64,
-    
+
     /// Memory usage estimate
     memory_bytes: usize,
-    
+
     /// Fusion opportunities
     fusable_with: Vec<usize>,
-    
+
     /// Performance hints
     hints: Vec<String>,
 }
@@ -281,16 +281,16 @@ struct XLANodeMetadata {
 struct TPUMemoryAllocator<A: Float> {
     /// Total TPU memory (bytes)
     total_memory: usize,
-    
+
     /// Allocated memory (bytes)
     allocated_memory: usize,
-    
+
     /// Memory pools
     memory_pools: HashMap<String, MemoryPool<A>>,
-    
+
     /// Allocation strategy
     strategy: TPUMemoryOptimization,
-    
+
     /// Fragmentation statistics
     fragmentation_stats: FragmentationStats,
 }
@@ -300,16 +300,16 @@ struct TPUMemoryAllocator<A: Float> {
 struct MemoryPool<A: Float> {
     /// Pool size (bytes)
     size: usize,
-    
+
     /// Free blocks
     free_blocks: Vec<MemoryBlock>,
-    
+
     /// Allocated blocks
     allocated_blocks: HashMap<usize, MemoryBlock>,
-    
+
     /// Pool usage statistics
     usage_stats: PoolUsageStats,
-    
+
     /// Phantom data
     _phantom: std::marker::PhantomData<A>,
 }
@@ -319,13 +319,13 @@ struct MemoryPool<A: Float> {
 struct MemoryBlock {
     /// Block offset
     offset: usize,
-    
+
     /// Block size
     size: usize,
-    
+
     /// Allocation timestamp
     timestamp: std::time::Instant,
-    
+
     /// Usage frequency
     usage_count: usize,
 }
@@ -335,13 +335,13 @@ struct MemoryBlock {
 struct FragmentationStats {
     /// External fragmentation ratio
     external_fragmentation: f64,
-    
+
     /// Internal fragmentation ratio
     internal_fragmentation: f64,
-    
+
     /// Largest free block size
     largest_free_block: usize,
-    
+
     /// Number of free blocks
     num_free_blocks: usize,
 }
@@ -351,13 +351,13 @@ struct FragmentationStats {
 struct PoolUsageStats {
     /// Total allocations
     total_allocations: usize,
-    
+
     /// Peak usage (bytes)
     peak_usage: usize,
-    
+
     /// Average allocation size
     avg_allocation_size: usize,
-    
+
     /// Allocation/deallocation rate
     allocation_rate: f64,
 }
@@ -367,19 +367,19 @@ struct PoolUsageStats {
 struct TPUPodCoordinator {
     /// Pod topology
     topology: PodTopology,
-    
+
     /// Number of TPU cores
     num_cores: usize,
-    
+
     /// Core assignments
     core_assignments: HashMap<usize, TPUCoreInfo>,
-    
+
     /// Communication patterns
     comm_patterns: Vec<CommunicationPattern>,
-    
+
     /// Synchronization barriers
     sync_barriers: Vec<SyncBarrier>,
-    
+
     /// Load balancing strategy
     load_balancing: LoadBalancingStrategy,
 }
@@ -389,16 +389,16 @@ struct TPUPodCoordinator {
 struct TPUCoreInfo {
     /// Core ID
     core_id: usize,
-    
+
     /// Core coordinates in pod
     coordinates: (usize, usize),
-    
+
     /// Core utilization
     utilization: f64,
-    
+
     /// Memory usage
     memory_usage: usize,
-    
+
     /// Communication links
     links: Vec<usize>,
 }
@@ -421,13 +421,13 @@ enum CommunicationPattern {
 struct SyncBarrier {
     /// Barrier ID
     id: usize,
-    
+
     /// Participating cores
     cores: Vec<usize>,
-    
+
     /// Barrier type
     barrier_type: BarrierType,
-    
+
     /// Timeout (milliseconds)
     timeout_ms: u64,
 }
@@ -454,16 +454,16 @@ enum LoadBalancingStrategy {
 struct TPUProfiler {
     /// Execution timeline
     timeline: Vec<ProfileEvent>,
-    
+
     /// Performance counters
     counters: HashMap<String, u64>,
-    
+
     /// Memory usage over time
     memory_timeline: Vec<MemorySnapshot>,
-    
+
     /// XLA compilation metrics
     compilation_metrics: CompilationMetrics,
-    
+
     /// TPU utilization metrics
     utilization_metrics: UtilizationMetrics,
 }
@@ -473,16 +473,16 @@ struct TPUProfiler {
 struct ProfileEvent {
     /// Event timestamp
     timestamp: std::time::Instant,
-    
+
     /// Event type
     event_type: ProfileEventType,
-    
+
     /// Core ID
     core_id: usize,
-    
+
     /// Duration (microseconds)
     duration_us: u64,
-    
+
     /// Metadata
     metadata: HashMap<String, String>,
 }
@@ -502,13 +502,13 @@ enum ProfileEventType {
 struct MemorySnapshot {
     /// Timestamp
     timestamp: std::time::Instant,
-    
+
     /// Used memory (bytes)
     used_memory: usize,
-    
+
     /// Peak memory (bytes)
     peak_memory: usize,
-    
+
     /// Fragmentation ratio
     fragmentation: f64,
 }
@@ -518,13 +518,13 @@ struct MemorySnapshot {
 struct CompilationMetrics {
     /// Compilation time (milliseconds)
     compilation_time_ms: u64,
-    
+
     /// Number of optimizations applied
     optimizations_applied: usize,
-    
+
     /// Generated code size (bytes)
     code_size: usize,
-    
+
     /// Estimated performance improvement
     perf_improvement_factor: f64,
 }
@@ -534,16 +534,16 @@ struct CompilationMetrics {
 struct UtilizationMetrics {
     /// Compute utilization (0.0 to 1.0)
     compute_utilization: f64,
-    
+
     /// Memory bandwidth utilization
     memory_bandwidth_utilization: f64,
-    
+
     /// Inter-core communication utilization
     communication_utilization: f64,
-    
+
     /// Matrix unit utilization
     matrix_unit_utilization: f64,
-    
+
     /// Vector unit utilization
     vector_unit_utilization: f64,
 }
@@ -553,16 +553,16 @@ struct UtilizationMetrics {
 struct CompiledComputation {
     /// Compilation ID
     id: String,
-    
+
     /// Compiled code
     code: Vec<u8>,
-    
+
     /// Input/output specifications
     io_spec: IOSpecification,
-    
+
     /// Performance characteristics
     perf_characteristics: PerformanceCharacteristics,
-    
+
     /// Memory requirements
     memory_requirements: MemoryRequirements,
 }
@@ -572,10 +572,10 @@ struct CompiledComputation {
 struct IOSpecification {
     /// Input shapes
     input_shapes: Vec<XLAShape>,
-    
+
     /// Output shapes
     output_shapes: Vec<XLAShape>,
-    
+
     /// Parameter shapes
     parameter_shapes: Vec<XLAShape>,
 }
@@ -585,13 +585,13 @@ struct IOSpecification {
 struct PerformanceCharacteristics {
     /// Estimated execution time (microseconds)
     estimated_execution_time_us: u64,
-    
+
     /// FLOPs count
     flops: u64,
-    
+
     /// Memory bandwidth required (GB/s)
     memory_bandwidth_gbs: f64,
-    
+
     /// TPU utilization estimate
     utilization_estimate: f64,
 }
@@ -601,13 +601,13 @@ struct PerformanceCharacteristics {
 struct MemoryRequirements {
     /// Total memory needed (bytes)
     total_memory: usize,
-    
+
     /// Working memory (bytes)
     working_memory: usize,
-    
+
     /// Parameter memory (bytes)
     parameter_memory: usize,
-    
+
     /// Temporary memory (bytes)
     temp_memory: usize,
 }
@@ -625,9 +625,9 @@ where
         } else {
             None
         };
-        
+
         let profiler = TPUProfiler::new();
-        
+
         Ok(Self {
             base_optimizer,
             config,
@@ -639,15 +639,16 @@ where
             computation_cache: HashMap::new(),
         })
     }
-    
+
     /// Initialize XLA computation graph
     pub fn initialize_xla_graph(&mut self) -> Result<(), OptimizerError> {
         if !self.config.enable_xla {
             return Ok(());
         }
-        
-        let builder = XLAComputationBuilder::new(self.config.xla_optimization_level, self.config.clone());
-        
+
+        let builder =
+            XLAComputationBuilder::new(self.config.xla_optimization_level, self.config.clone());
+
         self.xla_graph = Some(XLAComputationGraph {
             nodes: Vec::new(),
             builder,
@@ -662,42 +663,43 @@ where
                 XLAOptimizationPass::TensorCoreUtilization,
             ],
         });
-        
+
         Ok(())
     }
-    
+
     /// Compile optimizer step for TPU execution
     pub fn compile_step(&mut self, input_shapes: &[XLAShape]) -> Result<String, OptimizerError> {
         let compilation_id = format!("optimizer_step_{}", self.step_count);
-        
+
         if self.computation_cache.contains_key(&compilation_id) {
             return Ok(compilation_id);
         }
-        
+
         let start_time = std::time::Instant::now();
-        
+
         // Build XLA computation
         let computation = self.build_optimizer_computation(input_shapes)?;
-        
+
         // Apply optimization passes
         let optimized_computation = self.apply_optimization_passes(computation)?;
-        
+
         // Compile to TPU code
         let compiled = self.compile_to_tpu(optimized_computation)?;
-        
+
         let compilation_time = start_time.elapsed();
-        
+
         // Update compilation metrics
         self.profiler.compilation_metrics.compilation_time_ms = compilation_time.as_millis() as u64;
-        self.profiler.compilation_metrics.optimizations_applied = 
+        self.profiler.compilation_metrics.optimizations_applied =
             self.xla_graph.as_ref().unwrap().optimization_passes.len();
-        
+
         // Cache compiled computation
-        self.computation_cache.insert(compilation_id.clone(), compiled);
-        
+        self.computation_cache
+            .insert(compilation_id.clone(), compiled);
+
         Ok(compilation_id)
     }
-    
+
     /// Execute TPU-optimized step
     pub fn tpu_step<S, D>(
         &mut self,
@@ -709,21 +711,21 @@ where
         D: Dimension + Clone,
     {
         let start_time = std::time::Instant::now();
-        
+
         // Convert to XLA shapes
         let param_shape = self.array_to_xla_shape(params)?;
         let grad_shape = self.array_to_xla_shape(gradients)?;
-        
+
         // Compile if needed
         let computation_id = self.compile_step(&[param_shape, grad_shape])?;
-        
+
         // Execute on TPU
         let result = if let Some(ref pod_coordinator) = self.pod_coordinator {
             self.execute_distributed(&computation_id, params, gradients)?
         } else {
             self.execute_single_tpu(&computation_id, params, gradients)?
         };
-        
+
         // Update profiling
         let execution_time = start_time.elapsed();
         self.profiler.timeline.push(ProfileEvent {
@@ -733,66 +735,82 @@ where
             duration_us: execution_time.as_micros() as u64,
             metadata: HashMap::new(),
         });
-        
+
         self.step_count += 1;
-        
+
         Ok(result)
     }
-    
-    fn build_optimizer_computation(&self, input_shapes: &[XLAShape]) -> Result<XLAComputationGraph<A>, OptimizerError> {
+
+    fn build_optimizer_computation(
+        &self,
+        input_shapes: &[XLAShape],
+    ) -> Result<XLAComputationGraph<A>, OptimizerError> {
         // Simplified computation graph building
         // In a real implementation, this would build the full optimizer computation
         let mut graph = self.xla_graph.as_ref().unwrap().clone();
-        
+
         // Add input placeholders
         for (i, &shape) in input_shapes.iter().enumerate() {
             let operand = XLAOperand { id: i, shape };
             graph.inputs.insert(format!("input_{}", i), operand);
         }
-        
+
         Ok(graph)
     }
-    
-    fn apply_optimization_passes(&self, mut computation: XLAComputationGraph<A>) -> Result<XLAComputationGraph<A>, OptimizerError> {
+
+    fn apply_optimization_passes(
+        &self,
+        mut computation: XLAComputationGraph<A>,
+    ) -> Result<XLAComputationGraph<A>, OptimizerError> {
         for pass in &computation.optimization_passes {
             computation = self.apply_single_pass(computation, pass)?;
         }
         Ok(computation)
     }
-    
-    fn apply_single_pass(&self, computation: XLAComputationGraph<A>, pass: &XLAOptimizationPass) -> Result<XLAComputationGraph<A>, OptimizerError> {
+
+    fn apply_single_pass(
+        &self,
+        computation: XLAComputationGraph<A>,
+        pass: &XLAOptimizationPass,
+    ) -> Result<XLAComputationGraph<A>, OptimizerError> {
         // Apply specific optimization pass
         // This is simplified - real implementation would transform the computation graph
         Ok(computation)
     }
-    
-    fn compile_to_tpu(&self, computation: XLAComputationGraph<A>) -> Result<CompiledComputation, OptimizerError> {
+
+    fn compile_to_tpu(
+        &self,
+        computation: XLAComputationGraph<A>,
+    ) -> Result<CompiledComputation, OptimizerError> {
         // Compile XLA computation to TPU executable
-        let compilation_id = format!("tpu_comp_{}", std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs());
-        
+        let compilation_id = format!(
+            "tpu_comp_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+        );
+
         let io_spec = IOSpecification {
             input_shapes: computation.inputs.values().map(|op| op.shape).collect(),
             output_shapes: computation.outputs.iter().map(|op| op.shape).collect(),
             parameter_shapes: Vec::new(),
         };
-        
+
         let perf_characteristics = PerformanceCharacteristics {
             estimated_execution_time_us: 100, // Placeholder
             flops: 1000000,
             memory_bandwidth_gbs: 10.0,
             utilization_estimate: 0.85,
         };
-        
+
         let memory_requirements = MemoryRequirements {
             total_memory: 1024 * 1024, // 1MB placeholder
             working_memory: 512 * 1024,
             parameter_memory: 256 * 1024,
             temp_memory: 256 * 1024,
         };
-        
+
         Ok(CompiledComputation {
             id: compilation_id,
             code: vec![0; 1024], // Placeholder compiled code
@@ -801,7 +819,7 @@ where
             memory_requirements,
         })
     }
-    
+
     fn execute_single_tpu<S, D>(
         &self,
         _computation_id: &str,
@@ -816,7 +834,7 @@ where
         // For now, fall back to base optimizer
         self.base_optimizer.step(params, gradients)
     }
-    
+
     fn execute_distributed<S, D>(
         &self,
         _computation_id: &str,
@@ -831,7 +849,7 @@ where
         // For now, fall back to single TPU execution
         self.execute_single_tpu(_computation_id, params, gradients)
     }
-    
+
     fn array_to_xla_shape<S, D>(&self, array: &ArrayBase<S, D>) -> Result<XLAShape, OptimizerError>
     where
         S: Data<Elem = A>,
@@ -839,18 +857,18 @@ where
     {
         let dims = array.shape();
         let mut dimensions = [1usize; 4];
-        
+
         for (i, &dim) in dims.iter().enumerate().take(4) {
             dimensions[i] = dim;
         }
-        
+
         Ok(XLAShape {
             dimensions,
             rank: dims.len().min(4),
             element_type: XLAElementType::F32, // Simplified
         })
     }
-    
+
     /// Get TPU performance metrics
     pub fn get_performance_metrics(&self) -> TPUPerformanceMetrics {
         TPUPerformanceMetrics {
@@ -861,7 +879,7 @@ where
             cache_hit_rate: self.get_cache_hit_rate(),
         }
     }
-    
+
     fn get_cache_hit_rate(&self) -> f64 {
         if self.step_count == 0 {
             0.0
@@ -869,13 +887,13 @@ where
             self.computation_cache.len() as f64 / self.step_count as f64
         }
     }
-    
+
     /// Optimize TPU memory layout
     pub fn optimize_memory_layout(&mut self) -> Result<(), OptimizerError> {
         self.memory_allocator.optimize_layout()?;
         Ok(())
     }
-    
+
     /// Get TPU topology information
     pub fn get_topology_info(&self) -> TPUTopologyInfo {
         TPUTopologyInfo {
@@ -886,17 +904,17 @@ where
             interconnect_bandwidth: self.get_interconnect_bandwidth(),
         }
     }
-    
+
     fn get_memory_per_core(&self) -> usize {
         match self.config.tpu_version {
-            TPUVersion::V2 => 8 * 1024 * 1024 * 1024,  // 8GB
-            TPUVersion::V3 => 16 * 1024 * 1024 * 1024, // 16GB
-            TPUVersion::V4 => 32 * 1024 * 1024 * 1024, // 32GB
+            TPUVersion::V2 => 8 * 1024 * 1024 * 1024,   // 8GB
+            TPUVersion::V3 => 16 * 1024 * 1024 * 1024,  // 16GB
+            TPUVersion::V4 => 32 * 1024 * 1024 * 1024,  // 32GB
             TPUVersion::V5e => 16 * 1024 * 1024 * 1024, // 16GB
             TPUVersion::V5p => 95 * 1024 * 1024 * 1024, // 95GB
         }
     }
-    
+
     fn get_interconnect_bandwidth(&self) -> f64 {
         match self.config.tpu_version {
             TPUVersion::V2 => 500.0,   // 500 GB/s
@@ -948,7 +966,7 @@ impl<A: Float> TPUMemoryAllocator<A> {
             TPUVersion::V5e => 16 * 1024 * 1024 * 1024 * config.num_cores,
             TPUVersion::V5p => 95 * 1024 * 1024 * 1024 * config.num_cores,
         };
-        
+
         Ok(Self {
             total_memory,
             allocated_memory: 0,
@@ -962,12 +980,12 @@ impl<A: Float> TPUMemoryAllocator<A> {
             },
         })
     }
-    
+
     fn optimize_layout(&mut self) -> Result<(), OptimizerError> {
         // Implement memory layout optimization
         Ok(())
     }
-    
+
     fn get_usage_stats(&self) -> MemoryUsageStats {
         MemoryUsageStats {
             total_allocated: self.allocated_memory,
@@ -992,7 +1010,7 @@ impl TPUPodCoordinator {
             PodTopology::Pod16x16 => 256,
             PodTopology::Pod32x32 => 1024,
         };
-        
+
         let mut core_assignments = HashMap::new();
         for i in 0..num_cores {
             let (x, y) = match config.pod_topology {
@@ -1003,16 +1021,19 @@ impl TPUPodCoordinator {
                 PodTopology::Pod16x16 => (i % 16, i / 16),
                 PodTopology::Pod32x32 => (i % 32, i / 32),
             };
-            
-            core_assignments.insert(i, TPUCoreInfo {
-                core_id: i,
-                coordinates: (x, y),
-                utilization: 0.0,
-                memory_usage: 0,
-                links: vec![], // Would be populated based on topology
-            });
+
+            core_assignments.insert(
+                i,
+                TPUCoreInfo {
+                    core_id: i,
+                    coordinates: (x, y),
+                    utilization: 0.0,
+                    memory_usage: 0,
+                    links: vec![], // Would be populated based on topology
+                },
+            );
         }
-        
+
         Ok(Self {
             topology: config.pod_topology,
             num_cores,
@@ -1067,7 +1088,7 @@ impl Clone for XLAComputationGraph<A> {
             nodes: self.nodes.clone(),
             builder: XLAComputationBuilder::new(
                 self.builder.optimization_level,
-                self.builder.target_config.clone()
+                self.builder.target_config.clone(),
             ),
             inputs: self.inputs.clone(),
             outputs: self.outputs.clone(),
@@ -1104,7 +1125,7 @@ mod tests {
             rank: 2,
             element_type: XLAElementType::F32,
         };
-        
+
         assert_eq!(shape.rank, 2);
         assert_eq!(shape.dimensions[0], 10);
         assert_eq!(shape.dimensions[1], 20);
@@ -1117,10 +1138,10 @@ mod tests {
             num_cores: 8,
             ..Default::default()
         };
-        
+
         let allocator = TPUMemoryAllocator::<f32>::new(&config);
         assert!(allocator.is_ok());
-        
+
         let allocator = allocator.unwrap();
         assert_eq!(allocator.total_memory, 32 * 1024 * 1024 * 1024 * 8); // 32GB * 8 cores
     }

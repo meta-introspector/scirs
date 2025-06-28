@@ -375,11 +375,11 @@ pub fn read_harwell_boeing<P: AsRef<Path>>(path: P) -> Result<HBSparseMatrix<f64
         if !header.rhsfmt.is_empty() {
             let mut rhs_data = Vec::new();
             read_real_data(&mut reader, header.rhscrd, &mut rhs_data)?;
-            
+
             // For simplicity, assume single RHS vector
             // In full implementation, would parse rhstyp, nrhs, nrhsix from line 5
             let nrhs = 1; // Number of RHS vectors (should be parsed from header)
-            
+
             if rhs_data.len() >= header.nrow * nrhs {
                 // Reshape into matrix: each column is an RHS vector
                 let mut rhs_matrix = Array2::zeros((header.nrow, nrhs));
@@ -471,13 +471,13 @@ pub fn write_harwell_boeing<P: AsRef<Path>>(path: P, matrix: &HBSparseMatrix<f64
         if matrix.header.rhscrd > 0 && !matrix.header.rhsfmt.is_empty() {
             // Convert RHS matrix to column-major vector format
             let mut rhs_data = Vec::new();
-            
+
             for j in 0..rhs_matrix.ncols() {
                 for i in 0..rhs_matrix.nrows() {
                     rhs_data.push(rhs_matrix[[i, j]]);
                 }
             }
-            
+
             // Write RHS data using specified format
             write_real_data(&mut writer, &rhs_data, 20)?; // 20-character field width
         }

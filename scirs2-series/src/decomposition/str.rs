@@ -2,6 +2,7 @@
 
 use ndarray::{s, Array1, Array2, ScalarOperand};
 use num_traits::{Float, FromPrimitive, NumCast};
+use scirs2_linalg::{inv, solve};
 use std::fmt::Debug;
 
 use crate::error::{Result, TimeSeriesError};
@@ -110,12 +111,7 @@ pub struct STRResult<F> {
 /// ```
 pub fn str_decomposition<F>(ts: &Array1<F>, options: &STROptions) -> Result<STRResult<F>>
 where
-    F: Float
-        + FromPrimitive
-        + Debug
-        + ScalarOperand
-        + NumCast
-        + std::iter::Sum,
+    F: Float + FromPrimitive + Debug + ScalarOperand + NumCast + std::iter::Sum,
 {
     let n = ts.len();
 
@@ -263,11 +259,24 @@ where
         }
         RegularizationType::Lasso => {
             // LASSO regression using coordinate descent
-            solve_lasso(&design_matrix, ts, options.seasonal_lambda, 1000, F::from(1e-6).unwrap())?
+            solve_lasso(
+                &design_matrix,
+                ts,
+                options.seasonal_lambda,
+                1000,
+                F::from(1e-6).unwrap(),
+            )?
         }
         RegularizationType::ElasticNet => {
-            // Elastic Net regression using coordinate descent  
-            solve_elastic_net(&design_matrix, ts, options.seasonal_lambda, options.trend_lambda, 1000, F::from(1e-6).unwrap())?
+            // Elastic Net regression using coordinate descent
+            solve_elastic_net(
+                &design_matrix,
+                ts,
+                options.seasonal_lambda,
+                options.trend_lambda,
+                1000,
+                F::from(1e-6).unwrap(),
+            )?
         }
     };
 
@@ -343,12 +352,7 @@ fn compute_confidence_intervals<F>(
     confidence_level: f64,
 ) -> ConfidenceIntervalsResult<F>
 where
-    F: Float
-        + FromPrimitive
-        + Debug
-        + ScalarOperand
-        + NumCast
-        + std::iter::Sum,
+    F: Float + FromPrimitive + Debug + ScalarOperand + NumCast + std::iter::Sum,
 {
     let n = residual.len();
     let p = design_matrix.ncols();
@@ -358,8 +362,7 @@ where
     }
 
     // Estimate residual variance
-    let residual_variance =
-        residual.mapv(|x| x * x).sum() / F::from_usize(n - p).unwrap();
+    let residual_variance = residual.mapv(|x| x * x).sum() / F::from_usize(n - p).unwrap();
 
     // Compute covariance matrix: σ² (X^T X + λR)^(-1)
     let covariance_matrix = match matrix_inverse(system_matrix) {
@@ -375,7 +378,7 @@ where
         match alpha {
             a if a <= 0.01 => F::from(2.576).unwrap(), // 99% CI
             a if a <= 0.05 => F::from(1.96).unwrap(),  // 95% CI
-            _ => F::from(1.645).unwrap(),               // 90% CI
+            _ => F::from(1.645).unwrap(),              // 90% CI
         }
     } else {
         // Simple t-distribution approximation
@@ -396,15 +399,18 @@ where
 
     for seasonal_basis in seasonal_bases {
         let seasonal_cols = seasonal_basis.ncols();
-        let seasonal_cov = covariance_matrix
-            .slice(s![col_offset..col_offset + seasonal_cols, col_offset..col_offset + seasonal_cols]);
-        
-        let seasonal_se = compute_component_standard_errors(seasonal_basis, &seasonal_cov.to_owned())?;
+        let seasonal_cov = covariance_matrix.slice(s![
+            col_offset..col_offset + seasonal_cols,
+            col_offset..col_offset + seasonal_cols
+        ]);
+
+        let seasonal_se =
+            compute_component_standard_errors(seasonal_basis, &seasonal_cov.to_owned())?;
         let seasonal_margin = seasonal_se.mapv(|se| se * t_critical);
         let seasonal_fitted = seasonal_basis.dot(&seasonal_cov.diag());
         let seasonal_lower = &seasonal_fitted - &seasonal_margin;
         let seasonal_upper = &seasonal_fitted + &seasonal_margin;
-        
+
         seasonal_cis.push((seasonal_lower, seasonal_upper));
         col_offset += seasonal_cols;
     }
@@ -432,10 +438,10 @@ where
     Ok(standard_errors)
 }
 
-/// Matrix solve using Gaussian elimination with partial pivoting  
+/// Matrix solve using scirs2-linalg
 fn solve_regularized_system<F>(a: &Array2<F>, b: &Array1<F>) -> Result<Array1<F>>
 where
-    F: Float + FromPrimitive + ScalarOperand,
+    F: Float + FromPrimitive + ScalarOperand + NumCast + 'static,
 {
     let n = a.shape()[0];
     if n != a.shape()[1] || n != b.len() {
@@ -444,58 +450,16 @@ where
         ));
     }
 
-    // Create augmented matrix
-    let mut aug = a.clone();
-    let mut rhs = b.clone();
+    // Convert to f64 for scirs2-linalg computation
+    let a_f64 = a.mapv(|x| x.to_f64().unwrap_or(0.0));
+    let b_f64 = b.mapv(|x| x.to_f64().unwrap_or(0.0));
 
-    // Forward elimination
-    for i in 0..n {
-        // Find pivot
-        let mut max_row = i;
-        for k in (i + 1)..n {
-            if aug[[k, i]].abs() > aug[[max_row, i]].abs() {
-                max_row = k;
-            }
-        }
+    // Solve using scirs2-linalg
+    let x_f64 = solve(&a_f64.view(), &b_f64.view(), None)
+        .map_err(|e| TimeSeriesError::DecompositionError(format!("Linear solve failed: {}", e)))?;
 
-        // Swap rows
-        if max_row != i {
-            for j in 0..n {
-                let temp = aug[[i, j]];
-                aug[[i, j]] = aug[[max_row, j]];
-                aug[[max_row, j]] = temp;
-            }
-            let temp = rhs[i];
-            rhs[i] = rhs[max_row];
-            rhs[max_row] = temp;
-        }
-
-        // Check for singular matrix
-        if aug[[i, i]].abs() < F::from(1e-10).unwrap() {
-            return Err(TimeSeriesError::DecompositionError(
-                "Matrix is singular".to_string(),
-            ));
-        }
-
-        // Eliminate column
-        for k in (i + 1)..n {
-            let factor = aug[[k, i]] / aug[[i, i]];
-            for j in i..n {
-                aug[[k, j]] = aug[[k, j]] - factor * aug[[i, j]];
-            }
-            rhs[k] = rhs[k] - factor * rhs[i];
-        }
-    }
-
-    // Back substitution
-    let mut x = Array1::zeros(n);
-    for i in (0..n).rev() {
-        let mut sum = rhs[i];
-        for j in (i + 1)..n {
-            sum = sum - aug[[i, j]] * x[j];
-        }
-        x[i] = sum / aug[[i, i]];
-    }
+    // Convert back to original type
+    let x = x_f64.mapv(|val| F::from_f64(val).unwrap_or_else(F::zero));
 
     Ok(x)
 }
@@ -514,16 +478,16 @@ where
     let (n, p) = (x.nrows(), x.ncols());
     let mut beta = Array1::zeros(p);
     let lambda_f = F::from(lambda).unwrap();
-    
+
     // Precompute X^T X diagonal (for efficiency)
     let mut xtx_diag = Array1::zeros(p);
     for j in 0..p {
         xtx_diag[j] = x.column(j).dot(&x.column(j));
     }
-    
+
     for _iter in 0..max_iter {
         let beta_old = beta.clone();
-        
+
         for j in 0..p {
             // Compute partial residual
             let mut r = y.clone();
@@ -535,11 +499,11 @@ where
                     }
                 }
             }
-            
+
             // Compute coordinate update
             let x_j = x.column(j);
             let xty_j = x_j.dot(&r);
-            
+
             // Soft thresholding
             let z = xty_j;
             beta[j] = if z > lambda_f {
@@ -550,18 +514,18 @@ where
                 F::zero()
             };
         }
-        
+
         // Check convergence
         let mut diff = F::zero();
         for j in 0..p {
             diff = diff + (beta[j] - beta_old[j]).abs();
         }
-        
+
         if diff < tol {
             break;
         }
     }
-    
+
     Ok(beta)
 }
 
@@ -581,16 +545,16 @@ where
     let mut beta = Array1::zeros(p);
     let l1_lambda_f = F::from(l1_lambda).unwrap();
     let l2_lambda_f = F::from(l2_lambda).unwrap();
-    
+
     // Precompute X^T X diagonal + L2 penalty
     let mut xtx_diag = Array1::zeros(p);
     for j in 0..p {
         xtx_diag[j] = x.column(j).dot(&x.column(j)) + l2_lambda_f;
     }
-    
+
     for _iter in 0..max_iter {
         let beta_old = beta.clone();
-        
+
         for j in 0..p {
             // Compute partial residual
             let mut r = y.clone();
@@ -602,11 +566,11 @@ where
                     }
                 }
             }
-            
+
             // Compute coordinate update
             let x_j = x.column(j);
             let xty_j = x_j.dot(&r);
-            
+
             // Soft thresholding with L2 penalty
             let z = xty_j;
             beta[j] = if z > l1_lambda_f {
@@ -617,25 +581,25 @@ where
                 F::zero()
             };
         }
-        
+
         // Check convergence
         let mut diff = F::zero();
         for j in 0..p {
             diff = diff + (beta[j] - beta_old[j]).abs();
         }
-        
+
         if diff < tol {
             break;
         }
     }
-    
+
     Ok(beta)
 }
 
-/// Matrix inversion using Gauss-Jordan elimination
+/// Matrix inversion using scirs2-linalg
 fn matrix_inverse<F>(a: &Array2<F>) -> Result<Array2<F>>
 where
-    F: Float + FromPrimitive + ScalarOperand,
+    F: Float + FromPrimitive + ScalarOperand + NumCast + 'static,
 {
     let n = a.shape()[0];
     if n != a.shape()[1] {
@@ -644,73 +608,18 @@ where
         ));
     }
 
-    // Create augmented matrix [A | I]
-    let mut aug = Array2::zeros((n, 2 * n));
-    
-    // Fill left side with A
-    for i in 0..n {
-        for j in 0..n {
-            aug[[i, j]] = a[[i, j]];
-        }
-    }
-    
-    // Fill right side with identity matrix
-    for i in 0..n {
-        aug[[i, n + i]] = F::one();
-    }
-    
-    // Forward elimination
-    for i in 0..n {
-        // Find pivot
-        let mut max_row = i;
-        for k in (i + 1)..n {
-            if aug[[k, i]].abs() > aug[[max_row, i]].abs() {
-                max_row = k;
-            }
-        }
-        
-        // Swap rows
-        if max_row != i {
-            for j in 0..(2 * n) {
-                let temp = aug[[i, j]];
-                aug[[i, j]] = aug[[max_row, j]];
-                aug[[max_row, j]] = temp;
-            }
-        }
-        
-        // Check for singular matrix
-        if aug[[i, i]].abs() < F::from(1e-12).unwrap() {
-            return Err(TimeSeriesError::DecompositionError(
-                "Matrix is singular and cannot be inverted".to_string(),
-            ));
-        }
-        
-        // Scale pivot row
-        let pivot = aug[[i, i]];
-        for j in 0..(2 * n) {
-            aug[[i, j]] = aug[[i, j]] / pivot;
-        }
-        
-        // Eliminate column
-        for k in 0..n {
-            if k != i {
-                let factor = aug[[k, i]];
-                for j in 0..(2 * n) {
-                    aug[[k, j]] = aug[[k, j]] - factor * aug[[i, j]];
-                }
-            }
-        }
-    }
-    
-    // Extract inverse from right side
-    let mut inv = Array2::zeros((n, n));
-    for i in 0..n {
-        for j in 0..n {
-            inv[[i, j]] = aug[[i, n + j]];
-        }
-    }
-    
-    Ok(inv)
+    // Convert to f64 for scirs2-linalg computation
+    let a_f64 = a.mapv(|x| x.to_f64().unwrap_or(0.0));
+
+    // Compute inverse using scirs2-linalg
+    let inv_f64 = inv(&a_f64.view(), None).map_err(|e| {
+        TimeSeriesError::DecompositionError(format!("Matrix inversion failed: {}", e))
+    })?;
+
+    // Convert back to original type
+    let inverse = inv_f64.mapv(|val| F::from_f64(val).unwrap_or_else(F::zero));
+
+    Ok(inverse)
 }
 
 #[cfg(test)]

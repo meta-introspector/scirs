@@ -3,11 +3,9 @@
 //! This module provides comprehensive support for MATLAB v7.3+ files,
 //! which are based on HDF5 format with MATLAB-specific conventions.
 
-use crate::error::{IoError, Result};
 use crate::matlab::MatType;
-use ndarray::{ArrayD, IxDyn};
+use ndarray::ArrayD;
 use std::collections::HashMap;
-use std::path::Path;
 
 #[cfg(feature = "hdf5")]
 use crate::hdf5::{AttributeValue, CompressionOptions, DatasetOptions, FileMode, HDF5File};
@@ -187,7 +185,7 @@ impl V73MatFile {
 
         // Get all top-level datasets and groups
         let items = hdf5_file.list_all_items("/");
-        
+
         for item in items {
             if let Ok(ext_type) = self.read_extended_type(&hdf5_file, &item) {
                 vars.insert(item.trim_start_matches('/').to_string(), ext_type);
@@ -206,33 +204,19 @@ impl V73MatFile {
         ext_type: &ExtendedMatType,
     ) -> Result<()> {
         match ext_type {
-            ExtendedMatType::Standard(mat_type) => {
-                self.write_standard_type(file, name, mat_type)
-            }
-            ExtendedMatType::Table(table) => {
-                self.write_table(file, name, table)
-            }
+            ExtendedMatType::Standard(mat_type) => self.write_standard_type(file, name, mat_type),
+            ExtendedMatType::Table(table) => self.write_table(file, name, table),
             ExtendedMatType::Categorical(cat_array) => {
                 self.write_categorical(file, name, cat_array)
             }
-            ExtendedMatType::DateTime(dt_array) => {
-                self.write_datetime(file, name, dt_array)
-            }
-            ExtendedMatType::StringArray(strings) => {
-                self.write_string_array(file, name, strings)
-            }
+            ExtendedMatType::DateTime(dt_array) => self.write_datetime(file, name, dt_array),
+            ExtendedMatType::StringArray(strings) => self.write_string_array(file, name, strings),
             ExtendedMatType::FunctionHandle(func_handle) => {
                 self.write_function_handle(file, name, func_handle)
             }
-            ExtendedMatType::Object(object) => {
-                self.write_object(file, name, object)
-            }
-            ExtendedMatType::ComplexDouble(array) => {
-                self.write_complex_double(file, name, array)
-            }
-            ExtendedMatType::ComplexSingle(array) => {
-                self.write_complex_single(file, name, array)
-            }
+            ExtendedMatType::Object(object) => self.write_object(file, name, object),
+            ExtendedMatType::ComplexDouble(array) => self.write_complex_double(file, name, array),
+            ExtendedMatType::ComplexSingle(array) => self.write_complex_single(file, name, array),
         }
     }
 
@@ -267,10 +251,8 @@ impl V73MatFile {
 
         // Write row names if present
         if let Some(ref row_names) = table.row_names {
-            let row_names_data: Vec<u16> = row_names
-                .iter()
-                .flat_map(|s| s.encode_utf16())
-                .collect();
+            let row_names_data: Vec<u16> =
+                row_names.iter().flat_map(|s| s.encode_utf16()).collect();
             file.create_dataset(
                 &format!("{}/rownames", name),
                 &row_names_data,
@@ -326,11 +308,7 @@ impl V73MatFile {
         )?;
 
         // Write ordered flag
-        file.set_attribute(
-            name,
-            "ordered",
-            AttributeValue::Bool(cat_array.ordered),
-        )?;
+        file.set_attribute(name, "ordered", AttributeValue::Bool(cat_array.ordered))?;
 
         Ok(())
     }
@@ -345,7 +323,7 @@ impl V73MatFile {
     ) -> Result<()> {
         // Create dataset for datetime data
         file.create_dataset_from_array(name, &dt_array.data, self.compression.clone())?;
-        
+
         file.set_attribute(
             name,
             "MATLAB_class",
@@ -354,11 +332,7 @@ impl V73MatFile {
 
         // Write timezone if present
         if let Some(ref tz) = dt_array.timezone {
-            file.set_attribute(
-                name,
-                "timezone",
-                AttributeValue::String(tz.clone()),
-            )?;
+            file.set_attribute(name, "timezone", AttributeValue::String(tz.clone()))?;
         }
 
         // Write format
@@ -442,7 +416,7 @@ impl V73MatFile {
         if let Some(ref workspace) = func_handle.workspace {
             let ws_group = format!("{}/workspace", name);
             file.create_group(&ws_group)?;
-            
+
             for (var_name, var_data) in workspace {
                 let var_path = format!("{}/{}", ws_group, var_name);
                 self.write_standard_type(file, &var_path, var_data)?;
@@ -462,16 +436,12 @@ impl V73MatFile {
             "MATLAB_class",
             AttributeValue::String(object.class_name.clone()),
         )?;
-        file.set_attribute(
-            name,
-            "MATLAB_object",
-            AttributeValue::Bool(true),
-        )?;
+        file.set_attribute(name, "MATLAB_object", AttributeValue::Bool(true))?;
 
         // Write properties
         let props_group = format!("{}/properties", name);
         file.create_group(&props_group)?;
-        
+
         for (prop_name, prop_data) in &object.properties {
             let prop_path = format!("{}/{}", props_group, prop_name);
             self.write_standard_type(file, &prop_path, prop_data)?;
@@ -505,11 +475,7 @@ impl V73MatFile {
             "MATLAB_class",
             AttributeValue::String("double".to_string()),
         )?;
-        file.set_attribute(
-            name,
-            "MATLAB_complex",
-            AttributeValue::Bool(true),
-        )?;
+        file.set_attribute(name, "MATLAB_complex", AttributeValue::Bool(true))?;
 
         // Write real and imaginary parts
         file.create_dataset_from_array(
@@ -545,11 +511,7 @@ impl V73MatFile {
             "MATLAB_class",
             AttributeValue::String("single".to_string()),
         )?;
-        file.set_attribute(
-            name,
-            "MATLAB_complex",
-            AttributeValue::Bool(true),
-        )?;
+        file.set_attribute(name, "MATLAB_complex", AttributeValue::Bool(true))?;
 
         // Write real and imaginary parts
         file.create_dataset_from_array(
@@ -581,11 +543,7 @@ impl V73MatFile {
 
     /// Read an extended type from HDF5
     #[cfg(feature = "hdf5")]
-    fn read_extended_type(
-        &self,
-        file: &HDF5File,
-        name: &str,
-    ) -> Result<ExtendedMatType> {
+    fn read_extended_type(&self, file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
         // Check MATLAB_class attribute to determine type
         if let Ok(class_attr) = file.get_attribute(name, "MATLAB_class") {
             match class_attr {
@@ -598,11 +556,15 @@ impl V73MatFile {
                         "function_handle" => self.read_function_handle(file, name),
                         _ => {
                             // Check if it's an object
-                            if let Ok(AttributeValue::Bool(true)) = file.get_attribute(name, "MATLAB_object") {
+                            if let Ok(AttributeValue::Bool(true)) =
+                                file.get_attribute(name, "MATLAB_object")
+                            {
                                 self.read_object(file, name)
                             } else {
                                 // Try to read as standard type
-                                Err(IoError::Other("Standard type reading not implemented".to_string()))
+                                Err(IoError::Other(
+                                    "Standard type reading not implemented".to_string(),
+                                ))
                             }
                         }
                     }
@@ -617,32 +579,44 @@ impl V73MatFile {
     // Read implementations would follow similar patterns...
     #[cfg(feature = "hdf5")]
     fn read_table(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
-        Err(IoError::Other("Table reading not implemented yet".to_string()))
+        Err(IoError::Other(
+            "Table reading not implemented yet".to_string(),
+        ))
     }
 
     #[cfg(feature = "hdf5")]
     fn read_categorical(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
-        Err(IoError::Other("Categorical reading not implemented yet".to_string()))
+        Err(IoError::Other(
+            "Categorical reading not implemented yet".to_string(),
+        ))
     }
 
     #[cfg(feature = "hdf5")]
     fn read_datetime(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
-        Err(IoError::Other("DateTime reading not implemented yet".to_string()))
+        Err(IoError::Other(
+            "DateTime reading not implemented yet".to_string(),
+        ))
     }
 
     #[cfg(feature = "hdf5")]
     fn read_string_array(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
-        Err(IoError::Other("String array reading not implemented yet".to_string()))
+        Err(IoError::Other(
+            "String array reading not implemented yet".to_string(),
+        ))
     }
 
     #[cfg(feature = "hdf5")]
     fn read_function_handle(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
-        Err(IoError::Other("Function handle reading not implemented yet".to_string()))
+        Err(IoError::Other(
+            "Function handle reading not implemented yet".to_string(),
+        ))
     }
 
     #[cfg(feature = "hdf5")]
     fn read_object(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
-        Err(IoError::Other("Object reading not implemented yet".to_string()))
+        Err(IoError::Other(
+            "Object reading not implemented yet".to_string(),
+        ))
     }
 }
 
@@ -661,7 +635,9 @@ impl PartialIoSupport {
     where
         T: Default + Clone,
     {
-        Err(IoError::Other("Partial I/O not implemented yet".to_string()))
+        Err(IoError::Other(
+            "Partial I/O not implemented yet".to_string(),
+        ))
     }
 
     /// Write to a slice of an existing array
@@ -675,7 +651,9 @@ impl PartialIoSupport {
     where
         T: Default + Clone,
     {
-        Err(IoError::Other("Partial I/O not implemented yet".to_string()))
+        Err(IoError::Other(
+            "Partial I/O not implemented yet".to_string(),
+        ))
     }
 }
 
@@ -699,11 +677,17 @@ mod tests {
             data: HashMap::new(),
             properties: HashMap::new(),
         };
-        
+
         // Add some data
-        table.data.insert("x".to_string(), MatType::Double(ArrayD::zeros(IxDyn(&[2, 1]))));
-        table.data.insert("y".to_string(), MatType::Double(ArrayD::ones(IxDyn(&[2, 1]))));
-        
+        table.data.insert(
+            "x".to_string(),
+            MatType::Double(ArrayD::zeros(IxDyn(&[2, 1]))),
+        );
+        table.data.insert(
+            "y".to_string(),
+            MatType::Double(ArrayD::ones(IxDyn(&[2, 1]))),
+        );
+
         assert_eq!(table.variable_names.len(), 2);
         assert_eq!(table.data.len(), 2);
     }

@@ -25,7 +25,7 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 /// # Examples
 /// ```
 /// use scirs2_special::incomplete_gamma::gammainc_lower;
-/// 
+///
 /// let result = gammainc_lower(2.0, 1.0).unwrap();
 /// assert!((result - 0.2642411176571153).abs() < 1e-10);
 /// ```
@@ -35,11 +35,11 @@ where
 {
     check_positive(a, "a")?;
     check_finite(x, "x")?;
-    
+
     if x <= T::zero() {
         return Ok(T::zero());
     }
-    
+
     // Use series expansion for x < a + 1
     if x < a + T::one() {
         // Series representation: γ(a,x) = x^a e^(-x) Σ(x^n / Γ(a+n+1))
@@ -47,19 +47,19 @@ where
         let mut term = T::one() / a;
         let mut n = T::one();
         let tol = T::from_f64(1e-15).unwrap();
-        
+
         while term.abs() > tol * sum.abs() {
             term *= x / (a + n);
             sum += term;
             n += T::one();
-            
+
             if n > T::from_f64(1000.0).unwrap() {
                 return Err(SpecialError::ConvergenceError(
-                    "gammainc_lower: series did not converge".to_string()
+                    "gammainc_lower: series did not converge".to_string(),
                 ));
             }
         }
-        
+
         Ok(x.powf(a) * (-x).exp() * sum)
     } else {
         // Use complement: γ(a,x) = Γ(a) - Γ(a,x)
@@ -86,11 +86,11 @@ where
 {
     check_positive(a, "a")?;
     check_finite(x, "x")?;
-    
+
     if x <= T::zero() {
         return Ok(gamma(a));
     }
-    
+
     // Use continued fraction for x >= a + 1
     if x >= a + T::one() {
         // Continued fraction representation
@@ -99,32 +99,32 @@ where
         let mut d = T::one() / b;
         let mut h = d;
         let tol = T::from_f64(1e-15).unwrap();
-        
+
         for i in 1..1000 {
             let an = -T::from_usize(i).unwrap() * (T::from_usize(i).unwrap() - a);
             b += T::from_f64(2.0).unwrap();
             d = an * d + b;
-            
+
             if d.abs() < T::from_f64(1e-30).unwrap() {
                 d = T::from_f64(1e-30).unwrap();
             }
-            
+
             c = b + an / c;
             if c.abs() < T::from_f64(1e-30).unwrap() {
                 c = T::from_f64(1e-30).unwrap();
             }
-            
+
             d = T::one() / d;
             let delta = d * c;
             h *= delta;
-            
+
             if (delta - T::one()).abs() < tol {
                 return Ok(x.powf(a) * (-x).exp() * h);
             }
         }
-        
+
         Err(SpecialError::ConvergenceError(
-            "gammainc_upper: continued fraction did not converge".to_string()
+            "gammainc_upper: continued fraction did not converge".to_string(),
         ))
     } else {
         // Use complement
@@ -150,11 +150,11 @@ where
 {
     check_positive(a, "a")?;
     check_finite(x, "x")?;
-    
+
     if x <= T::zero() {
         return Ok(T::zero());
     }
-    
+
     // For large a, use asymptotic expansion or specialized algorithms
     if a > T::from_f64(100.0).unwrap() {
         // Use log-space computation to avoid overflow
@@ -177,11 +177,11 @@ where
 {
     check_positive(a, "a")?;
     check_finite(x, "x")?;
-    
+
     if x <= T::zero() {
         return Ok(T::one());
     }
-    
+
     // Use complement of regularized lower incomplete gamma
     let p = gammainc(a, x)?;
     Ok(T::one() - p)
@@ -196,43 +196,43 @@ where
 {
     check_positive(a, "a")?;
     crate::validation::check_probability(p, "p")?;
-    
+
     if p == T::zero() {
         return Ok(T::zero());
     }
-    
+
     if p == T::one() {
         return Ok(T::infinity());
     }
-    
+
     // Initial guess using Wilson-Hilferty transformation
     let x0 = initial_guess_gammaincinv(a, p);
-    
+
     // Newton-Raphson iteration
     let mut x = x0;
     let tol = T::from_f64(1e-12).unwrap();
-    
+
     for _ in 0..100 {
         let f = gammainc(a, x)? - p;
-        
+
         // Derivative: d/dx P(a,x) = x^(a-1) e^(-x) / Γ(a)
         let df = x.powf(a - T::one()) * (-x).exp() / gamma(a);
-        
+
         let dx = f / df;
         x -= dx;
-        
+
         // Ensure x stays positive
         if x <= T::zero() {
             x = T::from_f64(1e-10).unwrap();
         }
-        
+
         if dx.abs() < tol * x.abs() {
             return Ok(x);
         }
     }
-    
+
     Err(SpecialError::ConvergenceError(
-        "gammaincinv: Newton iteration did not converge".to_string()
+        "gammaincinv: Newton iteration did not converge".to_string(),
     ))
 }
 
@@ -245,7 +245,7 @@ where
 {
     check_positive(a, "a")?;
     crate::validation::check_probability(q, "q")?;
-    
+
     // Use Q(a, x) = 1 - P(a, x)
     let p = T::one() - q;
     gammaincinv(a, p)
@@ -260,7 +260,7 @@ where
     let g = T::from_f64(2.0).unwrap() / (T::from_f64(9.0).unwrap() * a);
     let z = crate::distributions::ndtri(p).unwrap_or(T::zero());
     let w = T::one() + g * z;
-    
+
     if w > T::zero() {
         a * w.powf(T::from_f64(3.0).unwrap())
     } else {
@@ -282,20 +282,20 @@ where
     // This is a simplified implementation
     let log_x = x.ln();
     let log_result = a * log_x - x - log_gamma_a;
-    
+
     // Add correction terms for better accuracy
     let mut sum = T::one();
     let mut term = T::one();
-    
+
     for n in 1..50 {
         term *= (a - T::from_usize(n).unwrap()) / x;
         sum += term;
-        
+
         if term.abs() < T::from_f64(1e-15).unwrap() {
             break;
         }
     }
-    
+
     Ok(log_result + sum.ln())
 }
 
@@ -307,13 +307,13 @@ where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign,
 {
     check_positive(x, "x")?;
-    
+
     if x >= T::from_f64(10.0).unwrap() {
         // Use Stirling series
         let mut sum = T::one();
         let x2 = x * x;
         let mut xn = x;
-        
+
         // Stirling coefficients
         let coeffs = [
             T::from_f64(1.0 / 12.0).unwrap(),
@@ -321,12 +321,12 @@ where
             T::from_f64(-139.0 / 51840.0).unwrap(),
             T::from_f64(-571.0 / 2488320.0).unwrap(),
         ];
-        
+
         for &c in &coeffs {
             sum += c / xn;
             xn *= x2;
         }
-        
+
         Ok(sum)
     } else {
         // Direct computation
@@ -334,7 +334,7 @@ where
         let gamma_x = gamma(x);
         let x_power = x.powf(x - T::from_f64(0.5).unwrap());
         let exp_neg_x = (-x).exp();
-        
+
         Ok(gamma_x / (sqrt_2pi * x_power * exp_neg_x))
     }
 }
@@ -373,10 +373,22 @@ mod tests {
     #[test]
     fn test_gammainc_lower() {
         // Test values verified against SciPy
-        assert_relative_eq!(gammainc_lower(1.0, 1.0).unwrap(), 0.6321205588285577, epsilon = 1e-10);
-        assert_relative_eq!(gammainc_lower(2.0, 1.0).unwrap(), 0.2642411176571153, epsilon = 1e-10);
-        assert_relative_eq!(gammainc_lower(3.0, 2.0).unwrap(), 0.32332358381693654, epsilon = 1e-10);
-        
+        assert_relative_eq!(
+            gammainc_lower(1.0, 1.0).unwrap(),
+            0.6321205588285577,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            gammainc_lower(2.0, 1.0).unwrap(),
+            0.2642411176571153,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            gammainc_lower(3.0, 2.0).unwrap(),
+            0.32332358381693654,
+            epsilon = 1e-10
+        );
+
         // Edge cases
         assert_eq!(gammainc_lower(1.0, 0.0).unwrap(), 0.0);
     }
@@ -384,9 +396,17 @@ mod tests {
     #[test]
     fn test_gammainc() {
         // Regularized lower incomplete gamma
-        assert_relative_eq!(gammainc(1.0, 1.0).unwrap(), 0.6321205588285577, epsilon = 1e-10);
-        assert_relative_eq!(gammainc(2.0, 2.0).unwrap(), 0.5939941502901619, epsilon = 1e-10);
-        
+        assert_relative_eq!(
+            gammainc(1.0, 1.0).unwrap(),
+            0.6321205588285577,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            gammainc(2.0, 2.0).unwrap(),
+            0.5939941502901619,
+            epsilon = 1e-10
+        );
+
         // P(a,0) = 0, P(a,∞) = 1
         assert_eq!(gammainc(1.0, 0.0).unwrap(), 0.0);
     }

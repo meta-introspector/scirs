@@ -194,18 +194,11 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
     let bytes_per_sample = bits_per_sample / 8;
     let samples_per_channel = (data_size / (channels as u32 * bytes_per_sample as u32)) as usize;
 
-    // Create header
-    let _header = WavHeader {
-        format,
-        channels,
-        sample_rate,
-        bits_per_sample,
-        samples_per_channel,
-    };
+    // We'll create the header at the end to return it
 
     // Read audio data
     let shape = ndarray::IxDyn(&[channels as usize, samples_per_channel]);
-    let mut data = ndarray::Array::zeros(shape);
+    let mut data: ndarray::ArrayD<f32> = ndarray::Array::zeros(shape);
 
     // Read samples based on bits per sample
     match bits_per_sample {
@@ -217,7 +210,7 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
                         IoError::FormatError(format!("Failed to read 8-bit sample: {}", e))
                     })?;
                     // Convert from 0-255 to -1.0 to 1.0
-                    data[[ch, sample_idx]] = (byte as f64 - 128.0) / 127.0;
+                    data[[ch, sample_idx]] = (byte as f32 - 128.0) / 127.0;
                 }
             }
         }
@@ -229,7 +222,7 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
                         IoError::FormatError(format!("Failed to read 16-bit sample: {}", e))
                     })?;
                     // Convert from -32768 to 32767 to -1.0 to 1.0
-                    data[[ch, sample_idx]] = sample as f64 / 32767.0;
+                    data[[ch, sample_idx]] = sample as f32 / 32767.0;
                 }
             }
         }
@@ -252,13 +245,13 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
                         ((bytes[2] as i32) << 16) | ((bytes[1] as i32) << 8) | (bytes[0] as i32)
                     };
                     // Convert to -1.0 to 1.0
-                    data[[ch, sample_idx]] = sample as f64 / 8388607.0;
+                    data[[ch, sample_idx]] = sample as f32 / 8388607.0;
                 }
             }
         }
         32 => {
             // 32-bit samples can be int or float
-            if format == 3 {
+            if format == WavFormat::Float {
                 // IEEE float format
                 for sample_idx in 0..samples_per_channel {
                     for ch in 0..channels as usize {
@@ -268,7 +261,7 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
                                 e
                             ))
                         })?;
-                        data[[ch, sample_idx]] = sample as f64;
+                        data[[ch, sample_idx]] = sample;
                     }
                 }
             } else {
@@ -279,7 +272,7 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
                             IoError::FormatError(format!("Failed to read 32-bit sample: {}", e))
                         })?;
                         // Convert to -1.0 to 1.0
-                        data[[ch, sample_idx]] = sample as f64 / 2147483647.0;
+                        data[[ch, sample_idx]] = sample as f32 / 2147483647.0;
                     }
                 }
             }
@@ -292,7 +285,15 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
         }
     }
 
-    Ok(data)
+    let header = WavHeader {
+        format,
+        channels,
+        sample_rate,
+        bits_per_sample,
+        samples_per_channel,
+    };
+
+    Ok((header, data))
 }
 
 /// Writes audio data to a WAV file

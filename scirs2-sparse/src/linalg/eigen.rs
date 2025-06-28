@@ -1,12 +1,12 @@
 // Eigenvalue solvers for sparse matrices
 //
-// This module provides specialized eigenpair (eigenvalue and eigenvector) 
+// This module provides specialized eigenpair (eigenvalue and eigenvector)
 // solvers for sparse matrices, with optimizations for symmetric matrices.
 
 use crate::error::{SparseError, SparseResult};
+use crate::sparray::SparseArray;
 use crate::sym_csr::SymCsrMatrix;
 use crate::sym_ops::sym_csr_matvec;
-use crate::sparray::SparseArray;
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
@@ -136,10 +136,17 @@ pub fn power_iteration<T>(
     initial_guess: Option<ArrayView1<T>>,
 ) -> SparseResult<EigenResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + std::iter::Sum,
 {
     let (n, _) = matrix.shape();
-    
+
     // Initialize eigenvector
     let mut x = match initial_guess {
         Some(v) => {
@@ -163,7 +170,7 @@ where
             x_arr
         }
     };
-    
+
     // Normalize the initial vector
     if options.normalize {
         let norm = (x.iter().map(|&v| v * v).sum::<T>()).sqrt();
@@ -173,30 +180,30 @@ where
             }
         }
     }
-    
+
     let mut lambda = T::zero();
     let mut prev_lambda = T::zero();
     let mut converged = false;
     let mut iter = 0;
-    
+
     // Power iteration loop
     while iter < options.max_iter {
         // Compute matrix-vector product: y = A * x
         let y = sym_csr_matvec(matrix, &x.view())?;
-        
+
         // Compute Rayleigh quotient: lambda = (x^T * y) / (x^T * x)
         let rayleigh_numerator = x.iter().zip(y.iter()).map(|(&xi, &yi)| xi * yi).sum::<T>();
-        
+
         if options.normalize {
             lambda = rayleigh_numerator;
-            
+
             // Check for convergence
             let diff = (lambda - prev_lambda).abs();
             if diff < T::from(options.tol).unwrap() {
                 converged = true;
                 break;
             }
-            
+
             // Normalize y to get the next x
             let norm = (y.iter().map(|&v| v * v).sum::<T>()).sqrt();
             if !norm.is_zero() {
@@ -207,13 +214,13 @@ where
         } else {
             // If not normalizing at each iteration, just update x
             x = y;
-            
+
             // Compute eigenvalue estimate
             let norm_x = (x.iter().map(|&v| v * v).sum::<T>()).sqrt();
             if !norm_x.is_zero() {
                 lambda = rayleigh_numerator / (norm_x * norm_x);
             }
-            
+
             // Check for convergence
             let diff = (lambda - prev_lambda).abs();
             if diff < T::from(options.tol).unwrap() {
@@ -221,11 +228,11 @@ where
                 break;
             }
         }
-        
+
         prev_lambda = lambda;
         iter += 1;
     }
-    
+
     // Compute final residual: ||Ax - λx||
     let ax = sym_csr_matvec(matrix, &x.view())?;
     let mut residual = Array1::zeros(n);
@@ -233,7 +240,7 @@ where
         residual[i] = ax[i] - lambda * x[i];
     }
     let residual_norm = (residual.iter().map(|&v| v * v).sum::<T>()).sqrt();
-    
+
     // Prepare eigenvectors if needed
     let eigenvectors = {
         let mut vecs = Array2::zeros((n, 1));
@@ -242,7 +249,7 @@ where
         }
         Some(vecs)
     };
-    
+
     // Prepare the result
     let result = EigenResult {
         eigenvalues: Array1::from_vec(vec![lambda]),
@@ -251,7 +258,7 @@ where
         residuals: Array1::from_vec(vec![residual_norm]),
         converged,
     };
-    
+
     Ok(result)
 }
 
@@ -307,16 +314,23 @@ pub fn lanczos<T>(
     initial_guess: Option<ArrayView1<T>>,
 ) -> SparseResult<EigenResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + std::iter::Sum,
 {
     let (n, _) = matrix.shape();
-    
+
     // Ensure the subspace size is valid
     let subspace_size = options.max_subspace_size.min(n);
-    
+
     // Ensure the number of eigenvalues requested is valid
     let num_eigenvalues = options.num_eigenvalues.min(subspace_size);
-    
+
     // Initialize the first Lanczos vector
     let mut v = match initial_guess {
         Some(v) => {
@@ -340,7 +354,7 @@ where
             v_arr
         }
     };
-    
+
     // Normalize the initial vector
     let norm = (v.iter().map(|&val| val * val).sum::<T>()).sqrt();
     if !norm.is_zero() {
@@ -348,99 +362,107 @@ where
             v[i] = v[i] / norm;
         }
     }
-    
+
     // Allocate space for Lanczos vectors
     let mut v_vectors = Vec::with_capacity(subspace_size);
     v_vectors.push(v.clone());
-    
+
     // Allocate space for tridiagonal matrix elements
     let mut alpha = Vec::<T>::with_capacity(subspace_size); // Diagonal elements
     let mut beta = Vec::<T>::with_capacity(subspace_size - 1); // Off-diagonal elements
-    
+
     // First iteration step
     let mut w = sym_csr_matvec(matrix, &v.view())?;
     let alpha_j = v.iter().zip(w.iter()).map(|(&vi, &wi)| vi * wi).sum::<T>();
     alpha.push(alpha_j);
-    
+
     // Orthogonalize against previous vectors
     for i in 0..n {
         w[i] = w[i] - alpha_j * v[i];
     }
-    
+
     // Compute beta (norm of w)
     let beta_j = (w.iter().map(|&val| val * val).sum::<T>()).sqrt();
-    
+
     let mut iter = 1;
     let mut converged = false;
-    
+
     while iter < options.max_iter && alpha.len() < subspace_size {
         if beta_j.is_zero() {
             // Lucky breakdown - exact invariant subspace found
             break;
         }
-        
+
         beta.push(beta_j);
-        
+
         // Next Lanczos vector
         let mut v_next = Array1::zeros(n);
         for i in 0..n {
             v_next[i] = w[i] / beta_j;
         }
-        
+
         // Store the vector
         v_vectors.push(v_next.clone());
-        
+
         // Next iteration step
         w = sym_csr_matvec(matrix, &v_next.view())?;
-        
+
         // Full reorthogonalization (for numerical stability)
         for (j, v_j) in v_vectors.iter().enumerate() {
-            let proj = v_j.iter().zip(w.iter()).map(|(&vj, &wi)| vj * wi).sum::<T>();
+            let proj = v_j
+                .iter()
+                .zip(w.iter())
+                .map(|(&vj, &wi)| vj * wi)
+                .sum::<T>();
             for i in 0..n {
                 w[i] = w[i] - proj * v_j[i];
             }
         }
-        
+
         // Compute alpha
-        let alpha_j = v_next.iter().zip(w.iter()).map(|(&vi, &wi)| vi * wi).sum::<T>();
+        let alpha_j = v_next
+            .iter()
+            .zip(w.iter())
+            .map(|(&vi, &wi)| vi * wi)
+            .sum::<T>();
         alpha.push(alpha_j);
-        
+
         // Update v for next iteration
         for i in 0..n {
             w[i] = w[i] - alpha_j * v_next[i];
         }
-        
+
         // Compute beta for next iteration
         let beta_j_next = (w.iter().map(|&val| val * val).sum::<T>()).sqrt();
-        
+
         // Check for convergence using the largest eigenvalue approx
         if alpha.len() >= num_eigenvalues {
             // Build and solve the tridiagonal system
             let (eigvals, _) = solve_tridiagonal_eigenproblem(&alpha, &beta, num_eigenvalues)?;
-            
+
             // Check if the largest eigvals have converged (using beta as an error estimate)
             if beta_j_next < T::from(options.tol).unwrap() * eigvals[0].abs() {
                 converged = true;
                 break;
             }
         }
-        
+
         v = v_next;
         iter += 1;
-        
+
         // Update beta for next iteration
         if iter < options.max_iter && alpha.len() < subspace_size {
             let beta_j = beta_j_next;
         }
     }
-    
+
     // Solve the final tridiagonal eigenproblem
     let (eigvals, eigvecs) = solve_tridiagonal_eigenproblem(&alpha, &beta, num_eigenvalues)?;
-    
+
     // Compute the Ritz vectors (eigenvectors in the original space) if requested
     let eigenvectors = if options.compute_eigenvectors {
         let mut ritz_vectors = Array2::zeros((n, num_eigenvalues));
-        
+
         for k in 0..num_eigenvalues {
             for i in 0..n {
                 let mut sum = T::zero();
@@ -452,12 +474,12 @@ where
                 ritz_vectors[[i, k]] = sum;
             }
         }
-        
+
         Some(ritz_vectors)
     } else {
         None
     };
-    
+
     // Compute residuals
     let mut residuals = Array1::zeros(num_eigenvalues);
     if let Some(ref evecs) = eigenvectors {
@@ -466,14 +488,14 @@ where
             for i in 0..n {
                 evec[i] = evecs[[i, k]];
             }
-            
+
             let ax = sym_csr_matvec(matrix, &evec.view())?;
-            
+
             let mut res = Array1::zeros(n);
             for i in 0..n {
                 res[i] = ax[i] - eigvals[k] * evec[i];
             }
-            
+
             residuals[k] = (res.iter().map(|&v| v * v).sum::<T>()).sqrt();
         }
     } else {
@@ -485,7 +507,7 @@ where
             }
         }
     }
-    
+
     // Create the result
     let result = EigenResult {
         eigenvalues: Array1::from_vec(eigvals),
@@ -494,7 +516,7 @@ where
         residuals,
         converged,
     };
-    
+
     Ok(result)
 }
 
@@ -525,40 +547,42 @@ where
 {
     let n = alpha.len();
     if n == 0 {
-        return Err(SparseError::ValueError("Empty tridiagonal matrix".to_string()));
+        return Err(SparseError::ValueError(
+            "Empty tridiagonal matrix".to_string(),
+        ));
     }
-    
+
     if beta.len() != n - 1 {
         return Err(SparseError::DimensionMismatch {
             expected: n - 1,
             found: beta.len(),
         });
     }
-    
+
     // For small matrices, use a simple algorithm for all eigenvalues
     if n <= 3 {
         return solve_small_tridiagonal(alpha, beta, num_eigenvalues);
     }
-    
+
     // For larger matrices, use the QL algorithm with implicit shifts
     // This is a simplified implementation and could be optimized further
-    
+
     // Clone the diagonal and off-diagonal elements
     let mut d = alpha.to_vec();
     let mut e = beta.to_vec();
     e.push(T::zero()); // Add a zero at the end
-    
+
     // Allocate space for eigenvectors
     let mut z = vec![vec![T::zero(); n]; n];
     for i in 0..n {
         z[i][i] = T::one(); // Initialize with identity matrix
     }
-    
+
     // Run the QL algorithm with implicit shifts
     for l in 0..n {
         let mut iter = 0;
         let max_iter = 30; // Typical value
-        
+
         loop {
             // Look for a small off-diagonal element
             let mut m = l;
@@ -568,69 +592,70 @@ where
                 }
                 m += 1;
             }
-            
+
             if m == l {
                 // No more work for this eigenvalue
                 break;
             }
-            
+
             if iter >= max_iter {
                 // Too many iterations, return error
                 return Err(SparseError::IterativeSolverFailure(
                     "QL algorithm did not converge".to_string(),
                 ));
             }
-            
+
             let g = (d[l + 1] - d[l]) * T::from(0.5).unwrap() / e[l];
             let r = (g * g + T::one()).sqrt();
             let mut g = d[m] - d[l] + e[l] / (g + if g >= T::zero() { r } else { -r });
-            
+
             let mut s = T::one();
             let mut c = T::one();
             let mut p = T::zero();
-            
+
             let mut i = m - 1;
-            while i >= l && i < n { // Handle unsigned underflow
+            while i >= l && i < n {
+                // Handle unsigned underflow
                 let f = s * e[i];
                 let b = c * e[i];
-                
+
                 // Compute the Givens rotation
                 let r = (f * f + g * g).sqrt();
                 e[i + 1] = r;
-                
+
                 if r.is_zero() {
                     // Avoid division by zero
                     d[i + 1] = d[i + 1] - p;
                     e[m] = T::zero();
                     break;
                 }
-                
+
                 s = f / r;
                 c = g / r;
-                
+
                 let h = g * p;
                 p = s * (d[i] - d[i + 1]) + c * b;
                 d[i + 1] = d[i + 1] + p;
                 g = c * s - b;
-                
+
                 // Update eigenvectors
                 for k in 0..n {
                     let t = z[k][i + 1];
                     z[k][i + 1] = s * z[k][i] + c * t;
                     z[k][i] = c * z[k][i] - s * t;
                 }
-                
+
                 if i == 0 {
                     break;
                 }
                 i -= 1;
             }
-            
+
             if (i as i32) < (l as i32) || i >= n {
                 // Handle the case of i becoming invalid after decrement
                 break;
             }
-            
+
             if r.is_zero() {
                 if abs_diff_eq!(m, l + 1) {
                     // Special case for m == l + 1
@@ -640,29 +665,29 @@ where
                 e[l] = g;
                 e[m - 1] = T::zero();
             }
-            
+
             iter += 1;
         }
     }
-    
+
     // Sort eigenvalues and eigenvectors in descending order
     let mut indices: Vec<usize> = (0..n).collect();
     indices.sort_by(|&i, &j| d[j].partial_cmp(&d[i]).unwrap_or(std::cmp::Ordering::Equal));
-    
+
     let mut sorted_eigenvalues = Vec::with_capacity(num_eigenvalues);
     let mut sorted_eigenvectors = Vec::with_capacity(num_eigenvalues);
-    
+
     for k in 0..num_eigenvalues.min(n) {
         let idx = indices[k];
         sorted_eigenvalues.push(d[idx]);
-        
+
         let mut eigenvector = Vec::with_capacity(n);
         for i in 0..n {
             eigenvector.push(z[i][idx]);
         }
         sorted_eigenvectors.push(eigenvector);
     }
-    
+
     Ok((sorted_eigenvalues, sorted_eigenvectors))
 }
 
@@ -676,53 +701,53 @@ where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
 {
     let n = alpha.len();
-    
+
     if n == 1 {
         // 1x1 case - just return the single value
         return Ok((vec![alpha[0]], vec![vec![T::one()]]));
     }
-    
+
     if n == 2 {
         // 2x2 case - direct formula
         let a = alpha[0];
         let b = alpha[1];
         let c = beta[0];
-        
+
         let trace = a + b;
         let det = a * b - c * c;
-        
+
         // Calculate eigenvalues
         let discriminant = (trace * trace - T::from(4.0).unwrap() * det).sqrt();
         let lambda1 = (trace + discriminant) * T::from(0.5).unwrap();
         let lambda2 = (trace - discriminant) * T::from(0.5).unwrap();
-        
+
         // Sort in descending order
         let (lambda1, lambda2) = if lambda1 >= lambda2 {
             (lambda1, lambda2)
         } else {
             (lambda2, lambda1)
         };
-        
+
         // Calculate eigenvectors
         let mut v1 = vec![T::zero(); 2];
         let mut v2 = vec![T::zero(); 2];
-        
+
         if !c.is_zero() {
             v1[0] = c;
             v1[1] = lambda1 - a;
-            
+
             v2[0] = c;
             v2[1] = lambda2 - a;
-            
+
             // Normalize
             let norm1 = (v1[0] * v1[0] + v1[1] * v1[1]).sqrt();
             let norm2 = (v2[0] * v2[0] + v2[1] * v2[1]).sqrt();
-            
+
             if !norm1.is_zero() {
                 v1[0] = v1[0] / norm1;
                 v1[1] = v1[1] / norm1;
             }
-            
+
             if !norm2.is_zero() {
                 v2[0] = v2[0] / norm2;
                 v2[1] = v2[1] / norm2;
@@ -732,28 +757,28 @@ where
             if a >= b {
                 v1[0] = T::one();
                 v1[1] = T::zero();
-                
+
                 v2[0] = T::zero();
                 v2[1] = T::one();
             } else {
                 v1[0] = T::zero();
                 v1[1] = T::one();
-                
+
                 v2[0] = T::one();
                 v2[1] = T::zero();
             }
         }
-        
+
         let mut eigenvalues = vec![lambda1, lambda2];
         let mut eigenvectors = vec![v1, v2];
-        
+
         // Return only the requested number of eigenvalues
         eigenvalues.truncate(num_eigenvalues);
         eigenvectors.truncate(num_eigenvalues);
-        
+
         return Ok((eigenvalues, eigenvectors));
     }
-    
+
     if n == 3 {
         // 3x3 case - use characteristic polynomial
         let a = alpha[0];
@@ -761,63 +786,63 @@ where
         let c = alpha[2];
         let d = beta[0];
         let e = beta[1];
-        
+
         // Characteristic polynomial coefficients
         let p = -(a + b + c);
         let q = a * b + a * c + b * c - d * d - e * e;
         let r = -(a * b * c - a * e * e - c * d * d);
-        
+
         // Solve the cubic equation using the Vieta formulas
         let eigenvalues = solve_cubic(p, q, r)?;
-        
+
         // Sort eigenvalues in descending order
         let mut sorted_eigenvalues = eigenvalues.clone();
         sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         // Compute eigenvectors
         let mut eigenvectors = Vec::with_capacity(sorted_eigenvalues.len());
-        
+
         for &lambda in &sorted_eigenvalues[0..num_eigenvalues.min(3)] {
             // For each eigenvalue, construct the resulting linear system
             // (A - lambda*I)v = 0, and solve for v
-            
+
             // Build the matrix (A - lambda*I)
             let mut m00 = a - lambda;
             let mut m01 = d;
             let mut m02 = T::zero();
-            
+
             let mut m10 = d;
             let mut m11 = b - lambda;
             let mut m12 = e;
-            
+
             let mut m20 = T::zero();
             let mut m21 = e;
             let mut m22 = c - lambda;
-            
+
             // Find the largest absolute row to use as pivot
             let r0_norm = (m00 * m00 + m01 * m01 + m02 * m02).sqrt();
             let r1_norm = (m10 * m10 + m11 * m11 + m12 * m12).sqrt();
             let r2_norm = (m20 * m20 + m21 * m21 + m22 * m22).sqrt();
-            
+
             let mut v = vec![T::zero(); 3];
-            
+
             if r0_norm >= r1_norm && r0_norm >= r2_norm && !r0_norm.is_zero() {
                 // Use first row as pivot
                 let scale = T::one() / r0_norm;
                 m00 = m00 * scale;
                 m01 = m01 * scale;
                 m02 = m02 * scale;
-                
+
                 // Eliminate first variable from second row
                 let factor = m10 / m00;
                 m11 = m11 - factor * m01;
                 m12 = m12 - factor * m02;
-                
+
                 // Eliminate first variable from third row
                 let factor = m20 / m00;
                 m21 = m21 - factor * m01;
                 m22 = m22 - factor * m02;
-                
+
                 // Back-substitute
                 v[2] = T::one(); // Set last component to 1
                 v[1] = -m12 * v[2] / m11;
@@ -828,17 +853,17 @@ where
                 m10 = m10 * scale;
                 m11 = m11 * scale;
                 m12 = m12 * scale;
-                
+
                 // Eliminate second variable from first row
                 let factor = m01 / m11;
                 m00 = m00 - factor * m10;
                 m02 = m02 - factor * m12;
-                
+
                 // Eliminate second variable from third row
                 let factor = m21 / m11;
                 m20 = m20 - factor * m10;
                 m22 = m22 - factor * m12;
-                
+
                 // Back-substitute
                 v[2] = T::one(); // Set last component to 1
                 v[0] = -m02 * v[2] / m00;
@@ -849,17 +874,17 @@ where
                 m20 = m20 * scale;
                 m21 = m21 * scale;
                 m22 = m22 * scale;
-                
+
                 // Eliminate third variable from first row
                 let factor = m02 / m22;
                 m00 = m00 - factor * m20;
                 m01 = m01 - factor * m21;
-                
+
                 // Eliminate third variable from second row
                 let factor = m12 / m22;
                 m10 = m10 - factor * m20;
                 m11 = m11 - factor * m21;
-                
+
                 // Back-substitute
                 v[0] = T::one(); // Set first component to 1
                 v[1] = -m10 * v[0] / m11;
@@ -874,7 +899,7 @@ where
                     v[2] = T::one();
                 }
             }
-            
+
             // Normalize the eigenvector
             let norm = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
             if !norm.is_zero() {
@@ -882,16 +907,16 @@ where
                 v[1] = v[1] / norm;
                 v[2] = v[2] / norm;
             }
-            
+
             eigenvectors.push(v);
         }
-        
+
         // Return only the requested number of eigenvalues
         sorted_eigenvalues.truncate(num_eigenvalues);
-        
+
         return Ok((sorted_eigenvalues, eigenvectors));
     }
-    
+
     // This should never happen since we check n <= 3 at the start
     Err(SparseError::ValueError(
         "Invalid matrix size for small tridiagonal solver".to_string(),
@@ -907,18 +932,18 @@ where
     let p3 = p / T::from(3.0).unwrap();
     let q3 = q / T::from(3.0).unwrap();
     let r3 = r / T::from(2.0).unwrap();
-    
+
     let p3_squared = p3 * p3;
-    
+
     // Compute coefficients of the depressed cubic
     let a = q - p * p3; // = 3*q3 - p*p3
     let b = r + p3 * (T::from(2.0).unwrap() * p3_squared - q); // r + p3*(2*p3^2 - q)
-    
+
     // Compute the discriminant
     let discriminant = T::from(4.0).unwrap() * a * a * a + T::from(27.0).unwrap() * b * b;
-    
+
     let mut roots = Vec::with_capacity(3);
-    
+
     if discriminant.is_zero() {
         // Either triple real root or one simple and one double root
         if a.is_zero() {
@@ -931,7 +956,7 @@ where
             // One simple and one double root
             let x1 = T::from(3.0).unwrap() * b / a;
             let x2 = -x1 / T::from(2.0).unwrap();
-            
+
             roots.push(x1 - p3);
             roots.push(x2 - p3);
             roots.push(x2 - p3);
@@ -939,34 +964,39 @@ where
     } else if discriminant > T::zero() {
         // One real root and two complex conjugate roots
         // We'll only include the real root
-        
+
         // Cardano's method
         let sqrt_disc = discriminant.sqrt();
         let c1 = (-b + sqrt_disc * T::from(0.5).unwrap()) / T::from(2.0).unwrap();
         let c2 = (-b - sqrt_disc * T::from(0.5).unwrap()) / T::from(2.0).unwrap();
-        
+
         // Extract the real root
-        let c1_cbrt = c1.abs().powf(T::from(1.0 / 3.0).unwrap()) * if c1 >= T::zero() { T::one() } else { -T::one() };
-        let c2_cbrt = c2.abs().powf(T::from(1.0 / 3.0).unwrap()) * if c2 >= T::zero() { T::one() } else { -T::one() };
-        
+        let c1_cbrt = c1.abs().powf(T::from(1.0 / 3.0).unwrap())
+            * if c1 >= T::zero() { T::one() } else { -T::one() };
+        let c2_cbrt = c2.abs().powf(T::from(1.0 / 3.0).unwrap())
+            * if c2 >= T::zero() { T::one() } else { -T::one() };
+
         let x = c1_cbrt + c2_cbrt - p3;
         roots.push(x);
     } else {
         // Three distinct real roots
-        
+
         // Vieta's substitution
         let p_sqrt = (-a / T::from(3.0).unwrap()).sqrt();
         let theta = (b / (T::from(2.0).unwrap() * p_sqrt * p_sqrt * p_sqrt)).acos();
-        
+
         // The three roots
         for k in 0..3 {
-            let x = T::from(2.0).unwrap() * p_sqrt 
-                * (T::from(std::f64::consts::PI * (2.0 * k as f64) / 3.0).unwrap() - theta / T::from(3.0).unwrap()).cos() 
+            let x = T::from(2.0).unwrap()
+                * p_sqrt
+                * (T::from(std::f64::consts::PI * (2.0 * k as f64) / 3.0).unwrap()
+                    - theta / T::from(3.0).unwrap())
+                .cos()
                 - p3;
             roots.push(x);
         }
     }
-    
+
     Ok(roots)
 }
 
@@ -1078,20 +1108,28 @@ pub fn eigs<T, S>(
     options: Option<ArpackOptions<T>>,
 ) -> SparseResult<EigenResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
     let k = k.unwrap_or(opts.k);
     let which = which.unwrap_or(&opts.which);
-    
+
     let (n, m) = matrix.shape();
     if n != m {
         return Err(SparseError::ValueError(
             "Matrix must be square for eigenvalue computation".to_string(),
         ));
     }
-    
+
     // For now, use Arnoldi method
     arnoldi_method(matrix, k, which, &opts)
 }
@@ -1134,19 +1172,26 @@ pub fn eigsh<T>(
     options: Option<LanczosOptions>,
 ) -> SparseResult<EigenResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + std::iter::Sum,
 {
     let opts = options.unwrap_or_default();
     let k = k.unwrap_or(opts.num_eigenvalues);
     let which = which.unwrap_or("LA");
-    
+
     let (n, m) = matrix.shape();
     if n != m {
         return Err(SparseError::ValueError(
             "Matrix must be square for eigenvalue computation".to_string(),
         ));
     }
-    
+
     // Use enhanced Lanczos method for symmetric matrices
     enhanced_lanczos(matrix, k, which, &opts)
 }
@@ -1159,58 +1204,77 @@ fn enhanced_lanczos<T>(
     options: &LanczosOptions,
 ) -> SparseResult<EigenResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + std::iter::Sum,
 {
     let n = matrix.shape().0;
     let max_subspace_size = options.max_subspace_size.min(n);
     let num_eigenvalues = k.min(max_subspace_size);
-    
+
     // Use the existing lanczos implementation as a base
     let mut lanczos_opts = options.clone();
     lanczos_opts.num_eigenvalues = num_eigenvalues;
     lanczos_opts.max_subspace_size = max_subspace_size;
-    
+
     let mut result = lanczos(matrix, &lanczos_opts, None)?;
-    
+
     // Sort eigenvalues according to 'which' parameter
     let mut sorted_indices: Vec<usize> = (0..result.eigenvalues.len()).collect();
-    
+
     match which {
         "LA" => {
             // Largest algebraic (most positive)
             sorted_indices.sort_by(|&i, &j| {
-                result.eigenvalues[j].partial_cmp(&result.eigenvalues[i]).unwrap_or(std::cmp::Ordering::Equal)
+                result.eigenvalues[j]
+                    .partial_cmp(&result.eigenvalues[i])
+                    .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         "SA" => {
             // Smallest algebraic (most negative)
             sorted_indices.sort_by(|&i, &j| {
-                result.eigenvalues[i].partial_cmp(&result.eigenvalues[j]).unwrap_or(std::cmp::Ordering::Equal)
+                result.eigenvalues[i]
+                    .partial_cmp(&result.eigenvalues[j])
+                    .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         "LM" => {
             // Largest magnitude
             sorted_indices.sort_by(|&i, &j| {
-                result.eigenvalues[j].abs().partial_cmp(&result.eigenvalues[i].abs()).unwrap_or(std::cmp::Ordering::Equal)
+                result.eigenvalues[j]
+                    .abs()
+                    .partial_cmp(&result.eigenvalues[i].abs())
+                    .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         "SM" => {
             // Smallest magnitude
             sorted_indices.sort_by(|&i, &j| {
-                result.eigenvalues[i].abs().partial_cmp(&result.eigenvalues[j].abs()).unwrap_or(std::cmp::Ordering::Equal)
+                result.eigenvalues[i]
+                    .abs()
+                    .partial_cmp(&result.eigenvalues[j].abs())
+                    .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         "BE" => {
             // Both ends (half largest, half smallest)
             sorted_indices.sort_by(|&i, &j| {
-                result.eigenvalues[j].partial_cmp(&result.eigenvalues[i]).unwrap_or(std::cmp::Ordering::Equal)
+                result.eigenvalues[j]
+                    .partial_cmp(&result.eigenvalues[i])
+                    .unwrap_or(std::cmp::Ordering::Equal)
             });
-            
+
             // Take half from each end
             let half = num_eigenvalues / 2;
             let mut new_indices = Vec::with_capacity(num_eigenvalues);
             new_indices.extend_from_slice(&sorted_indices[..half]);
-            new_indices.extend_from_slice(&sorted_indices[sorted_indices.len()-half..]);
+            new_indices.extend_from_slice(&sorted_indices[sorted_indices.len() - half..]);
             sorted_indices = new_indices;
         }
         _ => {
@@ -1220,10 +1284,10 @@ where
             )));
         }
     }
-    
+
     // Reorder results
     sorted_indices.truncate(num_eigenvalues);
-    
+
     let mut new_eigenvalues = Array1::zeros(sorted_indices.len());
     let mut new_eigenvectors = if let Some(ref vecs) = result.eigenvectors {
         Some(Array2::zeros((n, sorted_indices.len())))
@@ -1231,11 +1295,11 @@ where
         None
     };
     let mut new_residuals = Array1::zeros(sorted_indices.len());
-    
+
     for (new_idx, &old_idx) in sorted_indices.iter().enumerate() {
         new_eigenvalues[new_idx] = result.eigenvalues[old_idx];
         new_residuals[new_idx] = result.residuals[old_idx];
-        
+
         if let Some(ref vecs) = result.eigenvectors {
             if let Some(ref mut new_vecs) = new_eigenvectors {
                 for i in 0..n {
@@ -1244,11 +1308,11 @@ where
             }
         }
     }
-    
+
     result.eigenvalues = new_eigenvalues;
     result.eigenvectors = new_eigenvectors;
     result.residuals = new_residuals;
-    
+
     Ok(result)
 }
 
@@ -1260,18 +1324,26 @@ fn arnoldi_method<T, S>(
     options: &ArpackOptions<T>,
 ) -> SparseResult<EigenResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     let n = matrix.shape().0;
     let ncv = options.ncv.unwrap_or((2 * k + 1).min(n));
-    
+
     if k >= n {
         return Err(SparseError::ValueError(
             "Number of eigenvalues k must be less than matrix size".to_string(),
         ));
     }
-    
+
     // Initialize the first Arnoldi vector
     let mut v = if let Some(ref v0) = options.v0 {
         if v0.len() != n {
@@ -1286,7 +1358,7 @@ where
         v_arr[0] = T::one(); // Simple initialization
         v_arr
     };
-    
+
     // Normalize
     let norm = (v.iter().map(|&val| val * val).sum::<T>()).sqrt();
     if !norm.is_zero() {
@@ -1294,53 +1366,57 @@ where
             v[i] = v[i] / norm;
         }
     }
-    
+
     // Allocate space for Arnoldi vectors and Hessenberg matrix
     let mut v_vectors = Vec::with_capacity(ncv);
     v_vectors.push(v.clone());
-    
+
     let mut h_matrix = Array2::zeros((ncv + 1, ncv));
     let mut converged = false;
     let mut iter = 1;
-    
+
     // Arnoldi iteration
     while iter < options.maxiter && v_vectors.len() < ncv {
         // Apply matrix to the last vector
         let w = matrix_vector_product(matrix, &v_vectors[v_vectors.len() - 1])?;
-        
+
         // Orthogonalize against all previous vectors (modified Gram-Schmidt)
         let mut w_orth = w;
         for (j, v_j) in v_vectors.iter().enumerate() {
-            let h_val = v_j.iter().zip(w_orth.iter()).map(|(&vj, &wi)| vj * wi).sum::<T>();
+            let h_val = v_j
+                .iter()
+                .zip(w_orth.iter())
+                .map(|(&vj, &wi)| vj * wi)
+                .sum::<T>();
             h_matrix[[j, v_vectors.len() - 1]] = h_val;
-            
+
             for i in 0..n {
                 w_orth[i] = w_orth[i] - h_val * v_j[i];
             }
         }
-        
+
         // Compute norm
         let h_norm = (w_orth.iter().map(|&val| val * val).sum::<T>()).sqrt();
         h_matrix[[v_vectors.len(), v_vectors.len() - 1]] = h_norm;
-        
+
         // Check for breakdown
         if h_norm < T::from(options.tol).unwrap() {
             break;
         }
-        
+
         // Normalize and add to Arnoldi basis
         let mut v_next = Array1::zeros(n);
         for i in 0..n {
             v_next[i] = w_orth[i] / h_norm;
         }
         v_vectors.push(v_next);
-        
+
         // Check convergence (simplified)
         if v_vectors.len() >= k + 5 {
             // Extract Hessenberg submatrix and solve eigenproblem
             let subspace_size = v_vectors.len() - 1;
             let h_sub = h_matrix.slice(ndarray::s![..subspace_size, ..subspace_size]);
-            
+
             // For simplicity, we'll use power iteration on the Hessenberg matrix
             // In a full implementation, we'd use QR algorithm
             if let Ok((ritz_vals, _)) = solve_hessenberg_eigenproblem(&h_sub, k) {
@@ -1354,19 +1430,19 @@ where
                 }
             }
         }
-        
+
         iter += 1;
     }
-    
+
     // Extract final eigenvalues and eigenvectors
     let subspace_size = v_vectors.len() - 1;
     let h_sub = h_matrix.slice(ndarray::s![..subspace_size, ..subspace_size]);
     let (eigenvalues, hessenberg_vecs) = solve_hessenberg_eigenproblem(&h_sub, k)?;
-    
+
     // Compute Ritz vectors if requested
     let eigenvectors = if options.return_eigenvectors {
         let mut ritz_vectors = Array2::zeros((n, k.min(eigenvalues.len())));
-        
+
         for j in 0..k.min(eigenvalues.len()) {
             for i in 0..n {
                 let mut sum = T::zero();
@@ -1382,11 +1458,11 @@ where
     } else {
         None
     };
-    
+
     // Compute residuals (simplified)
     let num_computed = k.min(eigenvalues.len());
     let residuals = Array1::from_elem(num_computed, T::from(options.tol).unwrap());
-    
+
     let result = EigenResult {
         eigenvalues: Array1::from_vec(eigenvalues[..num_computed].to_vec()),
         eigenvectors,
@@ -1394,14 +1470,21 @@ where
         residuals,
         converged,
     };
-    
+
     Ok(result)
 }
 
 /// Matrix-vector product for general sparse matrices
 fn matrix_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static,
     S: SparseArray<T>,
 {
     let (n, m) = matrix.shape();
@@ -1411,14 +1494,14 @@ where
             found: vector.len(),
         });
     }
-    
+
     let mut result = Array1::zeros(n);
     let (row_indices, col_indices, values) = matrix.find();
-    
+
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[i] = result[i] + values[k] * vector[j];
     }
-    
+
     Ok(result)
 }
 
@@ -1431,13 +1514,13 @@ where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
 {
     let n = h_matrix.nrows();
-    
+
     // For simplicity, use power iteration on the Hessenberg matrix
     // In a real implementation, we'd use the QR algorithm
-    
+
     let mut eigenvalues = Vec::with_capacity(k);
     let mut eigenvectors = Vec::with_capacity(k);
-    
+
     // Convert to f64 for eigenvalue computation
     let mut h_f64 = Array2::zeros((n, n));
     for i in 0..n {
@@ -1445,10 +1528,10 @@ where
             h_f64[[i, j]] = h_matrix[[i, j]].to_f64().unwrap_or(0.0);
         }
     }
-    
+
     // Simple power iteration for the largest eigenvalue
     let mut v = Array1::from_elem(n, 1.0 / (n as f64).sqrt());
-    
+
     for _ in 0..100 {
         let mut w = Array1::<f64>::zeros(n);
         for i in 0..n {
@@ -1456,7 +1539,7 @@ where
                 w[i] += h_f64[[i, j]] * v[j];
             }
         }
-        
+
         let norm = (w.iter().map(|&x| x * x).sum::<f64>()).sqrt();
         if norm > 1e-12 {
             for i in 0..n {
@@ -1464,11 +1547,11 @@ where
             }
         }
     }
-    
+
     // Compute eigenvalue (Rayleigh quotient)
     let mut numerator = 0.0;
     let mut denominator = 0.0;
-    
+
     for i in 0..n {
         let mut hv_i = 0.0;
         for j in 0..n {
@@ -1477,19 +1560,19 @@ where
         numerator += v[i] * hv_i;
         denominator += v[i] * v[i];
     }
-    
+
     if denominator > 1e-12 {
         eigenvalues.push(T::from(numerator / denominator).unwrap());
         eigenvectors.push(v.to_vec());
     }
-    
+
     // For now, just return one eigenvalue/eigenvector
     // A full implementation would compute multiple eigenvalues
     while eigenvalues.len() < k && eigenvalues.len() < n {
         eigenvalues.push(T::zero());
         eigenvectors.push(vec![0.0; n]);
     }
-    
+
     Ok((eigenvalues, eigenvectors))
 }
 
@@ -1497,62 +1580,58 @@ where
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    
+
     // Create a simple symmetric matrix for testing
     fn create_test_sym_csr() -> SymCsrMatrix<f64> {
         // Create a symmetric matrix:
         // [2 1 0]
         // [1 2 3]
         // [0 3 1]
-        
+
         // Lower triangular part (which is stored):
         // [2 0 0]
         // [1 2 0]
         // [0 3 1]
-        
+
         let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
         let indices = vec![0, 0, 1, 1, 2];
         let indptr = vec![0, 1, 3, 5];
-        
+
         SymCsrMatrix::new(data, indices, indptr, (3, 3)).unwrap()
     }
-    
+
     #[test]
     fn test_power_iteration() {
         let matrix = create_test_sym_csr();
-        
+
         let options = PowerIterationOptions {
             max_iter: 100,
             tol: 1e-10,
             normalize: true,
         };
-        
+
         let result = power_iteration(&matrix, &options, None).unwrap();
-        
+
         // The largest eigenvalue of the test matrix is approximately 5.0
         assert_relative_eq!(result.eigenvalues[0], 5.0, epsilon = 1e-8);
         assert!(result.converged);
-        
+
         // Verify the eigenvector is normalized
         let v = &result.eigenvectors.as_ref().unwrap();
         let v_norm = (0..3).map(|i| v[[i, 0]] * v[[i, 0]]).sum::<f64>().sqrt();
         assert_relative_eq!(v_norm, 1.0, epsilon = 1e-8);
-        
+
         // Verify Av = λv
         let Av = crate::sym_ops::sym_csr_matvec(&matrix, &v.column(0).into_owned().view()).unwrap();
         for i in 0..3 {
-            assert_relative_eq!(
-                Av[i], 
-                result.eigenvalues[0] * v[[i, 0]], 
-                epsilon = 1e-8
-            );
+            assert_relative_eq!(Av[i], result.eigenvalues[0] * v[[i, 0]], epsilon = 1e-8);
         }
     }
-    
+
     #[test]
     fn test_lanczos() {
         let matrix = create_test_sym_csr();
-        
+
         let options = LanczosOptions {
             max_iter: 100,
             max_subspace_size: 3, // Matrix is 3x3
@@ -1560,76 +1639,76 @@ mod tests {
             num_eigenvalues: 3, // Find all eigenvalues
             compute_eigenvectors: true,
         };
-        
+
         let result = lanczos(&matrix, &options, None).unwrap();
-        
+
         // The eigenvalues of the test matrix are approximately 5.0, 1.0, -1.0
         assert_eq!(result.eigenvalues.len(), 3);
         assert_relative_eq!(result.eigenvalues[0], 5.0, epsilon = 1e-8);
         assert_relative_eq!(result.eigenvalues[1], 1.0, epsilon = 1e-8);
         assert_relative_eq!(result.eigenvalues[2], -1.0, epsilon = 1e-8);
-        
+
         assert!(result.converged);
-        
+
         // Verify the eigenvectors are normalized
         let v = &result.eigenvectors.as_ref().unwrap();
         for k in 0..3 {
             let v_norm = (0..3).map(|i| v[[i, k]] * v[[i, k]]).sum::<f64>().sqrt();
             assert_relative_eq!(v_norm, 1.0, epsilon = 1e-8);
-            
+
             // Verify Av = λv
-            let Av = crate::sym_ops::sym_csr_matvec(&matrix, &v.column(k).into_owned().view()).unwrap();
+            let Av =
+                crate::sym_ops::sym_csr_matvec(&matrix, &v.column(k).into_owned().view()).unwrap();
             for i in 0..3 {
-                assert_relative_eq!(
-                    Av[i], 
-                    result.eigenvalues[k] * v[[i, k]], 
-                    epsilon = 1e-8
-                );
+                assert_relative_eq!(Av[i], result.eigenvalues[k] * v[[i, k]], epsilon = 1e-8);
             }
         }
     }
-    
+
     #[test]
     fn test_tridiagonal_solver_2x2() {
         let alpha = vec![2.0, 1.0];
         let beta = vec![1.0];
-        
+
         let (eigenvalues, eigenvectors) = solve_tridiagonal_eigenproblem(&alpha, &beta, 2).unwrap();
-        
+
         // Eigenvalues of [2 1; 1 1] are 2.618... and 0.381...
         assert_eq!(eigenvalues.len(), 2);
         assert_relative_eq!(eigenvalues[0], 2.618033988749895, epsilon = 1e-8);
         assert_relative_eq!(eigenvalues[1], 0.381966011250105, epsilon = 1e-8);
-        
+
         // Verify eigenvectors are normalized
         for k in 0..2 {
-            let v_norm = (0..2).map(|i| eigenvectors[k][i] * eigenvectors[k][i]).sum::<f64>().sqrt();
+            let v_norm = (0..2)
+                .map(|i| eigenvectors[k][i] * eigenvectors[k][i])
+                .sum::<f64>()
+                .sqrt();
             assert_relative_eq!(v_norm, 1.0, epsilon = 1e-8);
         }
     }
-    
+
     #[test]
     fn test_cubic_solver() {
         // Test case 1: x^3 - 6x^2 + 11x - 6 = 0, roots: 1, 2, 3
         let roots = solve_cubic(-6.0, 11.0, -6.0).unwrap();
         assert_eq!(roots.len(), 3);
-        
+
         // Sort the roots for comparison
         let mut sorted_roots = roots.clone();
         sorted_roots.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         assert_relative_eq!(sorted_roots[0], 1.0, epsilon = 1e-8);
         assert_relative_eq!(sorted_roots[1], 2.0, epsilon = 1e-8);
         assert_relative_eq!(sorted_roots[2], 3.0, epsilon = 1e-8);
-        
+
         // Test case 2: x^3 + 0x^2 - 4x + 0 = 0, roots: 0, -2, 2
         let roots = solve_cubic(0.0, -4.0, 0.0).unwrap();
         assert_eq!(roots.len(), 3);
-        
+
         // Sort the roots for comparison
         let mut sorted_roots = roots.clone();
         sorted_roots.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         assert_relative_eq!(sorted_roots[0], -2.0, epsilon = 1e-8);
         assert_relative_eq!(sorted_roots[1], 0.0, epsilon = 1e-8);
         assert_relative_eq!(sorted_roots[2], 2.0, epsilon = 1e-8);

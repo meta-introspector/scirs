@@ -72,7 +72,8 @@ aws-sdk-s3 = []
 google-cloud-storage = []
 azure-storage-blobs = []
 gpu = []
-all = ["csv", "compression", "validation", "hdf5", "async", "reqwest", "aws-sdk-s3", "google-cloud-storage", "azure-storage-blobs", "gpu"]
+exif = []
+all = ["csv", "compression", "validation", "hdf5", "async", "reqwest", "aws-sdk-s3", "google-cloud-storage", "azure-storage-blobs", "gpu", "exif"]
 
 [[example]]
 name = "hdf5_example"

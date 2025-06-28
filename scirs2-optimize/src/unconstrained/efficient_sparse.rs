@@ -400,24 +400,139 @@ where
 
 /// Compute sparse Newton direction using sparse Hessian
 fn compute_sparse_newton_direction<F>(
-    _fun: &mut F,
-    _x: &ArrayView1<f64>,
+    fun: &mut F,
+    x: &ArrayView1<f64>,
     g_sparse: &CsrArray<f64>,
     sparsity_info: &SparsityInfo,
-    _options: &EfficientSparseOptions,
+    options: &EfficientSparseOptions,
 ) -> Result<Array1<f64>, OptimizeError>
 where
     F: FnMut(&ArrayView1<f64>) -> f64 + Sync,
 {
-    if let Some(_hessian_pattern) = &sparsity_info.hessian_pattern {
-        // TODO: Implement sparse Hessian computation with FnMut compatibility
-        // For now, use a simple identity approximation (steepest descent)
-        let g_dense = sparse_to_dense(g_sparse);
-        Ok(-g_dense)
+    if let Some(hessian_pattern) = &sparsity_info.hessian_pattern {
+        // Compute sparse Hessian using finite differences compatible with FnMut
+        let sparse_hessian = compute_sparse_hessian_fnmut(fun, x, hessian_pattern, options)?;
+
+        // Solve Hessian * p = -gradient for Newton direction
+        solve_sparse_newton_system(&sparse_hessian, g_sparse)
     } else {
-        // Fallback to negative gradient
+        // Fallback to negative gradient (steepest descent)
         Ok(-sparse_to_dense(g_sparse))
     }
+}
+
+/// Compute sparse Hessian using finite differences with FnMut compatibility
+fn compute_sparse_hessian_fnmut<F>(
+    fun: &mut F,
+    x: &ArrayView1<f64>,
+    pattern: &CsrArray<f64>,
+    options: &EfficientSparseOptions,
+) -> Result<CsrArray<f64>, OptimizeError>
+where
+    F: FnMut(&ArrayView1<f64>) -> f64,
+{
+    let n = x.len();
+    let eps = 1e-8; // Finite difference step size
+
+    // Collect non-zero positions from pattern
+    let mut triplets = Vec::new();
+
+    // For FnMut compatibility, we need to be careful about borrowing
+    // We'll compute Hessian elements using central differences
+    let f0 = fun(x);
+
+    for i in 0..n {
+        for j in i..n {
+            // Only compute if this position is in the sparsity pattern
+            if pattern.get(i, j) != 0.0 {
+                let h_i = eps * (1.0 + x[i].abs());
+                let h_j = eps * (1.0 + x[j].abs());
+
+                let hessian_element = if i == j {
+                    // Diagonal element: f''(x_i) ≈ (f(x + h*e_i) - 2*f(x) + f(x - h*e_i)) / h²
+                    let mut x_plus = x.to_owned();
+                    x_plus[i] += h_i;
+                    let f_plus = fun(&x_plus.view());
+
+                    let mut x_minus = x.to_owned();
+                    x_minus[i] -= h_i;
+                    let f_minus = fun(&x_minus.view());
+
+                    (f_plus - 2.0 * f0 + f_minus) / (h_i * h_i)
+                } else {
+                    // Off-diagonal element: f''(x_i, x_j) ≈ (f(x + h_i*e_i + h_j*e_j) - f(x + h_i*e_i) - f(x + h_j*e_j) + f(x)) / (h_i * h_j)
+                    let mut x_plus_both = x.to_owned();
+                    x_plus_both[i] += h_i;
+                    x_plus_both[j] += h_j;
+                    let f_plus_both = fun(&x_plus_both.view());
+
+                    let mut x_plus_i = x.to_owned();
+                    x_plus_i[i] += h_i;
+                    let f_plus_i = fun(&x_plus_i.view());
+
+                    let mut x_plus_j = x.to_owned();
+                    x_plus_j[j] += h_j;
+                    let f_plus_j = fun(&x_plus_j.view());
+
+                    (f_plus_both - f_plus_i - f_plus_j + f0) / (h_i * h_j)
+                };
+
+                // Add to triplets if significant
+                if hessian_element.abs() > options.sparse_percentage_threshold {
+                    triplets.push((i, j, hessian_element));
+                    // Add symmetric element if off-diagonal
+                    if i != j {
+                        triplets.push((j, i, hessian_element));
+                    }
+                }
+            }
+        }
+    }
+
+    // Create sparse matrix from triplets
+    if triplets.is_empty() {
+        // Return identity matrix scaled by a small value if no Hessian elements
+        let mut identity_triplets = Vec::new();
+        for i in 0..n {
+            identity_triplets.push((i, i, 1e-6));
+        }
+
+        let rows: Vec<usize> = identity_triplets.iter().map(|(r, _, _)| *r).collect();
+        let cols: Vec<usize> = identity_triplets.iter().map(|(_, c, _)| *c).collect();
+        let data: Vec<f64> = identity_triplets.iter().map(|(_, _, d)| *d).collect();
+
+        CsrArray::from_triplets(&rows, &cols, &data, (n, n), false).map_err(|_| {
+            OptimizeError::ComputationError("Failed to create sparse Hessian".to_string())
+        })
+    } else {
+        let rows: Vec<usize> = triplets.iter().map(|(r, _, _)| *r).collect();
+        let cols: Vec<usize> = triplets.iter().map(|(_, c, _)| *c).collect();
+        let data: Vec<f64> = triplets.iter().map(|(_, _, d)| *d).collect();
+
+        CsrArray::from_triplets(&rows, &cols, &data, (n, n), false).map_err(|_| {
+            OptimizeError::ComputationError("Failed to create sparse Hessian".to_string())
+        })
+    }
+}
+
+/// Solve sparse Newton system H * p = -g for search direction p
+fn solve_sparse_newton_system(
+    hessian: &CsrArray<f64>,
+    gradient_sparse: &CsrArray<f64>,
+) -> Result<Array1<f64>, OptimizeError> {
+    // Convert sparse gradient to dense
+    let gradient_dense = sparse_to_dense(gradient_sparse);
+    let neg_gradient = -gradient_dense;
+
+    // For sparse systems, we can use iterative solvers or direct sparse solvers
+    // For now, convert to dense and use dense linear algebra
+    let hessian_dense = sparse_to_dense_matrix(hessian);
+
+    // Use the existing solve function from scirs2-linalg
+    use scirs2_linalg::solve::solve;
+
+    solve(&hessian_dense.view(), &neg_gradient.view(), None)
+        .map_err(|e| OptimizeError::ComputationError(format!("Newton system solve failed: {}", e)))
 }
 
 // Helper functions for sparse operations

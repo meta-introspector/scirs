@@ -529,21 +529,24 @@ where
                 }
                 Ok(folds)
             }
-            CrossValidationStrategy::MonteCarlo { n_splits, test_fraction } => {
+            CrossValidationStrategy::MonteCarlo {
+                n_splits,
+                test_fraction,
+            } => {
                 let mut folds = Vec::new();
                 let test_size = (n as f64 * test_fraction).max(1.0) as usize;
-                
+
                 // Use a simple pseudo-random approach for demonstration
                 // In production, this should use proper random number generation
                 for split in 0..*n_splits {
                     let mut indices: Vec<usize> = (0..n).collect();
-                    
+
                     // Simple deterministic shuffle based on split number for reproducibility
                     for i in 0..n {
                         let j = (i + split * 17) % n; // Simple pseudo-random permutation
                         indices.swap(i, j);
                     }
-                    
+
                     let test_indices = indices[0..test_size].to_vec();
                     let train_indices = indices[test_size..].to_vec();
                     folds.push((train_indices, test_indices));
@@ -555,19 +558,19 @@ where
                 let mut folds = Vec::new();
                 let min_train_size = n / (*n_splits + 1);
                 let test_size = n / (*n_splits + 1);
-                
+
                 for i in 0..*n_splits {
                     let train_end = min_train_size + i * test_size;
                     let test_start = train_end;
                     let test_end = (test_start + test_size).min(n);
-                    
+
                     if test_end <= test_start {
                         break;
                     }
-                    
+
                     let train_indices: Vec<usize> = (0..train_end).collect();
                     let test_indices: Vec<usize> = (test_start..test_end).collect();
-                    
+
                     folds.push((train_indices, test_indices));
                 }
                 Ok(folds)

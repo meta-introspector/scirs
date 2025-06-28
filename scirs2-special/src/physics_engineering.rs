@@ -491,10 +491,14 @@ pub mod thermal {
         // Churchill-Chu correlation
         if rayleigh < 1e9 {
             // Laminar flow
-            Ok(0.68 + 0.67 * rayleigh.powf(0.25) / (1.0 + (0.492 / 0.9).powf(9.0 / 16.0)).powf(4.0 / 9.0))
+            Ok(0.68
+                + 0.67 * rayleigh.powf(0.25)
+                    / (1.0 + (0.492 / 0.9).powf(9.0 / 16.0)).powf(4.0 / 9.0))
         } else {
             // Turbulent flow
-            Ok(0.825 + 0.387 * rayleigh.powf(1.0 / 6.0) / (1.0 + (0.492 / 0.9).powf(9.0 / 16.0)).powf(8.0 / 27.0))
+            Ok(0.825
+                + 0.387 * rayleigh.powf(1.0 / 6.0)
+                    / (1.0 + (0.492 / 0.9).powf(9.0 / 16.0)).powf(8.0 / 27.0))
         }
     }
 
@@ -504,7 +508,11 @@ pub mod thermal {
     /// * `width` - Width of the plates
     /// * `height` - Height of the plates
     /// * `distance` - Distance between plates
-    pub fn view_factor_parallel_plates(width: f64, height: f64, distance: f64) -> SpecialResult<f64> {
+    pub fn view_factor_parallel_plates(
+        width: f64,
+        height: f64,
+        distance: f64,
+    ) -> SpecialResult<f64> {
         if width <= 0.0 || height <= 0.0 || distance <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Dimensions must be positive".to_string(),
@@ -513,7 +521,7 @@ pub mod thermal {
 
         let x = width / distance;
         let y = height / distance;
-        
+
         let term1 = ((1.0 + x * x) * (1.0 + y * y) / (1.0 + x * x + y * y)).sqrt();
         let term2 = x * (1.0 + y * y).sqrt() * (x / (1.0 + y * y).sqrt()).atan();
         let term3 = y * (1.0 + x * x).sqrt() * (y / (1.0 + x * x).sqrt()).atan();
@@ -599,7 +607,10 @@ pub mod semiconductor {
         let q = 1.602e-19; // C
         let k = blackbody::BOLTZMANN_CONSTANT;
 
-        Ok(((epsilon_0 * permittivity * k * temperature) / (q * q * carrier_concentration * 1e6)).sqrt())
+        Ok(
+            ((epsilon_0 * permittivity * k * temperature) / (q * q * carrier_concentration * 1e6))
+                .sqrt(),
+        )
     }
 }
 
@@ -622,8 +633,11 @@ pub mod plasma {
         const ELECTRON_MASS: f64 = 9.109e-31; // kg
         const EPSILON_0: f64 = 8.854e-12; // F/m
 
-        Ok((electron_density * ELECTRON_CHARGE * ELECTRON_CHARGE
-            / (EPSILON_0 * ELECTRON_MASS)).sqrt() / (2.0 * PI))
+        Ok(
+            (electron_density * ELECTRON_CHARGE * ELECTRON_CHARGE / (EPSILON_0 * ELECTRON_MASS))
+                .sqrt()
+                / (2.0 * PI),
+        )
     }
 
     /// Debye shielding distance
@@ -642,7 +656,10 @@ pub mod plasma {
         const EPSILON_0: f64 = 8.854e-12; // F/m
         let k = blackbody::BOLTZMANN_CONSTANT;
 
-        Ok((EPSILON_0 * k * temperature / (electron_density * ELECTRON_CHARGE * ELECTRON_CHARGE)).sqrt())
+        Ok(
+            (EPSILON_0 * k * temperature / (electron_density * ELECTRON_CHARGE * ELECTRON_CHARGE))
+                .sqrt(),
+        )
     }
 
     /// Cyclotron frequency
@@ -752,7 +769,9 @@ pub mod quantum {
 
         const RYDBERG_CONSTANT: f64 = 1.097_373e7; // m^-1
         let z_sq = (z * z) as f64;
-        let term = z_sq * RYDBERG_CONSTANT * (1.0 / (n_final * n_final) as f64 - 1.0 / (n_initial * n_initial) as f64);
+        let term = z_sq
+            * RYDBERG_CONSTANT
+            * (1.0 / (n_final * n_final) as f64 - 1.0 / (n_initial * n_initial) as f64);
 
         Ok(1.0 / term)
     }

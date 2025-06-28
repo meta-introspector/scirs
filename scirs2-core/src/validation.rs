@@ -918,6 +918,571 @@ mod tests {
     }
 }
 
+/// Custom validator implementations for flexible validation logic
+pub mod custom {
+    use super::*;
+    use std::fmt;
+    use std::marker::PhantomData;
+
+    /// Trait for implementing custom validators
+    pub trait Validator<T> {
+        /// Validate the value and return Ok(()) if valid, or an error if invalid
+        fn validate(&self, value: &T, name: &str) -> CoreResult<()>;
+
+        /// Get a description of what this validator checks
+        fn description(&self) -> String;
+
+        /// Chain this validator with another validator
+        fn and<V: Validator<T>>(self, other: V) -> CompositeValidator<T, Self, V>
+        where
+            Self: Sized,
+        {
+            CompositeValidator::new(self, other)
+        }
+
+        /// Create a conditional validator that only applies when a condition is met
+        fn when<F>(self, condition: F) -> ConditionalValidator<T, Self, F>
+        where
+            Self: Sized,
+            F: Fn(&T) -> bool,
+        {
+            ConditionalValidator::new(self, condition)
+        }
+    }
+
+    /// A validator that combines two validators with AND logic
+    pub struct CompositeValidator<T, V1, V2> {
+        validator1: V1,
+        validator2: V2,
+        _phantom: PhantomData<T>,
+    }
+
+    impl<T, V1, V2> CompositeValidator<T, V1, V2> {
+        pub fn new(validator1: V1, validator2: V2) -> Self {
+            Self {
+                validator1,
+                validator2,
+                _phantom: PhantomData,
+            }
+        }
+    }
+
+    impl<T, V1, V2> Validator<T> for CompositeValidator<T, V1, V2>
+    where
+        V1: Validator<T>,
+        V2: Validator<T>,
+    {
+        fn validate(&self, value: &T, name: &str) -> CoreResult<()> {
+            self.validator1.validate(value, name)?;
+            self.validator2.validate(value, name)?;
+            Ok(())
+        }
+
+        fn description(&self) -> String {
+            format!(
+                "{} AND {}",
+                self.validator1.description(),
+                self.validator2.description()
+            )
+        }
+    }
+
+    /// A validator that only applies when a condition is met
+    pub struct ConditionalValidator<T, V, F> {
+        validator: V,
+        condition: F,
+        _phantom: PhantomData<T>,
+    }
+
+    impl<T, V, F> ConditionalValidator<T, V, F> {
+        pub fn new(validator: V, condition: F) -> Self {
+            Self {
+                validator,
+                condition,
+                _phantom: PhantomData,
+            }
+        }
+    }
+
+    impl<T, V, F> Validator<T> for ConditionalValidator<T, V, F>
+    where
+        V: Validator<T>,
+        F: Fn(&T) -> bool,
+    {
+        fn validate(&self, value: &T, name: &str) -> CoreResult<()> {
+            if (self.condition)(value) {
+                self.validator.validate(value, name)
+            } else {
+                Ok(())
+            }
+        }
+
+        fn description(&self) -> String {
+            format!("IF condition THEN {}", self.validator.description())
+        }
+    }
+
+    /// Custom validator for ranges with inclusive/exclusive bounds
+    pub struct RangeValidator<T> {
+        min: Option<T>,
+        max: Option<T>,
+        min_inclusive: bool,
+        max_inclusive: bool,
+    }
+
+    impl<T> RangeValidator<T>
+    where
+        T: PartialOrd + Copy + fmt::Display,
+    {
+        pub fn new() -> Self {
+            Self {
+                min: None,
+                max: None,
+                min_inclusive: true,
+                max_inclusive: true,
+            }
+        }
+
+        pub fn min(mut self, min: T) -> Self {
+            self.min = Some(min);
+            self
+        }
+
+        pub fn max(mut self, max: T) -> Self {
+            self.max = Some(max);
+            self
+        }
+
+        pub fn min_exclusive(mut self, min: T) -> Self {
+            self.min = Some(min);
+            self.min_inclusive = false;
+            self
+        }
+
+        pub fn max_exclusive(mut self, max: T) -> Self {
+            self.max = Some(max);
+            self.max_inclusive = false;
+            self
+        }
+
+        pub fn between(min: T, max: T) -> Self {
+            Self::new().min(min).max(max)
+        }
+
+        pub fn between_exclusive(min: T, max: T) -> Self {
+            Self::new().min_exclusive(min).max_exclusive(max)
+        }
+    }
+
+    impl<T> Default for RangeValidator<T>
+    where
+        T: PartialOrd + Copy + fmt::Display,
+    {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl<T> Validator<T> for RangeValidator<T>
+    where
+        T: PartialOrd + Copy + fmt::Display,
+    {
+        fn validate(&self, value: &T, name: &str) -> CoreResult<()> {
+            if let Some(min) = self.min {
+                let valid = if self.min_inclusive {
+                    *value >= min
+                } else {
+                    *value > min
+                };
+                if !valid {
+                    let op = if self.min_inclusive { ">=" } else { ">" };
+                    return Err(CoreError::ValueError(
+                        ErrorContext::new(format!(
+                            "{} must be {} {}, got {}",
+                            name, op, min, value
+                        ))
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                    ));
+                }
+            }
+
+            if let Some(max) = self.max {
+                let valid = if self.max_inclusive {
+                    *value <= max
+                } else {
+                    *value < max
+                };
+                if !valid {
+                    let op = if self.max_inclusive { "<=" } else { "<" };
+                    return Err(CoreError::ValueError(
+                        ErrorContext::new(format!(
+                            "{} must be {} {}, got {}",
+                            name, op, max, value
+                        ))
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                    ));
+                }
+            }
+
+            Ok(())
+        }
+
+        fn description(&self) -> String {
+            match (self.min, self.max) {
+                (Some(min), Some(max)) => {
+                    let min_op = if self.min_inclusive { ">=" } else { ">" };
+                    let max_op = if self.max_inclusive { "<=" } else { "<" };
+                    format!("value {} {} and {} {}", min_op, min, max_op, max)
+                }
+                (Some(min), None) => {
+                    let op = if self.min_inclusive { ">=" } else { ">" };
+                    format!("value {} {}", op, min)
+                }
+                (None, Some(max)) => {
+                    let op = if self.max_inclusive { "<=" } else { "<" };
+                    format!("value {} {}", op, max)
+                }
+                (None, None) => "no range constraints".to_string(),
+            }
+        }
+    }
+
+    /// Type alias for shape validation function to reduce complexity
+    type ShapeValidatorFn = Box<dyn Fn(&[usize]) -> CoreResult<()>>;
+
+    /// Custom validator for array properties
+    pub struct ArrayValidator<T, D>
+    where
+        D: Dimension,
+    {
+        shape_validator: Option<ShapeValidatorFn>,
+        element_validator: Option<Box<dyn Validator<T>>>,
+        size_validator: Option<RangeValidator<usize>>,
+        _phantom: PhantomData<D>,
+    }
+
+    impl<T, D> ArrayValidator<T, D>
+    where
+        D: Dimension,
+    {
+        pub fn new() -> Self {
+            Self {
+                shape_validator: None,
+                element_validator: None,
+                size_validator: None,
+                _phantom: PhantomData,
+            }
+        }
+
+        pub fn with_shape<F>(mut self, validator: F) -> Self
+        where
+            F: Fn(&[usize]) -> CoreResult<()> + 'static,
+        {
+            self.shape_validator = Some(Box::new(validator));
+            self
+        }
+
+        pub fn with_elements<V>(mut self, validator: V) -> Self
+        where
+            V: Validator<T> + 'static,
+        {
+            self.element_validator = Some(Box::new(validator));
+            self
+        }
+
+        pub fn with_size(mut self, validator: RangeValidator<usize>) -> Self {
+            self.size_validator = Some(validator);
+            self
+        }
+
+        pub fn min_size(self, min_size: usize) -> Self {
+            self.with_size(RangeValidator::new().min(min_size))
+        }
+
+        pub fn max_size(self, max_size: usize) -> Self {
+            self.with_size(RangeValidator::new().max(max_size))
+        }
+
+        pub fn exact_size(self, size: usize) -> Self {
+            self.with_size(RangeValidator::new().min(size).max(size))
+        }
+    }
+
+    impl<T, D> Default for ArrayValidator<T, D>
+    where
+        D: Dimension,
+    {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl<S, T, D> Validator<ArrayBase<S, D>> for ArrayValidator<T, D>
+    where
+        S: ndarray::Data<Elem = T>,
+        T: Clone,
+        D: Dimension,
+    {
+        fn validate(&self, array: &ArrayBase<S, D>, name: &str) -> CoreResult<()> {
+            // Validate shape
+            if let Some(ref shape_validator) = self.shape_validator {
+                shape_validator(array.shape())?;
+            }
+
+            // Validate size
+            if let Some(ref size_validator) = self.size_validator {
+                size_validator.validate(&array.len(), &format!("{} size", name))?;
+            }
+
+            // Validate elements
+            if let Some(ref element_validator) = self.element_validator {
+                for (idx, element) in array.indexed_iter() {
+                    element_validator
+                        .validate(element, &format!("{} element at {:?}", name, idx))?;
+                }
+            }
+
+            Ok(())
+        }
+
+        fn description(&self) -> String {
+            let mut parts = Vec::new();
+
+            if self.shape_validator.is_some() {
+                parts.push("shape validation".to_string());
+            }
+
+            if let Some(ref size_validator) = self.size_validator {
+                parts.push(format!("size {}", size_validator.description()));
+            }
+
+            if let Some(ref element_validator) = self.element_validator {
+                parts.push(format!("elements {}", element_validator.description()));
+            }
+
+            if parts.is_empty() {
+                "no array constraints".to_string()
+            } else {
+                parts.join(" AND ")
+            }
+        }
+    }
+
+    /// Custom validator for function-based validation
+    pub struct FunctionValidator<T, F> {
+        func: F,
+        description: String,
+        _phantom: PhantomData<T>,
+    }
+
+    impl<T, F> FunctionValidator<T, F>
+    where
+        F: Fn(&T, &str) -> CoreResult<()>,
+    {
+        pub fn new(func: F, description: impl Into<String>) -> Self {
+            Self {
+                func,
+                description: description.into(),
+                _phantom: PhantomData,
+            }
+        }
+    }
+
+    impl<T, F> Validator<T> for FunctionValidator<T, F>
+    where
+        F: Fn(&T, &str) -> CoreResult<()>,
+    {
+        fn validate(&self, value: &T, name: &str) -> CoreResult<()> {
+            (self.func)(value, name)
+        }
+
+        fn description(&self) -> String {
+            self.description.clone()
+        }
+    }
+
+    /// Builder for creating complex validators
+    pub struct ValidatorBuilder<T> {
+        validators: Vec<Box<dyn Validator<T>>>,
+    }
+
+    impl<T: 'static> ValidatorBuilder<T> {
+        pub fn new() -> Self {
+            Self {
+                validators: Vec::new(),
+            }
+        }
+
+        pub fn with_validator<V: Validator<T> + 'static>(mut self, validator: V) -> Self {
+            self.validators.push(Box::new(validator));
+            self
+        }
+
+        pub fn with_function<F>(self, func: F, description: impl Into<String>) -> Self
+        where
+            F: Fn(&T, &str) -> CoreResult<()> + 'static,
+        {
+            self.with_validator(FunctionValidator::new(func, description))
+        }
+
+        pub fn build(self) -> MultiValidator<T> {
+            MultiValidator {
+                validators: self.validators,
+            }
+        }
+    }
+
+    impl<T: 'static> Default for ValidatorBuilder<T> {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    /// Validator that runs multiple validators
+    pub struct MultiValidator<T> {
+        validators: Vec<Box<dyn Validator<T>>>,
+    }
+
+    impl<T: 'static> Validator<T> for MultiValidator<T> {
+        fn validate(&self, value: &T, name: &str) -> CoreResult<()> {
+            for validator in &self.validators {
+                validator.validate(value, name)?;
+            }
+            Ok(())
+        }
+
+        fn description(&self) -> String {
+            if self.validators.is_empty() {
+                "no validators".to_string()
+            } else {
+                self.validators
+                    .iter()
+                    .map(|v| v.description())
+                    .collect::<Vec<_>>()
+                    .join(" AND ")
+            }
+        }
+    }
+
+    /// Convenience function to validate with a custom validator
+    pub fn validate_with<T, V: Validator<T>>(
+        value: &T,
+        validator: &V,
+        name: impl Into<String>,
+    ) -> CoreResult<()> {
+        validator.validate(value, &name.into())
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use ndarray::arr1;
+
+        #[test]
+        fn test_range_validator() {
+            let validator = RangeValidator::between(0.0, 1.0);
+
+            assert!(validator.validate(&0.5, "value").is_ok());
+            assert!(validator.validate(&0.0, "value").is_ok());
+            assert!(validator.validate(&1.0, "value").is_ok());
+            assert!(validator.validate(&-0.1, "value").is_err());
+            assert!(validator.validate(&1.1, "value").is_err());
+        }
+
+        #[test]
+        fn test_range_validator_exclusive() {
+            let validator = RangeValidator::between_exclusive(0.0, 1.0);
+
+            assert!(validator.validate(&0.5, "value").is_ok());
+            assert!(validator.validate(&0.0, "value").is_err());
+            assert!(validator.validate(&1.0, "value").is_err());
+        }
+
+        #[test]
+        fn test_composite_validator() {
+            let positive = RangeValidator::new().min(0.0);
+            let max_one = RangeValidator::new().max(1.0);
+            let validator = positive.and(max_one);
+
+            assert!(validator.validate(&0.5, "value").is_ok());
+            assert!(validator.validate(&-0.1, "value").is_err());
+            assert!(validator.validate(&1.1, "value").is_err());
+        }
+
+        #[test]
+        fn test_conditional_validator() {
+            let validator = RangeValidator::new().min(0.0).when(|x: &f64| *x > 0.0);
+
+            assert!(validator.validate(&0.5, "value").is_ok());
+            assert!(validator.validate(&-0.5, "value").is_ok()); // Condition not met
+            assert!(validator.validate(&0.0, "value").is_ok()); // Condition not met
+        }
+
+        #[test]
+        fn test_array_validator() {
+            let element_validator = RangeValidator::between(0.0, 1.0);
+            let array_validator = ArrayValidator::new()
+                .with_elements(element_validator)
+                .min_size(2);
+
+            let valid_array = arr1(&[0.2, 0.8]);
+            assert!(array_validator.validate(&valid_array, "array").is_ok());
+
+            let invalid_array = arr1(&[0.2, 1.5]);
+            assert!(array_validator.validate(&invalid_array, "array").is_err());
+
+            let too_small_array = arr1(&[0.5]);
+            assert!(array_validator.validate(&too_small_array, "array").is_err());
+        }
+
+        #[test]
+        fn test_function_validator() {
+            let validator = FunctionValidator::new(
+                |value: &i32, name: &str| {
+                    if *value % 2 == 0 {
+                        Ok(())
+                    } else {
+                        Err(CoreError::ValueError(
+                            ErrorContext::new(format!("{} must be even, got {}", name, value))
+                                .with_location(ErrorLocation::new(file!(), line!())),
+                        ))
+                    }
+                },
+                "value must be even",
+            );
+
+            assert!(validator.validate(&4, "number").is_ok());
+            assert!(validator.validate(&3, "number").is_err());
+        }
+
+        #[test]
+        fn test_validator_builder() {
+            let validator = ValidatorBuilder::new()
+                .with_validator(RangeValidator::new().min(0.0))
+                .with_validator(RangeValidator::new().max(1.0))
+                .with_function(
+                    |value: &f64, name: &str| {
+                        if *value != 0.5 {
+                            Ok(())
+                        } else {
+                            Err(CoreError::ValueError(
+                                ErrorContext::new(format!("{} cannot be 0.5", name))
+                                    .with_location(ErrorLocation::new(file!(), line!())),
+                            ))
+                        }
+                    },
+                    "value cannot be 0.5",
+                )
+                .build();
+
+            assert!(validator.validate(&0.3, "value").is_ok());
+            assert!(validator.validate(&0.5, "value").is_err());
+            assert!(validator.validate(&-0.1, "value").is_err());
+            assert!(validator.validate(&1.1, "value").is_err());
+        }
+    }
+}
+
 // Production-level validation with comprehensive security and performance features
 pub mod production;
 

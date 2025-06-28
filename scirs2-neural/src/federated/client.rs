@@ -79,35 +79,32 @@ impl FederatedClient {
     ) -> Result<ClientUpdate> {
         // Initialize local model with global weights
         let mut local_model = self.create_model_from_weights(global_weights)?;
-        
+
         let num_samples = data.shape()[0];
         let mut total_loss = 0.0;
         let mut correct_predictions = 0;
-        
+
         // Local training epochs
         for epoch in 0..self.config.local_epochs {
-            let (epoch_loss, epoch_acc) = self.train_epoch(
-                &mut local_model,
-                data,
-                labels
-            )?;
+            let (epoch_loss, epoch_acc) = self.train_epoch(&mut local_model, data, labels)?;
             total_loss += epoch_loss;
             correct_predictions += (epoch_acc * num_samples as f32) as usize;
         }
-        
+
         // Calculate weight updates (difference from global weights)
         let weight_updates = self.calculate_weight_updates(&local_model, global_weights)?;
-        
+
         // Apply differential privacy if enabled
         let weight_updates = if self.config.enable_privacy {
             self.apply_differential_privacy(weight_updates)?
         } else {
             weight_updates
         };
-        
+
         let avg_loss = total_loss / self.config.local_epochs as f32;
-        let avg_accuracy = correct_predictions as f32 / (num_samples * self.config.local_epochs) as f32;
-        
+        let avg_accuracy =
+            correct_predictions as f32 / (num_samples * self.config.local_epochs) as f32;
+
         // Record training round
         self.history.push(LocalTrainingRound {
             round: self.history.len(),
@@ -115,7 +112,7 @@ impl FederatedClient {
             accuracy: avg_accuracy,
             samples_processed: num_samples,
         });
-        
+
         Ok(ClientUpdate {
             client_id: self.config.client_id,
             weight_updates,
@@ -134,42 +131,42 @@ impl FederatedClient {
     ) -> Result<(f32, f32)> {
         let num_samples = data.shape()[0];
         let num_batches = (num_samples + self.config.batch_size - 1) / self.config.batch_size;
-        
+
         let mut total_loss = 0.0;
         let mut correct = 0;
-        
+
         // Shuffle indices
         let mut indices: Vec<usize> = (0..num_samples).collect();
         use rand::prelude::*;
         indices.shuffle(&mut rand::rng());
-        
+
         for batch_idx in 0..num_batches {
             let start = batch_idx * self.config.batch_size;
             let end = ((batch_idx + 1) * self.config.batch_size).min(num_samples);
-            
+
             // Get batch
             let batch_indices = &indices[start..end];
             let batch_data = self.get_batch_data(data, batch_indices);
             let batch_labels = self.get_batch_labels(labels, batch_indices);
-            
+
             // Forward pass (simplified)
             let predictions = model.forward(&batch_data.into_dyn())?;
-            
+
             // Calculate loss (simplified cross-entropy)
             let batch_loss = self.calculate_loss(&predictions, &batch_labels)?;
             total_loss += batch_loss * batch_indices.len() as f32;
-            
+
             // Calculate accuracy
             let batch_correct = self.calculate_correct_predictions(&predictions, &batch_labels)?;
             correct += batch_correct;
-            
+
             // Backward pass would go here in a real implementation
             // For now, we simulate training progress
         }
-        
+
         let avg_loss = total_loss / num_samples as f32;
         let accuracy = correct as f32 / num_samples as f32;
-        
+
         Ok((avg_loss, accuracy))
     }
 
@@ -178,11 +175,11 @@ impl FederatedClient {
         let batch_size = indices.len();
         let feature_dim = data.shape()[1];
         let mut batch = Array2::zeros((batch_size, feature_dim));
-        
+
         for (i, &idx) in indices.iter().enumerate() {
             batch.row_mut(i).assign(&data.row(idx));
         }
-        
+
         batch
     }
 
@@ -190,11 +187,11 @@ impl FederatedClient {
     fn get_batch_labels(&self, labels: &ArrayView1<usize>, indices: &[usize]) -> Array1<usize> {
         let batch_size = indices.len();
         let mut batch = Array1::zeros(batch_size);
-        
+
         for (i, &idx) in indices.iter().enumerate() {
             batch[i] = labels[idx];
         }
-        
+
         batch
     }
 
@@ -203,42 +200,45 @@ impl FederatedClient {
         // Simplified cross-entropy loss
         let batch_size = labels.len();
         let mut loss = 0.0;
-        
+
         for i in 0..batch_size {
             let label = labels[i];
             let pred_slice = predictions.slice(s![i, ..]);
             let max_val = pred_slice.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
-            
+
             // Stable softmax
-            let exp_sum: f32 = pred_slice.iter()
-                .map(|&x| (x - max_val).exp())
-                .sum();
-            
+            let exp_sum: f32 = pred_slice.iter().map(|&x| (x - max_val).exp()).sum();
+
             let log_prob = pred_slice[label] - max_val - exp_sum.ln();
             loss -= log_prob;
         }
-        
+
         Ok(loss / batch_size as f32)
     }
 
     /// Calculate correct predictions
-    fn calculate_correct_predictions(&self, predictions: &ArrayD<f32>, labels: &Array1<usize>) -> Result<usize> {
+    fn calculate_correct_predictions(
+        &self,
+        predictions: &ArrayD<f32>,
+        labels: &Array1<usize>,
+    ) -> Result<usize> {
         let batch_size = labels.len();
         let mut correct = 0;
-        
+
         for i in 0..batch_size {
             let pred_slice = predictions.slice(s![i, ..]);
-            let predicted_class = pred_slice.iter()
+            let predicted_class = pred_slice
+                .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                 .map(|(idx, _)| idx)
                 .unwrap_or(0);
-            
+
             if predicted_class == labels[i] {
                 correct += 1;
             }
         }
-        
+
         Ok(correct)
     }
 
@@ -258,18 +258,21 @@ impl FederatedClient {
         // Simplified implementation
         // Return difference between local and global weights
         let mut updates = Vec::new();
-        
+
         for (i, global_w) in global_weights.iter().enumerate() {
             // In practice, would get actual local weights
             let local_w = global_w + 0.01; // Simulated update
             updates.push(local_w - global_w);
         }
-        
+
         Ok(updates)
     }
 
     /// Apply differential privacy to weight updates
-    fn apply_differential_privacy(&mut self, mut updates: Vec<Array2<f32>>) -> Result<Vec<Array2<f32>>> {
+    fn apply_differential_privacy(
+        &mut self,
+        mut updates: Vec<Array2<f32>>,
+    ) -> Result<Vec<Array2<f32>>> {
         if let Some(ref mut accountant) = self.privacy_accountant {
             // Clip gradients
             let clip_threshold = 1.0;
@@ -279,46 +282,44 @@ impl FederatedClient {
                     *update *= clip_threshold / norm;
                 }
             }
-            
+
             // Add Gaussian noise
-            use rand_distr::{Normal, Distribution};
-            let noise_scale = clip_threshold * (2.0 * (1.0 / accountant.delta).ln()).sqrt() 
-                             / accountant.max_epsilon;
+            use rand_distr::{Distribution, Normal};
+            let noise_scale = clip_threshold * (2.0 * (1.0 / accountant.delta).ln()).sqrt()
+                / accountant.max_epsilon;
             let noise_dist = Normal::new(0.0, noise_scale).unwrap();
             let mut rng = rand::rng();
-            
+
             for update in &mut updates {
                 for elem in update.iter_mut() {
                     *elem += noise_dist.sample(&mut rng);
                 }
             }
-            
+
             // Update privacy budget
             let epsilon_per_step = accountant.max_epsilon / 100.0; // Simplified
             accountant.epsilon_spent += epsilon_per_step;
         }
-        
+
         Ok(updates)
     }
 
     /// Get client statistics
     pub fn get_statistics(&self) -> ClientStatistics {
-        let total_samples: usize = self.history.iter()
-            .map(|r| r.samples_processed)
-            .sum();
-        
+        let total_samples: usize = self.history.iter().map(|r| r.samples_processed).sum();
+
         let avg_loss = if self.history.is_empty() {
             0.0
         } else {
             self.history.iter().map(|r| r.loss).sum::<f32>() / self.history.len() as f32
         };
-        
+
         let avg_accuracy = if self.history.is_empty() {
             0.0
         } else {
             self.history.iter().map(|r| r.accuracy).sum::<f32>() / self.history.len() as f32
         };
-        
+
         ClientStatistics {
             client_id: self.config.client_id,
             rounds_participated: self.history.len(),
@@ -355,7 +356,7 @@ mod tests {
             enable_privacy: false,
             privacy_budget: None,
         };
-        
+
         let client = FederatedClient::new(config).unwrap();
         assert_eq!(client.config.client_id, 0);
     }
@@ -370,19 +371,20 @@ mod tests {
             enable_privacy: false,
             privacy_budget: None,
         };
-        
+
         let client = FederatedClient::new(config).unwrap();
-        
-        let data = Array2::from_shape_vec((4, 3), vec![
-            1.0, 2.0, 3.0,
-            4.0, 5.0, 6.0,
-            7.0, 8.0, 9.0,
-            10.0, 11.0, 12.0,
-        ]).unwrap();
-        
+
+        let data = Array2::from_shape_vec(
+            (4, 3),
+            vec![
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
+            ],
+        )
+        .unwrap();
+
         let indices = vec![1, 3];
         let batch = client.get_batch_data(&data.view(), &indices);
-        
+
         assert_eq!(batch.shape(), &[2, 3]);
         assert_eq!(batch[[0, 0]], 4.0);
         assert_eq!(batch[[1, 0]], 10.0);

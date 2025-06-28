@@ -3,10 +3,10 @@
 //! Dual numbers are the foundation of forward-mode automatic differentiation.
 //! A dual number has the form a + b*ε where ε² = 0.
 
-use std::ops::{Add, Sub, Mul, Div, Neg};
-use std::fmt;
 use crate::common::IntegrateFloat;
 use ndarray::{Array1, ArrayView1};
+use std::fmt;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Dual number for forward-mode automatic differentiation
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -25,7 +25,10 @@ impl<F: IntegrateFloat> Dual<F> {
 
     /// Create a constant dual number (zero derivative)
     pub fn constant(val: F) -> Self {
-        Dual { val, der: F::zero() }
+        Dual {
+            val,
+            der: F::zero(),
+        }
     }
 
     /// Create a variable dual number (unit derivative)
@@ -337,10 +340,10 @@ impl<F: IntegrateFloat> DualVector<F> {
     pub fn from_vector(values: ArrayView1<F>, active_var: usize) -> Self {
         let n = values.len();
         let mut jacobian = Array1::from_elem(n, Array1::zeros(n));
-        
+
         // Set the derivative of the active variable to 1
         jacobian[active_var][active_var] = F::one();
-        
+
         DualVector {
             values: values.to_owned(),
             jacobian,
@@ -378,17 +381,17 @@ mod tests {
     fn test_dual_arithmetic() {
         let x = Dual::new(2.0, 1.0);
         let y = Dual::new(3.0, 0.0);
-        
+
         // Test addition
         let sum = x + y;
         assert_eq!(sum.val, 5.0);
         assert_eq!(sum.der, 1.0);
-        
+
         // Test multiplication
         let prod = x * y;
         assert_eq!(prod.val, 6.0);
         assert_eq!(prod.der, 3.0); // d/dx(x*3) = 3
-        
+
         // Test chain rule: d/dx(x^2) = 2x
         let square = x * x;
         assert_eq!(square.val, 4.0);
@@ -398,16 +401,16 @@ mod tests {
     #[test]
     fn test_dual_functions() {
         let x = Dual::variable(0.0);
-        
+
         // Test sin/cos derivatives
         let sin_x = x.sin();
         assert!((sin_x.val - 0.0).abs() < 1e-10);
         assert!((sin_x.der - 1.0).abs() < 1e-10); // cos(0) = 1
-        
+
         let cos_x = x.cos();
         assert!((cos_x.val - 1.0).abs() < 1e-10);
         assert!((cos_x.der - 0.0).abs() < 1e-10); // -sin(0) = 0
-        
+
         // Test exp derivative
         let exp_x = x.exp();
         assert!((exp_x.val - 1.0).abs() < 1e-10);

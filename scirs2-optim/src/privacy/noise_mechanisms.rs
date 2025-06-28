@@ -4,10 +4,10 @@
 //! including Gaussian, Laplace, Exponential, and advanced mechanisms like
 //! tree aggregation and truncated noise.
 
-use ndarray::{Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray_rand::rand_distr::{Distribution, Normal};
 use num_traits::Float;
 use rand::Rng;
-use rand_distr::{Distribution, Normal, Laplace, Exponential, Gamma};
 use std::marker::PhantomData;
 
 use crate::error::OptimizerError;
@@ -25,13 +25,13 @@ pub trait NoiseMechanism<T: Float> {
     where
         S: DataMut<Elem = T>,
         D: Dimension;
-    
+
     /// Get the mechanism name
     fn name(&self) -> &'static str;
-    
+
     /// Check if mechanism supports (ε, δ)-DP
     fn supports_delta(&self) -> bool;
-    
+
     /// Get noise distribution parameters
     fn get_parameters(&self) -> NoiseParameters<T>;
 }
@@ -103,19 +103,19 @@ pub struct NoiseCalibrator<T: Float> {
     /// Target privacy parameters
     target_epsilon: T,
     target_delta: Option<T>,
-    
+
     /// Sensitivity bounds
     l2_sensitivity: T,
     l1_sensitivity: T,
     linf_sensitivity: T,
-    
+
     /// Mechanism selection strategy
     selection_strategy: MechanismSelectionStrategy,
-    
+
     /// Adaptive noise scaling
     adaptive_scaling: bool,
     scaling_factor: T,
-    
+
     _phantom: PhantomData<T>,
 }
 
@@ -124,16 +124,16 @@ pub struct NoiseCalibrator<T: Float> {
 pub enum MechanismSelectionStrategy {
     /// Always use Gaussian mechanism
     AlwaysGaussian,
-    
+
     /// Always use Laplace mechanism
     AlwaysLaplace,
-    
+
     /// Choose based on privacy parameters
     PrivacyOptimal,
-    
+
     /// Choose based on utility optimization
     UtilityOptimal,
-    
+
     /// Adaptive selection based on data characteristics
     Adaptive,
 }
@@ -149,19 +149,19 @@ where
             _phantom: PhantomData,
         }
     }
-    
+
     /// Compute noise scale for Gaussian mechanism
     pub fn compute_noise_scale(sensitivity: T, epsilon: T, delta: T) -> Result<T, OptimizerError> {
         if epsilon <= T::zero() || delta <= T::zero() || delta >= T::one() {
             return Err(OptimizerError::InvalidConfig(
-                "Invalid privacy parameters for Gaussian mechanism".to_string()
+                "Invalid privacy parameters for Gaussian mechanism".to_string(),
             ));
         }
-        
+
         // Standard Gaussian mechanism: σ = √(2 ln(1.25/δ)) * Δ / ε
         let ln_term = (T::one() + T::from(0.25).unwrap() / delta).ln();
         let sigma = (T::from(2.0).unwrap() * ln_term).sqrt() * sensitivity / epsilon;
-        
+
         Ok(sigma)
     }
 }
@@ -184,29 +184,29 @@ where
         let delta = delta.ok_or_else(|| {
             OptimizerError::InvalidConfig("Gaussian mechanism requires delta parameter".to_string())
         })?;
-        
+
         let sigma = Self::compute_noise_scale(sensitivity, epsilon, delta)?;
         let sigma_f64 = sigma.to_f64().unwrap_or(1.0);
-        
+
         let normal = Normal::new(0.0, sigma_f64)
             .map_err(|_| OptimizerError::InvalidConfig("Invalid noise parameters".to_string()))?;
-        
+
         data.mapv_inplace(|x| {
             let noise = T::from(normal.sample(&mut *self.rng)).unwrap();
             x + noise
         });
-        
+
         Ok(())
     }
-    
+
     fn name(&self) -> &'static str {
         "Gaussian"
     }
-    
+
     fn supports_delta(&self) -> bool {
         true
     }
-    
+
     fn get_parameters(&self) -> NoiseParameters<T> {
         NoiseParameters {
             mechanism_type: "Gaussian".to_string(),
@@ -231,15 +231,15 @@ where
             _phantom: PhantomData,
         }
     }
-    
+
     /// Compute noise scale for Laplace mechanism
     pub fn compute_noise_scale(sensitivity: T, epsilon: T) -> Result<T, OptimizerError> {
         if epsilon <= T::zero() {
             return Err(OptimizerError::InvalidConfig(
-                "Epsilon must be positive for Laplace mechanism".to_string()
+                "Epsilon must be positive for Laplace mechanism".to_string(),
             ));
         }
-        
+
         // Laplace mechanism: b = Δ / ε
         Ok(sensitivity / epsilon)
     }
@@ -262,26 +262,26 @@ where
     {
         let scale = Self::compute_noise_scale(sensitivity, epsilon)?;
         let scale_f64 = scale.to_f64().unwrap_or(1.0);
-        
+
         let laplace = Laplace::new(0.0, scale_f64)
             .map_err(|_| OptimizerError::InvalidConfig("Invalid noise parameters".to_string()))?;
-        
+
         data.mapv_inplace(|x| {
             let noise = T::from(laplace.sample(&mut *self.rng)).unwrap();
             x + noise
         });
-        
+
         Ok(())
     }
-    
+
     fn name(&self) -> &'static str {
         "Laplace"
     }
-    
+
     fn supports_delta(&self) -> bool {
         false
     }
-    
+
     fn get_parameters(&self) -> NoiseParameters<T> {
         NoiseParameters {
             mechanism_type: "Laplace".to_string(),
@@ -307,7 +307,7 @@ where
             _phantom: PhantomData,
         }
     }
-    
+
     /// Select output using exponential mechanism
     pub fn select_output(
         &mut self,
@@ -316,36 +316,40 @@ where
         epsilon: T,
     ) -> Result<T, OptimizerError> {
         if candidates.is_empty() {
-            return Err(OptimizerError::InvalidConfig("No candidates provided".to_string()));
+            return Err(OptimizerError::InvalidConfig(
+                "No candidates provided".to_string(),
+            ));
         }
-        
+
         // Compute quality scores
-        let scores: Vec<T> = candidates.iter()
+        let scores: Vec<T> = candidates
+            .iter()
             .map(|x| (self.quality_function)(x))
             .collect();
-        
+
         // Compute exponential weights
         let max_score = scores.iter().cloned().fold(T::neg_infinity(), T::max);
-        let weights: Vec<f64> = scores.iter()
+        let weights: Vec<f64> = scores
+            .iter()
             .map(|&score| {
                 let normalized_score = score - max_score;
                 let exponent = epsilon * normalized_score / (T::from(2.0).unwrap() * sensitivity);
                 exponent.to_f64().unwrap_or(0.0).exp()
             })
             .collect();
-        
+
         // Sample according to weights
         let total_weight: f64 = weights.iter().sum();
         let mut cumulative = 0.0;
         let random_val: f64 = self.rng.gen_range(0.0..total_weight);
-        
+
         for (i, &weight) in weights.iter().enumerate() {
             cumulative += weight;
             if random_val <= cumulative {
                 return Ok(candidates[i]);
             }
         }
-        
+
         // Fallback (should not happen)
         Ok(candidates[candidates.len() - 1])
     }
@@ -356,10 +360,7 @@ where
     T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
 {
     /// Create a new truncated noise mechanism
-    pub fn new(
-        base_mechanism: Box<dyn NoiseMechanism<T> + Send>,
-        truncation_bound: T,
-    ) -> Self {
+    pub fn new(base_mechanism: Box<dyn NoiseMechanism<T> + Send>, truncation_bound: T) -> Self {
         Self {
             base_mechanism,
             truncation_bound,
@@ -384,24 +385,23 @@ where
         D: Dimension,
     {
         // Apply base mechanism first
-        self.base_mechanism.add_noise(data, sensitivity, epsilon, delta)?;
-        
+        self.base_mechanism
+            .add_noise(data, sensitivity, epsilon, delta)?;
+
         // Truncate to bounds
-        data.mapv_inplace(|x| {
-            x.max(-self.truncation_bound).min(self.truncation_bound)
-        });
-        
+        data.mapv_inplace(|x| x.max(-self.truncation_bound).min(self.truncation_bound));
+
         Ok(())
     }
-    
+
     fn name(&self) -> &'static str {
         "Truncated"
     }
-    
+
     fn supports_delta(&self) -> bool {
         self.base_mechanism.supports_delta()
     }
-    
+
     fn get_parameters(&self) -> NoiseParameters<T> {
         let mut params = self.base_mechanism.get_parameters();
         params.mechanism_type = format!("Truncated_{}", params.mechanism_type);
@@ -414,17 +414,14 @@ where
     T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
 {
     /// Create a new tree aggregation mechanism
-    pub fn new(
-        tree_height: usize,
-        base_mechanism: Box<dyn NoiseMechanism<T> + Send>,
-    ) -> Self {
+    pub fn new(tree_height: usize, base_mechanism: Box<dyn NoiseMechanism<T> + Send>) -> Self {
         Self {
             tree_height,
             base_mechanism,
             _phantom: PhantomData,
         }
     }
-    
+
     /// Aggregate values using binary tree with noise
     pub fn aggregate_with_tree(
         &mut self,
@@ -436,28 +433,29 @@ where
         if values.is_empty() {
             return Ok(T::zero());
         }
-        
+
         let mut current_level = values.to_vec();
         let level_epsilon = epsilon / T::from(self.tree_height).unwrap();
-        
+
         // Aggregate level by level
         for _level in 0..self.tree_height {
             if current_level.len() <= 1 {
                 break;
             }
-            
+
             let mut next_level = Vec::new();
-            
+
             // Pair up values and add noise to sums
             for chunk in current_level.chunks(2) {
                 let mut sum = Array1::from_vec(vec![chunk.iter().cloned().sum()]);
-                self.base_mechanism.add_noise(&mut sum, sensitivity, level_epsilon, delta)?;
+                self.base_mechanism
+                    .add_noise(&mut sum, sensitivity, level_epsilon, delta)?;
                 next_level.push(sum[0]);
             }
-            
+
             current_level = next_level;
         }
-        
+
         Ok(current_level.into_iter().sum())
     }
 }
@@ -482,7 +480,7 @@ where
             _phantom: PhantomData,
         }
     }
-    
+
     /// Answer query if above threshold
     pub fn answer_query(
         &mut self,
@@ -494,20 +492,26 @@ where
         if self.queries_answered >= self.max_queries {
             return Ok(None);
         }
-        
+
         // Add noise to threshold
         let threshold_epsilon = epsilon * self.budget_fraction;
         let mut noisy_threshold = Array1::from_vec(vec![self.threshold]);
-        self.base_mechanism.add_noise(&mut noisy_threshold, sensitivity, threshold_epsilon, delta)?;
+        self.base_mechanism.add_noise(
+            &mut noisy_threshold,
+            sensitivity,
+            threshold_epsilon,
+            delta,
+        )?;
         let noisy_threshold = noisy_threshold[0];
-        
+
         // Check if query result exceeds noisy threshold
         if query_result > noisy_threshold {
             // Add noise to actual result
             let result_epsilon = epsilon * (T::one() - self.budget_fraction);
             let mut noisy_result = Array1::from_vec(vec![query_result]);
-            self.base_mechanism.add_noise(&mut noisy_result, sensitivity, result_epsilon, delta)?;
-            
+            self.base_mechanism
+                .add_noise(&mut noisy_result, sensitivity, result_epsilon, delta)?;
+
             self.queries_answered += 1;
             Ok(Some(noisy_result[0]))
         } else {
@@ -539,16 +543,12 @@ where
             _phantom: PhantomData,
         }
     }
-    
+
     /// Select optimal noise mechanism
     pub fn select_mechanism(&self) -> Box<dyn NoiseMechanism<T> + Send> {
         match self.selection_strategy {
-            MechanismSelectionStrategy::AlwaysGaussian => {
-                Box::new(GaussianMechanism::new())
-            }
-            MechanismSelectionStrategy::AlwaysLaplace => {
-                Box::new(LaplaceMechanism::new())
-            }
+            MechanismSelectionStrategy::AlwaysGaussian => Box::new(GaussianMechanism::new()),
+            MechanismSelectionStrategy::AlwaysLaplace => Box::new(LaplaceMechanism::new()),
             MechanismSelectionStrategy::PrivacyOptimal => {
                 if self.target_delta.is_some() {
                     Box::new(GaussianMechanism::new())
@@ -574,7 +574,7 @@ where
             }
         }
     }
-    
+
     /// Calibrate noise for optimal privacy-utility tradeoff
     pub fn calibrate_noise<S, D>(
         &mut self,
@@ -586,20 +586,25 @@ where
         D: Dimension,
     {
         let sensitivity = actual_sensitivity.unwrap_or(self.l2_sensitivity);
-        
+
         // Adaptive scaling based on data characteristics
         if self.adaptive_scaling {
             let data_scale = self.estimate_data_scale(data);
             self.scaling_factor = data_scale / sensitivity;
         }
-        
+
         let adjusted_sensitivity = sensitivity * self.scaling_factor;
         let mut mechanism = self.select_mechanism();
-        
+
         let start_time = std::time::Instant::now();
-        mechanism.add_noise(data, adjusted_sensitivity, self.target_epsilon, self.target_delta)?;
+        mechanism.add_noise(
+            data,
+            adjusted_sensitivity,
+            self.target_epsilon,
+            self.target_delta,
+        )?;
         let calibration_time = start_time.elapsed();
-        
+
         Ok(NoiseCalibrationResult {
             mechanism_used: mechanism.name().to_string(),
             noise_scale: adjusted_sensitivity / self.target_epsilon,
@@ -612,7 +617,7 @@ where
             },
         })
     }
-    
+
     fn estimate_data_scale<S, D>(&self, data: &ArrayBase<S, D>) -> T
     where
         S: Data<Elem = T>,
@@ -656,25 +661,25 @@ where
     T: Float + Default + Clone + rand_distr::uniform::SampleUniform,
 {
     let (rows, cols) = shape;
-    
+
     if correlation_matrix.nrows() != cols || correlation_matrix.ncols() != cols {
         return Err(OptimizerError::InvalidConfig(
-            "Correlation matrix dimensions mismatch".to_string()
+            "Correlation matrix dimensions mismatch".to_string(),
         ));
     }
-    
+
     let mut noise = Array2::zeros((rows, cols));
     let scale_f64 = scale.to_f64().unwrap_or(1.0);
     let normal = Normal::new(0.0, scale_f64)
         .map_err(|_| OptimizerError::InvalidConfig("Invalid noise scale".to_string()))?;
-    
+
     // Generate independent noise
     for i in 0..rows {
         for j in 0..cols {
             noise[[i, j]] = T::from(normal.sample(rng)).unwrap();
         }
     }
-    
+
     // Apply correlation (simplified - would use Cholesky decomposition in practice)
     for i in 0..rows {
         let row_slice = noise.slice(s![i, ..]);
@@ -683,7 +688,7 @@ where
             noise[[i, j]] = val;
         }
     }
-    
+
     Ok(noise)
 }
 
@@ -693,15 +698,19 @@ pub fn validate_privacy_parameters<T: Float>(
     delta: Option<T>,
 ) -> Result<(), OptimizerError> {
     if epsilon <= T::zero() {
-        return Err(OptimizerError::InvalidConfig("Epsilon must be positive".to_string()));
+        return Err(OptimizerError::InvalidConfig(
+            "Epsilon must be positive".to_string(),
+        ));
     }
-    
+
     if let Some(d) = delta {
         if d < T::zero() || d >= T::one() {
-            return Err(OptimizerError::InvalidConfig("Delta must be in [0, 1)".to_string()));
+            return Err(OptimizerError::InvalidConfig(
+                "Delta must be in [0, 1)".to_string(),
+            ));
         }
     }
-    
+
     Ok(())
 }
 
@@ -713,7 +722,7 @@ mod tests {
     fn test_gaussian_mechanism() {
         let mut mechanism = GaussianMechanism::<f64>::new();
         let mut data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        
+
         let result = mechanism.add_noise(&mut data, 1.0, 1.0, Some(1e-5));
         assert!(result.is_ok());
         assert_eq!(mechanism.name(), "Gaussian");
@@ -724,7 +733,7 @@ mod tests {
     fn test_laplace_mechanism() {
         let mut mechanism = LaplaceMechanism::<f64>::new();
         let mut data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        
+
         let result = mechanism.add_noise(&mut data, 1.0, 1.0, None);
         assert!(result.is_ok());
         assert_eq!(mechanism.name(), "Laplace");
@@ -736,7 +745,7 @@ mod tests {
         let gaussian_scale = GaussianMechanism::<f64>::compute_noise_scale(1.0, 1.0, 1e-5);
         assert!(gaussian_scale.is_ok());
         assert!(gaussian_scale.unwrap() > 0.0);
-        
+
         let laplace_scale = LaplaceMechanism::<f64>::compute_noise_scale(1.0, 1.0);
         assert!(laplace_scale.is_ok());
         assert_eq!(laplace_scale.unwrap(), 1.0);
@@ -747,7 +756,7 @@ mod tests {
         let base = Box::new(LaplaceMechanism::<f64>::new());
         let mut truncated = TruncatedNoiseMechanism::new(base, 5.0);
         let mut data = Array1::from_vec(vec![100.0]); // Large value
-        
+
         let result = truncated.add_noise(&mut data, 1.0, 0.1, None);
         assert!(result.is_ok());
         assert!(data[0].abs() <= 5.0); // Should be truncated
@@ -757,10 +766,10 @@ mod tests {
     fn test_exponential_mechanism() {
         let quality_fn = Box::new(|x: &f64| -*x); // Prefer smaller values
         let mut mechanism = ExponentialMechanism::new(quality_fn);
-        
+
         let candidates = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let result = mechanism.select_output(&candidates, 1.0, 1.0);
-        
+
         assert!(result.is_ok());
         assert!(candidates.contains(&result.unwrap()));
     }
@@ -773,7 +782,7 @@ mod tests {
             1.0,
             MechanismSelectionStrategy::PrivacyOptimal,
         );
-        
+
         let mechanism = calibrator.select_mechanism();
         assert_eq!(mechanism.name(), "Gaussian");
     }
@@ -782,12 +791,12 @@ mod tests {
     fn test_sparse_vector_mechanism() {
         let base = Box::new(LaplaceMechanism::<f64>::new());
         let mut svm = SparseVectorMechanism::new(5.0, 0.5, 3, base);
-        
+
         // Query above threshold
         let result1 = svm.answer_query(10.0, 1.0, 1.0, None);
         assert!(result1.is_ok());
         assert!(result1.unwrap().is_some());
-        
+
         // Query below threshold
         let result2 = svm.answer_query(1.0, 1.0, 1.0, None);
         assert!(result2.is_ok());

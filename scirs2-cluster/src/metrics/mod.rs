@@ -817,10 +817,7 @@ pub mod information_theory {
     /// # Returns
     ///
     /// The information-theoretic quality score (higher is better)
-    pub fn information_cluster_quality<F>(
-        data: ArrayView2<F>,
-        labels: ArrayView1<i32>,
-    ) -> Result<F>
+    pub fn information_cluster_quality<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
     where
         F: Float + FromPrimitive + Debug + PartialOrd + 'static,
     {
@@ -855,7 +852,13 @@ pub mod information_theory {
                 .rows()
                 .into_iter()
                 .zip(labels.iter())
-                .filter_map(|(row, &label)| if label == cluster_label { Some(row) } else { None })
+                .filter_map(|(row, &label)| {
+                    if label == cluster_label {
+                        Some(row)
+                    } else {
+                        None
+                    }
+                })
                 .collect();
 
             if cluster_data.len() > 1 {
@@ -891,7 +894,7 @@ pub mod information_theory {
 
         let n_samples = data.len();
         let n_features = data[0].len();
-        
+
         let mut entropy = F::zero();
 
         // For each feature, compute entropy based on value distribution
@@ -903,7 +906,7 @@ pub mod information_theory {
             let n_bins = (n_samples as f64).sqrt().ceil() as usize;
             let min_val = values[0];
             let max_val = values[n_samples - 1];
-            
+
             if max_val == min_val {
                 continue; // No entropy for constant features
             }
@@ -915,7 +918,10 @@ pub mod information_theory {
                 let bin_idx = if value == max_val {
                     n_bins - 1
                 } else {
-                    ((value - min_val) / bin_width).to_usize().unwrap_or(0).min(n_bins - 1)
+                    ((value - min_val) / bin_width)
+                        .to_usize()
+                        .unwrap_or(0)
+                        .min(n_bins - 1)
                 };
                 bin_counts[bin_idx] += 1;
             }
@@ -1022,7 +1028,7 @@ pub mod stability {
 
         let n_samples = data.shape()[0];
         let subsample_size = (n_samples as f64 * subsample_ratio) as usize;
-        
+
         if subsample_size < n_clusters {
             return Err(ClusteringError::InvalidInput(
                 "Subsample size must be at least as large as number of clusters".to_string(),
@@ -1047,8 +1053,17 @@ pub mod stability {
             // Perform clustering (using k-means as default)
             let max_iter = 100;
             let thresh = F::from(1e-6).unwrap();
-            
-            match kmeans2(bootstrap_data.view(), n_clusters, Some(max_iter), Some(thresh), Some(MinitMethod::PlusPlus), None, Some(true), None) {
+
+            match kmeans2(
+                bootstrap_data.view(),
+                n_clusters,
+                Some(max_iter),
+                Some(thresh),
+                Some(MinitMethod::PlusPlus),
+                None,
+                Some(true),
+                None,
+            ) {
                 Ok((_, labels)) => {
                     all_labels.push(labels);
                     sample_indices_list.push(indices);
@@ -1069,15 +1084,18 @@ pub mod stability {
         for i in 0..all_labels.len() {
             for j in (i + 1)..all_labels.len() {
                 // Find common samples between bootstrap iterations
-                let common_indices = find_common_indices(&sample_indices_list[i], &sample_indices_list[j]);
-                
+                let common_indices =
+                    find_common_indices(&sample_indices_list[i], &sample_indices_list[j]);
+
                 if common_indices.len() < n_clusters {
                     continue;
                 }
 
                 // Extract labels for common samples
-                let labels_i = extract_common_labels(&all_labels[i], &sample_indices_list[i], &common_indices);
-                let labels_j = extract_common_labels(&all_labels[j], &sample_indices_list[j], &common_indices);
+                let labels_i =
+                    extract_common_labels(&all_labels[i], &sample_indices_list[i], &common_indices);
+                let labels_j =
+                    extract_common_labels(&all_labels[j], &sample_indices_list[j], &common_indices);
 
                 // Compute agreement (using ARI)
                 if let Ok(ari) = adjusted_rand_index::<F>(
@@ -1094,7 +1112,7 @@ pub mod stability {
         }
 
         // Return mean stability score
-        let mean_stability = stability_scores.iter().fold(F::zero(), |acc, &x| acc + x) 
+        let mean_stability = stability_scores.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(stability_scores.len()).unwrap();
 
         Ok(mean_stability.max(F::zero()).min(F::one()))
@@ -1128,7 +1146,7 @@ pub mod stability {
         common_indices: &[usize],
     ) -> Vec<i32> {
         let mut common_labels = Vec::new();
-        
+
         for &common_idx in common_indices {
             if let Some(pos) = sample_indices.iter().position(|&x| x == common_idx) {
                 if pos < labels.len() {
@@ -1238,7 +1256,7 @@ pub mod advanced {
 
         // Compute minimum inter-cluster distance
         let mut min_inter_cluster = F::infinity();
-        
+
         for i in 0..n_samples {
             for j in (i + 1)..n_samples {
                 if labels[i] >= 0 && labels[j] >= 0 && labels[i] != labels[j] {
@@ -1252,12 +1270,18 @@ pub mod advanced {
 
         // Compute maximum intra-cluster distance
         let mut max_intra_cluster = F::zero();
-        
+
         for &cluster_label in &unique_labels {
             let cluster_indices: Vec<usize> = labels
                 .iter()
                 .enumerate()
-                .filter_map(|(i, &label)| if label == cluster_label { Some(i) } else { None })
+                .filter_map(|(i, &label)| {
+                    if label == cluster_label {
+                        Some(i)
+                    } else {
+                        None
+                    }
+                })
                 .collect();
 
             for i in 0..cluster_indices.len() {
@@ -1337,23 +1361,31 @@ pub mod advanced {
                 .rows()
                 .into_iter()
                 .zip(labels.iter())
-                .filter_map(|(row, &label)| if label == cluster_label { Some(row) } else { None })
+                .filter_map(|(row, &label)| {
+                    if label == cluster_label {
+                        Some(row)
+                    } else {
+                        None
+                    }
+                })
                 .collect();
 
             if cluster_data.len() > 1 {
                 // Compute cluster variance
                 let n_cluster = cluster_data.len() as f64;
                 let mean = compute_cluster_mean(&cluster_data);
-                
+
                 let mut cluster_variance = 0.0;
                 for row in &cluster_data {
                     let diff = row.to_owned() - &mean;
                     cluster_variance += diff.dot(&diff).to_f64().unwrap();
                 }
                 cluster_variance /= n_cluster;
-                
+
                 if cluster_variance > 0.0 {
-                    log_likelihood -= n_cluster * (cluster_variance.ln() + n_features * (2.0 * std::f64::consts::PI).ln()) / 2.0;
+                    log_likelihood -= n_cluster
+                        * (cluster_variance.ln() + n_features * (2.0 * std::f64::consts::PI).ln())
+                        / 2.0;
                     total_variance += cluster_variance;
                 }
             }
@@ -1379,11 +1411,11 @@ pub mod advanced {
 
         let n_features = cluster_data[0].len();
         let mut mean = ndarray::Array1::zeros(n_features);
-        
+
         for row in cluster_data {
             mean = mean + row;
         }
-        
+
         mean / F::from(cluster_data.len()).unwrap()
     }
 }
@@ -1391,7 +1423,7 @@ pub mod advanced {
 /// Ensemble validation methods for clustering evaluation
 pub mod ensemble {
     use super::*;
-    use crate::vq::{kmeans2, MinitMethod, euclidean_distance};
+    use crate::vq::{euclidean_distance, kmeans2, MinitMethod};
     use rand::Rng;
     use std::collections::HashMap;
 
@@ -1431,8 +1463,17 @@ pub mod ensemble {
             // Use different random seeds for initialization
             let max_iter = 100;
             let thresh = F::from(1e-6).unwrap();
-            
-            match kmeans2(data, n_clusters, Some(max_iter), Some(thresh), Some(MinitMethod::PlusPlus), None, Some(true), Some(seed as u64)) {
+
+            match kmeans2(
+                data,
+                n_clusters,
+                Some(max_iter),
+                Some(thresh),
+                Some(MinitMethod::PlusPlus),
+                None,
+                Some(true),
+                Some(seed as u64),
+            ) {
                 Ok((_, labels)) => {
                     // Convert to i32 for consistency with other functions
                     let labels_i32: Vec<i32> = labels.iter().map(|&x| x as i32).collect();
@@ -1455,10 +1496,9 @@ pub mod ensemble {
         let mut agreements = Vec::new();
         for i in 0..all_labels.len() {
             for j in (i + 1)..all_labels.len() {
-                if let Ok(ari) = adjusted_rand_index::<F>(
-                    all_labels[i].view(),
-                    all_labels[j].view(),
-                ) {
+                if let Ok(ari) =
+                    adjusted_rand_index::<F>(all_labels[i].view(), all_labels[j].view())
+                {
                     agreements.push(ari);
                 }
             }
@@ -1469,7 +1509,7 @@ pub mod ensemble {
         }
 
         // Return mean agreement
-        let mean_agreement = agreements.iter().fold(F::zero(), |acc, &x| acc + x) 
+        let mean_agreement = agreements.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(agreements.len()).unwrap();
 
         Ok(mean_agreement.max(F::zero()).min(F::one()))
@@ -1488,10 +1528,7 @@ pub mod ensemble {
     /// # Returns
     ///
     /// Composite score combining multiple metrics
-    pub fn multi_criterion_validation<F>(
-        data: ArrayView2<F>,
-        labels: ArrayView1<i32>,
-    ) -> Result<F>
+    pub fn multi_criterion_validation<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
     where
         F: Float + FromPrimitive + Debug + PartialOrd + 'static,
     {
@@ -1576,15 +1613,24 @@ pub mod ensemble {
             // Perform clustering on training data
             let max_iter = 100;
             let thresh = F::from(1e-6).unwrap();
-            
-            match kmeans2(train_data.view(), n_clusters, Some(max_iter), Some(thresh), Some(MinitMethod::PlusPlus), None, Some(true), None) {
+
+            match kmeans2(
+                train_data.view(),
+                n_clusters,
+                Some(max_iter),
+                Some(thresh),
+                Some(MinitMethod::PlusPlus),
+                None,
+                Some(true),
+                None,
+            ) {
                 Ok((centers, _)) => {
                     // Predict labels for test fold
                     let mut test_labels = Vec::new();
                     for i in start_idx..end_idx {
                         let mut min_dist = F::infinity();
                         let mut closest_cluster = 0;
-                        
+
                         for (cluster_idx, center_row) in centers.rows().into_iter().enumerate() {
                             let dist = euclidean_distance(data.row(i), center_row);
                             if dist < min_dist {
@@ -1601,7 +1647,8 @@ pub mod ensemble {
                     let test_labels_array = Array1::from_vec(test_labels);
 
                     // Compute silhouette score for test fold
-                    if let Ok(score) = silhouette_score(test_data.view(), test_labels_array.view()) {
+                    if let Ok(score) = silhouette_score(test_data.view(), test_labels_array.view())
+                    {
                         cv_scores.push(score);
                     }
                 }
@@ -1614,8 +1661,8 @@ pub mod ensemble {
         }
 
         // Return mean cross-validation score
-        let mean_score = cv_scores.iter().fold(F::zero(), |acc, &x| acc + x) 
-            / F::from(cv_scores.len()).unwrap();
+        let mean_score =
+            cv_scores.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(cv_scores.len()).unwrap();
 
         Ok(mean_score)
     }
@@ -1647,8 +1694,17 @@ pub mod ensemble {
         // Perform standard clustering
         let max_iter = 100;
         let thresh = F::from(1e-6).unwrap();
-        
-        let (_, labels) = kmeans2(data, n_clusters, Some(max_iter), Some(thresh), Some(MinitMethod::PlusPlus), None, Some(true), None)?;
+
+        let (_, labels) = kmeans2(
+            data,
+            n_clusters,
+            Some(max_iter),
+            Some(thresh),
+            Some(MinitMethod::PlusPlus),
+            None,
+            Some(true),
+            None,
+        )?;
         let labels_i32: Vec<i32> = labels.iter().map(|&x| x as i32).collect();
         let labels_array = Array1::from_vec(labels_i32);
 
@@ -1656,23 +1712,29 @@ pub mod ensemble {
         let multi_criterion = multi_criterion_validation(data, labels_array.view())?;
 
         // 2. Stability analysis
-        let stability = super::stability::cluster_stability_bootstrap(
-            data, n_clusters, n_bootstrap, 0.8
-        ).unwrap_or(F::zero());
+        let stability =
+            super::stability::cluster_stability_bootstrap(data, n_clusters, n_bootstrap, 0.8)
+                .unwrap_or(F::zero());
 
         // 3. Consensus clustering
-        let consensus = consensus_clustering_score(data, n_clusters, n_consensus)
-            .unwrap_or(F::zero());
+        let consensus =
+            consensus_clustering_score(data, n_clusters, n_consensus).unwrap_or(F::zero());
 
         // 4. Cross-validation score
-        let cv_score = cross_validation_score(data, n_clusters, 5)
-            .unwrap_or(F::zero());
+        let cv_score = cross_validation_score(data, n_clusters, 5).unwrap_or(F::zero());
 
         // Combine all scores with weights
-        let weights = [F::from(0.3).unwrap(), F::from(0.3).unwrap(), F::from(0.2).unwrap(), F::from(0.2).unwrap()];
+        let weights = [
+            F::from(0.3).unwrap(),
+            F::from(0.3).unwrap(),
+            F::from(0.2).unwrap(),
+            F::from(0.2).unwrap(),
+        ];
         let scores = [multi_criterion, stability, consensus, cv_score];
 
-        let robust_score = weights.iter().zip(scores.iter())
+        let robust_score = weights
+            .iter()
+            .zip(scores.iter())
             .map(|(&w, &s)| w * s)
             .fold(F::zero(), |acc, x| acc + x);
 
@@ -1721,7 +1783,7 @@ pub mod ensemble {
             // Create bootstrap sample
             let mut indices: Vec<usize> = (0..n_samples).collect();
             indices.shuffle(&mut rng);
-            
+
             // Sample with replacement
             let bootstrap_indices: Vec<usize> = (0..n_samples)
                 .map(|_| indices[rng.gen_range(0..n_samples)])
@@ -1729,13 +1791,13 @@ pub mod ensemble {
 
             // Extract bootstrap sample
             let bootstrap_data = data.select(ndarray::Axis(0), &bootstrap_indices);
-            let bootstrap_labels: Vec<i32> = bootstrap_indices.iter()
-                .map(|&i| labels[i])
-                .collect();
+            let bootstrap_labels: Vec<i32> = bootstrap_indices.iter().map(|&i| labels[i]).collect();
             let bootstrap_labels_array = Array1::from_vec(bootstrap_labels);
 
             // Compute metric (using silhouette score as example)
-            if let Ok(score) = silhouette_score(bootstrap_data.view(), bootstrap_labels_array.view()) {
+            if let Ok(score) =
+                silhouette_score(bootstrap_data.view(), bootstrap_labels_array.view())
+            {
                 bootstrap_scores.push(score);
             }
         }
@@ -1761,7 +1823,7 @@ pub mod ensemble {
         let upper_bound = bootstrap_scores[upper_idx.min(bootstrap_scores.len() - 1)];
 
         // Calculate mean score
-        let mean_score = bootstrap_scores.iter().fold(F::zero(), |acc, &x| acc + x) 
+        let mean_score = bootstrap_scores.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(bootstrap_scores.len()).unwrap();
 
         Ok((lower_bound, mean_score, upper_bound))

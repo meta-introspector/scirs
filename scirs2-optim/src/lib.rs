@@ -88,21 +88,21 @@ pub mod utils;
 pub mod visualization;
 
 // Re-exports for convenience
-pub use gradient_processing::*;
 #[cfg(feature = "gpu")]
 pub use gpu::{
-    adam_gpu::AdamGpu, 
-    adamw_gpu::AdamWGpu,
     adagrad_gpu::AdagradGpu,
-    lamb_gpu::LAMBGpu, 
-    memory_pool::{CudaMemoryPool, ThreadSafeMemoryPool, MemoryPoolConfig, MemoryStats},
-    mixed_precision::{MixedPrecisionConfig, MixedPrecisionOptimizer, DynamicLossScaler},
+    adam_gpu::AdamGpu,
+    adamw_gpu::AdamWGpu,
+    lamb_gpu::LAMBGpu,
+    memory_pool::{CudaMemoryPool, MemoryPoolConfig, MemoryStats, ThreadSafeMemoryPool},
+    mixed_precision::{DynamicLossScaler, MixedPrecisionConfig, MixedPrecisionOptimizer},
     multi_gpu::{MultiGpuConfig, MultiGpuSetup, MultiGpuSync, SyncStrategy},
     rmsprop_gpu::RMSpropGpu,
     rocm_backend::{RocmBackend, RocmConfig},
     sgd_gpu::SGDGpu,
-    GpuOptimizer, GpuOptimizerConfig, GpuOptimizerError
+    GpuOptimizer, GpuOptimizerConfig, GpuOptimizerError,
 };
+pub use gradient_processing::*;
 #[cfg(feature = "metrics_integration")]
 pub use metrics::*;
 pub use optimizer_composition::*;
@@ -175,24 +175,24 @@ pub use privacy::{
     MomentsAccountant, NoiseMechanism, PrivacyBudget, PrivacyValidation,
 };
 pub use second_order::{HessianInfo, Newton, SecondOrderOptimizer, LBFGS as SecondOrderLBFGS};
+pub use self_tuning::{
+    OptimizerInfo, OptimizerTrait, PerformanceStats, SelfTuningConfig, SelfTuningOptimizer,
+    SelfTuningStatistics, TargetMetric,
+};
 pub use streaming::{
-    LearningRateAdaptation, StreamingConfig, StreamingDataPoint, StreamingHealthStatus,
-    StreamingMetrics, StreamingOptimizer,
+    LearningRateAdaptation as StreamingLearningRateAdaptation, StreamingConfig, StreamingDataPoint,
+    StreamingHealthStatus, StreamingMetrics, StreamingOptimizer,
 };
 pub use tpu::{
     PodTopology, TPUConfig, TPUMemoryOptimization, TPUOptimizer, TPUPerformanceMetrics,
-    TPUTopologyInfo, TPUVersion, XLAOptimizationLevel,
+    TPUTopologyInfo, TPUVersion as TPUVersionEnum, XLAOptimizationLevel,
 };
 pub use training_stabilization::{AveragingMethod, ModelEnsemble, PolyakAverager, WeightAverager};
 pub use unified_api::{
     OptimizerConfig, OptimizerFactory, Parameter, TrainingLoop, UnifiedAdam, UnifiedOptimizer,
     UnifiedSGD,
 };
-pub use self_tuning::{
-    SelfTuningConfig, SelfTuningOptimizer, SelfTuningStatistics, OptimizerInfo, 
-    PerformanceStats, TargetMetric, OptimizerTrait,
-};
 pub use visualization::{
-    OptimizationVisualizer, VisualizationConfig, OptimizationMetric, OptimizerComparison,
-    MemoryStats, ConvergenceInfo, ColorScheme, PlotType, DataSeries,
+    ColorScheme, ConvergenceInfo, DataSeries, MemoryStats as VisualizationMemoryStats,
+    OptimizationMetric, OptimizationVisualizer, OptimizerComparison, PlotType, VisualizationConfig,
 };

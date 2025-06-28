@@ -1,9 +1,9 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use std::hint::black_box;
 use ndarray::{Array2, ShapeBuilder};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
 use scirs2_linalg::prelude::*;
+use std::hint::black_box;
 
 fn bench_matmul_optimizations(c: &mut Criterion) {
     let sizes = [64, 128, 256, 512, 1024];

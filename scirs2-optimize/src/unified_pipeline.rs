@@ -3,16 +3,23 @@
 //! This module provides a high-level interface that integrates distributed optimization,
 //! self-tuning, GPU acceleration, and visualization into a single cohesive pipeline.
 
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, ArrayView1};
-use scirs2_core::error::{ScirsError, ScirsResult};
 use std::path::Path;
 use std::sync::Arc;
 
 use crate::distributed::{DistributedConfig, DistributedOptimizationContext, MPIInterface};
-use crate::self_tuning::{SelfTuningOptimizer, SelfTuningConfig, TunableParameter, ParameterValue, AdaptationStrategy};
-use crate::gpu::{GpuOptimizationConfig, GpuOptimizationContext, acceleration::{AccelerationManager, AccelerationConfig}};
-use crate::visualization::{OptimizationVisualizer, VisualizationConfig, tracking::TrajectoryTracker};
+use crate::gpu::{
+    acceleration::{AccelerationConfig, AccelerationManager},
+    GpuOptimizationConfig, GpuOptimizationContext,
+};
 use crate::result::OptimizeResults;
+use crate::self_tuning::{
+    AdaptationStrategy, ParameterValue, SelfTuningConfig, SelfTuningOptimizer, TunableParameter,
+};
+use crate::visualization::{
+    tracking::TrajectoryTracker, OptimizationVisualizer, VisualizationConfig,
+};
 
 /// Comprehensive optimization pipeline configuration
 #[derive(Debug, Clone)]
@@ -21,27 +28,27 @@ pub struct UnifiedOptimizationConfig {
     pub use_distributed: bool,
     /// Distributed optimization settings
     pub distributed_config: Option<DistributedConfig>,
-    
+
     /// Enable self-tuning parameter adaptation
     pub use_self_tuning: bool,
     /// Self-tuning configuration
     pub self_tuning_config: Option<SelfTuningConfig>,
-    
+
     /// Enable GPU acceleration
     pub use_gpu: bool,
     /// GPU acceleration settings
     pub gpu_config: Option<GpuOptimizationConfig>,
     /// GPU acceleration configuration
     pub acceleration_config: Option<AccelerationConfig>,
-    
+
     /// Enable optimization visualization
     pub enable_visualization: bool,
     /// Visualization settings
     pub visualization_config: Option<VisualizationConfig>,
-    
+
     /// Output directory for results and visualization
     pub output_directory: Option<String>,
-    
+
     /// Maximum number of iterations
     pub max_iterations: usize,
     /// Function tolerance
@@ -73,7 +80,7 @@ impl Default for UnifiedOptimizationConfig {
 /// Unified optimization pipeline
 pub struct UnifiedOptimizer<M: MPIInterface> {
     config: UnifiedOptimizationConfig,
-    
+
     // Optional components based on configuration
     distributed_context: Option<DistributedOptimizationContext<M>>,
     self_tuning_optimizer: Option<SelfTuningOptimizer>,
@@ -88,10 +95,14 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
     pub fn new(config: UnifiedOptimizationConfig, mpi: Option<M>) -> ScirsResult<Self> {
         let distributed_context = if config.use_distributed {
             if let (Some(mpi_interface), Some(dist_config)) = (mpi, &config.distributed_config) {
-                Some(DistributedOptimizationContext::new(mpi_interface, dist_config.clone()))
+                Some(DistributedOptimizationContext::new(
+                    mpi_interface,
+                    dist_config.clone(),
+                ))
             } else {
                 return Err(ScirsError::InvalidInput(
-                    "MPI interface and distributed config required for distributed optimization".to_string()
+                    "MPI interface and distributed config required for distributed optimization"
+                        .to_string(),
                 ));
             }
         } else {
@@ -99,7 +110,9 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         };
 
         let self_tuning_optimizer = if config.use_self_tuning {
-            let tuning_config = config.self_tuning_config.clone()
+            let tuning_config = config
+                .self_tuning_config
+                .clone()
                 .unwrap_or_else(SelfTuningConfig::default);
             Some(SelfTuningOptimizer::new(tuning_config))
         } else {
@@ -107,21 +120,27 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         };
 
         let (gpu_context, acceleration_manager) = if config.use_gpu {
-            let gpu_config = config.gpu_config.clone()
+            let gpu_config = config
+                .gpu_config
+                .clone()
                 .unwrap_or_else(GpuOptimizationConfig::default);
             let gpu_ctx = GpuOptimizationContext::new(gpu_config)?;
-            
-            let accel_config = config.acceleration_config.clone()
+
+            let accel_config = config
+                .acceleration_config
+                .clone()
                 .unwrap_or_else(AccelerationConfig::default);
             let accel_mgr = AccelerationManager::new(accel_config)?;
-            
+
             (Some(gpu_ctx), Some(accel_mgr))
         } else {
             (None, None)
         };
 
         let (visualizer, trajectory_tracker) = if config.enable_visualization {
-            let vis_config = config.visualization_config.clone()
+            let vis_config = config
+                .visualization_config
+                .clone()
                 .unwrap_or_else(VisualizationConfig::default);
             let vis = OptimizationVisualizer::with_config(vis_config);
             let tracker = TrajectoryTracker::new();
@@ -142,7 +161,11 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
     }
 
     /// Register tunable parameters for self-tuning optimization
-    pub fn register_tunable_parameter<T>(&mut self, name: &str, param: TunableParameter<T>) -> ScirsResult<()>
+    pub fn register_tunable_parameter<T>(
+        &mut self,
+        name: &str,
+        param: TunableParameter<T>,
+    ) -> ScirsResult<()>
     where
         T: Clone + PartialOrd + std::fmt::Debug + 'static,
     {
@@ -200,19 +223,15 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
 
             // Self-tuning parameter adaptation
             if let Some(ref mut tuner) = self.self_tuning_optimizer {
-                let improvement = if iteration > 1 { 
+                let improvement = if iteration > 1 {
                     // This would be computed from previous function value
                     0.0 // Placeholder
-                } else { 
-                    0.0 
+                } else {
+                    0.0
                 };
-                
-                let params_changed = tuner.update_parameters(
-                    iteration,
-                    current_f,
-                    Some(grad_norm),
-                    improvement,
-                )?;
+
+                let params_changed =
+                    tuner.update_parameters(iteration, current_f, Some(grad_norm), improvement)?;
 
                 if params_changed {
                     // Update algorithm parameters based on self-tuning results
@@ -273,15 +292,20 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         };
 
         // Create visualization if enabled
-        let visualization_paths = if let (Some(ref visualizer), Some(ref tracker)) = 
-            (&self.visualizer, &self.trajectory_tracker) {
+        let visualization_paths = if let (Some(ref visualizer), Some(ref tracker)) =
+            (&self.visualizer, &self.trajectory_tracker)
+        {
             self.generate_visualization(visualizer, tracker.trajectory())?
         } else {
             Vec::new()
         };
 
         // Generate performance report
-        let performance_report = self.generate_performance_report(total_time, function_evaluations, gradient_evaluations)?;
+        let performance_report = self.generate_performance_report(
+            total_time,
+            function_evaluations,
+            gradient_evaluations,
+        )?;
 
         Ok(UnifiedOptimizationResults {
             base_result: OptimizeResults {
@@ -296,13 +320,20 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
             },
             visualization_paths,
             performance_report,
-            self_tuning_report: self.self_tuning_optimizer.as_ref().map(|t| t.generate_report()),
+            self_tuning_report: self
+                .self_tuning_optimizer
+                .as_ref()
+                .map(|t| t.generate_report()),
             distributed_stats: self.distributed_context.as_ref().map(|d| d.stats().clone()),
         })
     }
 
     /// Compute numerical gradient using finite differences
-    fn compute_numerical_gradient<F>(&self, function: &F, x: &Array1<f64>) -> ScirsResult<Array1<f64>>
+    fn compute_numerical_gradient<F>(
+        &self,
+        function: &F,
+        x: &Array1<f64>,
+    ) -> ScirsResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -323,7 +354,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
             let mut x_minus = x.clone();
             x_plus[i] += h;
             x_minus[i] -= h;
-            
+
             gradient[i] = (function(&x_plus.view()) - function(&x_minus.view())) / (2.0 * h);
         }
 
@@ -360,7 +391,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
     {
         // Distribute line search evaluation across processes
         let step_sizes = Array1::from(vec![0.001, 0.01, 0.1, 1.0, 10.0]);
-        
+
         // For simplicity, return a basic step size
         // In a full implementation, this would distribute evaluations
         self.standard_line_search(function, x, direction)
@@ -380,25 +411,25 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         let mut alpha = 1.0;
         let c1 = 1e-4;
         let rho = 0.5;
-        
+
         let f0 = function(&x.view());
         let grad_dot_dir = -direction.iter().map(|&d| d * d).sum::<f64>(); // Since direction = -gradient
-        
+
         for _ in 0..20 {
             let mut x_new = x.clone();
             for i in 0..x.len() {
                 x_new[i] += alpha * direction[i];
             }
-            
+
             let f_new = function(&x_new.view());
-            
+
             if f_new <= f0 + c1 * alpha * grad_dot_dir {
                 return Ok(alpha);
             }
-            
+
             alpha *= rho;
         }
-        
+
         Ok(alpha)
     }
 
@@ -421,7 +452,10 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
     }
 
     /// Apply tuned parameters from self-tuning optimizer
-    fn apply_tuned_parameters(&mut self, parameters: &std::collections::HashMap<String, ParameterValue>) -> ScirsResult<()> {
+    fn apply_tuned_parameters(
+        &mut self,
+        parameters: &std::collections::HashMap<String, ParameterValue>,
+    ) -> ScirsResult<()> {
         for (name, value) in parameters {
             match name.as_str() {
                 "learning_rate" | "step_size" => {
@@ -478,7 +512,12 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
 
             // Generate comprehensive report
             visualizer.create_optimization_report(trajectory, output_path)?;
-            paths.push(output_path.join("summary.html").to_string_lossy().to_string());
+            paths.push(
+                output_path
+                    .join("summary.html")
+                    .to_string_lossy()
+                    .to_string(),
+            );
         }
 
         Ok(paths)
@@ -497,10 +536,12 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         report.push_str(&format!("Total Time: {:.3}s\n", total_time));
         report.push_str(&format!("Function Evaluations: {}\n", function_evaluations));
         report.push_str(&format!("Gradient Evaluations: {}\n", gradient_evaluations));
-        
+
         if total_time > 0.0 {
-            report.push_str(&format!("Function Evaluations per Second: {:.2}\n", 
-                function_evaluations as f64 / total_time));
+            report.push_str(&format!(
+                "Function Evaluations per Second: {:.2}\n",
+                function_evaluations as f64 / total_time
+            ));
         }
 
         // Add distributed performance if available
@@ -567,8 +608,11 @@ impl UnifiedOptimizationResults {
         println!("Success: {}", self.success());
         println!("Final function value: {:.6e}", self.fun());
         println!("Iterations: {}", self.iterations());
-        println!("Function evaluations: {}", self.base_result.function_evaluations);
-        
+        println!(
+            "Function evaluations: {}",
+            self.base_result.function_evaluations
+        );
+
         if let Some(grad_evals) = self.base_result.gradient_evaluations {
             println!("Gradient evaluations: {}", grad_evals);
         }
@@ -724,9 +768,9 @@ mod tests {
     fn test_bounds_application() {
         // Test bounds constraint application
         let config = UnifiedOptimizationConfig::default();
-        let optimizer: Result<UnifiedOptimizer<crate::distributed::MockMPI>, _> = 
+        let optimizer: Result<UnifiedOptimizer<crate::distributed::MockMPI>, _> =
             UnifiedOptimizer::new(config, None);
-        
+
         // This would test the bounds application logic
         // Implementation depends on the specific test setup
     }
@@ -735,7 +779,7 @@ mod tests {
     fn test_rosenbrock_optimization() {
         // Test optimization on the Rosenbrock function
         let config = presets::interactive_config();
-        
+
         let rosenbrock = |x: &ArrayView1<f64>| -> f64 {
             let x0 = x[0];
             let x1 = x[1];
@@ -743,16 +787,15 @@ mod tests {
         };
 
         let initial_guess = array![-1.0, 1.0];
-        
+
         // Create optimizer without MPI for testing
-        let mut optimizer: UnifiedOptimizer<crate::distributed::MockMPI> = 
+        let mut optimizer: UnifiedOptimizer<crate::distributed::MockMPI> =
             UnifiedOptimizer::new(config, None).unwrap();
-        
+
         // Register tunable parameters
-        optimizer.register_tunable_parameter(
-            "step_size", 
-            TunableParameter::new(0.01, 0.001, 0.1)
-        ).unwrap();
+        optimizer
+            .register_tunable_parameter("step_size", TunableParameter::new(0.01, 0.001, 0.1))
+            .unwrap();
 
         // This would run the actual optimization in a full test
         // For now, just test that the setup works

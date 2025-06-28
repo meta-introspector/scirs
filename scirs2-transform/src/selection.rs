@@ -336,12 +336,10 @@ where
 
             // Find features to eliminate
             let n_to_remove = (self.step).min(remaining_features.len() - self.n_features_to_select);
-            
+
             // Get indices of features with lowest importance
             let mut indices: Vec<usize> = (0..importances.len()).collect();
-            indices.sort_by(|&i, &j| {
-                importances[i].partial_cmp(&importances[j]).unwrap()
-            });
+            indices.sort_by(|&i, &j| importances[i].partial_cmp(&importances[j]).unwrap());
 
             // Mark eliminated features with current rank
             for i in 0..n_to_remove {
@@ -351,9 +349,10 @@ where
             }
 
             // Remove eliminated features
-            let eliminated: std::collections::HashSet<usize> = 
+            let eliminated: std::collections::HashSet<usize> =
                 indices.iter().take(n_to_remove).cloned().collect();
-            let features_to_retain: Vec<usize> = remaining_features.iter()
+            let features_to_retain: Vec<usize> = remaining_features
+                .iter()
                 .filter(|&&idx| !eliminated.contains(&idx))
                 .cloned()
                 .collect();
@@ -368,7 +367,7 @@ where
         // Compute final scores for selected features
         let x_final = self.subset_features(x, &remaining_features);
         let final_scores = (self.importance_func)(&x_final, y)?;
-        
+
         let mut scores = Array1::zeros(n_features);
         for (i, &feature_idx) in remaining_features.iter().enumerate() {
             scores[feature_idx] = final_scores[i];
@@ -506,7 +505,7 @@ impl MutualInfoSelector {
         } else {
             // For discrete targets, use a simple grouping approach
             let mut groups = std::collections::HashMap::new();
-            
+
             for i in 0..n {
                 let key = y[i].round() as i64;
                 groups.entry(key).or_insert_with(Vec::new).push(x[i]);
@@ -534,7 +533,7 @@ impl MutualInfoSelector {
     /// Fit the selector
     pub fn fit(&mut self, x: &Array2<f64>, y: &Array1<f64>) -> Result<()> {
         let n_features = x.shape()[1];
-        
+
         if self.k > n_features {
             return Err(TransformError::InvalidInput(format!(
                 "k={} must be <= n_features={}",
@@ -544,7 +543,7 @@ impl MutualInfoSelector {
 
         // Compute mutual information for each feature
         let mut scores = Array1::zeros(n_features);
-        
+
         for j in 0..n_features {
             let feature = x.column(j).to_owned();
             scores[j] = self.estimate_mutual_info(&feature, y);
@@ -552,9 +551,7 @@ impl MutualInfoSelector {
 
         // Select top k features
         let mut indices: Vec<usize> = (0..n_features).collect();
-        indices.sort_by(|&i, &j| {
-            scores[j].partial_cmp(&scores[i]).unwrap()
-        });
+        indices.sort_by(|&i, &j| scores[j].partial_cmp(&scores[i]).unwrap());
 
         let selected_features = indices.into_iter().take(self.k).collect();
 
@@ -764,7 +761,7 @@ mod tests {
             let x2 = (i as f64 / n_samples as f64).sin();
             let x3 = rand::random::<f64>(); // Noise
             let x4 = 2.0 * x1; // Highly correlated with target
-            
+
             data_vec.extend_from_slice(&[x1, x2, x3, x4]);
             target_vec.push(3.0 * x1 + x4 + 0.1 * rand::random::<f64>());
         }
@@ -776,13 +773,13 @@ mod tests {
         let importance_func = |x: &Array2<f64>, y: &Array1<f64>| -> Result<Array1<f64>> {
             let n_features = x.shape()[1];
             let mut scores = Array1::zeros(n_features);
-            
+
             for j in 0..n_features {
                 let feature = x.column(j);
                 let corr = pearson_correlation(&feature.to_owned(), y);
                 scores[j] = corr.abs();
             }
-            
+
             Ok(scores)
         };
 
@@ -806,14 +803,14 @@ mod tests {
 
         for i in 0..n_samples {
             let t = i as f64 / n_samples as f64 * 2.0 * std::f64::consts::PI;
-            
+
             // Feature 0: Strongly related to target
             let x0 = t;
             // Feature 1: Noise
             let x1 = rand::random::<f64>();
             // Feature 2: Non-linearly related
             let x2 = t.sin();
-            
+
             x_data.extend_from_slice(&[x0, x1, x2]);
             y_data.push(t + 0.5 * t.sin());
         }
@@ -825,7 +822,7 @@ mod tests {
         selector.fit(&x, &y).unwrap();
 
         let scores = selector.scores().unwrap();
-        
+
         // Feature 0 should have highest score (linear relationship)
         // Feature 2 should have second highest (non-linear relationship)
         // Feature 1 should have lowest score (noise)
@@ -839,22 +836,23 @@ mod tests {
         let x = Array::from_shape_vec(
             (6, 3),
             vec![
-                1.0, 0.1, 5.0,  // Class 0
-                1.1, 0.2, 5.1,  // Class 0
-                2.0, 0.1, 4.0,  // Class 1
-                2.1, 0.2, 4.1,  // Class 1
-                3.0, 0.1, 3.0,  // Class 2
-                3.1, 0.2, 3.1,  // Class 2
+                1.0, 0.1, 5.0, // Class 0
+                1.1, 0.2, 5.1, // Class 0
+                2.0, 0.1, 4.0, // Class 1
+                2.1, 0.2, 4.1, // Class 1
+                3.0, 0.1, 3.0, // Class 2
+                3.1, 0.2, 3.1, // Class 2
             ],
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         let y = Array::from_vec(vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]);
 
         let mut selector = MutualInfoSelector::new(2).with_discrete_target();
         let transformed = selector.fit_transform(&x, &y).unwrap();
 
         assert_eq!(transformed.shape(), &[6, 2]);
-        
+
         // Feature 1 (middle column) has low variance within groups, should be excluded
         let selected = selector.get_support().unwrap();
         assert!(!selected.contains(&1));
@@ -865,11 +863,11 @@ mod tests {
         let n = x.len() as f64;
         let x_mean = x.mean().unwrap_or(0.0);
         let y_mean = y.mean().unwrap_or(0.0);
-        
+
         let mut num = 0.0;
         let mut x_var = 0.0;
         let mut y_var = 0.0;
-        
+
         for i in 0..x.len() {
             let x_diff = x[i] - x_mean;
             let y_diff = y[i] - y_mean;
@@ -877,7 +875,7 @@ mod tests {
             x_var += x_diff * x_diff;
             y_var += y_diff * y_diff;
         }
-        
+
         if x_var * y_var > 0.0 {
             num / (x_var * y_var).sqrt()
         } else {

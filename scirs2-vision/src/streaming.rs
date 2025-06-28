@@ -48,7 +48,7 @@ pub struct FrameMetadata {
 pub trait ProcessingStage: Send + 'static {
     /// Process a single frame
     fn process(&mut self, frame: Frame) -> Result<Frame>;
-    
+
     /// Get stage name for monitoring
     fn name(&self) -> &str;
 }
@@ -92,25 +92,25 @@ impl StreamPipeline {
             metrics: Arc::new(Mutex::new(PipelineMetrics::default())),
         }
     }
-    
+
     /// Set buffer size for inter-stage communication
     pub fn with_buffer_size(mut self, size: usize) -> Self {
         self.buffer_size = size;
         self
     }
-    
+
     /// Set number of worker threads
     pub fn with_num_threads(mut self, threads: usize) -> Self {
         self.num_threads = threads;
         self
     }
-    
+
     /// Add a processing stage to the pipeline
     pub fn add_stage<S: ProcessingStage>(mut self, stage: S) -> Self {
         self.stages.push(Box::new(stage));
         self
     }
-    
+
     /// Process a stream of frames
     pub fn process_stream<I>(&mut self, input: I) -> StreamProcessor
     where
@@ -118,40 +118,42 @@ impl StreamPipeline {
     {
         let (tx, rx) = bounded(self.buffer_size);
         let metrics = Arc::clone(&self.metrics);
-        
+
         // Create pipeline stages with channels
         let mut channels = vec![rx];
-        
+
         for stage in self.stages.drain(..) {
             let (stage_tx, stage_rx) = bounded(self.buffer_size);
             channels.push(stage_rx);
-            
+
             let stage_metrics = Arc::clone(&metrics);
             let stage_name = stage.name().to_string();
             let prev_rx = channels[channels.len() - 2].clone();
-            
+
             // Spawn worker thread for this stage
             thread::spawn(move || {
                 let mut stage = stage;
                 while let Ok(frame) = prev_rx.recv() {
                     let start = Instant::now();
-                    
+
                     match stage.process(frame) {
                         Ok(processed) => {
                             let duration = start.elapsed();
-                            
+
                             // Update metrics
                             if let Ok(mut m) = stage_metrics.lock() {
                                 m.frames_processed += 1;
                                 m.avg_processing_time = Duration::from_secs_f64(
-                                    (m.avg_processing_time.as_secs_f64() * (m.frames_processed - 1) as f64
-                                        + duration.as_secs_f64()) / m.frames_processed as f64
+                                    (m.avg_processing_time.as_secs_f64()
+                                        * (m.frames_processed - 1) as f64
+                                        + duration.as_secs_f64())
+                                        / m.frames_processed as f64,
                                 );
                                 if duration > m.peak_processing_time {
                                     m.peak_processing_time = duration;
                                 }
                             }
-                            
+
                             if stage_tx.send(processed).is_err() {
                                 break;
                             }
@@ -166,9 +168,9 @@ impl StreamPipeline {
                 }
             });
         }
-        
+
         let output_rx = channels.pop().unwrap();
-        
+
         // Input thread
         thread::spawn(move || {
             for frame in input {
@@ -177,14 +179,14 @@ impl StreamPipeline {
                 }
             }
         });
-        
+
         // Return processor with output channel
         StreamProcessor {
             output: output_rx,
             metrics,
         }
     }
-    
+
     /// Get current pipeline metrics
     pub fn metrics(&self) -> PipelineMetrics {
         self.metrics.lock().unwrap().clone()
@@ -202,12 +204,12 @@ impl StreamProcessor {
     pub fn next(&self) -> Option<Frame> {
         self.output.recv().ok()
     }
-    
+
     /// Try to get the next frame without blocking
     pub fn try_next(&self) -> Option<Frame> {
         self.output.try_recv().ok()
     }
-    
+
     /// Get current metrics
     pub fn metrics(&self) -> PipelineMetrics {
         self.metrics.lock().unwrap().clone()
@@ -216,7 +218,7 @@ impl StreamProcessor {
 
 impl Iterator for StreamProcessor {
     type Item = Frame;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         self.output.recv().ok()
     }
@@ -235,28 +237,28 @@ impl ProcessingStage for GrayscaleStage {
                 // Y = 0.299*R + 0.587*G + 0.114*B
                 let (height, width) = frame.data.dim();
                 let mut grayscale = Array2::<f32>::zeros((height, width));
-                
+
                 // If we have 3 channels, the data should be in format (height, width*3)
                 // or we might need to reshape. For now, assume single channel passthrough
                 // In a real implementation, we'd handle multi-channel data properly
-                
+
                 // Since we're working with single-channel f32 arrays in the current
                 // implementation, we'll use a simple averaging approach
                 grayscale.assign(&frame.data);
-                
+
                 frame.data = grayscale;
-                
+
                 // Update metadata to reflect single channel
                 if let Some(ref mut meta) = frame.metadata {
                     meta.channels = 1;
                 }
             }
         }
-        
+
         // If already grayscale or no metadata, pass through
         Ok(frame)
     }
-    
+
     fn name(&self) -> &str {
         "Grayscale"
     }
@@ -280,7 +282,7 @@ impl ProcessingStage for BlurStage {
         frame.data = crate::simd_ops::simd_gaussian_blur(&frame.data.view(), self.sigma)?;
         Ok(frame)
     }
-    
+
     fn name(&self) -> &str {
         "GaussianBlur"
     }
@@ -306,7 +308,7 @@ impl ProcessingStage for EdgeDetectionStage {
         frame.data = magnitude;
         Ok(frame)
     }
-    
+
     fn name(&self) -> &str {
         "EdgeDetection"
     }
@@ -335,11 +337,11 @@ impl ProcessingStage for MotionDetectionStage {
             let diff = &frame.data - prev;
             frame.data = diff.mapv(|x| if x.abs() > self.threshold { 1.0 } else { 0.0 });
         }
-        
+
         self.previous_frame = Some(frame.data.clone());
         Ok(frame)
     }
-    
+
     fn name(&self) -> &str {
         "MotionDetection"
     }
@@ -354,13 +356,13 @@ pub enum VideoSource {
     /// Camera device
     Camera(u32),
     /// Dummy source for testing
-    Dummy { 
+    Dummy {
         /// Frame width in pixels
-        width: u32, 
+        width: u32,
         /// Frame height in pixels
-        height: u32, 
+        height: u32,
         /// Frames per second
-        fps: f32 
+        fps: f32,
     },
 }
 
@@ -382,15 +384,18 @@ impl VideoStreamReader {
                 // Read directory and get sorted list of image files
                 let mut files = Vec::new();
                 if path.is_dir() {
-                    for entry in std::fs::read_dir(path)
-                        .map_err(|e| crate::error::VisionError::Other(format!("Failed to read directory: {}", e)))?
-                    {
-                        let entry = entry.map_err(|e| crate::error::VisionError::Other(format!("Failed to read entry: {}", e)))?;
+                    for entry in std::fs::read_dir(path).map_err(|e| {
+                        crate::error::VisionError::Other(format!("Failed to read directory: {}", e))
+                    })? {
+                        let entry = entry.map_err(|e| {
+                            crate::error::VisionError::Other(format!("Failed to read entry: {}", e))
+                        })?;
                         let path = entry.path();
                         if path.is_file() {
                             if let Some(ext) = path.extension() {
                                 let ext_str = ext.to_string_lossy().to_lowercase();
-                                if ["jpg", "jpeg", "png", "bmp", "tiff"].contains(&ext_str.as_str()) {
+                                if ["jpg", "jpeg", "png", "bmp", "tiff"].contains(&ext_str.as_str())
+                                {
                                     files.push(path);
                                 }
                             }
@@ -398,16 +403,18 @@ impl VideoStreamReader {
                     }
                     files.sort();
                 }
-                
+
                 if files.is_empty() {
-                    return Err(crate::error::VisionError::Other("No image files found in directory".to_string()));
+                    return Err(crate::error::VisionError::Other(
+                        "No image files found in directory".to_string(),
+                    ));
                 }
-                
+
                 // Determine dimensions from first image (in real impl, would load and check)
                 Ok(Self {
                     source,
                     frame_count: 0,
-                    fps: 30.0, // Default FPS for image sequences
+                    fps: 30.0,  // Default FPS for image sequences
                     width: 640, // Default, would read from actual image
                     height: 480,
                     image_files: Some(files),
@@ -416,28 +423,27 @@ impl VideoStreamReader {
             VideoSource::VideoFile(ref _path) => {
                 // Would require video decoder integration (ffmpeg, gstreamer, etc.)
                 Err(crate::error::VisionError::Other(
-                    "Video file reading not yet implemented. Use image sequences instead.".to_string()
+                    "Video file reading not yet implemented. Use image sequences instead."
+                        .to_string(),
                 ))
             }
             VideoSource::Camera(_device_id) => {
                 // Would require camera API integration
                 Err(crate::error::VisionError::Other(
-                    "Camera reading not yet implemented. Use image sequences instead.".to_string()
+                    "Camera reading not yet implemented. Use image sequences instead.".to_string(),
                 ))
             }
-            VideoSource::Dummy { width, height, fps } => {
-                Ok(Self {
-                    source,
-                    frame_count: 0,
-                    fps,
-                    width,
-                    height,
-                    image_files: None,
-                })
-            }
+            VideoSource::Dummy { width, height, fps } => Ok(Self {
+                source,
+                frame_count: 0,
+                fps,
+                width,
+                height,
+                image_files: None,
+            }),
         }
     }
-    
+
     /// Create a dummy video reader for testing
     pub fn dummy(width: u32, height: u32, fps: f32) -> Self {
         Self {
@@ -449,7 +455,7 @@ impl VideoStreamReader {
             image_files: None,
         }
     }
-    
+
     /// Read frames as a stream
     pub fn frames(mut self) -> impl Iterator<Item = Frame> {
         std::iter::from_fn(move || {
@@ -461,9 +467,9 @@ impl VideoStreamReader {
                             // For now, generate a frame with noise to simulate image data
                             let frame_data = Array2::from_shape_fn(
                                 (self.height as usize, self.width as usize),
-                                |_| rand::random::<f32>()
+                                |_| rand::random::<f32>(),
                             );
-                            
+
                             let frame = Frame {
                                 data: frame_data,
                                 timestamp: Instant::now(),
@@ -475,7 +481,7 @@ impl VideoStreamReader {
                                     channels: 1,
                                 }),
                             };
-                            
+
                             self.frame_count += 1;
                             Some(frame)
                         } else {
@@ -495,8 +501,10 @@ impl VideoStreamReader {
                                     // Create a moving pattern
                                     let t = self.frame_count as f32 / self.fps;
                                     ((x as f32 / self.width as f32 * 10.0 + t).sin()
-                                        + (y as f32 / self.height as f32 * 10.0 + t).cos()) * 0.5 + 0.5
-                                }
+                                        + (y as f32 / self.height as f32 * 10.0 + t).cos())
+                                        * 0.5
+                                        + 0.5
+                                },
                             ),
                             timestamp: Instant::now(),
                             index: self.frame_count,
@@ -507,7 +515,7 @@ impl VideoStreamReader {
                                 channels: 1,
                             }),
                         };
-                        
+
                         self.frame_count += 1;
                         Some(frame)
                     } else {
@@ -518,7 +526,7 @@ impl VideoStreamReader {
             }
         })
     }
-    
+
     /// Get video properties
     pub fn properties(&self) -> (u32, u32, f32) {
         (self.width, self.height, self.fps)
@@ -535,19 +543,19 @@ impl BatchProcessor {
     pub fn new(batch_size: usize) -> Self {
         Self { batch_size }
     }
-    
+
     /// Process frames in batches
     pub fn process_batch<F>(&self, frames: Vec<Frame>, mut processor: F) -> Result<Vec<Frame>>
     where
         F: FnMut(&[Frame]) -> Result<Vec<Frame>>,
     {
         let mut results = Vec::new();
-        
+
         for chunk in frames.chunks(self.batch_size) {
             let processed = processor(chunk)?;
             results.extend(processed);
         }
-        
+
         Ok(results)
     }
 }
@@ -575,33 +583,34 @@ impl PerformanceMonitor {
             window_size: 100,
         }
     }
-    
+
     /// Record frame processing time
     pub fn record_frame(&mut self, duration: Duration) {
         self.frame_times.push(duration);
-        
+
         // Keep only recent frames
         if self.frame_times.len() > self.window_size {
             self.frame_times.remove(0);
         }
     }
-    
+
     /// Get current FPS
     pub fn fps(&self) -> f32 {
         if self.frame_times.is_empty() {
             return 0.0;
         }
-        
-        let avg_duration: Duration = self.frame_times.iter().sum::<Duration>() / self.frame_times.len() as u32;
+
+        let avg_duration: Duration =
+            self.frame_times.iter().sum::<Duration>() / self.frame_times.len() as u32;
         1.0 / avg_duration.as_secs_f32()
     }
-    
+
     /// Get average latency
     pub fn avg_latency(&self) -> Duration {
         if self.frame_times.is_empty() {
             return Duration::ZERO;
         }
-        
+
         self.frame_times.iter().sum::<Duration>() / self.frame_times.len() as u32
     }
 }
@@ -609,7 +618,7 @@ impl PerformanceMonitor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_pipeline_creation() {
         let pipeline = StreamPipeline::new()
@@ -618,36 +627,36 @@ mod tests {
             .add_stage(GrayscaleStage)
             .add_stage(BlurStage::new(1.0))
             .add_stage(EdgeDetectionStage::new(0.1));
-        
+
         assert_eq!(pipeline.stages.len(), 3); // 3 stages added to pipeline
     }
-    
+
     #[test]
     fn test_video_stream_reader() {
         let reader = VideoStreamReader::dummy(640, 480, 30.0);
         let frames: Vec<_> = reader.frames().take(10).collect();
-        
+
         assert_eq!(frames.len(), 10);
         assert_eq!(frames[0].metadata.as_ref().unwrap().width, 640);
         assert_eq!(frames[0].metadata.as_ref().unwrap().height, 480);
     }
-    
+
     #[test]
     fn test_performance_monitor() {
         let mut monitor = PerformanceMonitor::new();
-        
+
         // Simulate frame processing
         for _ in 0..10 {
             monitor.record_frame(Duration::from_millis(16)); // ~60 FPS
         }
-        
+
         let fps = monitor.fps();
         assert!(fps > 50.0 && fps < 70.0);
-        
+
         let latency = monitor.avg_latency();
         assert_eq!(latency, Duration::from_millis(16));
     }
-    
+
     #[test]
     fn test_batch_processor() {
         let processor = BatchProcessor::new(5);
@@ -659,11 +668,9 @@ mod tests {
                 metadata: None,
             })
             .collect();
-        
-        let result = processor.process_batch(frames, |batch| {
-            Ok(batch.to_vec())
-        });
-        
+
+        let result = processor.process_batch(frames, |batch| Ok(batch.to_vec()));
+
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 12);
     }

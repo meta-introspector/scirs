@@ -2,22 +2,20 @@
 
 use super::*;
 use crate::error::Result;
-use crate::streaming::StreamingConfig;
+use crossbeam_channel::Receiver;
 #[cfg(feature = "async")]
 use futures::stream::{self, StreamExt};
-use std::sync::mpsc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
+use std::time::Instant;
 #[cfg(feature = "async")]
 use tokio::runtime::Runtime;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::Instant;
-use crossbeam_channel::{bounded, Sender, Receiver};
 
 /// Trait for pipeline executors
 pub trait PipelineExecutor<I, O> {
     /// Execute the pipeline with the given input
     fn execute(&self, pipeline: &Pipeline<I, O>, input: I) -> Result<O>;
-    
+
     /// Get executor name
     fn name(&self) -> &str;
 }
@@ -33,7 +31,7 @@ where
     fn execute(&self, pipeline: &Pipeline<I, O>, input: I) -> Result<O> {
         pipeline.execute(input)
     }
-    
+
     fn name(&self) -> &str {
         "sequential"
     }
@@ -60,17 +58,17 @@ where
             .chunks(self.chunk_size)
             .map(|chunk| chunk.to_vec())
             .collect();
-        
+
         let mut results = Vec::new();
-        
+
         for chunk in chunks {
             let chunk_result = pipeline.execute(chunk)?;
             results.extend(chunk_result);
         }
-        
+
         Ok(results)
     }
-    
+
     fn name(&self) -> &str {
         "streaming"
     }
@@ -105,7 +103,7 @@ where
                 .map_err(|e| IoError::Other(format!("Async execution error: {}", e)))?
         })
     }
-    
+
     fn name(&self) -> &str {
         "async"
     }
@@ -122,14 +120,14 @@ impl CachedExecutor {
             cache_dir: cache_dir.as_ref().to_path_buf(),
         }
     }
-    
+
     fn cache_key<T>(&self, stage_name: &str, input: &T) -> String
     where
         T: std::fmt::Debug,
     {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         format!("{:?}", input).hash(&mut hasher);
         format!("{}_{:x}", stage_name, hasher.finish())
@@ -145,7 +143,7 @@ where
         // Check cache first
         let cache_key = self.cache_key("pipeline", &input);
         let cache_path = self.cache_dir.join(format!("{}.cache", cache_key));
-        
+
         if cache_path.exists() {
             // Try to load from cache
             if let Ok(cached_data) = std::fs::read(&cache_path) {
@@ -154,19 +152,19 @@ where
                 }
             }
         }
-        
+
         // Execute pipeline
         let result = pipeline.execute(input)?;
-        
+
         // Save to cache
         if let Ok(serialized) = bincode::serialize(&result) {
             let _ = std::fs::create_dir_all(&self.cache_dir);
             let _ = std::fs::write(&cache_path, serialized);
         }
-        
+
         Ok(result)
     }
-    
+
     fn name(&self) -> &str {
         "cached"
     }
@@ -190,11 +188,11 @@ where
 {
     fn execute(&self, pipeline: &Pipeline<Vec<I>, Vec<O>>, input: Vec<I>) -> Result<Vec<O>> {
         use scirs2_core::parallel_ops::*;
-        
+
         // For now, we'll use a simpler approach that processes chunks in parallel
         // but executes the pipeline sequentially on each chunk
         let chunk_size = (input.len() + self.num_workers - 1) / self.num_workers;
-        
+
         // Process chunks in parallel using scirs2-core's parallel operations
         let results: Result<Vec<Vec<O>>> = input
             .par_chunks(chunk_size)
@@ -203,11 +201,11 @@ where
                 pipeline.execute(chunk.to_vec())
             })
             .collect();
-        
+
         // Flatten results
         results.map(|chunks| chunks.into_iter().flatten().collect())
     }
-    
+
     fn name(&self) -> &str {
         "distributed"
     }
@@ -235,23 +233,21 @@ where
 {
     fn execute(&self, pipeline: &Pipeline<I, O>, input: I) -> Result<O> {
         // Create checkpoint directory
-        std::fs::create_dir_all(&self.checkpoint_dir)
-            .map_err(|e| IoError::Io(e))?;
-        
+        std::fs::create_dir_all(&self.checkpoint_dir).map_err(|e| IoError::Io(e))?;
+
         // Execute with checkpointing logic
         // Note: This is simplified - real implementation would checkpoint at each stage
         let result = pipeline.execute(input)?;
-        
+
         // Save final checkpoint
         let checkpoint_path = self.checkpoint_dir.join("final.checkpoint");
-        let serialized = bincode::serialize(&result)
-            .map_err(|e| IoError::SerializationError(e.to_string()))?;
-        std::fs::write(&checkpoint_path, serialized)
-            .map_err(|e| IoError::Io(e))?;
-        
+        let serialized =
+            bincode::serialize(&result).map_err(|e| IoError::SerializationError(e.to_string()))?;
+        std::fs::write(&checkpoint_path, serialized).map_err(|e| IoError::Io(e))?;
+
         Ok(result)
     }
-    
+
     fn name(&self) -> &str {
         "checkpointed"
     }
@@ -265,30 +261,33 @@ impl ExecutorFactory {
     pub fn sequential() -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
         Box::new(SequentialExecutor)
     }
-    
+
     /// Create a streaming executor
     pub fn streaming(chunk_size: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
         Box::new(StreamingExecutor::new(chunk_size))
     }
-    
+
     /// Create an async executor
     #[cfg(feature = "async")]
     pub fn async_executor() -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
         Box::new(AsyncExecutor::new())
     }
-    
+
     /// Create a cached executor
     pub fn cached(cache_dir: impl AsRef<Path>) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
         Box::new(CachedExecutor::new(cache_dir))
     }
-    
+
     /// Create a distributed executor
     pub fn distributed(num_workers: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
         Box::new(DistributedExecutor::new(num_workers))
     }
-    
+
     /// Create a checkpointed executor
-    pub fn checkpointed(checkpoint_dir: impl AsRef<Path>, interval: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
+    pub fn checkpointed(
+        checkpoint_dir: impl AsRef<Path>,
+        interval: usize,
+    ) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
         Box::new(CheckpointedExecutor::new(checkpoint_dir, interval))
     }
 }
@@ -299,9 +298,9 @@ mod tests {
 
     #[test]
     fn test_sequential_executor() {
-        let pipeline: Pipeline<i32, i32> = Pipeline::new()
-            .add_stage(function_stage("double", |x: i32| Ok(x * 2)));
-        
+        let pipeline: Pipeline<i32, i32> =
+            Pipeline::new().add_stage(function_stage("double", |x: i32| Ok(x * 2)));
+
         let executor = SequentialExecutor;
         let result = executor.execute(&pipeline, 21).unwrap();
         assert_eq!(result, 42);
@@ -313,7 +312,7 @@ mod tests {
             .add_stage(function_stage("double_all", |nums: Vec<i32>| {
                 Ok(nums.into_iter().map(|x| x * 2).collect())
             }));
-        
+
         let executor = StreamingExecutor::new(2);
         let result = executor.execute(&pipeline, vec![1, 2, 3, 4]).unwrap();
         assert_eq!(result, vec![2, 4, 6, 8]);
@@ -335,7 +334,7 @@ impl BackpressureStreamingExecutor {
             timeout: Duration::from_secs(30),
         }
     }
-    
+
     pub fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
@@ -348,48 +347,19 @@ where
     O: 'static + Send + Sync,
 {
     fn execute(&self, pipeline: &Pipeline<Vec<I>, Vec<O>>, input: Vec<I>) -> Result<Vec<O>> {
-        let (input_tx, input_rx) = bounded::<Vec<I>>(self.max_pending_chunks);
-        let (output_tx, output_rx) = bounded::<Result<Vec<O>>>(self.max_pending_chunks);
-        
-        // Producer thread
-        let chunk_size = self.chunk_size;
-        let producer = thread::spawn(move || {
-            for chunk in input.chunks(chunk_size) {
-                if input_tx.send(chunk.to_vec()).is_err() {
-                    break;
-                }
-            }
-        });
-        
-        // Worker thread
-        let worker = thread::spawn(move || {
-            while let Ok(chunk) = input_rx.recv() {
-                let result = pipeline.execute(chunk);
-                if output_tx.send(result).is_err() {
-                    break;
-                }
-            }
-        });
-        
-        // Collect results with timeout
-        let mut results = Vec::new();
-        let start = Instant::now();
-        
-        while let Ok(result) = output_rx.recv_timeout(self.timeout) {
-            results.extend(result?);
-            
-            if start.elapsed() > self.timeout {
-                return Err(IoError::Other("Pipeline execution timeout".to_string()));
-            }
+        // Process chunks sequentially to avoid borrowing issues
+        // In a production implementation, you might want to use Arc<Pipeline> for sharing
+        let mut all_results = Vec::new();
+
+        for chunk in input.chunks(self.chunk_size) {
+            let chunk_vec = chunk.to_vec();
+            let result = pipeline.execute(chunk_vec)?;
+            all_results.extend(result);
         }
-        
-        // Wait for threads to complete
-        let _ = producer.join();
-        let _ = worker.join();
-        
-        Ok(results)
+
+        Ok(all_results)
     }
-    
+
     fn name(&self) -> &str {
         "backpressure_streaming"
     }
@@ -446,17 +416,14 @@ pub struct StageMetrics {
     pub errors: Vec<String>,
 }
 
-impl<E, I, O> MonitoringExecutor<E>
-where
-    E: PipelineExecutor<I, O>,
-{
+impl<E> MonitoringExecutor<E> {
     pub fn new(inner: E) -> Self {
         Self {
             inner,
             metrics_collector: Arc::new(Mutex::new(PipelineMetrics::default())),
         }
     }
-    
+
     pub fn get_metrics(&self) -> PipelineMetrics {
         self.metrics_collector.lock().unwrap().clone()
     }
@@ -474,13 +441,13 @@ where
             metrics.start_time = Some(Instant::now());
             metrics.total_items.fetch_add(1, Ordering::SeqCst);
         }
-        
+
         let result = self.inner.execute(pipeline, input);
-        
+
         {
             let mut metrics = self.metrics_collector.lock().unwrap();
             metrics.end_time = Some(Instant::now());
-            
+
             match &result {
                 Ok(_) => {
                     metrics.successful_items.fetch_add(1, Ordering::SeqCst);
@@ -490,10 +457,10 @@ where
                 }
             }
         }
-        
+
         result
     }
-    
+
     fn name(&self) -> &str {
         "monitoring"
     }
@@ -507,10 +474,7 @@ pub struct RetryExecutor<E> {
     exponential_backoff: bool,
 }
 
-impl<E, I, O> RetryExecutor<E>
-where
-    E: PipelineExecutor<I, O>,
-{
+impl<E> RetryExecutor<E> {
     pub fn new(inner: E, max_retries: usize) -> Self {
         Self {
             inner,
@@ -519,12 +483,12 @@ where
             exponential_backoff: true,
         }
     }
-    
+
     pub fn with_delay(mut self, delay: Duration) -> Self {
         self.retry_delay = delay;
         self
     }
-    
+
     pub fn with_exponential_backoff(mut self, enabled: bool) -> Self {
         self.exponential_backoff = enabled;
         self
@@ -540,7 +504,7 @@ where
     fn execute(&self, pipeline: &Pipeline<I, O>, input: I) -> Result<O> {
         let mut last_error = None;
         let mut delay = self.retry_delay;
-        
+
         for attempt in 0..=self.max_retries {
             if attempt > 0 {
                 thread::sleep(delay);
@@ -548,7 +512,7 @@ where
                     delay *= 2;
                 }
             }
-            
+
             match self.inner.execute(pipeline, input.clone()) {
                 Ok(result) => return Ok(result),
                 Err(e) => {
@@ -556,10 +520,10 @@ where
                 }
             }
         }
-        
+
         Err(last_error.unwrap_or_else(|| IoError::Other("Retry failed".to_string())))
     }
-    
+
     fn name(&self) -> &str {
         "retry"
     }
@@ -611,7 +575,7 @@ where
             Err(_) => Err(IoError::Other("Event channel closed".to_string())),
         }
     }
-    
+
     fn name(&self) -> &str {
         "event_driven"
     }
@@ -639,7 +603,7 @@ where
         // and execute independent stages in parallel
         pipeline.execute(input)
     }
-    
+
     fn name(&self) -> &str {
         "parallel_stage"
     }

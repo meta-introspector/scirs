@@ -1,7 +1,7 @@
 //! Federated learning server implementation
 
-use crate::error::{Result, NeuralError};
-use crate::federated::{ClientUpdate, AggregationStrategy};
+use crate::error::{NeuralError, Result};
+use crate::federated::{AggregationStrategy, ClientUpdate};
 use crate::models::sequential::Sequential;
 use ndarray::prelude::*;
 use std::sync::{Arc, RwLock};
@@ -113,22 +113,29 @@ impl FederatedServer {
     /// Aggregate client updates
     pub fn aggregate_updates(&mut self, updates: &[ClientUpdate]) -> Result<AggregatedUpdate> {
         if updates.len() < self.config.min_clients {
-            return Err(NeuralError::InvalidArgument(
-                format!("Not enough clients: {} < {}", updates.len(), self.config.min_clients)
-            ));
+            return Err(NeuralError::InvalidArgument(format!(
+                "Not enough clients: {} < {}",
+                updates.len(),
+                self.config.min_clients
+            )));
         }
 
         // Update client contributions
         for update in updates {
-            *self.client_contributions.samples_per_client
+            *self
+                .client_contributions
+                .samples_per_client
                 .entry(update.client_id)
                 .or_insert(0) += update.num_samples;
-            
-            *self.client_contributions.rounds_per_client
+
+            *self
+                .client_contributions
+                .rounds_per_client
                 .entry(update.client_id)
                 .or_insert(0) += 1;
-            
-            self.client_contributions.performance_history
+
+            self.client_contributions
+                .performance_history
                 .entry(update.client_id)
                 .or_insert_with(Vec::new)
                 .push(update.accuracy);
@@ -158,8 +165,9 @@ impl FederatedServer {
     /// Calculate sample-based weights
     fn calculate_sample_weights(&self, updates: &[ClientUpdate]) -> Vec<f32> {
         let total_samples: usize = updates.iter().map(|u| u.num_samples).sum();
-        
-        updates.iter()
+
+        updates
+            .iter()
             .map(|u| u.num_samples as f32 / total_samples as f32)
             .collect()
     }
@@ -167,31 +175,36 @@ impl FederatedServer {
     /// Calculate adaptive weights based on client performance
     fn calculate_adaptive_weights(&self, updates: &[ClientUpdate]) -> Result<Vec<f32>> {
         let mut weights = Vec::with_capacity(updates.len());
-        
+
         for update in updates {
             // Base weight from sample size
             let sample_weight = update.num_samples as f32;
-            
+
             // Performance factor
-            let performance_factor = if let Some(history) = 
-                self.client_contributions.performance_history.get(&update.client_id) {
+            let performance_factor = if let Some(history) = self
+                .client_contributions
+                .performance_history
+                .get(&update.client_id)
+            {
                 // Use recent performance trend
                 let recent_perf = history.iter().rev().take(5).copied().collect::<Vec<_>>();
                 self.calculate_performance_score(&recent_perf)
             } else {
                 1.0
             };
-            
+
             // Participation factor
-            let rounds = self.client_contributions.rounds_per_client
+            let rounds = self
+                .client_contributions
+                .rounds_per_client
                 .get(&update.client_id)
                 .copied()
                 .unwrap_or(1) as f32;
             let participation_factor = (rounds / self.current_round.max(1) as f32).sqrt();
-            
+
             weights.push(sample_weight * performance_factor * participation_factor);
         }
-        
+
         // Normalize weights
         let sum: f32 = weights.iter().sum();
         if sum > 0.0 {
@@ -203,7 +216,7 @@ impl FederatedServer {
             let equal_weight = 1.0 / weights.len() as f32;
             weights.fill(equal_weight);
         }
-        
+
         Ok(weights)
     }
 
@@ -212,10 +225,10 @@ impl FederatedServer {
         if history.is_empty() {
             return 1.0;
         }
-        
+
         // Consider both average performance and improvement trend
         let avg_performance = history.iter().sum::<f32>() / history.len() as f32;
-        
+
         let trend = if history.len() >= 2 {
             let recent = history[history.len() - 1];
             let previous = history[0];
@@ -223,7 +236,7 @@ impl FederatedServer {
         } else {
             0.0
         };
-        
+
         // Combine average and trend
         (avg_performance + 0.1 * trend).min(1.0)
     }
@@ -232,18 +245,18 @@ impl FederatedServer {
     pub fn update_global_model(
         &mut self,
         model: &mut Sequential<f32>,
-        update: &AggregatedUpdate
+        update: &AggregatedUpdate,
     ) -> Result<()> {
         let mut state = self.global_model_state.write().unwrap();
-        
+
         // Update model parameters
         state.parameters = update.aggregated_weights.clone();
         state.version += 1;
         state.last_updated = std::time::Instant::now();
-        
+
         // In practice, would update the actual model weights
         // For now, we just store the aggregated weights
-        
+
         Ok(())
     }
 
@@ -251,7 +264,7 @@ impl FederatedServer {
     pub fn handle_async_update(&mut self, update: ClientUpdate) -> Result<Option<ModelState>> {
         if !self.config.async_updates {
             return Err(NeuralError::InvalidArgument(
-                "Asynchronous updates not enabled".to_string()
+                "Asynchronous updates not enabled".to_string(),
             ));
         }
 
@@ -267,43 +280,45 @@ impl FederatedServer {
 
         // Apply update with staleness-aware weighting
         let staleness_weight = 1.0 / (1.0 + (model_age as f32));
-        
+
         // Simple asynchronous update (in practice, would be more sophisticated)
         let mut state = self.global_model_state.write().unwrap();
-        
+
         // Apply weighted update to current parameters
         for (i, param_update) in update.weight_updates.iter().enumerate() {
             if i < state.parameters.len() {
                 state.parameters[i] = &state.parameters[i] + staleness_weight * param_update;
             }
         }
-        
+
         state.version += 1;
         state.last_updated = std::time::Instant::now();
-        
+
         Ok(Some(state.clone()))
     }
 
     /// Get server statistics
     pub fn get_statistics(&self) -> ServerStatistics {
         let total_clients = self.client_contributions.samples_per_client.len();
-        let active_clients = self.client_contributions.rounds_per_client
+        let active_clients = self
+            .client_contributions
+            .rounds_per_client
             .values()
             .filter(|&&rounds| rounds > self.current_round.saturating_sub(5))
             .count();
-        
-        let total_samples: usize = self.client_contributions.samples_per_client
-            .values()
-            .sum();
-        
+
+        let total_samples: usize = self.client_contributions.samples_per_client.values().sum();
+
         let avg_rounds_per_client = if total_clients > 0 {
-            self.client_contributions.rounds_per_client
+            self.client_contributions
+                .rounds_per_client
                 .values()
-                .sum::<usize>() as f32 / total_clients as f32
+                .sum::<usize>() as f32
+                / total_clients as f32
         } else {
             0.0
         };
-        
+
         ServerStatistics {
             current_round: self.current_round,
             total_clients,
@@ -322,7 +337,7 @@ impl FederatedServer {
             rounds_per_client: std::collections::HashMap::new(),
             performance_history: std::collections::HashMap::new(),
         };
-        
+
         let mut state = self.global_model_state.write().unwrap();
         state.parameters.clear();
         state.version = 0;
@@ -366,7 +381,7 @@ mod tests {
     fn test_sample_weights() {
         let config = ServerConfig::from(&FederatedConfig::default());
         let server = FederatedServer::new(config).unwrap();
-        
+
         let updates = vec![
             ClientUpdate {
                 client_id: 0,
@@ -383,10 +398,10 @@ mod tests {
                 accuracy: 0.92,
             },
         ];
-        
+
         let weights = server.calculate_sample_weights(&updates);
         assert_eq!(weights.len(), 2);
-        assert!((weights[0] - 1.0/3.0).abs() < 0.001);
-        assert!((weights[1] - 2.0/3.0).abs() < 0.001);
+        assert!((weights[0] - 1.0 / 3.0).abs() < 0.001);
+        assert!((weights[1] - 2.0 / 3.0).abs() < 0.001);
     }
 }

@@ -400,4 +400,3 @@ mod integration {
         quickcheck::quickcheck(prop_reversing_twice_is_identity as fn(Vec<i32>) -> bool);
     }
 }
-

@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::error::{ClusteringError, Result};
 
@@ -959,7 +959,7 @@ pub mod interactive {
         /// Export to HTML with interactive features
         pub fn to_html(&self) -> Result<String> {
             let mut html = String::new();
-            
+
             html.push_str("<!DOCTYPE html>\n<html>\n<head>\n");
             html.push_str("<title>Interactive Dendrogram</title>\n");
             html.push_str("<script src=\"https://d3js.org/d3.v7.min.js\"></script>\n");
@@ -975,7 +975,7 @@ pub mod interactive {
             html.push_str("<script>\n");
             html.push_str("const width = 800, height = 600;\n");
             html.push_str("const svg = d3.select('#dendrogram').append('svg').attr('width', width).attr('height', height);\n");
-            
+
             // Add branches
             html.push_str("const branches = [\n");
             for branch in &self.plot.branches {
@@ -1060,14 +1060,18 @@ pub mod animation {
 
         /// Add a keyframe to the animation
         pub fn add_keyframe(&mut self, time: f64, plot: DendrogramPlot<F>, easing: EasingFunction) {
-            self.keyframes.push(AnimationKeyframe { time, plot, easing });
-            self.keyframes.sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap());
+            self.keyframes
+                .push(AnimationKeyframe { time, plot, easing });
+            self.keyframes
+                .sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap());
         }
 
         /// Interpolate dendrogram state at a specific time
         pub fn interpolate_at_time(&self, time: f64) -> Result<DendrogramPlot<F>> {
             if self.keyframes.is_empty() {
-                return Err(ClusteringError::InvalidInput("No keyframes available".to_string()));
+                return Err(ClusteringError::InvalidInput(
+                    "No keyframes available".to_string(),
+                ));
             }
 
             let normalized_time = time.clamp(0.0, 1.0);
@@ -1082,8 +1086,9 @@ pub mod animation {
             // Interpolate between keyframes
             let before_frame = &self.keyframes[before];
             let after_frame = &self.keyframes[after];
-            
-            let local_time = (normalized_time - before_frame.time) / (after_frame.time - before_frame.time);
+
+            let local_time =
+                (normalized_time - before_frame.time) / (after_frame.time - before_frame.time);
             let eased_time = apply_easing(local_time, after_frame.easing);
 
             self.interpolate_plots(&before_frame.plot, &after_frame.plot, eased_time)
@@ -1112,11 +1117,31 @@ pub mod animation {
                 let branch1 = &plot1.branches[i];
                 let branch2 = &plot2.branches[i];
 
-                let start_x = lerp(branch1.start.0.to_f64().unwrap(), branch2.start.0.to_f64().unwrap(), t);
-                let start_y = lerp(branch1.start.1.to_f64().unwrap(), branch2.start.1.to_f64().unwrap(), t);
-                let end_x = lerp(branch1.end.0.to_f64().unwrap(), branch2.end.0.to_f64().unwrap(), t);
-                let end_y = lerp(branch1.end.1.to_f64().unwrap(), branch2.end.1.to_f64().unwrap(), t);
-                let height = lerp(branch1.height.to_f64().unwrap(), branch2.height.to_f64().unwrap(), t);
+                let start_x = lerp(
+                    branch1.start.0.to_f64().unwrap(),
+                    branch2.start.0.to_f64().unwrap(),
+                    t,
+                );
+                let start_y = lerp(
+                    branch1.start.1.to_f64().unwrap(),
+                    branch2.start.1.to_f64().unwrap(),
+                    t,
+                );
+                let end_x = lerp(
+                    branch1.end.0.to_f64().unwrap(),
+                    branch2.end.0.to_f64().unwrap(),
+                    t,
+                );
+                let end_y = lerp(
+                    branch1.end.1.to_f64().unwrap(),
+                    branch2.end.1.to_f64().unwrap(),
+                    t,
+                );
+                let height = lerp(
+                    branch1.height.to_f64().unwrap(),
+                    branch2.height.to_f64().unwrap(),
+                    t,
+                );
 
                 interpolated_branches.push(Branch {
                     start: (F::from(start_x).unwrap(), F::from(start_y).unwrap()),
@@ -1134,10 +1159,30 @@ pub mod animation {
 
             // Interpolate bounds
             let bounds = (
-                F::from(lerp(plot1.bounds.0.to_f64().unwrap(), plot2.bounds.0.to_f64().unwrap(), t)).unwrap(),
-                F::from(lerp(plot1.bounds.1.to_f64().unwrap(), plot2.bounds.1.to_f64().unwrap(), t)).unwrap(),
-                F::from(lerp(plot1.bounds.2.to_f64().unwrap(), plot2.bounds.2.to_f64().unwrap(), t)).unwrap(),
-                F::from(lerp(plot1.bounds.3.to_f64().unwrap(), plot2.bounds.3.to_f64().unwrap(), t)).unwrap(),
+                F::from(lerp(
+                    plot1.bounds.0.to_f64().unwrap(),
+                    plot2.bounds.0.to_f64().unwrap(),
+                    t,
+                ))
+                .unwrap(),
+                F::from(lerp(
+                    plot1.bounds.1.to_f64().unwrap(),
+                    plot2.bounds.1.to_f64().unwrap(),
+                    t,
+                ))
+                .unwrap(),
+                F::from(lerp(
+                    plot1.bounds.2.to_f64().unwrap(),
+                    plot2.bounds.2.to_f64().unwrap(),
+                    t,
+                ))
+                .unwrap(),
+                F::from(lerp(
+                    plot1.bounds.3.to_f64().unwrap(),
+                    plot2.bounds.3.to_f64().unwrap(),
+                    t,
+                ))
+                .unwrap(),
             );
 
             Ok(DendrogramPlot {
@@ -1171,7 +1216,7 @@ pub mod animation {
             EasingFunction::Bounce => {
                 let n1 = 7.5625;
                 let d1 = 2.75;
-                
+
                 if t < 1.0 / d1 {
                     n1 * t * t
                 } else if t < 2.0 / d1 {
@@ -1192,7 +1237,8 @@ pub mod animation {
                 } else if t == 1.0 {
                     1.0
                 } else {
-                    -(2.0_f64.powf(10.0 * (t - 1.0))) * ((t - 1.0) * c4 - std::f64::consts::PI / 2.0).sin()
+                    -(2.0_f64.powf(10.0 * (t - 1.0)))
+                        * ((t - 1.0) * c4 - std::f64::consts::PI / 2.0).sin()
                 }
             }
         }
@@ -1285,7 +1331,8 @@ pub mod performance {
                 original_branches: original_count,
                 optimized_branches: optimized.branches.len(),
                 culled_branches: original_count - optimized.branches.len(),
-                complexity_reduction: 1.0 - (optimized.branches.len() as f64 / original_count as f64),
+                complexity_reduction: 1.0
+                    - (optimized.branches.len() as f64 / original_count as f64),
             };
 
             Self {
@@ -1299,11 +1346,12 @@ pub mod performance {
         /// Apply level-of-detail optimization
         fn apply_lod(plot: &DendrogramPlot<F>, config: &PerformanceConfig) -> DendrogramPlot<F> {
             let mut optimized = plot.clone();
-            
+
             // Remove branches shorter than minimum length
             optimized.branches.retain(|branch| {
-                let length = ((branch.end.0 - branch.start.0).to_f64().unwrap().powi(2) +
-                             (branch.end.1 - branch.start.1).to_f64().unwrap().powi(2)).sqrt();
+                let length = ((branch.end.0 - branch.start.0).to_f64().unwrap().powi(2)
+                    + (branch.end.1 - branch.start.1).to_f64().unwrap().powi(2))
+                .sqrt();
                 length >= config.min_branch_length
             });
 
@@ -1314,7 +1362,10 @@ pub mod performance {
         }
 
         /// Apply viewport culling
-        fn apply_culling(plot: &DendrogramPlot<F>, config: &PerformanceConfig) -> DendrogramPlot<F> {
+        fn apply_culling(
+            plot: &DendrogramPlot<F>,
+            config: &PerformanceConfig,
+        ) -> DendrogramPlot<F> {
             if let Some((vx_min, vy_min, vx_max, vy_max)) = config.viewport {
                 let mut optimized = plot.clone();
                 let mut retained_indices = Vec::new();
@@ -1327,18 +1378,26 @@ pub mod performance {
                     let y2 = branch.end.1.to_f64().unwrap();
 
                     // Simple bounding box intersection test
-                    if (x1 <= vx_max && x2 >= vx_min && y1 <= vy_max && y2 >= vy_min) ||
-                       (x2 <= vx_max && x1 >= vx_min && y2 <= vy_max && y1 >= vy_min) {
+                    if (x1 <= vx_max && x2 >= vx_min && y1 <= vy_max && y2 >= vy_min)
+                        || (x2 <= vx_max && x1 >= vx_min && y2 <= vy_max && y1 >= vy_min)
+                    {
                         retained_indices.push(i);
                     }
                 }
 
                 // Keep only visible branches
-                optimized.branches = retained_indices.iter()
+                optimized.branches = retained_indices
+                    .iter()
                     .map(|&i| plot.branches[i].clone())
                     .collect();
-                optimized.colors = retained_indices.iter()
-                    .map(|&i| plot.colors.get(i).cloned().unwrap_or_else(|| "#000000".to_string()))
+                optimized.colors = retained_indices
+                    .iter()
+                    .map(|&i| {
+                        plot.colors
+                            .get(i)
+                            .cloned()
+                            .unwrap_or_else(|| "#000000".to_string())
+                    })
                     .collect();
 
                 optimized
@@ -1402,7 +1461,7 @@ pub mod export {
     fn export_to_svg<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
         let mut svg = String::new();
         let (min_x, max_x, min_y, max_y) = plot.bounds;
-        
+
         svg.push_str(&format!(
             "<svg width=\"800\" height=\"600\" viewBox=\"{} {} {} {}\" xmlns=\"http://www.w3.org/2000/svg\">\n",
             min_x.to_f64().unwrap(),
@@ -1433,9 +1492,7 @@ pub mod export {
         for leaf in &plot.leaves {
             svg.push_str(&format!(
                 "<text x=\"{}\" y=\"{}\" font-size=\"10\" text-anchor=\"middle\">{}</text>\n",
-                leaf.position.0,
-                leaf.position.1,
-                leaf.label
+                leaf.position.0, leaf.position.1, leaf.label
             ));
         }
 
@@ -1444,12 +1501,16 @@ pub mod export {
     }
 
     /// Export to HTML format
-    fn export_to_html<F: Float + FromPrimitive + Debug>(_plot: &DendrogramPlot<F>) -> Result<String> {
+    fn export_to_html<F: Float + FromPrimitive + Debug>(
+        _plot: &DendrogramPlot<F>,
+    ) -> Result<String> {
         Ok("<html><body>HTML export not yet implemented</body></html>".to_string())
     }
 
     /// Export to JSON format
-    fn export_to_json<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
+    fn export_to_json<F: Float + FromPrimitive + Debug>(
+        plot: &DendrogramPlot<F>,
+    ) -> Result<String> {
         #[derive(serde::Serialize)]
         struct JsonBranch {
             start: (f64, f64),
@@ -1466,12 +1527,16 @@ pub mod export {
             bounds: (f64, f64, f64, f64),
         }
 
-        let json_branches: Vec<JsonBranch> = plot.branches.iter().map(|b| JsonBranch {
-            start: (b.start.0.to_f64().unwrap(), b.start.1.to_f64().unwrap()),
-            end: (b.end.0.to_f64().unwrap(), b.end.1.to_f64().unwrap()),
-            height: b.height.to_f64().unwrap(),
-            cluster_id: b.cluster_id,
-        }).collect();
+        let json_branches: Vec<JsonBranch> = plot
+            .branches
+            .iter()
+            .map(|b| JsonBranch {
+                start: (b.start.0.to_f64().unwrap(), b.start.1.to_f64().unwrap()),
+                end: (b.end.0.to_f64().unwrap(), b.end.1.to_f64().unwrap()),
+                height: b.height.to_f64().unwrap(),
+                cluster_id: b.cluster_id,
+            })
+            .collect();
 
         let json_plot = JsonPlot {
             branches: json_branches,
@@ -1485,9 +1550,8 @@ pub mod export {
             ),
         };
 
-        serde_json::to_string_pretty(&json_plot).map_err(|e| {
-            ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e))
-        })
+        serde_json::to_string_pretty(&json_plot)
+            .map_err(|e| ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e)))
     }
 
     /// Export to DOT format for Graphviz
@@ -1503,7 +1567,11 @@ pub mod export {
 
         // Add internal nodes and edges (simplified)
         for (i, branch) in plot.branches.iter().enumerate() {
-            dot.push_str(&format!("  internal_{} [label=\"{:.2}\"];\n", i, branch.height.to_f64().unwrap()));
+            dot.push_str(&format!(
+                "  internal_{} [label=\"{:.2}\"];\n",
+                i,
+                branch.height.to_f64().unwrap()
+            ));
         }
 
         dot.push_str("}\n");
@@ -1532,9 +1600,7 @@ pub mod export {
         for leaf in &plot.leaves {
             csv.push_str(&format!(
                 "leaf,{},{},,,,,{}\n",
-                leaf.position.0,
-                leaf.position.1,
-                leaf.label
+                leaf.position.0, leaf.position.1, leaf.label
             ));
         }
 
@@ -1548,12 +1614,10 @@ pub mod export {
         format: VisualizationFormat,
     ) -> Result<()> {
         let content = export_dendrogram(plot, format)?;
-        let mut file = std::fs::File::create(path).map_err(|e| {
-            ClusteringError::InvalidInput(format!("Failed to create file: {}", e))
-        })?;
-        file.write_all(content.as_bytes()).map_err(|e| {
-            ClusteringError::InvalidInput(format!("Failed to write file: {}", e))
-        })?;
+        let mut file = std::fs::File::create(path)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to create file: {}", e)))?;
+        file.write_all(content.as_bytes())
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write file: {}", e)))?;
         Ok(())
     }
 }
@@ -1564,7 +1628,7 @@ pub mod realtime {
     use std::sync::{Arc, Mutex};
     use std::thread;
     use std::time::{Duration, Instant};
-    
+
     /// Real-time dendrogram that updates as clustering progresses
     #[derive(Debug)]
     pub struct RealtimeDendrogram<F: Float> {
@@ -1577,7 +1641,7 @@ pub mod realtime {
         /// Whether the visualization is active
         is_active: Arc<Mutex<bool>>,
     }
-    
+
     /// Configuration for real-time visualization
     #[derive(Debug, Clone)]
     pub struct RealtimeConfig {
@@ -1592,7 +1656,7 @@ pub mod realtime {
         /// Show progress indicators
         pub show_progress: bool,
     }
-    
+
     impl Default for RealtimeConfig {
         fn default() -> Self {
             Self {
@@ -1604,7 +1668,7 @@ pub mod realtime {
             }
         }
     }
-    
+
     impl<F: Float + FromPrimitive + PartialOrd + Debug + Send + Sync + 'static> RealtimeDendrogram<F> {
         /// Create a new real-time dendrogram
         pub fn new(config: RealtimeConfig) -> Self {
@@ -1615,7 +1679,7 @@ pub mod realtime {
                 is_active: Arc::new(Mutex::new(false)),
             }
         }
-        
+
         /// Set update callback function
         pub fn set_update_callback<Callback>(&mut self, callback: Callback)
         where
@@ -1623,27 +1687,27 @@ pub mod realtime {
         {
             self.update_callback = Some(Arc::new(callback));
         }
-        
+
         /// Start real-time visualization
         pub fn start(&self) {
             let mut is_active = self.is_active.lock().unwrap();
             *is_active = true;
-            
+
             let plot_ref = Arc::clone(&self.current_plot);
             let callback_ref = self.update_callback.clone();
             let active_ref = Arc::clone(&self.is_active);
             let update_interval = Duration::from_millis(self.config.update_interval_ms);
-            
+
             thread::spawn(move || {
                 while *active_ref.lock().unwrap() {
                     let start_time = Instant::now();
-                    
+
                     if let Some(ref callback) = callback_ref {
                         if let Some(ref plot) = *plot_ref.lock().unwrap() {
                             callback(plot);
                         }
                     }
-                    
+
                     let elapsed = start_time.elapsed();
                     if elapsed < update_interval {
                         thread::sleep(update_interval - elapsed);
@@ -1651,25 +1715,25 @@ pub mod realtime {
                 }
             });
         }
-        
+
         /// Stop real-time visualization
         pub fn stop(&self) {
             let mut is_active = self.is_active.lock().unwrap();
             *is_active = false;
         }
-        
+
         /// Update the dendrogram with new data
         pub fn update_plot(&self, new_plot: DendrogramPlot<F>) {
             let mut current = self.current_plot.lock().unwrap();
             *current = Some(new_plot);
         }
-        
+
         /// Get current plot snapshot
         pub fn get_current_plot(&self) -> Option<DendrogramPlot<F>> {
             self.current_plot.lock().unwrap().clone()
         }
     }
-    
+
     /// Live clustering monitor for tracking algorithm progress
     #[derive(Debug)]
     pub struct LiveClusteringMonitor {
@@ -1680,7 +1744,7 @@ pub mod realtime {
         /// Start time
         start_time: Instant,
     }
-    
+
     /// Configuration for live monitoring
     #[derive(Debug, Clone)]
     pub struct MonitorConfig {
@@ -1691,7 +1755,7 @@ pub mod realtime {
         /// Metrics to track
         pub tracked_metrics: Vec<MetricType>,
     }
-    
+
     /// Types of metrics to track
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum MetricType {
@@ -1712,7 +1776,7 @@ pub mod realtime {
         /// Memory usage
         MemoryUsage,
     }
-    
+
     /// Clustering metrics at a point in time
     #[derive(Debug, Clone)]
     pub struct ClusteringMetrics {
@@ -1725,7 +1789,7 @@ pub mod realtime {
         /// Convergence status
         pub converged: bool,
     }
-    
+
     impl Default for MonitorConfig {
         fn default() -> Self {
             Self {
@@ -1739,7 +1803,7 @@ pub mod realtime {
             }
         }
     }
-    
+
     impl LiveClusteringMonitor {
         /// Create a new live monitoring instance
         pub fn new(config: MonitorConfig) -> Self {
@@ -1749,35 +1813,40 @@ pub mod realtime {
                 start_time: Instant::now(),
             }
         }
-        
+
         /// Record new metrics
-        pub fn record_metrics(&self, iteration: usize, values: HashMap<MetricType, f64>, converged: bool) {
+        pub fn record_metrics(
+            &self,
+            iteration: usize,
+            values: HashMap<MetricType, f64>,
+            converged: bool,
+        ) {
             let metrics = ClusteringMetrics {
                 timestamp: Instant::now(),
                 values,
                 iteration,
                 converged,
             };
-            
+
             let mut buffer = self.metrics_buffer.lock().unwrap();
             buffer.push(metrics);
-            
+
             // Keep buffer size under limit
             if buffer.len() > self.config.max_buffer_size {
                 buffer.remove(0);
             }
         }
-        
+
         /// Get latest metrics
         pub fn get_latest_metrics(&self) -> Option<ClusteringMetrics> {
             self.metrics_buffer.lock().unwrap().last().cloned()
         }
-        
+
         /// Get all metrics in buffer
         pub fn get_all_metrics(&self) -> Vec<ClusteringMetrics> {
             self.metrics_buffer.lock().unwrap().clone()
         }
-        
+
         /// Get metrics for a specific metric type over time
         pub fn get_metric_history(&self, metric_type: MetricType) -> Vec<(f64, f64)> {
             let buffer = self.metrics_buffer.lock().unwrap();
@@ -1791,35 +1860,41 @@ pub mod realtime {
                 })
                 .collect()
         }
-        
+
         /// Clear metrics buffer
         pub fn clear_buffer(&self) {
             self.metrics_buffer.lock().unwrap().clear();
         }
-        
+
         /// Export metrics to CSV format
         pub fn export_metrics_csv(&self) -> String {
             let mut csv = String::new();
             csv.push_str("timestamp,iteration,converged");
-            
+
             // Add headers for tracked metrics
             for metric_type in &self.config.tracked_metrics {
                 csv.push_str(&format!(",{:?}", metric_type));
             }
             csv.push('\n');
-            
+
             let buffer = self.metrics_buffer.lock().unwrap();
             for metrics in buffer.iter() {
-                let time_sec = metrics.timestamp.duration_since(self.start_time).as_secs_f64();
-                csv.push_str(&format!("{:.3},{},{}", time_sec, metrics.iteration, metrics.converged));
-                
+                let time_sec = metrics
+                    .timestamp
+                    .duration_since(self.start_time)
+                    .as_secs_f64();
+                csv.push_str(&format!(
+                    "{:.3},{},{}",
+                    time_sec, metrics.iteration, metrics.converged
+                ));
+
                 for metric_type in &self.config.tracked_metrics {
                     let value = metrics.values.get(metric_type).unwrap_or(&0.0);
                     csv.push_str(&format!(",{:.6}", value));
                 }
                 csv.push('\n');
             }
-            
+
             csv
         }
     }

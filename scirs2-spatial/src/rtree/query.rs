@@ -354,7 +354,9 @@ mod tests {
         ];
 
         for (min_corner, max_corner, value) in rectangles1 {
-            rtree1.insert_rectangle(min_corner, max_corner, value).unwrap();
+            rtree1
+                .insert_rectangle(min_corner, max_corner, value)
+                .unwrap();
         }
 
         // Insert rectangles into the second R-tree
@@ -366,7 +368,9 @@ mod tests {
         ];
 
         for (min_corner, max_corner, value) in rectangles2 {
-            rtree2.insert_rectangle(min_corner, max_corner, value).unwrap();
+            rtree2
+                .insert_rectangle(min_corner, max_corner, value)
+                .unwrap();
         }
 
         // Perform a spatial join with an intersection predicate
@@ -387,7 +391,8 @@ mod tests {
         // Rectangle D [0.8,0.8]x[1.2,1.2] intersects with rectangle 3
         // Total expected intersections: 4 + 2 + 2 + 1 = 9
         assert_eq!(
-            join_results.len(), 9,
+            join_results.len(),
+            9,
             "Expected 9 intersections, found {}",
             join_results.len()
         );

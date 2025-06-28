@@ -142,9 +142,13 @@ impl<T: Vectorizer + Send + Sync> ParallelVectorizer<T> {
         }
 
         let result = Arc::try_unwrap(result)
-            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap result Arc".to_string()))?
+            .map_err(|_| {
+                crate::error::TextError::RuntimeError("Failed to unwrap result Arc".to_string())
+            })?
             .into_inner()
-            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap result Mutex".to_string()))?;
+            .map_err(|_| {
+                crate::error::TextError::RuntimeError("Failed to unwrap result Mutex".to_string())
+            })?;
 
         Ok(result)
     }
@@ -225,9 +229,13 @@ impl ParallelTextProcessor {
             .collect();
 
         let progress = Arc::try_unwrap(progress)
-            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap progress Arc".to_string()))?
+            .map_err(|_| {
+                crate::error::TextError::RuntimeError("Failed to unwrap progress Arc".to_string())
+            })?
             .into_inner()
-            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap progress Mutex".to_string()))?;
+            .map_err(|_| {
+                crate::error::TextError::RuntimeError("Failed to unwrap progress Mutex".to_string())
+            })?;
 
         Ok((results, progress))
     }
@@ -324,9 +332,13 @@ impl ParallelCorpusProcessor {
 
         // Return results
         let results = Arc::try_unwrap(results)
-            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap results Arc".to_string()))?
+            .map_err(|_| {
+                crate::error::TextError::RuntimeError("Failed to unwrap results Arc".to_string())
+            })?
             .into_inner()
-            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap results Mutex".to_string()))?;
+            .map_err(|_| {
+                crate::error::TextError::RuntimeError("Failed to unwrap results Mutex".to_string())
+            })?;
 
         Ok(results)
     }
@@ -464,8 +476,9 @@ mod tests {
         let processor = ParallelTextProcessor::new();
         let texts = create_test_texts();
 
-        let (word_counts, progress) =
-            processor.process_with_progress(&texts, |text| text.split_whitespace().count(), 2).unwrap();
+        let (word_counts, progress) = processor
+            .process_with_progress(&texts, |text| text.split_whitespace().count(), 2)
+            .unwrap();
 
         assert_eq!(word_counts, vec![5, 4, 6, 2, 6]);
         assert!(!progress.is_empty());

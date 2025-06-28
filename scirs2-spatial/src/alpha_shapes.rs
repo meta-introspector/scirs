@@ -385,21 +385,23 @@ impl AlphaShape {
     fn circumradius_nd(points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
         let ndim = points.ncols();
         let n_vertices = simplex.len();
-        
+
         // A simplex in n dimensions requires n+1 vertices
         if n_vertices != ndim + 1 {
             return Err(SpatialError::ValueError(format!(
                 "Invalid simplex: {} vertices for {}-dimensional space (expected {})",
-                n_vertices, ndim, ndim + 1
+                n_vertices,
+                ndim,
+                ndim + 1
             )));
         }
-        
-        // For high dimensions, we use the general formula based on 
+
+        // For high dimensions, we use the general formula based on
         // the Cayley-Menger determinant approach
-        
+
         // Create matrix A where A[i,j] = ||p_i - p_j||^2
         let mut distance_matrix = vec![vec![0.0; n_vertices]; n_vertices];
-        
+
         for i in 0..n_vertices {
             for j in (i + 1)..n_vertices {
                 let mut dist_sq = 0.0;
@@ -411,11 +413,11 @@ impl AlphaShape {
                 distance_matrix[j][i] = dist_sq;
             }
         }
-        
+
         // Use simplified approach for high dimensions:
         // R ≈ max(edge_length) / 2 * correction_factor
         // This is an approximation but works well for well-shaped simplices
-        
+
         let mut max_dist_sq: f64 = 0.0;
         #[allow(clippy::needless_range_loop)]
         for i in 0..n_vertices {
@@ -423,7 +425,7 @@ impl AlphaShape {
                 max_dist_sq = max_dist_sq.max(distance_matrix[i][j]);
             }
         }
-        
+
         // For regular simplices, the circumradius can be approximated
         // The correction factor accounts for the geometry in higher dimensions
         let correction_factor = match ndim {
@@ -432,9 +434,9 @@ impl AlphaShape {
             6 => 0.756, // 6D simplex (7 vertices)
             _ => 0.8,   // General approximation for higher dimensions
         };
-        
+
         let circumradius = max_dist_sq.sqrt() * correction_factor / 2.0;
-        
+
         Ok(circumradius)
     }
 
@@ -647,22 +649,24 @@ impl AlphaShape {
     fn simplex_volume_nd(points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
         let ndim = points.ncols();
         let n_vertices = simplex.len();
-        
+
         // A simplex in n dimensions requires n+1 vertices
         if n_vertices != ndim + 1 {
             return Err(SpatialError::ValueError(format!(
                 "Invalid simplex: {} vertices for {}-dimensional space (expected {})",
-                n_vertices, ndim, ndim + 1
+                n_vertices,
+                ndim,
+                ndim + 1
             )));
         }
-        
+
         // For n-dimensional simplex volume, we use the determinant formula:
         // V = |det(matrix)| / n!
         // where matrix has rows [p1-p0, p2-p0, ..., pn-p0]
-        
+
         // Get the first vertex as reference point
         let p0: Vec<f64> = (0..ndim).map(|d| points[[simplex[0], d]]).collect();
-        
+
         // Create matrix with vectors from p0 to other vertices
         let mut matrix = vec![vec![0.0; ndim]; ndim];
         for i in 1..n_vertices {
@@ -670,28 +674,28 @@ impl AlphaShape {
                 matrix[i - 1][d] = points[[simplex[i], d]] - p0[d];
             }
         }
-        
+
         // Calculate determinant
         let det = Self::matrix_determinant(&matrix);
-        
+
         // Volume is |det| / n!
         let factorial = Self::factorial(ndim);
         let volume = det.abs() / factorial;
-        
+
         Ok(volume)
     }
-    
+
     /// Calculate determinant of a square matrix using LU decomposition
     fn matrix_determinant(matrix: &[Vec<f64>]) -> f64 {
         let n = matrix.len();
         if n == 0 {
             return 0.0;
         }
-        
+
         // Create mutable copy for LU decomposition
         let mut a = matrix.to_vec();
         let mut det = 1.0;
-        
+
         // Gaussian elimination with partial pivoting
         for i in 0..n {
             // Find pivot
@@ -701,20 +705,20 @@ impl AlphaShape {
                     max_row = k;
                 }
             }
-            
+
             // Swap rows if needed
             if max_row != i {
                 a.swap(i, max_row);
                 det = -det; // Row swap changes sign
             }
-            
+
             // Check for singular matrix
             if a[i][i].abs() < 1e-12 {
                 return 0.0;
             }
-            
+
             det *= a[i][i];
-            
+
             // Eliminate column
             for k in (i + 1)..n {
                 let factor = a[k][i] / a[i][i];
@@ -723,10 +727,10 @@ impl AlphaShape {
                 }
             }
         }
-        
+
         det
     }
-    
+
     /// Calculate factorial
     fn factorial(n: usize) -> f64 {
         match n {

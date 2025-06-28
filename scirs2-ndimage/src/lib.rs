@@ -19,6 +19,8 @@ pub mod mmap_io;
 pub mod morphology;
 pub mod profiling;
 pub mod scipy_compat;
+#[cfg(test)]
+mod scipy_validation_tests;
 pub mod segmentation;
 pub mod streaming;
 pub mod threading;

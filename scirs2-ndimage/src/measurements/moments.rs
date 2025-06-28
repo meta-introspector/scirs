@@ -6,15 +6,118 @@ use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
 
-/// Find the center of mass of an array
+/// Find the center of mass (centroid) of an array
+///
+/// Computes the intensity-weighted centroid of an n-dimensional array.
+/// The center of mass is calculated as the average position of all pixels,
+/// weighted by their intensity values. This is useful for object localization,
+/// tracking, and geometric analysis.
 ///
 /// # Arguments
 ///
-/// * `input` - Input array
+/// * `input` - Input array containing intensity values
 ///
 /// # Returns
 ///
-/// * `Result<Vec<T>>` - Center of mass (centroid)
+/// * `Result<Vec<T>>` - Center of mass coordinates, one per dimension
+///
+/// # Examples
+///
+/// ## Basic 1D center of mass
+/// ```
+/// use ndarray::Array1;
+/// use scirs2_ndimage::measurements::center_of_mass;
+///
+/// // Simple 1D signal with peak at position 2
+/// let signal = Array1::from_vec(vec![0.0, 1.0, 5.0, 1.0, 0.0]);
+/// let centroid = center_of_mass(&signal).unwrap();
+///
+/// // Center of mass should be close to position 2 (where the peak is)
+/// assert!((centroid[0] - 2.0).abs() < 0.1);
+/// ```
+///
+/// ## 2D object localization
+/// ```
+/// use ndarray::{Array2, array};
+/// use scirs2_ndimage::measurements::center_of_mass;
+///
+/// // Create a 2D object (bright square in upper-left)
+/// let mut image = Array2::zeros((10, 10));
+/// for i in 2..5 {
+///     for j in 2..5 {
+///         image[[i, j]] = 10.0;
+///     }
+/// }
+///
+/// let centroid = center_of_mass(&image).unwrap();
+/// // Centroid should be approximately at (3, 3) - center of the bright square
+/// assert!((centroid[0] - 3.0).abs() < 0.1);
+/// assert!((centroid[1] - 3.0).abs() < 0.1);
+/// ```
+///
+/// ## Intensity-weighted centroid
+/// ```
+/// use ndarray::{Array2, array};
+/// use scirs2_ndimage::measurements::center_of_mass;
+///
+/// // Create object with non-uniform intensity distribution
+/// let image = array![
+///     [0.0, 0.0, 0.0, 0.0],
+///     [0.0, 1.0, 2.0, 0.0],
+///     [0.0, 3.0, 6.0, 0.0],  // Higher intensities toward bottom-right
+///     [0.0, 0.0, 0.0, 0.0]
+/// ];
+///
+/// let centroid = center_of_mass(&image).unwrap();
+/// // Centroid will be shifted toward higher intensity pixels
+/// // Should be closer to (2, 2) than (1.5, 1.5) due to intensity weighting
+/// ```
+///
+/// ## 3D volume center of mass
+/// ```
+/// use ndarray::Array3;
+/// use scirs2_ndimage::measurements::center_of_mass;
+///
+/// // Create a 3D volume with a bright cube in one corner
+/// let mut volume = Array3::zeros((20, 20, 20));
+/// for i in 5..10 {
+///     for j in 5..10 {
+///         for k in 5..10 {
+///             volume[[i, j, k]] = 1.0;
+///         }
+///     }
+/// }
+///
+/// let centroid = center_of_mass(&volume).unwrap();
+/// // Centroid should be at approximately (7.5, 7.5, 7.5)
+/// assert_eq!(centroid.len(), 3); // 3D coordinates
+/// ```
+///
+/// ## Binary object analysis
+/// ```
+/// use ndarray::Array2;
+/// use scirs2_ndimage::measurements::center_of_mass;
+///
+/// // Binary image (0.0 and 1.0 values only)
+/// let binary = Array2::from_shape_fn((50, 50), |(i, j)| {
+///     if ((i as f64 - 25.0).powi(2) + (j as f64 - 25.0).powi(2)).sqrt() < 10.0 {
+///         1.0
+///     } else {
+///         0.0
+///     }
+/// });
+///
+/// let centroid = center_of_mass(&binary).unwrap();
+/// // For a circular object centered at (25, 25), centroid should be near center
+/// assert!((centroid[0] - 25.0).abs() < 1.0);
+/// assert!((centroid[1] - 25.0).abs() < 1.0);
+/// ```
+///
+/// # Special Cases
+///
+/// - If the total mass (sum of all values) is zero, returns the geometric center of the array
+/// - For binary images, equivalent to finding the centroid of the foreground region
+/// - Subpixel precision is maintained for accurate localization
 pub fn center_of_mass<T, D>(input: &Array<T, D>) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,

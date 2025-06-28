@@ -63,6 +63,19 @@ pub trait SimdUnifiedOps: Sized + Copy + PartialOrd + Zero {
     /// Fused multiply-add: a * b + c
     fn simd_fma(a: &ArrayView1<Self>, b: &ArrayView1<Self>, c: &ArrayView1<Self>) -> Array1<Self>;
 
+    /// Enhanced cache-optimized addition for large arrays
+    fn simd_add_cache_optimized(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self>;
+
+    /// Ultra-optimized fused multiply-add for maximum performance
+    fn simd_fma_ultra_optimized(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        c: &ArrayView1<Self>,
+    ) -> Array1<Self>;
+
+    /// Adaptive SIMD operation that selects optimal implementation
+    fn simd_add_adaptive(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self>;
+
     /// Matrix transpose
     fn simd_transpose(a: &ArrayView2<Self>) -> Array2<Self>;
 
@@ -260,6 +273,48 @@ impl SimdUnifiedOps for f32 {
             result[i] = a[i] * b[i] + c[i];
         }
         result
+    }
+
+    #[cfg(feature = "simd")]
+    fn simd_add_cache_optimized(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        crate::simd::simd_add_cache_optimized_f32(a, b)
+    }
+
+    #[cfg(not(feature = "simd"))]
+    fn simd_add_cache_optimized(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        a + b
+    }
+
+    #[cfg(feature = "simd")]
+    fn simd_fma_ultra_optimized(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        c: &ArrayView1<Self>,
+    ) -> Array1<Self> {
+        crate::simd::simd_fma_ultra_optimized_f32(a, b, c)
+    }
+
+    #[cfg(not(feature = "simd"))]
+    fn simd_fma_ultra_optimized(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        c: &ArrayView1<Self>,
+    ) -> Array1<Self> {
+        let mut result = Array1::zeros(a.len());
+        for i in 0..a.len() {
+            result[i] = a[i] * b[i] + c[i];
+        }
+        result
+    }
+
+    #[cfg(feature = "simd")]
+    fn simd_add_adaptive(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        crate::simd::simd_adaptive_add_f32(a, b)
+    }
+
+    #[cfg(not(feature = "simd"))]
+    fn simd_add_adaptive(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        a + b
     }
 
     fn simd_transpose(a: &ArrayView2<Self>) -> Array2<Self> {
@@ -469,6 +524,48 @@ impl SimdUnifiedOps for f64 {
             result[i] = a[i] * b[i] + c[i];
         }
         result
+    }
+
+    #[cfg(feature = "simd")]
+    fn simd_add_cache_optimized(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        crate::simd::simd_add_cache_optimized_f64(a, b)
+    }
+
+    #[cfg(not(feature = "simd"))]
+    fn simd_add_cache_optimized(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        a + b
+    }
+
+    #[cfg(feature = "simd")]
+    fn simd_fma_ultra_optimized(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        c: &ArrayView1<Self>,
+    ) -> Array1<Self> {
+        crate::simd::simd_fma_ultra_optimized_f64(a, b, c)
+    }
+
+    #[cfg(not(feature = "simd"))]
+    fn simd_fma_ultra_optimized(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        c: &ArrayView1<Self>,
+    ) -> Array1<Self> {
+        let mut result = Array1::zeros(a.len());
+        for i in 0..a.len() {
+            result[i] = a[i] * b[i] + c[i];
+        }
+        result
+    }
+
+    #[cfg(feature = "simd")]
+    fn simd_add_adaptive(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        crate::simd::simd_adaptive_add_f64(a, b)
+    }
+
+    #[cfg(not(feature = "simd"))]
+    fn simd_add_adaptive(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        a + b
     }
 
     fn simd_transpose(a: &ArrayView2<Self>) -> Array2<Self> {

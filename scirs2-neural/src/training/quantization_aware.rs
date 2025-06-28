@@ -12,8 +12,8 @@ use crate::optimizers::{Optimizer, OptimizerStep};
 use ndarray::prelude::*;
 use ndarray::{Array, IxDyn};
 use num_traits::{Float, FromPrimitive};
-use std::fmt::Debug;
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 /// Quantization scheme for weights and activations
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -54,7 +54,7 @@ impl BitWidth {
             BitWidth::Custom(bits) => *bits,
         }
     }
-    
+
     /// Get the quantization range
     pub fn range(&self) -> (i32, i32) {
         let bits = self.bits() as i32;
@@ -139,7 +139,7 @@ impl QuantizationParams {
             let zero_point = (qmin as f64 - min_val / scale).round() as i32;
             (scale, zero_point.max(qmin).min(qmax))
         };
-        
+
         Self {
             scale,
             zero_point,
@@ -149,12 +149,12 @@ impl QuantizationParams {
             symmetric,
         }
     }
-    
+
     /// Update parameters with new observations
     pub fn update(&mut self, min_val: f64, max_val: f64) {
         self.min_val = self.min_val.min(min_val);
         self.max_val = self.max_val.max(max_val);
-        
+
         let (qmin, qmax) = self.bits.range();
         let (scale, zero_point) = if self.symmetric {
             let max_abs = self.min_val.abs().max(self.max_val.abs());
@@ -165,7 +165,7 @@ impl QuantizationParams {
             let zero_point = (qmin as f64 - self.min_val / scale).round() as i32;
             (scale, zero_point.max(qmin).min(qmax))
         };
-        
+
         self.scale = scale;
         self.zero_point = zero_point;
     }
@@ -194,33 +194,42 @@ impl QuantizationObserver {
             enabled: true,
         }
     }
-    
+
     /// Update observer with new tensor
     pub fn update<F: Float + Debug>(&mut self, tensor: &Array<F, IxDyn>) {
         if !self.enabled {
             return;
         }
-        
-        let min_val = tensor.iter().fold(F::infinity(), |a, &b| a.min(b)).to_f64().unwrap();
-        let max_val = tensor.iter().fold(F::neg_infinity(), |a, &b| a.max(b)).to_f64().unwrap();
-        
+
+        let min_val = tensor
+            .iter()
+            .fold(F::infinity(), |a, &b| a.min(b))
+            .to_f64()
+            .unwrap();
+        let max_val = tensor
+            .iter()
+            .fold(F::neg_infinity(), |a, &b| a.max(b))
+            .to_f64()
+            .unwrap();
+
         if self.num_observations == 0 {
-            self.params = QuantizationParams::new(min_val, max_val, self.params.bits, self.params.symmetric);
+            self.params =
+                QuantizationParams::new(min_val, max_val, self.params.bits, self.params.symmetric);
         } else {
             // Exponential moving average
             let current_min = self.momentum * self.params.min_val + (1.0 - self.momentum) * min_val;
             let current_max = self.momentum * self.params.max_val + (1.0 - self.momentum) * max_val;
             self.params.update(current_min, current_max);
         }
-        
+
         self.num_observations += 1;
     }
-    
+
     /// Get current quantization parameters
     pub fn get_params(&self) -> &QuantizationParams {
         &self.params
     }
-    
+
     /// Enable or disable the observer
     pub fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
@@ -235,18 +244,20 @@ pub fn fake_quantize<F: Float + Debug + FromPrimitive>(
     let (qmin, qmax) = params.bits.range();
     let scale = F::from(params.scale).unwrap();
     let zero_point = F::from(params.zero_point).unwrap();
-    
+
     let mut result = tensor.clone();
-    
+
     for value in result.iter_mut() {
         // Quantize: x_q = round(x / scale) + zero_point
         let quantized = (*value / scale + zero_point).round();
-        let clamped = quantized.max(F::from(qmin).unwrap()).min(F::from(qmax).unwrap());
-        
+        let clamped = quantized
+            .max(F::from(qmin).unwrap())
+            .min(F::from(qmax).unwrap());
+
         // Dequantize: x = (x_q - zero_point) * scale
         *value = (clamped - zero_point) * scale;
     }
-    
+
     Ok(result)
 }
 
@@ -281,11 +292,11 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync> QuantizationAwareTrainer<F>
             quantized_params: HashMap::new(),
         }
     }
-    
+
     /// Initialize observers for a model
     pub fn initialize_observers<L: Layer<F>>(&mut self, model: &L) -> Result<()> {
         let params = model.params();
-        
+
         // Create weight observers
         for (i, _param) in params.iter().enumerate() {
             let observer_name = format!("weight_{}", i);
@@ -296,7 +307,7 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync> QuantizationAwareTrainer<F>
             );
             self.weight_observers.insert(observer_name, observer);
         }
-        
+
         // Create activation observers (would be initialized during forward pass)
         // For now, create a default one
         let activation_observer = QuantizationObserver::new(
@@ -304,45 +315,46 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync> QuantizationAwareTrainer<F>
             self.config.symmetric_activations,
             0.01,
         );
-        self.activation_observers.insert("default_activation".to_string(), activation_observer);
-        
+        self.activation_observers
+            .insert("default_activation".to_string(), activation_observer);
+
         Ok(())
     }
-    
+
     /// Update observers with current model parameters
     pub fn update_weight_observers<L: Layer<F>>(&mut self, model: &L) -> Result<()> {
         if !self.calibration_mode && self.training_step % self.config.observer_update_freq != 0 {
             return Ok(());
         }
-        
+
         let params = model.params();
-        
+
         for (i, param) in params.iter().enumerate() {
             let observer_name = format!("weight_{}", i);
             if let Some(observer) = self.weight_observers.get_mut(&observer_name) {
                 observer.update(param);
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Update activation observers
     pub fn update_activation_observer(&mut self, name: &str, activation: &Array<F, IxDyn>) {
         if let Some(observer) = self.activation_observers.get_mut(name) {
             observer.update(activation);
         }
     }
-    
+
     /// Apply fake quantization to model parameters
     pub fn apply_fake_quantization<L: ParamLayer<F>>(&mut self, model: &mut L) -> Result<()> {
         if !self.config.fake_quantize {
             return Ok(());
         }
-        
+
         let params = model.params();
         let mut quantized_params = Vec::new();
-        
+
         for (i, param) in params.iter().enumerate() {
             let observer_name = format!("weight_{}", i);
             if let Some(observer) = self.weight_observers.get(&observer_name) {
@@ -352,11 +364,11 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync> QuantizationAwareTrainer<F>
                 quantized_params.push(param.clone());
             }
         }
-        
+
         model.set_params(&quantized_params)?;
         Ok(())
     }
-    
+
     /// Train step with quantization-aware training
     pub fn train_step<L, O>(
         &mut self,
@@ -372,16 +384,16 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync> QuantizationAwareTrainer<F>
     {
         // Update weight observers
         self.update_weight_observers(model)?;
-        
+
         // Apply fake quantization to weights
         self.apply_fake_quantization(model)?;
-        
+
         // Forward pass
         let outputs = model.forward(inputs)?;
-        
+
         // Update activation observer (simplified - in practice would instrument forward pass)
         self.update_activation_observer("default_activation", &outputs);
-        
+
         // Fake quantize activations if needed
         let quantized_outputs = if self.config.fake_quantize {
             if let Some(observer) = self.activation_observers.get("default_activation") {
@@ -392,20 +404,20 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync> QuantizationAwareTrainer<F>
         } else {
             outputs
         };
-        
+
         // Compute loss
         let loss = loss_fn.forward(&quantized_outputs, targets)?;
         let grad_output = loss_fn.backward(&quantized_outputs, targets)?;
-        
+
         // Backward pass
         let _grad_input = model.backward(inputs, &grad_output)?;
-        
+
         // Update parameters
         optimizer.step(model)?;
-        
+
         // Update training state
         self.training_step += 1;
-        
+
         // Check if calibration phase is complete
         if self.calibration_mode {
             self.calibration_batches_processed += 1;
@@ -414,10 +426,10 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync> QuantizationAwareTrainer<F>
                 self.finalize_calibration();
             }
         }
-        
+
         Ok(loss)
     }
-    
+
     /// Finalize calibration and prepare for training
     fn finalize_calibration(&mut self) {
         // Disable observers after calibration
@@ -427,31 +439,31 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync> QuantizationAwareTrainer<F>
         for observer in self.activation_observers.values_mut() {
             observer.set_enabled(false);
         }
-        
+
         println!("Calibration complete. Quantization parameters finalized.");
     }
-    
+
     /// Get quantization parameters for deployment
     pub fn get_quantization_parameters(&self) -> HashMap<String, QuantizationParams> {
         let mut params = HashMap::new();
-        
+
         for (name, observer) in &self.weight_observers {
             params.insert(name.clone(), observer.get_params().clone());
         }
-        
+
         for (name, observer) in &self.activation_observers {
             params.insert(name.clone(), observer.get_params().clone());
         }
-        
+
         params
     }
-    
+
     /// Convert model to integer quantized format
     pub fn quantize_model<L: ParamLayer<F>>(&self, model: &L) -> Result<QuantizedModel<F>> {
         let params = model.params();
         let mut quantized_weights = Vec::new();
         let mut weight_params = Vec::new();
-        
+
         for (i, param) in params.iter().enumerate() {
             let observer_name = format!("weight_{}", i);
             if let Some(observer) = self.weight_observers.get(&observer_name) {
@@ -460,16 +472,19 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync> QuantizationAwareTrainer<F>
                 quantized_weights.push(quantized);
                 weight_params.push(qparams.clone());
             } else {
-                return Err(NeuralError::InvalidState(
-                    format!("No observer found for weight {}", i)
-                ));
+                return Err(NeuralError::InvalidState(format!(
+                    "No observer found for weight {}",
+                    i
+                )));
             }
         }
-        
-        let activation_params: Vec<_> = self.activation_observers.values()
+
+        let activation_params: Vec<_> = self
+            .activation_observers
+            .values()
             .map(|obs| obs.get_params().clone())
             .collect();
-        
+
         Ok(QuantizedModel {
             quantized_weights,
             weight_params,
@@ -477,54 +492,61 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync> QuantizationAwareTrainer<F>
             config: self.config.clone(),
         })
     }
-    
+
     /// Quantize a tensor to integer values
-    fn quantize_tensor(&self, tensor: &Array<F, IxDyn>, params: &QuantizationParams) -> Result<Array<i32, IxDyn>> {
+    fn quantize_tensor(
+        &self,
+        tensor: &Array<F, IxDyn>,
+        params: &QuantizationParams,
+    ) -> Result<Array<i32, IxDyn>> {
         let (qmin, qmax) = params.bits.range();
         let scale = params.scale;
         let zero_point = params.zero_point;
-        
+
         let mut result = Array::<i32, _>::zeros(tensor.raw_dim());
-        
+
         for (output, &input) in result.iter_mut().zip(tensor.iter()) {
             let input_f64 = input.to_f64().unwrap();
             let quantized = (input_f64 / scale).round() as i32 + zero_point;
             *output = quantized.max(qmin).min(qmax);
         }
-        
+
         Ok(result)
     }
-    
+
     /// Dequantize a tensor from integer values
-    pub fn dequantize_tensor(quantized: &Array<i32, IxDyn>, params: &QuantizationParams) -> Result<Array<F, IxDyn>> {
+    pub fn dequantize_tensor(
+        quantized: &Array<i32, IxDyn>,
+        params: &QuantizationParams,
+    ) -> Result<Array<F, IxDyn>> {
         let scale = F::from(params.scale).unwrap();
         let zero_point = F::from(params.zero_point).unwrap();
-        
+
         let mut result = Array::<F, _>::zeros(quantized.raw_dim());
-        
+
         for (output, &input) in result.iter_mut().zip(quantized.iter()) {
             let input_f = F::from(input).unwrap();
             *output = (input_f - zero_point) * scale;
         }
-        
+
         Ok(result)
     }
-    
+
     /// Get current training statistics
     pub fn get_statistics(&self) -> QuantizationStatistics {
         let mut weight_ranges = Vec::new();
         let mut activation_ranges = Vec::new();
-        
+
         for observer in self.weight_observers.values() {
             let params = observer.get_params();
             weight_ranges.push((params.min_val, params.max_val));
         }
-        
+
         for observer in self.activation_observers.values() {
             let params = observer.get_params();
             activation_ranges.push((params.min_val, params.max_val));
         }
-        
+
         QuantizationStatistics {
             training_step: self.training_step,
             calibration_mode: self.calibration_mode,
@@ -557,23 +579,27 @@ impl<F: Float + Debug + FromPrimitive> QuantizedModel<F> {
     pub fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // This is a simplified implementation
         // In practice, would need to implement quantized operations
-        
+
         // For now, dequantize weights and perform regular computation
         let mut current_input = input.clone();
-        
-        for (i, (quantized_weight, weight_params)) in self.quantized_weights.iter()
+
+        for (i, (quantized_weight, weight_params)) in self
+            .quantized_weights
+            .iter()
             .zip(self.weight_params.iter())
-            .enumerate() 
+            .enumerate()
         {
             // Dequantize weight
-            let weight = QuantizationAwareTrainer::<F>::dequantize_tensor(quantized_weight, weight_params)?;
-            
+            let weight =
+                QuantizationAwareTrainer::<F>::dequantize_tensor(quantized_weight, weight_params)?;
+
             // Simplified linear operation (would need proper layer implementation)
             if current_input.ndim() == 2 && weight.ndim() == 2 {
-                current_input = current_input.dot(&weight.view().into_dimensionality::<Ix2>().unwrap())
+                current_input = current_input
+                    .dot(&weight.view().into_dimensionality::<Ix2>().unwrap())
                     .into_dyn();
             }
-            
+
             // Apply activation quantization if not the last layer
             if i < self.quantized_weights.len() - 1 {
                 if let Some(activation_params) = self.activation_params.get(0) {
@@ -581,21 +607,21 @@ impl<F: Float + Debug + FromPrimitive> QuantizedModel<F> {
                 }
             }
         }
-        
+
         Ok(current_input)
     }
-    
+
     /// Get model size in bytes
     pub fn model_size(&self) -> usize {
         let mut size = 0;
-        
+
         for quantized_weight in &self.quantized_weights {
             size += quantized_weight.len() * (self.config.weight_bits.bits() as usize / 8).max(1);
         }
-        
+
         size
     }
-    
+
     /// Get compression ratio compared to FP32
     pub fn compression_ratio(&self) -> f32 {
         let fp32_bits = 32;
@@ -623,18 +649,18 @@ pub struct QuantizationStatistics {
 mod tests {
     use super::*;
     use ndarray::Array2;
-    
+
     #[test]
     fn test_bit_width() {
         assert_eq!(BitWidth::Int8.bits(), 8);
         assert_eq!(BitWidth::Int4.bits(), 4);
         assert_eq!(BitWidth::Custom(6).bits(), 6);
-        
+
         let (min, max) = BitWidth::Int8.range();
         assert_eq!(min, -128);
         assert_eq!(max, 127);
     }
-    
+
     #[test]
     fn test_quantization_params() {
         let params = QuantizationParams::new(-1.0, 1.0, BitWidth::Int8, true);
@@ -642,41 +668,41 @@ mod tests {
         assert_eq!(params.zero_point, 0);
         assert!((params.scale - (2.0 / 255.0)).abs() < 1e-6);
     }
-    
+
     #[test]
     fn test_quantization_observer() {
         let mut observer = QuantizationObserver::new(BitWidth::Int8, true, 0.1);
-        
+
         let tensor = Array2::<f32>::from_shape_vec((2, 2), vec![-0.5, 0.0, 0.5, 1.0])
             .unwrap()
             .into_dyn();
-        
+
         observer.update(&tensor);
-        
+
         let params = observer.get_params();
         assert!(params.min_val <= -0.5);
         assert!(params.max_val >= 1.0);
     }
-    
+
     #[test]
     fn test_fake_quantize() {
         let tensor = Array2::<f32>::from_shape_vec((2, 2), vec![-1.0, -0.5, 0.5, 1.0])
             .unwrap()
             .into_dyn();
-        
+
         let params = QuantizationParams::new(-1.0, 1.0, BitWidth::Int8, true);
         let quantized = fake_quantize(&tensor, &params).unwrap();
-        
+
         // Values should be quantized but still in floating point
         assert_eq!(quantized.shape(), tensor.shape());
-        
+
         // Check that values are quantized (not exactly the original values)
         for (&original, &quantized_val) in tensor.iter().zip(quantized.iter()) {
             let diff = (original - quantized_val).abs();
             assert!(diff <= params.scale as f32); // Should be within quantization error
         }
     }
-    
+
     #[test]
     fn test_quantization_config_default() {
         let config = QuantizationConfig::default();

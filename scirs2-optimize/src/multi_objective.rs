@@ -1073,45 +1073,103 @@ impl NSGAIII {
             let normalized_objectives = self.normalize_objectives(&all_solutions);
 
             // Associate solutions with reference points
-            let associations = self.associate_with_reference_points(
+            let (associations, niche_count) = self.associate_with_reference_points(
                 &normalized_objectives,
                 &new_population,
                 partial_front,
             );
 
             // Select solutions based on reference point niching
-            let selected = self.reference_point_selection(partial_front, associations, remaining);
+            let selected = self.reference_point_selection(
+                partial_front,
+                associations,
+                niche_count,
+                remaining,
+                &normalized_objectives,
+            );
             new_population.extend(selected);
         }
 
         new_population
     }
 
-    /// Normalize objectives using ideal and nadir points
+    /// Normalize objectives using ideal and nadir points with adaptive normalization
     fn normalize_objectives(&self, solutions: &[&MultiObjectiveSolution]) -> Array2<f64> {
         let n_solutions = solutions.len();
         let mut normalized = Array2::zeros((n_solutions, self.n_objectives));
 
-        // Find ideal point (minimum in each objective)
+        if n_solutions == 0 {
+            return normalized;
+        }
+
+        // Find ideal point (minimum in each objective) and nadir point (maximum in each objective)
         let mut ideal_point = Array1::from_elem(self.n_objectives, f64::INFINITY);
         let mut nadir_point = Array1::from_elem(self.n_objectives, f64::NEG_INFINITY);
 
-        for solution in solutions {
+        // Consider only feasible solutions for normalization
+        let feasible_solutions: Vec<&MultiObjectiveSolution> = solutions
+            .iter()
+            .filter(|sol| sol.constraint_violation <= 1e-8)
+            .copied()
+            .collect();
+
+        let solutions_for_norm = if feasible_solutions.is_empty() {
+            solutions // If no feasible solutions, use all
+        } else {
+            &feasible_solutions
+        };
+
+        for solution in solutions_for_norm {
             for (i, &obj_val) in solution.objectives.iter().enumerate() {
                 ideal_point[i] = ideal_point[i].min(obj_val);
                 nadir_point[i] = nadir_point[i].max(obj_val);
             }
         }
 
-        // Normalize objectives
+        // Adaptive normalization: for NSGA-III, we might need to use extreme points
+        // For now, we'll use standard min-max normalization with robustness improvements
         for (sol_idx, solution) in solutions.iter().enumerate() {
             for (obj_idx, &obj_val) in solution.objectives.iter().enumerate() {
                 let range = nadir_point[obj_idx] - ideal_point[obj_idx];
+
+                // Handle edge cases more robustly
                 normalized[[sol_idx, obj_idx]] = if range > 1e-12 {
-                    (obj_val - ideal_point[obj_idx]) / range
+                    let normalized_val = (obj_val - ideal_point[obj_idx]) / range;
+                    // Ensure normalized values are non-negative
+                    normalized_val.max(0.0)
                 } else {
+                    // If all values are the same, set normalized value to 0
                     0.0
                 };
+            }
+        }
+
+        // Apply stability enhancement: if any objective has very small range,
+        // use alternative normalization based on population variance
+        for obj_idx in 0..self.n_objectives {
+            let range = nadir_point[obj_idx] - ideal_point[obj_idx];
+            if range < 1e-10 {
+                // Calculate variance-based normalization
+                let mean: f64 = solutions
+                    .iter()
+                    .map(|sol| sol.objectives[obj_idx])
+                    .sum::<f64>()
+                    / n_solutions as f64;
+
+                let variance: f64 = solutions
+                    .iter()
+                    .map(|sol| (sol.objectives[obj_idx] - mean).powi(2))
+                    .sum::<f64>()
+                    / n_solutions as f64;
+
+                let std_dev = variance.sqrt();
+
+                if std_dev > 1e-12 {
+                    for (sol_idx, solution) in solutions.iter().enumerate() {
+                        normalized[[sol_idx, obj_idx]] =
+                            ((solution.objectives[obj_idx] - mean) / std_dev + 3.0) / 6.0;
+                    }
+                }
             }
         }
 
@@ -1124,7 +1182,7 @@ impl NSGAIII {
         normalized_objectives: &Array2<f64>,
         new_population: &[MultiObjectiveSolution],
         partial_front: &[MultiObjectiveSolution],
-    ) -> Vec<Vec<usize>> {
+    ) -> (Vec<Vec<usize>>, Vec<usize>) {
         let n_ref_points = self.reference_points.nrows();
         let mut associations = vec![Vec::new(); n_ref_points];
 
@@ -1143,7 +1201,7 @@ impl NSGAIII {
             associations[ref_point_idx].push(i);
         }
 
-        associations
+        (associations, niche_count)
     }
 
     /// Find closest reference point for a solution
@@ -1198,63 +1256,116 @@ impl NSGAIII {
         }
     }
 
-    /// Select solutions using reference point niching
+    /// Select solutions using reference point niching (enhanced NSGA-III mechanism)
     fn reference_point_selection(
         &self,
         partial_front: &[MultiObjectiveSolution],
-        associations: Vec<Vec<usize>>,
+        mut associations: Vec<Vec<usize>>,
+        mut niche_count: Vec<usize>,
         k: usize,
+        normalized_objectives: &Array2<f64>,
     ) -> Vec<MultiObjectiveSolution> {
         let mut selected = Vec::new();
-        let mut niche_count = vec![0; self.reference_points.nrows()];
-
-        // Calculate current niche counts (should be 0 for partial front)
+        let mut available_solutions: Vec<bool> = vec![true; partial_front.len()];
+        let start_idx = normalized_objectives.nrows() - partial_front.len();
 
         for _ in 0..k {
-            // Find reference point with minimum niche count that has associated solutions
+            // Find reference point with minimum niche count that has available associated solutions
             let mut min_niche_count = usize::MAX;
-            let mut selected_ref_points = Vec::new();
+            let mut candidate_ref_points = Vec::new();
 
             for (ref_idx, associated_solutions) in associations.iter().enumerate() {
-                if !associated_solutions.is_empty() && niche_count[ref_idx] < min_niche_count {
-                    min_niche_count = niche_count[ref_idx];
-                    selected_ref_points.clear();
-                    selected_ref_points.push(ref_idx);
-                } else if !associated_solutions.is_empty()
-                    && niche_count[ref_idx] == min_niche_count
-                {
-                    selected_ref_points.push(ref_idx);
+                let available_assocs = associated_solutions
+                    .iter()
+                    .filter(|&&sol_idx| available_solutions[sol_idx])
+                    .count();
+
+                if available_assocs > 0 {
+                    if niche_count[ref_idx] < min_niche_count {
+                        min_niche_count = niche_count[ref_idx];
+                        candidate_ref_points.clear();
+                        candidate_ref_points.push(ref_idx);
+                    } else if niche_count[ref_idx] == min_niche_count {
+                        candidate_ref_points.push(ref_idx);
+                    }
                 }
             }
 
-            if selected_ref_points.is_empty() {
+            if candidate_ref_points.is_empty() {
                 break;
             }
 
-            // Randomly select one reference point
+            // Randomly select one reference point from candidates
             let mut rng = rng();
-            let ref_point_idx = selected_ref_points[rng.random_range(0..selected_ref_points.len())];
+            let selected_ref_point =
+                candidate_ref_points[rng.random_range(0..candidate_ref_points.len())];
 
-            // Select solution from this reference point
-            let associated_indices = &associations[ref_point_idx];
+            // Select the best solution associated with this reference point
+            let associated_indices: Vec<usize> = associations[selected_ref_point]
+                .iter()
+                .filter(|&&sol_idx| available_solutions[sol_idx])
+                .copied()
+                .collect();
+
             if !associated_indices.is_empty() {
-                let sol_idx = if niche_count[ref_point_idx] == 0 {
-                    // If niche is empty, select closest solution
-                    associated_indices[0] // Simplified: could compute actual closest
+                let selected_sol_idx = if niche_count[selected_ref_point] == 0 {
+                    // If niche is empty, select the solution with minimum perpendicular distance
+                    self.select_closest_to_reference_point(
+                        &associated_indices,
+                        selected_ref_point,
+                        normalized_objectives,
+                        start_idx,
+                    )
                 } else {
-                    // Random selection
+                    // If niche already has solutions, randomly select
                     associated_indices[rng.random_range(0..associated_indices.len())]
                 };
 
-                selected.push(partial_front[sol_idx].clone());
-                niche_count[ref_point_idx] += 1;
+                // Add selected solution to result
+                selected.push(partial_front[selected_sol_idx].clone());
 
-                // Remove selected solution from future consideration
-                // (This is simplified - in practice would modify associations)
+                // Update niche count
+                niche_count[selected_ref_point] += 1;
+
+                // Mark solution as unavailable
+                available_solutions[selected_sol_idx] = false;
+
+                // Remove selected solution from all associations
+                for assoc_list in &mut associations {
+                    assoc_list.retain(|&idx| idx != selected_sol_idx);
+                }
             }
         }
 
         selected
+    }
+
+    /// Select the solution closest to a reference point (minimum perpendicular distance)
+    fn select_closest_to_reference_point(
+        &self,
+        candidate_indices: &[usize],
+        ref_point_idx: usize,
+        normalized_objectives: &Array2<f64>,
+        start_idx: usize,
+    ) -> usize {
+        let mut min_distance = f64::INFINITY;
+        let mut best_candidate = candidate_indices[0];
+
+        let reference_point = self.reference_points.row(ref_point_idx);
+
+        for &candidate_idx in candidate_indices {
+            let solution_idx = start_idx + candidate_idx;
+            let solution_objectives = normalized_objectives.row(solution_idx);
+
+            let distance = self.perpendicular_distance(&solution_objectives, &reference_point);
+
+            if distance < min_distance {
+                min_distance = distance;
+                best_candidate = candidate_idx;
+            }
+        }
+
+        best_candidate
     }
 
     /// Non-dominated sorting (reuse from NSGA-II)
@@ -1771,5 +1882,115 @@ mod tests {
 
         assert!(hypervolume > 0.0);
         assert!(hypervolume < 16.0); // Should be less than total area
+    }
+
+    #[test]
+    fn test_nsga3_reference_points() {
+        // Test reference point generation for 3 objectives
+        let ref_points = NSGAIII::generate_reference_points(3, 6);
+
+        assert!(ref_points.nrows() > 0);
+        assert_eq!(ref_points.ncols(), 3);
+
+        // Check that all reference points sum to approximately 1 (after normalization)
+        for row in ref_points.outer_iter() {
+            let sum: f64 = row.sum();
+            assert_abs_diff_eq!(sum, 1.0, epsilon = 1e-10);
+        }
+
+        // Check that all values are non-negative
+        for &val in ref_points.iter() {
+            assert!(val >= 0.0);
+        }
+    }
+
+    #[test]
+    fn test_nsga3_basic() {
+        // Simple tri-objective problem: minimize (x^2, (x-1)^2, (x-0.5)^2)
+        let objective_fn =
+            |x: &ArrayView1<f64>| array![x[0].powi(2), (x[0] - 1.0).powi(2), (x[0] - 0.5).powi(2)];
+
+        let config = MultiObjectiveConfig {
+            population_size: 30,
+            max_generations: 20,
+            ..Default::default()
+        };
+
+        let mut optimizer = NSGAIII::new(1, 3, Some(config))
+            .with_bounds(array![-1.0], array![2.0])
+            .unwrap();
+
+        let result = optimizer
+            .optimize(objective_fn, None::<fn(&ArrayView1<f64>) -> f64>)
+            .unwrap();
+
+        assert!(result.success);
+        assert!(!result.pareto_front.is_empty());
+        assert!(result.n_evaluations > 0);
+
+        // Check that Pareto front solutions are reasonable
+        for solution in &result.pareto_front {
+            assert!(solution.variables[0] >= -1.0 && solution.variables[0] <= 2.0);
+            assert!(solution.constraint_violation == 0.0);
+            assert!(solution.rank == 0);
+        }
+    }
+
+    #[test]
+    fn test_nsga3_perpendicular_distance() {
+        let config = MultiObjectiveConfig::default();
+        let optimizer = NSGAIII::new(2, 3, Some(config));
+
+        let point = array![0.3, 0.4, 0.3];
+        let reference = array![0.33, 0.33, 0.34]; // Should sum to ~1
+
+        let distance = optimizer.perpendicular_distance(&point.view(), &reference.view());
+
+        assert!(distance >= 0.0);
+        assert!(distance.is_finite());
+    }
+
+    #[test]
+    fn test_nsga3_with_constraints() {
+        // Test with a constrained problem
+        let objective_fn = |x: &ArrayView1<f64>| {
+            array![
+                x[0].powi(2) + x[1].powi(2),
+                (x[0] - 1.0).powi(2) + x[1].powi(2)
+            ]
+        };
+
+        let constraint_fn = |x: &ArrayView1<f64>| -> f64 {
+            // Constraint: x[0] + x[1] <= 1.0 (violated if > 0)
+            x[0] + x[1] - 1.0
+        };
+
+        let config = MultiObjectiveConfig {
+            population_size: 40,
+            max_generations: 15,
+            ..Default::default()
+        };
+
+        let mut optimizer = NSGAIII::new(2, 2, Some(config))
+            .with_bounds(array![-2.0, -2.0], array![2.0, 2.0])
+            .unwrap();
+
+        let result = optimizer
+            .optimize(objective_fn, Some(constraint_fn))
+            .unwrap();
+
+        assert!(result.success);
+
+        // Check that some solutions in the Pareto front satisfy constraints
+        let feasible_count = result
+            .pareto_front
+            .iter()
+            .filter(|sol| sol.constraint_violation <= 1e-8)
+            .count();
+
+        assert!(
+            feasible_count > 0,
+            "Should have at least some feasible solutions in Pareto front"
+        );
     }
 }

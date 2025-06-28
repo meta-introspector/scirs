@@ -88,13 +88,19 @@ impl DatabaseConfig {
                 let host = self.host.as_deref().unwrap_or("localhost");
                 let port = self.port.unwrap_or(5432);
                 let user = self.username.as_deref().unwrap_or("postgres");
-                format!("postgresql://{}:password@{}:{}/{}", user, host, port, self.database)
+                format!(
+                    "postgresql://{}:password@{}:{}/{}",
+                    user, host, port, self.database
+                )
             }
             DatabaseType::MySQL => {
                 let host = self.host.as_deref().unwrap_or("localhost");
                 let port = self.port.unwrap_or(3306);
                 let user = self.username.as_deref().unwrap_or("root");
-                format!("mysql://{}:password@{}:{}/{}", user, host, port, self.database)
+                format!(
+                    "mysql://{}:password@{}:{}/{}",
+                    user, host, port, self.database
+                )
             }
             DatabaseType::SQLite => {
                 format!("sqlite://{}", self.database)
@@ -194,7 +200,11 @@ impl QueryBuilder {
 
     /// Set ORDER BY
     pub fn order_by(mut self, column: impl Into<String>, desc: bool) -> Self {
-        self.order_by = Some(format!("{} {}", column.into(), if desc { "DESC" } else { "ASC" }));
+        self.order_by = Some(format!(
+            "{} {}",
+            column.into(),
+            if desc { "DESC" } else { "ASC" }
+        ));
         self
     }
 
@@ -215,23 +225,23 @@ impl QueryBuilder {
         match self.query_type {
             QueryType::Select => {
                 let mut sql = format!("SELECT {} FROM {}", self.columns.join(", "), self.table);
-                
+
                 if !self.conditions.is_empty() {
                     sql.push_str(&format!(" WHERE {}", self.conditions.join(" AND ")));
                 }
-                
+
                 if let Some(order) = &self.order_by {
                     sql.push_str(&format!(" ORDER BY {}", order));
                 }
-                
+
                 if let Some(limit) = self.limit {
                     sql.push_str(&format!(" LIMIT {}", limit));
                 }
-                
+
                 if let Some(offset) = self.offset {
                     sql.push_str(&format!(" OFFSET {}", offset));
                 }
-                
+
                 sql
             }
             QueryType::Insert => {
@@ -239,7 +249,11 @@ impl QueryBuilder {
                     "INSERT INTO {} ({}) VALUES ({})",
                     self.table,
                     self.columns.join(", "),
-                    self.values.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+                    self.values
+                        .iter()
+                        .map(|_| "?")
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 )
             }
             _ => String::new(),
@@ -251,7 +265,7 @@ impl QueryBuilder {
         match self.query_type {
             QueryType::Select => {
                 let mut query = serde_json::json!({});
-                
+
                 // Convert SQL-like conditions to MongoDB query
                 for condition in &self.conditions {
                     // Simple parsing - in real implementation would be more sophisticated
@@ -259,7 +273,7 @@ impl QueryBuilder {
                         query[field] = serde_json::json!(value.trim_matches('\''));
                     }
                 }
-                
+
                 serde_json::json!({
                     "collection": self.table,
                     "filter": query,
@@ -308,31 +322,36 @@ impl ResultSet {
     /// Convert to Array2<f64> if all values are numeric
     pub fn to_array(&self) -> Result<Array2<f64>> {
         let mut data = Vec::new();
-        
+
         for row in &self.rows {
             for value in row {
-                let num = value.as_f64()
-                    .ok_or_else(|| IoError::ConversionError("Non-numeric value in result set".to_string()))?;
+                let num = value.as_f64().ok_or_else(|| {
+                    IoError::ConversionError("Non-numeric value in result set".to_string())
+                })?;
                 data.push(num);
             }
         }
-        
+
         Array2::from_shape_vec((self.row_count(), self.column_count()), data)
             .map_err(|e| IoError::Other(e.to_string()))
     }
 
     /// Get column by name as Array1
     pub fn get_column(&self, name: &str) -> Result<Array1<f64>> {
-        let col_idx = self.columns.iter().position(|c| c == name)
+        let col_idx = self
+            .columns
+            .iter()
+            .position(|c| c == name)
             .ok_or_else(|| IoError::Other(format!("Column '{}' not found", name)))?;
-        
+
         let mut data = Vec::new();
         for row in &self.rows {
-            let num = row[col_idx].as_f64()
-                .ok_or_else(|| IoError::ConversionError("Non-numeric value in column".to_string()))?;
+            let num = row[col_idx].as_f64().ok_or_else(|| {
+                IoError::ConversionError("Non-numeric value in column".to_string())
+            })?;
             data.push(num);
         }
-        
+
         Ok(Array1::from_vec(data))
     }
 }
@@ -341,19 +360,19 @@ impl ResultSet {
 pub trait DatabaseConnection: Send + Sync {
     /// Execute a query and return results
     fn query(&self, query: &QueryBuilder) -> Result<ResultSet>;
-    
+
     /// Execute a raw SQL query
     fn execute_sql(&self, sql: &str, params: &[serde_json::Value]) -> Result<ResultSet>;
-    
+
     /// Insert data from Array2
     fn insert_array(&self, table: &str, data: ArrayView2<f64>, columns: &[&str]) -> Result<usize>;
-    
+
     /// Create table from schema
     fn create_table(&self, table: &str, schema: &TableSchema) -> Result<()>;
-    
+
     /// Check if table exists
     fn table_exists(&self, table: &str) -> Result<bool>;
-    
+
     /// Get table schema
     fn get_schema(&self, table: &str) -> Result<TableSchema>;
 }
@@ -410,9 +429,10 @@ impl DatabaseConnector {
             DatabaseType::PostgreSQL => Ok(Box::new(PostgreSQLConnection::new(config)?)),
             DatabaseType::MySQL => Ok(Box::new(MySQLConnection::new(config)?)),
             DatabaseType::DuckDB => Ok(Box::new(DuckDBConnection::new(config)?)),
-            _ => Err(IoError::UnsupportedFormat(
-                format!("Database type {:?} not yet implemented", config.db_type)
-            )),
+            _ => Err(IoError::UnsupportedFormat(format!(
+                "Database type {:?} not yet implemented",
+                config.db_type
+            ))),
         }
     }
 }
@@ -428,7 +448,7 @@ impl SQLiteConnection {
             path: config.database.clone(),
         })
     }
-    
+
     /// Convert DataType enum to SQL type string
     fn data_type_to_sql(&self, data_type: &DataType) -> &'static str {
         match data_type {
@@ -446,11 +466,11 @@ impl SQLiteConnection {
             DataType::Binary => "BLOB",
         }
     }
-    
+
     /// Convert SQL type string to DataType enum
     fn sql_type_to_data_type(&self, sql_type: &str) -> DataType {
         let sql_upper = sql_type.to_uppercase();
-        
+
         if sql_upper.contains("INT") {
             if sql_upper.contains("BIG") {
                 DataType::BigInt
@@ -485,7 +505,7 @@ impl DatabaseConnection for SQLiteConnection {
     fn query(&self, query: &QueryBuilder) -> Result<ResultSet> {
         // Simplified implementation - would use actual SQLite library
         let mut result = ResultSet::new(query.columns.clone());
-        
+
         // Mock some data
         if query.table == "test_table" {
             result.add_row(vec![
@@ -494,30 +514,30 @@ impl DatabaseConnection for SQLiteConnection {
                 serde_json::json!(3.14),
             ]);
         }
-        
+
         Ok(result)
     }
 
-    fn execute_sql(&self, sql: &str, params: &[serde_json::Value]) -> Result<ResultSet> {
+    fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
         // For a production implementation, you would use rusqlite here
         // For now, provide a sophisticated mock implementation
-        
+
         let mut result = ResultSet::new(vec![]);
-        
+
         // Parse common SQL patterns
         let sql_lower = sql.to_lowercase();
-        
+
         if sql_lower.contains("create table") {
             // Table creation - no rows returned
             return Ok(result);
         }
-        
+
         if sql_lower.contains("insert into") {
             result = ResultSet::new(vec!["rows_affected".to_string()]);
             result.add_row(vec![serde_json::json!(1)]);
             return Ok(result);
         }
-        
+
         if sql_lower.contains("select") {
             // Determine columns from query
             if sql_lower.contains("schema_migrations") {
@@ -535,7 +555,11 @@ impl DatabaseConnection for SQLiteConnection {
                 ]);
             } else {
                 // Generic select - return some mock data
-                result = ResultSet::new(vec!["id".to_string(), "name".to_string(), "value".to_string()]);
+                result = ResultSet::new(vec![
+                    "id".to_string(),
+                    "name".to_string(),
+                    "value".to_string(),
+                ]);
                 for i in 1..=5 {
                     result.add_row(vec![
                         serde_json::json!(i),
@@ -545,11 +569,16 @@ impl DatabaseConnection for SQLiteConnection {
                 }
             }
         }
-        
+
         Ok(result)
     }
 
-    fn insert_array(&self, _table: &str, data: ArrayView2<f64>, columns: &[&str]) -> Result<usize> {
+    fn insert_array(
+        &self,
+        _table: &str,
+        data: ArrayView2<f64>,
+        _columns: &[&str],
+    ) -> Result<usize> {
         Ok(data.nrows())
     }
 
@@ -575,7 +604,7 @@ impl DatabaseConnection for SQLiteConnection {
 pub mod timeseries {
     use super::*;
     use chrono::{DateTime, Utc};
-    
+
     /// Time series data point
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct TimeSeriesPoint {
@@ -583,7 +612,7 @@ pub mod timeseries {
         pub value: f64,
         pub tags: HashMap<String, String>,
     }
-    
+
     /// Time series query builder
     pub struct TimeSeriesQuery {
         pub measurement: String,
@@ -593,7 +622,7 @@ pub mod timeseries {
         pub aggregation: Option<Aggregation>,
         pub group_by: Vec<String>,
     }
-    
+
     #[derive(Debug, Clone)]
     pub enum Aggregation {
         Mean,
@@ -603,7 +632,7 @@ pub mod timeseries {
         Count,
         StdDev,
     }
-    
+
     impl TimeSeriesQuery {
         pub fn new(measurement: impl Into<String>) -> Self {
             Self {
@@ -615,18 +644,18 @@ pub mod timeseries {
                 group_by: Vec::new(),
             }
         }
-        
+
         pub fn time_range(mut self, start: DateTime<Utc>, end: DateTime<Utc>) -> Self {
             self.start_time = Some(start);
             self.end_time = Some(end);
             self
         }
-        
+
         pub fn tag(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
             self.tags.insert(key.into(), value.into());
             self
         }
-        
+
         pub fn aggregate(mut self, agg: Aggregation) -> Self {
             self.aggregation = Some(agg);
             self
@@ -637,7 +666,7 @@ pub mod timeseries {
 /// Bulk operations for efficient data loading
 pub mod bulk {
     use super::*;
-    
+
     /// Bulk loader for efficient data insertion
     pub struct BulkLoader {
         batch_size: usize,
@@ -645,7 +674,7 @@ pub mod bulk {
         table: String,
         columns: Vec<String>,
     }
-    
+
     impl BulkLoader {
         pub fn new(table: impl Into<String>, columns: Vec<impl Into<String>>) -> Self {
             Self {
@@ -655,12 +684,12 @@ pub mod bulk {
                 columns: columns.into_iter().map(|c| c.into()).collect(),
             }
         }
-        
+
         pub fn batch_size(mut self, size: usize) -> Self {
             self.batch_size = size;
             self
         }
-        
+
         pub fn add_row(&mut self, row: Vec<serde_json::Value>) -> Result<()> {
             if row.len() != self.columns.len() {
                 return Err(IoError::Other("Row length mismatch".to_string()));
@@ -668,18 +697,17 @@ pub mod bulk {
             self.buffer.push(row);
             Ok(())
         }
-        
+
         pub fn add_array(&mut self, data: ArrayView2<f64>) -> Result<()> {
             for row in data.rows() {
-                let json_row: Vec<serde_json::Value> = row.iter()
-                    .map(|&v| serde_json::json!(v))
-                    .collect();
+                let json_row: Vec<serde_json::Value> =
+                    row.iter().map(|&v| serde_json::json!(v)).collect();
                 self.add_row(json_row)?;
             }
             Ok(())
         }
-        
-        pub fn flush(&mut self, conn: &dyn DatabaseConnection) -> Result<usize> {
+
+        pub fn flush(&mut self, _conn: &dyn DatabaseConnection) -> Result<usize> {
             let total = self.buffer.len();
             // In real implementation, would batch insert
             self.buffer.clear();
@@ -710,9 +738,9 @@ impl DatabaseConnection for PostgreSQLConnection {
     fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
         // Mock PostgreSQL implementation
         let mut result = ResultSet::new(vec![]);
-        
+
         let sql_lower = sql.to_lowercase();
-        
+
         if sql_lower.contains("select") {
             result = ResultSet::new(vec!["id".to_string(), "data".to_string()]);
             result.add_row(vec![
@@ -720,11 +748,16 @@ impl DatabaseConnection for PostgreSQLConnection {
                 serde_json::json!("postgresql_data"),
             ]);
         }
-        
+
         Ok(result)
     }
 
-    fn insert_array(&self, _table: &str, data: ArrayView2<f64>, _columns: &[&str]) -> Result<usize> {
+    fn insert_array(
+        &self,
+        _table: &str,
+        data: ArrayView2<f64>,
+        _columns: &[&str],
+    ) -> Result<usize> {
         Ok(data.nrows())
     }
 
@@ -768,21 +801,23 @@ impl DatabaseConnection for MySQLConnection {
     fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
         // Mock MySQL implementation
         let mut result = ResultSet::new(vec![]);
-        
+
         let sql_lower = sql.to_lowercase();
-        
+
         if sql_lower.contains("select") {
             result = ResultSet::new(vec!["id".to_string(), "data".to_string()]);
-            result.add_row(vec![
-                serde_json::json!(1),
-                serde_json::json!("mysql_data"),
-            ]);
+            result.add_row(vec![serde_json::json!(1), serde_json::json!("mysql_data")]);
         }
-        
+
         Ok(result)
     }
 
-    fn insert_array(&self, _table: &str, data: ArrayView2<f64>, _columns: &[&str]) -> Result<usize> {
+    fn insert_array(
+        &self,
+        _table: &str,
+        data: ArrayView2<f64>,
+        _columns: &[&str],
+    ) -> Result<usize> {
         Ok(data.nrows())
     }
 
@@ -826,9 +861,9 @@ impl DatabaseConnection for DuckDBConnection {
     fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
         // Mock DuckDB implementation - optimized for analytics
         let mut result = ResultSet::new(vec![]);
-        
+
         let sql_lower = sql.to_lowercase();
-        
+
         if sql_lower.contains("select") {
             // Return analytical data
             result = ResultSet::new(vec![
@@ -836,7 +871,7 @@ impl DatabaseConnection for DuckDBConnection {
                 "count".to_string(),
                 "avg_value".to_string(),
             ]);
-            
+
             result.add_row(vec![
                 serde_json::json!("performance"),
                 serde_json::json!(1000),
@@ -848,11 +883,16 @@ impl DatabaseConnection for DuckDBConnection {
                 serde_json::json!(87.2),
             ]);
         }
-        
+
         Ok(result)
     }
 
-    fn insert_array(&self, _table: &str, data: ArrayView2<f64>, _columns: &[&str]) -> Result<usize> {
+    fn insert_array(
+        &self,
+        _table: &str,
+        data: ArrayView2<f64>,
+        _columns: &[&str],
+    ) -> Result<usize> {
         // DuckDB is optimized for bulk inserts
         Ok(data.nrows())
     }
@@ -885,7 +925,7 @@ mod tests {
             .host("localhost")
             .port(5432)
             .credentials("user", "pass");
-        
+
         assert_eq!(config.database, "mydb");
         assert_eq!(config.host, Some("localhost".to_string()));
         assert_eq!(config.port, Some(5432));
@@ -898,7 +938,7 @@ mod tests {
             .where_clause("age > 18")
             .order_by("name", false)
             .limit(10);
-        
+
         let sql = query.build_sql();
         assert!(sql.contains("SELECT id, name, email FROM users"));
         assert!(sql.contains("WHERE age > 18"));
@@ -911,10 +951,10 @@ mod tests {
         let mut result = ResultSet::new(vec!["id".to_string(), "value".to_string()]);
         result.add_row(vec![serde_json::json!(1), serde_json::json!(10.5)]);
         result.add_row(vec![serde_json::json!(2), serde_json::json!(20.3)]);
-        
+
         assert_eq!(result.row_count(), 2);
         assert_eq!(result.column_count(), 2);
-        
+
         let array = result.to_array().unwrap();
         assert_eq!(array.shape(), &[2, 2]);
     }
@@ -943,11 +983,11 @@ impl ConnectionPool {
             max_connections,
         }
     }
-    
+
     /// Get a connection from the pool
     pub fn get_connection(&self) -> Result<PooledConnection> {
         let mut connections = self.connections.lock().unwrap();
-        
+
         if let Some(conn) = connections.pop() {
             Ok(PooledConnection {
                 connection: conn,
@@ -973,7 +1013,7 @@ pub struct PooledConnection {
 
 impl std::ops::Deref for PooledConnection {
     type Target = dyn DatabaseConnection;
-    
+
     fn deref(&self) -> &Self::Target {
         &*self.connection
     }
@@ -997,24 +1037,26 @@ impl Transaction {
     pub fn new(connection: Box<dyn DatabaseConnection>) -> Result<Self> {
         let savepoint = format!("sp_{}", uuid::Uuid::new_v4());
         connection.execute_sql(&format!("SAVEPOINT {}", savepoint), &[])?;
-        
+
         Ok(Self {
             connection,
             savepoint,
             committed: false,
         })
     }
-    
+
     /// Commit the transaction
     pub fn commit(mut self) -> Result<()> {
-        self.connection.execute_sql(&format!("RELEASE SAVEPOINT {}", self.savepoint), &[])?;
+        self.connection
+            .execute_sql(&format!("RELEASE SAVEPOINT {}", self.savepoint), &[])?;
         self.committed = true;
         Ok(())
     }
-    
+
     /// Rollback the transaction
     pub fn rollback(mut self) -> Result<()> {
-        self.connection.execute_sql(&format!("ROLLBACK TO SAVEPOINT {}", self.savepoint), &[])?;
+        self.connection
+            .execute_sql(&format!("ROLLBACK TO SAVEPOINT {}", self.savepoint), &[])?;
         self.committed = true;
         Ok(())
     }
@@ -1023,7 +1065,9 @@ impl Transaction {
 impl Drop for Transaction {
     fn drop(&mut self) {
         if !self.committed {
-            let _ = self.connection.execute_sql(&format!("ROLLBACK TO SAVEPOINT {}", self.savepoint), &[]);
+            let _ = self
+                .connection
+                .execute_sql(&format!("ROLLBACK TO SAVEPOINT {}", self.savepoint), &[]);
         }
     }
 }
@@ -1038,12 +1082,16 @@ impl PreparedStatement {
     pub fn new(sql: impl Into<String>) -> Result<Self> {
         let sql = sql.into();
         let param_count = sql.matches('?').count();
-        
+
         Ok(Self { sql, param_count })
     }
-    
+
     /// Execute with parameters
-    pub fn execute(&self, conn: &dyn DatabaseConnection, params: &[serde_json::Value]) -> Result<ResultSet> {
+    pub fn execute(
+        &self,
+        conn: &dyn DatabaseConnection,
+        params: &[serde_json::Value],
+    ) -> Result<ResultSet> {
         if params.len() != self.param_count {
             return Err(IoError::Other(format!(
                 "Parameter count mismatch: expected {}, got {}",
@@ -1051,7 +1099,7 @@ impl PreparedStatement {
                 params.len()
             )));
         }
-        
+
         conn.execute_sql(&self.sql, params)
     }
 }
@@ -1060,7 +1108,7 @@ impl PreparedStatement {
 pub mod migration {
     use super::*;
     use chrono::{DateTime, Utc};
-    
+
     /// Database migration
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Migration {
@@ -1070,33 +1118,33 @@ pub mod migration {
         pub down_sql: String,
         pub applied_at: Option<DateTime<Utc>>,
     }
-    
+
     /// Migration manager
     pub struct MigrationManager {
         migrations: Vec<Migration>,
     }
-    
+
     impl MigrationManager {
         pub fn new() -> Self {
             Self {
                 migrations: Vec::new(),
             }
         }
-        
+
         /// Add a migration
         pub fn add_migration(&mut self, migration: Migration) {
             self.migrations.push(migration);
         }
-        
+
         /// Apply pending migrations
         pub fn migrate(&self, conn: &dyn DatabaseConnection) -> Result<usize> {
             // Ensure migration table exists
             self.ensure_migration_table(conn)?;
-            
+
             // Get applied migrations
             let applied = self.get_applied_migrations(conn)?;
             let mut count = 0;
-            
+
             for migration in &self.migrations {
                 if !applied.contains(&migration.version) {
                     conn.execute_sql(&migration.up_sql, &[])?;
@@ -1104,24 +1152,25 @@ pub mod migration {
                     count += 1;
                 }
             }
-            
+
             Ok(count)
         }
-        
+
         /// Rollback last migration
         pub fn rollback(&self, conn: &dyn DatabaseConnection) -> Result<()> {
             let applied = self.get_applied_migrations(conn)?;
-            
+
             if let Some(last_version) = applied.last() {
-                if let Some(migration) = self.migrations.iter().find(|m| &m.version == last_version) {
+                if let Some(migration) = self.migrations.iter().find(|m| &m.version == last_version)
+                {
                     conn.execute_sql(&migration.down_sql, &[])?;
                     self.remove_migration_record(conn, last_version)?;
                 }
             }
-            
+
             Ok(())
         }
-        
+
         fn ensure_migration_table(&self, conn: &dyn DatabaseConnection) -> Result<()> {
             let schema = TableSchema {
                 name: "schema_migrations".to_string(),
@@ -1142,26 +1191,28 @@ pub mod migration {
                 primary_key: Some(vec!["version".to_string()]),
                 indexes: vec![],
             };
-            
+
             if !conn.table_exists("schema_migrations")? {
                 conn.create_table("schema_migrations", &schema)?;
             }
-            
+
             Ok(())
         }
-        
+
         fn get_applied_migrations(&self, conn: &dyn DatabaseConnection) -> Result<Vec<String>> {
             let query = QueryBuilder::select("schema_migrations")
                 .columns(vec!["version"])
                 .order_by("version", false);
-            
+
             let result = conn.query(&query)?;
-            
-            Ok(result.rows.iter()
+
+            Ok(result
+                .rows
+                .iter()
                 .map(|row| row[0].as_str().unwrap_or("").to_string())
                 .collect())
         }
-        
+
         fn record_migration(&self, conn: &dyn DatabaseConnection, version: &str) -> Result<()> {
             let query = QueryBuilder::insert("schema_migrations")
                 .columns(vec!["version", "applied_at"])
@@ -1169,15 +1220,19 @@ pub mod migration {
                     serde_json::json!(version),
                     serde_json::json!(Utc::now().to_rfc3339()),
                 ]);
-            
+
             conn.query(&query)?;
             Ok(())
         }
-        
-        fn remove_migration_record(&self, conn: &dyn DatabaseConnection, version: &str) -> Result<()> {
+
+        fn remove_migration_record(
+            &self,
+            conn: &dyn DatabaseConnection,
+            version: &str,
+        ) -> Result<()> {
             conn.execute_sql(
                 "DELETE FROM schema_migrations WHERE version = ?",
-                &[serde_json::json!(version)]
+                &[serde_json::json!(version)],
             )?;
             Ok(())
         }
@@ -1187,20 +1242,20 @@ pub mod migration {
 /// ORM-like features
 pub mod orm {
     use super::*;
-    
+
     /// Model trait for ORM functionality
     pub trait Model: Sized {
         fn table_name() -> &'static str;
         fn from_row(row: &[serde_json::Value]) -> Result<Self>;
         fn to_row(&self) -> Vec<serde_json::Value>;
     }
-    
+
     /// Active record pattern implementation
     pub struct ActiveRecord<T: Model> {
         model: T,
         changed: bool,
     }
-    
+
     impl<T: Model> ActiveRecord<T> {
         pub fn new(model: T) -> Self {
             Self {
@@ -1208,38 +1263,34 @@ pub mod orm {
                 changed: false,
             }
         }
-        
+
         /// Find by primary key
         pub fn find(conn: &dyn DatabaseConnection, id: serde_json::Value) -> Result<T> {
-            let query = QueryBuilder::select(T::table_name())
-                .where_clause("id = ?");
-            
+            let query = QueryBuilder::select(T::table_name()).where_clause("id = ?");
+
             let result = conn.execute_sql(&query.build_sql(), &[id])?;
-            
+
             if let Some(row) = result.rows.first() {
                 T::from_row(row)
             } else {
                 Err(IoError::NotFound("Record not found".to_string()))
             }
         }
-        
+
         /// Find all records
         pub fn find_all(conn: &dyn DatabaseConnection) -> Result<Vec<T>> {
             let query = QueryBuilder::select(T::table_name());
             let result = conn.query(&query)?;
-            
-            result.rows.iter()
-                .map(|row| T::from_row(row))
-                .collect()
+
+            result.rows.iter().map(|row| T::from_row(row)).collect()
         }
-        
+
         /// Save the record
         pub fn save(&mut self, conn: &dyn DatabaseConnection) -> Result<()> {
             if self.changed {
                 let row = self.model.to_row();
-                let query = QueryBuilder::insert(T::table_name())
-                    .values(row);
-                
+                let query = QueryBuilder::insert(T::table_name()).values(row);
+
                 conn.query(&query)?;
                 self.changed = false;
             }
@@ -1252,49 +1303,60 @@ pub mod orm {
 pub mod cdc {
     use super::*;
     use std::sync::mpsc;
-    
+
     /// Change event types
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub enum ChangeEvent {
-        Insert { table: String, data: serde_json::Value },
-        Update { table: String, old: serde_json::Value, new: serde_json::Value },
-        Delete { table: String, data: serde_json::Value },
+        Insert {
+            table: String,
+            data: serde_json::Value,
+        },
+        Update {
+            table: String,
+            old: serde_json::Value,
+            new: serde_json::Value,
+        },
+        Delete {
+            table: String,
+            data: serde_json::Value,
+        },
     }
-    
+
     /// CDC listener
     pub struct CDCListener {
         receiver: mpsc::Receiver<ChangeEvent>,
     }
-    
+
     impl CDCListener {
         pub fn new(receiver: mpsc::Receiver<ChangeEvent>) -> Self {
             Self { receiver }
         }
-        
+
         /// Get next change event
         pub fn next_event(&self) -> Option<ChangeEvent> {
             self.receiver.try_recv().ok()
         }
-        
+
         /// Iterate over events
         pub fn events(&self) -> impl Iterator<Item = ChangeEvent> + '_ {
             std::iter::from_fn(move || self.next_event())
         }
     }
-    
+
     /// CDC publisher
     pub struct CDCPublisher {
         sender: mpsc::Sender<ChangeEvent>,
     }
-    
+
     impl CDCPublisher {
         pub fn new(sender: mpsc::Sender<ChangeEvent>) -> Self {
             Self { sender }
         }
-        
+
         /// Publish change event
         pub fn publish(&self, event: ChangeEvent) -> Result<()> {
-            self.sender.send(event)
+            self.sender
+                .send(event)
                 .map_err(|e| IoError::Other(format!("Failed to publish CDC event: {}", e)))
         }
     }
@@ -1303,7 +1365,7 @@ pub mod cdc {
 /// Database replication support
 pub mod replication {
     use super::*;
-    
+
     /// Replication mode
     #[derive(Debug, Clone, Copy)]
     pub enum ReplicationMode {
@@ -1314,14 +1376,14 @@ pub mod replication {
         /// Read replicas
         ReadReplica,
     }
-    
+
     /// Replication configuration
     pub struct ReplicationConfig {
         pub mode: ReplicationMode,
         pub master: DatabaseConfig,
         pub replicas: Vec<DatabaseConfig>,
     }
-    
+
     /// Replicated database connection
     pub struct ReplicatedConnection {
         master: Box<dyn DatabaseConnection>,
@@ -1329,21 +1391,23 @@ pub mod replication {
         mode: ReplicationMode,
         read_preference: ReadPreference,
     }
-    
+
     #[derive(Debug, Clone, Copy)]
     pub enum ReadPreference {
         Master,
         Replica,
         Nearest,
     }
-    
+
     impl ReplicatedConnection {
         pub fn new(config: ReplicationConfig) -> Result<Self> {
             let master = DatabaseConnector::connect(&config.master)?;
-            let replicas: Result<Vec<_>> = config.replicas.iter()
+            let replicas: Result<Vec<_>> = config
+                .replicas
+                .iter()
                 .map(|cfg| DatabaseConnector::connect(cfg))
                 .collect();
-            
+
             Ok(Self {
                 master,
                 replicas: replicas?,
@@ -1351,12 +1415,12 @@ pub mod replication {
                 read_preference: ReadPreference::Replica,
             })
         }
-        
+
         /// Set read preference
         pub fn set_read_preference(&mut self, pref: ReadPreference) {
             self.read_preference = pref;
         }
-        
+
         /// Get connection for read operations
         fn get_read_connection(&self) -> &dyn DatabaseConnection {
             match self.read_preference {
@@ -1378,26 +1442,23 @@ pub mod replication {
 /// Advanced query capabilities
 pub mod advanced_query {
     use super::*;
-    
+
     /// Query optimizer
     pub struct QueryOptimizer {
         rules: Vec<Box<dyn OptimizationRule>>,
     }
-    
+
     pub trait OptimizationRule: Send + Sync {
         fn optimize(&self, query: &mut QueryBuilder);
     }
-    
+
     impl QueryOptimizer {
         pub fn new() -> Self {
             Self {
-                rules: vec![
-                    Box::new(IndexHintRule),
-                    Box::new(JoinOrderRule),
-                ],
+                rules: vec![Box::new(IndexHintRule), Box::new(JoinOrderRule)],
             }
         }
-        
+
         /// Optimize query
         pub fn optimize(&self, mut query: QueryBuilder) -> QueryBuilder {
             for rule in &self.rules {
@@ -1406,25 +1467,25 @@ pub mod advanced_query {
             query
         }
     }
-    
+
     /// Index hint optimization rule
     struct IndexHintRule;
-    
+
     impl OptimizationRule for IndexHintRule {
-        fn optimize(&self, query: &mut QueryBuilder) {
+        fn optimize(&self, _query: &mut QueryBuilder) {
             // Add index hints based on conditions
         }
     }
-    
+
     /// Join order optimization rule
     struct JoinOrderRule;
-    
+
     impl OptimizationRule for JoinOrderRule {
-        fn optimize(&self, query: &mut QueryBuilder) {
+        fn optimize(&self, _query: &mut QueryBuilder) {
             // Optimize join order based on statistics
         }
     }
-    
+
     /// Query statistics
     #[derive(Debug, Clone)]
     pub struct QueryStats {
@@ -1433,17 +1494,17 @@ pub mod advanced_query {
         pub rows_returned: usize,
         pub index_used: Option<String>,
     }
-    
+
     /// Query analyzer
     pub struct QueryAnalyzer;
-    
+
     impl QueryAnalyzer {
         /// Analyze query performance
         pub fn analyze(query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<QueryStats> {
             let start = std::time::Instant::now();
             let result = conn.query(query)?;
             let execution_time = start.elapsed();
-            
+
             Ok(QueryStats {
                 execution_time,
                 rows_examined: result.row_count(),
@@ -1451,12 +1512,12 @@ pub mod advanced_query {
                 index_used: None, // Would be determined from EXPLAIN
             })
         }
-        
+
         /// Get query execution plan
         pub fn explain(query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<String> {
             let explain_sql = format!("EXPLAIN {}", query.build_sql());
             let result = conn.execute_sql(&explain_sql, &[])?;
-            
+
             // Format execution plan
             let mut plan = String::new();
             for row in &result.rows {
@@ -1465,7 +1526,7 @@ pub mod advanced_query {
                     plan.push('\n');
                 }
             }
-            
+
             Ok(plan)
         }
     }

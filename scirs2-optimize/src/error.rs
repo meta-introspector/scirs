@@ -1,6 +1,11 @@
 //! Error types for the SciRS2 optimization module
 
+use scirs2_core::error::{CoreError, CoreResult};
 use thiserror::Error;
+
+// Type aliases for compatibility
+pub type ScirsError = CoreError;
+pub type ScirsResult<T> = CoreResult<T>;
 
 /// Optimization error type
 #[derive(Error, Debug)]

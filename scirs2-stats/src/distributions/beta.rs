@@ -4,7 +4,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
-use crate::traits::distribution::{ContinuousDistribution, Distribution as ScirsDist};
+use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand_distr::{Beta as RandBeta, Distribution};
@@ -794,7 +794,7 @@ mod tests {
 
     #[test]
     fn test_beta_traits() {
-        use crate::traits::distribution::{ContinuousDistribution, Distribution};
+        use crate::traits::{ContinuousDistribution, Distribution};
 
         let beta = Beta::new(2.0, 3.0, 0.0, 1.0).unwrap();
 

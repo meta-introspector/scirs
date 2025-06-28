@@ -543,7 +543,7 @@ impl PhoneticAlgorithm for Nysiis {
 
         // Step 3: First character of key is first character of name
         let mut result = vec![word[0]];
-        
+
         // Step 4: Translate remaining characters
         for i in 1..word.len() {
             let ch = word[i];
@@ -585,7 +585,13 @@ impl PhoneticAlgorithm for Nysiis {
                     }
                 }
                 'H' => {
-                    if !matches!(prev, 'A' | 'E' | 'I' | 'O' | 'U') && !matches!(next, Some('A') | Some('E') | Some('I') | Some('O') | Some('U')) && prev != ch {
+                    if !matches!(prev, 'A' | 'E' | 'I' | 'O' | 'U')
+                        && !matches!(
+                            next,
+                            Some('A') | Some('E') | Some('I') | Some('O') | Some('U')
+                        )
+                        && prev != ch
+                    {
                         result.push('H');
                     }
                 }
@@ -595,7 +601,8 @@ impl PhoneticAlgorithm for Nysiis {
                     }
                 }
                 _ => {
-                    if prev != ch { // Skip repeated consonants
+                    if prev != ch {
+                        // Skip repeated consonants
                         result.push(ch);
                     }
                 }

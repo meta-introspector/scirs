@@ -4,16 +4,23 @@
 //! SIMD vectorization and parallel processing for the advanced statistical
 //! methods implemented in scirs2-stats.
 
-use crate::error::{StatsResult as Result, StatsError};
-use crate::unified_error_handling::{global_error_handler, validate_or_error};
+use crate::bayesian::{BayesianLinearRegression, BayesianRegressionResult};
+use crate::error::{StatsError, StatsResult as Result};
 use crate::error_handling_v2::ErrorCode;
-use crate::multivariate::{LinearDiscriminantAnalysis, LDAResult, CanonicalCorrelationAnalysis, CCAResult};
-use crate::mcmc::{MultipleTryMetropolis, ParallelTempering, TargetDistribution, ProposalDistribution};
-use crate::bayesian::{BayesianLinearRegression, BayesianLinearRegressionResult};
+use crate::mcmc::{
+    MultipleTryMetropolis, ParallelTempering, ProposalDistribution, TargetDistribution,
+};
+use crate::multivariate::{
+    CCAResult, CanonicalCorrelationAnalysis, LDAResult, LinearDiscriminantAnalysis,
+};
+use crate::{
+    unified_error_handling::{create_standardized_error, global_error_handler},
+    validate_or_error,
+};
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, s};
-use num_traits::{Float, NumCast, FromPrimitive};
-use scirs2_core::{simd_ops::SimdUnifiedOps, parallel_ops::*};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use num_traits::{Float, FromPrimitive, NumCast};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
@@ -34,18 +41,26 @@ pub struct PerformanceConfig {
     pub auto_tune: bool,
     /// Enable performance benchmarking
     pub benchmark: bool,
+    /// Enable automatic algorithm selection
+    pub auto_select: bool,
 }
 
 impl Default for PerformanceConfig {
     fn default() -> Self {
+        // Use platform capabilities for optimal defaults
+        let capabilities = scirs2_core::simd_ops::PlatformCapabilities::detect();
+
         Self {
-            enable_simd: true,
-            enable_parallel: true,
-            simd_threshold: 64,
+            enable_simd: capabilities.has_sse()
+                || capabilities.has_avx2()
+                || capabilities.has_avx512(),
+            enable_parallel: num_threads() > 1,
+            simd_threshold: if capabilities.has_avx512() { 32 } else { 64 },
             parallel_threshold: 1000,
             max_threads: None,
             auto_tune: true,
             benchmark: false,
+            auto_select: true,
         }
     }
 }
@@ -87,11 +102,37 @@ impl OptimizedLinearDiscriminantAnalysis {
         }
     }
 
+    /// Validate data with performance-aware checks
+    fn validate_data_optimized(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<()> {
+        let handler = global_error_handler();
+
+        // Basic shape validation
+        handler.validate_finite_array_or_error(x.as_slice().unwrap(), "x", "Optimized LDA fit")?;
+        handler.validate_array_or_error(y.as_slice().unwrap(), "y", "Optimized LDA fit")?;
+
+        let (n_samples, _) = x.dim();
+        if n_samples != y.len() {
+            return Err(create_standardized_error(
+                "dimension_mismatch",
+                "samples",
+                &format!("x: {}, y: {}", n_samples, y.len()),
+                "LDA fit",
+            ));
+        }
+
+        Ok(())
+    }
+
     /// Fit LDA with performance optimizations
     pub fn fit(&mut self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<LDAResult> {
-        let start_time = if self.config.benchmark { Some(Instant::now()) } else { None };
+        let start_time = if self.config.benchmark {
+            Some(Instant::now())
+        } else {
+            None
+        };
         let handler = global_error_handler();
-        validate_or_error!(finite: x.as_slice().unwrap(), "x", "Optimized LDA fit");
+        // Use comprehensive validation with performance considerations
+        self.validate_data_optimized(x, y)?;
 
         let (n_samples, n_features) = x.dim();
         let data_size = n_samples * n_features;
@@ -103,7 +144,8 @@ impl OptimizedLinearDiscriminantAnalysis {
 
         // Decide on optimization strategy
         let use_simd = self.config.enable_simd && data_size >= self.config.simd_threshold;
-        let use_parallel = self.config.enable_parallel && n_samples >= self.config.parallel_threshold;
+        let use_parallel =
+            self.config.enable_parallel && n_samples >= self.config.parallel_threshold;
 
         let result = if use_parallel && n_samples > 5000 {
             self.fit_parallel(x, y)?
@@ -149,7 +191,7 @@ impl OptimizedLinearDiscriminantAnalysis {
     fn fit_simd(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<LDAResult> {
         // For SIMD optimization, we focus on the scatter matrix computations
         // which involve many dot products and matrix operations
-        
+
         // Get unique classes
         let mut classes = y.to_vec();
         classes.sort_unstable();
@@ -166,7 +208,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
         // Use the regular LDA eigenvalue solver (already optimized)
         let lda_temp = LinearDiscriminantAnalysis::new();
-        
+
         // We'll need to reconstruct the LDA result manually since we computed optimized scatter matrices
         // For now, fall back to regular implementation with our optimized preprocessing
         self.lda.fit(x, y)
@@ -175,7 +217,7 @@ impl OptimizedLinearDiscriminantAnalysis {
     /// Parallel-optimized LDA fitting
     fn fit_parallel(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<LDAResult> {
         let (n_samples, n_features) = x.dim();
-        
+
         // Get unique classes
         let mut classes = y.to_vec();
         classes.sort_unstable();
@@ -185,9 +227,10 @@ impl OptimizedLinearDiscriminantAnalysis {
 
         // Parallel computation of class statistics
         let class_means = self.compute_class_means_parallel(x, y, &unique_classes)?;
-        
+
         // Parallel scatter matrix computation
-        let (sw, sb) = self.compute_scatter_matrices_parallel(x, y, &unique_classes, &class_means)?;
+        let (sw, sb) =
+            self.compute_scatter_matrices_parallel(x, y, &unique_classes, &class_means)?;
 
         // For now, use regular eigenvalue solver
         self.lda.fit(x, y)
@@ -205,7 +248,8 @@ impl OptimizedLinearDiscriminantAnalysis {
         let mut class_means = Array2::zeros((n_classes, n_features));
 
         for (class_idx, &class_label) in classes.iter().enumerate() {
-            let class_indices: Vec<_> = y.iter()
+            let class_indices: Vec<_> = y
+                .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == class_label)
                 .map(|(idx, _)| idx)
@@ -216,11 +260,11 @@ impl OptimizedLinearDiscriminantAnalysis {
             }
 
             let class_size = class_indices.len();
-            
+
             // Use SIMD for mean computation when beneficial
             if n_features >= self.config.simd_threshold {
                 let mut sum = Array1::zeros(n_features);
-                
+
                 for &idx in &class_indices {
                     let row = x.row(idx);
                     if n_features > 16 {
@@ -229,15 +273,19 @@ impl OptimizedLinearDiscriminantAnalysis {
                         sum += &row;
                     }
                 }
-                
-                class_means.row_mut(class_idx).assign(&(sum / class_size as f64));
+
+                class_means
+                    .row_mut(class_idx)
+                    .assign(&(sum / class_size as f64));
             } else {
                 // Regular computation for small features
                 let mut sum = Array1::zeros(n_features);
                 for &idx in &class_indices {
                     sum += &x.row(idx);
                 }
-                class_means.row_mut(class_idx).assign(&(sum / class_size as f64));
+                class_means
+                    .row_mut(class_idx)
+                    .assign(&(sum / class_size as f64));
             }
         }
 
@@ -258,7 +306,8 @@ impl OptimizedLinearDiscriminantAnalysis {
         let class_means: Vec<Array1<f64>> = classes
             .par_iter()
             .map(|&class_label| {
-                let class_indices: Vec<_> = y.iter()
+                let class_indices: Vec<_> = y
+                    .iter()
                     .enumerate()
                     .filter(|(_, &label)| label == class_label)
                     .map(|(idx, _)| idx)
@@ -306,7 +355,7 @@ impl OptimizedLinearDiscriminantAnalysis {
             for (sample_idx, &sample_label) in y.iter().enumerate() {
                 if sample_label == class_label {
                     let sample = x.row(sample_idx);
-                    
+
                     // SIMD-optimized difference computation
                     let diff = if n_features >= self.config.simd_threshold {
                         f64::simd_sub(&sample, &class_mean)
@@ -328,7 +377,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         for (class_idx, &class_label) in classes.iter().enumerate() {
             let class_mean = class_means.row(class_idx);
             let class_count = y.iter().filter(|&&label| label == class_label).count() as f64;
-            
+
             let diff = if n_features >= self.config.simd_threshold {
                 f64::simd_sub(&class_mean, &overall_mean.view())
             } else {
@@ -411,7 +460,7 @@ impl OptimizedLinearDiscriminantAnalysis {
     /// Transform data with optimizations
     pub fn transform(&self, x: ArrayView2<f64>, result: &LDAResult) -> Result<Array2<f64>> {
         let data_size = x.nrows() * x.ncols();
-        
+
         if self.config.enable_simd && data_size >= self.config.simd_threshold {
             self.transform_simd(x, result)
         } else {
@@ -427,7 +476,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         if n_features >= self.config.simd_threshold {
             // SIMD matrix multiplication
             let mut transformed = Array2::zeros((n_samples, n_components));
-            
+
             for i in 0..n_samples {
                 let row = x.row(i);
                 for j in 0..n_components {
@@ -435,7 +484,7 @@ impl OptimizedLinearDiscriminantAnalysis {
                     transformed[[i, j]] = f64::simd_dot_product(&row, &column.view());
                 }
             }
-            
+
             Ok(transformed)
         } else {
             self.lda.transform(x, result)
@@ -463,13 +512,18 @@ impl OptimizedCanonicalCorrelationAnalysis {
 
     /// Fit CCA with performance optimizations
     pub fn fit(&mut self, x: ArrayView2<f64>, y: ArrayView2<f64>) -> Result<CCAResult> {
-        let start_time = if self.config.benchmark { Some(Instant::now()) } else { None };
+        let start_time = if self.config.benchmark {
+            Some(Instant::now())
+        } else {
+            None
+        };
         let handler = global_error_handler();
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "Optimized CCA fit");
         validate_or_error!(finite: y.as_slice().unwrap(), "y", "Optimized CCA fit");
 
         let data_size = x.nrows() * (x.ncols() + y.ncols());
-        let use_parallel = self.config.enable_parallel && x.nrows() >= self.config.parallel_threshold;
+        let use_parallel =
+            self.config.enable_parallel && x.nrows() >= self.config.parallel_threshold;
 
         let result = if use_parallel {
             self.fit_parallel(x, y)?
@@ -498,10 +552,10 @@ impl OptimizedCanonicalCorrelationAnalysis {
     fn fit_parallel(&self, x: ArrayView2<f64>, y: ArrayView2<f64>) -> Result<CCAResult> {
         // Parallel centering and scaling
         let (x_processed, y_processed) = self.center_and_scale_parallel(x, y)?;
-        
+
         // Parallel covariance computation
         let (cxx, cyy, cxy) = self.compute_covariances_parallel(&x_processed, &y_processed)?;
-        
+
         // Use regular CCA solver for eigenvalue problem (already optimized)
         self.cca.fit(x, y)
     }
@@ -513,12 +567,14 @@ impl OptimizedCanonicalCorrelationAnalysis {
         y: ArrayView2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
         // Parallel mean computation
-        let x_mean = x.axis_iter(Axis(1))
+        let x_mean = x
+            .axis_iter(Axis(1))
             .into_par_iter()
             .map(|col| col.mean().unwrap())
             .collect::<Vec<_>>();
 
-        let y_mean = y.axis_iter(Axis(1))
+        let y_mean = y
+            .axis_iter(Axis(1))
             .into_par_iter()
             .map(|col| col.mean().unwrap())
             .collect::<Vec<_>>();
@@ -527,7 +583,8 @@ impl OptimizedCanonicalCorrelationAnalysis {
         let mut x_centered = x.to_owned();
         let mut y_centered = y.to_owned();
 
-        x_centered.axis_iter_mut(Axis(0))
+        x_centered
+            .axis_iter_mut(Axis(0))
             .into_par_iter()
             .for_each(|mut row| {
                 for (i, &mean) in x_mean.iter().enumerate() {
@@ -535,7 +592,8 @@ impl OptimizedCanonicalCorrelationAnalysis {
                 }
             });
 
-        y_centered.axis_iter_mut(Axis(0))
+        y_centered
+            .axis_iter_mut(Axis(0))
             .into_par_iter()
             .for_each(|mut row| {
                 for (i, &mean) in y_mean.iter().enumerate() {
@@ -559,14 +617,18 @@ impl OptimizedCanonicalCorrelationAnalysis {
         let cyy = self.parallel_covariance_matrix(y, y);
         let cxy = self.parallel_covariance_matrix(x, y);
 
-        Ok((cxx / (n_samples - 1.0), cyy / (n_samples - 1.0), cxy / (n_samples - 1.0)))
+        Ok((
+            cxx / (n_samples - 1.0),
+            cyy / (n_samples - 1.0),
+            cxy / (n_samples - 1.0),
+        ))
     }
 
     /// Helper for parallel covariance matrix computation
     fn parallel_covariance_matrix(&self, a: &Array2<f64>, b: &Array2<f64>) -> Array2<f64> {
         let (n_samples, n_features_a) = a.dim();
         let n_features_b = b.ncols();
-        
+
         let cov = Array2::from_shape_fn((n_features_a, n_features_b), |(i, j)| {
             a.column(i).dot(&b.column(j))
         });
@@ -590,52 +652,85 @@ impl PerformanceBenchmark {
         n_classes: usize,
     ) -> Result<Vec<(String, PerformanceMetrics)>> {
         let mut results = Vec::new();
-        
+
         for &(n_samples, n_features) in data_sizes {
             // Generate synthetic data
-            let (x, y) = Self::generate_synthetic_classification_data(n_samples, n_features, n_classes)?;
-            
+            let (x, y) =
+                Self::generate_synthetic_classification_data(n_samples, n_features, n_classes)?;
+
             // Test different configurations
             let configs = vec![
-                ("baseline", PerformanceConfig { enable_simd: false, enable_parallel: false, benchmark: true, ..Default::default() }),
-                ("simd", PerformanceConfig { enable_simd: true, enable_parallel: false, benchmark: true, ..Default::default() }),
-                ("parallel", PerformanceConfig { enable_simd: false, enable_parallel: true, benchmark: true, ..Default::default() }),
-                ("simd+parallel", PerformanceConfig { enable_simd: true, enable_parallel: true, benchmark: true, ..Default::default() }),
+                (
+                    "baseline",
+                    PerformanceConfig {
+                        enable_simd: false,
+                        enable_parallel: false,
+                        benchmark: true,
+                        ..Default::default()
+                    },
+                ),
+                (
+                    "simd",
+                    PerformanceConfig {
+                        enable_simd: true,
+                        enable_parallel: false,
+                        benchmark: true,
+                        ..Default::default()
+                    },
+                ),
+                (
+                    "parallel",
+                    PerformanceConfig {
+                        enable_simd: false,
+                        enable_parallel: true,
+                        benchmark: true,
+                        ..Default::default()
+                    },
+                ),
+                (
+                    "simd+parallel",
+                    PerformanceConfig {
+                        enable_simd: true,
+                        enable_parallel: true,
+                        benchmark: true,
+                        ..Default::default()
+                    },
+                ),
             ];
-            
+
             for (name, config) in configs {
                 let mut opt_lda = OptimizedLinearDiscriminantAnalysis::new(config);
                 let _result = opt_lda.fit(x.view(), y.view())?;
-                
+
                 if let Some(metrics) = opt_lda.get_metrics() {
                     results.push((
                         format!("{}_{}x{}", name, n_samples, n_features),
-                        metrics.clone()
+                        metrics.clone(),
                     ));
                 }
             }
         }
-        
+
         Ok(results)
     }
-    
+
     /// Generate synthetic classification data for benchmarking
     fn generate_synthetic_classification_data(
         n_samples: usize,
         n_features: usize,
         n_classes: usize,
     ) -> Result<(Array2<f64>, Array1<i32>)> {
-        use rand::{thread_rng, Rng};
-        use rand_distr::{Normal, Distribution};
-        
-        let mut rng = thread_rng();
+        use rand::{rng, Rng};
+        use rand_distr::{Distribution, Normal};
+
+        let mut rng = rng();
         let normal = Normal::new(0.0, 1.0).unwrap();
-        
+
         let mut x = Array2::zeros((n_samples, n_features));
         let mut y = Array1::zeros(n_samples);
-        
+
         let samples_per_class = n_samples / n_classes;
-        
+
         for class in 0..n_classes {
             let start_idx = class * samples_per_class;
             let end_idx = if class == n_classes - 1 {
@@ -643,10 +738,10 @@ impl PerformanceBenchmark {
             } else {
                 (class + 1) * samples_per_class
             };
-            
+
             for i in start_idx..end_idx {
                 y[i] = class as i32;
-                
+
                 for j in 0..n_features {
                     // Add class-specific offset for separability
                     let offset = (class as f64) * 2.0;
@@ -654,23 +749,28 @@ impl PerformanceBenchmark {
                 }
             }
         }
-        
+
         Ok((x, y))
     }
 
     /// Print benchmark results in a formatted table
     pub fn print_benchmark_results(results: &[(String, PerformanceMetrics)]) {
         println!("\n=== PERFORMANCE BENCHMARK RESULTS ===");
-        println!("{:<20} {:>12} {:>10} {:>15} {:>8} {:>8}", 
-                "Configuration", "Time (ms)", "Ops/sec", "Memory (KB)", "SIMD", "Parallel");
+        println!(
+            "{:<20} {:>12} {:>10} {:>15} {:>8} {:>8}",
+            "Configuration", "Time (ms)", "Ops/sec", "Memory (KB)", "SIMD", "Parallel"
+        );
         println!("{}", "-".repeat(80));
-        
+
         for (name, metrics) in results {
-            println!("{:<20} {:>12.2} {:>10.0} {:>15} {:>8} {:>8}",
+            println!(
+                "{:<20} {:>12.2} {:>10.0} {:>15} {:>8} {:>8}",
                 name,
                 metrics.execution_time_ms,
                 metrics.ops_per_second,
-                metrics.memory_usage.map_or("N/A".to_string(), |m| format!("{}", m / 1024)),
+                metrics
+                    .memory_usage
+                    .map_or("N/A".to_string(), |m| format!("{}", m / 1024)),
                 if metrics.used_simd { "✓" } else { "✗" },
                 if metrics.used_parallel { "✓" } else { "✗" }
             );
@@ -705,13 +805,7 @@ mod tests {
 
     #[test]
     fn test_optimized_cca() {
-        let x = array![
-            [1.0, 2.0],
-            [2.0, 3.0],
-            [3.0, 4.0],
-            [4.0, 5.0],
-            [5.0, 6.0],
-        ];
+        let x = array![[1.0, 2.0], [2.0, 3.0], [3.0, 4.0], [4.0, 5.0], [5.0, 6.0],];
 
         let y = array![
             [2.0, 4.0],

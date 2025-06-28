@@ -208,7 +208,7 @@ impl RotationSpline {
 
         // Compute velocities using finite differences and natural boundary conditions
         let mut vels = Vec::with_capacity(n);
-        
+
         // For endpoints, we'll use one-sided differences
         // For internal points, we'll use centered differences
         for i in 0..n {
@@ -224,17 +224,17 @@ impl RotationSpline {
                 // Centered difference for internal points
                 let dt_prev = self.times[i] - self.times[i - 1];
                 let dt_next = self.times[i + 1] - self.times[i];
-                
+
                 // Use weighted average based on time intervals
                 let vel_prev = (&rotvecs[i] - &rotvecs[i - 1]) / dt_prev;
                 let vel_next = (&rotvecs[i + 1] - &rotvecs[i]) / dt_next;
-                
+
                 // Weighted average
                 let weight_prev = dt_next / (dt_prev + dt_next);
                 let weight_next = dt_prev / (dt_prev + dt_next);
                 &vel_prev * weight_prev + &vel_next * weight_next
             };
-            
+
             vels.push(vel);
         }
 
@@ -420,13 +420,13 @@ impl RotationSpline {
         // where p0, p1 are the start and end values, m0, m1 are the scaled tangents
         let t2 = normalized_t * normalized_t;
         let t3 = t2 * normalized_t;
-        
+
         // Hermite basis functions
         let h00 = 2.0 * t3 - 3.0 * t2 + 1.0;
         let h10 = t3 - 2.0 * t2 + normalized_t;
         let h01 = -2.0 * t3 + 3.0 * t2;
         let h11 = t3 - t2;
-        
+
         // Compute the interpolated rotation vector
         let mut result = rotvec0 * h00;
         result = &result + &(vel0 * dt * h10);
@@ -816,7 +816,7 @@ impl RotationSpline {
         let vel0 = &velocities[idx];
         let vel1 = &velocities[idx + 1];
 
-        // Second derivatives of Hermite basis functions  
+        // Second derivatives of Hermite basis functions
         let d2h00_dt2 = (12.0 * normalized_t - 6.0) / (dt * dt);
         let d2h10_dt2 = (6.0 * normalized_t - 4.0) / (dt * dt);
         let d2h01_dt2 = (-12.0 * normalized_t + 6.0) / (dt * dt);
@@ -904,12 +904,12 @@ mod tests {
         // Verify interpolation results
         let rotated_mid1 = interp_mid1.apply(&test_point.view());
         let rotated_mid2 = interp_mid2.apply(&test_point.view());
-        
+
         // At t=0.5 (between identity and 90-degree rotation), should be approximately 45 degrees
         assert_relative_eq!(rotated_mid1[0], 2.0_f64.sqrt() / 2.0, epsilon = 1e-3);
         assert_relative_eq!(rotated_mid1[1], 2.0_f64.sqrt() / 2.0, epsilon = 1e-3);
         assert_relative_eq!(rotated_mid1[2], 0.0, epsilon = 1e-3);
-        
+
         // At t=1.5 (between 90 and 180 degrees), should be approximately 135 degrees
         assert_relative_eq!(rotated_mid2[0], -2.0_f64.sqrt() / 2.0, epsilon = 1e-3);
         assert_relative_eq!(rotated_mid2[1], 2.0_f64.sqrt() / 2.0, epsilon = 1e-3);
@@ -1105,11 +1105,11 @@ mod tests {
         // but still interpolate the key rotations
         let rot_05 = spline.interpolate(0.5);
         let rot_15 = spline.interpolate(1.5);
-        
+
         // Verify that interpolated rotations are valid
         let rotated_05 = rot_05.apply(&test_point.view());
         let rotated_15 = rot_15.apply(&test_point.view());
-        
+
         // Check that the results are normalized
         let norm_05 = (rotated_05.dot(&rotated_05)).sqrt();
         let norm_15 = (rotated_15.dot(&rotated_15)).sqrt();

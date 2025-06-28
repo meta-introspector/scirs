@@ -5,7 +5,7 @@
 use crate::error::{StatsError, StatsResult};
 use crate::error_messages::{helpers, validation};
 use crate::sampling::SampleableDistribution;
-use crate::traits::distribution::{ContinuousDistribution, Distribution as ScirsDist};
+use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand_distr::{Distribution, Exp as RandExp};
@@ -58,7 +58,9 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
                 loc,
                 rand_distr,
             }),
-            Err(_) => Err(helpers::numerical_error("exponential distribution creation")),
+            Err(_) => Err(helpers::numerical_error(
+                "exponential distribution creation",
+            )),
         }
     }
 
@@ -97,7 +99,9 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
                 loc,
                 rand_distr,
             }),
-            Err(_) => Err(helpers::numerical_error("exponential distribution creation")),
+            Err(_) => Err(helpers::numerical_error(
+                "exponential distribution creation",
+            )),
         }
     }
 
@@ -350,7 +354,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> SampleableDistribution<F> f
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::traits::distribution::{ContinuousDistribution, Distribution as ScirsDist};
+    use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
     use approx::assert_relative_eq;
 
     #[test]

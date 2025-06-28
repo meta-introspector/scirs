@@ -59,47 +59,47 @@ impl ExtendedDeviceInfo {
             GpuDeviceType::Vulkan => estimate_vulkan_specs(&basic_info),
             GpuDeviceType::Metal => estimate_metal_specs(&basic_info),
         };
-        
+
         Self {
             basic_info,
             capabilities,
             performance,
         }
     }
-    
+
     /// Check if this device is suitable for a given workload size
     pub fn is_suitable_for_workload(&self, elements: usize, requires_fp64: bool) -> bool {
         // Check memory requirements (assume 8 bytes per element for safety)
         let memory_required = elements * 8;
         let memory_available = self.basic_info.total_memory;
-        
+
         if memory_required > memory_available / 2 {
             return false; // Need at least 50% memory available
         }
-        
+
         // Check precision requirements
         if requires_fp64 && !self.capabilities.supports_fp64 {
             return false;
         }
-        
+
         true
     }
-    
+
     /// Estimate performance for matrix multiplication
     pub fn estimate_matmul_performance(&self, m: usize, n: usize, k: usize) -> f64 {
         let ops = 2.0 * m as f64 * n as f64 * k as f64; // FMA operations
         let peak_ops_per_sec = self.performance.peak_gflops_fp32 * 1e9;
-        
+
         // Simple estimate assuming 50% of peak performance
         ops / (peak_ops_per_sec * 0.5)
     }
-    
+
     /// Get recommended block size for this device
     pub fn recommended_block_size(&self) -> (usize, usize) {
         match self.basic_info.device_type {
-            GpuDeviceType::Cuda => (32, 32), // Common CUDA block size
+            GpuDeviceType::Cuda => (32, 32),   // Common CUDA block size
             GpuDeviceType::OpenCl => (16, 16), // Conservative OpenCL size
-            GpuDeviceType::Rocm => (32, 32), // Similar to CUDA
+            GpuDeviceType::Rocm => (32, 32),   // Similar to CUDA
             GpuDeviceType::Vulkan => (32, 32),
             GpuDeviceType::Metal => (16, 16),
         }
@@ -116,11 +116,11 @@ fn estimate_cuda_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerfo
         max_shared_memory: 48 * 1024, // 48KB typical
         warp_size: 32,
     };
-    
+
     // Rough estimates based on compute units and clock frequency
     let estimated_cores = info.compute_units * 64; // Estimate cores per SM
     let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
-    
+
     let performance = DevicePerformance {
         memory_bandwidth: (info.total_memory as f64 / 1e9) * 10.0, // Rough estimate
         peak_gflops_fp32: peak_gflops,
@@ -128,7 +128,7 @@ fn estimate_cuda_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerfo
         memory_latency_ns: 400.0,
         cache_size: 256 * 1024, // L2 cache estimate
     };
-    
+
     (capabilities, performance)
 }
 
@@ -140,12 +140,12 @@ fn estimate_opencl_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         supports_p2p: false,
         max_threads_per_block: info.max_work_group_size,
         max_shared_memory: 32 * 1024, // Conservative estimate
-        warp_size: 64, // AMD wavefront size or conservative estimate
+        warp_size: 64,                // AMD wavefront size or conservative estimate
     };
-    
+
     let estimated_cores = info.compute_units * 64;
     let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
-    
+
     let performance = DevicePerformance {
         memory_bandwidth: (info.total_memory as f64 / 1e9) * 8.0,
         peak_gflops_fp32: peak_gflops,
@@ -153,7 +153,7 @@ fn estimate_opencl_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         memory_latency_ns: 500.0,
         cache_size: 128 * 1024,
     };
-    
+
     (capabilities, performance)
 }
 
@@ -165,12 +165,12 @@ fn estimate_rocm_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerfo
         supports_p2p: true,
         max_threads_per_block: 1024,
         max_shared_memory: 64 * 1024, // LDS on AMD
-        warp_size: 64, // AMD wavefront size
+        warp_size: 64,                // AMD wavefront size
     };
-    
+
     let estimated_cores = info.compute_units * 64;
     let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
-    
+
     let performance = DevicePerformance {
         memory_bandwidth: (info.total_memory as f64 / 1e9) * 12.0, // AMD typically good bandwidth
         peak_gflops_fp32: peak_gflops,
@@ -178,7 +178,7 @@ fn estimate_rocm_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerfo
         memory_latency_ns: 350.0,
         cache_size: 512 * 1024,
     };
-    
+
     (capabilities, performance)
 }
 
@@ -193,10 +193,10 @@ fn estimate_vulkan_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         max_shared_memory: 32 * 1024,
         warp_size: 32, // Conservative estimate
     };
-    
+
     let estimated_cores = info.compute_units * 32;
     let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
-    
+
     let performance = DevicePerformance {
         memory_bandwidth: (info.total_memory as f64 / 1e9) * 6.0,
         peak_gflops_fp32: peak_gflops,
@@ -204,24 +204,24 @@ fn estimate_vulkan_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         memory_latency_ns: 600.0,
         cache_size: 64 * 1024,
     };
-    
+
     (capabilities, performance)
 }
 
 fn estimate_metal_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
     let capabilities = DeviceCapabilities {
         supports_fp64: info.supports_fp64,
-        supports_fp16: true, // Apple GPUs generally support fp16
+        supports_fp16: true,           // Apple GPUs generally support fp16
         supports_unified_memory: true, // Apple's unified memory architecture
         supports_p2p: false,
         max_threads_per_block: 1024,
         max_shared_memory: 32 * 1024,
         warp_size: 32, // SIMD group size on Apple GPUs
     };
-    
+
     let estimated_cores = info.compute_units * 32; // Conservative estimate
     let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
-    
+
     let performance = DevicePerformance {
         memory_bandwidth: (info.total_memory as f64 / 1e9) * 15.0, // Apple's unified memory is fast
         peak_gflops_fp32: peak_gflops,
@@ -229,7 +229,7 @@ fn estimate_metal_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerf
         memory_latency_ns: 200.0, // Unified memory has lower latency
         cache_size: 128 * 1024,
     };
-    
+
     (capabilities, performance)
 }
 
@@ -260,9 +260,9 @@ mod tests {
             max_work_group_size: 1024,
             vendor: "NVIDIA".to_string(),
         };
-        
+
         let extended_info = ExtendedDeviceInfo::from_basic(basic_info);
-        
+
         assert_eq!(extended_info.basic_info.device_type, GpuDeviceType::Cuda);
         assert_eq!(extended_info.capabilities.warp_size, 32);
         assert!(extended_info.performance.peak_gflops_fp32 > 0.0);
@@ -281,15 +281,15 @@ mod tests {
             max_work_group_size: 1024,
             vendor: "Test".to_string(),
         };
-        
+
         let extended_info = ExtendedDeviceInfo::from_basic(basic_info);
-        
+
         // Small workload, no fp64 required - should be suitable
         assert!(extended_info.is_suitable_for_workload(1000, false));
-        
+
         // Large workload - should not be suitable (memory)
         assert!(!extended_info.is_suitable_for_workload(100_000_000, false));
-        
+
         // Requires fp64 but device doesn't support it
         assert!(!extended_info.is_suitable_for_workload(1000, true));
     }
@@ -307,9 +307,9 @@ mod tests {
             max_work_group_size: 1024,
             vendor: "Test".to_string(),
         };
-        
+
         let extended_info = ExtendedDeviceInfo::from_basic(basic_info);
-        
+
         // Estimate time for 1000x1000x1000 matrix multiplication
         let time_estimate = extended_info.estimate_matmul_performance(1000, 1000, 1000);
         assert!(time_estimate > 0.0);

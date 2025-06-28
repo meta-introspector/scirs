@@ -6,20 +6,24 @@
 //! - Automated feature engineering
 //! - Production monitoring
 
-use ndarray::{Array2, Array1};
+use ndarray::{Array1, Array2};
 use scirs2_transform::{
-    Result, 
     auto_feature_engineering::{AutoFeatureEngineer, TransformationType},
+    Result,
 };
 
 #[cfg(feature = "gpu")]
 use scirs2_transform::gpu::GpuPCA;
 
 #[cfg(feature = "distributed")]
-use scirs2_transform::distributed::{DistributedConfig, DistributedPCA, NodeInfo, PartitioningStrategy};
+use scirs2_transform::distributed::{
+    DistributedConfig, DistributedPCA, NodeInfo, PartitioningStrategy,
+};
 
 #[cfg(feature = "monitoring")]
-use scirs2_transform::monitoring::{TransformationMonitor, DriftMethod, PerformanceMetrics, AlertConfig};
+use scirs2_transform::monitoring::{
+    AlertConfig, DriftMethod, PerformanceMetrics, TransformationMonitor,
+};
 
 fn main() -> Result<()> {
     println!("🚀 SciRS2 Transform Advanced Features Demo");
@@ -27,7 +31,11 @@ fn main() -> Result<()> {
 
     // Generate sample data
     let data = generate_sample_data(1000, 50)?;
-    println!("✅ Generated sample data: {} x {}", data.nrows(), data.ncols());
+    println!(
+        "✅ Generated sample data: {} x {}",
+        data.nrows(),
+        data.ncols()
+    );
 
     // Demo 1: Automated Feature Engineering
     demo_automated_feature_engineering(&data)?;
@@ -38,7 +46,9 @@ fn main() -> Result<()> {
 
     // Demo 3: Distributed Processing (if available)
     #[cfg(feature = "distributed")]
-    tokio::runtime::Runtime::new().unwrap().block_on(demo_distributed_processing(&data))?;
+    tokio::runtime::Runtime::new()
+        .unwrap()
+        .block_on(demo_distributed_processing(&data))?;
 
     // Demo 4: Production Monitoring (if available)
     #[cfg(feature = "monitoring")]
@@ -53,22 +63,29 @@ fn demo_automated_feature_engineering(data: &Array2<f64>) -> Result<()> {
     println!("=====================================");
 
     let auto_engineer = AutoFeatureEngineer::new()?;
-    
+
     // Extract meta-features from the dataset
     let meta_features = auto_engineer.extract_meta_features(&data.view())?;
     println!("📈 Dataset meta-features:");
     println!("   - Samples: {}", meta_features.n_samples);
     println!("   - Features: {}", meta_features.n_features);
     println!("   - Sparsity: {:.3}", meta_features.sparsity);
-    println!("   - Mean correlation: {:.3}", meta_features.mean_correlation);
+    println!(
+        "   - Mean correlation: {:.3}",
+        meta_features.mean_correlation
+    );
     println!("   - Outlier ratio: {:.3}", meta_features.outlier_ratio);
 
     // Get transformation recommendations
     let recommendations = auto_engineer.recommend_transformations(&data.view())?;
     println!("\n🎯 Recommended transformations:");
     for (i, config) in recommendations.iter().enumerate() {
-        println!("   {}. {:?} (score: {:.3})", 
-                i + 1, config.transformation_type, config.expected_performance);
+        println!(
+            "   {}. {:?} (score: {:.3})",
+            i + 1,
+            config.transformation_type,
+            config.expected_performance
+        );
     }
 
     Ok(())
@@ -82,11 +99,13 @@ fn demo_gpu_acceleration(data: &Array2<f64>) -> Result<()> {
     match GpuPCA::new(10) {
         Ok(mut gpu_pca) => {
             println!("✅ GPU PCA initialized successfully");
-            
+
             // Fit and transform would be called here in real usage
             println!("   Ready for GPU-accelerated PCA with 10 components");
-            println!("   Features: Fast matrix operations, eigendecomposition, and memory management");
-        },
+            println!(
+                "   Features: Fast matrix operations, eigendecomposition, and memory management"
+            );
+        }
         Err(e) => {
             println!("⚠️  GPU not available: {}", e);
             println!("   Install CUDA toolkit and enable 'gpu' feature for GPU acceleration");
@@ -133,7 +152,7 @@ async fn demo_distributed_processing(data: &Array2<f64>) -> Result<()> {
         Ok(_distributed_pca) => {
             println!("✅ Distributed PCA initialized successfully");
             println!("   Ready for multi-node processing");
-        },
+        }
         Err(e) => {
             println!("⚠️  Distributed processing setup failed: {}", e);
             println!("   Enable 'distributed' feature for multi-node capabilities");
@@ -149,7 +168,7 @@ fn demo_production_monitoring(data: &Array2<f64>) -> Result<()> {
     println!("=============================");
 
     let mut monitor = TransformationMonitor::new()?;
-    
+
     // Set reference data for drift detection
     let reference_data = data.slice(ndarray::s![..500, ..]).to_owned();
     monitor.set_reference_data(reference_data, None)?;
@@ -163,13 +182,19 @@ fn demo_production_monitoring(data: &Array2<f64>) -> Result<()> {
     // Simulate new data for drift detection
     let new_data = data.slice(ndarray::s![500.., ..]);
     let drift_results = monitor.detect_drift(&new_data)?;
-    
+
     println!("📈 Drift detection results:");
     for result in drift_results.iter().take(3) {
-        println!("   - {}: {} detected (severity: {:.3})", 
-                result.feature_name, 
-                if result.is_drift_detected { "DRIFT" } else { "no drift" },
-                result.severity);
+        println!(
+            "   - {}: {} detected (severity: {:.3})",
+            result.feature_name,
+            if result.is_drift_detected {
+                "DRIFT"
+            } else {
+                "no drift"
+            },
+            result.severity
+        );
     }
 
     // Record performance metrics
@@ -192,8 +217,8 @@ fn demo_production_monitoring(data: &Array2<f64>) -> Result<()> {
 }
 
 fn generate_sample_data(n_samples: usize, n_features: usize) -> Result<Array2<f64>> {
-    use ndarray_rand::RandomExt;
     use ndarray_rand::rand_distr::Normal;
+    use ndarray_rand::RandomExt;
 
     let data = Array2::random((n_samples, n_features), Normal::new(0.0, 1.0).unwrap());
     Ok(data)

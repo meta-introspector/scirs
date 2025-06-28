@@ -12,13 +12,13 @@ use crate::error::{Result, TransformError};
 pub trait StreamingTransformer: Send + Sync {
     /// Update the transformer with a new batch of data
     fn partial_fit(&mut self, x: &Array2<f64>) -> Result<()>;
-    
+
     /// Transform a batch of data using current statistics
     fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>>;
-    
+
     /// Reset the transformer to initial state
     fn reset(&mut self);
-    
+
     /// Get the number of samples seen so far
     fn n_samples_seen(&self) -> usize;
 }
@@ -51,21 +51,21 @@ impl StreamingStandardScaler {
             epsilon: 1e-8,
         }
     }
-    
+
     /// Update statistics using Welford's online algorithm
     fn update_statistics(&mut self, x: &Array2<f64>) {
         let batch_size = x.shape()[0];
         let n_features = x.shape()[1];
-        
+
         for i in 0..batch_size {
             self.n_samples += 1;
             let n = self.n_samples as f64;
-            
+
             for j in 0..n_features {
                 let value = x[[i, j]];
                 let delta = value - self.mean[j];
                 self.mean[j] += delta / n;
-                
+
                 if self.with_std {
                     let delta2 = value - self.mean[j];
                     self.variance[j] += delta * delta2;
@@ -73,13 +73,14 @@ impl StreamingStandardScaler {
             }
         }
     }
-    
+
     /// Get the current standard deviation
     fn get_std(&self) -> Array1<f64> {
         if self.n_samples <= 1 {
             Array1::ones(self.mean.len())
         } else {
-            self.variance.mapv(|v| (v / (self.n_samples - 1) as f64).sqrt().max(self.epsilon))
+            self.variance
+                .mapv(|v| (v / (self.n_samples - 1) as f64).sqrt().max(self.epsilon))
         }
     }
 }
@@ -87,24 +88,28 @@ impl StreamingStandardScaler {
 impl StreamingTransformer for StreamingStandardScaler {
     fn partial_fit(&mut self, x: &Array2<f64>) -> Result<()> {
         if x.shape()[1] != self.mean.len() {
-            return Err(TransformError::InvalidInput(
-                format!("Expected {} features, got {}", self.mean.len(), x.shape()[1])
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} features, got {}",
+                self.mean.len(),
+                x.shape()[1]
+            )));
         }
-        
+
         self.update_statistics(x);
         Ok(())
     }
-    
+
     fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>> {
         if x.shape()[1] != self.mean.len() {
-            return Err(TransformError::InvalidInput(
-                format!("Expected {} features, got {}", self.mean.len(), x.shape()[1])
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} features, got {}",
+                self.mean.len(),
+                x.shape()[1]
+            )));
         }
-        
+
         let mut result = x.to_owned();
-        
+
         if self.with_mean {
             for i in 0..result.shape()[0] {
                 for j in 0..result.shape()[1] {
@@ -112,7 +117,7 @@ impl StreamingTransformer for StreamingStandardScaler {
                 }
             }
         }
-        
+
         if self.with_std {
             let std = self.get_std();
             for i in 0..result.shape()[0] {
@@ -121,16 +126,16 @@ impl StreamingTransformer for StreamingStandardScaler {
                 }
             }
         }
-        
+
         Ok(result)
     }
-    
+
     fn reset(&mut self) {
         self.mean.fill(0.0);
         self.variance.fill(0.0);
         self.n_samples = 0;
     }
-    
+
     fn n_samples_seen(&self) -> usize {
         self.n_samples
     }
@@ -158,7 +163,7 @@ impl StreamingMinMaxScaler {
             n_samples: 0,
         }
     }
-    
+
     /// Update min and max values
     fn update_bounds(&mut self, x: &Array2<f64>) {
         for i in 0..x.shape()[0] {
@@ -175,26 +180,30 @@ impl StreamingMinMaxScaler {
 impl StreamingTransformer for StreamingMinMaxScaler {
     fn partial_fit(&mut self, x: &Array2<f64>) -> Result<()> {
         if x.shape()[1] != self.min.len() {
-            return Err(TransformError::InvalidInput(
-                format!("Expected {} features, got {}", self.min.len(), x.shape()[1])
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} features, got {}",
+                self.min.len(),
+                x.shape()[1]
+            )));
         }
-        
+
         self.update_bounds(x);
         Ok(())
     }
-    
+
     fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>> {
         if x.shape()[1] != self.min.len() {
-            return Err(TransformError::InvalidInput(
-                format!("Expected {} features, got {}", self.min.len(), x.shape()[1])
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} features, got {}",
+                self.min.len(),
+                x.shape()[1]
+            )));
         }
-        
+
         let mut result = Array2::zeros((x.nrows(), x.ncols()));
         let (min_val, max_val) = self.feature_range;
         let scale = max_val - min_val;
-        
+
         for i in 0..x.shape()[0] {
             for j in 0..x.shape()[1] {
                 let range = self.max[j] - self.min[j];
@@ -205,16 +214,16 @@ impl StreamingTransformer for StreamingMinMaxScaler {
                 }
             }
         }
-        
+
         Ok(result)
     }
-    
+
     fn reset(&mut self) {
         self.min.fill(f64::INFINITY);
         self.max.fill(f64::NEG_INFINITY);
         self.n_samples = 0;
     }
-    
+
     fn n_samples_seen(&self) -> usize {
         self.n_samples
     }
@@ -254,19 +263,19 @@ impl P2State {
             p,
         }
     }
-    
+
     fn update(&mut self, value: f64) {
         if self.count < 5 {
             self.q[self.count] = value;
             self.count += 1;
-            
+
             if self.count == 5 {
                 // Sort initial observations
                 self.q.sort_by(|a, b| a.partial_cmp(b).unwrap());
             }
             return;
         }
-        
+
         // Find cell k such that q[k] <= value < q[k+1]
         let mut k = 0;
         for i in 1..5 {
@@ -278,12 +287,12 @@ impl P2State {
         if value >= self.q[4] {
             k = 3;
         }
-        
+
         // Update marker positions
         for i in (k + 1)..5 {
             self.n[i] += 1.0;
         }
-        
+
         // Update desired marker positions
         for i in 0..5 {
             self.n_prime[i] += match i {
@@ -295,31 +304,31 @@ impl P2State {
                 _ => unreachable!(),
             };
         }
-        
+
         // Adjust marker values
         for i in 1..4 {
             let d = self.n_prime[i] - self.n[i];
-            
-            if (d >= 1.0 && self.n[i + 1] - self.n[i] > 1.0) ||
-               (d <= -1.0 && self.n[i - 1] - self.n[i] < -1.0) {
-                
+
+            if (d >= 1.0 && self.n[i + 1] - self.n[i] > 1.0)
+                || (d <= -1.0 && self.n[i - 1] - self.n[i] < -1.0)
+            {
                 let d_sign = d.signum();
-                
+
                 // Try parabolic interpolation
                 let qi = self.parabolic_interpolation(i, d_sign);
-                
+
                 if self.q[i - 1] < qi && qi < self.q[i + 1] {
                     self.q[i] = qi;
                 } else {
                     // Fall back to linear interpolation
                     self.q[i] = self.linear_interpolation(i, d_sign);
                 }
-                
+
                 self.n[i] += d_sign;
             }
         }
     }
-    
+
     fn parabolic_interpolation(&self, i: usize, d: f64) -> f64 {
         let qi = self.q[i];
         let qim1 = self.q[i - 1];
@@ -327,18 +336,17 @@ impl P2State {
         let ni = self.n[i];
         let nim1 = self.n[i - 1];
         let nip1 = self.n[i + 1];
-        
-        qi + d / (nip1 - nim1) * (
-            (ni - nim1 + d) * (qip1 - qi) / (nip1 - ni) +
-            (nip1 - ni - d) * (qi - qim1) / (ni - nim1)
-        )
+
+        qi + d / (nip1 - nim1)
+            * ((ni - nim1 + d) * (qip1 - qi) / (nip1 - ni)
+                + (nip1 - ni - d) * (qi - qim1) / (ni - nim1))
     }
-    
+
     fn linear_interpolation(&self, i: usize, d: f64) -> f64 {
         let j = if d > 0.0 { i + 1 } else { i - 1 };
         self.q[i] + d * (self.q[j] - self.q[i]) / (self.n[j] - self.n[i])
     }
-    
+
     fn quantile(&self) -> f64 {
         if self.count < 5 {
             // Not enough data, return median of available values
@@ -357,36 +365,36 @@ impl StreamingQuantileTracker {
         // Validate quantiles
         for &q in &quantiles {
             if q < 0.0 || q > 1.0 {
-                return Err(TransformError::InvalidInput(
-                    format!("Quantile {} must be between 0 and 1", q)
-                ));
+                return Err(TransformError::InvalidInput(format!(
+                    "Quantile {} must be between 0 and 1",
+                    q
+                )));
             }
         }
-        
+
         let mut p2_states = Vec::with_capacity(n_features);
         for _ in 0..n_features {
-            let feature_states: Vec<P2State> = quantiles
-                .iter()
-                .map(|&q| P2State::new(q))
-                .collect();
+            let feature_states: Vec<P2State> = quantiles.iter().map(|&q| P2State::new(q)).collect();
             p2_states.push(feature_states);
         }
-        
+
         Ok(StreamingQuantileTracker {
             quantiles,
             p2_states,
             n_features,
         })
     }
-    
+
     /// Update quantile estimates with new data
     pub fn update(&mut self, x: &Array2<f64>) -> Result<()> {
         if x.shape()[1] != self.n_features {
-            return Err(TransformError::InvalidInput(
-                format!("Expected {} features, got {}", self.n_features, x.shape()[1])
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} features, got {}",
+                self.n_features,
+                x.shape()[1]
+            )));
         }
-        
+
         for i in 0..x.shape()[0] {
             for j in 0..x.shape()[1] {
                 let value = x[[i, j]];
@@ -395,20 +403,20 @@ impl StreamingQuantileTracker {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Get current quantile estimates
     pub fn get_quantiles(&self) -> Array2<f64> {
         let mut result = Array2::zeros((self.n_features, self.quantiles.len()));
-        
+
         for j in 0..self.n_features {
             for k in 0..self.quantiles.len() {
                 result[[j, k]] = self.p2_states[j][k].quantile();
             }
         }
-        
+
         result
     }
 }
@@ -435,29 +443,29 @@ impl<T: StreamingTransformer> WindowedStreamingTransformer<T> {
             current_size: 0,
         }
     }
-    
+
     /// Update the transformer with new data
     pub fn update(&mut self, x: &Array2<f64>) -> Result<()> {
         // Add new data to window
         self.window.push_back(x.to_owned());
         self.current_size += x.shape()[0];
-        
+
         // Remove old data if window is full
         while self.current_size > self.window_size && !self.window.is_empty() {
             if let Some(old_data) = self.window.pop_front() {
                 self.current_size -= old_data.shape()[0];
             }
         }
-        
+
         // Refit transformer on window data
         self.transformer.reset();
         for data in &self.window {
             self.transformer.partial_fit(data)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Transform data using the windowed statistics
     pub fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>> {
         self.transformer.transform(x)

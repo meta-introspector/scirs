@@ -1289,30 +1289,28 @@ where
 /// # Safety
 ///
 /// The returned memory map must outlive any array views created from it.
-pub fn deserialize_array_zero_copy<P>(
-    path: P,
-) -> Result<(ArrayMetadata, memmap2::Mmap)>
+pub fn deserialize_array_zero_copy<P>(path: P) -> Result<(ArrayMetadata, memmap2::Mmap)>
 where
     P: AsRef<Path>,
 {
     use std::io::Read;
-    
+
     let mut file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
-    
+
     // Read metadata size hint (first 8 bytes)
     let mut size_buf = [0u8; 8];
     file.read_exact(&mut size_buf)
         .map_err(|e| IoError::FileError(e.to_string()))?;
     let metadata_size = u64::from_le_bytes(size_buf) as usize;
-    
+
     // Read metadata
     let mut metadata_buf = vec![0u8; metadata_size];
     file.read_exact(&mut metadata_buf)
         .map_err(|e| IoError::FileError(e.to_string()))?;
-    
+
     let metadata: ArrayMetadata = bincode::deserialize(&metadata_buf)
         .map_err(|e| IoError::DeserializationError(e.to_string()))?;
-    
+
     // Memory-map the rest of the file (data portion)
     let mmap = unsafe {
         memmap2::MmapOptions::new()
@@ -1320,6 +1318,6 @@ where
             .map(&file)
             .map_err(|e| IoError::FileError(e.to_string()))?
     };
-    
+
     Ok((metadata, mmap))
 }

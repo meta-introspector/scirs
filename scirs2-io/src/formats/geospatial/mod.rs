@@ -31,13 +31,12 @@
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
 
-use std::fs::File;
-use std::io::{Read, Write, Seek, SeekFrom, BufReader};
-use std::path::Path;
-use std::collections::HashMap;
-use byteorder::{ByteOrder, LittleEndian, BigEndian, ReadBytesExt};
-use ndarray::{Array2, ArrayView2};
 use crate::error::{IoError, Result};
+use ndarray::Array2;
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::BufReader;
+use std::path::Path;
 
 /// GeoTIFF coordinate reference system
 #[derive(Debug, Clone, PartialEq)]
@@ -113,13 +112,13 @@ impl GeoTransform {
         if det.abs() < 1e-10 {
             return (0.0, 0.0); // Singular transform
         }
-        
+
         let dx = geo_x - self.x_origin;
         let dy = geo_y - self.y_origin;
-        
+
         let pixel_x = (dx * self.pixel_height - dy * self.x_rotation) / det;
         let pixel_y = (dy * self.pixel_width - dx * self.y_rotation) / det;
-        
+
         (pixel_x, pixel_y)
     }
 }
@@ -155,7 +154,7 @@ impl GeoTiff {
         // This is a simplified implementation
         // In reality, we would use a proper TIFF/GeoTIFF library
         let file_path = path.as_ref().to_string_lossy().to_string();
-        
+
         // For now, return a dummy implementation
         Ok(Self {
             width: 512,
@@ -201,7 +200,7 @@ impl GeoTiff {
                 band, self.bands
             )));
         }
-        
+
         // Simplified implementation - return dummy data
         let data = vec![T::zero(); (self.width * self.height) as usize];
         Array2::from_shape_vec((self.height as usize, self.width as usize), data)
@@ -223,11 +222,13 @@ impl GeoTiff {
                 band, self.bands
             )));
         }
-        
+
         if x_off + width > self.width || y_off + height > self.height {
-            return Err(IoError::ParseError("Window extends beyond image bounds".to_string()));
+            return Err(IoError::ParseError(
+                "Window extends beyond image bounds".to_string(),
+            ));
         }
-        
+
         // Simplified implementation
         let data = vec![T::zero(); (width * height) as usize];
         Array2::from_shape_vec((height as usize, width as usize), data)
@@ -255,35 +256,51 @@ pub trait GeoTiffNumeric: Default + Clone {
 }
 
 impl GeoTiffNumeric for u8 {
-    fn zero() -> Self { 0 }
+    fn zero() -> Self {
+        0
+    }
 }
 
 impl GeoTiffNumeric for i8 {
-    fn zero() -> Self { 0 }
+    fn zero() -> Self {
+        0
+    }
 }
 
 impl GeoTiffNumeric for u16 {
-    fn zero() -> Self { 0 }
+    fn zero() -> Self {
+        0
+    }
 }
 
 impl GeoTiffNumeric for i16 {
-    fn zero() -> Self { 0 }
+    fn zero() -> Self {
+        0
+    }
 }
 
 impl GeoTiffNumeric for u32 {
-    fn zero() -> Self { 0 }
+    fn zero() -> Self {
+        0
+    }
 }
 
 impl GeoTiffNumeric for i32 {
-    fn zero() -> Self { 0 }
+    fn zero() -> Self {
+        0
+    }
 }
 
 impl GeoTiffNumeric for f32 {
-    fn zero() -> Self { 0.0 }
+    fn zero() -> Self {
+        0.0
+    }
 }
 
 impl GeoTiffNumeric for f64 {
-    fn zero() -> Self { 0.0 }
+    fn zero() -> Self {
+        0.0
+    }
 }
 
 /// GeoTIFF writer
@@ -330,20 +347,20 @@ impl GeoTiffWriter {
     /// Write a band
     pub fn write_band<T: GeoTiffNumeric>(&mut self, band: u16, data: &Array2<T>) -> Result<()> {
         if band == 0 || band > self.bands {
-            return Err(IoError::WriteError(format!(
+            return Err(IoError::FileError(format!(
                 "Invalid band number: {} (valid range: 1-{})",
                 band, self.bands
             )));
         }
-        
+
         let (rows, cols) = data.dim();
         if rows != self.height as usize || cols != self.width as usize {
-            return Err(IoError::WriteError(format!(
+            return Err(IoError::FileError(format!(
                 "Data dimensions ({}, {}) don't match image dimensions ({}, {})",
                 cols, rows, self.width, self.height
             )));
         }
-        
+
         // Simplified implementation
         Ok(())
     }
@@ -390,19 +407,20 @@ impl Geometry {
                 let mut min_y = f64::INFINITY;
                 let mut max_x = f64::NEG_INFINITY;
                 let mut max_y = f64::NEG_INFINITY;
-                
+
                 for (x, y) in points {
                     min_x = min_x.min(*x);
                     min_y = min_y.min(*y);
                     max_x = max_x.max(*x);
                     max_y = max_y.max(*y);
                 }
-                
+
                 Some((min_x, min_y, max_x, max_y))
             }
-            Geometry::Polygon { exterior, .. } => {
-                Self::LineString { points: exterior.clone() }.bbox()
+            Geometry::Polygon { exterior, .. } => Self::LineString {
+                points: exterior.clone(),
             }
+            .bbox(),
             _ => None, // Simplified for other types
         }
     }
@@ -446,21 +464,24 @@ impl Shapefile {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         // Simplified implementation
         // In reality, would read .shp, .shx, .dbf files
-        
+
         // Create some dummy features for demonstration
         let mut features = Vec::new();
-        
+
         // Add a point feature
         let mut attributes = HashMap::new();
-        attributes.insert("name".to_string(), AttributeValue::String("City A".to_string()));
+        attributes.insert(
+            "name".to_string(),
+            AttributeValue::String("City A".to_string()),
+        );
         attributes.insert("population".to_string(), AttributeValue::Integer(100000));
-        
+
         features.push(Feature {
             id: Some(1),
             geometry: Geometry::Point { x: -122.4, y: 37.8 },
             attributes,
         });
-        
+
         Ok(Self {
             features,
             crs: Some(CRS::from_epsg(4326)),
@@ -524,9 +545,9 @@ impl GeoJson {
     /// Read GeoJSON from file
     pub fn read<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path.as_ref())
-            .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string(), e))?;
+            .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
         let reader = BufReader::new(file);
-        
+
         // Simplified - would use serde_json to parse
         Ok(Self {
             r#type: "FeatureCollection".to_string(),
@@ -538,19 +559,22 @@ impl GeoJson {
     /// Write GeoJSON to file
     pub fn write<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let file = File::create(path.as_ref())
-            .map_err(|e| IoError::WriteError(format!("Failed to create file: {}", e)))?;
-        
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+
         // Simplified - would use serde_json to serialize
         Ok(())
     }
 
     /// Convert from Shapefile features
     pub fn from_features(features: Vec<Feature>, crs: Option<CRS>) -> Self {
-        let geojson_features = features.into_iter()
+        let geojson_features = features
+            .into_iter()
             .map(|f| GeoJsonFeature {
                 r#type: "Feature".to_string(),
                 geometry: Self::geometry_to_geojson(&f.geometry),
-                properties: f.attributes.into_iter()
+                properties: f
+                    .attributes
+                    .into_iter()
                     .map(|(k, v)| {
                         let json_value = match v {
                             AttributeValue::Integer(i) => serde_json::json!(i),
@@ -564,7 +588,7 @@ impl GeoJson {
                     .collect(),
             })
             .collect();
-        
+
         Self {
             r#type: "FeatureCollection".to_string(),
             features: geojson_features,
@@ -600,12 +624,12 @@ mod tests {
     #[test]
     fn test_geo_transform() {
         let transform = GeoTransform::new(100.0, 50.0, 0.5, -0.5);
-        
+
         // Test pixel to geo
         let (geo_x, geo_y) = transform.pixel_to_geo(10.0, 10.0);
         assert_eq!(geo_x, 105.0); // 100 + 10 * 0.5
-        assert_eq!(geo_y, 45.0);  // 50 + 10 * -0.5
-        
+        assert_eq!(geo_y, 45.0); // 50 + 10 * -0.5
+
         // Test geo to pixel
         let (pixel_x, pixel_y) = transform.geo_to_pixel(105.0, 45.0);
         assert!((pixel_x - 10.0).abs() < 1e-10);
@@ -616,12 +640,12 @@ mod tests {
     fn test_geometry_bbox() {
         let point = Geometry::Point { x: 10.0, y: 20.0 };
         assert_eq!(point.bbox(), Some((10.0, 20.0, 10.0, 20.0)));
-        
+
         let line = Geometry::LineString {
             points: vec![(0.0, 0.0), (10.0, 5.0), (5.0, 10.0)],
         };
         assert_eq!(line.bbox(), Some((0.0, 0.0, 10.0, 10.0)));
-        
+
         let empty_line = Geometry::LineString { points: vec![] };
         assert_eq!(empty_line.bbox(), None);
     }
@@ -630,7 +654,7 @@ mod tests {
     fn test_crs() {
         let crs_epsg = CRS::from_epsg(4326);
         assert_eq!(crs_epsg.epsg_code, Some(4326));
-        
+
         let crs_wkt = CRS::from_wkt("GEOGCS[\"WGS 84\",...]".to_string());
         assert!(crs_wkt.wkt.is_some());
     }

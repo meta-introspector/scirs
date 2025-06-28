@@ -1,14 +1,14 @@
 //! Discriminant Analysis
 //!
-//! This module provides implementations of Linear Discriminant Analysis (LDA) and 
+//! This module provides implementations of Linear Discriminant Analysis (LDA) and
 //! Quadratic Discriminant Analysis (QDA) for classification and dimensionality reduction.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use std::collections::HashMap;
-use crate::error::{StatsResult as Result, StatsError};
-use crate::unified_error_handling::{global_error_handler, validate_or_error};
+use crate::error::{StatsError, StatsResult as Result};
 use crate::error_handling_v2::ErrorCode;
+use crate::{unified_error_handling::global_error_handler, validate_or_error};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::validation::*;
+use std::collections::HashMap;
 
 /// Linear Discriminant Analysis (LDA)
 ///
@@ -111,28 +111,32 @@ impl LinearDiscriminantAnalysis {
     pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<LDAResult> {
         let handler = global_error_handler();
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "LDA fit");
-        
+
         let (n_samples, n_features) = x.dim();
         let n_targets = y.len();
 
         if n_samples != n_targets {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2001,
-                "LDA fit",
-                "sample_size_mismatch",
-                format!("x: {}, y: {}", n_samples, n_targets),
-                "Number of samples in X and y must be equal"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2001,
+                    "LDA fit",
+                    "sample_size_mismatch",
+                    format!("x: {}, y: {}", n_samples, n_targets),
+                    "Number of samples in X and y must be equal",
+                )
+                .error);
         }
 
         if n_samples < 2 {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2003,
-                "LDA fit",
-                "n_samples",
-                n_samples,
-                "LDA requires at least 2 samples"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2003,
+                    "LDA fit",
+                    "n_samples",
+                    n_samples,
+                    "LDA requires at least 2 samples",
+                )
+                .error);
         }
 
         // Get unique classes and validate
@@ -140,25 +144,30 @@ impl LinearDiscriminantAnalysis {
         let n_classes = unique_classes.len();
 
         if n_classes < 2 {
-            return Err(handler.create_validation_error(
-                ErrorCode::E1001,
-                "LDA fit",
-                "n_classes",
-                n_classes,
-                "LDA requires at least 2 classes"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E1001,
+                    "LDA fit",
+                    "n_classes",
+                    n_classes,
+                    "LDA requires at least 2 classes",
+                )
+                .error);
         }
 
         if n_features >= n_samples && self.solver == LDASolver::Eigen {
-            return Err(handler.create_error(
-                ErrorCode::E1001,
-                "LDA fit",
-                "Use SVD solver when n_features >= n_samples for numerical stability"
-            ).error);
+            return Err(handler
+                .create_error(
+                    ErrorCode::E1001,
+                    "LDA fit",
+                    "Use SVD solver when n_features >= n_samples for numerical stability",
+                )
+                .error);
         }
 
         // Compute class statistics
-        let (class_means, class_priors, class_counts) = self.compute_class_statistics(x, y, &unique_classes)?;
+        let (class_means, class_priors, class_counts) =
+            self.compute_class_statistics(x, y, &unique_classes)?;
 
         // Compute within-class and between-class scatter matrices
         let (sw, sb) = self.compute_scatter_matrices(x, y, &unique_classes, &class_means)?;
@@ -171,16 +180,20 @@ impl LinearDiscriminantAnalysis {
         };
 
         // Solve generalized eigenvalue problem
-        let (scalings, explained_variance_ratio) = self.solve_eigenvalue_problem(&sw_regularized, &sb)?;
+        let (scalings, explained_variance_ratio) =
+            self.solve_eigenvalue_problem(&sw_regularized, &sb)?;
 
         // Limit number of components
-        let n_components = self.n_components
+        let n_components = self
+            .n_components
             .unwrap_or(n_classes - 1)
             .min(n_classes - 1)
             .min(n_features);
 
         let final_scalings = scalings.slice(ndarray::s![.., ..n_components]).to_owned();
-        let final_explained_variance = explained_variance_ratio.slice(ndarray::s![..n_components]).to_owned();
+        let final_explained_variance = explained_variance_ratio
+            .slice(ndarray::s![..n_components])
+            .to_owned();
 
         // Compute intercept
         let intercept = self.compute_intercept(&class_means, &final_scalings, &class_priors)?;
@@ -188,7 +201,11 @@ impl LinearDiscriminantAnalysis {
         Ok(LDAResult {
             scalings: final_scalings,
             intercept,
-            covariance: if self.store_covariance { Some(sw_regularized) } else { None },
+            covariance: if self.store_covariance {
+                Some(sw_regularized)
+            } else {
+                None
+            },
             means: class_means,
             priors: class_priors,
             classes: unique_classes,
@@ -220,16 +237,18 @@ impl LinearDiscriminantAnalysis {
 
         // Compute class means and counts
         for (i, &class_label) in classes.iter().enumerate() {
-            let class_indices: Vec<_> = y.iter()
+            let class_indices: Vec<_> = y
+                .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == class_label)
                 .map(|(idx, _)| idx)
                 .collect();
 
             if class_indices.is_empty() {
-                return Err(StatsError::InvalidArgument(
-                    format!("Class {} has no samples", class_label)
-                ));
+                return Err(StatsError::InvalidArgument(format!(
+                    "Class {} has no samples",
+                    class_label
+                )));
             }
 
             class_counts[i] = class_indices.len();
@@ -239,15 +258,19 @@ impl LinearDiscriminantAnalysis {
             for &idx in &class_indices {
                 sum += &x.row(idx);
             }
-            class_means.row_mut(i).assign(&(sum / class_indices.len() as f64));
+            class_means
+                .row_mut(i)
+                .assign(&(sum / class_indices.len() as f64));
         }
 
         // Compute priors
         let class_priors = if let Some(ref priors) = self.priors {
             if priors.len() != n_classes {
-                return Err(StatsError::InvalidArgument(
-                    format!("Priors length ({}) must equal number of classes ({})", priors.len(), n_classes)
-                ));
+                return Err(StatsError::InvalidArgument(format!(
+                    "Priors length ({}) must equal number of classes ({})",
+                    priors.len(),
+                    n_classes
+                )));
             }
             priors.clone()
         } else {
@@ -266,8 +289,8 @@ impl LinearDiscriminantAnalysis {
         classes: &Array1<i32>,
         class_means: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
-        let (n_samples, n_features) = x.dim();
-        let n_classes = classes.len();
+        let (_n_samples, n_features) = x.dim();
+        let _n_classes = classes.len();
 
         // Overall mean
         let overall_mean = x.mean_axis(Axis(0)).unwrap();
@@ -284,7 +307,7 @@ impl LinearDiscriminantAnalysis {
                 if sample_label == class_label {
                     let sample = x.row(sample_idx);
                     let diff = &sample - &class_mean;
-                    
+
                     // Outer product: diff^T * diff
                     for i in 0..n_features {
                         for j in 0..n_features {
@@ -298,7 +321,10 @@ impl LinearDiscriminantAnalysis {
         // Compute between-class scatter
         for (class_idx, _) in classes.iter().enumerate() {
             let class_mean = class_means.row(class_idx);
-            let class_count = y.iter().filter(|&&label| label == classes[class_idx]).count() as f64;
+            let class_count = y
+                .iter()
+                .filter(|&&label| label == classes[class_idx])
+                .count() as f64;
             let diff = &class_mean - &overall_mean;
 
             // Weighted outer product
@@ -334,23 +360,27 @@ impl LinearDiscriminantAnalysis {
     }
 
     /// SVD-based solver (more numerically stable)
-    fn solve_svd(&self, sw: &Array2<f64>, sb: &Array2<f64>) -> Result<(Array2<f64>, Array1<f64>) {
+    fn solve_svd(&self, sw: &Array2<f64>, sb: &Array2<f64>) -> Result<(Array2<f64>, Array1<f64>)> {
         use ndarray_linalg::SVD;
 
         // Cholesky decomposition of Sw = L * L^T
-        let l = scirs2_linalg::cholesky(&sw.view(), true)
-            .map_err(|e| StatsError::ComputationError(
-                format!("Cholesky decomposition failed: {}. Try using shrinkage.", e)
-            ))?;
+        let l = scirs2_linalg::cholesky(&sw.view(), true).map_err(|e| {
+            StatsError::ComputationError(format!(
+                "Cholesky decomposition failed: {}. Try using shrinkage.",
+                e
+            ))
+        })?;
 
         // Solve L * M = Sb for M
-        let l_inv = scirs2_linalg::inv(&l.view(), None)
-            .map_err(|e| StatsError::ComputationError(format!("Failed to invert Cholesky factor: {}", e)))?;
+        let l_inv = scirs2_linalg::inv(&l.view(), None).map_err(|e| {
+            StatsError::ComputationError(format!("Failed to invert Cholesky factor: {}", e))
+        })?;
 
         let m = l_inv.dot(sb).dot(&l_inv.t());
 
         // SVD of M
-        let (u, s, _vt) = m.svd(true, false)
+        let (u, s, _vt) = m
+            .svd(true, false)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
         let u = u.unwrap();
@@ -365,13 +395,24 @@ impl LinearDiscriminantAnalysis {
         let eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val, _)| *val).collect();
         let eigenvectors: Array2<f64> = Array2::from_shape_vec(
             (scalings.nrows(), eigenvalues.len()),
-            eigen_pairs.iter().flat_map(|(_, vec)| vec.iter().cloned()).collect()
-        ).map_err(|e| StatsError::ComputationError(format!("Failed to construct eigenvector matrix: {}", e)))?;
+            eigen_pairs
+                .iter()
+                .flat_map(|(_, vec)| vec.iter().cloned())
+                .collect(),
+        )
+        .map_err(|e| {
+            StatsError::ComputationError(format!("Failed to construct eigenvector matrix: {}", e))
+        })?;
 
         // Compute explained variance ratio
         let total_variance: f64 = eigenvalues.iter().sum();
         let explained_variance_ratio = if total_variance > 1e-10 {
-            Array1::from_vec(eigenvalues.iter().map(|&val| val / total_variance).collect())
+            Array1::from_vec(
+                eigenvalues
+                    .iter()
+                    .map(|&val| val / total_variance)
+                    .collect(),
+            )
         } else {
             Array1::zeros(eigenvalues.len())
         };
@@ -380,38 +421,56 @@ impl LinearDiscriminantAnalysis {
     }
 
     /// Eigenvalue-based solver
-    fn solve_eigen(&self, sw: &Array2<f64>, sb: &Array2<f64>) -> Result<(Array2<f64>, Array1<f64>)> {
+    fn solve_eigen(
+        &self,
+        sw: &Array2<f64>,
+        sb: &Array2<f64>,
+    ) -> Result<(Array2<f64>, Array1<f64>)> {
         use ndarray_linalg::Eigh;
 
         // Compute Sw^{-1} * Sb
-        let sw_inv = scirs2_linalg::inv(&sw.view(), None)
-            .map_err(|e| StatsError::ComputationError(
-                format!("Failed to invert within-class scatter matrix: {}. Try using shrinkage.", e)
-            ))?;
+        let sw_inv = scirs2_linalg::inv(&sw.view(), None).map_err(|e| {
+            StatsError::ComputationError(format!(
+                "Failed to invert within-class scatter matrix: {}. Try using shrinkage.",
+                e
+            ))
+        })?;
 
         let a = sw_inv.dot(sb);
 
         // Eigenvalue decomposition
-        let (eigenvalues, eigenvectors) = a.eigh(ndarray_linalg::UPLO::Upper)
-            .map_err(|e| StatsError::ComputationError(format!("Eigenvalue decomposition failed: {}", e)))?;
+        let (eigenvalues, eigenvectors) = a.eigh(ndarray_linalg::UPLO::Upper).map_err(|e| {
+            StatsError::ComputationError(format!("Eigenvalue decomposition failed: {}", e))
+        })?;
 
         // Sort in descending order
-        let mut eigen_pairs: Vec<_> = eigenvalues.iter().cloned().zip(eigenvectors.columns()).collect();
+        let mut eigen_pairs: Vec<_> = eigenvalues
+            .iter()
+            .cloned()
+            .zip(eigenvectors.columns())
+            .collect();
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
 
         let sorted_eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val, _)| *val).collect();
         let sorted_eigenvectors: Array2<f64> = Array2::from_shape_vec(
             (eigenvectors.nrows(), sorted_eigenvalues.len()),
-            eigen_pairs.iter().flat_map(|(_, vec)| vec.iter().cloned()).collect()
-        ).map_err(|e| StatsError::ComputationError(format!("Failed to construct eigenvector matrix: {}", e)))?;
+            eigen_pairs
+                .iter()
+                .flat_map(|(_, vec)| vec.iter().cloned())
+                .collect(),
+        )
+        .map_err(|e| {
+            StatsError::ComputationError(format!("Failed to construct eigenvector matrix: {}", e))
+        })?;
 
         // Compute explained variance ratio
         let total_variance: f64 = sorted_eigenvalues.iter().filter(|&&val| val > 0.0).sum();
         let explained_variance_ratio = if total_variance > 1e-10 {
             Array1::from_vec(
-                sorted_eigenvalues.iter()
+                sorted_eigenvalues
+                    .iter()
                     .map(|&val| if val > 0.0 { val / total_variance } else { 0.0 })
-                    .collect()
+                    .collect(),
             )
         } else {
             Array1::zeros(sorted_eigenvalues.len())
@@ -434,7 +493,7 @@ impl LinearDiscriminantAnalysis {
             let class_mean = class_means.row(i);
             let projected_mean = scalings.t().dot(&class_mean.to_owned());
             let prior_term = priors[i].ln();
-            
+
             // Intercept = log(prior) - 0.5 * mean^T * Sigma^{-1} * mean
             intercept[i] = prior_term - 0.5 * projected_mean.dot(&projected_mean);
         }
@@ -448,13 +507,15 @@ impl LinearDiscriminantAnalysis {
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "LDA transform");
 
         if x.ncols() != result.n_features {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2001,
-                "LDA transform",
-                "n_features",
-                format!("input: {}, expected: {}", x.ncols(), result.n_features),
-                "Number of features must match training data"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2001,
+                    "LDA transform",
+                    "n_features",
+                    format!("input: {}, expected: {}", x.ncols(), result.n_features),
+                    "Number of features must match training data",
+                )
+                .error);
         }
 
         Ok(x.dot(&result.scalings))
@@ -466,7 +527,8 @@ impl LinearDiscriminantAnalysis {
         let mut predictions = Array1::zeros(x.nrows());
 
         for (i, row) in scores.rows().into_iter().enumerate() {
-            let max_idx = row.iter()
+            let max_idx = row
+                .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                 .map(|(idx, _)| idx)
@@ -490,7 +552,7 @@ impl LinearDiscriminantAnalysis {
             for j in 0..n_classes {
                 let class_mean = result.means.row(j);
                 let projected_class_mean = result.scalings.t().dot(&class_mean.to_owned());
-                
+
                 // Linear discriminant function
                 scores[[i, j]] = sample.dot(&projected_class_mean) + result.intercept[j];
             }
@@ -507,7 +569,7 @@ impl LinearDiscriminantAnalysis {
         for (i, mut row) in probabilities.rows_mut().into_iter().enumerate() {
             let score_row = scores.row(i);
             let max_score = score_row.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-            
+
             // Compute softmax (numerically stable)
             let mut sum_exp = 0.0;
             for (j, &score) in score_row.iter().enumerate() {
@@ -600,13 +662,15 @@ impl QuadraticDiscriminantAnalysis {
         let (n_samples, n_features) = x.dim();
 
         if n_samples != y.len() {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2001,
-                "QDA fit",
-                "sample_size_mismatch",
-                format!("x: {}, y: {}", n_samples, y.len()),
-                "Number of samples in X and y must be equal"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2001,
+                    "QDA fit",
+                    "sample_size_mismatch",
+                    format!("x: {}, y: {}", n_samples, y.len()),
+                    "Number of samples in X and y must be equal",
+                )
+                .error);
         }
 
         // Get unique classes
@@ -617,13 +681,15 @@ impl QuadraticDiscriminantAnalysis {
         let n_classes = unique_classes.len();
 
         if n_classes < 2 {
-            return Err(handler.create_validation_error(
-                ErrorCode::E1001,
-                "QDA fit",
-                "n_classes",
-                n_classes,
-                "QDA requires at least 2 classes"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E1001,
+                    "QDA fit",
+                    "n_classes",
+                    n_classes,
+                    "QDA requires at least 2 classes",
+                )
+                .error);
         }
 
         // Compute class statistics
@@ -632,7 +698,8 @@ impl QuadraticDiscriminantAnalysis {
         let mut class_counts = Array1::zeros(n_classes);
 
         for (class_idx, &class_label) in unique_classes.iter().enumerate() {
-            let class_indices: Vec<_> = y.iter()
+            let class_indices: Vec<_> = y
+                .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == class_label)
                 .map(|(idx, _)| idx)
@@ -640,13 +707,15 @@ impl QuadraticDiscriminantAnalysis {
 
             let class_size = class_indices.len();
             if class_size < 2 {
-                return Err(handler.create_validation_error(
-                    ErrorCode::E2003,
-                    "QDA fit",
-                    "class_size",
-                    class_size,
-                    "Each class must have at least 2 samples for covariance estimation"
-                ).error);
+                return Err(handler
+                    .create_validation_error(
+                        ErrorCode::E2003,
+                        "QDA fit",
+                        "class_size",
+                        class_size,
+                        "Each class must have at least 2 samples for covariance estimation",
+                    )
+                    .error);
             }
 
             class_counts[class_idx] = class_size;
@@ -671,7 +740,8 @@ impl QuadraticDiscriminantAnalysis {
             // Apply regularization
             if self.reg_param > 0.0 {
                 let trace = (0..n_features).map(|i| cov[[i, i]]).sum::<f64>();
-                let identity_term = Array2::eye(n_features) * (self.reg_param * trace / n_features as f64);
+                let identity_term =
+                    Array2::eye(n_features) * (self.reg_param * trace / n_features as f64);
                 cov = cov + identity_term;
             }
 
@@ -681,9 +751,11 @@ impl QuadraticDiscriminantAnalysis {
         // Compute priors
         let class_priors = if let Some(ref priors) = self.priors {
             if priors.len() != n_classes {
-                return Err(StatsError::InvalidArgument(
-                    format!("Priors length ({}) must equal number of classes ({})", priors.len(), n_classes)
-                ));
+                return Err(StatsError::InvalidArgument(format!(
+                    "Priors length ({}) must equal number of classes ({})",
+                    priors.len(),
+                    n_classes
+                )));
             }
             priors.clone()
         } else {
@@ -691,7 +763,11 @@ impl QuadraticDiscriminantAnalysis {
         };
 
         Ok(QDAResult {
-            covariances: if self.store_covariance { Some(class_covariances) } else { None },
+            covariances: if self.store_covariance {
+                Some(class_covariances)
+            } else {
+                None
+            },
             means: class_means,
             priors: class_priors,
             classes: unique_classes,
@@ -705,7 +781,8 @@ impl QuadraticDiscriminantAnalysis {
         let mut predictions = Array1::zeros(x.nrows());
 
         for (i, row) in scores.rows().into_iter().enumerate() {
-            let max_idx = row.iter()
+            let max_idx = row
+                .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                 .map(|(idx, _)| idx)
@@ -722,18 +799,20 @@ impl QuadraticDiscriminantAnalysis {
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "QDA decision_function");
 
         if x.ncols() != result.n_features {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2001,
-                "QDA decision_function",
-                "n_features",
-                format!("input: {}, expected: {}", x.ncols(), result.n_features),
-                "Number of features must match training data"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2001,
+                    "QDA decision_function",
+                    "n_features",
+                    format!("input: {}, expected: {}", x.ncols(), result.n_features),
+                    "Number of features must match training data",
+                )
+                .error);
         }
 
         if result.covariances.is_none() {
             return Err(StatsError::InvalidArgument(
-                "Covariances not stored during training. Set store_covariance=true.".to_string()
+                "Covariances not stored during training. Set store_covariance=true.".to_string(),
             ));
         }
 
@@ -747,20 +826,25 @@ impl QuadraticDiscriminantAnalysis {
             let class_cov = &covariances[class_idx];
 
             // Compute inverse and determinant
-            let cov_inv = scirs2_linalg::inv(&class_cov.view(), None)
-                .map_err(|e| StatsError::ComputationError(
-                    format!("Failed to invert covariance matrix for class {}: {}", class_idx, e)
-                ))?;
+            let cov_inv = scirs2_linalg::inv(&class_cov.view(), None).map_err(|e| {
+                StatsError::ComputationError(format!(
+                    "Failed to invert covariance matrix for class {}: {}",
+                    class_idx, e
+                ))
+            })?;
 
-            let det_cov = scirs2_linalg::det(&class_cov.view(), None)
-                .map_err(|e| StatsError::ComputationError(
-                    format!("Failed to compute determinant for class {}: {}", class_idx, e)
-                ))?;
+            let det_cov = scirs2_linalg::det(&class_cov.view(), None).map_err(|e| {
+                StatsError::ComputationError(format!(
+                    "Failed to compute determinant for class {}: {}",
+                    class_idx, e
+                ))
+            })?;
 
             if det_cov <= 0.0 {
-                return Err(StatsError::ComputationError(
-                    format!("Covariance matrix for class {} is not positive definite", class_idx)
-                ));
+                return Err(StatsError::ComputationError(format!(
+                    "Covariance matrix for class {} is not positive definite",
+                    class_idx
+                )));
             }
 
             let log_det_term = -0.5 * det_cov.ln();

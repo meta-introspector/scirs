@@ -80,9 +80,9 @@ impl MemoryProfiler {
 
         // Both in-edges and out-edges storage
         let mut adjacency_bytes = 0;
-        for node in 0..node_count {
-            let out_neighbors = graph.out_neighbors(node).count();
-            let in_neighbors = graph.in_neighbors(node).count();
+        for node in graph.nodes() {
+            let out_neighbors = graph.neighbors(&node).unwrap_or(vec![]).len();
+            let in_neighbors = out_neighbors; // For undirected graphs, in=out
             adjacency_bytes += (out_neighbors + in_neighbors) * mem::size_of::<(usize, f64)>()
                 + 2 * mem::size_of::<Vec<(usize, f64)>>(); // Two Vecs per node
         }
@@ -227,20 +227,20 @@ impl OptimizedGraphBuilder {
     }
 
     /// Build the optimized graph
-    pub fn build<N: crate::base::Node, E: crate::base::EdgeWeight>(self) -> Result<Graph<N, E>, String> {
+    pub fn build(self) -> Result<Graph<usize, f64>, String> {
         let mut graph = Graph::new();
 
         // Pre-allocate with estimated sizes
-        if let Some(epn) = self.estimated_edges_per_node {
+        if let Some(_epn) = self.estimated_edges_per_node {
             // Reserve capacity in adjacency lists
             for &node in &self.nodes {
-                graph.add_node(node);
+                let _ = graph.add_node(node);
                 // Internal method to reserve adjacency list capacity
                 // This would need to be added to Graph API
             }
         } else {
             for &node in &self.nodes {
-                graph.add_node(node);
+                let _ = graph.add_node(node);
             }
         }
 

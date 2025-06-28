@@ -588,7 +588,12 @@ mod tests {
         let freq_idx = f
             .iter()
             .enumerate()
-            .min_by(|(_, &a), (_, &b)| (a - freq).abs().partial_cmp(&(b - freq).abs()).expect("Frequency comparison should succeed"))
+            .min_by(|(_, &a), (_, &b)| {
+                (a - freq)
+                    .abs()
+                    .partial_cmp(&(b - freq).abs())
+                    .expect("Frequency comparison should succeed")
+            })
             .expect("Should find minimum frequency difference")
             .0;
 
@@ -691,7 +696,8 @@ mod tests {
 
         // Compute normalized spectrogram
         let (f, t, sxx) =
-            spectrogram_normalized(&signal, Some(fs), Some(128), Some(64), Some(80.0)).expect("Normalized spectrogram should succeed");
+            spectrogram_normalized(&signal, Some(fs), Some(128), Some(64), Some(80.0))
+                .expect("Normalized spectrogram should succeed");
 
         // Check dimensions
         assert!(!f.is_empty());

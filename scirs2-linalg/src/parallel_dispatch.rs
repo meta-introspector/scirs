@@ -5,7 +5,7 @@
 //! worker configuration.
 
 use crate::error::LinalgResult;
-use crate::parallel::{WorkerConfig, algorithms};
+use crate::parallel::{algorithms, WorkerConfig};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumAssign, One, Zero};
 use std::iter::Sum;
@@ -15,23 +15,20 @@ pub struct ParallelDecomposition;
 
 impl ParallelDecomposition {
     /// Choose and execute the appropriate Cholesky decomposition implementation
-    pub fn cholesky<F>(
-        a: &ArrayView2<F>,
-        workers: Option<usize>,
-    ) -> LinalgResult<Array2<F>>
+    pub fn cholesky<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
     where
         F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
     {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * n > config.parallel_threshold {
                 return algorithms::parallel_cholesky(a, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         crate::decomposition::cholesky(a, workers)
     }
@@ -47,35 +44,32 @@ impl ParallelDecomposition {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * n > config.parallel_threshold {
                 return algorithms::parallel_lu(a, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         crate::decomposition::lu(a, workers)
     }
 
     /// Choose and execute the appropriate QR decomposition implementation
-    pub fn qr<F>(
-        a: &ArrayView2<F>,
-        workers: Option<usize>,
-    ) -> LinalgResult<(Array2<F>, Array2<F>)>
+    pub fn qr<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<(Array2<F>, Array2<F>)>
     where
         F: Float + NumAssign + One + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
     {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * n > config.parallel_threshold {
                 return algorithms::parallel_qr(a, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         crate::decomposition::qr(a, workers)
     }
@@ -92,13 +86,13 @@ impl ParallelDecomposition {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices (only supports reduced form)
             if m * n > config.parallel_threshold && !full_matrices {
                 return algorithms::parallel_svd(a, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         crate::decomposition::svd(a, full_matrices, workers)
     }
@@ -122,13 +116,13 @@ impl ParallelSolver {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * n > config.parallel_threshold {
                 return algorithms::parallel_conjugate_gradient(a, b, max_iter, tolerance, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         crate::iterative_solvers::conjugate_gradient(a, b, max_iter, tolerance, None)
     }
@@ -143,18 +137,27 @@ impl ParallelSolver {
         workers: Option<usize>,
     ) -> LinalgResult<Array1<F>>
     where
-        F: Float + NumAssign + One + Sum + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug + std::fmt::Display + 'static,
+        F: Float
+            + NumAssign
+            + One
+            + Sum
+            + Send
+            + Sync
+            + ndarray::ScalarOperand
+            + std::fmt::Debug
+            + std::fmt::Display
+            + 'static,
     {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * n > config.parallel_threshold {
                 return algorithms::parallel_gmres(a, b, max_iter, tolerance, restart, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         let options = crate::solvers::iterative::IterativeSolverOptions {
             max_iterations: max_iter,
@@ -162,8 +165,7 @@ impl ParallelSolver {
             verbose: false,
             restart: Some(restart),
         };
-        crate::solvers::iterative::gmres(a, b, None, &options)
-            .map(|result| result.solution)
+        crate::solvers::iterative::gmres(a, b, None, &options).map(|result| result.solution)
     }
 
     /// Choose and execute the appropriate BiCGSTAB implementation
@@ -180,13 +182,13 @@ impl ParallelSolver {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * n > config.parallel_threshold {
                 return algorithms::parallel_bicgstab(a, b, max_iter, tolerance, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         crate::iterative_solvers::bicgstab(a, b, max_iter, tolerance, None)
     }
@@ -205,13 +207,13 @@ impl ParallelSolver {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * n > config.parallel_threshold {
                 return algorithms::parallel_jacobi(a, b, max_iter, tolerance, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         crate::iterative_solvers::jacobi_method(a, b, max_iter, tolerance, None)
     }
@@ -231,13 +233,13 @@ impl ParallelSolver {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * n > config.parallel_threshold {
                 return algorithms::parallel_sor(a, b, omega, max_iter, tolerance, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         crate::iterative_solvers::successive_over_relaxation(a, b, omega, max_iter, tolerance, None)
     }
@@ -260,13 +262,13 @@ impl ParallelOperations {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, k) = a.dim();
             let (_, n) = b.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * k * n > config.parallel_threshold {
                 return algorithms::parallel_gemm(a, b, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         Ok(a.dot(b))
     }
@@ -283,13 +285,13 @@ impl ParallelOperations {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * n > config.parallel_threshold {
                 return algorithms::parallel_matvec(a, x, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         Ok(a.dot(x))
     }
@@ -307,13 +309,13 @@ impl ParallelOperations {
         if let Some(num_workers) = workers {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
-            
+
             // Use parallel implementation for large matrices
             if m * n > config.parallel_threshold {
                 return algorithms::parallel_power_iteration(a, max_iter, tolerance, &config);
             }
         }
-        
+
         // Fall back to standard implementation
         crate::eigen::power_iteration(a, max_iter, tolerance)
     }
@@ -341,7 +343,7 @@ impl ParallelConfig {
     }
 
     /// Set the threshold multiplier for parallel execution
-    /// 
+    ///
     /// A value of 2.0 means matrices need to be 2x larger than default
     /// threshold to use parallel implementation
     pub fn with_threshold_multiplier(mut self, multiplier: f64) -> Self {
@@ -352,14 +354,15 @@ impl ParallelConfig {
     /// Build a WorkerConfig from this configuration
     pub fn build(&self) -> WorkerConfig {
         let mut config = WorkerConfig::new();
-        
+
         if let Some(workers) = self.workers {
             config = config.with_workers(workers);
         }
-        
+
         let base_threshold = config.parallel_threshold;
-        config = config.with_threshold((base_threshold as f64 * self.threshold_multiplier) as usize);
-        
+        config =
+            config.with_threshold((base_threshold as f64 * self.threshold_multiplier) as usize);
+
         config
     }
 }
@@ -389,7 +392,7 @@ mod tests {
             .with_workers(8)
             .with_threshold_multiplier(2.0)
             .build();
-        
+
         assert_eq!(config.workers, Some(8));
         assert_eq!(config.parallel_threshold, 2000); // Default 1000 * 2.0
     }

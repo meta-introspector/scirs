@@ -14,9 +14,10 @@ use ndarray::{Array1, Array2, ArrayView2, Axis};
 fn check_array_finite(array: &ArrayView2<f64>, name: &str) -> SpatialResult<()> {
     for value in array.iter() {
         if !value.is_finite() {
-            return Err(SpatialError::ValueError(
-                format!("Array '{}' contains non-finite values", name)
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "Array '{}' contains non-finite values",
+                name
+            )));
         }
     }
     Ok(())
@@ -88,48 +89,49 @@ pub fn procrustes(
     // Validate inputs
     check_array_finite(data1, "data1")?;
     check_array_finite(data2, "data2")?;
-    
+
     if data1.shape() != data2.shape() {
-        return Err(SpatialError::DimensionError(
-            format!("Input arrays must have the same shape. Got {:?} and {:?}", 
-                    data1.shape(), data2.shape())
-        ));
+        return Err(SpatialError::DimensionError(format!(
+            "Input arrays must have the same shape. Got {:?} and {:?}",
+            data1.shape(),
+            data2.shape()
+        )));
     }
-    
+
     let (n_points, n_dims) = (data1.nrows(), data1.ncols());
-    
+
     if n_points == 0 || n_dims == 0 {
         return Err(SpatialError::DimensionError(
-            "Input arrays cannot be empty".to_string()
+            "Input arrays cannot be empty".to_string(),
         ));
     }
-    
+
     // Center the data by subtracting the mean
     let mean1 = data1.mean_axis(Axis(0)).unwrap();
     let mean2 = data2.mean_axis(Axis(0)).unwrap();
-    
+
     let mut centered1 = data1.to_owned();
     let mut centered2 = data2.to_owned();
-    
+
     for mut row in centered1.rows_mut() {
         for (i, val) in row.iter_mut().enumerate() {
             *val -= mean1[i];
         }
     }
-    
+
     for mut row in centered2.rows_mut() {
         for (i, val) in row.iter_mut().enumerate() {
             *val -= mean2[i];
         }
     }
-    
+
     // Compute the cross-covariance matrix H = centered1.T @ centered2
     let _h = centered1.t().dot(&centered2);
-    
+
     // For now, use a simplified approach without SVD
     // This is a basic implementation using matrix operations available through ndarray
     let result = procrustes_basic_impl(&centered1.view(), &centered2.view(), &mean1, &mean2)?;
-    
+
     Ok(result)
 }
 
@@ -141,38 +143,38 @@ fn procrustes_basic_impl(
     mean2: &Array1<f64>,
 ) -> SpatialResult<(Array2<f64>, Array2<f64>, f64)> {
     let n_points = centered1.nrows() as f64;
-    
+
     // Compute norms for scaling
     let norm1_sq: f64 = centered1.iter().map(|x| x * x).sum();
     let norm2_sq: f64 = centered2.iter().map(|x| x * x).sum();
-    
+
     let norm1 = (norm1_sq / n_points).sqrt();
     let norm2 = (norm2_sq / n_points).sqrt();
-    
+
     // Scale the centered data
     let scale1 = if norm1 > 1e-10 { 1.0 / norm1 } else { 1.0 };
     let scale2 = if norm2 > 1e-10 { 1.0 / norm2 } else { 1.0 };
-    
+
     let scaled1 = centered1 * scale1;
     let scaled2 = centered2 * scale2;
-    
+
     // For basic implementation, use identity transformation (no rotation)
     // This gives a reasonable baseline result
     let mut transformed1 = scaled1.to_owned();
     let transformed2 = scaled2.to_owned();
-    
+
     // Translate back
     for mut row in transformed1.rows_mut() {
         for (i, val) in row.iter_mut().enumerate() {
             *val += mean2[i];
         }
     }
-    
+
     // Compute disparity (sum of squared differences)
     let diff = &transformed1 - &transformed2;
     let disparity: f64 = diff.iter().map(|x| x * x).sum();
     let normalized_disparity = disparity / n_points;
-    
+
     Ok((transformed1, transformed2, normalized_disparity))
 }
 
@@ -211,79 +213,85 @@ pub fn procrustes_extended(
     // Validate inputs
     check_array_finite(data1, "data1")?;
     check_array_finite(data2, "data2")?;
-    
+
     if data1.shape() != data2.shape() {
-        return Err(SpatialError::DimensionError(
-            format!("Input arrays must have the same shape. Got {:?} and {:?}", 
-                    data1.shape(), data2.shape())
-        ));
+        return Err(SpatialError::DimensionError(format!(
+            "Input arrays must have the same shape. Got {:?} and {:?}",
+            data1.shape(),
+            data2.shape()
+        )));
     }
-    
+
     let (n_points, n_dims) = (data1.nrows(), data1.ncols());
-    
+
     if n_points == 0 || n_dims == 0 {
         return Err(SpatialError::DimensionError(
-            "Input arrays cannot be empty".to_string()
+            "Input arrays cannot be empty".to_string(),
         ));
     }
-    
+
     // Initialize transformation parameters
     let mut scale = 1.0;
     let rotation = Array2::eye(n_dims);
     let mut translation_vec = Array1::zeros(n_dims);
-    
+
     // Center the data if translation is enabled
     let (centered1, centered2, mean1, mean2) = if translation {
         let mean1 = data1.mean_axis(Axis(0)).unwrap();
         let mean2 = data2.mean_axis(Axis(0)).unwrap();
-        
+
         let mut centered1 = data1.to_owned();
         let mut centered2 = data2.to_owned();
-        
+
         for mut row in centered1.rows_mut() {
             for (i, val) in row.iter_mut().enumerate() {
                 *val -= mean1[i];
             }
         }
-        
+
         for mut row in centered2.rows_mut() {
             for (i, val) in row.iter_mut().enumerate() {
                 *val -= mean2[i];
             }
         }
-        
+
         (centered1, centered2, mean1, mean2)
     } else {
-        (data1.to_owned(), data2.to_owned(), Array1::zeros(n_dims), Array1::zeros(n_dims))
+        (
+            data1.to_owned(),
+            data2.to_owned(),
+            Array1::zeros(n_dims),
+            Array1::zeros(n_dims),
+        )
     };
-    
+
     // Compute scaling if enabled
     if scaling {
         let norm1_sq: f64 = centered1.iter().map(|x| x * x).sum();
         let norm2_sq: f64 = centered2.iter().map(|x| x * x).sum();
-        
+
         let norm1 = (norm1_sq / n_points as f64).sqrt();
         let norm2 = (norm2_sq / n_points as f64).sqrt();
-        
+
         if norm1 > 1e-10 && norm2 > 1e-10 {
             scale = norm2 / norm1;
         }
     }
-    
+
     // For basic implementation, use identity rotation matrix
     // In a full implementation with SVD, we would compute the optimal rotation here
-    
+
     // Compute translation
     if translation {
         for i in 0..n_dims {
             translation_vec[i] = mean2[i] - scale * mean1[i];
         }
     }
-    
+
     // Apply transformation to data1
     let mut transformed = centered1 * scale;
     transformed = transformed.dot(&rotation);
-    
+
     if translation {
         for mut row in transformed.rows_mut() {
             for (i, val) in row.iter_mut().enumerate() {
@@ -291,23 +299,23 @@ pub fn procrustes_extended(
             }
         }
     }
-    
+
     // Compute disparity
-    let target = if translation { 
-        data2.to_owned() 
-    } else { 
-        centered2 
+    let target = if translation {
+        data2.to_owned()
+    } else {
+        centered2
     };
-    
+
     let diff = &transformed - &target;
     let disparity: f64 = diff.iter().map(|x| x * x).sum();
     let normalized_disparity = disparity / n_points as f64;
-    
+
     let params = ProcrustesParams {
         scale,
         rotation,
         translation: translation_vec,
     };
-    
+
     Ok((transformed, params, normalized_disparity))
 }

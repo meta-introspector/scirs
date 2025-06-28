@@ -635,9 +635,11 @@ where
                         .fold(F::zero(), |acc, (&vi, &ci)| acc + vi * ci);
 
                     // column = column - 2 * v * (v^T * column)
-                    let two = F::from(2.0).ok_or_else(|| LinalgError::NumericalError(
-                        "Failed to convert 2.0 to target type".to_string()
-                    ))?;
+                    let two = F::from(2.0).ok_or_else(|| {
+                        LinalgError::NumericalError(
+                            "Failed to convert 2.0 to target type".to_string(),
+                        )
+                    })?;
                     for i in k..n_rows {
                         a_copy[[i, j]] -= two * v[i - k] * dot_product;
                     }
@@ -652,9 +654,9 @@ where
                 }
 
                 // Apply the Householder reflection
-                let two = F::from(2.0).ok_or_else(|| LinalgError::NumericalError(
-                    "Failed to convert 2.0 to target type".to_string()
-                ))?;
+                let two = F::from(2.0).ok_or_else(|| {
+                    LinalgError::NumericalError("Failed to convert 2.0 to target type".to_string())
+                })?;
                 for i in k..n_rows {
                     for j in k..n_rows {
                         q_sub[[i, j]] -= two * v[i - k] * v[j - k];
@@ -722,9 +724,11 @@ where
                             .zip(row.iter())
                             .fold(F::zero(), |acc, (&vi, &ri)| acc + vi * ri);
 
-                        let two = F::from(2.0).ok_or_else(|| LinalgError::NumericalError(
-                            "Failed to convert 2.0 to target type".to_string()
-                        ))?;
+                        let two = F::from(2.0).ok_or_else(|| {
+                            LinalgError::NumericalError(
+                                "Failed to convert 2.0 to target type".to_string(),
+                            )
+                        })?;
                         for j in k..n_cols {
                             a_copy[[i, j]] -= two * v[j - k] * dot_product;
                         }
@@ -741,9 +745,11 @@ where
                     // Apply the Householder reflection
                     for i in k..n_cols {
                         for j in k..n_cols {
-                            let two = F::from(2.0).ok_or_else(|| LinalgError::NumericalError(
-                                "Failed to convert 2.0 to target type".to_string()
-                            ))?;
+                            let two = F::from(2.0).ok_or_else(|| {
+                                LinalgError::NumericalError(
+                                    "Failed to convert 2.0 to target type".to_string(),
+                                )
+                            })?;
                             p_sub[[i, j]] -= two * v[i - k] * v[j - k];
                         }
                     }

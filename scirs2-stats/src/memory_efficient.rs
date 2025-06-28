@@ -4,14 +4,14 @@
 //! that minimize allocations and use streaming/chunked processing for large datasets.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{ArrayBase, ArrayViewMut1, Data, Ix1, Ix2, s};
+#[cfg(feature = "memmap")]
+use memmap2::Mmap;
+use ndarray::{s, ArrayBase, ArrayViewMut1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
 use std::cmp::Ordering;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
-#[cfg(feature = "memmap")]
-use memmap2::Mmap;
 
 /// Chunk size for streaming operations (tuned for cache efficiency)
 const CHUNK_SIZE: usize = 8192;
@@ -35,7 +35,9 @@ where
     I: Iterator<Item = F>,
 {
     if total_count == 0 {
-        return Err(StatsError::InvalidArgument("Cannot compute mean of empty dataset".to_string()));
+        return Err(StatsError::InvalidArgument(
+            "Cannot compute mean of empty dataset".to_string(),
+        ));
     }
 
     let mut sum = F::zero();
@@ -47,7 +49,7 @@ where
             .by_ref()
             .take(CHUNK_SIZE)
             .fold(F::zero(), |acc, val| acc + val);
-        
+
         sum = sum + chunk_sum;
         count += CHUNK_SIZE.min(total_count - count);
     }
@@ -76,7 +78,7 @@ where
     let n = x.len();
     if n <= ddof {
         return Err(StatsError::InvalidArgument(
-            "Not enough data points for the given degrees of freedom".to_string()
+            "Not enough data points for the given degrees of freedom".to_string(),
         ));
     }
 
@@ -110,15 +112,15 @@ where
     F: Float + NumCast,
 {
     let (mean, variance) = welford_variance(&data.view(), ddof)?;
-    
+
     if variance <= F::epsilon() {
         return Err(StatsError::InvalidArgument(
-            "Cannot normalize data with zero variance".to_string()
+            "Cannot normalize data with zero variance".to_string(),
         ));
     }
 
     let std_dev = variance.sqrt();
-    
+
     // Normalize in-place
     for val in data.iter_mut() {
         *val = (*val - mean) / std_dev;
@@ -145,7 +147,9 @@ where
     F: Float + NumCast,
 {
     if data.is_empty() {
-        return Err(StatsError::InvalidArgument("Cannot compute quantile of empty array".to_string()));
+        return Err(StatsError::InvalidArgument(
+            "Cannot compute quantile of empty array".to_string(),
+        ));
     }
 
     if q < F::zero() || q > F::one() {
@@ -155,12 +159,12 @@ where
     let n = data.len();
     let pos = q * F::from(n - 1).unwrap();
     let k = NumCast::from(pos.floor()).unwrap();
-    
+
     // Use quickselect to find k-th element
     quickselect(data, k);
-    
+
     let lower = data[k];
-    
+
     // Handle interpolation if needed
     let frac = pos - pos.floor();
     if frac > F::zero() && k + 1 < n {
@@ -184,7 +188,7 @@ fn quickselect<F: Float>(data: &mut [F], k: usize) {
 
     while left < right {
         let pivot_idx = partition(data, left, right);
-        
+
         match k.cmp(&pivot_idx) {
             Ordering::Less => right = pivot_idx - 1,
             Ordering::Greater => left = pivot_idx + 1,
@@ -197,9 +201,9 @@ fn quickselect<F: Float>(data: &mut [F], k: usize) {
 fn partition<F: Float>(data: &mut [F], left: usize, right: usize) -> usize {
     let pivot_idx = left + (right - left) / 2;
     let pivot = data[pivot_idx];
-    
+
     data.swap(pivot_idx, right);
-    
+
     let mut store_idx = left;
     for i in left..right {
         if data[i] < pivot {
@@ -207,7 +211,7 @@ fn partition<F: Float>(data: &mut [F], left: usize, right: usize) -> usize {
             store_idx += 1;
         }
     }
-    
+
     data.swap(store_idx, right);
     store_idx
 }
@@ -235,10 +239,10 @@ where
 {
     let n_obs = data.nrows();
     let n_vars = data.ncols();
-    
+
     if n_obs <= ddof {
         return Err(StatsError::InvalidArgument(
-            "Not enough observations for the given degrees of freedom".to_string()
+            "Not enough observations for the given degrees of freedom".to_string(),
         ));
     }
 
@@ -337,21 +341,22 @@ impl<F: Float + NumCast> StreamingCorrelation<F> {
     pub fn correlation(&self) -> StatsResult<F> {
         if self.n < 2 {
             return Err(StatsError::InvalidArgument(
-                "Need at least 2 observations to compute correlation".to_string()
+                "Need at least 2 observations to compute correlation".to_string(),
             ));
         }
 
         let n = F::from(self.n).unwrap();
         let mean_x = self.sum_x / n;
         let mean_y = self.sum_y / n;
-        
+
         let cov_xy = (self.sum_xy - n * mean_x * mean_y) / (n - F::one());
         let var_x = (self.sum_xx - n * mean_x * mean_x) / (n - F::one());
         let var_y = (self.sum_yy - n * mean_y * mean_y) / (n - F::one());
 
         if var_x <= F::epsilon() || var_y <= F::epsilon() {
             return Err(StatsError::InvalidArgument(
-                "Cannot compute correlation when one or both variables have zero variance".to_string()
+                "Cannot compute correlation when one or both variables have zero variance"
+                    .to_string(),
             ));
         }
 
@@ -396,16 +401,16 @@ impl<F: Float + NumCast + ndarray::ScalarOperand> IncrementalCovariance<F> {
     pub fn update(&mut self, observation: &ndarray::ArrayView1<F>) -> StatsResult<()> {
         if observation.len() != self.n_vars {
             return Err(StatsError::DimensionMismatch(
-                "Observation dimension doesn't match".to_string()
+                "Observation dimension doesn't match".to_string(),
             ));
         }
 
         self.n += 1;
         let n = F::from(self.n).unwrap();
-        
+
         // Update means and covariance using Welford's algorithm
         let mut delta = ndarray::Array1::zeros(self.n_vars);
-        
+
         for i in 0..self.n_vars {
             delta[i] = observation[i] - self.means[i];
             self.means[i] = self.means[i] + delta[i] / n;
@@ -431,7 +436,7 @@ impl<F: Float + NumCast + ndarray::ScalarOperand> IncrementalCovariance<F> {
     pub fn covariance(&self, ddof: usize) -> StatsResult<ndarray::Array2<F>> {
         if self.n <= ddof {
             return Err(StatsError::InvalidArgument(
-                "Not enough observations for the given degrees of freedom".to_string()
+                "Not enough observations for the given degrees of freedom".to_string(),
             ));
         }
 
@@ -463,7 +468,9 @@ impl<F: Float + NumCast> RollingStats<F> {
     /// Create a new rolling statistics calculator
     pub fn new(window_size: usize) -> StatsResult<Self> {
         if window_size == 0 {
-            return Err(StatsError::InvalidArgument("Window size must be positive".to_string()));
+            return Err(StatsError::InvalidArgument(
+                "Window size must be positive".to_string(),
+            ));
         }
 
         Ok(Self {
@@ -479,15 +486,15 @@ impl<F: Float + NumCast> RollingStats<F> {
     /// Add a new value to the rolling window
     pub fn push(&mut self, value: F) {
         let old_value = self.buffer[self.position];
-        
+
         // Update running sums
         self.sum = self.sum - old_value + value;
         self.sum_squares = self.sum_squares - old_value * old_value + value * value;
-        
+
         // Store new value
         self.buffer[self.position] = value;
         self.position = (self.position + 1) % self.window_size;
-        
+
         if !self.is_full && self.position == 0 {
             self.is_full = true;
         }
@@ -517,7 +524,7 @@ impl<F: Float + NumCast> RollingStats<F> {
         let n = self.len();
         if n <= ddof {
             return Err(StatsError::InvalidArgument(
-                "Not enough data for the given degrees of freedom".to_string()
+                "Not enough data for the given degrees of freedom".to_string(),
             ));
         }
 
@@ -555,7 +562,7 @@ impl<F: Float + NumCast> StreamingHistogram<F> {
         let bins: Vec<F> = (0..=n_bins)
             .map(|i| min_val + F::from(i).unwrap() * bin_width)
             .collect();
-        
+
         Self {
             bins,
             counts: vec![0; n_bins],
@@ -597,12 +604,13 @@ impl<F: Float + NumCast> StreamingHistogram<F> {
         let n_bins = self.counts.len();
         let bin_width = (self.max_val - self.min_val) / F::from(n_bins).unwrap();
         let total = F::from(self.total_count).unwrap() * bin_width;
-        
-        let density: Vec<F> = self.counts
+
+        let density: Vec<F> = self
+            .counts
             .iter()
             .map(|&count| F::from(count).unwrap() / total)
             .collect();
-        
+
         (self.bins.clone(), density)
     }
 }
@@ -636,7 +644,7 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
         let file = File::open(path)
             .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {}", e)))?;
         let mut reader = BufReader::new(file);
-        
+
         let mut sum = F::zero();
         let mut count = 0;
         let mut line = String::new();
@@ -644,8 +652,9 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
 
         // Skip header if present
         if has_header {
-            reader.read_line(&mut line)
-                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read header: {}", e)))?;
+            reader.read_line(&mut line).map_err(|e| {
+                StatsError::InvalidArgument(format!("Failed to read header: {}", e))
+            })?;
             line.clear();
         }
 
@@ -656,24 +665,29 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
                 Ok(_) => {
                     line_num += 1;
                     let fields: Vec<&str> = line.trim().split(',').collect();
-                    
+
                     if fields.len() > column {
                         if let Ok(value) = fields[column].parse::<F>() {
                             sum = sum + value;
                             count += 1;
                         }
                     }
-                    
+
                     line.clear();
                 }
-                Err(e) => return Err(StatsError::ComputationError(
-                    format!("Error reading line {}: {}", line_num, e)
-                )),
+                Err(e) => {
+                    return Err(StatsError::ComputationError(format!(
+                        "Error reading line {}: {}",
+                        line_num, e
+                    )))
+                }
             }
         }
 
         if count == 0 {
-            return Err(StatsError::InvalidArgument("No valid data found".to_string()));
+            return Err(StatsError::InvalidArgument(
+                "No valid data found".to_string(),
+            ));
         }
 
         Ok(sum / F::from(count).unwrap())
@@ -689,20 +703,21 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
     ) -> StatsResult<(F, F)> {
         // First pass: compute mean
         let mean = self.mean_from_csv(&path, column, has_header)?;
-        
+
         // Second pass: compute variance
         let file = File::open(path)
             .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {}", e)))?;
         let mut reader = BufReader::new(file);
-        
+
         let mut sum_sq = F::zero();
         let mut count = 0;
         let mut line = String::new();
 
         // Skip header if present
         if has_header {
-            reader.read_line(&mut line)
-                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read header: {}", e)))?;
+            reader.read_line(&mut line).map_err(|e| {
+                StatsError::InvalidArgument(format!("Failed to read header: {}", e))
+            })?;
             line.clear();
         }
 
@@ -712,7 +727,7 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
                 Ok(0) => break, // EOF
                 Ok(_) => {
                     let fields: Vec<&str> = line.trim().split(',').collect();
-                    
+
                     if fields.len() > column {
                         if let Ok(value) = fields[column].parse::<F>() {
                             let diff = value - mean;
@@ -720,25 +735,30 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
                             count += 1;
                         }
                     }
-                    
+
                     line.clear();
                 }
-                Err(e) => return Err(StatsError::ComputationError(
-                    format!("Error reading file: {}", e)
-                )),
+                Err(e) => {
+                    return Err(StatsError::ComputationError(format!(
+                        "Error reading file: {}",
+                        e
+                    )))
+                }
             }
         }
 
         if count <= ddof {
             return Err(StatsError::InvalidArgument(
-                "Not enough data for the given degrees of freedom".to_string()
+                "Not enough data for the given degrees of freedom".to_string(),
             ));
         }
 
-        let variance = sum_sq / F::from(count - ddof).ok_or_else(|| 
-            StatsError::ComputationError(
-                "Failed to convert count - ddof to target type".to_string()
-            ))?;
+        let variance = sum_sq
+            / F::from(count - ddof).ok_or_else(|| {
+                StatsError::ComputationError(
+                    "Failed to convert count - ddof to target type".to_string(),
+                )
+            })?;
         Ok((mean, variance))
     }
 
@@ -752,37 +772,37 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
         G: FnMut(&[F]) -> StatsResult<()>,
     {
         use std::mem;
-        
+
         let file = File::open(path)
             .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {}", e)))?;
         let mut reader = BufReader::new(file);
-        
+
         let element_size = mem::size_of::<F>();
         let buffer_size = self.chunk_size * element_size;
         let mut buffer = vec![0u8; buffer_size];
-        
+
         loop {
             match reader.read(&mut buffer) {
                 Ok(0) => break, // EOF
                 Ok(bytes_read) => {
                     let n_elements = bytes_read / element_size;
-                    
+
                     // Convert bytes to floats (unsafe but efficient)
                     let floats = unsafe {
-                        std::slice::from_raw_parts(
-                            buffer.as_ptr() as *const F,
-                            n_elements
-                        )
+                        std::slice::from_raw_parts(buffer.as_ptr() as *const F, n_elements)
                     };
-                    
+
                     processor(floats)?;
                 }
-                Err(e) => return Err(StatsError::ComputationError(
-                    format!("Error reading file: {}", e)
-                )),
+                Err(e) => {
+                    return Err(StatsError::ComputationError(format!(
+                        "Error reading file: {}",
+                        e
+                    )))
+                }
             }
         }
-        
+
         Ok(())
     }
 }
@@ -803,32 +823,28 @@ impl<F: Float + NumCast> MemoryMappedStats<F> {
             _phantom: std::marker::PhantomData,
         }
     }
-    
+
     /// Process a memory-mapped file
-    pub fn process_mmap_file<P: AsRef<Path>, G>(
-        &self,
-        path: P,
-        processor: G,
-    ) -> StatsResult<()>
+    pub fn process_mmap_file<P: AsRef<Path>, G>(&self, path: P, processor: G) -> StatsResult<()>
     where
         G: FnOnce(&[F]) -> StatsResult<()>,
     {
         let file = File::open(path)
             .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {}", e)))?;
-        
+
         let mmap = unsafe {
             Mmap::map(&file)
                 .map_err(|e| StatsError::ComputationError(format!("Failed to mmap file: {}", e)))?
         };
-        
+
         // Interpret memory-mapped data as array of floats
         let data = unsafe {
             std::slice::from_raw_parts(
                 mmap.as_ptr() as *const F,
-                mmap.len() / std::mem::size_of::<F>()
+                mmap.len() / std::mem::size_of::<F>(),
             )
         };
-        
+
         processor(data)
     }
 }

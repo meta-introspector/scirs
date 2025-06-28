@@ -33,7 +33,7 @@ impl KernelCompiler {
             cache: HashMap::new(),
         }
     }
-    
+
     /// Compile a kernel for a specific target
     pub fn compile(
         &mut self,
@@ -46,7 +46,7 @@ impl KernelCompiler {
         if let Some(compiled) = self.cache.get(&cache_key) {
             return Ok(compiled.clone());
         }
-        
+
         // Compile based on target
         let compiled = match target {
             CompilationTarget::CUDA => self.compile_cuda(name, source)?,
@@ -55,16 +55,16 @@ impl KernelCompiler {
             CompilationTarget::SPIRV => self.compile_spirv(name, source)?,
             CompilationTarget::CPU => self.compile_cpu(name, source)?,
         };
-        
+
         // Cache the result
         self.cache.insert(cache_key, compiled.clone());
         Ok(compiled)
     }
-    
+
     /// Compile CUDA kernel
     fn compile_cuda(&self, name: &str, source: &str) -> Result<CompiledKernel> {
         let mut options = CudaCompileOptions::default();
-        
+
         // Set optimization flags based on level
         match self.optimization_level {
             OptimizationLevel::O0 => {
@@ -83,10 +83,10 @@ impl KernelCompiler {
                 options.add_flag("-maxrregcount=64");
             }
         }
-        
+
         // Simulate compilation
         let ptx = self.nvcc_compile(source, &options)?;
-        
+
         Ok(CompiledKernel {
             name: name.to_string(),
             binary: ptx.into_bytes(),
@@ -99,12 +99,12 @@ impl KernelCompiler {
             },
         })
     }
-    
+
     /// Compile OpenCL kernel
     fn compile_opencl(&self, name: &str, source: &str) -> Result<CompiledKernel> {
         // OpenCL compilation options
         let mut options = String::new();
-        
+
         match self.optimization_level {
             OptimizationLevel::O0 => options.push_str("-cl-opt-disable "),
             OptimizationLevel::O1 => {}
@@ -114,7 +114,7 @@ impl KernelCompiler {
                 options.push_str("-cl-mad-enable ");
             }
         }
-        
+
         Ok(CompiledKernel {
             name: name.to_string(),
             binary: source.as_bytes().to_vec(),
@@ -122,7 +122,7 @@ impl KernelCompiler {
             metadata: KernelMetadata::default(),
         })
     }
-    
+
     /// Compile Metal kernel
     fn compile_metal(&self, name: &str, source: &str) -> Result<CompiledKernel> {
         // Metal compilation would use metallib
@@ -133,7 +133,7 @@ impl KernelCompiler {
             metadata: KernelMetadata::default(),
         })
     }
-    
+
     /// Compile to SPIR-V
     fn compile_spirv(&self, name: &str, source: &str) -> Result<CompiledKernel> {
         // SPIR-V compilation would use spirv-tools
@@ -144,7 +144,7 @@ impl KernelCompiler {
             metadata: KernelMetadata::default(),
         })
     }
-    
+
     /// Compile CPU kernel (using LLVM or similar)
     fn compile_cpu(&self, name: &str, source: &str) -> Result<CompiledKernel> {
         Ok(CompiledKernel {
@@ -154,7 +154,7 @@ impl KernelCompiler {
             metadata: KernelMetadata::default(),
         })
     }
-    
+
     /// Simulate NVCC compilation
     fn nvcc_compile(&self, source: &str, options: &CudaCompileOptions) -> Result<String> {
         // This would actually invoke nvcc
@@ -165,11 +165,11 @@ impl KernelCompiler {
         ptx.push_str(&format!("// Options: {}\n", options.to_string()));
         Ok(ptx)
     }
-    
+
     /// Optimize kernel source
     pub fn optimize_kernel(&self, source: &str, target: CompilationTarget) -> Result<String> {
         let mut optimized = source.to_string();
-        
+
         // Apply target-specific optimizations
         match target {
             CompilationTarget::CUDA => {
@@ -180,38 +180,38 @@ impl KernelCompiler {
             }
             _ => {}
         }
-        
+
         Ok(optimized)
     }
-    
+
     /// CUDA-specific optimizations
     fn optimize_cuda_kernel(&self, source: &str) -> Result<String> {
         let mut optimized = source.to_string();
-        
+
         if self.optimization_level >= OptimizationLevel::O2 {
             // Unroll loops
             optimized = optimized.replace("#pragma unroll", "#pragma unroll 4");
-            
+
             // Use fast math intrinsics
             optimized = optimized.replace("expf(", "__expf(");
             optimized = optimized.replace("logf(", "__logf(");
             optimized = optimized.replace("sqrtf(", "__fsqrt_rn(");
         }
-        
+
         Ok(optimized)
     }
-    
+
     /// OpenCL-specific optimizations
     fn optimize_opencl_kernel(&self, source: &str) -> Result<String> {
         let mut optimized = source.to_string();
-        
+
         if self.optimization_level >= OptimizationLevel::O2 {
             // Use native functions
             optimized = optimized.replace("exp(", "native_exp(");
             optimized = optimized.replace("log(", "native_log(");
             optimized = optimized.replace("sqrt(", "native_sqrt(");
         }
-        
+
         Ok(optimized)
     }
 }
@@ -237,7 +237,7 @@ impl CompilationTarget {
             CompilationTarget::CPU => "cpu",
         }
     }
-    
+
     /// From accelerator type
     pub fn from_accelerator(acc_type: AcceleratorType) -> Self {
         match acc_type {
@@ -278,7 +278,7 @@ impl CudaCompileOptions {
     fn add_flag(&mut self, flag: &str) {
         self.flags.push(flag.to_string());
     }
-    
+
     fn to_string(&self) -> String {
         self.flags.join(" ")
     }
@@ -302,10 +302,11 @@ impl KernelTemplateGenerator {
             _ => String::new(),
         }
     }
-    
+
     /// CUDA matrix multiplication template
     fn cuda_matmul_template(m: usize, n: usize, k: usize, tile_size: usize) -> String {
-        format!(r#"
+        format!(
+            r#"
 __global__ void matmul_kernel(
     const float* __restrict__ A,
     const float* __restrict__ B,
@@ -352,12 +353,15 @@ __global__ void matmul_kernel(
         C[row * N + col] = sum;
     }}
 }}
-"#, tile_size)
+"#,
+            tile_size
+        )
     }
-    
+
     /// OpenCL matrix multiplication template
     fn opencl_matmul_template(m: usize, n: usize, k: usize, tile_size: usize) -> String {
-        format!(r#"
+        format!(
+            r#"
 __kernel void matmul_kernel(
     __global const float* A,
     __global const float* B,
@@ -396,26 +400,30 @@ __kernel void matmul_kernel(
         C[gy * N + gx] = sum;
     }}
 }}
-"#, tile_size)
+"#,
+            tile_size
+        )
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_kernel_compiler() {
         let mut compiler = KernelCompiler::new(OptimizationLevel::O2);
-        
+
         let source = "__global__ void test() {}";
-        let compiled = compiler.compile("test", source, CompilationTarget::CUDA).unwrap();
-        
+        let compiled = compiler
+            .compile("test", source, CompilationTarget::CUDA)
+            .unwrap();
+
         assert_eq!(compiled.name, "test");
         assert_eq!(compiled.target, CompilationTarget::CUDA);
         assert!(!compiled.binary.is_empty());
     }
-    
+
     #[test]
     fn test_compilation_target() {
         assert_eq!(CompilationTarget::CUDA.as_str(), "cuda");
@@ -424,17 +432,12 @@ mod tests {
             CompilationTarget::CUDA
         );
     }
-    
+
     #[test]
     fn test_kernel_template_generator() {
-        let cuda_kernel = KernelTemplateGenerator::generate_matmul(
-            CompilationTarget::CUDA,
-            128,
-            128,
-            128,
-            16
-        );
-        
+        let cuda_kernel =
+            KernelTemplateGenerator::generate_matmul(CompilationTarget::CUDA, 128, 128, 128, 16);
+
         assert!(cuda_kernel.contains("__global__"));
         assert!(cuda_kernel.contains("matmul_kernel"));
         assert!(cuda_kernel.contains("TILE_SIZE = 16"));

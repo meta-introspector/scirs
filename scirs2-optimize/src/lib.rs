@@ -197,8 +197,12 @@ pub use error::{OptimizeError, OptimizeResult};
 #[cfg(feature = "async")]
 pub mod async_parallel;
 pub mod automatic_differentiation;
+pub mod benchmarking;
 pub mod constrained;
+pub mod distributed;
+pub mod distributed_gpu;
 pub mod global;
+pub mod gpu;
 pub mod jit_optimization;
 pub mod least_squares;
 pub mod ml_optimizers;
@@ -209,17 +213,13 @@ pub mod roots;
 pub mod roots_anderson;
 pub mod roots_krylov;
 pub mod scalar;
+pub mod self_tuning;
 pub mod simd_ops;
 pub mod sparse_numdiff; // Refactored into a module with submodules
 pub mod stochastic;
 pub mod unconstrained;
-pub mod visualization;
-pub mod gpu;
-pub mod distributed;
-pub mod distributed_gpu;
-pub mod self_tuning;
 pub mod unified_pipeline;
-pub mod benchmarking;
+pub mod visualization;
 
 // Common optimization result structure
 pub mod result;
@@ -235,11 +235,32 @@ pub use automatic_differentiation::{
     autodiff, create_ad_gradient, create_ad_hessian, optimize_ad_mode, ADMode, ADResult,
     AutoDiffFunction, AutoDiffOptions,
 };
+pub use benchmarking::{
+    benchmark_suites, test_functions, AlgorithmRanking, BenchmarkConfig, BenchmarkResults,
+    BenchmarkRun, BenchmarkSummary, BenchmarkSystem, ProblemCharacteristics, RuntimeStats,
+    TestProblem,
+};
 pub use constrained::minimize_constrained;
+pub use distributed::{
+    algorithms::{DistributedDifferentialEvolution, DistributedParticleSwarm},
+    DistributedConfig, DistributedOptimizationContext, DistributedStats, DistributionStrategy,
+    MPIInterface, WorkAssignment,
+};
+pub use distributed_gpu::{
+    DistributedGpuConfig, DistributedGpuOptimizer, DistributedGpuResults, DistributedGpuStats,
+    GpuCommunicationStrategy, IterationStats,
+};
 pub use global::{
     basinhopping, bayesian_optimization, differential_evolution, dual_annealing,
     generate_diverse_start_points, multi_start, multi_start_with_clustering, particle_swarm,
     simulated_annealing,
+};
+pub use gpu::{
+    acceleration::{
+        AccelerationConfig, AccelerationManager, AccelerationStrategy, PerformanceStats,
+    },
+    algorithms::{GpuDifferentialEvolution, GpuParticleSwarm},
+    GpuFunction, GpuOptimizationConfig, GpuOptimizationContext, GpuPrecision,
 };
 pub use jit_optimization::{optimize_function, FunctionPattern, JitCompiler, JitOptions, JitStats};
 pub use least_squares::{
@@ -257,6 +278,10 @@ pub use multi_objective::{
 pub use neural_integration::{optimizers, NeuralOptimizer, NeuralParameters, NeuralTrainer};
 pub use roots::root;
 pub use scalar::minimize_scalar;
+pub use self_tuning::{
+    presets, AdaptationResult, AdaptationStrategy, ParameterChange, ParameterValue,
+    PerformanceMetrics, SelfTuningConfig, SelfTuningOptimizer, TunableParameter,
+};
 pub use sparse_numdiff::{sparse_hessian, sparse_jacobian, SparseFiniteDiffOptions};
 pub use stochastic::{
     minimize_adam, minimize_adamw, minimize_rmsprop, minimize_sgd, minimize_sgd_momentum,
@@ -265,37 +290,13 @@ pub use stochastic::{
     StochasticMethod, StochasticOptions,
 };
 pub use unconstrained::{minimize, Bounds};
-pub use visualization::{
-    OptimizationTrajectory, OptimizationVisualizer, VisualizationConfig, OutputFormat, ColorScheme,
-    tracking::TrajectoryTracker,
-};
-pub use gpu::{
-    GpuOptimizationConfig, GpuOptimizationContext, GpuFunction, GpuPrecision,
-    acceleration::{AccelerationManager, AccelerationConfig, AccelerationStrategy, PerformanceStats},
-    algorithms::{GpuDifferentialEvolution, GpuParticleSwarm},
-};
-pub use distributed::{
-    DistributedConfig, DistributionStrategy, MPIInterface, DistributedOptimizationContext,
-    algorithms::{DistributedDifferentialEvolution, DistributedParticleSwarm},
-    DistributedStats, WorkAssignment,
-};
-pub use distributed_gpu::{
-    DistributedGpuOptimizer, DistributedGpuConfig, DistributedGpuResults, DistributedGpuStats,
-    GpuCommunicationStrategy, IterationStats,
-};
-pub use self_tuning::{
-    SelfTuningOptimizer, SelfTuningConfig, AdaptationStrategy, TunableParameter,
-    ParameterValue, PerformanceMetrics, AdaptationResult, ParameterChange,
-    presets,
-};
 pub use unified_pipeline::{
-    UnifiedOptimizer, UnifiedOptimizationConfig, UnifiedOptimizationResults,
-    presets as unified_presets,
+    presets as unified_presets, UnifiedOptimizationConfig, UnifiedOptimizationResults,
+    UnifiedOptimizer,
 };
-pub use benchmarking::{
-    BenchmarkSystem, BenchmarkConfig, BenchmarkResults, BenchmarkRun, BenchmarkSummary,
-    TestProblem, ProblemCharacteristics, AlgorithmRanking, RuntimeStats,
-    test_functions, benchmark_suites,
+pub use visualization::{
+    tracking::TrajectoryTracker, ColorScheme, OptimizationTrajectory, OptimizationVisualizer,
+    OutputFormat, VisualizationConfig,
 };
 
 // Prelude module for convenient imports
@@ -309,7 +310,21 @@ pub mod prelude {
         autodiff, create_ad_gradient, create_ad_hessian, optimize_ad_mode, ADMode, ADResult,
         AutoDiffFunction, AutoDiffOptions, Dual, DualNumber,
     };
+    pub use crate::benchmarking::{
+        benchmark_suites, test_functions, AlgorithmRanking, BenchmarkConfig, BenchmarkResults,
+        BenchmarkRun, BenchmarkSummary, BenchmarkSystem, ProblemCharacteristics, RuntimeStats,
+        TestProblem,
+    };
     pub use crate::constrained::{minimize_constrained, Method as ConstrainedMethod};
+    pub use crate::distributed::{
+        algorithms::{DistributedDifferentialEvolution, DistributedParticleSwarm},
+        DistributedConfig, DistributedOptimizationContext, DistributedStats, DistributionStrategy,
+        MPIInterface, WorkAssignment,
+    };
+    pub use crate::distributed_gpu::{
+        DistributedGpuConfig, DistributedGpuOptimizer, DistributedGpuResults, DistributedGpuStats,
+        GpuCommunicationStrategy, IterationStats,
+    };
     pub use crate::error::{OptimizeError, OptimizeResult};
     pub use crate::global::{
         basinhopping, bayesian_optimization, differential_evolution, dual_annealing,
@@ -319,6 +334,13 @@ pub mod prelude {
         ClusteringOptions, ClusteringResult, DifferentialEvolutionOptions, DualAnnealingOptions,
         InitialPointGenerator, KernelType, LocalMinimum, Parameter, ParticleSwarmOptions,
         SimulatedAnnealingOptions, Space, StartPointStrategy,
+    };
+    pub use crate::gpu::{
+        acceleration::{
+            AccelerationConfig, AccelerationManager, AccelerationStrategy, PerformanceStats,
+        },
+        algorithms::{GpuDifferentialEvolution, GpuParticleSwarm},
+        GpuFunction, GpuOptimizationConfig, GpuOptimizationContext, GpuPrecision,
     };
     pub use crate::jit_optimization::{
         optimize_function, FunctionPattern, JitCompiler, JitOptions, JitStats,
@@ -349,39 +371,19 @@ pub mod prelude {
     pub use crate::scalar::{
         minimize_scalar, Method as ScalarMethod, Options as ScalarOptions, ScalarOptimizeResult,
     };
+    pub use crate::self_tuning::{
+        presets, AdaptationResult, AdaptationStrategy, ParameterChange, ParameterValue,
+        PerformanceMetrics, SelfTuningConfig, SelfTuningOptimizer, TunableParameter,
+    };
     pub use crate::sparse_numdiff::{sparse_hessian, sparse_jacobian, SparseFiniteDiffOptions};
     pub use crate::unconstrained::{minimize, Bounds, Method as UnconstrainedMethod, Options};
-    pub use crate::visualization::{
-        OptimizationTrajectory, OptimizationVisualizer, VisualizationConfig, OutputFormat, ColorScheme,
-        tracking::TrajectoryTracker,
-    };
-    pub use crate::gpu::{
-        GpuOptimizationConfig, GpuOptimizationContext, GpuFunction, GpuPrecision,
-        acceleration::{AccelerationManager, AccelerationConfig, AccelerationStrategy, PerformanceStats},
-        algorithms::{GpuDifferentialEvolution, GpuParticleSwarm},
-    };
-    pub use crate::distributed::{
-        DistributedConfig, DistributionStrategy, MPIInterface, DistributedOptimizationContext,
-        algorithms::{DistributedDifferentialEvolution, DistributedParticleSwarm},
-        DistributedStats, WorkAssignment,
-    };
-    pub use crate::distributed_gpu::{
-        DistributedGpuOptimizer, DistributedGpuConfig, DistributedGpuResults, DistributedGpuStats,
-        GpuCommunicationStrategy, IterationStats,
-    };
-    pub use crate::self_tuning::{
-        SelfTuningOptimizer, SelfTuningConfig, AdaptationStrategy, TunableParameter,
-        ParameterValue, PerformanceMetrics, AdaptationResult, ParameterChange,
-        presets,
-    };
     pub use crate::unified_pipeline::{
-        UnifiedOptimizer, UnifiedOptimizationConfig, UnifiedOptimizationResults,
-        presets as unified_presets,
+        presets as unified_presets, UnifiedOptimizationConfig, UnifiedOptimizationResults,
+        UnifiedOptimizer,
     };
-    pub use crate::benchmarking::{
-        BenchmarkSystem, BenchmarkConfig, BenchmarkResults, BenchmarkRun, BenchmarkSummary,
-        TestProblem, ProblemCharacteristics, AlgorithmRanking, RuntimeStats,
-        test_functions, benchmark_suites,
+    pub use crate::visualization::{
+        tracking::TrajectoryTracker, ColorScheme, OptimizationTrajectory, OptimizationVisualizer,
+        OutputFormat, VisualizationConfig,
     };
 }
 

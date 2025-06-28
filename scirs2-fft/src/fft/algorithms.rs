@@ -55,30 +55,32 @@ fn apply_normalization(data: &mut [Complex64], n: usize, mode: NormMode) -> FFTR
         NormMode::None => {} // No normalization
         NormMode::Backward => {
             let n_f64 = n as f64;
-            let scale = safe_divide(1.0, n_f64)
-                .map_err(|_| FFTError::ValueError(
-                    "Division by zero in backward normalization: FFT size is zero".to_string()
-                ))?;
+            let scale = safe_divide(1.0, n_f64).map_err(|_| {
+                FFTError::ValueError(
+                    "Division by zero in backward normalization: FFT size is zero".to_string(),
+                )
+            })?;
             data.iter_mut().for_each(|c| *c *= scale);
         }
         NormMode::Ortho => {
             let n_f64 = n as f64;
-            let sqrt_n = safe_sqrt(n_f64)
-                .map_err(|_| FFTError::ComputationError(
-                    "Invalid square root in orthogonal normalization".to_string()
-                ))?;
-            let scale = safe_divide(1.0, sqrt_n)
-                .map_err(|_| FFTError::ValueError(
-                    "Division by zero in orthogonal normalization".to_string()
-                ))?;
+            let sqrt_n = safe_sqrt(n_f64).map_err(|_| {
+                FFTError::ComputationError(
+                    "Invalid square root in orthogonal normalization".to_string(),
+                )
+            })?;
+            let scale = safe_divide(1.0, sqrt_n).map_err(|_| {
+                FFTError::ValueError("Division by zero in orthogonal normalization".to_string())
+            })?;
             data.iter_mut().for_each(|c| *c *= scale);
         }
         NormMode::Forward => {
             let n_f64 = n as f64;
-            let scale = safe_divide(1.0, n_f64)
-                .map_err(|_| FFTError::ValueError(
-                    "Division by zero in forward normalization: FFT size is zero".to_string()
-                ))?;
+            let scale = safe_divide(1.0, n_f64).map_err(|_| {
+                FFTError::ValueError(
+                    "Division by zero in forward normalization: FFT size is zero".to_string(),
+                )
+            })?;
             data.iter_mut().for_each(|c| *c *= scale);
         }
     }

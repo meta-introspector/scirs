@@ -1164,16 +1164,16 @@ where
 {
     let (m, n) = a.dim();
     let mut result = Array2::<F>::zeros((m, n));
-    
+
     match axis {
         Some(0) => {
             // Softmax along rows (column-wise)
             for j in 0..n {
                 let col = a.column(j);
-                
+
                 // Find maximum for numerical stability
                 let max_val = col.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
-                
+
                 // Compute exp(x - max) for numerical stability
                 let mut exp_sum = F::zero();
                 for i in 0..m {
@@ -1181,21 +1181,21 @@ where
                     result[[i, j]] = exp_val;
                     exp_sum += exp_val;
                 }
-                
+
                 // Normalize
                 for i in 0..m {
                     result[[i, j]] /= exp_sum;
                 }
             }
-        },
+        }
         Some(1) => {
             // Softmax along columns (row-wise)
             for i in 0..m {
                 let row = a.row(i);
-                
+
                 // Find maximum for numerical stability
                 let max_val = row.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
-                
+
                 // Compute exp(x - max) for numerical stability
                 let mut exp_sum = F::zero();
                 for j in 0..n {
@@ -1203,17 +1203,17 @@ where
                     result[[i, j]] = exp_val;
                     exp_sum += exp_val;
                 }
-                
+
                 // Normalize
                 for j in 0..n {
                     result[[i, j]] /= exp_sum;
                 }
             }
-        },
+        }
         None => {
             // Element-wise softmax (global normalization)
             let max_val = a.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
-            
+
             // Compute exp(x - max) for all elements
             let mut exp_sum = F::zero();
             for i in 0..m {
@@ -1223,17 +1223,18 @@ where
                     exp_sum += exp_val;
                 }
             }
-            
+
             // Normalize all elements
             result.mapv_inplace(|x| x / exp_sum);
-        },
+        }
         _ => {
-            return Err(LinalgError::InvalidInputError(
-                format!("Invalid axis {}. Matrix is 2D, so axis must be 0, 1, or None", axis.unwrap())
-            ));
+            return Err(LinalgError::InvalidInputError(format!(
+                "Invalid axis {}. Matrix is 2D, so axis must be 0, 1, or None",
+                axis.unwrap()
+            )));
         }
     }
-    
+
     Ok(result)
 }
 
@@ -1263,7 +1264,7 @@ where
     F: Float + NumAssign + One + ndarray::ScalarOperand,
 {
     let mut result = Array2::<F>::zeros(a.raw_dim());
-    
+
     for ((i, j), &val) in a.indexed_iter() {
         // Numerically stable sigmoid computation
         if val >= F::zero() {
@@ -1274,7 +1275,7 @@ where
             result[[i, j]] = exp_pos / (F::one() + exp_pos);
         }
     }
-    
+
     Ok(result)
 }
 
@@ -1302,11 +1303,7 @@ where
 /// let a = array![[4.0_f64, 0.0], [0.0, 9.0]];
 /// let sqrt_a = fractional_matrix_power(&a.view(), 0.5, "eigen").unwrap();
 /// ```
-pub fn fractional_matrix_power<F>(
-    a: &ArrayView2<F>, 
-    p: F, 
-    method: &str
-) -> LinalgResult<Array2<F>>
+pub fn fractional_matrix_power<F>(a: &ArrayView2<F>, p: F, method: &str) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
 {
@@ -1316,23 +1313,24 @@ where
             "Matrix must be square for fractional power".to_string(),
         ));
     }
-    
+
     match method {
         "eigen" => {
             // Use eigendecomposition for symmetric matrices
             let (eigenvals, eigenvecs) = crate::eigen::eigh(a, None)?;
-            
+
             // Check for negative eigenvalues if p is not an integer
             if !is_integer(p) {
                 for &eigenval in eigenvals.iter() {
                     if eigenval < F::zero() {
                         return Err(LinalgError::ComputationError(
-                            "Matrix has negative eigenvalues, fractional power not real".to_string(),
+                            "Matrix has negative eigenvalues, fractional power not real"
+                                .to_string(),
                         ));
                     }
                 }
             }
-            
+
             // Compute eigenvalue^p
             let powered_eigenvals = eigenvals.mapv(|x| {
                 if x > F::zero() {
@@ -1343,32 +1341,31 @@ where
                     F::nan() // This case should have been caught above
                 }
             });
-            
+
             // Reconstruct matrix: V * Λ^p * V^T
             let lambda_matrix = Array2::from_diag(&powered_eigenvals);
             let temp = eigenvecs.dot(&lambda_matrix);
             Ok(temp.dot(&eigenvecs.t()))
-        },
+        }
         "schur" => {
             // Use Schur decomposition for general matrices
             let (q, t) = crate::decomposition::schur(a)?;
-            
+
             // Compute T^p using specialized algorithm for upper triangular matrices
             let t_powered = upper_triangular_power(&t, p)?;
-            
+
             // Reconstruct: Q * T^p * Q^T
             let temp = q.dot(&t_powered);
             Ok(temp.dot(&q.t()))
-        },
+        }
         "pade" => {
             // Use Padé approximation combined with scaling and squaring
             pade_fractional_power(a, p)
-        },
-        _ => {
-            Err(LinalgError::InvalidInputError(
-                format!("Unknown method '{}'. Use 'eigen', 'schur', or 'pade'", method)
-            ))
         }
+        _ => Err(LinalgError::InvalidInputError(format!(
+            "Unknown method '{}'. Use 'eigen', 'schur', or 'pade'",
+            method
+        ))),
     }
 }
 
@@ -1401,10 +1398,10 @@ where
             "Matrix must be square for SPD function".to_string(),
         ));
     }
-    
+
     let tolerance = F::from(1e-12).unwrap();
     for i in 0..n {
-        for j in i+1..n {
+        for j in i + 1..n {
             if (a[[i, j]] - a[[j, i]]).abs() > tolerance {
                 return Err(LinalgError::InvalidInputError(
                     "Matrix is not symmetric".to_string(),
@@ -1412,7 +1409,7 @@ where
             }
         }
     }
-    
+
     // Use Cholesky decomposition for SPD matrices when possible
     if let Ok(l) = crate::decomposition::cholesky(a, None) {
         match func {
@@ -1420,16 +1417,16 @@ where
                 // For SPD matrices: sqrt(A) = L * L^T where A = L * L^T
                 // So sqrt(A) is just L for lower triangular L
                 Ok(l)
-            },
+            }
             "inv_sqrt" => {
                 // inv_sqrt(A) = L^{-1} * L^{-T}
                 let l_inv = triangular_inverse(&l, true)?;
                 Ok(l_inv.dot(&l_inv.t()))
-            },
+            }
             "log" => {
                 // Use eigendecomposition for log
                 let (eigenvals, eigenvecs) = crate::eigen::eigh(a, None)?;
-                
+
                 // Check for positive eigenvalues
                 for &eigenval in eigenvals.iter() {
                     if eigenval <= F::zero() {
@@ -1438,12 +1435,12 @@ where
                         ));
                     }
                 }
-                
+
                 let log_eigenvals = eigenvals.mapv(|x| x.ln());
                 let lambda_matrix = Array2::from_diag(&log_eigenvals);
                 let temp = eigenvecs.dot(&lambda_matrix);
                 Ok(temp.dot(&eigenvecs.t()))
-            },
+            }
             "exp" => {
                 // Use eigendecomposition for exp
                 let (eigenvals, eigenvecs) = crate::eigen::eigh(a, None)?;
@@ -1451,23 +1448,24 @@ where
                 let lambda_matrix = Array2::from_diag(&exp_eigenvals);
                 let temp = eigenvecs.dot(&lambda_matrix);
                 Ok(temp.dot(&eigenvecs.t()))
-            },
-            "power" => {
-                let p = param.ok_or_else(|| LinalgError::InvalidInputError(
-                    "Power parameter required for 'power' function".to_string(),
-                ))?;
-                fractional_matrix_power(a, p, "eigen")
-            },
-            _ => {
-                Err(LinalgError::InvalidInputError(
-                    format!("Unknown SPD function '{}'. Use 'log', 'sqrt', 'inv_sqrt', 'exp', or 'power'", func)
-                ))
             }
+            "power" => {
+                let p = param.ok_or_else(|| {
+                    LinalgError::InvalidInputError(
+                        "Power parameter required for 'power' function".to_string(),
+                    )
+                })?;
+                fractional_matrix_power(a, p, "eigen")
+            }
+            _ => Err(LinalgError::InvalidInputError(format!(
+                "Unknown SPD function '{}'. Use 'log', 'sqrt', 'inv_sqrt', 'exp', or 'power'",
+                func
+            ))),
         }
     } else {
         // Fall back to eigendecomposition if Cholesky fails
         let (eigenvals, eigenvecs) = crate::eigen::eigh(a, None)?;
-        
+
         // Check for positive eigenvalues
         for &eigenval in eigenvals.iter() {
             if eigenval <= F::zero() {
@@ -1476,25 +1474,28 @@ where
                 ));
             }
         }
-        
+
         let transformed_eigenvals = match func {
             "sqrt" => eigenvals.mapv(|x| x.sqrt()),
             "inv_sqrt" => eigenvals.mapv(|x| F::one() / x.sqrt()),
             "log" => eigenvals.mapv(|x| x.ln()),
             "exp" => eigenvals.mapv(|x| x.exp()),
             "power" => {
-                let p = param.ok_or_else(|| LinalgError::InvalidInputError(
-                    "Power parameter required for 'power' function".to_string(),
-                ))?;
+                let p = param.ok_or_else(|| {
+                    LinalgError::InvalidInputError(
+                        "Power parameter required for 'power' function".to_string(),
+                    )
+                })?;
                 eigenvals.mapv(|x| x.powf(p))
-            },
+            }
             _ => {
-                return Err(LinalgError::InvalidInputError(
-                    format!("Unknown SPD function '{}'", func)
-                ));
+                return Err(LinalgError::InvalidInputError(format!(
+                    "Unknown SPD function '{}'",
+                    func
+                )));
             }
         };
-        
+
         let lambda_matrix = Array2::from_diag(&transformed_eigenvals);
         let temp = eigenvecs.dot(&lambda_matrix);
         Ok(temp.dot(&eigenvecs.t()))
@@ -1515,24 +1516,24 @@ where
 {
     let n = t.nrows();
     let mut result = Array2::<F>::eye(n);
-    
+
     // Diagonal elements are easy: t[i,i]^p
     for i in 0..n {
         result[[i, i]] = t[[i, i]].powf(p);
     }
-    
+
     // Off-diagonal elements require special computation
     // This is a simplified version - full implementation would use
     // more sophisticated algorithms for numerical stability
     for k in 1..n {
-        for i in 0..n-k {
+        for i in 0..n - k {
             let j = i + k;
             let mut sum = F::zero();
-            
-            for l in (i+1)..j {
+
+            for l in (i + 1)..j {
                 sum = sum + result[[i, l]] * t[[l, j]] - t[[i, l]] * result[[l, j]];
             }
-            
+
             let denom = t[[j, j]] - t[[i, i]];
             if denom.abs() > F::epsilon() {
                 result[[i, j]] = (t[[i, j]] * p + sum) / denom;
@@ -1542,7 +1543,7 @@ where
             }
         }
     }
-    
+
     Ok(result)
 }
 
@@ -1553,7 +1554,7 @@ where
 {
     // This is a simplified implementation
     // Full implementation would use more sophisticated Padé approximants
-    
+
     // For now, use the identity A^p = exp(p * log(A))
     let log_a = logm(a)?;
     let p_log_a = log_a.mapv(|x| x * p);
@@ -1567,12 +1568,12 @@ where
 {
     let n = l.nrows();
     let mut l_inv = Array2::<F>::zeros((n, n));
-    
+
     if lower {
         // Forward substitution for lower triangular
         for i in 0..n {
             l_inv[[i, i]] = F::one() / l[[i, i]];
-            
+
             for j in 0..i {
                 let mut sum = F::zero();
                 for k in j..i {
@@ -1585,17 +1586,17 @@ where
         // Back substitution for upper triangular
         for i in (0..n).rev() {
             l_inv[[i, i]] = F::one() / l[[i, i]];
-            
-            for j in (i+1)..n {
+
+            for j in (i + 1)..n {
                 let mut sum = F::zero();
-                for k in (i+1)..=j {
+                for k in (i + 1)..=j {
                     sum += l[[i, k]] * l_inv[[k, j]];
                 }
                 l_inv[[i, j]] = -sum / l[[i, i]];
             }
         }
     }
-    
+
     Ok(l_inv)
 }
 
@@ -2156,9 +2157,10 @@ where
         let result = Array2::<F>::from_elem((n, n), pi_over_2) - asin_a;
         return Ok(result);
     }
-    
+
     Err(LinalgError::NotImplementedError(
-        "Matrix inverse cosine for matrices with large norm requires complex arithmetic".to_string(),
+        "Matrix inverse cosine for matrices with large norm requires complex arithmetic"
+            .to_string(),
     ))
 }
 
@@ -2203,7 +2205,7 @@ where
     // For small matrices, use the power series:
     // asin(A) = A + A³/6 + 3A⁵/40 + 5A⁷/112 + ...
     // This converges for ||A|| < 1
-    
+
     let norm_a = matrix_norm(a, "2", None)?;
     if norm_a >= F::one() {
         return Err(LinalgError::ConvergenceError(
@@ -2214,7 +2216,7 @@ where
     let mut result = a.to_owned();
     let a_squared = a.dot(a);
     let mut a_power = a.dot(&a_squared); // A³
-    
+
     // Coefficients for asin series
     let coeffs = [
         F::from(1.0 / 6.0).unwrap(),
@@ -2222,19 +2224,19 @@ where
         F::from(5.0 / 112.0).unwrap(),
         F::from(35.0 / 1152.0).unwrap(),
     ];
-    
+
     let tol = F::epsilon() * F::from(10.0).unwrap();
-    
+
     for (i, &coeff) in coeffs.iter().enumerate() {
         let term = &a_power * coeff;
         let term_norm = matrix_norm(&term.view(), "2", None)?;
-        
+
         if term_norm < tol {
             break;
         }
-        
+
         result = result + term;
-        
+
         // Update for next odd power
         if i < coeffs.len() - 1 {
             a_power = a_power.dot(&a_squared);
@@ -2279,7 +2281,7 @@ where
     // For general matrices, we use the power series expansion:
     // atan(A) = A - A³/3 + A⁵/5 - A⁷/7 + ...
     // This converges for ||A|| < 1
-    
+
     // Check if ||A|| < 1 for convergence
     let norm_a = matrix_norm(a, "2", None)?;
     if norm_a >= F::one() {
@@ -2292,19 +2294,19 @@ where
     let mut a_power = a.dot(a).dot(a); // A³
     let mut sign = -F::one();
     let tol = F::epsilon() * F::from(10.0).unwrap();
-    
+
     for k in 1..50 {
         let coeff = sign / F::from(2 * k + 1).unwrap();
         let term = &a_power * coeff;
-        
+
         // Check convergence
         let term_norm = matrix_norm(&term.view(), "2", None)?;
         if term_norm < tol {
             break;
         }
-        
+
         result = result + term;
-        
+
         // Update for next iteration
         a_power = a_power.dot(a).dot(a); // Multiply by A²
         sign = -sign;

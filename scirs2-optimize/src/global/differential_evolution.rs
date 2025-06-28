@@ -171,10 +171,10 @@ where
             _ => self.init_random(),
         }
 
-        // If x0 is provided, replace one member with it
+        // If x0 is provided, replace one member with it (bounds-checked)
         if let Some(ref x0) = self.options.x0 {
             for (i, &val) in x0.iter().enumerate() {
-                self.population[[0, i]] = val;
+                self.population[[0, i]] = self.ensure_bounds(i, val);
             }
         }
 
@@ -389,6 +389,11 @@ where
                     }
                 }
             }
+        }
+
+        // Ensure all trial elements are within bounds after crossover
+        for i in 0..self.ndim {
+            trial[i] = self.ensure_bounds(i, trial[i]);
         }
 
         trial

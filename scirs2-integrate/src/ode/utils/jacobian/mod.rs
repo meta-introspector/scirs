@@ -338,7 +338,8 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 // Since we can't guarantee them at compile time in this generic method, we'll use
                 // the serial implementation as a fallback. For parallel computation, use the
                 // update_jacobian_parallel method which has the proper trait bounds.
-                let jac = finite_difference_jacobian(&f, t, y, &f_current, F::from_f64(1e-8).unwrap());
+                let jac =
+                    finite_difference_jacobian(&f, t, y, &f_current, F::from_f64(1e-8).unwrap());
 
                 // Apply scaling if needed
                 let scaled_jac = if scale_val != F::one() {
@@ -641,7 +642,13 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                     f(t, y.view())
                 };
 
-                let jac = parallel_finite_difference_jacobian(&f, t, y, &f_current, F::from_f64(1e-8).unwrap())?;
+                let jac = parallel_finite_difference_jacobian(
+                    &f,
+                    t,
+                    y,
+                    &f_current,
+                    F::from_f64(1e-8).unwrap(),
+                )?;
 
                 // Apply scaling if needed
                 let scaled_jac = if scale_val != F::one() {
@@ -675,7 +682,14 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                     f(t, y.view())
                 };
 
-                let jac = parallel_sparse_jacobian(&f, t, y, &f_current, None, F::from_f64(1e-8).unwrap())?;
+                let jac = parallel_sparse_jacobian(
+                    &f,
+                    t,
+                    y,
+                    &f_current,
+                    None,
+                    F::from_f64(1e-8).unwrap(),
+                )?;
 
                 // Apply scaling if needed
                 let scaled_jac = if scale_val != F::one() {

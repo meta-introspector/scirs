@@ -442,29 +442,33 @@ impl DistributionTrait<f64> for MultivariateNormal {
 
 // Implement the MultivariateDistribution trait for MultivariateNormal
 impl MultivariateDistribution<f64> for MultivariateNormal {
-    fn pdf(&self, x: &[f64]) -> f64 {
-        if x.len() != self.dim {
-            return 0.0;
-        }
-
-        // Convert slice to Array1 for compatibility
-        let x_array = Array1::from_vec(x.to_vec());
-        self.pdf(&x_array)
+    fn pdf(&self, x: &Array1<f64>) -> f64 {
+        self.pdf(x)
     }
 
-    fn logpdf(&self, x: &[f64]) -> f64 {
-        if x.len() != self.dim {
-            return f64::NEG_INFINITY;
-        }
+    fn rvs(&self, size: usize) -> StatsResult<ndarray::Array2<f64>> {
+        self.rvs(size)
+    }
 
-        // Convert slice to Array1 for compatibility
-        let x_array = Array1::from_vec(x.to_vec());
-        self.logpdf(&x_array)
+    fn mean(&self) -> Array1<f64> {
+        self.mean.clone()
+    }
+
+    fn cov(&self) -> ndarray::Array2<f64> {
+        self.cov.clone()
+    }
+
+    fn dim(&self) -> usize {
+        self.dim
+    }
+
+    fn logpdf(&self, x: &Array1<f64>) -> f64 {
+        self.logpdf(x)
     }
 
     fn rvs_single(&self) -> StatsResult<Vec<f64>> {
-        let sample = self.rvs_single()?;
-        Ok(sample.to_vec())
+        let sample = self.rvs(1)?;
+        Ok(sample.row(0).to_vec())
     }
 }
 

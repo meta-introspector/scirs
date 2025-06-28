@@ -689,12 +689,14 @@ impl CredibleIntervalCalculator {
     }
 
     /// Set credible level
-    pub fn with_credible_level(mut self, level: f64) -> Self {
+    pub fn with_credible_level(mut self, level: f64) -> Result<Self> {
         if level <= 0.0 || level >= 1.0 {
-            panic!("Credible level must be between 0 and 1");
+            return Err(MetricsError::InvalidInput(
+                "Credible level must be between 0 and 1".to_string(),
+            ));
         }
         self.credible_level = level;
-        self
+        Ok(self)
     }
 
     /// Set null hypothesis value for testing
@@ -1023,6 +1025,7 @@ mod tests {
     fn test_credible_interval_calculator() {
         let ci_calc = CredibleIntervalCalculator::new()
             .with_credible_level(0.95)
+            .unwrap()
             .with_null_value(0.0);
 
         let posterior_samples =

@@ -40,17 +40,19 @@ where
 {
     // Import forward mode AD types locally when feature is enabled
     use crate::autodiff::Dual;
-    
+
     let n = y.len();
     let f_test = f(t, y.view());
     let m = f_test.len();
-    
+
     let mut jacobian = Array2::zeros((m, n));
-    
+
     // Compute Jacobian column by column using forward mode AD
     for j in 0..n {
         // Create dual numbers with j-th component having unit derivative
-        let dual_y: Vec<Dual<F>> = y.iter().enumerate()
+        let dual_y: Vec<Dual<F>> = y
+            .iter()
+            .enumerate()
             .map(|(i, &val)| {
                 if i == j {
                     Dual::variable(val)
@@ -59,12 +61,12 @@ where
                 }
             })
             .collect();
-        
+
         // Evaluate function with dual numbers
         let y_vals: Vec<F> = dual_y.iter().map(|d| d.value()).collect();
         let y_arr = Array1::from_vec(y_vals);
         let f_vals = f(t, y_arr.view());
-        
+
         // Extract derivatives for column j
         // Note: This is a simplified approach. A full implementation would
         // propagate dual numbers through the function evaluation.
@@ -73,12 +75,12 @@ where
         let mut y_pert = y.to_owned();
         y_pert[j] += eps;
         let f_pert = f(t, y_pert.view());
-        
+
         for i in 0..m {
             jacobian[[i, j]] = (f_pert[i] - f_vals[i]) / eps;
         }
     }
-    
+
     Ok(jacobian)
 }
 

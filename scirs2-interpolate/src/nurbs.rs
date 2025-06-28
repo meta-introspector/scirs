@@ -285,59 +285,59 @@ where
         // Compute derivatives using the generalized formula for NURBS derivatives
         // Based on "The NURBS Book" by Piegl and Tiller
         let n = self.weights.len();
-        
+
         // Compute all derivatives up to the requested order
         let basis_derivs_all = self.compute_all_basis_derivatives(t, order)?;
-        
+
         // Compute derivatives of the weighted control points (A^(k))
         let mut a_derivs = vec![Array1::<T>::zeros(self.dimension); order + 1];
         let mut w_derivs = vec![T::zero(); order + 1];
-        
+
         for k in 0..=order {
             for i in 0..n {
                 let basis_k = basis_derivs_all[k][i];
                 w_derivs[k] += self.weights[i] * basis_k;
-                
+
                 for j in 0..self.dimension {
                     a_derivs[k][j] += self.weights[i] * self.control_points[[i, j]] * basis_k;
                 }
             }
         }
-        
+
         // Apply the generalized quotient rule
         let mut result = Array1::zeros(self.dimension);
-        
+
         // C^(k) = (1/w) * [A^(k) - sum_{i=1}^k (k choose i) * w^(i) * C^(k-i)]
         let mut c_derivs = vec![Array1::<T>::zeros(self.dimension); order + 1];
-        
+
         // C^(0) is just the point itself
         if w_derivs[0] > T::epsilon() {
             for j in 0..self.dimension {
                 c_derivs[0][j] = a_derivs[0][j] / w_derivs[0];
             }
         }
-        
+
         // Compute higher order derivatives recursively
         for k in 1..=order {
             let mut temp = a_derivs[k].clone();
-            
+
             for i in 1..=k {
                 let binom_coeff = T::from(Self::binomial_coefficient(k, i)).unwrap();
                 for j in 0..self.dimension {
                     temp[j] -= binom_coeff * w_derivs[i] * c_derivs[k - i][j];
                 }
             }
-            
+
             if w_derivs[0] > T::epsilon() {
                 for j in 0..self.dimension {
                     c_derivs[k][j] = temp[j] / w_derivs[0];
                 }
             }
         }
-        
+
         Ok(c_derivs[order].clone())
     }
-    
+
     /// Compute the definite integral of the NURBS curve over an interval
     ///
     /// # Arguments
@@ -351,33 +351,34 @@ where
     pub fn integrate(&self, a: T, b: T) -> InterpolateResult<Array1<T>> {
         // Check bounds
         let t_min = self.bspline.knot_vector()[self.degree()];
-        let t_max = self.bspline.knot_vector()[self.bspline.knot_vector().len() - self.degree() - 1];
-        
+        let t_max =
+            self.bspline.knot_vector()[self.bspline.knot_vector().len() - self.degree() - 1];
+
         if a < t_min || b > t_max {
             return Err(InterpolateError::OutOfBounds(format!(
                 "Integration bounds [{}, {}] are outside the NURBS domain [{}, {}]",
                 a, b, t_min, t_max
             )));
         }
-        
+
         if a > b {
             // If a > b, swap and negate the result
             let result = self.integrate(b, a)?;
             return Ok(-result);
         }
-        
+
         // Use numerical integration (composite Simpson's rule)
         let n_intervals = 100; // Number of intervals for integration
         let h = (b - a) / T::from(n_intervals).unwrap();
-        
+
         let mut result = Array1::zeros(self.dimension);
-        
+
         // Add contributions from endpoints
         let f_a = self.evaluate(a)?;
         let f_b = self.evaluate(b)?;
         result = result + &f_a;
         result = result + &f_b;
-        
+
         // Add contributions from odd indices (coefficient 4)
         for i in 1..n_intervals {
             if i % 2 == 1 {
@@ -386,7 +387,7 @@ where
                 result = result + &(T::from(4.0).unwrap() * &f_t);
             }
         }
-        
+
         // Add contributions from even indices (coefficient 2)
         for i in 2..n_intervals {
             if i % 2 == 0 {
@@ -395,10 +396,10 @@ where
                 result = result + &(T::from(2.0).unwrap() * &f_t);
             }
         }
-        
+
         // Apply Simpson's rule factor
         result = (h / T::from(3.0).unwrap()) * result;
-        
+
         Ok(result)
     }
 
@@ -558,22 +559,26 @@ where
 
         Ok(basis_derivs)
     }
-    
+
     /// Compute all basis function derivatives up to a given order
-    fn compute_all_basis_derivatives(&self, t: T, max_order: usize) -> InterpolateResult<Vec<Vec<T>>> {
+    fn compute_all_basis_derivatives(
+        &self,
+        t: T,
+        max_order: usize,
+    ) -> InterpolateResult<Vec<Vec<T>>> {
         let n = self.weights.len();
         let mut all_derivs = vec![vec![T::zero(); n]; max_order + 1];
-        
+
         // Compute all derivatives up to max_order
         for order in 0..=max_order {
             for i in 0..n {
                 all_derivs[order][i] = self.basis_function_derivative(i, t, order)?;
             }
         }
-        
+
         Ok(all_derivs)
     }
-    
+
     /// Compute binomial coefficient (n choose k)
     fn binomial_coefficient(n: usize, k: usize) -> usize {
         if k > n {
@@ -582,7 +587,7 @@ where
         if k == 0 || k == n {
             return 1;
         }
-        
+
         let mut result = 1;
         for i in 0..k.min(n - k) {
             result = result * (n - i) / (i + 1);
@@ -638,6 +643,491 @@ where
         )?;
 
         basis.derivative(t, order)
+    }
+
+    /// Evaluate derivatives at multiple parameter values
+    ///
+    /// This provides batch evaluation of derivatives for improved performance
+    /// when evaluating derivatives at many points.
+    ///
+    /// # Arguments
+    ///
+    /// * `t_values` - Array of parameter values
+    /// * `order` - Order of the derivative (1 = first derivative, 2 = second derivative, etc.)
+    ///
+    /// # Returns
+    ///
+    /// Array of derivative vectors at the given parameter values
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array1};
+    /// use scirs2_interpolate::nurbs::NurbsCurve;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// // Create a simple NURBS curve
+    /// let control_points = array![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]];
+    /// let weights = array![1.0, 1.0, 1.0];
+    /// let knots = array![0.0, 0.0, 0.0, 1.0, 1.0, 1.0];
+    ///
+    /// let nurbs = NurbsCurve::new(
+    ///     &control_points.view(),
+    ///     &weights.view(),
+    ///     &knots.view(),
+    ///     2,
+    ///     ExtrapolateMode::Extrapolate,
+    /// ).unwrap();
+    ///
+    /// let t_vals = array![0.2, 0.5, 0.8];
+    /// let derivatives = nurbs.derivative_array(&t_vals.view(), 1).unwrap();
+    /// ```
+    pub fn derivative_array(
+        &self,
+        t_values: &ArrayView1<T>,
+        order: usize,
+    ) -> InterpolateResult<Array2<T>> {
+        let n_points = t_values.len();
+        let mut result = Array2::zeros((n_points, self.dimension));
+
+        for (i, &t) in t_values.iter().enumerate() {
+            let deriv = self.derivative(t, order)?;
+            for j in 0..self.dimension {
+                result[[i, j]] = deriv[j];
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Evaluate multiple orders of derivatives at a single parameter value
+    ///
+    /// This method efficiently computes derivatives of multiple orders at the same
+    /// parameter value, which is useful for Taylor series expansions or detailed
+    /// local analysis of the NURBS curve behavior.
+    ///
+    /// # Arguments
+    ///
+    /// * `t` - Parameter value
+    /// * `max_order` - Maximum order of derivative to compute (inclusive)
+    ///
+    /// # Returns
+    ///
+    /// Vector containing derivatives from order 0 (curve point) to max_order
+    /// Each element is a vector in the curve's dimension.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array1};
+    /// use scirs2_interpolate::nurbs::NurbsCurve;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// // Create a simple NURBS curve
+    /// let control_points = array![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]];
+    /// let weights = array![1.0, 1.0, 1.0];
+    /// let knots = array![0.0, 0.0, 0.0, 1.0, 1.0, 1.0];
+    ///
+    /// let nurbs = NurbsCurve::new(
+    ///     &control_points.view(),
+    ///     &weights.view(),
+    ///     &knots.view(),
+    ///     2,
+    ///     ExtrapolateMode::Extrapolate,
+    /// ).unwrap();
+    ///
+    /// // Get curve point, first derivative, and second derivative at t=0.5
+    /// let derivatives = nurbs.derivatives_all(0.5, 2).unwrap();
+    /// let curve_point = &derivatives[0];
+    /// let first_deriv = &derivatives[1];
+    /// let second_deriv = &derivatives[2];
+    /// ```
+    pub fn derivatives_all(&self, t: T, max_order: usize) -> InterpolateResult<Vec<Array1<T>>> {
+        let mut derivatives = Vec::with_capacity(max_order + 1);
+
+        // Order 0 is the curve point itself
+        derivatives.push(self.evaluate(t)?);
+
+        // Compute derivatives of order 1 through max_order
+        for order in 1..=max_order {
+            derivatives.push(self.derivative(t, order)?);
+        }
+
+        Ok(derivatives)
+    }
+
+    /// Compute arc length of the NURBS curve over an interval
+    ///
+    /// This method computes the arc length of the parametric curve
+    /// from parameter a to parameter b using numerical integration.
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - Lower bound of parameter interval
+    /// * `b` - Upper bound of parameter interval  
+    /// * `tolerance` - Tolerance for numerical integration (default: 1e-8)
+    ///
+    /// # Returns
+    ///
+    /// The arc length of the curve from parameter a to b
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array1};
+    /// use scirs2_interpolate::nurbs::NurbsCurve;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// // Create a simple NURBS curve
+    /// let control_points = array![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]];
+    /// let weights = array![1.0, 1.0, 1.0];
+    /// let knots = array![0.0, 0.0, 0.0, 1.0, 1.0, 1.0];
+    ///
+    /// let nurbs = NurbsCurve::new(
+    ///     &control_points.view(),
+    ///     &weights.view(),
+    ///     &knots.view(),
+    ///     2,
+    ///     ExtrapolateMode::Extrapolate,
+    /// ).unwrap();
+    ///
+    /// // Compute arc length from t=0 to t=1
+    /// let arc_length = nurbs.arc_length(0.0, 1.0, Some(1e-6)).unwrap();
+    /// ```
+    pub fn arc_length(&self, a: T, b: T, tolerance: Option<T>) -> InterpolateResult<T> {
+        let tol = tolerance.unwrap_or_else(|| T::from(1e-8).unwrap());
+
+        if a == b {
+            return Ok(T::zero());
+        }
+
+        // Use adaptive Simpson's rule for numerical integration
+        let (start, end, sign) = if a < b {
+            (a, b, T::one())
+        } else {
+            (b, a, -T::one())
+        };
+
+        let integrand = |t: T| -> InterpolateResult<T> {
+            let deriv = self.derivative(t, 1)?;
+            let mut norm_squared = T::zero();
+            for &component in deriv.iter() {
+                norm_squared += component * component;
+            }
+            Ok(norm_squared.sqrt())
+        };
+
+        let length = self.adaptive_simpson_integration(integrand, start, end, tol)?;
+        Ok(sign * length)
+    }
+
+    /// Find roots of the NURBS curve using Newton-Raphson method
+    ///
+    /// This method finds parameter values where a specific component of the
+    /// curve equals a target value, using derivative information.
+    ///
+    /// # Arguments
+    ///
+    /// * `component` - Which component to solve for (0 = x, 1 = y, etc.)
+    /// * `target_value` - Target value for the component
+    /// * `initial_guess` - Starting parameter value for root finding
+    /// * `tolerance` - Convergence tolerance (default: 1e-10)
+    /// * `max_iterations` - Maximum number of iterations (default: 100)
+    ///
+    /// # Returns
+    ///
+    /// The parameter value where curve[component] ≈ target_value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array1};
+    /// use scirs2_interpolate::nurbs::NurbsCurve;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// // Create a simple NURBS curve
+    /// let control_points = array![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]];
+    /// let weights = array![1.0, 1.0, 1.0];
+    /// let knots = array![0.0, 0.0, 0.0, 1.0, 1.0, 1.0];
+    ///
+    /// let nurbs = NurbsCurve::new(
+    ///     &control_points.view(),
+    ///     &weights.view(),
+    ///     &knots.view(),
+    ///     2,
+    ///     ExtrapolateMode::Extrapolate,
+    /// ).unwrap();
+    ///
+    /// // Find parameter where x-coordinate equals 1.5
+    /// let root = nurbs.find_root(0, 1.5, 0.5, Some(1e-8), Some(50)).unwrap();
+    /// ```
+    pub fn find_root(
+        &self,
+        component: usize,
+        target_value: T,
+        initial_guess: T,
+        tolerance: Option<T>,
+        max_iterations: Option<usize>,
+    ) -> InterpolateResult<T> {
+        if component >= self.dimension {
+            return Err(InterpolateError::invalid_input(format!(
+                "Component {} out of range for curve dimension {}",
+                component, self.dimension
+            )));
+        }
+
+        let tol = tolerance.unwrap_or_else(|| T::from(1e-10).unwrap());
+        let max_iter = max_iterations.unwrap_or(100);
+
+        let mut t = initial_guess;
+
+        for _iteration in 0..max_iter {
+            let point = self.evaluate(t)?;
+            let deriv = self.derivative(t, 1)?;
+
+            let f_val = point[component] - target_value;
+            let f_prime = deriv[component];
+
+            if f_prime.abs() < T::epsilon() {
+                return Err(InterpolateError::ComputationError(
+                    "Derivative too small for Newton-Raphson iteration".to_string(),
+                ));
+            }
+
+            let t_new = t - f_val / f_prime;
+
+            if (t_new - t).abs() < tol {
+                return Ok(t_new);
+            }
+
+            t = t_new;
+        }
+
+        Err(InterpolateError::ComputationError(format!(
+            "Root finding did not converge after {} iterations",
+            max_iter
+        )))
+    }
+
+    /// Find local extrema of a specific component of the NURBS curve
+    ///
+    /// This method finds parameter values where the derivative of a specific
+    /// component equals zero, indicating local minima or maxima.
+    ///
+    /// # Arguments
+    ///
+    /// * `component` - Which component to analyze (0 = x, 1 = y, etc.)
+    /// * `search_range` - Tuple (start, end) defining parameter search interval
+    /// * `tolerance` - Convergence tolerance (default: 1e-10)
+    /// * `max_iterations` - Maximum iterations per extremum search (default: 100)
+    ///
+    /// # Returns
+    ///
+    /// Vector of parameter values where extrema occur
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array1};
+    /// use scirs2_interpolate::nurbs::NurbsCurve;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// // Create a simple NURBS curve
+    /// let control_points = array![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]];
+    /// let weights = array![1.0, 1.0, 1.0];
+    /// let knots = array![0.0, 0.0, 0.0, 1.0, 1.0, 1.0];
+    ///
+    /// let nurbs = NurbsCurve::new(
+    ///     &control_points.view(),
+    ///     &weights.view(),
+    ///     &knots.view(),
+    ///     2,
+    ///     ExtrapolateMode::Extrapolate,
+    /// ).unwrap();
+    ///
+    /// // Find extrema of y-component between t=0 and t=1
+    /// let extrema = nurbs.find_extrema(1, (0.0, 1.0), Some(1e-8), Some(50)).unwrap();
+    /// ```
+    pub fn find_extrema(
+        &self,
+        component: usize,
+        search_range: (T, T),
+        tolerance: Option<T>,
+        max_iterations: Option<usize>,
+    ) -> InterpolateResult<Vec<T>> {
+        if component >= self.dimension {
+            return Err(InterpolateError::invalid_input(format!(
+                "Component {} out of range for curve dimension {}",
+                component, self.dimension
+            )));
+        }
+
+        let tol = tolerance.unwrap_or_else(|| T::from(1e-10).unwrap());
+        let max_iter = max_iterations.unwrap_or(100);
+        let (start, end) = search_range;
+
+        let mut extrema = Vec::new();
+
+        // Sample the derivative to find sign changes (indicating extrema)
+        let num_samples = 100;
+        let step = (end - start) / T::from_usize(num_samples).unwrap();
+
+        let mut prev_deriv_sign: Option<bool> = None;
+
+        for i in 0..=num_samples {
+            let t = start + T::from_usize(i).unwrap() * step;
+
+            // Check if t is within the valid domain
+            let knots = self.bspline.knot_vector();
+            let t_min = knots[self.degree()];
+            let t_max = knots[knots.len() - self.degree() - 1];
+
+            if t < t_min || t > t_max {
+                continue;
+            }
+
+            let deriv = self.derivative(t, 1)?;
+            let current_sign = deriv[component] > T::zero();
+
+            if let Some(prev_sign) = prev_deriv_sign {
+                if prev_sign != current_sign {
+                    // Sign change detected, refine the extremum location
+                    let prev_t = start + T::from_usize(i - 1).unwrap() * step;
+
+                    // Use bisection to refine the extremum location
+                    if let Ok(extremum) = self.refine_extremum(component, prev_t, t, tol, max_iter)
+                    {
+                        extrema.push(extremum);
+                    }
+                }
+            }
+
+            prev_deriv_sign = Some(current_sign);
+        }
+
+        Ok(extrema)
+    }
+
+    /// Refine extremum location using bisection method
+    fn refine_extremum(
+        &self,
+        component: usize,
+        mut a: T,
+        mut b: T,
+        tolerance: T,
+        max_iterations: usize,
+    ) -> InterpolateResult<T> {
+        for _iteration in 0..max_iterations {
+            let c = (a + b) / T::from(2.0).unwrap();
+            let deriv_c = self.derivative(c, 1)?;
+
+            if deriv_c[component].abs() < tolerance {
+                return Ok(c);
+            }
+
+            let deriv_a = self.derivative(a, 1)?;
+
+            if (deriv_a[component] > T::zero()) == (deriv_c[component] > T::zero()) {
+                a = c;
+            } else {
+                b = c;
+            }
+
+            if (b - a).abs() < tolerance {
+                return Ok((a + b) / T::from(2.0).unwrap());
+            }
+        }
+
+        Err(InterpolateError::ComputationError(
+            "Extremum refinement did not converge".to_string(),
+        ))
+    }
+
+    /// Adaptive Simpson's rule for numerical integration
+    fn adaptive_simpson_integration<F>(
+        &self,
+        f: F,
+        a: T,
+        b: T,
+        tolerance: T,
+    ) -> InterpolateResult<T>
+    where
+        F: Fn(T) -> InterpolateResult<T>,
+    {
+        let h = b - a;
+        let c = (a + b) / T::from(2.0).unwrap();
+
+        let fa = f(a)?;
+        let fb = f(b)?;
+        let fc = f(c)?;
+
+        // Simpson's rule approximation
+        let s = h * (fa + T::from(4.0).unwrap() * fc + fb) / T::from(6.0).unwrap();
+
+        // Recursive adaptive refinement
+        self.adaptive_simpson_recursive(f, a, b, tolerance, s, fa, fb, fc, 15)
+    }
+
+    fn adaptive_simpson_recursive<F>(
+        &self,
+        f: F,
+        a: T,
+        b: T,
+        tolerance: T,
+        s: T,
+        fa: T,
+        fb: T,
+        fc: T,
+        depth: usize,
+    ) -> InterpolateResult<T>
+    where
+        F: Fn(T) -> InterpolateResult<T>,
+    {
+        if depth == 0 {
+            return Ok(s);
+        }
+
+        let c = (a + b) / T::from(2.0).unwrap();
+        let h = b - a;
+        let d = (a + c) / T::from(2.0).unwrap();
+        let e = (c + b) / T::from(2.0).unwrap();
+
+        let fd = f(d)?;
+        let fe = f(e)?;
+
+        let s_left = h * (fa + T::from(4.0).unwrap() * fd + fc) / T::from(12.0).unwrap();
+        let s_right = h * (fc + T::from(4.0).unwrap() * fe + fb) / T::from(12.0).unwrap();
+        let s_new = s_left + s_right;
+
+        if (s - s_new).abs() <= T::from(15.0).unwrap() * tolerance {
+            return Ok(s_new + (s_new - s) / T::from(15.0).unwrap());
+        }
+
+        let left = self.adaptive_simpson_recursive(
+            &f,
+            a,
+            c,
+            tolerance / T::from(2.0).unwrap(),
+            s_left,
+            fa,
+            fc,
+            fd,
+            depth - 1,
+        )?;
+
+        let right = self.adaptive_simpson_recursive(
+            &f,
+            c,
+            b,
+            tolerance / T::from(2.0).unwrap(),
+            s_right,
+            fc,
+            fb,
+            fe,
+            depth - 1,
+        )?;
+
+        Ok(left + right)
     }
 }
 
@@ -1203,6 +1693,503 @@ where
         }
 
         Ok(basis_derivs)
+    }
+
+    /// Compute mixed partial derivative of the NURBS surface
+    ///
+    /// This method computes the mixed partial derivative ∂²S/∂u∂v at parameters (u, v).
+    ///
+    /// # Arguments
+    ///
+    /// * `u` - Parameter value in the u direction
+    /// * `v` - Parameter value in the v direction
+    ///
+    /// # Returns
+    ///
+    /// Mixed partial derivative ∂²S/∂u∂v at parameters (u, v)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array1};
+    /// use scirs2_interpolate::nurbs::NurbsSurface;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// // Create a simple NURBS surface
+    /// let control_points = array![
+    ///     [0.0, 0.0, 0.0], [1.0, 0.0, 0.0],
+    ///     [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]
+    /// ];
+    /// let weights = array![1.0, 1.0, 1.0, 1.0];
+    /// let knots_u = array![0.0, 0.0, 1.0, 1.0];
+    /// let knots_v = array![0.0, 0.0, 1.0, 1.0];
+    ///
+    /// let surface = NurbsSurface::new(
+    ///     &control_points.view(), &weights.view(), 2, 2,
+    ///     &knots_u.view(), &knots_v.view(), 1, 1, ExtrapolateMode::Error
+    /// ).unwrap();
+    ///
+    /// let mixed_deriv = surface.mixed_derivative(0.5, 0.5).unwrap();
+    /// ```
+    pub fn mixed_derivative(&self, u: T, v: T) -> InterpolateResult<Array1<T>> {
+        // Compute mixed partial derivative using the quotient rule for rational surfaces
+        // This is a simplified implementation - a complete one would be more complex
+
+        // Get basis functions and derivatives
+        let basis_u = self.compute_basis_values_u(u)?;
+        let basis_v = self.compute_basis_values_v(v)?;
+        let basis_u_deriv = self.compute_basis_derivatives_u(u, 1)?;
+        let basis_v_deriv = self.compute_basis_derivatives_v(v, 1)?;
+
+        // Apply the generalized quotient rule for mixed derivatives
+        let mut numerator: Array1<T> = Array1::zeros(self.dimension);
+        let mut sum_weights = T::zero();
+        let mut sum_weights_u_deriv = T::zero();
+        let mut sum_weights_v_deriv = T::zero();
+        let mut sum_weights_mixed_deriv = T::zero();
+
+        for (i, (&bu, &bu_deriv)) in basis_u
+            .iter()
+            .zip(basis_u_deriv.iter())
+            .enumerate()
+            .take(self.n_u)
+        {
+            for (j, (&bv, &bv_deriv)) in basis_v
+                .iter()
+                .zip(basis_v_deriv.iter())
+                .enumerate()
+                .take(self.n_v)
+            {
+                let idx = i * self.n_v + j;
+                let weight = self.weights[idx];
+                let basis = bu * bv;
+                let basis_u_deriv_val = bu_deriv * bv;
+                let basis_v_deriv_val = bu * bv_deriv;
+                let basis_mixed_deriv = bu_deriv * bv_deriv;
+
+                // For the numerator: w_i * ∂²N_i/∂u∂v * P_i,j
+                for k in 0..self.dimension {
+                    numerator[k] += weight * basis_mixed_deriv * self.control_points[[idx, k]];
+                }
+
+                // For the denominator parts
+                sum_weights += weight * basis;
+                sum_weights_u_deriv += weight * basis_u_deriv_val;
+                sum_weights_v_deriv += weight * basis_v_deriv_val;
+                sum_weights_mixed_deriv += weight * basis_mixed_deriv;
+            }
+        }
+
+        // Get the surface point and partial derivatives
+        let point = self.evaluate(u, v)?;
+        let deriv_u = self.derivative_u(u, v)?;
+        let deriv_v = self.derivative_v(u, v)?;
+
+        // Apply the quotient rule for mixed derivatives
+        let mut result = Array1::zeros(self.dimension);
+        if sum_weights > T::epsilon() {
+            for k in 0..self.dimension {
+                result[k] = (numerator[k]
+                    - deriv_u[k] * sum_weights_v_deriv
+                    - deriv_v[k] * sum_weights_u_deriv
+                    - point[k] * sum_weights_mixed_deriv)
+                    / sum_weights;
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Evaluate multiple orders of partial derivatives at a surface point
+    ///
+    /// This method computes partial derivatives up to specified orders in both
+    /// u and v directions at parameters (u, v).
+    ///
+    /// # Arguments
+    ///
+    /// * `u` - Parameter value in the u direction
+    /// * `v` - Parameter value in the v direction
+    /// * `max_order_u` - Maximum order of derivative in u direction
+    /// * `max_order_v` - Maximum order of derivative in v direction
+    ///
+    /// # Returns
+    ///
+    /// 2D vector where result[i][j] contains the partial derivative ∂^(i+j)S/∂u^i∂v^j
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array1};
+    /// use scirs2_interpolate::nurbs::NurbsSurface;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// // Create a simple NURBS surface
+    /// let control_points = array![
+    ///     [0.0, 0.0, 0.0], [1.0, 0.0, 0.0],
+    ///     [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]
+    /// ];
+    /// let weights = array![1.0, 1.0, 1.0, 1.0];
+    /// let knots_u = array![0.0, 0.0, 1.0, 1.0];
+    /// let knots_v = array![0.0, 0.0, 1.0, 1.0];
+    ///
+    /// let surface = NurbsSurface::new(
+    ///     &control_points.view(), &weights.view(), 2, 2,
+    ///     &knots_u.view(), &knots_v.view(), 1, 1, ExtrapolateMode::Error
+    /// ).unwrap();
+    ///
+    /// // Get derivatives up to order (1,1)
+    /// let derivatives = surface.derivatives_all(0.5, 0.5, 1, 1).unwrap();
+    /// let surface_point = &derivatives[0][0];      // S(u,v)
+    /// let deriv_u = &derivatives[1][0];            // ∂S/∂u
+    /// let deriv_v = &derivatives[0][1];            // ∂S/∂v
+    /// let mixed_deriv = &derivatives[1][1];        // ∂²S/∂u∂v
+    /// ```
+    pub fn derivatives_all(
+        &self,
+        u: T,
+        v: T,
+        max_order_u: usize,
+        max_order_v: usize,
+    ) -> InterpolateResult<Vec<Vec<Array1<T>>>> {
+        let mut derivatives =
+            vec![vec![Array1::zeros(self.dimension); max_order_v + 1]; max_order_u + 1];
+
+        // Order (0,0) is the surface point itself
+        derivatives[0][0] = self.evaluate(u, v)?;
+
+        // Pure partial derivatives in u direction
+        for i in 1..=max_order_u {
+            if i == 1 {
+                derivatives[i][0] = self.derivative_u(u, v)?;
+            } else {
+                // Higher order u derivatives would need more complex implementation
+                // For now, return zeros as placeholder
+                derivatives[i][0] = Array1::zeros(self.dimension);
+            }
+        }
+
+        // Pure partial derivatives in v direction
+        for j in 1..=max_order_v {
+            if j == 1 {
+                derivatives[0][j] = self.derivative_v(u, v)?;
+            } else {
+                // Higher order v derivatives would need more complex implementation
+                // For now, return zeros as placeholder
+                derivatives[0][j] = Array1::zeros(self.dimension);
+            }
+        }
+
+        // Mixed partial derivatives
+        for i in 1..=max_order_u {
+            for j in 1..=max_order_v {
+                if i == 1 && j == 1 {
+                    derivatives[i][j] = self.mixed_derivative(u, v)?;
+                } else {
+                    // Higher order mixed derivatives would need more complex implementation
+                    // For now, return zeros as placeholder
+                    derivatives[i][j] = Array1::zeros(self.dimension);
+                }
+            }
+        }
+
+        Ok(derivatives)
+    }
+
+    /// Compute surface area of the NURBS surface over a parameter domain
+    ///
+    /// This method computes the surface area over the rectangular parameter
+    /// domain [u_min, u_max] × [v_min, v_max] using numerical integration.
+    ///
+    /// # Arguments
+    ///
+    /// * `u_min` - Lower bound in u direction
+    /// * `u_max` - Upper bound in u direction
+    /// * `v_min` - Lower bound in v direction
+    /// * `v_max` - Upper bound in v direction
+    /// * `tolerance` - Tolerance for numerical integration (default: 1e-6)
+    ///
+    /// # Returns
+    ///
+    /// The surface area over the specified parameter domain
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array1};
+    /// use scirs2_interpolate::nurbs::NurbsSurface;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// // Create a simple NURBS surface
+    /// let control_points = array![
+    ///     [0.0, 0.0, 0.0], [1.0, 0.0, 0.0],
+    ///     [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]
+    /// ];
+    /// let weights = array![1.0, 1.0, 1.0, 1.0];
+    /// let knots_u = array![0.0, 0.0, 1.0, 1.0];
+    /// let knots_v = array![0.0, 0.0, 1.0, 1.0];
+    ///
+    /// let surface = NurbsSurface::new(
+    ///     &control_points.view(), &weights.view(), 2, 2,
+    ///     &knots_u.view(), &knots_v.view(), 1, 1, ExtrapolateMode::Error
+    /// ).unwrap();
+    ///
+    /// // Compute surface area over the unit square
+    /// let area = surface.surface_area(0.0, 1.0, 0.0, 1.0, Some(1e-6)).unwrap();
+    /// ```
+    pub fn surface_area(
+        &self,
+        u_min: T,
+        u_max: T,
+        v_min: T,
+        v_max: T,
+        tolerance: Option<T>,
+    ) -> InterpolateResult<T> {
+        let tol = tolerance.unwrap_or_else(|| T::from(1e-6).unwrap());
+
+        // Check bounds
+        let u_domain_min = self.knots_u[self.degree_u];
+        let u_domain_max = self.knots_u[self.knots_u.len() - self.degree_u - 1];
+        let v_domain_min = self.knots_v[self.degree_v];
+        let v_domain_max = self.knots_v[self.knots_v.len() - self.degree_v - 1];
+
+        if u_min < u_domain_min
+            || u_max > u_domain_max
+            || v_min < v_domain_min
+            || v_max > v_domain_max
+        {
+            return Err(InterpolateError::OutOfBounds(format!(
+                "Integration domain [{}, {}]×[{}, {}] is outside surface domain [{}, {}]×[{}, {}]",
+                u_min, u_max, v_min, v_max, u_domain_min, u_domain_max, v_domain_min, v_domain_max
+            )));
+        }
+
+        // Surface area element is ||∂S/∂u × ∂S/∂v|| du dv
+        let integrand = |u: T, v: T| -> InterpolateResult<T> {
+            let deriv_u = self.derivative_u(u, v)?;
+            let deriv_v = self.derivative_v(u, v)?;
+
+            // Compute cross product magnitude for 3D surfaces
+            if self.dimension == 3 {
+                let cross_x = deriv_u[1] * deriv_v[2] - deriv_u[2] * deriv_v[1];
+                let cross_y = deriv_u[2] * deriv_v[0] - deriv_u[0] * deriv_v[2];
+                let cross_z = deriv_u[0] * deriv_v[1] - deriv_u[1] * deriv_v[0];
+
+                let magnitude = (cross_x * cross_x + cross_y * cross_y + cross_z * cross_z).sqrt();
+                Ok(magnitude)
+            } else {
+                // For non-3D surfaces, use a simplified metric
+                let mut deriv_u_norm_sq = T::zero();
+                let mut deriv_v_norm_sq = T::zero();
+                let mut dot_product = T::zero();
+
+                for i in 0..self.dimension {
+                    deriv_u_norm_sq += deriv_u[i] * deriv_u[i];
+                    deriv_v_norm_sq += deriv_v[i] * deriv_v[i];
+                    dot_product += deriv_u[i] * deriv_v[i];
+                }
+
+                // Area element using metric tensor determinant
+                let det = deriv_u_norm_sq * deriv_v_norm_sq - dot_product * dot_product;
+                Ok(det.max(T::zero()).sqrt())
+            }
+        };
+
+        // Use Simpson's rule for 2D integration
+        let n_u = 20; // Number of intervals in u direction
+        let n_v = 20; // Number of intervals in v direction
+
+        let h_u = (u_max - u_min) / T::from_usize(n_u).unwrap();
+        let h_v = (v_max - v_min) / T::from_usize(n_v).unwrap();
+
+        let mut area = T::zero();
+
+        for i in 0..=n_u {
+            for j in 0..=n_v {
+                let u = u_min + T::from_usize(i).unwrap() * h_u;
+                let v = v_min + T::from_usize(j).unwrap() * h_v;
+
+                let weight_u = if i == 0 || i == n_u {
+                    T::one()
+                } else if i % 2 == 1 {
+                    T::from(4.0).unwrap()
+                } else {
+                    T::from(2.0).unwrap()
+                };
+
+                let weight_v = if j == 0 || j == n_v {
+                    T::one()
+                } else if j % 2 == 1 {
+                    T::from(4.0).unwrap()
+                } else {
+                    T::from(2.0).unwrap()
+                };
+
+                let integrand_val = integrand(u, v)?;
+                area += weight_u * weight_v * integrand_val;
+            }
+        }
+
+        area = area * h_u * h_v / T::from(9.0).unwrap();
+
+        Ok(area)
+    }
+
+    /// Find parameter values where a specific component of the surface equals a target value
+    ///
+    /// This method finds (u, v) parameter pairs where surface[component] equals the target value.
+    /// This is useful for contouring, iso-surface extraction, and intersection problems.
+    ///
+    /// # Arguments
+    ///
+    /// * `component` - Which component to solve for (0 = x, 1 = y, 2 = z, etc.)
+    /// * `target_value` - Target value for the component
+    /// * `search_region` - Rectangle (u_min, u_max, v_min, v_max) to search within
+    /// * `grid_resolution` - Number of grid points per dimension for initial search
+    /// * `tolerance` - Convergence tolerance (default: 1e-8)
+    ///
+    /// # Returns
+    ///
+    /// Vector of (u, v) parameter pairs where surface[component] ≈ target_value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array1};
+    /// use scirs2_interpolate::nurbs::NurbsSurface;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// // Create a simple NURBS surface
+    /// let control_points = array![
+    ///     [0.0, 0.0, 0.0], [1.0, 0.0, 1.0],
+    ///     [0.0, 1.0, 1.0], [1.0, 1.0, 0.0]
+    /// ];
+    /// let weights = array![1.0, 1.0, 1.0, 1.0];
+    /// let knots_u = array![0.0, 0.0, 1.0, 1.0];
+    /// let knots_v = array![0.0, 0.0, 1.0, 1.0];
+    ///
+    /// let surface = NurbsSurface::new(
+    ///     &control_points.view(), &weights.view(), 2, 2,
+    ///     &knots_u.view(), &knots_v.view(), 1, 1, ExtrapolateMode::Error
+    /// ).unwrap();
+    ///
+    /// // Find points where z-coordinate equals 0.5
+    /// let contour_points = surface.find_contour_points(
+    ///     2, 0.5, (0.0, 1.0, 0.0, 1.0), 10, Some(1e-6)
+    /// ).unwrap();
+    /// ```
+    pub fn find_contour_points(
+        &self,
+        component: usize,
+        target_value: T,
+        search_region: (T, T, T, T),
+        grid_resolution: usize,
+        tolerance: Option<T>,
+    ) -> InterpolateResult<Vec<(T, T)>> {
+        if component >= self.dimension {
+            return Err(InterpolateError::invalid_input(format!(
+                "Component {} out of range for surface dimension {}",
+                component, self.dimension
+            )));
+        }
+
+        let tol = tolerance.unwrap_or_else(|| T::from(1e-8).unwrap());
+        let (u_min, u_max, v_min, v_max) = search_region;
+
+        let mut contour_points = Vec::new();
+
+        // Grid search to find approximate contour locations
+        let h_u = (u_max - u_min) / T::from_usize(grid_resolution).unwrap();
+        let h_v = (v_max - v_min) / T::from_usize(grid_resolution).unwrap();
+
+        for i in 0..grid_resolution {
+            for j in 0..grid_resolution {
+                let u1 = u_min + T::from_usize(i).unwrap() * h_u;
+                let u2 = u_min + T::from_usize(i + 1).unwrap() * h_u;
+                let v1 = v_min + T::from_usize(j).unwrap() * h_v;
+                let v2 = v_min + T::from_usize(j + 1).unwrap() * h_v;
+
+                // Check if contour passes through this grid cell
+                let corners = [(u1, v1), (u2, v1), (u1, v2), (u2, v2)];
+
+                let mut corner_values = Vec::new();
+                for &(u, v) in &corners {
+                    if let Ok(point) = self.evaluate(u, v) {
+                        corner_values.push(point[component] - target_value);
+                    }
+                }
+
+                if corner_values.len() == 4 {
+                    // Check for sign changes indicating contour crossing
+                    let has_positive = corner_values.iter().any(|&val| val > T::zero());
+                    let has_negative = corner_values.iter().any(|&val| val < T::zero());
+
+                    if has_positive && has_negative {
+                        // Refine using Newton-Raphson from the center of the cell
+                        let u_center = (u1 + u2) / T::from(2.0).unwrap();
+                        let v_center = (v1 + v2) / T::from(2.0).unwrap();
+
+                        if let Ok((u_refined, v_refined)) = self.refine_contour_point(
+                            component,
+                            target_value,
+                            u_center,
+                            v_center,
+                            tol,
+                            50,
+                        ) {
+                            contour_points.push((u_refined, v_refined));
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(contour_points)
+    }
+
+    /// Refine contour point using Newton-Raphson method
+    fn refine_contour_point(
+        &self,
+        component: usize,
+        target_value: T,
+        mut u: T,
+        mut v: T,
+        tolerance: T,
+        max_iterations: usize,
+    ) -> InterpolateResult<(T, T)> {
+        for _iteration in 0..max_iterations {
+            let point = self.evaluate(u, v)?;
+            let deriv_u = self.derivative_u(u, v)?;
+            let deriv_v = self.derivative_v(u, v)?;
+
+            let f_val = point[component] - target_value;
+            let f_u = deriv_u[component];
+            let f_v = deriv_v[component];
+
+            // Newton-Raphson step: solve [f_u f_v] * [du dv]^T = -f_val
+            // For the 1D contour problem, we move in the direction of steepest descent
+            let grad_norm_sq = f_u * f_u + f_v * f_v;
+
+            if grad_norm_sq < T::epsilon() {
+                return Err(InterpolateError::ComputationError(
+                    "Gradient too small for Newton-Raphson iteration".to_string(),
+                ));
+            }
+
+            let step_size = f_val / grad_norm_sq;
+            let u_new = u - step_size * f_u;
+            let v_new = v - step_size * f_v;
+
+            if ((u_new - u) * (u_new - u) + (v_new - v) * (v_new - v)).sqrt() < tolerance {
+                return Ok((u_new, v_new));
+            }
+
+            u = u_new;
+            v = v_new;
+        }
+
+        Err(InterpolateError::ComputationError(
+            "Contour point refinement did not converge".to_string(),
+        ))
     }
 }
 

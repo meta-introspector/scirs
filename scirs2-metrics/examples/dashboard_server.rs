@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     dashboard.add_metric("learning_rate", 0.001)?;
 
     println!("Starting dashboard server...");
-    
+
     // Start the HTTP server
     let server = start_http_server(dashboard.clone())?;
 
@@ -37,30 +37,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut epoch = 0;
     loop {
         epoch += 1;
-        
+
         // Simulate improving accuracy
         let accuracy = 0.75 + (epoch as f64 * 0.01).min(0.24);
         dashboard.add_metric("accuracy", accuracy)?;
-        
+
         // Simulate decreasing loss
         let loss = 0.45 * (0.95_f64).powi(epoch);
         dashboard.add_metric("loss", loss)?;
-        
+
         // Simulate learning rate decay
         let lr = 0.001 * (0.99_f64).powi(epoch);
         dashboard.add_metric("learning_rate", lr)?;
-        
+
         // Add epoch-specific metrics
         dashboard.add_metric("epoch", epoch as f64)?;
-        
+
         println!(
             "Epoch {}: accuracy={:.4}, loss={:.4}, lr={:.6}",
             epoch, accuracy, loss, lr
         );
-        
+
         // Wait before next update
         thread::sleep(Duration::from_secs(3));
-        
+
         if epoch >= 50 {
             println!("Training completed!");
             break;
@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     drop(server);
     println!("Dashboard server stopped");
-    
+
     Ok(())
 }
 

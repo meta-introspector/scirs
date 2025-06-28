@@ -3,15 +3,13 @@
 //! This suite provides comparative benchmarks that can be used alongside
 //! Python/SciPy benchmarks to assess relative performance.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
-use scirs2_stats::{
-    mean, variance, std, skewness, kurtosis,
-    pearson_r, spearman_r, 
-    quantile, QuantileInterpolation,
-};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array1;
 use rand::prelude::*;
 use rand_distr::StandardNormal;
+use scirs2_stats::{
+    kurtosis, mean, pearson_r, quantile, skewness, spearman_r, std, variance, QuantileInterpolation,
+};
 
 /// Generate large datasets for throughput testing
 fn generate_large_dataset(n: usize) -> Array1<f64> {
@@ -22,88 +20,64 @@ fn generate_large_dataset(n: usize) -> Array1<f64> {
 /// Benchmark basic descriptive statistics
 fn bench_descriptive_stats(c: &mut Criterion) {
     let mut group = c.benchmark_group("descriptive_stats");
-    
+
     // Test with increasingly large datasets to measure scalability
     let sizes = vec![100, 1_000, 10_000, 100_000, 1_000_000];
-    
+
     for &size in &sizes {
         let data = generate_large_dataset(size);
-        
+
         // Set throughput for MB/s calculation
         group.throughput(Throughput::Bytes((size * 8) as u64)); // 8 bytes per f64
-        
+
         // Mean calculation
-        group.bench_with_input(
-            BenchmarkId::new("mean", size),
-            &data,
-            |b, data| {
-                b.iter(|| black_box(mean(&data.view())));
-            }
-        );
-        
+        group.bench_with_input(BenchmarkId::new("mean", size), &data, |b, data| {
+            b.iter(|| black_box(mean(&data.view())));
+        });
+
         // Variance calculation
-        group.bench_with_input(
-            BenchmarkId::new("variance", size),
-            &data,
-            |b, data| {
-                b.iter(|| black_box(variance(&data.view(), 1)));
-            }
-        );
-        
+        group.bench_with_input(BenchmarkId::new("variance", size), &data, |b, data| {
+            b.iter(|| black_box(variance(&data.view(), 1)));
+        });
+
         // Standard deviation
-        group.bench_with_input(
-            BenchmarkId::new("std", size),
-            &data,
-            |b, data| {
-                b.iter(|| black_box(std(&data.view(), 1)));
-            }
-        );
-        
+        group.bench_with_input(BenchmarkId::new("std", size), &data, |b, data| {
+            b.iter(|| black_box(std(&data.view(), 1)));
+        });
+
         // Skewness (more complex calculation)
         if size <= 100_000 {
-            group.bench_with_input(
-                BenchmarkId::new("skewness", size),
-                &data,
-                |b, data| {
-                    b.iter(|| black_box(skewness(&data.view())));
-                }
-            );
+            group.bench_with_input(BenchmarkId::new("skewness", size), &data, |b, data| {
+                b.iter(|| black_box(skewness(&data.view())));
+            });
         }
-        
+
         // Kurtosis
         if size <= 100_000 {
-            group.bench_with_input(
-                BenchmarkId::new("kurtosis", size),
-                &data,
-                |b, data| {
-                    b.iter(|| black_box(kurtosis(&data.view(), false)));
-                }
-            );
+            group.bench_with_input(BenchmarkId::new("kurtosis", size), &data, |b, data| {
+                b.iter(|| black_box(kurtosis(&data.view(), false)));
+            });
         }
     }
-    
+
     group.finish();
 }
 
 /// Benchmark quantile operations
 fn bench_quantiles(c: &mut Criterion) {
     let mut group = c.benchmark_group("quantiles");
-    
+
     let sizes = vec![100, 1_000, 10_000, 100_000];
     let quantiles_to_test = vec![0.25, 0.5, 0.75, 0.95, 0.99];
-    
+
     for &size in &sizes {
         let data = generate_large_dataset(size);
-        
+
         // Single quantile calculation
-        group.bench_with_input(
-            BenchmarkId::new("median", size),
-            &data,
-            |b, data| {
-                b.iter(|| black_box(quantile(&data.view(), 0.5, QuantileInterpolation::Linear)));
-            }
-        );
-        
+        group.bench_with_input(BenchmarkId::new("median", size), &data, |b, data| {
+            b.iter(|| black_box(quantile(&data.view(), 0.5, QuantileInterpolation::Linear)));
+        });
+
         // Multiple quantiles
         group.bench_with_input(
             BenchmarkId::new("multiple_quantiles", size),
@@ -114,35 +88,35 @@ fn bench_quantiles(c: &mut Criterion) {
                         black_box(quantile(&data.view(), q, QuantileInterpolation::Linear));
                     }
                 });
-            }
+            },
         );
     }
-    
+
     group.finish();
 }
 
 /// Benchmark correlation calculations on matrices
 fn bench_correlation_matrix(c: &mut Criterion) {
     let mut group = c.benchmark_group("correlation_matrix");
-    
+
     // Different matrix dimensions (variables x observations)
     let configs = vec![
-        (5, 100),     // 5 variables, 100 observations
-        (10, 100),    // 10 variables, 100 observations
-        (20, 100),    // 20 variables, 100 observations
-        (5, 1000),    // 5 variables, 1000 observations
-        (10, 1000),   // 10 variables, 1000 observations
+        (5, 100),   // 5 variables, 100 observations
+        (10, 100),  // 10 variables, 100 observations
+        (20, 100),  // 20 variables, 100 observations
+        (5, 1000),  // 5 variables, 1000 observations
+        (10, 1000), // 10 variables, 1000 observations
     ];
-    
+
     use scirs2_stats::corrcoef;
-    
+
     for (n_vars, n_obs) in configs {
         // Generate random data matrix
         let mut rng = thread_rng();
         let data: Vec<Array1<f64>> = (0..n_vars)
             .map(|_| Array1::from_shape_fn(n_obs, |_| StandardNormal.sample(&mut rng)))
             .collect();
-        
+
         group.bench_with_input(
             BenchmarkId::new("corrcoef", format!("{}x{}", n_vars, n_obs)),
             &data,
@@ -150,33 +124,33 @@ fn bench_correlation_matrix(c: &mut Criterion) {
                 b.iter(|| {
                     black_box(corrcoef(&data.iter().map(|a| a.view()).collect::<Vec<_>>()));
                 });
-            }
+            },
         );
     }
-    
+
     group.finish();
 }
 
 /// Benchmark memory-intensive operations
 fn bench_memory_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_operations");
-    
+
     // Test operations that stress memory bandwidth
     let sizes = vec![10_000, 100_000, 1_000_000];
-    
+
     for &size in &sizes {
         let data1 = generate_large_dataset(size);
         let data2 = generate_large_dataset(size);
-        
+
         // Pearson correlation (requires multiple passes through data)
         group.bench_with_input(
             BenchmarkId::new("pearson_large", size),
             &(data1.clone(), data2.clone()),
             |b, (x, y)| {
                 b.iter(|| black_box(pearson_r(&x.view(), &y.view())));
-            }
+            },
         );
-        
+
         // Spearman correlation (requires sorting)
         if size <= 100_000 {
             group.bench_with_input(
@@ -184,36 +158,34 @@ fn bench_memory_operations(c: &mut Criterion) {
                 &(data1.clone(), data2.clone()),
                 |b, (x, y)| {
                     b.iter(|| black_box(spearman_r(&x.view(), &y.view())));
-                }
+                },
             );
         }
     }
-    
+
     group.finish();
 }
 
 /// Benchmark parallel operations (when available)
 fn bench_parallel_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_operations");
-    
+
     // Large datasets where parallelization should help
     let size = 1_000_000;
     let data = generate_large_dataset(size);
-    
+
     // Operations that could benefit from parallelization
     group.bench_function("large_mean", |b| {
         b.iter(|| black_box(mean(&data.view())));
     });
-    
+
     group.bench_function("large_variance", |b| {
         b.iter(|| black_box(variance(&data.view(), 1)));
     });
-    
+
     // Multiple independent calculations
-    let datasets: Vec<Array1<f64>> = (0..10)
-        .map(|_| generate_large_dataset(10_000))
-        .collect();
-    
+    let datasets: Vec<Array1<f64>> = (0..10).map(|_| generate_large_dataset(10_000)).collect();
+
     group.bench_function("multiple_means", |b| {
         b.iter(|| {
             for data in &datasets {
@@ -221,7 +193,7 @@ fn bench_parallel_operations(c: &mut Criterion) {
             }
         });
     });
-    
+
     group.finish();
 }
 

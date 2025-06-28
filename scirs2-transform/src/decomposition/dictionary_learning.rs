@@ -7,7 +7,7 @@
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use rand::Rng;
-use scirs2_linalg::{vector_norm, svd};
+use scirs2_linalg::{svd, vector_norm};
 
 use crate::error::{Result, TransformError};
 
@@ -96,8 +96,8 @@ impl DictionaryLearning {
     fn initialize_dictionary(&self, x: &Array2<f64>) -> Array2<f64> {
         let n_features = x.shape()[1];
         let n_samples = x.shape()[0];
-        
-        let mut rng = rand::rng();
+
+        let mut rng = rand::thread_rng();
 
         let mut dictionary = Array2::zeros((self.n_components, n_features));
 
@@ -105,7 +105,7 @@ impl DictionaryLearning {
         for i in 0..self.n_components {
             let idx = rng.random_range(0..n_samples);
             dictionary.row_mut(i).assign(&x.row(idx));
-            
+
             // Normalize atom
             let norm = vector_norm(&dictionary.row(i).view(), 2).unwrap_or(0.0);
             if norm > 1e-10 {
@@ -162,7 +162,7 @@ impl DictionaryLearning {
                 // Multiple atoms: solve least squares
                 let n_selected = selected_atoms.len();
                 let mut sub_dictionary = Array2::zeros((n_selected, dictionary.shape()[1]));
-                
+
                 for (i, &atom_idx) in selected_atoms.iter().enumerate() {
                     sub_dictionary.row_mut(i).assign(&dictionary.row(atom_idx));
                 }
@@ -197,11 +197,11 @@ impl DictionaryLearning {
         let mut perm = (0..n).collect::<Vec<_>>();
 
         // Forward elimination
-        for k in 0..n-1 {
+        for k in 0..n - 1 {
             // Find pivot
             let mut max_idx = k;
             let mut max_val = lu[[k, k]].abs();
-            for i in k+1..n {
+            for i in k + 1..n {
                 if lu[[i, k]].abs() > max_val {
                     max_val = lu[[i, k]].abs();
                     max_idx = i;
@@ -222,9 +222,9 @@ impl DictionaryLearning {
             }
 
             // Eliminate
-            for i in k+1..n {
+            for i in k + 1..n {
                 let factor = lu[[i, k]] / lu[[k, k]];
-                for j in k+1..n {
+                for j in k + 1..n {
                     lu[[i, j]] -= factor * lu[[k, j]];
                 }
                 result[i] -= factor * result[k];
@@ -233,7 +233,7 @@ impl DictionaryLearning {
 
         // Back substitution
         for i in (0..n).rev() {
-            for j in i+1..n {
+            for j in i + 1..n {
                 result[i] -= lu[[i, j]] * result[j];
             }
             result[i] /= lu[[i, i]];
@@ -253,7 +253,8 @@ impl DictionaryLearning {
 
         // Sparse code each sample
         for i in 0..n_samples {
-            let sparse_code = self.omp_sparse_code(&x.row(i).to_owned(), dictionary, n_nonzero_coefs);
+            let sparse_code =
+                self.omp_sparse_code(&x.row(i).to_owned(), dictionary, n_nonzero_coefs);
             codes.row_mut(i).assign(&sparse_code);
         }
 
@@ -301,7 +302,7 @@ impl DictionaryLearning {
                     Ok((u, s, vt)) => {
                         // Update dictionary atom
                         dictionary.row_mut(k).assign(&vt.row(0));
-                        
+
                         // Update sparse codes
                         for (idx, &i) in using_samples.iter().enumerate() {
                             sparse_codes[[i, k]] = u[[idx, 0]] * s[0];
@@ -488,8 +489,7 @@ mod tests {
     fn test_dictionary_learning_sparsity() {
         let x = Array::eye(20) * 2.0;
 
-        let mut dict_learning = DictionaryLearning::new(10, 0.05)
-            .with_max_iter(30);
+        let mut dict_learning = DictionaryLearning::new(10, 0.05).with_max_iter(30);
 
         let sparse_codes = dict_learning.fit_transform(&x).unwrap();
 

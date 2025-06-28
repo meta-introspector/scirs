@@ -22,6 +22,9 @@ num-traits = { workspace = true }
 num-complex = { workspace = true }
 thiserror = { workspace = true }
 rand = { workspace = true }
+num_cpus = "1.16"
+rand_chacha = "0.3"
+rayon = "1.8"
 
 [dev-dependencies]
 plotters = { workspace = true }

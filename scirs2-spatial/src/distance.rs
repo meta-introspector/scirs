@@ -27,10 +27,10 @@
 //! println!("Minkowski distance (p=3): {}", minkowski_dist);
 //! ```
 
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::Array2;
 use num_traits::Float;
 use std::marker::PhantomData;
-use crate::error::{SpatialError, SpatialResult};
 
 /// A trait for distance metrics
 ///
@@ -938,7 +938,6 @@ where
 
     let mut result = Array2::zeros((n_a, n_b));
 
-
     for i in 0..n_a {
         let row_i = x_a.row(i).to_vec();
 
@@ -992,7 +991,9 @@ pub fn is_valid_condensed_distance_matrix<T: Float>(distances: &[T]) -> bool {
 /// * Returns `SpatialError::ValueError` if the input is not a valid condensed distance matrix
 pub fn squareform<T: Float>(distances: &[T]) -> SpatialResult<Array2<T>> {
     if !is_valid_condensed_distance_matrix(distances) {
-        return Err(SpatialError::ValueError("Invalid condensed distance matrix".to_string()));
+        return Err(SpatialError::ValueError(
+            "Invalid condensed distance matrix".to_string(),
+        ));
     }
 
     let n = (1.0 + (1.0 + 8.0 * distances.len() as f64).sqrt()) / 2.0;
@@ -1029,14 +1030,18 @@ pub fn squareform<T: Float>(distances: &[T]) -> SpatialResult<Array2<T>> {
 pub fn squareform_to_condensed<T: Float>(distances: &Array2<T>) -> SpatialResult<Vec<T>> {
     let n = distances.nrows();
     if n != distances.ncols() {
-        return Err(SpatialError::ValueError("Distance matrix must be square".to_string()));
+        return Err(SpatialError::ValueError(
+            "Distance matrix must be square".to_string(),
+        ));
     }
 
     // Check symmetry
     for i in 0..n {
         for j in i + 1..n {
             if (distances[(i, j)] - distances[(j, i)]).abs() > T::epsilon() {
-                return Err(SpatialError::ValueError("Distance matrix must be symmetric".to_string()));
+                return Err(SpatialError::ValueError(
+                    "Distance matrix must be symmetric".to_string(),
+                ));
             }
         }
     }
@@ -1586,8 +1591,34 @@ mod tests {
             std::f64::consts::SQRT_2,
             epsilon = 1e-6
         );
-        assert_relative_eq!(dist_matrix[(1, 0)], std::f64::consts::SQRT_2, epsilon = 1e-6);
+        assert_relative_eq!(
+            dist_matrix[(1, 0)],
+            std::f64::consts::SQRT_2,
+            epsilon = 1e-6
+        );
         assert_relative_eq!(dist_matrix[(1, 1)], 1.0, epsilon = 1e-6);
+    }
+
+    #[test]
+    fn test_braycurtis_distance() {
+        let point1 = &[1.0, 2.0, 3.0];
+        let point2 = &[2.0, 3.0, 4.0];
+
+        let dist = braycurtis(point1, point2);
+        // Sum of differences: |1-2| + |2-3| + |3-4| = 3
+        // Sum of totals: (1+2) + (2+3) + (3+4) = 18
+        // Distance: 3/18 = 1/6 ≈ 0.1667
+        assert_relative_eq!(dist, 1.0 / 6.0, epsilon = 1e-6);
+
+        // Test identical vectors (should be 0)
+        let point3 = &[1.0, 2.0, 3.0];
+        let point4 = &[1.0, 2.0, 3.0];
+        assert_relative_eq!(braycurtis(point3, point4), 0.0, epsilon = 1e-6);
+
+        // Test with zeros in both vectors
+        let point5 = &[0.0, 0.0];
+        let point6 = &[0.0, 0.0];
+        assert_relative_eq!(braycurtis(point5, point6), 0.0, epsilon = 1e-6);
     }
 
     #[test]

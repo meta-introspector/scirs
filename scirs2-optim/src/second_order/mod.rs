@@ -3,11 +3,15 @@
 //! This module provides implementations of second-order optimization methods
 //! that use curvature information (Hessian matrix) to improve convergence.
 
+pub mod kfac;
+
 use crate::error::{OptimError, Result};
 use ndarray::{Array, Array1, Array2, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::VecDeque;
 use std::fmt::Debug;
+
+pub use self::kfac::{KFACConfig, KFACLayerState, KFACStats, LayerInfo, LayerType, KFAC};
 
 /// Trait for second-order optimization methods
 pub trait SecondOrderOptimizer<A: Float + ScalarOperand + Debug, D: Dimension> {

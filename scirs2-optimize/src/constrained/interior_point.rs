@@ -454,6 +454,12 @@ impl<'a> InteriorPointSolver<'a> {
     }
 
     /// Compute Mehrotra's predictor-corrector direction
+    ///
+    /// This implements the full Mehrotra algorithm with predictor and corrector steps:
+    /// 1. Compute predictor step (affine scaling direction)
+    /// 2. Estimate complementarity gap after predictor step
+    /// 3. Compute centering parameter based on gap reduction
+    /// 4. Compute corrector step combining predictor and centering
     fn compute_mehrotra_direction(
         &self,
         g: &Array1<f64>,
@@ -463,21 +469,332 @@ impl<'a> InteriorPointSolver<'a> {
         j_ineq: &Option<Array2<f64>>,
         s: &Array1<f64>,
         lambda_ineq: &Array1<f64>,
-        barrier: f64,
+        _barrier: f64,
     ) -> Result<NewtonDirectionResult, OptimizeError> {
-        // For simplicity, use Newton direction with centering parameter
-        // In a full implementation, this would compute predictor and corrector steps
-        self.compute_newton_direction(
+        if self.m_ineq == 0 {
+            // No inequality constraints, use standard Newton direction
+            return self.compute_newton_direction(
+                g,
+                c_eq,
+                c_ineq,
+                j_eq,
+                j_ineq,
+                s,
+                &Array1::zeros(self.m_eq),
+                lambda_ineq,
+                _barrier,
+            );
+        }
+
+        // Step 1: Compute predictor step (affine scaling direction)
+        // This is the Newton step with zero barrier parameter (affine scaling)
+        let (dx_aff, ds_aff, dlambda_eq_aff, dlambda_ineq_aff) =
+            self.compute_affine_scaling_direction(g, c_eq, c_ineq, j_eq, j_ineq, s, lambda_ineq)?;
+
+        // Step 2: Compute maximum step lengths for predictor step
+        let alpha_primal_max = self.compute_max_step_primal(s, &ds_aff);
+        let alpha_dual_max = self.compute_max_step_dual(lambda_ineq, &dlambda_ineq_aff);
+
+        // Step 3: Estimate complementarity gap after predictor step
+        let current_gap = s
+            .iter()
+            .zip(lambda_ineq.iter())
+            .map(|(&si, &li)| si * li)
+            .sum::<f64>();
+        let mu = current_gap / (self.m_ineq as f64);
+
+        // Predict gap after affine step
+        let mut predicted_gap = 0.0;
+        for i in 0..self.m_ineq {
+            let s_new = s[i] + alpha_primal_max * ds_aff[i];
+            let lambda_new = lambda_ineq[i] + alpha_dual_max * dlambda_ineq_aff[i];
+            predicted_gap += s_new * lambda_new;
+        }
+
+        let mu_aff = predicted_gap / (self.m_ineq as f64);
+
+        // Step 4: Compute centering parameter using Mehrotra's heuristic
+        let sigma = if mu > 0.0 {
+            (mu_aff / mu).powi(3)
+        } else {
+            0.1 // Default centering when current gap is zero
+        };
+
+        // Ensure sigma is in reasonable bounds
+        let sigma = sigma.max(0.0).min(1.0);
+
+        // Step 5: Compute target barrier parameter for corrector step
+        let sigma_mu = sigma * mu;
+
+        // Step 6: Compute corrector step
+        // This combines the predictor direction with centering and second-order corrections
+        self.compute_corrector_direction(
             g,
             c_eq,
             c_ineq,
             j_eq,
             j_ineq,
             s,
-            &Array1::zeros(self.m_eq),
             lambda_ineq,
-            barrier,
+            &dx_aff,
+            &ds_aff,
+            &dlambda_ineq_aff,
+            sigma_mu,
         )
+    }
+
+    /// Compute affine scaling direction (predictor step)
+    fn compute_affine_scaling_direction(
+        &self,
+        g: &Array1<f64>,
+        c_eq: &Option<Array1<f64>>,
+        c_ineq: &Option<Array1<f64>>,
+        j_eq: &Option<Array2<f64>>,
+        j_ineq: &Option<Array2<f64>>,
+        s: &Array1<f64>,
+        lambda_ineq: &Array1<f64>,
+    ) -> Result<NewtonDirectionResult, OptimizeError> {
+        // Build KKT system for affine scaling (barrier = 0)
+        let n_total = self.n + self.m_ineq + self.m_eq + self.m_ineq;
+        let mut kkt_matrix = Array2::zeros((n_total, n_total));
+        let mut rhs = Array1::zeros(n_total);
+
+        let reg = self.options.regularization.max(1e-8);
+
+        // Hessian approximation (identity + regularization)
+        for i in 0..self.n {
+            kkt_matrix[[i, i]] = 1.0 + reg;
+        }
+
+        // Gradient of Lagrangian
+        for i in 0..self.n {
+            rhs[i] = -g[i];
+        }
+
+        let mut row_offset = self.n;
+
+        // Equality constraints
+        if let (Some(j_eq), Some(c_eq), true) = (j_eq, c_eq, self.m_eq > 0) {
+            for i in 0..self.m_eq {
+                for j in 0..self.n {
+                    kkt_matrix[[j, row_offset + i]] = j_eq[[i, j]];
+                    kkt_matrix[[row_offset + i, j]] = j_eq[[i, j]];
+                }
+            }
+
+            for i in 0..self.m_eq {
+                rhs[row_offset + i] = -c_eq[i];
+            }
+
+            row_offset += self.m_eq;
+        }
+
+        // Inequality constraints
+        if let (Some(j_ineq), Some(c_ineq), true) = (j_ineq, c_ineq, self.m_ineq > 0) {
+            for i in 0..self.m_ineq {
+                for j in 0..self.n {
+                    kkt_matrix[[j, row_offset + i]] = j_ineq[[i, j]];
+                    kkt_matrix[[row_offset + i, j]] = j_ineq[[i, j]];
+                }
+                kkt_matrix[[row_offset + i, self.n + i]] = 1.0;
+                kkt_matrix[[self.n + i, row_offset + i]] = 1.0;
+            }
+
+            for i in 0..self.m_ineq {
+                rhs[row_offset + i] = -(c_ineq[i] + s[i]);
+            }
+
+            row_offset += self.m_ineq;
+
+            // Complementarity conditions for affine scaling (no barrier term)
+            for i in 0..self.m_ineq {
+                let s_i = s[i].max(1e-10);
+                let lambda_i = lambda_ineq[i].max(0.0);
+
+                kkt_matrix[[self.n + i, self.n + i]] = lambda_i / s_i + reg;
+                kkt_matrix[[self.n + i, row_offset - self.m_ineq + i]] = s_i;
+                kkt_matrix[[row_offset - self.m_ineq + i, self.n + i]] = lambda_i;
+
+                // RHS for affine scaling: -s_i * lambda_i (no barrier term)
+                rhs[self.n + i] = -lambda_i;
+            }
+        }
+
+        // Solve KKT system
+        let solution = solve_linear_system(&kkt_matrix, &rhs)?;
+
+        // Extract components
+        self.extract_direction_components(&solution)
+    }
+
+    /// Compute corrector direction combining predictor and centering
+    fn compute_corrector_direction(
+        &self,
+        g: &Array1<f64>,
+        c_eq: &Option<Array1<f64>>,
+        c_ineq: &Option<Array1<f64>>,
+        j_eq: &Option<Array2<f64>>,
+        j_ineq: &Option<Array2<f64>>,
+        s: &Array1<f64>,
+        lambda_ineq: &Array1<f64>,
+        dx_aff: &Array1<f64>,
+        ds_aff: &Array1<f64>,
+        dlambda_ineq_aff: &Array1<f64>,
+        sigma_mu: f64,
+    ) -> Result<NewtonDirectionResult, OptimizeError> {
+        // Build KKT system for corrector step
+        let n_total = self.n + self.m_ineq + self.m_eq + self.m_ineq;
+        let mut kkt_matrix = Array2::zeros((n_total, n_total));
+        let mut rhs = Array1::zeros(n_total);
+
+        let reg = self.options.regularization.max(1e-8);
+
+        // Hessian approximation (identity + regularization)
+        for i in 0..self.n {
+            kkt_matrix[[i, i]] = 1.0 + reg;
+        }
+
+        // Gradient of Lagrangian (zero for corrector)
+        for i in 0..self.n {
+            rhs[i] = 0.0;
+        }
+
+        let mut row_offset = self.n;
+
+        // Equality constraints (zero RHS for corrector)
+        if let (Some(j_eq), true) = (j_eq, self.m_eq > 0) {
+            for i in 0..self.m_eq {
+                for j in 0..self.n {
+                    kkt_matrix[[j, row_offset + i]] = j_eq[[i, j]];
+                    kkt_matrix[[row_offset + i, j]] = j_eq[[i, j]];
+                }
+            }
+
+            for i in 0..self.m_eq {
+                rhs[row_offset + i] = 0.0;
+            }
+
+            row_offset += self.m_eq;
+        }
+
+        // Inequality constraints (zero RHS for corrector)
+        if let (Some(j_ineq), true) = (j_ineq, self.m_ineq > 0) {
+            for i in 0..self.m_ineq {
+                for j in 0..self.n {
+                    kkt_matrix[[j, row_offset + i]] = j_ineq[[i, j]];
+                    kkt_matrix[[row_offset + i, j]] = j_ineq[[i, j]];
+                }
+                kkt_matrix[[row_offset + i, self.n + i]] = 1.0;
+                kkt_matrix[[self.n + i, row_offset + i]] = 1.0;
+            }
+
+            for i in 0..self.m_ineq {
+                rhs[row_offset + i] = 0.0;
+            }
+
+            row_offset += self.m_ineq;
+
+            // Complementarity conditions with centering and second-order corrections
+            for i in 0..self.m_ineq {
+                let s_i = s[i].max(1e-10);
+                let lambda_i = lambda_ineq[i].max(0.0);
+
+                kkt_matrix[[self.n + i, self.n + i]] = lambda_i / s_i + reg;
+                kkt_matrix[[self.n + i, row_offset - self.m_ineq + i]] = s_i;
+                kkt_matrix[[row_offset - self.m_ineq + i, self.n + i]] = lambda_i;
+
+                // RHS includes centering term and second-order correction
+                // sigma_mu - ds_aff[i] * dlambda_ineq_aff[i]
+                let correction = sigma_mu - ds_aff[i] * dlambda_ineq_aff[i];
+                rhs[self.n + i] = correction / s_i;
+            }
+        }
+
+        // Solve KKT system
+        let solution = solve_linear_system(&kkt_matrix, &rhs)?;
+
+        // Extract components and combine with predictor step
+        let (dx_cor, ds_cor, dlambda_eq_cor, dlambda_ineq_cor) =
+            self.extract_direction_components(&solution)?;
+
+        // Combine predictor and corrector steps
+        let dx_final = dx_aff + &dx_cor;
+        let ds_final = ds_aff + &ds_cor;
+        let dlambda_eq_final = &Array1::zeros(self.m_eq) + &dlambda_eq_cor;
+        let dlambda_ineq_final = dlambda_ineq_aff + &dlambda_ineq_cor;
+
+        Ok((dx_final, ds_final, dlambda_eq_final, dlambda_ineq_final))
+    }
+
+    /// Extract direction components from KKT solution
+    fn extract_direction_components(
+        &self,
+        solution: &Array1<f64>,
+    ) -> Result<NewtonDirectionResult, OptimizeError> {
+        let dx = solution.slice(ndarray::s![0..self.n]).to_owned();
+        let ds = if self.m_ineq > 0 {
+            solution
+                .slice(ndarray::s![self.n..self.n + self.m_ineq])
+                .to_owned()
+        } else {
+            Array1::zeros(0)
+        };
+
+        let mut offset = self.n + self.m_ineq;
+        let dlambda_eq = if self.m_eq > 0 {
+            solution
+                .slice(ndarray::s![offset..offset + self.m_eq])
+                .to_owned()
+        } else {
+            Array1::zeros(0)
+        };
+
+        offset += self.m_eq;
+        let dlambda_ineq = if self.m_ineq > 0 {
+            solution
+                .slice(ndarray::s![offset..offset + self.m_ineq])
+                .to_owned()
+        } else {
+            Array1::zeros(0)
+        };
+
+        Ok((dx, ds, dlambda_eq, dlambda_ineq))
+    }
+
+    /// Compute maximum step length for primal variables
+    fn compute_max_step_primal(&self, s: &Array1<f64>, ds: &Array1<f64>) -> f64 {
+        if self.m_ineq == 0 {
+            return 1.0;
+        }
+
+        let tau = 0.995; // Fraction to boundary parameter
+        let mut alpha = 1.0;
+
+        for i in 0..self.m_ineq {
+            if ds[i] < 0.0 {
+                alpha = f64::min(alpha, -tau * s[i] / ds[i]);
+            }
+        }
+
+        alpha.max(0.0).min(1.0)
+    }
+
+    /// Compute maximum step length for dual variables
+    fn compute_max_step_dual(&self, lambda_ineq: &Array1<f64>, dlambda_ineq: &Array1<f64>) -> f64 {
+        if self.m_ineq == 0 {
+            return 1.0;
+        }
+
+        let tau = 0.995; // Fraction to boundary parameter
+        let mut alpha = 1.0;
+
+        for i in 0..self.m_ineq {
+            if dlambda_ineq[i] < 0.0 {
+                alpha = f64::min(alpha, -tau * lambda_ineq[i] / dlambda_ineq[i]);
+            }
+        }
+
+        alpha.max(0.0).min(1.0)
     }
 
     /// Line search with fraction to boundary rule
@@ -534,13 +851,12 @@ impl<'a> InteriorPointSolver<'a> {
     }
 }
 
-/// Solve linear system using LU decomposition
-/// TODO: Replace with scirs2-core BLAS abstractions when available
-fn solve_linear_system(_a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError> {
-    // Temporary implementation using basic operations
-    // This should be replaced with proper BLAS solve operations from scirs2-core
-    // For now, return a placeholder result to allow compilation
-    Ok(Array1::zeros(b.len()))
+/// Solve linear system using LU decomposition from scirs2-linalg
+fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError> {
+    use scirs2_linalg::solve::solve;
+
+    solve(&a.view(), &b.view(), None)
+        .map_err(|e| OptimizeError::ComputationError(format!("Linear system solve failed: {}", e)))
 }
 
 /// Minimize a function subject to constraints using interior point method

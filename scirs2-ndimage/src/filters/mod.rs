@@ -16,6 +16,13 @@ pub use simd_specialized::{
     simd_anisotropic_diffusion, simd_bilateral_filter, simd_non_local_means,
 };
 
+// Ultra SIMD optimized exports
+#[cfg(feature = "simd")]
+pub use ultra_simd_optimized::{
+    ultra_simd_gaussian_pyramid, ultra_simd_morphological_erosion_2d,
+    ultra_simd_separable_convolution_2d, ultra_simd_template_matching,
+};
+
 pub mod advanced;
 mod bilateral;
 mod boundary_handler;
@@ -34,6 +41,8 @@ mod rank;
 #[cfg(feature = "simd")]
 mod simd_specialized;
 mod tests;
+#[cfg(feature = "simd")]
+mod ultra_simd_optimized;
 mod uniform;
 mod utils;
 mod vectorized;
@@ -73,7 +82,7 @@ pub use median::*;
 // to avoid conflicts with extrema module
 pub use rank::{
     maximum_filter as rank_maximum_filter, minimum_filter as rank_minimum_filter,
-    percentile_filter, rank_filter,
+    percentile_filter, percentile_filter_footprint, rank_filter, rank_filter_footprint,
 };
 
 // Uniform module exports

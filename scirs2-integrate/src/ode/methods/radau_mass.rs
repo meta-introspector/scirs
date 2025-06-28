@@ -187,9 +187,9 @@ where
         // Adaptive Newton tolerance based on step size and mass matrix conditioning
         let mut newton_tol = base_newton_tol * h.max(F::from_f64(1e-3).unwrap());
 
-        // For mass matrix systems, be more tolerant to avoid convergence issues
+        // For mass matrix systems, be slightly more tolerant but not excessively so
         if mass_matrix.matrix_type != MassMatrixType::Identity {
-            newton_tol *= F::from_f64(1e8).unwrap(); // Much more relaxed
+            newton_tol *= F::from_f64(10.0).unwrap(); // Moderately more relaxed
         }
 
         // Ensure we have a Jacobian for the first iteration
@@ -295,36 +295,21 @@ where
                 k2 -= &dk2;
                 k3 -= &dk3;
             } else {
-                // For mass matrix systems, the correct residual formulation is:
-                // R_i = k_i - y - h * sum(a_ij * k'_j) where M(t_j, k_j) * k'_j = f(t_j, k_j)
+                // For mass matrix systems, we solve the coupled implicit system:
+                // k_i = y + h * sum(a_ij * k'_j) where M(t_j, k_j) * k'_j = f(t_j, k_j)
+                //
+                // This is equivalent to solving:
+                // k_i = y + h * sum(a_ij * M(t_j, k_j)^(-1) * f(t_j, k_j))
+                //
+                // The Newton system for this is more complex and requires careful handling
 
-                // Compute k'_j = M^(-1) * f for each stage
-                let k1_prime = if let Some(ref m1_matrix) = m1 {
-                    crate::ode::utils::linear_solvers::solve_linear_system(
-                        &m1_matrix.view(),
-                        &f1.view(),
-                    )?
-                } else {
-                    f1.clone()
-                };
-
-                let k2_prime = if let Some(ref m2_matrix) = m2 {
-                    crate::ode::utils::linear_solvers::solve_linear_system(
-                        &m2_matrix.view(),
-                        &f2.view(),
-                    )?
-                } else {
-                    f2.clone()
-                };
-
-                let k3_prime = if let Some(ref m3_matrix) = m3 {
-                    crate::ode::utils::linear_solvers::solve_linear_system(
-                        &m3_matrix.view(),
-                        &f3.view(),
-                    )?
-                } else {
-                    f3.clone()
-                };
+                // Compute k'_j by solving M(t_j, k_j) * k'_j = f(t_j, k_j)
+                let k1_prime =
+                    mass_matrix::solve_mass_system(&mass_matrix, t1, k1.view(), f1.view())?;
+                let k2_prime =
+                    mass_matrix::solve_mass_system(&mass_matrix, t2, k2.view(), f2.view())?;
+                let k3_prime =
+                    mass_matrix::solve_mass_system(&mass_matrix, t3, k3.view(), f3.view())?;
 
                 // Compute residuals: R_i = k_i - y - h * sum(a_ij * k'_j)
                 let r1 = &k1
@@ -362,8 +347,8 @@ where
                     break;
                 }
 
-                // For non-identity mass matrices, use a simplified iterative approach
-                // that avoids the numerically unstable large coupled system
+                // For mass matrix systems, we need to solve the correct Newton system
+                // The Jacobian of the mass matrix system includes both df/dy and mass matrix effects
 
                 // Compute Jacobian of f if needed
                 if compute_new_jacobian {
@@ -382,78 +367,97 @@ where
                 // Get Jacobian
                 let jac = jac_option.as_ref().unwrap();
 
-                // Use a fixed-point iteration approach with Newton corrections
-                // This is much more stable than the large coupled system
+                // For mass matrix systems, we solve a 3-stage coupled Newton system
+                // Build the full Newton system matrix and solve it properly
 
-                // Instead of solving the large coupled system, use a fixed-point iteration
-                // with Newton-like corrections. This is more stable numerically.
+                // The Newton system for mass matrix problems has the form:
+                // [I - h*a11*S1   -h*a12*S1    -h*a13*S1 ] [dk1]   [r1]
+                // [-h*a21*S2     I - h*a22*S2  -h*a23*S2 ] [dk2] = [r2]
+                // [-h*a31*S3    -h*a32*S3    I - h*a33*S3] [dk3]   [r3]
+                //
+                // where S_i = M_i^(-1) * J_i for each stage
 
-                // First, update using the current stage derivatives (fixed-point step)
-                k1 = &y
-                    + &((k1_prime.clone() * a11 + k2_prime.clone() * a12 + k3_prime.clone() * a13)
-                        * h);
-                k2 = &y
-                    + &((k1_prime.clone() * a21 + k2_prime.clone() * a22 + k3_prime.clone() * a23)
-                        * h);
-                k3 = &y
-                    + &((k1_prime.clone() * a31 + k2_prime.clone() * a32 + k3_prime.clone() * a33)
-                        * h);
+                // For stability, we'll use a simplified block-diagonal approximation
+                // This is more robust than the full coupled system but better than fixed-point
 
-                // Apply Newton-like corrections to each stage separately
-                // This avoids the numerical issues of the large coupled system
-
-                // Diagonal approximation for Newton correction
-                // Build correction matrices: I - h * a_ii * M_i^(-1) * J
-                let mut correction_applied = false;
-
-                if let Some(ref _m1_matrix) = m1 {
-                    let mut corr_matrix = Array2::<F>::eye(n_dim);
+                // Solve individual Newton corrections for each stage
+                // Stage 1: (I - h*a11*M1^(-1)*J) * dk1 = r1
+                let mut s1_matrix = Array2::<F>::eye(n_dim);
+                if let Some(ref m1_matrix) = m1 {
+                    // Compute M1^(-1) * J approximately (diagonal dominant approach)
                     for i in 0..n_dim {
-                        // Only use diagonal entries for stability
-                        corr_matrix[[i, i]] -= h * a11 * jac[[i, i]];
+                        for j in 0..n_dim {
+                            if i == j {
+                                // Diagonal terms are most important for stability
+                                s1_matrix[[i, j]] -= h * a11 * jac[[i, j]] / m1_matrix[[i, i]];
+                            } else if jac[[i, j]].abs() > F::from_f64(1e-6).unwrap() {
+                                // Include significant off-diagonal terms with damping
+                                s1_matrix[[i, j]] -=
+                                    h * a11 * jac[[i, j]] * F::from_f64(0.1).unwrap();
+                            }
+                        }
                     }
-
-                    // Solve: (I - h*a11*J) * correction = residual
-                    if let Ok(dk1) = solve_linear_system(&corr_matrix.view(), &r1.view()) {
-                        k1 -= &(dk1 * F::from_f64(0.5).unwrap()); // Damped correction
-                        correction_applied = true;
-                        n_lu += 1;
-                    }
-                }
-
-                if let Some(ref _m2_matrix) = m2 {
-                    let mut corr_matrix = Array2::<F>::eye(n_dim);
+                } else {
+                    // Identity mass matrix case
                     for i in 0..n_dim {
-                        corr_matrix[[i, i]] -= h * a22 * jac[[i, i]];
-                    }
-
-                    if let Ok(dk2) = solve_linear_system(&corr_matrix.view(), &r2.view()) {
-                        k2 -= &(dk2 * F::from_f64(0.5).unwrap());
-                        correction_applied = true;
-                        n_lu += 1;
+                        for j in 0..n_dim {
+                            s1_matrix[[i, j]] -= h * a11 * jac[[i, j]];
+                        }
                     }
                 }
 
-                if let Some(ref _m3_matrix) = m3 {
-                    let mut corr_matrix = Array2::<F>::eye(n_dim);
+                // Similar for stages 2 and 3
+                let mut s2_matrix = Array2::<F>::eye(n_dim);
+                if let Some(ref m2_matrix) = m2 {
                     for i in 0..n_dim {
-                        corr_matrix[[i, i]] -= h * a33 * jac[[i, i]];
+                        for j in 0..n_dim {
+                            if i == j {
+                                s2_matrix[[i, j]] -= h * a22 * jac[[i, j]] / m2_matrix[[i, i]];
+                            } else if jac[[i, j]].abs() > F::from_f64(1e-6).unwrap() {
+                                s2_matrix[[i, j]] -=
+                                    h * a22 * jac[[i, j]] * F::from_f64(0.1).unwrap();
+                            }
+                        }
                     }
-
-                    if let Ok(dk3) = solve_linear_system(&corr_matrix.view(), &r3.view()) {
-                        k3 -= &(dk3 * F::from_f64(0.5).unwrap());
-                        correction_applied = true;
-                        n_lu += 1;
+                } else {
+                    for i in 0..n_dim {
+                        for j in 0..n_dim {
+                            s2_matrix[[i, j]] -= h * a22 * jac[[i, j]];
+                        }
                     }
                 }
 
-                // If no correction was applied, use simple damped residual correction
-                if !correction_applied {
-                    let damp = F::from_f64(0.2).unwrap();
-                    k1 -= &(r1 * damp);
-                    k2 -= &(r2 * damp);
-                    k3 -= &(r3 * damp);
+                let mut s3_matrix = Array2::<F>::eye(n_dim);
+                if let Some(ref m3_matrix) = m3 {
+                    for i in 0..n_dim {
+                        for j in 0..n_dim {
+                            if i == j {
+                                s3_matrix[[i, j]] -= h * a33 * jac[[i, j]] / m3_matrix[[i, i]];
+                            } else if jac[[i, j]].abs() > F::from_f64(1e-6).unwrap() {
+                                s3_matrix[[i, j]] -=
+                                    h * a33 * jac[[i, j]] * F::from_f64(0.1).unwrap();
+                            }
+                        }
+                    }
+                } else {
+                    for i in 0..n_dim {
+                        for j in 0..n_dim {
+                            s3_matrix[[i, j]] -= h * a33 * jac[[i, j]];
+                        }
+                    }
                 }
+
+                // Solve the Newton corrections
+                let dk1 = solve_linear_system(&s1_matrix.view(), &r1.view())?;
+                let dk2 = solve_linear_system(&s2_matrix.view(), &r2.view())?;
+                let dk3 = solve_linear_system(&s3_matrix.view(), &r3.view())?;
+                n_lu += 3;
+
+                // Apply damped Newton corrections for better stability
+                let damping = F::from_f64(0.8).unwrap();
+                k1 -= &(dk1 * damping);
+                k2 -= &(dk2 * damping);
+                k3 -= &(dk3 * damping);
             }
         }
 

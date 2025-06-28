@@ -397,12 +397,7 @@ pub mod scheduler {
         ///
         /// Specialized version for matrix operations that takes into account
         /// cache line sizes and memory access patterns.
-        pub fn execute_matrix<R, F>(
-            &self,
-            rows: usize,
-            cols: usize,
-            f: F,
-        ) -> ndarray::Array2<R>
+        pub fn execute_matrix<R, F>(&self, rows: usize, cols: usize, f: F) -> ndarray::Array2<R>
         where
             R: Send + Default + Clone,
             F: Fn(usize, usize) -> R + Send + Sync,
@@ -411,11 +406,7 @@ pub mod scheduler {
             let block_size = 64; // Typical cache line aligned block
             let work_items: Vec<(usize, usize)> = (0..rows)
                 .step_by(block_size)
-                .flat_map(|i| {
-                    (0..cols)
-                        .step_by(block_size)
-                        .map(move |j| (i, j))
-                })
+                .flat_map(|i| (0..cols).step_by(block_size).map(move |j| (i, j)))
                 .collect();
 
             // Process blocks using work-stealing and collect results
@@ -658,10 +649,10 @@ pub mod scheduler {
             }
 
             let n = items.len();
-            
+
             // Analyze workload characteristics
             let workload_type = self.analyze_workload(n);
-            
+
             // Determine optimal chunking strategy
             let chunk_config = match workload_type {
                 WorkloadType::MemoryBound => ChunkConfig {
@@ -714,12 +705,7 @@ pub mod scheduler {
         }
 
         /// Execute work with specific strategy
-        fn execute_with_strategy<T, R, F>(
-            &self,
-            items: &[T],
-            f: F,
-            config: ChunkConfig,
-        ) -> Vec<R>
+        fn execute_with_strategy<T, R, F>(&self, items: &[T], f: F, config: ChunkConfig) -> Vec<R>
         where
             T: Send + Sync,
             R: Send + Default + Clone,
@@ -727,7 +713,9 @@ pub mod scheduler {
         {
             match config.strategy {
                 ChunkStrategy::Sequential => self.execute_sequential_chunks(items, f, config.size),
-                ChunkStrategy::Interleaved => self.execute_interleaved_chunks(items, f, config.size),
+                ChunkStrategy::Interleaved => {
+                    self.execute_interleaved_chunks(items, f, config.size)
+                }
                 ChunkStrategy::Dynamic => self.execute_dynamic_chunks(items, f, config.size),
             }
         }
@@ -777,7 +765,7 @@ pub mod scheduler {
                             loop {
                                 let chunk_id = work_counter.fetch_add(1, Ordering::SeqCst);
                                 let start = chunk_id * chunk_size;
-                                
+
                                 if start >= n {
                                     break;
                                 }
@@ -786,10 +774,10 @@ pub mod scheduler {
 
                                 // Process interleaved indices for better cache utilization
                                 for i in start..end {
-                                    let interleaved_idx = (i % self.base_scheduler.num_workers) * 
-                                                         (n / self.base_scheduler.num_workers) + 
-                                                         (i / self.base_scheduler.num_workers);
-                                    
+                                    let interleaved_idx = (i % self.base_scheduler.num_workers)
+                                        * (n / self.base_scheduler.num_workers)
+                                        + (i / self.base_scheduler.num_workers);
+
                                     if interleaved_idx < n {
                                         let result = f_ref(&items_ref[interleaved_idx]);
                                         let mut results_guard = results.lock().unwrap();
@@ -866,8 +854,8 @@ pub mod scheduler {
 /// different configurations optimized for various linear algebra workloads.
 pub mod thread_pool {
     use super::configure_workers;
-    use std::sync::{Arc, Mutex, Once};
     use scirs2_core::parallel_ops::*;
+    use std::sync::{Arc, Mutex, Once};
 
     /// Global thread pool manager
     static INIT: Once = Once::new();
@@ -892,16 +880,12 @@ pub mod thread_pool {
         /// Get the number of threads for this profile
         pub fn num_threads(&self) -> usize {
             match self {
-                ThreadPoolProfile::Default => {
-                    std::thread::available_parallelism()
-                        .map(|n| n.get())
-                        .unwrap_or(4)
-                }
-                ThreadPoolProfile::CpuBound => {
-                    std::thread::available_parallelism()
-                        .map(|n| n.get())
-                        .unwrap_or(4)
-                }
+                ThreadPoolProfile::Default => std::thread::available_parallelism()
+                    .map(|n| n.get())
+                    .unwrap_or(4),
+                ThreadPoolProfile::CpuBound => std::thread::available_parallelism()
+                    .map(|n| n.get())
+                    .unwrap_or(4),
                 ThreadPoolProfile::MemoryBound => {
                     // Use half the available cores to reduce memory contention
                     std::thread::available_parallelism()
@@ -1089,7 +1073,6 @@ pub mod thread_pool {
         }
     }
 
-
     /// Thread pool benchmarking utilities
     pub mod benchmark {
         use super::*;
@@ -1185,9 +1168,7 @@ pub mod thread_pool {
     impl EnhancedThreadPool {
         /// Create a new enhanced thread pool
         pub fn new(profile: ThreadPoolProfile) -> Self {
-            let base_pool = Arc::new(Mutex::new(
-                ThreadPoolManager::new().with_profile(profile)
-            ));
+            let base_pool = Arc::new(Mutex::new(ThreadPoolManager::new().with_profile(profile)));
 
             Self {
                 base_pool,
@@ -1222,7 +1203,7 @@ pub mod thread_pool {
             R: Send,
         {
             let start_time = std::time::Instant::now();
-            
+
             // Update monitoring before execution
             {
                 let mut monitoring = self.monitoring.lock().unwrap();
@@ -1247,7 +1228,7 @@ pub mod thread_pool {
         /// Check if thread pool scaling is needed and apply if necessary
         fn check_and_scale(&self) {
             let metrics = self.get_metrics();
-            
+
             match self.scaling_policy {
                 ScalingPolicy::Conservative => {
                     // Scale up only if utilization > 90% for extended period
@@ -1273,8 +1254,7 @@ pub mod thread_pool {
                     // Prioritize low latency over efficiency
                     if metrics.average_latency_ms > 10.0 {
                         self.scale_up();
-                    }
-                    else if metrics.average_latency_ms < 2.0 && metrics.active_threads > 2 {
+                    } else if metrics.average_latency_ms < 2.0 && metrics.active_threads > 2 {
                         self.scale_down();
                     }
                 }
@@ -1396,7 +1376,6 @@ pub mod thread_pool {
         /// Throughput in tasks per second
         pub throughput_tasks_per_sec: f64,
     }
-
 }
 
 /// NUMA-aware parallel computing
@@ -1407,7 +1386,7 @@ pub mod numa {
     use super::WorkerConfig;
     use crate::error::{LinalgError, LinalgResult};
     use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-    use num_traits::{Float, Zero, One, NumAssign};
+    use num_traits::{Float, NumAssign, One, Zero};
     use scirs2_core::parallel_ops::*;
     use std::sync::{Arc, Mutex};
 
@@ -1428,13 +1407,13 @@ pub mod numa {
             let num_cpus = std::thread::available_parallelism()
                 .map(|n| n.get())
                 .unwrap_or(4);
-            
+
             // Simple heuristic: assume 2 NUMA nodes if more than 8 CPUs
             let num_nodes = if num_cpus > 8 { 2 } else { 1 };
             let cpus_per_node = if num_nodes == 2 {
                 vec![
-                    (0..num_cpus/2).collect(),
-                    (num_cpus/2..num_cpus).collect(),
+                    (0..num_cpus / 2).collect(),
+                    (num_cpus / 2..num_cpus).collect(),
                 ]
             } else {
                 vec![(0..num_cpus).collect()]
@@ -1492,7 +1471,7 @@ pub mod numa {
             }
 
             let aspect_ratio = rows as f64 / cols as f64;
-            
+
             if aspect_ratio > 2.0 {
                 // Tall matrix - prefer row-wise partitioning
                 NumaPartitioning::RowWise
@@ -1523,7 +1502,9 @@ pub mod numa {
         if n != vector.len() {
             return Err(LinalgError::ShapeError(format!(
                 "Matrix-vector dimensions incompatible: {}x{} * {}",
-                m, n, vector.len()
+                m,
+                n,
+                vector.len()
             )));
         }
 
@@ -1535,10 +1516,9 @@ pub mod numa {
         config.apply();
 
         // Partition matrix by rows across NUMA nodes
-        let _node_distribution = topology.optimal_thread_distribution(
-            config.workers.unwrap_or(topology.num_nodes * 2)
-        );
-        
+        let _node_distribution =
+            topology.optimal_thread_distribution(config.workers.unwrap_or(topology.num_nodes * 2));
+
         let rows_per_node: Vec<usize> = (0..topology.num_nodes)
             .map(|i| {
                 let start_ratio = i as f64 / topology.num_nodes as f64;
@@ -1555,18 +1535,19 @@ pub mod numa {
             .map(|node_id| {
                 let start_row = rows_per_node.iter().take(node_id).sum::<usize>();
                 let node_rows = rows_per_node[node_id];
-                
+
                 if node_rows == 0 {
                     return Vec::new();
                 }
 
                 let node_matrix = matrix.slice(ndarray::s![start_row..start_row + node_rows, ..]);
-                
+
                 // Compute local result for this NUMA node
                 (0..node_rows)
                     .into_par_iter()
                     .map(|local_row| {
-                        node_matrix.row(local_row)
+                        node_matrix
+                            .row(local_row)
                             .iter()
                             .zip(vector.iter())
                             .map(|(&a_ij, &x_j)| a_ij * x_j)
@@ -1809,7 +1790,15 @@ pub mod numa {
         topology: &NumaTopology,
     ) -> LinalgResult<Array2<F>>
     where
-        F: Float + Send + Sync + Zero + One + NumAssign + ndarray::ScalarOperand + std::iter::Sum + 'static,
+        F: Float
+            + Send
+            + Sync
+            + Zero
+            + One
+            + NumAssign
+            + ndarray::ScalarOperand
+            + std::iter::Sum
+            + 'static,
     {
         let (m, n) = matrix.dim();
         if m != n {
@@ -1870,12 +1859,13 @@ pub mod numa {
                             for j in 0..(k_end - k) {
                                 let global_i = block_start + i;
                                 let global_j = k + j;
-                                
+
                                 let mut sum = F::zero();
                                 for p in 0..global_j {
                                     sum += l[[global_i, p]] * l[[global_j, p]];
                                 }
-                                block_result[[i, j]] = (matrix[[global_i, global_j]] - sum) / l[[global_j, global_j]];
+                                block_result[[i, j]] =
+                                    (matrix[[global_i, global_j]] - sum) / l[[global_j, global_j]];
                             }
                         }
                         block_result
@@ -1886,7 +1876,7 @@ pub mod numa {
                 for (block_idx, block_start) in (k_end..n).step_by(block_size).enumerate() {
                     let block_end = std::cmp::min(block_start + block_size, n);
                     let block_result = &remaining_blocks[block_idx];
-                    
+
                     for i in 0..(block_end - block_start) {
                         for j in 0..(k_end - k) {
                             l[[block_start + i, k + j]] = block_result[[i, j]];
@@ -1921,9 +1911,11 @@ pub mod numa {
         /// Get optimal work distribution for a given workload
         pub fn distribute_work(&self, total_work_units: usize) -> Vec<usize> {
             let load_history = self.load_history.lock().unwrap();
-            
+
             // Calculate load-adjusted capacity for each node
-            let node_capacities: Vec<f64> = self.topology.cpus_per_node
+            let node_capacities: Vec<f64> = self
+                .topology
+                .cpus_per_node
                 .iter()
                 .enumerate()
                 .map(|(i, cpus)| {
@@ -1934,7 +1926,7 @@ pub mod numa {
                 .collect();
 
             let total_capacity: f64 = node_capacities.iter().sum();
-            
+
             // Distribute work proportionally
             let mut distribution = vec![0; self.topology.num_nodes];
             let mut remaining_work = total_work_units;
@@ -1944,7 +1936,8 @@ pub mod numa {
                     // Give remaining work to last node
                     distribution[i] = remaining_work;
                 } else {
-                    let node_share = (node_capacities[i] / total_capacity * total_work_units as f64) as usize;
+                    let node_share =
+                        (node_capacities[i] / total_capacity * total_work_units as f64) as usize;
                     distribution[i] = node_share;
                     remaining_work -= node_share;
                 }
@@ -1954,9 +1947,14 @@ pub mod numa {
         }
 
         /// Update load history after completing work
-        pub fn update_load_history(&self, node_id: usize, completion_time: f64, expected_time: f64) {
+        pub fn update_load_history(
+            &self,
+            node_id: usize,
+            completion_time: f64,
+            expected_time: f64,
+        ) {
             let mut load_history = self.load_history.lock().unwrap();
-            
+
             // Exponential moving average with alpha = 0.1
             let load_ratio = completion_time / expected_time;
             load_history[node_id] = 0.9 * load_history[node_id] + 0.1 * load_ratio;
@@ -2026,7 +2024,7 @@ pub mod numa {
 
             let balancer = NumaWorkloadBalancer::new(topology);
             let distribution = balancer.distribute_work(100);
-            
+
             // Should distribute roughly equally for balanced load
             assert_eq!(distribution.iter().sum::<usize>(), 100);
             assert!(distribution[0] >= 40 && distribution[0] <= 60);
@@ -2040,7 +2038,7 @@ pub mod numa {
 /// This module provides advanced thread affinity management for optimal
 /// performance on multi-core and multi-socket systems.
 pub mod affinity {
-    use super::{WorkerConfig, numa::NumaTopology};
+    use super::{numa::NumaTopology, WorkerConfig};
     use std::sync::{Arc, Mutex};
 
     /// Thread affinity strategy
@@ -2126,18 +2124,16 @@ pub mod affinity {
                     // No specific affinity
                     vec![]
                 }
-                AffinityStrategy::Pinned => {
-                    self.generate_pinned_assignments(num_threads)
-                }
-                AffinityStrategy::NumaSpread => {
-                    self.generate_numa_spread_assignments(num_threads)
-                }
+                AffinityStrategy::Pinned => self.generate_pinned_assignments(num_threads),
+                AffinityStrategy::NumaSpread => self.generate_numa_spread_assignments(num_threads),
                 AffinityStrategy::NumaCompact => {
                     self.generate_numa_compact_assignments(num_threads)
                 }
                 AffinityStrategy::Custom => {
                     // Use existing assignments
-                    self.thread_assignments.lock().unwrap()
+                    self.thread_assignments
+                        .lock()
+                        .unwrap()
                         .iter()
                         .filter_map(|opt| opt.clone())
                         .collect()
@@ -2147,13 +2143,17 @@ pub mod affinity {
 
         /// Generate pinned affinity assignments (one thread per core)
         fn generate_pinned_assignments(&self, num_threads: usize) -> Vec<CoreAffinity> {
-            let total_cores: usize = self.topology.cpus_per_node
+            let total_cores: usize = self
+                .topology
+                .cpus_per_node
                 .iter()
                 .map(|node| node.len())
                 .sum();
 
             let effective_threads = std::cmp::min(num_threads, total_cores);
-            let mut all_cores: Vec<usize> = self.topology.cpus_per_node
+            let mut all_cores: Vec<usize> = self
+                .topology
+                .cpus_per_node
                 .iter()
                 .flat_map(|node| node.iter().cloned())
                 .collect();
@@ -2173,20 +2173,15 @@ pub mod affinity {
             let extra_threads = num_threads % self.topology.num_nodes;
 
             for (node_id, cores) in self.topology.cpus_per_node.iter().enumerate() {
-                let node_threads = threads_per_node + 
-                    if node_id < extra_threads { 1 } else { 0 };
+                let node_threads = threads_per_node + if node_id < extra_threads { 1 } else { 0 };
 
                 for i in 0..node_threads {
                     if i < cores.len() {
-                        assignments.push(
-                            CoreAffinity::cores(vec![cores[i]])
-                                .with_migration(false)
-                        );
+                        assignments.push(CoreAffinity::cores(vec![cores[i]]).with_migration(false));
                     } else {
                         // More threads than cores in this node - allow migration
                         assignments.push(
-                            CoreAffinity::numa_node(node_id, &self.topology)
-                                .with_migration(true)
+                            CoreAffinity::numa_node(node_id, &self.topology).with_migration(true),
                         );
                     }
                 }
@@ -2210,18 +2205,14 @@ pub mod affinity {
 
                 // Assign threads to specific cores in this node
                 for core in cores.iter().take(threads_for_node) {
-                    assignments.push(
-                        CoreAffinity::cores(vec![*core])
-                            .with_migration(false)
-                    );
+                    assignments.push(CoreAffinity::cores(vec![*core]).with_migration(false));
                 }
 
                 // If more threads needed than cores, allow migration within node
                 if remaining_threads > node_capacity {
                     for _ in node_capacity..remaining_threads.min(node_capacity * 2) {
                         assignments.push(
-                            CoreAffinity::numa_node(node_id, &self.topology)
-                                .with_migration(true)
+                            CoreAffinity::numa_node(node_id, &self.topology).with_migration(true),
                         );
                     }
                 }
@@ -2235,12 +2226,12 @@ pub mod affinity {
         /// Set custom affinity for a specific thread
         pub fn set_thread_affinity(&self, thread_id: usize, affinity: CoreAffinity) {
             let mut assignments = self.thread_assignments.lock().unwrap();
-            
+
             // Expand vector if needed
             while assignments.len() <= thread_id {
                 assignments.push(None);
             }
-            
+
             assignments[thread_id] = Some(affinity);
         }
 
@@ -2257,17 +2248,17 @@ pub mod affinity {
             // - On Linux: sched_setaffinity, pthread_setaffinity_np
             // - On Windows: SetThreadAffinityMask
             // - On macOS: thread_policy_set
-            
+
             #[cfg(target_os = "linux")]
             {
                 self.apply_linux_affinity(affinity)
             }
-            
+
             #[cfg(target_os = "windows")]
             {
                 self.apply_windows_affinity(affinity)
             }
-            
+
             #[cfg(not(any(target_os = "linux", target_os = "windows")))]
             {
                 // Fallback for unsupported platforms
@@ -2281,20 +2272,21 @@ pub mod affinity {
             // This would typically use libc::sched_setaffinity
             // For now, we'll just set environment variables that some libraries recognize
             if !affinity.core_ids.is_empty() {
-                let core_list = affinity.core_ids
+                let core_list = affinity
+                    .core_ids
                     .iter()
                     .map(|id| id.to_string())
                     .collect::<Vec<_>>()
                     .join(",");
-                
+
                 std::env::set_var("GOMP_CPU_AFFINITY", &core_list);
                 std::env::set_var("KMP_AFFINITY", format!("explicit,proclist=[{}]", core_list));
             }
-            
+
             if let Some(numa_node) = affinity.numa_node {
                 std::env::set_var("NUMA_NODE_HINT", numa_node.to_string());
             }
-            
+
             Ok(())
         }
 
@@ -2303,18 +2295,23 @@ pub mod affinity {
             // This would typically use Windows APIs like SetThreadAffinityMask
             // For now, we'll set environment variables
             if !affinity.core_ids.is_empty() {
-                let core_mask: u64 = affinity.core_ids
+                let core_mask: u64 = affinity
+                    .core_ids
                     .iter()
                     .fold(0u64, |mask, &core_id| mask | (1u64 << core_id));
-                
+
                 std::env::set_var("THREAD_AFFINITY_MASK", format!("0x{:x}", core_mask));
             }
-            
+
             Ok(())
         }
 
         /// Get optimal affinity strategy for current system
-        pub fn recommend_strategy(&self, num_threads: usize, workload_type: WorkloadType) -> AffinityStrategy {
+        pub fn recommend_strategy(
+            &self,
+            num_threads: usize,
+            workload_type: WorkloadType,
+        ) -> AffinityStrategy {
             match workload_type {
                 WorkloadType::CpuBound => {
                     if num_threads <= self.total_cores() {
@@ -2343,7 +2340,11 @@ pub mod affinity {
 
         /// Get total number of CPU cores
         fn total_cores(&self) -> usize {
-            self.topology.cpus_per_node.iter().map(|node| node.len()).sum()
+            self.topology
+                .cpus_per_node
+                .iter()
+                .map(|node| node.len())
+                .sum()
         }
     }
 
@@ -2387,18 +2388,23 @@ pub mod affinity {
             R: Send,
         {
             let num_threads = self.config.workers.unwrap_or(
-                std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4)
+                std::thread::available_parallelism()
+                    .map(|n| n.get())
+                    .unwrap_or(4),
             );
-            
+
             let assignments = self.affinity_manager.generate_assignments(num_threads);
-            
+
             // Apply affinity to current thread if assignments available
             if let Some(affinity) = assignments.first() {
-                if let Err(e) = self.affinity_manager.apply_current_thread_affinity(affinity) {
+                if let Err(e) = self
+                    .affinity_manager
+                    .apply_current_thread_affinity(affinity)
+                {
                     eprintln!("Warning: Failed to set thread affinity: {}", e);
                 }
             }
-            
+
             // Execute the work
             work()
         }
@@ -2406,11 +2412,13 @@ pub mod affinity {
         /// Get affinity information for debugging
         pub fn get_affinity_info(&self) -> AffinityInfo {
             let num_threads = self.config.workers.unwrap_or(
-                std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4)
+                std::thread::available_parallelism()
+                    .map(|n| n.get())
+                    .unwrap_or(4),
             );
-            
+
             let assignments = self.affinity_manager.generate_assignments(num_threads);
-            
+
             AffinityInfo {
                 strategy: self.affinity_manager.strategy,
                 num_threads,
@@ -2436,18 +2444,16 @@ pub mod affinity {
             println!("Strategy: {:?}", self.strategy);
             println!("Number of threads: {}", self.num_threads);
             println!("NUMA nodes: {}", self.topology.num_nodes);
-            
+
             for (node_id, cores) in self.topology.cpus_per_node.iter().enumerate() {
                 println!("  Node {}: CPUs {:?}", node_id, cores);
             }
-            
+
             println!("Thread assignments:");
             for (thread_id, affinity) in self.assignments.iter().enumerate() {
-                println!("  Thread {}: cores {:?}, migration: {}, NUMA: {:?}",
-                    thread_id,
-                    affinity.core_ids,
-                    affinity.allow_migration,
-                    affinity.numa_node
+                println!(
+                    "  Thread {}: cores {:?}, migration: {}, NUMA: {:?}",
+                    thread_id, affinity.core_ids, affinity.allow_migration, affinity.numa_node
                 );
             }
             println!("==============================");
@@ -2455,22 +2461,27 @@ pub mod affinity {
 
         /// Get affinity efficiency metrics
         pub fn efficiency_metrics(&self) -> AffinityEfficiencyMetrics {
-            let cores_used: std::collections::HashSet<usize> = self.assignments
+            let cores_used: std::collections::HashSet<usize> = self
+                .assignments
                 .iter()
                 .flat_map(|affinity| affinity.core_ids.iter().cloned())
                 .collect();
-            
-            let total_cores: usize = self.topology.cpus_per_node
+
+            let total_cores: usize = self
+                .topology
+                .cpus_per_node
                 .iter()
                 .map(|node| node.len())
                 .sum();
-            
-            let numa_nodes_used: std::collections::HashSet<usize> = self.assignments
+
+            let numa_nodes_used: std::collections::HashSet<usize> = self
+                .assignments
                 .iter()
                 .filter_map(|affinity| affinity.numa_node)
                 .collect();
-            
-            let threads_with_migration: usize = self.assignments
+
+            let threads_with_migration: usize = self
+                .assignments
                 .iter()
                 .filter(|affinity| affinity.allow_migration)
                 .count();
@@ -2521,15 +2532,17 @@ pub mod affinity {
             } else {
                 WorkloadType::CpuBound
             };
-            
+
             let num_threads = std::cmp::min(
                 topology.cpus_per_node.iter().map(|node| node.len()).sum(),
-                std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4)
+                std::thread::available_parallelism()
+                    .map(|n| n.get())
+                    .unwrap_or(4),
             );
-            
+
             let strategy = auto_detect_strategy(workload_type, num_threads, &topology);
             let config = WorkerConfig::new().with_workers(num_threads);
-            
+
             AffinityThreadPool::new(strategy, topology, config)
         }
 
@@ -2548,32 +2561,32 @@ pub mod affinity {
                 AffinityStrategy::NumaSpread,
                 AffinityStrategy::NumaCompact,
             ];
-            
+
             let mut results = Vec::new();
-            
+
             for strategy in strategies {
                 let pool = AffinityThreadPool::new(strategy, topology.clone(), config.clone());
-                
+
                 // Warm up
                 for _ in 0..3 {
                     pool.execute_with_affinity(&workload);
                 }
-                
+
                 // Benchmark
                 let start = std::time::Instant::now();
                 let iterations = 10;
                 let mut total_work = 0.0;
-                
+
                 for _ in 0..iterations {
                     total_work += pool.execute_with_affinity(&workload);
                 }
-                
+
                 let elapsed = start.elapsed().as_secs_f64();
                 let throughput = total_work / elapsed;
-                
+
                 results.push((strategy, throughput));
             }
-            
+
             results
         }
     }
@@ -2658,17 +2671,27 @@ pub mod affinity {
             let assignments = manager.generate_assignments(4);
 
             assert_eq!(assignments.len(), 4);
-            
+
             // Should have 2 threads per NUMA node
-            let node0_threads = assignments.iter()
-                .filter(|a| a.core_ids.contains(&0) || a.core_ids.contains(&1) || 
-                           a.core_ids.contains(&2) || a.core_ids.contains(&3))
+            let node0_threads = assignments
+                .iter()
+                .filter(|a| {
+                    a.core_ids.contains(&0)
+                        || a.core_ids.contains(&1)
+                        || a.core_ids.contains(&2)
+                        || a.core_ids.contains(&3)
+                })
                 .count();
-            let node1_threads = assignments.iter()
-                .filter(|a| a.core_ids.contains(&4) || a.core_ids.contains(&5) || 
-                           a.core_ids.contains(&6) || a.core_ids.contains(&7))
+            let node1_threads = assignments
+                .iter()
+                .filter(|a| {
+                    a.core_ids.contains(&4)
+                        || a.core_ids.contains(&5)
+                        || a.core_ids.contains(&6)
+                        || a.core_ids.contains(&7)
+                })
                 .count();
-            
+
             assert_eq!(node0_threads, 2);
             assert_eq!(node1_threads, 2);
         }
@@ -2899,7 +2922,6 @@ pub mod algorithms {
             Ok(Array1::from_vec(result_vec))
         }
     }
-
 
     /// Parallel matrix multiplication (GEMM)
     ///
@@ -3316,7 +3338,17 @@ pub mod algorithms {
         config: &WorkerConfig,
     ) -> LinalgResult<Array1<F>>
     where
-        F: Float + Send + Sync + Zero + Sum + One + NumAssign + ndarray::ScalarOperand + std::fmt::Debug + std::fmt::Display + 'static,
+        F: Float
+            + Send
+            + Sync
+            + Zero
+            + Sum
+            + One
+            + NumAssign
+            + ndarray::ScalarOperand
+            + std::fmt::Debug
+            + std::fmt::Display
+            + 'static,
     {
         let (m, n) = matrix.dim();
         if m != n {
@@ -3339,12 +3371,7 @@ pub mod algorithms {
                 verbose: false,
                 restart: Some(restart),
             };
-            let result = crate::solvers::iterative::gmres(
-                matrix,
-                b,
-                None,
-                &options,
-            )?;
+            let result = crate::solvers::iterative::gmres(matrix, b, None, &options)?;
             return Ok(result.solution);
         }
 
@@ -3376,7 +3403,8 @@ pub mod algorithms {
                 let mut w_new = w.clone();
                 for i in 0..=j {
                     h[[i, j]] = vector_ops::parallel_dot(&w.view(), &v[i].view(), config)?;
-                    w_new = vector_ops::parallel_axpy(-h[[i, j]], &v[i].view(), &w_new.view(), config)?;
+                    w_new =
+                        vector_ops::parallel_axpy(-h[[i, j]], &v[i].view(), &w_new.view(), config)?;
                 }
 
                 h[[j + 1, j]] = vector_ops::parallel_norm(&w_new.view(), config)?;
@@ -3451,7 +3479,13 @@ pub mod algorithms {
 
         let data_size = m * n;
         if !adaptive::should_use_parallel(data_size, config) {
-            return crate::iterative_solvers::bicgstab(&matrix.view(), &b.view(), max_iter, tolerance, None);
+            return crate::iterative_solvers::bicgstab(
+                &matrix.view(),
+                &b.view(),
+                max_iter,
+                tolerance,
+                None,
+            );
         }
 
         config.apply();
@@ -3461,63 +3495,69 @@ pub mod algorithms {
         let ax = parallel_matvec(matrix, &x.view(), config)?;
         let mut r = b - &ax;
         let r_hat = r.clone();
-        
+
         let mut rho = F::one();
         let mut alpha = F::one();
         let mut omega = F::one();
-        
+
         let mut v = Array1::zeros(n);
         let mut p = Array1::zeros(n);
 
         for _iter in 0..max_iter {
             let rho_new = vector_ops::parallel_dot(&r_hat.view(), &r.view(), config)?;
-            
+
             if rho_new.abs() < F::epsilon() {
                 return Err(LinalgError::ComputationError(
                     "BiCGSTAB breakdown: rho = 0".to_string(),
                 ));
             }
-            
+
             let beta = (rho_new / rho) * (alpha / omega);
-            
+
             // p = r + beta * (p - omega * v)
             let temp = vector_ops::parallel_axpy(-omega, &v.view(), &p.view(), config)?;
-            p = vector_ops::parallel_axpy(F::one(), &r.view(), &vector_ops::parallel_axpy(beta, &temp.view(), &Array1::zeros(n).view(), config)?.view(), config)?;
-            
+            p = vector_ops::parallel_axpy(
+                F::one(),
+                &r.view(),
+                &vector_ops::parallel_axpy(beta, &temp.view(), &Array1::zeros(n).view(), config)?
+                    .view(),
+                config,
+            )?;
+
             // v = A * p
             v = parallel_matvec(matrix, &p.view(), config)?;
-            
+
             alpha = rho_new / vector_ops::parallel_dot(&r_hat.view(), &v.view(), config)?;
-            
+
             // s = r - alpha * v
             let s = vector_ops::parallel_axpy(-alpha, &v.view(), &r.view(), config)?;
-            
+
             // Check convergence
             let s_norm = vector_ops::parallel_norm(&s.view(), config)?;
             if s_norm < tolerance {
                 x = vector_ops::parallel_axpy(alpha, &p.view(), &x.view(), config)?;
                 return Ok(x);
             }
-            
+
             // t = A * s
             let t = parallel_matvec(matrix, &s.view(), config)?;
-            
-            omega = vector_ops::parallel_dot(&t.view(), &s.view(), config)? / 
-                    vector_ops::parallel_dot(&t.view(), &t.view(), config)?;
-            
+
+            omega = vector_ops::parallel_dot(&t.view(), &s.view(), config)?
+                / vector_ops::parallel_dot(&t.view(), &t.view(), config)?;
+
             // x = x + alpha * p + omega * s
             x = vector_ops::parallel_axpy(alpha, &p.view(), &x.view(), config)?;
             x = vector_ops::parallel_axpy(omega, &s.view(), &x.view(), config)?;
-            
+
             // r = s - omega * t
             r = vector_ops::parallel_axpy(-omega, &t.view(), &s.view(), config)?;
-            
+
             // Check convergence
             let r_norm = vector_ops::parallel_norm(&r.view(), config)?;
             if r_norm < tolerance {
                 return Ok(x);
             }
-            
+
             rho = rho_new;
         }
 
@@ -3554,7 +3594,13 @@ pub mod algorithms {
 
         let data_size = m * n;
         if !adaptive::should_use_parallel(data_size, config) {
-            return crate::iterative_solvers::jacobi_method(&matrix.view(), &b.view(), max_iter, tolerance, None);
+            return crate::iterative_solvers::jacobi_method(
+                &matrix.view(),
+                &b.view(),
+                max_iter,
+                tolerance,
+                None,
+            );
         }
 
         config.apply();
@@ -3642,7 +3688,12 @@ pub mod algorithms {
         let data_size = m * n;
         if !adaptive::should_use_parallel(data_size, config) {
             return crate::iterative_solvers::successive_over_relaxation(
-                &matrix.view(), &b.view(), omega, max_iter, tolerance, None
+                &matrix.view(),
+                &b.view(),
+                omega,
+                max_iter,
+                tolerance,
+                None,
             );
         }
 
@@ -3718,10 +3769,10 @@ pub mod algorithms {
 pub mod advanced_work_stealing {
     use super::*;
     use crate::parallel::numa::NumaTopology;
-    use std::collections::{VecDeque, BinaryHeap};
+    use std::cmp::Ordering as CmpOrdering;
+    use std::collections::{BinaryHeap, VecDeque};
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::time::{Duration, Instant};
-    use std::cmp::Ordering as CmpOrdering;
 
     /// Work item with priority for the advanced scheduler
     #[derive(Debug, Clone)]
@@ -3750,7 +3801,8 @@ pub mod advanced_work_stealing {
     impl<T> Ord for PriorityWorkItem<T> {
         fn cmp(&self, other: &Self) -> CmpOrdering {
             // Higher priority values get processed first
-            self.priority.cmp(&other.priority)
+            self.priority
+                .cmp(&other.priority)
                 .then_with(|| other.estimated_cost.cmp(&self.estimated_cost))
         }
     }
@@ -3806,7 +3858,7 @@ pub mod advanced_work_stealing {
         pub fn push(&self, item: T, estimated_cost: Duration, dependencies: Vec<usize>) -> usize {
             let task_id = self.generate_task_id();
             let priority = self.classify_priority(&estimated_cost, &dependencies);
-            
+
             let work_item = PriorityWorkItem {
                 data: item,
                 priority,
@@ -3818,10 +3870,10 @@ pub mod advanced_work_stealing {
             match priority {
                 0..=33 => {
                     self.low_priority.lock().unwrap().push_back(work_item);
-                },
+                }
                 34..=66 => {
                     self.normal_priority.lock().unwrap().push_back(work_item);
-                },
+                }
                 _ => {
                     self.high_priority.lock().unwrap().push(work_item);
                 }
@@ -3885,11 +3937,11 @@ pub mod advanced_work_stealing {
         /// Classify task priority based on cost and dependencies
         fn classify_priority(&self, estimated_cost: &Duration, dependencies: &[usize]) -> u32 {
             let base_priority: u32 = if estimated_cost.as_millis() > 100 {
-                80  // High cost tasks get high priority
+                80 // High cost tasks get high priority
             } else if estimated_cost.as_millis() > 10 {
-                50  // Medium cost tasks
+                50 // Medium cost tasks
             } else {
-                20  // Low cost tasks
+                20 // Low cost tasks
             };
 
             // Adjust for dependencies (more dependencies = lower priority)
@@ -3907,7 +3959,7 @@ pub mod advanced_work_stealing {
         pub fn record_completion(&self, task_id: usize, actual_duration: Duration) {
             if let Ok(mut history) = self.completion_history.try_lock() {
                 history.push_back((task_id, actual_duration));
-                
+
                 // Keep history bounded
                 if history.len() > 1000 {
                     history.pop_front();
@@ -3927,9 +3979,7 @@ pub mod advanced_work_stealing {
             let low_count = self.low_priority.lock().unwrap().len();
 
             // Rough estimates based on priority
-            Duration::from_millis(
-                (high_count * 100 + normal_count * 50 + low_count * 10) as u64
-            )
+            Duration::from_millis((high_count * 100 + normal_count * 50 + low_count * 10) as u64)
         }
     }
 
@@ -3949,7 +3999,7 @@ pub mod advanced_work_stealing {
     struct ChunkingPerformance {
         chunk_size: usize,
         matrix_dimensions: (usize, usize),
-        throughput: f64,  // operations per second
+        throughput: f64, // operations per second
         #[allow(dead_code)]
         cache_misses: usize,
         #[allow(dead_code)]
@@ -3966,39 +4016,43 @@ pub mod advanced_work_stealing {
         /// Create new adaptive chunking strategy
         pub fn new() -> Self {
             Self {
-                cache_line_size: 64,  // typical cache line size
+                cache_line_size: 64, // typical cache line size
                 numa_info: Some(NumaTopology::detect()),
                 performance_history: Mutex::new(VecDeque::with_capacity(100)),
             }
         }
 
         /// Calculate optimal chunk size for matrix operation
-        pub fn optimal_chunk_size(&self, matrix_dims: (usize, usize), operation_type: MatrixOperation) -> usize {
+        pub fn optimal_chunk_size(
+            &self,
+            matrix_dims: (usize, usize),
+            operation_type: MatrixOperation,
+        ) -> usize {
             let (rows, cols) = matrix_dims;
-            
+
             // Base chunk size calculation
             let base_chunk = match operation_type {
                 MatrixOperation::MatrixMultiply => {
                     // For matrix multiplication, consider cache blocking
-                    let l1_cache_size = 32 * 1024;  // 32KB typical L1 cache
+                    let l1_cache_size = 32 * 1024; // 32KB typical L1 cache
                     let element_size = std::mem::size_of::<f64>();
                     let elements_per_cache = l1_cache_size / element_size;
-                    
+
                     // Aim for square blocks that fit in cache
                     ((elements_per_cache as f64).sqrt() as usize).clamp(32, 512)
-                },
+                }
                 MatrixOperation::ElementWise => {
                     // For element-wise operations, optimize for memory bandwidth
                     let memory_bandwidth = self.estimate_memory_bandwidth();
-                    (memory_bandwidth / 8).clamp(64, 1024)  // 8 bytes per f64
-                },
+                    (memory_bandwidth / 8).clamp(64, 1024) // 8 bytes per f64
+                }
                 MatrixOperation::Reduction => {
                     // For reductions, use smaller chunks to balance load
                     let num_cores = std::thread::available_parallelism()
                         .map(|n| n.get())
                         .unwrap_or(4);
                     rows.max(cols) / (num_cores * 4)
-                },
+                }
                 MatrixOperation::Decomposition => {
                     // For decompositions, larger chunks for better locality
                     let num_cores = std::thread::available_parallelism()
@@ -4017,13 +4071,18 @@ pub mod advanced_work_stealing {
             // This is a simplified estimation - in practice, this would
             // involve actual benchmarking
             match std::env::var("SCIRS_MEMORY_BANDWIDTH") {
-                Ok(val) => val.parse().unwrap_or(100_000),  // MB/s
-                Err(_) => 100_000,  // Default assumption: 100 GB/s
+                Ok(val) => val.parse().unwrap_or(100_000), // MB/s
+                Err(_) => 100_000,                         // Default assumption: 100 GB/s
             }
         }
 
         /// Adjust chunk size based on historical performance
-        fn adjust_for_history(&self, base_chunk: usize, matrix_dims: (usize, usize), _operation_type: MatrixOperation) -> usize {
+        fn adjust_for_history(
+            &self,
+            base_chunk: usize,
+            matrix_dims: (usize, usize),
+            _operation_type: MatrixOperation,
+        ) -> usize {
             if let Ok(history) = self.performance_history.lock() {
                 // Find similar operations in history
                 let similar_ops: Vec<_> = history
@@ -4031,8 +4090,8 @@ pub mod advanced_work_stealing {
                     .filter(|perf| {
                         let (h_rows, h_cols) = perf.matrix_dimensions;
                         // Consider operations on similar-sized matrices
-                        (h_rows as f64 / matrix_dims.0 as f64).abs() < 2.0 &&
-                        (h_cols as f64 / matrix_dims.1 as f64).abs() < 2.0
+                        (h_rows as f64 / matrix_dims.0 as f64).abs() < 2.0
+                            && (h_cols as f64 / matrix_dims.1 as f64).abs() < 2.0
                     })
                     .collect();
 
@@ -4044,8 +4103,10 @@ pub mod advanced_work_stealing {
 
                     if let Some(best) = best_perf {
                         // Interpolate between base chunk and historically best
-                        let weight = 0.7;  // Favor historical data
-                        return (base_chunk as f64 * (1.0 - weight) + best.chunk_size as f64 * weight) as usize;
+                        let weight = 0.7; // Favor historical data
+                        return (base_chunk as f64 * (1.0 - weight)
+                            + best.chunk_size as f64 * weight)
+                            as usize;
                     }
                 }
             }
@@ -4054,13 +4115,18 @@ pub mod advanced_work_stealing {
         }
 
         /// Record performance data for future optimization
-        pub fn record_performance(&self, chunk_size: usize, matrix_dims: (usize, usize), throughput: f64) {
+        pub fn record_performance(
+            &self,
+            chunk_size: usize,
+            matrix_dims: (usize, usize),
+            throughput: f64,
+        ) {
             if let Ok(mut history) = self.performance_history.lock() {
                 let perf = ChunkingPerformance {
                     chunk_size,
                     matrix_dimensions: matrix_dims,
                     throughput,
-                    cache_misses: 0,  // Would be measured in practice
+                    cache_misses: 0, // Would be measured in practice
                     timestamp: Instant::now(),
                 };
 
@@ -4099,14 +4165,14 @@ pub mod advanced_work_stealing {
             Self {
                 execution_history: Mutex::new(std::collections::HashMap::new()),
                 worker_loads: Mutex::new(vec![0.0; num_workers]),
-                model_weights: Mutex::new(vec![1.0; 4]),  // Simple 4-feature model
+                model_weights: Mutex::new(vec![1.0; 4]), // Simple 4-feature model
             }
         }
 
         /// Predict execution time for a task
         pub fn predict_execution_time(&self, task_features: &TaskFeatures) -> Duration {
             let weights = self.model_weights.lock().unwrap();
-            
+
             // Extract features
             let features = [
                 task_features.data_size as f64,
@@ -4121,7 +4187,7 @@ pub mod advanced_work_stealing {
                 .zip(weights.iter())
                 .map(|(f, w)| f * w)
                 .sum::<f64>()
-                .max(1.0);  // Minimum 1ms
+                .max(1.0); // Minimum 1ms
 
             Duration::from_millis(predicted_ms as u64)
         }
@@ -4147,8 +4213,11 @@ pub mod advanced_work_stealing {
         /// Update model with actual execution time
         pub fn update_model(&self, task_features: &TaskFeatures, actual_time: Duration) {
             // Record execution time
-            let task_type = format!("{}_{}", task_features.data_size, task_features.complexity_factor as u32);
-            
+            let task_type = format!(
+                "{}_{}",
+                task_features.data_size, task_features.complexity_factor as u32
+            );
+
             if let Ok(mut history) = self.execution_history.lock() {
                 history
                     .entry(task_type)
@@ -4174,7 +4243,7 @@ pub mod advanced_work_stealing {
         fn update_weights(&self, task_features: &TaskFeatures, actual_time: Duration) {
             let predicted_time = self.predict_execution_time(task_features);
             let error = actual_time.as_secs_f64() - predicted_time.as_secs_f64();
-            
+
             if let Ok(mut weights) = self.model_weights.lock() {
                 let learning_rate = 0.001;
                 let features = [
@@ -4197,28 +4266,31 @@ pub mod advanced_work_stealing {
     pub struct TaskFeatures {
         pub data_size: usize,
         pub complexity_factor: f64,
-        pub memory_access_pattern: u32,  // 0=sequential, 1=random, 2=strided
-        pub arithmetic_intensity: f64,   // operations per byte
+        pub memory_access_pattern: u32, // 0=sequential, 1=random, 2=strided
+        pub arithmetic_intensity: f64,  // operations per byte
     }
 
     impl TaskFeatures {
         /// Create task features for matrix operation
-        pub fn for_matrix_operation(matrix_dims: (usize, usize), operation: MatrixOperation) -> Self {
+        pub fn for_matrix_operation(
+            matrix_dims: (usize, usize),
+            operation: MatrixOperation,
+        ) -> Self {
             let (rows, cols) = matrix_dims;
             let data_size = rows * cols;
 
             let (complexity_factor, memory_pattern, arithmetic_intensity) = match operation {
                 MatrixOperation::MatrixMultiply => {
-                    (rows as f64 * cols as f64 * 2.0, 1, 2.0)  // O(n²) complexity, random access, 2 ops per element
-                },
+                    (rows as f64 * cols as f64 * 2.0, 1, 2.0) // O(n²) complexity, random access, 2 ops per element
+                }
                 MatrixOperation::ElementWise => {
-                    (data_size as f64, 0, 1.0)  // O(n) complexity, sequential access, 1 op per element
-                },
+                    (data_size as f64, 0, 1.0) // O(n) complexity, sequential access, 1 op per element
+                }
                 MatrixOperation::Reduction => {
-                    (data_size as f64, 0, 1.0)  // O(n) complexity, sequential access
-                },
+                    (data_size as f64, 0, 1.0) // O(n) complexity, sequential access
+                }
                 MatrixOperation::Decomposition => {
-                    (data_size as f64 * 1.5, 2, 3.0)  // Higher complexity, strided access
+                    (data_size as f64 * 1.5, 2, 3.0) // Higher complexity, strided access
                 }
             };
 

@@ -49,7 +49,7 @@ where
     F: Float + NumAssign + Sum + Display + 'static,
 {
     let n = b.len();
-    
+
     // Check dimensions
     if a.shape().0 != n || a.shape().1 != n {
         return Err(SparseError::DimensionMismatch {
@@ -57,32 +57,32 @@ where
             found: a.shape().0,
         });
     }
-    
+
     // Initialize solution
     let mut x = options.x0.unwrap_or_else(|| vec![F::zero(); n]);
-    
+
     // For a simple implementation, let's use BiCG-style iteration
     // This is not standard QMR but should work for testing
-    
+
     // Compute initial residual r = b - Ax
     let ax = a.matvec(&x)?;
     let mut r = vec_sub(b, &ax);
-    
+
     // Choose r_tilde = r for simplicity
     let mut r_tilde = r.clone();
-    
+
     // Initialize vectors
     let mut p = vec![F::zero(); n];
     let mut p_tilde = vec![F::zero(); n];
-    
+
     // Initialize scalars
     let mut rho = F::one();
     let mut rho_old = F::one();
-    
+
     // Compute initial norms
     let bnorm = norm2(b);
     let tol = options.atol + options.rtol * bnorm;
-    
+
     for iter in 0..options.max_iter {
         // Check convergence
         let rnorm = norm2(&r);
@@ -95,10 +95,10 @@ where
                 message: format!("Converged in {} iterations", iter),
             });
         }
-        
+
         // BiCG-like iteration
         rho = dot(&r_tilde, &r);
-        
+
         if rho.abs() < F::epsilon() {
             return Ok(QMRResult {
                 x,
@@ -108,7 +108,7 @@ where
                 message: "Breakdown: rho = 0".to_string(),
             });
         }
-        
+
         if iter == 0 {
             p = r.clone();
             p_tilde = r_tilde.clone();
@@ -117,22 +117,22 @@ where
             p = vec_add_scaled(&r, &p, beta);
             p_tilde = vec_add_scaled(&r_tilde, &p_tilde, beta);
         }
-        
+
         // q = A * p
         let q = a.matvec(&p)?;
         let alpha = rho / dot(&p_tilde, &q);
-        
+
         // Update solution and residuals
         x = vec_add(&x, &vec_scaled(&p, alpha));
         r = vec_sub(&r, &vec_scaled(&q, alpha));
-        
+
         // Update r_tilde for the transpose
         let q_tilde = a.rmatvec(&p_tilde)?;
         r_tilde = vec_sub(&r_tilde, &vec_scaled(&q_tilde, alpha));
-        
+
         rho_old = rho;
     }
-    
+
     let rnorm = norm2(&r);
     Ok(QMRResult {
         x,
@@ -200,7 +200,7 @@ mod tests {
         let diagonal = DiagonalOperator::new(diag.clone());
         let b = vec![2.0, 6.0, 8.0];
         let expected = vec![1.0, 2.0, 2.0];
-        
+
         let options = QMROptions {
             rtol: 1e-10,
             atol: 1e-12,

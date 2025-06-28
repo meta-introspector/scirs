@@ -2,17 +2,16 @@
 //!
 //! This module provides an adapter for rendering visualizations using the plotly crate.
 
+use plotly::{
+    common::{ColorScale, ColorScalePalette, DashType, Line, Marker, Mode, Title},
+    layout::{Annotation, Axis, Layout},
+    Bar, HeatMap, Histogram, Plot, Scatter,
+};
 use std::error::Error;
 use std::path::Path;
-use plotly::{
-    Plot, 
-    common::{Title, Mode, Line, DashType, Marker, ColorScale, ColorScalePalette},
-    layout::{Layout, Axis, Annotation},
-    Scatter, Bar, HeatMap, Histogram,
-};
 
 use crate::visualization::{
-    ColorMap, VisualizationData, VisualizationMetadata, VisualizationOptions, PlotType,
+    ColorMap, PlotType, VisualizationData, VisualizationMetadata, VisualizationOptions,
 };
 
 use super::PlottingBackend;
@@ -52,13 +51,13 @@ impl PlotlyBackend {
     ) -> Result<(), Box<dyn Error>> {
         let default_name = vec!["Series 1".to_string()];
         let series_names = data.series_names.as_ref().unwrap_or(&default_name);
-        
+
         let trace = Scatter::new(data.x.clone(), data.y.clone())
             .mode(Mode::Lines)
             .name(&series_names[0]);
-        
+
         plot.add_trace(trace);
-        
+
         // Add additional series from the series HashMap
         if !data.series.is_empty() {
             for (name, series_data) in &data.series {
@@ -68,18 +67,18 @@ impl PlotlyBackend {
                 } else {
                     data.x.clone()
                 };
-                
+
                 let trace = Scatter::new(x_data, series_data.clone())
                     .mode(Mode::Lines)
                     .name(name);
-                
+
                 plot.add_trace(trace);
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Add scatter traces to a plot
     fn add_scatter_traces(
         &self,
@@ -89,13 +88,13 @@ impl PlotlyBackend {
     ) -> Result<(), Box<dyn Error>> {
         let default_name = vec!["Series 1".to_string()];
         let series_names = data.series_names.as_ref().unwrap_or(&default_name);
-        
+
         let trace = Scatter::new(data.x.clone(), data.y.clone())
             .mode(Mode::Markers)
             .name(&series_names[0]);
-        
+
         plot.add_trace(trace);
-        
+
         // Add additional series from the series HashMap
         if !data.series.is_empty() {
             for (name, series_data) in &data.series {
@@ -105,18 +104,18 @@ impl PlotlyBackend {
                 } else {
                     data.x.clone()
                 };
-                
+
                 let trace = Scatter::new(x_data, series_data.clone())
                     .mode(Mode::Markers)
                     .name(name);
-                
+
                 plot.add_trace(trace);
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Add bar traces to a plot
     fn add_bar_traces(
         &self,
@@ -126,12 +125,11 @@ impl PlotlyBackend {
     ) -> Result<(), Box<dyn Error>> {
         let default_name = vec!["Series 1".to_string()];
         let series_names = data.series_names.as_ref().unwrap_or(&default_name);
-        
-        let trace = Bar::new(data.x.clone(), data.y.clone())
-            .name(&series_names[0]);
-        
+
+        let trace = Bar::new(data.x.clone(), data.y.clone()).name(&series_names[0]);
+
         plot.add_trace(trace);
-        
+
         // Add additional series from the series HashMap
         if !data.series.is_empty() {
             for (name, series_data) in &data.series {
@@ -141,17 +139,16 @@ impl PlotlyBackend {
                 } else {
                     data.x.clone()
                 };
-                
-                let trace = Bar::new(x_data, series_data.clone())
-                    .name(name);
-                
+
+                let trace = Bar::new(x_data, series_data.clone()).name(name);
+
                 plot.add_trace(trace);
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Add heatmap traces to a plot
     fn add_heatmap_traces(
         &self,
@@ -166,16 +163,15 @@ impl PlotlyBackend {
             } else {
                 ColorScale::Palette(ColorScalePalette::Viridis)
             };
-            
-            let trace = HeatMap::new_z(z_data.clone())
-                .color_scale(colorscale);
-            
+
+            let trace = HeatMap::new_z(z_data.clone()).color_scale(colorscale);
+
             plot.add_trace(trace);
         }
-        
+
         Ok(())
     }
-    
+
     /// Add histogram traces to a plot
     fn add_histogram_traces(
         &self,
@@ -185,12 +181,11 @@ impl PlotlyBackend {
     ) -> Result<(), Box<dyn Error>> {
         let default_name = vec!["Series 1".to_string()];
         let series_names = data.series_names.as_ref().unwrap_or(&default_name);
-        
-        let trace = Histogram::new(data.x.clone())
-            .name(&series_names[0]);
-        
+
+        let trace = Histogram::new(data.x.clone()).name(&series_names[0]);
+
         plot.add_trace(trace);
-        
+
         Ok(())
     }
 }
@@ -221,7 +216,7 @@ impl PlottingBackend for PlotlyBackend {
             .width(options.width)
             .height(options.height)
             .show_legend(options.show_legend);
-            
+
         plot.set_layout(layout);
 
         // Save to file
@@ -229,12 +224,12 @@ impl PlottingBackend for PlotlyBackend {
             Some("html") => {
                 plot.write_html(path);
                 Ok(())
-            },
+            }
             Some("json") => {
                 let json_data = plot.to_json();
                 std::fs::write(path, json_data)?;
                 Ok(())
-            },
+            }
             _ => Err(Box::new(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 "Unsupported file extension for plotly output. Only .html and .json are supported.",

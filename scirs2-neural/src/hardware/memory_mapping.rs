@@ -3,8 +3,8 @@
 use crate::error::Result;
 use crate::hardware::accelerator::DeviceBuffer;
 use crate::hardware::MemoryStrategy;
-use std::sync::{Arc, Mutex};
 use std::collections::{HashMap, VecDeque};
+use std::sync::{Arc, Mutex};
 
 /// Memory requirements for a layer or operation
 #[derive(Debug, Clone)]
@@ -44,12 +44,15 @@ pub struct MemoryMapper {
 
 impl MemoryMapper {
     /// Create a new memory mapper
-    pub fn new(device: Arc<dyn crate::hardware::Accelerator>, strategy: MemoryStrategy) -> Result<Self> {
+    pub fn new(
+        device: Arc<dyn crate::hardware::Accelerator>,
+        strategy: MemoryStrategy,
+    ) -> Result<Self> {
         let pool_size = match strategy {
             MemoryStrategy::PoolBased(size) => size,
             _ => 0,
         };
-        
+
         Ok(Self {
             device,
             strategy,
@@ -59,7 +62,7 @@ impl MemoryMapper {
             peak_allocated: Arc::new(Mutex::new(0)),
         })
     }
-    
+
     /// Allocate memory with specific layout
     pub fn allocate_with_layout(&self, layout: &MemoryLayout) -> Result<BufferAllocation> {
         match self.strategy {
@@ -69,55 +72,55 @@ impl MemoryMapper {
             MemoryStrategy::PoolBased(_) => self.allocate_from_pool(layout),
         }
     }
-    
+
     /// Allocate using automatic strategy
     fn allocate_automatic(&self, layout: &MemoryLayout) -> Result<BufferAllocation> {
         // Try pool first, fall back to on-demand
         if let Ok(alloc) = self.allocate_from_pool(layout) {
             return Ok(alloc);
         }
-        
+
         self.allocate_on_demand(layout)
     }
-    
+
     /// Allocate from preallocated memory
     fn allocate_preallocated(&self, layout: &MemoryLayout) -> Result<BufferAllocation> {
         // In real implementation, this would use a preallocated chunk
         self.allocate_on_demand(layout)
     }
-    
+
     /// Allocate on demand
     fn allocate_on_demand(&self, layout: &MemoryLayout) -> Result<BufferAllocation> {
         let aligned_size = Self::align_size(layout.size, layout.alignment);
         let buffer = self.device.allocate(aligned_size)?;
-        
+
         let allocation = BufferAllocation {
             buffer,
             layout: layout.clone(),
             offset: 0,
             in_use: true,
         };
-        
+
         // Track allocation
         let mut allocations = self.allocations.lock().unwrap();
         allocations.insert(allocation.buffer.id, allocation.clone());
-        
+
         // Update statistics
         let mut total = self.total_allocated.lock().unwrap();
         *total += aligned_size;
-        
+
         let mut peak = self.peak_allocated.lock().unwrap();
         if *total > *peak {
             *peak = *total;
         }
-        
+
         Ok(allocation)
     }
-    
+
     /// Allocate from memory pool
     fn allocate_from_pool(&self, layout: &MemoryLayout) -> Result<BufferAllocation> {
         let mut pool = self.memory_pool.lock().unwrap();
-        
+
         if let Some(buffer) = pool.allocate(layout.size, layout.alignment) {
             let allocation = BufferAllocation {
                 buffer,
@@ -125,49 +128,53 @@ impl MemoryMapper {
                 offset: 0,
                 in_use: true,
             };
-            
+
             let mut allocations = self.allocations.lock().unwrap();
             allocations.insert(allocation.buffer.id, allocation.clone());
-            
+
             Ok(allocation)
         } else {
             Err(crate::error::NeuralError::AllocationError(
-                "No suitable buffer in pool".to_string()
+                "No suitable buffer in pool".to_string(),
             ))
         }
     }
-    
+
     /// Free an allocation
     pub fn free(&self, buffer_id: u64) -> Result<()> {
         let mut allocations = self.allocations.lock().unwrap();
-        
+
         if let Some(allocation) = allocations.remove(&buffer_id) {
             let size = allocation.layout.size;
-            
+
             // Return to pool if using pool strategy
             if matches!(self.strategy, MemoryStrategy::PoolBased(_)) {
                 let mut pool = self.memory_pool.lock().unwrap();
                 pool.return_buffer(allocation.buffer);
             }
-            
+
             // Update statistics
             let mut total = self.total_allocated.lock().unwrap();
             *total = total.saturating_sub(size);
-            
+
             Ok(())
         } else {
-            Err(crate::error::NeuralError::InvalidArgument(
-                format!("Buffer {} not found", buffer_id)
-            ))
+            Err(crate::error::NeuralError::InvalidArgument(format!(
+                "Buffer {} not found",
+                buffer_id
+            )))
         }
     }
-    
+
     /// Optimize memory layout for multiple allocations
-    pub fn optimize_layout(&self, requirements: &[MemoryMapRequirements]) -> Result<OptimizedLayout> {
+    pub fn optimize_layout(
+        &self,
+        requirements: &[MemoryMapRequirements],
+    ) -> Result<OptimizedLayout> {
         let mut total_size = 0;
         let mut max_alignment = 64;
         let mut layouts = Vec::new();
-        
+
         for req in requirements {
             let input_layout = MemoryLayout {
                 size: req.input_size,
@@ -175,35 +182,35 @@ impl MemoryMapper {
                 access_pattern: AccessPattern::Sequential,
                 usage: MemoryUsage::ReadOnly,
             };
-            
+
             let output_layout = MemoryLayout {
                 size: req.output_size,
                 alignment: req.alignment,
                 access_pattern: AccessPattern::Sequential,
                 usage: MemoryUsage::WriteOnly,
             };
-            
+
             let workspace_layout = MemoryLayout {
                 size: req.workspace_size,
                 alignment: req.alignment,
                 access_pattern: AccessPattern::Random,
                 usage: MemoryUsage::ReadWrite,
             };
-            
+
             total_size += Self::align_size(req.input_size, req.alignment);
             total_size += Self::align_size(req.output_size, req.alignment);
             total_size += Self::align_size(req.workspace_size, req.alignment);
-            
+
             max_alignment = max_alignment.max(req.alignment);
-            
+
             layouts.push(input_layout);
             layouts.push(output_layout);
             layouts.push(workspace_layout);
         }
-        
+
         // Try to coalesce allocations
         let coalesced = self.coalesce_layouts(&layouts)?;
-        
+
         Ok(OptimizedLayout {
             total_size,
             max_alignment,
@@ -211,24 +218,30 @@ impl MemoryMapper {
             estimated_bandwidth: self.estimate_bandwidth(&layouts),
         })
     }
-    
+
     /// Coalesce multiple layouts into fewer allocations
     fn coalesce_layouts(&self, layouts: &[MemoryLayout]) -> Result<Vec<MemoryLayout>> {
         // Simple strategy: group by usage pattern
         let mut read_only_size = 0;
         let mut write_only_size = 0;
         let mut read_write_size = 0;
-        
+
         for layout in layouts {
             match layout.usage {
-                MemoryUsage::ReadOnly => read_only_size += Self::align_size(layout.size, layout.alignment),
-                MemoryUsage::WriteOnly => write_only_size += Self::align_size(layout.size, layout.alignment),
-                MemoryUsage::ReadWrite => read_write_size += Self::align_size(layout.size, layout.alignment),
+                MemoryUsage::ReadOnly => {
+                    read_only_size += Self::align_size(layout.size, layout.alignment)
+                }
+                MemoryUsage::WriteOnly => {
+                    write_only_size += Self::align_size(layout.size, layout.alignment)
+                }
+                MemoryUsage::ReadWrite => {
+                    read_write_size += Self::align_size(layout.size, layout.alignment)
+                }
             }
         }
-        
+
         let mut coalesced = Vec::new();
-        
+
         if read_only_size > 0 {
             coalesced.push(MemoryLayout {
                 size: read_only_size,
@@ -237,7 +250,7 @@ impl MemoryMapper {
                 usage: MemoryUsage::ReadOnly,
             });
         }
-        
+
         if write_only_size > 0 {
             coalesced.push(MemoryLayout {
                 size: write_only_size,
@@ -246,7 +259,7 @@ impl MemoryMapper {
                 usage: MemoryUsage::WriteOnly,
             });
         }
-        
+
         if read_write_size > 0 {
             coalesced.push(MemoryLayout {
                 size: read_write_size,
@@ -255,15 +268,15 @@ impl MemoryMapper {
                 usage: MemoryUsage::ReadWrite,
             });
         }
-        
+
         Ok(coalesced)
     }
-    
+
     /// Estimate bandwidth requirements
     fn estimate_bandwidth(&self, layouts: &[MemoryLayout]) -> f32 {
         let mut read_bytes = 0;
         let mut write_bytes = 0;
-        
+
         for layout in layouts {
             match layout.usage {
                 MemoryUsage::ReadOnly => read_bytes += layout.size,
@@ -274,34 +287,34 @@ impl MemoryMapper {
                 }
             }
         }
-        
+
         // Assume 1ms kernel execution time for estimation
         ((read_bytes + write_bytes) as f32) / 1e6
     }
-    
+
     /// Get memory statistics
     pub fn get_statistics(&self) -> MemoryStatistics {
         let allocations = self.allocations.lock().unwrap();
         let total = *self.total_allocated.lock().unwrap();
         let peak = *self.peak_allocated.lock().unwrap();
-        
+
         // Calculate fragmentation
         let mut used_blocks = 0;
         let mut total_block_size = 0;
-        
+
         for (_, alloc) in allocations.iter() {
             if alloc.in_use {
                 used_blocks += 1;
                 total_block_size += alloc.layout.size;
             }
         }
-        
+
         let fragmentation = if total > 0 {
             1.0 - (total_block_size as f32 / total as f32)
         } else {
             0.0
         };
-        
+
         MemoryStatistics {
             allocated: total,
             used: total_block_size,
@@ -310,7 +323,7 @@ impl MemoryMapper {
             fragmentation,
         }
     }
-    
+
     /// Align size to alignment requirement
     fn align_size(size: usize, alignment: usize) -> usize {
         (size + alignment - 1) & !(alignment - 1)
@@ -391,11 +404,11 @@ impl MemoryPool {
             current_size: 0,
         }
     }
-    
+
     /// Allocate from pool
     fn allocate(&mut self, size: usize, alignment: usize) -> Option<DeviceBuffer> {
         let aligned_size = MemoryMapper::align_size(size, alignment);
-        
+
         // Look for exact size match first
         if let Some(buffers) = self.free_buffers.get_mut(&aligned_size) {
             if let Some(buffer) = buffers.pop_front() {
@@ -403,7 +416,7 @@ impl MemoryPool {
                 return Some(buffer);
             }
         }
-        
+
         // Look for larger buffer
         for (&buffer_size, buffers) in self.free_buffers.iter_mut() {
             if buffer_size >= aligned_size && !buffers.is_empty() {
@@ -413,10 +426,10 @@ impl MemoryPool {
                 }
             }
         }
-        
+
         None
     }
-    
+
     /// Return buffer to pool
     fn return_buffer(&mut self, buffer: DeviceBuffer) {
         if self.current_size + buffer.size <= self.max_size {
@@ -443,11 +456,11 @@ impl MemoryMigration {
     ) -> Result<DeviceBuffer> {
         // Download from source
         let data = src_device.download(buffer)?;
-        
+
         // Upload to destination
         dst_device.upload(&data.view())
     }
-    
+
     /// Migrate with transformation
     pub fn migrate_with_transform<F>(
         src_device: &dyn crate::hardware::Accelerator,
@@ -460,10 +473,10 @@ impl MemoryMigration {
     {
         // Download from source
         let data = src_device.download(buffer)?;
-        
+
         // Apply transformation
         let transformed = transform(data);
-        
+
         // Upload to destination
         dst_device.upload(&transformed.view())
     }
@@ -473,7 +486,7 @@ impl MemoryMigration {
 mod tests {
     use super::*;
     use crate::hardware::CPUAccelerator;
-    
+
     #[test]
     fn test_memory_layout() {
         let layout = MemoryLayout {
@@ -482,29 +495,25 @@ mod tests {
             access_pattern: AccessPattern::Sequential,
             usage: MemoryUsage::ReadOnly,
         };
-        
+
         assert_eq!(layout.size, 1024);
         assert_eq!(layout.alignment, 64);
     }
-    
+
     #[test]
     fn test_memory_pool() {
         let mut pool = MemoryPool::new(10 * 1024 * 1024); // 10MB pool
-        
-        let buffer = DeviceBuffer::new(
-            Box::into_raw(Box::new([0u8; 1024])) as *mut u8,
-            1024,
-            0
-        );
-        
+
+        let buffer = DeviceBuffer::new(Box::into_raw(Box::new([0u8; 1024])) as *mut u8, 1024, 0);
+
         pool.return_buffer(buffer);
         assert_eq!(pool.current_size, 1024);
-        
+
         let allocated = pool.allocate(1024, 64);
         assert!(allocated.is_some());
         assert_eq!(pool.current_size, 0);
     }
-    
+
     #[test]
     fn test_align_size() {
         assert_eq!(MemoryMapper::align_size(100, 64), 128);

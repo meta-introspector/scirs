@@ -143,11 +143,13 @@ pub fn robust_scale(data: &mut Array2<f64>) {
 ///
 /// This trait provides statistical methods for ndarray's ArrayView1 type,
 /// enabling easy calculation of mean and standard deviation for scaling operations.
+///
+/// Note: Uses `standard_deviation` instead of `std` to avoid conflicts with ndarray's built-in methods.
 pub trait StatsExt {
     /// Calculate the mean of the array
     fn mean(&self) -> Option<f64>;
     /// Calculate the standard deviation with specified degrees of freedom
-    fn std(&self, ddof: f64) -> f64;
+    fn standard_deviation(&self, ddof: f64) -> f64;
 }
 
 impl StatsExt for ndarray::ArrayView1<'_, f64> {
@@ -174,7 +176,7 @@ impl StatsExt for ndarray::ArrayView1<'_, f64> {
     /// # Returns
     ///
     /// Standard deviation of the array
-    fn std(&self, ddof: f64) -> f64 {
+    fn standard_deviation(&self, ddof: f64) -> f64 {
         if self.is_empty() {
             return 0.0;
         }

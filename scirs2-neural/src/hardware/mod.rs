@@ -3,23 +3,27 @@
 //! This module provides support for specialized hardware accelerators including
 //! FPGAs, custom ASICs, and other domain-specific processors.
 
-pub mod fpga;
 pub mod accelerator;
+pub mod custom_asic;
+pub mod device_manager;
+pub mod fpga;
 pub mod kernel_compiler;
 pub mod memory_mapping;
-pub mod device_manager;
-pub mod partial_reconfiguration;
-pub mod custom_asic;
 pub mod model_partitioning;
+pub mod partial_reconfiguration;
 
-pub use fpga::{FPGADevice, FPGAKernel, FPGAConfig};
-pub use accelerator::{Accelerator, AcceleratorType, AcceleratorCapabilities};
-pub use kernel_compiler::{KernelCompiler, CompilationTarget, OptimizationLevel};
-pub use memory_mapping::{MemoryMapper, MemoryLayout, BufferAllocation, MemoryMapRequirements};
-pub use device_manager::{DeviceManager, DeviceInfo, DeviceSelector};
-pub use partial_reconfiguration::{DPRManager, PartialRegion, PartialBitstream, ReconfigurationState};
-pub use custom_asic::{CustomASIC, ASICConfig, ASICOperation, DataType, NativeOperation};
-pub use model_partitioning::{ModelPartitioner, ModelPartition, PartitioningStrategy, LayerProfile};
+pub use accelerator::{Accelerator, AcceleratorCapabilities, AcceleratorType};
+pub use custom_asic::{ASICConfig, ASICOperation, CustomASIC, DataType, NativeOperation};
+pub use device_manager::{DeviceInfo, DeviceManager, DeviceSelector};
+pub use fpga::{FPGAConfig, FPGADevice, FPGAKernel};
+pub use kernel_compiler::{CompilationTarget, KernelCompiler, OptimizationLevel};
+pub use memory_mapping::{BufferAllocation, MemoryLayout, MemoryMapRequirements, MemoryMapper};
+pub use model_partitioning::{
+    LayerProfile, ModelPartition, ModelPartitioner, PartitioningStrategy,
+};
+pub use partial_reconfiguration::{
+    DPRManager, PartialBitstream, PartialRegion, ReconfigurationState,
+};
 
 use crate::error::Result;
 use ndarray::prelude::*;
@@ -93,16 +97,24 @@ pub enum PrecisionMode {
 pub trait HardwareLayer: Send + Sync {
     /// Compile the layer for specific hardware
     fn compile(&mut self, device: &dyn Accelerator, config: &HardwareConfig) -> Result<()>;
-    
+
     /// Execute forward pass on hardware
-    fn forward_hardware(&self, input: &ArrayView2<f32>, device: &dyn Accelerator) -> Result<Array2<f32>>;
-    
+    fn forward_hardware(
+        &self,
+        input: &ArrayView2<f32>,
+        device: &dyn Accelerator,
+    ) -> Result<Array2<f32>>;
+
     /// Execute backward pass on hardware
-    fn backward_hardware(&self, grad_output: &ArrayView2<f32>, device: &dyn Accelerator) -> Result<Array2<f32>>;
-    
+    fn backward_hardware(
+        &self,
+        grad_output: &ArrayView2<f32>,
+        device: &dyn Accelerator,
+    ) -> Result<Array2<f32>>;
+
     /// Get memory requirements
     fn memory_requirements(&self) -> MemoryRequirements;
-    
+
     /// Check if layer is compiled for hardware
     fn is_compiled(&self) -> bool;
 }
@@ -138,7 +150,7 @@ impl HardwareContext {
         let active_device = device_manager.get_device(config.device_type, config.device_id)?;
         let memory_mapper = MemoryMapper::new(active_device.clone(), config.memory_strategy)?;
         let kernel_compiler = KernelCompiler::new(config.optimization_level);
-        
+
         Ok(Self {
             device_manager,
             active_device,
@@ -147,49 +159,54 @@ impl HardwareContext {
             config,
         })
     }
-    
+
     /// List available devices
     pub fn list_devices(&self) -> Vec<DeviceInfo> {
         self.device_manager.list_devices()
     }
-    
+
     /// Switch to a different device
     pub fn switch_device(&mut self, device_type: AcceleratorType, device_id: usize) -> Result<()> {
         self.active_device = self.device_manager.get_device(device_type, device_id)?;
-        self.memory_mapper = MemoryMapper::new(self.active_device.clone(), self.config.memory_strategy)?;
+        self.memory_mapper =
+            MemoryMapper::new(self.active_device.clone(), self.config.memory_strategy)?;
         self.config.device_type = device_type;
         self.config.device_id = device_id;
         Ok(())
     }
-    
+
     /// Compile a model for hardware execution
     pub fn compile_model(&mut self, model: &mut dyn HardwareModel) -> Result<()> {
         model.compile(&*self.active_device, &self.config)?;
         Ok(())
     }
-    
+
     /// Execute a model on hardware
-    pub fn execute_model(&self, model: &dyn HardwareModel, input: &ArrayView2<f32>) -> Result<Array2<f32>> {
+    pub fn execute_model(
+        &self,
+        model: &dyn HardwareModel,
+        input: &ArrayView2<f32>,
+    ) -> Result<Array2<f32>> {
         if !model.is_compiled() {
             return Err(crate::error::NeuralError::InvalidArgument(
-                "Model must be compiled before execution".to_string()
+                "Model must be compiled before execution".to_string(),
             ));
         }
-        
+
         model.forward_hardware(input, &*self.active_device)
     }
-    
+
     /// Get memory usage statistics
     pub fn memory_stats(&self) -> MemoryStatistics {
         self.memory_mapper.get_statistics()
     }
-    
+
     /// Optimize memory layout for a model
     pub fn optimize_memory_layout(&mut self, model: &dyn HardwareModel) -> Result<()> {
         if !self.config.enable_layout_optimization {
             return Ok(());
         }
-        
+
         let requirements = model.memory_requirements();
         self.memory_mapper.optimize_layout(&requirements)?;
         Ok(())
@@ -200,16 +217,20 @@ impl HardwareContext {
 pub trait HardwareModel: Send + Sync {
     /// Compile the model for hardware
     fn compile(&mut self, device: &dyn Accelerator, config: &HardwareConfig) -> Result<()>;
-    
+
     /// Forward pass on hardware
-    fn forward_hardware(&self, input: &ArrayView2<f32>, device: &dyn Accelerator) -> Result<Array2<f32>>;
-    
+    fn forward_hardware(
+        &self,
+        input: &ArrayView2<f32>,
+        device: &dyn Accelerator,
+    ) -> Result<Array2<f32>>;
+
     /// Get total memory requirements
     fn memory_requirements(&self) -> Vec<MemoryRequirements>;
-    
+
     /// Check if model is compiled
     fn is_compiled(&self) -> bool;
-    
+
     /// Get model statistics
     fn statistics(&self) -> ModelStatistics;
 }
@@ -260,36 +281,38 @@ impl KernelFusion {
             max_fusion_depth: 5,
         }
     }
-    
+
     /// Analyze and fuse eligible kernels
     pub fn optimize_kernels(&self, kernels: Vec<KernelDescriptor>) -> Result<Vec<FusedKernel>> {
         if !self.enabled || kernels.len() < self.fusion_threshold {
             // Convert kernels to fused kernels without fusion
-            return Ok(kernels.into_iter()
+            return Ok(kernels
+                .into_iter()
                 .map(|k| FusedKernel {
                     kernels: vec![k],
                     fusion_type: FusionType::None,
                 })
                 .collect());
         }
-        
+
         // Simple fusion strategy: fuse consecutive element-wise operations
         let mut fused = Vec::new();
         let mut i = 0;
-        
+
         while i < kernels.len() {
             if i + 1 < kernels.len() && self.can_fuse(&kernels[i], &kernels[i + 1]) {
                 let mut fusion_group = vec![kernels[i].clone(), kernels[i + 1].clone()];
                 i += 2;
-                
+
                 // Try to extend the fusion group
-                while i < kernels.len() && 
-                      fusion_group.len() < self.max_fusion_depth &&
-                      self.can_fuse(fusion_group.last().unwrap(), &kernels[i]) {
+                while i < kernels.len()
+                    && fusion_group.len() < self.max_fusion_depth
+                    && self.can_fuse(fusion_group.last().unwrap(), &kernels[i])
+                {
                     fusion_group.push(kernels[i].clone());
                     i += 1;
                 }
-                
+
                 fused.push(FusedKernel {
                     kernels: fusion_group,
                     fusion_type: FusionType::ElementWise,
@@ -302,16 +325,16 @@ impl KernelFusion {
                 i += 1;
             }
         }
-        
+
         Ok(fused)
     }
-    
+
     /// Check if two kernels can be fused
     fn can_fuse(&self, kernel1: &KernelDescriptor, kernel2: &KernelDescriptor) -> bool {
         // Simple heuristic: fuse element-wise operations with matching shapes
-        kernel1.operation_type.is_element_wise() &&
-        kernel2.operation_type.is_element_wise() &&
-        kernel1.output_shape == kernel2.input_shape
+        kernel1.operation_type.is_element_wise()
+            && kernel2.operation_type.is_element_wise()
+            && kernel1.output_shape == kernel2.input_shape
     }
 }
 
@@ -390,7 +413,7 @@ pub enum FusionType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_hardware_config_default() {
         let config = HardwareConfig::default();
@@ -398,11 +421,11 @@ mod tests {
         assert_eq!(config.optimization_level, OptimizationLevel::O2);
         assert!(config.enable_kernel_fusion);
     }
-    
+
     #[test]
     fn test_kernel_fusion() {
         let fusion = KernelFusion::new(true);
-        
+
         let kernels = vec![
             KernelDescriptor {
                 name: "add".to_string(),
@@ -419,7 +442,7 @@ mod tests {
                 memory_access_pattern: MemoryAccessPattern::Sequential,
             },
         ];
-        
+
         let fused = fusion.optimize_kernels(kernels).unwrap();
         assert_eq!(fused.len(), 1);
         assert_eq!(fused[0].kernels.len(), 2);

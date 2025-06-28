@@ -281,17 +281,17 @@ where
         // For quintic interpolation, we need higher-order splines
         // For simplicity, we'll use cubic splines with a refined grid approach
         // This is a basic implementation - true quintic would need quintic splines
-        
+
         // Use higher density sampling for better approximation
         let n_x = self.x.len();
         let n_y = self.y.len();
-        
+
         if n_x < 6 || n_y < 6 {
             return Err(InterpolateError::invalid_input(
                 "quintic interpolation requires at least 6 points in each dimension",
             ));
         }
-        
+
         // For now, fall back to cubic with validation for sufficient points
         self.evaluate_cubic(x_new, y_new)
     }

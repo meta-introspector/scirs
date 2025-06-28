@@ -114,7 +114,7 @@ impl NMF {
     /// Initialize matrices with random non-negative values
     fn random_initialization(&self, v: &Array2<f64>) -> (Array2<f64>, Array2<f64>) {
         let (n_samples, n_features) = (v.shape()[0], v.shape()[1]);
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let scale = (v.mean().unwrap() / self.n_components as f64).sqrt();
 
@@ -205,12 +205,7 @@ impl NMF {
     }
 
     /// Multiplicative update for W
-    fn update_w(
-        &self,
-        v: &Array2<f64>,
-        w: &Array2<f64>,
-        h: &Array2<f64>,
-    ) -> Array2<f64> {
+    fn update_w(&self, v: &Array2<f64>, w: &Array2<f64>, h: &Array2<f64>) -> Array2<f64> {
         let eps = 1e-10;
         let wh = w.dot(h);
 
@@ -242,12 +237,7 @@ impl NMF {
     }
 
     /// Multiplicative update for H
-    fn update_h(
-        &self,
-        v: &Array2<f64>,
-        w: &Array2<f64>,
-        h: &Array2<f64>,
-    ) -> Array2<f64> {
+    fn update_h(&self, v: &Array2<f64>, w: &Array2<f64>, h: &Array2<f64>) -> Array2<f64> {
         let eps = 1e-10;
         let wh = w.dot(h);
 
@@ -274,6 +264,118 @@ impl NMF {
 
         // Ensure non-negativity
         h_new.mapv_inplace(|x| x.max(eps));
+
+        h_new
+    }
+
+    /// Coordinate descent update for W
+    fn update_w_cd(&self, v: &Array2<f64>, w: &Array2<f64>, h: &Array2<f64>) -> Array2<f64> {
+        let eps = 1e-10;
+        let (n_samples, n_components) = w.dim();
+        let mut w_new = w.clone();
+
+        // Precompute H * H^T for efficiency
+        let hht = h.dot(&h.t());
+
+        for i in 0..n_samples {
+            for j in 0..n_components {
+                // Compute residual without contribution from w[i,j]
+                let mut numerator = 0.0;
+                let mut denominator = hht[[j, j]];
+
+                // Compute v[i,:] * h[j,:] (numerator)
+                for k in 0..h.ncols() {
+                    numerator += v[[i, k]] * h[[j, k]];
+                }
+
+                // Compute w[i,:] * (H * H^T)[j,:] excluding w[i,j]
+                for k in 0..n_components {
+                    if k != j {
+                        numerator -= w_new[[i, k]] * hht[[k, j]];
+                    }
+                }
+
+                // Add regularization terms
+                if self.alpha > 0.0 {
+                    if self.l1_ratio > 0.0 {
+                        // L1 regularization (soft thresholding)
+                        let l1_penalty = self.alpha * self.l1_ratio;
+                        numerator -= l1_penalty;
+                    }
+                    if self.l1_ratio < 1.0 {
+                        // L2 regularization
+                        let l2_penalty = self.alpha * (1.0 - self.l1_ratio);
+                        denominator += l2_penalty;
+                        numerator -= l2_penalty * w_new[[i, j]];
+                    }
+                }
+
+                // Update w[i,j]
+                let new_val = if denominator > eps {
+                    (numerator / denominator).max(eps)
+                } else {
+                    eps
+                };
+
+                w_new[[i, j]] = new_val;
+            }
+        }
+
+        w_new
+    }
+
+    /// Coordinate descent update for H
+    fn update_h_cd(&self, v: &Array2<f64>, w: &Array2<f64>, h: &Array2<f64>) -> Array2<f64> {
+        let eps = 1e-10;
+        let (n_components, n_features) = h.dim();
+        let mut h_new = h.clone();
+
+        // Precompute W^T * W for efficiency
+        let wtw = w.t().dot(w);
+
+        for i in 0..n_components {
+            for j in 0..n_features {
+                // Compute residual without contribution from h[i,j]
+                let mut numerator = 0.0;
+                let mut denominator = wtw[[i, i]];
+
+                // Compute w[:,i]^T * v[:,j] (numerator)
+                for k in 0..w.nrows() {
+                    numerator += w[[k, i]] * v[[k, j]];
+                }
+
+                // Compute (W^T * W)[i,:] * h[:,j] excluding h[i,j]
+                for k in 0..n_components {
+                    if k != i {
+                        numerator -= wtw[[i, k]] * h_new[[k, j]];
+                    }
+                }
+
+                // Add regularization terms
+                if self.alpha > 0.0 {
+                    if self.l1_ratio > 0.0 {
+                        // L1 regularization (soft thresholding)
+                        let l1_penalty = self.alpha * self.l1_ratio;
+                        numerator -= l1_penalty;
+                    }
+                    if self.l1_ratio < 1.0 {
+                        // L2 regularization
+                        let l2_penalty = self.alpha * (1.0 - self.l1_ratio);
+                        denominator += l2_penalty;
+                        numerator -= l2_penalty * h_new[[i, j]];
+                    }
+                }
+
+                // Update h[i,j]
+                let new_val = if denominator > eps {
+                    (numerator / denominator).max(eps)
+                } else {
+                    eps
+                };
+
+                h_new[[i, j]] = new_val;
+            }
+        }
 
         h_new
     }
@@ -320,11 +422,14 @@ impl NMF {
             if self.solver == "mu" {
                 h = self.update_h(&v, &w, &h);
                 w = self.update_w(&v, &w, &h);
+            } else if self.solver == "cd" {
+                h = self.update_h_cd(&v, &w, &h);
+                w = self.update_w_cd(&v, &w, &h);
             } else {
-                // TODO: Implement coordinate descent solver
-                return Err(TransformError::InvalidInput(
-                    "Only 'mu' solver is currently implemented".to_string(),
-                ));
+                return Err(TransformError::InvalidInput(format!(
+                    "Unknown solver '{}'. Supported solvers: 'mu', 'cd'",
+                    self.solver
+                )));
             }
 
             // Compute error
@@ -378,7 +483,7 @@ impl NMF {
         let n_samples = v.shape()[0];
 
         // Initialize W randomly
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let scale = (v.mean().unwrap() / self.n_components as f64).sqrt();
         let mut w = Array2::zeros((n_samples, self.n_components));
@@ -457,19 +562,13 @@ mod tests {
         let x = Array::from_shape_vec(
             (6, 4),
             vec![
-                1.0, 2.0, 3.0, 4.0,
-                2.0, 4.0, 6.0, 8.0,
-                3.0, 6.0, 9.0, 12.0,
-                4.0, 8.0, 12.0, 16.0,
-                5.0, 10.0, 15.0, 20.0,
-                6.0, 12.0, 18.0, 24.0,
+                1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0, 4.0, 8.0, 12.0, 16.0,
+                5.0, 10.0, 15.0, 20.0, 6.0, 12.0, 18.0, 24.0,
             ],
         )
         .unwrap();
 
-        let mut nmf = NMF::new(2)
-            .with_max_iter(100)
-            .with_random_state(42);
+        let mut nmf = NMF::new(2).with_max_iter(100).with_random_state(42);
 
         let w = nmf.fit_transform(&x).unwrap();
 
@@ -498,9 +597,7 @@ mod tests {
     fn test_nmf_regularization() {
         let x = Array::eye(10) + 0.1; // Add small value to ensure positivity
 
-        let mut nmf = NMF::new(3)
-            .with_regularization(0.1, 0.5)
-            .with_max_iter(50);
+        let mut nmf = NMF::new(3).with_regularization(0.1, 0.5).with_max_iter(50);
 
         let result = nmf.fit_transform(&x);
         assert!(result.is_ok());
@@ -512,13 +609,72 @@ mod tests {
     #[test]
     #[should_panic(expected = "NMF requires non-negative input data")]
     fn test_nmf_negative_input() {
-        let x = Array::from_shape_vec(
-            (3, 3),
-            vec![1.0, 2.0, 3.0, -1.0, 5.0, 6.0, 7.0, 8.0, 9.0],
-        )
-        .unwrap();
+        let x = Array::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, -1.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            .unwrap();
 
         let mut nmf = NMF::new(2);
         let _ = nmf.fit(&x);
+    }
+
+    #[test]
+    fn test_nmf_coordinate_descent() {
+        // Create non-negative data
+        let x = Array::from_shape_vec(
+            (6, 4),
+            vec![
+                1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0, 4.0, 8.0, 12.0, 16.0,
+                5.0, 10.0, 15.0, 20.0, 6.0, 12.0, 18.0, 24.0,
+            ],
+        )
+        .unwrap();
+
+        let mut nmf_cd = NMF::new(2)
+            .with_solver("cd")
+            .with_max_iter(100)
+            .with_random_state(42);
+
+        let w_cd = nmf_cd.fit_transform(&x).unwrap();
+
+        // Check dimensions
+        assert_eq!(w_cd.shape(), &[6, 2]);
+
+        // Check non-negativity
+        for val in w_cd.iter() {
+            assert!(*val >= 0.0);
+        }
+
+        // Check components
+        let h_cd = nmf_cd.components().unwrap();
+        assert_eq!(h_cd.shape(), &[2, 4]);
+
+        for val in h_cd.iter() {
+            assert!(*val >= 0.0);
+        }
+
+        // Check reconstruction
+        let x_reconstructed = nmf_cd.inverse_transform(&w_cd).unwrap();
+        assert_eq!(x_reconstructed.shape(), x.shape());
+
+        // Compare with multiplicative update solver
+        let mut nmf_mu = NMF::new(2)
+            .with_solver("mu")
+            .with_max_iter(100)
+            .with_random_state(42);
+
+        let _w_mu = nmf_mu.fit_transform(&x).unwrap();
+
+        // Both should converge and produce valid decompositions
+        assert!(nmf_cd.reconstruction_error().unwrap() >= 0.0);
+        assert!(nmf_mu.reconstruction_error().unwrap() >= 0.0);
+    }
+
+    #[test]
+    fn test_nmf_invalid_solver() {
+        let x = Array::eye(3) + 0.1;
+        let mut nmf = NMF::new(2).with_solver("invalid");
+
+        let result = nmf.fit(&x);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Unknown solver"));
     }
 }

@@ -23,7 +23,9 @@ serde_json = { workspace = true }
 csv = { workspace = true }
 
 # Datasets specific dependencies
-reqwest = { workspace = true, optional = true }
+reqwest = { workspace = true, optional = true, features = ["stream"] }
+futures-util = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true, features = ["time"] }
 dirs = { workspace = true }
 flate2 = { workspace = true }
 zip = { workspace = true }
@@ -35,4 +37,4 @@ tempfile = { workspace = true }
 
 [features]
 default = []
-download = ["reqwest"]
+download = ["reqwest", "futures-util", "tokio"]

@@ -7,7 +7,7 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, NumCast, Zero};
 use rand::prelude::*;
-use rand::{SeedableRng, rngs::StdRng};
+use rand::{rngs::StdRng, SeedableRng};
 use rand_distr::uniform::SampleUniform;
 use rand_distr::{Distribution, StandardNormal};
 

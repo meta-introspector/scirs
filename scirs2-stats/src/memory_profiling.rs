@@ -4,10 +4,10 @@
 //! memory-efficient algorithms with adaptive strategies based on available memory.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2, s};
+use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
-use std::sync::Arc;
 use std::collections::VecDeque;
+use std::sync::Arc;
 
 /// Memory usage profiler for statistical operations
 #[derive(Debug, Clone)]
@@ -41,7 +41,7 @@ impl MemoryAdaptiveAlgorithm {
         // Estimate available memory (simplified - in production would use system calls)
         let available_memory = Self::estimate_available_memory();
         let preferred_chunk_size = Self::calculate_optimal_chunk_size(available_memory);
-        
+
         Self {
             available_memory,
             preferred_chunk_size,
@@ -49,11 +49,145 @@ impl MemoryAdaptiveAlgorithm {
         }
     }
 
-    /// Estimate available system memory
+    /// Estimate available system memory using platform-specific calls
     fn estimate_available_memory() -> usize {
-        // In a real implementation, this would query the system
-        // For now, return a conservative estimate
-        500_000_000 // 500 MB
+        #[cfg(target_os = "linux")]
+        {
+            Self::get_available_memory_linux()
+        }
+        #[cfg(target_os = "windows")]
+        {
+            Self::get_available_memory_windows()
+        }
+        #[cfg(target_os = "macos")]
+        {
+            Self::get_available_memory_macos()
+        }
+        #[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]
+        {
+            // Fallback for other systems
+            Self::get_available_memory_fallback()
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    fn get_available_memory_linux() -> usize {
+        use std::fs;
+
+        // Read /proc/meminfo for accurate memory information
+        if let Ok(meminfo) = fs::read_to_string("/proc/meminfo") {
+            let mut mem_available = None;
+            let mut mem_free = None;
+            let mut mem_total = None;
+
+            for line in meminfo.lines() {
+                if line.starts_with("MemAvailable:") {
+                    if let Some(value) = line.split_whitespace().nth(1) {
+                        if let Ok(kb) = value.parse::<usize>() {
+                            mem_available = Some(kb * 1024); // Convert KB to bytes
+                        }
+                    }
+                } else if line.starts_with("MemFree:") {
+                    if let Some(value) = line.split_whitespace().nth(1) {
+                        if let Ok(kb) = value.parse::<usize>() {
+                            mem_free = Some(kb * 1024);
+                        }
+                    }
+                } else if line.starts_with("MemTotal:") {
+                    if let Some(value) = line.split_whitespace().nth(1) {
+                        if let Ok(kb) = value.parse::<usize>() {
+                            mem_total = Some(kb * 1024);
+                        }
+                    }
+                }
+            }
+
+            // Prefer MemAvailable (includes reclaimable memory), fallback to MemFree
+            if let Some(available) = mem_available {
+                return available;
+            } else if let Some(free) = mem_free {
+                return free;
+            } else if let Some(total) = mem_total {
+                // Conservative estimate: 50% of total if we can't get precise info
+                return total / 2;
+            }
+        }
+
+        // Fallback if /proc/meminfo is not readable
+        Self::get_available_memory_fallback()
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_available_memory_windows() -> usize {
+        // On Windows, we would use GlobalMemoryStatusEx API
+        // For cross-platform compatibility without external dependencies,
+        // we'll use a conservative estimate based on typical Windows systems
+
+        // This could be improved by using winapi crate:
+        // use winapi::um::sysinfoapi::{GlobalMemoryStatusEx, MEMORYSTATUSEX};
+        // But to avoid dependencies, we use a reasonable estimate
+
+        // Assume at least 4GB total, use 25% as available
+        let conservative_total = 4_000_000_000; // 4GB
+        conservative_total / 4
+    }
+
+    #[cfg(target_os = "macos")]
+    fn get_available_memory_macos() -> usize {
+        use std::process::Command;
+
+        // Use vm_stat command to get memory information
+        if let Ok(output) = Command::new("vm_stat").output() {
+            if let Ok(stdout) = String::from_utf8(output.stdout) {
+                let mut page_size = 4096; // Default page size
+                let mut free_pages = 0;
+                let mut inactive_pages = 0;
+
+                for line in stdout.lines() {
+                    if line.starts_with("Mach Virtual Memory Statistics:") {
+                        // Try to extract page size if available
+                        if line.contains("page size of") {
+                            if let Some(size_str) = line.split("page size of ").nth(1) {
+                                if let Some(size_str) = size_str.split(" bytes").next() {
+                                    if let Ok(size) = size_str.parse::<usize>() {
+                                        page_size = size;
+                                    }
+                                }
+                            }
+                        }
+                    } else if line.starts_with("Pages free:") {
+                        if let Some(count_str) = line.split(':').nth(1) {
+                            if let Some(count_str) = count_str.trim().split('.').next() {
+                                if let Ok(count) = count_str.parse::<usize>() {
+                                    free_pages = count;
+                                }
+                            }
+                        }
+                    } else if line.starts_with("Pages inactive:") {
+                        if let Some(count_str) = line.split(':').nth(1) {
+                            if let Some(count_str) = count_str.trim().split('.').next() {
+                                if let Ok(count) = count_str.parse::<usize>() {
+                                    inactive_pages = count;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Available memory is approximately free + inactive pages
+                return (free_pages + inactive_pages) * page_size;
+            }
+        }
+
+        // Fallback if vm_stat fails
+        Self::get_available_memory_fallback()
+    }
+
+    fn get_available_memory_fallback() -> usize {
+        // Conservative fallback for unknown systems
+        // Assume at least 2GB total memory, use 25% as available
+        let conservative_total = 2_000_000_000; // 2GB
+        conservative_total / 4 // 500MB
     }
 
     /// Calculate optimal chunk size based on available memory
@@ -61,7 +195,7 @@ impl MemoryAdaptiveAlgorithm {
         // Aim for chunks that fit comfortably in L3 cache (typically 8-32MB)
         let l3_cache_estimate = 8_000_000; // 8MB
         let max_chunk = available_memory / 10; // Use at most 10% of available memory
-        
+
         l3_cache_estimate.min(max_chunk).max(4096)
     }
 
@@ -74,8 +208,9 @@ impl MemoryAdaptiveAlgorithm {
     pub fn recommend_algorithm<F: Float>(&self, data_size: usize) -> AlgorithmChoice {
         let element_size = std::mem::size_of::<F>();
         let total_bytes = data_size * element_size;
-        
-        if total_bytes < 1_000_000 { // < 1MB
+
+        if total_bytes < 1_000_000 {
+            // < 1MB
             AlgorithmChoice::Direct
         } else if self.can_allocate(total_bytes) {
             AlgorithmChoice::Optimized
@@ -100,7 +235,7 @@ pub enum AlgorithmChoice {
 /// These functions operate on views to avoid unnecessary copying
 pub mod zero_copy {
     use super::*;
-    
+
     /// Compute statistics on overlapping windows without copying
     pub fn rolling_stats_zerocopy<F, D, S>(
         data: &ArrayBase<D, Ix1>,
@@ -116,19 +251,19 @@ pub mod zero_copy {
         if window_size == 0 || window_size > n {
             return Err(StatsError::invalid_argument("Invalid window size"));
         }
-        
+
         let output_len = n - window_size + 1;
         let mut results = Array1::zeros(output_len);
-        
+
         // Use views to avoid copying
         for i in 0..output_len {
             let window = data.slice(s![i..i + window_size]);
             results[i] = stat_fn(window)?;
         }
-        
+
         Ok(results)
     }
-    
+
     /// Compute pairwise operations using views
     pub fn pairwise_operation_zerocopy<F, D, Op>(
         data: &ArrayBase<D, Ix2>,
@@ -141,7 +276,7 @@ pub mod zero_copy {
     {
         let n = data.nrows();
         let mut result = Array2::zeros((n, n));
-        
+
         for i in 0..n {
             result[(i, i)] = F::one(); // Diagonal
             for j in (i + 1)..n {
@@ -152,7 +287,7 @@ pub mod zero_copy {
                 result[(j, i)] = value; // Symmetric
             }
         }
-        
+
         Ok(result)
     }
 }
@@ -160,7 +295,7 @@ pub mod zero_copy {
 /// Memory-mapped statistical operations for very large datasets
 pub mod memory_mapped {
     use super::*;
-    
+
     /// Chunked mean calculation for memory-mapped data
     pub fn mmap_mean<'a, F: Float + NumCast + 'a>(
         data_chunks: impl Iterator<Item = ArrayView1<'a, F>>,
@@ -169,23 +304,23 @@ pub mod memory_mapped {
         if total_count == 0 {
             return Err(StatsError::invalid_argument("Empty dataset"));
         }
-        
+
         let mut total_sum = F::zero();
         let mut count_processed = 0;
-        
+
         for chunk in data_chunks {
             let chunk_sum = chunk.sum();
             total_sum = total_sum + chunk_sum;
             count_processed += chunk.len();
         }
-        
+
         if count_processed != total_count {
             return Err(StatsError::invalid_argument("Chunk count mismatch"));
         }
-        
+
         Ok(total_sum / F::from(total_count).unwrap())
     }
-    
+
     /// Chunked variance calculation using Welford's algorithm
     pub fn mmap_variance<'a, F: Float + NumCast + 'a>(
         data_chunks: impl Iterator<Item = ArrayView1<'a, F>>,
@@ -195,11 +330,11 @@ pub mod memory_mapped {
         if total_count <= ddof {
             return Err(StatsError::invalid_argument("Insufficient data for ddof"));
         }
-        
+
         let mut mean = F::zero();
         let mut m2 = F::zero();
         let mut count = 0;
-        
+
         for chunk in data_chunks {
             for &value in chunk.iter() {
                 count += 1;
@@ -209,7 +344,7 @@ pub mod memory_mapped {
                 m2 = m2 + delta * delta2;
             }
         }
-        
+
         let variance = m2 / F::from(count - ddof).unwrap();
         Ok((mean, variance))
     }
@@ -233,7 +368,7 @@ impl<F: Float + NumCast> RingBufferStats<F> {
             sum_squares: F::zero(),
         }
     }
-    
+
     /// Add a new value, potentially evicting the oldest
     pub fn push(&mut self, value: F) {
         if self.buffer.len() >= self.capacity {
@@ -242,12 +377,12 @@ impl<F: Float + NumCast> RingBufferStats<F> {
                 self.sum_squares = self.sum_squares - old_value * old_value;
             }
         }
-        
+
         self.buffer.push_back(value);
         self.sum = self.sum + value;
         self.sum_squares = self.sum_squares + value * value;
     }
-    
+
     /// Get current mean
     pub fn mean(&self) -> F {
         if self.buffer.is_empty() {
@@ -256,19 +391,19 @@ impl<F: Float + NumCast> RingBufferStats<F> {
             self.sum / F::from(self.buffer.len()).unwrap()
         }
     }
-    
+
     /// Get current variance
     pub fn variance(&self, ddof: usize) -> Option<F> {
         let n = self.buffer.len();
         if n <= ddof {
             return None;
         }
-        
+
         let mean = self.mean();
         let var = self.sum_squares / F::from(n).unwrap() - mean * mean;
         Some(var * F::from(n).unwrap() / F::from(n - ddof).unwrap())
     }
-    
+
     /// Get current standard deviation
     pub fn std(&self, ddof: usize) -> Option<F> {
         self.variance(ddof).map(|v| v.sqrt())
@@ -298,41 +433,47 @@ impl<F: Float + NumCast + std::iter::Sum> LazyStatComputation<F> {
             operations: Vec::new(),
         }
     }
-    
+
     /// Add mean computation
     pub fn mean(mut self) -> Self {
         self.operations.push(StatOperation::Mean);
         self
     }
-    
+
     /// Add variance computation
     pub fn variance(mut self, ddof: usize) -> Self {
         self.operations.push(StatOperation::Variance(ddof));
         self
     }
-    
+
     /// Add quantile computation
     pub fn quantile(mut self, q: f64) -> Self {
         self.operations.push(StatOperation::Quantile(q));
         self
     }
-    
+
     /// Execute all operations efficiently
     pub fn compute(&self) -> StatsResult<Vec<F>> {
         let mut results = Vec::new();
         let data = &*self.data_ref;
-        
+
         // Check which operations we need
-        let need_mean = self.operations.iter().any(|op| matches!(op, StatOperation::Mean | StatOperation::Variance(_)));
-        let need_sorted = self.operations.iter().any(|op| matches!(op, StatOperation::Quantile(_)));
-        
+        let need_mean = self
+            .operations
+            .iter()
+            .any(|op| matches!(op, StatOperation::Mean | StatOperation::Variance(_)));
+        let need_sorted = self
+            .operations
+            .iter()
+            .any(|op| matches!(op, StatOperation::Quantile(_)));
+
         // Compute shared values
         let mean = if need_mean {
             Some(data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap())
         } else {
             None
         };
-        
+
         let sorted_data = if need_sorted {
             let mut sorted = data.clone();
             sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -340,7 +481,7 @@ impl<F: Float + NumCast + std::iter::Sum> LazyStatComputation<F> {
         } else {
             None
         };
-        
+
         // Execute operations
         for op in &self.operations {
             match op {
@@ -349,12 +490,14 @@ impl<F: Float + NumCast + std::iter::Sum> LazyStatComputation<F> {
                 }
                 StatOperation::Variance(ddof) => {
                     let m = mean.unwrap();
-                    let var = data.iter()
+                    let var = data
+                        .iter()
                         .map(|&x| {
                             let diff = x - m;
                             diff * diff
                         })
-                        .sum::<F>() / F::from(data.len() - ddof).unwrap();
+                        .sum::<F>()
+                        / F::from(data.len() - ddof).unwrap();
                     results.push(var);
                 }
                 StatOperation::Quantile(q) => {
@@ -362,7 +505,7 @@ impl<F: Float + NumCast + std::iter::Sum> LazyStatComputation<F> {
                     let pos = *q * (sorted.len() - 1) as f64;
                     let idx = pos.floor() as usize;
                     let frac = pos - pos.floor();
-                    
+
                     let result = if frac == 0.0 {
                         sorted[idx]
                     } else {
@@ -379,7 +522,7 @@ impl<F: Float + NumCast + std::iter::Sum> LazyStatComputation<F> {
                 }
             }
         }
-        
+
         Ok(results)
     }
 }
@@ -402,20 +545,20 @@ impl MemoryTracker {
             deallocations: 0,
         }
     }
-    
+
     /// Record an allocation
     pub fn record_allocation(&mut self, bytes: usize) {
         self.current_usage += bytes;
         self.peak_usage = self.peak_usage.max(self.current_usage);
         self.allocations += 1;
     }
-    
+
     /// Record a deallocation
     pub fn record_deallocation(&mut self, bytes: usize) {
         self.current_usage = self.current_usage.saturating_sub(bytes);
         self.deallocations += 1;
     }
-    
+
     /// Get memory profile
     pub fn get_profile(&self) -> MemoryProfile {
         let efficiency_score = if self.peak_usage > 0 {
@@ -423,7 +566,7 @@ impl MemoryTracker {
         } else {
             1.0
         };
-        
+
         MemoryProfile {
             peak_memory: self.peak_usage,
             avg_memory: (self.peak_usage + self.current_usage) / 2,
@@ -437,7 +580,7 @@ impl MemoryTracker {
 /// Cache-friendly matrix operations
 pub mod cache_friendly {
     use super::*;
-    
+
     /// Tiled matrix multiplication for better cache usage
     pub fn tiled_matrix_operation<F, D1, D2, Op>(
         a: &ArrayBase<D1, Ix2>,
@@ -453,13 +596,15 @@ pub mod cache_friendly {
     {
         let (m, k1) = a.dim();
         let (k2, n) = b.dim();
-        
+
         if k1 != k2 {
-            return Err(StatsError::dimension_mismatch("Matrix dimensions incompatible"));
+            return Err(StatsError::dimension_mismatch(
+                "Matrix dimensions incompatible",
+            ));
         }
-        
+
         let mut result = Array2::zeros((m, n));
-        
+
         // Process in tiles for better cache locality
         for i in (0..m).step_by(tile_size) {
             for j in (0..n).step_by(tile_size) {
@@ -467,19 +612,19 @@ pub mod cache_friendly {
                     let i_end = (i + tile_size).min(m);
                     let j_end = (j + tile_size).min(n);
                     let k_end = (k + tile_size).min(k1);
-                    
+
                     let a_tile = a.slice(s![i..i_end, k..k_end]);
                     let b_tile = b.slice(s![k..k_end, j..j_end]);
-                    
+
                     let tile_result = operation(a_tile, b_tile)?;
-                    
+
                     // Add to result
                     let mut result_tile = result.slice_mut(s![i..i_end, j..j_end]);
                     result_tile.zip_mut_with(&tile_result, |r, &t| *r = *r + t);
                 }
             }
         }
-        
+
         Ok(result)
     }
 }
@@ -487,41 +632,41 @@ pub mod cache_friendly {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
-    
+    use ndarray::array;
+
     #[test]
     fn test_memory_adaptive_algorithm() {
         let adapter = MemoryAdaptiveAlgorithm::new();
-        
+
         // Test algorithm selection
         match adapter.recommend_algorithm::<f64>(100) {
             AlgorithmChoice::Direct => (), // Small data
             _ => panic!("Expected Direct algorithm for small data"),
         }
-        
+
         match adapter.recommend_algorithm::<f64>(10_000_000) {
             AlgorithmChoice::Streaming(_) => (), // Large data
             _ => panic!("Expected Streaming algorithm for large data"),
         }
     }
-    
+
     #[test]
     fn test_ring_buffer_stats() {
         let mut buffer = RingBufferStats::<f64>::new(5);
-        
+
         // Add values
         for i in 1..=5 {
             buffer.push(i as f64);
         }
-        
+
         assert_relative_eq!(buffer.mean(), 3.0, epsilon = 1e-10);
-        
+
         // Add more values (should evict oldest)
         buffer.push(6.0);
         assert_relative_eq!(buffer.mean(), 4.0, epsilon = 1e-10); // (2+3+4+5+6)/5
     }
-    
+
     #[test]
     fn test_lazy_computation() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -529,21 +674,21 @@ mod tests {
             .mean()
             .variance(1)
             .quantile(0.5);
-        
+
         let results = lazy.compute().unwrap();
         assert_eq!(results.len(), 3);
         assert_relative_eq!(results[0], 3.0, epsilon = 1e-10); // mean
         assert_relative_eq!(results[1], 2.5, epsilon = 1e-10); // variance
         assert_relative_eq!(results[2], 3.0, epsilon = 1e-10); // median
     }
-    
+
     #[test]
     fn test_zero_copy_rolling() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let results = zero_copy::rolling_stats_zerocopy(&data.view(), 3, |window| {
-            Ok(window.mean().unwrap())
-        }).unwrap();
-        
+        let results =
+            zero_copy::rolling_stats_zerocopy(&data.view(), 3, |window| Ok(window.mean().unwrap()))
+                .unwrap();
+
         assert_eq!(results.len(), 3);
         assert_relative_eq!(results[0], 2.0, epsilon = 1e-10);
         assert_relative_eq!(results[1], 3.0, epsilon = 1e-10);

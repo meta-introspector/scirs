@@ -98,13 +98,13 @@ where
             "Input arrays cannot be empty".to_string(),
         ));
     }
-    
+
     if times.len() != values.len() {
         return Err(SignalError::ShapeMismatch(
             "Times and values arrays must have the same length".to_string(),
         ));
     }
-    
+
     // Convert to f64 and validate
     let times_f64: Vec<f64> = times
         .iter()
@@ -116,7 +116,7 @@ where
             Ok(val)
         })
         .collect::<SignalResult<Vec<f64>>>()?;
-    
+
     let values_f64: Vec<f64> = values
         .iter()
         .map(|&v| {
@@ -127,7 +127,7 @@ where
             Ok(val)
         })
         .collect::<SignalResult<Vec<f64>>>()?;
-    
+
     // Check if times are sorted
     for i in 1..times_f64.len() {
         if times_f64[i] <= times_f64[i - 1] {
@@ -136,20 +136,20 @@ where
             ));
         }
     }
-    
+
     // Apply window function if requested
     let windowed_values = apply_window(&values_f64, config)?;
-    
+
     // Compute frequency grid
     let frequencies = compute_frequency_grid(&times_f64, config)?;
-    
+
     // Compute periodogram
     let power = if config.use_fast {
         compute_fast_lombscargle(&times_f64, &windowed_values, &frequencies, config.tolerance)?
     } else {
         compute_standard_lombscargle(&times_f64, &windowed_values, &frequencies)?
     };
-    
+
     // Compute bootstrap confidence intervals if requested
     let confidence_intervals = if let Some(n_iter) = config.bootstrap_iter {
         Some(bootstrap_confidence_intervals(
@@ -163,14 +163,14 @@ where
     } else {
         None
     };
-    
+
     Ok((frequencies, power, confidence_intervals))
 }
 
 /// Apply window function to values
 fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
     let n = values.len();
-    
+
     let window = match config.window {
         WindowType::None => vec![1.0; n],
         WindowType::Hann => {
@@ -210,15 +210,15 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
             }
         }
     };
-    
+
     // Apply window and normalize
     let mut windowed = vec![0.0; n];
     let window_sum: f64 = window.iter().sum();
-    
+
     for i in 0..n {
         windowed[i] = values[i] * window[i] / window_sum.sqrt();
     }
-    
+
     Ok(windowed)
 }
 
@@ -226,30 +226,30 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
 fn compute_frequency_grid(times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
     let n = times.len();
     let t_span = times[n - 1] - times[0];
-    
+
     // Estimate average sampling rate
     let avg_dt = t_span / (n - 1) as f64;
     let nyquist = 0.5 / avg_dt;
-    
+
     // Determine frequency range
     let f_min = config.f_min.unwrap_or(1.0 / t_span);
     let f_max = config.f_max.unwrap_or(nyquist);
-    
+
     if f_min >= f_max {
         return Err(SignalError::ValueError(
             "f_min must be less than f_max".to_string(),
         ));
     }
-    
+
     // Number of frequencies with oversampling
     let n_freq = ((f_max - f_min) * t_span * config.oversample) as usize + 1;
-    
+
     // Generate frequency grid
     let mut frequencies = Vec::with_capacity(n_freq);
     for i in 0..n_freq {
         frequencies.push(f_min + i as f64 * (f_max - f_min) / (n_freq - 1) as f64);
     }
-    
+
     Ok(frequencies)
 }
 
@@ -262,41 +262,41 @@ fn compute_fast_lombscargle(
 ) -> SignalResult<Vec<f64>> {
     let n = times.len();
     let mut power = vec![0.0; frequencies.len()];
-    
+
     // Center the data
     let mean_val: f64 = values.iter().sum::<f64>() / n as f64;
     let values_centered: Vec<f64> = values.iter().map(|&v| v - mean_val).collect();
-    
+
     // Precompute time shifts for numerical stability
     let t_mean = times.iter().sum::<f64>() / n as f64;
     let times_shifted: Vec<f64> = times.iter().map(|&t| t - t_mean).collect();
-    
+
     for (i, &freq) in frequencies.iter().enumerate() {
         let omega = 2.0 * PI * freq;
-        
+
         // Compute time offset tau for this frequency
         let mut sum_sin = 0.0;
         let mut sum_cos = 0.0;
-        
+
         for &t in &times_shifted {
             let phase = 2.0 * omega * t;
             sum_sin += phase.sin();
             sum_cos += phase.cos();
         }
-        
+
         let tau = 0.5 * sum_sin.atan2(sum_cos) / omega;
-        
+
         // Compute sums with numerical stability checks
         let mut c_tau = 0.0;
         let mut s_tau = 0.0;
         let mut c_tau2 = 0.0;
         let mut s_tau2 = 0.0;
-        
+
         for (j, &t) in times_shifted.iter().enumerate() {
             let arg = omega * (t - tau);
             let cos_arg = arg.cos();
             let sin_arg = arg.sin();
-            
+
             // Check for numerical issues
             if cos_arg.is_finite() && sin_arg.is_finite() {
                 c_tau += values_centered[j] * cos_arg;
@@ -305,14 +305,14 @@ fn compute_fast_lombscargle(
                 s_tau2 += sin_arg * sin_arg;
             }
         }
-        
+
         // Add small tolerance to prevent division by zero
         c_tau2 = c_tau2.max(tolerance);
         s_tau2 = s_tau2.max(tolerance);
-        
+
         // Compute variance
         let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n as f64;
-        
+
         if variance > tolerance {
             // Standard normalization
             power[i] = 0.5 * ((c_tau * c_tau / c_tau2) + (s_tau * s_tau / s_tau2)) / variance;
@@ -320,7 +320,7 @@ fn compute_fast_lombscargle(
             power[i] = 0.0;
         }
     }
-    
+
     Ok(power)
 }
 
@@ -332,37 +332,37 @@ fn compute_standard_lombscargle(
 ) -> SignalResult<Vec<f64>> {
     let n = times.len();
     let mut power = vec![0.0; frequencies.len()];
-    
+
     // Center the data
     let mean_val: f64 = values.iter().sum::<f64>() / n as f64;
     let values_centered: Vec<f64> = values.iter().map(|&v| v - mean_val).collect();
     let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n as f64;
-    
+
     if variance == 0.0 {
         return Ok(power); // All zeros
     }
-    
+
     for (i, &freq) in frequencies.iter().enumerate() {
         let omega = 2.0 * PI * freq;
-        
+
         let mut a = 0.0;
         let mut b = 0.0;
         let mut c = 0.0;
         let mut d = 0.0;
-        
+
         for (j, &t) in times.iter().enumerate() {
             let cos_wt = (omega * t).cos();
             let sin_wt = (omega * t).sin();
-            
+
             a += values_centered[j] * cos_wt;
             b += values_centered[j] * sin_wt;
             c += cos_wt * cos_wt;
             d += sin_wt * sin_wt;
         }
-        
+
         power[i] = 0.5 * ((a * a / c) + (b * b / d)) / variance;
     }
-    
+
     Ok(power)
 }
 
@@ -377,57 +377,53 @@ fn bootstrap_confidence_intervals(
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     let n = times.len();
     let n_freq = frequencies.len();
-    
+
     // Store bootstrap results
     let mut bootstrap_powers = vec![vec![0.0; n_freq]; n_iterations];
-    
+
     // Random number generator
     let mut rng = rand::rng();
-    
+
     for iter in 0..n_iterations {
         // Generate bootstrap sample
         let mut boot_times = Vec::with_capacity(n);
         let mut boot_values = Vec::with_capacity(n);
-        
+
         for _ in 0..n {
             let idx = rng.random_range(0..n);
             boot_times.push(times[idx]);
             boot_values.push(values[idx]);
         }
-        
+
         // Sort by time
         let mut indices: Vec<usize> = (0..n).collect();
         indices.sort_by(|&i, &j| boot_times[i].partial_cmp(&boot_times[j]).unwrap());
-        
+
         let sorted_times: Vec<f64> = indices.iter().map(|&i| boot_times[i]).collect();
         let sorted_values: Vec<f64> = indices.iter().map(|&i| boot_values[i]).collect();
-        
+
         // Compute periodogram for bootstrap sample
-        let power = compute_fast_lombscargle(
-            &sorted_times,
-            &sorted_values,
-            frequencies,
-            config.tolerance,
-        )?;
-        
+        let power =
+            compute_fast_lombscargle(&sorted_times, &sorted_values, frequencies, config.tolerance)?;
+
         bootstrap_powers[iter] = power;
     }
-    
+
     // Compute percentiles
     let lower_percentile = ((1.0 - confidence) / 2.0 * n_iterations as f64) as usize;
     let upper_percentile = ((1.0 + confidence) / 2.0 * n_iterations as f64) as usize;
-    
+
     let mut lower_ci = vec![0.0; n_freq];
     let mut upper_ci = vec![0.0; n_freq];
-    
+
     for j in 0..n_freq {
         let mut freq_powers: Vec<f64> = bootstrap_powers.iter().map(|p| p[j]).collect();
         freq_powers.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         lower_ci[j] = freq_powers[lower_percentile];
         upper_ci[j] = freq_powers[upper_percentile.min(n_iterations - 1)];
     }
-    
+
     Ok((lower_ci, upper_ci))
 }
 
@@ -452,13 +448,13 @@ pub fn false_alarm_probability(
     check_positive(peak_power, "peak_power")?;
     check_positive(n_samples as f64, "n_samples")?;
     check_positive(n_frequencies as f64, "n_frequencies")?;
-    
+
     let fap = match normalization {
         "standard" => {
             // Baluev (2008) approximation
             let z = peak_power;
             let n_eff = n_frequencies as f64;
-            
+
             if z <= 0.0 {
                 1.0
             } else {
@@ -471,18 +467,19 @@ pub fn false_alarm_probability(
             // For model normalization, use chi-squared distribution
             let dof = 2.0; // Degrees of freedom for sinusoidal model
             let chi2 = peak_power * (n_samples - 3) as f64;
-            
+
             // Approximate using incomplete gamma function
             let prob_single = (-chi2 / 2.0).exp();
             1.0 - (1.0 - prob_single).powf(n_frequencies as f64)
         }
         _ => {
-            return Err(SignalError::ValueError(
-                format!("Unknown normalization method: {}", normalization),
-            ));
+            return Err(SignalError::ValueError(format!(
+                "Unknown normalization method: {}",
+                normalization
+            )));
         }
     };
-    
+
     Ok(fap.min(1.0).max(0.0))
 }
 
@@ -510,7 +507,7 @@ pub fn significance_threshold(
             "False alarm probability must be less than 1".to_string(),
         ));
     }
-    
+
     let threshold = match normalization {
         "standard" => {
             // Invert the FAP formula
@@ -524,11 +521,12 @@ pub fn significance_threshold(
             chi2 / (n_samples - 3) as f64
         }
         _ => {
-            return Err(SignalError::ValueError(
-                format!("Unknown normalization method: {}", normalization),
-            ));
+            return Err(SignalError::ValueError(format!(
+                "Unknown normalization method: {}",
+                normalization
+            )));
         }
     };
-    
+
     Ok(threshold)
 }

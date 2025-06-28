@@ -271,7 +271,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
                 let slice = array.as_slice().ok_or_else(|| {
                     CoreError::ValidationError(
                         ErrorContext::new("Array is not contiguous in memory".to_string())
-                            .with_location(ErrorLocation::new(file!(), line!()))
+                            .with_location(ErrorLocation::new(file!(), line!())),
                     )
                 })?;
                 let chunk = &slice[start..end];
@@ -283,7 +283,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
                 let out_slice_full = out_array.as_slice_mut().ok_or_else(|| {
                     CoreError::ValidationError(
                         ErrorContext::new("Output array is not contiguous in memory".to_string())
-                            .with_location(ErrorLocation::new(file!(), line!()))
+                            .with_location(ErrorLocation::new(file!(), line!())),
                     )
                 })?;
                 let out_slice = &mut out_slice_full[start..end];
@@ -311,7 +311,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
                 let slice = array.as_slice().ok_or_else(|| {
                     CoreError::ValidationError(
                         ErrorContext::new("Array is not contiguous in memory".to_string())
-                            .with_location(ErrorLocation::new(file!(), line!()))
+                            .with_location(ErrorLocation::new(file!(), line!())),
                     )
                 })?;
                 let chunk = &slice[start..end];
@@ -325,7 +325,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
                 let out_slice_full = out_array.as_slice_mut().ok_or_else(|| {
                     CoreError::ValidationError(
                         ErrorContext::new("Output array is not contiguous in memory".to_string())
-                            .with_location(ErrorLocation::new(file!(), line!()))
+                            .with_location(ErrorLocation::new(file!(), line!())),
                     )
                 })?;
                 let out_slice = &mut out_slice_full[start..end];
@@ -361,7 +361,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
-                        .with_location(ErrorLocation::new(file!(), line!()))
+                        .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
             let chunk = &slice[start..end];
@@ -443,13 +443,13 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let self_slice = self_array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Self array is not contiguous in memory".to_string())
-                        .with_location(ErrorLocation::new(file!(), line!()))
+                        .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
             let other_slice = other_array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Other array is not contiguous in memory".to_string())
-                        .with_location(ErrorLocation::new(file!(), line!()))
+                        .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
             let self_chunk = &self_slice[start..end];
@@ -466,7 +466,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let out_slice_full = out_array.as_slice_mut().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Output array is not contiguous in memory".to_string())
-                        .with_location(ErrorLocation::new(file!(), line!()))
+                        .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
             let out_slice = &mut out_slice_full[start..end];
@@ -496,7 +496,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let array_slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
-                        .with_location(ErrorLocation::new(file!(), line!()))
+                        .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
             let slice = &array_slice[start..end];
@@ -532,7 +532,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
-                        .with_location(ErrorLocation::new(file!(), line!()))
+                        .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
             slice[0]
@@ -559,7 +559,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
-                        .with_location(ErrorLocation::new(file!(), line!()))
+                        .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
             slice[0]

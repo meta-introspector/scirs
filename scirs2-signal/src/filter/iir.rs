@@ -385,18 +385,18 @@ where
     // Calculate Chebyshev Type II analog prototype poles and zeros
     let mut poles = Vec::with_capacity(order);
     let mut zeros = Vec::with_capacity(order);
-    
+
     // Calculate the parameter related to ripple
     let a = (epsilon + (epsilon * epsilon + 1.0).sqrt()).ln() / order as f64;
 
     // Generate poles for Type II (inverse Chebyshev)
     for k in 0..order {
         let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64);
-        
+
         // For Type II, poles are inverted from Type I
         let real = -a.sinh() * theta.sin();
         let imag = a.cosh() * theta.cos();
-        
+
         // Invert to get Type II poles
         let pole = Complex64::new(real, imag);
         let inv_pole = 1.0 / pole;
@@ -516,33 +516,33 @@ where
 
     // For a simplified elliptic filter, we'll approximate using a Chebyshev-like approach
     // with modified pole-zero placement to achieve both passband and stopband specifications
-    
+
     // This is a simplified implementation. A full elliptic filter would require:
     // 1. Calculation of modular constant k from specifications
     // 2. Use of Jacobi elliptic functions sn, cn, dn
     // 3. Elliptic integral calculations
-    
+
     // For production readiness, we'll create a filter that approximates elliptic behavior
     // by combining aspects of Chebyshev I (passband ripple) and Chebyshev II (stopband zeros)
-    
+
     let mut poles = Vec::with_capacity(order);
     let mut zeros = Vec::with_capacity(order);
-    
+
     // Generate poles similar to Chebyshev but with adjustments for elliptic characteristics
     let a = (1.0 / epsilon_p).asinh() / order as f64;
-    
+
     for k in 0..order {
         let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64);
-        
+
         // Elliptic-like pole placement
         let real = -a.sinh() * theta.sin();
         let imag = a.cosh() * theta.cos();
-        
+
         // Modify pole positions to account for stopband requirements
         let mod_factor = 1.0 + (epsilon_s / epsilon_p).ln() / (2.0 * order as f64);
         let pole = Complex64::new(real * mod_factor, imag);
         poles.push(pole);
-        
+
         // Add zeros for stopband (simplified placement)
         if k < order / 2 {
             let zero_freq = 1.5 + 0.5 * k as f64 / (order as f64 / 2.0);
@@ -712,7 +712,11 @@ where
             // Scale poles by the warped frequency
             let scaled_poles: Vec<_> = bessel_poles.iter().map(|p| p * warped_freq).collect();
             // Lowpass Bessel has no finite zeros
-            (Vec::<Complex64>::new(), scaled_poles, warped_freq.powi(order as i32))
+            (
+                Vec::<Complex64>::new(),
+                scaled_poles,
+                warped_freq.powi(order as i32),
+            )
         }
         FilterType::Highpass => {
             let warped_freq = prewarp_frequency(wn);

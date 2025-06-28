@@ -3,11 +3,11 @@
 //! This module provides functionality for detecting and exploiting sparsity
 //! patterns in Jacobian matrices to improve computational efficiency.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
-use std::collections::{HashSet, HashMap};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_core::parallel_ops::*;
+use std::collections::{HashMap, HashSet};
 
 /// Represents a sparsity pattern
 #[derive(Debug, Clone)]
@@ -69,7 +69,7 @@ impl SparsePattern {
     pub fn compute_coloring(&self) -> ColGrouping {
         // Use improved Welsh-Powell algorithm for better coloring
         let mut degrees: Vec<(usize, usize)> = Vec::new();
-        
+
         // Calculate degree of each column (number of structural neighbors)
         for col in 0..self.n_cols {
             let mut neighbors = HashSet::new();
@@ -82,10 +82,10 @@ impl SparsePattern {
             }
             degrees.push((col, neighbors.len()));
         }
-        
+
         // Sort by degree (descending)
         degrees.sort_by_key(|&(_, deg)| std::cmp::Reverse(deg));
-        
+
         let mut colors: HashMap<usize, usize> = HashMap::new();
         let mut max_color = 0;
 
@@ -152,11 +152,11 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
     pub fn new(pattern: SparsePattern) -> Self {
         let nnz = pattern.nnz();
         let mut index_map = HashMap::new();
-        
+
         for (i, &(row, col)) in pattern.entries.iter().enumerate() {
             index_map.insert((row, col), i);
         }
-        
+
         SparseJacobian {
             pattern,
             values: vec![F::zero(); nnz],
@@ -170,9 +170,10 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
             self.values[idx] = value;
             Ok(())
         } else {
-            Err(IntegrateError::IndexError(
-                format!("Entry ({}, {}) not in sparsity pattern", row, col)
-            ))
+            Err(IntegrateError::IndexError(format!(
+                "Entry ({}, {}) not in sparsity pattern",
+                row, col
+            )))
         }
     }
 
@@ -193,34 +194,38 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
     /// Multiply by a vector: y = J * x
     pub fn matvec(&self, x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
         if x.len() != self.pattern.n_cols {
-            return Err(IntegrateError::DimensionMismatch(
-                format!("Expected {} columns, got {}", self.pattern.n_cols, x.len())
-            ));
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "Expected {} columns, got {}",
+                self.pattern.n_cols,
+                x.len()
+            )));
         }
 
         let mut y = Array1::zeros(self.pattern.n_rows);
-        
+
         for (&(row, col), &idx) in &self.index_map {
             y[row] += self.values[idx] * x[col];
         }
-        
+
         Ok(y)
     }
 
     /// Transpose multiply by a vector: y = J^T * x
     pub fn matvec_transpose(&self, x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
         if x.len() != self.pattern.n_rows {
-            return Err(IntegrateError::DimensionMismatch(
-                format!("Expected {} rows, got {}", self.pattern.n_rows, x.len())
-            ));
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "Expected {} rows, got {}",
+                self.pattern.n_rows,
+                x.len()
+            )));
         }
 
         let mut y = Array1::zeros(self.pattern.n_cols);
-        
+
         for (&(row, col), &idx) in &self.index_map {
             y[col] += self.values[idx] * x[row];
         }
-        
+
         Ok(y)
     }
 }
@@ -296,9 +301,11 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
     /// Apply to vector (matrix-vector multiplication)
     pub fn apply(&self, x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
         if x.len() != self.pattern.n_cols {
-            return Err(IntegrateError::DimensionMismatch(
-                format!("Expected {} columns, got {}", self.pattern.n_cols, x.len())
-            ));
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "Expected {} columns, got {}",
+                self.pattern.n_cols,
+                x.len()
+            )));
         }
 
         let mut result = Array1::zeros(self.pattern.n_rows);
@@ -308,21 +315,21 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
 
         Ok(result)
     }
-    
+
     /// Convert to CSR format for efficient row operations
     pub fn to_csr(&self) -> CSRJacobian<F> {
         let mut entries: Vec<(usize, usize, F)> = Vec::new();
         for (idx, &(row, col)) in self.pattern.entries.iter().enumerate() {
             entries.push((row, col, self.values[idx]));
         }
-        
+
         // Sort by row, then column
         entries.sort_by_key(|&(r, c, _)| (r, c));
-        
+
         let mut row_ptr = vec![0];
         let mut col_idx = Vec::new();
         let mut values = Vec::new();
-        
+
         let mut current_row = 0;
         for (row, col, val) in entries {
             while current_row < row {
@@ -332,12 +339,12 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
             col_idx.push(col);
             values.push(val);
         }
-        
+
         // Fill remaining row pointers
         while row_ptr.len() <= self.pattern.n_rows {
             row_ptr.push(col_idx.len());
         }
-        
+
         CSRJacobian {
             n_rows: self.pattern.n_rows,
             n_cols: self.pattern.n_cols,
@@ -349,11 +356,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
 }
 
 /// Detect sparsity pattern by probing with finite differences
-pub fn detect_sparsity<F, Func>(
-    f: Func,
-    x: ArrayView1<F>,
-    eps: F,
-) -> IntegrateResult<SparsePattern>
+pub fn detect_sparsity<F, Func>(f: Func, x: ArrayView1<F>, eps: F) -> IntegrateResult<SparsePattern>
 where
     F: IntegrateFloat + Send + Sync,
     Func: Fn(ArrayView1<F>) -> IntegrateResult<Array1<F>> + Sync,
@@ -384,7 +387,7 @@ where
             local_entries
         })
         .collect();
-    
+
     // Merge results
     for entries in results {
         for (i, j) in entries {
@@ -399,13 +402,15 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
     /// Apply to vector (matrix-vector multiplication) - optimized for CSR
     pub fn apply(&self, x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
         if x.len() != self.n_cols {
-            return Err(IntegrateError::DimensionMismatch(
-                format!("Expected {} columns, got {}", self.n_cols, x.len())
-            ));
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "Expected {} columns, got {}",
+                self.n_cols,
+                x.len()
+            )));
         }
-        
+
         let mut result = Array1::zeros(self.n_rows);
-        
+
         // Parallel row-wise computation
         let chunks: Vec<_> = (0..self.n_rows)
             .collect::<Vec<_>>()
@@ -422,21 +427,21 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
                 (rows[0], local_result)
             })
             .collect();
-            
+
         // Combine results
         for (start_row, chunk) in chunks {
             for (i, val) in chunk.iter().enumerate() {
                 result[start_row + i] = *val;
             }
         }
-        
+
         Ok(result)
     }
-    
+
     /// Transpose to CSC format
     pub fn transpose(&self) -> CSCJacobian<F> {
         let mut entries: Vec<(usize, usize, F)> = Vec::new();
-        
+
         for row in 0..self.n_rows {
             let start = self.row_ptr[row];
             let end = self.row_ptr[row + 1];
@@ -444,14 +449,14 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
                 entries.push((self.col_idx[idx], row, self.values[idx]));
             }
         }
-        
+
         // Sort by column, then row
         entries.sort_by_key(|&(c, r, _)| (c, r));
-        
+
         let mut col_ptr = vec![0];
         let mut row_idx = Vec::new();
         let mut values = Vec::new();
-        
+
         let mut current_col = 0;
         for (col, row, val) in entries {
             while current_col < col {
@@ -461,12 +466,12 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
             row_idx.push(row);
             values.push(val);
         }
-        
+
         // Fill remaining column pointers
         while col_ptr.len() <= self.n_cols {
             col_ptr.push(row_idx.len());
         }
-        
+
         CSCJacobian {
             n_rows: self.n_cols,
             n_cols: self.n_rows,
@@ -483,11 +488,11 @@ pub fn compress_jacobian<F: IntegrateFloat>(
     pattern: &SparsePattern,
 ) -> SparseJacobian<F> {
     let mut sparse = SparseJacobian::from_pattern(pattern.clone());
-    
+
     for (idx, &(row, col)) in pattern.entries.iter().enumerate() {
         sparse.values[idx] = dense[[row, col]];
     }
-    
+
     sparse
 }
 
@@ -509,14 +514,14 @@ where
     // Compute Jacobian using column groups
     for group in &coloring.groups {
         let mut x_pert = x.to_owned();
-        
+
         // Perturb all columns in this group
         for &col in group {
             x_pert[col] += eps;
         }
-        
+
         let f_pert = f(x_pert.view())?;
-        
+
         // Extract derivatives for this group
         for &col in group {
             for &row in &pattern.col_indices[col] {
@@ -532,7 +537,7 @@ where
 /// Example: Create a tridiagonal sparsity pattern
 pub fn example_tridiagonal_pattern(n: usize) -> SparsePattern {
     let mut pattern = SparsePattern::new(n, n);
-    
+
     for i in 0..n {
         pattern.add_entry(i, i); // Diagonal
         if i > 0 {
@@ -542,7 +547,7 @@ pub fn example_tridiagonal_pattern(n: usize) -> SparsePattern {
             pattern.add_entry(i, i + 1); // Super-diagonal
         }
     }
-    
+
     pattern
 }
 
@@ -567,7 +572,7 @@ impl<F: IntegrateFloat> SparseJacobianUpdater<F> {
     ) -> IntegrateResult<()> {
         let jdx = jac.apply(dx)?;
         let dy = &df - &jdx;
-        
+
         let dx_norm_sq = dx.dot(&dx);
         if dx_norm_sq < self.threshold {
             return Ok(());
@@ -596,24 +601,24 @@ where
     let n = x.len();
     let f0 = f(x)?;
     let m = f0.len();
-    
+
     let mut accumulated_pattern = SparsePattern::new(m, n);
     let eps_min = eps_range.0;
     let eps_max = eps_range.1;
-    
+
     // Try multiple perturbation sizes
     for sample in 0..n_samples {
         let alpha = F::from(sample).unwrap() / F::from(n_samples - 1).unwrap();
         let eps = eps_min * (F::one() - alpha) + eps_max * alpha;
-        
+
         let pattern = detect_sparsity(&f, x, eps)?;
-        
+
         // Merge patterns
         for &(i, j) in &pattern.entries {
             accumulated_pattern.add_entry(i, j);
         }
     }
-    
+
     Ok(accumulated_pattern)
 }
 
@@ -632,27 +637,27 @@ impl BlockPattern {
     /// Convert block pattern to regular sparsity pattern
     pub fn to_sparse_pattern(&self) -> SparsePattern {
         let mut pattern = SparsePattern::new(self.n_rows, self.n_cols);
-        
+
         let mut row_offset = 0;
         let mut col_offset = 0;
-        
+
         for &(block_row, block_col) in &self.blocks {
             let (block_height, block_width) = self.block_sizes[block_row];
-            
+
             // Add all entries in this block
             for i in 0..block_height {
                 for j in 0..block_width {
                     pattern.add_entry(row_offset + i, col_offset + j);
                 }
             }
-            
+
             col_offset += block_width;
             if block_col == self.blocks.len() - 1 {
                 col_offset = 0;
                 row_offset += block_height;
             }
         }
-        
+
         pattern
     }
 }
@@ -678,7 +683,7 @@ mod tests {
         pattern.add_entry(1, 1);
         pattern.add_entry(2, 2);
         pattern.add_entry(0, 1);
-        
+
         assert_eq!(pattern.nnz(), 4);
         assert!(pattern.sparsity() > 0.5);
     }
@@ -687,7 +692,7 @@ mod tests {
     fn test_coloring() {
         let pattern = example_tridiagonal_pattern(5);
         let coloring = pattern.compute_coloring();
-        
+
         // Tridiagonal matrix should need at most 3 colors
         assert!(coloring.n_groups() <= 3);
     }
@@ -696,7 +701,7 @@ mod tests {
     fn test_sparse_jacobian() {
         let pattern = example_tridiagonal_pattern(3);
         let mut jac = SparseJacobian::from_pattern(pattern);
-        
+
         // Set some values
         jac.set(0, 0, 2.0);
         jac.set(0, 1, -1.0);
@@ -705,22 +710,22 @@ mod tests {
         jac.set(1, 2, -1.0);
         jac.set(2, 1, -1.0);
         jac.set(2, 2, 2.0);
-        
+
         // Test matrix-vector multiplication
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let y = jac.apply(x.view()).unwrap();
-        
+
         // Should compute [2*1 - 1*2, -1*1 + 2*2 - 1*3, -1*2 + 2*3]
-        assert!((y[0] - 0.0).abs() < 1e-10);
-        assert!((y[1] - 0.0).abs() < 1e-10);
-        assert!((y[2] - 4.0).abs() < 1e-10);
+        assert!((y[0] - 0.0_f64).abs() < 1e-10);
+        assert!((y[1] - 0.0_f64).abs() < 1e-10);
+        assert!((y[2] - 4.0_f64).abs() < 1e-10);
     }
-    
+
     #[test]
     fn test_csr_format() {
         let pattern = example_tridiagonal_pattern(3);
         let mut jac = SparseJacobian::from_pattern(pattern);
-        
+
         // Set values
         jac.set(0, 0, 2.0);
         jac.set(0, 1, -1.0);
@@ -729,16 +734,16 @@ mod tests {
         jac.set(1, 2, -1.0);
         jac.set(2, 1, -1.0);
         jac.set(2, 2, 2.0);
-        
+
         // Convert to CSR
         let csr = jac.to_csr();
-        
+
         // Test CSR matrix-vector multiplication
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let y = csr.apply(x.view()).unwrap();
-        
-        assert!((y[0] - 0.0).abs() < 1e-10);
-        assert!((y[1] - 0.0).abs() < 1e-10);
-        assert!((y[2] - 4.0).abs() < 1e-10);
+
+        assert!((y[0] - 0.0_f64).abs() < 1e-10);
+        assert!((y[1] - 0.0_f64).abs() < 1e-10);
+        assert!((y[2] - 4.0_f64).abs() < 1e-10);
     }
 }

@@ -141,22 +141,22 @@ pub mod gamma {
         let two_pi = ctx.pi() * 2.0;
         let sqrt_2pi = two_pi.sqrt();
         let e = ctx.e();
-        
+
         // Γ(x) ≈ √(2π/x) * (x/e)^x * (1 + 1/(12x) + ...)
         let term1 = sqrt_2pi / x.clone().sqrt();
         let term2 = (x.clone() / e).pow(x);
-        
+
         // Add correction terms
         let mut correction = ctx.float(1.0);
         let x2 = x.clone() * x;
         let x3 = &x2 * x;
         let x4 = &x2 * &x2;
-        
+
         correction += ctx.float(1.0) / (12.0 * x);
         correction += ctx.float(1.0) / (288.0 * &x2);
         correction -= ctx.float(139.0) / (51840.0 * &x3);
         correction -= ctx.float(571.0) / (2488320.0 * &x4);
-        
+
         Ok(term1 * term2 * correction)
     }
 
@@ -178,15 +178,15 @@ pub mod gamma {
 
         let g = ctx.float(LANCZOS_G);
         let sqrt_2pi = (ctx.pi() * 2.0).sqrt();
-        
+
         let mut ag = ctx.float(LANCZOS_COEFFS[0]);
         for i in 1..LANCZOS_COEFFS.len() {
             ag += ctx.float(LANCZOS_COEFFS[i]) / (x.clone() + i as f64);
         }
-        
+
         let tmp = x.clone() + &g + 0.5;
         let result = sqrt_2pi * ag * tmp.clone().pow(x.clone() + 0.5) * (-tmp).exp();
-        
+
         Ok(result / x)
     }
 
@@ -194,13 +194,13 @@ pub mod gamma {
     fn reflection_gamma(x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         let pi = ctx.pi();
         let sin_pi_x = (pi.clone() * x).sin();
-        
+
         if sin_pi_x.is_zero() {
             return Err(SpecialError::DomainError(
                 "Gamma function has poles at negative integers".to_string(),
             ));
         }
-        
+
         let pos_gamma = gamma_mp(&(ctx.float(1.0) - x), ctx)?;
         Ok(pi / (sin_pi_x * pos_gamma))
     }
@@ -233,21 +233,21 @@ pub mod gamma {
     fn stirling_log_gamma(x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         let two_pi = ctx.pi() * 2.0;
         let ln_2pi = two_pi.ln();
-        
+
         // log Γ(x) ≈ (x - 1/2) log x - x + log(2π)/2 + 1/(12x) - ...
         let mut result = (x.clone() - 0.5) * x.clone().ln() - x.clone() + ln_2pi / 2.0;
-        
+
         // Add correction terms
         let x2 = x.clone() * x;
         let x3 = &x2 * x;
         let x5 = &x3 * &x2;
         let x7 = &x5 * &x2;
-        
+
         result += ctx.float(1.0) / (12.0 * x);
         result -= ctx.float(1.0) / (360.0 * &x3);
         result += ctx.float(1.0) / (1260.0 * &x5);
         result -= ctx.float(1.0) / (1680.0 * &x7);
-        
+
         Ok(result)
     }
 }
@@ -265,7 +265,11 @@ pub mod bessel {
     /// Compute Bessel J_n(x) for arbitrary precision input
     pub fn bessel_j_mp(n: i32, x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         if x.is_zero() {
-            return Ok(if n == 0 { ctx.float(1.0) } else { ctx.float(0.0) });
+            return Ok(if n == 0 {
+                ctx.float(1.0)
+            } else {
+                ctx.float(0.0)
+            });
         }
 
         // For small x, use power series
@@ -282,23 +286,26 @@ pub mod bessel {
         let mut sum = ctx.float(0.0);
         let x_half = x.clone() / 2.0;
         let x2_quarter = x_half.clone() * &x_half;
-        
+
         let mut term = x_half.pow(n) / factorial_mp(n.abs() as u32, ctx);
         let sign = if n < 0 && n % 2 != 0 { -1.0 } else { 1.0 };
         term *= sign;
-        
+
         sum += &term;
-        
+
         // Add terms until convergence
         for k in 1..200 {
             term *= -&x2_quarter / (k as f64 * (k as f64 + n.abs() as f64));
             sum += &term;
-            
-            if term.clone().abs() < sum.clone().abs() * Float::with_val(ctx.precision(), 10.0).pow(-ctx.precision() as i32 / 10) {
+
+            if term.clone().abs()
+                < sum.clone().abs()
+                    * Float::with_val(ctx.precision(), 10.0).pow(-ctx.precision() as i32 / 10)
+            {
                 break;
             }
         }
-        
+
         Ok(sum)
     }
 
@@ -306,18 +313,18 @@ pub mod bessel {
     fn bessel_j_asymptotic(n: i32, x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         let pi = ctx.pi();
         let sqrt_2_pi_x = (ctx.float(2.0) / (&pi * x)).sqrt();
-        
+
         let phase = x.clone() - (n as f64 + 0.5) * &pi / 2.0;
         let cos_phase = phase.cos();
-        
+
         // Add asymptotic correction terms
         let mut correction = ctx.float(1.0);
         let n2 = (n * n) as f64;
         let x2 = x.clone() * x;
-        
+
         correction -= (4.0 * n2 - 1.0) / (8.0 * x);
         correction += (4.0 * n2 - 1.0) * (4.0 * n2 - 9.0) / (128.0 * &x2);
-        
+
         Ok(sqrt_2_pi_x * cos_phase * correction)
     }
 
@@ -347,12 +354,12 @@ pub mod bessel {
     /// Compute Y_n using relation with J_n
     fn bessel_y_relation(n: i32, x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         let pi = ctx.pi();
-        
+
         if n >= 0 {
             let jn = bessel_j_mp(n, x, ctx)?;
             let jn_neg = bessel_j_mp(-n, x, ctx)?;
             let cos_n_pi = if n % 2 == 0 { 1.0 } else { -1.0 };
-            
+
             Ok((jn * cos_n_pi - jn_neg) / (n as f64 * &pi).sin())
         } else {
             // Y_{-n}(x) = (-1)^n Y_n(x)
@@ -365,18 +372,18 @@ pub mod bessel {
     fn bessel_y_asymptotic(n: i32, x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         let pi = ctx.pi();
         let sqrt_2_pi_x = (ctx.float(2.0) / (&pi * x)).sqrt();
-        
+
         let phase = x.clone() - (n as f64 + 0.5) * &pi / 2.0;
         let sin_phase = phase.sin();
-        
+
         // Add asymptotic correction terms
         let mut correction = ctx.float(1.0);
         let n2 = (n * n) as f64;
         let x2 = x.clone() * x;
-        
+
         correction -= (4.0 * n2 - 1.0) / (8.0 * x);
         correction += (4.0 * n2 - 1.0) * (4.0 * n2 - 9.0) / (128.0 * &x2);
-        
+
         Ok(sqrt_2_pi_x * sin_phase * correction)
     }
 }
@@ -398,7 +405,7 @@ pub mod error_function {
         }
 
         let abs_x = x.clone().abs();
-        
+
         // For small x, use Taylor series
         if abs_x < 2.0 {
             erf_series(x, ctx)
@@ -417,20 +424,23 @@ pub mod error_function {
     fn erf_series(x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         let sqrt_pi = ctx.pi().sqrt();
         let x2 = x.clone() * x;
-        
+
         let mut sum = x.clone();
         let mut term = x.clone();
-        
+
         for n in 1..200 {
             term *= -&x2 / n as f64;
             let new_term = &term / (2 * n + 1) as f64;
             sum += &new_term;
-            
-            if new_term.clone().abs() < sum.clone().abs() * Float::with_val(ctx.precision(), 10.0).pow(-ctx.precision() as i32 / 10) {
+
+            if new_term.clone().abs()
+                < sum.clone().abs()
+                    * Float::with_val(ctx.precision(), 10.0).pow(-ctx.precision() as i32 / 10)
+            {
                 break;
             }
         }
-        
+
         Ok(2.0 * sum / sqrt_pi)
     }
 
@@ -439,19 +449,22 @@ pub mod error_function {
         let sqrt_pi = ctx.pi().sqrt();
         let x2 = x.clone() * x;
         let exp_neg_x2 = (-&x2).exp();
-        
+
         let mut sum = ctx.float(1.0);
         let mut term = ctx.float(1.0);
-        
+
         for n in 1..50 {
             term *= -(2 * n - 1) as f64 / (2.0 * &x2);
             sum += &term;
-            
-            if term.clone().abs() < sum.clone().abs() * Float::with_val(ctx.precision(), 10.0).pow(-ctx.precision() as i32 / 10) {
+
+            if term.clone().abs()
+                < sum.clone().abs()
+                    * Float::with_val(ctx.precision(), 10.0).pow(-ctx.precision() as i32 / 10)
+            {
                 break;
             }
         }
-        
+
         Ok(exp_neg_x2 * sum / (x.clone() * sqrt_pi))
     }
 
@@ -468,7 +481,7 @@ pub mod error_function {
         }
 
         let abs_x = x.clone().abs();
-        
+
         // For small x, use erf
         if abs_x < 2.0 {
             let erf_val = erf_mp(x, ctx)?;
@@ -494,7 +507,7 @@ mod utils {
         if n == 0 || n == 1 {
             return ctx.float(1.0);
         }
-        
+
         let mut result = ctx.float(1.0);
         for i in 2..=n {
             result *= i as f64;
@@ -510,9 +523,9 @@ mod utils {
         if k == 0 || k == n {
             return ctx.float(1.0);
         }
-        
+
         let k = k.min(n - k); // Take advantage of symmetry
-        
+
         let mut result = ctx.float(1.0);
         for i in 0..k {
             result *= (n - i) as f64;
@@ -526,7 +539,7 @@ mod utils {
         if n == 0 {
             return Ok(ctx.float(1.0));
         }
-        
+
         let mut result = x.clone();
         for i in 1..n {
             result *= x.clone() + i as f64;
@@ -563,10 +576,10 @@ mod tests {
     fn test_precision_context() {
         let ctx = PrecisionContext::new(512).unwrap();
         assert_eq!(ctx.precision(), 512);
-        
+
         let pi = ctx.pi();
         assert!(pi.prec() >= 512);
-        
+
         // Test that we get more precision than f64
         let pi_str = pi.to_string();
         assert!(pi_str.len() > 20); // More digits than f64 can represent
@@ -575,16 +588,16 @@ mod tests {
     #[test]
     fn test_gamma_ap() {
         let ctx = PrecisionContext::default();
-        
+
         // Test Γ(1) = 1
         let gamma_1 = gamma::gamma_ap(1.0, &ctx).unwrap();
         assert_relative_eq!(to_f64(&gamma_1), 1.0, epsilon = 1e-15);
-        
+
         // Test Γ(0.5) = √π
         let gamma_half = gamma::gamma_ap(0.5, &ctx).unwrap();
         let sqrt_pi = std::f64::consts::PI.sqrt();
         assert_relative_eq!(to_f64(&gamma_half), sqrt_pi, epsilon = 1e-15);
-        
+
         // Test Γ(5) = 4! = 24
         let gamma_5 = gamma::gamma_ap(5.0, &ctx).unwrap();
         assert_relative_eq!(to_f64(&gamma_5), 24.0, epsilon = 1e-15);
@@ -593,11 +606,11 @@ mod tests {
     #[test]
     fn test_bessel_ap() {
         let ctx = PrecisionContext::default();
-        
+
         // Test J_0(0) = 1
         let j0_0 = bessel::bessel_j_ap(0, 0.0, &ctx).unwrap();
         assert_relative_eq!(to_f64(&j0_0), 1.0, epsilon = 1e-15);
-        
+
         // Test J_1(0) = 0
         let j1_0 = bessel::bessel_j_ap(1, 0.0, &ctx).unwrap();
         assert_relative_eq!(to_f64(&j1_0), 0.0, epsilon = 1e-15);
@@ -606,15 +619,15 @@ mod tests {
     #[test]
     fn test_erf_ap() {
         let ctx = PrecisionContext::default();
-        
+
         // Test erf(0) = 0
         let erf_0 = error_function::erf_ap(0.0, &ctx).unwrap();
         assert_relative_eq!(to_f64(&erf_0), 0.0, epsilon = 1e-15);
-        
+
         // Test erfc(0) = 1
         let erfc_0 = error_function::erfc_ap(0.0, &ctx).unwrap();
         assert_relative_eq!(to_f64(&erfc_0), 1.0, epsilon = 1e-15);
-        
+
         // Test erf(x) + erfc(x) = 1
         let x = 1.5;
         let erf_x = error_function::erf_ap(x, &ctx).unwrap();
@@ -627,11 +640,11 @@ mod tests {
     fn test_high_precision() {
         // Test with 1024-bit precision
         let ctx = PrecisionContext::new(1024).unwrap();
-        
+
         // Compute π with high precision
         let pi = ctx.pi();
         let pi_str = format!("{:.100}", pi);
-        
+
         // Check that we have many accurate digits
         let expected_pi = "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679";
         assert!(pi_str.starts_with(expected_pi));

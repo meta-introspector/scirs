@@ -5,6 +5,7 @@
 
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, FromPrimitive, NumCast};
+use scirs2_linalg::solve;
 use std::fmt::Debug;
 
 use super::common::box_cox_transform;
@@ -137,12 +138,7 @@ pub struct TBATSParameters {
 /// ```
 pub fn tbats_decomposition<F>(ts: &Array1<F>, options: &TBATSOptions) -> Result<TBATSResult<F>>
 where
-    F: Float
-        + FromPrimitive
-        + Debug
-        + std::iter::Sum
-        + ScalarOperand
-        + NumCast,
+    F: Float + FromPrimitive + Debug + std::iter::Sum + ScalarOperand + NumCast,
 {
     let n = ts.len();
 
@@ -349,12 +345,7 @@ fn estimate_parameters<F>(
     fourier_terms: &[usize],
 ) -> Result<TBATSParameters>
 where
-    F: Float
-        + FromPrimitive
-        + Debug
-        + std::iter::Sum
-        + ScalarOperand
-        + NumCast,
+    F: Float + FromPrimitive + Debug + std::iter::Sum + ScalarOperand + NumCast,
 {
     // Simplified parameter estimation
     // In practice, this would use numerical optimization (e.g., Nelder-Mead)
@@ -404,12 +395,7 @@ fn estimate_fourier_coefficients<F>(
     fourier_terms: &[usize],
 ) -> Result<Vec<Vec<(f64, f64)>>>
 where
-    F: Float
-        + FromPrimitive
-        + Debug
-        + std::iter::Sum
-        + ScalarOperand
-        + NumCast,
+    F: Float + FromPrimitive + Debug + std::iter::Sum + ScalarOperand + NumCast,
 {
     let n = ts.len();
     let mut all_coefficients = Vec::new();
@@ -432,7 +418,7 @@ where
             }
         }
 
-        // Solve least squares: design_matrix * coeffs = ts  
+        // Solve least squares: design_matrix * coeffs = ts
         let xtx = design_matrix.t().dot(&design_matrix);
         let xty = design_matrix.t().dot(ts);
 
@@ -615,10 +601,10 @@ where
     Ok((level, trend, seasonal_components, residuals, log_likelihood))
 }
 
-/// Solve regularized least squares system using Gaussian elimination
+/// Solve regularized least squares system using scirs2-linalg
 fn solve_regularized_least_squares<F>(a: &Array2<F>, b: &Array1<F>) -> Result<Array1<F>>
 where
-    F: Float + FromPrimitive + ScalarOperand,
+    F: Float + FromPrimitive + ScalarOperand + NumCast + 'static,
 {
     let n = a.shape()[0];
     if n != a.shape()[1] || n != b.len() {
@@ -627,58 +613,16 @@ where
         ));
     }
 
-    // Create augmented matrix
-    let mut aug = a.clone();
-    let mut rhs = b.clone();
+    // Convert to f64 for scirs2-linalg computation
+    let a_f64 = a.mapv(|x| x.to_f64().unwrap_or(0.0));
+    let b_f64 = b.mapv(|x| x.to_f64().unwrap_or(0.0));
 
-    // Forward elimination
-    for i in 0..n {
-        // Find pivot
-        let mut max_row = i;
-        for k in (i + 1)..n {
-            if aug[[k, i]].abs() > aug[[max_row, i]].abs() {
-                max_row = k;
-            }
-        }
+    // Solve using scirs2-linalg
+    let x_f64 = solve(&a_f64.view(), &b_f64.view(), None)
+        .map_err(|e| TimeSeriesError::DecompositionError(format!("Linear solve failed: {}", e)))?;
 
-        // Swap rows
-        if max_row != i {
-            for j in 0..n {
-                let temp = aug[[i, j]];
-                aug[[i, j]] = aug[[max_row, j]];
-                aug[[max_row, j]] = temp;
-            }
-            let temp = rhs[i];
-            rhs[i] = rhs[max_row];
-            rhs[max_row] = temp;
-        }
-
-        // Check for singular matrix
-        if aug[[i, i]].abs() < F::from(1e-10).unwrap() {
-            return Err(TimeSeriesError::DecompositionError(
-                "Matrix is singular".to_string(),
-            ));
-        }
-
-        // Eliminate column
-        for k in (i + 1)..n {
-            let factor = aug[[k, i]] / aug[[i, i]];
-            for j in i..n {
-                aug[[k, j]] = aug[[k, j]] - factor * aug[[i, j]];
-            }
-            rhs[k] = rhs[k] - factor * rhs[i];
-        }
-    }
-
-    // Back substitution
-    let mut x = Array1::zeros(n);
-    for i in (0..n).rev() {
-        let mut sum = rhs[i];
-        for j in (i + 1)..n {
-            sum = sum - aug[[i, j]] * x[j];
-        }
-        x[i] = sum / aug[[i, i]];
-    }
+    // Convert back to original type
+    let x = x_f64.mapv(|val| F::from_f64(val).unwrap_or_else(F::zero));
 
     Ok(x)
 }

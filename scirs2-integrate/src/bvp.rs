@@ -595,7 +595,8 @@ mod tests {
         let b = array![5.0, 8.0];
 
         // Using crate's utils module function instead
-        let x = crate::utils::solve_linear_system(a.view(), b.view());
+        let x = crate::utils::solve_linear_system(a.view(), b.view())
+            .expect("Linear system should solve successfully for test data");
 
         // Expected solution: x = [2.0, 1.0]
         assert!(

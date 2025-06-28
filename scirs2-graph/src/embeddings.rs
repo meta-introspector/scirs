@@ -7,14 +7,14 @@ use crate::base::{DiGraph, EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
 use rand::prelude::*;
 use rand::Rng;
-use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
-use std::fs::File;
-use std::io::{BufReader, BufWriter, Read, Write};
-use std::path::Path;
-use serde::{Deserialize, Serialize};
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::SimdUnifiedOps;
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
+use std::fs::File;
+use std::io::{BufReader, BufWriter, Write};
+use std::path::Path;
+use std::sync::Arc;
 
 /// Configuration for Node2Vec embedding algorithm
 #[derive(Debug, Clone)]
@@ -128,50 +128,47 @@ impl<N: Node> NegativeSampler<N> {
             .iter()
             .map(|node| graph.degree(node).unwrap_or(0) as f64)
             .collect::<Vec<_>>();
-        
+
         // Use subsampling with power 0.75 as in Word2Vec
         let total_degree: f64 = node_degrees.iter().sum();
         let frequencies: Vec<f64> = node_degrees
             .iter()
             .map(|d| (d / total_degree).powf(0.75))
             .collect();
-        
+
         let total_freq: f64 = frequencies.iter().sum();
-        let frequencies: Vec<f64> = frequencies
-            .iter()
-            .map(|f| f / total_freq)
-            .collect();
-        
+        let frequencies: Vec<f64> = frequencies.iter().map(|f| f / total_freq).collect();
+
         // Build cumulative distribution
         let mut cumulative = vec![0.0; frequencies.len()];
         cumulative[0] = frequencies[0];
         for i in 1..frequencies.len() {
             cumulative[i] = cumulative[i - 1] + frequencies[i];
         }
-        
+
         NegativeSampler {
             vocabulary,
             frequencies,
             cumulative,
         }
     }
-    
+
     /// Sample a negative node
     pub fn sample(&self, rng: &mut impl Rng) -> Option<&N> {
         if self.vocabulary.is_empty() {
             return None;
         }
-        
+
         let r = rng.random::<f64>();
         for (i, &cum_freq) in self.cumulative.iter().enumerate() {
             if r <= cum_freq {
                 return Some(&self.vocabulary[i]);
             }
         }
-        
+
         self.vocabulary.last()
     }
-    
+
     /// Sample multiple negative nodes excluding target and context
     pub fn sample_negatives(
         &self,
@@ -182,7 +179,7 @@ impl<N: Node> NegativeSampler<N> {
         let mut negatives = Vec::new();
         let mut attempts = 0;
         let max_attempts = count * 10; // Prevent infinite loops
-        
+
         while negatives.len() < count && attempts < max_attempts {
             if let Some(candidate) = self.sample(rng) {
                 if !exclude.contains(candidate) {
@@ -191,7 +188,7 @@ impl<N: Node> NegativeSampler<N> {
             }
             attempts += 1;
         }
-        
+
         negatives
     }
 }
@@ -296,7 +293,7 @@ impl Embedding {
             *x *= factor;
         }
     }
-    
+
     /// Compute dot product with another embedding (SIMD optimized)
     pub fn dot_product(&self, other: &Embedding) -> Result<f64> {
         if self.vector.len() != other.vector.len() {
@@ -304,14 +301,15 @@ impl Embedding {
                 "Embeddings must have same dimensions".to_string(),
             ));
         }
-        
+
         // Use SIMD optimization from scirs2-core when available
         if self.vector.len() >= 4 {
             let dot = f64::simd_dot_product(&self.vector, &other.vector);
             Ok(dot)
         } else {
             // Fallback for small vectors
-            let dot: f64 = self.vector
+            let dot: f64 = self
+                .vector
                 .iter()
                 .zip(other.vector.iter())
                 .map(|(a, b)| a * b)
@@ -319,12 +317,12 @@ impl Embedding {
             Ok(dot)
         }
     }
-    
+
     /// Sigmoid activation function
     fn sigmoid(x: f64) -> f64 {
         1.0 / (1.0 + (-x).exp())
     }
-    
+
     /// Update embedding using gradient (SIMD optimized)
     pub fn update_gradient(&mut self, gradient: &[f64], learning_rate: f64) {
         if self.vector.len() >= 4 && gradient.len() >= 4 {
@@ -387,7 +385,8 @@ impl<N: Node> EmbeddingModel<N> {
             let embedding = Embedding::random(self.dimensions, rng);
             let context_embedding = Embedding::random(self.dimensions, rng);
             self.embeddings.insert(node.clone(), embedding);
-            self.context_embeddings.insert(node.clone(), context_embedding);
+            self.context_embeddings
+                .insert(node.clone(), context_embedding);
         }
     }
 
@@ -405,7 +404,8 @@ impl<N: Node> EmbeddingModel<N> {
             let embedding = Embedding::random(self.dimensions, rng);
             let context_embedding = Embedding::random(self.dimensions, rng);
             self.embeddings.insert(node.clone(), embedding);
-            self.context_embeddings.insert(node.clone(), context_embedding);
+            self.context_embeddings
+                .insert(node.clone(), context_embedding);
         }
     }
 
@@ -430,7 +430,7 @@ impl<N: Node> EmbeddingModel<N> {
 
         Ok(similarities)
     }
-    
+
     /// Train skip-gram model on context pairs with negative sampling
     pub fn train_skip_gram(
         &mut self,
@@ -442,50 +442,63 @@ impl<N: Node> EmbeddingModel<N> {
     ) -> Result<()> {
         for pair in pairs {
             // Get embeddings
-            let target_emb = self.embeddings.get(&pair.target)
+            let target_emb = self
+                .embeddings
+                .get(&pair.target)
                 .ok_or(GraphError::NodeNotFound)?
                 .clone();
-            let context_emb = self.context_embeddings.get(&pair.context)
+            let context_emb = self
+                .context_embeddings
+                .get(&pair.context)
                 .ok_or(GraphError::NodeNotFound)?
                 .clone();
-            
+
             // Positive sample: maximize probability of context given target
             let positive_score = target_emb.dot_product(&context_emb)?;
             let positive_prob = Embedding::sigmoid(positive_score);
-            
+
             // Compute gradients for positive sample
             let positive_error = 1.0 - positive_prob;
             let mut target_gradient = vec![0.0; self.dimensions];
             let mut context_gradient = vec![0.0; self.dimensions];
-            
+
             for i in 0..self.dimensions {
                 target_gradient[i] += positive_error * context_emb.vector[i];
                 context_gradient[i] += positive_error * target_emb.vector[i];
             }
-            
+
             // Negative samples: minimize probability of negative contexts
             let exclude_set: HashSet<&N> = [&pair.target, &pair.context].iter().cloned().collect();
             let negatives = negative_sampler.sample_negatives(negative_samples, &exclude_set, rng);
-            
+
             for negative in &negatives {
                 if let Some(neg_context_emb) = self.context_embeddings.get(negative) {
                     let negative_score = target_emb.dot_product(neg_context_emb)?;
                     let negative_prob = Embedding::sigmoid(negative_score);
-                    
+
                     // Negative sample error
                     let negative_error = -negative_prob;
-                    
+
                     for i in 0..self.dimensions {
                         target_gradient[i] += negative_error * neg_context_emb.vector[i];
-                        // Update negative context embedding
-                        let neg_context_grad = negative_error * target_emb.vector[i];
-                        if let Some(neg_context_emb_mut) = self.context_embeddings.get_mut(negative) {
-                            neg_context_emb_mut.vector[i] -= learning_rate * neg_context_grad;
-                        }
                     }
                 }
             }
-            
+
+            // Update negative context embeddings separately to avoid borrowing issues
+            for negative in &negatives {
+                if let Some(neg_context_emb_mut) = self.context_embeddings.get_mut(negative) {
+                    let negative_score = target_emb.dot_product(neg_context_emb_mut)?;
+                    let negative_prob = Embedding::sigmoid(negative_score);
+                    let negative_error = -negative_prob;
+
+                    for i in 0..self.dimensions {
+                        let neg_context_grad = negative_error * target_emb.vector[i];
+                        neg_context_emb_mut.vector[i] -= learning_rate * neg_context_grad;
+                    }
+                }
+            }
+
             // Apply gradients
             if let Some(target_emb_mut) = self.embeddings.get_mut(&pair.target) {
                 target_emb_mut.update_gradient(&target_gradient, learning_rate);
@@ -494,10 +507,10 @@ impl<N: Node> EmbeddingModel<N> {
                 context_emb_mut.update_gradient(&context_gradient, learning_rate);
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Parallel and SIMD-optimized skip-gram training
     pub fn train_skip_gram_parallel(
         &mut self,
@@ -505,107 +518,249 @@ impl<N: Node> EmbeddingModel<N> {
         negative_sampler: &NegativeSampler<N>,
         learning_rate: f64,
         negative_samples: usize,
-        rng: &mut impl Rng,
-    ) -> Result<()> {
+        _rng: &mut impl Rng,
+    ) -> Result<()>
+    where
+        N: Clone + Send + Sync,
+    {
+        use scirs2_core::parallel_ops::*;
         use std::sync::Mutex;
-        
-        // Split pairs into chunks for parallel processing
-        let chunk_size = (pairs.len() / rayon::current_num_threads()).max(1);
-        let embeddings_mutex = Arc::new(Mutex::new(&mut self.embeddings));
-        let context_embeddings_mutex = Arc::new(Mutex::new(&mut self.context_embeddings));
-        
-        pairs
-            .par_chunks(chunk_size)
-            .try_for_each(|chunk| -> Result<()> {
+
+        // Use collect-reduce pattern for thread-safe parallel processing
+        let gradient_updates: Vec<(N, Vec<f64>, Vec<f64>)> = pairs
+            .par_chunks(1000) // Process in chunks for better cache locality
+            .map(|chunk| -> Result<Vec<(N, Vec<f64>, Vec<f64>)>> {
+                let mut local_updates = Vec::new();
                 let mut local_rng = rand::rng();
-                
+
                 for pair in chunk {
-                    // Get embeddings (with locking)
-                    let (target_emb, context_emb) = {
-                        let embeddings = embeddings_mutex.lock().unwrap();
-                        let context_embeddings = context_embeddings_mutex.lock().unwrap();
-                        
-                        let target_emb = embeddings.get(&pair.target)
-                            .ok_or(GraphError::NodeNotFound)?
-                            .clone();
-                        let context_emb = context_embeddings.get(&pair.context)
-                            .ok_or(GraphError::NodeNotFound)?
-                            .clone();
-                        
-                        (target_emb, context_emb)
-                    };
-                    
+                    // Get embeddings (read-only access)
+                    let target_emb = self.embeddings
+                        .get(&pair.target)
+                        .ok_or(GraphError::NodeNotFound)?
+                        .clone();
+                    let context_emb = self.context_embeddings
+                        .get(&pair.context)
+                        .ok_or(GraphError::NodeNotFound)?
+                        .clone();
+
                     // Compute gradients (SIMD optimized)
                     let positive_score = target_emb.dot_product(&context_emb)?;
                     let positive_prob = Embedding::sigmoid(positive_score);
                     let positive_error = 1.0 - positive_prob;
-                    
+
                     let mut target_gradient = vec![0.0; self.dimensions];
                     let mut context_gradient = vec![0.0; self.dimensions];
-                    
+
                     // SIMD-optimized gradient computation
                     if self.dimensions >= 4 {
-                        f64::simd_scaled_add(&mut target_gradient, &context_emb.vector, positive_error);
-                        f64::simd_scaled_add(&mut context_gradient, &target_emb.vector, positive_error);
+                        f64::simd_scaled_add(
+                            &mut target_gradient,
+                            &context_emb.vector,
+                            positive_error,
+                        );
+                        f64::simd_scaled_add(
+                            &mut context_gradient,
+                            &target_emb.vector,
+                            positive_error,
+                        );
                     } else {
                         for i in 0..self.dimensions {
                             target_gradient[i] += positive_error * context_emb.vector[i];
                             context_gradient[i] += positive_error * target_emb.vector[i];
                         }
                     }
-                    
+
                     // Negative sampling
-                    let exclude_set: HashSet<&N> = [&pair.target, &pair.context].iter().cloned().collect();
-                    let negatives = negative_sampler.sample_negatives(negative_samples, &exclude_set, &mut local_rng);
-                    
+                    let exclude_set: HashSet<&N> =
+                        [&pair.target, &pair.context].iter().cloned().collect();
+                    let negatives = negative_sampler.sample_negatives(
+                        negative_samples,
+                        &exclude_set,
+                        &mut local_rng,
+                    );
+
                     for negative in &negatives {
-                        let context_embeddings = context_embeddings_mutex.lock().unwrap();
-                        if let Some(neg_context_emb) = context_embeddings.get(negative) {
+                        if let Some(neg_context_emb) = self.context_embeddings.get(negative) {
                             let negative_score = target_emb.dot_product(neg_context_emb)?;
                             let negative_prob = Embedding::sigmoid(negative_score);
                             let negative_error = -negative_prob;
-                            
+
                             if self.dimensions >= 4 {
-                                f64::simd_scaled_add(&mut target_gradient, &neg_context_emb.vector, negative_error);
+                                f64::simd_scaled_add(
+                                    &mut target_gradient,
+                                    &neg_context_emb.vector,
+                                    negative_error,
+                                );
                             } else {
                                 for i in 0..self.dimensions {
-                                    target_gradient[i] += negative_error * neg_context_emb.vector[i];
+                                    target_gradient[i] +=
+                                        negative_error * neg_context_emb.vector[i];
                                 }
                             }
                         }
                     }
-                    
-                    // Apply gradients with locking
-                    {
-                        let mut embeddings = embeddings_mutex.lock().unwrap();
-                        let mut context_embeddings = context_embeddings_mutex.lock().unwrap();
-                        
-                        if let Some(target_emb_mut) = embeddings.get_mut(&pair.target) {
-                            target_emb_mut.update_gradient(&target_gradient, learning_rate);
+
+                    local_updates.push((pair.target.clone(), target_gradient, context_gradient));
+                }
+
+                Ok(local_updates)
+            })
+            .collect::<Result<Vec<_>>>()?
+            .into_iter()
+            .flatten()
+            .collect();
+
+        // Apply all gradients sequentially to avoid race conditions
+        for (target_node, target_gradient, context_gradient) in gradient_updates {
+            if let Some(target_emb) = self.embeddings.get_mut(&target_node) {
+                target_emb.update_gradient(&target_gradient, learning_rate);
+            }
+
+            // Find corresponding context pair for context gradient
+            for pair in pairs {
+                if pair.target == target_node {
+                    if let Some(context_emb) = self.context_embeddings.get_mut(&pair.context) {
+                        context_emb.update_gradient(&context_gradient, learning_rate);
+                    }
+                    break;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Optimized parallel skip-gram with reduced contention
+    pub fn train_skip_gram_parallel_optimized(
+        &mut self,
+        pairs: &[ContextPair<N>],
+        negative_sampler: &NegativeSampler<N>,
+        learning_rate: f64,
+        negative_samples: usize,
+        _rng: &mut impl Rng,
+    ) -> Result<()>
+    where
+        N: Clone + Send + Sync,
+    {
+        use scirs2_core::parallel_ops::*;
+        use std::collections::HashMap;
+
+        // Group pairs by target node to reduce lock contention
+        let mut pairs_by_target: HashMap<N, Vec<&ContextPair<N>>> = HashMap::new();
+        for pair in pairs {
+            pairs_by_target
+                .entry(pair.target.clone())
+                .or_default()
+                .push(pair);
+        }
+
+        // Process each target node's pairs in parallel
+        let target_nodes: Vec<N> = pairs_by_target.keys().cloned().collect();
+
+        let gradient_updates: Vec<(N, Vec<f64>)> = target_nodes
+            .par_iter()
+            .map(|target_node| -> Result<(N, Vec<f64>)> {
+                let mut local_rng = rand::rng();
+                let mut accumulated_gradient = vec![0.0; self.dimensions];
+
+                let target_emb = self
+                    .embeddings
+                    .get(target_node)
+                    .ok_or(GraphError::NodeNotFound)?
+                    .clone();
+
+                if let Some(node_pairs) = pairs_by_target.get(target_node) {
+                    for &pair in node_pairs {
+                        let context_emb = self
+                            .context_embeddings
+                            .get(&pair.context)
+                            .ok_or(GraphError::NodeNotFound)?
+                            .clone();
+
+                        // Compute positive gradient
+                        let positive_score = target_emb.dot_product(&context_emb)?;
+                        let positive_prob = Embedding::sigmoid(positive_score);
+                        let positive_error = 1.0 - positive_prob;
+
+                        // Add positive contribution
+                        if self.dimensions >= 4 {
+                            let mut temp_gradient = vec![0.0; self.dimensions];
+                            f64::simd_scaled_add(
+                                &mut temp_gradient,
+                                &context_emb.vector,
+                                positive_error,
+                            );
+                            f64::simd_add_assign(&mut accumulated_gradient, &temp_gradient);
+                        } else {
+                            for i in 0..self.dimensions {
+                                accumulated_gradient[i] += positive_error * context_emb.vector[i];
+                            }
                         }
-                        if let Some(context_emb_mut) = context_embeddings.get_mut(&pair.context) {
-                            context_emb_mut.update_gradient(&context_gradient, learning_rate);
+
+                        // Negative sampling
+                        let exclude_set: HashSet<&N> =
+                            [target_node, &pair.context].iter().cloned().collect();
+                        let negatives = negative_sampler.sample_negatives(
+                            negative_samples,
+                            &exclude_set,
+                            &mut local_rng,
+                        );
+
+                        for negative in &negatives {
+                            if let Some(neg_context_emb) = self.context_embeddings.get(negative) {
+                                let negative_score = target_emb.dot_product(neg_context_emb)?;
+                                let negative_prob = Embedding::sigmoid(negative_score);
+                                let negative_error = -negative_prob;
+
+                                if self.dimensions >= 4 {
+                                    let mut temp_gradient = vec![0.0; self.dimensions];
+                                    f64::simd_scaled_add(
+                                        &mut temp_gradient,
+                                        &neg_context_emb.vector,
+                                        negative_error,
+                                    );
+                                    f64::simd_add_assign(&mut accumulated_gradient, &temp_gradient);
+                                } else {
+                                    for i in 0..self.dimensions {
+                                        accumulated_gradient[i] +=
+                                            negative_error * neg_context_emb.vector[i];
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-                Ok(())
-            })?;
-        
+
+                Ok((target_node.clone(), accumulated_gradient))
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        // Apply accumulated gradients
+        for (target_node, gradient) in gradient_updates {
+            if let Some(target_emb) = self.embeddings.get_mut(&target_node) {
+                target_emb.update_gradient(&gradient, learning_rate);
+            }
+        }
+
         Ok(())
     }
-    
+
     /// Generate context pairs from random walks
-    pub fn generate_context_pairs(walks: &[RandomWalk<N>], window_size: usize) -> Vec<ContextPair<N>>
+    pub fn generate_context_pairs(
+        walks: &[RandomWalk<N>],
+        window_size: usize,
+    ) -> Vec<ContextPair<N>>
     where
         N: Clone,
     {
         let mut pairs = Vec::new();
-        
+
         for walk in walks {
             for (i, target) in walk.nodes.iter().enumerate() {
                 let start = i.saturating_sub(window_size);
                 let end = (i + window_size + 1).min(walk.nodes.len());
-                
+
                 for j in start..end {
                     if i != j {
                         pairs.push(ContextPair {
@@ -616,15 +771,16 @@ impl<N: Node> EmbeddingModel<N> {
                 }
             }
         }
-        
+
         pairs
     }
-    
+
     /// Evaluate embeddings using link prediction task
     /// Returns AUC score for predicting missing edges
+    #[allow(dead_code)]
     pub fn evaluate_link_prediction<E, Ix>(
         &self,
-        graph: &Graph<N, E, Ix>,
+        _graph: &Graph<N, E, Ix>,
         test_edges: &[(N, N)],
         negative_edges: &[(N, N)],
     ) -> Result<f64>
@@ -635,7 +791,7 @@ impl<N: Node> EmbeddingModel<N> {
     {
         let mut scores = Vec::new();
         let mut labels = Vec::new();
-        
+
         // Positive examples (existing edges)
         for (u, v) in test_edges {
             if let (Some(u_emb), Some(v_emb)) = (self.embeddings.get(u), self.embeddings.get(v)) {
@@ -644,7 +800,7 @@ impl<N: Node> EmbeddingModel<N> {
                 labels.push(1.0);
             }
         }
-        
+
         // Negative examples (non-existing edges)
         for (u, v) in negative_edges {
             if let (Some(u_emb), Some(v_emb)) = (self.embeddings.get(u), self.embeddings.get(v)) {
@@ -653,12 +809,12 @@ impl<N: Node> EmbeddingModel<N> {
                 labels.push(0.0);
             }
         }
-        
+
         // Calculate AUC using trapezoidal rule
         let auc = Self::calculate_auc(&scores, &labels)?;
         Ok(auc)
     }
-    
+
     /// Calculate AUC (Area Under Curve) for binary classification
     fn calculate_auc(scores: &[f64], labels: &[f64]) -> Result<f64> {
         if scores.len() != labels.len() {
@@ -666,41 +822,41 @@ impl<N: Node> EmbeddingModel<N> {
                 "Scores and labels must have same length".to_string(),
             ));
         }
-        
+
         // Create sorted pairs (score, label)
         let mut pairs: Vec<_> = scores.iter().zip(labels.iter()).collect();
         pairs.sort_by(|a, b| b.0.partial_cmp(a.0).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         let mut tp = 0.0; // True positives
         let mut fp = 0.0; // False positives
         let total_pos = labels.iter().sum::<f64>();
         let total_neg = labels.len() as f64 - total_pos;
-        
+
         if total_pos == 0.0 || total_neg == 0.0 {
             return Ok(0.5); // Random classifier performance
         }
-        
+
         let mut auc = 0.0;
         let mut prev_fp_rate = 0.0;
-        
+
         for (_, &label) in pairs {
             if label > 0.5 {
                 tp += 1.0;
             } else {
                 fp += 1.0;
             }
-            
+
             let tp_rate = tp / total_pos;
             let fp_rate = fp / total_neg;
-            
+
             // Add trapezoid area
             auc += tp_rate * (fp_rate - prev_fp_rate);
             prev_fp_rate = fp_rate;
         }
-        
+
         Ok(auc)
     }
-    
+
     /// Evaluate embeddings for node classification using k-NN
     pub fn evaluate_node_classification(
         &self,
@@ -712,40 +868,43 @@ impl<N: Node> EmbeddingModel<N> {
         N: Clone,
     {
         let mut predictions = HashMap::new();
-        
+
         for test_node in test_nodes {
             if let Some(test_emb) = self.embeddings.get(test_node) {
                 // Find k nearest neighbors
                 let mut similarities = Vec::new();
-                
+
                 for (train_node, label) in train_nodes {
                     if let Some(train_emb) = self.embeddings.get(train_node) {
                         let sim = test_emb.cosine_similarity(train_emb)?;
                         similarities.push((sim, *label));
                     }
                 }
-                
+
                 // Sort by similarity (descending)
-                similarities.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
-                
+                similarities
+                    .sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+
                 // Take top k and predict by majority vote
                 let top_k = similarities.into_iter().take(k);
                 let mut label_counts: HashMap<i32, usize> = HashMap::new();
-                
+
                 for (_, label) in top_k {
                     *label_counts.entry(label).or_insert(0) += 1;
                 }
-                
+
                 // Find most frequent label
-                if let Some((&predicted_label, _)) = label_counts.iter().max_by_key(|(_, &count)| count) {
+                if let Some((&predicted_label, _)) =
+                    label_counts.iter().max_by_key(|(_, &count)| count)
+                {
                     predictions.insert(test_node.clone(), predicted_label);
                 }
             }
         }
-        
+
         Ok(predictions)
     }
-    
+
     /// Calculate classification accuracy
     pub fn calculate_accuracy(
         predictions: &HashMap<N, i32>,
@@ -753,7 +912,7 @@ impl<N: Node> EmbeddingModel<N> {
     ) -> f64 {
         let mut correct = 0;
         let mut total = 0;
-        
+
         for (node, &true_label) in ground_truth {
             if let Some(&predicted_label) = predictions.get(node) {
                 if predicted_label == true_label {
@@ -762,14 +921,14 @@ impl<N: Node> EmbeddingModel<N> {
                 total += 1;
             }
         }
-        
+
         if total == 0 {
             0.0
         } else {
             correct as f64 / total as f64
         }
     }
-    
+
     /// Generate negative edges for link prediction evaluation
     pub fn generate_negative_edges<E, Ix>(
         graph: &Graph<N, E, Ix>,
@@ -785,7 +944,7 @@ impl<N: Node> EmbeddingModel<N> {
         let mut negative_edges = Vec::new();
         let mut attempts = 0;
         let max_attempts = count * 10;
-        
+
         while negative_edges.len() < count && attempts < max_attempts {
             if let (Some(u), Some(v)) = (nodes.choose(rng), nodes.choose(rng)) {
                 if u != v && !graph.has_edge(u, v) {
@@ -794,56 +953,54 @@ impl<N: Node> EmbeddingModel<N> {
             }
             attempts += 1;
         }
-        
+
         negative_edges
     }
-    
+
     /// Save embeddings to a file in JSON format
     pub fn save_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()>
     where
         N: Serialize,
     {
-        let file = File::create(path).map_err(|e| {
-            GraphError::ComputationError(format!("Failed to create file: {}", e))
-        })?;
+        let file = File::create(path)
+            .map_err(|e| GraphError::ComputationError(format!("Failed to create file: {}", e)))?;
         let writer = BufWriter::new(file);
-        
+
         // Create a serializable representation
         let serializable_data = SerializableEmbeddingModel {
             embeddings: self.embeddings.clone(),
             context_embeddings: self.context_embeddings.clone(),
             dimensions: self.dimensions,
         };
-        
+
         serde_json::to_writer_pretty(writer, &serializable_data).map_err(|e| {
             GraphError::ComputationError(format!("Failed to serialize embeddings: {}", e))
         })?;
-        
+
         Ok(())
     }
-    
+
     /// Load embeddings from a file
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<EmbeddingModel<N>>
     where
         N: for<'de> Deserialize<'de>,
     {
-        let file = File::open(path).map_err(|e| {
-            GraphError::ComputationError(format!("Failed to open file: {}", e))
-        })?;
+        let file = File::open(path)
+            .map_err(|e| GraphError::ComputationError(format!("Failed to open file: {}", e)))?;
         let reader = BufReader::new(file);
-        
-        let serializable_data: SerializableEmbeddingModel<N> = 
-            serde_json::from_reader(reader).map_err(|e| {
+
+        let serializable_data: SerializableEmbeddingModel<N> = serde_json::from_reader(reader)
+            .map_err(|e| {
                 GraphError::ComputationError(format!("Failed to deserialize embeddings: {}", e))
             })?;
-        
+
         Ok(EmbeddingModel {
             embeddings: serializable_data.embeddings,
             context_embeddings: serializable_data.context_embeddings,
             dimensions: serializable_data.dimensions,
         })
     }
-    
+
     /// Save embeddings in binary format for faster loading
     pub fn save_binary<P: AsRef<Path>>(&self, path: P) -> Result<()>
     where
@@ -853,20 +1010,20 @@ impl<N: Node> EmbeddingModel<N> {
             GraphError::ComputationError(format!("Failed to create binary file: {}", e))
         })?;
         let writer = BufWriter::new(file);
-        
+
         let serializable_data = SerializableEmbeddingModel {
             embeddings: self.embeddings.clone(),
             context_embeddings: self.context_embeddings.clone(),
             dimensions: self.dimensions,
         };
-        
+
         bincode::serialize_into(writer, &serializable_data).map_err(|e| {
             GraphError::ComputationError(format!("Failed to serialize embeddings to binary: {}", e))
         })?;
-        
+
         Ok(())
     }
-    
+
     /// Load embeddings from binary format
     pub fn load_binary<P: AsRef<Path>>(path: P) -> Result<EmbeddingModel<N>>
     where
@@ -876,19 +1033,22 @@ impl<N: Node> EmbeddingModel<N> {
             GraphError::ComputationError(format!("Failed to open binary file: {}", e))
         })?;
         let reader = BufReader::new(file);
-        
-        let serializable_data: SerializableEmbeddingModel<N> = 
-            bincode::deserialize_from(reader).map_err(|e| {
-                GraphError::ComputationError(format!("Failed to deserialize binary embeddings: {}", e))
+
+        let serializable_data: SerializableEmbeddingModel<N> = bincode::deserialize_from(reader)
+            .map_err(|e| {
+                GraphError::ComputationError(format!(
+                    "Failed to deserialize binary embeddings: {}",
+                    e
+                ))
             })?;
-        
+
         Ok(EmbeddingModel {
             embeddings: serializable_data.embeddings,
             context_embeddings: serializable_data.context_embeddings,
             dimensions: serializable_data.dimensions,
         })
     }
-    
+
     /// Export embeddings to CSV format for analysis
     pub fn export_csv<P: AsRef<Path>>(&self, path: P) -> Result<()>
     where
@@ -897,14 +1057,14 @@ impl<N: Node> EmbeddingModel<N> {
         let mut file = File::create(path).map_err(|e| {
             GraphError::ComputationError(format!("Failed to create CSV file: {}", e))
         })?;
-        
+
         // Write header
         write!(file, "node")?;
         for i in 0..self.dimensions {
             write!(file, ",dim_{}", i)?;
         }
         writeln!(file)?;
-        
+
         // Write embeddings
         for (node, embedding) in &self.embeddings {
             write!(file, "{}", node)?;
@@ -913,40 +1073,36 @@ impl<N: Node> EmbeddingModel<N> {
             }
             writeln!(file)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Import embeddings from CSV format
     pub fn import_csv<P: AsRef<Path>>(path: P) -> Result<EmbeddingModel<String>> {
-        let content = std::fs::read_to_string(path).map_err(|e| {
-            GraphError::ComputationError(format!("Failed to read CSV file: {}", e))
-        })?;
-        
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| GraphError::ComputationError(format!("Failed to read CSV file: {}", e)))?;
+
         let lines: Vec<&str> = content.lines().collect();
         if lines.is_empty() {
             return Err(GraphError::ComputationError("Empty CSV file".to_string()));
         }
-        
+
         // Parse header to get dimensions
         let header = lines[0];
         let header_parts: Vec<&str> = header.split(',').collect();
         let dimensions = header_parts.len() - 1; // Subtract 1 for the node column
-        
+
         let mut embeddings = HashMap::new();
-        
+
         for line in lines.iter().skip(1) {
             let parts: Vec<&str> = line.split(',').collect();
             if parts.len() != dimensions + 1 {
                 continue; // Skip malformed lines
             }
-            
+
             let node = parts[0].to_string();
-            let vector: Result<Vec<f64>, _> = parts[1..]
-                .iter()
-                .map(|s| s.parse::<f64>())
-                .collect();
-                
+            let vector: Result<Vec<f64>, _> = parts[1..].iter().map(|s| s.parse::<f64>()).collect();
+
             match vector {
                 Ok(v) => {
                     embeddings.insert(node, Embedding { vector: v });
@@ -954,7 +1110,7 @@ impl<N: Node> EmbeddingModel<N> {
                 Err(_) => continue, // Skip lines with parsing errors
             }
         }
-        
+
         Ok(EmbeddingModel {
             embeddings,
             context_embeddings: HashMap::new(), // CSV doesn't include context embeddings
@@ -1191,22 +1347,24 @@ impl<N: Node> Node2Vec<N> {
 
         // Create negative sampler
         let negative_sampler = NegativeSampler::new(graph);
-        
+
         // Training loop over epochs
         for epoch in 0..self.config.epochs {
             // Generate walks for this epoch
             let walks = self.generate_walks(graph)?;
-            
+
             // Generate context pairs from walks
-            let context_pairs = EmbeddingModel::generate_context_pairs(&walks, self.config.window_size);
-            
+            let context_pairs =
+                EmbeddingModel::generate_context_pairs(&walks, self.config.window_size);
+
             // Shuffle pairs for better training
             let mut shuffled_pairs = context_pairs;
             shuffled_pairs.shuffle(&mut self.walk_generator.rng);
-            
+
             // Train skip-gram model with negative sampling
-            let current_lr = self.config.learning_rate * (1.0 - epoch as f64 / self.config.epochs as f64);
-            
+            let current_lr =
+                self.config.learning_rate * (1.0 - epoch as f64 / self.config.epochs as f64);
+
             self.model.train_skip_gram(
                 &shuffled_pairs,
                 &negative_sampler,
@@ -1214,7 +1372,7 @@ impl<N: Node> Node2Vec<N> {
                 self.config.negative_samples,
                 &mut self.walk_generator.rng,
             )?;
-            
+
             if epoch % 10 == 0 || epoch == self.config.epochs - 1 {
                 println!(
                     "Node2Vec epoch {}/{}, generated {} walks, {} context pairs",
@@ -1291,22 +1449,24 @@ impl<N: Node> DeepWalk<N> {
 
         // Create negative sampler
         let negative_sampler = NegativeSampler::new(graph);
-        
+
         // Training loop over epochs
         for epoch in 0..self.config.epochs {
             // Generate walks for this epoch
             let walks = self.generate_walks(graph)?;
-            
+
             // Generate context pairs from walks
-            let context_pairs = EmbeddingModel::generate_context_pairs(&walks, self.config.window_size);
-            
+            let context_pairs =
+                EmbeddingModel::generate_context_pairs(&walks, self.config.window_size);
+
             // Shuffle pairs for better training
             let mut shuffled_pairs = context_pairs;
             shuffled_pairs.shuffle(&mut self.walk_generator.rng);
-            
+
             // Train skip-gram model with negative sampling
-            let current_lr = self.config.learning_rate * (1.0 - epoch as f64 / self.config.epochs as f64);
-            
+            let current_lr =
+                self.config.learning_rate * (1.0 - epoch as f64 / self.config.epochs as f64);
+
             self.model.train_skip_gram(
                 &shuffled_pairs,
                 &negative_sampler,
@@ -1314,7 +1474,7 @@ impl<N: Node> DeepWalk<N> {
                 self.config.negative_samples,
                 &mut self.walk_generator.rng,
             )?;
-            
+
             if epoch % 10 == 0 || epoch == self.config.epochs - 1 {
                 println!(
                     "DeepWalk epoch {}/{}, generated {} walks, {} context pairs",

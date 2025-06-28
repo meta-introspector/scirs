@@ -26,6 +26,10 @@ pub enum SpecialError {
     #[error("Convergence error: {0}")]
     ConvergenceError(String),
 
+    /// Overflow error (result too large to represent)
+    #[error("Overflow error: {0}")]
+    OverflowError(String),
+
     /// Core error propagation
     #[error("Core error: {0}")]
     CoreError(#[from] CoreError),

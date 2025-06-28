@@ -3,7 +3,7 @@
 //! This module provides efficient implementations of shortest path algorithms
 //! for sparse matrices representing graphs.
 
-use super::{PriorityQueueNode, to_adjacency_list, validate_graph, num_vertices};
+use super::{num_vertices, to_adjacency_list, validate_graph, PriorityQueueNode};
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, Array2};
@@ -96,9 +96,9 @@ where
         }
         (Some(source), None) => {
             // Single source shortest paths
-            let (distances, predecessors) = 
+            let (distances, predecessors) =
                 single_source_shortest_path(graph, source, method, directed, return_predecessors)?;
-            
+
             // Convert to matrix format
             let mut dist_matrix = Array2::from_elem((n, n), T::infinity());
             let mut pred_matrix = if return_predecessors {
@@ -120,9 +120,9 @@ where
         }
         (Some(source), Some(target)) => {
             // Single pair shortest path
-            let (distances, predecessors) = 
+            let (distances, predecessors) =
                 single_source_shortest_path(graph, source, method, directed, return_predecessors)?;
-            
+
             let mut dist_matrix = Array2::from_elem((1, 1), distances[target]);
             let pred_matrix = if return_predecessors {
                 let mut pred_mat = Array2::from_elem((1, 1), -1isize);
@@ -136,11 +136,9 @@ where
 
             Ok((dist_matrix, pred_matrix))
         }
-        (None, Some(_)) => {
-            Err(SparseError::ValueError(
-                "Cannot specify target vertex without source vertex".to_string(),
-            ))
-        }
+        (None, Some(_)) => Err(SparseError::ValueError(
+            "Cannot specify target vertex without source vertex".to_string(),
+        )),
     }
 }
 
@@ -157,7 +155,7 @@ where
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
-    
+
     if source >= n {
         return Err(SparseError::ValueError(format!(
             "Source vertex {} out of bounds for graph with {} vertices",
@@ -216,9 +214,7 @@ where
     };
 
     match actual_method {
-        ShortestPathMethod::FloydWarshall => {
-            floyd_warshall(graph, directed, return_predecessors)
-        }
+        ShortestPathMethod::FloydWarshall => floyd_warshall(graph, directed, return_predecessors),
         ShortestPathMethod::Dijkstra => {
             // Run Dijkstra from each vertex
             let mut distances = Array2::from_elem((n, n), T::infinity());
@@ -229,8 +225,9 @@ where
             };
 
             for source in 0..n {
-                let (dist, pred) = dijkstra_single_source(graph, source, directed, return_predecessors)?;
-                
+                let (dist, pred) =
+                    dijkstra_single_source(graph, source, directed, return_predecessors)?;
+
                 for target in 0..n {
                     distances[[source, target]] = dist[target];
                     if let Some(ref pred_vec) = pred {
@@ -269,9 +266,9 @@ where
     } else {
         None
     };
-    
+
     distances[source] = T::zero();
-    
+
     let mut heap = BinaryHeap::new();
     heap.push(PriorityQueueNode {
         distance: T::zero(),
@@ -284,7 +281,7 @@ where
         if visited[node] {
             continue;
         }
-        
+
         visited[node] = true;
 
         // Early termination if we've processed all reachable nodes
@@ -298,10 +295,10 @@ where
             }
 
             let new_distance = distance + weight;
-            
+
             if new_distance < distances[neighbor] {
                 distances[neighbor] = new_distance;
-                
+
                 if let Some(ref mut preds) = predecessors {
                     preds[neighbor] = node as isize;
                 }
@@ -346,7 +343,7 @@ where
         let weight = values[i];
         if !weight.is_zero() {
             edges.push((row, col, weight));
-            
+
             // For undirected graphs, add reverse edge
             if !directed && row != col {
                 edges.push((col, row, weight));
@@ -357,23 +354,23 @@ where
     // Relax edges n-1 times
     for _ in 0..(n - 1) {
         let mut updated = false;
-        
+
         for &(u, v, weight) in &edges {
             if distances[u] != T::infinity() {
                 let new_distance = distances[u] + weight;
-                
+
                 if new_distance < distances[v] {
                     distances[v] = new_distance;
-                    
+
                     if let Some(ref mut preds) = predecessors {
                         preds[v] = u as isize;
                     }
-                    
+
                     updated = true;
                 }
             }
         }
-        
+
         // Early termination if no updates
         if !updated {
             break;
@@ -403,7 +400,7 @@ where
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
-    
+
     // Initialize distance matrix
     let mut distances = Array2::from_elem((n, n), T::infinity());
     let mut predecessors = if return_predecessors {
@@ -423,7 +420,7 @@ where
         let weight = values[i];
         if !weight.is_zero() {
             distances[[row, col]] = weight;
-            
+
             if let Some(ref mut preds) = predecessors {
                 if row != col {
                     preds[[row, col]] = row as isize;
@@ -433,7 +430,7 @@ where
             // For undirected graphs, set symmetric entries
             if !directed && row != col {
                 distances[[col, row]] = weight;
-                
+
                 if let Some(ref mut preds) = predecessors {
                     preds[[col, row]] = col as isize;
                 }
@@ -446,10 +443,10 @@ where
         for i in 0..n {
             for j in 0..n {
                 let through_k = distances[[i, k]] + distances[[k, j]];
-                
+
                 if through_k < distances[[i, j]] {
                     distances[[i, j]] = through_k;
-                    
+
                     if let Some(ref mut preds) = predecessors {
                         preds[[i, j]] = preds[[k, j]];
                     }
@@ -477,20 +474,20 @@ pub fn reconstruct_path(
 
     while current != source {
         path.push(current);
-        
+
         let pred = predecessors[current];
         if pred == -1 {
             return Err(SparseError::ValueError(
                 "Invalid predecessor information".to_string(),
             ));
         }
-        
+
         current = pred as usize;
     }
-    
+
     path.push(source);
     path.reverse();
-    
+
     Ok(path)
 }
 
@@ -510,7 +507,7 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2, 3, 3];
         let cols = vec![1, 2, 0, 3, 0, 3, 1, 2];
         let data = vec![1.0, 2.0, 1.0, 3.0, 2.0, 1.0, 3.0, 1.0];
-        
+
         CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
     }
 
@@ -518,7 +515,7 @@ mod tests {
     fn test_dijkstra_single_source() {
         let graph = create_test_graph();
         let (distances, _) = dijkstra_single_source(&graph, 0, false, false).unwrap();
-        
+
         assert_relative_eq!(distances[0], 0.0);
         assert_relative_eq!(distances[1], 1.0);
         assert_relative_eq!(distances[2], 2.0);
@@ -530,18 +527,18 @@ mod tests {
         let graph = create_test_graph();
         let (distances, predecessors) = dijkstra_single_source(&graph, 0, false, true).unwrap();
         let preds = predecessors.unwrap();
-        
+
         assert_eq!(preds[0], -1); // Source has no predecessor
-        assert_eq!(preds[1], 0);  // 1's predecessor is 0
-        assert_eq!(preds[2], 0);  // 2's predecessor is 0
-        assert_eq!(preds[3], 2);  // 3's predecessor is 2 (via shortest path 0->2->3)
+        assert_eq!(preds[1], 0); // 1's predecessor is 0
+        assert_eq!(preds[2], 0); // 2's predecessor is 0
+        assert_eq!(preds[3], 2); // 3's predecessor is 2 (via shortest path 0->2->3)
     }
 
     #[test]
     fn test_bellman_ford() {
         let graph = create_test_graph();
         let (distances, _) = bellman_ford_single_source(&graph, 0, false, false).unwrap();
-        
+
         assert_relative_eq!(distances[0], 0.0);
         assert_relative_eq!(distances[1], 1.0);
         assert_relative_eq!(distances[2], 2.0);
@@ -552,13 +549,13 @@ mod tests {
     fn test_floyd_warshall() {
         let graph = create_test_graph();
         let (distances, _) = floyd_warshall(&graph, false, false).unwrap();
-        
+
         // Check distances from vertex 0
         assert_relative_eq!(distances[[0, 0]], 0.0);
         assert_relative_eq!(distances[[0, 1]], 1.0);
         assert_relative_eq!(distances[[0, 2]], 2.0);
         assert_relative_eq!(distances[[0, 3]], 3.0);
-        
+
         // Check distances from vertex 1
         assert_relative_eq!(distances[[1, 0]], 1.0);
         assert_relative_eq!(distances[[1, 1]], 0.0);
@@ -569,12 +566,13 @@ mod tests {
     #[test]
     fn test_shortest_path_api() {
         let graph = create_test_graph();
-        
+
         // Single source
-        let (distances, _) = shortest_path(&graph, Some(0), None, "dijkstra", false, false).unwrap();
+        let (distances, _) =
+            shortest_path(&graph, Some(0), None, "dijkstra", false, false).unwrap();
         assert_relative_eq!(distances[[0, 1]], 1.0);
         assert_relative_eq!(distances[[0, 3]], 3.0);
-        
+
         // Single pair
         let (distance, _) = shortest_path(&graph, Some(0), Some(3), "auto", false, false).unwrap();
         assert_relative_eq!(distance[[0, 0]], 3.0);
@@ -585,7 +583,7 @@ mod tests {
         let graph = create_test_graph();
         let (_, predecessors) = dijkstra_single_source(&graph, 0, false, true).unwrap();
         let preds = predecessors.unwrap();
-        
+
         let path = reconstruct_path(&preds, 0, 3).unwrap();
         assert_eq!(path, vec![0, 2, 3]); // Shortest path 0->2->3
     }
@@ -596,9 +594,9 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![1, 2, 0];
         let data = vec![1.0, 1.0, -3.0]; // Cycle 0->1->2->0 with total weight -1
-        
+
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
-        
+
         // Bellman-Ford should detect the negative cycle
         let result = bellman_ford_single_source(&graph, 0, true, false);
         assert!(result.is_err());

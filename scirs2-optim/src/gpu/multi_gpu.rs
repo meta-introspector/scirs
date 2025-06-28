@@ -2,13 +2,13 @@
 
 use ndarray::{ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
-use std::sync::Arc;
 use std::marker::PhantomData;
+use std::sync::Arc;
 
 use crate::gpu::GpuOptimizerError;
 
 #[cfg(feature = "gpu")]
-use scirs2_core::gpu::{GpuContext, GpuKernelHandle, GpuBuffer};
+use scirs2_core::gpu::{GpuBuffer, GpuContext, GpuKernelHandle};
 
 /// Multi-GPU synchronization strategy
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -139,24 +139,27 @@ impl CommunicationPerformanceMonitor {
             optimal_strategy: SyncStrategy::RingAllReduce,
         }
     }
-    
+
     fn record_communication(&mut self, strategy: SyncStrategy, data_bytes: u64, time_us: u64) {
         self.total_comm_time_us += time_us;
         self.total_data_bytes += data_bytes;
         self.comm_operations += 1;
-        
+
         let bandwidth_gb_s = (data_bytes as f64) / (time_us as f64 / 1_000_000.0) / 1e9;
         self.bandwidth_history.push_back(bandwidth_gb_s);
-        
+
         if self.bandwidth_history.len() > 1000 {
             self.bandwidth_history.pop_front();
         }
-        
+
         // Update strategy performance
-        let metrics = self.strategy_performance.entry(strategy).or_insert_with(StrategyPerformanceMetrics::new);
+        let metrics = self
+            .strategy_performance
+            .entry(strategy)
+            .or_insert_with(StrategyPerformanceMetrics::new);
         metrics.update(bandwidth_gb_s, time_us);
     }
-    
+
     fn get_average_bandwidth(&self) -> f64 {
         if self.total_comm_time_us == 0 {
             0.0
@@ -164,11 +167,11 @@ impl CommunicationPerformanceMonitor {
             (self.total_data_bytes as f64) / (self.total_comm_time_us as f64 / 1_000_000.0) / 1e9
         }
     }
-    
+
     fn get_optimal_strategy(&self, tensor_size: usize) -> SyncStrategy {
         let mut best_strategy = SyncStrategy::RingAllReduce;
         let mut best_score = 0.0;
-        
+
         for (strategy, metrics) in &self.strategy_performance {
             let score = metrics.calculate_score(tensor_size);
             if score > best_score {
@@ -176,7 +179,7 @@ impl CommunicationPerformanceMonitor {
                 best_strategy = *strategy;
             }
         }
-        
+
         best_strategy
     }
 }
@@ -199,23 +202,25 @@ impl StrategyPerformanceMetrics {
             efficiency_score: 0.0,
         }
     }
-    
+
     fn update(&mut self, bandwidth_gb_s: f64, latency_us: u64) {
         self.bandwidth_samples.push_back(bandwidth_gb_s);
         self.latency_samples.push_back(latency_us);
-        
+
         if self.bandwidth_samples.len() > 100 {
             self.bandwidth_samples.pop_front();
             self.latency_samples.pop_front();
         }
-        
+
         // Update efficiency score based on recent performance
-        let avg_bandwidth = self.bandwidth_samples.iter().sum::<f64>() / self.bandwidth_samples.len() as f64;
-        let avg_latency = self.latency_samples.iter().sum::<u64>() as f64 / self.latency_samples.len() as f64;
-        
+        let avg_bandwidth =
+            self.bandwidth_samples.iter().sum::<f64>() / self.bandwidth_samples.len() as f64;
+        let avg_latency =
+            self.latency_samples.iter().sum::<u64>() as f64 / self.latency_samples.len() as f64;
+
         self.efficiency_score = avg_bandwidth / (avg_latency / 1000.0); // Bandwidth per ms
     }
-    
+
     fn calculate_score(&self, tensor_size: usize) -> f64 {
         // Higher score for better efficiency, adjusted for tensor size
         let size_factor = if tensor_size > 1000000 { 2.0 } else { 1.0 }; // Favor strategies for large tensors
@@ -248,26 +253,32 @@ impl AdaptiveCommunicationSelector {
             performance_threshold: 1.2, // 20% improvement required
         }
     }
-    
+
     fn should_evaluate_strategy(&self, current_step: usize) -> bool {
         current_step - self.last_switch_step >= self.switch_cooldown
     }
-    
-    fn evaluate_and_switch(&mut self, monitor: &CommunicationPerformanceMonitor, tensor_size: usize, current_step: usize) -> Option<SyncStrategy> {
+
+    fn evaluate_and_switch(
+        &mut self,
+        monitor: &CommunicationPerformanceMonitor,
+        tensor_size: usize,
+        current_step: usize,
+    ) -> Option<SyncStrategy> {
         if !self.should_evaluate_strategy(current_step) {
             return None;
         }
-        
+
         let optimal_strategy = monitor.get_optimal_strategy(tensor_size);
-        
+
         if optimal_strategy != self.current_strategy {
             // Check if the switch is worth it based on performance threshold
             if let (Some(current_metrics), Some(optimal_metrics)) = (
                 monitor.strategy_performance.get(&self.current_strategy),
                 monitor.strategy_performance.get(&optimal_strategy),
             ) {
-                let performance_ratio = optimal_metrics.efficiency_score / current_metrics.efficiency_score;
-                
+                let performance_ratio =
+                    optimal_metrics.efficiency_score / current_metrics.efficiency_score;
+
                 if performance_ratio >= self.performance_threshold {
                     self.current_strategy = optimal_strategy;
                     self.last_switch_step = current_step;
@@ -275,7 +286,7 @@ impl AdaptiveCommunicationSelector {
                 }
             }
         }
-        
+
         None
     }
 }
@@ -326,15 +337,15 @@ impl<A: Float> MultiGpuSync<A> {
     ) -> Result<Self, GpuOptimizerError> {
         // Load synchronization kernels
         let sync_kernels = Self::load_sync_kernels(&context, &config)?;
-        
+
         // Allocate workspace buffers
         let workspace = Self::allocate_workspace(&context, &config, max_param_size)?;
-        
+
         // Initialize performance monitoring and adaptive components
         let perf_monitor = CommunicationPerformanceMonitor::new();
         let adaptive_selector = AdaptiveCommunicationSelector::new();
         let async_handles = Vec::with_capacity(config.pipeline_depth);
-        
+
         Ok(Self {
             context,
             config,
@@ -347,7 +358,7 @@ impl<A: Float> MultiGpuSync<A> {
             _phantom: PhantomData,
         })
     }
-    
+
     /// Synchronize gradients across GPUs
     pub fn sync_gradients<S, D>(
         &mut self,
@@ -360,7 +371,7 @@ impl<A: Float> MultiGpuSync<A> {
         self.step_counter += 1;
         let tensor_size = gradients.len();
         let start_time = std::time::Instant::now();
-        
+
         // Adaptive strategy selection
         let strategy = if self.config.adaptive_communication {
             if let Some(new_strategy) = self.adaptive_selector.evaluate_and_switch(
@@ -375,7 +386,7 @@ impl<A: Float> MultiGpuSync<A> {
         } else {
             self.config.sync_strategy
         };
-        
+
         // Execute synchronization
         let result = match strategy {
             SyncStrategy::RingAllReduce => self.ring_allreduce(gradients),
@@ -386,133 +397,133 @@ impl<A: Float> MultiGpuSync<A> {
                     self.pipeline_parallel_async(gradients)
                 } else {
                     Err(GpuOptimizerError::UnsupportedOperation(
-                        "Pipeline parallel requires async updates enabled".to_string()
+                        "Pipeline parallel requires async updates enabled".to_string(),
                     ))
                 }
             }
         };
-        
+
         // Record performance
         let elapsed = start_time.elapsed();
         let data_bytes = tensor_size * std::mem::size_of::<A>();
-        
+
         self.perf_monitor.record_communication(
             strategy,
             data_bytes as u64,
             elapsed.as_micros() as u64,
         );
-        
+
         // Periodic monitoring output
         if self.step_counter % self.config.bandwidth_monitor_interval == 0 {
             self.log_performance_statistics();
         }
-        
+
         result
     }
-    
+
     /// Ring all-reduce implementation
-    fn ring_allreduce<S, D>(
-        &self,
-        gradients: &mut ArrayBase<S, D>,
-    ) -> Result<(), GpuOptimizerError>
+    fn ring_allreduce<S, D>(&self, gradients: &mut ArrayBase<S, D>) -> Result<(), GpuOptimizerError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
     {
         #[cfg(feature = "gpu")]
         {
-            let kernel = self.sync_kernels.ring_allreduce.as_ref()
+            let kernel = self
+                .sync_kernels
+                .ring_allreduce
+                .as_ref()
                 .ok_or(GpuOptimizerError::NotInitialized)?;
-            
-            let grad_slice = gradients.as_slice_mut()
-                .ok_or_else(|| GpuOptimizerError::InvalidState(
-                    "Gradients must be contiguous".to_string()
-                ))?;
-            
+
+            let grad_slice = gradients.as_slice_mut().ok_or_else(|| {
+                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+            })?;
+
             // Create GPU buffer for gradients
             let grad_buffer = self.context.create_buffer_from_slice(grad_slice);
-            
+
             // Calculate chunk size for ring operations
             let chunk_size = (gradients.len() + self.config.num_gpus - 1) / self.config.num_gpus;
-            
+
             // Set kernel parameters
             kernel.set_buffer("data", &grad_buffer);
             kernel.set_buffer("recv_buffer", self.workspace.recv_buffer.as_ref().unwrap());
             kernel.set_i32("chunk_size", chunk_size as i32);
             kernel.set_i32("rank", self.config.rank as i32);
             kernel.set_i32("world_size", self.config.num_gpus as i32);
-            
+
             // Execute ring all-reduce for each chunk
             for chunk_id in 0..self.config.num_gpus {
                 kernel.set_i32("chunk_id", chunk_id as i32);
-                
-                let (grid_size, block_size) = crate::gpu::utils::calculate_block_size(chunk_size, 256);
+
+                let (grid_size, block_size) =
+                    crate::gpu::utils::calculate_block_size(chunk_size, 256);
                 kernel.dispatch([grid_size as u32, 1, 1]);
             }
-            
+
             // Copy results back
             grad_buffer.copy_to_host(grad_slice);
         }
-        
+
         Ok(())
     }
-    
+
     /// Tree all-reduce implementation
-    fn tree_allreduce<S, D>(
-        &self,
-        gradients: &mut ArrayBase<S, D>,
-    ) -> Result<(), GpuOptimizerError>
+    fn tree_allreduce<S, D>(&self, gradients: &mut ArrayBase<S, D>) -> Result<(), GpuOptimizerError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
     {
         #[cfg(feature = "gpu")]
         {
-            let kernel = self.sync_kernels.tree_allreduce.as_ref()
+            let kernel = self
+                .sync_kernels
+                .tree_allreduce
+                .as_ref()
                 .ok_or(GpuOptimizerError::NotInitialized)?;
-            
-            let grad_slice = gradients.as_slice_mut()
-                .ok_or_else(|| GpuOptimizerError::InvalidState(
-                    "Gradients must be contiguous".to_string()
-                ))?;
-            
+
+            let grad_slice = gradients.as_slice_mut().ok_or_else(|| {
+                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+            })?;
+
             // Create GPU buffer for gradients
             let grad_buffer = self.context.create_buffer_from_slice(grad_slice);
-            
+
             // Calculate tree reduction levels
             let num_levels = (self.config.num_gpus as f32).log2().ceil() as usize;
-            
+
             // Set kernel parameters
             kernel.set_buffer("data", &grad_buffer);
             kernel.set_buffer("workspace", self.workspace.workspace.as_ref().unwrap());
             kernel.set_i32("rank", self.config.rank as i32);
             kernel.set_i32("world_size", self.config.num_gpus as i32);
             kernel.set_i32("data_size", gradients.len() as i32);
-            
+
             // Execute tree all-reduce in phases
             for level in 0..num_levels {
                 let stride = 1 << level;
                 let peer_rank = self.config.rank ^ stride;
-                
+
                 if peer_rank < self.config.num_gpus {
                     kernel.set_i32("level", level as i32);
                     kernel.set_i32("peer_rank", peer_rank as i32);
-                    
-                    let (grid_size, block_size) = crate::gpu::utils::calculate_block_size(gradients.len(), 256);
+
+                    let (grid_size, block_size) =
+                        crate::gpu::utils::calculate_block_size(gradients.len(), 256);
                     kernel.dispatch([grid_size as u32, 1, 1]);
-                    
+
                     // Synchronize before next level
                     self.context.synchronize();
                 }
             }
-            
+
             // Copy results back
             grad_buffer.copy_to_host(grad_slice);
         }
-        
+
         Ok(())
     }
-    
+
     /// Hierarchical all-reduce for multi-node setups
     fn hierarchical_allreduce<S, D>(
         &self,
@@ -524,22 +535,24 @@ impl<A: Float> MultiGpuSync<A> {
     {
         #[cfg(feature = "gpu")]
         {
-            let kernel = self.sync_kernels.hierarchical_allreduce.as_ref()
+            let kernel = self
+                .sync_kernels
+                .hierarchical_allreduce
+                .as_ref()
                 .ok_or(GpuOptimizerError::NotInitialized)?;
-            
-            let grad_slice = gradients.as_slice_mut()
-                .ok_or_else(|| GpuOptimizerError::InvalidState(
-                    "Gradients must be contiguous".to_string()
-                ))?;
-            
+
+            let grad_slice = gradients.as_slice_mut().ok_or_else(|| {
+                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+            })?;
+
             // Calculate local and global ranks
             let local_rank = self.config.rank % self.config.local_group_size;
             let global_rank = self.config.rank / self.config.local_group_size;
             let global_size = self.config.num_gpus / self.config.local_group_size;
-            
+
             // Create GPU buffer for gradients
             let grad_buffer = self.context.create_buffer_from_slice(grad_slice);
-            
+
             // Phase 1: Reduce-scatter within local group
             kernel.set_buffer("data", &grad_buffer);
             kernel.set_buffer("workspace", self.workspace.workspace.as_ref().unwrap());
@@ -549,30 +562,31 @@ impl<A: Float> MultiGpuSync<A> {
             kernel.set_i32("global_size", global_size as i32);
             kernel.set_i32("data_size", gradients.len() as i32);
             kernel.set_i32("phase", 1); // Local reduce-scatter
-            
-            let (grid_size, block_size) = crate::gpu::utils::calculate_block_size(gradients.len(), 256);
+
+            let (grid_size, block_size) =
+                crate::gpu::utils::calculate_block_size(gradients.len(), 256);
             kernel.dispatch([grid_size as u32, 1, 1]);
             self.context.synchronize();
-            
+
             // Phase 2: All-reduce across global leaders (one per node)
             if local_rank == 0 {
                 kernel.set_i32("phase", 2); // Global all-reduce
                 kernel.dispatch([grid_size as u32, 1, 1]);
                 self.context.synchronize();
             }
-            
+
             // Phase 3: All-gather within local group
             kernel.set_i32("phase", 3); // Local all-gather
             kernel.dispatch([grid_size as u32, 1, 1]);
             self.context.synchronize();
-            
+
             // Copy results back
             grad_buffer.copy_to_host(grad_slice);
         }
-        
+
         Ok(())
     }
-    
+
     /// Pipeline parallel asynchronous synchronization
     fn pipeline_parallel_async<S, D>(
         &mut self,
@@ -584,11 +598,10 @@ impl<A: Float> MultiGpuSync<A> {
     {
         #[cfg(feature = "gpu")]
         {
-            let grad_slice = gradients.as_slice_mut()
-                .ok_or_else(|| GpuOptimizerError::InvalidState(
-                    "Gradients must be contiguous".to_string()
-                ))?;
-            
+            let grad_slice = gradients.as_slice_mut().ok_or_else(|| {
+                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+            })?;
+
             // Create async communication handle
             let handle = AsyncCommunicationHandle {
                 id: self.async_handles.len(),
@@ -598,39 +611,41 @@ impl<A: Float> MultiGpuSync<A> {
                 data_size: gradients.len() * std::mem::size_of::<A>(),
                 status: AsyncCommStatus::InProgress,
             };
-            
+
             // Pipeline stages: overlap computation and communication
             let chunk_size = gradients.len() / self.config.pipeline_depth;
-            
+
             for stage in 0..self.config.pipeline_depth {
                 let start_idx = stage * chunk_size;
                 let end_idx = ((stage + 1) * chunk_size).min(gradients.len());
-                
+
                 if start_idx < end_idx {
                     // Process chunk asynchronously
-                    let chunk_buffer = self.context.create_buffer_from_slice(&grad_slice[start_idx..end_idx]);
-                    
+                    let chunk_buffer = self
+                        .context
+                        .create_buffer_from_slice(&grad_slice[start_idx..end_idx]);
+
                     // Submit async operation (placeholder - would use actual GPU streams)
                     // In practice, this would use CUDA streams or similar
                 }
             }
-            
+
             self.async_handles.push(handle);
-            
+
             // Clean up completed handles periodically
             if self.async_handles.len() > self.config.pipeline_depth * 2 {
                 self.cleanup_completed_handles();
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Log performance statistics
     fn log_performance_statistics(&self) {
         let avg_bandwidth = self.perf_monitor.get_average_bandwidth();
         let total_ops = self.perf_monitor.comm_operations;
-        
+
         println!(
             "Multi-GPU Performance [Step {}]: {:.2} GB/s avg bandwidth, {} ops, current strategy: {:?}",
             self.step_counter,
@@ -639,14 +654,14 @@ impl<A: Float> MultiGpuSync<A> {
             self.adaptive_selector.current_strategy
         );
     }
-    
+
     /// Clean up completed asynchronous communication handles
     fn cleanup_completed_handles(&mut self) {
         let current_time = std::time::Instant::now();
-        
+
         self.async_handles.retain(|handle| {
             let elapsed = current_time.duration_since(handle.start_time);
-            
+
             if elapsed > handle.expected_completion {
                 // Mark as completed or timeout
                 false // Remove from vector
@@ -655,7 +670,7 @@ impl<A: Float> MultiGpuSync<A> {
             }
         });
     }
-    
+
     /// Get communication performance statistics
     pub fn get_performance_stats(&self) -> CommunicationPerformanceStats {
         CommunicationPerformanceStats {
@@ -667,26 +682,26 @@ impl<A: Float> MultiGpuSync<A> {
             step_count: self.step_counter,
         }
     }
-    
+
     /// Force synchronization of all pending operations
     pub fn synchronize_all(&mut self) -> Result<(), GpuOptimizerError> {
         #[cfg(feature = "gpu")]
         {
             self.context.synchronize();
-            
+
             // Update all pending handles to completed
             for handle in &mut self.async_handles {
                 if handle.status == AsyncCommStatus::InProgress {
                     handle.status = AsyncCommStatus::Completed;
                 }
             }
-            
+
             self.cleanup_completed_handles();
         }
-        
+
         Ok(())
     }
-    
+
     /// Compress gradients for bandwidth optimization
     pub fn compress_gradients<S, D>(
         &mut self,
@@ -698,29 +713,32 @@ impl<A: Float> MultiGpuSync<A> {
     {
         #[cfg(feature = "gpu")]
         {
-            let kernel = self.sync_kernels.compress_gradients.as_ref()
+            let kernel = self
+                .sync_kernels
+                .compress_gradients
+                .as_ref()
                 .ok_or(GpuOptimizerError::NotInitialized)?;
-            
+
             let k = (gradients.len() as f32 * self.config.compression_ratio) as usize;
-            
+
             // Set kernel parameters and execute
             // ... implementation details
-            
+
             // Return compressed values and indices
             let compressed_values = vec![A::zero(); k];
             let compressed_indices = vec![0i32; k];
-            
+
             Ok((compressed_values, compressed_indices))
         }
-        
+
         #[cfg(not(feature = "gpu"))]
         {
             Err(GpuOptimizerError::UnsupportedOperation(
-                "GPU feature not enabled".to_string()
+                "GPU feature not enabled".to_string(),
             ))
         }
     }
-    
+
     /// Load synchronization kernels
     fn load_sync_kernels(
         context: &Arc<GpuContext>,
@@ -733,31 +751,32 @@ impl<A: Float> MultiGpuSync<A> {
             } else {
                 None
             };
-            
+
             let tree_kernel = if matches!(config.sync_strategy, SyncStrategy::TreeAllReduce) {
                 Some(Arc::new(context.get_kernel("tree_allreduce_f32")?))
             } else {
                 None
             };
-            
-            let hierarchical_kernel = if matches!(config.sync_strategy, SyncStrategy::HierarchicalAllReduce) {
-                Some(Arc::new(context.get_kernel("hierarchical_allreduce_f32")?))
-            } else {
-                None
-            };
-            
+
+            let hierarchical_kernel =
+                if matches!(config.sync_strategy, SyncStrategy::HierarchicalAllReduce) {
+                    Some(Arc::new(context.get_kernel("hierarchical_allreduce_f32")?))
+                } else {
+                    None
+                };
+
             let compress_kernel = if config.gradient_compression {
                 Some(Arc::new(context.get_kernel("compress_gradients_topk_f32")?))
             } else {
                 None
             };
-            
+
             let decompress_kernel = if config.gradient_compression {
                 Some(Arc::new(context.get_kernel("decompress_gradients_f32")?))
             } else {
                 None
             };
-            
+
             Ok(SyncKernels {
                 ring_allreduce: ring_kernel,
                 tree_allreduce: tree_kernel,
@@ -766,7 +785,7 @@ impl<A: Float> MultiGpuSync<A> {
                 decompress_gradients: decompress_kernel,
             })
         }
-        
+
         #[cfg(not(feature = "gpu"))]
         {
             Ok(SyncKernels {
@@ -778,7 +797,7 @@ impl<A: Float> MultiGpuSync<A> {
             })
         }
     }
-    
+
     /// Allocate workspace buffers
     fn allocate_workspace(
         context: &Arc<GpuContext>,
@@ -789,18 +808,19 @@ impl<A: Float> MultiGpuSync<A> {
         {
             let recv_buffer = Some(context.create_buffer::<A>(max_param_size));
             let workspace = Some(context.create_buffer::<A>(max_param_size));
-            
-            let (compressed_values, compressed_indices, error_feedback) = if config.gradient_compression {
-                let k = (max_param_size as f32 * config.compression_ratio) as usize;
-                (
-                    Some(context.create_buffer::<A>(k)),
-                    Some(context.create_buffer::<i32>(k)),
-                    Some(context.create_buffer::<A>(max_param_size)),
-                )
-            } else {
-                (None, None, None)
-            };
-            
+
+            let (compressed_values, compressed_indices, error_feedback) =
+                if config.gradient_compression {
+                    let k = (max_param_size as f32 * config.compression_ratio) as usize;
+                    (
+                        Some(context.create_buffer::<A>(k)),
+                        Some(context.create_buffer::<i32>(k)),
+                        Some(context.create_buffer::<A>(max_param_size)),
+                    )
+                } else {
+                    (None, None, None)
+                };
+
             Ok(WorkspaceBuffers {
                 recv_buffer,
                 workspace,
@@ -809,7 +829,7 @@ impl<A: Float> MultiGpuSync<A> {
                 error_feedback,
             })
         }
-        
+
         #[cfg(not(feature = "gpu"))]
         {
             Ok(WorkspaceBuffers {
@@ -836,28 +856,24 @@ impl MultiGpuSetup {
     pub fn new(num_gpus: usize, max_param_size: usize) -> Result<Self, GpuOptimizerError> {
         let mut contexts = Vec::new();
         let mut sync_managers = Vec::new();
-        
+
         for rank in 0..num_gpus {
             // Create GPU context for each device
             let context = Arc::new(GpuContext::new(scirs2_core::gpu::GpuBackend::Cuda)?);
-            
+
             // Create sync manager
             let config = MultiGpuConfig {
                 num_gpus,
                 rank,
                 ..Default::default()
             };
-            
-            let sync_manager = MultiGpuSync::new(
-                context.clone(),
-                config,
-                max_param_size,
-            )?;
-            
+
+            let sync_manager = MultiGpuSync::new(context.clone(), config, max_param_size)?;
+
             contexts.push(context);
             sync_managers.push(sync_manager);
         }
-        
+
         Ok(Self {
             contexts,
             sync_managers,
@@ -868,7 +884,7 @@ impl MultiGpuSetup {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_multi_gpu_config_default() {
         let config = MultiGpuConfig::default();
@@ -877,7 +893,7 @@ mod tests {
         assert_eq!(config.sync_strategy, SyncStrategy::RingAllReduce);
         assert!(!config.gradient_compression);
     }
-    
+
     #[test]
     fn test_sync_strategy_selection() {
         let strategies = [
@@ -886,7 +902,7 @@ mod tests {
             SyncStrategy::HierarchicalAllReduce,
             SyncStrategy::PipelineParallel,
         ];
-        
+
         for strategy in &strategies {
             let config = MultiGpuConfig {
                 sync_strategy: *strategy,
@@ -895,45 +911,49 @@ mod tests {
             assert_eq!(config.sync_strategy, *strategy);
         }
     }
-    
+
     #[test]
     fn test_communication_performance_monitor() {
         let mut monitor = CommunicationPerformanceMonitor::new();
-        
+
         // Record some communications
         monitor.record_communication(SyncStrategy::RingAllReduce, 1000000, 1000); // 1GB/s
         monitor.record_communication(SyncStrategy::TreeAllReduce, 2000000, 1000); // 2GB/s
-        
+
         assert_eq!(monitor.comm_operations, 2);
         assert!(monitor.get_average_bandwidth() > 0.0);
-        
+
         // Test strategy performance tracking
         let optimal = monitor.get_optimal_strategy(1000000);
-        assert!(matches!(optimal, SyncStrategy::RingAllReduce | SyncStrategy::TreeAllReduce));
+        assert!(matches!(
+            optimal,
+            SyncStrategy::RingAllReduce | SyncStrategy::TreeAllReduce
+        ));
     }
-    
+
     #[test]
     fn test_adaptive_communication_selector() {
         let mut selector = AdaptiveCommunicationSelector::new();
         let mut monitor = CommunicationPerformanceMonitor::new();
-        
+
         // Initial strategy
         assert_eq!(selector.current_strategy, SyncStrategy::RingAllReduce);
-        
+
         // Record better performance for tree all-reduce
         for _ in 0..10 {
-            monitor.record_communication(SyncStrategy::TreeAllReduce, 1000000, 500); // Better bandwidth
+            monitor.record_communication(SyncStrategy::TreeAllReduce, 1000000, 500);
+            // Better bandwidth
         }
-        
+
         // Should suggest switching after cooldown period
         let new_strategy = selector.evaluate_and_switch(&monitor, 1000000, 100);
-        
+
         // Depending on performance threshold, might suggest a switch
         if let Some(strategy) = new_strategy {
             assert_ne!(strategy, SyncStrategy::RingAllReduce);
         }
     }
-    
+
     #[test]
     fn test_multi_gpu_config_extended() {
         let config = MultiGpuConfig {
@@ -946,7 +966,7 @@ mod tests {
             pipeline_depth: 4,
             ..Default::default()
         };
-        
+
         assert_eq!(config.num_gpus, 8);
         assert!(config.adaptive_communication);
         assert_eq!(config.bandwidth_monitor_interval, 50);
@@ -955,7 +975,7 @@ mod tests {
         assert!(config.error_correction);
         assert_eq!(config.pipeline_depth, 4);
     }
-    
+
     #[test]
     fn test_async_communication_handle() {
         let handle = AsyncCommunicationHandle {
@@ -966,26 +986,26 @@ mod tests {
             data_size: 1000000,
             status: AsyncCommStatus::Pending,
         };
-        
+
         assert_eq!(handle.id, 0);
         assert_eq!(handle.strategy, SyncStrategy::PipelineParallel);
         assert_eq!(handle.data_size, 1000000);
         assert_eq!(handle.status, AsyncCommStatus::Pending);
     }
-    
+
     #[test]
     fn test_strategy_performance_metrics() {
         let mut metrics = StrategyPerformanceMetrics::new();
-        
+
         metrics.update(10.0, 1000); // 10 GB/s, 1ms
-        metrics.update(15.0, 800);  // 15 GB/s, 0.8ms
-        
+        metrics.update(15.0, 800); // 15 GB/s, 0.8ms
+
         assert!(metrics.efficiency_score > 0.0);
-        
+
         let score = metrics.calculate_score(1000000); // Large tensor
         assert!(score > 0.0);
     }
-    
+
     #[test]
     fn test_communication_performance_stats() {
         let stats = CommunicationPerformanceStats {
@@ -996,7 +1016,7 @@ mod tests {
             pending_async_ops: 2,
             step_count: 1000,
         };
-        
+
         assert_eq!(stats.average_bandwidth_gb_s, 10.5);
         assert_eq!(stats.total_operations, 100);
         assert_eq!(stats.total_data_transferred_gb, 50.0);

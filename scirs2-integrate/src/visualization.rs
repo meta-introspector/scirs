@@ -3,11 +3,11 @@
 //! This module provides tools for visualizing results from various solvers,
 //! including phase space plots, bifurcation diagrams, and field visualizations.
 
+use crate::analysis::{BasinAnalysis, BifurcationPoint};
+use crate::error::{IntegrateError, IntegrateResult as Result};
+use crate::ode::ODEResult;
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;
-use crate::error::{IntegrateError, IntegrateResult as Result};
-use crate::analysis::{BifurcationPoint, BasinAnalysis};
-use crate::ode::ODEResult;
 
 /// Data structure for plotting 2D phase space
 #[derive(Debug, Clone)]
@@ -162,24 +162,32 @@ impl VisualizationEngine {
         y_index: usize,
     ) -> Result<PhaseSpacePlot> {
         let n_points = ode_result.t.len();
-        let n_vars = if !ode_result.y.is_empty() { ode_result.y[0].len() } else { 0 };
+        let n_vars = if !ode_result.y.is_empty() {
+            ode_result.y[0].len()
+        } else {
+            0
+        };
 
         if x_index >= n_vars || y_index >= n_vars {
             return Err(IntegrateError::ValueError(
-                "Variable index out of bounds".to_string()
+                "Variable index out of bounds".to_string(),
             ));
         }
 
         let x: Vec<f64> = (0..n_points)
             .map(|i| ode_result.y[i][x_index].to_f64().unwrap_or(0.0))
             .collect();
-        
+
         let y: Vec<f64> = (0..n_points)
             .map(|i| ode_result.y[i][y_index].to_f64().unwrap_or(0.0))
             .collect();
 
         // Color by time for trajectory visualization
-        let colors: Vec<f64> = ode_result.t.iter().map(|t| t.to_f64().unwrap_or(0.0)).collect();
+        let colors: Vec<f64> = ode_result
+            .t
+            .iter()
+            .map(|t| t.to_f64().unwrap_or(0.0))
+            .collect();
 
         let mut metadata = PlotMetadata::default();
         metadata.title = "Phase Space Plot".to_string();
@@ -210,21 +218,20 @@ impl VisualizationEngine {
         for i in 0..n_points {
             let param = parameter_range.0 + i as f64 * param_step;
             parameters.push(param);
-            
+
             // Find corresponding state (simplified)
             let mut found = false;
             for bif_point in bifurcation_points {
                 if (bif_point.parameter_value - param).abs() < param_step {
                     states.push(bif_point.state.to_vec());
                     // Simplified stability check based on eigenvalues
-                    let is_stable = bif_point.eigenvalues.iter()
-                        .all(|eig| eig.re < 0.0);
+                    let is_stable = bif_point.eigenvalues.iter().all(|eig| eig.re < 0.0);
                     stability.push(is_stable);
                     found = true;
                     break;
                 }
             }
-            
+
             if !found {
                 states.push(vec![0.0]); // Default value
                 stability.push(true);
@@ -264,13 +271,13 @@ impl VisualizationEngine {
             for j in 0..nx {
                 let x = x_range.0 + j as f64 * dx;
                 let y = y_range.0 + i as f64 * dy;
-                
+
                 x_grid[[i, j]] = x;
                 y_grid[[i, j]] = y;
 
                 let state = Array1::from_vec(vec![x, y]);
                 let derivative = system(&state);
-                
+
                 if derivative.len() >= 2 {
                     u[[i, j]] = derivative[0];
                     v[[i, j]] = derivative[1];
@@ -295,14 +302,11 @@ impl VisualizationEngine {
     }
 
     /// Create basin of attraction visualization
-    pub fn create_basin_plot(
-        &self,
-        basin_analysis: &BasinAnalysis,
-    ) -> Result<HeatMapPlot> {
+    pub fn create_basin_plot(&self, basin_analysis: &BasinAnalysis) -> Result<HeatMapPlot> {
         let grid_size = basin_analysis.attractor_indices.nrows();
         let x = Array1::linspace(0.0, 1.0, grid_size);
         let y = Array1::linspace(0.0, 1.0, grid_size);
-        
+
         // Convert attractor indices to f64 for plotting
         let z = basin_analysis.attractor_indices.mapv(|x| x as f64);
 
@@ -311,12 +315,7 @@ impl VisualizationEngine {
         metadata.xlabel = "X".to_string();
         metadata.ylabel = "Y".to_string();
 
-        Ok(HeatMapPlot {
-            x,
-            y,
-            z,
-            metadata,
-        })
+        Ok(HeatMapPlot { x, y, z, metadata })
     }
 
     /// Generate ASCII art representation of a 2D plot
@@ -327,9 +326,15 @@ impl VisualizationEngine {
 
         // Find data bounds
         let x_min = data.iter().map(|(x, _)| *x).fold(f64::INFINITY, f64::min);
-        let x_max = data.iter().map(|(x, _)| *x).fold(f64::NEG_INFINITY, f64::max);
+        let x_max = data
+            .iter()
+            .map(|(x, _)| *x)
+            .fold(f64::NEG_INFINITY, f64::max);
         let y_min = data.iter().map(|(_, y)| *y).fold(f64::INFINITY, f64::min);
-        let y_max = data.iter().map(|(_, y)| *y).fold(f64::NEG_INFINITY, f64::max);
+        let y_max = data
+            .iter()
+            .map(|(_, y)| *y)
+            .fold(f64::NEG_INFINITY, f64::max);
 
         // Create character grid
         let mut grid = vec![vec![' '; width]; height];
@@ -338,7 +343,7 @@ impl VisualizationEngine {
         for (x, y) in data {
             let i = ((y - y_min) / (y_max - y_min) * (height - 1) as f64) as usize;
             let j = ((x - x_min) / (x_max - x_min) * (width - 1) as f64) as usize;
-            
+
             if i < height && j < width {
                 grid[height - 1 - i][j] = '*'; // Flip y-axis for proper orientation
             }
@@ -361,7 +366,7 @@ impl VisualizationEngine {
     /// Export plot data to CSV format
     pub fn export_csv(&self, plot: &PhaseSpacePlot) -> Result<String> {
         let mut csv = String::new();
-        
+
         // Header
         csv.push_str("x,y");
         if plot.colors.is_some() {
@@ -441,7 +446,7 @@ impl VisualizationEngine {
     ) -> Result<ParameterExplorationPlot> {
         if param_ranges.len() != 2 {
             return Err(IntegrateError::ValueError(
-                "Parameter exploration currently supports only 2D parameter spaces".to_string()
+                "Parameter exploration currently supports only 2D parameter spaces".to_string(),
             ));
         }
 
@@ -459,7 +464,7 @@ impl VisualizationEngine {
             for j in 0..resolution {
                 let x = x_min + i as f64 * dx;
                 let y = y_min + j as f64 * dy;
-                
+
                 x_grid[[i, j]] = x;
                 y_grid[[i, j]] = y;
                 z_values[[i, j]] = evaluation_function(&[x, y]);
@@ -468,8 +473,14 @@ impl VisualizationEngine {
 
         let mut metadata = PlotMetadata::default();
         metadata.title = "Parameter Space Exploration".to_string();
-        metadata.xlabel = param_names.get(0).cloned().unwrap_or_else(|| "Parameter 1".to_string());
-        metadata.ylabel = param_names.get(1).cloned().unwrap_or_else(|| "Parameter 2".to_string());
+        metadata.xlabel = param_names
+            .get(0)
+            .cloned()
+            .unwrap_or_else(|| "Parameter 1".to_string());
+        metadata.ylabel = param_names
+            .get(1)
+            .cloned()
+            .unwrap_or_else(|| "Parameter 2".to_string());
 
         Ok(ParameterExplorationPlot {
             x_grid,
@@ -492,7 +503,7 @@ impl VisualizationEngine {
     ) -> Result<RealTimeBifurcationPlot> {
         let n_params = 200;
         let param_step = (parameter_range.1 - parameter_range.0) / (n_params - 1) as f64;
-        
+
         let mut parameter_values = Vec::new();
         let mut attractor_data = Vec::new();
         let mut stability_data = Vec::new();
@@ -515,17 +526,20 @@ impl VisualizationEngine {
                 // Record attractor points
                 let mut attractor_points = Vec::new();
                 let mut local_maxima = Vec::new();
-                
+
                 for step in 0..record_steps {
                     let derivative = system(&state, param);
                     let derivative_scaled = &derivative * 0.01;
                     let new_state = &state + &derivative_scaled;
-                    
+
                     // Simple local maxima detection for period identification
-                    if step > 2 && new_state[0] > state[0] && state[0] > (state.clone() - &derivative_scaled)[0] {
+                    if step > 2
+                        && new_state[0] > state[0]
+                        && state[0] > (state.clone() - &derivative_scaled)[0]
+                    {
                         local_maxima.push(state[0]);
                     }
-                    
+
                     attractor_points.push(state[0]);
                     state = new_state;
                 }
@@ -572,18 +586,22 @@ impl VisualizationEngine {
         z_index: usize,
     ) -> Result<PhaseSpace3D> {
         let n_points = ode_result.t.len();
-        let n_vars = if !ode_result.y.is_empty() { ode_result.y[0].len() } else { 0 };
+        let n_vars = if !ode_result.y.is_empty() {
+            ode_result.y[0].len()
+        } else {
+            0
+        };
 
         if x_index >= n_vars || y_index >= n_vars || z_index >= n_vars {
             return Err(IntegrateError::ValueError(
-                "Variable index out of bounds".to_string()
+                "Variable index out of bounds".to_string(),
             ));
         }
 
         let x: Vec<f64> = (0..n_points)
             .map(|i| ode_result.y[i][x_index].to_f64().unwrap_or(0.0))
             .collect();
-        
+
         let y: Vec<f64> = (0..n_points)
             .map(|i| ode_result.y[i][y_index].to_f64().unwrap_or(0.0))
             .collect();
@@ -593,16 +611,19 @@ impl VisualizationEngine {
             .collect();
 
         // Color by time or by distance from initial point
-        let colors: Vec<f64> = ode_result.t.iter().map(|t| t.to_f64().unwrap_or(0.0)).collect();
+        let colors: Vec<f64> = ode_result
+            .t
+            .iter()
+            .map(|t| t.to_f64().unwrap_or(0.0))
+            .collect();
 
         let mut metadata = PlotMetadata::default();
         metadata.title = "3D Phase Space Trajectory".to_string();
         metadata.xlabel = format!("Variable {}", x_index);
         metadata.ylabel = format!("Variable {}", y_index);
-        metadata.annotations.insert(
-            "zlabel".to_string(), 
-            format!("Variable {}", z_index)
-        );
+        metadata
+            .annotations
+            .insert("zlabel".to_string(), format!("Variable {}", z_index));
 
         Ok(PhaseSpace3D {
             x,
@@ -628,18 +649,18 @@ impl VisualizationEngine {
         for i in 0..n_params {
             let mut perturbed_params = base_parameters.to_vec();
             let perturbation = base_parameters[i] * perturbation_percent / 100.0;
-            
+
             // Forward difference
             perturbed_params[i] += perturbation;
             let perturbed_value = sensitivity_function(&perturbed_params);
-            
+
             // Calculate normalized sensitivity
             let sensitivity = if perturbation.abs() > 1e-12 {
                 (perturbed_value - base_value) / perturbation * base_parameters[i] / base_value
             } else {
                 0.0
             };
-            
+
             sensitivities.push(sensitivity);
         }
 
@@ -721,18 +742,15 @@ pub mod utils {
     }
 
     /// Calculate optimal grid resolution for vector field plots
-    pub fn optimal_grid_resolution(
-        domain_size: (f64, f64),
-        target_density: f64,
-    ) -> (usize, usize) {
+    pub fn optimal_grid_resolution(domain_size: (f64, f64), target_density: f64) -> (usize, usize) {
         let (width, height) = domain_size;
         let area = width * height;
         let total_points = (area * target_density) as usize;
-        
+
         let aspect_ratio = width / height;
         let ny = (total_points as f64 / aspect_ratio).sqrt() as usize;
         let nx = (ny as f64 * aspect_ratio) as usize;
-        
+
         (nx.max(10), ny.max(10))
     }
 
@@ -742,10 +760,10 @@ pub mod utils {
         let mean = data.iter().sum::<f64>() / n;
         let variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n;
         let std_dev = variance.sqrt();
-        
+
         let mut sorted_data = data.to_vec();
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         let min = sorted_data[0];
         let max = sorted_data[sorted_data.len() - 1];
         let median = if sorted_data.len() % 2 == 0 {
@@ -898,7 +916,7 @@ mod tests {
         let values = vec![0.0, 0.5, 1.0];
         let colors = utils::generate_colormap(&values, ColorScheme::Grayscale);
         assert_eq!(colors.len(), 3);
-        assert_eq!(colors[0], (0, 0, 0));   // Black for min
+        assert_eq!(colors[0], (0, 0, 0)); // Black for min
         assert_eq!(colors[2], (255, 255, 255)); // White for max
     }
 
@@ -919,7 +937,7 @@ pub mod advanced_visualization {
     use crate::ode::ODEResult;
     use ndarray::{Array1, Array2};
     use rand::Rng;
-    
+
     /// Multi-dimensional data visualization engine
     pub struct MultiDimensionalVisualizer {
         /// Dimension reduction method
@@ -929,7 +947,7 @@ pub mod advanced_visualization {
         /// Clustering method for data grouping
         pub clustering_method: ClusteringMethod,
     }
-    
+
     /// Dimension reduction methods
     #[derive(Debug, Clone, Copy)]
     pub enum DimensionReductionMethod {
@@ -944,7 +962,7 @@ pub mod advanced_visualization {
         /// Multidimensional Scaling
         MDS,
     }
-    
+
     /// Clustering methods for visualization
     #[derive(Debug, Clone, Copy)]
     pub enum ClusteringMethod {
@@ -957,7 +975,7 @@ pub mod advanced_visualization {
         /// No clustering
         None,
     }
-    
+
     impl MultiDimensionalVisualizer {
         /// Create new multi-dimensional visualizer
         pub fn new() -> Self {
@@ -967,7 +985,7 @@ pub mod advanced_visualization {
                 clustering_method: ClusteringMethod::None,
             }
         }
-        
+
         /// Visualize high-dimensional data
         pub fn visualize_high_dimensional_data(
             &self,
@@ -976,10 +994,10 @@ pub mod advanced_visualization {
         ) -> Result<HighDimensionalPlot> {
             // Apply dimension reduction
             let reduced_data = self.apply_dimension_reduction(data)?;
-            
+
             // Apply clustering if specified
             let cluster_labels = self.apply_clustering(&reduced_data)?;
-            
+
             // Create plot data
             let x: Vec<f64> = reduced_data.column(0).to_vec();
             let y: Vec<f64> = if reduced_data.ncols() > 1 {
@@ -987,13 +1005,13 @@ pub mod advanced_visualization {
             } else {
                 vec![0.0; x.len()]
             };
-            
+
             let z: Option<Vec<f64>> = if self.target_dimensions > 2 && reduced_data.ncols() > 2 {
                 Some(reduced_data.column(2).to_vec())
             } else {
                 None
             };
-            
+
             let colors = if let Some(labels) = labels {
                 labels.to_vec().into_iter().map(|l| l as f64).collect()
             } else if let Some(clusters) = &cluster_labels {
@@ -1001,12 +1019,12 @@ pub mod advanced_visualization {
             } else {
                 (0..x.len()).map(|i| i as f64).collect()
             };
-            
+
             let mut metadata = PlotMetadata::default();
             metadata.title = "High-Dimensional Data Visualization".to_string();
             metadata.xlabel = format!("{:?} Component 1", self.reduction_method);
             metadata.ylabel = format!("{:?} Component 2", self.reduction_method);
-            
+
             Ok(HighDimensionalPlot {
                 x,
                 y,
@@ -1019,7 +1037,7 @@ pub mod advanced_visualization {
                 metadata,
             })
         }
-        
+
         /// Apply dimension reduction to data
         fn apply_dimension_reduction(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
             match self.reduction_method {
@@ -1030,45 +1048,46 @@ pub mod advanced_visualization {
                 DimensionReductionMethod::MDS => self.apply_mds(data),
             }
         }
-        
+
         /// Apply Principal Component Analysis
         fn apply_pca(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
             let (n_samples, n_features) = data.dim();
-            
+
             // Center the data
             let mean = data.mean_axis(ndarray::Axis(0)).unwrap();
             let centered_data = data - &mean.insert_axis(ndarray::Axis(0));
-            
+
             // Compute covariance matrix
             let cov_matrix = centered_data.t().dot(&centered_data) / (n_samples - 1) as f64;
-            
+
             // Simplified eigenvalue decomposition (for small matrices)
             let (eigenvalues, eigenvectors) = self.compute_eigendecomposition(&cov_matrix)?;
-            
+
             // Sort by eigenvalue magnitude (descending)
             let mut eigenvalue_indices: Vec<usize> = (0..eigenvalues.len()).collect();
-            eigenvalue_indices.sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
-            
+            eigenvalue_indices
+                .sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
+
             // Project data onto principal components
             let n_components = self.target_dimensions.min(n_features);
             let mut projected_data = Array2::zeros((n_samples, n_components));
-            
+
             for (i, &idx) in eigenvalue_indices.iter().take(n_components).enumerate() {
                 let component = eigenvectors.column(idx);
                 let projection = centered_data.dot(&component);
                 projected_data.column_mut(i).assign(&projection);
             }
-            
+
             Ok(projected_data)
         }
-        
+
         /// Apply t-SNE (simplified implementation)
         fn apply_tsne(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
             // Simplified t-SNE implementation
             // In practice, would use a proper t-SNE algorithm
             let (n_samples, _) = data.dim();
             let mut rng = rand::rng();
-            
+
             // Random initialization
             let mut embedding = Array2::zeros((n_samples, self.target_dimensions));
             for i in 0..n_samples {
@@ -1076,18 +1095,18 @@ pub mod advanced_visualization {
                     embedding[[i, j]] = rng.random::<f64>() * 2.0 - 1.0;
                 }
             }
-            
+
             // Simplified optimization (would need proper gradient descent)
             let learning_rate = 200.0;
             let n_iterations = 1000;
-            
+
             for _iter in 0..n_iterations {
                 // Compute pairwise similarities in high dimension
                 let p_similarities = self.compute_gaussian_similarities(data, 1.0)?;
-                
-                // Compute pairwise similarities in low dimension  
+
+                // Compute pairwise similarities in low dimension
                 let q_similarities = self.compute_t_similarities(&embedding)?;
-                
+
                 // Gradient descent step (simplified)
                 for i in 0..n_samples {
                     for j in 0..self.target_dimensions {
@@ -1104,28 +1123,28 @@ pub mod advanced_visualization {
                     }
                 }
             }
-            
+
             Ok(embedding)
         }
-        
+
         /// Apply UMAP (simplified implementation)
         fn apply_umap(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
             // Simplified UMAP - in practice would use proper UMAP algorithm
             // For now, fall back to PCA
             self.apply_pca(data)
         }
-        
+
         /// Apply Linear Discriminant Analysis
         fn apply_lda(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
             // Simplified LDA - would need class labels for proper implementation
             // For now, fall back to PCA
             self.apply_pca(data)
         }
-        
+
         /// Apply Multidimensional Scaling
         fn apply_mds(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
             let n_samples = data.nrows();
-            
+
             // Compute distance matrix
             let mut distance_matrix = Array2::zeros((n_samples, n_samples));
             for i in 0..n_samples {
@@ -1135,37 +1154,36 @@ pub mod advanced_visualization {
                     distance_matrix[[j, i]] = dist;
                 }
             }
-            
+
             // Classical MDS using eigendecomposition
             let squared_distances = distance_matrix.mapv(|d| d * d);
-            
+
             // Double centering
             let _n = n_samples as f64;
             let row_means = squared_distances.mean_axis(ndarray::Axis(1)).unwrap();
             let col_means = squared_distances.mean_axis(ndarray::Axis(0)).unwrap();
             let grand_mean = squared_distances.mean().unwrap();
-            
+
             let mut b_matrix = Array2::zeros((n_samples, n_samples));
             for i in 0..n_samples {
                 for j in 0..n_samples {
-                    b_matrix[[i, j]] = -0.5 * (squared_distances[[i, j]] 
-                                               - row_means[i] 
-                                               - col_means[j] 
-                                               + grand_mean);
+                    b_matrix[[i, j]] = -0.5
+                        * (squared_distances[[i, j]] - row_means[i] - col_means[j] + grand_mean);
                 }
             }
-            
+
             // Eigendecomposition of B matrix
             let (eigenvalues, eigenvectors) = self.compute_eigendecomposition(&b_matrix)?;
-            
+
             // Sort eigenvalues in descending order
             let mut eigenvalue_indices: Vec<usize> = (0..eigenvalues.len()).collect();
-            eigenvalue_indices.sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
-            
+            eigenvalue_indices
+                .sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
+
             // Construct embedding
             let n_components = self.target_dimensions.min(n_samples);
             let mut embedding = Array2::zeros((n_samples, n_components));
-            
+
             for (i, &idx) in eigenvalue_indices.iter().take(n_components).enumerate() {
                 if eigenvalues[idx] > 0.0 {
                     let scale = eigenvalues[idx].sqrt();
@@ -1174,16 +1192,14 @@ pub mod advanced_visualization {
                     }
                 }
             }
-            
+
             Ok(embedding)
         }
-        
+
         /// Apply clustering to reduced data
         fn apply_clustering(&self, data: &Array2<f64>) -> Result<Option<Vec<usize>>> {
             match self.clustering_method {
-                ClusteringMethod::KMeans { k } => {
-                    Ok(Some(self.kmeans_clustering(data, k)?))
-                }
+                ClusteringMethod::KMeans { k } => Ok(Some(self.kmeans_clustering(data, k)?)),
                 ClusteringMethod::DBSCAN { eps, min_samples } => {
                     Ok(Some(self.dbscan_clustering(data, eps, min_samples)?))
                 }
@@ -1193,34 +1209,37 @@ pub mod advanced_visualization {
                 ClusteringMethod::None => Ok(None),
             }
         }
-        
+
         /// K-means clustering implementation
         fn kmeans_clustering(&self, data: &Array2<f64>, k: usize) -> Result<Vec<usize>> {
             use rand::Rng;
             let mut rng = rand::rng();
             let (n_samples, n_features) = data.dim();
-            
+
             // Initialize centroids randomly
             let mut centroids = Array2::zeros((k, n_features));
             for i in 0..k {
                 for j in 0..n_features {
                     let min_val = data.column(j).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-                    let max_val = data.column(j).iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+                    let max_val = data
+                        .column(j)
+                        .iter()
+                        .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
                     centroids[[i, j]] = min_val + rng.random::<f64>() * (max_val - min_val);
                 }
             }
-            
+
             let mut labels = vec![0; n_samples];
             let max_iterations = 100;
-            
+
             for _iteration in 0..max_iterations {
                 let mut changed = false;
-                
+
                 // Assign points to nearest centroids
                 for i in 0..n_samples {
                     let mut min_distance = f64::INFINITY;
                     let mut best_cluster = 0;
-                    
+
                     for j in 0..k {
                         let distance = self.euclidean_distance(&data.row(i), &centroids.row(j));
                         if distance < min_distance {
@@ -1228,21 +1247,21 @@ pub mod advanced_visualization {
                             best_cluster = j;
                         }
                     }
-                    
+
                     if labels[i] != best_cluster {
                         labels[i] = best_cluster;
                         changed = true;
                     }
                 }
-                
+
                 if !changed {
                     break;
                 }
-                
+
                 // Update centroids
                 let mut cluster_counts = vec![0; k];
                 centroids.fill(0.0);
-                
+
                 for i in 0..n_samples {
                     let cluster = labels[i];
                     cluster_counts[cluster] += 1;
@@ -1250,7 +1269,7 @@ pub mod advanced_visualization {
                         centroids[[cluster, j]] += data[[i, j]];
                     }
                 }
-                
+
                 for i in 0..k {
                     if cluster_counts[i] > 0 {
                         for j in 0..n_features {
@@ -1259,31 +1278,44 @@ pub mod advanced_visualization {
                     }
                 }
             }
-            
+
             Ok(labels)
         }
-        
+
         /// DBSCAN clustering implementation
-        fn dbscan_clustering(&self, data: &Array2<f64>, eps: f64, min_samples: usize) -> Result<Vec<usize>> {
+        fn dbscan_clustering(
+            &self,
+            data: &Array2<f64>,
+            eps: f64,
+            min_samples: usize,
+        ) -> Result<Vec<usize>> {
             let n_samples = data.nrows();
             let mut labels = vec![usize::MAX; n_samples]; // MAX means unclassified
             let mut cluster_id = 0;
-            
+
             for i in 0..n_samples {
                 if labels[i] != usize::MAX {
                     continue; // Already processed
                 }
-                
+
                 let neighbors = self.find_neighbors(data, i, eps);
-                
+
                 if neighbors.len() < min_samples {
                     labels[i] = usize::MAX - 1; // Mark as noise
                 } else {
-                    self.expand_cluster(data, i, &neighbors, cluster_id, eps, min_samples, &mut labels);
+                    self.expand_cluster(
+                        data,
+                        i,
+                        &neighbors,
+                        cluster_id,
+                        eps,
+                        min_samples,
+                        &mut labels,
+                    );
                     cluster_id += 1;
                 }
             }
-            
+
             // Convert noise points to cluster 0 and increment others
             for label in &mut labels {
                 if *label == usize::MAX - 1 {
@@ -1292,37 +1324,42 @@ pub mod advanced_visualization {
                     *label += 1; // Shift cluster IDs
                 }
             }
-            
+
             Ok(labels)
         }
-        
+
         /// Hierarchical clustering implementation
-        fn hierarchical_clustering(&self, data: &Array2<f64>, n_clusters: usize) -> Result<Vec<usize>> {
+        fn hierarchical_clustering(
+            &self,
+            data: &Array2<f64>,
+            n_clusters: usize,
+        ) -> Result<Vec<usize>> {
             let n_samples = data.nrows();
-            
+
             // Initialize each point as its own cluster
             let mut clusters: Vec<Vec<usize>> = (0..n_samples).map(|i| vec![i]).collect();
-            
+
             // Compute initial distance matrix
             let mut distance_matrix = Array2::zeros((n_samples, n_samples));
             for i in 0..n_samples {
-                for j in i+1..n_samples {
+                for j in i + 1..n_samples {
                     let dist = self.euclidean_distance(&data.row(i), &data.row(j));
                     distance_matrix[[i, j]] = dist;
                     distance_matrix[[j, i]] = dist;
                 }
             }
-            
+
             // Agglomerative clustering
             while clusters.len() > n_clusters {
                 let mut min_distance = f64::INFINITY;
                 let mut merge_i = 0;
                 let mut merge_j = 1;
-                
+
                 // Find closest clusters
                 for i in 0..clusters.len() {
-                    for j in i+1..clusters.len() {
-                        let dist = self.cluster_distance(&clusters[i], &clusters[j], &distance_matrix);
+                    for j in i + 1..clusters.len() {
+                        let dist =
+                            self.cluster_distance(&clusters[i], &clusters[j], &distance_matrix);
                         if dist < min_distance {
                             min_distance = dist;
                             merge_i = i;
@@ -1330,17 +1367,17 @@ pub mod advanced_visualization {
                         }
                     }
                 }
-                
+
                 // Merge clusters
                 let mut merged_cluster = clusters[merge_i].clone();
                 merged_cluster.extend(&clusters[merge_j]);
-                
+
                 // Remove old clusters and add merged cluster
                 clusters.remove(merge_j); // Remove j first (higher index)
                 clusters.remove(merge_i);
                 clusters.push(merged_cluster);
             }
-            
+
             // Assign labels
             let mut labels = vec![0; n_samples];
             for (cluster_id, cluster) in clusters.iter().enumerate() {
@@ -1348,30 +1385,41 @@ pub mod advanced_visualization {
                     labels[point_id] = cluster_id;
                 }
             }
-            
+
             Ok(labels)
         }
-        
+
         /// Helper functions
-        fn euclidean_distance(&self, a: &ndarray::ArrayView1<f64>, b: &ndarray::ArrayView1<f64>) -> f64 {
-            a.iter().zip(b.iter()).map(|(&x, &y)| (x - y).powi(2)).sum::<f64>().sqrt()
+        fn euclidean_distance(
+            &self,
+            a: &ndarray::ArrayView1<f64>,
+            b: &ndarray::ArrayView1<f64>,
+        ) -> f64 {
+            a.iter()
+                .zip(b.iter())
+                .map(|(&x, &y)| (x - y).powi(2))
+                .sum::<f64>()
+                .sqrt()
         }
-        
-        fn compute_eigendecomposition(&self, matrix: &Array2<f64>) -> Result<(Array1<f64>, Array2<f64>)> {
+
+        fn compute_eigendecomposition(
+            &self,
+            matrix: &Array2<f64>,
+        ) -> Result<(Array1<f64>, Array2<f64>)> {
             let n = matrix.nrows();
-            
+
             // For small matrices, use power iteration for dominant eigenvalues
             if n <= 10 {
                 let mut eigenvalues = Array1::zeros(n);
                 let mut eigenvectors = Array2::zeros((n, n));
-                
+
                 let mut remaining_matrix = matrix.clone();
-                
+
                 for k in 0..n {
                     // Power iteration for largest eigenvalue
                     let mut v = Array1::from_elem(n, 1.0 / (n as f64).sqrt());
                     let mut eigenvalue = 0.0;
-                    
+
                     for _ in 0..100 {
                         let v_new = remaining_matrix.dot(&v);
                         eigenvalue = v.dot(&v_new);
@@ -1380,29 +1428,33 @@ pub mod advanced_visualization {
                             v = v_new / norm;
                         }
                     }
-                    
+
                     eigenvalues[k] = eigenvalue;
                     eigenvectors.column_mut(k).assign(&v);
-                    
+
                     // Deflate matrix
                     let v_col = v.view().insert_axis(ndarray::Axis(1));
-                    let v_row = v.view().insert_axis(ndarray::Axis(0)); 
+                    let v_row = v.view().insert_axis(ndarray::Axis(0));
                     let vv = v_col.dot(&v_row);
                     remaining_matrix = &remaining_matrix - eigenvalue * &vv;
                 }
-                
+
                 Ok((eigenvalues, eigenvectors))
             } else {
                 Err(crate::error::IntegrateError::NotImplementedError(
-                    "Eigendecomposition for large matrices not implemented".to_string()
+                    "Eigendecomposition for large matrices not implemented".to_string(),
                 ))
             }
         }
-        
-        fn compute_gaussian_similarities(&self, data: &Array2<f64>, sigma: f64) -> Result<Array2<f64>> {
+
+        fn compute_gaussian_similarities(
+            &self,
+            data: &Array2<f64>,
+            sigma: f64,
+        ) -> Result<Array2<f64>> {
             let n = data.nrows();
             let mut similarities = Array2::zeros((n, n));
-            
+
             for i in 0..n {
                 for j in 0..n {
                     if i != j {
@@ -1411,7 +1463,7 @@ pub mod advanced_visualization {
                     }
                 }
             }
-            
+
             // Normalize
             for i in 0..n {
                 let row_sum: f64 = similarities.row(i).sum();
@@ -1419,32 +1471,34 @@ pub mod advanced_visualization {
                     similarities.row_mut(i).mapv_inplace(|x| x / row_sum);
                 }
             }
-            
+
             Ok(similarities)
         }
-        
+
         fn compute_t_similarities(&self, embedding: &Array2<f64>) -> Result<Array2<f64>> {
             let n = embedding.nrows();
             let mut similarities = Array2::zeros((n, n));
-            
+
             for i in 0..n {
                 for j in 0..n {
                     if i != j {
-                        let dist_sq = self.euclidean_distance(&embedding.row(i), &embedding.row(j)).powi(2);
+                        let dist_sq = self
+                            .euclidean_distance(&embedding.row(i), &embedding.row(j))
+                            .powi(2);
                         similarities[[i, j]] = 1.0 / (1.0 + dist_sq);
                     }
                 }
             }
-            
+
             // Normalize
             let total_sum: f64 = similarities.sum();
             if total_sum > 0.0 {
                 similarities.mapv_inplace(|x| x / total_sum);
             }
-            
+
             Ok(similarities)
         }
-        
+
         fn find_neighbors(&self, data: &Array2<f64>, point: usize, eps: f64) -> Vec<usize> {
             let mut neighbors = Vec::new();
             for i in 0..data.nrows() {
@@ -1457,7 +1511,7 @@ pub mod advanced_visualization {
             }
             neighbors
         }
-        
+
         fn expand_cluster(
             &self,
             data: &Array2<f64>,
@@ -1471,10 +1525,10 @@ pub mod advanced_visualization {
             labels[point] = cluster_id;
             let mut seed_set = neighbors.to_vec();
             let mut i = 0;
-            
+
             while i < seed_set.len() {
                 let q = seed_set[i];
-                
+
                 if labels[q] == usize::MAX - 1 {
                     // Change noise to border point
                     labels[q] = cluster_id;
@@ -1482,7 +1536,7 @@ pub mod advanced_visualization {
                     // Unclassified
                     labels[q] = cluster_id;
                     let q_neighbors = self.find_neighbors(data, q, eps);
-                    
+
                     if q_neighbors.len() >= min_samples {
                         for &neighbor in &q_neighbors {
                             if !seed_set.contains(&neighbor) {
@@ -1491,15 +1545,20 @@ pub mod advanced_visualization {
                         }
                     }
                 }
-                
+
                 i += 1;
             }
         }
-        
-        fn cluster_distance(&self, cluster1: &[usize], cluster2: &[usize], distance_matrix: &Array2<f64>) -> f64 {
+
+        fn cluster_distance(
+            &self,
+            cluster1: &[usize],
+            cluster2: &[usize],
+            distance_matrix: &Array2<f64>,
+        ) -> f64 {
             // Single linkage (minimum distance)
             let mut min_distance = f64::INFINITY;
-            
+
             for &i in cluster1 {
                 for &j in cluster2 {
                     let dist = distance_matrix[[i, j]];
@@ -1508,11 +1567,11 @@ pub mod advanced_visualization {
                     }
                 }
             }
-            
+
             min_distance
         }
     }
-    
+
     /// High-dimensional data visualization plot
     #[derive(Debug, Clone)]
     pub struct HighDimensionalPlot {
@@ -1535,7 +1594,7 @@ pub mod advanced_visualization {
         /// Plot metadata
         pub metadata: PlotMetadata,
     }
-    
+
     /// Animated visualization for time-series or dynamic systems
     pub struct AnimatedVisualizer {
         /// Frame data
@@ -1545,7 +1604,7 @@ pub mod advanced_visualization {
         /// Current frame index
         pub current_frame: usize,
     }
-    
+
     /// Animation settings
     #[derive(Debug, Clone)]
     pub struct AnimationSettings {
@@ -1558,7 +1617,7 @@ pub mod advanced_visualization {
         /// Fade trail length
         pub trail_length: usize,
     }
-    
+
     impl Default for AnimationSettings {
         fn default() -> Self {
             Self {
@@ -1569,7 +1628,7 @@ pub mod advanced_visualization {
             }
         }
     }
-    
+
     impl AnimatedVisualizer {
         /// Create new animated visualizer
         pub fn new() -> Self {
@@ -1579,7 +1638,7 @@ pub mod advanced_visualization {
                 current_frame: 0,
             }
         }
-        
+
         /// Create animation from ODE solution
         pub fn create_animation_from_ode<F: crate::common::IntegrateFloat>(
             &mut self,
@@ -1589,78 +1648,84 @@ pub mod advanced_visualization {
             frames_per_time_unit: usize,
         ) -> Result<()> {
             let n_points = ode_result.t.len();
-            let n_vars = if !ode_result.y.is_empty() { ode_result.y[0].len() } else { 0 };
-            
+            let n_vars = if !ode_result.y.is_empty() {
+                ode_result.y[0].len()
+            } else {
+                0
+            };
+
             if x_index >= n_vars || y_index >= n_vars {
                 return Err(crate::error::IntegrateError::ValueError(
-                    "Variable index out of bounds".to_string()
+                    "Variable index out of bounds".to_string(),
                 ));
             }
-            
+
             // Calculate frame indices
             let total_frames = n_points * frames_per_time_unit;
-            
+
             for frame_idx in 0..total_frames {
                 let time_idx = frame_idx / frames_per_time_unit;
                 let sub_frame = frame_idx % frames_per_time_unit;
-                
+
                 // Determine how many points to include in this frame
                 let end_point = time_idx + 1;
-                
+
                 let mut x_data = Vec::new();
                 let mut y_data = Vec::new();
                 let mut colors = Vec::new();
-                
+
                 // Add trajectory up to current time
                 for i in 0..end_point.min(n_points) {
                     x_data.push(ode_result.y[i][x_index].to_f64().unwrap_or(0.0));
                     y_data.push(ode_result.y[i][y_index].to_f64().unwrap_or(0.0));
                     colors.push(i as f64);
                 }
-                
+
                 // Add interpolated current point if within time step
                 if sub_frame > 0 && time_idx < n_points - 1 {
                     let alpha = sub_frame as f64 / frames_per_time_unit as f64;
-                    let x_interp = (1.0 - alpha) * ode_result.y[time_idx][x_index].to_f64().unwrap_or(0.0) +
-                                  alpha * ode_result.y[time_idx + 1][x_index].to_f64().unwrap_or(0.0);
-                    let y_interp = (1.0 - alpha) * ode_result.y[time_idx][y_index].to_f64().unwrap_or(0.0) +
-                                  alpha * ode_result.y[time_idx + 1][y_index].to_f64().unwrap_or(0.0);
-                    
+                    let x_interp = (1.0 - alpha)
+                        * ode_result.y[time_idx][x_index].to_f64().unwrap_or(0.0)
+                        + alpha * ode_result.y[time_idx + 1][x_index].to_f64().unwrap_or(0.0);
+                    let y_interp = (1.0 - alpha)
+                        * ode_result.y[time_idx][y_index].to_f64().unwrap_or(0.0)
+                        + alpha * ode_result.y[time_idx + 1][y_index].to_f64().unwrap_or(0.0);
+
                     x_data.push(x_interp);
                     y_data.push(y_interp);
                     colors.push(time_idx as f64 + alpha);
                 }
-                
+
                 let mut metadata = PlotMetadata::default();
                 metadata.title = format!("Trajectory Animation - Frame {}", frame_idx);
                 metadata.xlabel = format!("Variable {}", x_index);
                 metadata.ylabel = format!("Variable {}", y_index);
-                
+
                 let frame = PhaseSpacePlot {
                     x: x_data,
                     y: y_data,
                     colors: Some(colors),
                     metadata,
                 };
-                
+
                 self.frames.push(frame);
             }
-            
+
             Ok(())
         }
-        
+
         /// Get current frame
         pub fn get_current_frame(&self) -> Option<&PhaseSpacePlot> {
             self.frames.get(self.current_frame)
         }
-        
+
         /// Advance to next frame
         pub fn next_frame(&mut self) {
             if !self.frames.is_empty() {
                 self.current_frame = (self.current_frame + 1) % self.frames.len();
             }
         }
-        
+
         /// Go to previous frame
         pub fn previous_frame(&mut self) {
             if !self.frames.is_empty() {
@@ -1671,20 +1736,20 @@ pub mod advanced_visualization {
                 };
             }
         }
-        
+
         /// Set specific frame
         pub fn set_frame(&mut self, frame_index: usize) {
             if frame_index < self.frames.len() {
                 self.current_frame = frame_index;
             }
         }
-        
+
         /// Export animation frames to vector
         pub fn export_frames(&self) -> &[PhaseSpacePlot] {
             &self.frames
         }
     }
-    
+
     /// Statistical plotting utilities
     pub struct StatisticalPlotter {
         /// Confidence level for error bars
@@ -1692,7 +1757,7 @@ pub mod advanced_visualization {
         /// Bootstrap samples for uncertainty estimation
         pub bootstrap_samples: usize,
     }
-    
+
     impl Default for StatisticalPlotter {
         fn default() -> Self {
             Self {
@@ -1701,64 +1766,73 @@ pub mod advanced_visualization {
             }
         }
     }
-    
+
     impl StatisticalPlotter {
         /// Create box plot data
-        pub fn create_box_plot(&self, data_groups: &[Vec<f64>], group_names: &[String]) -> Result<BoxPlot> {
+        pub fn create_box_plot(
+            &self,
+            data_groups: &[Vec<f64>],
+            group_names: &[String],
+        ) -> Result<BoxPlot> {
             let mut box_data = Vec::new();
-            
+
             for data in data_groups {
                 let box_stats = self.calculate_box_statistics(data)?;
                 box_data.push(box_stats);
             }
-            
+
             let mut metadata = PlotMetadata::default();
             metadata.title = "Box Plot".to_string();
             metadata.xlabel = "Groups".to_string();
             metadata.ylabel = "Values".to_string();
-            
+
             Ok(BoxPlot {
                 box_data,
                 group_names: group_names.to_vec(),
                 metadata,
             })
         }
-        
+
         /// Create histogram with density estimation
-        pub fn create_histogram_with_density(&self, data: &[f64], n_bins: usize) -> Result<HistogramPlot> {
+        pub fn create_histogram_with_density(
+            &self,
+            data: &[f64],
+            n_bins: usize,
+        ) -> Result<HistogramPlot> {
             let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
             let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
             let bin_width = (max_val - min_val) / n_bins as f64;
-            
+
             let mut histogram = vec![0; n_bins];
             let mut bin_edges = Vec::with_capacity(n_bins + 1);
-            
+
             for i in 0..=n_bins {
                 bin_edges.push(min_val + i as f64 * bin_width);
             }
-            
+
             // Count frequencies
             for &value in data {
                 let bin = ((value - min_val) / bin_width) as usize;
                 let bin_index = bin.min(n_bins - 1);
                 histogram[bin_index] += 1;
             }
-            
+
             // Normalize to density
             let total_count = data.len() as f64;
-            let density: Vec<f64> = histogram.iter()
+            let density: Vec<f64> = histogram
+                .iter()
                 .map(|&count| count as f64 / (total_count * bin_width))
                 .collect();
-            
+
             // Kernel density estimation
             let kde_points = Array1::linspace(min_val, max_val, 200);
             let kde_values = self.kernel_density_estimation(data, &kde_points)?;
-            
+
             let mut metadata = PlotMetadata::default();
             metadata.title = "Histogram with Density Estimation".to_string();
             metadata.xlabel = "Values".to_string();
             metadata.ylabel = "Density".to_string();
-            
+
             Ok(HistogramPlot {
                 bin_edges,
                 frequencies: histogram.iter().map(|&x| x as f64).collect(),
@@ -1768,113 +1842,127 @@ pub mod advanced_visualization {
                 metadata,
             })
         }
-        
+
         /// Create Q-Q plot for normality testing
         pub fn create_qq_plot(&self, data: &[f64]) -> Result<QQPlot> {
             let mut sorted_data = data.to_vec();
             sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            
+
             let n = sorted_data.len();
             let mut theoretical_quantiles = Vec::with_capacity(n);
             let mut sample_quantiles = Vec::with_capacity(n);
-            
+
             for i in 0..n {
                 let p = (i as f64 + 0.5) / n as f64;
                 let theoretical_q = self.inverse_normal_cdf(p);
-                
+
                 theoretical_quantiles.push(theoretical_q);
                 sample_quantiles.push(sorted_data[i]);
             }
-            
+
             let mut metadata = PlotMetadata::default();
             metadata.title = "Q-Q Plot (Normal)".to_string();
             metadata.xlabel = "Theoretical Quantiles".to_string();
             metadata.ylabel = "Sample Quantiles".to_string();
-            
+
             Ok(QQPlot {
                 theoretical_quantiles,
                 sample_quantiles,
                 metadata,
             })
         }
-        
+
         /// Calculate bootstrap confidence intervals
-        pub fn bootstrap_confidence_interval(&self, data: &[f64], statistic: fn(&[f64]) -> f64) -> Result<(f64, f64)> {
+        pub fn bootstrap_confidence_interval(
+            &self,
+            data: &[f64],
+            statistic: fn(&[f64]) -> f64,
+        ) -> Result<(f64, f64)> {
             use rand::Rng;
             let mut rng = rand::rng();
             let n = data.len();
             let mut bootstrap_stats = Vec::with_capacity(self.bootstrap_samples);
-            
+
             for _ in 0..self.bootstrap_samples {
                 let mut bootstrap_sample = Vec::with_capacity(n);
                 for _ in 0..n {
                     let idx = rng.random_range(0..n);
                     bootstrap_sample.push(data[idx]);
                 }
-                
+
                 let stat = statistic(&bootstrap_sample);
                 bootstrap_stats.push(stat);
             }
-            
+
             bootstrap_stats.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            
+
             let alpha = 1.0 - self.confidence_level;
             let lower_idx = (alpha / 2.0 * self.bootstrap_samples as f64) as usize;
             let upper_idx = ((1.0 - alpha / 2.0) * self.bootstrap_samples as f64) as usize;
-            
+
             let lower_bound = bootstrap_stats[lower_idx];
             let upper_bound = bootstrap_stats[upper_idx.min(self.bootstrap_samples - 1)];
-            
+
             Ok((lower_bound, upper_bound))
         }
-        
+
         /// Helper functions
         fn calculate_box_statistics(&self, data: &[f64]) -> Result<BoxStatistics> {
             let mut sorted_data = data.to_vec();
             sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            
+
             let n = sorted_data.len();
             if n == 0 {
                 return Err(crate::error::IntegrateError::ValueError(
-                    "Cannot calculate statistics for empty data".to_string()
+                    "Cannot calculate statistics for empty data".to_string(),
                 ));
             }
-            
+
             let q1 = self.percentile(&sorted_data, 25.0);
             let median = self.percentile(&sorted_data, 50.0);
             let q3 = self.percentile(&sorted_data, 75.0);
-            
+
             let iqr = q3 - q1;
             let lower_fence = q1 - 1.5 * iqr;
             let upper_fence = q3 + 1.5 * iqr;
-            
-            let whisker_low = sorted_data.iter().find(|&&x| x >= lower_fence).copied().unwrap_or(sorted_data[0]);
-            let whisker_high = sorted_data.iter().rev().find(|&&x| x <= upper_fence).copied().unwrap_or(sorted_data[n-1]);
-            
-            let outliers: Vec<f64> = sorted_data.iter()
+
+            let whisker_low = sorted_data
+                .iter()
+                .find(|&&x| x >= lower_fence)
+                .copied()
+                .unwrap_or(sorted_data[0]);
+            let whisker_high = sorted_data
+                .iter()
+                .rev()
+                .find(|&&x| x <= upper_fence)
+                .copied()
+                .unwrap_or(sorted_data[n - 1]);
+
+            let outliers: Vec<f64> = sorted_data
+                .iter()
                 .filter(|&&x| x < lower_fence || x > upper_fence)
                 .copied()
                 .collect();
-            
+
             Ok(BoxStatistics {
                 min: sorted_data[0],
                 q1,
                 median,
                 q3,
-                max: sorted_data[n-1],
+                max: sorted_data[n - 1],
                 whisker_low,
                 whisker_high,
                 outliers,
             })
         }
-        
+
         fn percentile(&self, sorted_data: &[f64], p: f64) -> f64 {
             let n = sorted_data.len();
             let index = (p / 100.0) * (n - 1) as f64;
             let lower = index.floor() as usize;
             let upper = index.ceil() as usize;
             let weight = index - lower as f64;
-            
+
             if upper >= n {
                 sorted_data[n - 1]
             } else if lower == upper {
@@ -1883,13 +1971,17 @@ pub mod advanced_visualization {
                 sorted_data[lower] * (1.0 - weight) + sorted_data[upper] * weight
             }
         }
-        
-        fn kernel_density_estimation(&self, data: &[f64], points: &Array1<f64>) -> Result<Vec<f64>> {
+
+        fn kernel_density_estimation(
+            &self,
+            data: &[f64],
+            points: &Array1<f64>,
+        ) -> Result<Vec<f64>> {
             let n = data.len() as f64;
             let bandwidth = self.silverman_bandwidth(data);
-            
+
             let mut kde_values = Vec::with_capacity(points.len());
-            
+
             for &x in points {
                 let mut density = 0.0;
                 for &xi in data {
@@ -1898,26 +1990,26 @@ pub mod advanced_visualization {
                 }
                 kde_values.push(density / (n * bandwidth));
             }
-            
+
             Ok(kde_values)
         }
-        
+
         fn silverman_bandwidth(&self, data: &[f64]) -> f64 {
             let n = data.len() as f64;
             let std_dev = self.standard_deviation(data);
-            1.06 * std_dev * n.powf(-1.0/5.0)
+            1.06 * std_dev * n.powf(-1.0 / 5.0)
         }
-        
+
         fn standard_deviation(&self, data: &[f64]) -> f64 {
             let mean = data.iter().sum::<f64>() / data.len() as f64;
             let variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64;
             variance.sqrt()
         }
-        
+
         fn gaussian_kernel(&self, u: f64) -> f64 {
             (2.0 * std::f64::consts::PI).sqrt().recip() * (-0.5 * u * u).exp()
         }
-        
+
         fn inverse_normal_cdf(&self, p: f64) -> f64 {
             // Simplified inverse normal CDF approximation
             if p <= 0.0 {
@@ -1926,22 +2018,23 @@ pub mod advanced_visualization {
             if p >= 1.0 {
                 return f64::INFINITY;
             }
-            
+
             // Use Box-Muller transformation for approximation
             if p == 0.5 {
                 return 0.0;
             }
-            
+
             // Simple rational approximation
             let t = if p < 0.5 {
                 (-2.0 * p.ln()).sqrt()
             } else {
                 (-2.0 * (1.0 - p).ln()).sqrt()
             };
-            
-            let result = t - (2.515517 + 0.802853 * t + 0.010328 * t * t) / 
-                           (1.0 + 1.432788 * t + 0.189269 * t * t + 0.001308 * t * t * t);
-            
+
+            let result = t
+                - (2.515517 + 0.802853 * t + 0.010328 * t * t)
+                    / (1.0 + 1.432788 * t + 0.189269 * t * t + 0.001308 * t * t * t);
+
             if p < 0.5 {
                 -result
             } else {
@@ -1974,132 +2067,630 @@ pub mod advanced_visualization {
         pub outliers: Vec<f64>,
     }
 
-/// Histogram plot with density estimation
-#[derive(Debug, Clone)]
-pub struct HistogramPlot {
-    /// Bin edges
-    pub bin_edges: Vec<f64>,
-    /// Frequencies in each bin
-    pub frequencies: Vec<f64>,
-    /// Density values
-    pub density: Vec<f64>,
-    /// KDE evaluation points
-    pub kde_points: Vec<f64>,
-    /// KDE values
-    pub kde_values: Vec<f64>,
-    /// Plot metadata
-    pub metadata: PlotMetadata,
+    /// Histogram plot with density estimation
+    #[derive(Debug, Clone)]
+    pub struct HistogramPlot {
+        /// Bin edges
+        pub bin_edges: Vec<f64>,
+        /// Frequencies in each bin
+        pub frequencies: Vec<f64>,
+        /// Density values
+        pub density: Vec<f64>,
+        /// KDE evaluation points
+        pub kde_points: Vec<f64>,
+        /// KDE values
+        pub kde_values: Vec<f64>,
+        /// Plot metadata
+        pub metadata: PlotMetadata,
+    }
+
+    /// Q-Q plot for distribution testing
+    #[derive(Debug, Clone)]
+    pub struct QQPlot {
+        /// Theoretical quantiles
+        pub theoretical_quantiles: Vec<f64>,
+        /// Sample quantiles
+        pub sample_quantiles: Vec<f64>,
+        /// Plot metadata
+        pub metadata: PlotMetadata,
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use approx::assert_relative_eq;
+
+        #[test]
+        fn test_multi_dimensional_visualizer() {
+            // Create test data (3D -> 2D)
+            let data =
+                Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+
+            let visualizer = MultiDimensionalVisualizer::new();
+            let result = visualizer
+                .visualize_high_dimensional_data(&data, None)
+                .unwrap();
+
+            assert_eq!(result.x.len(), 10);
+            assert_eq!(result.y.len(), 10);
+            assert_eq!(result.original_dimensions, 3);
+            assert_eq!(result.reduced_dimensions, 2);
+        }
+
+        #[test]
+        fn test_animated_visualizer() {
+            let mut animator = AnimatedVisualizer::new();
+
+            // Create mock ODE result
+            let mut ode_result: ODEResult<f64> = ODEResult {
+                t: vec![0.0, 0.1, 0.2, 0.3, 0.4],
+                y: vec![
+                    Array1::from(vec![0.0, 0.0]),
+                    Array1::from(vec![0.1, 0.05]),
+                    Array1::from(vec![0.2, 0.2]),
+                    Array1::from(vec![0.3, 0.45]),
+                    Array1::from(vec![0.4, 0.8]),
+                ],
+                success: true,
+                message: Some("Success".to_string()),
+                n_eval: 10,
+                n_steps: 5,
+                n_accepted: 5,
+                n_rejected: 0,
+                n_lu: 0,
+                n_jac: 2,
+                method: crate::ode::types::ODEMethod::RK45,
+            };
+
+            let result = animator.create_animation_from_ode(&ode_result, 0, 1, 2);
+            assert!(result.is_ok());
+            assert!(!animator.frames.is_empty());
+        }
+
+        #[test]
+        fn test_statistical_plotter() {
+            let plotter = StatisticalPlotter::default();
+
+            // Test data
+            let data1 = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+            let data2 = vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0];
+
+            // Test box plot
+            let box_plot = plotter
+                .create_box_plot(
+                    &[data1.clone(), data2.clone()],
+                    &["Group 1".to_string(), "Group 2".to_string()],
+                )
+                .unwrap();
+
+            assert_eq!(box_plot.box_data.len(), 2);
+            assert_eq!(box_plot.group_names.len(), 2);
+
+            // Test histogram
+            let histogram = plotter.create_histogram_with_density(&data1, 5).unwrap();
+            assert_eq!(histogram.bin_edges.len(), 6); // n_bins + 1
+            assert_eq!(histogram.frequencies.len(), 5);
+
+            // Test Q-Q plot
+            let qq_plot = plotter.create_qq_plot(&data1).unwrap();
+            assert_eq!(qq_plot.theoretical_quantiles.len(), data1.len());
+            assert_eq!(qq_plot.sample_quantiles.len(), data1.len());
+        }
+
+        #[test]
+        fn test_kmeans_clustering() {
+            let visualizer = MultiDimensionalVisualizer {
+                reduction_method: DimensionReductionMethod::PCA,
+                target_dimensions: 2,
+                clustering_method: ClusteringMethod::KMeans { k: 2 },
+            };
+
+            // Create two distinct clusters
+            let mut data_vec = Vec::new();
+            // Cluster 1: around (0, 0)
+            for _ in 0..5 {
+                data_vec.extend_from_slice(&[0.0, 0.0]);
+            }
+            // Cluster 2: around (5, 5)
+            for _ in 0..5 {
+                data_vec.extend_from_slice(&[5.0, 5.0]);
+            }
+
+            let data = Array2::from_shape_vec((10, 2), data_vec).unwrap();
+            let labels = visualizer.kmeans_clustering(&data, 2).unwrap();
+
+            assert_eq!(labels.len(), 10);
+            // Check that we get two distinct clusters
+            let unique_labels: std::collections::HashSet<_> = labels.iter().collect();
+            assert!(unique_labels.len() <= 2);
+        }
+    }
 }
 
-/// Q-Q plot for distribution testing
-#[derive(Debug, Clone)]
-pub struct QQPlot {
-    /// Theoretical quantiles
-    pub theoretical_quantiles: Vec<f64>,
-    /// Sample quantiles
-    pub sample_quantiles: Vec<f64>,
-    /// Plot metadata
-    pub metadata: PlotMetadata,
-}
-
-#[cfg(test)]
-mod tests {
+/// Advanced visualization capabilities for specialized solvers
+pub mod specialized_visualizations {
     use super::*;
-    use approx::assert_relative_eq;
-    
-    #[test]
-    fn test_multi_dimensional_visualizer() {
-        // Create test data (3D -> 2D)
-        let data = Array2::from_shape_vec((10, 3), 
-            (0..30).map(|x| x as f64).collect()
-        ).unwrap();
-        
-        let visualizer = MultiDimensionalVisualizer::new();
-        let result = visualizer.visualize_high_dimensional_data(&data, None).unwrap();
-        
-        assert_eq!(result.x.len(), 10);
-        assert_eq!(result.y.len(), 10);
-        assert_eq!(result.original_dimensions, 3);
-        assert_eq!(result.reduced_dimensions, 2);
-    }
-    
-    #[test]
-    fn test_animated_visualizer() {
-        let mut animator = AnimatedVisualizer::new();
-        
-        // Create mock ODE result
-        let mut ode_result: ODEResult<f64> = ODEResult {
-            t: vec![0.0, 0.1, 0.2, 0.3, 0.4],
-            y: vec![
-                vec![0.0, 0.0],
-                vec![0.1, 0.05],
-                vec![0.2, 0.2],
-                vec![0.3, 0.45],
-                vec![0.4, 0.8],
-            ],
-            success: true,
-            message: "Success".to_string(),
-        };
-        
-        let result = animator.create_animation_from_ode(&ode_result, 0, 1, 2);
-        assert!(result.is_ok());
-        assert!(!animator.frames.is_empty());
-    }
-    
-    #[test]
-    fn test_statistical_plotter() {
-        let plotter = StatisticalPlotter::default();
-        
-        // Test data
-        let data1 = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-        let data2 = vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0];
-        
-        // Test box plot
-        let box_plot = plotter.create_box_plot(
-            &[data1.clone(), data2.clone()], 
-            &["Group 1".to_string(), "Group 2".to_string()]
-        ).unwrap();
-        
-        assert_eq!(box_plot.box_data.len(), 2);
-        assert_eq!(box_plot.group_names.len(), 2);
-        
-        // Test histogram
-        let histogram = plotter.create_histogram_with_density(&data1, 5).unwrap();
-        assert_eq!(histogram.bin_edges.len(), 6); // n_bins + 1
-        assert_eq!(histogram.frequencies.len(), 5);
-        
-        // Test Q-Q plot
-        let qq_plot = plotter.create_qq_plot(&data1).unwrap();
-        assert_eq!(qq_plot.theoretical_quantiles.len(), data1.len());
-        assert_eq!(qq_plot.sample_quantiles.len(), data1.len());
-    }
-    
-    #[test]
-    fn test_kmeans_clustering() {
-        let visualizer = MultiDimensionalVisualizer {
-            reduction_method: DimensionReductionMethod::PCA,
-            target_dimensions: 2,
-            clustering_method: ClusteringMethod::KMeans { k: 2 },
-        };
-        
-        // Create two distinct clusters
-        let mut data_vec = Vec::new();
-        // Cluster 1: around (0, 0)
-        for _ in 0..5 {
-            data_vec.extend_from_slice(&[0.0, 0.0]);
+    use crate::specialized::fluid_dynamics::{FluidState, FluidState3D};
+    use crate::specialized::quantum::QuantumState;
+
+    /// Quantum state visualization tools
+    pub struct QuantumVisualizer;
+
+    impl QuantumVisualizer {
+        /// Create wave function visualization
+        pub fn visualize_wavefunction(state: &QuantumState) -> Result<HeatMapPlot> {
+            let probability_density = state.probability_density();
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = format!("Quantum State at t = {:.3}", state.t);
+            metadata.xlabel = "Position".to_string();
+            metadata.ylabel = "Probability Density".to_string();
+
+            Ok(HeatMapPlot {
+                x: state.x.clone(),
+                y: Array1::from_elem(1, 0.0), // 1D visualization
+                z: Array2::from_shape_vec(
+                    (1, probability_density.len()),
+                    probability_density.to_vec(),
+                )
+                .map_err(|e| IntegrateError::ComputationError(format!("Shape error: {}", e)))?,
+                metadata,
+            })
         }
-        // Cluster 2: around (5, 5)
-        for _ in 0..5 {
-            data_vec.extend_from_slice(&[5.0, 5.0]);
+
+        /// Create complex phase visualization
+        pub fn visualize_complex_phase(state: &QuantumState) -> Result<PhaseSpacePlot> {
+            let real_parts: Vec<f64> = state.psi.iter().map(|c| c.re).collect();
+            let imag_parts: Vec<f64> = state.psi.iter().map(|c| c.im).collect();
+            let phases: Vec<f64> = state.psi.iter().map(|c| c.arg()).collect();
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = "Complex Wave Function Phase".to_string();
+            metadata.xlabel = "Real Part".to_string();
+            metadata.ylabel = "Imaginary Part".to_string();
+
+            Ok(PhaseSpacePlot {
+                x: real_parts,
+                y: imag_parts,
+                colors: Some(phases),
+                metadata,
+            })
         }
-        
-        let data = Array2::from_shape_vec((10, 2), data_vec).unwrap();
-        let labels = visualizer.kmeans_clustering(&data, 2).unwrap();
-        
-        assert_eq!(labels.len(), 10);
-        // Check that we get two distinct clusters
-        let unique_labels: std::collections::HashSet<_> = labels.iter().collect();
-        assert!(unique_labels.len() <= 2);
+
+        /// Create expectation value evolution plot
+        pub fn visualize_expectation_evolution(states: &[QuantumState]) -> Result<PhaseSpacePlot> {
+            let times: Vec<f64> = states.iter().map(|s| s.t).collect();
+            let positions: Vec<f64> = states.iter().map(|s| s.expectation_position()).collect();
+            let momenta: Vec<f64> = states.iter().map(|s| s.expectation_momentum()).collect();
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = "Quantum Expectation Values Evolution".to_string();
+            metadata.xlabel = "Position Expectation".to_string();
+            metadata.ylabel = "Momentum Expectation".to_string();
+
+            Ok(PhaseSpacePlot {
+                x: positions,
+                y: momenta,
+                colors: Some(times),
+                metadata,
+            })
+        }
+
+        /// Create energy level diagram
+        pub fn visualize_energy_levels(
+            energies: &Array1<f64>,
+            wavefunctions: &Array2<f64>,
+        ) -> Result<VectorFieldPlot> {
+            let n_levels = energies.len().min(5); // Show up to 5 levels
+            let n_points = wavefunctions.nrows();
+
+            let x_coords = Array1::linspace(-1.0, 1.0, n_points);
+            let mut x_grid = Array2::zeros((n_levels, n_points));
+            let mut y_grid = Array2::zeros((n_levels, n_points));
+            let mut u = Array2::zeros((n_levels, n_points));
+            let mut v = Array2::zeros((n_levels, n_points));
+            let mut magnitude = Array2::zeros((n_levels, n_points));
+
+            for level in 0..n_levels {
+                for i in 0..n_points {
+                    x_grid[[level, i]] = x_coords[i];
+                    y_grid[[level, i]] = energies[level];
+                    u[[level, i]] = wavefunctions[[i, level]];
+                    v[[level, i]] = 0.0; // No y-component for energy levels
+                    magnitude[[level, i]] = wavefunctions[[i, level]].abs();
+                }
+            }
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = "Energy Level Diagram".to_string();
+            metadata.xlabel = "Position".to_string();
+            metadata.ylabel = "Energy".to_string();
+
+            Ok(VectorFieldPlot {
+                x_grid,
+                y_grid,
+                u,
+                v,
+                magnitude,
+                metadata,
+            })
+        }
     }
+
+    /// Fluid dynamics visualization tools
+    pub struct FluidVisualizer;
+
+    impl FluidVisualizer {
+        /// Create velocity field visualization
+        pub fn visualize_velocity_field(state: &FluidState) -> Result<VectorFieldPlot> {
+            if state.velocity.len() < 2 {
+                return Err(IntegrateError::ValueError(
+                    "Need at least 2 velocity components".to_string(),
+                ));
+            }
+
+            let u = &state.velocity[0];
+            let v = &state.velocity[1];
+            let (ny, nx) = u.dim();
+
+            let mut x_grid = Array2::zeros((ny, nx));
+            let mut y_grid = Array2::zeros((ny, nx));
+            let mut magnitude = Array2::zeros((ny, nx));
+
+            for i in 0..ny {
+                for j in 0..nx {
+                    x_grid[[i, j]] = j as f64 * state.dx;
+                    y_grid[[i, j]] = i as f64 * state.dy;
+                    magnitude[[i, j]] = (u[[i, j]].powi(2) + v[[i, j]].powi(2)).sqrt();
+                }
+            }
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = format!("Velocity Field at t = {:.3}", state.time);
+            metadata.xlabel = "X Position".to_string();
+            metadata.ylabel = "Y Position".to_string();
+
+            Ok(VectorFieldPlot {
+                x_grid,
+                y_grid,
+                u: u.clone(),
+                v: v.clone(),
+                magnitude,
+                metadata,
+            })
+        }
+
+        /// Create pressure field heatmap
+        pub fn visualize_pressure_field(state: &FluidState) -> Result<HeatMapPlot> {
+            let (ny, nx) = state.pressure.dim();
+            let x = Array1::from_iter((0..nx).map(|i| i as f64 * state.dx));
+            let y = Array1::from_iter((0..ny).map(|i| i as f64 * state.dy));
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = format!("Pressure Field at t = {:.3}", state.time);
+            metadata.xlabel = "X Position".to_string();
+            metadata.ylabel = "Y Position".to_string();
+
+            Ok(HeatMapPlot {
+                x,
+                y,
+                z: state.pressure.clone(),
+                metadata,
+            })
+        }
+
+        /// Create vorticity visualization
+        pub fn visualize_vorticity(state: &FluidState) -> Result<HeatMapPlot> {
+            if state.velocity.len() < 2 {
+                return Err(IntegrateError::ValueError(
+                    "Need at least 2 velocity components".to_string(),
+                ));
+            }
+
+            let u = &state.velocity[0];
+            let v = &state.velocity[1];
+            let (ny, nx) = u.dim();
+
+            let mut vorticity = Array2::zeros((ny, nx));
+
+            // Compute vorticity using finite differences
+            for i in 1..ny - 1 {
+                for j in 1..nx - 1 {
+                    let dvdx = (v[[i, j + 1]] - v[[i, j - 1]]) / (2.0 * state.dx);
+                    let dudy = (u[[i + 1, j]] - u[[i - 1, j]]) / (2.0 * state.dy);
+                    vorticity[[i, j]] = dvdx - dudy;
+                }
+            }
+
+            let x = Array1::from_iter((0..nx).map(|i| i as f64 * state.dx));
+            let y = Array1::from_iter((0..ny).map(|i| i as f64 * state.dy));
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = format!("Vorticity Field at t = {:.3}", state.time);
+            metadata.xlabel = "X Position".to_string();
+            metadata.ylabel = "Y Position".to_string();
+
+            Ok(HeatMapPlot {
+                x,
+                y,
+                z: vorticity,
+                metadata,
+            })
+        }
+
+        /// Create streamline visualization  
+        pub fn visualize_streamlines(
+            state: &FluidState,
+            n_streamlines: usize,
+        ) -> Result<Vec<PhaseSpacePlot>> {
+            if state.velocity.len() < 2 {
+                return Err(IntegrateError::ValueError(
+                    "Need at least 2 velocity components".to_string(),
+                ));
+            }
+
+            let u = &state.velocity[0];
+            let v = &state.velocity[1];
+            let (ny, nx) = u.dim();
+
+            let mut streamlines = Vec::new();
+
+            // Create evenly spaced starting points
+            for i in 0..n_streamlines {
+                let start_x = (i as f64 / (n_streamlines - 1) as f64) * (nx - 1) as f64 * state.dx;
+                let start_y = 0.5 * (ny - 1) as f64 * state.dy; // Start at middle height
+
+                let mut x_line = vec![start_x];
+                let mut y_line = vec![start_y];
+
+                let mut current_x = start_x;
+                let mut current_y = start_y;
+
+                // Integrate streamline using simple Euler method
+                let dt = 0.01 * state.dx.min(state.dy);
+                for _ in 0..1000 {
+                    // Maximum steps
+                    let i_idx = (current_y / state.dy) as usize;
+                    let j_idx = (current_x / state.dx) as usize;
+
+                    if i_idx >= ny - 1 || j_idx >= nx - 1 || i_idx == 0 || j_idx == 0 {
+                        break;
+                    }
+
+                    let vel_x = u[[i_idx, j_idx]];
+                    let vel_y = v[[i_idx, j_idx]];
+
+                    current_x += vel_x * dt;
+                    current_y += vel_y * dt;
+
+                    x_line.push(current_x);
+                    y_line.push(current_y);
+
+                    // Stop if velocity is too small
+                    if vel_x.abs() + vel_y.abs() < 1e-6 {
+                        break;
+                    }
+                }
+
+                let mut metadata = PlotMetadata::default();
+                metadata.title = format!("Streamline {} at t = {:.3}", i, state.time);
+                metadata.xlabel = "X Position".to_string();
+                metadata.ylabel = "Y Position".to_string();
+
+                streamlines.push(PhaseSpacePlot {
+                    x: x_line,
+                    y: y_line,
+                    colors: None,
+                    metadata,
+                });
+            }
+
+            Ok(streamlines)
+        }
+
+        /// Create 3D fluid visualization
+        pub fn visualize_3d_velocity_magnitude(state: &FluidState3D) -> Result<SurfacePlot> {
+            if state.velocity.len() < 3 {
+                return Err(IntegrateError::ValueError(
+                    "Need 3 velocity components for 3D".to_string(),
+                ));
+            }
+
+            let u = &state.velocity[0];
+            let v = &state.velocity[1];
+            let w = &state.velocity[2];
+            let (nz, ny, nx) = u.dim();
+
+            // Take a slice at z = nz/2
+            let z_slice = nz / 2;
+            let mut x_grid = Array2::zeros((ny, nx));
+            let mut y_grid = Array2::zeros((ny, nx));
+            let mut magnitude = Array2::zeros((ny, nx));
+
+            for i in 0..ny {
+                for j in 0..nx {
+                    x_grid[[i, j]] = j as f64 * state.dx;
+                    y_grid[[i, j]] = i as f64 * state.dy;
+                    let vel_mag = (u[[z_slice, i, j]].powi(2)
+                        + v[[z_slice, i, j]].powi(2)
+                        + w[[z_slice, i, j]].powi(2))
+                    .sqrt();
+                    magnitude[[i, j]] = vel_mag;
+                }
+            }
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = format!("3D Velocity Magnitude at t = {:.3}", state.time);
+            metadata.xlabel = "X Position".to_string();
+            metadata.ylabel = "Y Position".to_string();
+
+            Ok(SurfacePlot {
+                x: x_grid,
+                y: y_grid,
+                z: magnitude,
+                metadata,
+            })
+        }
+    }
+
+    /// Financial analysis visualization tools
+    pub struct FinanceVisualizer;
+
+    impl FinanceVisualizer {
+        /// Create option price surface
+        pub fn visualize_option_surface(
+            strikes: &Array1<f64>,
+            maturities: &Array1<f64>,
+            prices: &Array2<f64>,
+        ) -> Result<SurfacePlot> {
+            let (n_maturities, n_strikes) = prices.dim();
+            let mut x_grid = Array2::zeros((n_maturities, n_strikes));
+            let mut y_grid = Array2::zeros((n_maturities, n_strikes));
+
+            for i in 0..n_maturities {
+                for j in 0..n_strikes {
+                    x_grid[[i, j]] = strikes[j];
+                    y_grid[[i, j]] = maturities[i];
+                }
+            }
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = "Option Price Surface".to_string();
+            metadata.xlabel = "Strike Price".to_string();
+            metadata.ylabel = "Time to Maturity".to_string();
+
+            Ok(SurfacePlot {
+                x: x_grid,
+                y: y_grid,
+                z: prices.clone(),
+                metadata,
+            })
+        }
+
+        /// Create Greeks surface visualization
+        pub fn visualize_greeks_surface(
+            strikes: &Array1<f64>,
+            spot_prices: &Array1<f64>,
+            greek_values: &Array2<f64>,
+            greek_name: &str,
+        ) -> Result<HeatMapPlot> {
+            let mut metadata = PlotMetadata::default();
+            metadata.title = format!("{} Surface", greek_name);
+            metadata.xlabel = "Strike Price".to_string();
+            metadata.ylabel = "Spot Price".to_string();
+
+            Ok(HeatMapPlot {
+                x: strikes.clone(),
+                y: spot_prices.clone(),
+                z: greek_values.clone(),
+                metadata,
+            })
+        }
+
+        /// Create volatility smile visualization
+        pub fn visualize_volatility_smile(
+            strikes: &Array1<f64>,
+            implied_vols: &Array1<f64>,
+            maturity: f64,
+        ) -> Result<PhaseSpacePlot> {
+            let strikes_vec = strikes.to_vec();
+            let vols_vec = implied_vols.to_vec();
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = format!("Volatility Smile (T = {:.2})", maturity);
+            metadata.xlabel = "Strike Price".to_string();
+            metadata.ylabel = "Implied Volatility".to_string();
+
+            Ok(PhaseSpacePlot {
+                x: strikes_vec,
+                y: vols_vec,
+                colors: None,
+                metadata,
+            })
+        }
+
+        /// Create risk scenario analysis
+        pub fn visualize_risk_scenarios(
+            scenarios: &[String],
+            portfolio_values: &Array1<f64>,
+            _probabilities: &Array1<f64>,
+        ) -> Result<HeatMapPlot> {
+            // Create a simple bar chart representation as heatmap
+            let n_scenarios = scenarios.len();
+            let x = Array1::from_iter(0..n_scenarios).mapv(|i| i as f64);
+            let y = Array1::from_elem(1, 0.0);
+            let z = Array2::from_shape_vec((1, n_scenarios), portfolio_values.to_vec())
+                .map_err(|e| IntegrateError::ComputationError(format!("Shape error: {}", e)))?;
+
+            let mut metadata = PlotMetadata::default();
+            metadata.title = "Risk Scenario Analysis".to_string();
+            metadata.xlabel = "Scenario".to_string();
+            metadata.ylabel = "Portfolio Value".to_string();
+
+            Ok(HeatMapPlot { x, y, z, metadata })
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use approx::assert_relative_eq;
+
+        #[test]
+        fn test_quantum_wavefunction_visualization() {
+            use num_complex::Complex64;
+
+            let x = Array1::linspace(-5.0, 5.0, 100);
+            let psi = x.mapv(|xi| Complex64::new((-xi * xi / 2.0).exp(), 0.0));
+
+            let state = QuantumState::new(psi, x, 0.0, 1.0);
+            let plot = QuantumVisualizer::visualize_wavefunction(&state);
+
+            assert!(plot.is_ok());
+            let plot = plot.unwrap();
+            assert_eq!(plot.x.len(), 100);
+            assert_eq!(plot.z.nrows(), 1);
+            assert_eq!(plot.z.ncols(), 100);
+        }
+
+        #[test]
+        fn test_fluid_velocity_visualization() {
+            let nx = 10;
+            let ny = 8;
+            let u = Array2::zeros((ny, nx));
+            let v = Array2::ones((ny, nx));
+            let pressure = Array2::zeros((ny, nx));
+
+            let state = FluidState {
+                velocity: vec![u, v],
+                pressure,
+                temperature: None,
+                time: 0.0,
+                dx: 0.1,
+                dy: 0.1,
+            };
+
+            let plot = FluidVisualizer::visualize_velocity_field(&state);
+            assert!(plot.is_ok());
+
+            let plot = plot.unwrap();
+            assert_eq!(plot.x_grid.dim(), (ny, nx));
+            assert_eq!(plot.y_grid.dim(), (ny, nx));
+        }
+
+        #[test]
+        fn test_finance_option_surface() {
+            let strikes = Array1::linspace(80.0, 120.0, 5);
+            let maturities = Array1::linspace(0.1, 1.0, 4);
+            let prices = Array2::ones((4, 5)) * 10.0;
+
+            let plot = FinanceVisualizer::visualize_option_surface(&strikes, &maturities, &prices);
+            assert!(plot.is_ok());
+
+            let plot = plot.unwrap();
+            assert_eq!(plot.x.dim(), (4, 5));
+            assert_eq!(plot.y.dim(), (4, 5));
+            assert_eq!(plot.z.dim(), (4, 5));
+        }
     }
 }

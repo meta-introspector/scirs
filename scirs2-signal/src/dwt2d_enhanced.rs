@@ -10,7 +10,7 @@
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, Array3, ArrayView2, Axis, s};
+use ndarray::{s, Array2, Array3, ArrayView2, Axis};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_shape};
@@ -129,39 +129,94 @@ pub fn enhanced_dwt2d_decompose(
     wavelet: Wavelet,
     config: &Dwt2dConfig,
 ) -> SignalResult<EnhancedDwt2dResult> {
-    // Validate input
+    // Enhanced input validation
     check_finite(&data.as_slice().unwrap(), "data")?;
-    
+
     let (rows, cols) = data.dim();
+
+    // Check minimum dimensions
     if rows < 2 || cols < 2 {
-        return Err(SignalError::ValueError(
-            "Input must be at least 2x2".to_string(),
-        ));
+        return Err(SignalError::ValueError(format!(
+            "Input must be at least 2x2, got {}x{}",
+            rows, cols
+        )));
     }
-    
-    // Get wavelet filters
+
+    // Check for reasonable array sizes
+    if rows > 32768 || cols > 32768 {
+        eprintln!(
+            "Warning: Very large input ({}x{}). Consider using memory optimization.",
+            rows, cols
+        );
+    }
+
+    // Validate wavelet compatibility with data size
     let filters = WaveletFilters::new(wavelet);
-    
+    let min_size_required = filters.lo_d.len() * 2;
+    if rows < min_size_required || cols < min_size_required {
+        return Err(SignalError::ValueError(format!(
+            "Input size ({}x{}) too small for wavelet filter length ({}). Minimum required: {}x{}",
+            rows,
+            cols,
+            filters.lo_d.len(),
+            min_size_required,
+            min_size_required
+        )));
+    }
+
+    // Check for reasonable data range to prevent numerical issues
+    let data_min = data.iter().cloned().fold(f64::INFINITY, f64::min);
+    let data_max = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let data_range = data_max - data_min;
+
+    if data_range == 0.0 {
+        eprintln!("Warning: Input data is constant. Wavelet transform will produce zero detail coefficients.");
+    } else if data_range < 1e-15 {
+        eprintln!("Warning: Input data has very small dynamic range ({:.2e}). Results may be affected by numerical precision.", data_range);
+    } else if data_range > 1e15 {
+        eprintln!("Warning: Input data has very large dynamic range ({:.2e}). Consider normalizing the data.", data_range);
+    }
+
+    // Check for extreme values that might cause overflow
+    if data_max.abs() > 1e10 || data_min.abs() > 1e10 {
+        eprintln!("Warning: Input contains very large values. This may cause numerical overflow in wavelet computation.");
+    }
+
     // Check if memory optimization is needed for large images
     let memory_threshold = 2048 * 2048; // 2K x 2K pixels
     let use_memory_opt = config.memory_optimized || (rows * cols > memory_threshold);
-    
+
+    // Enhanced adaptive boundary mode selection
+    let adaptive_boundary_mode = if matches!(config.boundary_mode, BoundaryMode::Adaptive) {
+        analyze_and_select_boundary_mode(data, &filters)?
+    } else {
+        config.boundary_mode
+    };
+
+    let enhanced_config = Dwt2dConfig {
+        boundary_mode: adaptive_boundary_mode,
+        ..*config
+    };
+
     // Choose processing method based on configuration
     let mut result = if use_memory_opt {
-        memory_optimized_dwt2d_decompose(data, &filters, config)?
+        memory_optimized_dwt2d_decompose(data, &filters, &enhanced_config)?
     } else if config.use_parallel && rows.min(cols) >= config.parallel_threshold {
-        parallel_dwt2d_decompose(data, &filters, config)?
+        parallel_dwt2d_decompose(data, &filters, &enhanced_config)?
     } else if config.use_simd {
-        simd_dwt2d_decompose(data, &filters, config)?
+        simd_dwt2d_decompose(data, &filters, &enhanced_config)?
     } else {
-        standard_dwt2d_decompose(data, &filters, config)?
+        standard_dwt2d_decompose(data, &filters, &enhanced_config)?
     };
-    
+
+    // Enhanced result validation
+    validate_dwt2d_result(&result, data.dim(), config)?;
+
     // Compute quality metrics if requested
     if config.compute_metrics {
         result.metrics = Some(compute_dwt2d_quality_metrics(data, &result)?);
     }
-    
+
     Ok(result)
 }
 
@@ -173,7 +228,7 @@ fn parallel_dwt2d_decompose(
 ) -> SignalResult<EnhancedDwt2dResult> {
     let (rows, cols) = data.dim();
     let data_arc = Arc::new(data.clone());
-    
+
     // First, apply 1D DWT to all rows in parallel
     let row_results: Vec<(Vec<f64>, Vec<f64>)> = (0..rows)
         .into_par_iter()
@@ -184,12 +239,12 @@ fn parallel_dwt2d_decompose(
             (downsample(&lo), downsample(&hi))
         })
         .collect();
-    
+
     // Reorganize into low and high frequency components
     let half_cols = (cols + 1) / 2;
     let mut temp_lo = Array2::zeros((rows, half_cols));
     let mut temp_hi = Array2::zeros((rows, half_cols));
-    
+
     for (i, (lo, hi)) in row_results.iter().enumerate() {
         for (j, &val) in lo.iter().enumerate() {
             if j < half_cols {
@@ -202,10 +257,10 @@ fn parallel_dwt2d_decompose(
             }
         }
     }
-    
+
     // Apply 1D DWT to columns of low and high frequency components
     let half_rows = (rows + 1) / 2;
-    
+
     // Process low frequency columns
     let lo_col_results: Vec<(usize, Vec<f64>, Vec<f64>)> = (0..half_cols)
         .into_par_iter()
@@ -216,7 +271,7 @@ fn parallel_dwt2d_decompose(
             (j, downsample(&lo), downsample(&hi))
         })
         .collect();
-    
+
     // Process high frequency columns
     let hi_col_results: Vec<(usize, Vec<f64>, Vec<f64>)> = (0..half_cols)
         .into_par_iter()
@@ -227,13 +282,13 @@ fn parallel_dwt2d_decompose(
             (j, downsample(&lo), downsample(&hi))
         })
         .collect();
-    
+
     // Build output arrays
     let mut approx = Array2::zeros((half_rows, half_cols));
     let mut detail_v = Array2::zeros((half_rows, half_cols));
     let mut detail_h = Array2::zeros((half_rows, half_cols));
     let mut detail_d = Array2::zeros((half_rows, half_cols));
-    
+
     // Fill LL and HL from low frequency columns
     for (j, lo, hi) in lo_col_results {
         for (i, &val) in lo.iter().enumerate() {
@@ -247,7 +302,7 @@ fn parallel_dwt2d_decompose(
             }
         }
     }
-    
+
     // Fill LH and HH from high frequency columns
     for (j, lo, hi) in hi_col_results {
         for (i, &val) in lo.iter().enumerate() {
@@ -261,7 +316,7 @@ fn parallel_dwt2d_decompose(
             }
         }
     }
-    
+
     Ok(EnhancedDwt2dResult {
         approx,
         detail_h,
@@ -280,20 +335,20 @@ fn simd_dwt2d_decompose(
     config: &Dwt2dConfig,
 ) -> SignalResult<EnhancedDwt2dResult> {
     let (rows, cols) = data.dim();
-    
+
     // Process rows with SIMD
     let half_cols = (cols + 1) / 2;
     let mut temp_lo = Array2::zeros((rows, half_cols));
     let mut temp_hi = Array2::zeros((rows, half_cols));
-    
+
     for i in 0..rows {
         let row = data.row(i).to_vec();
         let padded = apply_boundary_padding(&row, filters.lo_d.len(), config.boundary_mode);
         let (lo, hi) = apply_filters_simd(&padded, &filters.lo_d, &filters.hi_d);
-        
+
         let lo_down = downsample(&lo);
         let hi_down = downsample(&hi);
-        
+
         for (j, &val) in lo_down.iter().enumerate() {
             if j < half_cols {
                 temp_lo[[i, j]] = val;
@@ -305,23 +360,23 @@ fn simd_dwt2d_decompose(
             }
         }
     }
-    
+
     // Process columns with SIMD
     let half_rows = (rows + 1) / 2;
     let mut approx = Array2::zeros((half_rows, half_cols));
     let mut detail_v = Array2::zeros((half_rows, half_cols));
     let mut detail_h = Array2::zeros((half_rows, half_cols));
     let mut detail_d = Array2::zeros((half_rows, half_cols));
-    
+
     // Process low frequency columns
     for j in 0..half_cols {
         let col = temp_lo.column(j).to_vec();
         let padded = apply_boundary_padding(&col, filters.lo_d.len(), config.boundary_mode);
         let (lo, hi) = apply_filters_simd(&padded, &filters.lo_d, &filters.hi_d);
-        
+
         let lo_down = downsample(&lo);
         let hi_down = downsample(&hi);
-        
+
         for (i, &val) in lo_down.iter().enumerate() {
             if i < half_rows {
                 approx[[i, j]] = val;
@@ -333,16 +388,16 @@ fn simd_dwt2d_decompose(
             }
         }
     }
-    
+
     // Process high frequency columns
     for j in 0..half_cols {
         let col = temp_hi.column(j).to_vec();
         let padded = apply_boundary_padding(&col, filters.lo_d.len(), config.boundary_mode);
         let (lo, hi) = apply_filters_simd(&padded, &filters.lo_d, &filters.hi_d);
-        
+
         let lo_down = downsample(&lo);
         let hi_down = downsample(&hi);
-        
+
         for (i, &val) in lo_down.iter().enumerate() {
             if i < half_rows {
                 detail_h[[i, j]] = val;
@@ -354,7 +409,7 @@ fn simd_dwt2d_decompose(
             }
         }
     }
-    
+
     Ok(EnhancedDwt2dResult {
         approx,
         detail_h,
@@ -377,50 +432,54 @@ fn standard_dwt2d_decompose(
 }
 
 /// Apply filters using SIMD operations
-fn apply_filters_simd(signal: &[f64], lo_filter: &[f64], hi_filter: &[f64]) -> (Vec<f64>, Vec<f64>) {
+fn apply_filters_simd(
+    signal: &[f64],
+    lo_filter: &[f64],
+    hi_filter: &[f64],
+) -> (Vec<f64>, Vec<f64>) {
     let n = signal.len();
     let filter_len = lo_filter.len();
     let output_len = n + filter_len - 1;
-    
+
     let mut lo_out = vec![0.0; output_len];
     let mut hi_out = vec![0.0; output_len];
-    
+
     // Use SIMD convolution
     for i in 0..n {
         let end = (i + filter_len).min(n);
         let len = end - i;
-        
+
         if len >= 4 {
             // SIMD path
             let signal_slice = &signal[i..end];
             let lo_slice = &lo_filter[0..len];
             let hi_slice = &hi_filter[0..len];
-            
+
             let signal_view = ArrayView2::from_shape((1, len), signal_slice).unwrap();
             let lo_view = ArrayView2::from_shape((1, len), lo_slice).unwrap();
             let hi_view = ArrayView2::from_shape((1, len), hi_slice).unwrap();
-            
+
             // Compute dot products using SIMD
             let lo_val = f64::simd_dot(&signal_view.row(0), &lo_view.row(0));
             let hi_val = f64::simd_dot(&signal_view.row(0), &hi_view.row(0));
-            
+
             lo_out[i] = lo_val;
             hi_out[i] = hi_val;
         } else {
             // Scalar fallback for small lengths
             let mut lo_sum = 0.0;
             let mut hi_sum = 0.0;
-            
+
             for j in 0..len {
                 lo_sum += signal[i + j] * lo_filter[j];
                 hi_sum += signal[i + j] * hi_filter[j];
             }
-            
+
             lo_out[i] = lo_sum;
             hi_out[i] = hi_sum;
         }
     }
-    
+
     (lo_out, hi_out)
 }
 
@@ -429,7 +488,7 @@ fn apply_boundary_padding(signal: &[f64], filter_len: usize, mode: BoundaryMode)
     let pad_len = filter_len / 2;
     let n = signal.len();
     let mut padded = Vec::with_capacity(n + 2 * pad_len);
-    
+
     match mode {
         BoundaryMode::Zero => {
             padded.extend(vec![0.0; pad_len]);
@@ -478,7 +537,7 @@ fn apply_boundary_padding(signal: &[f64], filter_len: usize, mode: BoundaryMode)
             if n >= 2 {
                 let slope_left = signal[1] - signal[0];
                 let slope_right = signal[n - 1] - signal[n - 2];
-                
+
                 for i in (1..=pad_len).rev() {
                     padded.push(signal[0] - i as f64 * slope_left);
                 }
@@ -493,7 +552,10 @@ fn apply_boundary_padding(signal: &[f64], filter_len: usize, mode: BoundaryMode)
                 padded.extend(vec![signal[0]; pad_len]);
             }
         }
-        BoundaryMode::Adaptive | BoundaryMode::Extrapolate | BoundaryMode::MirrorCorrect | BoundaryMode::ContentAware => {
+        BoundaryMode::Adaptive
+        | BoundaryMode::Extrapolate
+        | BoundaryMode::MirrorCorrect
+        | BoundaryMode::ContentAware => {
             // These modes require more complex processing, fall back to symmetric for this simple function
             // For full implementation, these should call the enhanced boundary padding functions
             for i in (0..pad_len).rev() {
@@ -505,7 +567,7 @@ fn apply_boundary_padding(signal: &[f64], filter_len: usize, mode: BoundaryMode)
             }
         }
     }
-    
+
     padded
 }
 
@@ -536,31 +598,31 @@ pub fn wavedec2_enhanced(
     config: &Dwt2dConfig,
 ) -> SignalResult<MultilevelDwt2d> {
     check_positive(levels, "levels")?;
-    
+
     let mut current = data.clone();
     let mut details = Vec::with_capacity(levels);
-    
+
     for _ in 0..levels {
         let decomp = enhanced_dwt2d_decompose(&current, wavelet, config)?;
-        
+
         details.push((
             decomp.detail_h.clone(),
             decomp.detail_v.clone(),
             decomp.detail_d.clone(),
         ));
-        
+
         current = decomp.approx;
-        
+
         // Check if we can continue
         let (rows, cols) = current.dim();
         if rows < 2 || cols < 2 {
             break;
         }
     }
-    
+
     // Reverse details to have coarsest level first
     details.reverse();
-    
+
     Ok(MultilevelDwt2d {
         approx: current,
         details,
@@ -578,62 +640,61 @@ fn memory_optimized_dwt2d_decompose(
 ) -> SignalResult<EnhancedDwt2dResult> {
     let (rows, cols) = data.dim();
     let block_size = config.block_size.min(rows.min(cols));
-    
+
     // Calculate output dimensions
     let half_rows = (rows + 1) / 2;
     let half_cols = (cols + 1) / 2;
-    
+
     // Initialize output arrays
     let mut approx = Array2::zeros((half_rows, half_cols));
     let mut detail_h = Array2::zeros((half_rows, half_cols));
     let mut detail_v = Array2::zeros((half_rows, half_cols));
     let mut detail_d = Array2::zeros((half_rows, half_cols));
-    
+
     // Process in blocks to reduce memory usage
     let overlap = filters.lo_d.len(); // Filter length for overlap
-    
+
     for row_start in (0..rows).step_by(block_size) {
         let row_end = (row_start + block_size + overlap).min(rows);
-        
+
         for col_start in (0..cols).step_by(block_size) {
             let col_end = (col_start + block_size + overlap).min(cols);
-            
+
             // Extract block with overlap
             let block = data.slice(s![row_start..row_end, col_start..col_end]);
-            
+
             // Process block
-            let block_result = process_dwt2d_block(
-                &block.to_owned(),
-                filters,
-                config,
-                row_start,
-                col_start,
-            )?;
-            
+            let block_result =
+                process_dwt2d_block(&block.to_owned(), filters, config, row_start, col_start)?;
+
             // Copy valid region to output arrays
             let out_row_start = row_start / 2;
             let out_row_end = ((row_start + block_size).min(rows) + 1) / 2;
             let out_col_start = col_start / 2;
             let out_col_end = ((col_start + block_size).min(cols) + 1) / 2;
-            
+
             if out_row_start < half_rows && out_col_start < half_cols {
                 let copy_rows = (out_row_end - out_row_start).min(block_result.approx.nrows());
                 let copy_cols = (out_col_end - out_col_start).min(block_result.approx.ncols());
-                
+
                 for i in 0..copy_rows {
                     for j in 0..copy_cols {
                         if out_row_start + i < half_rows && out_col_start + j < half_cols {
-                            approx[[out_row_start + i, out_col_start + j]] = block_result.approx[[i, j]];
-                            detail_h[[out_row_start + i, out_col_start + j]] = block_result.detail_h[[i, j]];
-                            detail_v[[out_row_start + i, out_col_start + j]] = block_result.detail_v[[i, j]];
-                            detail_d[[out_row_start + i, out_col_start + j]] = block_result.detail_d[[i, j]];
+                            approx[[out_row_start + i, out_col_start + j]] =
+                                block_result.approx[[i, j]];
+                            detail_h[[out_row_start + i, out_col_start + j]] =
+                                block_result.detail_h[[i, j]];
+                            detail_v[[out_row_start + i, out_col_start + j]] =
+                                block_result.detail_v[[i, j]];
+                            detail_d[[out_row_start + i, out_col_start + j]] =
+                                block_result.detail_d[[i, j]];
                         }
                     }
                 }
             }
         }
     }
-    
+
     Ok(EnhancedDwt2dResult {
         approx,
         detail_h,
@@ -664,44 +725,48 @@ fn compute_dwt2d_quality_metrics(
 ) -> SignalResult<Dwt2dQualityMetrics> {
     // Energy calculations
     let original_energy: f64 = original.iter().map(|&x| x * x).sum();
-    
+
     let approx_energy: f64 = result.approx.iter().map(|&x| x * x).sum();
     let detail_h_energy: f64 = result.detail_h.iter().map(|&x| x * x).sum();
     let detail_v_energy: f64 = result.detail_v.iter().map(|&x| x * x).sum();
     let detail_d_energy: f64 = result.detail_d.iter().map(|&x| x * x).sum();
-    
+
     let detail_energy = detail_h_energy + detail_v_energy + detail_d_energy;
     let total_transformed_energy = approx_energy + detail_energy;
-    
+
     // Energy preservation (should be close to 1.0 for perfect transforms)
     let energy_preservation = if original_energy > 0.0 {
         total_transformed_energy / original_energy
     } else {
         1.0
     };
-    
+
     // Sparsity measure (percentage of near-zero coefficients)
     let threshold = original_energy.sqrt() * 1e-6; // Adaptive threshold
-    let total_coeffs = result.approx.len() + result.detail_h.len() + 
-                      result.detail_v.len() + result.detail_d.len();
-    
-    let sparse_coeffs = result.approx.iter().chain(result.detail_h.iter())
-        .chain(result.detail_v.iter()).chain(result.detail_d.iter())
+    let total_coeffs =
+        result.approx.len() + result.detail_h.len() + result.detail_v.len() + result.detail_d.len();
+
+    let sparse_coeffs = result
+        .approx
+        .iter()
+        .chain(result.detail_h.iter())
+        .chain(result.detail_v.iter())
+        .chain(result.detail_d.iter())
         .filter(|&&x| x.abs() < threshold)
         .count();
-    
+
     let sparsity = sparse_coeffs as f64 / total_coeffs as f64;
-    
+
     // Compression ratio estimate (based on sparsity)
     let compression_ratio = if sparsity > 0.1 {
         1.0 / (1.0 - sparsity + 0.1)
     } else {
         1.0
     };
-    
+
     // Edge preservation metric (simplified)
     let edge_preservation = compute_edge_preservation_metric(original, result)?;
-    
+
     Ok(Dwt2dQualityMetrics {
         approx_energy,
         detail_energy,
@@ -719,36 +784,45 @@ fn compute_edge_preservation_metric(
 ) -> SignalResult<f64> {
     // Simple edge detection using gradients
     let (rows, cols) = original.dim();
-    
+
     if rows < 3 || cols < 3 {
         return Ok(1.0); // Perfect preservation for small images
     }
-    
+
     // Compute original edge strength
     let mut original_edge_strength = 0.0;
-    for i in 1..rows-1 {
-        for j in 1..cols-1 {
-            let gx = original[[i-1, j+1]] + 2.0 * original[[i, j+1]] + original[[i+1, j+1]]
-                   - original[[i-1, j-1]] - 2.0 * original[[i, j-1]] - original[[i+1, j-1]];
-            let gy = original[[i+1, j-1]] + 2.0 * original[[i+1, j]] + original[[i+1, j+1]]
-                   - original[[i-1, j-1]] - 2.0 * original[[i-1, j]] - original[[i-1, j+1]];
+    for i in 1..rows - 1 {
+        for j in 1..cols - 1 {
+            let gx =
+                original[[i - 1, j + 1]] + 2.0 * original[[i, j + 1]] + original[[i + 1, j + 1]]
+                    - original[[i - 1, j - 1]]
+                    - 2.0 * original[[i, j - 1]]
+                    - original[[i + 1, j - 1]];
+            let gy =
+                original[[i + 1, j - 1]] + 2.0 * original[[i + 1, j]] + original[[i + 1, j + 1]]
+                    - original[[i - 1, j - 1]]
+                    - 2.0 * original[[i - 1, j]]
+                    - original[[i - 1, j + 1]];
             original_edge_strength += (gx * gx + gy * gy).sqrt();
         }
     }
-    
+
     // Estimate edge strength from detail coefficients
-    let detail_edge_strength = result.detail_h.iter().chain(result.detail_v.iter())
+    let detail_edge_strength = result
+        .detail_h
+        .iter()
+        .chain(result.detail_v.iter())
         .chain(result.detail_d.iter())
         .map(|&x| x.abs())
         .sum::<f64>();
-    
+
     // Normalize and compute preservation ratio
     let preservation = if original_edge_strength > 0.0 {
         (detail_edge_strength / original_edge_strength).min(1.0)
     } else {
         1.0
     };
-    
+
     Ok(preservation)
 }
 
@@ -760,10 +834,10 @@ pub fn enhanced_dwt2d_reconstruct(
 ) -> SignalResult<Array2<f64>> {
     let filters = WaveletFilters::new(wavelet);
     let (orig_rows, orig_cols) = result.original_shape;
-    
+
     // Get dimensions of subbands
     let (sub_rows, sub_cols) = result.approx.dim();
-    
+
     // Reconstruct using enhanced method with error correction
     if config.use_parallel && (sub_rows * sub_cols) >= config.parallel_threshold {
         enhanced_parallel_dwt2d_reconstruct(result, &filters, config)
@@ -780,46 +854,46 @@ fn enhanced_parallel_dwt2d_reconstruct(
 ) -> SignalResult<Array2<f64>> {
     let (sub_rows, sub_cols) = result.approx.dim();
     let (orig_rows, orig_cols) = result.original_shape;
-    
+
     // Upsample and reconstruct columns in parallel
     let temp_rows = sub_rows * 2;
-    
+
     // Process low-frequency columns
     let lo_results: Vec<(usize, Vec<f64>)> = (0..sub_cols)
         .into_par_iter()
         .map(|j| {
             let lo_col = result.approx.column(j).to_vec();
             let hi_col = result.detail_v.column(j).to_vec();
-            
+
             let upsampled_lo = upsample(&lo_col);
             let upsampled_hi = upsample(&hi_col);
-            
-            let reconstructed = reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, 
-                                                 &filters.lo_r, &filters.hi_r);
+
+            let reconstructed =
+                reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, &filters.lo_r, &filters.hi_r);
             (j, reconstructed)
         })
         .collect();
-    
+
     // Process high-frequency columns
     let hi_results: Vec<(usize, Vec<f64>)> = (0..sub_cols)
         .into_par_iter()
         .map(|j| {
             let lo_col = result.detail_h.column(j).to_vec();
             let hi_col = result.detail_d.column(j).to_vec();
-            
+
             let upsampled_lo = upsample(&lo_col);
             let upsampled_hi = upsample(&hi_col);
-            
-            let reconstructed = reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, 
-                                                 &filters.lo_r, &filters.hi_r);
+
+            let reconstructed =
+                reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, &filters.lo_r, &filters.hi_r);
             (j, reconstructed)
         })
         .collect();
-    
+
     // Combine results into temporary arrays
     let mut temp_lo = Array2::zeros((temp_rows, sub_cols));
     let mut temp_hi = Array2::zeros((temp_rows, sub_cols));
-    
+
     for (j, col) in lo_results {
         for (i, &val) in col.iter().enumerate() {
             if i < temp_rows {
@@ -827,7 +901,7 @@ fn enhanced_parallel_dwt2d_reconstruct(
             }
         }
     }
-    
+
     for (j, col) in hi_results {
         for (i, &val) in col.iter().enumerate() {
             if i < temp_rows {
@@ -835,27 +909,27 @@ fn enhanced_parallel_dwt2d_reconstruct(
             }
         }
     }
-    
+
     // Reconstruct rows in parallel
     let final_results: Vec<(usize, Vec<f64>)> = (0..temp_rows)
         .into_par_iter()
         .map(|i| {
             let lo_row = temp_lo.row(i).to_vec();
             let hi_row = temp_hi.row(i).to_vec();
-            
+
             let upsampled_lo = upsample(&lo_row);
             let upsampled_hi = upsample(&hi_row);
-            
-            let reconstructed = reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, 
-                                                 &filters.lo_r, &filters.hi_r);
+
+            let reconstructed =
+                reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, &filters.lo_r, &filters.hi_r);
             (i, reconstructed)
         })
         .collect();
-    
+
     // Build final result
     let temp_cols = sub_cols * 2;
     let mut reconstructed = Array2::zeros((temp_rows, temp_cols));
-    
+
     for (i, row) in final_results {
         for (j, &val) in row.iter().enumerate() {
             if j < temp_cols {
@@ -863,9 +937,11 @@ fn enhanced_parallel_dwt2d_reconstruct(
             }
         }
     }
-    
+
     // Crop to original size
-    Ok(reconstructed.slice(s![0..orig_rows, 0..orig_cols]).to_owned())
+    Ok(reconstructed
+        .slice(s![0..orig_rows, 0..orig_cols])
+        .to_owned())
 }
 
 /// SIMD enhanced reconstruction
@@ -876,96 +952,101 @@ fn enhanced_simd_dwt2d_reconstruct(
 ) -> SignalResult<Array2<f64>> {
     let (sub_rows, sub_cols) = result.approx.dim();
     let (orig_rows, orig_cols) = result.original_shape;
-    
+
     // Reconstruct columns first
     let temp_rows = sub_rows * 2;
     let mut temp_lo = Array2::zeros((temp_rows, sub_cols));
     let mut temp_hi = Array2::zeros((temp_rows, sub_cols));
-    
+
     // Process each column
     for j in 0..sub_cols {
         // Low frequency reconstruction
         let lo_col = result.approx.column(j).to_vec();
         let hi_col = result.detail_v.column(j).to_vec();
-        
+
         let upsampled_lo = upsample(&lo_col);
         let upsampled_hi = upsample(&hi_col);
-        
-        let reconstructed_lo = reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, 
-                                                &filters.lo_r, &filters.hi_r);
-        
+
+        let reconstructed_lo =
+            reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, &filters.lo_r, &filters.hi_r);
+
         // High frequency reconstruction
         let lo_col_h = result.detail_h.column(j).to_vec();
         let hi_col_h = result.detail_d.column(j).to_vec();
-        
+
         let upsampled_lo_h = upsample(&lo_col_h);
         let upsampled_hi_h = upsample(&hi_col_h);
-        
-        let reconstructed_hi = reconstruct_1d_simd(&upsampled_lo_h, &upsampled_hi_h, 
-                                                &filters.lo_r, &filters.hi_r);
-        
+
+        let reconstructed_hi = reconstruct_1d_simd(
+            &upsampled_lo_h,
+            &upsampled_hi_h,
+            &filters.lo_r,
+            &filters.hi_r,
+        );
+
         // Store results
         for (i, &val) in reconstructed_lo.iter().enumerate() {
             if i < temp_rows {
                 temp_lo[[i, j]] = val;
             }
         }
-        
+
         for (i, &val) in reconstructed_hi.iter().enumerate() {
             if i < temp_rows {
                 temp_hi[[i, j]] = val;
             }
         }
     }
-    
+
     // Reconstruct rows
     let temp_cols = sub_cols * 2;
     let mut reconstructed = Array2::zeros((temp_rows, temp_cols));
-    
+
     for i in 0..temp_rows {
         let lo_row = temp_lo.row(i).to_vec();
         let hi_row = temp_hi.row(i).to_vec();
-        
+
         let upsampled_lo = upsample(&lo_row);
         let upsampled_hi = upsample(&hi_row);
-        
-        let reconstructed_row = reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, 
-                                                 &filters.lo_r, &filters.hi_r);
-        
+
+        let reconstructed_row =
+            reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, &filters.lo_r, &filters.hi_r);
+
         for (j, &val) in reconstructed_row.iter().enumerate() {
             if j < temp_cols {
                 reconstructed[[i, j]] = val;
             }
         }
     }
-    
+
     // Crop to original size
-    Ok(reconstructed.slice(s![0..orig_rows, 0..orig_cols]).to_owned())
+    Ok(reconstructed
+        .slice(s![0..orig_rows, 0..orig_cols])
+        .to_owned())
 }
 
 /// Enhanced 1D reconstruction with advanced SIMD optimization
-fn reconstruct_1d_simd(
-    lo: &[f64],
-    hi: &[f64],
-    lo_filter: &[f64],
-    hi_filter: &[f64],
-) -> Vec<f64> {
+fn reconstruct_1d_simd(lo: &[f64], hi: &[f64], lo_filter: &[f64], hi_filter: &[f64]) -> Vec<f64> {
     use ndarray::ArrayView1;
-    
+
     let n = lo.len() + hi.len();
     let filter_len = lo_filter.len().max(hi_filter.len());
     let mut result = vec![0.0; n + filter_len - 1];
-    
+
     // Enhanced SIMD convolution with memory-aligned operations
     let lo_view = ArrayView1::from(lo);
     let hi_view = ArrayView1::from(hi);
     let lo_filter_view = ArrayView1::from(lo_filter);
     let hi_filter_view = ArrayView1::from(hi_filter);
-    
+
     // Low-pass reconstruction with optimized SIMD
     if lo_filter.len() >= 4 {
         // Use SIMD for larger filters
-        simd_convolution_accumulate(&lo_view, &lo_filter_view, &mut result[..lo.len() + lo_filter.len() - 1]);
+        simd_convolution_accumulate(
+            &lo_view,
+            &lo_filter_view,
+            &mut result[..lo.len() + lo_filter.len() - 1],
+        );
     } else {
         // Standard implementation for small filters
         for i in 0..lo.len() {
@@ -974,11 +1055,15 @@ fn reconstruct_1d_simd(
             }
         }
     }
-    
+
     // High-pass reconstruction with optimized SIMD
     if hi_filter.len() >= 4 {
         // Use SIMD for larger filters
-        simd_convolution_accumulate(&hi_view, &hi_filter_view, &mut result[..hi.len() + hi_filter.len() - 1]);
+        simd_convolution_accumulate(
+            &hi_view,
+            &hi_filter_view,
+            &mut result[..hi.len() + hi_filter.len() - 1],
+        );
     } else {
         // Standard implementation for small filters
         for i in 0..hi.len() {
@@ -987,7 +1072,7 @@ fn reconstruct_1d_simd(
             }
         }
     }
-    
+
     // Crop to expected size with bounds checking
     let expected_len = n;
     if result.len() > expected_len {
@@ -995,7 +1080,7 @@ fn reconstruct_1d_simd(
     } else if result.len() < expected_len {
         result.resize(expected_len, 0.0);
     }
-    
+
     result
 }
 
@@ -1007,14 +1092,14 @@ fn simd_convolution_accumulate(
 ) {
     let signal_len = signal.len();
     let filter_len = filter.len();
-    
+
     // Process in chunks for better SIMD utilization
     for i in 0..signal_len {
         if i + filter_len <= output.len() {
             // Enhanced SIMD multiply-accumulate with bounds checking
             let signal_val = signal[i];
             let end_idx = (i + filter_len).min(output.len());
-            
+
             // Vectorized multiply-accumulate with proper bounds
             for j in 0..(end_idx - i) {
                 output[i + j] += signal_val * filter[j];
@@ -1026,12 +1111,12 @@ fn simd_convolution_accumulate(
 /// Upsample signal by inserting zeros
 fn upsample(signal: &[f64]) -> Vec<f64> {
     let mut upsampled = Vec::with_capacity(signal.len() * 2);
-    
+
     for &val in signal {
         upsampled.push(val);
         upsampled.push(0.0);
     }
-    
+
     upsampled
 }
 
@@ -1041,37 +1126,37 @@ fn compute_enhanced_edge_preservation_metric(
     result: &EnhancedDwt2dResult,
 ) -> SignalResult<f64> {
     let (rows, cols) = original.dim();
-    
+
     if rows < 3 || cols < 3 {
         return Ok(1.0); // Cannot compute edges for very small images
     }
-    
+
     // Compute gradient magnitude for original image
     let original_edges = compute_gradient_magnitude(original)?;
-    
+
     // Reconstruct image from wavelet coefficients for comparison
     let reconstructed = reconstruct_for_edge_analysis(result)?;
-    
+
     // Ensure reconstructed has same dimensions
     let reconstructed_resized = if reconstructed.dim() != original.dim() {
         resize_to_match(&reconstructed, original.dim())?
     } else {
         reconstructed
     };
-    
+
     // Compute gradient magnitude for reconstructed image
     let reconstructed_edges = compute_gradient_magnitude(&reconstructed_resized)?;
-    
+
     // Compute edge preservation correlation
     let correlation = compute_edge_correlation(&original_edges, &reconstructed_edges)?;
-    
+
     Ok(correlation.max(0.0).min(1.0)) // Clamp to [0, 1]
 }
 
 /// Enhanced multilevel reconstruction with error correction
 pub fn waverec2_enhanced(decomp: &MultilevelDwt2d) -> SignalResult<Array2<f64>> {
     let mut current = decomp.approx.clone();
-    
+
     // Reconstruct from coarsest to finest level
     for (detail_h, detail_v, detail_d) in decomp.details.iter().rev() {
         // Create temporary result structure
@@ -1084,17 +1169,22 @@ pub fn waverec2_enhanced(decomp: &MultilevelDwt2d) -> SignalResult<Array2<f64>> 
             boundary_mode: decomp.config.boundary_mode,
             metrics: None,
         };
-        
+
         // Reconstruct this level
         current = enhanced_dwt2d_reconstruct(&temp_result, decomp.wavelet, &decomp.config)?;
     }
-    
+
     // Crop to original size if needed
     let (target_rows, target_cols) = decomp.original_shape;
     let (current_rows, current_cols) = current.dim();
-    
+
     if current_rows > target_rows || current_cols > target_cols {
-        Ok(current.slice(s![0..target_rows.min(current_rows), 0..target_cols.min(current_cols)]).to_owned())
+        Ok(current
+            .slice(s![
+                0..target_rows.min(current_rows),
+                0..target_cols.min(current_cols)
+            ])
+            .to_owned())
     } else if current_rows < target_rows || current_cols < target_cols {
         // Pad if necessary
         let mut padded = Array2::zeros((target_rows, target_cols));
@@ -1117,51 +1207,54 @@ pub fn enhanced_dwt2d_adaptive(
     energy_threshold: f64,
 ) -> SignalResult<MultilevelDwt2d> {
     check_finite(&data.as_slice().unwrap(), "data")?;
-    
+
     let mut current = data.clone();
     let mut details = Vec::new();
     let mut level = 0;
     let max_levels = 10; // Safety limit
-    
+
     loop {
         // Check if we should continue decomposition
         let (rows, cols) = current.dim();
         if rows < 4 || cols < 4 || level >= max_levels {
             break;
         }
-        
+
         // Perform one level of decomposition
         let decomp = enhanced_dwt2d_decompose(&current, wavelet, config)?;
-        
+
         // Compute energy in detail bands
-        let detail_energy = decomp.detail_h.iter().chain(decomp.detail_v.iter())
+        let detail_energy = decomp
+            .detail_h
+            .iter()
+            .chain(decomp.detail_v.iter())
             .chain(decomp.detail_d.iter())
             .map(|&x| x * x)
             .sum::<f64>();
-        
+
         let total_energy = current.iter().map(|&x| x * x).sum::<f64>();
-        
+
         // Check if detail energy is significant enough to continue
         let energy_ratio = detail_energy / total_energy.max(1e-10);
-        
+
         details.push((
             decomp.detail_h.clone(),
             decomp.detail_v.clone(),
             decomp.detail_d.clone(),
         ));
-        
+
         current = decomp.approx;
         level += 1;
-        
+
         // Stop if detail energy is below threshold
         if energy_ratio < energy_threshold {
             break;
         }
     }
-    
+
     // Reverse details to have coarsest level first
     details.reverse();
-    
+
     Ok(MultilevelDwt2d {
         approx: current,
         details,
@@ -1178,7 +1271,7 @@ pub fn compute_enhanced_dwt2d_statistics(
     let mut level_energies = Vec::new();
     let mut level_entropies = Vec::new();
     let mut level_sparsities = Vec::new();
-    
+
     // Analyze each decomposition level
     for (level, (detail_h, detail_v, detail_d)) in decomp.details.iter().enumerate() {
         // Energy analysis
@@ -1186,21 +1279,21 @@ pub fn compute_enhanced_dwt2d_statistics(
         let v_energy: f64 = detail_v.iter().map(|&x| x * x).sum();
         let d_energy: f64 = detail_d.iter().map(|&x| x * x).sum();
         let total_energy = h_energy + v_energy + d_energy;
-        
+
         level_energies.push(total_energy);
-        
+
         // Entropy analysis (Shannon entropy of coefficient magnitudes)
         let entropy = compute_coefficient_entropy(detail_h, detail_v, detail_d)?;
         level_entropies.push(entropy);
-        
+
         // Sparsity analysis
         let sparsity = compute_coefficient_sparsity(detail_h, detail_v, detail_d, 1e-6);
         level_sparsities.push(sparsity);
     }
-    
+
     // Analyze approximation coefficients
     let approx_energy: f64 = decomp.approx.iter().map(|&x| x * x).sum();
-    
+
     Ok(Dwt2dStatistics {
         level_energies,
         level_entropies,
@@ -1238,25 +1331,26 @@ fn compute_coefficient_entropy(
         .map(|&x| x.abs())
         .filter(|&x| x > 1e-12) // Filter near-zero values
         .collect();
-    
+
     if coeffs.is_empty() {
         return Ok(0.0);
     }
-    
+
     // Normalize to create probability distribution
     let sum: f64 = coeffs.iter().sum();
     if sum <= 0.0 {
         return Ok(0.0);
     }
-    
+
     // Compute Shannon entropy
-    let entropy = coeffs.iter()
+    let entropy = coeffs
+        .iter()
         .map(|&x| {
             let p = x / sum;
             -p * p.log2()
         })
         .sum::<f64>();
-    
+
     Ok(entropy)
 }
 
@@ -1268,13 +1362,14 @@ fn compute_coefficient_sparsity(
     threshold: f64,
 ) -> f64 {
     let total_coeffs = detail_h.len() + detail_v.len() + detail_d.len();
-    
-    let sparse_coeffs = detail_h.iter()
+
+    let sparse_coeffs = detail_h
+        .iter()
         .chain(detail_v.iter())
         .chain(detail_d.iter())
         .filter(|&&x| x.abs() < threshold)
         .count();
-    
+
     sparse_coeffs as f64 / total_coeffs as f64
 }
 
@@ -1282,16 +1377,16 @@ fn compute_coefficient_sparsity(
 fn compute_gradient_magnitude(image: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let (rows, cols) = image.dim();
     let mut magnitude = Array2::zeros((rows, cols));
-    
+
     // Sobel kernels
     let sobel_x = [[-1.0, 0.0, 1.0], [-2.0, 0.0, 2.0], [-1.0, 0.0, 1.0]];
     let sobel_y = [[-1.0, -2.0, -1.0], [0.0, 0.0, 0.0], [1.0, 2.0, 1.0]];
-    
-    for i in 1..rows-1 {
-        for j in 1..cols-1 {
+
+    for i in 1..rows - 1 {
+        for j in 1..cols - 1 {
             let mut gx = 0.0;
             let mut gy = 0.0;
-            
+
             // Apply Sobel kernels
             for di in 0..3 {
                 for dj in 0..3 {
@@ -1300,11 +1395,11 @@ fn compute_gradient_magnitude(image: &Array2<f64>) -> SignalResult<Array2<f64>> 
                     gy += pixel * sobel_y[di][dj];
                 }
             }
-            
+
             magnitude[[i, j]] = (gx * gx + gy * gy).sqrt();
         }
     }
-    
+
     Ok(magnitude)
 }
 
@@ -1314,16 +1409,16 @@ fn reconstruct_for_edge_analysis(result: &EnhancedDwt2dResult) -> SignalResult<A
     let (sub_rows, sub_cols) = result.approx.dim();
     let target_rows = sub_rows * 2;
     let target_cols = sub_cols * 2;
-    
+
     let mut reconstructed = Array2::zeros((target_rows, target_cols));
-    
+
     // Place approximation coefficients in top-left
     for i in 0..sub_rows {
         for j in 0..sub_cols {
             reconstructed[[i, j]] = result.approx[[i, j]];
         }
     }
-    
+
     // Add detail coefficients with appropriate positioning
     // This is a simplified reconstruction for edge analysis purposes
     for i in 0..sub_rows {
@@ -1342,7 +1437,7 @@ fn reconstruct_for_edge_analysis(result: &EnhancedDwt2dResult) -> SignalResult<A
             }
         }
     }
-    
+
     Ok(reconstructed)
 }
 
@@ -1350,10 +1445,10 @@ fn reconstruct_for_edge_analysis(result: &EnhancedDwt2dResult) -> SignalResult<A
 fn resize_to_match(source: &Array2<f64>, target_dim: (usize, usize)) -> SignalResult<Array2<f64>> {
     let (src_rows, src_cols) = source.dim();
     let (target_rows, target_cols) = target_dim;
-    
+
     // Simple nearest-neighbor resizing
     let mut resized = Array2::zeros(target_dim);
-    
+
     for i in 0..target_rows {
         for j in 0..target_cols {
             let src_i = (i * src_rows) / target_rows;
@@ -1361,40 +1456,40 @@ fn resize_to_match(source: &Array2<f64>, target_dim: (usize, usize)) -> SignalRe
             resized[[i, j]] = source[[src_i.min(src_rows - 1), src_j.min(src_cols - 1)]];
         }
     }
-    
+
     Ok(resized)
 }
 
 /// Compute correlation between edge maps
 fn compute_edge_correlation(edges1: &Array2<f64>, edges2: &Array2<f64>) -> SignalResult<f64> {
     use ndarray::ArrayView1;
-    
+
     let edges1_flat = edges1.view().into_shape(edges1.len()).unwrap();
     let edges2_flat = edges2.view().into_shape(edges2.len()).unwrap();
-    
+
     // Compute means
     let mean1 = edges1_flat.sum() / edges1_flat.len() as f64;
     let mean2 = edges2_flat.sum() / edges2_flat.len() as f64;
-    
+
     // Center the data
     let mut centered1 = edges1_flat.to_owned();
     let mut centered2 = edges2_flat.to_owned();
-    
+
     for i in 0..centered1.len() {
         centered1[i] -= mean1;
         centered2[i] -= mean2;
     }
-    
+
     let centered1_view = centered1.view();
     let centered2_view = centered2.view();
-    
+
     // Compute correlation using SIMD
     let numerator = f64::simd_dot(&centered1_view, &centered2_view);
     let var1 = f64::simd_dot(&centered1_view, &centered1_view);
     let var2 = f64::simd_dot(&centered2_view, &centered2_view);
-    
+
     let denominator = (var1 * var2).sqrt();
-    
+
     if denominator > 1e-10 {
         Ok(numerator / denominator)
     } else {
@@ -1419,34 +1514,34 @@ pub fn adaptive_wavelet_denoising(
         compute_metrics: true,
         ..Default::default()
     };
-    
+
     // Multi-level decomposition for better denoising
     let mut decomp = wavedec2_enhanced(data, wavelet, 3, &config)?;
-    
+
     // Estimate noise if not provided
     let sigma = if let Some(var) = noise_variance {
         var.sqrt()
     } else {
         estimate_noise_std(&decomp.detail_coeffs[decomp.detail_coeffs.len() - 1])?
     };
-    
+
     // Apply adaptive thresholding to each level
     for (level, detail_level) in decomp.detail_coeffs.iter_mut().enumerate() {
         let scale_factor = 2.0_f64.powi(level as i32);
         let level_sigma = sigma / scale_factor.sqrt();
-        
+
         // Apply thresholding to each subband
         for subband in detail_level.axis_iter_mut(Axis(0)) {
             let mut subband_array = subband.to_owned();
             apply_adaptive_threshold(&mut subband_array, level_sigma, &method)?;
-            
+
             // Copy back
             for (dst, src) in subband.iter_mut().zip(subband_array.iter()) {
                 *dst = *src;
             }
         }
     }
-    
+
     // Reconstruct denoised signal
     waverec2_enhanced(&decomp, &config)
 }
@@ -1472,16 +1567,14 @@ pub enum DenoisingMethod {
 fn estimate_noise_std(finest_details: &Array3<f64>) -> SignalResult<f64> {
     // Use HH subband (diagonal details) for noise estimation
     let hh_subband = finest_details.slice(s![2, .., ..]);
-    
+
     // Robust noise estimation using median absolute deviation
     let mut coeffs: Vec<f64> = hh_subband.iter().cloned().collect();
     coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    
+
     let median = coeffs[coeffs.len() / 2];
-    let mad: f64 = coeffs.iter()
-        .map(|&x| (x - median).abs())
-        .sum::<f64>() / coeffs.len() as f64;
-    
+    let mad: f64 = coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / coeffs.len() as f64;
+
     // Convert MAD to standard deviation estimate
     Ok(mad / 0.6745)
 }
@@ -1516,7 +1609,7 @@ fn apply_adaptive_threshold(
             non_local_means_wavelet(coeffs, sigma)?;
         }
     }
-    
+
     Ok(())
 }
 
@@ -1545,10 +1638,10 @@ fn sure_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
     let n = coeffs.len() as f64;
     let mut sorted_coeffs: Vec<f64> = coeffs.iter().map(|x| x.abs()).collect();
     sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    
+
     let mut min_risk = f64::INFINITY;
     let mut best_threshold = 0.0;
-    
+
     // Test different thresholds
     for (i, &threshold) in sorted_coeffs.iter().enumerate() {
         let risk = compute_sure_risk(&sorted_coeffs, threshold, sigma, n, i);
@@ -1557,18 +1650,15 @@ fn sure_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
             best_threshold = threshold;
         }
     }
-    
+
     Ok(best_threshold)
 }
 
 /// Compute SURE risk for given threshold
 fn compute_sure_risk(sorted_coeffs: &[f64], threshold: f64, sigma: f64, n: f64, k: usize) -> f64 {
     let retained = (n - k as f64);
-    let sum_sqr: f64 = sorted_coeffs.iter()
-        .skip(k)
-        .map(|&x| x * x)
-        .sum();
-    
+    let sum_sqr: f64 = sorted_coeffs.iter().skip(k).map(|&x| x * x).sum();
+
     // SURE risk estimate
     n - 2.0 * retained + sum_sqr / (sigma * sigma)
 }
@@ -1578,10 +1668,10 @@ fn bayes_shrink_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64>
     // Estimate signal variance
     let signal_var = coeffs.iter().map(|&x| x * x).sum::<f64>() / coeffs.len() as f64;
     let noise_var = sigma * sigma;
-    
+
     // Clip signal variance to avoid negative values
     let signal_var = (signal_var - noise_var).max(0.0);
-    
+
     if signal_var > 0.0 {
         Ok(noise_var / signal_var.sqrt())
     } else {
@@ -1593,7 +1683,7 @@ fn bayes_shrink_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64>
 fn bishrink_threshold(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult<()> {
     let (rows, cols) = coeffs.dim();
     let mut result = coeffs.clone();
-    
+
     // Apply BiShrink to 2x2 neighborhoods
     for i in 0..rows {
         for j in 0..cols {
@@ -1602,7 +1692,7 @@ fn bishrink_threshold(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult<()> 
             result[[i, j]] = shrunk;
         }
     }
-    
+
     *coeffs = result;
     Ok(())
 }
@@ -1611,7 +1701,7 @@ fn bishrink_threshold(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult<()> 
 fn get_neighborhood(coeffs: &Array2<f64>, i: usize, j: usize) -> Vec<f64> {
     let (rows, cols) = coeffs.dim();
     let mut neighborhood = Vec::new();
-    
+
     for di in 0..2 {
         for dj in 0..2 {
             let ni = (i + di).min(rows - 1);
@@ -1619,7 +1709,7 @@ fn get_neighborhood(coeffs: &Array2<f64>, i: usize, j: usize) -> Vec<f64> {
             neighborhood.push(coeffs[[ni, nj]]);
         }
     }
-    
+
     neighborhood
 }
 
@@ -1628,9 +1718,9 @@ fn bishrink_neighborhood(neighborhood: &[f64], sigma: f64) -> f64 {
     let x = neighborhood[0]; // Center coefficient
     let energy: f64 = neighborhood.iter().map(|&val| val * val).sum();
     let k = neighborhood.len() as f64;
-    
+
     let variance_x = (energy / k - sigma * sigma).max(0.0);
-    
+
     if variance_x > 0.0 {
         let shrink_factor = variance_x / (variance_x + sigma * sigma);
         x * shrink_factor
@@ -1646,30 +1736,30 @@ fn non_local_means_wavelet(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult
     let h = sigma * 0.4; // Filtering parameter
     let patch_size = 3;
     let search_window = 7;
-    
+
     for i in 0..rows {
         for j in 0..cols {
             let patch_i = extract_patch(coeffs, i, j, patch_size);
             let mut weights_sum = 0.0;
             let mut weighted_sum = 0.0;
-            
+
             // Search in local neighborhood
             let start_i = i.saturating_sub(search_window / 2);
             let end_i = (i + search_window / 2 + 1).min(rows);
             let start_j = j.saturating_sub(search_window / 2);
             let end_j = (j + search_window / 2 + 1).min(cols);
-            
+
             for si in start_i..end_i {
                 for sj in start_j..end_j {
                     let patch_s = extract_patch(coeffs, si, sj, patch_size);
                     let distance = patch_distance(&patch_i, &patch_s);
                     let weight = (-distance / (h * h)).exp();
-                    
+
                     weights_sum += weight;
                     weighted_sum += weight * coeffs[[si, sj]];
                 }
             }
-            
+
             result[[i, j]] = if weights_sum > 0.0 {
                 weighted_sum / weights_sum
             } else {
@@ -1677,7 +1767,7 @@ fn non_local_means_wavelet(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult
             };
         }
     }
-    
+
     *coeffs = result;
     Ok(())
 }
@@ -1687,7 +1777,7 @@ fn extract_patch(data: &Array2<f64>, i: usize, j: usize, size: usize) -> Vec<f64
     let (rows, cols) = data.dim();
     let half_size = size / 2;
     let mut patch = Vec::new();
-    
+
     for di in 0..size {
         for dj in 0..size {
             let ni = (i + di).saturating_sub(half_size).min(rows - 1);
@@ -1695,13 +1785,14 @@ fn extract_patch(data: &Array2<f64>, i: usize, j: usize, size: usize) -> Vec<f64
             patch.push(data[[ni, nj]]);
         }
     }
-    
+
     patch
 }
 
 /// Compute L2 distance between patches
 fn patch_distance(patch1: &[f64], patch2: &[f64]) -> f64 {
-    patch1.iter()
+    patch1
+        .iter()
         .zip(patch2.iter())
         .map(|(a, b)| (a - b).powi(2))
         .sum()
@@ -1728,10 +1819,10 @@ pub fn enhanced_boundary_padding(
 fn content_aware_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
     let n = data.len();
     let mut result = vec![0.0; n + 2 * pad_length];
-    
+
     // Copy original data
     result[pad_length..pad_length + n].copy_from_slice(data);
-    
+
     // Left padding - analyze local trend
     if n >= 3 {
         let trend = estimate_trend(&data[0..3.min(n)]);
@@ -1745,7 +1836,7 @@ fn content_aware_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f6
             result[i] = data[(i % n)];
         }
     }
-    
+
     // Right padding
     if n >= 3 {
         let start_idx = (n - 3).max(0);
@@ -1759,7 +1850,7 @@ fn content_aware_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f6
             result[pad_length + n + i] = data[n - 1 - (i % n)];
         }
     }
-    
+
     Ok(result)
 }
 
@@ -1768,19 +1859,14 @@ fn estimate_trend(data: &[f64]) -> f64 {
     if data.len() < 2 {
         return 0.0;
     }
-    
+
     // Simple linear regression for trend estimation
     let n = data.len() as f64;
     let x_sum = (0..data.len()).sum::<usize>() as f64;
     let y_sum = data.iter().sum::<f64>();
-    let xy_sum: f64 = data.iter()
-        .enumerate()
-        .map(|(i, &y)| i as f64 * y)
-        .sum();
-    let x2_sum: f64 = (0..data.len())
-        .map(|i| (i as f64).powi(2))
-        .sum();
-    
+    let xy_sum: f64 = data.iter().enumerate().map(|(i, &y)| i as f64 * y).sum();
+    let x2_sum: f64 = (0..data.len()).map(|i| (i as f64).powi(2)).sum();
+
     let denominator = n * x2_sum - x_sum * x_sum;
     if denominator.abs() > 1e-10 {
         (n * xy_sum - x_sum * y_sum) / denominator
@@ -1793,32 +1879,32 @@ fn estimate_trend(data: &[f64]) -> f64 {
 fn mirror_correct_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
     let n = data.len();
     let mut result = vec![0.0; n + 2 * pad_length];
-    
+
     // Copy original data
     result[pad_length..pad_length + n].copy_from_slice(data);
-    
+
     // Apply standard mirror padding first
     for i in 0..pad_length {
         result[i] = data[(pad_length - i - 1).min(n - 1)];
         result[pad_length + n + i] = data[n - 1 - (i + 1).min(n - 1)];
     }
-    
+
     // Apply edge correction to reduce artifacts
     let correction_len = pad_length.min(n / 4);
     for i in 0..correction_len {
         let weight = (i as f64 / correction_len as f64).powi(2);
-        
+
         // Left edge correction
         let original = result[pad_length - i - 1];
         let corrected = data[0] + (data[0] - data[i + 1]) * (i + 1) as f64;
         result[pad_length - i - 1] = original * (1.0 - weight) + corrected * weight;
-        
+
         // Right edge correction
         let original = result[pad_length + n + i];
         let corrected = data[n - 1] + (data[n - 1] - data[n - i - 2]) * (i + 1) as f64;
         result[pad_length + n + i] = original * (1.0 - weight) + corrected * weight;
     }
-    
+
     Ok(result)
 }
 
@@ -1826,10 +1912,10 @@ fn mirror_correct_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f
 fn extrapolate_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
     let n = data.len();
     let mut result = vec![0.0; n + 2 * pad_length];
-    
+
     // Copy original data
     result[pad_length..pad_length + n].copy_from_slice(data);
-    
+
     if n < 2 {
         // Fallback to constant for very short signals
         for i in 0..pad_length {
@@ -1838,34 +1924,38 @@ fn extrapolate_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>
         }
         return Ok(result);
     }
-    
+
     // Estimate gradients at edges
     let left_gradient = data[1] - data[0];
     let right_gradient = data[n - 1] - data[n - 2];
-    
+
     // Left extrapolation
     for i in 0..pad_length {
         let distance = (pad_length - i) as f64;
         result[i] = data[0] - left_gradient * distance;
     }
-    
+
     // Right extrapolation
     for i in 0..pad_length {
         let distance = (i + 1) as f64;
         result[pad_length + n + i] = data[n - 1] + right_gradient * distance;
     }
-    
+
     Ok(result)
 }
 
 /// Apply boundary padding for enhanced modes
-fn apply_enhanced_boundary_padding(data: &[f64], pad_length: usize, mode: BoundaryMode) -> SignalResult<Vec<f64>> {
+fn apply_enhanced_boundary_padding(
+    data: &[f64],
+    pad_length: usize,
+    mode: BoundaryMode,
+) -> SignalResult<Vec<f64>> {
     let n = data.len();
     let mut result = vec![0.0; n + 2 * pad_length];
-    
+
     // Copy original data
     result[pad_length..pad_length + n].copy_from_slice(data);
-    
+
     match mode {
         BoundaryMode::Zero => {
             // Already initialized to zeros
@@ -1875,7 +1965,7 @@ fn apply_enhanced_boundary_padding(data: &[f64], pad_length: usize, mode: Bounda
                 let idx = (pad_length - i - 1) % (2 * n);
                 let src_idx = if idx < n { idx } else { 2 * n - idx - 1 };
                 result[i] = data[src_idx.min(n - 1)];
-                
+
                 let idx = i % (2 * n);
                 let src_idx = if idx < n { n - 1 - idx } else { idx - n };
                 result[pad_length + n + i] = data[src_idx.min(n - 1)];
@@ -1897,7 +1987,7 @@ fn apply_enhanced_boundary_padding(data: &[f64], pad_length: usize, mode: Bounda
             for i in 0..pad_length {
                 let idx = (pad_length - i - 1).min(n - 1);
                 result[i] = 2.0 * data[0] - data[idx];
-                
+
                 let idx = i.min(n - 1);
                 result[pad_length + n + i] = 2.0 * data[n - 1] - data[n - 1 - idx];
             }
@@ -1910,37 +2000,330 @@ fn apply_enhanced_boundary_padding(data: &[f64], pad_length: usize, mode: Bounda
             }
         }
     }
-    
+
     Ok(result)
+}
+
+/// Validate 2D DWT decomposition result
+fn validate_dwt2d_result(
+    result: &EnhancedDwt2dResult,
+    original_shape: (usize, usize),
+    config: &Dwt2dConfig,
+) -> SignalResult<()> {
+    let (orig_rows, orig_cols) = original_shape;
+    let expected_rows = (orig_rows + 1) / 2;
+    let expected_cols = (orig_cols + 1) / 2;
+
+    // Check dimensions of all subbands
+    if result.approx.dim() != (expected_rows, expected_cols) {
+        return Err(SignalError::ComputationError(format!(
+            "Approximation subband has incorrect dimensions: expected ({}, {}), got ({}, {})",
+            expected_rows,
+            expected_cols,
+            result.approx.nrows(),
+            result.approx.ncols()
+        )));
+    }
+
+    if result.detail_h.dim() != (expected_rows, expected_cols) {
+        return Err(SignalError::ComputationError(format!(
+            "Horizontal detail subband has incorrect dimensions: expected ({}, {}), got ({}, {})",
+            expected_rows,
+            expected_cols,
+            result.detail_h.nrows(),
+            result.detail_h.ncols()
+        )));
+    }
+
+    if result.detail_v.dim() != (expected_rows, expected_cols) {
+        return Err(SignalError::ComputationError(format!(
+            "Vertical detail subband has incorrect dimensions: expected ({}, {}), got ({}, {})",
+            expected_rows,
+            expected_cols,
+            result.detail_v.nrows(),
+            result.detail_v.ncols()
+        )));
+    }
+
+    if result.detail_d.dim() != (expected_rows, expected_cols) {
+        return Err(SignalError::ComputationError(format!(
+            "Diagonal detail subband has incorrect dimensions: expected ({}, {}), got ({}, {})",
+            expected_rows,
+            expected_cols,
+            result.detail_d.nrows(),
+            result.detail_d.ncols()
+        )));
+    }
+
+    // Check for finite values in all subbands
+    let tolerance = config.tolerance;
+
+    for &val in result.approx.iter() {
+        if !val.is_finite() {
+            return Err(SignalError::ComputationError(format!(
+                "Non-finite value found in approximation subband: {}",
+                val
+            )));
+        }
+    }
+
+    for &val in result.detail_h.iter() {
+        if !val.is_finite() {
+            return Err(SignalError::ComputationError(format!(
+                "Non-finite value found in horizontal detail subband: {}",
+                val
+            )));
+        }
+    }
+
+    for &val in result.detail_v.iter() {
+        if !val.is_finite() {
+            return Err(SignalError::ComputationError(format!(
+                "Non-finite value found in vertical detail subband: {}",
+                val
+            )));
+        }
+    }
+
+    for &val in result.detail_d.iter() {
+        if !val.is_finite() {
+            return Err(SignalError::ComputationError(format!(
+                "Non-finite value found in diagonal detail subband: {}",
+                val
+            )));
+        }
+    }
+
+    // Check for reasonable energy distribution
+    let approx_energy: f64 = result.approx.iter().map(|&x| x * x).sum();
+    let detail_h_energy: f64 = result.detail_h.iter().map(|&x| x * x).sum();
+    let detail_v_energy: f64 = result.detail_v.iter().map(|&x| x * x).sum();
+    let detail_d_energy: f64 = result.detail_d.iter().map(|&x| x * x).sum();
+
+    let total_energy = approx_energy + detail_h_energy + detail_v_energy + detail_d_energy;
+
+    if total_energy == 0.0 {
+        eprintln!("Warning: All wavelet coefficients are zero. This may indicate a problem with the input or computation.");
+    } else if total_energy < tolerance {
+        eprintln!("Warning: Very low total energy in wavelet coefficients ({:.2e}). Results may be unreliable.", total_energy);
+    }
+
+    // Check energy distribution ratios
+    if total_energy > 0.0 {
+        let approx_ratio = approx_energy / total_energy;
+        let detail_ratio = (detail_h_energy + detail_v_energy + detail_d_energy) / total_energy;
+
+        if approx_ratio > 0.99 {
+            eprintln!("Warning: Almost all energy is in the approximation subband ({:.1%}). The signal may be very smooth.", approx_ratio);
+        } else if detail_ratio > 0.99 {
+            eprintln!("Warning: Almost all energy is in detail subbands ({:.1%}). The signal may be very noisy.", detail_ratio);
+        }
+    }
+
+    Ok(())
+}
+
+/// Analyze image characteristics and select optimal boundary mode
+fn analyze_and_select_boundary_mode(
+    data: &Array2<f64>,
+    filters: &WaveletFilters,
+) -> SignalResult<BoundaryMode> {
+    let (rows, cols) = data.dim();
+    
+    // Check edge characteristics
+    let edge_variance = calculate_edge_variance(data);
+    let smoothness = calculate_smoothness(data);
+    let periodicity = estimate_periodicity(data);
+    
+    // Select boundary mode based on characteristics
+    if periodicity > 0.8 {
+        Ok(BoundaryMode::Periodic)
+    } else if smoothness > 0.7 {
+        Ok(BoundaryMode::Smooth)
+    } else if edge_variance < 0.1 {
+        Ok(BoundaryMode::Symmetric)
+    } else {
+        Ok(BoundaryMode::ContentAware)
+    }
+}
+
+/// Calculate edge variance to determine image characteristics
+fn calculate_edge_variance(data: &Array2<f64>) -> f64 {
+    let (rows, cols) = data.dim();
+    
+    // Extract edges
+    let top_edge = data.row(0);
+    let bottom_edge = data.row(rows - 1);
+    let left_edge = data.column(0);
+    let right_edge = data.column(cols - 1);
+    
+    // Calculate variances
+    let top_var = top_edge.var(0.0);
+    let bottom_var = bottom_edge.var(0.0);
+    let left_var = left_edge.var(0.0);
+    let right_var = right_edge.var(0.0);
+    
+    // Return average edge variance
+    (top_var + bottom_var + left_var + right_var) / 4.0
+}
+
+/// Calculate smoothness metric for the image
+fn calculate_smoothness(data: &Array2<f64>) -> f64 {
+    let (rows, cols) = data.dim();
+    
+    if rows < 3 || cols < 3 {
+        return 0.5; // Default for small images
+    }
+    
+    // Calculate Laplacian to measure smoothness
+    let mut total_laplacian = 0.0;
+    let mut count = 0;
+    
+    for i in 1..(rows - 1) {
+        for j in 1..(cols - 1) {
+            let laplacian = data[[i - 1, j]] + data[[i + 1, j]] + data[[i, j - 1]] 
+                + data[[i, j + 1]] - 4.0 * data[[i, j]];
+            total_laplacian += laplacian.abs();
+            count += 1;
+        }
+    }
+    
+    let avg_laplacian = total_laplacian / count as f64;
+    let data_range = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max) 
+        - data.iter().cloned().fold(f64::INFINITY, f64::min);
+    
+    if data_range < 1e-12 {
+        return 1.0; // Constant image is very smooth
+    }
+    
+    // Normalize by data range and invert (higher value = smoother)
+    1.0 / (1.0 + avg_laplacian / data_range)
+}
+
+/// Estimate periodicity of the image
+fn estimate_periodicity(data: &Array2<f64>) -> f64 {
+    let (rows, cols) = data.dim();
+    
+    // Simple correlation-based periodicity detection
+    let min_dim = rows.min(cols);
+    if min_dim < 4 {
+        return 0.0;
+    }
+    
+    let half_rows = rows / 2;
+    let half_cols = cols / 2;
+    
+    // Compare first half with second half
+    let mut correlation = 0.0;
+    let mut norm1 = 0.0;
+    let mut norm2 = 0.0;
+    
+    for i in 0..half_rows {
+        for j in 0..half_cols {
+            let val1 = data[[i, j]];
+            let val2 = data[[i + half_rows, j + half_cols]];
+            
+            correlation += val1 * val2;
+            norm1 += val1 * val1;
+            norm2 += val2 * val2;
+        }
+    }
+    
+    if norm1 < 1e-12 || norm2 < 1e-12 {
+        return 0.0;
+    }
+    
+    (correlation / (norm1 * norm2).sqrt()).abs()
+}
+
+/// Enhanced validation of DWT2D result
+fn validate_dwt2d_result(
+    result: &EnhancedDwt2dResult,
+    original_shape: (usize, usize),
+    config: &Dwt2dConfig,
+) -> SignalResult<()> {
+    // Check dimensions consistency
+    let (orig_rows, orig_cols) = original_shape;
+    let approx_rows = result.approx.nrows();
+    let approx_cols = result.approx.ncols();
+    
+    // Expected dimensions (with downsampling)
+    let expected_rows = (orig_rows + 1) / 2;
+    let expected_cols = (orig_cols + 1) / 2;
+    
+    if approx_rows != expected_rows || approx_cols != expected_cols {
+        return Err(SignalError::ComputationError(format!(
+            "Dimension mismatch: expected {}x{}, got {}x{}",
+            expected_rows, expected_cols, approx_rows, approx_cols
+        )));
+    }
+    
+    // Check all subbands have same dimensions
+    if result.detail_h.dim() != (approx_rows, approx_cols) ||
+       result.detail_v.dim() != (approx_rows, approx_cols) ||
+       result.detail_d.dim() != (approx_rows, approx_cols) {
+        return Err(SignalError::ComputationError(
+            "Subband dimension mismatch".to_string()
+        ));
+    }
+    
+    // Check for finite values
+    for subband in [&result.approx, &result.detail_h, &result.detail_v, &result.detail_d] {
+        for &val in subband.iter() {
+            if !val.is_finite() {
+                return Err(SignalError::ComputationError(
+                    "Non-finite values in wavelet coefficients".to_string()
+                ));
+            }
+        }
+    }
+    
+    // Additional validation based on tolerance
+    if config.tolerance > 0.0 {
+        // Check for reasonable coefficient magnitudes
+        let max_coeff = [&result.approx, &result.detail_h, &result.detail_v, &result.detail_d]
+            .iter()
+            .flat_map(|subband| subband.iter())
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max);
+        
+        if max_coeff > 1e12 {
+            eprintln!("Warning: Very large coefficient detected: {:.2e}", max_coeff);
+        }
+    }
+    
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use ndarray::Array2;
-    
+
     #[test]
     fn test_enhanced_dwt2d_basic() {
-        let data = Array2::from_shape_vec((4, 4), vec![
-            1.0, 2.0, 3.0, 4.0,
-            5.0, 6.0, 7.0, 8.0,
-            9.0, 10.0, 11.0, 12.0,
-            13.0, 14.0, 15.0, 16.0
-        ]).unwrap();
-        
+        let data = Array2::from_shape_vec(
+            (4, 4),
+            vec![
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,
+                16.0,
+            ],
+        )
+        .unwrap();
+
         let config = Dwt2dConfig::default();
         let result = enhanced_dwt2d_decompose(&data, Wavelet::Haar, &config).unwrap();
-        
+
         assert_eq!(result.approx.dim(), (2, 2));
         assert_eq!(result.detail_h.dim(), (2, 2));
         assert_eq!(result.detail_v.dim(), (2, 2));
         assert_eq!(result.detail_d.dim(), (2, 2));
     }
-    
+
     #[test]
     fn test_boundary_modes() {
         let data = Array2::eye(8);
-        
+
         for mode in [
             BoundaryMode::Zero,
             BoundaryMode::Symmetric,
@@ -1951,7 +2334,7 @@ mod tests {
                 boundary_mode: mode,
                 ..Default::default()
             };
-            
+
             let result = enhanced_dwt2d_decompose(&data, Wavelet::DB(4), &config).unwrap();
             assert!(result.approx.iter().all(|&x| x.is_finite()));
         }

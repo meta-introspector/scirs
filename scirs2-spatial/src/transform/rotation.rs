@@ -749,7 +749,9 @@ impl Rotation {
     /// ```
     pub fn apply(&self, vec: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
         if vec.len() != 3 {
-            return Err(SpatialError::DimensionError("Vector must have 3 elements".to_string()));
+            return Err(SpatialError::DimensionError(
+                "Vector must have 3 elements".to_string(),
+            ));
         }
 
         // Convert to matrix and apply
@@ -783,7 +785,9 @@ impl Rotation {
     /// ```
     pub fn apply_multiple(&self, vecs: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
         if vecs.ncols() != 3 {
-            return Err(SpatialError::DimensionError("Each vector must have 3 elements".to_string()));
+            return Err(SpatialError::DimensionError(
+                "Each vector must have 3 elements".to_string(),
+            ));
         }
 
         let matrix = self.as_matrix();

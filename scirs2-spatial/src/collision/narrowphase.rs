@@ -1065,3 +1065,371 @@ pub fn ray_triangle3d_collision(
 
     Some((t, hit_point, barycentric))
 }
+
+// ---------------------------------------------------------------------------
+// GJK (Gilbert-Johnson-Keerthi) Algorithm for Convex Shape Collision Detection
+// ---------------------------------------------------------------------------
+
+/// Trait for shapes that can be used with the GJK algorithm
+///
+/// The support function returns the farthest point in the given direction
+pub trait GJKShape {
+    /// Returns the farthest point in the shape in the given direction
+    fn support(&self, direction: &[f64; 3]) -> [f64; 3];
+}
+
+/// Implementation of GJK support function for Sphere
+impl GJKShape for Sphere {
+    fn support(&self, direction: &[f64; 3]) -> [f64; 3] {
+        // Normalize the direction vector
+        let length = (direction[0] * direction[0]
+            + direction[1] * direction[1]
+            + direction[2] * direction[2])
+            .sqrt();
+        if length < 1e-10 {
+            return self.center;
+        }
+
+        let normalized = [
+            direction[0] / length,
+            direction[1] / length,
+            direction[2] / length,
+        ];
+
+        [
+            self.center[0] + self.radius * normalized[0],
+            self.center[1] + self.radius * normalized[1],
+            self.center[2] + self.radius * normalized[2],
+        ]
+    }
+}
+
+/// Implementation of GJK support function for Box3D
+impl GJKShape for Box3D {
+    fn support(&self, direction: &[f64; 3]) -> [f64; 3] {
+        [
+            if direction[0] >= 0.0 {
+                self.max[0]
+            } else {
+                self.min[0]
+            },
+            if direction[1] >= 0.0 {
+                self.max[1]
+            } else {
+                self.min[1]
+            },
+            if direction[2] >= 0.0 {
+                self.max[2]
+            } else {
+                self.min[2]
+            },
+        ]
+    }
+}
+
+/// Represents a simplex used in the GJK algorithm
+#[derive(Debug, Clone)]
+struct GJKSimplex {
+    points: Vec<[f64; 3]>,
+}
+
+impl GJKSimplex {
+    fn new() -> Self {
+        Self {
+            points: Vec::with_capacity(4),
+        }
+    }
+
+    fn add_point(&mut self, point: [f64; 3]) {
+        self.points.push(point);
+    }
+
+    fn size(&self) -> usize {
+        self.points.len()
+    }
+
+    fn get_point(&self, index: usize) -> Option<[f64; 3]> {
+        self.points.get(index).copied()
+    }
+
+    #[allow(dead_code)]
+    fn clear(&mut self) {
+        self.points.clear();
+    }
+
+    fn set_points(&mut self, points: Vec<[f64; 3]>) {
+        self.points = points;
+    }
+}
+
+/// Compute the Minkowski difference support point
+fn support_minkowski_difference<T1: GJKShape, T2: GJKShape>(
+    shape1: &T1,
+    shape2: &T2,
+    direction: &[f64; 3],
+) -> [f64; 3] {
+    let support1 = shape1.support(direction);
+    let neg_direction = [-direction[0], -direction[1], -direction[2]];
+    let support2 = shape2.support(&neg_direction);
+
+    [
+        support1[0] - support2[0],
+        support1[1] - support2[1],
+        support1[2] - support2[2],
+    ]
+}
+
+/// Vector operations helper functions
+fn dot_product(a: &[f64; 3], b: &[f64; 3]) -> f64 {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+fn cross_product(a: &[f64; 3], b: &[f64; 3]) -> [f64; 3] {
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
+}
+
+fn subtract_vectors(a: &[f64; 3], b: &[f64; 3]) -> [f64; 3] {
+    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+fn negate_vector(a: &[f64; 3]) -> [f64; 3] {
+    [-a[0], -a[1], -a[2]]
+}
+
+/// Handle line simplex (2 points)
+fn handle_line_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
+    let a = simplex.get_point(1).unwrap(); // Latest point
+    let b = simplex.get_point(0).unwrap(); // Previous point
+
+    let ab = subtract_vectors(&b, &a);
+    let ao = negate_vector(&a);
+
+    if dot_product(&ab, &ao) > 0.0 {
+        // Origin is beyond point B in direction AB
+        *direction = cross_product(&cross_product(&ab, &ao), &ab);
+    } else {
+        // Origin is beyond point A
+        simplex.set_points(vec![a]);
+        *direction = ao;
+    }
+
+    false // Origin not contained
+}
+
+/// Handle triangle simplex (3 points)
+fn handle_triangle_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
+    let a = simplex.get_point(2).unwrap(); // Latest point
+    let b = simplex.get_point(1).unwrap();
+    let c = simplex.get_point(0).unwrap();
+
+    let ab = subtract_vectors(&b, &a);
+    let ac = subtract_vectors(&c, &a);
+    let ao = negate_vector(&a);
+
+    let abc = cross_product(&ab, &ac);
+
+    if dot_product(&cross_product(&abc, &ac), &ao) > 0.0 {
+        if dot_product(&ac, &ao) > 0.0 {
+            // Region AC
+            simplex.set_points(vec![c, a]);
+            *direction = cross_product(&cross_product(&ac, &ao), &ac);
+        } else {
+            return handle_line_simplex_from_points(simplex, direction, a, b);
+        }
+    } else if dot_product(&cross_product(&ab, &abc), &ao) > 0.0 {
+        return handle_line_simplex_from_points(simplex, direction, a, b);
+    } else if dot_product(&abc, &ao) > 0.0 {
+        // Above triangle
+        *direction = abc;
+    } else {
+        // Below triangle
+        simplex.set_points(vec![b, c, a]);
+        *direction = negate_vector(&abc);
+    }
+
+    false // Origin not contained
+}
+
+/// Helper function for handling line simplex from specific points
+fn handle_line_simplex_from_points(
+    simplex: &mut GJKSimplex,
+    direction: &mut [f64; 3],
+    a: [f64; 3],
+    b: [f64; 3],
+) -> bool {
+    let ab = subtract_vectors(&b, &a);
+    let ao = negate_vector(&a);
+
+    if dot_product(&ab, &ao) > 0.0 {
+        simplex.set_points(vec![b, a]);
+        *direction = cross_product(&cross_product(&ab, &ao), &ab);
+    } else {
+        simplex.set_points(vec![a]);
+        *direction = ao;
+    }
+
+    false
+}
+
+/// Handle tetrahedron simplex (4 points)
+fn handle_tetrahedron_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
+    let a = simplex.get_point(3).unwrap(); // Latest point
+    let b = simplex.get_point(2).unwrap();
+    let c = simplex.get_point(1).unwrap();
+    let d = simplex.get_point(0).unwrap();
+
+    let ab = subtract_vectors(&b, &a);
+    let ac = subtract_vectors(&c, &a);
+    let ad = subtract_vectors(&d, &a);
+    let ao = negate_vector(&a);
+
+    let abc = cross_product(&ab, &ac);
+    let acd = cross_product(&ac, &ad);
+    let adb = cross_product(&ad, &ab);
+
+    // Check which face the origin is on the outside of
+    if dot_product(&abc, &ao) > 0.0 {
+        simplex.set_points(vec![c, b, a]);
+        return handle_triangle_simplex(simplex, direction);
+    }
+
+    if dot_product(&acd, &ao) > 0.0 {
+        simplex.set_points(vec![d, c, a]);
+        return handle_triangle_simplex(simplex, direction);
+    }
+
+    if dot_product(&adb, &ao) > 0.0 {
+        simplex.set_points(vec![b, d, a]);
+        return handle_triangle_simplex(simplex, direction);
+    }
+
+    // Origin is inside the tetrahedron
+    true
+}
+
+/// Handle simplex evolution based on current size
+fn handle_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
+    match simplex.size() {
+        2 => handle_line_simplex(simplex, direction),
+        3 => handle_triangle_simplex(simplex, direction),
+        4 => handle_tetrahedron_simplex(simplex, direction),
+        _ => false,
+    }
+}
+
+/// GJK collision detection algorithm for two convex shapes
+///
+/// # Arguments
+///
+/// * `shape1` - First convex shape implementing GJKShape trait
+/// * `shape2` - Second convex shape implementing GJKShape trait
+/// * `max_iterations` - Maximum number of iterations (typically 64 is sufficient)
+///
+/// # Returns
+///
+/// `true` if the shapes are colliding, `false` otherwise
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_spatial::collision::{gjk_collision_detection, Sphere, Box3D};
+///
+/// let sphere = Sphere {
+///     center: [0.0, 0.0, 0.0],
+///     radius: 1.0,
+/// };
+///
+/// let bbox = Box3D {
+///     min: [-0.5, -0.5, -0.5],
+///     max: [0.5, 0.5, 0.5],
+/// };
+///
+/// let colliding = gjk_collision_detection(&sphere, &bbox, 64);
+/// println!("Are the shapes colliding? {}", colliding);
+/// ```
+pub fn gjk_collision_detection<T1: GJKShape, T2: GJKShape>(
+    shape1: &T1,
+    shape2: &T2,
+    max_iterations: usize,
+) -> bool {
+    // Choose initial search direction (can be arbitrary non-zero vector)
+    let mut direction = [1.0, 0.0, 0.0];
+
+    // Get initial support point
+    let initial_support = support_minkowski_difference(shape1, shape2, &direction);
+
+    // If the first support point isn't past the origin, there's no collision
+    if dot_product(&initial_support, &direction) <= 0.0 {
+        return false;
+    }
+
+    let mut simplex = GJKSimplex::new();
+    simplex.add_point(initial_support);
+
+    // Flip direction towards origin
+    direction = negate_vector(&initial_support);
+
+    for _ in 0..max_iterations {
+        let support_point = support_minkowski_difference(shape1, shape2, &direction);
+
+        // If we don't make progress past the origin, there's no collision
+        if dot_product(&support_point, &direction) <= 0.0 {
+            return false;
+        }
+
+        simplex.add_point(support_point);
+
+        // Check if the simplex contains the origin
+        if handle_simplex(&mut simplex, &mut direction) {
+            return true; // Collision detected
+        }
+    }
+
+    false // No collision detected within max iterations
+}
+
+/// Convenience function for GJK collision detection between two spheres
+///
+/// # Arguments
+///
+/// * `sphere1` - First sphere
+/// * `sphere2` - Second sphere
+///
+/// # Returns
+///
+/// `true` if the spheres are colliding, `false` otherwise
+pub fn gjk_sphere_sphere_collision(sphere1: &Sphere, sphere2: &Sphere) -> bool {
+    gjk_collision_detection(sphere1, sphere2, 64)
+}
+
+/// Convenience function for GJK collision detection between two boxes
+///
+/// # Arguments
+///
+/// * `box1` - First box
+/// * `box2` - Second box
+///
+/// # Returns
+///
+/// `true` if the boxes are colliding, `false` otherwise
+pub fn gjk_box_box_collision(box1: &Box3D, box2: &Box3D) -> bool {
+    gjk_collision_detection(box1, box2, 64)
+}
+
+/// Convenience function for GJK collision detection between a sphere and a box
+///
+/// # Arguments
+///
+/// * `sphere` - The sphere
+/// * `bbox` - The box
+///
+/// # Returns
+///
+/// `true` if the sphere and box are colliding, `false` otherwise
+pub fn gjk_sphere_box_collision(sphere: &Sphere, bbox: &Box3D) -> bool {
+    gjk_collision_detection(sphere, bbox, 64)
+}

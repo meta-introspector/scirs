@@ -1,13 +1,13 @@
 //! Spectral Embedding for non-linear dimensionality reduction
 //!
-//! Spectral embedding is a non-linear dimensionality reduction technique that uses 
+//! Spectral embedding is a non-linear dimensionality reduction technique that uses
 //! the eigenvectors of a graph Laplacian to embed data points in a lower-dimensional space.
 //! It's particularly effective for data that lies on a non-linear manifold.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix2, Axis};
+use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
 use num_traits::{Float, NumCast};
-use scirs2_linalg::eigh;
 use scirs2_core::validation::{check_positive, check_shape};
+use scirs2_linalg::eigh;
 use std::collections::BinaryHeap;
 
 use crate::error::{Result, TransformError};
@@ -208,7 +208,7 @@ impl SpectralEmbedding {
     /// Compute the graph Laplacian matrix
     fn compute_laplacian(&self, affinity: &Array2<f64>) -> Result<Array2<f64>> {
         let n_samples = affinity.nrows();
-        
+
         // Compute degree matrix
         let mut degree = Array1::zeros(n_samples);
         for i in 0..n_samples {
@@ -347,9 +347,10 @@ impl SpectralEmbedding {
             ));
         }
 
-        let training_data = self.training_data.as_ref().ok_or_else(|| {
-            TransformError::NotFitted("Training data not available".to_string())
-        })?;
+        let training_data = self
+            .training_data
+            .as_ref()
+            .ok_or_else(|| TransformError::NotFitted("Training data not available".to_string()))?;
 
         let x_f64 = x.mapv(|v| num_traits::cast::<S::Elem, f64>(v).unwrap_or(0.0));
 
@@ -422,7 +423,8 @@ impl SpectralEmbedding {
         if n_features != training_data.ncols() {
             return Err(TransformError::InvalidInput(format!(
                 "Input features {} must match training features {}",
-                n_features, training_data.ncols()
+                n_features,
+                training_data.ncols()
             )));
         }
 
@@ -445,7 +447,11 @@ impl SpectralEmbedding {
                     AffinityMethod::KNN | AffinityMethod::Epsilon => {
                         // For discrete methods, use distance-based weighting
                         let dist = dist_sq.sqrt();
-                        if dist > 0.0 { 1.0 / (1.0 + dist) } else { 1.0 }
+                        if dist > 0.0 {
+                            1.0 / (1.0 + dist)
+                        } else {
+                            1.0
+                        }
                     }
                 };
 
@@ -458,7 +464,7 @@ impl SpectralEmbedding {
         let mut new_embedding = Array2::zeros((n_new, self.n_components));
 
         let start_idx = if self.normalized { 1 } else { 0 };
-        
+
         for i in 0..n_new {
             for j in 0..self.n_components {
                 let eigenvalue = eigenvalues[start_idx + j];
@@ -484,14 +490,7 @@ mod tests {
     #[test]
     fn test_spectral_embedding_gaussian() {
         // Create a simple 2D dataset with two clusters
-        let data = vec![
-            1.0, 1.0,
-            1.1, 1.1,
-            1.2, 0.9,
-            5.0, 5.0,
-            5.1, 5.1,
-            4.9, 5.2,
-        ];
+        let data = vec![1.0, 1.0, 1.1, 1.1, 1.2, 0.9, 5.0, 5.0, 5.1, 5.1, 4.9, 5.2];
         let x = Array::from_shape_vec((6, 2), data).unwrap();
 
         let mut spectral = SpectralEmbedding::new(2, AffinityMethod::Gaussian);
@@ -509,8 +508,7 @@ mod tests {
     fn test_spectral_embedding_knn() {
         let x = Array::eye(8);
 
-        let mut spectral = SpectralEmbedding::new(3, AffinityMethod::KNN)
-            .with_n_neighbors(3);
+        let mut spectral = SpectralEmbedding::new(3, AffinityMethod::KNN).with_n_neighbors(3);
         let embedding = spectral.fit_transform(&x).unwrap();
 
         assert_eq!(embedding.shape(), &[8, 3]);
@@ -524,10 +522,11 @@ mod tests {
     #[test]
     fn test_spectral_embedding_out_of_sample() {
         let x_train = Array::eye(5);
-        let x_test = Array::from_shape_vec((2, 5), vec![
-            0.1, 0.1, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.1, 0.1, 0.0,
-        ]).unwrap();
+        let x_test = Array::from_shape_vec(
+            (2, 5),
+            vec![0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1, 0.0],
+        )
+        .unwrap();
 
         let mut spectral = SpectralEmbedding::new(2, AffinityMethod::Gaussian);
         spectral.fit(&x_train).unwrap();

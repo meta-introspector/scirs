@@ -7,9 +7,9 @@
 
 #[cfg(feature = "plotting")]
 use scirs2_special::visualization::{
-    PlotConfig, MultiPlot,
-    gamma_plots, bessel_plots, error_function_plots, polynomial_plots,
+    bessel_plots, error_function_plots,
     export::{export_plot_data, ExportFormat},
+    gamma_plots, polynomial_plots, MultiPlot, PlotConfig,
 };
 
 #[cfg(not(feature = "plotting"))]
@@ -68,8 +68,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(feature = "plotting")]
 fn create_custom_plot() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2_special::{ai, bi, si, ci};
-    
+    use scirs2_special::{ai, bi, ci, si};
+
     let config = PlotConfig {
         title: "Special Functions Comparison".to_string(),
         x_label: "x".to_string(),
@@ -91,24 +91,14 @@ fn create_custom_plot() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(feature = "plotting")]
 fn export_examples() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_special::gamma;
-    
+
     // Export gamma function data as CSV
-    let csv_data = export_plot_data(
-        |x| gamma(x),
-        (0.1, 5.0),
-        100,
-        ExportFormat::CSV,
-    )?;
+    let csv_data = export_plot_data(|x| gamma(x), (0.1, 5.0), 100, ExportFormat::CSV)?;
     std::fs::write("plots/gamma_data.csv", csv_data)?;
     println!("   Exported gamma function to CSV: plots/gamma_data.csv");
 
     // Export as LaTeX/TikZ
-    let latex_data = export_plot_data(
-        |x| gamma(x),
-        (0.1, 5.0),
-        50,
-        ExportFormat::LaTeX,
-    )?;
+    let latex_data = export_plot_data(|x| gamma(x), (0.1, 5.0), 50, ExportFormat::LaTeX)?;
     std::fs::write("plots/gamma_tikz.tex", latex_data)?;
     println!("   Exported gamma function to LaTeX: plots/gamma_tikz.tex");
 
@@ -119,28 +109,28 @@ fn export_examples() -> Result<(), Box<dyn std::error::Error>> {
 fn demonstrate_advanced_features() {
     println!("\nAdvanced Visualization Features:");
     println!("================================");
-    
+
     println!("\n1. Complex function visualization:");
     println!("   - Heatmaps of |f(z)| in complex plane");
     println!("   - Phase portraits with color coding");
     println!("   - Contour plots of real/imaginary parts");
-    
+
     println!("\n2. 3D surface plots:");
     println!("   - Functions of two variables");
     println!("   - Parametric surfaces");
     println!("   - Level sets and isosurfaces");
-    
+
     println!("\n3. Animation capabilities:");
     println!("   - Evolution of polynomial families");
     println!("   - Parameter sweeps");
     println!("   - Zero tracking animations");
-    
+
     println!("\n4. Interactive features (when enabled):");
     println!("   - Zoom and pan");
     println!("   - Hover tooltips with values");
     println!("   - Export to various formats");
     println!("   - Parameter sliders");
-    
+
     println!("\n5. Export formats:");
     println!("   - PNG/SVG for publications");
     println!("   - LaTeX/TikZ for papers");

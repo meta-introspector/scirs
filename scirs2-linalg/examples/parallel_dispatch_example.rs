@@ -4,9 +4,9 @@
 //! to automatically select between serial and parallel implementations
 //! based on matrix size and worker configuration.
 
-use ndarray::{Array2, array};
-use scirs2_linalg::parallel_dispatch::{ParallelDecomposition, ParallelSolver, ParallelOperations};
+use ndarray::{array, Array2};
 use scirs2_linalg::parallel::set_global_workers;
+use scirs2_linalg::parallel_dispatch::{ParallelDecomposition, ParallelOperations, ParallelSolver};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set global worker count for all operations
@@ -14,12 +14,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 1: Parallel Cholesky decomposition
     println!("=== Parallel Cholesky Decomposition ===");
-    
+
     // Small matrix - will use serial implementation
     let small_matrix = array![[4.0, 2.0], [2.0, 5.0]];
     let l_small = ParallelDecomposition::cholesky(&small_matrix.view(), Some(4))?;
     println!("Small matrix Cholesky result shape: {:?}", l_small.shape());
-    
+
     // Large matrix - will use parallel implementation if workers > 0
     let n = 100;
     let large_matrix = create_spd_matrix(n);
@@ -36,54 +36,68 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
     let (p, l, u) = ParallelDecomposition::lu(&matrix.view(), Some(4))?;
-    println!("LU decomposition complete - P: {:?}, L: {:?}, U: {:?}", 
-             p.shape(), l.shape(), u.shape());
+    println!(
+        "LU decomposition complete - P: {:?}, L: {:?}, U: {:?}",
+        p.shape(),
+        l.shape(),
+        u.shape()
+    );
 
     // Example 3: Parallel iterative solvers
     println!("\n=== Parallel Iterative Solvers ===");
     let a = create_spd_matrix(50);
-    let b = Array2::from_shape_fn((50, 1), |(i, _)| (i as f64).sin()).column(0).to_owned();
-    
+    let b = Array2::from_shape_fn((50, 1), |(i, _)| (i as f64).sin())
+        .column(0)
+        .to_owned();
+
     // Conjugate Gradient
     let x_cg = ParallelSolver::conjugate_gradient(&a.view(), &b.view(), 100, 1e-10, Some(4))?;
     println!("CG solution norm: {}", x_cg.mapv(|x| x * x).sum().sqrt());
-    
+
     // Jacobi method
     let x_jacobi = ParallelSolver::jacobi(&a.view(), &b.view(), 100, 1e-6, Some(4))?;
-    println!("Jacobi solution norm: {}", x_jacobi.mapv(|x| x * x).sum().sqrt());
+    println!(
+        "Jacobi solution norm: {}",
+        x_jacobi.mapv(|x| x * x).sum().sqrt()
+    );
 
     // Example 4: Parallel matrix operations
     println!("\n=== Parallel Matrix Operations ===");
     let mat_a = Array2::from_shape_fn((100, 80), |(i, j)| ((i + j) as f64).sin());
     let mat_b = Array2::from_shape_fn((80, 60), |(i, j)| ((i * j) as f64).cos());
-    
+
     // Matrix multiplication
     let c = ParallelOperations::matmul(&mat_a.view(), &mat_b.view(), Some(4))?;
     println!("Matrix multiplication result shape: {:?}", c.shape());
-    
+
     // Matrix-vector multiplication
-    let vec = Array2::from_shape_fn((80, 1), |(i, _)| (i as f64).sin()).column(0).to_owned();
+    let vec = Array2::from_shape_fn((80, 1), |(i, _)| (i as f64).sin())
+        .column(0)
+        .to_owned();
     let result = ParallelOperations::matvec(&mat_a.view(), &vec.view(), Some(4))?;
-    println!("Matrix-vector multiplication result shape: {:?}", result.shape());
+    println!(
+        "Matrix-vector multiplication result shape: {:?}",
+        result.shape()
+    );
 
     // Example 5: Comparing serial vs parallel performance
     println!("\n=== Performance Comparison ===");
     use std::time::Instant;
-    
+
     let large_mat = create_spd_matrix(200);
-    
+
     // Serial execution (no workers specified)
     let start = Instant::now();
     let _ = ParallelDecomposition::cholesky(&large_mat.view(), None)?;
     let serial_time = start.elapsed();
     println!("Serial Cholesky time: {:?}", serial_time);
-    
+
     // Parallel execution with 4 workers
     let start = Instant::now();
     let _ = ParallelDecomposition::cholesky(&large_mat.view(), Some(4))?;
     let parallel_time = start.elapsed();
     println!("Parallel Cholesky time (4 workers): {:?}", parallel_time);
-    
+
     let speedup = serial_time.as_secs_f64() / parallel_time.as_secs_f64();
     println!("Speedup: {:.2}x", speedup);
 
@@ -92,9 +106,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a symmetric positive definite matrix
 fn create_spd_matrix(n: usize) -> Array2<f64> {
-    let a = Array2::from_shape_fn((n, n), |(i, j)| {
-        ((i + j + 1) as f64 * 0.1).sin()
-    });
+    let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     // Make it symmetric positive definite
     let sym = &a + &a.t();
     &sym.dot(&sym.t()) + Array2::eye(n) * (n as f64)

@@ -5,7 +5,7 @@
 
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque, BTreeMap};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use crate::error::OptimizerError;
@@ -15,28 +15,28 @@ use crate::error::OptimizerError;
 pub struct StreamingMetricsCollector<A: Float> {
     /// Performance metrics
     performance_metrics: PerformanceMetrics<A>,
-    
+
     /// Resource utilization metrics
     resource_metrics: ResourceMetrics,
-    
+
     /// Quality metrics
     quality_metrics: QualityMetrics<A>,
-    
+
     /// Business metrics
     business_metrics: BusinessMetrics<A>,
-    
+
     /// Historical data storage
     historical_data: HistoricalMetrics<A>,
-    
+
     /// Real-time dashboards
     dashboards: Vec<Dashboard>,
-    
+
     /// Alert system
     alert_system: AlertSystem<A>,
-    
+
     /// Metric aggregation settings
     aggregation_config: AggregationConfig,
-    
+
     /// Export configuration
     export_config: ExportConfig,
 }
@@ -46,16 +46,16 @@ pub struct StreamingMetricsCollector<A: Float> {
 pub struct PerformanceMetrics<A: Float> {
     /// Throughput measurements
     pub throughput: ThroughputMetrics,
-    
+
     /// Latency measurements
     pub latency: LatencyMetrics,
-    
+
     /// Accuracy and convergence metrics
     pub accuracy: AccuracyMetrics<A>,
-    
+
     /// Stability metrics
     pub stability: StabilityMetrics<A>,
-    
+
     /// Efficiency metrics
     pub efficiency: EfficiencyMetrics<A>,
 }
@@ -65,22 +65,22 @@ pub struct PerformanceMetrics<A: Float> {
 pub struct ThroughputMetrics {
     /// Samples processed per second
     pub samples_per_second: f64,
-    
+
     /// Updates per second
     pub updates_per_second: f64,
-    
+
     /// Gradient computations per second
     pub gradients_per_second: f64,
-    
+
     /// Peak throughput achieved
     pub peak_throughput: f64,
-    
+
     /// Minimum throughput observed
     pub min_throughput: f64,
-    
+
     /// Throughput variance
     pub throughput_variance: f64,
-    
+
     /// Throughput trend (positive = increasing)
     pub throughput_trend: f64,
 }
@@ -90,19 +90,19 @@ pub struct ThroughputMetrics {
 pub struct LatencyMetrics {
     /// End-to-end latency statistics
     pub end_to_end: LatencyStats,
-    
+
     /// Gradient computation latency
     pub gradient_computation: LatencyStats,
-    
+
     /// Update application latency
     pub update_application: LatencyStats,
-    
+
     /// Communication latency (for distributed)
     pub communication: LatencyStats,
-    
+
     /// Queue waiting time
     pub queue_wait_time: LatencyStats,
-    
+
     /// Processing jitter
     pub jitter: f64,
 }
@@ -112,25 +112,25 @@ pub struct LatencyMetrics {
 pub struct LatencyStats {
     /// Mean latency
     pub mean: Duration,
-    
+
     /// Median latency
     pub median: Duration,
-    
+
     /// 95th percentile
     pub p95: Duration,
-    
+
     /// 99th percentile
     pub p99: Duration,
-    
+
     /// 99.9th percentile
     pub p999: Duration,
-    
+
     /// Maximum latency observed
     pub max: Duration,
-    
+
     /// Minimum latency observed
     pub min: Duration,
-    
+
     /// Standard deviation
     pub std_dev: Duration,
 }
@@ -140,22 +140,22 @@ pub struct LatencyStats {
 pub struct AccuracyMetrics<A: Float> {
     /// Current loss value
     pub current_loss: A,
-    
+
     /// Loss reduction rate
     pub loss_reduction_rate: A,
-    
+
     /// Convergence rate
     pub convergence_rate: A,
-    
+
     /// Prediction accuracy (if applicable)
     pub prediction_accuracy: Option<A>,
-    
+
     /// Gradient magnitude
     pub gradient_magnitude: A,
-    
+
     /// Parameter stability
     pub parameter_stability: A,
-    
+
     /// Learning progress score
     pub learning_progress: A,
 }
@@ -165,19 +165,19 @@ pub struct AccuracyMetrics<A: Float> {
 pub struct StabilityMetrics<A: Float> {
     /// Loss variance
     pub loss_variance: A,
-    
+
     /// Gradient variance
     pub gradient_variance: A,
-    
+
     /// Parameter drift
     pub parameter_drift: A,
-    
+
     /// Oscillation detection
     pub oscillation_score: A,
-    
+
     /// Divergence probability
     pub divergence_probability: A,
-    
+
     /// Stability confidence
     pub stability_confidence: A,
 }
@@ -187,19 +187,19 @@ pub struct StabilityMetrics<A: Float> {
 pub struct EfficiencyMetrics<A: Float> {
     /// Computational efficiency
     pub computational_efficiency: A,
-    
+
     /// Memory efficiency
     pub memory_efficiency: A,
-    
+
     /// Communication efficiency (for distributed)
     pub communication_efficiency: A,
-    
+
     /// Energy efficiency (if measurable)
     pub energy_efficiency: Option<A>,
-    
+
     /// Resource utilization score
     pub resource_utilization: A,
-    
+
     /// Cost efficiency
     pub cost_efficiency: A,
 }
@@ -209,19 +209,19 @@ pub struct EfficiencyMetrics<A: Float> {
 pub struct ResourceMetrics {
     /// CPU utilization
     pub cpu_utilization: f64,
-    
+
     /// Memory usage
     pub memory_usage: MemoryUsage,
-    
+
     /// GPU utilization (if applicable)
     pub gpu_utilization: Option<f64>,
-    
+
     /// Network bandwidth usage
     pub network_bandwidth: f64,
-    
+
     /// Disk I/O usage
     pub disk_io: f64,
-    
+
     /// Thread utilization
     pub thread_utilization: f64,
 }
@@ -231,19 +231,19 @@ pub struct ResourceMetrics {
 pub struct MemoryUsage {
     /// Total allocated memory (bytes)
     pub total_allocated: u64,
-    
+
     /// Currently used memory (bytes)
     pub current_used: u64,
-    
+
     /// Peak memory usage (bytes)
     pub peak_usage: u64,
-    
+
     /// Memory fragmentation ratio
     pub fragmentation_ratio: f64,
-    
+
     /// Garbage collection overhead
     pub gc_overhead: f64,
-    
+
     /// Memory efficiency
     pub efficiency: f64,
 }
@@ -253,16 +253,16 @@ pub struct MemoryUsage {
 pub struct QualityMetrics<A: Float> {
     /// Data quality score
     pub data_quality: A,
-    
+
     /// Model quality metrics
     pub model_quality: ModelQuality<A>,
-    
+
     /// Concept drift metrics
     pub concept_drift: ConceptDriftMetrics<A>,
-    
+
     /// Anomaly detection metrics
     pub anomaly_detection: AnomalyMetrics<A>,
-    
+
     /// Robustness metrics
     pub robustness: RobustnessMetrics<A>,
 }
@@ -272,16 +272,16 @@ pub struct QualityMetrics<A: Float> {
 pub struct ModelQuality<A: Float> {
     /// Training quality score
     pub training_quality: A,
-    
+
     /// Generalization ability
     pub generalization_score: A,
-    
+
     /// Overfitting detection
     pub overfitting_score: A,
-    
+
     /// Underfitting detection
     pub underfitting_score: A,
-    
+
     /// Model complexity score
     pub complexity_score: A,
 }
@@ -291,16 +291,16 @@ pub struct ModelQuality<A: Float> {
 pub struct ConceptDriftMetrics<A: Float> {
     /// Drift detection confidence
     pub drift_confidence: A,
-    
+
     /// Drift magnitude
     pub drift_magnitude: A,
-    
+
     /// Drift frequency
     pub drift_frequency: f64,
-    
+
     /// Adaptation effectiveness
     pub adaptation_effectiveness: A,
-    
+
     /// Time to detect drift
     pub detection_latency: Duration,
 }
@@ -310,16 +310,16 @@ pub struct ConceptDriftMetrics<A: Float> {
 pub struct AnomalyMetrics<A: Float> {
     /// Anomaly score
     pub anomaly_score: A,
-    
+
     /// False positive rate
     pub false_positive_rate: A,
-    
+
     /// False negative rate
     pub false_negative_rate: A,
-    
+
     /// Detection accuracy
     pub detection_accuracy: A,
-    
+
     /// Anomaly frequency
     pub anomaly_frequency: f64,
 }
@@ -329,16 +329,16 @@ pub struct AnomalyMetrics<A: Float> {
 pub struct RobustnessMetrics<A: Float> {
     /// Noise tolerance
     pub noise_tolerance: A,
-    
+
     /// Adversarial robustness
     pub adversarial_robustness: A,
-    
+
     /// Input perturbation sensitivity
     pub perturbation_sensitivity: A,
-    
+
     /// Recovery capability
     pub recovery_capability: A,
-    
+
     /// Fault tolerance
     pub fault_tolerance: A,
 }
@@ -348,16 +348,16 @@ pub struct RobustnessMetrics<A: Float> {
 pub struct BusinessMetrics<A: Float> {
     /// System availability
     pub availability: f64,
-    
+
     /// Service level objectives (SLO) compliance
     pub slo_compliance: f64,
-    
+
     /// Cost metrics
     pub cost_metrics: CostMetrics<A>,
-    
+
     /// User satisfaction metrics
     pub user_satisfaction: Option<A>,
-    
+
     /// Business value score
     pub business_value: A,
 }
@@ -367,16 +367,16 @@ pub struct BusinessMetrics<A: Float> {
 pub struct CostMetrics<A: Float> {
     /// Computational cost
     pub computational_cost: A,
-    
+
     /// Infrastructure cost
     pub infrastructure_cost: A,
-    
+
     /// Energy cost
     pub energy_cost: A,
-    
+
     /// Opportunity cost
     pub opportunity_cost: A,
-    
+
     /// Total cost of ownership
     pub total_cost: A,
 }
@@ -386,13 +386,13 @@ pub struct CostMetrics<A: Float> {
 pub struct HistoricalMetrics<A: Float> {
     /// Time-series data storage
     time_series: BTreeMap<u64, MetricsSnapshot<A>>,
-    
+
     /// Aggregated historical data
     aggregated_data: HashMap<AggregationPeriod, Vec<AggregatedMetrics<A>>>,
-    
+
     /// Retention policy
     retention_policy: RetentionPolicy,
-    
+
     /// Compression settings
     compression_config: CompressionConfig,
 }
@@ -402,16 +402,16 @@ pub struct HistoricalMetrics<A: Float> {
 pub struct MetricsSnapshot<A: Float> {
     /// Timestamp
     pub timestamp: u64,
-    
+
     /// Performance metrics at this time
     pub performance: PerformanceMetrics<A>,
-    
+
     /// Resource metrics at this time
     pub resource: ResourceMetrics,
-    
+
     /// Quality metrics at this time
     pub quality: QualityMetrics<A>,
-    
+
     /// Business metrics at this time
     pub business: BusinessMetrics<A>,
 }
@@ -431,19 +431,19 @@ pub enum AggregationPeriod {
 pub struct AggregatedMetrics<A: Float> {
     /// Time period start
     pub period_start: u64,
-    
+
     /// Time period end  
     pub period_end: u64,
-    
+
     /// Mean values
     pub mean: MetricsSnapshot<A>,
-    
+
     /// Maximum values
     pub max: MetricsSnapshot<A>,
-    
+
     /// Minimum values
     pub min: MetricsSnapshot<A>,
-    
+
     /// Standard deviation
     pub std_dev: MetricsSnapshot<A>,
 }
@@ -453,13 +453,13 @@ pub struct AggregatedMetrics<A: Float> {
 pub struct RetentionPolicy {
     /// Raw data retention (seconds)
     pub raw_data_retention: u64,
-    
+
     /// Aggregated data retention by period
     pub aggregated_retention: HashMap<AggregationPeriod, u64>,
-    
+
     /// Automatic cleanup enabled
     pub auto_cleanup: bool,
-    
+
     /// Maximum storage size (bytes)
     pub max_storage_size: u64,
 }
@@ -469,13 +469,13 @@ pub struct RetentionPolicy {
 pub struct CompressionConfig {
     /// Enable compression
     pub enabled: bool,
-    
+
     /// Compression algorithm
     pub algorithm: CompressionAlgorithm,
-    
+
     /// Compression ratio target
     pub target_ratio: f64,
-    
+
     /// Lossy compression tolerance
     pub lossy_tolerance: f64,
 }
@@ -495,13 +495,13 @@ pub enum CompressionAlgorithm {
 pub struct Dashboard {
     /// Dashboard name
     pub name: String,
-    
+
     /// Dashboard widgets
     pub widgets: Vec<Widget>,
-    
+
     /// Update frequency
     pub update_frequency: Duration,
-    
+
     /// Auto-refresh enabled
     pub auto_refresh: bool,
 }
@@ -511,10 +511,10 @@ pub struct Dashboard {
 pub struct Widget {
     /// Widget type
     pub widget_type: WidgetType,
-    
+
     /// Metrics to display
     pub metrics: Vec<String>,
-    
+
     /// Display configuration
     pub config: WidgetConfig,
 }
@@ -537,16 +537,16 @@ pub enum WidgetType {
 pub struct WidgetConfig {
     /// Widget title
     pub title: String,
-    
+
     /// Time range to display
     pub time_range: Duration,
-    
+
     /// Refresh rate
     pub refresh_rate: Duration,
-    
+
     /// Color scheme
     pub color_scheme: String,
-    
+
     /// Size and position
     pub layout: WidgetLayout,
 }
@@ -556,13 +556,13 @@ pub struct WidgetConfig {
 pub struct WidgetLayout {
     /// X position
     pub x: u32,
-    
+
     /// Y position
     pub y: u32,
-    
+
     /// Width
     pub width: u32,
-    
+
     /// Height
     pub height: u32,
 }
@@ -572,13 +572,13 @@ pub struct WidgetLayout {
 pub struct AlertSystem<A: Float> {
     /// Alert rules
     pub rules: Vec<AlertRule<A>>,
-    
+
     /// Active alerts
     pub active_alerts: Vec<Alert<A>>,
-    
+
     /// Alert history
     pub alert_history: Vec<Alert<A>>,
-    
+
     /// Notification channels
     pub notification_channels: Vec<NotificationChannel>,
 }
@@ -588,19 +588,19 @@ pub struct AlertSystem<A: Float> {
 pub struct AlertRule<A: Float> {
     /// Rule name
     pub name: String,
-    
+
     /// Metric to monitor
     pub metric_path: String,
-    
+
     /// Condition
     pub condition: AlertCondition<A>,
-    
+
     /// Severity level
     pub severity: AlertSeverity,
-    
+
     /// Evaluation frequency
     pub evaluation_frequency: Duration,
-    
+
     /// Notification settings
     pub notifications: Vec<String>,
 }
@@ -609,14 +609,17 @@ pub struct AlertRule<A: Float> {
 #[derive(Debug, Clone)]
 pub enum AlertCondition<A: Float> {
     /// Threshold crossing
-    Threshold { operator: ComparisonOperator, value: A },
-    
+    Threshold {
+        operator: ComparisonOperator,
+        value: A,
+    },
+
     /// Rate of change
     RateOfChange { threshold: A, time_window: Duration },
-    
+
     /// Anomaly detection
     Anomaly { sensitivity: A },
-    
+
     /// Custom condition
     Custom { expression: String },
 }
@@ -645,25 +648,25 @@ pub enum AlertSeverity {
 pub struct Alert<A: Float> {
     /// Alert ID
     pub id: String,
-    
+
     /// Rule that triggered the alert
     pub rule_name: String,
-    
+
     /// Timestamp when alert was triggered
     pub triggered_at: SystemTime,
-    
+
     /// Timestamp when alert was resolved (if applicable)
     pub resolved_at: Option<SystemTime>,
-    
+
     /// Current metric value
     pub current_value: A,
-    
+
     /// Threshold that was breached
     pub threshold: A,
-    
+
     /// Alert severity
     pub severity: AlertSeverity,
-    
+
     /// Alert message
     pub message: String,
 }
@@ -671,11 +674,23 @@ pub struct Alert<A: Float> {
 /// Notification channels
 #[derive(Debug, Clone)]
 pub enum NotificationChannel {
-    Email { addresses: Vec<String> },
-    Webhook { url: String, headers: HashMap<String, String> },
-    Slack { webhook_url: String, channel: String },
-    PagerDuty { integration_key: String },
-    Custom { config: HashMap<String, String> },
+    Email {
+        addresses: Vec<String>,
+    },
+    Webhook {
+        url: String,
+        headers: HashMap<String, String>,
+    },
+    Slack {
+        webhook_url: String,
+        channel: String,
+    },
+    PagerDuty {
+        integration_key: String,
+    },
+    Custom {
+        config: HashMap<String, String>,
+    },
 }
 
 /// Metrics aggregation configuration
@@ -683,13 +698,13 @@ pub enum NotificationChannel {
 pub struct AggregationConfig {
     /// Default aggregation functions
     pub default_functions: Vec<AggregationFunction>,
-    
+
     /// Custom aggregations by metric
     pub custom_aggregations: HashMap<String, Vec<AggregationFunction>>,
-    
+
     /// Aggregation intervals
     pub intervals: Vec<Duration>,
-    
+
     /// Maximum aggregation window
     pub max_window: Duration,
 }
@@ -712,13 +727,13 @@ pub enum AggregationFunction {
 pub struct ExportConfig {
     /// Export formats
     pub formats: Vec<ExportFormat>,
-    
+
     /// Export destinations
     pub destinations: Vec<ExportDestination>,
-    
+
     /// Export frequency
     pub frequency: Duration,
-    
+
     /// Batch size for exports
     pub batch_size: usize,
 }
@@ -737,11 +752,24 @@ pub enum ExportFormat {
 /// Export destinations
 #[derive(Debug, Clone)]
 pub enum ExportDestination {
-    File { path: String },
-    Database { connection_string: String },
-    S3 { bucket: String, prefix: String },
-    Http { endpoint: String, headers: HashMap<String, String> },
-    Kafka { topic: String, brokers: Vec<String> },
+    File {
+        path: String,
+    },
+    Database {
+        connection_string: String,
+    },
+    S3 {
+        bucket: String,
+        prefix: String,
+    },
+    Http {
+        endpoint: String,
+        headers: HashMap<String, String>,
+    },
+    Kafka {
+        topic: String,
+        brokers: Vec<String>,
+    },
 }
 
 impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> {
@@ -759,7 +787,7 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
             export_config: ExportConfig::default(),
         }
     }
-    
+
     /// Record a new metrics sample
     pub fn record_sample(&mut self, sample: MetricsSample<A>) -> Result<(), OptimizerError> {
         // Update current metrics
@@ -767,13 +795,13 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
         self.update_resource_metrics(&sample)?;
         self.update_quality_metrics(&sample)?;
         self.update_business_metrics(&sample)?;
-        
+
         // Store historical data
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        
+
         let snapshot = MetricsSnapshot {
             timestamp,
             performance: self.performance_metrics.clone(),
@@ -781,15 +809,15 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
             quality: self.quality_metrics.clone(),
             business: self.business_metrics.clone(),
         };
-        
+
         self.historical_data.store_snapshot(snapshot)?;
-        
+
         // Check alerts
         self.alert_system.evaluate_rules(&sample)?;
-        
+
         Ok(())
     }
-    
+
     /// Get current metrics summary
     pub fn get_current_metrics(&self) -> MetricsSummary<A> {
         MetricsSummary {
@@ -800,7 +828,7 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
             timestamp: SystemTime::now(),
         }
     }
-    
+
     /// Get historical metrics for a time range
     pub fn get_historical_metrics(
         &self,
@@ -809,7 +837,7 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
     ) -> Result<Vec<MetricsSnapshot<A>>, OptimizerError> {
         self.historical_data.get_range(start_time, end_time)
     }
-    
+
     /// Get aggregated metrics
     pub fn get_aggregated_metrics(
         &self,
@@ -817,31 +845,41 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
         start_time: SystemTime,
         end_time: SystemTime,
     ) -> Result<Vec<AggregatedMetrics<A>>, OptimizerError> {
-        self.historical_data.get_aggregated(period, start_time, end_time)
+        self.historical_data
+            .get_aggregated(period, start_time, end_time)
     }
-    
+
     /// Export metrics to configured destinations
     pub fn export_metrics(&self) -> Result<(), OptimizerError> {
         // Implementation would export to configured destinations
         Ok(())
     }
-    
-    fn update_performance_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimizerError> {
+
+    fn update_performance_metrics(
+        &mut self,
+        _sample: &MetricsSample<A>,
+    ) -> Result<(), OptimizerError> {
         // Update performance metrics based on sample
         Ok(())
     }
-    
-    fn update_resource_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimizerError> {
+
+    fn update_resource_metrics(
+        &mut self,
+        _sample: &MetricsSample<A>,
+    ) -> Result<(), OptimizerError> {
         // Update resource metrics based on sample
         Ok(())
     }
-    
+
     fn update_quality_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimizerError> {
         // Update quality metrics based on sample
         Ok(())
     }
-    
-    fn update_business_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimizerError> {
+
+    fn update_business_metrics(
+        &mut self,
+        _sample: &MetricsSample<A>,
+    ) -> Result<(), OptimizerError> {
         // Update business metrics based on sample
         Ok(())
     }
@@ -852,19 +890,19 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
 pub struct MetricsSample<A: Float> {
     /// Timestamp of the sample
     pub timestamp: SystemTime,
-    
+
     /// Loss value
     pub loss: A,
-    
+
     /// Gradient magnitude
     pub gradient_magnitude: A,
-    
+
     /// Processing time
     pub processing_time: Duration,
-    
+
     /// Memory usage
     pub memory_usage: u64,
-    
+
     /// Additional custom metrics
     pub custom_metrics: HashMap<String, A>,
 }
@@ -874,16 +912,16 @@ pub struct MetricsSample<A: Float> {
 pub struct MetricsSummary<A: Float> {
     /// Performance metrics
     pub performance: PerformanceMetrics<A>,
-    
+
     /// Resource metrics
     pub resource: ResourceMetrics,
-    
+
     /// Quality metrics
     pub quality: QualityMetrics<A>,
-    
+
     /// Business metrics
     pub business: BusinessMetrics<A>,
-    
+
     /// Summary timestamp
     pub timestamp: SystemTime,
 }
@@ -1102,12 +1140,12 @@ impl<A: Float> HistoricalMetrics<A> {
             compression_config: CompressionConfig::default(),
         }
     }
-    
+
     fn store_snapshot(&mut self, snapshot: MetricsSnapshot<A>) -> Result<(), OptimizerError> {
         self.time_series.insert(snapshot.timestamp, snapshot);
         Ok(())
     }
-    
+
     fn get_range(
         &self,
         start_time: SystemTime,
@@ -1115,15 +1153,16 @@ impl<A: Float> HistoricalMetrics<A> {
     ) -> Result<Vec<MetricsSnapshot<A>>, OptimizerError> {
         let start_ts = start_time.duration_since(UNIX_EPOCH).unwrap().as_secs();
         let end_ts = end_time.duration_since(UNIX_EPOCH).unwrap().as_secs();
-        
-        let snapshots = self.time_series
+
+        let snapshots = self
+            .time_series
             .range(start_ts..=end_ts)
             .map(|(_, snapshot)| snapshot.clone())
             .collect();
-        
+
         Ok(snapshots)
     }
-    
+
     fn get_aggregated(
         &self,
         _period: AggregationPeriod,
@@ -1144,7 +1183,7 @@ impl<A: Float> AlertSystem<A> {
             notification_channels: Vec::new(),
         }
     }
-    
+
     fn evaluate_rules(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimizerError> {
         // Implementation would evaluate all alert rules
         Ok(())
@@ -1159,7 +1198,7 @@ impl Default for RetentionPolicy {
         aggregated_retention.insert(AggregationPeriod::Day, 3600 * 24 * 30); // 1 month
         aggregated_retention.insert(AggregationPeriod::Week, 3600 * 24 * 365); // 1 year
         aggregated_retention.insert(AggregationPeriod::Month, 3600 * 24 * 365 * 5); // 5 years
-        
+
         Self {
             raw_data_retention: 3600 * 24, // 1 day
             aggregated_retention,
@@ -1191,9 +1230,9 @@ impl Default for AggregationConfig {
             ],
             custom_aggregations: HashMap::new(),
             intervals: vec![
-                Duration::from_secs(60),      // 1 minute
-                Duration::from_secs(3600),    // 1 hour
-                Duration::from_secs(86400),   // 1 day
+                Duration::from_secs(60),    // 1 minute
+                Duration::from_secs(3600),  // 1 hour
+                Duration::from_secs(86400), // 1 day
             ],
             max_window: Duration::from_secs(86400 * 30), // 30 days
         }
@@ -1204,8 +1243,8 @@ impl Default for ExportConfig {
     fn default() -> Self {
         Self {
             formats: vec![ExportFormat::Json],
-            destinations: vec![ExportDestination::File { 
-                path: "/tmp/streaming_metrics".to_string() 
+            destinations: vec![ExportDestination::File {
+                path: "/tmp/streaming_metrics".to_string(),
             }],
             frequency: Duration::from_secs(300), // 5 minutes
             batch_size: 1000,
@@ -1216,14 +1255,17 @@ impl Default for ExportConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_metrics_collector_creation() {
         let collector = StreamingMetricsCollector::<f64>::new();
-        assert_eq!(collector.performance_metrics.throughput.samples_per_second, 0.0);
+        assert_eq!(
+            collector.performance_metrics.throughput.samples_per_second,
+            0.0
+        );
         assert!(collector.dashboards.is_empty());
     }
-    
+
     #[test]
     fn test_metrics_sample() {
         let sample = MetricsSample {
@@ -1234,18 +1276,18 @@ mod tests {
             memory_usage: 1024,
             custom_metrics: HashMap::new(),
         };
-        
+
         assert_eq!(sample.loss, 0.5f64);
         assert_eq!(sample.gradient_magnitude, 0.1f64);
     }
-    
+
     #[test]
     fn test_latency_stats_default() {
         let stats = LatencyStats::default();
         assert_eq!(stats.mean, Duration::from_micros(0));
         assert_eq!(stats.min, Duration::from_micros(u64::MAX));
     }
-    
+
     #[test]
     fn test_aggregation_period() {
         let periods = vec![
@@ -1255,10 +1297,10 @@ mod tests {
             AggregationPeriod::Week,
             AggregationPeriod::Month,
         ];
-        
+
         assert_eq!(periods.len(), 5);
     }
-    
+
     #[test]
     fn test_alert_severity() {
         let severities = vec![
@@ -1266,7 +1308,7 @@ mod tests {
             AlertSeverity::Warning,
             AlertSeverity::Info,
         ];
-        
+
         assert_eq!(severities.len(), 3);
     }
 }

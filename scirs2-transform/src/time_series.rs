@@ -4,8 +4,8 @@
 //! including Fourier features, wavelet features, and lag features.
 
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast};
 use num_complex::Complex;
+use num_traits::{Float, NumCast};
 use scirs2_fft::fft;
 
 use crate::error::{Result, TransformError};
@@ -60,16 +60,16 @@ impl FourierFeatures {
     {
         let n = x.len();
         if n == 0 {
-            return Err(TransformError::InvalidInput("Empty time series".to_string()));
+            return Err(TransformError::InvalidInput(
+                "Empty time series".to_string(),
+            ));
         }
 
         // Convert to complex for FFT
         let mut complex_data = vec![Complex::new(0.0, 0.0); n];
         for (i, &val) in x.iter().enumerate() {
-            complex_data[i] = Complex::new(
-                num_traits::cast::<S::Elem, f64>(val).unwrap_or(0.0),
-                0.0,
-            );
+            complex_data[i] =
+                Complex::new(num_traits::cast::<S::Elem, f64>(val).unwrap_or(0.0), 0.0);
         }
 
         // Compute FFT
@@ -83,11 +83,7 @@ impl FourierFeatures {
             Array1::zeros(n_freq)
         };
 
-        let norm_factor = if self.normalize {
-            1.0 / n as f64
-        } else {
-            1.0
-        };
+        let norm_factor = if self.normalize { 1.0 / n as f64 } else { 1.0 };
 
         for i in 0..n_freq {
             let magnitude = (complex_data[i].re * complex_data[i].re
@@ -130,7 +126,9 @@ impl FourierFeatures {
         for i in 0..n_samples {
             let features = self.extract_features_1d(&x.row(i))?;
             let feat_len = features.len().min(n_features);
-            result.slice_mut(ndarray::s![i, ..feat_len]).assign(&features.slice(ndarray::s![..feat_len]));
+            result
+                .slice_mut(ndarray::s![i, ..feat_len])
+                .assign(&features.slice(ndarray::s![..feat_len]));
         }
 
         Ok(result)

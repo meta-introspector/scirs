@@ -128,6 +128,7 @@ where
         })
         .collect::<SignalResult<Vec<_>>>()?;
 
+    // Enhanced input validation
     // Check that sample times are sorted
     for i in 1..x_f64.len() {
         if x_f64[i] < x_f64[i - 1] {
@@ -135,6 +136,58 @@ where
                 "Sample times must be sorted in increasing order".to_string(),
             ));
         }
+    }
+
+    // Check for finite values in both arrays
+    check_finite(&Array1::from(x_f64.clone()), "sample times")?;
+    check_finite(&Array1::from(y_f64.clone()), "signal values")?;
+
+    // Check for adequate data length
+    if x_f64.len() < 3 {
+        return Err(SignalError::ValueError(
+            "At least 3 data points are required for Lomb-Scargle analysis".to_string(),
+        ));
+    }
+
+    // Check for reasonable time range
+    let time_range = x_f64[x_f64.len() - 1] - x_f64[0];
+    if time_range <= 0.0 {
+        return Err(SignalError::ValueError(
+            "Sample time range must be positive".to_string(),
+        ));
+    }
+
+    // Check for minimum time resolution
+    let min_dt = x_f64
+        .windows(2)
+        .map(|w| w[1] - w[0])
+        .fold(f64::INFINITY, f64::min);
+    if min_dt <= 0.0 {
+        return Err(SignalError::ValueError(
+            "Sample times must be strictly increasing".to_string(),
+        ));
+    }
+
+    // Warn about extremely small time steps that might cause numerical issues
+    if min_dt < 1e-12 {
+        eprintln!("Warning: Very small time step detected ({:.2e}). This may cause numerical instability.", min_dt);
+    }
+
+    // Check for reasonable signal variance
+    let signal_mean = y_f64.iter().sum::<f64>() / y_f64.len() as f64;
+    let signal_variance = y_f64
+        .iter()
+        .map(|&val| (val - signal_mean).powi(2))
+        .sum::<f64>()
+        / y_f64.len() as f64;
+
+    if signal_variance == 0.0 {
+        eprintln!("Warning: Signal has zero variance (constant signal). Periodogram will be uninformative.");
+    } else if signal_variance < 1e-20 {
+        eprintln!(
+            "Warning: Signal has very low variance ({:.2e}). Results may be numerically unstable.",
+            signal_variance
+        );
     }
 
     // Default parameter values
@@ -153,13 +206,85 @@ where
         }
     };
 
-    // Determine frequencies to evaluate if not provided
+    // Enhanced frequency validation and determination
     let frequencies = if let Some(f) = freqs {
+        // Validate provided frequency array
+        if f.is_empty() {
+            return Err(SignalError::ValueError(
+                "Frequency array cannot be empty".to_string(),
+            ));
+        }
+
+        // Check for finite frequencies
+        for (i, &freq) in f.iter().enumerate() {
+            if !freq.is_finite() {
+                return Err(SignalError::ValueError(format!(
+                    "Frequency at index {} is not finite: {}",
+                    i, freq
+                )));
+            }
+            if freq < 0.0 {
+                return Err(SignalError::ValueError(format!(
+                    "Frequency at index {} is negative: {}",
+                    i, freq
+                )));
+            }
+        }
+
+        // Check frequency ordering
+        for i in 1..f.len() {
+            if f[i] < f[i - 1] {
+                eprintln!("Warning: Frequencies are not in ascending order. This may affect interpretation of results.");
+                break;
+            }
+        }
+
+        // Validate frequency range against data
+        let nyquist_freq = 0.5 / min_dt;
+        let max_freq = f.iter().cloned().fold(0.0, f64::max);
+        if max_freq > 10.0 * nyquist_freq {
+            eprintln!("Warning: Maximum frequency ({:.3}) is much higher than effective Nyquist frequency ({:.3}). Results may be unreliable at high frequencies.", 
+                      max_freq, nyquist_freq);
+        }
+
         f.to_vec()
     } else {
-        // Auto-determine frequencies
-        autofrequency(&x_f64, nyquist_factor.unwrap_or(1.0), freq_method)?
+        // Auto-determine frequencies with enhanced validation
+        let nyquist_factor_val = nyquist_factor.unwrap_or(1.0);
+        if nyquist_factor_val <= 0.0 {
+            return Err(SignalError::ValueError(format!(
+                "nyquist_factor must be positive, got {}",
+                nyquist_factor_val
+            )));
+        }
+        if nyquist_factor_val > 10.0 {
+            eprintln!(
+                "Warning: Large nyquist_factor ({}) may lead to excessive high-frequency sampling.",
+                nyquist_factor_val
+            );
+        }
+
+        autofrequency(&x_f64, nyquist_factor_val, freq_method)?
     };
+
+    // Final validation of frequency array
+    if frequencies.is_empty() {
+        return Err(SignalError::ComputationError(
+            "Generated frequency array is empty".to_string(),
+        ));
+    }
+
+    // Check for reasonable frequency resolution
+    if frequencies.len() > 1 {
+        let freq_resolution = frequencies[1] - frequencies[0];
+        let time_range = x_f64[x_f64.len() - 1] - x_f64[0];
+        let min_resolution = 1.0 / time_range;
+
+        if freq_resolution < min_resolution / 10.0 {
+            eprintln!("Warning: Frequency resolution ({:.2e}) is much finer than data time range allows ({:.2e}). Consider reducing frequency density.", 
+                      freq_resolution, min_resolution);
+        }
+    }
 
     // Compute periodogram
     let pgram = _lombscargle_impl(
@@ -171,7 +296,51 @@ where
         norm_method,
     )?;
 
-    Ok((frequencies, pgram.to_vec()))
+    // Enhanced validation of periodogram results
+    let pgram_vec = pgram.to_vec();
+
+    // Check for finite values in result
+    for (i, &val) in pgram_vec.iter().enumerate() {
+        if !val.is_finite() {
+            return Err(SignalError::ComputationError(format!(
+                "Periodogram value at frequency index {} is not finite: {}",
+                i, val
+            )));
+        }
+        if val < 0.0 {
+            return Err(SignalError::ComputationError(format!(
+                "Periodogram value at frequency index {} is negative: {}",
+                i, val
+            )));
+        }
+    }
+
+    // Statistical validation
+    let pgram_mean = pgram_vec.iter().sum::<f64>() / pgram_vec.len() as f64;
+    let pgram_max = pgram_vec.iter().cloned().fold(0.0, f64::max);
+    let pgram_min = pgram_vec.iter().cloned().fold(f64::INFINITY, f64::min);
+
+    // Check for reasonable dynamic range
+    if pgram_max > 0.0 {
+        let dynamic_range = pgram_max / pgram_min.max(1e-15);
+        if dynamic_range > 1e12 {
+            eprintln!("Warning: Periodogram has very large dynamic range ({:.2e}). This may indicate numerical issues or very strong periodicities.", dynamic_range);
+        }
+    }
+
+    // Check for suspiciously uniform values (might indicate numerical problems)
+    let pgram_std = (pgram_vec
+        .iter()
+        .map(|&val| (val - pgram_mean).powi(2))
+        .sum::<f64>()
+        / pgram_vec.len() as f64)
+        .sqrt();
+
+    if pgram_std / pgram_mean.max(1e-15) < 1e-6 {
+        eprintln!("Warning: Periodogram values are very uniform. This may indicate insufficient signal variability or computational issues.");
+    }
+
+    Ok((frequencies, pgram_vec))
 }
 
 /// Methods for automatically determining frequency grids

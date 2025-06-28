@@ -5,36 +5,36 @@
 
 use crate::error::Result;
 use crate::tokenize::{Tokenizer, WordTokenizer};
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use lazy_static::lazy_static;
 
 lazy_static! {
     // Common regex patterns for information extraction
     static ref EMAIL_PATTERN: Regex = Regex::new(
         r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
     ).unwrap();
-    
+
     static ref URL_PATTERN: Regex = Regex::new(
         r"https?://(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&/=]*)"
     ).unwrap();
-    
+
     static ref PHONE_PATTERN: Regex = Regex::new(
         r"(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})"
     ).unwrap();
-    
+
     static ref DATE_PATTERN: Regex = Regex::new(
         r"\b(?:(?:0?[1-9]|1[0-2])[/-](?:0?[1-9]|[12][0-9]|3[01])[/-](?:19|20)?\d{2})|(?:(?:19|20)\d{2}[/-](?:0?[1-9]|1[0-2])[/-](?:0?[1-9]|[12][0-9]|3[01]))\b"
     ).unwrap();
-    
+
     static ref TIME_PATTERN: Regex = Regex::new(
         r"\b(?:[01]?[0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?(?:\s*[aApP][mM])?\b"
     ).unwrap();
-    
+
     static ref MONEY_PATTERN: Regex = Regex::new(
         r"[$€£¥]\s*\d+(?:,\d{3})*(?:\.\d{1,2})?|\d+(?:,\d{3})*(?:\.\d{1,2})?\s*(?:dollars?|euros?|pounds?|yen)"
     ).unwrap();
-    
+
     static ref PERCENTAGE_PATTERN: Regex = Regex::new(
         r"\b\d+(?:\.\d+)?%\b"
     ).unwrap();
@@ -132,14 +132,18 @@ impl RuleBasedNER {
         entities.extend(self.extract_pattern_entities(text, &DATE_PATTERN, EntityType::Date)?);
         entities.extend(self.extract_pattern_entities(text, &TIME_PATTERN, EntityType::Time)?);
         entities.extend(self.extract_pattern_entities(text, &MONEY_PATTERN, EntityType::Money)?);
-        entities.extend(self.extract_pattern_entities(text, &PERCENTAGE_PATTERN, EntityType::Percentage)?);
+        entities.extend(self.extract_pattern_entities(
+            text,
+            &PERCENTAGE_PATTERN,
+            EntityType::Percentage,
+        )?);
 
         // Extract custom patterns
         for (name, pattern) in &self.custom_patterns {
             entities.extend(self.extract_pattern_entities(
                 text,
                 pattern,
-                EntityType::Custom(name.clone())
+                EntityType::Custom(name.clone()),
             )?);
         }
 
@@ -186,7 +190,7 @@ impl RuleBasedNER {
         for word in words {
             let _word_lower = word.to_lowercase();
             let word_clean = word.trim_matches(|c: char| !c.is_alphanumeric());
-            
+
             if self.person_names.contains(word_clean) {
                 if let Some(start) = text[position..].find(word) {
                     let abs_start = position + start;
@@ -336,7 +340,7 @@ impl PatternExtractor {
 
         for (name, pattern) in &self.patterns {
             let mut matches = Vec::new();
-            
+
             for mat in pattern.find_iter(text) {
                 matches.push(mat.as_str().to_string());
             }
@@ -350,34 +354,37 @@ impl PatternExtractor {
     }
 
     /// Extract with capture groups
-    pub fn extract_with_groups(&self, text: &str) -> Result<HashMap<String, Vec<HashMap<String, String>>>> {
+    pub fn extract_with_groups(
+        &self,
+        text: &str,
+    ) -> Result<HashMap<String, Vec<HashMap<String, String>>>> {
         let mut results: HashMap<String, Vec<HashMap<String, String>>> = HashMap::new();
 
         for (name, pattern) in &self.patterns {
             let mut matches = Vec::new();
-            
+
             for caps in pattern.captures_iter(text) {
                 let mut groups = HashMap::new();
-                
+
                 // Add full match
                 if let Some(full_match) = caps.get(0) {
                     groups.insert("full".to_string(), full_match.as_str().to_string());
                 }
-                
+
                 // Add numbered groups
                 for i in 1..caps.len() {
                     if let Some(group) = caps.get(i) {
                         groups.insert(format!("group{}", i), group.as_str().to_string());
                     }
                 }
-                
+
                 // Add named groups if any
                 for name in pattern.capture_names().flatten() {
                     if let Some(group) = caps.name(name) {
                         groups.insert(name.to_string(), group.as_str().to_string());
                     }
                 }
-                
+
                 matches.push(groups);
             }
 
@@ -421,11 +428,7 @@ impl RelationExtractor {
     }
 
     /// Extract relations from text
-    pub fn extract_relations(
-        &self,
-        text: &str,
-        entities: &[Entity],
-    ) -> Result<Vec<Relation>> {
+    pub fn extract_relations(&self, text: &str, entities: &[Entity]) -> Result<Vec<Relation>> {
         let mut relations = Vec::new();
 
         for (relation_type, pattern) in &self.relation_patterns {
@@ -434,7 +437,7 @@ impl RelationExtractor {
                     // Find entities that might be involved in this relation
                     let match_start = full_match.start();
                     let match_end = full_match.end();
-                    
+
                     let involved_entities: Vec<&Entity> = entities
                         .iter()
                         .filter(|e| e.start >= match_start && e.end <= match_end)
@@ -524,7 +527,7 @@ impl InformationExtractionPipeline {
     /// Extract all information from text
     pub fn extract(&self, text: &str) -> Result<ExtractedInformation> {
         let tokenizer = WordTokenizer::default();
-        
+
         let entities = self.ner.extract_entities(text)?;
         let key_phrases = self.key_phrase_extractor.extract(text, &tokenizer)?;
         let patterns = self.pattern_extractor.extract(text)?;
@@ -554,25 +557,31 @@ impl TemporalExtractor {
     /// Create new temporal extractor with predefined patterns
     pub fn new() -> Self {
         let mut patterns = Vec::new();
-        
+
         // Relative dates
         patterns.push((
             "relative_date".to_string(),
             Regex::new(r"(?i)\b(?:yesterday|today|tomorrow|last|next|this)\s+(?:week|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b").unwrap()
         ));
-        
+
         // Time ranges
         patterns.push((
             "time_range".to_string(),
-            Regex::new(r"(?i)\b(?:[01]?[0-9]|2[0-3]):[0-5][0-9]\s*-\s*(?:[01]?[0-9]|2[0-3]):[0-5][0-9]\b").unwrap()
+            Regex::new(
+                r"(?i)\b(?:[01]?[0-9]|2[0-3]):[0-5][0-9]\s*-\s*(?:[01]?[0-9]|2[0-3]):[0-5][0-9]\b",
+            )
+            .unwrap(),
         ));
-        
+
         // Durations
         patterns.push((
             "duration".to_string(),
-            Regex::new(r"(?i)\b(?:\d+)\s+(?:seconds?|minutes?|hours?|days?|weeks?|months?|years?)\b").unwrap()
+            Regex::new(
+                r"(?i)\b(?:\d+)\s+(?:seconds?|minutes?|hours?|days?|weeks?|months?|years?)\b",
+            )
+            .unwrap(),
         ));
-        
+
         // Seasons and holidays
         patterns.push((
             "seasonal".to_string(),
@@ -585,7 +594,7 @@ impl TemporalExtractor {
     /// Extract temporal expressions from text
     pub fn extract(&self, text: &str) -> Result<Vec<Entity>> {
         let mut entities = Vec::new();
-        
+
         for (pattern_type, pattern) in &self.patterns {
             for mat in pattern.find_iter(text) {
                 entities.push(Entity {
@@ -597,7 +606,7 @@ impl TemporalExtractor {
                 });
             }
         }
-        
+
         Ok(entities)
     }
 }
@@ -635,20 +644,20 @@ impl EntityLinker {
     /// Add entity to knowledge base
     pub fn add_entity(&mut self, entry: KnowledgeBaseEntry) {
         let canonical = entry.canonical_name.clone();
-        
+
         // Add aliases to alias map
         for alias in &entry.aliases {
             self.alias_map.insert(alias.clone(), canonical.clone());
         }
         self.alias_map.insert(canonical.clone(), canonical.clone());
-        
+
         self.knowledge_base.insert(canonical, entry);
     }
 
     /// Link extracted entities to knowledge base
     pub fn link_entities(&self, entities: &mut [Entity]) -> Result<Vec<LinkedEntity>> {
         let mut linked_entities = Vec::new();
-        
+
         for entity in entities {
             if let Some(canonical_name) = self.alias_map.get(&entity.text.to_lowercase()) {
                 if let Some(kb_entry) = self.knowledge_base.get(canonical_name) {
@@ -662,7 +671,7 @@ impl EntityLinker {
                 }
             }
         }
-        
+
         Ok(linked_entities)
     }
 }
@@ -693,9 +702,10 @@ impl CoreferenceResolver {
         let pronoun_patterns = vec![
             Regex::new(r"\b(?i)(?:he|she|it|they|him|her|them|his|hers|its|their)\b").unwrap(),
             Regex::new(r"\b(?i)(?:this|that|these|those)\b").unwrap(),
-            Regex::new(r"\b(?i)(?:the (?:company|organization|person|individual|entity))\b").unwrap(),
+            Regex::new(r"\b(?i)(?:the (?:company|organization|person|individual|entity))\b")
+                .unwrap(),
         ];
-        
+
         Self { pronoun_patterns }
     }
 
@@ -703,14 +713,16 @@ impl CoreferenceResolver {
     pub fn resolve(&self, text: &str, entities: &[Entity]) -> Result<Vec<CoreferenceChain>> {
         let mut chains = Vec::new();
         let sentences = self.split_into_sentences(text);
-        
+
         for (sent_idx, sentence) in sentences.iter().enumerate() {
             // Find entities in this sentence
-            let sentence_entities: Vec<&Entity> = entities.iter()
-                .filter(|e| text[e.start..e.end].trim() == sentence.trim() || 
-                         sentence.contains(&e.text))
+            let _sentence_entities: Vec<&Entity> = entities
+                .iter()
+                .filter(|e| {
+                    text[e.start..e.end].trim() == sentence.trim() || sentence.contains(&e.text)
+                })
                 .collect();
-            
+
             // Find pronouns in this sentence
             for pattern in &self.pronoun_patterns {
                 for mat in pattern.find_iter(sentence) {
@@ -718,7 +730,7 @@ impl CoreferenceResolver {
                     if let Some(antecedent) = self.find_antecedent(
                         &mat.as_str().to_lowercase(),
                         &sentences[..sent_idx],
-                        entities
+                        entities,
                     ) {
                         chains.push(CoreferenceChain {
                             mentions: vec![
@@ -733,7 +745,7 @@ impl CoreferenceResolver {
                                     start: mat.start(),
                                     end: mat.end(),
                                     mention_type: MentionType::Pronoun,
-                                }
+                                },
                             ],
                             confidence: 0.6,
                         });
@@ -741,7 +753,7 @@ impl CoreferenceResolver {
                 }
             }
         }
-        
+
         Ok(chains)
     }
 
@@ -754,7 +766,12 @@ impl CoreferenceResolver {
     }
 
     /// Find antecedent for a pronoun
-    fn find_antecedent(&self, pronoun: &str, previous_sentences: &[String], entities: &[Entity]) -> Option<&Entity> {
+    fn find_antecedent<'a>(
+        &self,
+        pronoun: &str,
+        previous_sentences: &[String],
+        entities: &'a [Entity],
+    ) -> Option<&'a Entity> {
         // Simple heuristic: find the closest person/organization entity
         let target_type = match pronoun {
             "he" | "him" | "his" => Some(EntityType::Person),
@@ -774,7 +791,10 @@ impl CoreferenceResolver {
                         }
                     } else {
                         // For ambiguous pronouns, return any person or organization
-                        if matches!(entity.entity_type, EntityType::Person | EntityType::Organization) {
+                        if matches!(
+                            entity.entity_type,
+                            EntityType::Person | EntityType::Organization
+                        ) {
                             return Some(entity);
                         }
                     }
@@ -830,14 +850,14 @@ impl ConfidenceScorer {
         feature_weights.insert("context_score".to_string(), 0.3);
         feature_weights.insert("length_score".to_string(), 0.1);
         feature_weights.insert("position_score".to_string(), 0.1);
-        
+
         Self { feature_weights }
     }
 
     /// Calculate confidence score for an entity
     pub fn score_entity(&self, entity: &Entity, text: &str, context_window: usize) -> f64 {
         let mut features = HashMap::new();
-        
+
         // Pattern match confidence (based on entity type)
         let pattern_score = match entity.entity_type {
             EntityType::Email | EntityType::Url | EntityType::Phone => 1.0,
@@ -865,7 +885,7 @@ impl ConfidenceScorer {
         // Calculate weighted sum
         let mut total_score = 0.0;
         let mut total_weight = 0.0;
-        
+
         for (feature, score) in features {
             if let Some(weight) = self.feature_weights.get(&feature) {
                 total_score += score * weight;
@@ -885,18 +905,21 @@ impl ConfidenceScorer {
         let start = entity.start.saturating_sub(window);
         let end = (entity.end + window).min(text.len());
         let context = &text[start..end];
-        
+
         // Simple scoring based on presence of relevant keywords
         let keywords = match entity.entity_type {
             EntityType::Person => vec!["Mr.", "Ms.", "Dr.", "CEO", "President", "Manager"],
-            EntityType::Organization => vec!["Inc.", "Corp.", "LLC", "Ltd.", "Company", "Foundation"],
+            EntityType::Organization => {
+                vec!["Inc.", "Corp.", "LLC", "Ltd.", "Company", "Foundation"]
+            }
             EntityType::Location => vec!["in", "at", "from", "to", "near", "City", "State"],
             EntityType::Money => vec!["cost", "price", "pay", "budget", "revenue", "profit"],
             EntityType::Date => vec!["on", "in", "during", "until", "since", "when"],
             _ => vec![],
         };
 
-        let matches = keywords.iter()
+        let matches = keywords
+            .iter()
             .filter(|&keyword| context.contains(keyword))
             .count();
 
@@ -906,6 +929,412 @@ impl ConfidenceScorer {
             (matches as f64 / keywords.len() as f64).min(1.0)
         }
     }
+}
+
+/// Document-level information extraction and organization
+pub struct DocumentInformationExtractor {
+    topic_threshold: f64,
+    similarity_threshold: f64,
+    max_topics: usize,
+}
+
+impl Default for DocumentInformationExtractor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl DocumentInformationExtractor {
+    /// Create new document information extractor
+    pub fn new() -> Self {
+        Self {
+            topic_threshold: 0.3,
+            similarity_threshold: 0.7,
+            max_topics: 10,
+        }
+    }
+
+    /// Extract information organized by topics and themes
+    pub fn extract_structured_information(
+        &self,
+        documents: &[String],
+        pipeline: &AdvancedExtractionPipeline,
+    ) -> Result<StructuredDocumentInformation> {
+        let mut all_entities = Vec::new();
+        let mut all_relations = Vec::new();
+        let mut document_summaries = Vec::new();
+
+        // Extract information from each document
+        for (doc_idx, document) in documents.iter().enumerate() {
+            let info = pipeline.extract_advanced(document)?;
+
+            // Add document index to entities
+            let mut doc_entities = info.entities;
+            for entity in &mut doc_entities {
+                entity.confidence *= 0.9; // Slight confidence reduction for batch processing
+            }
+
+            let doc_summary = DocumentSummary {
+                document_index: doc_idx,
+                entity_count: doc_entities.len(),
+                relation_count: info.relations.len(),
+                key_phrases: info.key_phrases.clone(),
+                confidence_score: self.calculate_document_confidence(&doc_entities),
+            };
+
+            all_entities.extend(doc_entities);
+            all_relations.extend(info.relations);
+            document_summaries.push(doc_summary);
+        }
+
+        // Cluster similar entities
+        let entity_clusters = self.cluster_entities(&all_entities)?;
+
+        // Extract events from relations
+        let events = self.extract_events(&all_relations, &all_entities)?;
+
+        // Identify document topics
+        let topics = self.identify_topics(&document_summaries)?;
+
+        Ok(StructuredDocumentInformation {
+            documents: document_summaries,
+            entity_clusters,
+            relations: all_relations,
+            events,
+            topics,
+            total_entities: all_entities.len(),
+            total_relations: all_relations.len(),
+        })
+    }
+
+    /// Calculate overall confidence for a document
+    fn calculate_document_confidence(&self, entities: &[Entity]) -> f64 {
+        if entities.is_empty() {
+            return 0.0;
+        }
+
+        let sum: f64 = entities.iter().map(|e| e.confidence).sum();
+        sum / entities.len() as f64
+    }
+
+    /// Cluster similar entities across documents
+    fn cluster_entities(&self, entities: &[Entity]) -> Result<Vec<EntityCluster>> {
+        let mut clusters = Vec::new();
+        let mut used = vec![false; entities.len()];
+
+        for (i, entity) in entities.iter().enumerate() {
+            if used[i] {
+                continue;
+            }
+
+            let mut cluster = EntityCluster {
+                representative: entity.clone(),
+                members: vec![entity.clone()],
+                entity_type: entity.entity_type.clone(),
+                confidence: entity.confidence,
+            };
+
+            used[i] = true;
+
+            // Find similar entities
+            for (j, other) in entities.iter().enumerate().skip(i + 1) {
+                if used[j] || other.entity_type != entity.entity_type {
+                    continue;
+                }
+
+                let similarity = self.calculate_entity_similarity(entity, other);
+                if similarity > self.similarity_threshold {
+                    cluster.members.push(other.clone());
+                    cluster.confidence = (cluster.confidence + other.confidence) / 2.0;
+                    used[j] = true;
+                }
+            }
+
+            clusters.push(cluster);
+        }
+
+        clusters.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap());
+        Ok(clusters)
+    }
+
+    /// Calculate similarity between two entities
+    fn calculate_entity_similarity(&self, entity1: &Entity, entity2: &Entity) -> f64 {
+        if entity1.entity_type != entity2.entity_type {
+            return 0.0;
+        }
+
+        // Simple Levenshtein-based similarity
+        let text1 = entity1.text.to_lowercase();
+        let text2 = entity2.text.to_lowercase();
+
+        if text1 == text2 {
+            return 1.0;
+        }
+
+        // Calculate character-level similarity
+        let max_len = text1.len().max(text2.len());
+        if max_len == 0 {
+            return 1.0;
+        }
+
+        let distance = self.levenshtein_distance(&text1, &text2);
+        1.0 - (distance as f64 / max_len as f64)
+    }
+
+    /// Simple Levenshtein distance implementation
+    fn levenshtein_distance(&self, s1: &str, s2: &str) -> usize {
+        let len1 = s1.len();
+        let len2 = s2.len();
+        let mut matrix = vec![vec![0; len2 + 1]; len1 + 1];
+
+        for i in 0..=len1 {
+            matrix[i][0] = i;
+        }
+        for j in 0..=len2 {
+            matrix[0][j] = j;
+        }
+
+        let s1_chars: Vec<char> = s1.chars().collect();
+        let s2_chars: Vec<char> = s2.chars().collect();
+
+        for (i, &c1) in s1_chars.iter().enumerate() {
+            for (j, &c2) in s2_chars.iter().enumerate() {
+                let cost = if c1 == c2 { 0 } else { 1 };
+                matrix[i + 1][j + 1] = std::cmp::min(
+                    std::cmp::min(matrix[i][j + 1] + 1, matrix[i + 1][j] + 1),
+                    matrix[i][j] + cost,
+                );
+            }
+        }
+
+        matrix[len1][len2]
+    }
+
+    /// Extract events from relations and entities
+    fn extract_events(&self, relations: &[Relation], entities: &[Entity]) -> Result<Vec<Event>> {
+        let mut events = Vec::new();
+
+        // Group relations by context to identify events
+        let mut relation_groups: std::collections::HashMap<String, Vec<&Relation>> =
+            std::collections::HashMap::new();
+
+        for relation in relations {
+            let context_key = format!(
+                "{}_{}",
+                relation.subject.start / 100, // Group by approximate position
+                relation.object.start / 100
+            );
+            relation_groups
+                .entry(context_key)
+                .or_insert_with(Vec::new)
+                .push(relation);
+        }
+
+        // Convert relation groups to events
+        for (_, group_relations) in relation_groups {
+            if group_relations.len() >= 2 {
+                let event = Event {
+                    event_type: self.infer_event_type(&group_relations),
+                    participants: self.extract_participants(&group_relations),
+                    location: self.extract_location(&group_relations, entities),
+                    time: self.extract_time(&group_relations, entities),
+                    description: self.generate_event_description(&group_relations),
+                    confidence: self.calculate_event_confidence(&group_relations),
+                };
+                events.push(event);
+            }
+        }
+
+        Ok(events)
+    }
+
+    /// Infer event type from relations
+    fn infer_event_type(&self, relations: &[&Relation]) -> String {
+        let relation_types: std::collections::HashMap<String, usize> =
+            relations
+                .iter()
+                .fold(std::collections::HashMap::new(), |mut acc, rel| {
+                    *acc.entry(rel.relation_type.clone()).or_insert(0) += 1;
+                    acc
+                });
+
+        relation_types
+            .into_iter()
+            .max_by_key(|(_, count)| *count)
+            .map(|(rel_type, _)| rel_type)
+            .unwrap_or_else(|| "unknown".to_string())
+    }
+
+    /// Extract participants from relations
+    fn extract_participants(&self, relations: &[&Relation]) -> Vec<Entity> {
+        let mut participants = Vec::new();
+        for relation in relations {
+            participants.push(relation.subject.clone());
+            participants.push(relation.object.clone());
+        }
+
+        // Deduplicate participants
+        participants.sort_by_key(|e| e.text.clone());
+        participants.dedup_by_key(|e| e.text.clone());
+        participants
+    }
+
+    /// Extract location entities near the relations
+    fn extract_location(&self, relations: &[&Relation], entities: &[Entity]) -> Option<Entity> {
+        for relation in relations {
+            for entity in entities {
+                if matches!(entity.entity_type, EntityType::Location) {
+                    let relation_span = relation.subject.start..relation.object.end;
+                    let entity_span = entity.start..entity.end;
+
+                    // Check if location entity is near the relation
+                    if relation_span.contains(&entity.start)
+                        || entity_span.contains(&relation.subject.start)
+                        || (entity.start as i32 - relation.subject.start as i32).abs() < 100
+                    {
+                        return Some(entity.clone());
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    /// Extract temporal entities near the relations
+    fn extract_time(&self, relations: &[&Relation], entities: &[Entity]) -> Option<Entity> {
+        for relation in relations {
+            for entity in entities {
+                if matches!(entity.entity_type, EntityType::Date | EntityType::Time) {
+                    let relation_span = relation.subject.start..relation.object.end;
+                    let entity_span = entity.start..entity.end;
+
+                    // Check if temporal entity is near the relation
+                    if relation_span.contains(&entity.start)
+                        || entity_span.contains(&relation.subject.start)
+                        || (entity.start as i32 - relation.subject.start as i32).abs() < 100
+                    {
+                        return Some(entity.clone());
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    /// Generate description for an event
+    fn generate_event_description(&self, relations: &[&Relation]) -> String {
+        if relations.is_empty() {
+            return "Unknown event".to_string();
+        }
+
+        let contexts: Vec<String> = relations.iter().map(|r| r.context.clone()).collect();
+
+        // Find the longest context as primary description
+        contexts
+            .into_iter()
+            .max_by_key(|s| s.len())
+            .unwrap_or_else(|| "Event description unavailable".to_string())
+    }
+
+    /// Calculate confidence for an event
+    fn calculate_event_confidence(&self, relations: &[&Relation]) -> f64 {
+        if relations.is_empty() {
+            return 0.0;
+        }
+
+        let sum: f64 = relations.iter().map(|r| r.confidence).sum();
+        (sum / relations.len() as f64) * 0.8 // Reduce confidence for inferred events
+    }
+
+    /// Identify topics from document summaries
+    fn identify_topics(&self, summaries: &[DocumentSummary]) -> Result<Vec<Topic>> {
+        let mut topics = Vec::new();
+        let mut topic_phrases: std::collections::HashMap<String, Vec<usize>> =
+            std::collections::HashMap::new();
+
+        // Collect all key phrases with document indices
+        for summary in summaries {
+            for (phrase, score) in &summary.key_phrases {
+                if *score > self.topic_threshold {
+                    topic_phrases
+                        .entry(phrase.clone())
+                        .or_insert_with(Vec::new)
+                        .push(summary.document_index);
+                }
+            }
+        }
+
+        // Create topics from frequent phrases
+        for (phrase, doc_indices) in topic_phrases {
+            if doc_indices.len() >= 2 {
+                // Phrase appears in multiple documents
+                let topic = Topic {
+                    name: phrase.clone(),
+                    key_phrases: vec![phrase],
+                    document_indices: doc_indices,
+                    confidence: 0.8,
+                };
+                topics.push(topic);
+            }
+        }
+
+        // Limit to max topics
+        topics.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap());
+        topics.truncate(self.max_topics);
+
+        Ok(topics)
+    }
+}
+
+/// Summary information for a single document
+#[derive(Debug, Clone)]
+pub struct DocumentSummary {
+    pub document_index: usize,
+    pub entity_count: usize,
+    pub relation_count: usize,
+    pub key_phrases: Vec<(String, f64)>,
+    pub confidence_score: f64,
+}
+
+/// Cluster of similar entities
+#[derive(Debug, Clone)]
+pub struct EntityCluster {
+    pub representative: Entity,
+    pub members: Vec<Entity>,
+    pub entity_type: EntityType,
+    pub confidence: f64,
+}
+
+/// Extracted event from text
+#[derive(Debug, Clone)]
+pub struct Event {
+    pub event_type: String,
+    pub participants: Vec<Entity>,
+    pub location: Option<Entity>,
+    pub time: Option<Entity>,
+    pub description: String,
+    pub confidence: f64,
+}
+
+/// Identified topic across documents
+#[derive(Debug, Clone)]
+pub struct Topic {
+    pub name: String,
+    pub key_phrases: Vec<String>,
+    pub document_indices: Vec<usize>,
+    pub confidence: f64,
+}
+
+/// Structured information extracted from multiple documents
+#[derive(Debug)]
+pub struct StructuredDocumentInformation {
+    pub documents: Vec<DocumentSummary>,
+    pub entity_clusters: Vec<EntityCluster>,
+    pub relations: Vec<Relation>,
+    pub events: Vec<Event>,
+    pub topics: Vec<Topic>,
+    pub total_entities: usize,
+    pub total_relations: usize,
 }
 
 /// Enhanced information extraction pipeline with advanced features
@@ -955,12 +1384,12 @@ impl AdvancedExtractionPipeline {
     /// Extract comprehensive information with advanced features
     pub fn extract_advanced(&self, text: &str) -> Result<AdvancedExtractedInformation> {
         let tokenizer = WordTokenizer::default();
-        
+
         // Basic extractions
         let mut entities = self.ner.extract_entities(text)?;
         let temporal_entities = self.temporal_extractor.extract(text)?;
         entities.extend(temporal_entities);
-        
+
         // Enhance confidence scores
         for entity in &mut entities {
             entity.confidence = self.confidence_scorer.score_entity(entity, text, 50);
@@ -969,7 +1398,7 @@ impl AdvancedExtractionPipeline {
         let key_phrases = self.key_phrase_extractor.extract(text, &tokenizer)?;
         let patterns = self.pattern_extractor.extract(text)?;
         let relations = self.relation_extractor.extract_relations(text, &entities)?;
-        
+
         // Advanced extractions
         let linked_entities = self.entity_linker.link_entities(&mut entities)?;
         let coreference_chains = self.coreference_resolver.resolve(text, &entities)?;
@@ -1024,13 +1453,15 @@ mod tests {
         let mut ner = RuleBasedNER::new();
         ner.add_person_names(vec!["John".to_string(), "Jane".to_string()]);
         ner.add_organizations(vec!["Microsoft".to_string(), "Google".to_string()]);
-        
+
         let text = "John works at Microsoft. His email is john@example.com";
         let entities = ner.extract_entities(text).unwrap();
-        
+
         assert!(entities.len() >= 3); // John, Microsoft, email
         assert!(entities.iter().any(|e| e.entity_type == EntityType::Person));
-        assert!(entities.iter().any(|e| e.entity_type == EntityType::Organization));
+        assert!(entities
+            .iter()
+            .any(|e| e.entity_type == EntityType::Organization));
         assert!(entities.iter().any(|e| e.entity_type == EntityType::Email));
     }
 
@@ -1039,12 +1470,12 @@ mod tests {
         let extractor = KeyPhraseExtractor::new()
             .with_min_frequency(1)
             .with_max_length(2);
-        
+
         let text = "machine learning is important. machine learning algorithms are complex.";
         let tokenizer = WordTokenizer::default();
-        
+
         let phrases = extractor.extract(text, &tokenizer).unwrap();
-        
+
         assert!(!phrases.is_empty());
         assert!(phrases.iter().any(|(p, _)| p.contains("machine learning")));
     }
@@ -1054,12 +1485,12 @@ mod tests {
         let mut extractor = PatternExtractor::new();
         extractor.add_pattern(
             "price".to_string(),
-            Regex::new(r"\$\d+(?:\.\d{2})?").unwrap()
+            Regex::new(r"\$\d+(?:\.\d{2})?").unwrap(),
         );
-        
+
         let text = "The product costs $29.99 and shipping is $5.00";
         let results = extractor.extract(text).unwrap();
-        
+
         assert!(results.contains_key("price"));
         assert_eq!(results["price"].len(), 2);
     }
@@ -1067,22 +1498,28 @@ mod tests {
     #[test]
     fn test_information_extraction_pipeline() {
         let pipeline = InformationExtractionPipeline::new();
-        
+
         let text = "Apple Inc. announced that Tim Cook will visit London on January 15, 2024. Contact: info@apple.com";
         let info = pipeline.extract(text).unwrap();
-        
+
         assert!(!info.entities.is_empty());
-        assert!(info.entities.iter().any(|e| e.entity_type == EntityType::Email));
-        assert!(info.entities.iter().any(|e| e.entity_type == EntityType::Date));
+        assert!(info
+            .entities
+            .iter()
+            .any(|e| e.entity_type == EntityType::Email));
+        assert!(info
+            .entities
+            .iter()
+            .any(|e| e.entity_type == EntityType::Date));
     }
 
     #[test]
     fn test_temporal_extractor() {
         let extractor = TemporalExtractor::new();
-        
+
         let text = "The meeting is scheduled for next Monday from 2:00-4:00 PM. It will last 2 hours during winter season.";
         let entities = extractor.extract(text).unwrap();
-        
+
         assert!(!entities.is_empty());
         assert!(entities.iter().any(|e| e.text.contains("next Monday")));
         assert!(entities.iter().any(|e| e.text.contains("2:00-4:00")));
@@ -1093,7 +1530,7 @@ mod tests {
     #[test]
     fn test_entity_linker() {
         let mut linker = EntityLinker::new();
-        
+
         // Add a knowledge base entry
         let kb_entry = KnowledgeBaseEntry {
             canonical_name: "Apple Inc.".to_string(),
@@ -1103,18 +1540,16 @@ mod tests {
             metadata: HashMap::new(),
         };
         linker.add_entity(kb_entry);
-        
+
         // Create test entities
-        let mut entities = vec![
-            Entity {
-                text: "apple".to_string(),
-                entity_type: EntityType::Organization,
-                start: 0,
-                end: 5,
-                confidence: 0.7,
-            }
-        ];
-        
+        let mut entities = vec![Entity {
+            text: "apple".to_string(),
+            entity_type: EntityType::Organization,
+            start: 0,
+            end: 5,
+            confidence: 0.7,
+        }];
+
         let linked = linker.link_entities(&mut entities).unwrap();
         assert!(!linked.is_empty());
         assert_eq!(linked[0].canonical_name, "Apple Inc.");
@@ -1123,20 +1558,18 @@ mod tests {
     #[test]
     fn test_coreference_resolver() {
         let resolver = CoreferenceResolver::new();
-        
-        let entities = vec![
-            Entity {
-                text: "John Smith".to_string(),
-                entity_type: EntityType::Person,
-                start: 0,
-                end: 10,
-                confidence: 0.8,
-            }
-        ];
-        
+
+        let entities = vec![Entity {
+            text: "John Smith".to_string(),
+            entity_type: EntityType::Person,
+            start: 0,
+            end: 10,
+            confidence: 0.8,
+        }];
+
         let text = "John Smith is a CEO. He founded the company in 2020.";
         let chains = resolver.resolve(text, &entities).unwrap();
-        
+
         // Should find a coreference chain for "He" -> "John Smith"
         assert!(!chains.is_empty());
         assert_eq!(chains[0].mentions.len(), 2);
@@ -1145,7 +1578,7 @@ mod tests {
     #[test]
     fn test_confidence_scorer() {
         let scorer = ConfidenceScorer::new();
-        
+
         let entity = Entity {
             text: "john@example.com".to_string(),
             entity_type: EntityType::Email,
@@ -1153,10 +1586,10 @@ mod tests {
             end: 36,
             confidence: 0.5,
         };
-        
+
         let text = "Please contact John at john@example.com for more information.";
         let score = scorer.score_entity(&entity, text, 10);
-        
+
         // Email patterns should get high confidence
         assert!(score > 0.8);
     }
@@ -1164,18 +1597,19 @@ mod tests {
     #[test]
     fn test_advanced_extraction_pipeline() {
         let pipeline = AdvancedExtractionPipeline::new();
-        
+
         let text = "Microsoft Corp. announced today that CEO Satya Nadella will visit New York next week. He will meet with partners.";
         let info = pipeline.extract_advanced(text).unwrap();
-        
+
         // Should extract basic entities
         assert!(!info.entities.is_empty());
-        
+
         // Should find temporal expressions
-        assert!(info.entities.iter().any(|e| 
-            matches!(e.entity_type, EntityType::Custom(ref s) if s.contains("temporal"))
-        ));
-        
+        assert!(info
+            .entities
+            .iter()
+            .any(|e| matches!(e.entity_type, EntityType::Custom(ref s) if s.contains("temporal"))));
+
         // Should have key phrases
         assert!(!info.key_phrases.is_empty());
     }
@@ -1183,7 +1617,7 @@ mod tests {
     #[test]
     fn test_context_scoring() {
         let scorer = ConfidenceScorer::new();
-        
+
         // Test person entity with good context
         let person_entity = Entity {
             text: "Smith".to_string(),
@@ -1192,21 +1626,251 @@ mod tests {
             end: 8,
             confidence: 0.5,
         };
-        
+
         let text_with_context = "Dr. Smith is the CEO of the company.";
         let score_with_context = scorer.score_entity(&person_entity, text_with_context, 10);
-        
+
         let text_without_context = "The Smith family owns this.";
         let score_without_context = scorer.score_entity(&person_entity, text_without_context, 10);
-        
+
         // Context with "Dr." and "CEO" should score higher
         assert!(score_with_context > score_without_context);
     }
 
     #[test]
+    fn test_document_information_extractor() {
+        let extractor = DocumentInformationExtractor::new();
+        let pipeline = AdvancedExtractionPipeline::new();
+
+        let documents = vec![
+            "Apple Inc. announced a new product launch. Tim Cook will present in San Francisco on January 15, 2024.".to_string(),
+            "Microsoft Corporation released quarterly results. Satya Nadella discussed growth in cloud computing.".to_string(),
+            "Apple Inc. stock price increased after the announcement. Investors are optimistic about the new product.".to_string(),
+        ];
+
+        let result = extractor
+            .extract_structured_information(&documents, &pipeline)
+            .unwrap();
+
+        // Should have processed all documents
+        assert_eq!(result.documents.len(), 3);
+
+        // Should have found some entities and relations
+        assert!(result.total_entities > 0);
+
+        // Should have identified some topics (Apple Inc. appears in multiple documents)
+        assert!(!result.topics.is_empty());
+
+        // Should have clustered similar entities
+        assert!(!result.entity_clusters.is_empty());
+    }
+
+    #[test]
+    fn test_entity_clustering() {
+        let extractor = DocumentInformationExtractor::new();
+
+        let entities = vec![
+            Entity {
+                text: "Apple Inc.".to_string(),
+                entity_type: EntityType::Organization,
+                start: 0,
+                end: 10,
+                confidence: 0.9,
+            },
+            Entity {
+                text: "apple inc".to_string(),
+                entity_type: EntityType::Organization,
+                start: 20,
+                end: 29,
+                confidence: 0.8,
+            },
+            Entity {
+                text: "Microsoft".to_string(),
+                entity_type: EntityType::Organization,
+                start: 40,
+                end: 49,
+                confidence: 0.9,
+            },
+        ];
+
+        let clusters = extractor.cluster_entities(&entities).unwrap();
+
+        // Should cluster similar entities (Apple variations)
+        assert_eq!(clusters.len(), 2);
+
+        // First cluster should have both Apple entities
+        let apple_cluster = clusters
+            .iter()
+            .find(|c| c.representative.text.to_lowercase().contains("apple"))
+            .unwrap();
+        assert_eq!(apple_cluster.members.len(), 2);
+    }
+
+    #[test]
+    fn test_event_extraction() {
+        let extractor = DocumentInformationExtractor::new();
+
+        let relations = vec![
+            Relation {
+                relation_type: "announcement".to_string(),
+                subject: Entity {
+                    text: "Apple".to_string(),
+                    entity_type: EntityType::Organization,
+                    start: 0,
+                    end: 5,
+                    confidence: 0.9,
+                },
+                object: Entity {
+                    text: "product".to_string(),
+                    entity_type: EntityType::Other,
+                    start: 15,
+                    end: 22,
+                    confidence: 0.8,
+                },
+                context: "Apple announced a new product launch".to_string(),
+                confidence: 0.8,
+            },
+            Relation {
+                relation_type: "presentation".to_string(),
+                subject: Entity {
+                    text: "Tim Cook".to_string(),
+                    entity_type: EntityType::Person,
+                    start: 25,
+                    end: 33,
+                    confidence: 0.9,
+                },
+                object: Entity {
+                    text: "product".to_string(),
+                    entity_type: EntityType::Other,
+                    start: 15,
+                    end: 22,
+                    confidence: 0.8,
+                },
+                context: "Tim Cook will present the product".to_string(),
+                confidence: 0.8,
+            },
+        ];
+
+        let entities = vec![
+            Entity {
+                text: "January 15, 2024".to_string(),
+                entity_type: EntityType::Date,
+                start: 50,
+                end: 66,
+                confidence: 0.9,
+            },
+            Entity {
+                text: "San Francisco".to_string(),
+                entity_type: EntityType::Location,
+                start: 70,
+                end: 83,
+                confidence: 0.9,
+            },
+        ];
+
+        let events = extractor.extract_events(&relations, &entities).unwrap();
+
+        // Should extract at least one event
+        assert!(!events.is_empty());
+
+        let event = &events[0];
+        assert!(!event.participants.is_empty());
+        // Should find temporal and location information
+        assert!(event.time.is_some() || event.location.is_some());
+    }
+
+    #[test]
+    fn test_levenshtein_distance() {
+        let extractor = DocumentInformationExtractor::new();
+
+        assert_eq!(extractor.levenshtein_distance("apple", "apple"), 0);
+        assert_eq!(extractor.levenshtein_distance("apple", "apples"), 1);
+        assert_eq!(extractor.levenshtein_distance("apple", "orange"), 5);
+        assert_eq!(extractor.levenshtein_distance("", "apple"), 5);
+        assert_eq!(extractor.levenshtein_distance("apple", ""), 5);
+    }
+
+    #[test]
+    fn test_entity_similarity() {
+        let extractor = DocumentInformationExtractor::new();
+
+        let entity1 = Entity {
+            text: "Apple Inc.".to_string(),
+            entity_type: EntityType::Organization,
+            start: 0,
+            end: 10,
+            confidence: 0.9,
+        };
+
+        let entity2 = Entity {
+            text: "apple inc".to_string(),
+            entity_type: EntityType::Organization,
+            start: 20,
+            end: 29,
+            confidence: 0.8,
+        };
+
+        let entity3 = Entity {
+            text: "Microsoft".to_string(),
+            entity_type: EntityType::Organization,
+            start: 40,
+            end: 49,
+            confidence: 0.9,
+        };
+
+        // Similar entities should have high similarity
+        let similarity = extractor.calculate_entity_similarity(&entity1, &entity2);
+        assert!(similarity > 0.5);
+
+        // Different entities should have low similarity
+        let similarity = extractor.calculate_entity_similarity(&entity1, &entity3);
+        assert!(similarity < 0.5);
+    }
+
+    #[test]
+    fn test_topic_identification() {
+        let extractor = DocumentInformationExtractor::new();
+
+        let summaries = vec![
+            DocumentSummary {
+                document_index: 0,
+                entity_count: 5,
+                relation_count: 2,
+                key_phrases: vec![
+                    ("machine learning".to_string(), 0.8),
+                    ("artificial intelligence".to_string(), 0.6),
+                ],
+                confidence_score: 0.8,
+            },
+            DocumentSummary {
+                document_index: 1,
+                entity_count: 3,
+                relation_count: 1,
+                key_phrases: vec![
+                    ("machine learning".to_string(), 0.7),
+                    ("data science".to_string(), 0.5),
+                ],
+                confidence_score: 0.7,
+            },
+        ];
+
+        let topics = extractor.identify_topics(&summaries).unwrap();
+
+        // Should identify "machine learning" as a topic (appears in both documents)
+        assert!(!topics.is_empty());
+        assert!(topics.iter().any(|t| t.name.contains("machine learning")));
+
+        let ml_topic = topics
+            .iter()
+            .find(|t| t.name.contains("machine learning"))
+            .unwrap();
+        assert_eq!(ml_topic.document_indices.len(), 2);
+    }
+
+    #[test]
     fn test_knowledge_base_aliases() {
         let mut linker = EntityLinker::new();
-        
+
         let kb_entry = KnowledgeBaseEntry {
             canonical_name: "International Business Machines".to_string(),
             entity_type: EntityType::Organization,
@@ -1219,17 +1883,15 @@ mod tests {
             },
         };
         linker.add_entity(kb_entry);
-        
-        let mut entities = vec![
-            Entity {
-                text: "ibm".to_string(), // lowercase
-                entity_type: EntityType::Organization,
-                start: 0,
-                end: 3,
-                confidence: 0.8,
-            }
-        ];
-        
+
+        let mut entities = vec![Entity {
+            text: "ibm".to_string(), // lowercase
+            entity_type: EntityType::Organization,
+            start: 0,
+            end: 3,
+            confidence: 0.8,
+        }];
+
         let linked = linker.link_entities(&mut entities).unwrap();
         assert_eq!(linked.len(), 1);
         assert_eq!(linked[0].canonical_name, "International Business Machines");
@@ -1240,7 +1902,7 @@ mod tests {
     fn test_sentence_splitting() {
         let resolver = CoreferenceResolver::new();
         let sentences = resolver.split_into_sentences("Hello world. How are you? Fine, thanks!");
-        
+
         assert_eq!(sentences.len(), 3);
         assert_eq!(sentences[0], "Hello world");
         assert_eq!(sentences[1], "How are you");

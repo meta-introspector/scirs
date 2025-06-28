@@ -5,7 +5,7 @@ use scirs2_cluster::{
     hierarchy::{linkage, LinkageMethod},
     kmeans_to_model, save_hierarchy, save_kmeans,
     vq::kmeans2,
-    HierarchicalModel, KMeansModel, SerializableModel, Metric,
+    HierarchicalModel, KMeansModel, Metric, SerializableModel,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -37,12 +37,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn kmeans_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // Perform K-means clustering
     let (centroids, labels) = kmeans2(data.view(), 3, None, None, None, None, None, None)?;
-    println!("K-means clustering completed with {} clusters", centroids.nrows());
+    println!(
+        "K-means clustering completed with {} clusters",
+        centroids.nrows()
+    );
     println!("Cluster assignments: {:?}", labels);
 
     // Convert to serializable model
     let model = kmeans_to_model(centroids.clone(), labels.clone(), 10);
-    
+
     // Save to JSON file
     model.save_to_file("kmeans_model.json")?;
     println!("K-means model saved to 'kmeans_model.json'");
@@ -58,7 +61,7 @@ fn hierarchical_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     // Perform hierarchical clustering
     let linkage_matrix = linkage(data.view(), LinkageMethod::Average, Metric::Euclidean)?;
     let n_observations = data.nrows();
-    
+
     // Create model with sample labels
     let labels = vec![
         "Sample_A".to_string(),
@@ -71,7 +74,7 @@ fn hierarchical_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
         "Sample_H".to_string(),
         "Sample_I".to_string(),
     ];
-    
+
     let model = HierarchicalModel::new(
         linkage_matrix.clone(),
         n_observations,
@@ -109,17 +112,14 @@ fn hierarchical_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
 fn model_loading_example() -> Result<(), Box<dyn std::error::Error>> {
     // Load K-means model
     let loaded_kmeans = KMeansModel::load_from_file("kmeans_model.json")?;
-    println!("Loaded K-means model with {} clusters", loaded_kmeans.n_clusters);
+    println!(
+        "Loaded K-means model with {} clusters",
+        loaded_kmeans.n_clusters
+    );
     println!("Centroids shape: {:?}", loaded_kmeans.centroids.shape());
 
     // Make predictions on new data
-    let new_data = array![
-        [1.1, 1.9],
-        [5.1, 4.7],
-        [8.9, 8.7],
-        [2.0, 2.5],
-        [6.0, 5.0]
-    ];
+    let new_data = array![[1.1, 1.9], [5.1, 4.7], [8.9, 8.7], [2.0, 2.5], [6.0, 5.0]];
 
     let predictions = loaded_kmeans.predict(new_data.view())?;
     println!("\nPredictions for new data: {:?}", predictions);
@@ -128,8 +128,14 @@ fn model_loading_example() -> Result<(), Box<dyn std::error::Error>> {
     let loaded_hierarchy = HierarchicalModel::load_from_file("hierarchy_model.json")?;
     println!("\nLoaded hierarchical model:");
     println!("  Method: {}", loaded_hierarchy.method);
-    println!("  Number of observations: {}", loaded_hierarchy.n_observations);
-    println!("  Linkage matrix shape: {:?}", loaded_hierarchy.linkage.shape());
+    println!(
+        "  Number of observations: {}",
+        loaded_hierarchy.n_observations
+    );
+    println!(
+        "  Linkage matrix shape: {:?}",
+        loaded_hierarchy.linkage.shape()
+    );
 
     // Clean up temporary files
     std::fs::remove_file("kmeans_model.json").ok();

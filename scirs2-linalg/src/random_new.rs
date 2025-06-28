@@ -49,7 +49,7 @@ use rand_distr::{Normal as NormalDist, Uniform as UniformDist};
 use std::iter::Sum;
 
 use scirs2_core::random::{Random, DistributionExt};
-// use scirs2_core::validation::{check_in_bounds, check_positive, check_probability};
+use scirs2_core::validation::{check_in_bounds, check_positive, check_probability};
 
 use crate::decomposition::qr;
 // Temporarily removing validation imports to fix compilation
@@ -99,10 +99,11 @@ macro_rules! with_rng {
 /// ```
 pub fn uniform<F>(rows: usize, cols: usize, low: F, high: F, seed: Option<u64>) -> Array2<F>
 where
-    F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + 'static,
+    F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + std::fmt::Display + 'static,
 {
-    // Note: Temporarily removed validation for compilation
-    // TODO: Re-add validation when check_in_bounds supports Debug trait instead of Display
+    // Validate input parameters (re-added with Display trait bound)
+    let _ = check_in_bounds(low, F::neg_infinity(), F::infinity(), "low").expect("Invalid low value");
+    let _ = check_in_bounds(high, low, F::infinity(), "high").expect("Invalid high value");
     
     with_rng!(seed, |rng| {
         // Create a uniform distribution

@@ -5,7 +5,7 @@
 
 use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array1, ArrayView1, ArrayView2};
-use num_traits::{Float, NumAssign, Zero, One};
+use num_traits::{Float, NumAssign, One, Zero};
 
 /// Hardware capabilities detection
 #[derive(Debug, Clone, Copy)]
@@ -35,10 +35,8 @@ impl HardwareCapabilities {
             64 // AVX-512 uses 512-bit vectors (64 bytes)
         } else if self.has_avx2 || self.has_avx {
             32 // AVX/AVX2 uses 256-bit vectors (32 bytes)
-        } else if self.has_neon {
-            16 // ARM Neon uses 128-bit vectors (16 bytes)
         } else {
-            16 // SSE uses 128-bit vectors (16 bytes)
+            16 // ARM Neon and SSE both use 128-bit vectors (16 bytes)
         }
     }
 }
@@ -54,11 +52,12 @@ where
     F: Float + NumAssign + Zero + Send + Sync + 'static,
 {
     let (m, n) = a.dim();
-    
+
     if x.len() != n {
         return Err(LinalgError::ShapeError(format!(
             "Matrix columns ({}) must match vector length ({})",
-            n, x.len()
+            n,
+            x.len()
         )));
     }
 
@@ -74,7 +73,7 @@ where
                     result.as_mut_ptr() as *mut f64,
                     m,
                     n,
-                    a.strides()[0] as isize,
+                    a.strides()[0],
                 )?;
             }
         } else if capabilities.has_neon && cfg!(target_arch = "aarch64") {
@@ -86,7 +85,7 @@ where
                     result.as_mut_ptr() as *mut f64,
                     m,
                     n,
-                    a.strides()[0] as isize,
+                    a.strides()[0],
                 )?;
             }
         } else {
@@ -102,7 +101,7 @@ where
                     result.as_mut_ptr() as *mut f32,
                     m,
                     n,
-                    a.strides()[0] as isize,
+                    a.strides()[0],
                 )?;
             }
         } else if capabilities.has_neon && cfg!(target_arch = "aarch64") {
@@ -114,7 +113,7 @@ where
                     result.as_mut_ptr() as *mut f32,
                     m,
                     n,
-                    a.strides()[0] as isize,
+                    a.strides()[0],
                 )?;
             }
         } else {
@@ -136,7 +135,7 @@ where
 {
     let (m, n) = a.dim();
     let mut result = Array1::zeros(m);
-    
+
     for i in 0..m {
         let mut sum = F::zero();
         for j in 0..n {
@@ -144,7 +143,7 @@ where
         }
         result[i] = sum;
     }
-    
+
     Ok(result)
 }
 
@@ -160,13 +159,13 @@ unsafe fn avx2_matvec_f64(
     a_stride: isize,
 ) -> LinalgResult<()> {
     use std::arch::x86_64::*;
-    
+
     const BLOCK_SIZE: usize = 4; // AVX2 can process 4 f64 values at once
-    
+
     for i in 0..m {
         let row_ptr = a_ptr.offset(i as isize * a_stride);
         let mut sum = _mm256_setzero_pd();
-        
+
         // Process 4 elements at a time
         let mut j = 0;
         while j + BLOCK_SIZE <= n {
@@ -175,23 +174,23 @@ unsafe fn avx2_matvec_f64(
             sum = _mm256_fmadd_pd(a_vec, x_vec, sum);
             j += BLOCK_SIZE;
         }
-        
+
         // Horizontal sum of the 4 elements in sum
         let sum_high = _mm256_extractf128_pd(sum, 1);
         let sum_low = _mm256_castpd256_pd128(sum);
         let sum_quad = _mm_add_pd(sum_low, sum_high);
         let sum_dual = _mm_hadd_pd(sum_quad, sum_quad);
         let mut result = _mm_cvtsd_f64(sum_dual);
-        
+
         // Handle remaining elements
         while j < n {
             result += *row_ptr.add(j) * *x_ptr.add(j);
             j += 1;
         }
-        
+
         *y_ptr.add(i) = result;
     }
-    
+
     Ok(())
 }
 
@@ -207,13 +206,13 @@ unsafe fn avx2_matvec_f32(
     a_stride: isize,
 ) -> LinalgResult<()> {
     use std::arch::x86_64::*;
-    
+
     const BLOCK_SIZE: usize = 8; // AVX2 can process 8 f32 values at once
-    
+
     for i in 0..m {
         let row_ptr = a_ptr.offset(i as isize * a_stride);
         let mut sum = _mm256_setzero_ps();
-        
+
         // Process 8 elements at a time
         let mut j = 0;
         while j + BLOCK_SIZE <= n {
@@ -222,7 +221,7 @@ unsafe fn avx2_matvec_f32(
             sum = _mm256_fmadd_ps(a_vec, x_vec, sum);
             j += BLOCK_SIZE;
         }
-        
+
         // Horizontal sum of the 8 elements in sum
         let sum_high = _mm256_extractf128_ps(sum, 1);
         let sum_low = _mm256_castps256_ps128(sum);
@@ -230,16 +229,16 @@ unsafe fn avx2_matvec_f32(
         let sum_dual = _mm_hadd_ps(sum_quad, sum_quad);
         let sum_final = _mm_hadd_ps(sum_dual, sum_dual);
         let mut result = _mm_cvtss_f32(sum_final);
-        
+
         // Handle remaining elements
         while j < n {
             result += *row_ptr.add(j) * *x_ptr.add(j);
             j += 1;
         }
-        
+
         *y_ptr.add(i) = result;
     }
-    
+
     Ok(())
 }
 
@@ -255,13 +254,13 @@ unsafe fn neon_matvec_f64(
     a_stride: isize,
 ) -> LinalgResult<()> {
     use std::arch::aarch64::*;
-    
+
     const BLOCK_SIZE: usize = 2; // Neon can process 2 f64 values at once
-    
+
     for i in 0..m {
         let row_ptr = a_ptr.offset(i as isize * a_stride);
         let mut sum = vdupq_n_f64(0.0);
-        
+
         // Process 2 elements at a time
         let mut j = 0;
         while j + BLOCK_SIZE <= n {
@@ -270,19 +269,19 @@ unsafe fn neon_matvec_f64(
             sum = vfmaq_f64(sum, a_vec, x_vec);
             j += BLOCK_SIZE;
         }
-        
+
         // Horizontal sum
         let mut result = vaddvq_f64(sum);
-        
+
         // Handle remaining elements
         while j < n {
             result += *row_ptr.add(j) * *x_ptr.add(j);
             j += 1;
         }
-        
+
         *y_ptr.add(i) = result;
     }
-    
+
     Ok(())
 }
 
@@ -298,13 +297,13 @@ unsafe fn neon_matvec_f32(
     a_stride: isize,
 ) -> LinalgResult<()> {
     use std::arch::aarch64::*;
-    
+
     const BLOCK_SIZE: usize = 4; // Neon can process 4 f32 values at once
-    
+
     for i in 0..m {
         let row_ptr = a_ptr.offset(i as isize * a_stride);
         let mut sum = vdupq_n_f32(0.0);
-        
+
         // Process 4 elements at a time
         let mut j = 0;
         while j + BLOCK_SIZE <= n {
@@ -313,19 +312,19 @@ unsafe fn neon_matvec_f32(
             sum = vfmaq_f32(sum, a_vec, x_vec);
             j += BLOCK_SIZE;
         }
-        
+
         // Horizontal sum
         let mut result = vaddvq_f32(sum);
-        
+
         // Handle remaining elements
         while j < n {
             result += *row_ptr.add(j) * *x_ptr.add(j);
             j += 1;
         }
-        
+
         *y_ptr.add(i) = result;
     }
-    
+
     Ok(())
 }
 
@@ -342,7 +341,8 @@ where
     if x.len() != y.len() {
         return Err(LinalgError::ShapeError(format!(
             "Vector lengths must match: {} != {}",
-            x.len(), y.len()
+            x.len(),
+            y.len()
         )));
     }
 
@@ -353,21 +353,15 @@ where
     if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f64>() {
         if capabilities.has_avx2 && n >= 4 {
             unsafe {
-                let avx_result = avx2_dot_f64(
-                    x.as_ptr() as *const f64,
-                    y.as_ptr() as *const f64,
-                    n,
-                )?;
+                let avx_result =
+                    avx2_dot_f64(x.as_ptr() as *const f64, y.as_ptr() as *const f64, n)?;
                 result = *(&avx_result as *const f64 as *const F);
             }
         } else if capabilities.has_neon && cfg!(target_arch = "aarch64") && n >= 2 {
             #[cfg(target_arch = "aarch64")]
             unsafe {
-                let neon_result = neon_dot_f64(
-                    x.as_ptr() as *const f64,
-                    y.as_ptr() as *const f64,
-                    n,
-                )?;
+                let neon_result =
+                    neon_dot_f64(x.as_ptr() as *const f64, y.as_ptr() as *const f64, n)?;
                 result = *(&neon_result as *const f64 as *const F);
             }
         } else {
@@ -376,21 +370,15 @@ where
     } else if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f32>() {
         if capabilities.has_avx2 && n >= 8 {
             unsafe {
-                let avx_result = avx2_dot_f32(
-                    x.as_ptr() as *const f32,
-                    y.as_ptr() as *const f32,
-                    n,
-                )?;
+                let avx_result =
+                    avx2_dot_f32(x.as_ptr() as *const f32, y.as_ptr() as *const f32, n)?;
                 result = *(&avx_result as *const f32 as *const F);
             }
         } else if capabilities.has_neon && cfg!(target_arch = "aarch64") && n >= 4 {
             #[cfg(target_arch = "aarch64")]
             unsafe {
-                let neon_result = neon_dot_f32(
-                    x.as_ptr() as *const f32,
-                    y.as_ptr() as *const f32,
-                    n,
-                )?;
+                let neon_result =
+                    neon_dot_f32(x.as_ptr() as *const f32, y.as_ptr() as *const f32, n)?;
                 result = *(&neon_result as *const f32 as *const F);
             }
         } else {
@@ -420,10 +408,10 @@ where
 #[target_feature(enable = "avx2", enable = "fma")]
 unsafe fn avx2_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> LinalgResult<f64> {
     use std::arch::x86_64::*;
-    
+
     const BLOCK_SIZE: usize = 4;
     let mut sum = _mm256_setzero_pd();
-    
+
     // Process 4 elements at a time
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
@@ -432,20 +420,20 @@ unsafe fn avx2_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
         sum = _mm256_fmadd_pd(x_vec, y_vec, sum);
         i += BLOCK_SIZE;
     }
-    
+
     // Horizontal sum
     let sum_high = _mm256_extractf128_pd(sum, 1);
     let sum_low = _mm256_castpd256_pd128(sum);
     let sum_quad = _mm_add_pd(sum_low, sum_high);
     let sum_dual = _mm_hadd_pd(sum_quad, sum_quad);
     let mut result = _mm_cvtsd_f64(sum_dual);
-    
+
     // Handle remaining elements
     while i < n {
         result += *x_ptr.add(i) * *y_ptr.add(i);
         i += 1;
     }
-    
+
     Ok(result)
 }
 
@@ -454,10 +442,10 @@ unsafe fn avx2_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
 #[target_feature(enable = "avx2", enable = "fma")]
 unsafe fn avx2_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> LinalgResult<f32> {
     use std::arch::x86_64::*;
-    
+
     const BLOCK_SIZE: usize = 8;
     let mut sum = _mm256_setzero_ps();
-    
+
     // Process 8 elements at a time
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
@@ -466,7 +454,7 @@ unsafe fn avx2_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
         sum = _mm256_fmadd_ps(x_vec, y_vec, sum);
         i += BLOCK_SIZE;
     }
-    
+
     // Horizontal sum
     let sum_high = _mm256_extractf128_ps(sum, 1);
     let sum_low = _mm256_castps256_ps128(sum);
@@ -474,13 +462,13 @@ unsafe fn avx2_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
     let sum_dual = _mm_hadd_ps(sum_quad, sum_quad);
     let sum_final = _mm_hadd_ps(sum_dual, sum_dual);
     let mut result = _mm_cvtss_f32(sum_final);
-    
+
     // Handle remaining elements
     while i < n {
         result += *x_ptr.add(i) * *y_ptr.add(i);
         i += 1;
     }
-    
+
     Ok(result)
 }
 
@@ -489,10 +477,10 @@ unsafe fn avx2_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
 #[target_feature(enable = "neon")]
 unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> LinalgResult<f64> {
     use std::arch::aarch64::*;
-    
+
     const BLOCK_SIZE: usize = 2;
     let mut sum = vdupq_n_f64(0.0);
-    
+
     // Process 2 elements at a time
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
@@ -501,16 +489,16 @@ unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
         sum = vfmaq_f64(sum, x_vec, y_vec);
         i += BLOCK_SIZE;
     }
-    
+
     // Horizontal sum
     let mut result = vaddvq_f64(sum);
-    
+
     // Handle remaining elements
     while i < n {
         result += *x_ptr.add(i) * *y_ptr.add(i);
         i += 1;
     }
-    
+
     Ok(result)
 }
 
@@ -519,10 +507,10 @@ unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
 #[target_feature(enable = "neon")]
 unsafe fn neon_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> LinalgResult<f32> {
     use std::arch::aarch64::*;
-    
+
     const BLOCK_SIZE: usize = 4;
     let mut sum = vdupq_n_f32(0.0);
-    
+
     // Process 4 elements at a time
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
@@ -531,16 +519,16 @@ unsafe fn neon_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
         sum = vfmaq_f32(sum, x_vec, y_vec);
         i += BLOCK_SIZE;
     }
-    
+
     // Horizontal sum
     let mut result = vaddvq_f32(sum);
-    
+
     // Handle remaining elements
     while i < n {
         result += *x_ptr.add(i) * *y_ptr.add(i);
         i += 1;
     }
-    
+
     Ok(result)
 }
 
@@ -563,10 +551,10 @@ mod tests {
         let caps = HardwareCapabilities::detect();
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let y = array![8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
-        
+
         let result = hardware_optimized_dot(&x.view(), &y.view(), &caps).unwrap();
         let expected = 120.0; // 1*8 + 2*7 + 3*6 + 4*5 + 5*4 + 6*3 + 7*2 + 8*1
-        
+
         assert_abs_diff_eq!(result, expected, epsilon = 1e-10);
     }
 
@@ -575,10 +563,10 @@ mod tests {
         let caps = HardwareCapabilities::detect();
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let x = array![1.0, 2.0, 3.0];
-        
+
         let result = hardware_optimized_matvec(&a.view(), &x.view(), &caps).unwrap();
         let expected = array![14.0, 32.0]; // [1*1+2*2+3*3, 4*1+5*2+6*3]
-        
+
         for (actual, expected) in result.iter().zip(expected.iter()) {
             assert_abs_diff_eq!(*actual, *expected, epsilon = 1e-10);
         }

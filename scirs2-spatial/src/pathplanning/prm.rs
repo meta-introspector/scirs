@@ -251,11 +251,17 @@ impl Debug for PRMPlanner {
 
 impl PRMPlanner {
     /// Create a new PRM planner with the given configuration and bounds
-    pub fn new(config: PRMConfig, lower_bounds: Array1<f64>, upper_bounds: Array1<f64>) -> SpatialResult<Self> {
+    pub fn new(
+        config: PRMConfig,
+        lower_bounds: Array1<f64>,
+        upper_bounds: Array1<f64>,
+    ) -> SpatialResult<Self> {
         let dimension = lower_bounds.len();
 
         if lower_bounds.len() != upper_bounds.len() {
-            return Err(SpatialError::DimensionError("Lower and upper bounds must have the same dimension".to_string()));
+            return Err(SpatialError::DimensionError(
+                "Lower and upper bounds must have the same dimension".to_string(),
+            ));
         }
 
         // Use the provided seed or generate a random one
@@ -389,14 +395,13 @@ impl PRMPlanner {
             let nearby = match &self.kdtree {
                 Some(kdtree) => {
                     // Use the KD-tree to find neighbors efficiently
-                    let node_slice = node_config.as_slice()
-                        .ok_or_else(|| SpatialError::ComputationError(
-                            "Failed to convert node config to slice (non-contiguous memory layout)".into()
-                        ))?;
-                    kdtree.query_radius(
-                        node_slice,
-                        self.config.connection_radius,
-                    )?
+                    let node_slice = node_config.as_slice().ok_or_else(|| {
+                        SpatialError::ComputationError(
+                            "Failed to convert node config to slice (non-contiguous memory layout)"
+                                .into(),
+                        )
+                    })?;
+                    kdtree.query_radius(node_slice, self.config.connection_radius)?
                 }
                 None => (Vec::new(), Vec::new()),
             };
@@ -767,7 +772,7 @@ mod tests {
         // Complex polygon
         let complex = vec![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0], [2.0, 2.0], [0.0, 2.0]];
 
-        // Points inside - for complex self-intersecting polygons, 
+        // Points inside - for complex self-intersecting polygons,
         // the ray casting algorithm uses the odd-even rule
         // The point [1.0, 0.5] is in an ambiguous region for this self-intersecting polygon
         // so we'll skip that test

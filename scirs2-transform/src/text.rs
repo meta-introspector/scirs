@@ -3,11 +3,11 @@
 //! This module provides utilities for converting text data into numerical features
 //! suitable for machine learning algorithms.
 
+use ahash::AHasher;
 use ndarray::{Array1, Array2};
+use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
-use ahash::AHasher;
-use regex::Regex;
 
 use crate::error::{Result, TransformError};
 
@@ -48,44 +48,44 @@ impl CountVectorizer {
             fitted: false,
         }
     }
-    
+
     /// Set maximum number of features
     pub fn with_max_features(mut self, max_features: usize) -> Self {
         self.max_features = Some(max_features);
         self
     }
-    
+
     /// Set minimum document frequency
     pub fn with_min_df(mut self, min_df: f64) -> Self {
         self.min_df = min_df;
         self
     }
-    
+
     /// Set maximum document frequency
     pub fn with_max_df(mut self, max_df: f64) -> Self {
         self.max_df = max_df;
         self
     }
-    
+
     /// Set whether to convert to lowercase
     pub fn with_lowercase(mut self, lowercase: bool) -> Self {
         self.lowercase = lowercase;
         self
     }
-    
+
     /// Set custom token pattern
     pub fn with_token_pattern(mut self, pattern: &str) -> Result<Self> {
         self.token_pattern = Regex::new(pattern)
             .map_err(|e| TransformError::InvalidInput(format!("Invalid regex pattern: {}", e)))?;
         Ok(self)
     }
-    
+
     /// Set stop words
     pub fn with_stop_words(mut self, stop_words: Vec<String>) -> Self {
         self.stop_words = stop_words.into_iter().collect();
         self
     }
-    
+
     /// Tokenize a document
     fn tokenize(&self, doc: &str) -> Vec<String> {
         let text = if self.lowercase {
@@ -93,80 +93,84 @@ impl CountVectorizer {
         } else {
             doc.to_string()
         };
-        
+
         self.token_pattern
             .find_iter(&text)
             .map(|m| m.as_str().to_string())
             .filter(|token| !self.stop_words.contains(token))
             .collect()
     }
-    
+
     /// Fit the vectorizer on a collection of documents
     pub fn fit(&mut self, documents: &[String]) -> Result<()> {
         if documents.is_empty() {
-            return Err(TransformError::InvalidInput("Empty document collection".into()));
+            return Err(TransformError::InvalidInput(
+                "Empty document collection".into(),
+            ));
         }
-        
+
         // Count term frequencies across all documents
         let mut term_doc_freq: HashMap<String, usize> = HashMap::new();
         let n_docs = documents.len();
-        
+
         for doc in documents {
             let tokens: HashSet<String> = self.tokenize(doc).into_iter().collect();
             for token in tokens {
                 *term_doc_freq.entry(token).or_insert(0) += 1;
             }
         }
-        
+
         // Filter by document frequency
         let min_df_count = if self.min_df <= 1.0 {
             self.min_df as usize
         } else {
             (self.min_df * n_docs as f64).ceil() as usize
         };
-        
+
         let max_df_count = if self.max_df <= 1.0 {
             (self.max_df * n_docs as f64).floor() as usize
         } else {
             self.max_df as usize
         };
-        
+
         let mut filtered_terms: Vec<(String, usize)> = term_doc_freq
             .into_iter()
             .filter(|(_, freq)| *freq >= min_df_count && *freq <= max_df_count)
             .collect();
-        
+
         // Sort by document frequency (descending) for max_features selection
         filtered_terms.sort_by(|a, b| b.1.cmp(&a.1));
-        
+
         // Limit to max_features if specified
         if let Some(max_feat) = self.max_features {
             filtered_terms.truncate(max_feat);
         }
-        
+
         // Build vocabulary
         self.vocabulary.clear();
         self.feature_names.clear();
-        
+
         for (idx, (term, _)) in filtered_terms.into_iter().enumerate() {
             self.vocabulary.insert(term.clone(), idx);
             self.feature_names.push(term);
         }
-        
+
         self.fitted = true;
         Ok(())
     }
-    
+
     /// Transform documents to count vectors
     pub fn transform(&self, documents: &[String]) -> Result<Array2<f64>> {
         if !self.fitted {
-            return Err(TransformError::NotFitted("CountVectorizer must be fitted before transform".into()));
+            return Err(TransformError::NotFitted(
+                "CountVectorizer must be fitted before transform".into(),
+            ));
         }
-        
+
         let n_samples = documents.len();
         let n_features = self.vocabulary.len();
         let mut result = Array2::zeros((n_samples, n_features));
-        
+
         for (i, doc) in documents.iter().enumerate() {
             let tokens = self.tokenize(doc);
             for token in tokens {
@@ -175,16 +179,16 @@ impl CountVectorizer {
                 }
             }
         }
-        
+
         Ok(result)
     }
-    
+
     /// Fit and transform in one step
     pub fn fit_transform(&mut self, documents: &[String]) -> Result<Array2<f64>> {
         self.fit(documents)?;
         self.transform(documents)
     }
-    
+
     /// Get feature names
     pub fn get_feature_names(&self) -> &[String] {
         &self.feature_names
@@ -225,61 +229,62 @@ impl TfidfVectorizer {
             sublinear_tf: false,
         }
     }
-    
+
     /// Set whether to use IDF weighting
     pub fn with_use_idf(mut self, use_idf: bool) -> Self {
         self.use_idf = use_idf;
         self
     }
-    
+
     /// Set whether to apply L2 normalization
     pub fn with_norm(mut self, norm: bool) -> Self {
         self.norm = norm;
         self
     }
-    
+
     /// Set whether to smooth IDF weights
     pub fn with_smooth_idf(mut self, smooth_idf: bool) -> Self {
         self.smooth_idf = smooth_idf;
         self
     }
-    
+
     /// Set whether to use sublinear term frequency
     pub fn with_sublinear_tf(mut self, sublinear_tf: bool) -> Self {
         self.sublinear_tf = sublinear_tf;
         self
     }
-    
+
     /// Configure the underlying count vectorizer
-    pub fn configure_count_vectorizer<F>(mut self, f: F) -> Self 
+    pub fn configure_count_vectorizer<F>(mut self, f: F) -> Self
     where
         F: FnOnce(CountVectorizer) -> CountVectorizer,
     {
         self.count_vectorizer = f(self.count_vectorizer);
         self
     }
-    
+
     /// Fit the vectorizer on documents
     pub fn fit(&mut self, documents: &[String]) -> Result<()> {
         // Fit count vectorizer
         self.count_vectorizer.fit(documents)?;
-        
+
         if self.use_idf {
             // Calculate IDF values
             let n_samples = documents.len() as f64;
             let n_features = self.count_vectorizer.vocabulary.len();
             let mut df = Array1::zeros(n_features);
-            
+
             // Count document frequencies
             for doc in documents {
-                let tokens: HashSet<String> = self.count_vectorizer.tokenize(doc).into_iter().collect();
+                let tokens: HashSet<String> =
+                    self.count_vectorizer.tokenize(doc).into_iter().collect();
                 for token in tokens {
                     if let Some(&idx) = self.count_vectorizer.vocabulary.get(&token) {
                         df[idx] += 1.0;
                     }
                 }
             }
-            
+
             // Calculate IDF
             if self.smooth_idf {
                 self.idf = df.mapv(|d: f64| ((n_samples + 1.0) / (d + 1.0)).ln() + 1.0);
@@ -287,20 +292,20 @@ impl TfidfVectorizer {
                 self.idf = df.mapv(|d: f64| (n_samples / d).ln() + 1.0);
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Transform documents to TF-IDF vectors
     pub fn transform(&self, documents: &[String]) -> Result<Array2<f64>> {
         // Get count vectors
         let mut X = self.count_vectorizer.transform(documents)?;
-        
+
         // Apply sublinear TF scaling
         if self.sublinear_tf {
             X.mapv_inplace(|v| if v > 0.0 { 1.0 + v.ln() } else { 0.0 });
         }
-        
+
         // Apply IDF weighting
         if self.use_idf {
             for i in 0..X.shape()[0] {
@@ -309,7 +314,7 @@ impl TfidfVectorizer {
                 }
             }
         }
-        
+
         // Apply L2 normalization
         if self.norm {
             for i in 0..X.shape()[0] {
@@ -320,16 +325,16 @@ impl TfidfVectorizer {
                 }
             }
         }
-        
+
         Ok(X)
     }
-    
+
     /// Fit and transform in one step
     pub fn fit_transform(&mut self, documents: &[String]) -> Result<Array2<f64>> {
         self.fit(documents)?;
         self.transform(documents)
     }
-    
+
     /// Get feature names
     pub fn get_feature_names(&self) -> &[String] {
         self.count_vectorizer.get_feature_names()
@@ -367,32 +372,32 @@ impl HashingVectorizer {
             norm: Some("l2".to_string()),
         }
     }
-    
+
     /// Set whether to use binary occurrence
     pub fn with_binary(mut self, binary: bool) -> Self {
         self.binary = binary;
         self
     }
-    
+
     /// Set normalization method
     pub fn with_norm(mut self, norm: Option<String>) -> Self {
         self.norm = norm;
         self
     }
-    
+
     /// Set whether to convert to lowercase
     pub fn with_lowercase(mut self, lowercase: bool) -> Self {
         self.lowercase = lowercase;
         self
     }
-    
+
     /// Hash a token to a feature index
     fn hash_token(&self, token: &str) -> usize {
         let mut hasher = AHasher::default();
         token.hash(&mut hasher);
         (hasher.finish() as usize) % self.n_features
     }
-    
+
     /// Tokenize a document
     fn tokenize(&self, doc: &str) -> Vec<String> {
         let text = if self.lowercase {
@@ -400,27 +405,25 @@ impl HashingVectorizer {
         } else {
             doc.to_string()
         };
-        
+
         self.token_pattern
             .find_iter(&text)
             .map(|m| m.as_str().to_string())
             .collect()
     }
-    
+
     /// Transform documents to hashed feature vectors
     pub fn transform(&self, documents: &[String]) -> Result<Array2<f64>> {
         let n_samples = documents.len();
         let mut result = Array2::zeros((n_samples, self.n_features));
-        
+
         for (i, doc) in documents.iter().enumerate() {
             let tokens = self.tokenize(doc);
-            
+
             if self.binary {
-                let unique_indices: HashSet<usize> = tokens
-                    .iter()
-                    .map(|token| self.hash_token(token))
-                    .collect();
-                
+                let unique_indices: HashSet<usize> =
+                    tokens.iter().map(|token| self.hash_token(token)).collect();
+
                 for idx in unique_indices {
                     result[[i, idx]] = 1.0;
                 }
@@ -430,7 +433,7 @@ impl HashingVectorizer {
                     result[[i, idx]] += 1.0;
                 }
             }
-            
+
             // Apply normalization
             if let Some(ref norm_type) = self.norm {
                 let row = result.row(i).to_owned();
@@ -439,13 +442,13 @@ impl HashingVectorizer {
                     "l2" => (row.dot(&row) as f64).sqrt(),
                     _ => continue,
                 };
-                
+
                 if norm_value > 0.0 {
                     result.row_mut(i).mapv_inplace(|v| v / norm_value);
                 }
             }
         }
-        
+
         Ok(result)
     }
 }
@@ -478,13 +481,13 @@ impl StreamingCountVectorizer {
             token_pattern: Regex::new(r"\b\w+\b").unwrap(),
         }
     }
-    
+
     /// Set maximum vocabulary size
     pub fn with_max_features(mut self, max_features: usize) -> Self {
         self.max_features = Some(max_features);
         self
     }
-    
+
     /// Tokenize a document
     fn tokenize(&self, doc: &str) -> Vec<String> {
         let text = if self.lowercase {
@@ -492,34 +495,35 @@ impl StreamingCountVectorizer {
         } else {
             doc.to_string()
         };
-        
+
         self.token_pattern
             .find_iter(&text)
             .map(|m| m.as_str().to_string())
             .collect()
     }
-    
+
     /// Update vocabulary with new documents
     pub fn partial_fit(&mut self, documents: &[String]) -> Result<()> {
         for doc in documents {
             self.n_docs_seen += 1;
             let tokens: HashSet<String> = self.tokenize(doc).into_iter().collect();
-            
+
             for token in tokens {
                 *self.doc_freq.entry(token.clone()).or_insert(0) += 1;
-                
+
                 if !self.vocabulary.contains_key(&token) {
                     if let Some(max_feat) = self.max_features {
                         if self.vocabulary.len() >= max_feat {
                             // Find least frequent term to replace
-                            if let Some((min_token, _)) = self.vocabulary
+                            if let Some((min_token, _)) = self
+                                .vocabulary
                                 .iter()
                                 .min_by_key(|(t, _)| self.doc_freq.get(*t).unwrap_or(&0))
                             {
                                 let min_token = min_token.clone();
                                 let min_freq = self.doc_freq.get(&min_token).unwrap_or(&0);
                                 let new_freq = self.doc_freq.get(&token).unwrap_or(&0);
-                                
+
                                 if new_freq > min_freq {
                                     let old_idx = self.vocabulary.remove(&min_token).unwrap();
                                     self.vocabulary.insert(token, old_idx);
@@ -534,21 +538,23 @@ impl StreamingCountVectorizer {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Transform documents using current vocabulary
     pub fn transform(&self, documents: &[String]) -> Result<Array2<f64>> {
         let n_samples = documents.len();
         let n_features = self.vocabulary.len();
-        
+
         if n_features == 0 {
-            return Err(TransformError::NotFitted("No vocabulary learned yet".into()));
+            return Err(TransformError::NotFitted(
+                "No vocabulary learned yet".into(),
+            ));
         }
-        
+
         let mut result = Array2::zeros((n_samples, n_features));
-        
+
         for (i, doc) in documents.iter().enumerate() {
             let tokens = self.tokenize(doc);
             for token in tokens {
@@ -557,7 +563,7 @@ impl StreamingCountVectorizer {
                 }
             }
         }
-        
+
         Ok(result)
     }
 }

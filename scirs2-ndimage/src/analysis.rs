@@ -14,6 +14,30 @@ use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{gaussian_filter, sobel, BorderMode};
 use crate::measurements::{center_of_mass, moments};
 
+/// Helper function for safe conversion of hardcoded constants
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
+/// Helper function for safe usize conversion
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
+    T::from_usize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+    })
+}
+
+/// Helper function for safe float to usize conversion
+fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
+    value.to_usize().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert float to usize".to_string())
+    })
+}
+
 /// Comprehensive image quality metrics
 #[derive(Debug, Clone)]
 pub struct ImageQualityMetrics<T> {
@@ -144,7 +168,7 @@ where
         ));
     }
 
-    let psnr = T::from_f64(20.0).unwrap() * (max_val * max_val / mse).log10();
+    let psnr = safe_f64_to_float(20.0)? * (max_val * max_val / mse).log10();
     Ok(psnr)
 }
 
@@ -157,11 +181,11 @@ where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
 {
     // SSIM constants
-    let c1 = T::from_f64(0.01).unwrap() * T::from_f64(0.01).unwrap(); // (K1 * L)^2
-    let c2 = T::from_f64(0.03).unwrap() * T::from_f64(0.03).unwrap(); // (K2 * L)^2
+    let c1 = safe_f64_to_float(0.01)? * safe_f64_to_float(0.01)?; // (K1 * L)^2
+    let c2 = safe_f64_to_float(0.03)? * safe_f64_to_float(0.03)?; // (K2 * L)^2
 
     // Apply Gaussian filter for local statistics
-    let sigma = vec![T::from_f64(1.5).unwrap(), T::from_f64(1.5).unwrap()];
+    let sigma = vec![safe_f64_to_float(1.5)?, safe_f64_to_float(1.5)?];
 
     let ref_filtered = gaussian_filter(reference.to_owned(), &sigma, None, None, None)?;
     let test_filtered = gaussian_filter(test_image.to_owned(), &sigma, None, None, None)?;
@@ -187,11 +211,11 @@ where
     let covar = Zip::from(&ref_filtered)
         .and(&test_filtered)
         .fold(T::zero(), |acc, &r, &t| acc + (r - mu1) * (t - mu2))
-        / T::from_usize(ref_filtered.len()).unwrap();
+        / safe_usize_to_float(ref_filtered.len())?;
 
     // Compute SSIM
     let numerator =
-        (T::from_f64(2.0).unwrap() * mu1_mu2 + c1) * (T::from_f64(2.0).unwrap() * covar + c2);
+        (safe_f64_to_float(2.0)? * mu1_mu2 + c1) * (safe_f64_to_float(2.0)? * covar + c2);
     let denominator = (mu1_sq + mu2_sq + c1) * (ref_var + test_var + c2);
 
     if denominator <= T::zero() {
@@ -213,7 +237,7 @@ where
             acc + diff * diff
         });
 
-    diff_sq / T::from_usize(reference.len()).unwrap()
+    diff_sq / safe_usize_to_float(reference.len()).unwrap_or(T::one())
 }
 
 /// Compute Mean Absolute Error
@@ -225,7 +249,7 @@ where
         .and(test_image)
         .fold(T::zero(), |acc, &r, &t| acc + (r - t).abs());
 
-    abs_diff / T::from_usize(reference.len()).unwrap()
+    abs_diff / safe_usize_to_float(reference.len()).unwrap_or(T::one())
 }
 
 /// Compute Signal-to-Noise Ratio
@@ -292,21 +316,21 @@ where
     // Create histogram
     let mut histogram = vec![0usize; BINS];
     let range = max_val - min_val;
-    let bin_size = range / T::from_usize(BINS).unwrap();
+    let bin_size = range / safe_usize_to_float(BINS)?;
 
     for &pixel in image.iter() {
         let normalized = (pixel - min_val) / bin_size;
-        let bin_idx = normalized.to_usize().unwrap_or(0).min(BINS - 1);
+        let bin_idx = safe_float_to_usize(normalized).unwrap_or(0).min(BINS - 1);
         histogram[bin_idx] += 1;
     }
 
     // Compute entropy
-    let total_pixels = T::from_usize(image.len()).unwrap();
+    let total_pixels = safe_usize_to_float(image.len())?;
     let mut entropy = T::zero();
 
     for &count in &histogram {
         if count > 0 {
-            let probability = T::from_usize(count).unwrap() / total_pixels;
+            let probability = safe_usize_to_float(count)? / total_pixels;
             entropy = entropy - probability * probability.log2();
         }
     }
@@ -327,7 +351,7 @@ where
             -T::one(),
             T::zero(),
             -T::one(),
-            T::from_f64(4.0).unwrap(),
+            safe_f64_to_float(4.0)?,
             -T::one(),
             T::zero(),
             -T::one(),
@@ -377,7 +401,7 @@ where
                 }
             }
 
-            let local_mean = local_sum / T::from_usize(local_count).unwrap();
+            let local_mean = local_sum / safe_usize_to_float(local_count)?;
 
             // Compute local variance
             let mut variance_sum = T::zero();
@@ -390,13 +414,13 @@ where
                 }
             }
 
-            let local_variance = variance_sum / T::from_usize(local_count).unwrap();
+            let local_variance = variance_sum / safe_usize_to_float(local_count)?;
             total_variance = total_variance + local_variance;
             count += 1;
         }
     }
 
-    Ok(total_variance / T::from_usize(count).unwrap())
+    Ok(total_variance / safe_usize_to_float(count)?)
 }
 
 /// Perform comprehensive texture analysis
@@ -475,7 +499,7 @@ where
         }
     }
 
-    let norm_factor = T::from_usize(count).unwrap();
+    let norm_factor = safe_usize_to_float(count)?;
     Ok((
         contrast / norm_factor,
         dissimilarity / norm_factor,
@@ -530,7 +554,7 @@ where
         }
     }
 
-    Ok(T::from_usize(uniform_patterns).unwrap() / T::from_usize(total_patterns).unwrap())
+    Ok(safe_usize_to_float(uniform_patterns)? / safe_usize_to_float(total_patterns)?)
 }
 
 /// Compute Gabor filter texture features
@@ -549,10 +573,10 @@ where
 
     for &orientation in &orientations {
         let params = crate::filters::advanced::GaborParams {
-            wavelength: T::from_f64(8.0).unwrap(),
-            orientation: T::from_f64(orientation).unwrap(),
-            sigma_x: T::from_f64(2.0).unwrap(),
-            sigma_y: T::from_f64(2.0).unwrap(),
+            wavelength: safe_f64_to_float(8.0)?,
+            orientation: safe_f64_to_float(orientation)?,
+            sigma_x: safe_f64_to_float(2.0)?,
+            sigma_y: safe_f64_to_float(2.0)?,
             phase: T::zero(),
             aspect_ratio: None,
         };
@@ -566,13 +590,13 @@ where
         .iter()
         .cloned()
         .fold(T::zero(), |acc, x| acc + x)
-        / T::from_usize(all_responses.len()).unwrap();
+        / safe_usize_to_float(all_responses.len())?;
 
     let variance = all_responses
         .iter()
         .map(|&x| (x - mean) * (x - mean))
         .fold(T::zero(), |acc, x| acc + x)
-        / T::from_usize(all_responses.len()).unwrap();
+        / safe_usize_to_float(all_responses.len())?;
 
     let std_dev = variance.sqrt();
 
@@ -586,7 +610,7 @@ where
 {
     // Convert to binary edge image for fractal analysis
     let edges = sobel(&image.to_owned(), None)?;
-    let threshold = edges.mean().unwrap_or(T::zero()) * T::from_f64(2.0).unwrap();
+    let threshold = edges.mean().unwrap_or(T::zero()) * safe_f64_to_float(2.0)?;
 
     let (height, width) = edges.dim();
     let min_dim = height.min(width);
@@ -631,7 +655,7 @@ where
 
     // Linear regression to estimate fractal dimension
     if log_scales.len() < 2 {
-        return Ok(T::from_f64(1.5).unwrap()); // Default fractal dimension
+        return Ok(safe_f64_to_float(1.5)?); // Default fractal dimension
     }
 
     let n = log_scales.len() as f64;
@@ -647,7 +671,7 @@ where
     let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
     let fractal_dim = -slope; // Negative of slope gives fractal dimension
 
-    Ok(T::from_f64(fractal_dim).unwrap())
+    Ok(safe_f64_to_float(fractal_dim)?)
 }
 
 /// High-performance SIMD-optimized image quality assessment for large arrays
@@ -867,13 +891,13 @@ where
 
     // Create histogram in parallel
     let range = max_val - min_val;
-    let bin_size = range / T::from_usize(BINS).unwrap();
+    let bin_size = range / safe_usize_to_float(BINS)?;
 
     let histogram = image
         .iter()
         .parallel_map(|&pixel| {
             let normalized = (pixel - min_val) / bin_size;
-            normalized.to_usize().unwrap_or(0).min(BINS - 1)
+            safe_float_to_usize(normalized).unwrap_or(0).min(BINS - 1)
         })
         .fold(
             || vec![0usize; BINS],
@@ -893,12 +917,12 @@ where
         );
 
     // Compute entropy
-    let total_pixels = T::from_usize(image.len()).unwrap();
+    let total_pixels = safe_usize_to_float(image.len())?;
     let entropy = histogram
         .iter()
         .filter(|&&count| count > 0)
         .map(|&count| {
-            let probability = T::from_usize(count).unwrap() / total_pixels;
+            let probability = safe_usize_to_float(count).unwrap_or(T::zero()) / total_pixels;
             -probability * probability.log2()
         })
         .fold(T::zero(), |acc, x| acc + x);
@@ -1001,13 +1025,13 @@ where
                     .iter()
                     .cloned()
                     .fold(T::zero(), |acc, x| acc + x)
-                    / T::from_usize(window_values.len()).unwrap();
+                    / safe_usize_to_float(window_values.len())?;
 
                 let variance = window_values
                     .iter()
                     .map(|&x| (x - mean) * (x - mean))
                     .fold(T::zero(), |acc, x| acc + x)
-                    / T::from_usize(window_values.len()).unwrap();
+                    / safe_usize_to_float(window_values.len())?;
 
                 // Local entropy (simplified)
                 let min_val = window_values.iter().cloned().fold(T::infinity(), T::min);
@@ -1019,7 +1043,7 @@ where
                     // Simplified entropy calculation
                     let normalized_variance =
                         variance / ((max_val - min_val) * (max_val - min_val));
-                    normalized_variance.ln() * T::from_f64(0.5).unwrap()
+                    normalized_variance.ln() * safe_f64_to_float(0.5)?
                 } else {
                     T::zero()
                 };
@@ -1118,8 +1142,8 @@ mod tests {
         let uniform_img = array![[1.0, 1.0], [1.0, 1.0]];
         let varied_img = array![[0.0, 1.0], [0.5, 0.8]];
 
-        let uniform_entropy = image_entropy(&uniform_img.view()).unwrap();
-        let varied_entropy = image_entropy(&varied_img.view()).unwrap();
+        let uniform_entropy = image_entropy(&uniform_img.view()).expect("image_entropy should succeed for uniform image");
+        let varied_entropy = image_entropy(&varied_img.view()).expect("image_entropy should succeed for varied image");
 
         assert!(varied_entropy > uniform_entropy);
     }
@@ -1128,7 +1152,7 @@ mod tests {
     fn test_image_sharpness() {
         let sharp_img = array![[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]];
 
-        let sharpness = image_sharpness(&sharp_img.view()).unwrap();
+        let sharpness = image_sharpness(&sharp_img.view()).expect("image_sharpness should succeed for sharp image");
         assert!(sharpness > 0.0);
     }
 
@@ -1137,8 +1161,8 @@ mod tests {
         let high_snr = array![[10.0, 10.1], [9.9, 10.0]];
         let low_snr = array![[5.0, 15.0], [1.0, 20.0]];
 
-        let snr_high = signal_to_noise_ratio(&high_snr.view()).unwrap();
-        let snr_low = signal_to_noise_ratio(&low_snr.view()).unwrap();
+        let snr_high = signal_to_noise_ratio(&high_snr.view()).expect("signal_to_noise_ratio should succeed for high SNR image");
+        let snr_low = signal_to_noise_ratio(&low_snr.view()).expect("signal_to_noise_ratio should succeed for low SNR image");
 
         assert!(snr_high > snr_low);
     }
@@ -1148,7 +1172,7 @@ mod tests {
         let image = Array2::from_elem((64, 64), 1.0);
         let config = MultiScaleConfig::default();
 
-        let results = multi_scale_analysis(&image.view(), &config).unwrap();
+        let results = multi_scale_analysis(&image.view(), &config).expect("multi_scale_analysis should succeed for test image");
         assert!(!results.is_empty());
         assert!(results.len() <= config.num_scales);
     }

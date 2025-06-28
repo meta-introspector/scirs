@@ -227,7 +227,7 @@ fn credible_interval_example() -> Result<()> {
 
     for &level in &credible_levels {
         let ci_calc = CredibleIntervalCalculator::new()
-            .with_credible_level(level)
+            .with_credible_level(level)?
             .with_null_value(0.0); // Test if effect is significantly different from 0
 
         let results = ci_calc.calculate_intervals(&posterior_samples)?;

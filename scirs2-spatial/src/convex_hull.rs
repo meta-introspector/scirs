@@ -1024,10 +1024,15 @@ impl ConvexHull {
             _ => {
                 // Higher dimensions: compute surface hypervolume using facet equations
                 if let Some(equations) = &self.equations {
-                    Self::compute_high_dim_surface_area(&self.points, &self.vertex_indices, equations)
+                    Self::compute_high_dim_surface_area(
+                        &self.points,
+                        &self.vertex_indices,
+                        equations,
+                    )
                 } else {
                     Err(SpatialError::NotImplementedError(
-                        "Surface area computation for dimensions > 3 requires facet equations".to_string(),
+                        "Surface area computation for dimensions > 3 requires facet equations"
+                            .to_string(),
                     ))
                 }
             }
@@ -1220,17 +1225,17 @@ impl ConvexHull {
     ) -> SpatialResult<f64> {
         let ndim = points.ncols();
         let nfacets = equations.nrows();
-        
+
         if nfacets == 0 {
             return Ok(0.0);
         }
-        
+
         // For high-dimensional convex hulls, we use the divergence theorem:
         // V = (1/d) * Σ(A_i * h_i)
         // where A_i is the area of facet i and h_i is the distance from origin to facet i
-        
+
         let mut total_volume = 0.0;
-        
+
         // Find a point inside the hull (centroid of vertices)
         let mut centroid = vec![0.0; ndim];
         for &vertex_idx in vertex_indices {
@@ -1241,7 +1246,7 @@ impl ConvexHull {
         for item in centroid.iter_mut().take(ndim) {
             *item /= vertex_indices.len() as f64;
         }
-        
+
         // Process each facet
         for facet_idx in 0..nfacets {
             // Extract normal vector and offset from equation
@@ -1250,55 +1255,59 @@ impl ConvexHull {
                 normal[d] = equations[[facet_idx, d]];
             }
             let offset = equations[[facet_idx, ndim]];
-            
+
             // Normalize the normal vector
             let normal_length = (normal.iter().map(|x| x * x).sum::<f64>()).sqrt();
             if normal_length < 1e-12 {
                 continue; // Skip degenerate facets
             }
-            
+
             for item in normal.iter_mut().take(ndim) {
                 *item /= normal_length;
             }
             let normalized_offset = offset / normal_length;
-            
+
             // Distance from centroid to facet plane
-            let distance_to_centroid: f64 = normal.iter().zip(centroid.iter())
-                .map(|(n, c)| n * c).sum::<f64>() + normalized_offset;
-            
+            let distance_to_centroid: f64 = normal
+                .iter()
+                .zip(centroid.iter())
+                .map(|(n, c)| n * c)
+                .sum::<f64>()
+                + normalized_offset;
+
             // For volume computation, we need to use the absolute distance
             // The contribution of this facet to the volume calculation
             let height = distance_to_centroid.abs();
-            
+
             // For high-dimensional case, we approximate the facet area
             // This is a simplified approach - a full implementation would compute exact facet areas
             let facet_area = Self::estimate_facet_area(points, vertex_indices, facet_idx, ndim)?;
-            
+
             // Add this facet's contribution to the total volume
             total_volume += facet_area * height;
         }
-        
+
         // Final volume is divided by dimension
         let volume = total_volume / (ndim as f64);
-        
+
         Ok(volume)
     }
-    
+
     /// Estimate the area of a facet in high dimensions
     /// This is a simplified approach that works for well-formed convex hulls
     fn estimate_facet_area(
         points: &Array2<f64>,
-        vertex_indices: &[usize], 
+        vertex_indices: &[usize],
         _facet_idx: usize,
         ndim: usize,
     ) -> SpatialResult<f64> {
         // For high dimensions, computing exact facet areas is complex
         // We use a simplified estimation based on the convex hull size
-        
+
         // Calculate the bounding box volume as a reference
         let mut min_coords = vec![f64::INFINITY; ndim];
         let mut max_coords = vec![f64::NEG_INFINITY; ndim];
-        
+
         for &vertex_idx in vertex_indices {
             for d in 0..ndim {
                 let coord = points[[vertex_idx, d]];
@@ -1306,7 +1315,7 @@ impl ConvexHull {
                 max_coords[d] = max_coords[d].max(coord);
             }
         }
-        
+
         // Calculate the characteristic size of the hull
         let mut size_product = 1.0;
         for d in 0..ndim {
@@ -1315,11 +1324,12 @@ impl ConvexHull {
                 size_product *= size;
             }
         }
-        
+
         // Estimate facet area as a fraction of the hull's characteristic area
         // This is approximate but provides reasonable results for well-formed hulls
-        let estimated_area = size_product.powf((ndim - 1) as f64 / ndim as f64) / vertex_indices.len() as f64;
-        
+        let estimated_area =
+            size_product.powf((ndim - 1) as f64 / ndim as f64) / vertex_indices.len() as f64;
+
         Ok(estimated_area)
     }
 
@@ -1331,19 +1341,19 @@ impl ConvexHull {
     ) -> SpatialResult<f64> {
         let ndim = points.ncols();
         let nfacets = equations.nrows();
-        
+
         if nfacets == 0 {
             return Ok(0.0);
         }
-        
+
         let mut total_surface_area = 0.0;
-        
+
         // Sum the areas of all facets
         for facet_idx in 0..nfacets {
             let facet_area = Self::estimate_facet_area(points, vertex_indices, facet_idx, ndim)?;
             total_surface_area += facet_area;
         }
-        
+
         Ok(total_surface_area)
     }
 

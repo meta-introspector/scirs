@@ -50,6 +50,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///
 /// # Examples
 ///
+/// ## Basic 2D erosion
 /// ```
 /// use ndarray::Array2;
 /// use scirs2_ndimage::morphology::binary_erosion;
@@ -57,11 +58,82 @@ use crate::error::{NdimageError, NdimageResult};
 /// // Create a simple 3x3 array filled with true values
 /// let input = Array2::from_elem((3, 3), true);
 ///
-/// // Erode the array
+/// // Erode the array with default 3x3 structuring element
 /// let result = binary_erosion(&input, None, None, None, None, None, None).unwrap();
 ///
 /// // The center of the eroded array is still true, but the border elements may be eroded
 /// assert!(result[[1, 1]]);
+/// ```
+///
+/// ## Custom structuring element
+/// ```
+/// use ndarray::{Array2, array};
+/// use scirs2_ndimage::morphology::binary_erosion;
+///
+/// let input = array![
+///     [true,  true,  true,  true,  true],
+///     [true,  true,  true,  true,  true],
+///     [true,  true,  true,  true,  true],
+///     [true,  true,  true,  true,  true],
+///     [true,  true,  true,  true,  true]
+/// ];
+///
+/// // Create a cross-shaped structuring element
+/// let structure = array![
+///     [false, true,  false],
+///     [true,  true,  true],
+///     [false, true,  false]
+/// ];
+///
+/// let result = binary_erosion(&input, Some(&structure), None, None, None, None, None).unwrap();
+/// // Only pixels where the entire cross fits will remain true
+/// ```
+///
+/// ## Multiple iterations for heavy erosion
+/// ```
+/// use ndarray::Array2;
+/// use scirs2_ndimage::morphology::binary_erosion;
+///
+/// // Create a larger filled region
+/// let input = Array2::from_elem((10, 10), true);
+///
+/// // Apply erosion multiple times to shrink the region significantly
+/// let heavily_eroded = binary_erosion(&input, None, Some(3), None, None, None, None).unwrap();
+///
+/// // The object will be much smaller after 3 iterations
+/// assert_eq!(heavily_eroded.shape(), input.shape());
+/// ```
+///
+/// ## Using a mask to limit erosion area
+/// ```
+/// use ndarray::{Array2, array};
+/// use scirs2_ndimage::morphology::binary_erosion;
+///
+/// let input = Array2::from_elem((5, 5), true);
+///
+/// // Create a mask that only allows erosion in the center region
+/// let mask = array![
+///     [false, false, false, false, false],
+///     [false, true,  true,  true,  false],
+///     [false, true,  true,  true,  false],
+///     [false, true,  true,  true,  false],
+///     [false, false, false, false, false]
+/// ];
+///
+/// let masked_erosion = binary_erosion(&input, None, None, Some(&mask), None, None, None).unwrap();
+/// // Erosion only occurs within the masked region
+/// ```
+///
+/// ## 1D signal processing
+/// ```
+/// use ndarray::Array1;
+/// use scirs2_ndimage::morphology::binary_erosion;
+///
+/// let signal = Array1::from_vec(vec![false, true, true, true, false]);
+/// let eroded = binary_erosion(&signal, None, None, None, None, None, None).unwrap();
+///
+/// // The signal will be eroded from the edges inward
+/// assert_eq!(eroded.len(), signal.len());
 /// ```
 pub fn binary_erosion<D>(
     input: &Array<bool, D>,

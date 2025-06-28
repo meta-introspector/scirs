@@ -7,15 +7,15 @@
 //! - Hamiltonian Monte Carlo
 //! - Advanced methods (Multiple-try Metropolis, Parallel Tempering, Slice Sampling, Ensemble Methods)
 
-mod metropolis;
+mod advanced;
 mod gibbs;
 mod hamiltonian;
-mod advanced;
+mod metropolis;
 
-pub use metropolis::*;
+pub use advanced::*;
 pub use gibbs::*;
 pub use hamiltonian::*;
-pub use advanced::*;
+pub use metropolis::*;
 
 #[allow(unused_imports)]
 use crate::error::StatsResult as Result;

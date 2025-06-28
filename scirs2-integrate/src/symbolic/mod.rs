@@ -7,13 +7,13 @@
 //! - Conservation law detection and enforcement
 //! - Symbolic simplification for performance optimization
 
-pub mod jacobian;
-pub mod conversion;
 pub mod conservation;
+pub mod conversion;
 pub mod expression;
+pub mod jacobian;
 
 // Re-export main types and functions
-pub use jacobian::{SymbolicJacobian, generate_jacobian};
-pub use conversion::{higher_order_to_first_order, HigherOrderODE, FirstOrderSystem};
-pub use conservation::{ConservationLaw, detect_conservation_laws, ConservationEnforcer};
-pub use expression::{SymbolicExpression, Variable, simplify};
+pub use conservation::{detect_conservation_laws, ConservationEnforcer, ConservationLaw};
+pub use conversion::{higher_order_to_first_order, FirstOrderSystem, HigherOrderODE};
+pub use expression::{simplify, SymbolicExpression, Variable};
+pub use jacobian::{generate_jacobian, SymbolicJacobian};

@@ -89,6 +89,24 @@ where
 
         Ok(CirculantMatrix { first_row, n })
     }
+
+    /// Get a view of the first row of the circulant matrix
+    ///
+    /// # Returns
+    ///
+    /// An ArrayView1 of the first row
+    pub fn first_row(&self) -> ndarray::ArrayView1<A> {
+        self.first_row.view()
+    }
+
+    /// Get the size of the circulant matrix
+    ///
+    /// # Returns
+    ///
+    /// The size (number of rows/columns) of the matrix
+    pub fn size(&self) -> usize {
+        self.n
+    }
 }
 
 impl<A> StructuredMatrix<A> for CirculantMatrix<A>

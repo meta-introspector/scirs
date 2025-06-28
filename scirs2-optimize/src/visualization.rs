@@ -4,8 +4,8 @@
 //! processes, including trajectory plotting, convergence analysis, and parameter
 //! surface visualization.
 
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::error::{ScirsError, ScirsResult};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
@@ -70,7 +70,8 @@ impl OptimizationTrajectory {
 
     /// Add custom metric
     pub fn add_custom_metric(&mut self, name: &str, value: f64) {
-        self.custom_metrics.entry(name.to_string())
+        self.custom_metrics
+            .entry(name.to_string())
             .or_insert_with(Vec::new)
             .push(value);
     }
@@ -104,7 +105,7 @@ impl OptimizationTrajectory {
         let n = self.function_values.len();
         let mut rates = Vec::new();
 
-        for i in 1..(n-1) {
+        for i in 1..(n - 1) {
             let f_current = self.function_values[i];
             let f_next = self.function_values[i + 1];
             let f_prev = self.function_values[i - 1];
@@ -208,7 +209,11 @@ impl OptimizationVisualizer {
     }
 
     /// Plot convergence curve (function value vs iteration)
-    pub fn plot_convergence(&self, trajectory: &OptimizationTrajectory, output_path: &Path) -> ScirsResult<()> {
+    pub fn plot_convergence(
+        &self,
+        trajectory: &OptimizationTrajectory,
+        output_path: &Path,
+    ) -> ScirsResult<()> {
         if trajectory.is_empty() {
             return Err(ScirsError::InvalidInput("Empty trajectory".to_string()));
         }
@@ -217,19 +222,25 @@ impl OptimizationVisualizer {
             OutputFormat::Svg => self.plot_convergence_svg(trajectory, output_path),
             OutputFormat::Html => self.plot_convergence_html(trajectory, output_path),
             OutputFormat::Data => self.export_convergence_data(trajectory, output_path),
-            _ => Err(ScirsError::NotImplemented("PNG output not yet implemented".to_string())),
+            _ => Err(ScirsError::NotImplemented(
+                "PNG output not yet implemented".to_string(),
+            )),
         }
     }
 
     /// Plot parameter trajectory (for 2D problems)
-    pub fn plot_parameter_trajectory(&self, trajectory: &OptimizationTrajectory, output_path: &Path) -> ScirsResult<()> {
+    pub fn plot_parameter_trajectory(
+        &self,
+        trajectory: &OptimizationTrajectory,
+        output_path: &Path,
+    ) -> ScirsResult<()> {
         if trajectory.is_empty() {
             return Err(ScirsError::InvalidInput("Empty trajectory".to_string()));
         }
 
         if trajectory.parameters[0].len() != 2 {
             return Err(ScirsError::InvalidInput(
-                "Parameter trajectory visualization only supports 2D problems".to_string()
+                "Parameter trajectory visualization only supports 2D problems".to_string(),
             ));
         }
 
@@ -237,15 +248,17 @@ impl OptimizationVisualizer {
             OutputFormat::Svg => self.plot_trajectory_svg(trajectory, output_path),
             OutputFormat::Html => self.plot_trajectory_html(trajectory, output_path),
             OutputFormat::Data => self.export_trajectory_data(trajectory, output_path),
-            _ => Err(ScirsError::NotImplemented("PNG output not yet implemented".to_string())),
+            _ => Err(ScirsError::NotImplemented(
+                "PNG output not yet implemented".to_string(),
+            )),
         }
     }
 
     /// Create a comprehensive optimization report
     pub fn create_optimization_report(
-        &self, 
-        trajectory: &OptimizationTrajectory, 
-        output_dir: &Path
+        &self,
+        trajectory: &OptimizationTrajectory,
+        output_dir: &Path,
     ) -> ScirsResult<()> {
         std::fs::create_dir_all(output_dir)?;
 
@@ -271,7 +284,11 @@ impl OptimizationVisualizer {
     }
 
     /// Generate summary statistics report
-    fn generate_summary_report(&self, trajectory: &OptimizationTrajectory, output_path: &Path) -> ScirsResult<()> {
+    fn generate_summary_report(
+        &self,
+        trajectory: &OptimizationTrajectory,
+        output_path: &Path,
+    ) -> ScirsResult<()> {
         let mut file = File::create(output_path)?;
 
         let html_content = format!(
@@ -313,8 +330,8 @@ impl OptimizationVisualizer {
             trajectory.len(),
             trajectory.final_function_value().unwrap_or(0.0),
             trajectory.function_values.first().cloned().unwrap_or(0.0),
-            trajectory.function_values.first().cloned().unwrap_or(0.0) - 
-                trajectory.final_function_value().unwrap_or(0.0),
+            trajectory.function_values.first().cloned().unwrap_or(0.0)
+                - trajectory.final_function_value().unwrap_or(0.0),
             trajectory.times.last().cloned().unwrap_or(0.0),
             if !trajectory.gradient_norms.is_empty() {
                 format!("<div class=\"metric\">Final Gradient Norm: <span class=\"value\">{:.6e}</span></div>",
@@ -322,7 +339,8 @@ impl OptimizationVisualizer {
             } else {
                 String::new()
             },
-            trajectory.convergence_rate()
+            trajectory
+                .convergence_rate()
                 .map(|r| format!("{:.6f}", r))
                 .unwrap_or_else(|| "N/A".to_string()),
             if trajectory.len() > 1 && !trajectory.times.is_empty() {
@@ -330,7 +348,8 @@ impl OptimizationVisualizer {
             } else {
                 0.0
             },
-            if !trajectory.times.is_empty() && trajectory.times.last().cloned().unwrap_or(0.0) > 0.0 {
+            if !trajectory.times.is_empty() && trajectory.times.last().cloned().unwrap_or(0.0) > 0.0
+            {
                 trajectory.len() as f64 / trajectory.times.last().cloned().unwrap_or(1.0)
             } else {
                 0.0
@@ -348,13 +367,13 @@ impl OptimizationVisualizer {
         }
 
         let mut table = String::from("<h2>Custom Metrics</h2>\n<table>\n<tr><th>Metric</th><th>Final Value</th><th>Min</th><th>Max</th><th>Mean</th></tr>\n");
-        
+
         for (name, values) in &trajectory.custom_metrics {
             if let Some(final_val) = values.last() {
                 let min_val = values.iter().cloned().fold(f64::INFINITY, f64::min);
                 let max_val = values.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
                 let mean_val = values.iter().sum::<f64>() / values.len() as f64;
-                
+
                 table.push_str(&format!(
                     "<tr><td>{}</td><td>{:.6e}</td><td>{:.6e}</td><td>{:.6e}</td><td>{:.6e}</td></tr>\n",
                     name, final_val, min_val, max_val, mean_val
@@ -365,7 +384,11 @@ impl OptimizationVisualizer {
         table
     }
 
-    fn plot_convergence_svg(&self, trajectory: &OptimizationTrajectory, output_path: &Path) -> ScirsResult<()> {
+    fn plot_convergence_svg(
+        &self,
+        trajectory: &OptimizationTrajectory,
+        output_path: &Path,
+    ) -> ScirsResult<()> {
         let mut file = File::create(output_path)?;
 
         let width = self.config.width;
@@ -375,17 +398,35 @@ impl OptimizationVisualizer {
         let plot_height = height - 2 * margin;
 
         let min_y = if self.config.log_scale_y {
-            trajectory.function_values.iter().filter(|&&v| v > 0.0).cloned()
-                .fold(f64::INFINITY, f64::min).ln()
+            trajectory
+                .function_values
+                .iter()
+                .filter(|&&v| v > 0.0)
+                .cloned()
+                .fold(f64::INFINITY, f64::min)
+                .ln()
         } else {
-            trajectory.function_values.iter().cloned().fold(f64::INFINITY, f64::min)
+            trajectory
+                .function_values
+                .iter()
+                .cloned()
+                .fold(f64::INFINITY, f64::min)
         };
 
         let max_y = if self.config.log_scale_y {
-            trajectory.function_values.iter().filter(|&&v| v > 0.0).cloned()
-                .fold(f64::NEG_INFINITY, f64::max).ln()
+            trajectory
+                .function_values
+                .iter()
+                .filter(|&&v| v > 0.0)
+                .cloned()
+                .fold(f64::NEG_INFINITY, f64::max)
+                .ln()
         } else {
-            trajectory.function_values.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
+            trajectory
+                .function_values
+                .iter()
+                .cloned()
+                .fold(f64::NEG_INFINITY, f64::max)
         };
 
         let max_x = trajectory.iterations.len() as f64;
@@ -412,7 +453,10 @@ impl OptimizationVisualizer {
                 svg_content.push_str(&format!(
                     r#"    <line x1="{}" y1="{}" x2="{}" y2="{}" class="grid" />
 "#,
-                    x, margin, x, height - margin
+                    x,
+                    margin,
+                    x,
+                    height - margin
                 ));
             }
 
@@ -421,7 +465,10 @@ impl OptimizationVisualizer {
                 svg_content.push_str(&format!(
                     r#"    <line x1="{}" y1="{}" x2="{}" y2="{}" class="grid" />
 "#,
-                    margin, y, width - margin, y
+                    margin,
+                    y,
+                    width - margin,
+                    y
                 ));
             }
         }
@@ -431,8 +478,14 @@ impl OptimizationVisualizer {
             r#"    <line x1="{}" y1="{}" x2="{}" y2="{}" class="axis" />
     <line x1="{}" y1="{}" x2="{}" y2="{}" class="axis" />
 "#,
-            margin, height - margin, width - margin, height - margin, // x-axis
-            margin, margin, margin, height - margin // y-axis
+            margin,
+            height - margin,
+            width - margin,
+            height - margin, // x-axis
+            margin,
+            margin,
+            margin,
+            height - margin // y-axis
         ));
 
         // Plot line
@@ -444,8 +497,9 @@ impl OptimizationVisualizer {
             } else {
                 f_val
             };
-            let y = height as f64 - margin as f64 - 
-                ((y_val - min_y) / (max_y - min_y)) * plot_height as f64;
+            let y = height as f64
+                - margin as f64
+                - ((y_val - min_y) / (max_y - min_y)) * plot_height as f64;
             svg_content.push_str(&format!("{},{} ", x, y));
         }
         svg_content.push_str("\" class=\"line\" />\n");
@@ -455,7 +509,8 @@ impl OptimizationVisualizer {
             svg_content.push_str(&format!(
                 r#"    <text x="{}" y="30" text-anchor="middle" class="title">{}</text>
 "#,
-                width / 2, title
+                width / 2,
+                title
             ));
         }
 
@@ -475,7 +530,11 @@ impl OptimizationVisualizer {
         Ok(())
     }
 
-    fn plot_convergence_html(&self, trajectory: &OptimizationTrajectory, output_path: &Path) -> ScirsResult<()> {
+    fn plot_convergence_html(
+        &self,
+        trajectory: &OptimizationTrajectory,
+        output_path: &Path,
+    ) -> ScirsResult<()> {
         let mut file = File::create(output_path)?;
 
         let html_content = format!(
@@ -513,10 +572,27 @@ impl OptimizationVisualizer {
 </html>"#,
             self.config.width,
             self.config.height,
-            trajectory.iterations.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","),
-            trajectory.function_values.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(","),
-            self.config.title.as_deref().unwrap_or("Optimization Convergence"),
-            if self.config.log_scale_y { "log" } else { "linear" },
+            trajectory
+                .iterations
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<_>>()
+                .join(","),
+            trajectory
+                .function_values
+                .iter()
+                .map(|f| f.to_string())
+                .collect::<Vec<_>>()
+                .join(","),
+            self.config
+                .title
+                .as_deref()
+                .unwrap_or("Optimization Convergence"),
+            if self.config.log_scale_y {
+                "log"
+            } else {
+                "linear"
+            },
             self.config.show_legend
         );
 
@@ -524,7 +600,11 @@ impl OptimizationVisualizer {
         Ok(())
     }
 
-    fn plot_trajectory_svg(&self, trajectory: &OptimizationTrajectory, output_path: &Path) -> ScirsResult<()> {
+    fn plot_trajectory_svg(
+        &self,
+        trajectory: &OptimizationTrajectory,
+        output_path: &Path,
+    ) -> ScirsResult<()> {
         let mut file = File::create(output_path)?;
 
         let width = self.config.width;
@@ -565,7 +645,10 @@ impl OptimizationVisualizer {
                 svg_content.push_str(&format!(
                     r#"    <line x1="{}" y1="{}" x2="{}" y2="{}" class="grid" />
 "#,
-                    x, margin, x, height - margin
+                    x,
+                    margin,
+                    x,
+                    height - margin
                 ));
             }
 
@@ -574,7 +657,10 @@ impl OptimizationVisualizer {
                 svg_content.push_str(&format!(
                     r#"    <line x1="{}" y1="{}" x2="{}" y2="{}" class="grid" />
 "#,
-                    margin, y, width - margin, y
+                    margin,
+                    y,
+                    width - margin,
+                    y
                 ));
             }
         }
@@ -584,29 +670,40 @@ impl OptimizationVisualizer {
             r#"    <line x1="{}" y1="{}" x2="{}" y2="{}" class="axis" />
     <line x1="{}" y1="{}" x2="{}" y2="{}" class="axis" />
 "#,
-            margin, height - margin, width - margin, height - margin,
-            margin, margin, margin, height - margin
+            margin,
+            height - margin,
+            width - margin,
+            height - margin,
+            margin,
+            margin,
+            margin,
+            height - margin
         ));
 
         // Trajectory
         svg_content.push_str("    <polyline points=\"");
         for (x_val, y_val) in x_coords.iter().zip(y_coords.iter()) {
             let x = margin as f64 + ((x_val - min_x) / (max_x - min_x)) * plot_width as f64;
-            let y = height as f64 - margin as f64 - 
-                ((y_val - min_y) / (max_y - min_y)) * plot_height as f64;
+            let y = height as f64
+                - margin as f64
+                - ((y_val - min_y) / (max_y - min_y)) * plot_height as f64;
             svg_content.push_str(&format!("{},{} ", x, y));
         }
         svg_content.push_str("\" class=\"trajectory\" />\n");
 
         // Start and end points
         if !x_coords.is_empty() {
-            let start_x = margin as f64 + ((x_coords[0] - min_x) / (max_x - min_x)) * plot_width as f64;
-            let start_y = height as f64 - margin as f64 - 
-                ((y_coords[0] - min_y) / (max_y - min_y)) * plot_height as f64;
-            
-            let end_x = margin as f64 + ((x_coords.last().unwrap() - min_x) / (max_x - min_x)) * plot_width as f64;
-            let end_y = height as f64 - margin as f64 - 
-                ((y_coords.last().unwrap() - min_y) / (max_y - min_y)) * plot_height as f64;
+            let start_x =
+                margin as f64 + ((x_coords[0] - min_x) / (max_x - min_x)) * plot_width as f64;
+            let start_y = height as f64
+                - margin as f64
+                - ((y_coords[0] - min_y) / (max_y - min_y)) * plot_height as f64;
+
+            let end_x = margin as f64
+                + ((x_coords.last().unwrap() - min_x) / (max_x - min_x)) * plot_width as f64;
+            let end_y = height as f64
+                - margin as f64
+                - ((y_coords.last().unwrap() - min_y) / (max_y - min_y)) * plot_height as f64;
 
             svg_content.push_str(&format!(
                 r#"    <circle cx="{}" cy="{}" r="5" class="start" />
@@ -621,7 +718,8 @@ impl OptimizationVisualizer {
             svg_content.push_str(&format!(
                 r#"    <text x="{}" y="30" text-anchor="middle" class="title">{}</text>
 "#,
-                width / 2, title
+                width / 2,
+                title
             ));
         }
 
@@ -631,7 +729,11 @@ impl OptimizationVisualizer {
         Ok(())
     }
 
-    fn plot_trajectory_html(&self, trajectory: &OptimizationTrajectory, output_path: &Path) -> ScirsResult<()> {
+    fn plot_trajectory_html(
+        &self,
+        trajectory: &OptimizationTrajectory,
+        output_path: &Path,
+    ) -> ScirsResult<()> {
         let mut file = File::create(output_path)?;
 
         let x_coords: Vec<f64> = trajectory.parameters.iter().map(|p| p[0]).collect();
@@ -675,11 +777,34 @@ impl OptimizationVisualizer {
 </html>"#,
             self.config.width,
             self.config.height,
-            x_coords.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(","),
-            y_coords.iter().map(|y| y.to_string()).collect::<Vec<_>>().join(","),
-            (0..x_coords.len()).map(|i| if i == 0 { "10" } else if i == x_coords.len() - 1 { "10" } else { "6" }).collect::<Vec<_>>().join(","),
-            (0..x_coords.len()).map(|i| i.to_string()).collect::<Vec<_>>().join(","),
-            self.config.title.as_deref().unwrap_or("Parameter Trajectory"),
+            x_coords
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<_>>()
+                .join(","),
+            y_coords
+                .iter()
+                .map(|y| y.to_string())
+                .collect::<Vec<_>>()
+                .join(","),
+            (0..x_coords.len())
+                .map(|i| if i == 0 {
+                    "10"
+                } else if i == x_coords.len() - 1 {
+                    "10"
+                } else {
+                    "6"
+                })
+                .collect::<Vec<_>>()
+                .join(","),
+            (0..x_coords.len())
+                .map(|i| i.to_string())
+                .collect::<Vec<_>>()
+                .join(","),
+            self.config
+                .title
+                .as_deref()
+                .unwrap_or("Parameter Trajectory"),
             self.config.show_legend
         );
 
@@ -687,7 +812,11 @@ impl OptimizationVisualizer {
         Ok(())
     }
 
-    fn export_convergence_data(&self, trajectory: &OptimizationTrajectory, output_path: &Path) -> ScirsResult<()> {
+    fn export_convergence_data(
+        &self,
+        trajectory: &OptimizationTrajectory,
+        output_path: &Path,
+    ) -> ScirsResult<()> {
         let mut file = File::create(output_path)?;
 
         // CSV header
@@ -698,7 +827,7 @@ impl OptimizationVisualizer {
         if !trajectory.step_sizes.is_empty() {
             header.push_str(",step_size");
         }
-        
+
         // Add parameter columns
         if !trajectory.parameters.is_empty() {
             for i in 0..trajectory.parameters[0].len() {
@@ -716,10 +845,9 @@ impl OptimizationVisualizer {
 
         // Data rows
         for i in 0..trajectory.len() {
-            let mut row = format!("{},{},{}", 
-                trajectory.iterations[i], 
-                trajectory.function_values[i],
-                trajectory.times[i]
+            let mut row = format!(
+                "{},{},{}",
+                trajectory.iterations[i], trajectory.function_values[i], trajectory.times[i]
             );
 
             if i < trajectory.gradient_norms.len() {
@@ -759,7 +887,11 @@ impl OptimizationVisualizer {
         Ok(())
     }
 
-    fn export_trajectory_data(&self, trajectory: &OptimizationTrajectory, output_path: &Path) -> ScirsResult<()> {
+    fn export_trajectory_data(
+        &self,
+        trajectory: &OptimizationTrajectory,
+        output_path: &Path,
+    ) -> ScirsResult<()> {
         self.export_convergence_data(trajectory, output_path)
     }
 }
@@ -794,7 +926,8 @@ pub mod tracking {
         /// Record a new point in the optimization trajectory
         pub fn record(&mut self, iteration: usize, params: &ArrayView1<f64>, function_value: f64) {
             let elapsed = self.start_time.elapsed().as_secs_f64();
-            self.trajectory.add_point(iteration, params, function_value, elapsed);
+            self.trajectory
+                .add_point(iteration, params, function_value, elapsed);
         }
 
         /// Record gradient norm
@@ -842,7 +975,7 @@ mod tests {
 
         let params = array![1.0, 2.0];
         trajectory.add_point(0, &params.view(), 5.0, 0.1);
-        
+
         assert_eq!(trajectory.len(), 1);
         assert_eq!(trajectory.final_function_value(), Some(5.0));
     }
@@ -850,7 +983,7 @@ mod tests {
     #[test]
     fn test_convergence_rate_calculation() {
         let mut trajectory = OptimizationTrajectory::new();
-        
+
         // Add points with known convergence pattern
         let function_values = vec![10.0, 5.0, 2.5, 1.25, 0.625];
         for (i, &f_val) in function_values.iter().enumerate() {
@@ -886,14 +1019,14 @@ mod tests {
     #[test]
     fn test_trajectory_tracker() {
         let mut tracker = tracking::TrajectoryTracker::new();
-        
+
         let params1 = array![0.0, 0.0];
         let params2 = array![1.0, 1.0];
-        
+
         tracker.record(0, &params1.view(), 10.0);
         tracker.record_gradient_norm(2.5);
         tracker.record_step_size(0.1);
-        
+
         tracker.record(1, &params2.view(), 5.0);
         tracker.record_gradient_norm(1.5);
         tracker.record_step_size(0.2);

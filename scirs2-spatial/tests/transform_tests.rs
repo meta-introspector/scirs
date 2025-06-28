@@ -307,8 +307,16 @@ fn test_rotation_spline_angular_velocity() {
     let velocity_start = spline.angular_velocity(0.0).unwrap();
     let velocity_end = spline.angular_velocity(1.0).unwrap();
 
-    assert_relative_eq!((velocity_start.dot(&velocity_start)).sqrt(), 0.0, epsilon = 1e-10);
-    assert_relative_eq!((velocity_end.dot(&velocity_end)).sqrt(), 0.0, epsilon = 1e-10);
+    assert_relative_eq!(
+        (velocity_start.dot(&velocity_start)).sqrt(),
+        0.0,
+        epsilon = 1e-10
+    );
+    assert_relative_eq!(
+        (velocity_end.dot(&velocity_end)).sqrt(),
+        0.0,
+        epsilon = 1e-10
+    );
 
     // Test with cubic interpolation
     let mut cubic_spline = RotationSpline::new(&rotations, &times).unwrap();

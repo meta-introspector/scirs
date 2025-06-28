@@ -171,7 +171,9 @@ fn parallel_find_closest_clusters<
                 LinkageMethod::Centroid => {
                     Ok(centroid_linkage(cluster_i, cluster_j, centroids.unwrap()))
                 }
-                LinkageMethod::Median => Ok(median_linkage(cluster_i, cluster_j, centroids.unwrap())),
+                LinkageMethod::Median => {
+                    Ok(median_linkage(cluster_i, cluster_j, centroids.unwrap()))
+                }
                 LinkageMethod::Weighted => parallel_weighted_linkage(
                     &clusters[cluster_i],
                     &clusters[cluster_j],
@@ -215,7 +217,7 @@ pub(crate) fn parallel_single_linkage<F: Float + PartialOrd + Send + Sync>(
             Ok(min_dist)
         })
         .collect();
-        
+
     let min_distances = results?;
     Ok(min_distances
         .into_iter()
@@ -244,7 +246,7 @@ pub(crate) fn parallel_complete_linkage<F: Float + PartialOrd + Send + Sync>(
             Ok(max_dist)
         })
         .collect();
-        
+
     let max_distances = results?;
     Ok(max_distances
         .into_iter()
@@ -274,7 +276,7 @@ pub(crate) fn parallel_average_linkage<F: Float + FromPrimitive + Send + Sync>(
             Ok((sum, count))
         })
         .collect();
-        
+
     let sum_counts = results?;
     let (total_sum, total_count) = sum_counts
         .into_iter()
@@ -313,7 +315,7 @@ pub(crate) fn parallel_ward_linkage<F: Float + FromPrimitive + Send + Sync + std
             Ok(sum_squared)
         })
         .collect();
-        
+
     let squared_distances = results?;
     let sum_squared_dist: F = squared_distances.into_iter().sum();
 

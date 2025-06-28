@@ -219,62 +219,189 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
         self.config = config;
     }
 
-    fn compute_activations(&mut self, _input: &ArrayD<F>, _target_layers: &[String]) -> Result<()> {
-        // TODO: Implement activation computation
-        // This would run forward pass and capture intermediate activations
-        Err(NeuralError::NotImplementedError(
-            "Activation computation not yet implemented".to_string(),
-        ))
+    fn compute_activations(&mut self, input: &ArrayD<F>, target_layers: &[String]) -> Result<()> {
+        self.activation_cache.clear();
+        let mut current_output = input.clone();
+
+        // Store input if requested
+        if target_layers.is_empty() || target_layers.contains(&"input".to_string()) {
+            self.activation_cache
+                .insert("input".to_string(), input.clone());
+        }
+
+        // Run forward pass through each layer and capture activations
+        for (layer_idx, layer) in self.model.layers().iter().enumerate() {
+            current_output = layer.forward(&current_output)?;
+
+            let layer_name = format!("layer_{}", layer_idx);
+
+            // Store activation if this layer is requested or if no specific layers requested
+            if target_layers.is_empty() || target_layers.contains(&layer_name) {
+                self.activation_cache
+                    .insert(layer_name, current_output.clone());
+            }
+        }
+
+        Ok(())
     }
 
     fn generate_feature_maps(
         &self,
-        _options: &ActivationVisualizationOptions,
+        options: &ActivationVisualizationOptions,
     ) -> Result<Vec<PathBuf>> {
-        // TODO: Implement feature map generation
-        Err(NeuralError::NotImplementedError(
-            "Feature map visualization not yet implemented".to_string(),
-        ))
+        let mut output_paths = Vec::new();
+
+        for layer_name in &options.target_layers {
+            if let Some(activations) = self.activation_cache.get(layer_name) {
+                let feature_maps = self.process_activations_for_visualization(
+                    activations,
+                    &options.normalization,
+                    &options.aggregation,
+                )?;
+
+                // Generate SVG visualization
+                let svg_content =
+                    self.create_feature_map_svg(&feature_maps, layer_name, &options.colormap)?;
+
+                let output_path = self
+                    .config
+                    .output_dir
+                    .join(format!("{}_feature_maps.svg", layer_name));
+                std::fs::write(&output_path, svg_content).map_err(|e| {
+                    NeuralError::IOError(format!("Failed to write feature map: {}", e))
+                })?;
+
+                output_paths.push(output_path);
+            }
+        }
+
+        Ok(output_paths)
     }
 
     fn generate_histograms(
         &self,
-        _options: &ActivationVisualizationOptions,
+        options: &ActivationVisualizationOptions,
     ) -> Result<Vec<PathBuf>> {
-        // TODO: Implement histogram generation
-        Err(NeuralError::NotImplementedError(
-            "Histogram visualization not yet implemented".to_string(),
-        ))
+        let mut output_paths = Vec::new();
+
+        for layer_name in &options.target_layers {
+            if let Some(activations) = self.activation_cache.get(layer_name) {
+                let histogram = self.compute_activation_histogram(layer_name, activations, 50)?;
+
+                // Generate SVG histogram
+                let svg_content = self.create_histogram_svg(&histogram)?;
+
+                let output_path = self
+                    .config
+                    .output_dir
+                    .join(format!("{}_histogram.svg", layer_name));
+                std::fs::write(&output_path, svg_content).map_err(|e| {
+                    NeuralError::IOError(format!("Failed to write histogram: {}", e))
+                })?;
+
+                output_paths.push(output_path);
+            }
+        }
+
+        Ok(output_paths)
     }
 
     fn generate_statistics(
         &self,
-        _options: &ActivationVisualizationOptions,
+        options: &ActivationVisualizationOptions,
     ) -> Result<Vec<PathBuf>> {
-        // TODO: Implement statistics generation
-        Err(NeuralError::NotImplementedError(
-            "Statistics visualization not yet implemented".to_string(),
-        ))
+        let mut all_stats = Vec::new();
+
+        for layer_name in &options.target_layers {
+            if let Some(activations) = self.activation_cache.get(layer_name) {
+                let stats = self.compute_layer_statistics(layer_name, activations)?;
+                all_stats.push(stats);
+            }
+        }
+
+        // Generate JSON statistics report
+        let json_content = serde_json::to_string_pretty(&all_stats).map_err(|e| {
+            NeuralError::SerializationError(format!("Failed to serialize statistics: {}", e))
+        })?;
+
+        let json_path = self.config.output_dir.join("activation_statistics.json");
+        std::fs::write(&json_path, json_content)
+            .map_err(|e| NeuralError::IOError(format!("Failed to write statistics: {}", e)))?;
+
+        // Generate SVG statistics visualization
+        let svg_content = self.create_statistics_svg(&all_stats)?;
+        let svg_path = self.config.output_dir.join("activation_statistics.svg");
+        std::fs::write(&svg_path, svg_content).map_err(|e| {
+            NeuralError::IOError(format!("Failed to write statistics visualization: {}", e))
+        })?;
+
+        Ok(vec![json_path, svg_path])
     }
 
     fn generate_attention_maps(
         &self,
-        _options: &ActivationVisualizationOptions,
+        options: &ActivationVisualizationOptions,
     ) -> Result<Vec<PathBuf>> {
-        // TODO: Implement attention map generation
-        Err(NeuralError::NotImplementedError(
-            "Attention map visualization not yet implemented".to_string(),
-        ))
+        let mut output_paths = Vec::new();
+
+        for layer_name in &options.target_layers {
+            if let Some(activations) = self.activation_cache.get(layer_name) {
+                // Check if activations have spatial dimensions suitable for attention maps
+                if activations.ndim() >= 3 {
+                    let attention_map = self.compute_spatial_attention(activations)?;
+
+                    let svg_content = self.create_attention_map_svg(&attention_map, layer_name)?;
+                    let output_path = self
+                        .config
+                        .output_dir
+                        .join(format!("{}_attention.svg", layer_name));
+
+                    std::fs::write(&output_path, svg_content).map_err(|e| {
+                        NeuralError::IOError(format!("Failed to write attention map: {}", e))
+                    })?;
+
+                    output_paths.push(output_path);
+                }
+            }
+        }
+
+        Ok(output_paths)
     }
 
     fn generate_activation_flow(
         &self,
-        _options: &ActivationVisualizationOptions,
+        options: &ActivationVisualizationOptions,
     ) -> Result<Vec<PathBuf>> {
-        // TODO: Implement activation flow generation
-        Err(NeuralError::NotImplementedError(
-            "Activation flow visualization not yet implemented".to_string(),
-        ))
+        // Compute activation flow between consecutive layers
+        let mut flow_data = Vec::new();
+
+        let sorted_layers: Vec<_> = options.target_layers.iter().collect();
+        for i in 0..sorted_layers.len().saturating_sub(1) {
+            let from_layer = sorted_layers[i];
+            let to_layer = sorted_layers[i + 1];
+
+            if let (Some(from_activations), Some(to_activations)) = (
+                self.activation_cache.get(from_layer),
+                self.activation_cache.get(to_layer),
+            ) {
+                let flow_intensity =
+                    self.compute_activation_flow(from_activations, to_activations)?;
+                flow_data.push((from_layer.clone(), to_layer.clone(), flow_intensity));
+            }
+        }
+
+        if !flow_data.is_empty() {
+            let svg_content = self.create_flow_diagram_svg(&flow_data)?;
+            let output_path = self.config.output_dir.join("activation_flow.svg");
+
+            std::fs::write(&output_path, svg_content).map_err(|e| {
+                NeuralError::IOError(format!("Failed to write activation flow: {}", e))
+            })?;
+
+            Ok(vec![output_path])
+        } else {
+            Ok(Vec::new())
+        }
     }
 
     fn compute_layer_statistics(
@@ -344,6 +471,716 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
             dead_neurons: zero_count,
             total_neurons: total_elements,
         })
+    }
+
+    fn process_activations_for_visualization(
+        &self,
+        activations: &ArrayD<F>,
+        normalization: &ActivationNormalization,
+        aggregation: &ChannelAggregation,
+    ) -> Result<ArrayD<F>> {
+        let mut processed = activations.clone();
+
+        // Apply channel aggregation first
+        processed = match aggregation {
+            ChannelAggregation::None => processed,
+            ChannelAggregation::Mean => {
+                if processed.ndim() > 2 {
+                    let mean_axis = processed.ndim() - 1; // Usually channel is last dimension
+                    processed
+                        .mean_axis(ndarray::Axis(mean_axis))
+                        .unwrap()
+                        .insert_axis(ndarray::Axis(mean_axis))
+                } else {
+                    processed
+                }
+            }
+            ChannelAggregation::Max => {
+                if processed.ndim() > 2 {
+                    let max_axis = processed.ndim() - 1;
+                    let max_values = processed.fold_axis(
+                        ndarray::Axis(max_axis),
+                        F::neg_infinity(),
+                        |&acc, &x| acc.max(x),
+                    );
+                    max_values.insert_axis(ndarray::Axis(max_axis))
+                } else {
+                    processed
+                }
+            }
+            ChannelAggregation::Min => {
+                if processed.ndim() > 2 {
+                    let min_axis = processed.ndim() - 1;
+                    let min_values =
+                        processed.fold_axis(ndarray::Axis(min_axis), F::infinity(), |&acc, &x| {
+                            acc.min(x)
+                        });
+                    min_values.insert_axis(ndarray::Axis(min_axis))
+                } else {
+                    processed
+                }
+            }
+            ChannelAggregation::Std => {
+                if processed.ndim() > 2 {
+                    let std_axis = processed.ndim() - 1;
+                    let mean = processed.mean_axis(ndarray::Axis(std_axis)).unwrap();
+                    let variance = processed.map_axis(ndarray::Axis(std_axis), |channel| {
+                        let mean_val = mean.iter().next().copied().unwrap_or(F::zero());
+                        let variance_sum = channel
+                            .iter()
+                            .map(|&x| (x - mean_val) * (x - mean_val))
+                            .fold(F::zero(), |acc, x| acc + x);
+                        (variance_sum / F::from(channel.len()).unwrap_or(F::one())).sqrt()
+                    });
+                    variance.insert_axis(ndarray::Axis(std_axis))
+                } else {
+                    processed
+                }
+            }
+            ChannelAggregation::Select(channels) => {
+                if processed.ndim() > 2 && !channels.is_empty() {
+                    let channel_axis = processed.ndim() - 1;
+                    let mut selected_slices = Vec::new();
+                    for &channel_idx in channels {
+                        if channel_idx < processed.shape()[channel_axis] {
+                            let slice =
+                                processed.index_axis(ndarray::Axis(channel_axis), channel_idx);
+                            selected_slices.push(slice.insert_axis(ndarray::Axis(channel_axis)));
+                        }
+                    }
+                    if !selected_slices.is_empty() {
+                        ndarray::concatenate(
+                            ndarray::Axis(channel_axis),
+                            &selected_slices.iter().map(|x| x.view()).collect::<Vec<_>>(),
+                        )
+                        .map_err(|_| {
+                            NeuralError::DimensionMismatch(
+                                "Failed to concatenate selected channels".to_string(),
+                            )
+                        })?
+                    } else {
+                        processed
+                    }
+                } else {
+                    processed
+                }
+            }
+        };
+
+        // Apply normalization
+        processed = match normalization {
+            ActivationNormalization::None => processed,
+            ActivationNormalization::MinMax => {
+                let min_val = processed.iter().copied().fold(F::infinity(), F::min);
+                let max_val = processed.iter().copied().fold(F::neg_infinity(), F::max);
+                let range = max_val - min_val;
+                if range > F::zero() {
+                    processed.mapv(|x| (x - min_val) / range)
+                } else {
+                    processed.mapv(|_| F::zero())
+                }
+            }
+            ActivationNormalization::ZScore => {
+                let mean = processed.mean().unwrap_or(F::zero());
+                let variance = processed
+                    .iter()
+                    .map(|&x| (x - mean) * (x - mean))
+                    .fold(F::zero(), |acc, x| acc + x)
+                    / F::from(processed.len()).unwrap_or(F::one());
+                let std = variance.sqrt();
+                if std > F::zero() {
+                    processed.mapv(|x| (x - mean) / std)
+                } else {
+                    processed.mapv(|_| F::zero())
+                }
+            }
+            ActivationNormalization::Percentile(low, high) => {
+                let mut values: Vec<F> = processed.iter().copied().collect();
+                values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+                let n = values.len();
+                let low_idx = ((low / 100.0) * n as f64) as usize;
+                let high_idx = ((high / 100.0) * n as f64) as usize;
+                if low_idx < n && high_idx < n && low_idx < high_idx {
+                    let low_val = values[low_idx];
+                    let high_val = values[high_idx];
+                    let range = high_val - low_val;
+                    if range > F::zero() {
+                        processed.mapv(|x| ((x - low_val) / range).max(F::zero()).min(F::one()))
+                    } else {
+                        processed.mapv(|_| F::zero())
+                    }
+                } else {
+                    processed
+                }
+            }
+            ActivationNormalization::Custom(_) => {
+                // Custom normalization would require function pointer or callback
+                // For now, fall back to no normalization
+                processed
+            }
+        };
+
+        Ok(processed)
+    }
+
+    fn create_feature_map_svg(
+        &self,
+        feature_maps: &ArrayD<F>,
+        layer_name: &str,
+        colormap: &Colormap,
+    ) -> Result<String> {
+        let width = self.config.style.layout.width;
+        let height = self.config.style.layout.height;
+
+        // Get color scheme
+        let colors = self.get_colormap_colors(colormap);
+
+        let mut svg = format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}" height="{}" viewBox="0 0 {} {}">
+"#,
+            width, height, width, height
+        );
+
+        // Title
+        svg.push_str(&format!(
+            r#"<text x="{}" y="30" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">{} Feature Maps</text>
+"#,
+            width / 2, self.config.style.font.family,
+            (self.config.style.font.size as f32 * self.config.style.font.title_scale) as u32,
+            layer_name
+        ));
+
+        // Simple grid visualization of feature maps
+        if feature_maps.ndim() >= 2 {
+            let shape = feature_maps.shape();
+            let map_height = shape[0].min(32); // Limit visualization size
+            let map_width = shape[1].min(32);
+
+            let cell_width = (width - 100) / map_width as u32;
+            let cell_height = (height - 100) / map_height as u32;
+
+            for i in 0..map_height {
+                for j in 0..map_width {
+                    let value = if let Some(&val) = feature_maps.get([i, j].as_slice()) {
+                        val
+                    } else {
+                        F::zero()
+                    };
+
+                    let intensity =
+                        (value.to_f64().unwrap_or(0.0) * 255.0).max(0.0).min(255.0) as u8;
+                    let color = if colors.len() > 1 {
+                        // Interpolate between colors
+                        let color_idx =
+                            (intensity as f64 / 255.0 * (colors.len() - 1) as f64) as usize;
+                        colors[color_idx.min(colors.len() - 1)].clone()
+                    } else {
+                        format!("rgb({},{},{})", intensity, intensity, intensity)
+                    };
+
+                    svg.push_str(&format!(
+                        r#"<rect x="{}" y="{}" width="{}" height="{}" fill="{}" stroke="#ccc" stroke-width="0.5"/>
+"#,
+                        50 + j * cell_width as usize,
+                        50 + i * cell_height as usize,
+                        cell_width,
+                        cell_height,
+                        color
+                    ));
+                }
+            }
+        }
+
+        svg.push_str("</svg>");
+        Ok(svg)
+    }
+
+    fn compute_activation_histogram(
+        &self,
+        layer_name: &str,
+        activations: &ArrayD<F>,
+        num_bins: usize,
+    ) -> Result<ActivationHistogram<F>> {
+        let values: Vec<F> = activations.iter().copied().collect();
+        if values.is_empty() {
+            return Err(NeuralError::InvalidArgument(
+                "Empty activations for histogram".to_string(),
+            ));
+        }
+
+        let min_val = values.iter().copied().fold(F::infinity(), F::min);
+        let max_val = values.iter().copied().fold(F::neg_infinity(), F::max);
+        let range = max_val - min_val;
+
+        if range <= F::zero() {
+            // All values are the same
+            return Ok(ActivationHistogram {
+                layer_name: layer_name.to_string(),
+                bins: vec![min_val],
+                counts: vec![values.len()],
+                edges: vec![min_val, max_val],
+                total_samples: values.len(),
+            });
+        }
+
+        let bin_width = range / F::from(num_bins).unwrap_or(F::one());
+        let mut bins = Vec::with_capacity(num_bins);
+        let mut counts = vec![0; num_bins];
+        let mut edges = Vec::with_capacity(num_bins + 1);
+
+        // Create bin edges and centers
+        for i in 0..=num_bins {
+            edges.push(min_val + F::from(i).unwrap_or(F::zero()) * bin_width);
+        }
+
+        for i in 0..num_bins {
+            bins.push(
+                min_val
+                    + (F::from(i).unwrap_or(F::zero()) + F::from(0.5).unwrap_or(F::zero()))
+                        * bin_width,
+            );
+        }
+
+        // Count values in each bin
+        for &value in &values {
+            let bin_idx = ((value - min_val) / bin_width)
+                .to_usize()
+                .unwrap_or(0)
+                .min(num_bins - 1);
+            counts[bin_idx] += 1;
+        }
+
+        Ok(ActivationHistogram {
+            layer_name: layer_name.to_string(),
+            bins,
+            counts,
+            edges,
+            total_samples: values.len(),
+        })
+    }
+
+    fn create_histogram_svg(&self, histogram: &ActivationHistogram<F>) -> Result<String> {
+        let width = self.config.style.layout.width;
+        let height = self.config.style.layout.height;
+        let margins = &self.config.style.layout.margins;
+
+        let plot_width = width - margins.left - margins.right;
+        let plot_height = height - margins.top - margins.bottom;
+
+        let mut svg = format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}" height="{}" viewBox="0 0 {} {}">
+"#,
+            width, height, width, height
+        );
+
+        // Title
+        svg.push_str(&format!(
+            r#"<text x="{}" y="{}" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">Activation Histogram - {}</text>
+"#,
+            width / 2, margins.top / 2,
+            self.config.style.font.family,
+            (self.config.style.font.size as f32 * self.config.style.font.title_scale) as u32,
+            histogram.layer_name
+        ));
+
+        if !histogram.counts.is_empty() {
+            let max_count = histogram.counts.iter().max().copied().unwrap_or(1);
+            let bin_width = plot_width / histogram.bins.len() as u32;
+
+            for (i, &count) in histogram.counts.iter().enumerate() {
+                let bar_height = (count as f64 / max_count as f64 * plot_height as f64) as u32;
+                let x = margins.left + i as u32 * bin_width;
+                let y = margins.top + (plot_height - bar_height);
+
+                svg.push_str(&format!(
+                    r#"<rect x="{}" y="{}" width="{}" height="{}" fill="#4CAF50" stroke="#45a049" stroke-width="1" opacity="0.8"/>
+"#,
+                    x, y, bin_width.saturating_sub(1), bar_height
+                ));
+
+                // Add count label on top of bar
+                if count > 0 {
+                    svg.push_str(&format!(
+                        r#"<text x="{}" y="{}" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">{}</text>
+"#,
+                        x + bin_width / 2, y.saturating_sub(5),
+                        self.config.style.font.family,
+                        (self.config.style.font.size as f32 * self.config.style.font.label_scale) as u32,
+                        count
+                    ));
+                }
+            }
+        }
+
+        // X-axis
+        svg.push_str(&format!(
+            r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="#333" stroke-width="2"/>
+        "#,
+            margins.left, margins.top + plot_height,
+            margins.left + plot_width, margins.top + plot_height
+        ));
+
+        // Y-axis
+        svg.push_str(&format!(
+            r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="#333" stroke-width="2"/>
+        "#,
+            margins.left, margins.top,
+            margins.left, margins.top + plot_height
+        ));
+
+        svg.push_str("</svg>");
+        Ok(svg)
+    }
+
+    fn create_statistics_svg(&self, stats: &[ActivationStatistics<F>]) -> Result<String> {
+        let width = self.config.style.layout.width;
+        let height = self.config.style.layout.height;
+
+        let mut svg = format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}" height="{}" viewBox="0 0 {} {}">
+"#,
+            width, height, width, height
+        );
+
+        // Title
+        svg.push_str(&format!(
+            r#"<text x="{}" y="30" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">Activation Statistics Summary</text>
+"#,
+            width / 2, self.config.style.font.family,
+            (self.config.style.font.size as f32 * self.config.style.font.title_scale) as u32
+        ));
+
+        let row_height = 80;
+        let start_y = 60;
+
+        for (i, stat) in stats.iter().enumerate() {
+            let y = start_y + i * row_height;
+
+            // Layer name
+            svg.push_str(&format!(
+                r#"<text x="50" y="{}" font-family="{}" font-size="{}" font-weight="bold" fill="#333">{}</text>
+"#,
+                y, self.config.style.font.family, self.config.style.font.size, stat.layer_name
+            ));
+
+            // Statistics
+            svg.push_str(&format!(
+                r#"<text x="50" y="{}" font-family="{}" font-size="{}" fill="#666">Mean: {:.4}, Std: {:.4}, Min: {:.4}, Max: {:.4}</text>
+"#,
+                y + 20, self.config.style.font.family,
+                (self.config.style.font.size as f32 * self.config.style.font.label_scale) as u32,
+                stat.mean.to_f64().unwrap_or(0.0),
+                stat.std.to_f64().unwrap_or(0.0),
+                stat.min.to_f64().unwrap_or(0.0),
+                stat.max.to_f64().unwrap_or(0.0)
+            ));
+
+            svg.push_str(&format!(
+                r#"<text x="50" y="{}" font-family="{}" font-size="{}" fill="#666">Sparsity: {:.2}%, Dead Neurons: {}/{}</text>
+"#,
+                y + 40, self.config.style.font.family,
+                (self.config.style.font.size as f32 * self.config.style.font.label_scale) as u32,
+                stat.sparsity * 100.0, stat.dead_neurons, stat.total_neurons
+            ));
+        }
+
+        svg.push_str("</svg>");
+        Ok(svg)
+    }
+
+    fn compute_spatial_attention(&self, activations: &ArrayD<F>) -> Result<ArrayD<F>> {
+        // Compute spatial attention by averaging across channels and normalizing
+        if activations.ndim() < 3 {
+            return Err(NeuralError::DimensionMismatch(
+                "Spatial attention requires at least 3D tensors".to_string(),
+            ));
+        }
+
+        // Assume format is [batch, height, width, channels] or [height, width, channels]
+        let channel_axis = activations.ndim() - 1;
+        let attention_map = activations.mean_axis(ndarray::Axis(channel_axis)).unwrap();
+
+        // Normalize attention map
+        let min_val = attention_map.iter().copied().fold(F::infinity(), F::min);
+        let max_val = attention_map
+            .iter()
+            .copied()
+            .fold(F::neg_infinity(), F::max);
+        let range = max_val - min_val;
+
+        if range > F::zero() {
+            Ok(attention_map.mapv(|x| (x - min_val) / range))
+        } else {
+            Ok(attention_map.mapv(|_| F::zero()))
+        }
+    }
+
+    fn create_attention_map_svg(
+        &self,
+        attention_map: &ArrayD<F>,
+        layer_name: &str,
+    ) -> Result<String> {
+        let width = self.config.style.layout.width;
+        let height = self.config.style.layout.height;
+
+        let mut svg = format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}" height="{}" viewBox="0 0 {} {}">
+"#,
+            width, height, width, height
+        );
+
+        // Title
+        svg.push_str(&format!(
+            r#"<text x="{}" y="30" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">{} Attention Map</text>
+"#,
+            width / 2, self.config.style.font.family,
+            (self.config.style.font.size as f32 * self.config.style.font.title_scale) as u32,
+            layer_name
+        ));
+
+        // Render attention map as heatmap
+        if attention_map.ndim() >= 2 {
+            let shape = attention_map.shape();
+            let map_height = shape[0].min(32);
+            let map_width = shape[1].min(32);
+
+            let cell_width = (width - 100) / map_width as u32;
+            let cell_height = (height - 100) / map_height as u32;
+
+            for i in 0..map_height {
+                for j in 0..map_width {
+                    let attention = if let Some(&val) = attention_map.get([i, j].as_slice()) {
+                        val.to_f64().unwrap_or(0.0)
+                    } else {
+                        0.0
+                    };
+
+                    // Use red intensity for attention (higher attention = more red)
+                    let intensity = (attention * 255.0).max(0.0).min(255.0) as u8;
+                    let color = format!("rgba({}, 0, 0, {})", intensity, attention);
+
+                    svg.push_str(&format!(
+                        r#"<rect x="{}" y="{}" width="{}" height="{}" fill="{}" stroke="#ccc" stroke-width="0.5"/>
+"#,
+                        50 + j * cell_width as usize,
+                        50 + i * cell_height as usize,
+                        cell_width,
+                        cell_height,
+                        color
+                    ));
+                }
+            }
+        }
+
+        svg.push_str("</svg>");
+        Ok(svg)
+    }
+
+    fn compute_activation_flow(
+        &self,
+        from_activations: &ArrayD<F>,
+        to_activations: &ArrayD<F>,
+    ) -> Result<f64> {
+        // Compute a simple flow metric as correlation between layer activations
+        let from_flat: Vec<F> = from_activations.iter().copied().collect();
+        let to_flat: Vec<F> = to_activations
+            .iter()
+            .copied()
+            .take(from_flat.len())
+            .collect();
+
+        if from_flat.is_empty() || to_flat.is_empty() {
+            return Ok(0.0);
+        }
+
+        let from_mean = from_flat.iter().copied().fold(F::zero(), |acc, x| acc + x)
+            / F::from(from_flat.len()).unwrap_or(F::one());
+        let to_mean = to_flat.iter().copied().fold(F::zero(), |acc, x| acc + x)
+            / F::from(to_flat.len()).unwrap_or(F::one());
+
+        let mut numerator = F::zero();
+        let mut from_var = F::zero();
+        let mut to_var = F::zero();
+
+        for i in 0..from_flat.len().min(to_flat.len()) {
+            let from_diff = from_flat[i] - from_mean;
+            let to_diff = to_flat[i] - to_mean;
+
+            numerator = numerator + from_diff * to_diff;
+            from_var = from_var + from_diff * from_diff;
+            to_var = to_var + to_diff * to_diff;
+        }
+
+        let denominator = (from_var * to_var).sqrt();
+        if denominator > F::zero() {
+            Ok((numerator / denominator).to_f64().unwrap_or(0.0))
+        } else {
+            Ok(0.0)
+        }
+    }
+
+    fn create_flow_diagram_svg(&self, flow_data: &[(String, String, f64)]) -> Result<String> {
+        let width = self.config.style.layout.width;
+        let height = self.config.style.layout.height;
+
+        let mut svg = format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}" height="{}" viewBox="0 0 {} {}">
+"#,
+            width, height, width, height
+        );
+
+        // Title
+        svg.push_str(&format!(
+            r#"<text x="{}" y="30" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">Activation Flow Diagram</text>
+"#,
+            width / 2, self.config.style.font.family,
+            (self.config.style.font.size as f32 * self.config.style.font.title_scale) as u32
+        ));
+
+        let node_width = 120;
+        let node_height = 40;
+        let vertical_spacing = 80;
+        let start_y = 60;
+
+        // Collect unique layers and assign positions
+        let mut layers = std::collections::HashSet::new();
+        for (from, to, _) in flow_data {
+            layers.insert(from.clone());
+            layers.insert(to.clone());
+        }
+
+        let mut layer_positions = std::collections::HashMap::new();
+        for (i, layer) in layers.iter().enumerate() {
+            let y = start_y + i * vertical_spacing;
+            layer_positions.insert(layer.clone(), (width / 2 - node_width / 2, y));
+        }
+
+        // Draw nodes
+        for (layer, &(x, y)) in &layer_positions {
+            svg.push_str(&format!(
+                r#"<rect x="{}" y="{}" width="{}" height="{}" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="5"/>
+"#,
+                x, y, node_width, node_height
+            ));
+
+            svg.push_str(&format!(
+                r#"<text x="{}" y="{}" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">{}</text>
+"#,
+                x + node_width / 2, y + node_height / 2 + 5,
+                self.config.style.font.family, self.config.style.font.size, layer
+            ));
+        }
+
+        // Draw flow arrows
+        for (from, to, flow_strength) in flow_data {
+            if let (Some(&(from_x, from_y)), Some(&(to_x, to_y))) =
+                (layer_positions.get(from), layer_positions.get(to))
+            {
+                let arrow_width = (flow_strength.abs() * 10.0).max(1.0).min(10.0) as u32;
+                let color = if *flow_strength > 0.0 {
+                    "#4CAF50"
+                } else {
+                    "#f44336"
+                };
+
+                svg.push_str(&format!(
+                    r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="{}" stroke-width="{}" marker-end="url(#arrowhead)"/>
+"#,
+                    from_x + node_width / 2, from_y + node_height,
+                    to_x + node_width / 2, to_y,
+                    color, arrow_width
+                ));
+
+                // Flow strength label
+                let mid_x = (from_x + to_x + node_width) / 2;
+                let mid_y = (from_y + to_y + node_height) / 2;
+
+                svg.push_str(&format!(
+                    r#"<text x="{}" y="{}" text-anchor="middle" font-family="{}" font-size="{}" fill="#666">{:.3}</text>
+"#,
+                    mid_x, mid_y,
+                    self.config.style.font.family,
+                    (self.config.style.font.size as f32 * self.config.style.font.label_scale) as u32,
+                    flow_strength
+                ));
+            }
+        }
+
+        // Add arrow marker definition
+        svg.push_str("<defs><marker id=\"arrowhead\" markerWidth=\"10\" markerHeight=\"7\" refX=\"9\" refY=\"3.5\" orient=\"auto\"><polygon points=\"0 0, 10 3.5, 0 7\" fill=\"#333\"/></marker></defs>");
+
+        svg.push_str("</svg>");
+        Ok(svg)
+    }
+
+    fn get_colormap_colors(&self, colormap: &Colormap) -> Vec<String> {
+        match colormap {
+            Colormap::Viridis => vec![
+                "#440154".to_string(),
+                "#482677".to_string(),
+                "#3f4a8a".to_string(),
+                "#31678e".to_string(),
+                "#26838f".to_string(),
+                "#1f9d8a".to_string(),
+                "#6cce5a".to_string(),
+                "#b6de2b".to_string(),
+                "#fee825".to_string(),
+            ],
+            Colormap::Plasma => vec![
+                "#0c0786".to_string(),
+                "#40039a".to_string(),
+                "#6a0a83".to_string(),
+                "#8b0aa5".to_string(),
+                "#a83eaf".to_string(),
+                "#c06fad".to_string(),
+                "#d8a1a3".to_string(),
+                "#f0d3a3".to_string(),
+                "#fcffa4".to_string(),
+            ],
+            Colormap::Inferno => vec![
+                "#000003".to_string(),
+                "#1f0c48".to_string(),
+                "#581845".to_string(),
+                "#8b1538".to_string(),
+                "#b71f2b".to_string(),
+                "#db4c26".to_string(),
+                "#ed7953".to_string(),
+                "#fbad76".to_string(),
+                "#fcffa4".to_string(),
+            ],
+            Colormap::Jet => vec![
+                "#00007f".to_string(),
+                "#0000ff".to_string(),
+                "#007fff".to_string(),
+                "#00ffff".to_string(),
+                "#7fff00".to_string(),
+                "#ffff00".to_string(),
+                "#ff7f00".to_string(),
+                "#ff0000".to_string(),
+                "#7f0000".to_string(),
+            ],
+            Colormap::Gray => vec![
+                "#000000".to_string(),
+                "#404040".to_string(),
+                "#808080".to_string(),
+                "#c0c0c0".to_string(),
+                "#ffffff".to_string(),
+            ],
+            Colormap::RdBu => vec![
+                "#053061".to_string(),
+                "#2166ac".to_string(),
+                "#4393c3".to_string(),
+                "#92c5de".to_string(),
+                "#d1e5f0".to_string(),
+                "#f7f7f7".to_string(),
+                "#fddbc7".to_string(),
+                "#f4a582".to_string(),
+                "#d6604d".to_string(),
+                "#b2182b".to_string(),
+                "#67001f".to_string(),
+            ],
+            Colormap::Custom(colors) => colors.clone(),
+        }
     }
 }
 

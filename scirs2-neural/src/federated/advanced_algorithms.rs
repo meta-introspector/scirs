@@ -3,8 +3,8 @@
 //! This module implements state-of-the-art federated learning algorithms
 //! including SCAFFOLD, FedAvgM, and others.
 
-use crate::error::{Result, NeuralError};
-use crate::federated::{ClientUpdate, AggregationStrategy};
+use crate::error::{NeuralError, Result};
+use crate::federated::{AggregationStrategy, ClientUpdate};
 use ndarray::prelude::*;
 use std::collections::HashMap;
 
@@ -41,20 +41,22 @@ impl SCAFFOLD {
         local_lr: f32,
     ) -> Result<()> {
         let mut new_control = Vec::new();
-        
+
         if let Some(old_control) = self.client_controls.get(&client_id) {
             // c_i^+ = c_i - c + 1/(K*lr) * (x_i - y_i)
             let server_control = self.server_control.as_ref().unwrap_or(&vec![]);
-            
-            for (idx, ((old_w, new_w), old_c)) in old_weights.iter()
+
+            for (idx, ((old_w, new_w), old_c)) in old_weights
+                .iter()
                 .zip(new_weights.iter())
                 .zip(old_control.iter())
                 .enumerate()
             {
-                let server_c = server_control.get(idx)
+                let server_c = server_control
+                    .get(idx)
                     .cloned()
                     .unwrap_or_else(|| Array2::zeros(old_w.shape()));
-                
+
                 let gradient_term = (old_w - new_w) / (local_steps as f32 * local_lr);
                 let new_c = old_c - &server_c + &gradient_term;
                 new_control.push(new_c);
@@ -66,7 +68,7 @@ impl SCAFFOLD {
                 new_control.push(gradient_term);
             }
         }
-        
+
         self.client_controls.insert(client_id, new_control);
         Ok(())
     }
@@ -89,7 +91,8 @@ impl SCAFFOLD {
             for update in client_updates {
                 if let Some(client_control) = self.client_controls.get(&update.client_id) {
                     if tensor_idx < client_control.len() {
-                        control_sum = control_sum + &client_control[tensor_idx] * update.num_samples as f32;
+                        control_sum =
+                            control_sum + &client_control[tensor_idx] * update.num_samples as f32;
                         total_samples += update.num_samples;
                     }
                 }
@@ -196,7 +199,10 @@ impl AggregationStrategy for FedAvgM {
         if self.momentum_buffers.is_none() {
             // Initialize momentum buffers
             self.momentum_buffers = Some(
-                aggregated.iter().map(|a| Array2::zeros(a.shape())).collect()
+                aggregated
+                    .iter()
+                    .map(|a| Array2::zeros(a.shape()))
+                    .collect(),
             );
         }
 
@@ -450,12 +456,13 @@ impl AggregationStrategy for FedLAG {
 
         // Update slow weights every k steps
         if self.step_count % self.k == 0 {
-            if let (Some(ref mut slow_weights), Some(ref fast_weights)) = 
-                (&mut self.slow_weights, &self.fast_weights) {
+            if let (Some(ref mut slow_weights), Some(ref fast_weights)) =
+                (&mut self.slow_weights, &self.fast_weights)
+            {
                 for (slow_w, fast_w) in slow_weights.iter_mut().zip(fast_weights) {
                     *slow_w = &*slow_w + &(*fast_w - &*slow_w) * self.alpha;
                 }
-                
+
                 // Reset fast weights to slow weights
                 if let Some(ref mut fast_weights) = self.fast_weights {
                     for (fast_w, slow_w) in fast_weights.iter_mut().zip(slow_weights) {
@@ -479,38 +486,42 @@ pub struct AggregatorFactory;
 
 impl AggregatorFactory {
     /// Create aggregator by name
-    pub fn create(name: &str, config: &HashMap<String, f32>) -> Result<Box<dyn AggregationStrategy>> {
+    pub fn create(
+        name: &str,
+        config: &HashMap<String, f32>,
+    ) -> Result<Box<dyn AggregationStrategy>> {
         match name.to_lowercase().as_str() {
             "scaffold" => {
                 let server_lr = config.get("server_lr").copied().unwrap_or(1.0);
                 let global_lr = config.get("global_lr").copied().unwrap_or(1.0);
                 Ok(Box::new(SCAFFOLD::new(server_lr, global_lr)))
-            },
+            }
             "fedavgm" => {
                 let server_lr = config.get("server_lr").copied().unwrap_or(1.0);
                 let momentum = config.get("momentum").copied().unwrap_or(0.9);
                 Ok(Box::new(FedAvgM::new(server_lr, momentum)))
-            },
+            }
             "fedadam" => {
                 let lr = config.get("lr").copied().unwrap_or(0.001);
                 let beta1 = config.get("beta1").copied().unwrap_or(0.9);
                 let beta2 = config.get("beta2").copied().unwrap_or(0.999);
                 let epsilon = config.get("epsilon").copied().unwrap_or(1e-8);
                 Ok(Box::new(FedAdam::new(lr, beta1, beta2, epsilon)))
-            },
+            }
             "fedadagrad" => {
                 let lr = config.get("lr").copied().unwrap_or(0.01);
                 let epsilon = config.get("epsilon").copied().unwrap_or(1e-8);
                 Ok(Box::new(FedAdagrad::new(lr, epsilon)))
-            },
+            }
             "fedlag" => {
                 let k = config.get("k").copied().unwrap_or(5.0) as usize;
                 let alpha = config.get("alpha").copied().unwrap_or(0.5);
                 Ok(Box::new(FedLAG::new(k, alpha)))
-            },
-            _ => {
-                Err(NeuralError::InvalidArgument(format!("Unknown aggregator: {}", name)))
             }
+            _ => Err(NeuralError::InvalidArgument(format!(
+                "Unknown aggregator: {}",
+                name
+            ))),
         }
     }
 
@@ -522,33 +533,33 @@ impl AggregatorFactory {
     /// Get default configuration for an aggregator
     pub fn default_config(name: &str) -> HashMap<String, f32> {
         let mut config = HashMap::new();
-        
+
         match name.to_lowercase().as_str() {
             "scaffold" => {
                 config.insert("server_lr".to_string(), 1.0);
                 config.insert("global_lr".to_string(), 1.0);
-            },
+            }
             "fedavgm" => {
                 config.insert("server_lr".to_string(), 1.0);
                 config.insert("momentum".to_string(), 0.9);
-            },
+            }
             "fedadam" => {
                 config.insert("lr".to_string(), 0.001);
                 config.insert("beta1".to_string(), 0.9);
                 config.insert("beta2".to_string(), 0.999);
                 config.insert("epsilon".to_string(), 1e-8);
-            },
+            }
             "fedadagrad" => {
                 config.insert("lr".to_string(), 0.01);
                 config.insert("epsilon".to_string(), 1e-8);
-            },
+            }
             "fedlag" => {
                 config.insert("k".to_string(), 5.0);
                 config.insert("alpha".to_string(), 0.5);
-            },
-            _ => {},
+            }
+            _ => {}
         }
-        
+
         config
     }
 }
@@ -582,7 +593,7 @@ mod tests {
         let mut scaffold = SCAFFOLD::new(1.0, 1.0);
         let updates = create_test_updates();
         let weights = vec![0.5, 0.5];
-        
+
         let result = scaffold.aggregate(&updates, &weights).unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].shape(), &[3, 3]);
@@ -593,7 +604,7 @@ mod tests {
         let mut fedavgm = FedAvgM::new(1.0, 0.9);
         let updates = create_test_updates();
         let weights = vec![0.5, 0.5];
-        
+
         let result = fedavgm.aggregate(&updates, &weights).unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].shape(), &[3, 3]);
@@ -604,7 +615,7 @@ mod tests {
         let config = AggregatorFactory::default_config("fedadam");
         let aggregator = AggregatorFactory::create("fedadam", &config).unwrap();
         assert_eq!(aggregator.name(), "FedAdam");
-        
+
         let available = AggregatorFactory::available_aggregators();
         assert!(available.contains(&"scaffold"));
         assert!(available.contains(&"fedavgm"));

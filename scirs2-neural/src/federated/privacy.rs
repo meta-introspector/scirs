@@ -43,10 +43,10 @@ impl DifferentialPrivacy {
     pub fn apply_to_gradients(&self, gradients: &mut [Array2<f32>]) -> Result<()> {
         // Clip gradients
         self.clip_gradients(gradients)?;
-        
+
         // Add noise
         self.add_noise(gradients)?;
-        
+
         Ok(())
     }
 
@@ -72,23 +72,24 @@ impl DifferentialPrivacy {
 
     /// Add noise based on mechanism
     fn add_noise(&self, gradients: &mut [Array2<f32>]) -> Result<()> {
-        use rand_distr::{Normal, Distribution};
+        use rand_distr::{Distribution, Normal};
         let mut rng = rand::rng();
 
         match self.mechanism {
             NoiseMethod::Gaussian => {
-                let sigma = self.clip_threshold * (2.0 * (1.0 / self.delta).ln()).sqrt() / self.epsilon;
+                let sigma =
+                    self.clip_threshold * (2.0 * (1.0 / self.delta).ln()).sqrt() / self.epsilon;
                 let noise_dist = Normal::new(0.0, sigma as f32).unwrap();
-                
+
                 for grad in gradients.iter_mut() {
                     for elem in grad.iter_mut() {
                         *elem += noise_dist.sample(&mut rng);
                     }
                 }
-            },
+            }
             NoiseMethod::Laplace => {
                 let b = self.clip_threshold / self.epsilon;
-                
+
                 for grad in gradients.iter_mut() {
                     for elem in grad.iter_mut() {
                         // Manual Laplace distribution: sample from uniform and transform
@@ -97,7 +98,7 @@ impl DifferentialPrivacy {
                         *elem += laplace_sample;
                     }
                 }
-            },
+            }
         }
 
         Ok(())
@@ -128,49 +129,57 @@ impl SecureAggregation {
     }
 
     /// Mask client updates
-    pub fn mask_updates(&self, updates: &mut Vec<Array2<f32>>, client_id: usize) -> Result<Vec<Array2<f32>>> {
+    pub fn mask_updates(
+        &self,
+        updates: &mut Vec<Array2<f32>>,
+        client_id: usize,
+    ) -> Result<Vec<Array2<f32>>> {
         // Simplified masking - in practice would use cryptographic PRG
-        use rand::{Rng, SeedableRng};
         use rand::rngs::StdRng;
-        
+        use rand::{Rng, SeedableRng};
+
         let mut masked = Vec::new();
-        
+
         for update in updates.iter() {
             let mut mask = Array2::<f32>::zeros(update.shape());
             let seed = client_id as u64 * 1000 + 42; // Simplified seed generation
             let mut rng = StdRng::seed_from_u64(seed);
-            
+
             for elem in mask.iter_mut() {
                 *elem = rng.gen_range(-1.0..1.0);
             }
-            
+
             masked.push(update + &mask);
         }
-        
+
         Ok(masked)
     }
 
     /// Unmask aggregated updates
-    pub fn unmask_aggregate(&self, aggregated: &mut Vec<Array2<f32>>, participating_clients: &[usize]) -> Result<()> {
+    pub fn unmask_aggregate(
+        &self,
+        aggregated: &mut Vec<Array2<f32>>,
+        participating_clients: &[usize],
+    ) -> Result<()> {
         // Remove masks from aggregated result
-        use rand::{Rng, SeedableRng};
         use rand::rngs::StdRng;
-        
+        use rand::{Rng, SeedableRng};
+
         for (update_idx, update) in aggregated.iter_mut().enumerate() {
             let mut total_mask = Array2::<f32>::zeros(update.shape());
-            
+
             for &client_id in participating_clients {
                 let seed = client_id as u64 * 1000 + 42;
                 let mut rng = StdRng::seed_from_u64(seed);
-                
+
                 for elem in total_mask.iter_mut() {
                     *elem += rng.gen_range(-1.0..1.0);
                 }
             }
-            
+
             *update -= &total_mask;
         }
-        
+
         Ok(())
     }
 }
@@ -190,7 +199,9 @@ impl HomomorphicEncryption {
     /// Encrypt weights
     pub fn encrypt(&self, weights: &Array2<f32>) -> Result<Vec<u8>> {
         // Placeholder - would use actual HE library
-        Ok(weights.as_slice().unwrap()
+        Ok(weights
+            .as_slice()
+            .unwrap()
             .iter()
             .flat_map(|x| x.to_ne_bytes())
             .collect())
@@ -199,10 +210,11 @@ impl HomomorphicEncryption {
     /// Decrypt weights
     pub fn decrypt(&self, encrypted: &[u8]) -> Result<Array2<f32>> {
         // Placeholder
-        let floats: Vec<f32> = encrypted.chunks_exact(4)
+        let floats: Vec<f32> = encrypted
+            .chunks_exact(4)
             .map(|chunk| f32::from_ne_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
             .collect();
-        
+
         // Assume square matrix for simplicity
         let size = (floats.len() as f64).sqrt() as usize;
         Ok(Array2::from_shape_vec((size, size), floats)?)
@@ -217,9 +229,9 @@ mod tests {
     fn test_differential_privacy() {
         let dp = DifferentialPrivacy::new(1.0, 1e-5);
         let mut gradients = vec![Array2::ones((2, 2))];
-        
+
         dp.apply_to_gradients(&mut gradients).unwrap();
-        
+
         // Check that noise was added
         assert_ne!(gradients[0][[0, 0]], 1.0);
     }
@@ -228,9 +240,9 @@ mod tests {
     fn test_gradient_clipping() {
         let dp = DifferentialPrivacy::new(1.0, 1e-5).with_clipping(1.0);
         let mut gradients = vec![Array2::ones((2, 2)) * 10.0];
-        
+
         dp.clip_gradients(&mut gradients).unwrap();
-        
+
         // Check that gradients were clipped
         let norm: f32 = gradients[0].iter().map(|x| x * x).sum::<f32>().sqrt();
         assert!((norm - 1.0).abs() < 0.01);

@@ -140,7 +140,7 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
                 // If we're very close to a data point, return that value
                 return Ok(self.y[idx]);
             }
-            
+
             let weight = local_weights[i] / diff;
             numerator = numerator + weight * self.y[idx];
             denominator = denominator + weight;
@@ -198,8 +198,9 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
 
         // Sort by distance and take the nearest order + 1 points
         distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-        
-        distances.into_iter()
+
+        distances
+            .into_iter()
             .take(order_plus_one)
             .map(|(_, idx)| idx)
             .collect()
@@ -610,7 +611,7 @@ mod tests {
         assert!((interp.evaluate(1.5).unwrap() - 3.375).abs() < 1e-10);
         assert!((interp.evaluate(2.5).unwrap() - 15.625).abs() < 1e-10);
         assert!((interp.evaluate(3.5).unwrap() - 42.875).abs() < 1e-10);
-        
+
         // Test edge interpolation
         assert!((interp.evaluate(0.5).unwrap() - 0.125).abs() < 1e-10);
         assert!((interp.evaluate(4.5).unwrap() - 91.125).abs() < 1e-10);

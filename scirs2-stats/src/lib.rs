@@ -311,54 +311,53 @@
 
 // Export error types
 pub mod error;
-pub mod error_messages;
 pub mod error_context;
-pub mod error_suggestions;
-pub mod error_handling_v2;
-pub mod error_standardization;
 pub mod error_diagnostics;
-pub mod unified_error_handling;
+pub mod error_handling_v2;
+pub mod error_messages;
+pub mod error_standardization;
+pub mod error_suggestions;
 pub mod performance_optimization;
+pub mod unified_error_handling;
 pub use error::{StatsError, StatsResult};
-pub use error_suggestions::{
-    SuggestionEngine, Suggestion, ErrorFormatter, diagnose_error, 
-    DiagnosisReport, ErrorType, Severity
+pub use error_diagnostics::{
+    generate_global_health_report, get_global_statistics, global_monitor, record_global_error,
+    CriticalIssue, ErrorMonitor, ErrorOccurrence, ErrorPattern, ErrorStatistics, ErrorTrend,
+    HealthReport, Recommendation, TrendDirection,
 };
 pub use error_handling_v2::{
-    ErrorCode, EnhancedError, ErrorContext as ErrorContextV2, 
-    ErrorBuilder, RecoverySuggestion, PerformanceImpact
+    EnhancedError, ErrorBuilder, ErrorCode, ErrorContext as ErrorContextV2, PerformanceImpact,
+    RecoverySuggestion,
 };
 pub use error_standardization::{
-    ErrorMessages, ErrorValidator, RecoverySuggestions, StandardizedErrorReporter,
-    PerformanceImpact as StandardizedPerformanceImpact
+    ErrorMessages, ErrorValidator, PerformanceImpact as StandardizedPerformanceImpact,
+    RecoverySuggestions, StandardizedErrorReporter,
 };
-pub use error_diagnostics::{
-    ErrorMonitor, ErrorPattern, ErrorOccurrence, ErrorStatistics, HealthReport, 
-    CriticalIssue, Recommendation, ErrorTrend, TrendDirection, ChainStatistics,
-    global_monitor, record_global_error, get_global_statistics, generate_global_health_report
-};
-pub use unified_error_handling::{
-    UnifiedErrorHandler, global_error_handler, create_standardized_error
+pub use error_suggestions::{
+    diagnose_error, DiagnosisReport, ErrorFormatter, ErrorType, Severity, Suggestion,
+    SuggestionEngine,
 };
 pub use performance_optimization::{
-    PerformanceConfig, PerformanceMetrics, OptimizedLinearDiscriminantAnalysis,
-    OptimizedCanonicalCorrelationAnalysis, PerformanceBenchmark
+    OptimizedCanonicalCorrelationAnalysis, OptimizedLinearDiscriminantAnalysis,
+    PerformanceBenchmark, PerformanceConfig, PerformanceMetrics,
+};
+pub use unified_error_handling::{
+    create_standardized_error, global_error_handler, UnifiedErrorHandler,
 };
 
 // API improvements for v1.0.0
 pub mod api_improvements;
 pub use api_improvements::{
-    CorrelationResult, CorrelationMethod, OptimizationHint,
-    StatsConfig, CorrelationExt, StatsBuilder, TestResult
+    CorrelationExt, CorrelationMethod, CorrelationResult, OptimizationHint, StatsBuilder,
+    StatsConfig, TestResult,
 };
 
 // Advanced integration workflows
 pub use advanced_integration::{
-    BayesianAnalysisWorkflow, BayesianAnalysisResult, BayesianModelMetrics,
-    DimensionalityAnalysisWorkflow, DimensionalityAnalysisResult, 
-    DimensionalityRecommendations, DimensionalityMetrics,
-    QMCWorkflow, QMCResult, QMCSequenceType, QMCQualityMetrics,
-    SurvivalAnalysisWorkflow, SurvivalAnalysisResult, SurvivalSummaryStats
+    BayesianAnalysisResult, BayesianAnalysisWorkflow, BayesianModelMetrics,
+    DimensionalityAnalysisResult, DimensionalityAnalysisWorkflow, DimensionalityMetrics,
+    DimensionalityRecommendations, QMCQualityMetrics, QMCResult, QMCSequenceType, QMCWorkflow,
+    SurvivalAnalysisResult, SurvivalAnalysisWorkflow, SurvivalSummaryStats,
 };
 
 // Module substructure following SciPy's organization
@@ -375,75 +374,89 @@ pub mod sampling; // Sampling utilities
 pub mod survival; // Survival analysis
 pub mod traits; // Trait definitions for distributions and statistical objects
 
+// Export commonly used traits
+pub use traits::{
+    CircularDistribution, ContinuousDistribution, DiscreteDistribution, Distribution, Fittable,
+    MultivariateDistribution, Truncatable,
+};
+
 // Core functions for descriptive statistics
 mod descriptive;
 mod descriptive_simd;
-mod simd_optimized_v2;
-mod simd_enhanced_v3;
-mod simd_enhanced_advanced;
-mod parallel_stats;
-mod parallel_stats_enhanced;
-mod parallel_enhanced_v2;
-mod parallel_advanced_v3;
+mod dispersion_simd;
 mod memory_efficient;
-mod memory_profiling;
 mod memory_optimized_v2;
 mod memory_profiler_v3;
+mod memory_profiling;
+mod parallel_advanced_v3;
+mod parallel_enhanced_v2;
+mod parallel_stats;
+mod parallel_stats_enhanced;
 mod quantile_simd;
-mod dispersion_simd;
+mod simd_enhanced_advanced;
+mod simd_enhanced_v3;
+mod simd_enhanced_v4;
+mod simd_optimized_v2;
 pub use descriptive::*;
-pub use descriptive_simd::{mean_simd, variance_simd, std_simd, descriptive_stats_simd};
-pub use simd_optimized_v2::{
-    mean_simd_optimized, variance_simd_optimized, stats_simd_single_pass, SimdConfig
-};
-pub use simd_enhanced_v3::{
-    distance_matrix_simd, euclidean_distance_simd, manhattan_distance_simd, cosine_distance_simd,
-    MovingWindowSIMD, histogram_simd, detect_outliers_zscore_simd
-};
-pub use simd_enhanced_advanced::{
-    ttest_ind_simd, corrcoef_matrix_simd, robust_statistics_simd, 
-    bootstrap_mean_simd, linear_regression_simd
-};
-pub use quantile_simd::{
-    quantile_simd, quantiles_simd, median_simd, percentile_simd, quickselect_simd
-};
+pub use descriptive_simd::{descriptive_stats_simd, mean_simd, std_simd, variance_simd};
 pub use dispersion_simd::{
-    mad_simd, iqr_simd, coefficient_of_variation_simd, range_simd, gini_simd,
-    sem_simd, median_abs_deviation_simd, percentile_range_simd
-};
-pub use parallel_stats::{
-    mean_parallel, variance_parallel, quantiles_parallel, row_statistics_parallel,
-    corrcoef_parallel, bootstrap_parallel
-};
-pub use parallel_stats_enhanced::{
-    AdaptiveThreshold, ParallelHistogram, kde_parallel, ParallelMovingStats,
-    pairwise_distances_parallel, ParallelCrossValidation
-};
-pub use parallel_enhanced_v2::{
-    ParallelConfig, mean_parallel_enhanced, variance_parallel_enhanced,
-    corrcoef_parallel_enhanced, bootstrap_parallel_enhanced
-};
-pub use parallel_advanced_v3::{
-    AdvancedParallelConfig, ParallelBatchProcessor, ParallelCrossValidator,
-    ParallelMonteCarlo, ParallelMatrixOps
+    coefficient_of_variation_simd, gini_simd, iqr_simd, mad_simd, median_abs_deviation_simd,
+    percentile_range_simd, range_simd, sem_simd,
 };
 pub use memory_efficient::{
-    streaming_mean, welford_variance, normalize_inplace, quantile_quickselect,
-    covariance_chunked, StreamingHistogram
-};
-pub use memory_profiling::{
-    MemoryProfile, MemoryAdaptiveAlgorithm, AlgorithmChoice, 
-    RingBufferStats, LazyStatComputation, MemoryTracker,
-    zero_copy, memory_mapped, cache_friendly
+    covariance_chunked, normalize_inplace, quantile_quickselect, streaming_mean, welford_variance,
+    StreamingHistogram,
 };
 pub use memory_optimized_v2::{
-    MemoryConfig, MemoryPool, mean_zero_copy, variance_cache_aware,
-    LazyStats, StreamingCovariance
+    mean_zero_copy, variance_cache_aware, LazyStats, MemoryConfig, MemoryPool, StreamingCovariance,
 };
 pub use memory_profiler_v3::{
-    MemoryProfiler, MemoryReport, AllocationStats, StatisticsCache, CacheStats,
-    AdaptiveMemoryManager, AlgorithmChoice as MemoryAlgorithmChoice, ProfiledStatistics
+    AdaptiveMemoryManager, AlgorithmChoice as MemoryAlgorithmChoice, AllocationStats, CacheStats,
+    MemoryProfiler, MemoryReport, ProfiledStatistics, StatisticsCache,
 };
+pub use memory_profiling::{
+    cache_friendly, memory_mapped, zero_copy, AlgorithmChoice, LazyStatComputation,
+    MemoryAdaptiveAlgorithm, MemoryProfile, MemoryTracker, RingBufferStats,
+};
+pub use parallel_advanced_v3::{
+    AdvancedParallelConfig, ParallelBatchProcessor, ParallelCrossValidator, ParallelMatrixOps,
+    ParallelMonteCarlo,
+};
+pub use parallel_enhanced_v2::{
+    bootstrap_parallel_enhanced, corrcoef_parallel_enhanced, mean_parallel_enhanced,
+    variance_parallel_enhanced, ParallelConfig,
+};
+pub use parallel_stats::{
+    bootstrap_parallel, corrcoef_parallel, mean_parallel, quantiles_parallel,
+    row_statistics_parallel, variance_parallel,
+};
+pub use parallel_stats_enhanced::{
+    kde_parallel, pairwise_distances_parallel, AdaptiveThreshold, ParallelCrossValidation,
+    ParallelHistogram, ParallelMovingStats,
+};
+pub use quantile_simd::{
+    median_simd, percentile_simd, quantile_simd, quantiles_simd, quickselect_simd,
+};
+pub use simd_enhanced_advanced::{
+    bootstrap_mean_simd, corrcoef_matrix_simd, linear_regression_simd, robust_statistics_simd,
+    ttest_ind_simd,
+};
+pub use simd_enhanced_v3::{
+    cosine_distance_simd, detect_outliers_zscore_simd, distance_matrix_simd,
+    euclidean_distance_simd, histogram_simd, manhattan_distance_simd, MovingWindowSIMD,
+};
+pub use simd_optimized_v2::{
+    mean_simd_optimized, stats_simd_single_pass, variance_simd_optimized, SimdConfig,
+};
+pub use simd_enhanced_v4::{
+    batch_normalize_simd, comprehensive_stats_simd, covariance_matrix_simd,
+    exponential_moving_average_simd, outlier_detection_zscore_simd, quantiles_batch_simd,
+    robust_statistics_simd as robust_stats_v4_simd, sliding_window_stats_simd,
+    ComprehensiveStats, RobustStats, SlidingWindowStats,
+};
+
+// MCMC module
+pub use mcmc::ChainStatistics;
 
 // Statistical tests module
 pub mod tests;
@@ -464,7 +477,7 @@ pub use correlation::{
     corrcoef, kendall_tau, kendalltau, partial_corr, partial_corrr, pearson_r, pearsonr,
     point_biserial, point_biserialr, spearman_r, spearmanr,
 };
-pub use correlation_simd::{pearson_r_simd, corrcoef_simd, covariance_simd};
+pub use correlation_simd::{corrcoef_simd, covariance_simd, pearson_r_simd};
 
 // Dispersion and variability measures
 mod dispersion;

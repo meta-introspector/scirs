@@ -74,7 +74,12 @@ fn wright_bessel_asymptotic(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
         z.powf(power_exponent)
     } else {
         // For negative z, approximate using |z|
-        (-z).powf(power_exponent) * if power_exponent.fract() != 0.0 { -1.0 } else { 1.0 }
+        (-z).powf(power_exponent)
+            * if power_exponent.fract() != 0.0 {
+                -1.0
+            } else {
+                1.0
+            }
     };
 
     // Main asymptotic formula
@@ -91,7 +96,11 @@ fn wright_bessel_asymptotic(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
 /// where sigma = rho * (1/rho)^{1/rho}
 ///
 /// This is valid for |z| → ∞ and rho > 0
-fn wright_bessel_complex_asymptotic(rho: f64, beta: Complex64, z: Complex64) -> SpecialResult<Complex64> {
+fn wright_bessel_complex_asymptotic(
+    rho: f64,
+    beta: Complex64,
+    z: Complex64,
+) -> SpecialResult<Complex64> {
     if rho <= 0.0 {
         return Err(SpecialError::DomainError(
             "Asymptotic expansion requires rho > 0".to_string(),
@@ -174,20 +183,21 @@ pub fn wright_bessel(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
             "Parameter rho must be positive".to_string(),
         ));
     }
-    
+
     // Check for extreme parameter ranges
     if rho > 100.0 {
         return Err(SpecialError::DomainError(
             "Parameter rho is too large (> 100), may cause numerical instability".to_string(),
         ));
     }
-    
+
     if beta.abs() > 500.0 {
         return Err(SpecialError::DomainError(
-            "Parameter beta is too large (|beta| > 500), may cause numerical instability".to_string(),
+            "Parameter beta is too large (|beta| > 500), may cause numerical instability"
+                .to_string(),
         ));
     }
-    
+
     if z.abs() > 1000.0 {
         return Err(SpecialError::DomainError(
             "Parameter z is too large (|z| > 1000), may cause numerical overflow".to_string(),
@@ -197,12 +207,12 @@ pub fn wright_bessel(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
     if z.is_nan() || beta.is_nan() || rho.is_nan() {
         return Ok(f64::NAN);
     }
-    
+
     // Handle infinite inputs
     if z.is_infinite() {
         return Ok(if z > 0.0 { f64::INFINITY } else { 0.0 });
     }
-    
+
     if beta.is_infinite() {
         return Ok(0.0); // 1/Gamma(infinity) = 0
     }
@@ -224,14 +234,14 @@ pub fn wright_bessel(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
 
     // Compute using enhanced series expansion with convergence acceleration
     let result = compute_wright_bessel_series(rho, beta, z)?;
-    
+
     // Final stability check
     if !result.is_finite() {
         return Err(SpecialError::ComputationError(
-            "Wright Bessel computation produced non-finite result".to_string()
+            "Wright Bessel computation produced non-finite result".to_string(),
         ));
     }
-    
+
     Ok(result)
 }
 
@@ -253,20 +263,20 @@ pub fn wright_bessel_complex(rho: f64, beta: Complex64, z: Complex64) -> Special
             "Parameter rho must be positive".to_string(),
         ));
     }
-    
+
     // Check for extreme parameter ranges in complex case
     if rho > 100.0 {
         return Err(SpecialError::DomainError(
             "Parameter rho is too large (> 100), may cause numerical instability".to_string(),
         ));
     }
-    
+
     if beta.norm() > 500.0 {
         return Err(SpecialError::DomainError(
             "Parameter beta has too large magnitude (|beta| > 500)".to_string(),
         ));
     }
-    
+
     if z.norm() > 1000.0 {
         return Err(SpecialError::DomainError(
             "Parameter z has too large magnitude (|z| > 1000)".to_string(),
@@ -276,12 +286,12 @@ pub fn wright_bessel_complex(rho: f64, beta: Complex64, z: Complex64) -> Special
     if z.re.is_nan() || z.im.is_nan() || beta.re.is_nan() || beta.im.is_nan() || rho.is_nan() {
         return Ok(Complex64::new(f64::NAN, f64::NAN));
     }
-    
+
     // Handle infinite inputs
     if !z.is_finite() {
         return Ok(Complex64::new(f64::INFINITY, f64::INFINITY));
     }
-    
+
     if !beta.is_finite() {
         return Ok(Complex64::new(0.0, 0.0));
     }
@@ -347,7 +357,7 @@ pub fn wright_bessel_zeros(rho: f64, _beta: f64, n: usize) -> SpecialResult<Vec<
         // Newton's method iterations
         for _iter in 0..max_iterations {
             let f_val = wright_bessel(rho, _beta, x)?;
-            
+
             // Compute derivative analytically using the series relation
             let f_prime = wright_bessel_derivative(rho, _beta, x)?;
 
@@ -378,7 +388,7 @@ pub fn wright_bessel_zeros(rho: f64, _beta: f64, n: usize) -> SpecialResult<Vec<
             let verification = wright_bessel(rho, _beta, x)?;
             if verification.abs() < 1e-10 {
                 zeros.push(x);
-                
+
                 // Next guess: approximately π spacing for typical cases
                 x_guess = x + std::f64::consts::PI;
             } else {
@@ -388,13 +398,13 @@ pub fn wright_bessel_zeros(rho: f64, _beta: f64, n: usize) -> SpecialResult<Vec<
             }
         } else {
             // If Newton's method failed, try bisection method
-            let mut a = if i == 0 { 0.1 } else { zeros[i-1] + 0.1 };
+            let mut a = if i == 0 { 0.1 } else { zeros[i - 1] + 0.1 };
             let mut b = a + 10.0;
-            
+
             // Find an interval [a,b] where f(a) and f(b) have opposite signs
             let mut f_a = wright_bessel(rho, _beta, a)?;
             let mut f_b = wright_bessel(rho, _beta, b)?;
-            
+
             // Expand search if needed
             while f_a * f_b > 0.0 && b < 100.0 {
                 a = b;
@@ -402,19 +412,19 @@ pub fn wright_bessel_zeros(rho: f64, _beta: f64, n: usize) -> SpecialResult<Vec<
                 f_a = f_b;
                 f_b = wright_bessel(rho, _beta, b)?;
             }
-            
+
             if f_a * f_b <= 0.0 {
                 // Apply bisection method
                 for _bisect_iter in 0..100 {
                     let c = (a + b) / 2.0;
                     let f_c = wright_bessel(rho, _beta, c)?;
-                    
+
                     if f_c.abs() < tolerance || (b - a) / 2.0 < tolerance {
                         zeros.push(c);
                         x_guess = c + std::f64::consts::PI;
                         break;
                     }
-                    
+
                     if f_a * f_c < 0.0 {
                         b = c;
                         f_b = f_c;
@@ -434,8 +444,8 @@ pub fn wright_bessel_zeros(rho: f64, _beta: f64, n: usize) -> SpecialResult<Vec<
 
     if zeros.len() < n {
         return Err(SpecialError::ComputationError(format!(
-            "Could only find {} out of {} requested zeros", 
-            zeros.len(), 
+            "Could only find {} out of {} requested zeros",
+            zeros.len(),
             n
         )));
     }
@@ -444,63 +454,64 @@ pub fn wright_bessel_zeros(rho: f64, _beta: f64, n: usize) -> SpecialResult<Vec<
 }
 
 /// Enhanced series computation for Wright Bessel functions with convergence acceleration
-/// 
+///
 /// Implements Aitken's Δ² process for convergence acceleration and adaptive precision control
 fn compute_wright_bessel_series(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
     let max_terms = 200;
     let tolerance = 1e-15;
     let z_abs = z.abs();
-    
+
     // Adaptive tolerance based on argument magnitude
     let adaptive_tolerance = if z_abs < 1.0 {
-        tolerance * 10.0  // Looser tolerance for small arguments
+        tolerance * 10.0 // Looser tolerance for small arguments
     } else if z_abs > 10.0 {
-        tolerance / 10.0  // Tighter tolerance for large arguments
+        tolerance / 10.0 // Tighter tolerance for large arguments
     } else {
         tolerance
     };
-    
+
     // Pre-compute gamma(beta) to avoid repeated computation
     let gamma_beta = gamma(beta);
     if gamma_beta.is_infinite() || gamma_beta.is_nan() {
         return Ok(0.0);
     }
-    
+
     let mut sum = 1.0 / gamma_beta;
     let mut k_factorial = 1.0;
-    let mut z_power = 1.0;  // Tracks (-z)^k more efficiently
-    
+    let mut z_power = 1.0; // Tracks (-z)^k more efficiently
+
     // Store terms for Aitken acceleration
     let mut terms = Vec::with_capacity(max_terms);
     let mut partial_sums = Vec::with_capacity(max_terms);
-    
+
     partial_sums.push(sum);
-    
+
     // Compute series terms
     for k in 1..max_terms {
         let k_f64 = k as f64;
-        
+
         // Update factorial and power more efficiently
         k_factorial *= k_f64;
         z_power *= -z;
-        
+
         // Compute gamma function term with overflow protection
         let gamma_arg = rho * k_f64 + beta;
-        if gamma_arg > 170.0 {  // Gamma function overflow threshold
-            break;  // Series will converge before this becomes significant
+        if gamma_arg > 170.0 {
+            // Gamma function overflow threshold
+            break; // Series will converge before this becomes significant
         }
-        
+
         let gamma_term = gamma(gamma_arg);
         if gamma_term.is_infinite() || gamma_term.is_nan() {
             break;
         }
-        
+
         // Compute next term
         let term = z_power / (k_factorial * gamma_term);
         terms.push(term);
         sum += term;
         partial_sums.push(sum);
-        
+
         // Check for convergence every few terms
         if k >= 3 && k % 3 == 0 {
             // Apply Aitken's Δ² acceleration if we have enough terms
@@ -512,30 +523,34 @@ fn compute_wright_bessel_series(rho: f64, beta: f64, z: f64) -> SpecialResult<f6
                     }
                 }
             }
-            
+
             // Standard convergence check
             if term.abs() < adaptive_tolerance * sum.abs() {
                 break;
             }
-            
+
             // Divergence check
             if term.abs() > 1e10 || sum.abs() > 1e50 {
                 return Err(SpecialError::ComputationError(
-                    "Wright Bessel series diverged".to_string()
+                    "Wright Bessel series diverged".to_string(),
                 ));
             }
         }
     }
-    
+
     Ok(sum)
 }
 
 /// Enhanced series computation for Wright Bessel functions with complex arguments
-fn compute_wright_bessel_complex_series(rho: f64, beta: Complex64, z: Complex64) -> SpecialResult<Complex64> {
+fn compute_wright_bessel_complex_series(
+    rho: f64,
+    beta: Complex64,
+    z: Complex64,
+) -> SpecialResult<Complex64> {
     let max_terms = 200;
     let tolerance = 1e-15;
     let z_norm = z.norm();
-    
+
     // Adaptive tolerance
     let adaptive_tolerance = if z_norm < 1.0 {
         tolerance * 10.0
@@ -544,46 +559,46 @@ fn compute_wright_bessel_complex_series(rho: f64, beta: Complex64, z: Complex64)
     } else {
         tolerance
     };
-    
+
     // Pre-compute gamma(beta)
     let gamma_beta = gamma::complex::gamma_complex(beta);
     if !gamma_beta.is_finite() {
         return Ok(Complex64::new(0.0, 0.0));
     }
-    
+
     let mut sum = Complex64::new(1.0, 0.0) / gamma_beta;
     let mut k_factorial = Complex64::new(1.0, 0.0);
     let mut z_power = Complex64::new(1.0, 0.0);
     let neg_z = -z;
-    
+
     // Store partial sums for convergence acceleration
     let mut partial_sums = Vec::with_capacity(max_terms);
     partial_sums.push(sum);
-    
+
     for k in 1..max_terms {
         let k_f64 = k as f64;
         let k_complex = Complex64::new(k_f64, 0.0);
-        
+
         // Update factorial and power
         k_factorial *= k_complex;
         z_power *= neg_z;
-        
+
         // Compute gamma function term with overflow protection
         let gamma_arg = Complex64::new(rho * k_f64, 0.0) + beta;
         if gamma_arg.re > 170.0 {
             break;
         }
-        
+
         let gamma_term = gamma::complex::gamma_complex(gamma_arg);
         if !gamma_term.is_finite() {
             break;
         }
-        
+
         // Compute next term
         let term = z_power / (k_factorial * gamma_term);
         sum += term;
         partial_sums.push(sum);
-        
+
         // Convergence check every few terms
         if k >= 3 && k % 3 == 0 {
             // Apply complex Aitken acceleration
@@ -595,45 +610,45 @@ fn compute_wright_bessel_complex_series(rho: f64, beta: Complex64, z: Complex64)
                     }
                 }
             }
-            
+
             // Standard convergence check
             if term.norm() < adaptive_tolerance * sum.norm() {
                 break;
             }
-            
+
             // Divergence check
             if term.norm() > 1e10 || sum.norm() > 1e50 {
                 return Err(SpecialError::ComputationError(
-                    "Complex Wright Bessel series diverged".to_string()
+                    "Complex Wright Bessel series diverged".to_string(),
                 ));
             }
         }
     }
-    
+
     Ok(sum)
 }
 
 /// Aitken's Δ² convergence acceleration for real sequences
-/// 
+///
 /// Given a sequence s_n, computes s_n - (s_{n+1} - s_n)² / (s_{n+2} - 2s_{n+1} + s_n)
 fn aitken_acceleration(partial_sums: &[f64], n: usize) -> SpecialResult<Option<f64>> {
     if n < 3 || partial_sums.len() < 3 * n {
         return Ok(None);
     }
-    
+
     let s_n = partial_sums[3 * (n - 1)];
     let s_n_plus_1 = partial_sums[3 * n - 1];
     let s_n_plus_2 = partial_sums[3 * n];
-    
+
     let delta = s_n_plus_1 - s_n;
     let delta2 = s_n_plus_2 - 2.0 * s_n_plus_1 + s_n;
-    
+
     if delta2.abs() < 1e-16 {
-        return Ok(None);  // Denominator too small
+        return Ok(None); // Denominator too small
     }
-    
+
     let accelerated = s_n - delta * delta / delta2;
-    
+
     if accelerated.is_finite() {
         Ok(Some(accelerated))
     } else {
@@ -642,24 +657,27 @@ fn aitken_acceleration(partial_sums: &[f64], n: usize) -> SpecialResult<Option<f
 }
 
 /// Aitken's Δ² convergence acceleration for complex sequences
-fn aitken_acceleration_complex(partial_sums: &[Complex64], n: usize) -> SpecialResult<Option<Complex64>> {
+fn aitken_acceleration_complex(
+    partial_sums: &[Complex64],
+    n: usize,
+) -> SpecialResult<Option<Complex64>> {
     if n < 3 || partial_sums.len() < 3 * n {
         return Ok(None);
     }
-    
+
     let s_n = partial_sums[3 * (n - 1)];
     let s_n_plus_1 = partial_sums[3 * n - 1];
     let s_n_plus_2 = partial_sums[3 * n];
-    
+
     let delta = s_n_plus_1 - s_n;
     let delta2 = s_n_plus_2 - Complex64::new(2.0, 0.0) * s_n_plus_1 + s_n;
-    
+
     if delta2.norm() < 1e-16 {
         return Ok(None);
     }
-    
+
     let accelerated = s_n - delta * delta / delta2;
-    
+
     if accelerated.is_finite() {
         Ok(Some(accelerated))
     } else {
@@ -668,7 +686,7 @@ fn aitken_acceleration_complex(partial_sums: &[Complex64], n: usize) -> SpecialR
 }
 
 /// Computes the derivative of the Wright Bessel function J_{rho, beta}(z) with respect to z
-/// 
+///
 /// Uses the series relation: d/dz J_{rho, beta}(z) = J_{rho, beta+rho}(z) / rho
 /// This is derived from the series definition and provides exact analytical derivatives.
 pub fn wright_bessel_derivative(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
@@ -678,11 +696,11 @@ pub fn wright_bessel_derivative(rho: f64, beta: f64, z: f64) -> SpecialResult<f6
             "Parameter rho must be positive for derivative computation".to_string(),
         ));
     }
-    
+
     if z.is_nan() || beta.is_nan() || rho.is_nan() {
         return Ok(f64::NAN);
     }
-    
+
     // Special case: z = 0
     if z == 0.0 {
         // The derivative at z=0 is 0 unless beta + rho = 1, in which case it's 1/Gamma(1) = 1
@@ -692,7 +710,7 @@ pub fn wright_bessel_derivative(rho: f64, beta: f64, z: f64) -> SpecialResult<f6
             return Ok(0.0);
         }
     }
-    
+
     // Use the analytical relation: d/dz J_{rho, beta}(z) = J_{rho, beta+rho}(z) / rho
     // This comes from differentiating the series term by term
     let derivative_function = wright_bessel(rho, beta + rho, z)?;
@@ -706,19 +724,19 @@ fn wright_bessel_asymptotic_enhanced(rho: f64, beta: f64, z: f64) -> SpecialResu
             "Enhanced asymptotic expansion requires rho > 0".to_string(),
         ));
     }
-    
+
     // Enhanced overflow protection
     if z.abs() > 500.0 {
         return Ok(if z > 0.0 { f64::INFINITY } else { 0.0 });
     }
-    
+
     // More accurate asymptotic coefficient computation
     let sigma = if (rho - 1.0).abs() < 1e-10 {
         1.0
     } else {
         rho * (1.0 / rho).powf(1.0 / rho)
     };
-    
+
     // Enhanced handling for negative z
     let (z_to_1_over_rho, phase_factor) = if z >= 0.0 {
         (z.powf(1.0 / rho), 1.0)
@@ -727,10 +745,10 @@ fn wright_bessel_asymptotic_enhanced(rho: f64, beta: f64, z: f64) -> SpecialResu
         let phase = std::f64::consts::PI / rho;
         (magnitude, phase.cos())
     };
-    
+
     // Compute the main exponential term with better precision
     let exponent = sigma * z_to_1_over_rho * phase_factor;
-    
+
     // Enhanced overflow/underflow checks
     if exponent > 500.0 {
         return Ok(f64::INFINITY);
@@ -738,7 +756,7 @@ fn wright_bessel_asymptotic_enhanced(rho: f64, beta: f64, z: f64) -> SpecialResu
     if exponent < -500.0 {
         return Ok(0.0);
     }
-    
+
     // More accurate power term computation
     let power_exponent = (beta - 1.0) / (2.0 * rho);
     let power_term = if z >= 0.0 {
@@ -746,21 +764,25 @@ fn wright_bessel_asymptotic_enhanced(rho: f64, beta: f64, z: f64) -> SpecialResu
     } else {
         let magnitude = (-z).powf(power_exponent);
         let is_odd = (power_exponent * 2.0).rem_euclid(2.0) > 1.0;
-        if is_odd { -magnitude } else { magnitude }
+        if is_odd {
+            -magnitude
+        } else {
+            magnitude
+        }
     };
-    
+
     // Enhanced normalization factor
     let norm_factor = 1.0 / (2.0 * std::f64::consts::PI).sqrt() / rho.sqrt();
-    
+
     // Add higher-order asymptotic corrections
     let correction = if z.abs() > 1.0 {
         1.0 + (beta - 1.0) * (beta - 2.0) / (8.0 * rho * z_to_1_over_rho)
     } else {
         1.0
     };
-    
+
     let result = norm_factor * power_term * exponent.exp() * correction;
-    
+
     Ok(result)
 }
 
@@ -801,17 +823,20 @@ mod tests {
         use num_complex::Complex64;
 
         // For z=0, beta=1, the result should be 1/Gamma(1) = 1
-        let result = wright_bessel_complex(1.0, Complex64::new(1.0, 0.0), Complex64::new(0.0, 0.0)).unwrap();
+        let result =
+            wright_bessel_complex(1.0, Complex64::new(1.0, 0.0), Complex64::new(0.0, 0.0)).unwrap();
         assert_relative_eq!(result.re, 1.0, epsilon = 1e-10);
         assert_relative_eq!(result.im, 0.0, epsilon = 1e-10);
 
         // For z=0, beta=2, the result should be 1/Gamma(2) = 1
-        let result = wright_bessel_complex(1.0, Complex64::new(2.0, 0.0), Complex64::new(0.0, 0.0)).unwrap();
+        let result =
+            wright_bessel_complex(1.0, Complex64::new(2.0, 0.0), Complex64::new(0.0, 0.0)).unwrap();
         assert_relative_eq!(result.re, 1.0, epsilon = 1e-10);
         assert_relative_eq!(result.im, 0.0, epsilon = 1e-10);
 
         // Test with complex beta and z=0
-        let result = wright_bessel_complex(1.0, Complex64::new(1.0, 0.5), Complex64::new(0.0, 0.0)).unwrap();
+        let result =
+            wright_bessel_complex(1.0, Complex64::new(1.0, 0.5), Complex64::new(0.0, 0.0)).unwrap();
         assert!(result.re.is_finite());
         assert!(result.im.is_finite());
     }
@@ -821,11 +846,18 @@ mod tests {
         use num_complex::Complex64;
 
         // Test with invalid rho
-        assert!(wright_bessel_complex(0.0, Complex64::new(1.0, 0.0), Complex64::new(1.0, 0.0)).is_err());
-        assert!(wright_bessel_complex(-1.0, Complex64::new(1.0, 0.0), Complex64::new(1.0, 0.0)).is_err());
+        assert!(
+            wright_bessel_complex(0.0, Complex64::new(1.0, 0.0), Complex64::new(1.0, 0.0)).is_err()
+        );
+        assert!(
+            wright_bessel_complex(-1.0, Complex64::new(1.0, 0.0), Complex64::new(1.0, 0.0))
+                .is_err()
+        );
 
         // Test with NaN parameters
-        let result = wright_bessel_complex(1.0, Complex64::new(1.0, 0.0), Complex64::new(f64::NAN, 0.0)).unwrap();
+        let result =
+            wright_bessel_complex(1.0, Complex64::new(1.0, 0.0), Complex64::new(f64::NAN, 0.0))
+                .unwrap();
         assert!(result.re.is_nan());
         assert!(result.im.is_nan());
     }
@@ -837,7 +869,7 @@ mod tests {
             Ok(zeros) => {
                 assert_eq!(zeros.len(), 1);
                 assert!(zeros[0] > 0.0);
-                
+
                 // Verify it's actually close to a zero
                 let verification = wright_bessel(1.0, 1.0, zeros[0]).unwrap();
                 assert!(verification.abs() < 1e-8);

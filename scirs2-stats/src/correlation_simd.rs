@@ -3,11 +3,11 @@
 //! This module provides SIMD-accelerated implementations of correlation
 //! functions using scirs2-core's unified SIMD operations.
 
-use crate::error::{StatsError, StatsResult};
 use crate::descriptive_simd::mean_simd;
+use crate::error::{StatsError, StatsResult};
 use ndarray::{ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
-use scirs2_core::simd_ops::{SimdUnifiedOps, AutoOptimizer};
+use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 
 /// Compute the Pearson correlation coefficient using SIMD operations
 ///
@@ -43,14 +43,12 @@ where
     // Validate inputs
     if x.len() != y.len() {
         return Err(StatsError::dimension_mismatch(
-            "Arrays must have the same length"
+            "Arrays must have the same length",
         ));
     }
 
     if x.is_empty() {
-        return Err(StatsError::invalid_argument(
-            "Arrays cannot be empty"
-        ));
+        return Err(StatsError::invalid_argument("Arrays cannot be empty"));
     }
 
     let n = x.len();
@@ -83,7 +81,7 @@ where
         // Check for zero variances
         if sum_x2 <= F::epsilon() || sum_y2 <= F::epsilon() {
             return Err(StatsError::invalid_argument(
-                "Cannot compute correlation when one or both variables have zero variance"
+                "Cannot compute correlation when one or both variables have zero variance",
             ));
         }
 
@@ -109,7 +107,7 @@ where
 
         if sum_x2 <= F::epsilon() || sum_y2 <= F::epsilon() {
             return Err(StatsError::invalid_argument(
-                "Cannot compute correlation when one or both variables have zero variance"
+                "Cannot compute correlation when one or both variables have zero variance",
             ));
         }
 
@@ -140,7 +138,7 @@ where
     D: Data<Elem = F>,
 {
     use ndarray::s;
-    
+
     let (n_vars, n_obs) = if rowvar {
         (data.nrows(), data.ncols())
     } else {
@@ -149,7 +147,7 @@ where
 
     if n_obs < 2 {
         return Err(StatsError::invalid_argument(
-            "Need at least 2 observations to compute correlation"
+            "Need at least 2 observations to compute correlation",
         ));
     }
 
@@ -158,14 +156,14 @@ where
     // Compute correlations
     for i in 0..n_vars {
         corr_matrix[(i, i)] = F::one(); // Diagonal is always 1
-        
+
         for j in (i + 1)..n_vars {
             let var_i = if rowvar {
                 data.slice(s![i, ..])
             } else {
                 data.slice(s![.., i])
             };
-            
+
             let var_j = if rowvar {
                 data.slice(s![j, ..])
             } else {
@@ -196,14 +194,14 @@ where
 {
     if x.len() != y.len() {
         return Err(StatsError::dimension_mismatch(
-            "Arrays must have the same length"
+            "Arrays must have the same length",
         ));
     }
 
     let n = x.len();
     if n <= ddof {
         return Err(StatsError::invalid_argument(
-            "Not enough data points for the given degrees of freedom"
+            "Not enough data points for the given degrees of freedom",
         ));
     }
 

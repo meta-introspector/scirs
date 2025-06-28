@@ -379,7 +379,7 @@ impl NetCDFFile {
     ///
     /// This is a placeholder implementation. In a real implementation,
     /// this would read actual data from a NetCDF file.
-    pub fn read_variable<T: Clone + Default>(&self, name: &str) -> Result<ArrayD<T>> {
+    pub fn read_variable<T: Clone + Default + 'static>(&self, name: &str) -> Result<ArrayD<T>> {
         if self.mode != "r" {
             return Err(IoError::ValidationError(
                 "File not opened in read mode".to_string(),
@@ -407,7 +407,7 @@ impl NetCDFFile {
         if let Some(ref hdf5) = self.hdf5_backend {
             // Try to read from HDF5 dataset with enhanced compression handling
             let array_f64 = self.read_compressed_variable_data(hdf5, name)?;
-            
+
             // Convert to requested type with proper type handling
             let data: Vec<T> = self.convert_data_type(&array_f64)?;
 
@@ -452,27 +452,38 @@ impl NetCDFFile {
         }
 
         // For NetCDF4/HDF5 backend, write to HDF5 file with compression support
+        // Get compression and chunking info before mutable borrow
+        let compression_level = self.get_compression_level();
+        let chunking_enabled = self.is_chunking_enabled();
+        let chunk_size = if chunking_enabled {
+            Some(self.calculate_optimal_chunk_size(data.shape()))
+        } else {
+            None
+        };
+
         if let Some(ref mut hdf5) = self.hdf5_backend {
             // Create dataset options with compression if enabled
             let mut dataset_options = crate::hdf5::DatasetOptions::default();
-            
-            // Check if compression is enabled for this file
-            if let Some(compression_level) = self.get_compression_level() {
-                dataset_options.compression.gzip = Some(compression_level);
+
+            // Apply compression if enabled
+            if let Some(level) = compression_level {
+                dataset_options.compression.gzip = Some(level);
                 dataset_options.compression.shuffle = true; // Often improves compression
             }
-            
-            // Check if chunking is enabled
-            if self.is_chunking_enabled() {
-                let chunk_size = self.calculate_optimal_chunk_size(data.shape());
-                dataset_options.chunk_size = Some(chunk_size);
+
+            // Apply chunking if enabled
+            if let Some(chunk) = chunk_size {
+                dataset_options.chunk_size = Some(chunk);
             }
-            
+
+            // Check if compression is enabled before moving dataset_options
+            let has_compression = dataset_options.compression.gzip.is_some();
+
             // Convert data and write to HDF5 dataset with compression
             hdf5.create_dataset_from_array(name, data, Some(dataset_options))?;
-            
+
             // Store compression metadata as attributes
-            if dataset_options.compression.gzip.is_some() {
+            if has_compression {
                 if let Ok(dataset) = hdf5.get_dataset(name) {
                     // In a full implementation, we'd add the compression attributes to the dataset
                 }
@@ -524,18 +535,18 @@ impl NetCDFFile {
     fn read_compressed_variable_data(&self, hdf5: &HDF5File, name: &str) -> Result<ArrayD<f64>> {
         // First, try to read the dataset directly
         let array_data = hdf5.read_dataset(name)?;
-        
+
         // Check if the variable has compression metadata
         if let Ok(dataset) = hdf5.get_dataset(name) {
             // Look for compression-related attributes
-            let has_compression = dataset.get_attribute("compression").is_some() ||
-                                 dataset.get_attribute("shuffle").is_some() ||
-                                 dataset.get_attribute("deflate").is_some();
-            
+            let has_compression = dataset.get_attribute("compression").is_some()
+                || dataset.get_attribute("shuffle").is_some()
+                || dataset.get_attribute("deflate").is_some();
+
             if has_compression {
                 // For compressed data, we might need special handling
                 // but in this case HDF5 backend already handles decompression transparently
-                
+
                 // Check for chunking information
                 if let Some(chunk_attr) = dataset.get_attribute("chunksizes") {
                     // Process chunked data if needed
@@ -543,51 +554,67 @@ impl NetCDFFile {
                 }
             }
         }
-        
+
         Ok(array_data)
     }
-    
+
     /// Process chunked data for optimal reading
-    fn process_chunked_data(&self, array_data: &ArrayD<f64>, _chunk_attr: &crate::hdf5::AttributeValue) -> Result<()> {
+    fn process_chunked_data(
+        &self,
+        array_data: &ArrayD<f64>,
+        _chunk_attr: &crate::hdf5::AttributeValue,
+    ) -> Result<()> {
         // In a full implementation, this would optimize chunk reading
         // For now, we return the data as-is since HDF5 handles chunk decompression
         // This is where chunk-specific optimizations would go:
         // - Cache frequently accessed chunks
         // - Pre-decompress chunks in background
         // - Optimize chunk layout for access patterns
-        
+
         let _chunk_info = format!("Processing {} elements in chunked format", array_data.len());
         // For performance logging in a full implementation
-        
+
         Ok(())
     }
-    
-    /// Convert data types properly for NetCDF variables
-    fn convert_data_type<T: Clone + Default>(&self, array_f64: &ArrayD<f64>) -> Result<Vec<T>> {
+
+    /// Convert data types properly for NetCDF variables using safer casting
+    fn convert_data_type<T>(&self, array_f64: &ArrayD<f64>) -> Result<Vec<T>>
+    where
+        T: Clone + Default + 'static,
+    {
+        // Use type-specific conversion helpers to avoid unsafe transmute
         let data: Vec<T> = array_f64
             .iter()
             .map(|&x| {
-                // Handle different numeric types properly
-                if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
-                    unsafe { std::mem::transmute_copy(&x) }
-                } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() {
-                    unsafe { std::mem::transmute_copy(&(x as f32)) }
-                } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<i32>() {
-                    unsafe { std::mem::transmute_copy(&(x as i32)) }
-                } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<i16>() {
-                    unsafe { std::mem::transmute_copy(&(x as i16)) }
-                } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<i8>() {
-                    unsafe { std::mem::transmute_copy(&(x as i8)) }
+                // Use any::Any for safe downcasting
+                let value: Box<dyn std::any::Any> =
+                    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
+                        Box::new(x)
+                    } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() {
+                        Box::new(x as f32)
+                    } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<i32>() {
+                        Box::new(x as i32)
+                    } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<i16>() {
+                        Box::new(x as i16)
+                    } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<i8>() {
+                        Box::new(x as i8)
+                    } else {
+                        // Fallback for unsupported types
+                        return T::default();
+                    };
+
+                // Safe downcast
+                if let Ok(boxed_t) = value.downcast::<T>() {
+                    *boxed_t
                 } else {
-                    // Fallback for unsupported types
                     T::default()
                 }
             })
             .collect();
-        
+
         Ok(data)
     }
-    
+
     /// Get compression level for this NetCDF file
     fn get_compression_level(&self) -> Option<u8> {
         // Check if compression is enabled via global attributes
@@ -601,7 +628,7 @@ impl NetCDFFile {
             }
         }
     }
-    
+
     /// Check if chunking is enabled for this NetCDF file
     fn is_chunking_enabled(&self) -> bool {
         // Check if chunking is enabled via global attributes
@@ -609,55 +636,59 @@ impl NetCDFFile {
             chunking_str.to_lowercase() == "true" || chunking_str == "1"
         } else {
             // Default to enabled for NetCDF4 files
-            matches!(self.format, NetCDFFormat::NetCDF4 | NetCDFFormat::NetCDF4Classic)
+            matches!(
+                self.format,
+                NetCDFFormat::NetCDF4 | NetCDFFormat::NetCDF4Classic
+            )
         }
     }
-    
+
     /// Calculate optimal chunk size for a given data shape
     fn calculate_optimal_chunk_size(&self, shape: &[usize]) -> Vec<usize> {
         // Target chunk size in bytes (aim for ~1MB chunks)
         const TARGET_CHUNK_BYTES: usize = 1024 * 1024;
         const ELEMENT_SIZE: usize = 8; // Assume f64 for simplicity
-        
+
         let target_elements = TARGET_CHUNK_BYTES / ELEMENT_SIZE;
-        
+
         if shape.is_empty() {
             return vec![1];
         }
-        
+
         // For 1D arrays, use simple chunking
         if shape.len() == 1 {
             let chunk_size = (target_elements).min(shape[0]).max(1);
             return vec![chunk_size];
         }
-        
+
         // For multi-dimensional arrays, balance chunk dimensions
         let total_elements: usize = shape.iter().product();
-        
+
         if total_elements <= target_elements {
             // Small array - use full dimensions as chunk
             return shape.to_vec();
         }
-        
+
         // Calculate scaling factor to reduce dimensions proportionally
-        let scale_factor = (target_elements as f64 / total_elements as f64).powf(1.0 / shape.len() as f64);
-        
+        let scale_factor =
+            (target_elements as f64 / total_elements as f64).powf(1.0 / shape.len() as f64);
+
         let mut chunk_shape: Vec<usize> = shape
             .iter()
             .map(|&dim| ((dim as f64 * scale_factor) as usize).max(1))
             .collect();
-        
+
         // Ensure chunk doesn't exceed actual dimensions
         for (i, &max_dim) in shape.iter().enumerate() {
             chunk_shape[i] = chunk_shape[i].min(max_dim);
         }
-        
+
         // For time series data (first dimension is often time), prefer larger time chunks
         if shape.len() >= 2 {
             let time_chunk = (target_elements / shape[1..].iter().product::<usize>()).max(1);
             chunk_shape[0] = time_chunk.min(shape[0]);
         }
-        
+
         chunk_shape
     }
 

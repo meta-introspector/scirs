@@ -3,25 +3,29 @@
 //! This module provides federated learning capabilities for distributed
 //! model training while preserving data privacy.
 
-pub mod client;
-pub mod server;
-pub mod aggregation;
-pub mod privacy;
-pub mod communication;
-pub mod strategies;
-pub mod fednova;
 pub mod advanced_algorithms;
+pub mod aggregation;
+pub mod client;
+pub mod communication;
+pub mod fednova;
 pub mod personalized;
+pub mod privacy;
+pub mod server;
+pub mod strategies;
 
-pub use client::{FederatedClient, ClientConfig};
-pub use server::{FederatedServer, ServerConfig};
-pub use aggregation::{AggregationStrategy, FedAvg, FedProx, FedYogi, TrimmedMean, Krum, Median};
-pub use privacy::{DifferentialPrivacy, SecureAggregation};
-pub use communication::{CommunicationProtocol, Message, CompressionMethod, CompressedMessage, MessageCompressor};
-pub use strategies::{ClientSelection, SamplingStrategy};
+pub use advanced_algorithms::{AggregatorFactory, FedAdagrad, FedAdam, FedAvgM, FedLAG, SCAFFOLD};
+pub use aggregation::{AggregationStrategy, FedAvg, FedProx, FedYogi, Krum, Median, TrimmedMean};
+pub use client::{ClientConfig, FederatedClient};
+pub use communication::{
+    CommunicationProtocol, CompressedMessage, CompressionMethod, Message, MessageCompressor,
+};
 pub use fednova::{FedNova, FedNovaClient, FedNovaCoordinator, FedNovaUpdate};
-pub use advanced_algorithms::{SCAFFOLD, FedAvgM, FedAdam, FedAdagrad, FedLAG, AggregatorFactory};
-pub use personalized::{PersonalizedFL, PersonalizationStrategy, PersonalizedAggregation, PersonalizationStats};
+pub use personalized::{
+    PersonalizationStats, PersonalizationStrategy, PersonalizedAggregation, PersonalizedFL,
+};
+pub use privacy::{DifferentialPrivacy, SecureAggregation};
+pub use server::{FederatedServer, ServerConfig};
+pub use strategies::{ClientSelection, SamplingStrategy};
 
 use crate::error::Result;
 use crate::models::sequential::Sequential;
@@ -107,7 +111,7 @@ impl FederatedLearning {
     /// Create a new federated learning instance
     pub fn new(config: FederatedConfig, num_clients: usize) -> Result<Self> {
         let server = FederatedServer::new(ServerConfig::from(&config))?;
-        
+
         let mut clients = Vec::with_capacity(num_clients);
         for i in 0..num_clients {
             let client_config = ClientConfig {
@@ -120,7 +124,7 @@ impl FederatedLearning {
             };
             clients.push(FederatedClient::new(client_config)?);
         }
-        
+
         Ok(Self {
             config,
             server,
@@ -130,47 +134,46 @@ impl FederatedLearning {
     }
 
     /// Run federated training
-    pub fn train(&mut self, 
-                 global_model: &mut Sequential<f32>,
-                 client_data: &HashMap<usize, (ArrayView2<f32>, ArrayView1<usize>)>) -> Result<()> {
-        
+    pub fn train(
+        &mut self,
+        global_model: &mut Sequential<f32>,
+        client_data: &HashMap<usize, (ArrayView2<f32>, ArrayView1<usize>)>,
+    ) -> Result<()> {
         for round in 0..self.config.num_rounds {
             let round_start = std::time::Instant::now();
-            
+
             // Select clients for this round
             let selected_clients = self.select_clients()?;
-            
+
             // Send global model to selected clients
             let model_params = self.server.get_model_parameters(global_model)?;
-            
+
             // Collect client updates
             let mut client_updates = Vec::new();
             let mut round_losses = Vec::new();
             let mut round_accuracies = Vec::new();
             let mut communication_bytes = 0;
-            
+
             for &client_id in &selected_clients {
                 if let Some((data, labels)) = client_data.get(&client_id) {
                     // Client trains on local data
-                    let update = self.clients[client_id].train_on_local_data(
-                        &model_params,
-                        data,
-                        labels
-                    )?;
-                    
+                    let update =
+                        self.clients[client_id].train_on_local_data(&model_params, data, labels)?;
+
                     communication_bytes += update.size_bytes();
                     round_losses.push(update.loss);
                     round_accuracies.push(update.accuracy);
                     client_updates.push(update);
                 }
             }
-            
+
             // Aggregate updates
             let aggregated_update = self.server.aggregate_updates(&client_updates)?;
-            
+
             // Update global model
-            self.server.update_global_model(global_model, &aggregated_update)?;
-            
+            self.server
+                .update_global_model(global_model, &aggregated_update)?;
+
             // Record round statistics
             let round_stats = RoundStatistics {
                 round,
@@ -181,15 +184,15 @@ impl FederatedLearning {
                 duration: round_start.elapsed().as_secs_f64(),
                 privacy_spent: self.calculate_privacy_spent(round),
             };
-            
+
             self.communication_rounds.push(round_stats);
-            
+
             // Check for early stopping
             if self.should_stop_early() {
                 break;
             }
         }
-        
+
         Ok(())
     }
 
@@ -197,29 +200,33 @@ impl FederatedLearning {
     fn select_clients(&self) -> Result<Vec<usize>> {
         use rand::prelude::*;
         let mut rng = rand::rng();
-        
+
         match self.config.client_selection.as_str() {
             "random" => {
                 // Random selection
                 let mut client_indices: Vec<usize> = (0..self.clients.len()).collect();
                 client_indices.shuffle(&mut rng);
-                Ok(client_indices.into_iter()
+                Ok(client_indices
+                    .into_iter()
                     .take(self.config.clients_per_round)
                     .collect())
-            },
+            }
             "importance" => {
                 // Importance sampling based on data size
                 // Simplified implementation
-                let mut weighted_indices: Vec<(usize, f32)> = self.clients.iter()
+                let mut weighted_indices: Vec<(usize, f32)> = self
+                    .clients
+                    .iter()
                     .enumerate()
                     .map(|(i, _)| (i, 1.0 + rng.gen::<f32>()))
                     .collect();
                 weighted_indices.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-                Ok(weighted_indices.into_iter()
+                Ok(weighted_indices
+                    .into_iter()
                     .take(self.config.clients_per_round)
                     .map(|(i, _)| i)
                     .collect())
-            },
+            }
             _ => {
                 // Default to random
                 self.select_clients()
@@ -241,15 +248,16 @@ impl FederatedLearning {
         if self.communication_rounds.len() < 10 {
             return false;
         }
-        
+
         // Check if loss has plateaued
-        let recent_losses: Vec<f32> = self.communication_rounds
+        let recent_losses: Vec<f32> = self
+            .communication_rounds
             .iter()
             .rev()
             .take(5)
             .map(|r| r.avg_loss)
             .collect();
-        
+
         let loss_variance = self.calculate_variance(&recent_losses);
         loss_variance < 0.0001
     }
@@ -259,12 +267,10 @@ impl FederatedLearning {
         if values.is_empty() {
             return 0.0;
         }
-        
+
         let mean = values.iter().sum::<f32>() / values.len() as f32;
-        let variance = values.iter()
-            .map(|v| (v - mean).powi(2))
-            .sum::<f32>() / values.len() as f32;
-        
+        let variance = values.iter().map(|v| (v - mean).powi(2)).sum::<f32>() / values.len() as f32;
+
         variance
     }
 
@@ -277,12 +283,17 @@ impl FederatedLearning {
     pub fn export_metrics(&self, path: &str) -> Result<()> {
         use std::fs::File;
         use std::io::Write;
-        
+
         let mut file = File::create(path)?;
-        writeln!(file, "round,num_clients,avg_loss,avg_accuracy,communication_cost,duration,privacy_spent")?;
-        
+        writeln!(
+            file,
+            "round,num_clients,avg_loss,avg_accuracy,communication_cost,duration,privacy_spent"
+        )?;
+
         for round in &self.communication_rounds {
-            writeln!(file, "{},{},{},{},{},{},{}",
+            writeln!(
+                file,
+                "{},{},{},{},{},{},{}",
                 round.round,
                 round.num_clients,
                 round.avg_loss,
@@ -292,7 +303,7 @@ impl FederatedLearning {
                 round.privacy_spent.unwrap_or(0.0)
             )?;
         }
-        
+
         Ok(())
     }
 }
@@ -315,7 +326,8 @@ pub struct ClientUpdate {
 impl ClientUpdate {
     /// Calculate size in bytes
     pub fn size_bytes(&self) -> usize {
-        self.weight_updates.iter()
+        self.weight_updates
+            .iter()
             .map(|w| w.len() * std::mem::size_of::<f32>())
             .sum()
     }

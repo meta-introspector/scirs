@@ -27,7 +27,11 @@ pub fn safe_from_usize<T: Float>(value: usize, context: &str) -> SpatialResult<T
 }
 
 /// Safely perform partial comparison with proper error handling
-pub fn safe_partial_cmp<T: PartialOrd>(a: &T, b: &T, context: &str) -> SpatialResult<std::cmp::Ordering> {
+pub fn safe_partial_cmp<T: PartialOrd>(
+    a: &T,
+    b: &T,
+    context: &str,
+) -> SpatialResult<std::cmp::Ordering> {
     a.partial_cmp(b).ok_or_else(|| {
         SpatialError::ComputationError(format!(
             "Failed to compare values in {} (possibly NaN or incomparable values)",
@@ -70,7 +74,10 @@ where
 
 /// Safely convert array view to slice
 #[allow(dead_code)]
-pub fn safe_as_slice<'a, T>(array: &'a ndarray::ArrayView1<'a, T>, context: &str) -> SpatialResult<&'a [T]> {
+pub fn safe_as_slice<'a, T>(
+    array: &'a ndarray::ArrayView1<'a, T>,
+    context: &str,
+) -> SpatialResult<&'a [T]> {
     array.as_slice().ok_or_else(|| {
         SpatialError::ComputationError(format!(
             "Failed to convert array to slice in {} (non-contiguous memory layout)",
@@ -107,7 +114,9 @@ pub fn safe_index<T: Clone>(array: &[T], index: usize, context: &str) -> Spatial
     array.get(index).cloned().ok_or_else(|| {
         SpatialError::ComputationError(format!(
             "Index {} out of bounds for array of length {} in {}",
-            index, array.len(), context
+            index,
+            array.len(),
+            context
         ))
     })
 }
@@ -141,11 +150,11 @@ mod tests {
     #[test]
     fn test_safe_index() {
         let array = vec![1.0, 2.0, 3.0];
-        
+
         let result = safe_index(&array, 1, "test");
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 2.0);
-        
+
         let result = safe_index(&array, 5, "test");
         assert!(result.is_err());
     }

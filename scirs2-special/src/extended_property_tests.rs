@@ -90,7 +90,7 @@ fn complex_approx_eq(a: Complex64, b: Complex64, tol: f64) -> bool {
 // Gamma function properties
 mod gamma_properties {
     use super::*;
-    use crate::{gamma, beta, digamma, gammaln};
+    use crate::{beta, digamma, gamma, gammaln};
 
     #[quickcheck]
     fn gamma_reflection_formula(x: f64) -> TestResult {
@@ -118,7 +118,7 @@ mod gamma_properties {
         let gamma_x = gamma(x);
         let gamma_x_half = gamma(x + 0.5);
         let gamma_2x = gamma(2.0 * x);
-        
+
         let left = gamma_x * gamma_x_half;
         let right = f64::consts::PI.sqrt() * 2.0_f64.powf(1.0 - 2.0 * x) * gamma_2x;
 
@@ -142,7 +142,7 @@ mod gamma_properties {
         // ψ(x + n) - ψ(x) = sum(1/(x + k) for k in 0..n)
         let x = x.0;
         let n = n.0 as usize;
-        
+
         if x > 50.0 || n > 10 {
             return TestResult::discard();
         }
@@ -177,14 +177,14 @@ mod gamma_properties {
 // Bessel function properties
 mod bessel_properties {
     use super::*;
-    use crate::bessel::{j0, j1, jn, y0, y1, yn, i0, i1, iv, k0, k1, kv};
+    use crate::bessel::{i0, i1, iv, j0, j1, jn, k0, k1, kv, y0, y1, yn};
 
     #[quickcheck]
     fn bessel_j_recurrence(n: NonNegInt, x: Positive) -> TestResult {
         // J_{n-1}(x) + J_{n+1}(x) = (2n/x) * J_n(x)
         let n = n.0;
         let x = x.0;
-        
+
         if n < 1 || n > 10 || x > 20.0 {
             return TestResult::discard();
         }
@@ -204,7 +204,7 @@ mod bessel_properties {
         // J_0'(x) = -J_1(x)
         let x = x.0;
         let h = 1e-8;
-        
+
         let j0_x = j0(x);
         let j0_x_h = j0(x + h);
         let derivative = (j0_x_h - j0_x) / h;
@@ -255,14 +255,14 @@ mod bessel_properties {
 // Error function properties
 mod error_function_properties {
     use super::*;
-    use crate::{erf, erfc, erfinv, erfcinv};
+    use crate::{erf, erfc, erfcinv, erfinv};
 
     #[quickcheck]
     fn erf_erfc_complement(x: f64) -> bool {
         // erf(x) + erfc(x) = 1
         let erf_x = erf(x);
         let erfc_x = erfc(x);
-        
+
         approx_eq(erf_x + erfc_x, 1.0, 1e-14)
     }
 
@@ -311,7 +311,7 @@ mod error_function_properties {
 // Orthogonal polynomial properties
 mod orthogonal_polynomial_properties {
     use super::*;
-    use crate::{legendre, chebyshev, hermite, laguerre};
+    use crate::{chebyshev, hermite, laguerre, legendre};
 
     #[quickcheck]
     fn legendre_recurrence(n: NonNegInt, x: UnitInterval) -> TestResult {
@@ -350,7 +350,7 @@ mod orthogonal_polynomial_properties {
     fn hermite_parity(n: NonNegInt, x: f64) -> TestResult {
         // H_n(-x) = (-1)^n * H_n(x)
         let n = n.0 as usize;
-        
+
         if x.abs() > 5.0 || n > 10 {
             return TestResult::discard();
         }
@@ -378,11 +378,15 @@ mod spherical_harmonics_properties {
     use crate::sph_harm;
 
     #[quickcheck]
-    fn spherical_harmonics_normalization(l: NonNegInt, theta: UnitInterval, phi: f64) -> TestResult {
+    fn spherical_harmonics_normalization(
+        l: NonNegInt,
+        theta: UnitInterval,
+        phi: f64,
+    ) -> TestResult {
         // Check normalization for m=0 case
         let l = l.0;
         let m = 0;
-        
+
         if l > 5 {
             return TestResult::discard();
         }
@@ -391,17 +395,22 @@ mod spherical_harmonics_properties {
         let phi_val = phi % (2.0 * f64::consts::PI);
 
         let y_lm = sph_harm(l, m, theta_val, phi_val);
-        
+
         // For m=0, Y_l0 should be real
         TestResult::from_bool(y_lm.im.abs() < 1e-14)
     }
 
     #[quickcheck]
-    fn spherical_harmonics_conjugate_symmetry(l: NonNegInt, m: NonNegInt, theta: f64, phi: f64) -> TestResult {
+    fn spherical_harmonics_conjugate_symmetry(
+        l: NonNegInt,
+        m: NonNegInt,
+        theta: f64,
+        phi: f64,
+    ) -> TestResult {
         // Y_l^{-m} = (-1)^m * conj(Y_l^m)
         let l = l.0;
         let m = m.0;
-        
+
         if l > 5 || m > l {
             return TestResult::discard();
         }
@@ -411,7 +420,7 @@ mod spherical_harmonics_properties {
 
         let y_lm = sph_harm(l, m, theta_val, phi_val);
         let y_l_neg_m = sph_harm(l, -m, theta_val, phi_val);
-        
+
         let expected = if m % 2 == 0 {
             y_lm.conj()
         } else {
@@ -425,7 +434,7 @@ mod spherical_harmonics_properties {
 // Elliptic function properties
 mod elliptic_properties {
     use super::*;
-    use crate::{ellipk, ellipe};
+    use crate::{ellipe, ellipk};
 
     #[quickcheck]
     fn elliptic_k_special_values() -> bool {
@@ -463,7 +472,7 @@ mod hypergeometric_properties {
     fn hyp1f1_special_case(b: Positive, z: f64) -> TestResult {
         // 1F1(0; b; z) = 1
         let b_val = b.0;
-        
+
         if b_val > 10.0 || z.abs() > 10.0 {
             return TestResult::discard();
         }
@@ -477,7 +486,7 @@ mod hypergeometric_properties {
         // 2F1(a, b; c; 0) = 1
         let c_val = c.0;
         let z_val = z.0 * 0.5; // Keep z small
-        
+
         if c_val > 10.0 {
             return TestResult::discard();
         }
@@ -490,14 +499,14 @@ mod hypergeometric_properties {
 // Cross-function relationships
 mod cross_function_properties {
     use super::*;
-    use crate::{gamma, beta, erf};
     use crate::combinatorial::factorial;
+    use crate::{beta, erf, gamma};
 
     #[quickcheck]
     fn gamma_factorial_relation(n: NonNegInt) -> TestResult {
         // Gamma(n+1) = n!
         let n = n.0 as usize;
-        
+
         if n > 20 {
             return TestResult::discard();
         }
@@ -519,7 +528,7 @@ mod cross_function_properties {
         }
 
         let beta_ab = beta(a_val, b_val);
-        
+
         // Check beta is positive
         TestResult::from_bool(beta_ab > 0.0)
     }
@@ -532,7 +541,7 @@ mod cross_function_properties {
         }
 
         let erf_scaled = erf(x / 2.0_f64.sqrt());
-        
+
         // Check bounds: -1 <= erf(x) <= 1
         TestResult::from_bool(erf_scaled >= -1.0 && erf_scaled <= 1.0)
     }

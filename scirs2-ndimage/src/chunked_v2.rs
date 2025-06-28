@@ -47,34 +47,36 @@ where
     T: Float + Send + Sync,
     D: Dimension,
 {
-    /// Process a single chunk of the array
-    fn process_chunk(&self, chunk: ArrayView<T, D>, chunk_idx: usize)
-        -> NdimageResult<Array<T, D>>;
+    /// Create the processing closure for chunks
+    fn create_processor(
+        &self,
+    ) -> Box<dyn Fn(&ArrayView<T, IxDyn>) -> CoreResult<Array<T, IxDyn>> + Send + Sync>;
 
     /// Get the required overlap for this processor
     fn required_overlap(&self) -> usize;
 }
 
 /// Process an array using scirs2-core's chunk-wise operations
-pub fn process_chunked_v2<T, D, P, F>(
+pub fn process_chunked_v2<T, D, P>(
     input: &ArrayView<T, D>,
     processor: &P,
     config: &ChunkConfigV2,
-    op: F,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension + 'static,
     P: ChunkProcessorV2<T, D>,
-    F: Fn(&ArrayView<T, IxDyn>) -> CoreResult<Array<T, IxDyn>> + Send + Sync,
 {
+    // Get the processing operation from the processor
+    let op = processor.create_processor();
+
     // Check if we should use memory-mapped array
     let input_size = input.len() * std::mem::size_of::<T>();
 
     if let Some(threshold) = config.use_mmap_threshold {
         if input_size > threshold {
             // Use memory-mapped array for very large inputs
-            return process_with_mmap(input, processor, config, op);
+            return process_with_mmap(input, processor, config, &*op);
         }
     }
 
@@ -82,7 +84,7 @@ where
     let input_dyn = input.view().into_dyn();
 
     // Use scirs2-core's chunk_wise_op
-    let result_dyn = chunk_wise_op(&input_dyn, config.strategy.clone(), op)
+    let result_dyn = chunk_wise_op(&input_dyn, config.strategy.clone(), &*op)
         .map_err(|e| NdimageError::ProcessingError(format!("Chunk processing failed: {}", e)))?;
 
     // Convert back to original dimension
@@ -92,17 +94,16 @@ where
 }
 
 /// Process using memory-mapped arrays for very large inputs
-fn process_with_mmap<T, D, P, F>(
+fn process_with_mmap<T, D, P>(
     input: &ArrayView<T, D>,
     processor: &P,
     config: &ChunkConfigV2,
-    op: F,
+    op: &dyn Fn(&ArrayView<T, IxDyn>) -> CoreResult<Array<T, IxDyn>>,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension + 'static,
     P: ChunkProcessorV2<T, D>,
-    F: Fn(&ArrayView<T, IxDyn>) -> CoreResult<Array<T, IxDyn>> + Send + Sync,
 {
     use std::path::PathBuf;
     use tempfile::tempdir;
@@ -158,41 +159,64 @@ where
     D: Dimension + 'static,
 {
     let config = config.unwrap_or_default();
+    let processor = UniformProcessorV2::new(size.to_vec(), border_mode);
 
-    // Create the operation closure
-    let size_vec = size.to_vec();
-    let border_mode_clone = border_mode;
-
-    let op = move |chunk: &ArrayView<T, IxDyn>| -> CoreResult<Array<T, IxDyn>> {
-        // Convert to owned array for processing
-        let chunk_owned = chunk.to_owned();
-
-        // Apply uniform filter to the chunk
-        let result =
-            crate::filters::uniform_filter(&chunk_owned, &size_vec, Some(border_mode_clone), None)
-                .map_err(|e| scirs2_core::error::CoreError::ComputationError(e.to_string()))?;
-
-        Ok(result.into_dyn())
-    };
-
-    process_chunked_v2(&input.view(), &UniformProcessorV2, &config, op)
+    process_chunked_v2(&input.view(), &processor, &config)
 }
 
 /// Helper processor for uniform filter
-struct UniformProcessorV2;
+struct UniformProcessorV2 {
+    size: Vec<usize>,
+    border_mode: BorderMode,
+}
 
-impl<T: Float, D: Dimension> ChunkProcessorV2<T, D> for UniformProcessorV2 {
-    fn process_chunk(
+impl UniformProcessorV2 {
+    fn new(size: Vec<usize>, border_mode: BorderMode) -> Self {
+        Self { size, border_mode }
+    }
+}
+
+impl<T, D> ChunkProcessorV2<T, D> for UniformProcessorV2
+where
+    T: Float
+        + FromPrimitive
+        + NumCast
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
+    D: Dimension,
+{
+    fn create_processor(
         &self,
-        _chunk: ArrayView<T, D>,
-        _chunk_idx: usize,
-    ) -> NdimageResult<Array<T, D>> {
-        // This is handled by the closure in uniform_filter_chunked_v2
-        unreachable!("Should use closure-based processing")
+    ) -> Box<dyn Fn(&ArrayView<T, IxDyn>) -> CoreResult<Array<T, IxDyn>> + Send + Sync> {
+        let size_vec = self.size.clone();
+        let border_mode_clone = self.border_mode;
+
+        Box::new(
+            move |chunk: &ArrayView<T, IxDyn>| -> CoreResult<Array<T, IxDyn>> {
+                // Convert to owned array for processing
+                let chunk_owned = chunk.to_owned();
+
+                // Apply uniform filter to the chunk
+                let result = crate::filters::uniform_filter(
+                    &chunk_owned,
+                    &size_vec,
+                    Some(border_mode_clone),
+                    None,
+                )
+                .map_err(|e| scirs2_core::error::CoreError::ComputationError(e.to_string()))?;
+
+                Ok(result.into_dyn())
+            },
+        )
     }
 
     fn required_overlap(&self) -> usize {
-        0 // Overlap is handled by the operation
+        self.size.iter().max().copied().unwrap_or(0)
     }
 }
 
@@ -208,42 +232,61 @@ where
     D: Dimension + 'static,
 {
     let config = config.unwrap_or_default();
+    let processor = ConvolveProcessorV2::new(kernel.clone(), border_mode);
 
-    // Clone kernel for the closure
-    let kernel_clone = kernel.clone();
-
-    let op = move |chunk: &ArrayView<T, IxDyn>| -> CoreResult<Array<T, IxDyn>> {
-        let chunk_owned = chunk.to_owned();
-
-        // Apply convolution to the chunk
-        let result = crate::filters::convolve(
-            &chunk_owned,
-            &kernel_clone.view().into_dyn(),
-            Some(border_mode),
-            None,
-        )
-        .map_err(|e| scirs2_core::error::CoreError::ComputationError(e.to_string()))?;
-
-        Ok(result)
-    };
-
-    process_chunked_v2(&input.view(), &ConvolveProcessorV2, &config, op)
+    process_chunked_v2(&input.view(), &processor, &config)
 }
 
 /// Helper processor for convolution
-struct ConvolveProcessorV2;
+struct ConvolveProcessorV2<T, D> {
+    kernel: Array<T, D>,
+    border_mode: BorderMode,
+}
 
-impl<T: Float, D: Dimension> ChunkProcessorV2<T, D> for ConvolveProcessorV2 {
-    fn process_chunk(
+impl<T, D> ConvolveProcessorV2<T, D>
+where
+    T: Clone,
+    D: Dimension,
+{
+    fn new(kernel: Array<T, D>, border_mode: BorderMode) -> Self {
+        Self {
+            kernel,
+            border_mode,
+        }
+    }
+}
+
+impl<T, D> ChunkProcessorV2<T, D> for ConvolveProcessorV2<T, D>
+where
+    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
+    D: Dimension + 'static,
+{
+    fn create_processor(
         &self,
-        _chunk: ArrayView<T, D>,
-        _chunk_idx: usize,
-    ) -> NdimageResult<Array<T, D>> {
-        unreachable!("Should use closure-based processing")
+    ) -> Box<dyn Fn(&ArrayView<T, IxDyn>) -> CoreResult<Array<T, IxDyn>> + Send + Sync> {
+        let kernel_clone = self.kernel.clone();
+        let border_mode_clone = self.border_mode;
+
+        Box::new(
+            move |chunk: &ArrayView<T, IxDyn>| -> CoreResult<Array<T, IxDyn>> {
+                let chunk_owned = chunk.to_owned();
+
+                // Apply convolution to the chunk
+                let result = crate::filters::convolve(
+                    &chunk_owned,
+                    &kernel_clone.view().into_dyn(),
+                    Some(border_mode_clone),
+                    None,
+                )
+                .map_err(|e| scirs2_core::error::CoreError::ComputationError(e.to_string()))?;
+
+                Ok(result)
+            },
+        )
     }
 
     fn required_overlap(&self) -> usize {
-        0 // Overlap is handled by the operation
+        self.kernel.shape().iter().max().copied().unwrap_or(0)
     }
 }
 

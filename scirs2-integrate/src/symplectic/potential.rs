@@ -370,7 +370,7 @@ mod tests {
             // H = p²/2 + q²/2 = 0 + 0.5 = 0.5
             assert!((energy - 0.5_f64).abs() < 1e-10);
         } else {
-            panic!("Hamiltonian function not provided");
+            assert!(false, "Hamiltonian function not provided");
         }
     }
 
@@ -418,7 +418,7 @@ mod tests {
         if let Some(err) = result.energy_relative_error {
             assert!(err < 1e-3, "Energy conservation error too large: {}", err);
         } else {
-            panic!("Energy conservation error not calculated");
+            assert!(false, "Energy conservation error not calculated");
         }
     }
 
@@ -456,7 +456,7 @@ mod tests {
             // H = p²/2 + q²/2 = 0 + 0.5 = 0.5
             assert!((energy - 0.5_f64).abs() < 1e-10);
         } else {
-            panic!("Hamiltonian function not provided");
+            assert!(false, "Hamiltonian function not provided");
         }
     }
 }

@@ -173,7 +173,7 @@ impl InterpolateError {
             object: object.into(),
         }
     }
-    
+
     /// Create a standard dimension mismatch error
     pub fn dimension_mismatch(expected: usize, actual: usize, context: &str) -> Self {
         Self::DimensionMismatch(format!(
@@ -181,12 +181,12 @@ impl InterpolateError {
             context, expected, actual
         ))
     }
-    
+
     /// Create a standard empty data error
     pub fn empty_data(context: &str) -> Self {
         Self::InsufficientData(format!("Empty input data provided to {}", context))
     }
-    
+
     /// Create a standard convergence failure error
     pub fn convergence_failure(method: &str, iterations: usize) -> Self {
         Self::ComputationError(format!(
@@ -194,15 +194,12 @@ impl InterpolateError {
             method, iterations
         ))
     }
-    
+
     /// Create a numerical stability error
     pub fn numerical_instability(context: &str, details: &str) -> Self {
-        Self::NumericalError(format!(
-            "Numerical instability in {}: {}",
-            context, details
-        ))
+        Self::NumericalError(format!("Numerical instability in {}: {}", context, details))
     }
-    
+
     /// Create an insufficient data points error
     pub fn insufficient_points(required: usize, provided: usize, method: &str) -> Self {
         Self::InsufficientData(format!(

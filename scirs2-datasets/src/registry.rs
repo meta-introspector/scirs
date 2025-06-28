@@ -48,32 +48,55 @@ impl DatasetRegistry {
 
     /// Populate the registry with default datasets
     ///
-    /// Note: The SHA256 hashes below are placeholder values and must be updated
-    /// with actual hashes when the dataset files are available in the repository.
+    /// This includes both local sample datasets and references to potential remote datasets.
+    /// Local datasets use verified SHA256 hashes computed from actual files.
     fn populate_default_datasets(&mut self) {
-        // Real-world datasets
+        // Local sample datasets (with verified SHA256 hashes)
+        self.register(
+            "example".to_string(),
+            RegistryEntry {
+                url: "file://data/example.csv",
+                sha256: "c51c3ff2e8a5db28b1baed809a2ba29f29643e5a26ad476448eb3889996173d6",
+            },
+        );
+
+        self.register(
+            "sample_data".to_string(),
+            RegistryEntry {
+                url: "file://examples/sample_data.csv",
+                sha256: "59cceb2c80692ee2c1c3b607335d1feb983ceed24214d1ffc2eace9f3ce5ab47",
+            },
+        );
+
+        // Built-in toy datasets (no hash needed as they're embedded in code)
+        self.register_toy_dataset("iris", "Classic iris flower dataset for classification");
+        self.register_toy_dataset("boston", "Boston housing prices dataset for regression");
+        self.register_toy_dataset(
+            "digits",
+            "Hand-written digits dataset for image classification",
+        );
+        self.register_toy_dataset("wine", "Wine recognition dataset for classification");
+        self.register_toy_dataset(
+            "breast_cancer",
+            "Breast cancer wisconsin dataset for classification",
+        );
+        self.register_toy_dataset("diabetes", "Diabetes dataset for regression");
+
+        // Future remote datasets (commented out until available)
+        /*
         self.register(
             "california_housing".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/california_housing.csv",
-                sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", // Placeholder - update with actual hash
+                sha256: "TODO_UPDATE_WITH_ACTUAL_HASH_WHEN_AVAILABLE",
             },
         );
 
-        self.register(
-            "wine".to_string(),
-            RegistryEntry {
-                url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/wine.csv",
-                sha256: "d4e1c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b856", // Placeholder - update with actual hash
-            },
-        );
-
-        // Time series datasets
         self.register(
             "electrocardiogram".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/electrocardiogram.json",
-                sha256: "a1b2c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857", // Placeholder - update with actual hash
+                sha256: "TODO_UPDATE_WITH_ACTUAL_HASH_WHEN_AVAILABLE",
             },
         );
 
@@ -81,16 +104,37 @@ impl DatasetRegistry {
             "stock_market".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/stock_market.json",
-                sha256: "f5e6c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b858", // Placeholder - update with actual hash
+                sha256: "TODO_UPDATE_WITH_ACTUAL_HASH_WHEN_AVAILABLE",
             },
         );
 
         self.register(
             "weather".to_string(),
             RegistryEntry {
-                url:
-                    "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/weather.json",
-                sha256: "b7c8c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b859", // Placeholder - update with actual hash
+                url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/weather.json",
+                sha256: "TODO_UPDATE_WITH_ACTUAL_HASH_WHEN_AVAILABLE",
+            },
+        );
+        */
+    }
+
+    /// Register a toy dataset (built-in datasets don't need URLs or hashes)
+    fn register_toy_dataset(&mut self, name: &str, _description: &str) {
+        let url = match name {
+            "iris" => "builtin://iris",
+            "boston" => "builtin://boston",
+            "digits" => "builtin://digits",
+            "wine" => "builtin://wine",
+            "breast_cancer" => "builtin://breast_cancer",
+            "diabetes" => "builtin://diabetes",
+            _ => "builtin://unknown",
+        };
+
+        self.register(
+            name.to_string(),
+            RegistryEntry {
+                url,
+                sha256: "builtin", // Special marker for built-in datasets
             },
         );
     }
@@ -106,27 +150,93 @@ pub fn get_registry() -> DatasetRegistry {
 pub fn load_dataset_by_name(name: &str, force_download: bool) -> Result<crate::utils::Dataset> {
     let registry = get_registry();
 
-    match name {
-        "california_housing" => crate::sample::load_california_housing(force_download),
-        "wine" => crate::sample::load_wine(force_download),
-        "electrocardiogram" => crate::time_series::electrocardiogram(),
-        "stock_market" => crate::time_series::stock_market(false), // Default to raw prices
-        "weather" => crate::time_series::weather(None),            // Default to all features
-        _ => {
-            if registry.contains(name) {
-                Err(DatasetsError::Other(format!(
-                    "Dataset '{}' is registered but not yet implemented for loading",
+    if let Some(entry) = registry.get(name) {
+        // Handle different URL schemes
+        if entry.url.starts_with("builtin://") {
+            // Built-in toy datasets
+            match name {
+                "iris" => crate::toy::load_iris(),
+                "boston" => crate::toy::load_boston(),
+                "digits" => crate::toy::load_digits(),
+                "wine" => crate::toy::load_wine(),
+                "breast_cancer" => crate::toy::load_breast_cancer(),
+                "diabetes" => crate::toy::load_diabetes(),
+                _ => Err(DatasetsError::Other(format!(
+                    "Built-in dataset '{}' not implemented",
                     name
-                )))
-            } else {
-                Err(DatasetsError::Other(format!(
-                    "Unknown dataset: '{}'. Available datasets: {:?}",
-                    name,
-                    registry.list_datasets()
-                )))
+                ))),
+            }
+        } else if entry.url.starts_with("file://") {
+            // Local file datasets
+            load_local_dataset(name, &entry.url[7..], entry.sha256) // Remove "file://" prefix
+        } else if entry.url.starts_with("http") {
+            // Remote datasets (when available)
+            match name {
+                "california_housing" => crate::sample::load_california_housing(force_download),
+                "electrocardiogram" => crate::time_series::electrocardiogram(),
+                "stock_market" => crate::time_series::stock_market(false),
+                "weather" => crate::time_series::weather(None),
+                _ => Err(DatasetsError::Other(format!(
+                    "Remote dataset '{}' not yet implemented for loading",
+                    name
+                ))),
+            }
+        } else {
+            Err(DatasetsError::Other(format!(
+                "Unsupported URL scheme for dataset '{}': {}",
+                name, entry.url
+            )))
+        }
+    } else {
+        Err(DatasetsError::Other(format!(
+            "Unknown dataset: '{}'. Available datasets: {:?}",
+            name,
+            registry.list_datasets()
+        )))
+    }
+}
+
+/// Load a local dataset file
+#[cfg(feature = "download")]
+fn load_local_dataset(
+    name: &str,
+    relative_path: &str,
+    expected_sha256: &str,
+) -> Result<crate::utils::Dataset> {
+    use crate::loaders::csv::{load_csv, CsvConfig};
+    use std::path::Path;
+
+    // Build absolute path from workspace root
+    let workspace_root = env!("CARGO_MANIFEST_DIR");
+    let file_path = Path::new(workspace_root).join(relative_path);
+
+    if !file_path.exists() {
+        return Err(DatasetsError::Other(format!(
+            "Local dataset file not found: {}",
+            file_path.display()
+        )));
+    }
+
+    // Verify SHA256 hash
+    if expected_sha256 != "builtin" {
+        if let Ok(actual_hash) = crate::cache::sha256_hash_file(&file_path) {
+            if actual_hash != expected_sha256 {
+                return Err(DatasetsError::Other(format!(
+                    "Hash verification failed for dataset '{}'. Expected: {}, Got: {}",
+                    name, expected_sha256, actual_hash
+                )));
             }
         }
     }
+
+    // Load the CSV file
+    let config = CsvConfig::default().with_header(true);
+    let mut dataset = load_csv(&file_path, config)?;
+
+    // Add metadata
+    dataset = dataset.with_description(format!("Local dataset: {}", name));
+
+    Ok(dataset)
 }
 
 #[cfg(not(feature = "download"))]
@@ -151,9 +261,18 @@ mod tests {
     fn test_registry_default() {
         let registry = DatasetRegistry::default();
         assert!(!registry.entries.is_empty());
-        assert!(registry.contains("california_housing"));
+
+        // Test local datasets
+        assert!(registry.contains("example"));
+        assert!(registry.contains("sample_data"));
+
+        // Test built-in toy datasets
+        assert!(registry.contains("iris"));
+        assert!(registry.contains("boston"));
         assert!(registry.contains("wine"));
-        assert!(registry.contains("electrocardiogram"));
+        assert!(registry.contains("digits"));
+        assert!(registry.contains("breast_cancer"));
+        assert!(registry.contains("diabetes"));
     }
 
     #[test]
@@ -183,5 +302,54 @@ mod tests {
     fn test_get_registry() {
         let registry = get_registry();
         assert!(!registry.list_datasets().is_empty());
+    }
+
+    #[test]
+    fn test_registry_url_schemes() {
+        let registry = DatasetRegistry::default();
+
+        // Test built-in datasets have builtin:// URLs
+        if let Some(iris_entry) = registry.get("iris") {
+            assert_eq!(iris_entry.url, "builtin://iris");
+            assert_eq!(iris_entry.sha256, "builtin");
+        }
+
+        // Test local datasets have file:// URLs
+        if let Some(example_entry) = registry.get("example") {
+            assert_eq!(example_entry.url, "file://data/example.csv");
+            assert_eq!(
+                example_entry.sha256,
+                "c51c3ff2e8a5db28b1baed809a2ba29f29643e5a26ad476448eb3889996173d6"
+            );
+        }
+    }
+
+    #[test]
+    fn test_dataset_count() {
+        let registry = DatasetRegistry::default();
+        let datasets = registry.list_datasets();
+
+        // Should have 2 local datasets + 6 built-in toy datasets = 8 total
+        assert_eq!(datasets.len(), 8);
+
+        // Verify all expected datasets are present
+        let expected_datasets = vec![
+            "example",
+            "sample_data", // local
+            "iris",
+            "boston",
+            "digits",
+            "wine",
+            "breast_cancer",
+            "diabetes", // built-in
+        ];
+
+        for expected in expected_datasets {
+            assert!(
+                datasets.contains(&expected.to_string()),
+                "Dataset '{}' not found in registry",
+                expected
+            );
+        }
     }
 }

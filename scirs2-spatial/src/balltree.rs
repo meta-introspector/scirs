@@ -327,7 +327,9 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         self.query_recursive(0, point, k, &mut nearest_neighbors, &mut max_dist);
 
         // Sort by distance
-        nearest_neighbors.sort_by(|a, b| safe_partial_cmp(&a.0, &b.0, "balltree sort results").unwrap_or(Ordering::Equal));
+        nearest_neighbors.sort_by(|a, b| {
+            safe_partial_cmp(&a.0, &b.0, "balltree sort results").unwrap_or(Ordering::Equal)
+        });
 
         // Extract indices and distances
         let (distances, indices): (Vec<_>, Vec<_>) = nearest_neighbors.into_iter().unzip();
@@ -372,9 +374,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
             for i in node.start_idx..node.end_idx {
                 let idx = self.indices[i];
                 let row_vec = self.data.row(idx).to_vec();
-                let dist = self
-                    .distance
-                    .distance(point, row_vec.as_slice());
+                let dist = self.distance.distance(point, row_vec.as_slice());
 
                 if dist < *max_dist || nearest.len() < k {
                     // Add this point to nearest neighbors
@@ -387,7 +387,8 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                             .iter()
                             .enumerate()
                             .max_by(|(_, a), (_, b)| {
-                                safe_partial_cmp(&a.0, &b.0, "balltree max distance").unwrap_or(Ordering::Equal)
+                                safe_partial_cmp(&a.0, &b.0, "balltree max distance")
+                                    .unwrap_or(Ordering::Equal)
                             })
                             .map(|(idx, _)| idx)
                             .unwrap_or(0);
@@ -399,7 +400,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                         *max_dist = nearest
                             .iter()
                             .map(|(dist, _)| *dist)
-                            .max_by(|a, b| safe_partial_cmp(a, b, "balltree update max_dist").unwrap_or(Ordering::Equal))
+                            .max_by(|a, b| {
+                                safe_partial_cmp(a, b, "balltree update max_dist")
+                                    .unwrap_or(Ordering::Equal)
+                            })
                             .unwrap_or(T::infinity());
                     }
                 }
@@ -523,9 +527,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
             for i in node.start_idx..node.end_idx {
                 let idx = self.indices[i];
                 let row_vec = self.data.row(idx).to_vec();
-                let dist = self
-                    .distance
-                    .distance(point, row_vec.as_slice());
+                let dist = self.distance.distance(point, row_vec.as_slice());
 
                 if dist <= radius {
                     indices.push(idx);
@@ -618,10 +620,9 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
                     let self_vec = self_point.to_vec();
                     let other_vec = other_point.to_vec();
-                    let dist = self.distance.distance(
-                        self_vec.as_slice(),
-                        other_vec.as_slice(),
-                    );
+                    let dist = self
+                        .distance
+                        .distance(self_vec.as_slice(), other_vec.as_slice());
 
                     if dist <= radius {
                         pairs.push((self_idx, other_idx));

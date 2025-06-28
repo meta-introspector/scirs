@@ -309,7 +309,7 @@ impl EnhancedHDF5File {
                 let _data_size = array.len();
             }
         }
-        
+
         // Note: Actual dataset.write() calls would go here in a full implementation
         // The current HDF5 API requires specific type handling that would need
         // more significant refactoring to implement properly

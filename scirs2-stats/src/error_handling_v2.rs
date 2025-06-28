@@ -17,13 +17,13 @@ pub enum ErrorCode {
     E1002, // Negative value where positive required
     E1003, // Probability out of range
     E1004, // Invalid degrees of freedom
-    
+
     // Dimension errors (2xxx)
     E2001, // Array dimension mismatch
     E2002, // Matrix not square
     E2003, // Insufficient data points
     E2004, // Empty input
-    
+
     // Computation errors (3xxx)
     E3001, // Numerical overflow
     E3002, // Numerical underflow
@@ -31,12 +31,12 @@ pub enum ErrorCode {
     E3004, // Singular matrix
     E3005, // NaN encountered
     E3006, // Infinity encountered
-    
+
     // Algorithm errors (4xxx)
     E4001, // Maximum iterations exceeded
     E4002, // Tolerance not achieved
     E4003, // Invalid algorithm parameter
-    
+
     // Memory errors (5xxx)
     E5001, // Allocation failure
     E5002, // Memory limit exceeded
@@ -50,28 +50,28 @@ impl ErrorCode {
             ErrorCode::E1002 => "Negative value provided where positive required",
             ErrorCode::E1003 => "Probability value must be between 0 and 1",
             ErrorCode::E1004 => "Invalid degrees of freedom",
-            
+
             ErrorCode::E2001 => "Array dimensions do not match",
             ErrorCode::E2002 => "Matrix must be square",
             ErrorCode::E2003 => "Insufficient data points for operation",
             ErrorCode::E2004 => "Empty input provided",
-            
+
             ErrorCode::E3001 => "Numerical overflow occurred",
             ErrorCode::E3002 => "Numerical underflow occurred",
             ErrorCode::E3003 => "Algorithm failed to converge",
             ErrorCode::E3004 => "Matrix is singular or near-singular",
             ErrorCode::E3005 => "NaN (Not a Number) encountered",
             ErrorCode::E3006 => "Infinity encountered",
-            
+
             ErrorCode::E4001 => "Maximum iterations exceeded",
             ErrorCode::E4002 => "Required tolerance not achieved",
             ErrorCode::E4003 => "Invalid algorithm parameter",
-            
+
             ErrorCode::E5001 => "Memory allocation failed",
             ErrorCode::E5002 => "Memory limit exceeded",
         }
     }
-    
+
     /// Get the severity level (1-5, where 1 is most severe)
     pub fn severity(&self) -> u8 {
         match self {
@@ -122,7 +122,7 @@ impl ErrorContext {
             timestamp: std::time::SystemTime::now(),
         }
     }
-    
+
     pub fn with_parameter(mut self, name: impl Into<String>, value: impl fmt::Display) -> Self {
         self.parameters.push((name.into(), value.to_string()));
         self
@@ -172,22 +172,22 @@ impl ErrorBuilder {
             performance_impact: None,
         }
     }
-    
+
     pub fn parameter(mut self, name: impl Into<String>, value: impl fmt::Display) -> Self {
         self.context = self.context.with_parameter(name, value);
         self
     }
-    
+
     pub fn suggestion(mut self, suggestion: RecoverySuggestion) -> Self {
         self.suggestions.push(suggestion);
         self
     }
-    
+
     pub fn performance_impact(mut self, impact: PerformanceImpact) -> Self {
         self.performance_impact = Some(impact);
         self
     }
-    
+
     pub fn build(self, error: StatsError) -> EnhancedError {
         let mut enhanced = EnhancedError {
             code: self.code,
@@ -196,7 +196,7 @@ impl ErrorBuilder {
             suggestions: self.suggestions,
             performance_impact: self.performance_impact,
         };
-        
+
         // Add automatic suggestions based on error code
         enhanced.add_automatic_suggestions();
         enhanced
@@ -211,7 +211,8 @@ impl EnhancedError {
                 if self.suggestions.is_empty() {
                     self.suggestions.push(RecoverySuggestion {
                         title: "Handle NaN values".to_string(),
-                        description: "Filter out or replace NaN values before computation".to_string(),
+                        description: "Filter out or replace NaN values before computation"
+                            .to_string(),
                         example: Some("data.iter().filter(|x| !x.is_nan())".to_string()),
                         complexity: 2,
                         fixes_root_cause: true,
@@ -222,8 +223,11 @@ impl EnhancedError {
                 if self.suggestions.is_empty() {
                     self.suggestions.push(RecoverySuggestion {
                         title: "Check input data".to_string(),
-                        description: "Ensure data is loaded correctly and not filtered out".to_string(),
-                        example: Some("assert!(!data.is_empty(), \"Data cannot be empty\");".to_string()),
+                        description: "Ensure data is loaded correctly and not filtered out"
+                            .to_string(),
+                        example: Some(
+                            "assert!(!data.is_empty(), \"Data cannot be empty\");".to_string(),
+                        ),
                         complexity: 1,
                         fixes_root_cause: true,
                     });
@@ -243,7 +247,7 @@ impl EnhancedError {
             _ => {}
         }
     }
-    
+
     /// Format the error as a detailed report
     pub fn detailed_report(&self) -> String {
         let mut report = format!(
@@ -251,9 +255,9 @@ impl EnhancedError {
             self.code.to_string(),
             self.code.description()
         );
-        
+
         report.push_str(&format!("Operation: {}\n", self.context.operation));
-        
+
         if !self.context.parameters.is_empty() {
             report.push_str("Parameters:\n");
             for (name, value) in &self.context.parameters {
@@ -261,9 +265,9 @@ impl EnhancedError {
             }
             report.push('\n');
         }
-        
+
         report.push_str(&format!("Details: {}\n\n", self.error));
-        
+
         if !self.suggestions.is_empty() {
             report.push_str("Recovery Suggestions:\n");
             for (i, suggestion) in self.suggestions.iter().enumerate() {
@@ -280,15 +284,14 @@ impl EnhancedError {
                 report.push('\n');
             }
         }
-        
+
         if let Some(impact) = &self.performance_impact {
             report.push_str(&format!(
                 "Performance Impact if ignored:\n  - Slowdown: {}x\n  - {}\n",
-                impact.slowdown_factor,
-                impact.description
+                impact.slowdown_factor, impact.description
             ));
         }
-        
+
         report
     }
 }
@@ -306,7 +309,7 @@ macro_rules! stats_error {
         ErrorBuilder::new($code, $op)
             .build(StatsError::computation($msg))
     };
-    
+
     ($code:expr, $op:expr, $msg:expr, $($param:expr => $value:expr),+) => {
         ErrorBuilder::new($code, $op)
             $(.parameter($param, $value))+
@@ -317,7 +320,7 @@ macro_rules! stats_error {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_error_builder() {
         let error = ErrorBuilder::new(ErrorCode::E3005, "mean calculation")
@@ -331,13 +334,13 @@ mod tests {
                 fixes_root_cause: true,
             })
             .build(StatsError::computation("NaN values in input"));
-        
+
         assert_eq!(error.code, ErrorCode::E3005);
         assert_eq!(error.context.operation, "mean calculation");
         assert_eq!(error.context.parameters.len(), 2);
         assert!(!error.suggestions.is_empty());
     }
-    
+
     #[test]
     fn test_error_code_severity() {
         assert_eq!(ErrorCode::E3001.severity(), 1); // Overflow is severe

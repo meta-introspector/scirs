@@ -61,6 +61,8 @@ pub struct MultitaperConfig {
     pub parallel: bool,
     /// Minimum chunk size for parallel processing
     pub parallel_threshold: usize,
+    /// Force memory-optimized processing for large signals
+    pub memory_optimized: bool,
 }
 
 impl Default for MultitaperConfig {
@@ -76,6 +78,7 @@ impl Default for MultitaperConfig {
             return_tapers: false,
             parallel: true,
             parallel_threshold: 1024,
+            memory_optimized: false,
         }
     }
 }
@@ -124,7 +127,10 @@ impl Default for MultitaperConfig {
 /// assert!(result.frequencies.len() > 0);
 /// assert!(result.confidence_intervals.is_some());
 /// ```
-pub fn enhanced_pmtm<T>(x: &[T], config: &MultitaperConfig) -> SignalResult<EnhancedMultitaperResult>
+pub fn enhanced_pmtm<T>(
+    x: &[T],
+    config: &MultitaperConfig,
+) -> SignalResult<EnhancedMultitaperResult>
 where
     T: Float + NumCast + Debug + Send + Sync,
 {
@@ -132,28 +138,12 @@ where
     if x.is_empty() {
         return Err(SignalError::ValueError("Input signal is empty".to_string()));
     }
-    
+
     check_positive(config.nw, "nw")?;
     check_positive(config.k, "k")?;
     check_positive(config.fs, "fs")?;
-    
-    // Validate confidence level if provided
-    if let Some(confidence) = config.confidence {
-        if confidence <= 0.0 || confidence >= 1.0 {
-            return Err(SignalError::ValueError(
-                format!("Confidence level must be between 0 and 1, got {}", confidence)
-            ));
-        }
-    }
-    
-    // Validate multitaper parameters
-    if config.k > (2.0 * config.nw) as usize {
-        return Err(SignalError::ValueError(
-            format!("Number of tapers k={} should not exceed 2*nw={}", config.k, 2.0 * config.nw)
-        ));
-    }
-    
-    // Convert input to f64
+
+    // Convert input to f64 for numerical computations
     let x_f64: Vec<f64> = x
         .iter()
         .map(|&val| {
@@ -162,58 +152,179 @@ where
             })
         })
         .collect::<SignalResult<Vec<f64>>>()?;
-    
+
+    // Validate confidence level if provided
+    if let Some(confidence) = config.confidence {
+        if confidence <= 0.0 || confidence >= 1.0 {
+            return Err(SignalError::ValueError(format!(
+                "Confidence level must be between 0 and 1, got {}",
+                confidence
+            )));
+        }
+    }
+
+    // Enhanced multitaper parameter validation
+    if config.k > (2.0 * config.nw) as usize {
+        return Err(SignalError::ValueError(format!(
+            "Number of tapers k={} should not exceed 2*nw={}",
+            config.k,
+            2.0 * config.nw
+        )));
+    }
+
+    // Additional validation for numerical stability
+    if config.nw < 1.0 {
+        return Err(SignalError::ValueError(format!(
+            "Time-bandwidth product nw={} must be at least 1.0",
+            config.nw
+        )));
+    }
+
+    if config.k == 0 {
+        return Err(SignalError::ValueError(
+            "Number of tapers k must be at least 1".to_string(),
+        ));
+    }
+
+    // Check if signal is long enough for meaningful spectral estimation
+    let min_signal_length = (4.0 * config.nw) as usize;
+    if x_f64.len() < min_signal_length {
+        return Err(SignalError::ValueError(format!(
+            "Signal length {} too short for nw={}. Minimum length is {}",
+            x_f64.len(),
+            config.nw,
+            min_signal_length
+        )));
+    }
+
+    // Warn if signal is very short relative to nw
+    if x_f64.len() < (8.0 * config.nw) as usize {
+        eprintln!("Warning: Signal length {} is relatively short for nw={}. Consider reducing nw or using a longer signal.", 
+                  x_f64.len(), config.nw);
+    }
+
     check_finite(&x_f64, "signal")?;
-    
+
     let n = x_f64.len();
     let nfft = config.nfft.unwrap_or(next_power_of_two(n));
-    
-    // Memory management: For very large signals, use chunked processing
-    let memory_threshold = 1_000_000; // 1M samples
-    let use_chunked_processing = n > memory_threshold;
-    
+
+    // Enhanced memory management: Adaptive threshold based on available system memory
+    let memory_threshold = if config.k > 10 {
+        500_000 // Reduce threshold for many tapers
+    } else {
+        1_000_000 // 1M samples for normal cases
+    };
+    let use_chunked_processing = n > memory_threshold || config.memory_optimized;
+
     if use_chunked_processing {
         return compute_pmtm_chunked(&x_f64, config, nfft);
     }
-    
-    // Compute DPSS tapers
+
+    // Compute DPSS tapers with enhanced validation
     let (tapers, eigenvalues_opt) = dpss(n, config.nw, config.k, true)?;
-    
+
     let eigenvalues = eigenvalues_opt.ok_or_else(|| {
         SignalError::ComputationError("Eigenvalues required but not returned from dpss".to_string())
     })?;
-    
+
+    // Enhanced validation of DPSS results
+    // Check eigenvalue ordering (should be descending)
+    for i in 1..eigenvalues.len() {
+        if eigenvalues[i] > eigenvalues[i - 1] {
+            return Err(SignalError::ComputationError(
+                "DPSS eigenvalues are not in descending order".to_string(),
+            ));
+        }
+    }
+
+    // Check eigenvalue concentration (should be close to 1 for good tapers)
+    let min_concentration = 0.9;
+    for (i, &eigenval) in eigenvalues.iter().enumerate() {
+        if eigenval < min_concentration && i < config.k {
+            eprintln!("Warning: Taper {} has low concentration ratio {:.3}. Consider reducing k or increasing nw.", 
+                      i, eigenval);
+        }
+    }
+
+    // Verify taper orthogonality
+    for i in 0..config.k {
+        for j in (i + 1)..config.k {
+            let dot_product: f64 = tapers.row(i).dot(&tapers.row(j));
+            if dot_product.abs() > 1e-10 {
+                eprintln!(
+                    "Warning: Tapers {} and {} have non-orthogonal dot product {:.2e}",
+                    i, j, dot_product
+                );
+            }
+        }
+    }
+
     // Compute tapered FFTs using parallel processing if enabled
     let spectra = if config.parallel && n >= config.parallel_threshold {
         compute_tapered_ffts_parallel(&x_f64, &tapers, nfft)?
     } else {
         compute_tapered_ffts_simd(&x_f64, &tapers, nfft)?
     };
-    
+
+    // Enhanced spectral validation before combination
+    for i in 0..spectra.nrows() {
+        for j in 0..spectra.ncols() {
+            let val = spectra[[i, j]];
+            if !val.is_finite() || val < 0.0 {
+                return Err(SignalError::ComputationError(format!(
+                    "Invalid spectral value at taper {}, frequency bin {}: {}",
+                    i, j, val
+                )));
+            }
+        }
+    }
+
     // Combine spectra using adaptive or standard weighting
     let (frequencies, psd) = if config.adaptive {
         combine_spectra_adaptive(&spectra, &eigenvalues, config.fs, nfft, config.onesided)?
     } else {
         combine_spectra_standard(&spectra, &eigenvalues, config.fs, nfft, config.onesided)?
     };
-    
+
+    // Final validation of PSD results
+    for (i, &val) in psd.iter().enumerate() {
+        if !val.is_finite() || val < 0.0 {
+            return Err(SignalError::ComputationError(format!(
+                "Invalid PSD value at frequency bin {}: {}",
+                i, val
+            )));
+        }
+    }
+
     // Compute confidence intervals if requested
     let confidence_intervals = if let Some(confidence_level) = config.confidence {
-        Some(compute_confidence_intervals(&spectra, &eigenvalues, confidence_level)?)
+        Some(compute_confidence_intervals(
+            &spectra,
+            &eigenvalues,
+            confidence_level,
+        )?)
     } else {
         None
     };
-    
+
     // Compute effective degrees of freedom
     let dof = Some(compute_effective_dof(&eigenvalues));
-    
+
     Ok(EnhancedMultitaperResult {
         frequencies,
         psd,
         confidence_intervals,
         dof,
-        tapers: if config.return_tapers { Some(tapers) } else { None },
-        eigenvalues: if config.return_tapers { Some(eigenvalues) } else { None },
+        tapers: if config.return_tapers {
+            Some(tapers)
+        } else {
+            None
+        },
+        eigenvalues: if config.return_tapers {
+            Some(eigenvalues)
+        } else {
+            None
+        },
     })
 }
 
@@ -226,31 +337,31 @@ fn compute_tapered_ffts_simd(
     let k = tapers.nrows();
     let n = signal.len();
     let mut spectra = Array2::zeros((k, nfft));
-    
+
     // Get SIMD capabilities
     let _caps = PlatformCapabilities::detect();
-    
+
     for i in 0..k {
         // Apply taper using SIMD operations
         let taper_view = tapers.row(i);
         let signal_view = ArrayView1::from(signal);
-        
+
         // Use SIMD multiplication for tapering
         let mut tapered = vec![0.0; n];
         let tapered_view = ArrayView1::from_shape(n, &mut tapered).unwrap();
-        
+
         // SIMD element-wise multiplication
         f64::simd_mul(&signal_view, &taper_view, &tapered_view);
-        
+
         // Compute FFT (using enhanced FFT with SIMD)
         let spectrum = simd_fft(&tapered, nfft)?;
-        
+
         // Store power spectrum
         for (j, &val) in spectrum.iter().enumerate() {
             spectra[[i, j]] = val.norm_sqr();
         }
     }
-    
+
     Ok(spectra)
 }
 
@@ -263,30 +374,30 @@ fn compute_tapered_ffts_parallel(
     let k = tapers.nrows();
     let n = signal.len();
     let signal_arc = Arc::new(signal.to_vec());
-    
+
     // Process tapers in parallel
     let results: Result<Vec<Vec<f64>>, SignalError> = (0..k)
         .into_par_iter()
         .map(|i| {
             let signal_ref = signal_arc.clone();
             let taper = tapers.row(i).to_owned();
-            
+
             // Apply taper
             let mut tapered = vec![0.0; n];
             for j in 0..n {
                 tapered[j] = signal_ref[j] * taper[j];
             }
-            
+
             // Compute FFT
             let spectrum = simd_fft(&tapered, nfft)?;
-            
+
             // Return power spectrum
             Ok(spectrum.iter().map(|c| c.norm_sqr()).collect())
         })
         .collect();
-    
+
     let results = results?;
-    
+
     // Convert to Array2
     let mut spectra = Array2::zeros((k, nfft));
     for (i, row) in results.iter().enumerate() {
@@ -294,7 +405,7 @@ fn compute_tapered_ffts_parallel(
             spectra[[i, j]] = val;
         }
     }
-    
+
     Ok(spectra)
 }
 
@@ -303,20 +414,20 @@ fn simd_fft(x: &[f64], nfft: usize) -> SignalResult<Vec<Complex64>> {
     // Pad or truncate to nfft
     let mut padded = vec![Complex64::new(0.0, 0.0); nfft];
     let copy_len = x.len().min(nfft);
-    
+
     for i in 0..copy_len {
         padded[i] = Complex64::new(x[i], 0.0);
     }
-    
+
     // Use rustfft with pre-planning for better performance
-    use rustfft::{FftPlanner, num_complex::Complex};
-    
+    use rustfft::{num_complex::Complex, FftPlanner};
+
     let mut planner = FftPlanner::new();
     let fft = planner.plan_fft_forward(nfft);
     let mut buffer = padded.clone();
-    
+
     fft.process(&mut buffer);
-    
+
     Ok(buffer)
 }
 
@@ -329,13 +440,11 @@ fn combine_spectra_standard(
     onesided: bool,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     let k = spectra.nrows();
-    
+
     // Create frequency array
     let frequencies = if onesided {
         let n_freqs = nfft / 2 + 1;
-        (0..n_freqs)
-            .map(|i| i as f64 * fs / nfft as f64)
-            .collect()
+        (0..n_freqs).map(|i| i as f64 * fs / nfft as f64).collect()
     } else {
         (0..nfft)
             .map(|i| {
@@ -347,18 +456,18 @@ fn combine_spectra_standard(
             })
             .collect()
     };
-    
+
     // Combine spectra with eigenvalue weights
     let n_freqs = if onesided { nfft / 2 + 1 } else { nfft };
     let mut psd = vec![0.0; n_freqs];
-    
+
     let weight_sum: f64 = eigenvalues.sum();
     let scaling = if onesided {
         2.0 / (fs * weight_sum)
     } else {
         1.0 / (fs * weight_sum)
     };
-    
+
     for j in 0..n_freqs {
         let mut weighted_sum = 0.0;
         for i in 0..k {
@@ -366,7 +475,7 @@ fn combine_spectra_standard(
         }
         psd[j] = weighted_sum * scaling;
     }
-    
+
     Ok((frequencies, psd))
 }
 
@@ -380,11 +489,11 @@ fn combine_spectra_adaptive(
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     let k = spectra.nrows();
     let n_freqs = if onesided { nfft / 2 + 1 } else { nfft };
-    
+
     // Initialize adaptive weights
     let mut weights = Array2::zeros((k, n_freqs));
     let mut psd = vec![0.0; n_freqs];
-    
+
     // Enhanced adaptive algorithm with improved stabilization
     let max_iter = 15; // Increased for better convergence
     let tolerance = 1e-10; // Tighter tolerance for better accuracy
@@ -392,7 +501,7 @@ fn combine_spectra_adaptive(
     let regularization = 1e-12; // Tighter regularization
     let damping_start = 7; // Start damping later
     let damping_factor = 0.9; // Less aggressive damping
-    
+
     // Initialize with normalized eigenvalue weights
     let lambda_sum: f64 = eigenvalues.sum();
     for i in 0..k {
@@ -400,23 +509,23 @@ fn combine_spectra_adaptive(
             weights[[i, j]] = eigenvalues[i] / lambda_sum;
         }
     }
-    
+
     // Adaptive iteration with convergence checks
     let mut converged = false;
     for iter in 0..max_iter {
         let old_psd = psd.clone();
-        
+
         // Update PSD estimate with numerical stabilization
         for j in 0..n_freqs {
             let mut weighted_sum = 0.0;
             let mut weight_sum = 0.0;
-            
+
             for i in 0..k {
                 let w = weights[[i, j]];
                 weighted_sum += w * spectra[[i, j]];
                 weight_sum += w;
             }
-            
+
             // Prevent division by zero
             if weight_sum > min_weight {
                 psd[j] = weighted_sum / weight_sum;
@@ -428,20 +537,20 @@ fn combine_spectra_adaptive(
                 }
                 psd[j] = fallback_sum / lambda_sum;
             }
-            
+
             // Ensure PSD is positive
             psd[j] = psd[j].max(regularization);
         }
-        
+
         // Update weights with improved Thomson's method
         for j in 0..n_freqs {
             let mut new_weight_sum = 0.0;
-            
+
             for i in 0..k {
                 let lambda = eigenvalues[i];
                 let spectrum_val = spectra[[i, j]].max(regularization);
                 let psd_val = psd[j].max(regularization);
-                
+
                 // Improved bias factor calculation
                 let ratio = psd_val / spectrum_val;
                 let bias_factor = if ratio > 1e-6 {
@@ -449,11 +558,11 @@ fn combine_spectra_adaptive(
                 } else {
                     lambda // Fallback for very small ratios
                 };
-                
+
                 weights[[i, j]] = bias_factor.max(min_weight);
                 new_weight_sum += weights[[i, j]];
             }
-            
+
             // Normalize weights for this frequency bin
             if new_weight_sum > min_weight {
                 for i in 0..k {
@@ -466,39 +575,45 @@ fn combine_spectra_adaptive(
                 }
             }
         }
-        
+
         // Enhanced convergence criteria with multiple metrics
-        let max_change = old_psd.iter()
+        let max_change = old_psd
+            .iter()
             .zip(psd.iter())
             .map(|(old, new)| {
                 let denominator = old.abs().max(new.abs()).max(1e-12);
                 ((old - new) / denominator).abs()
             })
             .fold(0.0, f64::max);
-        
-        let mean_change = old_psd.iter()
+
+        let mean_change = old_psd
+            .iter()
             .zip(psd.iter())
             .map(|(old, new)| {
                 let denominator = old.abs().max(new.abs()).max(1e-12);
                 ((old - new) / denominator).abs()
             })
-            .sum::<f64>() / n_freqs as f64;
-        
+            .sum::<f64>()
+            / n_freqs as f64;
+
         // Additional convergence criterion: RMS change
-        let rms_change = (old_psd.iter()
+        let rms_change = (old_psd
+            .iter()
             .zip(psd.iter())
             .map(|(old, new)| {
                 let denominator = old.abs().max(new.abs()).max(1e-12);
                 ((old - new) / denominator).powi(2)
             })
-            .sum::<f64>() / n_freqs as f64).sqrt();
-        
+            .sum::<f64>()
+            / n_freqs as f64)
+            .sqrt();
+
         // Convergence check with all three criteria
         if max_change < tolerance && mean_change < tolerance * 0.1 && rms_change < tolerance * 0.5 {
             converged = true;
             break;
         }
-        
+
         // Add adaptive damping for later iterations to ensure convergence
         if iter > damping_start {
             // Adaptive damping based on convergence rate
@@ -507,38 +622,40 @@ fn combine_spectra_adaptive(
             } else {
                 damping_factor // Standard damping
             };
-            
+
             for j in 0..n_freqs {
                 psd[j] = adaptive_damping * psd[j] + (1.0 - adaptive_damping) * old_psd[j];
             }
         }
     }
-    
+
     // Enhanced convergence diagnostics
     if !converged {
         // Check if we're close to convergence
-        let final_change = old_psd.iter()
+        let final_change = old_psd
+            .iter()
             .zip(psd.iter())
             .map(|(old, new)| {
                 let denominator = old.abs().max(new.abs()).max(1e-12);
                 ((old - new) / denominator).abs()
             })
             .fold(0.0, f64::max);
-            
+
         if final_change < tolerance * 10.0 {
             // Close enough for practical purposes
-            eprintln!("Warning: Adaptive multitaper algorithm nearly converged (final change: {:.2e})", final_change);
+            eprintln!(
+                "Warning: Adaptive multitaper algorithm nearly converged (final change: {:.2e})",
+                final_change
+            );
         } else {
             eprintln!("Warning: Adaptive multitaper algorithm did not converge within {} iterations (final change: {:.2e})", max_iter, final_change);
             // Could potentially return an error here in stricter implementations
         }
     }
-    
+
     // Create frequency array
     let frequencies = if onesided {
-        (0..n_freqs)
-            .map(|i| i as f64 * fs / nfft as f64)
-            .collect()
+        (0..n_freqs).map(|i| i as f64 * fs / nfft as f64).collect()
     } else {
         (0..nfft)
             .map(|i| {
@@ -550,16 +667,16 @@ fn combine_spectra_adaptive(
             })
             .collect()
     };
-    
+
     // Apply final scaling with improved normalization
     let scaling = if onesided { 2.0 / fs } else { 1.0 / fs };
     psd.iter_mut().for_each(|p| *p *= scaling);
-    
+
     Ok((frequencies, psd))
 }
 
 /// Compute confidence intervals using enhanced chi-squared approximation
-/// 
+///
 /// This implementation includes improved DOF calculation and better handling
 /// of edge cases for more accurate confidence intervals.
 fn compute_confidence_intervals(
@@ -568,60 +685,60 @@ fn compute_confidence_intervals(
     confidence_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     use statrs::distribution::{ChiSquared, ContinuousCDF};
-    
+
     let k = spectra.nrows() as f64;
     // Enhanced DOF calculation using effective number of tapers
     let effective_k = compute_effective_dof(eigenvalues) / 2.0;
     let dof = 2.0 * effective_k; // More accurate degrees of freedom
-    
+
     // Chi-squared distribution
     let chi2 = ChiSquared::new(dof).map_err(|e| {
         SignalError::ComputationError(format!("Failed to create chi-squared distribution: {}", e))
     })?;
-    
+
     // Confidence interval factors
     let alpha = 1.0 - confidence_level;
     let lower_quantile = chi2.inverse_cdf(alpha / 2.0);
     let upper_quantile = chi2.inverse_cdf(1.0 - alpha / 2.0);
-    
+
     let lower_factor = dof / upper_quantile;
     let upper_factor = dof / lower_quantile;
-    
+
     // Apply factors to PSD estimate with improved scaling
     let n_freqs = spectra.ncols();
     let mut lower_ci = vec![0.0; n_freqs];
     let mut upper_ci = vec![0.0; n_freqs];
-    
+
     let weight_sum: f64 = eigenvalues.sum();
-    
+
     for j in 0..n_freqs {
         let mut weighted_sum = 0.0;
         let mut variance_estimate = 0.0;
-        
+
         // Compute weighted mean and variance estimate
         for i in 0..spectra.nrows() {
             weighted_sum += eigenvalues[i] * spectra[[i, j]];
         }
         let psd_estimate = weighted_sum / weight_sum;
-        
+
         // Improved variance estimation for better confidence intervals
         for i in 0..spectra.nrows() {
             let deviation = spectra[[i, j]] - psd_estimate;
             variance_estimate += eigenvalues[i] * deviation * deviation;
         }
         variance_estimate /= weight_sum;
-        
+
         // Apply chi-squared scaling with variance correction
         let scale_factor = (1.0 + variance_estimate / (psd_estimate * psd_estimate + 1e-15)).sqrt();
-        
+
         lower_ci[j] = psd_estimate * lower_factor / scale_factor;
         upper_ci[j] = psd_estimate * upper_factor * scale_factor;
-        
+
         // Ensure positive confidence intervals
         lower_ci[j] = lower_ci[j].max(1e-15);
         upper_ci[j] = upper_ci[j].max(lower_ci[j] * 1.01); // Ensure upper > lower
     }
-    
+
     Ok((lower_ci, upper_ci))
 }
 
@@ -629,12 +746,12 @@ fn compute_confidence_intervals(
 fn compute_effective_dof(eigenvalues: &Array1<f64>) -> f64 {
     let sum_lambda: f64 = eigenvalues.sum();
     let sum_lambda_sq: f64 = eigenvalues.iter().map(|&x| x * x).sum();
-    
+
     2.0 * sum_lambda.powi(2) / sum_lambda_sq
 }
 
 /// Enhanced memory-efficient multitaper estimation for very large signals
-/// 
+///
 /// This implementation includes improved chunking strategy and better
 /// statistical combination of results across chunks.
 fn compute_pmtm_chunked(
@@ -648,28 +765,28 @@ fn compute_pmtm_chunked(
     let chunk_size = base_chunk_size.min(n / 10).max(config.k * 20); // Ensure minimum viable chunk
     let overlap = (chunk_size as f64 * 0.2) as usize; // Increased overlap for better continuity
     let step = chunk_size - overlap;
-    
+
     // Calculate number of chunks
     let n_chunks = (n + step - 1) / step; // Ceiling division
-    
+
     // Initialize accumulators
     let n_freqs = if config.onesided { nfft / 2 + 1 } else { nfft };
     let mut psd_accumulator = vec![0.0; n_freqs];
     let mut weight_accumulator = vec![0.0; n_freqs];
     let mut frequencies = Vec::new();
-    
+
     // Process each chunk
     for chunk_idx in 0..n_chunks {
         let start = chunk_idx * step;
         let end = (start + chunk_size).min(n);
-        
+
         let chunk_len = end - start;
         if chunk_len < config.k * 15 {
             // Skip chunks that are too small for reliable estimation
             // Increased minimum size for better statistical properties
             continue;
         }
-        
+
         // Additional validation for chunk quality
         let chunk = &signal[start..end];
         let chunk_energy: f64 = chunk.iter().map(|&x| x * x).sum();
@@ -677,50 +794,64 @@ fn compute_pmtm_chunked(
             // Skip near-zero energy chunks
             continue;
         }
-        
+
         let chunk = &signal[start..end];
         let chunk_len = chunk.len();
-        
+
         // Compute DPSS for this chunk size
         let (tapers, eigenvalues_opt) = dpss(chunk_len, config.nw, config.k, true)?;
         let eigenvalues = eigenvalues_opt.ok_or_else(|| {
-            SignalError::ComputationError("Eigenvalues required but not returned from dpss".to_string())
+            SignalError::ComputationError(
+                "Eigenvalues required but not returned from dpss".to_string(),
+            )
         })?;
-        
+
         // Use a smaller nfft for chunks
         let chunk_nfft = next_power_of_two(chunk_len);
-        
+
         // Compute tapered FFTs for this chunk
         let spectra = if config.parallel && chunk_len >= config.parallel_threshold {
             compute_tapered_ffts_parallel(chunk, &tapers, chunk_nfft)?
         } else {
             compute_tapered_ffts_simd(chunk, &tapers, chunk_nfft)?
         };
-        
+
         // Combine spectra for this chunk
         let (chunk_freqs, chunk_psd) = if config.adaptive {
-            combine_spectra_adaptive(&spectra, &eigenvalues, config.fs, chunk_nfft, config.onesided)?
+            combine_spectra_adaptive(
+                &spectra,
+                &eigenvalues,
+                config.fs,
+                chunk_nfft,
+                config.onesided,
+            )?
         } else {
-            combine_spectra_standard(&spectra, &eigenvalues, config.fs, chunk_nfft, config.onesided)?
+            combine_spectra_standard(
+                &spectra,
+                &eigenvalues,
+                config.fs,
+                chunk_nfft,
+                config.onesided,
+            )?
         };
-        
+
         // Store frequencies from first chunk
         if chunk_idx == 0 {
             frequencies = chunk_freqs.clone();
         }
-        
+
         // Interpolate chunk PSD to match target frequency grid if needed
         let interpolated_psd = if chunk_freqs.len() != frequencies.len() {
             interpolate_psd(&chunk_freqs, &chunk_psd, &frequencies)?
         } else {
             chunk_psd
         };
-        
+
         // Enhanced weighted accumulation with variance tracking
         let chunk_len_actual = end - start;
-        let chunk_weight = (chunk_len_actual as f64 / n as f64) * 
-                          (chunk_len_actual as f64 / chunk_size as f64).sqrt(); // Quality factor
-        
+        let chunk_weight = (chunk_len_actual as f64 / n as f64)
+            * (chunk_len_actual as f64 / chunk_size as f64).sqrt(); // Quality factor
+
         for (i, &psd_val) in interpolated_psd.iter().enumerate() {
             if i < psd_accumulator.len() && psd_val.is_finite() && psd_val > 0.0 {
                 psd_accumulator[i] += psd_val * chunk_weight;
@@ -728,24 +859,24 @@ fn compute_pmtm_chunked(
             }
         }
     }
-    
+
     // Normalize accumulated PSD
     for i in 0..psd_accumulator.len() {
         if weight_accumulator[i] > 0.0 {
             psd_accumulator[i] /= weight_accumulator[i];
         }
     }
-    
+
     // Note: For chunked processing, we don't compute confidence intervals
     // as they would require more complex statistical handling across chunks
-    
+
     Ok(EnhancedMultitaperResult {
         frequencies,
         psd: psd_accumulator,
         confidence_intervals: None, // Not supported for chunked processing
         dof: Some(2.0 * config.k as f64 * n_chunks as f64), // Approximate DOF
-        tapers: None, // Not returned for memory efficiency
-        eigenvalues: None, // Not returned for memory efficiency
+        tapers: None,               // Not returned for memory efficiency
+        eigenvalues: None,          // Not returned for memory efficiency
     })
 }
 
@@ -756,16 +887,18 @@ fn interpolate_psd(
     target_freqs: &[f64],
 ) -> SignalResult<Vec<f64>> {
     if source_freqs.is_empty() || source_psd.is_empty() || target_freqs.is_empty() {
-        return Err(SignalError::ValueError("Empty frequency or PSD arrays".to_string()));
+        return Err(SignalError::ValueError(
+            "Empty frequency or PSD arrays".to_string(),
+        ));
     }
-    
+
     let mut result = vec![0.0; target_freqs.len()];
-    
+
     for (i, &target_freq) in target_freqs.iter().enumerate() {
         // Find bracketing indices
         let mut lower_idx = 0;
         let mut upper_idx = source_freqs.len() - 1;
-        
+
         for (j, &freq) in source_freqs.iter().enumerate() {
             if freq <= target_freq {
                 lower_idx = j;
@@ -774,7 +907,7 @@ fn interpolate_psd(
                 break;
             }
         }
-        
+
         if lower_idx == upper_idx {
             // Exact match or at boundary
             result[i] = source_psd[lower_idx];
@@ -784,7 +917,7 @@ fn interpolate_psd(
             let f2 = source_freqs[upper_idx];
             let p1 = source_psd[lower_idx];
             let p2 = source_psd[upper_idx];
-            
+
             if (f2 - f1).abs() > 1e-15 {
                 let weight = (target_freq - f1) / (f2 - f1);
                 result[i] = p1 + weight * (p2 - p1);
@@ -793,7 +926,7 @@ fn interpolate_psd(
             }
         }
     }
-    
+
     Ok(result)
 }
 
@@ -802,7 +935,7 @@ fn next_power_of_two(n: usize) -> usize {
     if n == 0 {
         return 1;
     }
-    
+
     let mut power = 1;
     while power < n {
         power <<= 1;
@@ -834,10 +967,10 @@ where
     if x.is_empty() {
         return Err(SignalError::ValueError("Input signal is empty".to_string()));
     }
-    
+
     check_positive(config.window_size, "window_size")?;
     check_positive(config.step, "step")?;
-    
+
     // Convert input to f64
     let x_f64: Vec<f64> = x
         .iter()
@@ -847,49 +980,49 @@ where
             })
         })
         .collect::<SignalResult<Vec<f64>>>()?;
-    
+
     check_finite(&x_f64, "signal")?;
-    
+
     let n = x_f64.len();
     let window_size = config.window_size;
     let step = config.step;
-    
+
     // Calculate number of windows
     if window_size > n {
         return Err(SignalError::ValueError(
-            "Window size larger than signal length".to_string()
+            "Window size larger than signal length".to_string(),
         ));
     }
-    
+
     let n_windows = (n - window_size) / step + 1;
     if n_windows == 0 {
         return Err(SignalError::ValueError(
-            "No complete windows in signal".to_string()
+            "No complete windows in signal".to_string(),
         ));
     }
-    
+
     // Prepare multitaper config for each window
     let mut mt_config = config.multitaper.clone();
     mt_config.nfft = Some(config.window_size);
-    
+
     // Calculate time points
     let times: Vec<f64> = (0..n_windows)
         .map(|i| (i * step + window_size / 2) as f64 / config.fs)
         .collect();
-    
+
     // Process windows in parallel if enabled
-    let results: Vec<EnhancedMultitaperResult> = if config.multitaper.parallel 
-        && n_windows >= config.multitaper.parallel_threshold / window_size {
-        
+    let results: Vec<EnhancedMultitaperResult> = if config.multitaper.parallel
+        && n_windows >= config.multitaper.parallel_threshold / window_size
+    {
         let x_arc = Arc::new(x_f64);
-        
+
         (0..n_windows)
             .into_par_iter()
             .map(|i| {
                 let start = i * step;
                 let end = start + window_size;
                 let window = &x_arc[start..end];
-                
+
                 enhanced_pmtm(window, &mt_config).unwrap()
             })
             .collect()
@@ -900,29 +1033,29 @@ where
                 let start = i * step;
                 let end = start + window_size;
                 let window = &x_f64[start..end];
-                
+
                 enhanced_pmtm(window, &mt_config)
             })
             .collect::<SignalResult<Vec<_>>>()?
     };
-    
+
     // Extract frequencies from first result
     let frequencies = results[0].frequencies.clone();
     let n_freqs = frequencies.len();
-    
+
     // Build spectrogram matrix
     let mut spectrogram = Array2::zeros((n_freqs, n_windows));
-    
+
     for (j, result) in results.iter().enumerate() {
         for (i, &psd_val) in result.psd.iter().enumerate() {
             spectrogram[[i, j]] = psd_val;
         }
     }
-    
+
     // Apply logarithmic scaling if requested (common for spectrograms)
     let epsilon = 1e-10;
     spectrogram.mapv_inplace(|x| (x + epsilon).log10() * 10.0); // Convert to dB
-    
+
     Ok((times, frequencies, spectrogram))
 }
 
@@ -942,7 +1075,7 @@ pub struct SpectrogramConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_enhanced_pmtm_basic() {
         // Generate test signal
@@ -950,14 +1083,14 @@ mod tests {
         let signal: Vec<f64> = (0..n)
             .map(|i| (2.0 * std::f64::consts::PI * 10.0 * i as f64 / 100.0).sin())
             .collect();
-        
+
         let config = MultitaperConfig::default();
         let result = enhanced_pmtm(&signal, &config).unwrap();
-        
+
         assert_eq!(result.frequencies.len(), result.psd.len());
         assert!(result.dof.is_some());
     }
-    
+
     #[test]
     fn test_simd_fft() {
         let signal = vec![1.0, 0.0, -1.0, 0.0];

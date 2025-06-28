@@ -1,0 +1,374 @@
+# Mathematical Foundations of Special Functions
+
+This document provides comprehensive mathematical foundations, proofs, and derivations for the special functions implemented in scirs2-special.
+
+## Table of Contents
+
+1. [Gamma and Beta Functions](#gamma-and-beta-functions)
+2. [Bessel Functions](#bessel-functions)
+3. [Error Functions](#error-functions)
+4. [Orthogonal Polynomials](#orthogonal-polynomials)
+5. [Hypergeometric Functions](#hypergeometric-functions)
+6. [Wright Functions](#wright-functions)
+7. [Elliptic Integrals](#elliptic-integrals)
+8. [Spherical Harmonics](#spherical-harmonics)
+9. [Mathieu Functions](#mathieu-functions)
+10. [Asymptotic Analysis](#asymptotic-analysis)
+
+---
+
+## Gamma and Beta Functions
+
+### Gamma Function Definition
+
+The Gamma function is defined by the integral:
+
+$$\Gamma(z) = \int_0^{\infty} t^{z-1} e^{-t} dt, \quad \Re(z) > 0$$
+
+### Fundamental Properties
+
+**Recurrence Relation:**
+$$\Gamma(z+1) = z\Gamma(z)$$
+
+**Proof:** Using integration by parts on the defining integral:
+$$\Gamma(z+1) = \int_0^{\infty} t^z e^{-t} dt$$
+
+Let $u = t^z$ and $dv = e^{-t}dt$. Then $du = zt^{z-1}dt$ and $v = -e^{-t}$.
+
+$$\Gamma(z+1) = \left[-t^z e^{-t}\right]_0^{\infty} + z\int_0^{\infty} t^{z-1} e^{-t} dt$$
+
+The boundary term vanishes, giving us $\Gamma(z+1) = z\Gamma(z)$. □
+
+**Special Values:**
+- $\Gamma(1) = 0! = 1$
+- $\Gamma(n+1) = n!$ for $n \in \mathbb{N}_0$
+- $\Gamma(1/2) = \sqrt{\pi}$
+
+**Proof of $\Gamma(1/2) = \sqrt{\pi}$:**
+
+$$\Gamma(1/2) = \int_0^{\infty} t^{-1/2} e^{-t} dt$$
+
+Substituting $t = u^2$, $dt = 2u du$:
+
+$$\Gamma(1/2) = \int_0^{\infty} (u^2)^{-1/2} e^{-u^2} \cdot 2u du = 2\int_0^{\infty} e^{-u^2} du$$
+
+The Gaussian integral $\int_{-\infty}^{\infty} e^{-u^2} du = \sqrt{\pi}$, so $\int_0^{\infty} e^{-u^2} du = \sqrt{\pi}/2$.
+
+Therefore, $\Gamma(1/2) = 2 \cdot \sqrt{\pi}/2 = \sqrt{\pi}$. □
+
+### Stirling's Approximation
+
+For large $|z|$:
+$$\Gamma(z) \sim \sqrt{\frac{2\pi}{z}} \left(\frac{z}{e}\right)^z$$
+
+**Derivation:** Using the saddle-point method on the integral representation:
+
+$$\ln \Gamma(z) = \int_0^{\infty} [(z-1)\ln t - t] dt$$
+
+The saddle point occurs at $t = z-1$, yielding the asymptotic expansion.
+
+### Beta Function
+
+The Beta function is defined as:
+$$B(a,b) = \int_0^1 t^{a-1}(1-t)^{b-1} dt = \frac{\Gamma(a)\Gamma(b)}{\Gamma(a+b)}$$
+
+**Proof of the Gamma function relation:**
+
+Starting with the product:
+$$\Gamma(a)\Gamma(b) = \int_0^{\infty} s^{a-1} e^{-s} ds \int_0^{\infty} t^{b-1} e^{-t} dt$$
+
+Converting to polar coordinates $(s = r\cos^2\theta, t = r\sin^2\theta)$:
+$$= 4\int_0^{\pi/2} \int_0^{\infty} r^{a+b-1} e^{-r} \cos^{2a-1}\theta \sin^{2b-1}\theta \, dr \, d\theta$$
+
+$$= \Gamma(a+b) \cdot 2\int_0^{\pi/2} \cos^{2a-1}\theta \sin^{2b-1}\theta \, d\theta$$
+
+Using the substitution $u = \cos^2\theta$ yields $B(a,b)$. □
+
+---
+
+## Bessel Functions
+
+### Bessel Differential Equation
+
+The Bessel differential equation is:
+$$z^2 \frac{d^2y}{dz^2} + z\frac{dy}{dz} + (z^2 - \nu^2)y = 0$$
+
+### Series Solutions
+
+**Bessel Functions of the First Kind:**
+$$J_\nu(z) = \left(\frac{z}{2}\right)^\nu \sum_{k=0}^{\infty} \frac{(-1)^k}{k!\Gamma(\nu+k+1)} \left(\frac{z}{2}\right)^{2k}$$
+
+**Derivation:** Using the Frobenius method, we assume a solution of the form:
+$$y = z^r \sum_{n=0}^{\infty} a_n z^n$$
+
+Substituting into the differential equation and equating coefficients yields the recurrence relations that lead to the series representation. □
+
+**Orthogonality Relations:**
+$$\int_0^1 x J_\mu(\alpha_{\mu,m} x) J_\mu(\alpha_{\mu,n} x) dx = \frac{\delta_{mn}}{2} [J_{\mu+1}(\alpha_{\mu,m})]^2$$
+
+where $\alpha_{\mu,m}$ are the zeros of $J_\mu(x)$.
+
+### Asymptotic Behavior
+
+For large $|z|$:
+$$J_\nu(z) \sim \sqrt{\frac{2}{\pi z}} \cos\left(z - \frac{\nu\pi}{2} - \frac{\pi}{4}\right)$$
+
+**Derivation using Stationary Phase Method:**
+
+The integral representation:
+$$J_\nu(z) = \frac{1}{\pi} \int_0^\pi \cos(z\sin\theta - \nu\theta) d\theta$$
+
+For large $z$, the main contribution comes from the stationary points where $\frac{d}{d\theta}(z\sin\theta - \nu\theta) = 0$, i.e., $z\cos\theta = \nu$.
+
+For $\nu \ll z$, the stationary point is near $\theta = \pi/2$, leading to the asymptotic formula. □
+
+### Modified Bessel Functions
+
+**Modified Bessel Functions of the First Kind:**
+$$I_\nu(z) = i^{-\nu} J_\nu(iz) = \left(\frac{z}{2}\right)^\nu \sum_{k=0}^{\infty} \frac{1}{k!\Gamma(\nu+k+1)} \left(\frac{z}{2}\right)^{2k}$$
+
+**Asymptotic behavior for large $z$:**
+$$I_\nu(z) \sim \frac{e^z}{\sqrt{2\pi z}} \left(1 - \frac{4\nu^2-1}{8z} + O(z^{-2})\right)$$
+
+---
+
+## Error Functions
+
+### Definition and Integral Representation
+
+The error function is defined as:
+$$\operatorname{erf}(z) = \frac{2}{\sqrt{\pi}} \int_0^z e^{-t^2} dt$$
+
+### Series Expansion
+
+$$\operatorname{erf}(z) = \frac{2}{\sqrt{\pi}} \sum_{n=0}^{\infty} \frac{(-1)^n z^{2n+1}}{n!(2n+1)}$$
+
+**Derivation:** From the Taylor series of $e^{-t^2}$:
+$$e^{-t^2} = \sum_{n=0}^{\infty} \frac{(-t^2)^n}{n!} = \sum_{n=0}^{\infty} \frac{(-1)^n t^{2n}}{n!}$$
+
+Integrating term by term:
+$$\operatorname{erf}(z) = \frac{2}{\sqrt{\pi}} \int_0^z \sum_{n=0}^{\infty} \frac{(-1)^n t^{2n}}{n!} dt = \frac{2}{\sqrt{\pi}} \sum_{n=0}^{\infty} \frac{(-1)^n z^{2n+1}}{n!(2n+1)}$$ □
+
+### Asymptotic Expansion
+
+For large $|z|$:
+$$\operatorname{erfc}(z) \sim \frac{e^{-z^2}}{z\sqrt{\pi}} \sum_{n=0}^{\infty} \frac{(-1)^n (2n-1)!!}{(2z^2)^n}$$
+
+**Derivation using Integration by Parts:**
+
+Starting with:
+$$\operatorname{erfc}(z) = \frac{2}{\sqrt{\pi}} \int_z^{\infty} e^{-t^2} dt$$
+
+Let $u = e^{-t^2}$ and $dv = dt$. Then $du = -2te^{-t^2}dt$ and $v = t$.
+
+Repeated integration by parts yields the asymptotic series. □
+
+### Complex Error Function (Faddeeva Function)
+
+$$w(z) = e^{-z^2} \operatorname{erfc}(-iz)$$
+
+This function satisfies:
+$$w'(z) = -2z w(z) + \frac{2i}{\sqrt{\pi}}$$
+
+---
+
+## Orthogonal Polynomials
+
+### Legendre Polynomials
+
+**Rodrigues' Formula:**
+$$P_n(x) = \frac{1}{2^n n!} \frac{d^n}{dx^n}(x^2-1)^n$$
+
+**Generating Function:**
+$$\frac{1}{\sqrt{1-2xt+t^2}} = \sum_{n=0}^{\infty} P_n(x) t^n, \quad |t| < 1$$
+
+**Orthogonality:**
+$$\int_{-1}^1 P_m(x) P_n(x) dx = \frac{2}{2n+1} \delta_{mn}$$
+
+**Proof of Orthogonality:** Using Rodrigues' formula and integration by parts:
+
+$$\int_{-1}^1 P_m(x) P_n(x) dx = \frac{1}{2^{m+n} m! n!} \int_{-1}^1 \frac{d^m}{dx^m}(x^2-1)^m \frac{d^n}{dx^n}(x^2-1)^n dx$$
+
+For $m \neq n$, repeated integration by parts shows this integral vanishes. □
+
+### Hermite Polynomials
+
+**Physicist's Hermite Polynomials:**
+$$H_n(x) = (-1)^n e^{x^2} \frac{d^n}{dx^n} e^{-x^2}$$
+
+**Generating Function:**
+$$e^{2xt-t^2} = \sum_{n=0}^{\infty} H_n(x) \frac{t^n}{n!}$$
+
+**Orthogonality:**
+$$\int_{-\infty}^{\infty} H_m(x) H_n(x) e^{-x^2} dx = 2^n n! \sqrt{\pi} \delta_{mn}$$
+
+### Laguerre Polynomials
+
+**Generalized Laguerre Polynomials:**
+$$L_n^{(\alpha)}(x) = \frac{x^{-\alpha} e^x}{n!} \frac{d^n}{dx^n}(e^{-x} x^{n+\alpha})$$
+
+**Orthogonality:**
+$$\int_0^{\infty} x^\alpha e^{-x} L_m^{(\alpha)}(x) L_n^{(\alpha)}(x) dx = \frac{\Gamma(n+\alpha+1)}{n!} \delta_{mn}$$
+
+---
+
+## Hypergeometric Functions
+
+### Gaussian Hypergeometric Function
+
+$$_2F_1(a,b;c;z) = \sum_{n=0}^{\infty} \frac{(a)_n (b)_n}{(c)_n} \frac{z^n}{n!}$$
+
+where $(a)_n = a(a+1)\cdots(a+n-1)$ is the Pochhammer symbol.
+
+### Integral Representation
+
+For $\Re(c) > \Re(b) > 0$:
+$$_2F_1(a,b;c;z) = \frac{\Gamma(c)}{\Gamma(b)\Gamma(c-b)} \int_0^1 t^{b-1}(1-t)^{c-b-1}(1-zt)^{-a} dt$$
+
+### Kummer's Function
+
+$$_1F_1(a;c;z) = \sum_{n=0}^{\infty} \frac{(a)_n}{(c)_n} \frac{z^n}{n!}$$
+
+**Differential Equation:**
+$$z\frac{d^2w}{dz^2} + (c-z)\frac{dw}{dz} - aw = 0$$
+
+---
+
+## Wright Functions
+
+### Wright Bessel Function
+
+The Wright Bessel function is defined by:
+$$J_{\rho,\beta}(z) = \sum_{k=0}^{\infty} \frac{(-z)^k}{k! \Gamma(\rho k + \beta)}$$
+
+### Asymptotic Behavior
+
+For large $|z|$ and $\rho > 0$:
+$$J_{\rho,\beta}(z) \sim \frac{1}{\sqrt{2\pi\rho}} z^{(\beta-1)/(2\rho)} \exp\left(\rho \left(\frac{z}{\rho}\right)^{1/\rho}\right)$$
+
+**Derivation using Saddle Point Method:**
+
+The integral representation:
+$$J_{\rho,\beta}(z) = \frac{1}{2\pi i} \int_{\mathcal{C}} \Gamma(-s) \frac{z^s}{\Gamma(\beta - \rho s)} ds$$
+
+For large $|z|$, the saddle point occurs at $s = s_0$ where the exponent is stationary. This leads to the asymptotic formula through standard saddle-point analysis. □
+
+### Wright Omega Function
+
+The Wright omega function $\omega(z)$ is defined as the solution to:
+$$\omega e^\omega = z$$
+
+It satisfies the functional equation:
+$$\omega(z e^z) = z$$
+
+---
+
+## Elliptic Integrals
+
+### Complete Elliptic Integrals
+
+**Elliptic Integral of the First Kind:**
+$$K(k) = \int_0^{\pi/2} \frac{d\theta}{\sqrt{1-k^2\sin^2\theta}}$$
+
+**Series Expansion:**
+$$K(k) = \frac{\pi}{2} \sum_{n=0}^{\infty} \left[\frac{(2n-1)!!}{(2n)!!}\right]^2 k^{2n}$$
+
+**Elliptic Integral of the Second Kind:**
+$$E(k) = \int_0^{\pi/2} \sqrt{1-k^2\sin^2\theta} \, d\theta$$
+
+### Jacobi Elliptic Functions
+
+The Jacobi elliptic functions $\operatorname{sn}(u,k)$, $\operatorname{cn}(u,k)$, and $\operatorname{dn}(u,k)$ are defined as the inverse of elliptic integrals.
+
+**Addition Formulas:**
+$$\operatorname{sn}(u+v,k) = \frac{\operatorname{sn}u \operatorname{cn}v \operatorname{dn}v + \operatorname{sn}v \operatorname{cn}u \operatorname{dn}u}{1 - k^2 \operatorname{sn}^2u \operatorname{sn}^2v}$$
+
+---
+
+## Spherical Harmonics
+
+### Definition
+
+$$Y_\ell^m(\theta,\phi) = \sqrt{\frac{2\ell+1}{4\pi}\frac{(\ell-m)!}{(\ell+m)!}} P_\ell^m(\cos\theta) e^{im\phi}$$
+
+where $P_\ell^m$ are the associated Legendre polynomials.
+
+### Orthonormality
+
+$$\int_0^{2\pi} \int_0^{\pi} Y_{\ell'}^{m'}(\theta,\phi)^* Y_\ell^m(\theta,\phi) \sin\theta \, d\theta \, d\phi = \delta_{\ell'\ell} \delta_{m'm}$$
+
+### Addition Theorem
+
+$$P_\ell(\cos\gamma) = \frac{4\pi}{2\ell+1} \sum_{m=-\ell}^{\ell} Y_\ell^m(\theta_1,\phi_1)^* Y_\ell^m(\theta_2,\phi_2)$$
+
+where $\cos\gamma = \cos\theta_1\cos\theta_2 + \sin\theta_1\sin\theta_2\cos(\phi_1-\phi_2)$.
+
+---
+
+## Mathieu Functions
+
+### Mathieu Differential Equation
+
+$$\frac{d^2y}{dz^2} + (a - 2q\cos 2z)y = 0$$
+
+The characteristic values $a = a_n(q)$ and $b_n(q)$ are determined by the requirement of periodic or semi-periodic solutions.
+
+### Floquet Theory
+
+Solutions have the form:
+$$y(z) = e^{i\mu z} P(z)$$
+
+where $P(z)$ is periodic with period $\pi$ or $2\pi$.
+
+---
+
+## Asymptotic Analysis
+
+### Steepest Descent Method
+
+For integrals of the form:
+$$I(\lambda) = \int_{\mathcal{C}} g(z) e^{\lambda f(z)} dz$$
+
+As $\lambda \to \infty$, the main contribution comes from saddle points where $f'(z) = 0$.
+
+**Leading Asymptotic Term:**
+$$I(\lambda) \sim g(z_0) e^{\lambda f(z_0)} \sqrt{\frac{2\pi}{\lambda |f''(z_0)|}}$$
+
+### Watson's Lemma
+
+If $f(t) \sim \sum_{n=0}^{\infty} a_n t^{\alpha_n}$ as $t \to 0^+$ with $0 \leq \alpha_0 < \alpha_1 < \cdots$, then:
+
+$$\int_0^{\infty} f(t) e^{-\lambda t} dt \sim \sum_{n=0}^{\infty} a_n \frac{\Gamma(\alpha_n + 1)}{\lambda^{\alpha_n + 1}}$$
+
+as $\lambda \to +\infty$.
+
+---
+
+## Convergence and Error Analysis
+
+### Numerical Stability
+
+**Condition Number:** For a function $f$, the relative condition number is:
+$$\kappa = \left|\frac{xf'(x)}{f(x)}\right|$$
+
+**Forward Error Analysis:** If $\tilde{f}(x)$ is a computed approximation to $f(x)$:
+$$\frac{|\tilde{f}(x) - f(x)|}{|f(x)|} \approx \kappa \cdot \epsilon_{machine}$$
+
+### Series Truncation Errors
+
+For alternating series satisfying the conditions of the alternating series test, the error is bounded by the first neglected term:
+
+$$\left|\sum_{n=0}^{N} (-1)^n a_n - \sum_{n=0}^{\infty} (-1)^n a_n\right| \leq a_{N+1}$$
+
+---
+
+## References
+
+1. Abramowitz, M., & Stegun, I. A. (1972). Handbook of Mathematical Functions. Dover Publications.
+2. Olver, F. W. J., et al. (2010). NIST Handbook of Mathematical Functions. Cambridge University Press.
+3. Watson, G. N. (1944). A Treatise on the Theory of Bessel Functions. Cambridge University Press.
+4. Erdélyi, A., et al. (1953-1955). Higher Transcendental Functions (3 volumes). McGraw-Hill.
+5. Andrews, G. E., Askey, R., & Roy, R. (1999). Special Functions. Cambridge University Press.
+6. Temme, N. M. (1996). Special Functions: An Introduction to Classical Functions of Mathematical Physics. Wiley.
+7. Wright, E. M. (1935). The asymptotic expansion of the generalized Bessel function. Proc. London Math. Soc.
+8. Wong, R., & Zhao, Y. Q. (1999). Exponential asymptotics of the Wright Bessel functions. J. Math. Anal. Appl.

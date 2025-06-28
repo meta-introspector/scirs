@@ -227,8 +227,7 @@ impl PolygonObstacle {
             let xj = self.vertices[j][0];
             let yj = self.vertices[j][1];
 
-            if ((yi > py) != (yj > py)) && 
-               (px < (xj - xi) * (py - yi) / (yj - yi) + xi) {
+            if ((yi > py) != (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi) {
                 inside = !inside;
             }
         }
@@ -247,11 +246,8 @@ impl PolygonObstacle {
 
         for i in 0..n {
             let j = (i + 1) % n;
-            let edge_dist = self.distance_point_to_line_segment(
-                point, 
-                &self.vertices[i], 
-                &self.vertices[j]
-            );
+            let edge_dist =
+                self.distance_point_to_line_segment(point, &self.vertices[i], &self.vertices[j]);
             min_distance = min_distance.min(edge_dist);
         }
 
@@ -309,13 +305,11 @@ impl PolygonObstacle {
 
         for i in 0..n {
             let j = (i + 1) % n;
-            let edge_point = self.closest_point_on_line_segment(
-                point,
-                &self.vertices[i],
-                &self.vertices[j],
-            );
-            
-            let dist = self.distance_point_to_line_segment(point, &self.vertices[i], &self.vertices[j]);
+            let edge_point =
+                self.closest_point_on_line_segment(point, &self.vertices[i], &self.vertices[j]);
+
+            let dist =
+                self.distance_point_to_line_segment(point, &self.vertices[i], &self.vertices[j]);
             if dist < min_distance {
                 min_distance = dist;
                 closest_point = edge_point;
@@ -367,7 +361,7 @@ impl Obstacle for PolygonObstacle {
         }
 
         let boundary_distance = self.distance_to_polygon_boundary(point);
-        
+
         // If point is inside the polygon, return 0 (collision)
         if self.is_point_inside(point) {
             0.0
@@ -382,7 +376,7 @@ impl Obstacle for PolygonObstacle {
         }
 
         let distance = self.distance_to_polygon_boundary(point);
-        
+
         // No force if point is too far away or inside the polygon
         if distance > config.influence_radius || self.is_point_inside(point) {
             return Array1::zeros(point.len());
@@ -390,23 +384,23 @@ impl Obstacle for PolygonObstacle {
 
         // Find the closest point on the polygon boundary
         let closest_point = self.closest_point_on_boundary(point);
-        
+
         // Calculate direction from closest point to the point (repulsive direction)
         let direction_x = point[0] - closest_point[0];
         let direction_y = point[1] - closest_point[1];
         let direction_magnitude = (direction_x * direction_x + direction_y * direction_y).sqrt();
-        
+
         if direction_magnitude < 1e-10 {
             // Point is exactly on the boundary, push in arbitrary direction
             return Array1::from_vec(vec![1.0, 0.0]) * config.repulsive_gain;
         }
-        
+
         // Normalize direction vector
         let unit_direction = Array1::from_vec(vec![
             direction_x / direction_magnitude,
             direction_y / direction_magnitude,
         ]);
-        
+
         // Calculate force magnitude based on distance
         // Force increases as distance decreases, following potential field formula
         let force_magnitude = if distance > 1e-6 {
@@ -414,7 +408,7 @@ impl Obstacle for PolygonObstacle {
         } else {
             config.repulsive_gain * 1000.0 // Very large force when very close
         };
-        
+
         // Apply force in the repulsive direction
         unit_direction * force_magnitude.max(0.0)
     }
@@ -523,12 +517,12 @@ impl PotentialFieldPlanner {
         // Check if start or goal are in collision
         if self.is_collision(start) {
             return Err(SpatialError::ValueError(
-                "Start position is in collision with obstacle".to_string()
+                "Start position is in collision with obstacle".to_string(),
             ));
         }
         if self.is_collision(goal) {
             return Err(SpatialError::ValueError(
-                "Goal position is in collision with obstacle".to_string()
+                "Goal position is in collision with obstacle".to_string(),
             ));
         }
 
@@ -566,7 +560,12 @@ impl PotentialFieldPlanner {
             // Check for local minimum (very small force)
             if force_magnitude < self.config.min_force_threshold {
                 // Try to escape local minimum by adding random perturbation
-                let escape_success = self.escape_local_minimum(&mut current_pos, goal, &mut path_points, &mut total_distance);
+                let escape_success = self.escape_local_minimum(
+                    &mut current_pos,
+                    goal,
+                    &mut path_points,
+                    &mut total_distance,
+                );
                 if !escape_success {
                     break; // Could not escape local minimum
                 }
@@ -585,7 +584,12 @@ impl PotentialFieldPlanner {
                 let adjusted_pos = self.adjust_for_collision(&current_pos, &step, &force_unit);
                 if self.is_collision(&adjusted_pos) {
                     // Still in collision, try escape mechanism
-                    let escape_success = self.escape_local_minimum(&mut current_pos, goal, &mut path_points, &mut total_distance);
+                    let escape_success = self.escape_local_minimum(
+                        &mut current_pos,
+                        goal,
+                        &mut path_points,
+                        &mut total_distance,
+                    );
                     if !escape_success {
                         break;
                     }
@@ -603,7 +607,12 @@ impl PotentialFieldPlanner {
                 stuck_counter += 1;
                 if stuck_counter > 10 {
                     // Try escape mechanism
-                    let escape_success = self.escape_local_minimum(&mut current_pos, goal, &mut path_points, &mut total_distance);
+                    let escape_success = self.escape_local_minimum(
+                        &mut current_pos,
+                        goal,
+                        &mut path_points,
+                        &mut total_distance,
+                    );
                     if !escape_success {
                         break;
                     }
@@ -658,9 +667,13 @@ impl PotentialFieldPlanner {
             for i in 0..random_direction.len() {
                 random_direction[i] = rng.random_range(-1.0..1.0);
             }
-            
+
             // Normalize the random direction
-            let magnitude = random_direction.iter().map(|x| x.powi(2)).sum::<f64>().sqrt();
+            let magnitude = random_direction
+                .iter()
+                .map(|x| x.powi(2))
+                .sum::<f64>()
+                .sqrt();
             if magnitude > 1e-6 {
                 random_direction /= magnitude;
             }
@@ -673,7 +686,7 @@ impl PotentialFieldPlanner {
             if !self.is_collision(&candidate_pos) {
                 let old_goal_distance = self.distance(current_pos, goal);
                 let new_goal_distance = self.distance(&candidate_pos, goal);
-                
+
                 // Accept if it gets us closer to the goal or at least doesn't move us much farther
                 if new_goal_distance <= old_goal_distance * 1.2 {
                     *total_distance += self.distance(current_pos, &candidate_pos);
@@ -688,7 +701,12 @@ impl PotentialFieldPlanner {
     }
 
     /// Adjust movement direction to avoid collision
-    fn adjust_for_collision(&self, current_pos: &Array1<f64>, step: &Array1<f64>, force_unit: &Array1<f64>) -> Array1<f64> {
+    fn adjust_for_collision(
+        &self,
+        current_pos: &Array1<f64>,
+        step: &Array1<f64>,
+        force_unit: &Array1<f64>,
+    ) -> Array1<f64> {
         // Try moving with a smaller step
         let reduced_step = step * 0.5;
         let candidate1 = current_pos + &reduced_step;
@@ -701,7 +719,7 @@ impl PotentialFieldPlanner {
             // For 2D, rotate force vector by 90 degrees
             let perpendicular = Array1::from_vec(vec![-force_unit[1], force_unit[0]]);
             let side_step = &perpendicular * self.config.step_size * 0.5;
-            
+
             let candidate2 = current_pos + &side_step;
             if !self.is_collision(&candidate2) {
                 return candidate2;

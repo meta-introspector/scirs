@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 
 use super::{compress_data, decompress_data, CompressionAlgorithm};
 use crate::error::{IoError, Result};
-use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::PlatformCapabilities;
 
 /// Metadata for compressed array data
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -465,10 +465,11 @@ where
         let (compressed_chunks, total_original_size, total_compressed_size) = if use_parallel {
             // Parallel compression for large arrays
             let chunks: Vec<&[u8]> = bytes.chunks(bytes_per_chunk).collect();
-            let results: Vec<_> = chunks.into_par_iter()
+            let results: Vec<_> = chunks
+                .into_par_iter()
                 .map(|chunk_bytes| {
-                    let compressed = compress_data(chunk_bytes, algorithm, level)
-                        .unwrap_or_else(|_| Vec::new());
+                    let compressed =
+                        compress_data(chunk_bytes, algorithm, level).unwrap_or_else(|_| Vec::new());
                     let original_size = chunk_bytes.len();
                     let compressed_size = compressed.len();
                     (compressed, original_size, compressed_size)
@@ -499,20 +500,25 @@ where
                 compressed_chunks.push(compressed_chunk);
             }
 
-            (compressed_chunks, total_original_size, total_compressed_size)
+            (
+                compressed_chunks,
+                total_original_size,
+                total_compressed_size,
+            )
         };
 
         // Combine all compressed chunks into a single vector
-        let mut combined_data = Vec::with_capacity(total_compressed_size + compressed_chunks.len() * 8 + 8);
-        
+        let mut combined_data =
+            Vec::with_capacity(total_compressed_size + compressed_chunks.len() * 8 + 8);
+
         // Write chunk count
         combined_data.extend_from_slice(&(compressed_chunks.len() as u64).to_le_bytes());
-        
+
         // Write chunk sizes
         for chunk in &compressed_chunks {
             combined_data.extend_from_slice(&(chunk.len() as u64).to_le_bytes());
         }
-        
+
         // Write chunk data
         for chunk in compressed_chunks {
             combined_data.extend_from_slice(&chunk);
@@ -560,7 +566,9 @@ where
 /// # Returns
 ///
 /// * `Result<Array<A, IxDyn>>` - Decompressed array or error
-pub fn decompress_array_zero_copy<A>(compressed: &CompressedArray) -> Result<ndarray::Array<A, IxDyn>>
+pub fn decompress_array_zero_copy<A>(
+    compressed: &CompressedArray,
+) -> Result<ndarray::Array<A, IxDyn>>
 where
     A: for<'de> Deserialize<'de> + Clone + bytemuck::Pod,
 {
@@ -579,34 +587,40 @@ where
 
     let capabilities = PlatformCapabilities::detect();
     let data = &compressed.data;
-    
+
     // Read chunk count
     if data.len() < 8 {
-        return Err(IoError::DecompressionError("Invalid compressed data".to_string()));
+        return Err(IoError::DecompressionError(
+            "Invalid compressed data".to_string(),
+        ));
     }
-    
+
     let chunk_count = u64::from_le_bytes(data[0..8].try_into().unwrap()) as usize;
-    
+
     // Read chunk sizes
     let header_size = 8 + chunk_count * 8;
     if data.len() < header_size {
-        return Err(IoError::DecompressionError("Invalid chunk headers".to_string()));
+        return Err(IoError::DecompressionError(
+            "Invalid chunk headers".to_string(),
+        ));
     }
-    
+
     let mut chunk_sizes = Vec::with_capacity(chunk_count);
     for i in 0..chunk_count {
         let start = 8 + i * 8;
         let size = u64::from_le_bytes(data[start..start + 8].try_into().unwrap()) as usize;
         chunk_sizes.push(size);
     }
-    
+
     // Extract compressed chunks
     let mut chunks = Vec::with_capacity(chunk_count);
     let mut offset = header_size;
-    
+
     for &size in &chunk_sizes {
         if offset + size > data.len() {
-            return Err(IoError::DecompressionError("Truncated chunk data".to_string()));
+            return Err(IoError::DecompressionError(
+                "Truncated chunk data".to_string(),
+            ));
         }
         chunks.push(&data[offset..offset + size]);
         offset += size;
@@ -614,19 +628,22 @@ where
 
     // Pre-allocate the output array with the exact size needed
     let total_elements: usize = compressed.metadata.shape.iter().product();
-    
+
     let use_parallel = capabilities.simd_available && chunks.len() > 4 && total_elements > 10000;
-    
+
     let decompressed_data = if use_parallel {
         // Parallel decompression for large arrays
-        let decompressed_chunks: Vec<Vec<u8>> = chunks.into_par_iter()
+        let decompressed_chunks: Vec<Vec<u8>> = chunks
+            .into_par_iter()
             .map(|chunk| decompress_data(chunk, algorithm).unwrap_or_else(|_| Vec::new()))
             .collect();
-        
+
         let mut result = Vec::with_capacity(total_elements);
         for chunk_data in decompressed_chunks {
             if chunk_data.len() % std::mem::size_of::<A>() != 0 {
-                return Err(IoError::DecompressionError("Invalid chunk alignment".to_string()));
+                return Err(IoError::DecompressionError(
+                    "Invalid chunk alignment".to_string(),
+                ));
             }
             let elements = bytemuck::cast_slice::<u8, A>(&chunk_data);
             result.extend_from_slice(elements);
@@ -635,14 +652,16 @@ where
     } else {
         // Sequential decompression for smaller arrays
         let mut decompressed_data = Vec::with_capacity(total_elements);
-        
+
         for chunk in chunks {
             let decompressed_chunk = decompress_data(chunk, algorithm)?;
-            
+
             if decompressed_chunk.len() % std::mem::size_of::<A>() != 0 {
-                return Err(IoError::DecompressionError("Invalid chunk alignment".to_string()));
+                return Err(IoError::DecompressionError(
+                    "Invalid chunk alignment".to_string(),
+                ));
             }
-            
+
             let elements = bytemuck::cast_slice::<u8, A>(&decompressed_chunk);
             decompressed_data.extend_from_slice(elements);
         }

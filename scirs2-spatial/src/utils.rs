@@ -33,7 +33,7 @@ where
                 // Fallback: use a very small value that should work for most numeric types
                 // This handles edge cases where 1e-8 cannot be represented in type T
                 match T::from_f64(0.0) {
-                    Some(zero) => zero, // Use zero as fallback tolerance (exact equality)
+                    Some(zero) => zero,   // Use zero as fallback tolerance (exact equality)
                     None => return false, // If we can't even create zero, points can't be equal
                 }
             }

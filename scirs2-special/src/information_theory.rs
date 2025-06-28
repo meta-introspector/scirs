@@ -23,7 +23,7 @@ use std::fmt::{Debug, Display};
 /// # Examples
 /// ```
 /// use scirs2_special::information_theory::entr;
-/// 
+///
 /// let h = entr(0.5);
 /// assert!((h - 0.34657359027997264).abs() < 1e-10);
 /// ```
@@ -110,13 +110,15 @@ where
 {
     check_finite(delta, "delta")?;
     check_finite(r, "r")?;
-    
+
     if delta <= T::zero() {
-        return Err(SpecialError::DomainError("huber: delta must be positive".to_string()));
+        return Err(SpecialError::DomainError(
+            "huber: delta must be positive".to_string(),
+        ));
     }
-    
+
     let abs_r = r.abs();
-    
+
     if abs_r <= delta {
         Ok(r * r / T::from_f64(2.0).unwrap())
     } else {
@@ -141,14 +143,16 @@ where
 {
     check_finite(delta, "delta")?;
     check_finite(r, "r")?;
-    
+
     if delta <= T::zero() {
-        return Err(SpecialError::DomainError("pseudo_huber: delta must be positive".to_string()));
+        return Err(SpecialError::DomainError(
+            "pseudo_huber: delta must be positive".to_string(),
+        ));
     }
-    
+
     let r_over_delta = r / delta;
     let delta_squared = delta * delta;
-    
+
     Ok(delta_squared * ((T::one() + r_over_delta * r_over_delta).sqrt() - T::one()))
 }
 
@@ -179,13 +183,13 @@ where
     for &pi in p.iter() {
         check_non_negative(pi, "probability")?;
     }
-    
+
     // Compute entropy
     let mut h = T::zero();
     for &pi in p.iter() {
         h = h + entr(pi);
     }
-    
+
     Ok(h)
 }
 
@@ -205,15 +209,15 @@ where
 {
     if p.len() != q.len() {
         return Err(SpecialError::ValueError(
-            "kl_divergence: arrays must have the same length".to_string()
+            "kl_divergence: arrays must have the same length".to_string(),
         ));
     }
-    
+
     let mut kl = T::zero();
     for i in 0..p.len() {
         kl = kl + rel_entr(p[i], q[i]);
     }
-    
+
     Ok(kl)
 }
 
@@ -235,15 +239,15 @@ where
 {
     if predictions.len() != targets.len() || predictions.len() != output.len() {
         return Err(SpecialError::ValueError(
-            "huber_loss: all arrays must have the same length".to_string()
+            "huber_loss: all arrays must have the same length".to_string(),
         ));
     }
-    
+
     for i in 0..predictions.len() {
         let residual = predictions[i] - targets[i];
         output[i] = huber(delta, residual)?;
     }
-    
+
     Ok(())
 }
 
@@ -261,11 +265,11 @@ where
     T: Float + FromPrimitive + Display,
 {
     crate::validation::check_probability(p, "p")?;
-    
+
     if p.is_zero() || p == T::one() {
         return Ok(T::zero());
     }
-    
+
     Ok(entr(p) + entr(T::one() - p))
 }
 
@@ -285,10 +289,10 @@ where
 {
     if p.len() != q.len() {
         return Err(SpecialError::ValueError(
-            "cross_entropy: arrays must have the same length".to_string()
+            "cross_entropy: arrays must have the same length".to_string(),
         ));
     }
-    
+
     let mut ce = T::zero();
     for i in 0..p.len() {
         if p[i] > T::zero() {
@@ -298,7 +302,7 @@ where
             ce = ce - p[i] * q[i].ln();
         }
     }
-    
+
     Ok(ce)
 }
 
@@ -334,11 +338,11 @@ mod tests {
     #[test]
     fn test_huber() {
         let delta = 1.0;
-        
+
         // Small residuals (quadratic region)
         assert_relative_eq!(huber(delta, 0.5).unwrap(), 0.125, epsilon = 1e-10);
         assert_relative_eq!(huber(delta, -0.5).unwrap(), 0.125, epsilon = 1e-10);
-        
+
         // Large residuals (linear region)
         assert_relative_eq!(huber(delta, 2.0).unwrap(), 1.5, epsilon = 1e-10);
         assert_relative_eq!(huber(delta, -2.0).unwrap(), 1.5, epsilon = 1e-10);
@@ -347,9 +351,13 @@ mod tests {
     #[test]
     fn test_pseudo_huber() {
         let delta = 1.0;
-        
+
         assert_relative_eq!(pseudo_huber(delta, 0.0).unwrap(), 0.0, epsilon = 1e-10);
-        assert_relative_eq!(pseudo_huber(delta, 1.0).unwrap(), 0.41421356237309515, epsilon = 1e-10);
+        assert_relative_eq!(
+            pseudo_huber(delta, 1.0).unwrap(),
+            0.41421356237309515,
+            epsilon = 1e-10
+        );
     }
 
     #[test]
@@ -357,7 +365,7 @@ mod tests {
         let uniform = arr1(&[0.25, 0.25, 0.25, 0.25]);
         let h = entropy(&uniform.view()).unwrap();
         assert_relative_eq!(h, 1.3862943611198906, epsilon = 1e-10); // log(4)
-        
+
         let certain = arr1(&[1.0, 0.0, 0.0, 0.0]);
         let h = entropy(&certain.view()).unwrap();
         assert_relative_eq!(h, 0.0, epsilon = 1e-10);
@@ -375,6 +383,10 @@ mod tests {
     fn test_binary_entropy() {
         assert_eq!(binary_entropy(0.0).unwrap(), 0.0);
         assert_eq!(binary_entropy(1.0).unwrap(), 0.0);
-        assert_relative_eq!(binary_entropy(0.5).unwrap(), 0.6931471805599453, epsilon = 1e-10); // log(2)
+        assert_relative_eq!(
+            binary_entropy(0.5).unwrap(),
+            0.6931471805599453,
+            epsilon = 1e-10
+        ); // log(2)
     }
 }

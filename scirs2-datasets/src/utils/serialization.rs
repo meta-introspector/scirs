@@ -86,7 +86,19 @@ where
 /// # Returns
 ///
 /// * `Result<S::Ok, S::Error>` - Serialization result
-#[allow(dead_code)]
+/// Serialize a 1D array to a serde-compatible format
+///
+/// This function converts an Array1<f64> to a Vec<f64> for serialization.
+/// Useful for saving datasets or individual arrays to JSON, YAML, etc.
+///
+/// # Arguments
+///
+/// * `array` - The 1D array to serialize
+/// * `serializer` - The serde serializer to use
+///
+/// # Returns
+///
+/// * `Result<S::Ok, S::Error>` - Serialization result
 pub fn serialize_array1<S>(array: &Array1<f64>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -128,7 +140,19 @@ pub mod optional_array1 {
     /// # Returns
     ///
     /// * `Result<S::Ok, S::Error>` - Serialization result
-    #[allow(dead_code)]
+    /// Serialize an optional 1D array to a serde-compatible format
+    ///
+    /// This function handles serialization of optional arrays, serializing None as null
+    /// and Some(array) using the array1 serializer.
+    ///
+    /// # Arguments
+    ///
+    /// * `array_opt` - The optional array to serialize
+    /// * `serializer` - The serde serializer to use
+    ///
+    /// # Returns
+    ///
+    /// * `Result<S::Ok, S::Error>` - Serialization result
     pub fn serialize<S>(array_opt: &Option<Array1<f64>>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -159,7 +183,18 @@ pub mod optional_array1 {
     /// # Returns
     ///
     /// * `Result<Option<Array1<f64>>, D::Error>` - Deserialized optional array
-    #[allow(dead_code)]
+    /// Deserialize an optional 1D array from a serde-compatible format
+    ///
+    /// This function handles deserialization of optional arrays, converting null to None
+    /// and valid data to Some(array).
+    ///
+    /// # Arguments
+    ///
+    /// * `deserializer` - The serde deserializer to use
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Option<Array1<f64>>, D::Error>` - Deserialized optional array
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Array1<f64>>, D::Error>
     where
         D: Deserializer<'de>,

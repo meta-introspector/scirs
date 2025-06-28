@@ -2,9 +2,8 @@
 
 use super::*;
 use crate::error::Result;
-use ndarray::{Array1, Array2, ArrayBase, ArrayView2, Axis, DataMut, Dimension, s};
+use ndarray::{s, Array1, Array2, Axis};
 use num_traits::{Float, FromPrimitive};
-use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -42,9 +41,11 @@ where
     fn transform(&self, data: Box<dyn Any + Send + Sync>) -> Result<Box<dyn Any + Send + Sync>> {
         if let Ok(array) = data.downcast::<Array2<T>>() {
             let normalized = match &self.method {
-                NormalizationMethod::MinMax { min, max } => {
-                    normalize_minmax(*array, T::from_f64(*min).unwrap(), T::from_f64(*max).unwrap())
-                }
+                NormalizationMethod::MinMax { min, max } => normalize_minmax(
+                    *array,
+                    T::from_f64(*min).unwrap(),
+                    T::from_f64(*max).unwrap(),
+                ),
                 NormalizationMethod::ZScore => normalize_zscore(*array),
                 NormalizationMethod::L1 => normalize_l1(*array),
                 NormalizationMethod::L2 => normalize_l2(*array),
@@ -52,7 +53,9 @@ where
             };
             Ok(Box::new(normalized) as Box<dyn Any + Send + Sync>)
         } else {
-            Err(IoError::Other("Invalid data type for normalization".to_string()))
+            Err(IoError::Other(
+                "Invalid data type for normalization".to_string(),
+            ))
         }
     }
 }
@@ -64,12 +67,12 @@ where
     let min = array.iter().fold(T::infinity(), |a, &b| a.min(b));
     let max = array.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
     let range = max - min;
-    
+
     if range > T::zero() {
         let scale = (new_max - new_min) / range;
         array.mapv_inplace(|x| (x - min) * scale + new_min);
     }
-    
+
     array
 }
 
@@ -84,11 +87,11 @@ where
         a + diff * diff
     }) / n;
     let std = variance.sqrt();
-    
+
     if std > T::zero() {
         array.mapv_inplace(|x| (x - mean) / std);
     }
-    
+
     array
 }
 
@@ -151,14 +154,12 @@ impl DataTransformer for ReshapeTransform {
                     self.new_shape
                 )));
             }
-            
+
             // Convert to 1D, then reshape
             let flat: Vec<f64> = array.into_iter().collect();
-            let reshaped = Array2::from_shape_vec(
-                (self.new_shape[0], self.new_shape[1]),
-                flat
-            ).map_err(|e| IoError::Other(e.to_string()))?;
-            
+            let reshaped = Array2::from_shape_vec((self.new_shape[0], self.new_shape[1]), flat)
+                .map_err(|e| IoError::Other(e.to_string()))?;
+
             Ok(Box::new(reshaped) as Box<dyn Any + Send + Sync>)
         } else {
             Err(IoError::Other("Invalid data type for reshape".to_string()))
@@ -238,7 +239,9 @@ impl DataTransformer for AggregateTransform {
             };
             Ok(result)
         } else {
-            Err(IoError::Other("Invalid data type for aggregation".to_string()))
+            Err(IoError::Other(
+                "Invalid data type for aggregation".to_string(),
+            ))
         }
     }
 }
@@ -268,7 +271,7 @@ impl DataTransformer for EncodingTransform {
                 EncodingMethod::Label => {
                     let mut label_map = HashMap::new();
                     let mut next_label = 0;
-                    
+
                     let encoded: Vec<i32> = categories
                         .iter()
                         .map(|cat| {
@@ -279,39 +282,41 @@ impl DataTransformer for EncodingTransform {
                             })
                         })
                         .collect();
-                    
+
                     Ok(Box::new(encoded) as Box<dyn Any + Send + Sync>)
                 }
                 EncodingMethod::OneHot => {
                     let unique_categories: Vec<String> = {
-                        let mut cats = categories.clone();
+                        let mut cats = (*categories).clone();
                         cats.sort();
                         cats.dedup();
                         cats
                     };
-                    
+
                     let n_categories = unique_categories.len();
                     let n_samples = categories.len();
                     let mut encoded = Array2::<f64>::zeros((n_samples, n_categories));
-                    
+
                     for (i, cat) in categories.iter().enumerate() {
-                        if let Ok(j) = unique_categories.iter().position(|c| c == cat) {
+                        if let Some(j) = unique_categories.iter().position(|c| c == cat) {
                             encoded[[i, j]] = 1.0;
                         }
                     }
-                    
+
                     Ok(Box::new(encoded) as Box<dyn Any + Send + Sync>)
                 }
                 EncodingMethod::Ordinal(order) => {
                     let encoded: Result<Vec<i32>> = categories
                         .iter()
                         .map(|cat| {
-                            order.iter().position(|o| o == cat)
+                            order
+                                .iter()
+                                .position(|o| o == cat)
                                 .map(|pos| pos as i32)
                                 .ok_or_else(|| IoError::Other(format!("Unknown category: {}", cat)))
                         })
                         .collect();
-                    
+
                     Ok(Box::new(encoded?) as Box<dyn Any + Send + Sync>)
                 }
             }
@@ -348,27 +353,31 @@ impl DataTransformer for ImputeTransform {
             match &self.strategy {
                 ImputationStrategy::Mean => {
                     for mut col in array.axis_iter_mut(Axis(1)) {
-                        let valid_values: Vec<f64> = col.iter()
-                            .filter_map(|&x| x)
-                            .collect();
-                        
+                        let valid_values: Vec<f64> = col.iter().filter_map(|&x| x).collect();
+
                         if !valid_values.is_empty() {
                             let mean = valid_values.iter().sum::<f64>() / valid_values.len() as f64;
-                            col.mapv_inplace(|x| x.unwrap_or(mean));
+                            col.mapv_inplace(|x| Some(x.unwrap_or(mean)));
                         }
                     }
                 }
                 ImputationStrategy::Constant(value) => {
-                    array.mapv_inplace(|x| x.unwrap_or(*value));
+                    array.mapv_inplace(|x| Some(x.unwrap_or(*value)));
                 }
-                _ => return Err(IoError::Other("Unsupported imputation strategy".to_string())),
+                _ => {
+                    return Err(IoError::Other(
+                        "Unsupported imputation strategy".to_string(),
+                    ))
+                }
             }
-            
+
             // Convert to Array2<f64> after imputation
             let imputed: Array2<f64> = array.mapv(|x| x.unwrap_or(0.0));
             Ok(Box::new(imputed) as Box<dyn Any + Send + Sync>)
         } else {
-            Err(IoError::Other("Invalid data type for imputation".to_string()))
+            Err(IoError::Other(
+                "Invalid data type for imputation".to_string(),
+            ))
         }
     }
 }
@@ -399,69 +408,73 @@ impl DataTransformer for OutlierTransform {
                 OutlierMethod::ZScore => {
                     let mean = array.mean().unwrap();
                     let std = array.std(0.0);
-                    
-                    let filtered: Vec<Vec<f64>> = array.axis_iter(Axis(0))
+
+                    let filtered: Vec<Vec<f64>> = array
+                        .axis_iter(Axis(0))
                         .filter(|row| {
-                            row.iter().all(|&x| ((x - mean) / std).abs() <= self.threshold)
+                            row.iter()
+                                .all(|&x| ((x - mean) / std).abs() <= self.threshold)
                         })
                         .map(|row| row.to_vec())
                         .collect();
-                    
+
                     if filtered.is_empty() {
                         return Err(IoError::Other("All data filtered as outliers".to_string()));
                     }
-                    
+
                     let n_rows = filtered.len();
                     let n_cols = filtered[0].len();
                     let flat: Vec<f64> = filtered.into_iter().flatten().collect();
-                    
+
                     let result = Array2::from_shape_vec((n_rows, n_cols), flat)
                         .map_err(|e| IoError::Other(e.to_string()))?;
-                    
+
                     Ok(Box::new(result) as Box<dyn Any + Send + Sync>)
                 }
                 OutlierMethod::IQR => {
                     // Interquartile Range method
                     let mut filtered_rows = Vec::new();
-                    
+
                     for row in array.axis_iter(Axis(0)) {
                         let mut values: Vec<f64> = row.to_vec();
                         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-                        
+
                         let n = values.len();
                         let q1_idx = n / 4;
                         let q3_idx = 3 * n / 4;
                         let q1 = values[q1_idx];
                         let q3 = values[q3_idx];
                         let iqr = q3 - q1;
-                        
+
                         let lower_bound = q1 - self.threshold * iqr;
                         let upper_bound = q3 + self.threshold * iqr;
-                        
+
                         let is_outlier = row.iter().any(|&x| x < lower_bound || x > upper_bound);
-                        
+
                         if !is_outlier {
                             filtered_rows.push(row.to_vec());
                         }
                     }
-                    
+
                     if filtered_rows.is_empty() {
                         return Err(IoError::Other("All data filtered as outliers".to_string()));
                     }
-                    
+
                     let n_rows = filtered_rows.len();
                     let n_cols = filtered_rows[0].len();
                     let flat: Vec<f64> = filtered_rows.into_iter().flatten().collect();
-                    
+
                     let result = Array2::from_shape_vec((n_rows, n_cols), flat)
                         .map_err(|e| IoError::Other(e.to_string()))?;
-                    
+
                     Ok(Box::new(result) as Box<dyn Any + Send + Sync>)
                 }
                 _ => Err(IoError::Other("Unsupported outlier method".to_string())),
             }
         } else {
-            Err(IoError::Other("Invalid data type for outlier detection".to_string()))
+            Err(IoError::Other(
+                "Invalid data type for outlier detection".to_string(),
+            ))
         }
     }
 }
@@ -481,30 +494,34 @@ impl PCATransform {
             mean: None,
         }
     }
-    
+
     /// Fit PCA on training data
     pub fn fit(&mut self, data: &Array2<f64>) -> Result<()> {
         let (n_samples, n_features) = data.dim();
-        
+
         if self.n_components > n_features {
-            return Err(IoError::Other("n_components cannot exceed n_features".to_string()));
+            return Err(IoError::Other(
+                "n_components cannot exceed n_features".to_string(),
+            ));
         }
-        
+
         // Center the data
         let mean = data.mean_axis(Axis(0)).unwrap();
-        let centered = data - &mean.insert_axis(Axis(0));
-        
+        let centered = data - &mean.clone().insert_axis(Axis(0));
+
         // Compute covariance matrix
-        let cov = centered.t().dot(&centered) / (n_samples - 1) as f64;
-        
+        let _cov = centered.t().dot(&centered) / (n_samples - 1) as f64;
+
         // For simplicity, use a basic eigenvalue decomposition approximation
         // In practice, you would use a proper linear algebra library
         self.mean = Some(mean);
-        
+
         // Mock components for demonstration
-        let components = Array2::eye(n_features).slice(s![..self.n_components, ..]).to_owned();
+        let components = Array2::eye(n_features)
+            .slice(s![..self.n_components, ..])
+            .to_owned();
         self.components = Some(components);
-        
+
         Ok(())
     }
 }
@@ -512,17 +529,21 @@ impl PCATransform {
 impl DataTransformer for PCATransform {
     fn transform(&self, data: Box<dyn Any + Send + Sync>) -> Result<Box<dyn Any + Send + Sync>> {
         if let Ok(array) = data.downcast::<Array2<f64>>() {
-            let mean = self.mean.as_ref()
+            let mean = self
+                .mean
+                .as_ref()
                 .ok_or_else(|| IoError::Other("PCA not fitted yet".to_string()))?;
-            let components = self.components.as_ref()
+            let components = self
+                .components
+                .as_ref()
                 .ok_or_else(|| IoError::Other("PCA not fitted yet".to_string()))?;
-            
+
             // Center the data
-            let centered = &*array - &mean.insert_axis(Axis(0));
-            
+            let centered = &*array - &mean.clone().insert_axis(Axis(0));
+
             // Project onto principal components
             let transformed = centered.dot(&components.t());
-            
+
             Ok(Box::new(transformed) as Box<dyn Any + Send + Sync>)
         } else {
             Err(IoError::Other("Invalid data type for PCA".to_string()))
@@ -537,12 +558,19 @@ pub struct FeatureEngineeringTransform {
 
 #[derive(Debug, Clone)]
 pub enum FeatureOperation {
-    Polynomial { degree: usize },
+    Polynomial {
+        degree: usize,
+    },
     Log,
     Sqrt,
     Square,
-    Interaction { indices: Vec<usize> },
-    Binning { n_bins: usize, strategy: BinningStrategy },
+    Interaction {
+        indices: Vec<usize>,
+    },
+    Binning {
+        n_bins: usize,
+        strategy: BinningStrategy,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -560,27 +588,37 @@ impl FeatureEngineeringTransform {
 impl DataTransformer for FeatureEngineeringTransform {
     fn transform(&self, data: Box<dyn Any + Send + Sync>) -> Result<Box<dyn Any + Send + Sync>> {
         if let Ok(array) = data.downcast::<Array2<f64>>() {
-            let mut result = array.clone();
-            
+            let mut result = (*array).clone();
+
             for operation in &self.operations {
                 match operation {
                     FeatureOperation::Log => {
                         let log_features = result.mapv(|x| if x > 0.0 { x.ln() } else { 0.0 });
-                        result = ndarray::concatenate![Axis(1), result, log_features];
+                        result =
+                            ndarray::concatenate(Axis(1), &[result.view(), log_features.view()])
+                                .unwrap();
                     }
                     FeatureOperation::Sqrt => {
                         let sqrt_features = result.mapv(|x| if x >= 0.0 { x.sqrt() } else { 0.0 });
-                        result = ndarray::concatenate![Axis(1), result, sqrt_features];
+                        result =
+                            ndarray::concatenate(Axis(1), &[result.view(), sqrt_features.view()])
+                                .unwrap();
                     }
                     FeatureOperation::Square => {
                         let square_features = result.mapv(|x| x * x);
-                        result = ndarray::concatenate![Axis(1), result, square_features];
+                        result =
+                            ndarray::concatenate(Axis(1), &[result.view(), square_features.view()])
+                                .unwrap();
                     }
                     FeatureOperation::Polynomial { degree } => {
                         let mut poly_features = result.clone();
                         for d in 2..=*degree {
                             let power_features = result.mapv(|x| x.powi(d as i32));
-                            poly_features = ndarray::concatenate![Axis(1), poly_features, power_features];
+                            poly_features = ndarray::concatenate(
+                                Axis(1),
+                                &[poly_features.view(), power_features.view()],
+                            )
+                            .unwrap();
                         }
                         result = poly_features;
                     }
@@ -592,33 +630,44 @@ impl DataTransformer for FeatureEngineeringTransform {
                                     interaction_col = interaction_col * &result.column(idx);
                                 }
                             }
-                            result = ndarray::concatenate![Axis(1), result, interaction_col.insert_axis(Axis(1))];
+                            result = ndarray::concatenate(
+                                Axis(1),
+                                &[result.view(), interaction_col.insert_axis(Axis(1)).view()],
+                            )
+                            .unwrap();
                         }
                     }
-                    FeatureOperation::Binning { n_bins, strategy: _strategy } => {
+                    FeatureOperation::Binning {
+                        n_bins,
+                        strategy: _strategy,
+                    } => {
                         // Simple uniform binning implementation
                         let mut binned_features = Array2::zeros((result.nrows(), result.ncols()));
-                        
+
                         for (col_idx, col) in result.axis_iter(Axis(1)).enumerate() {
                             let min_val = col.iter().fold(f64::INFINITY, |a, &b| a.min(b));
                             let max_val = col.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
                             let bin_width = (max_val - min_val) / *n_bins as f64;
-                            
+
                             for (row_idx, &val) in col.iter().enumerate() {
                                 let bin = ((val - min_val) / bin_width).floor() as usize;
                                 let bin = bin.min(n_bins - 1);
                                 binned_features[[row_idx, col_idx]] = bin as f64;
                             }
                         }
-                        
-                        result = ndarray::concatenate![Axis(1), result, binned_features];
+
+                        result =
+                            ndarray::concatenate(Axis(1), &[result.view(), binned_features.view()])
+                                .unwrap();
                     }
                 }
             }
-            
+
             Ok(Box::new(result) as Box<dyn Any + Send + Sync>)
         } else {
-            Err(IoError::Other("Invalid data type for feature engineering".to_string()))
+            Err(IoError::Other(
+                "Invalid data type for feature engineering".to_string(),
+            ))
         }
     }
 }
@@ -648,30 +697,42 @@ impl DataTransformer for TextProcessingTransform {
     fn transform(&self, data: Box<dyn Any + Send + Sync>) -> Result<Box<dyn Any + Send + Sync>> {
         if let Ok(texts) = data.downcast::<Vec<String>>() {
             let mut processed = texts.clone();
-            
+
             for operation in &self.operations {
                 match operation {
                     TextOperation::Lowercase => {
-                        processed = processed.into_iter().map(|s| s.to_lowercase()).collect();
+                        processed = Box::new(
+                            processed
+                                .into_iter()
+                                .map(|s| s.to_lowercase())
+                                .collect::<Vec<_>>(),
+                        );
                     }
                     TextOperation::RemovePunctuation => {
-                        processed = processed.into_iter()
-                            .map(|s| s.chars().filter(|c| c.is_alphanumeric() || c.is_whitespace()).collect())
-                            .collect();
+                        processed = Box::new(
+                            processed
+                                .into_iter()
+                                .map(|s| {
+                                    s.chars()
+                                        .filter(|c| c.is_alphanumeric() || c.is_whitespace())
+                                        .collect()
+                                })
+                                .collect::<Vec<_>>(),
+                        );
                     }
                     TextOperation::Tokenize => {
-                        let tokens: Vec<Vec<String>> = processed.into_iter()
+                        let tokens: Vec<Vec<String>> = processed
+                            .into_iter()
                             .map(|s| s.split_whitespace().map(|w| w.to_string()).collect())
                             .collect();
                         return Ok(Box::new(tokens) as Box<dyn Any + Send + Sync>);
                     }
                     TextOperation::NGrams { n } => {
-                        let ngrams: Vec<Vec<String>> = processed.into_iter()
+                        let ngrams: Vec<Vec<String>> = processed
+                            .into_iter()
                             .map(|s| {
                                 let words: Vec<&str> = s.split_whitespace().collect();
-                                words.windows(*n)
-                                    .map(|window| window.join(" "))
-                                    .collect()
+                                words.windows(*n).map(|window| window.join(" ")).collect()
                             })
                             .collect();
                         return Ok(Box::new(ngrams) as Box<dyn Any + Send + Sync>);
@@ -679,10 +740,12 @@ impl DataTransformer for TextProcessingTransform {
                     _ => {}
                 }
             }
-            
+
             Ok(Box::new(processed) as Box<dyn Any + Send + Sync>)
         } else {
-            Err(IoError::Other("Invalid data type for text processing".to_string()))
+            Err(IoError::Other(
+                "Invalid data type for text processing".to_string(),
+            ))
         }
     }
 }
@@ -694,11 +757,12 @@ mod tests {
 
     #[test]
     fn test_normalize_minmax() {
-        let transform = NormalizeTransform::<f64>::new(NormalizationMethod::MinMax { min: 0.0, max: 1.0 });
+        let transform =
+            NormalizeTransform::<f64>::new(NormalizationMethod::MinMax { min: 0.0, max: 1.0 });
         let data = Box::new(arr2(&[[1.0, 2.0], [3.0, 4.0]])) as Box<dyn Any + Send + Sync>;
         let result = transform.transform(data).unwrap();
         let normalized = result.downcast::<Array2<f64>>().unwrap();
-        
+
         assert!((normalized[[0, 0]] - 0.0).abs() < 1e-6);
         assert!((normalized[[1, 1]] - 1.0).abs() < 1e-6);
     }
@@ -706,10 +770,14 @@ mod tests {
     #[test]
     fn test_encoding_label() {
         let transform = EncodingTransform::new(EncodingMethod::Label);
-        let data = Box::new(vec!["cat".to_string(), "dog".to_string(), "cat".to_string()]) as Box<dyn Any + Send + Sync>;
+        let data = Box::new(vec![
+            "cat".to_string(),
+            "dog".to_string(),
+            "cat".to_string(),
+        ]) as Box<dyn Any + Send + Sync>;
         let result = transform.transform(data).unwrap();
         let encoded = result.downcast::<Vec<i32>>().unwrap();
-        
+
         assert_eq!(*encoded, vec![0, 1, 0]);
     }
 }

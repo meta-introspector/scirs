@@ -1544,3 +1544,6 @@ fn min<T: Ord>(a: T, b: T) -> T {
         b
     }
 }
+
+/// Neural network-based forecasting models
+pub mod neural;

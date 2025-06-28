@@ -73,6 +73,8 @@ pub mod denoise_enhanced;
 pub mod detrend;
 pub mod dwt;
 pub mod dwt2d;
+pub mod dwt2d_advanced_algorithms;
+pub mod dwt2d_advanced_features;
 pub mod dwt2d_enhanced;
 pub mod dwt2d_image;
 pub mod dwt2d_validation;
@@ -93,6 +95,7 @@ pub mod interpolate;
 pub mod kalman;
 pub mod lombscargle;
 pub mod lombscargle_advanced_validation;
+pub mod lombscargle_comprehensive_validation;
 pub mod lombscargle_enhanced;
 pub mod lombscargle_enhanced_validation;
 pub mod lombscargle_simd;
@@ -107,6 +110,7 @@ pub mod nlm;
 pub mod parallel_spectral;
 pub mod parametric;
 pub mod parametric_adaptive;
+pub mod parametric_advanced;
 pub mod parametric_arma;
 pub mod parametric_enhanced;
 pub mod parametric_validation;
@@ -138,8 +142,9 @@ pub mod wavelets;
 pub mod wiener;
 pub mod window;
 pub mod wpt;
-pub mod wpt_validation;
 pub mod wpt2d;
+pub mod wpt_comprehensive_validation;
+pub mod wpt_validation;
 pub mod wvd;
 
 // Re-export commonly used functions
@@ -212,9 +217,7 @@ pub use kalman::{
 pub use lombscargle::{
     find_peaks as find_ls_peaks, lombscargle, significance_levels, AutoFreqMethod,
 };
-pub use lombscargle_simd::{
-    simd_lombscargle, SimdLombScargleResult, ValidationMetrics,
-};
+pub use lombscargle_simd::{simd_lombscargle, SimdLombScargleResult, ValidationMetrics};
 pub use median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
@@ -232,9 +235,13 @@ pub use parametric::{
     ar_spectrum, arma_spectrum, estimate_ar, estimate_arma, select_ar_order, ARMethod,
     OrderSelection,
 };
+pub use parametric_advanced::{
+    estimate_var_model, high_resolution_spectral_estimation, AdvancedParametricConfig,
+    HighResolutionMethod, HighResolutionResult, RegularizationMethod, VarModel,
+};
 pub use parametric_enhanced::{
-    enhanced_parametric_estimation, EnhancedParametricResult, ParametricConfig, 
-    ModelType, ModelSelectionResult, DiagnosticStats,
+    enhanced_parametric_estimation, DiagnosticStats, EnhancedParametricResult,
+    ModelSelectionResult, ModelType, ParametricConfig,
 };
 pub use peak::{find_peaks, peak_prominences, peak_widths};
 pub use realtime::{
@@ -288,6 +295,10 @@ pub use multitaper::{
 
 // Wavelet transform functions already re-exported above
 pub use dwt2d::{dwt2d_decompose, dwt2d_reconstruct, wavedec2, waverec2, Dwt2dResult};
+pub use dwt2d_advanced_features::{
+    advanced_wavelet_denoising, AdvancedWaveletConfig, AdvancedWaveletResult, DenoisingMetrics,
+    EdgeMetrics, TextureFeatures, ThresholdMethod, ThresholdSelection,
+};
 pub use swt::{iswt, swt, swt_decompose, swt_reconstruct};
 pub use swt2d::{iswt2d, swt2d, swt2d_decompose, swt2d_reconstruct, Swt2dResult};
 pub use wavelets::{

@@ -21,10 +21,24 @@ pub enum Choice {
 #[derive(Debug, Clone, PartialEq)]
 pub enum LayerType {
     Dense(usize),
-    Conv2D { filters: usize, kernel_size: (usize, usize), stride: (usize, usize) },
-    Conv1D { filters: usize, kernel_size: usize, stride: usize },
-    MaxPool2D { pool_size: (usize, usize), stride: (usize, usize) },
-    AvgPool2D { pool_size: (usize, usize), stride: (usize, usize) },
+    Conv2D {
+        filters: usize,
+        kernel_size: (usize, usize),
+        stride: (usize, usize),
+    },
+    Conv1D {
+        filters: usize,
+        kernel_size: usize,
+        stride: usize,
+    },
+    MaxPool2D {
+        pool_size: (usize, usize),
+        stride: (usize, usize),
+    },
+    AvgPool2D {
+        pool_size: (usize, usize),
+        stride: (usize, usize),
+    },
     GlobalMaxPool2D,
     GlobalAvgPool2D,
     Dropout(f32),
@@ -32,10 +46,22 @@ pub enum LayerType {
     LayerNorm,
     Activation(String),
     Residual,
-    Attention { num_heads: usize, key_dim: usize },
-    LSTM { units: usize, return_sequences: bool },
-    GRU { units: usize, return_sequences: bool },
-    Embedding { vocab_size: usize, embedding_dim: usize },
+    Attention {
+        num_heads: usize,
+        key_dim: usize,
+    },
+    LSTM {
+        units: usize,
+        return_sequences: bool,
+    },
+    GRU {
+        units: usize,
+        return_sequences: bool,
+    },
+    Embedding {
+        vocab_size: usize,
+        embedding_dim: usize,
+    },
     Flatten,
     Reshape(Vec<i32>),
 }
@@ -72,9 +98,20 @@ impl Default for SearchSpaceConfig {
                 LayerType::Dense(64),
                 LayerType::Dense(128),
                 LayerType::Dense(256),
-                LayerType::Conv2D { filters: 32, kernel_size: (3, 3), stride: (1, 1) },
-                LayerType::Conv2D { filters: 64, kernel_size: (3, 3), stride: (1, 1) },
-                LayerType::MaxPool2D { pool_size: (2, 2), stride: (2, 2) },
+                LayerType::Conv2D {
+                    filters: 32,
+                    kernel_size: (3, 3),
+                    stride: (1, 1),
+                },
+                LayerType::Conv2D {
+                    filters: 64,
+                    kernel_size: (3, 3),
+                    stride: (1, 1),
+                },
+                LayerType::MaxPool2D {
+                    pool_size: (2, 2),
+                    stride: (2, 2),
+                },
                 LayerType::Dropout(0.2),
                 LayerType::Dropout(0.5),
                 LayerType::BatchNorm,
@@ -125,7 +162,7 @@ impl SearchSpace {
     /// Create a new search space
     pub fn new(config: SearchSpaceConfig) -> Result<Self> {
         let mut layer_choices = Vec::new();
-        
+
         // Build layer choices based on config
         for i in 0..config.max_layers {
             let optional = i >= config.min_layers;
@@ -138,7 +175,10 @@ impl SearchSpace {
 
         // Initialize connection matrix if branches are allowed
         let connection_matrix = if config.allow_branches {
-            Some(ConnectionMatrix::new(config.max_layers, config.skip_connection_prob))
+            Some(ConnectionMatrix::new(
+                config.max_layers,
+                config.skip_connection_prob,
+            ))
         } else {
             None
         };
@@ -182,11 +222,15 @@ impl SearchSpace {
         }
 
         // Sample width and depth multipliers
-        let width_mult = self.config.width_multipliers
+        let width_mult = self
+            .config
+            .width_multipliers
             .choose(&mut rng)
             .copied()
             .unwrap_or(1.0);
-        let depth_mult = self.config.depth_multipliers
+        let depth_mult = self
+            .config
+            .depth_multipliers
             .choose(&mut rng)
             .copied()
             .unwrap_or(1.0);
@@ -201,7 +245,9 @@ impl SearchSpace {
 
     /// Get the size of the search space
     pub fn size(&self) -> f64 {
-        let layer_combinations = self.layer_choices.iter()
+        let layer_combinations = self
+            .layer_choices
+            .iter()
             .take(self.config.max_layers)
             .map(|lc| lc.choices.len() as f64)
             .product::<f64>();
@@ -212,8 +258,8 @@ impl SearchSpace {
             1.0
         };
 
-        let multiplier_combinations = (self.config.width_multipliers.len() * 
-                                       self.config.depth_multipliers.len()) as f64;
+        let multiplier_combinations =
+            (self.config.width_multipliers.len() * self.config.depth_multipliers.len()) as f64;
 
         layer_combinations * connection_combinations * multiplier_combinations
     }
@@ -250,8 +296,12 @@ impl SearchSpace {
                 // Update connections
                 mutated.connections.retain(|(i, j)| *i != idx && *j != idx);
                 for (i, j) in &mut mutated.connections {
-                    if *i > idx { *i -= 1; }
-                    if *j > idx { *j -= 1; }
+                    if *i > idx {
+                        *i -= 1;
+                    }
+                    if *j > idx {
+                        *j -= 1;
+                    }
                 }
             }
         }
@@ -275,12 +325,16 @@ impl SearchSpace {
 
         // Mutate multipliers
         if rng.gen::<f32>() < mutation_rate {
-            mutated.width_multiplier = *self.config.width_multipliers
+            mutated.width_multiplier = *self
+                .config
+                .width_multipliers
                 .choose(&mut rng)
                 .unwrap_or(&1.0);
         }
         if rng.gen::<f32>() < mutation_rate {
-            mutated.depth_multiplier = *self.config.depth_multipliers
+            mutated.depth_multiplier = *self
+                .config
+                .depth_multipliers
                 .choose(&mut rng)
                 .unwrap_or(&1.0);
         }
@@ -289,7 +343,11 @@ impl SearchSpace {
     }
 
     /// Crossover two architectures
-    pub fn crossover(&self, parent1: &Architecture, parent2: &Architecture) -> Result<Architecture> {
+    pub fn crossover(
+        &self,
+        parent1: &Architecture,
+        parent2: &Architecture,
+    ) -> Result<Architecture> {
         use rand::prelude::*;
         let mut rng = rand::thread_rng();
 
@@ -323,11 +381,12 @@ impl SearchSpace {
             // Combine connections from both parents
             let mut all_connections = parent1.connections.clone();
             all_connections.extend(parent2.connections.clone());
-            
+
             // Remove duplicates and invalid connections
             all_connections.sort_unstable();
             all_connections.dedup();
-            child_connections = all_connections.into_iter()
+            child_connections = all_connections
+                .into_iter()
                 .filter(|(i, j)| *i < child_len && *j < child_len)
                 .collect();
         }
@@ -357,7 +416,7 @@ impl ConnectionMatrix {
     /// Create a new connection matrix
     pub fn new(num_layers: usize, skip_prob: f32) -> Self {
         let mut connections = vec![vec![0.0; num_layers]; num_layers];
-        
+
         // Initialize with skip connection probabilities
         for i in 0..num_layers {
             for j in (i + 1)..num_layers {

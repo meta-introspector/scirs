@@ -4,36 +4,36 @@
 //! allowing for automatic discovery of optimal network architectures for
 //! specific tasks.
 
-pub mod search_space;
-pub mod search_algorithms;
-pub mod performance_estimation;
 pub mod architecture_encoding;
 pub mod controller;
-pub mod evaluator;
 pub mod enas;
-pub mod multi_objective;
-pub mod progressive_search;
+pub mod evaluator;
 pub mod hardware_aware;
+pub mod multi_objective;
+pub mod performance_estimation;
+pub mod progressive_search;
+pub mod search_algorithms;
+pub mod search_space;
 
-pub use search_space::{SearchSpace, SearchSpaceConfig};
-pub use search_algorithms::{
-    SearchAlgorithm, RandomSearch, EvolutionarySearch, ReinforcementSearch,
-    DifferentiableSearch, BayesianOptimization
+pub use architecture_encoding::{ArchitectureEncoding, GraphEncoding, SequentialEncoding};
+pub use controller::{ControllerConfig, NASController};
+pub use enas::{ENASController, ENASTrainer, SuperNetwork};
+pub use evaluator::{ArchitectureEvaluator, EvaluationMetrics};
+pub use hardware_aware::{HardwareAwareSearch, HardwareConstraints, LatencyPredictor};
+pub use multi_objective::{
+    MultiObjectiveAlgorithm, MultiObjectiveConfig, MultiObjectiveOptimizer, MultiObjectiveSolution,
+    Objective,
 };
 pub use performance_estimation::{
-    PerformanceEstimator, EarlyStoppingEstimator, SuperNetEstimator, 
-    ZeroCostEstimator, MultiFidelityEstimator, LearningCurveEstimator
+    EarlyStoppingEstimator, LearningCurveEstimator, MultiFidelityEstimator, PerformanceEstimator,
+    SuperNetEstimator, ZeroCostEstimator,
 };
-pub use architecture_encoding::{ArchitectureEncoding, GraphEncoding, SequentialEncoding};
-pub use controller::{NASController, ControllerConfig};
-pub use evaluator::{ArchitectureEvaluator, EvaluationMetrics};
-pub use enas::{ENASController, SuperNetwork, ENASTrainer};
-pub use multi_objective::{
-    MultiObjectiveOptimizer, MultiObjectiveConfig, MultiObjectiveAlgorithm,
-    MultiObjectiveSolution, Objective
+pub use progressive_search::{ProgressiveConfig, ProgressiveSearch};
+pub use search_algorithms::{
+    BayesianOptimization, DifferentiableSearch, EvolutionarySearch, RandomSearch,
+    ReinforcementSearch, SearchAlgorithm,
 };
-pub use progressive_search::{ProgressiveSearch, ProgressiveConfig};
-pub use hardware_aware::{HardwareAwareSearch, HardwareConstraints, LatencyPredictor};
+pub use search_space::{SearchSpace, SearchSpaceConfig};
 
 use crate::error::Result;
 use crate::models::sequential::Sequential;
@@ -116,7 +116,7 @@ impl NeuralArchitectureSearch {
     pub fn new(config: NASConfig) -> Result<Self> {
         let controller = NASController::new(config.search_space.clone())?;
         let evaluator = ArchitectureEvaluator::new(ControllerConfig::default())?;
-        
+
         Ok(Self {
             config,
             controller,
@@ -127,15 +127,21 @@ impl NeuralArchitectureSearch {
     }
 
     /// Run the architecture search
-    pub fn search(&mut self, 
-                  train_data: &ArrayView2<f32>,
-                  train_labels: &ArrayView1<usize>,
-                  val_data: &ArrayView2<f32>,
-                  val_labels: &ArrayView1<usize>) -> Result<Arc<dyn ArchitectureEncoding>> {
+    pub fn search(
+        &mut self,
+        train_data: &ArrayView2<f32>,
+        train_labels: &ArrayView1<usize>,
+        val_data: &ArrayView2<f32>,
+        val_labels: &ArrayView1<usize>,
+    ) -> Result<Arc<dyn ArchitectureEncoding>> {
         let start_time = std::time::Instant::now();
         let mut evaluations = 0;
         let mut no_improvement_count = 0;
-        let mut best_metric = if self.config.minimize { f64::INFINITY } else { f64::NEG_INFINITY };
+        let mut best_metric = if self.config.minimize {
+            f64::INFINITY
+        } else {
+            f64::NEG_INFINITY
+        };
 
         while evaluations < self.config.max_evaluations {
             // Check time budget
@@ -148,7 +154,9 @@ impl NeuralArchitectureSearch {
             // Generate architectures to evaluate
             let architectures = self.config.search_algorithm.propose_architectures(
                 &self.search_history,
-                self.config.parallel_evaluations.min(self.config.max_evaluations - evaluations)
+                self.config
+                    .parallel_evaluations
+                    .min(self.config.max_evaluations - evaluations),
             )?;
 
             // Evaluate architectures in parallel
@@ -164,10 +172,16 @@ impl NeuralArchitectureSearch {
                 evaluations += 1;
                 self.search_history.push(result.clone());
 
-                let current_metric = result.metrics.get(&self.config.target_metric)
-                    .ok_or_else(|| crate::error::NeuralError::InvalidArgument(
-                        format!("Target metric {} not found", self.config.target_metric)
-                    ))?;
+                let current_metric =
+                    result
+                        .metrics
+                        .get(&self.config.target_metric)
+                        .ok_or_else(|| {
+                            crate::error::NeuralError::InvalidArgument(format!(
+                                "Target metric {} not found",
+                                self.config.target_metric
+                            ))
+                        })?;
 
                 let is_better = if self.config.minimize {
                     current_metric < best_metric
@@ -192,17 +206,20 @@ impl NeuralArchitectureSearch {
             }
         }
 
-        self.best_architecture.clone()
-            .ok_or_else(|| crate::error::NeuralError::InvalidArchitecture("No architecture found".to_string()))
+        self.best_architecture.clone().ok_or_else(|| {
+            crate::error::NeuralError::InvalidArchitecture("No architecture found".to_string())
+        })
     }
 
     /// Evaluate a single architecture
-    fn evaluate_architecture(&self,
-                           architecture: Arc<dyn ArchitectureEncoding>,
-                           train_data: &ArrayView2<f32>,
-                           train_labels: &ArrayView1<usize>,
-                           val_data: &ArrayView2<f32>,
-                           val_labels: &ArrayView1<usize>) -> Result<SearchResult> {
+    fn evaluate_architecture(
+        &self,
+        architecture: Arc<dyn ArchitectureEncoding>,
+        train_data: &ArrayView2<f32>,
+        train_labels: &ArrayView1<usize>,
+        val_data: &ArrayView2<f32>,
+        val_labels: &ArrayView1<usize>,
+    ) -> Result<SearchResult> {
         let start_time = std::time::Instant::now();
 
         // Build model from architecture encoding
@@ -214,7 +231,7 @@ impl NeuralArchitectureSearch {
             train_data,
             train_labels,
             val_data,
-            val_labels
+            val_labels,
         )?;
 
         let training_time = start_time.elapsed().as_secs_f64();
@@ -242,8 +259,9 @@ impl NeuralArchitectureSearch {
 
     /// Build a model from the best architecture
     pub fn build_best_model(&self) -> Result<Sequential<f32>> {
-        let arch = self.best_architecture.as_ref()
-            .ok_or_else(|| crate::error::NeuralError::InvalidArchitecture("No best architecture found".to_string()))?;
+        let arch = self.best_architecture.as_ref().ok_or_else(|| {
+            crate::error::NeuralError::InvalidArchitecture("No best architecture found".to_string())
+        })?;
         self.controller.build_model(arch)
     }
 

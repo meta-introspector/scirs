@@ -210,18 +210,22 @@ impl<T: Clone> RTree<T> {
         // If the sibling has enough entries, we can redistribute
         if sibling.size() > self.min_entries {
             // Implement entry redistribution
-            
+
             // Get mutable references to both child and sibling
             let (child_idx, sibling_idx) = if child_index < best_sibling_index {
                 (child_index, best_sibling_index)
             } else {
                 (best_sibling_index, child_index)
             };
-            
+
             // Extract entries from parent temporarily
             let mut child_entry = parent.entries.remove(child_idx);
-            let mut sibling_entry = parent.entries.remove(if sibling_idx > child_idx { sibling_idx - 1 } else { sibling_idx });
-            
+            let mut sibling_entry = parent.entries.remove(if sibling_idx > child_idx {
+                sibling_idx - 1
+            } else {
+                sibling_idx
+            });
+
             // Get mutable references to the nodes
             let child_node = match &mut child_entry {
                 Entry::NonLeaf { child, .. } => child,
@@ -239,17 +243,17 @@ impl<T: Clone> RTree<T> {
                     ))
                 }
             };
-            
+
             // Calculate how many entries to move
             let total_entries = child_node.size() + sibling_node.size();
             let target_child_size = total_entries / 2;
-            
+
             // Move entries from sibling to child if child has fewer entries
             while child_node.size() < target_child_size && !sibling_node.entries.is_empty() {
                 let entry = sibling_node.entries.remove(0);
                 child_node.entries.push(entry);
             }
-            
+
             // Update MBRs
             if let Ok(Some(child_mbr)) = child_node.mbr() {
                 if let Entry::NonLeaf { mbr, .. } = &mut child_entry {
@@ -261,25 +265,32 @@ impl<T: Clone> RTree<T> {
                     *mbr = sibling_mbr;
                 }
             }
-            
+
             // Put entries back in parent
             parent.entries.insert(child_idx, child_entry);
-            parent.entries.insert(if sibling_idx > child_idx { sibling_idx } else { sibling_idx + 1 }, sibling_entry);
-            
+            parent.entries.insert(
+                if sibling_idx > child_idx {
+                    sibling_idx
+                } else {
+                    sibling_idx + 1
+                },
+                sibling_entry,
+            );
+
             Ok(())
         } else {
             // Otherwise, merge the nodes
-            
+
             // Remove both entries from parent
             let (smaller_idx, larger_idx) = if child_index < best_sibling_index {
                 (child_index, best_sibling_index)
             } else {
                 (best_sibling_index, child_index)
             };
-            
+
             let mut child_entry = parent.entries.remove(smaller_idx);
             let sibling_entry = parent.entries.remove(larger_idx - 1);
-            
+
             // Get the nodes
             let child_node = match &mut child_entry {
                 Entry::NonLeaf { child, .. } => child,
@@ -297,25 +308,25 @@ impl<T: Clone> RTree<T> {
                     ))
                 }
             };
-            
+
             // Move all entries from sibling to child
             for entry in sibling_node.entries {
                 child_node.entries.push(entry);
             }
-            
+
             // Update MBR of merged node
             if let Ok(Some(merged_mbr)) = child_node.mbr() {
                 if let Entry::NonLeaf { mbr, .. } = &mut child_entry {
                     *mbr = merged_mbr;
                 }
             }
-            
+
             // Put the merged node back
             parent.entries.insert(smaller_idx, child_entry);
-            
+
             // If parent is now underfull and is not the root, it needs handling too
             // This would be handled by the caller
-            
+
             Ok(())
         }
     }

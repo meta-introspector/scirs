@@ -377,6 +377,10 @@ where
                     let elements_per_chunk = bytes / element_size;
                     elements_per_chunk.max(1)
                 }
+                ChunkingStrategy::Advanced(_) => {
+                    // For advanced strategies, fall back to auto sizing
+                    (self.array.size / 100).max(1)
+                }
             };
 
             let start_idx = chunk_idx * chunk_size;
@@ -467,6 +471,12 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
                 let elements_per_chunk = elements_per_chunk.max(1); // Ensure at least 1 element per chunk
                 self.size.div_ceil(elements_per_chunk)
             }
+            ChunkingStrategy::Advanced(_) => {
+                // For advanced strategies, fall back to auto sizing
+                let total_elements = self.size;
+                let optimal_chunk_size = (total_elements / 100).max(1);
+                total_elements.div_ceil(optimal_chunk_size)
+            }
         }
     }
 
@@ -491,6 +501,11 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
                     let element_size = std::mem::size_of::<A>();
                     let elements_per_chunk = bytes / element_size;
                     elements_per_chunk.max(1)
+                }
+                ChunkingStrategy::Advanced(_) => {
+                    // For advanced strategies, fall back to auto sizing
+                    let total_elements = self.size;
+                    (total_elements / 100).max(1)
                 }
             };
 
@@ -530,6 +545,11 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
                 ChunkingStrategy::FixedBytes(bytes) => {
                     let elements_per_chunk = bytes / element_size;
                     elements_per_chunk.max(1)
+                }
+                ChunkingStrategy::Advanced(_) => {
+                    // For advanced strategies, fall back to auto sizing
+                    let total_elements = self.size;
+                    (total_elements / 100).max(1)
                 }
             };
 
@@ -610,6 +630,11 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunksPa
                         let elements_per_chunk = bytes / element_size;
                         elements_per_chunk.max(1)
                     }
+                    ChunkingStrategy::Advanced(_) => {
+                        // For advanced strategies, fall back to auto sizing
+                        let total_elements = self.size;
+                        (total_elements / 100).max(1)
+                    }
                 };
 
                 let start_idx = chunk_idx * chunk_size;
@@ -660,6 +685,11 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunksPa
                     ChunkingStrategy::FixedBytes(bytes) => {
                         let elements_per_chunk = bytes / element_size;
                         elements_per_chunk.max(1)
+                    }
+                    ChunkingStrategy::Advanced(_) => {
+                        // For advanced strategies, fall back to auto sizing
+                        let total_elements = self.size;
+                        (total_elements / 100).max(1)
                     }
                 };
 

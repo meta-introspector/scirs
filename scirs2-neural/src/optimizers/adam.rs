@@ -241,4 +241,5 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for Adam<F> {
 }
 
 // Enable direct usage of scirs2-optim's Adam when the optim feature is enabled
-// TODO: Uncomment when scirs2-optim crate is available
+#[cfg(feature = "optim")]
+pub use scirs2_optim::Adam as OptimAdam;

@@ -17,22 +17,22 @@ use crate::error::{Result, TransformError};
 pub trait Transformer: Send + Sync {
     /// Fits the transformer to the input data
     fn fit(&mut self, x: &Array2<f64>) -> Result<()>;
-    
+
     /// Transforms the input data
     fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>>;
-    
+
     /// Fits and transforms the data in one step
     fn fit_transform(&mut self, x: &Array2<f64>) -> Result<Array2<f64>> {
         self.fit(x)?;
         self.transform(x)
     }
-    
+
     /// Returns a boxed clone of the transformer
     fn clone_box(&self) -> Box<dyn Transformer>;
-    
+
     /// Returns the transformer as Any for downcasting
     fn as_any(&self) -> &dyn Any;
-    
+
     /// Returns the transformer as mutable Any for downcasting
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
@@ -53,7 +53,7 @@ impl Pipeline {
             fitted: false,
         }
     }
-    
+
     /// Adds a step to the pipeline
     ///
     /// # Arguments
@@ -66,7 +66,7 @@ impl Pipeline {
         self.steps.push((name.into(), transformer));
         self
     }
-    
+
     /// Fits all steps in the pipeline
     ///
     /// # Arguments
@@ -80,23 +80,24 @@ impl Pipeline {
         S::Elem: Float + NumCast,
     {
         let mut x_transformed = x.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
-        
+
         for (name, transformer) in &mut self.steps {
-            transformer.fit(&x_transformed)
-                .map_err(|e| TransformError::TransformationError(
-                    format!("Failed to fit step '{}': {}", name, e)
-                ))?;
-            
-            x_transformed = transformer.transform(&x_transformed)
-                .map_err(|e| TransformError::TransformationError(
-                    format!("Failed to transform in step '{}': {}", name, e)
-                ))?;
+            transformer.fit(&x_transformed).map_err(|e| {
+                TransformError::TransformationError(format!("Failed to fit step '{}': {}", name, e))
+            })?;
+
+            x_transformed = transformer.transform(&x_transformed).map_err(|e| {
+                TransformError::TransformationError(format!(
+                    "Failed to transform in step '{}': {}",
+                    name, e
+                ))
+            })?;
         }
-        
+
         self.fitted = true;
         Ok(())
     }
-    
+
     /// Transforms data through all steps in the pipeline
     ///
     /// # Arguments
@@ -111,22 +112,24 @@ impl Pipeline {
     {
         if !self.fitted {
             return Err(TransformError::TransformationError(
-                "Pipeline has not been fitted".to_string()
+                "Pipeline has not been fitted".to_string(),
             ));
         }
-        
+
         let mut x_transformed = x.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
-        
+
         for (name, transformer) in &self.steps {
-            x_transformed = transformer.transform(&x_transformed)
-                .map_err(|e| TransformError::TransformationError(
-                    format!("Failed to transform in step '{}': {}", name, e)
-                ))?;
+            x_transformed = transformer.transform(&x_transformed).map_err(|e| {
+                TransformError::TransformationError(format!(
+                    "Failed to transform in step '{}': {}",
+                    name, e
+                ))
+            })?;
         }
-        
+
         Ok(x_transformed)
     }
-    
+
     /// Fits and transforms data through all steps in the pipeline
     ///
     /// # Arguments
@@ -142,27 +145,29 @@ impl Pipeline {
         self.fit(x)?;
         self.transform(x)
     }
-    
+
     /// Returns the number of steps in the pipeline
     pub fn len(&self) -> usize {
         self.steps.len()
     }
-    
+
     /// Returns whether the pipeline is empty
     pub fn is_empty(&self) -> bool {
         self.steps.is_empty()
     }
-    
+
     /// Gets a reference to a step by name
     pub fn get_step(&self, name: &str) -> Option<&dyn Transformer> {
-        self.steps.iter()
+        self.steps
+            .iter()
             .find(|(n, _)| n == name)
             .map(|(_, t)| t.as_ref())
     }
-    
+
     /// Gets a mutable reference to a step by name
     pub fn get_step_mut(&mut self, name: &str) -> Option<&mut Box<dyn Transformer>> {
-        self.steps.iter_mut()
+        self.steps
+            .iter_mut()
             .find(|(n, _)| n == name)
             .map(|(_, t)| t)
     }
@@ -205,7 +210,7 @@ impl ColumnTransformer {
             fitted: false,
         }
     }
-    
+
     /// Adds a transformer for specific columns
     ///
     /// # Arguments
@@ -219,12 +224,12 @@ impl ColumnTransformer {
         mut self,
         name: impl Into<String>,
         transformer: Box<dyn Transformer>,
-        columns: Vec<usize>
+        columns: Vec<usize>,
     ) -> Self {
         self.transformers.push((name.into(), transformer, columns));
         self
     }
-    
+
     /// Fits all transformers to their respective columns
     ///
     /// # Arguments
@@ -239,34 +244,36 @@ impl ColumnTransformer {
     {
         let x_f64 = x.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
         let n_features = x_f64.shape()[1];
-        
+
         // Validate column indices
         for (name, _, columns) in &self.transformers {
             for &col in columns {
                 if col >= n_features {
-                    return Err(TransformError::InvalidInput(
-                        format!("Column index {} in transformer '{}' exceeds number of features {}", 
-                                col, name, n_features)
-                    ));
+                    return Err(TransformError::InvalidInput(format!(
+                        "Column index {} in transformer '{}' exceeds number of features {}",
+                        col, name, n_features
+                    )));
                 }
             }
         }
-        
+
         // Fit each transformer on its columns
         for (name, transformer, columns) in &mut self.transformers {
             // Extract relevant columns
             let subset = extract_columns(&x_f64, columns);
-            
-            transformer.fit(&subset)
-                .map_err(|e| TransformError::TransformationError(
-                    format!("Failed to fit transformer '{}': {}", name, e)
-                ))?;
+
+            transformer.fit(&subset).map_err(|e| {
+                TransformError::TransformationError(format!(
+                    "Failed to fit transformer '{}': {}",
+                    name, e
+                ))
+            })?;
         }
-        
+
         self.fitted = true;
         Ok(())
     }
-    
+
     /// Transforms data using all configured transformers
     ///
     /// # Arguments
@@ -281,43 +288,44 @@ impl ColumnTransformer {
     {
         if !self.fitted {
             return Err(TransformError::TransformationError(
-                "ColumnTransformer has not been fitted".to_string()
+                "ColumnTransformer has not been fitted".to_string(),
             ));
         }
-        
+
         let x_f64 = x.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
         let n_samples = x_f64.shape()[0];
         let n_features = x_f64.shape()[1];
-        
+
         // Track which columns have been transformed
         let mut used_columns = vec![false; n_features];
         let mut transformed_parts = Vec::new();
-        
+
         // Transform each group of columns
         for (name, transformer, columns) in &self.transformers {
             // Mark columns as used
             for &col in columns {
                 used_columns[col] = true;
             }
-            
+
             // Extract and transform columns
             let subset = extract_columns(&x_f64, columns);
-            let transformed = transformer.transform(&subset)
-                .map_err(|e| TransformError::TransformationError(
-                    format!("Failed to transform with '{}': {}", name, e)
-                ))?;
-            
+            let transformed = transformer.transform(&subset).map_err(|e| {
+                TransformError::TransformationError(format!(
+                    "Failed to transform with '{}': {}",
+                    name, e
+                ))
+            })?;
+
             transformed_parts.push(transformed);
         }
-        
+
         // Handle remainder columns
         match self.remainder {
             RemainderOption::Passthrough => {
                 // Collect unused columns
-                let unused_columns: Vec<usize> = (0..n_features)
-                    .filter(|&i| !used_columns[i])
-                    .collect();
-                
+                let unused_columns: Vec<usize> =
+                    (0..n_features).filter(|&i| !used_columns[i]).collect();
+
                 if !unused_columns.is_empty() {
                     let remainder = extract_columns(&x_f64, &unused_columns);
                     transformed_parts.push(remainder);
@@ -327,15 +335,15 @@ impl ColumnTransformer {
                 // Do nothing - unused columns are dropped
             }
         }
-        
+
         // Concatenate all parts horizontally
         if transformed_parts.is_empty() {
             return Ok(Array2::zeros((n_samples, 0)));
         }
-        
+
         concatenate_horizontal(&transformed_parts)
     }
-    
+
     /// Fits and transforms data in one step
     pub fn fit_transform<S>(&mut self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
     where
@@ -351,15 +359,15 @@ impl ColumnTransformer {
 fn extract_columns(data: &Array2<f64>, columns: &[usize]) -> Array2<f64> {
     let n_samples = data.shape()[0];
     let n_cols = columns.len();
-    
+
     let mut result = Array2::zeros((n_samples, n_cols));
-    
+
     for (j, &col_idx) in columns.iter().enumerate() {
         for i in 0..n_samples {
             result[[i, j]] = data[[i, col_idx]];
         }
     }
-    
+
     result
 }
 
@@ -367,25 +375,25 @@ fn extract_columns(data: &Array2<f64>, columns: &[usize]) -> Array2<f64> {
 fn concatenate_horizontal(arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
     if arrays.is_empty() {
         return Err(TransformError::InvalidInput(
-            "Cannot concatenate empty array list".to_string()
+            "Cannot concatenate empty array list".to_string(),
         ));
     }
-    
+
     let n_samples = arrays[0].shape()[0];
     let total_features: usize = arrays.iter().map(|a| a.shape()[1]).sum();
-    
+
     // Verify all arrays have the same number of samples
     for arr in arrays {
         if arr.shape()[0] != n_samples {
             return Err(TransformError::InvalidInput(
-                "All arrays must have the same number of samples".to_string()
+                "All arrays must have the same number of samples".to_string(),
             ));
         }
     }
-    
+
     let mut result = Array2::zeros((n_samples, total_features));
     let mut col_offset = 0;
-    
+
     for arr in arrays {
         let n_cols = arr.shape()[1];
         for i in 0..n_samples {
@@ -395,7 +403,7 @@ fn concatenate_horizontal(arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
         }
         col_offset += n_cols;
     }
-    
+
     Ok(result)
 }
 

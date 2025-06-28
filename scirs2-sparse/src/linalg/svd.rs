@@ -131,32 +131,32 @@ pub fn svds<T, S>(
     options: Option<SVDOptions>,
 ) -> SparseResult<SVDResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
     let k = k.unwrap_or(opts.k);
-    
+
     let (m, n) = matrix.shape();
     if k >= m.min(n) {
         return Err(SparseError::ValueError(
             "Number of singular values k must be less than min(m, n)".to_string(),
         ));
     }
-    
+
     match opts.method {
-        SVDMethod::Lanczos => {
-            lanczos_bidiag_svd(matrix, k, &opts)
-        }
-        SVDMethod::Randomized => {
-            randomized_svd(matrix, k, &opts)
-        }
-        SVDMethod::Power => {
-            power_method_svd(matrix, k, &opts)
-        }
-        SVDMethod::CrossApproximation => {
-            cross_approximation_svd(matrix, k, &opts)
-        }
+        SVDMethod::Lanczos => lanczos_bidiag_svd(matrix, k, &opts),
+        SVDMethod::Randomized => randomized_svd(matrix, k, &opts),
+        SVDMethod::Power => power_method_svd(matrix, k, &opts),
+        SVDMethod::CrossApproximation => cross_approximation_svd(matrix, k, &opts),
     }
 }
 
@@ -169,11 +169,19 @@ pub fn svd_truncated<T, S>(
     maxiter: Option<usize>,
 ) -> SparseResult<SVDResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     let method_enum = SVDMethod::from_str(method)?;
-    
+
     let options = SVDOptions {
         k,
         method: method_enum,
@@ -181,7 +189,7 @@ where
         maxiter: maxiter.unwrap_or(1000),
         ..Default::default()
     };
-    
+
     svds(matrix, Some(k), Some(options))
 }
 
@@ -192,16 +200,24 @@ fn lanczos_bidiag_svd<T, S>(
     options: &SVDOptions,
 ) -> SparseResult<SVDResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     let (m, n) = matrix.shape();
     let max_lanczos_size = (2 * k + 10).min(m.min(n));
-    
+
     // Initialize starting vector
     let mut u = Array1::zeros(m);
     u[0] = T::one();
-    
+
     // Normalize
     let norm = (u.iter().map(|&v| v * v).sum::<T>()).sqrt();
     if !norm.is_zero() {
@@ -209,73 +225,73 @@ where
             u[i] = u[i] / norm;
         }
     }
-    
+
     let mut alpha = Vec::<T>::new();
     let mut beta = Vec::<T>::new();
     let mut u_vectors = Vec::<Array1<T>>::with_capacity(max_lanczos_size);
     let mut v_vectors = Vec::<Array1<T>>::with_capacity(max_lanczos_size);
-    
+
     u_vectors.push(u.clone());
-    
+
     let mut converged = false;
     let mut iter = 0;
-    
+
     // Lanczos bidiagonalization loop
     while iter < options.maxiter && alpha.len() < max_lanczos_size {
         // v = A^T * u - beta[j-1] * v[j-1]
         let av = matrix_transpose_vector_product(matrix, &u_vectors[iter])?;
         let mut v = av;
-        
+
         if iter > 0 && !beta.is_empty() {
             let prev_beta = beta[iter - 1];
             for i in 0..n {
                 v[i] = v[i] - prev_beta * v_vectors[iter - 1][i];
             }
         }
-        
+
         // alpha[j] = ||v||
         let alpha_j = (v.iter().map(|&val| val * val).sum::<T>()).sqrt();
         alpha.push(alpha_j);
-        
+
         if alpha_j.is_zero() {
             break;
         }
-        
+
         // Normalize v
         for i in 0..n {
             v[i] = v[i] / alpha_j;
         }
         v_vectors.push(v.clone());
-        
+
         // u = A * v - alpha[j] * u[j]
         let avu = matrix_vector_product(matrix, &v)?;
         let mut u_next = avu;
-        
+
         for i in 0..m {
             u_next[i] = u_next[i] - alpha_j * u_vectors[iter][i];
         }
-        
+
         // beta[j] = ||u||
         let beta_j = (u_next.iter().map(|&val| val * val).sum::<T>()).sqrt();
         beta.push(beta_j);
-        
+
         if beta_j < T::from(options.tol).unwrap() {
             converged = true;
             break;
         }
-        
+
         // Normalize u
         for i in 0..m {
             u_next[i] = u_next[i] / beta_j;
         }
-        
+
         u_vectors.push(u_next);
         iter += 1;
     }
-    
+
     // Solve the bidiagonal SVD problem
     let (singular_values, u_bidiag, vt_bidiag) = solve_bidiagonal_svd(&alpha, &beta, k)?;
-    
+
     // Compute final U and V^T matrices
     let final_u = if options.compute_u {
         let mut u_final = Array2::zeros((m, k.min(singular_values.len())));
@@ -294,7 +310,7 @@ where
     } else {
         None
     };
-    
+
     let final_vt = if options.compute_vt {
         let mut vt_final = Array2::zeros((k.min(singular_values.len()), n));
         for j in 0..k.min(singular_values.len()) {
@@ -312,7 +328,7 @@ where
     } else {
         None
     };
-    
+
     Ok(SVDResult {
         u: final_u,
         s: Array1::from_vec(singular_values[..k.min(singular_values.len())].to_vec()),
@@ -323,18 +339,22 @@ where
 }
 
 /// Randomized SVD algorithm
-fn randomized_svd<T, S>(
-    matrix: &S,
-    k: usize,
-    options: &SVDOptions,
-) -> SparseResult<SVDResult<T>>
+fn randomized_svd<T, S>(matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     let (m, n) = matrix.shape();
     let l = k + options.n_oversamples;
-    
+
     // Generate random matrix
     let mut omega = Array2::zeros((n, l));
     for i in 0..n {
@@ -344,7 +364,7 @@ where
             omega[[i, j]] = T::from(val).unwrap();
         }
     }
-    
+
     // Y = A * Omega
     let mut y = Array2::zeros((m, l));
     for j in 0..l {
@@ -354,7 +374,7 @@ where
             y[[i, j]] = y_col[i];
         }
     }
-    
+
     // Power iterations to improve quality
     for _ in 0..options.n_iter {
         // Y = A * (A^T * Y)
@@ -369,25 +389,25 @@ where
         }
         y = y_new;
     }
-    
+
     // QR decomposition of Y
     let q = qr_decomposition_orthogonal(&y)?;
-    
+
     // B = Q^T * A
     let mut b = Array2::zeros((l, n));
     for i in 0..l {
         let q_row = q.row(i).to_owned();
-        
+
         // Compute A^T * q_row (equivalent to q_row^T * A)
         let b_row = matrix_transpose_vector_product(matrix, &q_row)?;
         for j in 0..n {
             b[[i, j]] = b_row[j];
         }
     }
-    
+
     // SVD of B
     let b_svd = dense_svd(&b, k)?;
-    
+
     // Compute final U and V^T
     let final_u = if options.compute_u {
         // U = Q * U_B
@@ -409,7 +429,7 @@ where
     } else {
         None
     };
-    
+
     Ok(SVDResult {
         u: final_u,
         s: b_svd.s,
@@ -420,13 +440,17 @@ where
 }
 
 /// Power method SVD (simplified implementation)
-fn power_method_svd<T, S>(
-    matrix: &S,
-    k: usize,
-    options: &SVDOptions,
-) -> SparseResult<SVDResult<T>>
+fn power_method_svd<T, S>(matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     // For now, fall back to Lanczos method
@@ -441,7 +465,15 @@ fn cross_approximation_svd<T, S>(
     options: &SVDOptions,
 ) -> SparseResult<SVDResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     // For now, fall back to Lanczos method
@@ -452,7 +484,15 @@ where
 /// Matrix-vector product: y = A * x
 fn matrix_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     let (m, n) = matrix.shape();
@@ -462,21 +502,29 @@ where
             found: vector.len(),
         });
     }
-    
+
     let mut result = Array1::zeros(m);
     let (row_indices, col_indices, values) = matrix.find();
-    
+
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[i] = result[i] + values[k] * vector[j];
     }
-    
+
     Ok(result)
 }
 
 /// Matrix-transpose-vector product: y = A^T * x
 fn matrix_transpose_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     let (m, n) = matrix.shape();
@@ -486,14 +534,14 @@ where
             found: vector.len(),
         });
     }
-    
+
     let mut result = Array1::zeros(n);
     let (row_indices, col_indices, values) = matrix.find();
-    
+
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[j] = result[j] + values[k] * vector[i];
     }
-    
+
     Ok(result)
 }
 
@@ -504,53 +552,72 @@ fn solve_bidiagonal_svd<T>(
     k: usize,
 ) -> SparseResult<(Vec<T>, Vec<Vec<f64>>, Vec<Vec<f64>>)>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
 {
     let n = alpha.len();
-    
+
     // For simplicity, use power iteration on A^T * A
     // In a real implementation, we'd use the QR algorithm for bidiagonal matrices
-    
+
     let mut singular_values = Vec::with_capacity(k);
     let mut u_vectors = Vec::with_capacity(k);
     let mut vt_vectors = Vec::with_capacity(k);
-    
+
     // Approximate largest singular value using power iteration
     if n > 0 {
-        let largest_sv = alpha.iter().map(|&x| x.abs()).fold(T::zero(), |a, b| if a > b { a } else { b });
+        let largest_sv = alpha
+            .iter()
+            .map(|&x| x.abs())
+            .fold(T::zero(), |a, b| if a > b { a } else { b });
         singular_values.push(largest_sv);
-        
+
         // Create identity-like vectors
         let mut u_vec = vec![0.0; n];
         let mut vt_vec = vec![0.0; n];
-        
+
         if n > 0 {
             u_vec[0] = 1.0;
             vt_vec[0] = 1.0;
         }
-        
+
         u_vectors.push(u_vec);
         vt_vectors.push(vt_vec);
     }
-    
+
     // Fill remaining with zeros (simplified)
     while singular_values.len() < k && singular_values.len() < n {
         singular_values.push(T::zero());
         u_vectors.push(vec![0.0; n]);
         vt_vectors.push(vec![0.0; n]);
     }
-    
+
     Ok((singular_values, u_vectors, vt_vectors))
 }
 
 /// QR decomposition returning only Q (simplified implementation)
 fn qr_decomposition_orthogonal<T>(matrix: &Array2<T>) -> SparseResult<Array2<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
 {
     let (m, n) = matrix.dim();
     let mut q = matrix.clone();
-    
+
     // Simple Gram-Schmidt orthogonalization
     for j in 0..n {
         // Normalize column j
@@ -559,42 +626,50 @@ where
             norm = norm + q[[i, j]] * q[[i, j]];
         }
         norm = norm.sqrt();
-        
+
         if !norm.is_zero() {
             for i in 0..m {
                 q[[i, j]] = q[[i, j]] / norm;
             }
         }
-        
+
         // Orthogonalize remaining columns against column j
         for k in (j + 1)..n {
             let mut dot = T::zero();
             for i in 0..m {
                 dot = dot + q[[i, j]] * q[[i, k]];
             }
-            
+
             for i in 0..m {
                 q[[i, k]] = q[[i, k]] - dot * q[[i, j]];
             }
         }
     }
-    
+
     Ok(q)
 }
 
 /// Dense SVD (placeholder implementation)
 fn dense_svd<T>(matrix: &Array2<T>, k: usize) -> SparseResult<SVDResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + 'static
+        + std::iter::Sum,
 {
     let (m, n) = matrix.dim();
     let rank = k.min(m).min(n);
-    
+
     // Simplified implementation - in practice, use LAPACK or similar
     let singular_values = Array1::from_elem(rank, T::one());
     let u = Some(Array2::eye(m).slice(ndarray::s![.., ..rank]).to_owned());
     let vt = Some(Array2::eye(n).slice(ndarray::s![..rank, ..]).to_owned());
-    
+
     Ok(SVDResult {
         u,
         s: singular_values,
@@ -615,7 +690,7 @@ mod tests {
         let rows = vec![0, 0, 1, 2, 2];
         let cols = vec![0, 2, 1, 0, 2];
         let data = vec![3.0, 2.0, 1.0, 4.0, 5.0];
-        
+
         CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap()
     }
 
@@ -623,18 +698,18 @@ mod tests {
     fn test_svds_basic() {
         let matrix = create_test_matrix();
         let result = svds(&matrix, Some(2), None).unwrap();
-        
+
         // Check dimensions
         assert_eq!(result.s.len(), 2);
-        
+
         if let Some(ref u) = result.u {
             assert_eq!(u.shape(), [3, 2]);
         }
-        
+
         if let Some(ref vt) = result.vt {
             assert_eq!(vt.shape(), [2, 3]);
         }
-        
+
         // Singular values should be non-negative and sorted
         assert!(result.s[0] >= 0.0);
         if result.s.len() > 1 {
@@ -646,12 +721,12 @@ mod tests {
     fn test_matrix_vector_product() {
         let matrix = create_test_matrix();
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        
+
         let y = matrix_vector_product(&matrix, &x).unwrap();
-        
+
         // Check result dimensions
         assert_eq!(y.len(), 3);
-        
+
         // Verify computation: y = A * x
         assert_relative_eq!(y[0], 3.0 * 1.0 + 2.0 * 3.0, epsilon = 1e-10); // 9.0
         assert_relative_eq!(y[1], 1.0 * 2.0, epsilon = 1e-10); // 2.0
@@ -662,12 +737,12 @@ mod tests {
     fn test_matrix_transpose_vector_product() {
         let matrix = create_test_matrix();
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        
+
         let y = matrix_transpose_vector_product(&matrix, &x).unwrap();
-        
+
         // Check result dimensions
         assert_eq!(y.len(), 3);
-        
+
         // Verify computation: y = A^T * x
         assert_relative_eq!(y[0], 3.0 * 1.0 + 4.0 * 3.0, epsilon = 1e-10); // 15.0
         assert_relative_eq!(y[1], 1.0 * 2.0, epsilon = 1e-10); // 2.0
@@ -677,7 +752,7 @@ mod tests {
     #[test]
     fn test_svd_options() {
         let matrix = create_test_matrix();
-        
+
         let options = SVDOptions {
             k: 1,
             method: SVDMethod::Lanczos,
@@ -685,9 +760,9 @@ mod tests {
             compute_vt: true,
             ..Default::default()
         };
-        
+
         let result = svds(&matrix, Some(1), Some(options)).unwrap();
-        
+
         assert_eq!(result.s.len(), 1);
         assert!(result.u.is_none());
         assert!(result.vt.is_some());
@@ -696,9 +771,9 @@ mod tests {
     #[test]
     fn test_svd_truncated_api() {
         let matrix = create_test_matrix();
-        
+
         let result = svd_truncated(&matrix, 2, "lanczos", Some(1e-8), Some(100)).unwrap();
-        
+
         assert_eq!(result.s.len(), 2);
         assert!(result.u.is_some());
         assert!(result.vt.is_some());
@@ -707,7 +782,7 @@ mod tests {
     #[test]
     fn test_randomized_svd() {
         let matrix = create_test_matrix();
-        
+
         let options = SVDOptions {
             k: 2,
             method: SVDMethod::Randomized,
@@ -715,9 +790,9 @@ mod tests {
             n_iter: 1,
             ..Default::default()
         };
-        
+
         let result = svds(&matrix, Some(2), Some(options)).unwrap();
-        
+
         assert_eq!(result.s.len(), 2);
         assert!(result.converged);
     }
@@ -725,12 +800,12 @@ mod tests {
     #[test]
     fn test_qr_decomposition() {
         let matrix = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        
+
         let q = qr_decomposition_orthogonal(&matrix).unwrap();
-        
+
         // Check orthogonality (Q^T * Q = I)
         assert_eq!(q.shape(), [3, 2]);
-        
+
         // Check that columns are orthonormal
         for j in 0..2 {
             let mut norm = 0.0;
@@ -744,7 +819,10 @@ mod tests {
     #[test]
     fn test_svd_method_parsing() {
         assert_eq!(SVDMethod::from_str("lanczos").unwrap(), SVDMethod::Lanczos);
-        assert_eq!(SVDMethod::from_str("randomized").unwrap(), SVDMethod::Randomized);
+        assert_eq!(
+            SVDMethod::from_str("randomized").unwrap(),
+            SVDMethod::Randomized
+        );
         assert_eq!(SVDMethod::from_str("power").unwrap(), SVDMethod::Power);
         assert!(SVDMethod::from_str("invalid").is_err());
     }
@@ -752,7 +830,7 @@ mod tests {
     #[test]
     fn test_invalid_k() {
         let matrix = create_test_matrix();
-        
+
         // k too large
         let result = svds(&matrix, Some(10), None);
         assert!(result.is_err());

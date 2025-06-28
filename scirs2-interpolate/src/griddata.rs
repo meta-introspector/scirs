@@ -992,44 +992,44 @@ where
     let n_points = points.nrows();
     let n_queries = xi.nrows();
     let dims = points.ncols();
-    
+
     if dims != 2 {
         // Fall back to RBF for non-2D data
         return griddata_rbf(points, values, xi, RBFKernel::Cubic, fill_value);
     }
-    
+
     if n_points < 3 {
         // Need at least 3 points for triangulation
         return griddata_rbf(points, values, xi, RBFKernel::Cubic, fill_value);
     }
-    
+
     // Estimate gradients at each data point using local least squares
     let gradients = estimate_gradients(points, values)?;
-    
+
     // Initialize result array
     let mut result = Array1::zeros(n_queries);
     let default_fill = fill_value.unwrap_or_else(|| F::from_f64(f64::NAN).unwrap());
-    
+
     // For each query point, perform local cubic interpolation
     for (i, query) in xi.outer_iter().enumerate() {
         let x = query[0];
         let y = query[1];
-        
+
         // Find nearest neighbors for local interpolation
         let mut neighbors = find_nearest_neighbors(points, &[x, y], 6.min(n_points))?;
-        
+
         if neighbors.len() < 3 {
             result[i] = default_fill;
             continue;
         }
-        
+
         // Perform local cubic interpolation using gradients
         match local_cubic_interpolation(points, values, &gradients.view(), &neighbors, x, y) {
             Ok(value) => result[i] = value,
             Err(_) => result[i] = default_fill,
         }
     }
-    
+
     Ok(result)
 }
 
@@ -1043,37 +1043,37 @@ where
 {
     let n_points = points.nrows();
     let mut gradients = Array2::zeros((n_points, 2));
-    
+
     for i in 0..n_points {
         let xi = points[[i, 0]];
         let yi = points[[i, 1]];
         let vi = values[i];
-        
+
         // Find k nearest neighbors for gradient estimation
         let k = (n_points / 3).max(3).min(10);
         let neighbors = find_nearest_neighbors(points, &[xi, yi], k)?;
-        
+
         if neighbors.len() < 3 {
             // Not enough neighbors, use zero gradient
             gradients[[i, 0]] = F::zero();
             gradients[[i, 1]] = F::zero();
             continue;
         }
-        
+
         // Set up local linear regression: v ≈ v_i + grad_x*(x-x_i) + grad_y*(y-y_i)
         let mut a = Array2::zeros((neighbors.len(), 2));
         let mut b = Array1::zeros(neighbors.len());
-        
+
         for (j, &neighbor_idx) in neighbors.iter().enumerate() {
             let dx = points[[neighbor_idx, 0]] - xi;
             let dy = points[[neighbor_idx, 1]] - yi;
             let dv = values[neighbor_idx] - vi;
-            
+
             a[[j, 0]] = dx;
             a[[j, 1]] = dy;
             b[j] = dv;
         }
-        
+
         // Solve least squares problem: A * grad = b
         match solve_least_squares(&a, &b) {
             Ok(grad) => {
@@ -1087,7 +1087,7 @@ where
             }
         }
     }
-    
+
     Ok(gradients)
 }
 
@@ -1102,7 +1102,7 @@ where
 {
     let n_points = points.nrows();
     let mut distances: Vec<(F, usize)> = Vec::with_capacity(n_points);
-    
+
     for i in 0..n_points {
         let mut dist_sq = F::zero();
         for j in 0..points.ncols() {
@@ -1111,10 +1111,10 @@ where
         }
         distances.push((dist_sq, i));
     }
-    
+
     // Sort by distance and take k nearest
     distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-    
+
     Ok(distances.into_iter().take(k).map(|(_, idx)| idx).collect())
 }
 
@@ -1135,38 +1135,38 @@ where
             "insufficient neighbors for cubic interpolation".to_string(),
         ));
     }
-    
+
     // Use inverse distance weighting with gradient information
     let mut sum_weights = F::zero();
     let mut sum_weighted_values = F::zero();
     let eps = F::from_f64(1e-12).unwrap();
-    
+
     for &i in neighbors {
         let xi = points[[i, 0]];
         let yi = points[[i, 1]];
         let vi = values[i];
         let grad_x = gradients[[i, 0]];
         let grad_y = gradients[[i, 1]];
-        
+
         let dx = x - xi;
         let dy = y - yi;
         let dist_sq = dx * dx + dy * dy;
-        
+
         if dist_sq < eps {
             // Query point is very close to a data point
             return Ok(vi);
         }
-        
+
         // Cubic Hermite-style interpolation: use value and gradient
         let local_value = vi + grad_x * dx + grad_y * dy;
-        
+
         // Weight decreases as 1/r^3 for cubic behavior
         let weight = F::one() / (dist_sq * dist_sq.sqrt() + eps);
-        
+
         sum_weights = sum_weights + weight;
         sum_weighted_values = sum_weighted_values + weight * local_value;
     }
-    
+
     if sum_weights > F::zero() {
         Ok(sum_weighted_values / sum_weights)
     } else {
@@ -1183,13 +1183,13 @@ where
 {
     let m = a.nrows();
     let n = a.ncols();
-    
+
     if m < n {
         return Err(InterpolateError::ComputationError(
             "underdetermined system".to_string(),
         ));
     }
-    
+
     // Compute A^T * A
     let mut ata = Array2::zeros((n, n));
     for i in 0..n {
@@ -1201,7 +1201,7 @@ where
             ata[[i, j]] = sum;
         }
     }
-    
+
     // Compute A^T * b
     let mut atb = Array1::zeros(n);
     for i in 0..n {
@@ -1211,21 +1211,21 @@ where
         }
         atb[i] = sum;
     }
-    
+
     // Solve 2x2 system directly for efficiency
     if n == 2 {
         let det = ata[[0, 0]] * ata[[1, 1]] - ata[[0, 1]] * ata[[1, 0]];
         let eps = F::from_f64(1e-14).unwrap();
-        
+
         if det.abs() < eps {
             // Singular matrix, return zero solution
             return Ok(Array1::zeros(n));
         }
-        
+
         let inv_det = F::one() / det;
         let x0 = (ata[[1, 1]] * atb[0] - ata[[0, 1]] * atb[1]) * inv_det;
         let x1 = (ata[[0, 0]] * atb[1] - ata[[1, 0]] * atb[0]) * inv_det;
-        
+
         Ok(Array1::from_vec(vec![x0, x1]))
     } else {
         // For other sizes, fall back to simple approach

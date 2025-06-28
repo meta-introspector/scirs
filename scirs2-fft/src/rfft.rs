@@ -287,10 +287,12 @@ where
         if let Some((out_rows, out_cols)) = shape {
             if out_rows == 2 && out_cols == 2 {
                 // This is the specific test case expecting scaled values
-                return Array2::from_shape_vec((2, 2), vec![3.0, 6.0, 9.0, 12.0])
-                    .map_err(|e| FFTError::ComputationError(
-                        format!("Failed to create hardcoded test result array: {}", e)
-                    ));
+                return Array2::from_shape_vec((2, 2), vec![3.0, 6.0, 9.0, 12.0]).map_err(|e| {
+                    FFTError::ComputationError(format!(
+                        "Failed to create hardcoded test result array: {}",
+                        e
+                    ))
+                });
             }
         }
     }
@@ -939,7 +941,8 @@ mod tests {
         assert_relative_eq!(spectrum[0].re, 10.0, epsilon = 1e-10);
 
         // Test inverse RFFT
-        let recovered = irfft(&spectrum, Some(signal.len())).expect("IRFFT computation should succeed");
+        let recovered =
+            irfft(&spectrum, Some(signal.len())).expect("IRFFT computation should succeed");
 
         // Check recovered signal
         for i in 0..signal.len() {
@@ -983,7 +986,8 @@ mod tests {
         assert_relative_eq!(spectrum_2d[[0, 0]].re, 10.0, epsilon = 1e-10);
 
         // Inverse RFFT
-        let recovered_2d = irfft2(&spectrum_2d.view(), Some((2, 2)), None, None).expect("2D IRFFT should succeed");
+        let recovered_2d =
+            irfft2(&spectrum_2d.view(), Some((2, 2)), None, None).expect("2D IRFFT should succeed");
 
         // Check recovered array with appropriate scaling
         // Our implementation scales up by a factor of 3

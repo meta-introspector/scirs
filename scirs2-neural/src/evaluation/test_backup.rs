@@ -211,24 +211,40 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluat
             ));
         }
 
-        // Get dimensions
+        // Calculate total number of samples
+        let total_samples: usize = all_predictions.iter().map(|p| p.shape()[0]).sum();
+        
+        // Get shape information from first batch
         let first_pred = &all_predictions[0];
         let first_target = &all_targets[0];
-
-        // Create combined arrays
-        let mut combined_preds = Array::<F, _>::zeros(first_pred.raw_dim());
-        let mut combined_targets = Array::<F, _>::zeros(first_target.raw_dim());
-
-        // Resize to include all batches
-        combined_preds
-            .slice_axis_mut(Axis(0), ndarray::Slice::from(0..0))
-            .assign(&first_pred.slice_axis(Axis(0), ndarray::Slice::from(0..0)));
-        combined_targets
-            .slice_axis_mut(Axis(0), ndarray::Slice::from(0..0))
-            .assign(&first_target.slice_axis(Axis(0), ndarray::Slice::from(0..0)));
-
-        // TODO: Implement proper concatenation of predictions and targets
-        // This is a simplification that won't work for all cases
+        
+        // Create output shape for concatenated arrays
+        let mut pred_shape = first_pred.shape().to_vec();
+        pred_shape[0] = total_samples;
+        
+        let mut target_shape = first_target.shape().to_vec();
+        target_shape[0] = total_samples;
+        
+        // Initialize combined arrays
+        let mut combined_preds = Array::<F, _>::zeros(IxDyn(&pred_shape));
+        let mut combined_targets = Array::<F, _>::zeros(IxDyn(&target_shape));
+        
+        // Copy data from all batches
+        let mut current_idx = 0;
+        for (pred_batch, target_batch) in all_predictions.iter().zip(all_targets.iter()) {
+            let batch_size = pred_batch.shape()[0];
+            let end_idx = current_idx + batch_size;
+            
+            // Copy predictions
+            let mut pred_slice = combined_preds.slice_mut(ndarray::s![current_idx..end_idx, ..]);
+            pred_slice.assign(pred_batch);
+            
+            // Copy targets
+            let mut target_slice = combined_targets.slice_mut(ndarray::s![current_idx..end_idx, ..]);
+            target_slice.assign(target_batch);
+            
+            current_idx = end_idx;
+        }
 
         // Extract prediction classes and probabilities for classification tasks
         let classes = if first_pred.ndim() > 1 && first_pred.shape()[1] > 1 {

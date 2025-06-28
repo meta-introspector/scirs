@@ -7,7 +7,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::quantile_simd::{median_simd, quantile_simd};
 use ndarray::{ArrayBase, Data, DataMut, Ix1};
 use num_traits::{Float, NumCast};
-use scirs2_core::simd_ops::{SimdUnifiedOps, AutoOptimizer};
+use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 
 /// SIMD-optimized Mean Absolute Deviation (MAD)
 ///
@@ -23,18 +23,16 @@ use scirs2_core::simd_ops::{SimdUnifiedOps, AutoOptimizer};
 /// # Returns
 ///
 /// The mean absolute deviation
-pub fn mad_simd<F, D>(
-    x: &mut ArrayBase<D, Ix1>,
-    scale: F,
-    nan_policy: &str,
-) -> StatsResult<F>
+pub fn mad_simd<F, D>(x: &mut ArrayBase<D, Ix1>, scale: F, nan_policy: &str) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
     D: DataMut<Elem = F>,
 {
     let n = x.len();
     if n == 0 {
-        return Err(StatsError::invalid_argument("Cannot compute MAD of empty array"));
+        return Err(StatsError::invalid_argument(
+            "Cannot compute MAD of empty array",
+        ));
     }
 
     // Handle NaN values according to policy
@@ -51,15 +49,13 @@ where
         }
         "omit" => {
             // Filter out NaN values
-            let filtered: ndarray::Array1<F> = x.iter()
-                .filter(|&&v| !v.is_nan())
-                .copied()
-                .collect();
-            
+            let filtered: ndarray::Array1<F> =
+                x.iter().filter(|&&v| !v.is_nan()).copied().collect();
+
             if filtered.is_empty() {
                 return Ok(F::nan());
             }
-            
+
             // Compute MAD on filtered data
             let mut filtered_mut = filtered;
             return mad_simd(&mut filtered_mut.view_mut(), scale, "propagate");
@@ -70,27 +66,27 @@ where
     // Compute median
     let med = median_simd(x)?;
     let valid_data = x.view();
-    
+
     // Compute absolute deviations using SIMD
     let optimizer = AutoOptimizer::new();
     let n_valid = valid_data.len();
-    
+
     let deviations = if optimizer.should_use_simd(n_valid) {
         // SIMD path
         let med_array = ndarray::Array1::from_elem(n_valid, med);
         let diff = F::simd_sub(&valid_data, &med_array.view());
-        
+
         // Compute absolute values using SIMD
         F::simd_abs(&diff.view())
     } else {
         // Scalar fallback
         ndarray::Array1::from_shape_fn(n_valid, |i| (valid_data[i] - med).abs())
     };
-    
+
     // Compute median of absolute deviations
     let mut deviations_mut = deviations;
     let mad = median_simd(&mut deviations_mut.view_mut())?;
-    
+
     Ok(mad * scale)
 }
 
@@ -120,13 +116,15 @@ where
     D: DataMut<Elem = F>,
 {
     if x.is_empty() {
-        return Err(StatsError::invalid_argument("Cannot compute IQR of empty array"));
+        return Err(StatsError::invalid_argument(
+            "Cannot compute IQR of empty array",
+        ));
     }
 
     // Compute Q1 and Q3
     let q1 = quantile_simd(x, F::from(0.25).unwrap(), interpolation)?;
     let q3 = quantile_simd(x, F::from(0.75).unwrap(), interpolation)?;
-    
+
     Ok(q3 - q1)
 }
 
@@ -152,7 +150,7 @@ where
     D: Data<Elem = F>,
 {
     use crate::descriptive_simd::{mean_simd, std_simd};
-    
+
     // Handle NaN values
     let valid_data = match nan_policy {
         "propagate" => {
@@ -168,28 +166,28 @@ where
             x.view()
         }
         "omit" => {
-            let filtered: ndarray::Array1<F> = x.iter()
-                .filter(|&&v| !v.is_nan())
-                .copied()
-                .collect();
-            
+            let filtered: ndarray::Array1<F> =
+                x.iter().filter(|&&v| !v.is_nan()).copied().collect();
+
             if filtered.is_empty() {
                 return Ok(F::nan());
             }
-            
+
             return coefficient_of_variation_simd(&filtered.view(), "propagate");
         }
         _ => return Err(StatsError::invalid_argument("Invalid nan_policy")),
     };
 
     let mean = mean_simd(&valid_data)?;
-    
+
     if mean.abs() < F::epsilon() {
-        return Err(StatsError::invalid_argument("Cannot compute CV when mean is zero"));
+        return Err(StatsError::invalid_argument(
+            "Cannot compute CV when mean is zero",
+        ));
     }
-    
+
     let std = std_simd(&valid_data, 1)?;
-    
+
     Ok(std / mean.abs())
 }
 
@@ -203,11 +201,13 @@ where
     D: Data<Elem = F>,
 {
     if x.is_empty() {
-        return Err(StatsError::invalid_argument("Cannot compute range of empty array"));
+        return Err(StatsError::invalid_argument(
+            "Cannot compute range of empty array",
+        ));
     }
 
     let optimizer = AutoOptimizer::new();
-    
+
     if optimizer.should_use_simd(x.len()) {
         // Use SIMD min/max operations
         let min = F::simd_min_element(&x.view());
@@ -217,7 +217,7 @@ where
         // Scalar fallback
         let mut min = x[0];
         let mut max = x[0];
-        
+
         for &val in x.iter().skip(1) {
             if val < min {
                 min = val;
@@ -226,7 +226,7 @@ where
                 max = val;
             }
         }
-        
+
         Ok(max - min)
     }
 }
@@ -242,12 +242,16 @@ where
 {
     let n = x.len();
     if n == 0 {
-        return Err(StatsError::invalid_argument("Cannot compute Gini coefficient of empty array"));
+        return Err(StatsError::invalid_argument(
+            "Cannot compute Gini coefficient of empty array",
+        ));
     }
 
     // Check for negative values
     if x.iter().any(|&v| v < F::zero()) {
-        return Err(StatsError::invalid_argument("Gini coefficient requires non-negative values"));
+        return Err(StatsError::invalid_argument(
+            "Gini coefficient requires non-negative values",
+        ));
     }
 
     // Sort the data
@@ -257,39 +261,39 @@ where
 
     // Compute cumulative sum and weighted sum using SIMD
     let optimizer = AutoOptimizer::new();
-    
+
     if optimizer.should_use_simd(n) {
         // SIMD path
         let indices = ndarray::Array1::from_shape_fn(n, |i| F::from(i + 1).unwrap());
         let weighted = F::simd_mul(&sorted_data.view(), &indices.view());
         let weighted_sum = F::simd_sum(&weighted.view());
         let total_sum = F::simd_sum(&sorted_data.view());
-        
+
         if total_sum <= F::epsilon() {
             return Ok(F::zero()); // Perfect equality (all zeros)
         }
-        
-        let gini = (F::from(2).unwrap() * weighted_sum) / (F::from(n).unwrap() * total_sum) 
-                   - F::from(n + 1).unwrap() / F::from(n).unwrap();
-        
+
+        let gini = (F::from(2).unwrap() * weighted_sum) / (F::from(n).unwrap() * total_sum)
+            - F::from(n + 1).unwrap() / F::from(n).unwrap();
+
         Ok(gini)
     } else {
         // Scalar fallback
         let mut cumsum = F::zero();
         let mut weighted_sum = F::zero();
-        
+
         for (i, &val) in sorted_slice.iter().enumerate() {
             cumsum = cumsum + val;
             weighted_sum = weighted_sum + F::from(i + 1).unwrap() * val;
         }
-        
+
         if cumsum <= F::epsilon() {
             return Ok(F::zero());
         }
-        
+
         let gini = (F::from(2).unwrap() * weighted_sum) / (F::from(n).unwrap() * cumsum)
-                   - F::from(n + 1).unwrap() / F::from(n).unwrap();
-        
+            - F::from(n + 1).unwrap() / F::from(n).unwrap();
+
         Ok(gini)
     }
 }
@@ -303,12 +307,14 @@ where
     D: Data<Elem = F>,
 {
     use crate::descriptive_simd::std_simd;
-    
+
     let n = x.len();
     if n <= ddof {
-        return Err(StatsError::invalid_argument("Not enough data points for the given degrees of freedom"));
+        return Err(StatsError::invalid_argument(
+            "Not enough data points for the given degrees of freedom",
+        ));
     }
-    
+
     let std_dev = std_simd(x, ddof)?;
     Ok(std_dev / F::from(n).unwrap().sqrt())
 }
@@ -327,7 +333,9 @@ where
 {
     let n = x.len();
     if n == 0 {
-        return Err(StatsError::invalid_argument("Cannot compute MAD of empty array"));
+        return Err(StatsError::invalid_argument(
+            "Cannot compute MAD of empty array",
+        ));
     }
 
     // Compute center if not provided
@@ -338,7 +346,7 @@ where
 
     // Compute absolute deviations using SIMD
     let optimizer = AutoOptimizer::new();
-    
+
     let deviations = if optimizer.should_use_simd(n) {
         // SIMD path
         let center_array = ndarray::Array1::from_elem(n, center_val);
@@ -352,7 +360,7 @@ where
     // Compute median of absolute deviations
     let mut deviations_mut = deviations;
     let mad = median_simd(&mut deviations_mut.view_mut())?;
-    
+
     Ok(mad * scale)
 }
 
@@ -369,35 +377,42 @@ where
     F: Float + NumCast + SimdUnifiedOps,
     D: DataMut<Elem = F>,
 {
-    if lower_pct < F::zero() || lower_pct > F::from(100).unwrap() ||
-       upper_pct < F::zero() || upper_pct > F::from(100).unwrap() {
-        return Err(StatsError::invalid_argument("Percentiles must be between 0 and 100"));
+    if lower_pct < F::zero()
+        || lower_pct > F::from(100).unwrap()
+        || upper_pct < F::zero()
+        || upper_pct > F::from(100).unwrap()
+    {
+        return Err(StatsError::invalid_argument(
+            "Percentiles must be between 0 and 100",
+        ));
     }
-    
+
     if lower_pct >= upper_pct {
-        return Err(StatsError::invalid_argument("Lower percentile must be less than upper percentile"));
+        return Err(StatsError::invalid_argument(
+            "Lower percentile must be less than upper percentile",
+        ));
     }
 
     let lower_q = lower_pct / F::from(100).unwrap();
     let upper_q = upper_pct / F::from(100).unwrap();
-    
+
     let lower_val = quantile_simd(x, lower_q, interpolation)?;
     let upper_val = quantile_simd(x, upper_q, interpolation)?;
-    
+
     Ok(upper_val - lower_val)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_mad_simd() {
         let mut data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
         let result = mad_simd(&mut data.view_mut(), 1.0, "propagate").unwrap();
-        
+
         // MAD should be median(|x - median(x)|) = median(|x - 5|) = 2
         assert_relative_eq!(result, 2.0, epsilon = 1e-10);
     }
@@ -406,7 +421,7 @@ mod tests {
     fn test_coefficient_of_variation_simd() {
         let data = array![2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
         let cv = coefficient_of_variation_simd(&data.view(), "propagate").unwrap();
-        
+
         // Mean = 5, Std ≈ 2, CV ≈ 0.4
         assert_relative_eq!(cv, 0.4, epsilon = 0.1);
     }
@@ -424,7 +439,7 @@ mod tests {
         let equal_data = array![5.0, 5.0, 5.0, 5.0];
         let gini_equal = gini_simd(&equal_data.view()).unwrap();
         assert_relative_eq!(gini_equal, 0.0, epsilon = 1e-10);
-        
+
         // Test some inequality
         let unequal_data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let gini_unequal = gini_simd(&unequal_data.view()).unwrap();
@@ -435,7 +450,7 @@ mod tests {
     fn test_sem_simd() {
         let data = array![2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
         let sem = sem_simd(&data.view(), 1).unwrap();
-        
+
         // SEM = std/sqrt(n) ≈ 2/sqrt(8) ≈ 0.707
         assert_relative_eq!(sem, 0.707, epsilon = 0.1);
     }

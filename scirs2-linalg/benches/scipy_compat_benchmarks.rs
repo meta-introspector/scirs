@@ -3,7 +3,6 @@
 //! This benchmark suite measures the performance of SciPy-compatible functions
 //! and compares them against pure Rust implementations where available.
 
-
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Axis};
 use scirs2_linalg::matrix_functions::{expm, logm, sqrtm};

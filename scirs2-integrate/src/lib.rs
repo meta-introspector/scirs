@@ -147,6 +147,12 @@ pub mod error;
 pub use common::IntegrateFloat;
 pub use error::{IntegrateError, IntegrateResult};
 
+// Advanced performance and analysis modules
+pub mod amr_advanced;
+pub mod error_estimation;
+pub mod parallel_optimization;
+pub mod performance_monitor;
+
 // Integration modules
 pub mod bvp;
 pub mod bvp_extended;
@@ -266,58 +272,110 @@ pub use pde::{
 };
 // Export symbolic integration types
 pub use symbolic::{
-    SymbolicJacobian, generate_jacobian, higher_order_to_first_order, HigherOrderODE,
-    FirstOrderSystem, ConservationLaw, detect_conservation_laws, ConservationEnforcer,
-    SymbolicExpression, Variable, simplify,
+    detect_conservation_laws, generate_jacobian, higher_order_to_first_order, simplify,
+    ConservationEnforcer, ConservationLaw, FirstOrderSystem, HigherOrderODE, SymbolicExpression,
+    SymbolicJacobian, Variable,
 };
 // Export automatic differentiation types
 pub use autodiff::{
-    ForwardAD, forward_gradient, forward_jacobian, ReverseAD, reverse_gradient, 
-    reverse_jacobian, TapeNode, SparsePattern, SparseJacobian, detect_sparsity, 
-    compress_jacobian, SensitivityAnalysis, ParameterSensitivity, compute_sensitivities,
-    Dual, DualVector,
+    compress_jacobian, compute_sensitivities, detect_sparsity, forward_gradient, forward_jacobian,
+    reverse_gradient, reverse_jacobian, Dual, DualVector, ForwardAD, ParameterSensitivity,
+    ReverseAD, SensitivityAnalysis, SparseJacobian, SparsePattern, TapeNode,
 };
 // Export specialized domain-specific solvers
 pub use specialized::{
-    SchrodingerSolver, QuantumState, QuantumPotential, HarmonicOscillator, ParticleInBox,
-    HydrogenAtom, SchrodingerMethod, QuantumAnnealer, VariationalQuantumEigensolver, 
-    MultiBodyQuantumSolver, NavierStokesSolver, FluidState, FluidBoundaryCondition,
-    NavierStokesParams, LESolver, RANSSolver, FluidState3D, RANSState, SGSModel, RANSModel,
-    StochasticPDESolver, FinancialOption, VolatilityModel, OptionType,
-    OptionStyle, FinanceMethod, JumpProcess, Greeks,
+    FinanceMethod, FinancialOption, FluidBoundaryCondition, FluidState, FluidState3D, Greeks,
+    HarmonicOscillator, HydrogenAtom, JumpProcess, LESolver, MultiBodyQuantumSolver,
+    NavierStokesParams, NavierStokesSolver, OptionStyle, OptionType, ParticleInBox,
+    QuantumAnnealer, QuantumPotential, QuantumState, RANSModel, RANSSolver, RANSState, SGSModel,
+    SchrodingerMethod, SchrodingerSolver, StochasticPDESolver, VariationalQuantumEigensolver,
+    VolatilityModel,
 };
 // Export geometric integration methods
 pub use geometric::{
+    ABCFlow,
+    AngularMomentumInvariant2D,
+    CircularFlow2D,
+    ConservationChecker,
+    ConstrainedIntegrator,
+    DiscreteGradientIntegrator,
+    DivergenceFreeFlow,
+    DoubleGyre,
+    EnergyInvariant,
+    EnergyMomentumIntegrator,
+    EnergyPreservingMethod,
+    ExponentialMap,
+    GLn,
+    GeometricInvariant,
+    Gln,
+    HamiltonianFlow,
+    HeisenbergAlgebra,
+    HeisenbergGroup,
+    IncompressibleFlow,
+    LieAlgebra,
     // Lie group integration
-    LieGroupIntegrator, LieAlgebra, ExponentialMap, LieGroupMethod,
-    SO3, SO3Integrator, So3, SE3, SE3Integrator, Se3,
-    SLn, Sln, GLn, Gln, Sp2n, HeisenbergGroup, HeisenbergAlgebra,
-    // Volume-preserving integration
-    VolumePreservingIntegrator, VolumePreservingMethod, DivergenceFreeFlow, IncompressibleFlow,
-    CircularFlow2D, ABCFlow, DoubleGyre, VolumeChecker,
-    StreamFunction, StuartVortex, TaylorGreenVortex, HamiltonianFlow,
-    ModifiedMidpointIntegrator, VariationalIntegrator, DiscreteGradientIntegrator,
+    LieGroupIntegrator,
+    LieGroupMethod,
+    LinearMomentumInvariant,
+    ModifiedMidpointIntegrator,
+    MomentumPreservingMethod,
+    MultiSymplecticIntegrator,
+    SE3Integrator,
+    SLn,
+    SO3Integrator,
+    Se3,
+    Sln,
+    So3,
+    Sp2n,
+    SplittingIntegrator,
+    StreamFunction,
     // Structure-preserving integration
-    StructurePreservingIntegrator, StructurePreservingMethod, ConservationChecker, GeometricInvariant,
-    EnergyPreservingMethod, MomentumPreservingMethod,
-    SplittingIntegrator, EnergyMomentumIntegrator, ConstrainedIntegrator, MultiSymplecticIntegrator,
-    EnergyInvariant, LinearMomentumInvariant, AngularMomentumInvariant2D,
+    StructurePreservingIntegrator,
+    StructurePreservingMethod,
+    StuartVortex,
+    TaylorGreenVortex,
+    VariationalIntegrator,
+    VolumeChecker,
+    // Volume-preserving integration
+    VolumePreservingIntegrator,
+    VolumePreservingMethod,
+    SE3,
+    SO3,
 };
 // Export analysis tools
 pub use analysis::{
-    BifurcationAnalyzer, BifurcationPoint, BifurcationType, StabilityAnalyzer, StabilityResult,
-    FixedPoint, PeriodicOrbit, StabilityType, BasinAnalysis,
+    BasinAnalysis, BifurcationAnalyzer, BifurcationPoint, BifurcationType, FixedPoint,
+    PeriodicOrbit, StabilityAnalyzer, StabilityResult, StabilityType,
 };
 // Export visualization utilities
 pub use visualization::{
-    VisualizationEngine, PhaseSpacePlot, BifurcationDiagram, VectorFieldPlot, HeatMapPlot,
-    SurfacePlot, PlotMetadata, OutputFormat, ColorScheme, PlotStatistics,
+    BifurcationDiagram, ColorScheme, HeatMapPlot, OutputFormat, PhaseSpacePlot, PlotMetadata,
+    PlotStatistics, SurfacePlot, VectorFieldPlot, VisualizationEngine,
 };
-// Implicit solvers will be exposed in a future update
-// pub use pde::implicit::{
-//     ImplicitMethod, ImplicitOptions, ImplicitResult,
-//     CrankNicolson1D, BackwardEuler1D, ADI2D, ADIResult
-// };
+// Export advanced modules
+pub use amr_advanced::{
+    AMRAdaptationResult, AdaptiveCell, AdaptiveMeshLevel, AdvancedAMRManager,
+    CurvatureRefinementCriterion, FeatureDetectionCriterion, GeometricLoadBalancer,
+    GradientRefinementCriterion, LoadBalancer, MeshHierarchy, RefinementCriterion,
+};
+pub use error_estimation::{
+    AdvancedErrorEstimator, DefectCorrector, ErrorAnalysisResult, ErrorDistribution,
+    RichardsonExtrapolator, SolutionQualityMetrics, SpectralErrorIndicator,
+};
+pub use parallel_optimization::{
+    LoadBalancingStrategy, NumaTopology, ParallelExecutionStats, ParallelOptimizer, ParallelTask,
+    VectorOperation, VectorizedComputeTask, WorkStealingConfig, WorkStealingStats,
+};
+pub use performance_monitor::{
+    ConvergenceAnalysis as PerfConvergenceAnalysis, OptimizationRecommendation,
+    PerformanceAnalyzer, PerformanceBottleneck, PerformanceMetrics, PerformanceProfiler,
+    PerformanceReport,
+};
+// Implicit solvers for PDEs
+pub use pde::implicit::{
+    ADIResult, BackwardEuler1D, CrankNicolson1D, ImplicitMethod, ImplicitOptions, ImplicitResult,
+    ADI2D,
+};
 pub use qmc::{qmc_quad, qmc_quad_parallel, Faure, Halton, QMCQuadResult, RandomGenerator, Sobol};
 pub use quad::{quad, simpson, trapezoid};
 pub use quad_vec::{quad_vec, NormType, QuadRule, QuadVecOptions, QuadVecResult};

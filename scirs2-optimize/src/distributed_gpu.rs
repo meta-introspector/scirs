@@ -4,19 +4,19 @@
 //! computing (MPI) and GPU acceleration, enabling massive parallel optimization
 //! across multiple nodes with GPU acceleration on each node.
 
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::{ScirsError, ScirsResult};
 use std::sync::Arc;
 
 use crate::distributed::{
-    DistributedConfig, DistributedOptimizationContext, MPIInterface, 
-    WorkAssignment, DistributedStats
+    DistributedConfig, DistributedOptimizationContext, DistributedStats, MPIInterface,
+    WorkAssignment,
 };
 use crate::gpu::{
-    GpuOptimizationConfig, GpuOptimizationContext, GpuFunction,
-    acceleration::{AccelerationManager, AccelerationConfig, AccelerationStrategy},
-    cuda_kernels::{FunctionEvaluationKernel, DifferentialEvolutionKernel, ParticleSwarmKernel},
-    tensor_core_optimization::{TensorCoreOptimizer, TensorCoreOptimizationConfig, AMPManager},
+    acceleration::{AccelerationConfig, AccelerationManager, AccelerationStrategy},
+    cuda_kernels::{DifferentialEvolutionKernel, FunctionEvaluationKernel, ParticleSwarmKernel},
+    tensor_core_optimization::{AMPManager, TensorCoreOptimizationConfig, TensorCoreOptimizer},
+    GpuFunction, GpuOptimizationConfig, GpuOptimizationContext,
 };
 use crate::result::OptimizeResults;
 
@@ -80,7 +80,8 @@ pub struct DistributedGpuOptimizer<M: MPIInterface> {
 impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Create a new distributed GPU optimizer
     pub fn new(mpi: M, config: DistributedGpuConfig) -> ScirsResult<Self> {
-        let distributed_context = DistributedOptimizationContext::new(mpi, config.distributed_config.clone());
+        let distributed_context =
+            DistributedOptimizationContext::new(mpi, config.distributed_config.clone());
         let gpu_context = GpuOptimizationContext::new(config.gpu_config.clone())?;
         let acceleration_manager = AccelerationManager::new(config.acceleration_config.clone())?;
 
@@ -104,8 +105,12 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
             None
         };
 
-        let amp_manager = if config.tensor_config.as_ref()
-            .map(|tc| tc.use_amp).unwrap_or(false) {
+        let amp_manager = if config
+            .tensor_config
+            .as_ref()
+            .map(|tc| tc.use_amp)
+            .unwrap_or(false)
+        {
             Some(AMPManager::new())
         } else {
             None
@@ -134,11 +139,11 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         F: Fn(&ArrayView1<f64>) -> f64 + Clone + Send + Sync,
     {
         let start_time = std::time::Instant::now();
-        
+
         // Distribute work across MPI processes
         let work_assignment = self.distributed_context.distribute_work(population_size);
         let local_pop_size = work_assignment.count;
-        
+
         if local_pop_size == 0 {
             return Ok(DistributedGpuResults::empty()); // Worker with no assigned work
         }
@@ -149,9 +154,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         let mut local_fitness = self.evaluate_population_gpu(&function, &local_population)?;
 
         // GPU kernels for evolution operations
-        let evolution_kernel = DifferentialEvolutionKernel::new(
-            Arc::clone(self.gpu_context.context())
-        )?;
+        let evolution_kernel =
+            DifferentialEvolutionKernel::new(Arc::clone(self.gpu_context.context()))?;
 
         let mut best_individual = Array1::zeros(dims);
         let mut best_fitness = f64::INFINITY;
@@ -182,7 +186,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
             // Find local best
             let (local_best_idx, local_best_fitness) = self.find_local_best(&local_fitness)?;
-            
+
             if local_best_fitness < best_fitness {
                 best_fitness = local_best_fitness;
                 best_individual = local_population.row(local_best_idx).to_owned();
@@ -190,11 +194,9 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
             // Periodic communication and migration
             if iteration % 10 == 0 {
-                let global_best = self.communicate_best_individuals(
-                    &best_individual,
-                    best_fitness,
-                )?;
-                
+                let global_best =
+                    self.communicate_best_individuals(&best_individual, best_fitness)?;
+
                 if let Some((global_best_individual, global_best_fitness)) = global_best {
                     if global_best_fitness < best_fitness {
                         best_individual = global_best_individual;
@@ -221,8 +223,9 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         }
 
         // Final global best communication
-        let final_global_best = self.communicate_best_individuals(&best_individual, best_fitness)?;
-        
+        let final_global_best =
+            self.communicate_best_individuals(&best_individual, best_fitness)?;
+
         if let Some((final_best_individual, final_best_fitness)) = final_global_best {
             best_individual = final_best_individual;
             best_fitness = final_best_fitness;
@@ -240,7 +243,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
                 function_evaluations: total_evaluations,
                 ..OptimizeResults::default()
             },
-            gpu_stats: self.acceleration_manager.get_performance_stats(),
+            gpu_stats: self.acceleration_manager.performance_stats().clone(),
             distributed_stats: self.distributed_context.stats().clone(),
             performance_stats: self.performance_stats.clone(),
             total_time,
@@ -254,15 +257,15 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         bounds: &[(f64, f64)],
     ) -> ScirsResult<Array2<f64>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
-        
+        let mut rng = rand::rng();
+
         let dims = bounds.len();
         let mut population = Array2::zeros((pop_size, dims));
 
         for i in 0..pop_size {
             for j in 0..dims {
                 let (low, high) = bounds[j];
-                population[[i, j]] = rng.gen_range(low..=high);
+                population[[i, j]] = rng.random_range(low..=high);
             }
         }
 
@@ -287,16 +290,17 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         if use_gpu {
             // Use GPU acceleration for function evaluation
             self.performance_stats.gpu_evaluations += pop_size;
-            
+
             // Upload population to GPU
             let gpu_population = self.gpu_context.upload_array(population)?;
-            
+
             // Evaluate using GPU kernels (assuming we have a suitable kernel)
-            let gpu_fitness = self.gpu_context.evaluate_batch(&gpu_population, function)?;
-            
+            let gpu_fitness = self
+                .gpu_context
+                .evaluate_function_batch(function, &gpu_population)?;
+
             // Download results
             fitness = self.gpu_context.download_array(&gpu_fitness)?;
-            
         } else {
             // Use CPU evaluation
             self.performance_stats.cpu_evaluations += pop_size;
@@ -498,12 +502,11 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         }
 
         let mean = fitness.mean().unwrap_or(0.0);
-        let variance = fitness.iter()
-            .map(|&x| (x - mean).powi(2))
-            .sum::<f64>() / fitness.len() as f64;
-        
+        let variance =
+            fitness.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / fitness.len() as f64;
+
         let std_dev = variance.sqrt();
-        
+
         // Simple convergence criterion
         Ok(std_dev < 1e-12 || iteration >= 1000)
     }
@@ -511,7 +514,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Generate random indices for differential evolution mutation
     fn generate_random_indices(&self, pop_size: usize) -> ScirsResult<Array2<i32>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut indices = Array2::zeros((pop_size, 3));
 
         for i in 0..pop_size {
@@ -520,7 +523,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
             for j in 0..3 {
                 loop {
-                    let idx = rng.gen_range(0..pop_size);
+                    let idx = rng.random_range(0..pop_size);
                     if !selected.contains(&idx) {
                         indices[[i, j]] = idx as i32;
                         selected.insert(idx);
@@ -536,11 +539,11 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Generate random values for crossover
     fn generate_random_values(&self, count: usize) -> ScirsResult<Array1<f64>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut values = Array1::zeros(count);
 
         for i in 0..count {
-            values[i] = rng.gen::<f64>();
+            values[i] = rng.random::<f64>();
         }
 
         Ok(values)
@@ -549,11 +552,11 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Generate j_rand values for crossover
     fn generate_j_rand(&self, pop_size: usize, dims: usize) -> ScirsResult<Array1<i32>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut j_rand = Array1::zeros(pop_size);
 
         for i in 0..pop_size {
-            j_rand[i] = rng.gen_range(0..dims) as i32;
+            j_rand[i] = rng.random_range(0..dims) as i32;
         }
 
         Ok(j_rand)
@@ -594,7 +597,13 @@ impl DistributedGpuStats {
         }
     }
 
-    fn record_iteration(&mut self, iteration: usize, pop_size: usize, best_fitness: f64, elapsed_time: f64) {
+    fn record_iteration(
+        &mut self,
+        iteration: usize,
+        pop_size: usize,
+        best_fitness: f64,
+        elapsed_time: f64,
+    ) {
         self.iterations.push(IterationStats {
             iteration,
             population_size: pop_size,
@@ -608,22 +617,43 @@ impl DistributedGpuStats {
         let mut report = String::from("Distributed GPU Optimization Performance Report\n");
         report.push_str("==============================================\n\n");
 
-        report.push_str(&format!("GPU Function Evaluations: {}\n", self.gpu_evaluations));
-        report.push_str(&format!("CPU Function Evaluations: {}\n", self.cpu_evaluations));
-        
+        report.push_str(&format!(
+            "GPU Function Evaluations: {}\n",
+            self.gpu_evaluations
+        ));
+        report.push_str(&format!(
+            "CPU Function Evaluations: {}\n",
+            self.cpu_evaluations
+        ));
+
         let total_evaluations = self.gpu_evaluations + self.cpu_evaluations;
         if total_evaluations > 0 {
             let gpu_percentage = (self.gpu_evaluations as f64 / total_evaluations as f64) * 100.0;
             report.push_str(&format!("GPU Usage: {:.1}%\n", gpu_percentage));
         }
 
-        report.push_str(&format!("GPU Utilization: {:.1}%\n", self.gpu_utilization * 100.0));
-        report.push_str(&format!("Communication Overhead: {:.3}s\n", self.communication_time));
-        report.push_str(&format!("GPU Memory Usage: {:.1}%\n", self.gpu_memory_usage * 100.0));
+        report.push_str(&format!(
+            "GPU Utilization: {:.1}%\n",
+            self.gpu_utilization * 100.0
+        ));
+        report.push_str(&format!(
+            "Communication Overhead: {:.3}s\n",
+            self.communication_time
+        ));
+        report.push_str(&format!(
+            "GPU Memory Usage: {:.1}%\n",
+            self.gpu_memory_usage * 100.0
+        ));
 
         if let Some(last_iteration) = self.iterations.last() {
-            report.push_str(&format!("Final Best Fitness: {:.6e}\n", last_iteration.best_fitness));
-            report.push_str(&format!("Total Time: {:.3}s\n", last_iteration.elapsed_time));
+            report.push_str(&format!(
+                "Final Best Fitness: {:.6e}\n",
+                last_iteration.best_fitness
+            ));
+            report.push_str(&format!(
+                "Total Time: {:.3}s\n",
+                last_iteration.elapsed_time
+            ));
         }
 
         report
@@ -686,18 +716,21 @@ impl DistributedGpuResults {
         println!("Success: {}", self.base_result.success);
         println!("Final function value: {:.6e}", self.base_result.fun);
         println!("Iterations: {}", self.base_result.iterations);
-        println!("Function evaluations: {}", self.base_result.function_evaluations);
+        println!(
+            "Function evaluations: {}",
+            self.base_result.function_evaluations
+        );
         println!("Total time: {:.3}s", self.total_time);
         println!();
-        
+
         println!("GPU Performance:");
         println!("{}", self.gpu_stats.generate_report());
         println!();
-        
+
         println!("Distributed Performance:");
         println!("{}", self.distributed_stats.generate_report());
         println!();
-        
+
         println!("Combined Performance:");
         println!("{}", self.performance_stats.generate_report());
     }
@@ -712,7 +745,10 @@ mod tests {
         let config = DistributedGpuConfig::default();
         assert!(config.use_tensor_cores);
         assert_eq!(config.gpu_cpu_load_balance, 0.8);
-        assert_eq!(config.gpu_communication_strategy, GpuCommunicationStrategy::Direct);
+        assert_eq!(
+            config.gpu_communication_strategy,
+            GpuCommunicationStrategy::Direct
+        );
     }
 
     #[test]

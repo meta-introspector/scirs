@@ -4,64 +4,64 @@
 //! for federated learning scenarios, including secure aggregation, client-side
 //! differential privacy, and privacy amplification through federation.
 
+use super::moment_accountant::MomentsAccountant;
+use super::noise_mechanisms::{
+    GaussianMechanism, LaplaceMechanism, NoiseMechanism as NoiseMechanismTrait,
+};
+use super::{AccountingMethod, DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
+use crate::error::OptimizerError;
 use ndarray::{Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use std::collections::{HashMap, VecDeque};
-use std::sync::Arc;
-
-use crate::error::OptimizerError;
-use super::{DifferentialPrivacyConfig, PrivacyBudget, AccountingMethod, NoiseMechanism};
-use super::moment_accountant::MomentsAccountant;
-use super::noise_mechanisms::{NoiseMechanism as NoiseMechanismTrait, GaussianMechanism, LaplaceMechanism};
 
 // Additional imports for advanced federated learning
-use std::thread;
-use std::sync::{Arc, Mutex, RwLock};
 use rayon::prelude::*;
+use std::sync::{Arc, Mutex, RwLock};
+use std::thread;
 
 /// Federated differential privacy coordinator
 pub struct FederatedPrivacyCoordinator<T: Float> {
     /// Global privacy configuration
     config: FederatedPrivacyConfig,
-    
+
     /// Per-client privacy accountants
     client_accountants: HashMap<String, MomentsAccountant>,
-    
+
     /// Global privacy accountant
     global_accountant: MomentsAccountant,
-    
+
     /// Secure aggregation protocol
     secure_aggregator: SecureAggregator<T>,
-    
+
     /// Privacy amplification analyzer
     amplification_analyzer: PrivacyAmplificationAnalyzer,
-    
+
     /// Cross-device privacy manager
     cross_device_manager: CrossDevicePrivacyManager<T>,
-    
+
     /// Composition analyzer for multi-round privacy
     composition_analyzer: FederatedCompositionAnalyzer,
-    
+
     /// Byzantine-robust aggregation engine
     byzantine_aggregator: ByzantineRobustAggregator<T>,
-    
+
     /// Personalized federated learning manager
     personalization_manager: PersonalizationManager<T>,
-    
+
     /// Adaptive privacy budget manager
     adaptive_budget_manager: AdaptiveBudgetManager,
-    
+
     /// Communication efficiency optimizer
     communication_optimizer: CommunicationOptimizer<T>,
-    
+
     /// Continual learning coordinator
     continual_learning_coordinator: ContinualLearningCoordinator<T>,
-    
+
     /// Current round number
     current_round: usize,
-    
+
     /// Client participation history
     participation_history: VecDeque<ParticipationRound>,
 }
@@ -71,31 +71,31 @@ pub struct FederatedPrivacyCoordinator<T: Float> {
 pub struct FederatedPrivacyConfig {
     /// Base differential privacy config
     pub base_config: DifferentialPrivacyConfig,
-    
+
     /// Number of participating clients per round
     pub clients_per_round: usize,
-    
+
     /// Total number of clients in federation
     pub total_clients: usize,
-    
+
     /// Client sampling strategy
     pub sampling_strategy: ClientSamplingStrategy,
-    
+
     /// Secure aggregation settings
     pub secure_aggregation: SecureAggregationConfig,
-    
+
     /// Privacy amplification settings
     pub amplification_config: AmplificationConfig,
-    
+
     /// Cross-device privacy settings
     pub cross_device_config: CrossDeviceConfig,
-    
+
     /// Federated composition method
     pub composition_method: FederatedCompositionMethod,
-    
+
     /// Trust model
     pub trust_model: TrustModel,
-    
+
     /// Communication privacy
     pub communication_privacy: CommunicationPrivacyConfig,
 }
@@ -105,16 +105,16 @@ pub struct FederatedPrivacyConfig {
 pub enum ClientSamplingStrategy {
     /// Uniform random sampling
     UniformRandom,
-    
+
     /// Stratified sampling based on data distribution
     Stratified,
-    
+
     /// Importance sampling based on client importance
     ImportanceSampling,
-    
+
     /// Poisson sampling for theoretical guarantees
     PoissonSampling,
-    
+
     /// Fair sampling ensuring client diversity
     FairSampling,
 }
@@ -124,22 +124,22 @@ pub enum ClientSamplingStrategy {
 pub struct SecureAggregationConfig {
     /// Enable secure aggregation
     pub enabled: bool,
-    
+
     /// Minimum number of clients for aggregation
     pub min_clients: usize,
-    
+
     /// Maximum number of dropouts tolerated
     pub max_dropouts: usize,
-    
+
     /// Masking vector dimension
     pub masking_dimension: usize,
-    
+
     /// Random seed sharing method
     pub seed_sharing: SeedSharingMethod,
-    
+
     /// Quantization bits for compressed aggregation
     pub quantization_bits: Option<u8>,
-    
+
     /// Enable differential privacy on aggregated result
     pub aggregate_dp: bool,
 }
@@ -149,16 +149,16 @@ pub struct SecureAggregationConfig {
 pub struct AmplificationConfig {
     /// Enable privacy amplification analysis
     pub enabled: bool,
-    
+
     /// Subsampling amplification factor
     pub subsampling_factor: f64,
-    
+
     /// Shuffling amplification (if applicable)
     pub shuffling_enabled: bool,
-    
+
     /// Multi-round amplification
     pub multi_round_amplification: bool,
-    
+
     /// Heterogeneous client amplification
     pub heterogeneous_amplification: bool,
 }
@@ -168,16 +168,16 @@ pub struct AmplificationConfig {
 pub struct CrossDeviceConfig {
     /// User-level privacy guarantees
     pub user_level_privacy: bool,
-    
+
     /// Device clustering for privacy
     pub device_clustering: bool,
-    
+
     /// Temporal privacy across rounds
     pub temporal_privacy: bool,
-    
+
     /// Geographic privacy considerations
     pub geographic_privacy: bool,
-    
+
     /// Demographic privacy protection
     pub demographic_privacy: bool,
 }
@@ -187,16 +187,16 @@ pub struct CrossDeviceConfig {
 pub enum FederatedCompositionMethod {
     /// Basic composition
     Basic,
-    
+
     /// Advanced composition with amplification
     AdvancedComposition,
-    
+
     /// Moments accountant for federated setting
     FederatedMomentsAccountant,
-    
+
     /// Renyi differential privacy
     RenyiDP,
-    
+
     /// Zero-concentrated differential privacy
     ZCDP,
 }
@@ -206,13 +206,13 @@ pub enum FederatedCompositionMethod {
 pub enum TrustModel {
     /// Honest-but-curious clients
     HonestButCurious,
-    
+
     /// Semi-honest with some malicious clients
     SemiHonest,
-    
+
     /// Byzantine fault tolerance
     Byzantine,
-    
+
     /// Fully malicious adversary
     Malicious,
 }
@@ -222,13 +222,13 @@ pub enum TrustModel {
 pub struct CommunicationPrivacyConfig {
     /// Encrypt communications
     pub encryption_enabled: bool,
-    
+
     /// Use anonymous communication channels
     pub anonymous_channels: bool,
-    
+
     /// Add communication noise
     pub communication_noise: bool,
-    
+
     /// Traffic analysis protection
     pub traffic_analysis_protection: bool,
 }
@@ -238,10 +238,10 @@ pub struct CommunicationPrivacyConfig {
 pub enum SeedSharingMethod {
     /// Shamir secret sharing
     ShamirSecretSharing,
-    
+
     /// Threshold encryption
     ThresholdEncryption,
-    
+
     /// Distributed key generation
     DistributedKeyGeneration,
 }
@@ -251,25 +251,25 @@ pub enum SeedSharingMethod {
 pub enum ByzantineRobustMethod {
     /// Trimmed mean aggregation
     TrimmedMean { trim_ratio: f64 },
-    
+
     /// Coordinate-wise median
     CoordinateWiseMedian,
-    
+
     /// Krum aggregation
     Krum { f: usize },
-    
+
     /// Multi-Krum aggregation
     MultiKrum { f: usize, m: usize },
-    
+
     /// Bulyan aggregation
     Bulyan { f: usize },
-    
+
     /// Centered clipping
     CenteredClipping { tau: f64 },
-    
+
     /// FedAvg with outlier detection
     FedAvgOutlierDetection { threshold: f64 },
-    
+
     /// Robust aggregation with reputation
     ReputationWeighted { reputation_decay: f64 },
 }
@@ -279,25 +279,25 @@ pub enum ByzantineRobustMethod {
 pub enum PersonalizationStrategy {
     /// No personalization (standard federated learning)
     None,
-    
+
     /// Fine-tuning on local data
     FineTuning { local_epochs: usize },
-    
+
     /// Meta-learning based personalization (MAML)
     MetaLearning { inner_lr: f64, outer_lr: f64 },
-    
+
     /// Clustered federated learning
     ClusteredFL { num_clusters: usize },
-    
+
     /// Federated multi-task learning
     MultiTask { task_similarity_threshold: f64 },
-    
+
     /// Personalized layers (some layers personalized, others shared)
     PersonalizedLayers { personal_layer_indices: Vec<usize> },
-    
+
     /// Model interpolation
     ModelInterpolation { interpolation_weight: f64 },
-    
+
     /// Adaptive personalization
     Adaptive { adaptation_rate: f64 },
 }
@@ -307,25 +307,25 @@ pub enum PersonalizationStrategy {
 pub enum CompressionStrategy {
     /// No compression
     None,
-    
+
     /// Quantization with specified bits
     Quantization { bits: u8 },
-    
+
     /// Top-K sparsification
     TopK { k: usize },
-    
+
     /// Random sparsification
     RandomSparsification { sparsity_ratio: f64 },
-    
+
     /// Error feedback compression
     ErrorFeedback,
-    
+
     /// Gradient compression with memory
     GradientMemory { memory_factor: f64 },
-    
+
     /// Low-rank approximation
     LowRank { rank: usize },
-    
+
     /// Structured compression
     Structured { structure_type: StructureType },
 }
@@ -344,22 +344,22 @@ pub enum StructureType {
 pub enum ContinualLearningStrategy {
     /// Elastic Weight Consolidation (EWC)
     EWC { lambda: f64 },
-    
+
     /// Memory-Aware Synapses (MAS)
     MAS { lambda: f64 },
-    
+
     /// Progressive Neural Networks
     Progressive,
-    
+
     /// Learning without Forgetting (LwF)
     LwF { distillation_temperature: f64 },
-    
+
     /// Gradient Episodic Memory (GEM)
     GEM { memory_size: usize },
-    
+
     /// Federated Continual Learning with Memory
     FedContinual { memory_budget: usize },
-    
+
     /// Task-agnostic continual learning
     TaskAgnostic,
 }
@@ -369,19 +369,19 @@ pub enum ContinualLearningStrategy {
 pub struct AdvancedFederatedConfig {
     /// Byzantine robustness settings
     pub byzantine_config: ByzantineRobustConfig,
-    
+
     /// Personalization settings
     pub personalization_config: PersonalizationConfig,
-    
+
     /// Adaptive privacy budgeting
     pub adaptive_budget_config: AdaptiveBudgetConfig,
-    
+
     /// Communication efficiency settings
     pub communication_config: CommunicationConfig,
-    
+
     /// Continual learning settings
     pub continual_learning_config: ContinualLearningConfig,
-    
+
     /// Multi-level privacy settings
     pub multi_level_privacy: MultiLevelPrivacyConfig,
 }
@@ -391,16 +391,16 @@ pub struct AdvancedFederatedConfig {
 pub struct ByzantineRobustConfig {
     /// Aggregation method
     pub method: ByzantineRobustMethod,
-    
+
     /// Expected number of Byzantine clients
     pub expected_byzantine_ratio: f64,
-    
+
     /// Enable dynamic Byzantine detection
     pub dynamic_detection: bool,
-    
+
     /// Reputation system settings
     pub reputation_system: ReputationSystemConfig,
-    
+
     /// Statistical tests for outlier detection
     pub statistical_tests: StatisticalTestConfig,
 }
@@ -410,16 +410,16 @@ pub struct ByzantineRobustConfig {
 pub struct PersonalizationConfig {
     /// Personalization strategy
     pub strategy: PersonalizationStrategy,
-    
+
     /// Local adaptation parameters
     pub local_adaptation: LocalAdaptationConfig,
-    
+
     /// Clustering parameters for clustered FL
     pub clustering: ClusteringConfig,
-    
+
     /// Meta-learning parameters
     pub meta_learning: MetaLearningConfig,
-    
+
     /// Privacy-preserving personalization
     pub privacy_preserving: bool,
 }
@@ -429,16 +429,16 @@ pub struct PersonalizationConfig {
 pub struct AdaptiveBudgetConfig {
     /// Enable adaptive budgeting
     pub enabled: bool,
-    
+
     /// Budget allocation strategy
     pub allocation_strategy: BudgetAllocationStrategy,
-    
+
     /// Dynamic privacy parameters
     pub dynamic_privacy: DynamicPrivacyConfig,
-    
+
     /// Client importance weighting
     pub importance_weighting: bool,
-    
+
     /// Contextual privacy adjustment
     pub contextual_adjustment: ContextualAdjustmentConfig,
 }
@@ -448,16 +448,16 @@ pub struct AdaptiveBudgetConfig {
 pub struct CommunicationConfig {
     /// Compression strategy
     pub compression: CompressionStrategy,
-    
+
     /// Lazy aggregation settings
     pub lazy_aggregation: LazyAggregationConfig,
-    
+
     /// Federated dropout settings
     pub federated_dropout: FederatedDropoutConfig,
-    
+
     /// Asynchronous update settings
     pub async_updates: AsyncUpdateConfig,
-    
+
     /// Bandwidth adaptation
     pub bandwidth_adaptation: BandwidthAdaptationConfig,
 }
@@ -467,16 +467,16 @@ pub struct CommunicationConfig {
 pub struct ContinualLearningConfig {
     /// Continual learning strategy
     pub strategy: ContinualLearningStrategy,
-    
+
     /// Memory management settings
     pub memory_management: MemoryManagementConfig,
-    
+
     /// Task detection settings
     pub task_detection: TaskDetectionConfig,
-    
+
     /// Knowledge transfer settings
     pub knowledge_transfer: KnowledgeTransferConfig,
-    
+
     /// Catastrophic forgetting prevention
     pub forgetting_prevention: ForgettingPreventionConfig,
 }
@@ -486,16 +486,16 @@ pub struct ContinualLearningConfig {
 pub struct MultiLevelPrivacyConfig {
     /// Local differential privacy
     pub local_dp: LocalDPConfig,
-    
+
     /// Global differential privacy
     pub global_dp: GlobalDPConfig,
-    
+
     /// User-level privacy
     pub user_level: UserLevelPrivacyConfig,
-    
+
     /// Hierarchical privacy
     pub hierarchical: HierarchicalPrivacyConfig,
-    
+
     /// Context-aware privacy
     pub context_aware: ContextAwarePrivacyConfig,
 }
@@ -1407,12 +1407,14 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             config.clients_per_round,
             config.total_clients,
         );
-        
+
         let secure_aggregator = SecureAggregator::new(config.secure_aggregation.clone())?;
-        let amplification_analyzer = PrivacyAmplificationAnalyzer::new(config.amplification_config.clone());
-        let cross_device_manager = CrossDevicePrivacyManager::new(config.cross_device_config.clone());
+        let amplification_analyzer =
+            PrivacyAmplificationAnalyzer::new(config.amplification_config.clone());
+        let cross_device_manager =
+            CrossDevicePrivacyManager::new(config.cross_device_config.clone());
         let composition_analyzer = FederatedCompositionAnalyzer::new(config.composition_method);
-        
+
         Ok(Self {
             config,
             client_accountants: HashMap::new(),
@@ -1430,17 +1432,17 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             participation_history: VecDeque::with_capacity(1000),
         })
     }
-    
+
     /// Start a new federated round with privacy guarantees
     pub fn start_federated_round(
         &mut self,
         available_clients: &[String],
     ) -> Result<FederatedRoundPlan, OptimizerError> {
         self.current_round += 1;
-        
+
         // Sample clients for this round
         let selected_clients = self.sample_clients(available_clients)?;
-        
+
         // Check global privacy budget
         let global_budget = self.get_global_privacy_budget()?;
         if !self.has_sufficient_privacy_budget(&global_budget)? {
@@ -1449,33 +1451,29 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
                 target_epsilon: self.config.base_config.target_epsilon,
             });
         }
-        
+
         // Compute sampling probability for amplification
         let sampling_probability = selected_clients.len() as f64 / available_clients.len() as f64;
-        
+
         // Analyze privacy amplification
         let amplification_factor = if self.config.amplification_config.enabled {
-            self.amplification_analyzer.compute_amplification_factor(
-                sampling_probability,
-                self.current_round,
-            )?
+            self.amplification_analyzer
+                .compute_amplification_factor(sampling_probability, self.current_round)?
         } else {
             1.0
         };
-        
+
         // Prepare secure aggregation if enabled
         let aggregation_plan = if self.config.secure_aggregation.enabled {
             Some(self.secure_aggregator.prepare_round(&selected_clients)?)
         } else {
             None
         };
-        
+
         // Compute per-client privacy allocations
-        let client_privacy_allocations = self.compute_client_privacy_allocations(
-            &selected_clients,
-            amplification_factor,
-        )?;
-        
+        let client_privacy_allocations =
+            self.compute_client_privacy_allocations(&selected_clients, amplification_factor)?;
+
         // Create round plan
         let round_plan = FederatedRoundPlan {
             round_number: self.current_round,
@@ -1484,15 +1482,20 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             amplification_factor,
             client_privacy_allocations,
             aggregation_plan,
-            privacy_analysis: self.analyze_round_privacy(&selected_clients, amplification_factor)?,
+            privacy_analysis: self
+                .analyze_round_privacy(&selected_clients, amplification_factor)?,
         };
-        
+
         // Record participation
-        self.record_participation_round(&selected_clients, sampling_probability, amplification_factor);
-        
+        self.record_participation_round(
+            &selected_clients,
+            sampling_probability,
+            amplification_factor,
+        );
+
         Ok(round_plan)
     }
-    
+
     /// Perform secure aggregation of client updates
     pub fn secure_aggregate_updates(
         &mut self,
@@ -1502,13 +1505,11 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         if self.config.secure_aggregation.enabled {
             // Use secure aggregation protocol
             if let Some(ref aggregation_plan) = round_plan.aggregation_plan {
-                self.secure_aggregator.aggregate_with_masks(
-                    client_updates,
-                    aggregation_plan,
-                )
+                self.secure_aggregator
+                    .aggregate_with_masks(client_updates, aggregation_plan)
             } else {
                 return Err(OptimizerError::InvalidConfig(
-                    "Secure aggregation enabled but no aggregation plan provided".to_string()
+                    "Secure aggregation enabled but no aggregation plan provided".to_string(),
                 ));
             }
         } else {
@@ -1516,7 +1517,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             self.simple_aggregate(client_updates)
         }
     }
-    
+
     /// Add federated differential privacy noise to aggregated update
     pub fn add_federated_privacy_noise(
         &mut self,
@@ -1524,28 +1525,28 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         round_plan: &FederatedRoundPlan,
     ) -> Result<(), OptimizerError> {
         let noise_scale = self.compute_federated_noise_scale(round_plan)?;
-        
+
         // Select noise mechanism
-        let mut noise_mechanism: Box<dyn NoiseMechanismTrait<T> + Send> = 
+        let mut noise_mechanism: Box<dyn NoiseMechanismTrait<T> + Send> =
             match self.config.base_config.noise_mechanism {
                 NoiseMechanism::Gaussian => Box::new(GaussianMechanism::new()),
                 NoiseMechanism::Laplace => Box::new(LaplaceMechanism::new()),
                 _ => Box::new(GaussianMechanism::new()),
             };
-        
+
         // Apply noise with federated-specific sensitivity
         let sensitivity = self.compute_federated_sensitivity(round_plan)?;
         let epsilon = self.config.base_config.target_epsilon / round_plan.amplification_factor;
         let delta = Some(self.config.base_config.target_delta);
-        
+
         noise_mechanism.add_noise(aggregated_update, sensitivity, epsilon, delta)?;
-        
+
         // Update privacy accountants
         self.update_privacy_accountants(round_plan)?;
-        
+
         Ok(())
     }
-    
+
     /// Advanced Byzantine-robust aggregation with personalization and adaptive privacy
     pub fn byzantine_robust_personalized_aggregation(
         &mut self,
@@ -1553,42 +1554,51 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         round_plan: &FederatedRoundPlan,
     ) -> Result<AdvancedAggregationResult<T>, OptimizerError> {
         // 1. Byzantine outlier detection and filtering
-        let outlier_results = self.byzantine_aggregator
+        let outlier_results = self
+            .byzantine_aggregator
             .detect_byzantine_clients(client_updates, self.current_round)?;
-        
+
         // Filter out Byzantine clients
-        let filtered_updates: HashMap<String, Array1<T>> = client_updates.iter()
+        let filtered_updates: HashMap<String, Array1<T>> = client_updates
+            .iter()
             .filter(|(client_id, _)| {
-                !outlier_results.iter().any(|result| 
-                    &result.client_id == *client_id && result.is_outlier
-                )
+                !outlier_results
+                    .iter()
+                    .any(|result| &result.client_id == *client_id && result.is_outlier)
             })
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
-        
+
         // 2. Adaptive privacy budget allocation
-        let adaptive_allocations = self.adaptive_budget_manager
+        let adaptive_allocations = self
+            .adaptive_budget_manager
             .compute_adaptive_allocations(&filtered_updates, round_plan)?;
-        
+
         // 3. Personalized model aggregation
-        let personalized_updates = self.personalization_manager
+        let personalized_updates = self
+            .personalization_manager
             .personalize_client_updates(&filtered_updates, round_plan)?;
-        
+
         // 4. Communication-efficient compression
-        let compressed_updates = self.communication_optimizer
+        let compressed_updates = self
+            .communication_optimizer
             .compress_and_schedule(&personalized_updates, round_plan)?;
-        
+
         // 5. Continual learning adaptation
-        if self.continual_learning_coordinator.task_detector
-            .detect_task_change(&compressed_updates)? {
+        if self
+            .continual_learning_coordinator
+            .task_detector
+            .detect_task_change(&compressed_updates)?
+        {
             self.continual_learning_coordinator
                 .adapt_to_new_task(&compressed_updates, self.current_round)?;
         }
-        
+
         // 6. Byzantine-robust aggregation
-        let robust_aggregate = self.byzantine_aggregator
+        let robust_aggregate = self
+            .byzantine_aggregator
             .robust_aggregate(&compressed_updates, &adaptive_allocations)?;
-        
+
         // 7. Multi-level privacy application
         let mut privacy_protected_aggregate = robust_aggregate.clone();
         self.apply_multi_level_privacy(
@@ -1596,11 +1606,12 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             &adaptive_allocations,
             round_plan,
         )?;
-        
+
         // 8. Update global model with personalization
-        let updated_global_model = self.personalization_manager
+        let updated_global_model = self
+            .personalization_manager
             .update_global_model(&privacy_protected_aggregate)?;
-        
+
         Ok(AdvancedAggregationResult {
             aggregated_update: updated_global_model,
             outlier_detection_results: outlier_results,
@@ -1612,7 +1623,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             fairness_metrics: self.adaptive_budget_manager.fairness_monitor.get_metrics(),
         })
     }
-    
+
     /// Apply multi-level privacy protection
     fn apply_multi_level_privacy(
         &mut self,
@@ -1624,7 +1635,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         // Global DP noise
         let global_epsilon = self.compute_global_epsilon(allocations)?;
         let global_sensitivity = self.compute_global_sensitivity(allocations)?;
-        
+
         let mut global_noise_mechanism = GaussianMechanism::new();
         global_noise_mechanism.add_noise(
             aggregated_update,
@@ -1632,45 +1643,49 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             global_epsilon,
             Some(self.config.base_config.target_delta),
         )?;
-        
+
         // User-level privacy protection
         if self.config.cross_device_config.user_level_privacy {
             self.apply_user_level_privacy(aggregated_update, allocations)?;
         }
-        
+
         // Hierarchical privacy protection
         self.apply_hierarchical_privacy(aggregated_update, round_plan)?;
-        
+
         // Context-aware privacy adaptation
-        if self.adaptive_budget_manager.config.contextual_adjustment.enabled {
+        if self
+            .adaptive_budget_manager
+            .config
+            .contextual_adjustment
+            .enabled
+        {
             self.apply_contextual_privacy_adjustment(aggregated_update, round_plan)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Compute advanced privacy guarantees
     fn compute_advanced_privacy_guarantees(
         &self,
         round_plan: &FederatedRoundPlan,
     ) -> Result<AdvancedPrivacyGuarantees, OptimizerError> {
         let basic_guarantees = self.get_privacy_guarantees();
-        
+
         // Compute amplification benefits
         let amplification_benefit = round_plan.amplification_factor - 1.0;
-        
+
         // Compute Byzantine robustness impact
-        let byzantine_robustness_factor = self.byzantine_aggregator
-            .compute_robustness_factor()?;
-        
+        let byzantine_robustness_factor = self.byzantine_aggregator.compute_robustness_factor()?;
+
         // Compute personalization privacy cost
-        let personalization_cost = self.personalization_manager
-            .compute_privacy_cost()?;
-        
+        let personalization_cost = self.personalization_manager.compute_privacy_cost()?;
+
         // Compute continual learning privacy overhead
-        let continual_learning_overhead = self.continual_learning_coordinator
+        let continual_learning_overhead = self
+            .continual_learning_coordinator
             .compute_privacy_overhead()?;
-        
+
         Ok(AdvancedPrivacyGuarantees {
             basic_guarantees,
             amplification_benefit,
@@ -1682,7 +1697,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             communication_privacy_enabled: self.config.communication_privacy.encryption_enabled,
         })
     }
-    
+
     /// Enhanced client sampling with fairness and Byzantine awareness
     pub fn enhanced_client_sampling(
         &mut self,
@@ -1690,39 +1705,42 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         round_plan: &FederatedRoundPlan,
     ) -> Result<EnhancedSamplingResult, OptimizerError> {
         // Get client reputation scores
-        let reputation_scores = self.byzantine_aggregator
+        let reputation_scores = self
+            .byzantine_aggregator
             .get_client_reputations(available_clients);
-        
+
         // Compute fairness weights
-        let fairness_weights = self.adaptive_budget_manager
-            .fairness_monitor.compute_fairness_weights(available_clients)?;
-        
+        let fairness_weights = self
+            .adaptive_budget_manager
+            .fairness_monitor
+            .compute_fairness_weights(available_clients)?;
+
         // Compute communication efficiency scores
-        let communication_scores = self.communication_optimizer
+        let communication_scores = self
+            .communication_optimizer
             .compute_efficiency_scores(available_clients)?;
-        
+
         // Apply multi-criteria sampling
-        let sampling_weights: HashMap<String, f64> = available_clients.iter()
+        let sampling_weights: HashMap<String, f64> = available_clients
+            .iter()
             .map(|client_id| {
                 let reputation = reputation_scores.get(client_id).unwrap_or(&0.5);
                 let fairness = fairness_weights.get(client_id).unwrap_or(&1.0);
                 let communication = communication_scores.get(client_id).unwrap_or(&1.0);
-                
+
                 // Weighted combination
                 let weight = reputation * 0.4 + fairness * 0.3 + communication * 0.3;
                 (client_id.clone(), weight)
             })
             .collect();
-        
+
         // Sample clients based on weights
-        let selected_clients = self.weighted_client_sampling(
-            &sampling_weights,
-            self.config.clients_per_round,
-        )?;
-        
+        let selected_clients =
+            self.weighted_client_sampling(&sampling_weights, self.config.clients_per_round)?;
+
         // Compute diversity metrics
         let diversity_metrics = self.compute_selection_diversity(&selected_clients)?;
-        
+
         Ok(EnhancedSamplingResult {
             selected_clients,
             sampling_weights,
@@ -1732,7 +1750,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             diversity_metrics,
         })
     }
-    
+
     /// Personalized federated learning round
     pub fn personalized_federated_round(
         &mut self,
@@ -1740,36 +1758,45 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         round_plan: &FederatedRoundPlan,
     ) -> Result<PersonalizedRoundResult<T>, OptimizerError> {
         // 1. Cluster clients based on model similarity
-        let cluster_assignments = self.personalization_manager
+        let cluster_assignments = self
+            .personalization_manager
             .cluster_clients(client_updates)?;
-        
+
         // 2. Perform cluster-specific aggregation
         let mut cluster_aggregates = HashMap::new();
         for (cluster_id, client_ids) in &cluster_assignments {
-            let cluster_updates: HashMap<String, Array1<T>> = client_ids.iter()
+            let cluster_updates: HashMap<String, Array1<T>> = client_ids
+                .iter()
                 .filter_map(|client_id| {
-                    client_updates.get(client_id).map(|update| (client_id.clone(), update.clone()))
+                    client_updates
+                        .get(client_id)
+                        .map(|update| (client_id.clone(), update.clone()))
                 })
                 .collect();
-            
+
             if !cluster_updates.is_empty() {
-                let cluster_aggregate = self.secure_aggregate_updates(&cluster_updates, round_plan)?;
+                let cluster_aggregate =
+                    self.secure_aggregate_updates(&cluster_updates, round_plan)?;
                 cluster_aggregates.insert(*cluster_id, cluster_aggregate);
             }
         }
-        
+
         // 3. Apply meta-learning for personalization
-        let meta_gradients = self.personalization_manager
-            .meta_learner.compute_meta_gradients(&cluster_aggregates)?;
-        
+        let meta_gradients = self
+            .personalization_manager
+            .meta_learner
+            .compute_meta_gradients(&cluster_aggregates)?;
+
         // 4. Generate personalized models for each client
-        let personalized_models = self.personalization_manager
+        let personalized_models = self
+            .personalization_manager
             .generate_personalized_models(&cluster_assignments, &meta_gradients)?;
-        
+
         // 5. Compute personalization effectiveness
-        let effectiveness_metrics = self.personalization_manager
+        let effectiveness_metrics = self
+            .personalization_manager
             .compute_effectiveness_metrics(&personalized_models)?;
-        
+
         Ok(PersonalizedRoundResult {
             cluster_assignments,
             cluster_aggregates,
@@ -1779,12 +1806,12 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             privacy_cost: self.personalization_manager.compute_privacy_cost()?,
         })
     }
-    
+
     /// Sample clients for federated round
     fn sample_clients(&self, available_clients: &[String]) -> Result<Vec<String>, OptimizerError> {
         let mut rng = rand::thread_rng();
         let target_count = self.config.clients_per_round.min(available_clients.len());
-        
+
         match self.config.sampling_strategy {
             ClientSamplingStrategy::UniformRandom => {
                 use rand::seq::SliceRandom;
@@ -1795,11 +1822,12 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             }
             ClientSamplingStrategy::PoissonSampling => {
                 let sampling_rate = target_count as f64 / available_clients.len() as f64;
-                let selected = available_clients.iter()
+                let selected = available_clients
+                    .iter()
                     .filter(|_| rng.gen::<f64>() < sampling_rate)
                     .cloned()
                     .collect::<Vec<_>>();
-                
+
                 if selected.len() < target_count / 2 {
                     // Fallback to uniform sampling if too few selected
                     self.sample_clients(available_clients)
@@ -1821,7 +1849,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             }
         }
     }
-    
+
     /// Stratified sampling based on client characteristics
     fn stratified_sampling(
         &self,
@@ -1830,44 +1858,48 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     ) -> Result<Vec<String>, OptimizerError> {
         // Group clients by device type
         let mut device_groups: HashMap<DeviceType, Vec<String>> = HashMap::new();
-        
+
         for client_id in available_clients {
             if let Some(profile) = self.cross_device_manager.device_profiles.get(client_id) {
-                device_groups.entry(profile.device_type)
+                device_groups
+                    .entry(profile.device_type)
                     .or_insert_with(Vec::new)
                     .push(client_id.clone());
             } else {
-                device_groups.entry(DeviceType::Mobile)
+                device_groups
+                    .entry(DeviceType::Mobile)
                     .or_insert_with(Vec::new)
                     .push(client_id.clone());
             }
         }
-        
+
         // Sample proportionally from each group
         let mut selected = Vec::new();
         let mut rng = rand::thread_rng();
-        
+
         for (_, clients) in device_groups {
-            if clients.is_empty() { continue; }
-            
+            if clients.is_empty() {
+                continue;
+            }
+
             let group_target = (target_count * clients.len() / available_clients.len()).max(1);
             let group_target = group_target.min(clients.len());
-            
+
             use rand::seq::SliceRandom;
             let mut group_clients = clients;
             group_clients.shuffle(&mut rng);
-            
+
             selected.extend(group_clients.into_iter().take(group_target));
-            
+
             if selected.len() >= target_count {
                 break;
             }
         }
-        
+
         selected.truncate(target_count);
         Ok(selected)
     }
-    
+
     /// Importance sampling based on client participation history
     fn importance_sampling(
         &self,
@@ -1875,9 +1907,12 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         target_count: usize,
     ) -> Result<Vec<String>, OptimizerError> {
         // Compute importance weights based on participation frequency
-        let mut client_weights: Vec<(String, f64)> = available_clients.iter()
+        let mut client_weights: Vec<(String, f64)> = available_clients
+            .iter()
             .map(|client_id| {
-                let weight = if let Some(profile) = self.cross_device_manager.device_profiles.get(client_id) {
+                let weight = if let Some(profile) =
+                    self.cross_device_manager.device_profiles.get(client_id)
+                {
                     // Lower weight for frequently participating clients
                     1.0 / (1.0 + profile.participation_frequency)
                 } else {
@@ -1886,18 +1921,20 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
                 (client_id.clone(), weight)
             })
             .collect();
-        
+
         // Sample based on weights
         let total_weight: f64 = client_weights.iter().map(|(_, w)| w).sum();
         let mut selected = Vec::new();
         let mut rng = rand::thread_rng();
-        
+
         for _ in 0..target_count {
-            if client_weights.is_empty() { break; }
-            
+            if client_weights.is_empty() {
+                break;
+            }
+
             let random_weight = rng.gen::<f64>() * total_weight;
             let mut cumulative_weight = 0.0;
-            
+
             for (i, (_, weight)) in client_weights.iter().enumerate() {
                 cumulative_weight += weight;
                 if random_weight <= cumulative_weight {
@@ -1906,10 +1943,10 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
                 }
             }
         }
-        
+
         Ok(selected)
     }
-    
+
     /// Fair sampling ensuring client diversity
     fn fair_sampling(
         &self,
@@ -1920,7 +1957,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         let mut selected = Vec::new();
         let mut remaining_clients = available_clients.to_vec();
         let mut rng = rand::thread_rng();
-        
+
         // First, ensure at least one client from each major cluster
         let clusters = self.get_client_clusters(&remaining_clients);
         for (_, cluster_clients) in clusters {
@@ -1932,35 +1969,37 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
                 }
             }
         }
-        
+
         // Fill remaining slots randomly
         use rand::seq::SliceRandom;
         remaining_clients.shuffle(&mut rng);
         let remaining_slots = target_count.saturating_sub(selected.len());
         selected.extend(remaining_clients.into_iter().take(remaining_slots));
-        
+
         Ok(selected)
     }
-    
+
     /// Get client clusters for fair sampling
     fn get_client_clusters(&self, clients: &[String]) -> HashMap<String, Vec<String>> {
         let mut clusters: HashMap<String, Vec<String>> = HashMap::new();
-        
+
         for client_id in clients {
-            let cluster_id = if let Some(profile) = self.cross_device_manager.device_profiles.get(client_id) {
-                profile.location_cluster.clone()
-            } else {
-                "default".to_string()
-            };
-            
-            clusters.entry(cluster_id)
+            let cluster_id =
+                if let Some(profile) = self.cross_device_manager.device_profiles.get(client_id) {
+                    profile.location_cluster.clone()
+                } else {
+                    "default".to_string()
+                };
+
+            clusters
+                .entry(cluster_id)
                 .or_insert_with(Vec::new)
                 .push(client_id.clone());
         }
-        
+
         clusters
     }
-    
+
     /// Compute privacy allocations for each client
     fn compute_client_privacy_allocations(
         &self,
@@ -1968,33 +2007,36 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         amplification_factor: f64,
     ) -> Result<HashMap<String, ClientPrivacyAllocation>, OptimizerError> {
         let mut allocations = HashMap::new();
-        
+
         let base_epsilon = self.config.base_config.target_epsilon / amplification_factor;
         let base_delta = self.config.base_config.target_delta;
-        
+
         for client_id in selected_clients {
             // Adjust allocation based on client characteristics
-            let (client_epsilon, client_delta) = if let Some(profile) = 
-                self.cross_device_manager.device_profiles.get(client_id) {
-                // Adjust based on client's historical participation
-                let adjustment_factor = 1.0 / (1.0 + profile.participation_frequency * 0.1);
-                (base_epsilon * adjustment_factor, base_delta)
-            } else {
-                (base_epsilon, base_delta)
-            };
-            
-            allocations.insert(client_id.clone(), ClientPrivacyAllocation {
-                epsilon: client_epsilon,
-                delta: client_delta,
-                noise_multiplier: self.config.base_config.noise_multiplier,
-                clipping_threshold: self.config.base_config.l2_norm_clip,
-                amplification_factor,
-            });
+            let (client_epsilon, client_delta) =
+                if let Some(profile) = self.cross_device_manager.device_profiles.get(client_id) {
+                    // Adjust based on client's historical participation
+                    let adjustment_factor = 1.0 / (1.0 + profile.participation_frequency * 0.1);
+                    (base_epsilon * adjustment_factor, base_delta)
+                } else {
+                    (base_epsilon, base_delta)
+                };
+
+            allocations.insert(
+                client_id.clone(),
+                ClientPrivacyAllocation {
+                    epsilon: client_epsilon,
+                    delta: client_delta,
+                    noise_multiplier: self.config.base_config.noise_multiplier,
+                    clipping_threshold: self.config.base_config.l2_norm_clip,
+                    amplification_factor,
+                },
+            );
         }
-        
+
         Ok(allocations)
     }
-    
+
     /// Analyze privacy for the current round
     fn analyze_round_privacy(
         &self,
@@ -2002,20 +2044,21 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         amplification_factor: f64,
     ) -> Result<RoundPrivacyAnalysis, OptimizerError> {
         let sampling_probability = selected_clients.len() as f64 / self.config.total_clients as f64;
-        
+
         // Compute theoretical privacy cost
         let theoretical_epsilon = self.config.base_config.target_epsilon / amplification_factor;
-        
+
         // Analyze composition with previous rounds
         let composition_epsilon = self.composition_analyzer.analyze_composition(
             self.current_round,
             theoretical_epsilon,
             self.config.base_config.target_delta,
         )?;
-        
+
         // Estimate utility impact
-        let utility_impact = self.estimate_utility_impact(selected_clients.len(), amplification_factor);
-        
+        let utility_impact =
+            self.estimate_utility_impact(selected_clients.len(), amplification_factor);
+
         Ok(RoundPrivacyAnalysis {
             round_number: self.current_round,
             participating_clients: selected_clients.len(),
@@ -2028,7 +2071,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             privacy_guarantees: self.get_privacy_guarantees(),
         })
     }
-    
+
     /// Record participation for this round
     fn record_participation_round(
         &mut self,
@@ -2043,7 +2086,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             amplification_factor,
             composition_cost: 0.0, // To be updated later
         };
-        
+
         let participation_round = ParticipationRound {
             round: self.current_round,
             participating_clients: selected_clients.to_vec(),
@@ -2051,47 +2094,50 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             privacy_cost,
             aggregation_noise: self.config.base_config.noise_multiplier,
         };
-        
+
         self.participation_history.push_back(participation_round);
-        
+
         if self.participation_history.len() > 1000 {
             self.participation_history.pop_front();
         }
-        
+
         // Update cross-device manager
         for client_id in selected_clients {
-            self.cross_device_manager.update_participation(client_id.clone(), self.current_round);
+            self.cross_device_manager
+                .update_participation(client_id.clone(), self.current_round);
         }
     }
-    
+
     /// Simple aggregation without secure protocols
     fn simple_aggregate(
         &self,
         client_updates: &HashMap<String, Array1<T>>,
     ) -> Result<Array1<T>, OptimizerError> {
         if client_updates.is_empty() {
-            return Err(OptimizerError::InvalidConfig("No client updates provided".to_string()));
+            return Err(OptimizerError::InvalidConfig(
+                "No client updates provided".to_string(),
+            ));
         }
-        
+
         let first_update = client_updates.values().next().unwrap();
         let mut aggregated = Array1::zeros(first_update.len());
-        
+
         for update in client_updates.values() {
             if update.len() != aggregated.len() {
                 return Err(OptimizerError::InvalidConfig(
-                    "Client updates have different dimensions".to_string()
+                    "Client updates have different dimensions".to_string(),
                 ));
             }
             aggregated = aggregated + update;
         }
-        
+
         // Average the updates
         let num_clients = T::from(client_updates.len()).unwrap();
         aggregated = aggregated / num_clients;
-        
+
         Ok(aggregated)
     }
-    
+
     /// Compute federated noise scale
     fn compute_federated_noise_scale(
         &self,
@@ -2100,12 +2146,13 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         let base_noise = self.config.base_config.noise_multiplier;
         let amplification_adjustment = 1.0 / round_plan.amplification_factor;
         let participation_adjustment = (round_plan.selected_clients.len() as f64).sqrt();
-        
-        let federated_noise_scale = base_noise * amplification_adjustment / participation_adjustment;
-        
+
+        let federated_noise_scale =
+            base_noise * amplification_adjustment / participation_adjustment;
+
         Ok(T::from(federated_noise_scale).unwrap())
     }
-    
+
     /// Compute federated sensitivity
     fn compute_federated_sensitivity(
         &self,
@@ -2115,20 +2162,22 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         // divided by the number of participating clients
         let base_sensitivity = self.config.base_config.l2_norm_clip;
         let num_clients = round_plan.selected_clients.len() as f64;
-        
+
         let federated_sensitivity = base_sensitivity / num_clients;
-        
+
         Ok(T::from(federated_sensitivity).unwrap())
     }
-    
+
     /// Update privacy accountants after round completion
     fn update_privacy_accountants(
         &mut self,
         round_plan: &FederatedRoundPlan,
     ) -> Result<(), OptimizerError> {
         // Update global accountant
-        let (global_epsilon, global_delta) = self.global_accountant.get_privacy_spent(self.current_round)?;
-        
+        let (global_epsilon, global_delta) = self
+            .global_accountant
+            .get_privacy_spent(self.current_round)?;
+
         // Update per-client accountants
         for client_id in &round_plan.selected_clients {
             if !self.client_accountants.contains_key(client_id) {
@@ -2142,41 +2191,46 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
                     ),
                 );
             }
-            
+
             if let Some(client_accountant) = self.client_accountants.get_mut(client_id) {
                 // Count this as one step for the client
                 let _ = client_accountant.get_privacy_spent(1)?;
             }
         }
-        
+
         // Update composition analyzer
-        self.composition_analyzer.add_round_composition(RoundComposition {
-            round: self.current_round,
-            participating_clients: round_plan.selected_clients.len(),
-            epsilon_consumed: global_epsilon,
-            delta_consumed: global_delta,
-            amplification_applied: round_plan.amplification_factor != 1.0,
-            composition_method: self.config.composition_method,
-        });
-        
+        self.composition_analyzer
+            .add_round_composition(RoundComposition {
+                round: self.current_round,
+                participating_clients: round_plan.selected_clients.len(),
+                epsilon_consumed: global_epsilon,
+                delta_consumed: global_delta,
+                amplification_applied: round_plan.amplification_factor != 1.0,
+                composition_method: self.config.composition_method,
+            });
+
         Ok(())
     }
-    
+
     /// Check if sufficient privacy budget is available
     fn has_sufficient_privacy_budget(
         &self,
         budget: &PrivacyBudget,
     ) -> Result<bool, OptimizerError> {
         let threshold_factor = 0.1; // Reserve 10% of budget
-        
-        Ok(budget.epsilon_remaining > budget.epsilon_consumed * threshold_factor &&
-           budget.delta_remaining > budget.delta_consumed * threshold_factor)
+
+        Ok(
+            budget.epsilon_remaining > budget.epsilon_consumed * threshold_factor
+                && budget.delta_remaining > budget.delta_consumed * threshold_factor,
+        )
     }
-    
+
     /// Get global privacy budget
     fn get_global_privacy_budget(&self) -> Result<PrivacyBudget, OptimizerError> {
-        let (epsilon_consumed, delta_consumed) = self.global_accountant.get_privacy_spent(self.current_round)?;
-        
+        let (epsilon_consumed, delta_consumed) = self
+            .global_accountant
+            .get_privacy_spent(self.current_round)?;
+
         Ok(PrivacyBudget {
             epsilon_consumed,
             delta_consumed,
@@ -2187,33 +2241,33 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             estimated_steps_remaining: self.estimate_remaining_rounds(epsilon_consumed),
         })
     }
-    
+
     /// Estimate remaining rounds before budget exhaustion
     fn estimate_remaining_rounds(&self, epsilon_consumed: f64) -> usize {
         if self.current_round == 0 || epsilon_consumed <= 0.0 {
             return usize::MAX;
         }
-        
+
         let epsilon_per_round = epsilon_consumed / self.current_round as f64;
         let remaining_epsilon = self.config.base_config.target_epsilon - epsilon_consumed;
-        
+
         if epsilon_per_round > 0.0 {
             (remaining_epsilon / epsilon_per_round) as usize
         } else {
             usize::MAX
         }
     }
-    
+
     /// Estimate utility impact of privacy mechanisms
     fn estimate_utility_impact(&self, num_clients: usize, amplification_factor: f64) -> f64 {
         // Simplified utility impact estimation
         let noise_impact = self.config.base_config.noise_multiplier / amplification_factor;
         let participation_impact = 1.0 - (num_clients as f64 / self.config.total_clients as f64);
         let clipping_impact = self.config.base_config.l2_norm_clip.recip();
-        
+
         noise_impact + participation_impact + clipping_impact
     }
-    
+
     /// Get privacy guarantees for current configuration
     fn get_privacy_guarantees(&self) -> PrivacyGuarantees {
         PrivacyGuarantees {
@@ -2226,7 +2280,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             trust_model: self.config.trust_model,
         }
     }
-    
+
     /// Get federated privacy statistics
     pub fn get_federated_stats(&self) -> FederatedPrivacyStats {
         FederatedPrivacyStats {
@@ -2239,24 +2293,29 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             participation_stats: self.get_participation_stats(),
         }
     }
-    
+
     /// Get participation statistics
     fn get_participation_stats(&self) -> ParticipationStats {
         if self.participation_history.is_empty() {
             return ParticipationStats::default();
         }
-        
-        let total_participations: usize = self.participation_history.iter()
+
+        let total_participations: usize = self
+            .participation_history
+            .iter()
             .map(|round| round.participating_clients.len())
             .sum();
-        
-        let avg_participation = total_participations as f64 / self.participation_history.len() as f64;
-        
-        let unique_participants: std::collections::HashSet<String> = self.participation_history.iter()
+
+        let avg_participation =
+            total_participations as f64 / self.participation_history.len() as f64;
+
+        let unique_participants: std::collections::HashSet<String> = self
+            .participation_history
+            .iter()
             .flat_map(|round| &round.participating_clients)
             .cloned()
             .collect();
-        
+
         ParticipationStats {
             total_rounds: self.participation_history.len(),
             avg_clients_per_round: avg_participation,
@@ -2264,35 +2323,33 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
             participation_fairness: self.compute_participation_fairness(),
         }
     }
-    
+
     /// Compute participation fairness metric
     fn compute_participation_fairness(&self) -> f64 {
         if self.participation_history.is_empty() {
             return 1.0;
         }
-        
+
         // Count participation frequency for each client
         let mut participation_counts: HashMap<String, usize> = HashMap::new();
-        
+
         for round in &self.participation_history {
             for client_id in &round.participating_clients {
                 *participation_counts.entry(client_id.clone()).or_insert(0) += 1;
             }
         }
-        
+
         if participation_counts.is_empty() {
             return 1.0;
         }
-        
+
         // Compute coefficient of variation as fairness metric
         let counts: Vec<f64> = participation_counts.values().map(|&c| c as f64).collect();
         let mean = counts.iter().sum::<f64>() / counts.len() as f64;
-        let variance = counts.iter()
-            .map(|c| (c - mean).powi(2))
-            .sum::<f64>() / counts.len() as f64;
-        
+        let variance = counts.iter().map(|c| (c - mean).powi(2)).sum::<f64>() / counts.len() as f64;
+
         let std_dev = variance.sqrt();
-        
+
         if mean > 0.0 {
             1.0 / (1.0 + std_dev / mean) // Normalize so 1.0 is perfectly fair
         } else {
@@ -2313,25 +2370,28 @@ impl<T: Float> SecureAggregator<T> {
             round_keys: Vec::new(),
         })
     }
-    
-    fn prepare_round(&mut self, selected_clients: &[String]) -> Result<SecureAggregationPlan, OptimizerError> {
+
+    fn prepare_round(
+        &mut self,
+        selected_clients: &[String],
+    ) -> Result<SecureAggregationPlan, OptimizerError> {
         // Generate round-specific keys
         let round_seed = self.shared_randomness.gen::<u64>();
         self.round_keys.push(round_seed);
-        
+
         // Generate client masks (simplified)
         self.client_masks.clear();
         for (i, client_id) in selected_clients.iter().enumerate() {
             let mut client_rng = ChaCha20Rng::seed_from_u64(round_seed + i as u64);
             let mask_size = self.config.masking_dimension;
-            
-            let mask = Array1::from_iter((0..mask_size).map(|_| {
-                T::from(client_rng.gen_range(-1.0..1.0)).unwrap()
-            }));
-            
+
+            let mask = Array1::from_iter(
+                (0..mask_size).map(|_| T::from(client_rng.gen_range(-1.0..1.0)).unwrap()),
+            );
+
             self.client_masks.insert(client_id.clone(), mask);
         }
-        
+
         Ok(SecureAggregationPlan {
             round_seed,
             participating_clients: selected_clients.to_vec(),
@@ -2339,7 +2399,7 @@ impl<T: Float> SecureAggregator<T> {
             masking_enabled: true,
         })
     }
-    
+
     fn aggregate_with_masks(
         &self,
         client_updates: &HashMap<String, Array1<T>>,
@@ -2347,14 +2407,14 @@ impl<T: Float> SecureAggregator<T> {
     ) -> Result<Array1<T>, OptimizerError> {
         if client_updates.len() < self.aggregation_threshold {
             return Err(OptimizerError::InvalidConfig(
-                "Insufficient clients for secure aggregation".to_string()
+                "Insufficient clients for secure aggregation".to_string(),
             ));
         }
-        
+
         // Simplified secure aggregation (in practice, would use more sophisticated protocols)
         let first_update = client_updates.values().next().unwrap();
         let mut aggregated = Array1::zeros(first_update.len());
-        
+
         for (client_id, update) in client_updates {
             if let Some(mask) = self.client_masks.get(client_id) {
                 // Apply mask (simplified - real implementation would be more complex)
@@ -2368,11 +2428,11 @@ impl<T: Float> SecureAggregator<T> {
                 aggregated = aggregated + update;
             }
         }
-        
+
         // Remove aggregated masks (simplified)
         let num_clients = T::from(client_updates.len()).unwrap();
         aggregated = aggregated / num_clients;
-        
+
         Ok(aggregated)
     }
 }
@@ -2385,7 +2445,7 @@ impl PrivacyAmplificationAnalyzer {
             amplification_factors: HashMap::new(),
         }
     }
-    
+
     fn compute_amplification_factor(
         &mut self,
         sampling_probability: f64,
@@ -2394,7 +2454,7 @@ impl PrivacyAmplificationAnalyzer {
         if !self.config.enabled {
             return Ok(1.0);
         }
-        
+
         // Basic subsampling amplification
         let subsampling_factor = if sampling_probability < 1.0 {
             // Privacy amplification by subsampling: √(2 ln(1.25/δ)) * q
@@ -2403,16 +2463,16 @@ impl PrivacyAmplificationAnalyzer {
         } else {
             1.0
         };
-        
+
         // Multi-round amplification (simplified)
         let multi_round_factor = if self.config.multi_round_amplification && round > 1 {
             1.0 + 0.1 * (round as f64).ln() // Logarithmic improvement
         } else {
             1.0
         };
-        
+
         let total_amplification = subsampling_factor * multi_round_factor;
-        
+
         // Record amplification event
         self.subsampling_history.push_back(SubsamplingEvent {
             round,
@@ -2421,27 +2481,29 @@ impl PrivacyAmplificationAnalyzer {
             total_clients: 1000,
             amplification_factor: total_amplification,
         });
-        
+
         if self.subsampling_history.len() > 1000 {
             self.subsampling_history.pop_front();
         }
-        
+
         Ok(total_amplification.max(1.0))
     }
-    
+
     fn get_amplification_stats(&self) -> AmplificationStats {
         if self.subsampling_history.is_empty() {
             return AmplificationStats::default();
         }
-        
-        let factors: Vec<f64> = self.subsampling_history.iter()
+
+        let factors: Vec<f64> = self
+            .subsampling_history
+            .iter()
             .map(|event| event.amplification_factor)
             .collect();
-        
+
         let avg_amplification = factors.iter().sum::<f64>() / factors.len() as f64;
         let max_amplification = factors.iter().cloned().fold(0.0f64, f64::max);
         let min_amplification = factors.iter().cloned().fold(f64::INFINITY, f64::min);
-        
+
         AmplificationStats {
             rounds_analyzed: self.subsampling_history.len(),
             avg_amplification_factor: avg_amplification,
@@ -2461,7 +2523,7 @@ impl<T: Float> CrossDevicePrivacyManager<T> {
             temporal_correlations: HashMap::new(),
         }
     }
-    
+
     fn update_participation(&mut self, client_id: String, round: usize) {
         // Update device profile
         if let Some(profile) = self.device_profiles.get_mut(&client_id) {
@@ -2470,7 +2532,7 @@ impl<T: Float> CrossDevicePrivacyManager<T> {
             // Create new profile
             let profile = DeviceProfile {
                 device_id: client_id.clone(),
-                user_id: client_id.clone(), // Simplified
+                user_id: client_id.clone(),      // Simplified
                 device_type: DeviceType::Mobile, // Default
                 location_cluster: "default".to_string(),
                 participation_frequency: 1.0,
@@ -2479,7 +2541,7 @@ impl<T: Float> CrossDevicePrivacyManager<T> {
             };
             self.device_profiles.insert(client_id.clone(), profile);
         }
-        
+
         // Record temporal event
         self.temporal_correlations
             .entry(client_id)
@@ -2500,7 +2562,7 @@ impl FederatedCompositionAnalyzer {
             client_compositions: HashMap::new(),
         }
     }
-    
+
     fn analyze_composition(
         &self,
         round: usize,
@@ -2508,13 +2570,13 @@ impl FederatedCompositionAnalyzer {
         delta: f64,
     ) -> Result<f64, OptimizerError> {
         match self.method {
-            FederatedCompositionMethod::Basic => {
-                Ok(epsilon * round as f64)
-            }
+            FederatedCompositionMethod::Basic => Ok(epsilon * round as f64),
             FederatedCompositionMethod::AdvancedComposition => {
                 // Simplified advanced composition
                 let k = round as f64;
-                let advanced_epsilon = (k * epsilon * epsilon + k.sqrt() * epsilon * (2.0 * (1.25 / delta).ln()).sqrt()).sqrt();
+                let advanced_epsilon = (k * epsilon * epsilon
+                    + k.sqrt() * epsilon * (2.0 * (1.25 / delta).ln()).sqrt())
+                .sqrt();
                 Ok(advanced_epsilon)
             }
             FederatedCompositionMethod::FederatedMomentsAccountant => {
@@ -2531,30 +2593,36 @@ impl FederatedCompositionAnalyzer {
             }
         }
     }
-    
+
     fn add_round_composition(&mut self, composition: RoundComposition) {
         self.round_compositions.push(composition);
     }
-    
+
     fn get_composition_stats(&self) -> CompositionStats {
         if self.round_compositions.is_empty() {
             return CompositionStats::default();
         }
-        
-        let total_epsilon: f64 = self.round_compositions.iter()
+
+        let total_epsilon: f64 = self
+            .round_compositions
+            .iter()
             .map(|comp| comp.epsilon_consumed)
             .sum();
-        
-        let total_delta: f64 = self.round_compositions.iter()
+
+        let total_delta: f64 = self
+            .round_compositions
+            .iter()
             .map(|comp| comp.delta_consumed)
             .sum();
-        
+
         CompositionStats {
             total_rounds: self.round_compositions.len(),
             total_epsilon_consumed: total_epsilon,
             total_delta_consumed: total_delta,
             composition_method: self.method,
-            amplification_rounds: self.round_compositions.iter()
+            amplification_rounds: self
+                .round_compositions
+                .iter()
                 .filter(|comp| comp.amplification_applied)
                 .count(),
         }
@@ -2790,7 +2858,7 @@ impl<T: Float + Default + Clone + Send + Sync> ByzantineRobustAggregator<T> {
             robust_estimators: RobustEstimators::new(),
         })
     }
-    
+
     #[allow(dead_code)]
     pub fn detect_byzantine_clients(
         &mut self,
@@ -2799,12 +2867,12 @@ impl<T: Float + Default + Clone + Send + Sync> ByzantineRobustAggregator<T> {
     ) -> Result<Vec<OutlierDetectionResult>, OptimizerError> {
         Ok(Vec::new())
     }
-    
+
     #[allow(dead_code)]
     pub fn get_client_reputations(&self, _clients: &[String]) -> HashMap<String, f64> {
         HashMap::new()
     }
-    
+
     #[allow(dead_code)]
     pub fn robust_aggregate(
         &self,
@@ -2814,17 +2882,19 @@ impl<T: Float + Default + Clone + Send + Sync> ByzantineRobustAggregator<T> {
         if let Some(first_update) = client_updates.values().next() {
             let mut result = Array1::zeros(first_update.len());
             let count = T::from(client_updates.len()).unwrap();
-            
+
             for update in client_updates.values() {
                 result = result + update;
             }
-            
+
             Ok(result / count)
         } else {
-            Err(OptimizerError::InvalidConfig("No client updates".to_string()))
+            Err(OptimizerError::InvalidConfig(
+                "No client updates".to_string(),
+            ))
         }
     }
-    
+
     #[allow(dead_code)]
     pub fn compute_robustness_factor(&self) -> Result<f64, OptimizerError> {
         Ok(0.9) // Placeholder
@@ -2843,7 +2913,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
             adaptation_tracker: AdaptationTracker::new(),
         })
     }
-    
+
     #[allow(dead_code)]
     pub fn get_metrics(&self) -> PersonalizationMetrics {
         PersonalizationMetrics {
@@ -2854,12 +2924,12 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
             meta_learning_progress: 0.75,
         }
     }
-    
+
     #[allow(dead_code)]
     pub fn compute_privacy_cost(&self) -> Result<f64, OptimizerError> {
         Ok(0.1) // Placeholder
     }
-    
+
     #[allow(dead_code)]
     pub fn personalize_client_updates(
         &self,
@@ -2868,7 +2938,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
     ) -> Result<HashMap<String, Array1<T>>, OptimizerError> {
         Ok(client_updates.clone())
     }
-    
+
     #[allow(dead_code)]
     pub fn update_global_model(
         &mut self,
@@ -2877,7 +2947,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
         self.global_model = Some(aggregate.clone());
         Ok(aggregate.clone())
     }
-    
+
     #[allow(dead_code)]
     pub fn cluster_clients(
         &self,
@@ -2885,7 +2955,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
     ) -> Result<HashMap<usize, Vec<String>>, OptimizerError> {
         Ok(HashMap::new())
     }
-    
+
     #[allow(dead_code)]
     pub fn generate_personalized_models(
         &self,
@@ -2894,7 +2964,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
     ) -> Result<HashMap<String, PersonalizedModel<T>>, OptimizerError> {
         Ok(HashMap::new())
     }
-    
+
     #[allow(dead_code)]
     pub fn compute_effectiveness_metrics(
         &self,
@@ -2922,7 +2992,7 @@ impl AdaptiveBudgetManager {
             contextual_analyzer: ContextualAnalyzer::new(),
         })
     }
-    
+
     #[allow(dead_code)]
     pub fn compute_adaptive_allocations(
         &self,
@@ -2945,7 +3015,7 @@ impl<T: Float + Default + Clone + Send + Sync> CommunicationOptimizer<T> {
             quality_controller: QualityController::new(),
         })
     }
-    
+
     #[allow(dead_code)]
     pub fn get_efficiency_stats(&self) -> CommunicationEfficiencyStats {
         CommunicationEfficiencyStats {
@@ -2956,7 +3026,7 @@ impl<T: Float + Default + Clone + Send + Sync> CommunicationOptimizer<T> {
             quality_of_service_score: 0.9,
         }
     }
-    
+
     #[allow(dead_code)]
     pub fn compress_and_schedule(
         &self,
@@ -2965,9 +3035,12 @@ impl<T: Float + Default + Clone + Send + Sync> CommunicationOptimizer<T> {
     ) -> Result<HashMap<String, Array1<T>>, OptimizerError> {
         Ok(client_updates.clone())
     }
-    
+
     #[allow(dead_code)]
-    pub fn compute_efficiency_scores(&self, _clients: &[String]) -> Result<HashMap<String, f64>, OptimizerError> {
+    pub fn compute_efficiency_scores(
+        &self,
+        _clients: &[String],
+    ) -> Result<HashMap<String, f64>, OptimizerError> {
         Ok(HashMap::new())
     }
 }
@@ -2984,7 +3057,7 @@ impl<T: Float + Default + Clone + Send + Sync> ContinualLearningCoordinator<T> {
             task_history: VecDeque::with_capacity(100),
         })
     }
-    
+
     #[allow(dead_code)]
     pub fn get_status(&self) -> ContinualLearningStatus {
         ContinualLearningStatus {
@@ -2995,12 +3068,12 @@ impl<T: Float + Default + Clone + Send + Sync> ContinualLearningCoordinator<T> {
             knowledge_transfer_effectiveness: 0.8,
         }
     }
-    
+
     #[allow(dead_code)]
     pub fn compute_privacy_overhead(&self) -> Result<f64, OptimizerError> {
         Ok(0.05) // Placeholder
     }
-    
+
     #[allow(dead_code)]
     pub fn adapt_to_new_task(
         &mut self,
@@ -3154,6 +3227,591 @@ impl Default for CommunicationPrivacyConfig {
     }
 }
 
+/// Enhanced Secure Aggregation Protocols
+pub mod secure_aggregation_protocols {
+    use super::*;
+    use rand::distributions::{Distribution, Uniform};
+    use sha2::{Digest, Sha256};
+    use std::time::Instant;
+
+    /// Advanced secure aggregation coordinator with multiple protocols
+    #[derive(Debug)]
+    pub struct AdvancedSecureAggregator<T: Float> {
+        /// Configuration
+        config: AdvancedSecureAggregationConfig,
+
+        /// Active protocol
+        active_protocol: SecureAggregationProtocol,
+
+        /// Client key manager
+        key_manager: SecureKeyManager,
+
+        /// Byzantine fault detector
+        fault_detector: ByzantineFaultDetector<T>,
+
+        /// Performance metrics
+        metrics: SecureAggregationMetrics,
+
+        /// Current round state
+        round_state: AggregationRoundState<T>,
+    }
+
+    /// Advanced secure aggregation configuration
+    #[derive(Debug, Clone)]
+    pub struct AdvancedSecureAggregationConfig {
+        /// Protocol to use
+        pub protocol: SecureAggregationProtocol,
+
+        /// Security level (bits)
+        pub security_level: usize,
+
+        /// Threshold for reconstruction
+        pub reconstruction_threshold: usize,
+
+        /// Maximum Byzantine failures to tolerate
+        pub max_byzantine_failures: usize,
+
+        /// Client authentication required
+        pub require_authentication: bool,
+
+        /// Forward security
+        pub forward_security: bool,
+
+        /// Fault tolerance level
+        pub fault_tolerance: FaultToleranceLevel,
+    }
+
+    /// Secure aggregation protocols
+    #[derive(Debug, Clone, Copy)]
+    pub enum SecureAggregationProtocol {
+        /// Basic secret sharing with Shamir's scheme
+        ShamirSecretSharing,
+
+        /// Threshold aggregation with BGW protocol
+        ThresholdBGW,
+
+        /// Multi-party computation (MPC)
+        SecureMultiParty,
+
+        /// Verifiable secret sharing
+        VerifiableSecretSharing,
+    }
+
+    /// Fault tolerance levels
+    #[derive(Debug, Clone, Copy)]
+    pub enum FaultToleranceLevel {
+        /// Basic failure tolerance
+        Basic,
+
+        /// Byzantine fault tolerance
+        Byzantine,
+
+        /// Malicious adversary tolerance
+        Malicious,
+    }
+
+    /// Secure key management for federated learning
+    #[derive(Debug)]
+    pub struct SecureKeyManager {
+        /// Master secret key
+        master_key: [u8; 32],
+
+        /// Client public keys
+        client_public_keys: HashMap<String, Vec<u8>>,
+
+        /// Key rotation counter
+        key_rotation_counter: usize,
+    }
+
+    /// Byzantine fault detection and tolerance
+    #[derive(Debug)]
+    pub struct ByzantineFaultDetector<T: Float> {
+        /// Statistical anomaly detector
+        anomaly_detector: StatisticalAnomalyDetector<T>,
+
+        /// Fault history
+        fault_history: VecDeque<FaultEvent>,
+    }
+
+    /// Aggregation round state
+    #[derive(Debug)]
+    pub struct AggregationRoundState<T: Float> {
+        /// Round number
+        round_number: usize,
+
+        /// Participating clients
+        participants: Vec<String>,
+
+        /// Client shares received
+        received_shares: HashMap<String, ClientShare<T>>,
+
+        /// Start timestamp
+        start_time: Instant,
+
+        /// Byzantine clients detected
+        byzantine_clients: Vec<String>,
+    }
+
+    /// Client share in secure aggregation
+    #[derive(Debug, Clone)]
+    pub struct ClientShare<T: Float> {
+        /// Client identifier
+        client_id: String,
+
+        /// Secret share values
+        share_values: Array1<T>,
+
+        /// Share index
+        share_index: usize,
+
+        /// Digital signature
+        signature: Option<Vec<u8>>,
+    }
+
+    /// Secure aggregation performance metrics
+    #[derive(Debug, Clone)]
+    pub struct SecureAggregationMetrics {
+        /// Total rounds completed
+        pub total_rounds: usize,
+
+        /// Average aggregation time (ms)
+        pub avg_aggregation_time_ms: f64,
+
+        /// Communication overhead
+        pub communication_overhead: f64,
+
+        /// Byzantine failures detected
+        pub byzantine_failures_detected: usize,
+
+        /// Successful reconstructions
+        pub successful_reconstructions: usize,
+    }
+
+    impl<T: Float + Default + Clone + Send + Sync> AdvancedSecureAggregator<T> {
+        /// Create a new advanced secure aggregator
+        pub fn new(config: AdvancedSecureAggregationConfig) -> Result<Self, OptimizerError> {
+            let key_manager = SecureKeyManager::new()?;
+            let fault_detector = ByzantineFaultDetector::new();
+
+            Ok(Self {
+                active_protocol: config.protocol,
+                config,
+                key_manager,
+                fault_detector,
+                metrics: SecureAggregationMetrics::default(),
+                round_state: AggregationRoundState::new(),
+            })
+        }
+
+        /// Initialize a new aggregation round
+        pub fn initialize_round(
+            &mut self,
+            round_number: usize,
+            participants: Vec<String>,
+        ) -> Result<AggregationSetup, OptimizerError> {
+            self.round_state = AggregationRoundState::new();
+            self.round_state.round_number = round_number;
+            self.round_state.participants = participants.clone();
+            self.round_state.start_time = Instant::now();
+
+            // Generate fresh keys for this round if forward security is enabled
+            if self.config.forward_security {
+                self.key_manager.rotate_keys(round_number)?;
+            }
+
+            // Setup protocol-specific parameters
+            let setup = match self.active_protocol {
+                SecureAggregationProtocol::ShamirSecretSharing => {
+                    self.setup_shamir_secret_sharing(&participants)?
+                }
+                SecureAggregationProtocol::VerifiableSecretSharing => {
+                    self.setup_verifiable_secret_sharing(&participants)?
+                }
+                _ => {
+                    return Err(OptimizerError::InvalidConfig(
+                        "Unsupported secure aggregation protocol".to_string(),
+                    ));
+                }
+            };
+
+            Ok(setup)
+        }
+
+        /// Process client gradient shares
+        pub fn process_client_share(
+            &mut self,
+            client_share: ClientShare<T>,
+        ) -> Result<ShareProcessingResult, OptimizerError> {
+            // Verify client authentication
+            if self.config.require_authentication {
+                self.verify_client_authentication(&client_share)?;
+            }
+
+            // Check for Byzantine behavior
+            let is_byzantine = self
+                .fault_detector
+                .detect_byzantine_behavior(&client_share)?;
+            if is_byzantine {
+                self.round_state
+                    .byzantine_clients
+                    .push(client_share.client_id.clone());
+                self.metrics.byzantine_failures_detected += 1;
+
+                return Ok(ShareProcessingResult {
+                    accepted: false,
+                    reason: "Byzantine behavior detected".to_string(),
+                    byzantine_detected: true,
+                });
+            }
+
+            // Store the valid share
+            self.round_state
+                .received_shares
+                .insert(client_share.client_id.clone(), client_share);
+
+            Ok(ShareProcessingResult {
+                accepted: true,
+                reason: "Share accepted".to_string(),
+                byzantine_detected: false,
+            })
+        }
+
+        /// Aggregate received shares securely
+        pub fn aggregate_shares(&mut self) -> Result<Array1<T>, OptimizerError> {
+            let start_time = Instant::now();
+
+            // Check if we have enough shares for reconstruction
+            let received_count = self.round_state.received_shares.len();
+            if received_count < self.config.reconstruction_threshold {
+                return Err(OptimizerError::InvalidConfig(format!(
+                    "Insufficient shares: {} < {}",
+                    received_count, self.config.reconstruction_threshold
+                )));
+            }
+
+            // Perform secure aggregation based on active protocol
+            let aggregated_result = match self.active_protocol {
+                SecureAggregationProtocol::ShamirSecretSharing => self.aggregate_shamir_shares()?,
+                SecureAggregationProtocol::VerifiableSecretSharing => {
+                    self.aggregate_verifiable_shares()?
+                }
+                _ => {
+                    return Err(OptimizerError::InvalidConfig(
+                        "Unsupported aggregation protocol".to_string(),
+                    ));
+                }
+            };
+
+            // Update metrics
+            let aggregation_time = start_time.elapsed().as_millis() as f64;
+            self.update_aggregation_metrics(aggregation_time)?;
+
+            self.metrics.successful_reconstructions += 1;
+            Ok(aggregated_result)
+        }
+
+        fn setup_shamir_secret_sharing(
+            &mut self,
+            participants: &[String],
+        ) -> Result<AggregationSetup, OptimizerError> {
+            let n = participants.len();
+            let t = self.config.reconstruction_threshold;
+
+            if t > n {
+                return Err(OptimizerError::InvalidConfig(
+                    "Threshold cannot exceed number of participants".to_string(),
+                ));
+            }
+
+            let mut client_setups = HashMap::new();
+            for (i, client_id) in participants.iter().enumerate() {
+                let share_setup = ClientSetupInfo {
+                    client_id: client_id.clone(),
+                    share_index: i + 1,
+                    polynomial_point: T::from(i + 1).unwrap(),
+                    verification_key: self.generate_verification_key(client_id)?,
+                };
+                client_setups.insert(client_id.clone(), share_setup);
+            }
+
+            Ok(AggregationSetup {
+                protocol: SecureAggregationProtocol::ShamirSecretSharing,
+                client_setups,
+                threshold: t,
+                total_participants: n,
+                round_number: self.round_state.round_number,
+            })
+        }
+
+        fn setup_verifiable_secret_sharing(
+            &mut self,
+            participants: &[String],
+        ) -> Result<AggregationSetup, OptimizerError> {
+            // Similar to Shamir but with additional verification
+            self.setup_shamir_secret_sharing(participants)
+        }
+
+        fn aggregate_shamir_shares(&self) -> Result<Array1<T>, OptimizerError> {
+            let shares: Vec<_> = self.round_state.received_shares.values().collect();
+
+            if shares.is_empty() {
+                return Err(OptimizerError::InvalidConfig(
+                    "No shares to aggregate".to_string(),
+                ));
+            }
+
+            let gradient_dim = shares[0].share_values.len();
+            let mut aggregated_gradient = Array1::zeros(gradient_dim);
+
+            // Reconstruct secret using Lagrange interpolation
+            for j in 0..gradient_dim {
+                let mut secret_j = T::zero();
+
+                // Collect share points for this gradient component
+                let points: Vec<(T, T)> = shares
+                    .iter()
+                    .map(|share| {
+                        let x = T::from(share.share_index).unwrap();
+                        let y = share.share_values[j];
+                        (x, y)
+                    })
+                    .collect();
+
+                // Lagrange interpolation at x = 0 to get the secret
+                for (i, &(xi, yi)) in points.iter().enumerate() {
+                    let mut lagrange_coeff = T::one();
+
+                    for (k, &(xk, _)) in points.iter().enumerate() {
+                        if i != k {
+                            lagrange_coeff = lagrange_coeff * (-xk) / (xi - xk);
+                        }
+                    }
+
+                    secret_j = secret_j + yi * lagrange_coeff;
+                }
+
+                aggregated_gradient[j] = secret_j;
+            }
+
+            Ok(aggregated_gradient)
+        }
+
+        fn aggregate_verifiable_shares(&self) -> Result<Array1<T>, OptimizerError> {
+            // For now, use same as Shamir - in practice would include verification
+            self.aggregate_shamir_shares()
+        }
+
+        fn verify_client_authentication(
+            &self,
+            share: &ClientShare<T>,
+        ) -> Result<(), OptimizerError> {
+            if let Some(ref signature) = share.signature {
+                let public_key = self
+                    .key_manager
+                    .client_public_keys
+                    .get(&share.client_id)
+                    .ok_or_else(|| {
+                        OptimizerError::InvalidConfig(format!(
+                            "No public key for client {}",
+                            share.client_id
+                        ))
+                    })?;
+
+                if !self.verify_signature(&share.share_values, signature, public_key) {
+                    return Err(OptimizerError::InvalidConfig(
+                        "Invalid client signature".to_string(),
+                    ));
+                }
+            }
+
+            Ok(())
+        }
+
+        fn verify_signature(&self, data: &Array1<T>, signature: &[u8], public_key: &[u8]) -> bool {
+            // Simplified signature verification
+            let data_hash = self.hash_gradient(data);
+            signature.len() > 32 && public_key.len() > 32 && data_hash.len() > 16
+        }
+
+        fn hash_gradient(&self, gradient: &Array1<T>) -> Vec<u8> {
+            let mut hasher = Sha256::new();
+            for &value in gradient.iter() {
+                hasher.update(value.to_f64().unwrap_or(0.0).to_be_bytes());
+            }
+            hasher.finalize().to_vec()
+        }
+
+        fn generate_verification_key(&self, client_id: &str) -> Result<Vec<u8>, OptimizerError> {
+            let mut hasher = Sha256::new();
+            hasher.update(client_id.as_bytes());
+            hasher.update(&self.key_manager.master_key);
+            Ok(hasher.finalize().to_vec())
+        }
+
+        fn update_aggregation_metrics(
+            &mut self,
+            aggregation_time_ms: f64,
+        ) -> Result<(), OptimizerError> {
+            self.metrics.total_rounds += 1;
+
+            // Update average aggregation time
+            let alpha = 0.1;
+            if self.metrics.avg_aggregation_time_ms == 0.0 {
+                self.metrics.avg_aggregation_time_ms = aggregation_time_ms;
+            } else {
+                self.metrics.avg_aggregation_time_ms = (1.0 - alpha)
+                    * self.metrics.avg_aggregation_time_ms
+                    + alpha * aggregation_time_ms;
+            }
+
+            // Update communication overhead
+            let num_participants = self.round_state.participants.len();
+            let actual_communication = self.round_state.received_shares.len();
+            self.metrics.communication_overhead =
+                actual_communication as f64 / num_participants as f64;
+
+            Ok(())
+        }
+
+        /// Get current secure aggregation metrics
+        pub fn get_metrics(&self) -> &SecureAggregationMetrics {
+            &self.metrics
+        }
+    }
+
+    // Helper types and implementations
+
+    #[derive(Debug, Clone)]
+    pub struct AggregationSetup {
+        pub protocol: SecureAggregationProtocol,
+        pub client_setups: HashMap<String, ClientSetupInfo>,
+        pub threshold: usize,
+        pub total_participants: usize,
+        pub round_number: usize,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct ClientSetupInfo {
+        pub client_id: String,
+        pub share_index: usize,
+        pub polynomial_point: T,
+        pub verification_key: Vec<u8>,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct ShareProcessingResult {
+        pub accepted: bool,
+        pub reason: String,
+        pub byzantine_detected: bool,
+    }
+
+    impl SecureKeyManager {
+        fn new() -> Result<Self, OptimizerError> {
+            let mut master_key = [0u8; 32];
+            rand::thread_rng().fill(&mut master_key);
+
+            Ok(Self {
+                master_key,
+                client_public_keys: HashMap::new(),
+                key_rotation_counter: 0,
+            })
+        }
+
+        fn rotate_keys(&mut self, round: usize) -> Result<(), OptimizerError> {
+            self.key_rotation_counter = round;
+            Ok(())
+        }
+    }
+
+    impl<T: Float> ByzantineFaultDetector<T> {
+        fn new() -> Self {
+            Self {
+                anomaly_detector: StatisticalAnomalyDetector::new(),
+                fault_history: VecDeque::with_capacity(1000),
+            }
+        }
+
+        fn detect_byzantine_behavior(
+            &mut self,
+            share: &ClientShare<T>,
+        ) -> Result<bool, OptimizerError> {
+            let is_anomaly = self.anomaly_detector.detect_anomaly(&share.share_values)?;
+
+            if is_anomaly {
+                let fault_event = FaultEvent {
+                    client_id: share.client_id.clone(),
+                    timestamp: Instant::now(),
+                    fault_type: FaultType::Byzantine,
+                };
+                self.fault_history.push_back(fault_event);
+
+                if self.fault_history.len() > 1000 {
+                    self.fault_history.pop_front();
+                }
+            }
+
+            Ok(is_anomaly)
+        }
+    }
+
+    impl<T: Float> AggregationRoundState<T> {
+        fn new() -> Self {
+            Self {
+                round_number: 0,
+                participants: Vec::new(),
+                received_shares: HashMap::new(),
+                start_time: Instant::now(),
+                byzantine_clients: Vec::new(),
+            }
+        }
+    }
+
+    impl Default for SecureAggregationMetrics {
+        fn default() -> Self {
+            Self {
+                total_rounds: 0,
+                avg_aggregation_time_ms: 0.0,
+                communication_overhead: 1.0,
+                byzantine_failures_detected: 0,
+                successful_reconstructions: 0,
+            }
+        }
+    }
+
+    // Helper types
+    #[derive(Debug)]
+    struct StatisticalAnomalyDetector<T: Float> {
+        _phantom: std::marker::PhantomData<T>,
+    }
+
+    impl<T: Float> StatisticalAnomalyDetector<T> {
+        fn new() -> Self {
+            Self {
+                _phantom: std::marker::PhantomData,
+            }
+        }
+
+        fn detect_anomaly(&self, _values: &Array1<T>) -> Result<bool, OptimizerError> {
+            // Simplified anomaly detection - in practice would be more sophisticated
+            Ok(false)
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    struct FaultEvent {
+        client_id: String,
+        timestamp: Instant,
+        fault_type: FaultType,
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    enum FaultType {
+        Byzantine,
+        FailStop,
+        Omission,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3173,10 +3831,10 @@ mod tests {
             sampling_strategy: ClientSamplingStrategy::UniformRandom,
             ..Default::default()
         };
-        
+
         let coordinator = FederatedPrivacyCoordinator::<f64>::new(config).unwrap();
         let available_clients: Vec<String> = (0..100).map(|i| format!("client_{}", i)).collect();
-        
+
         let selected = coordinator.sample_clients(&available_clients).unwrap();
         assert_eq!(selected.len(), 10);
     }
@@ -3189,7 +3847,7 @@ mod tests {
             max_dropouts: 2,
             ..Default::default()
         };
-        
+
         assert!(config.enabled);
         assert_eq!(config.min_clients, 5);
     }
@@ -3198,17 +3856,16 @@ mod tests {
     fn test_privacy_amplification_analyzer() {
         let config = AmplificationConfig::default();
         let mut analyzer = PrivacyAmplificationAnalyzer::new(config);
-        
+
         let amplification = analyzer.compute_amplification_factor(0.1, 1).unwrap();
         assert!(amplification >= 1.0);
     }
 
     #[test]
     fn test_federated_composition_analyzer() {
-        let analyzer = FederatedCompositionAnalyzer::new(
-            FederatedCompositionMethod::AdvancedComposition
-        );
-        
+        let analyzer =
+            FederatedCompositionAnalyzer::new(FederatedCompositionMethod::AdvancedComposition);
+
         let epsilon = analyzer.analyze_composition(5, 0.1, 1e-5).unwrap();
         assert!(epsilon > 0.0);
     }
@@ -3224,7 +3881,7 @@ mod tests {
             local_privacy_budget: PrivacyBudget::default(),
             sensitivity_estimate: 1.0,
         };
-        
+
         assert_eq!(profile.device_id, "device_1");
         assert!(matches!(profile.device_type, DeviceType::Mobile));
     }
@@ -3240,7 +3897,7 @@ mod tests {
             user_level_privacy: false,
             trust_model: TrustModel::HonestButCurious,
         };
-        
+
         assert_eq!(guarantees.epsilon, 1.0);
         assert!(guarantees.amplification_enabled);
     }

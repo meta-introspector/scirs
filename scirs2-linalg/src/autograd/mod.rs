@@ -124,12 +124,12 @@ pub mod helpers {
         // Extract diagonal values from tensor
         let diag_array = ag::tensor_ops::tensor_to_ndarray(diagonal);
         let n = diag_array.len();
-        
+
         let mut matrix_data = vec![F::zero(); n * n];
         for i in 0..n {
             matrix_data[i * n + i] = diag_array[i];
         }
-        
+
         ag::tensor_ops::convert_to_tensor(
             ag::ndarray::Array2::from_shape_vec((n, n), matrix_data).unwrap(),
             ctx,
@@ -137,9 +137,7 @@ pub mod helpers {
     }
 
     /// Compute Frobenius norm using available operations
-    pub fn frobenius_norm<'g, F: ag::Float>(
-        matrix: &ag::Tensor<'g, F>,
-    ) -> ag::Tensor<'g, F> {
+    pub fn frobenius_norm<'g, F: ag::Float>(matrix: &ag::Tensor<'g, F>) -> ag::Tensor<'g, F> {
         // ||A||_F = sqrt(sum(A .* A))
         let squared = matrix * matrix;
         let sum_squared = ag::tensor_ops::sum_all(squared);
@@ -147,7 +145,7 @@ pub mod helpers {
     }
 
     /// Compute matrix determinant approximation using available operations
-    /// 
+    ///
     /// This uses a recursive approach for small matrices or iterative methods for larger ones.
     /// Note: This is a computational approximation, not optimized for accuracy or performance.
     pub fn det_approximation<'g, F: ag::Float>(
@@ -159,7 +157,7 @@ pub mod helpers {
             // 1x1 matrix determinant is the single element
             return matrix.clone();
         }
-        
+
         if n == 2 {
             // 2x2 determinant: ad - bc
             let mat_array = ag::tensor_ops::tensor_to_ndarray(matrix);
@@ -179,15 +177,12 @@ pub mod helpers {
                 ag::ndarray::Array2::from_elem((1, 1), mat_array[[1, 1]]),
                 ctx,
             );
-            
+
             return a * d - b * c;
         }
-        
+
         // For larger matrices, return a placeholder (would need LU decomposition)
-        ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::from_elem((1, 1), F::one()),
-            ctx,
-        )
+        ag::tensor_ops::convert_to_tensor(ag::ndarray::Array2::from_elem((1, 1), F::one()), ctx)
     }
 
     /// Solve linear system Ax = b using iterative method approximation
@@ -204,16 +199,13 @@ pub mod helpers {
         // Initialize x as zeros
         let b_array = ag::tensor_ops::tensor_to_ndarray(b);
         let n = b_array.len();
-        let mut x = ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::zeros((n, 1)),
-            ctx,
-        );
-        
+        let mut x = ag::tensor_ops::convert_to_tensor(ag::ndarray::Array2::zeros((n, 1)), ctx);
+
         let lr_tensor = ag::tensor_ops::convert_to_tensor(
             ag::ndarray::Array2::from_elem((1, 1), learning_rate),
             ctx,
         );
-        
+
         // Gradient descent: x = x - lr * A^T * (A*x - b)
         for _iter in 0..iterations {
             let ax = ag::tensor_ops::matmul(a, &x);
@@ -223,7 +215,7 @@ pub mod helpers {
             let update = gradient * &lr_tensor;
             x = x - update;
         }
-        
+
         x
     }
 
@@ -243,25 +235,25 @@ pub mod helpers {
         for i in 1..n {
             v_data[i] = F::from(0.1).unwrap() * F::from(i as f64).unwrap();
         }
-        
+
         let mut v = ag::tensor_ops::convert_to_tensor(
             ag::ndarray::Array2::from_shape_vec((n, 1), v_data).unwrap(),
             ctx,
         );
-        
+
         // Power iteration
         for _iter in 0..iterations {
             let av = ag::tensor_ops::matmul(matrix, &v);
             let norm = frobenius_norm(&av);
             v = av / norm;
         }
-        
+
         // Compute eigenvalue: λ = v^T * A * v / (v^T * v)
         let vt = ag::tensor_ops::transpose(&v);
         let av = ag::tensor_ops::matmul(matrix, &v);
         let numerator = ag::tensor_ops::matmul(&vt, &av);
         let denominator = ag::tensor_ops::matmul(&vt, &v);
-        
+
         numerator / denominator
     }
 
@@ -274,7 +266,7 @@ pub mod helpers {
     ) -> ag::Tensor<'g, F> {
         // Compute largest eigenvalue
         let lambda_max = dominant_eigenvalue(matrix, iterations, n, ctx);
-        
+
         // For condition number, we'd need smallest eigenvalue too
         // This is a simplified approximation - return max eigenvalue as proxy
         lambda_max

@@ -86,7 +86,10 @@ pub mod auto_feature_engineering;
 pub mod monitoring;
 
 // Re-export important types and functions
-pub use encoding::{BinaryEncoder, OneHotEncoder, OrdinalEncoder, TargetEncoder};
+pub use decomposition::{DictionaryLearning, NMF};
+pub use encoding::{
+    BinaryEncoder, EncodedOutput, OneHotEncoder, OrdinalEncoder, SparseMatrix, TargetEncoder,
+};
 pub use error::{Result, TransformError};
 pub use features::{
     binarize, discretize_equal_frequency, discretize_equal_width, log_transform, power_transform,
@@ -97,46 +100,66 @@ pub use impute::{
     WeightingScheme,
 };
 pub use normalize::{normalize_array, normalize_vector, NormalizationMethod, Normalizer};
-pub use reduction::{trustworthiness, TruncatedSVD, LDA, PCA, TSNE, UMAP, Isomap, LLE, SpectralEmbedding, AffinityMethod};
-pub use decomposition::{NMF, DictionaryLearning};
+pub use pipeline::{
+    make_column_transformer, make_pipeline, ColumnTransformer, Pipeline, RemainderOption,
+    Transformer,
+};
+pub use reduction::{
+    trustworthiness, AffinityMethod, Isomap, SpectralEmbedding, TruncatedSVD, LDA, LLE, PCA, TSNE,
+    UMAP,
+};
 pub use scaling::{MaxAbsScaler, QuantileTransformer};
-pub use selection::{VarianceThreshold, RecursiveFeatureElimination, MutualInfoSelector};
-pub use time_series::{FourierFeatures, LagFeatures, WaveletFeatures, TimeSeriesFeatures};
-pub use pipeline::{Pipeline, ColumnTransformer, RemainderOption, Transformer, make_pipeline, make_column_transformer};
+pub use selection::{MutualInfoSelector, RecursiveFeatureElimination, VarianceThreshold};
+pub use time_series::{FourierFeatures, LagFeatures, TimeSeriesFeatures, WaveletFeatures};
 
 #[cfg(feature = "simd")]
-pub use normalize_simd::{simd_minmax_normalize_1d, simd_zscore_normalize_1d, simd_l2_normalize_1d, simd_maxabs_normalize_1d, simd_normalize_array};
+pub use normalize_simd::{
+    simd_l2_normalize_1d, simd_maxabs_normalize_1d, simd_minmax_normalize_1d, simd_normalize_array,
+    simd_zscore_normalize_1d,
+};
 
 #[cfg(feature = "simd")]
-pub use features_simd::{SimdPolynomialFeatures, simd_power_transform, simd_binarize};
+pub use features_simd::{simd_binarize, simd_power_transform, SimdPolynomialFeatures};
 
 #[cfg(feature = "simd")]
 pub use scaling_simd::{SimdMaxAbsScaler, SimdRobustScaler, SimdStandardScaler};
 
-pub use out_of_core::{OutOfCoreConfig, OutOfCoreTransformer, ChunkedArrayReader, ChunkedArrayWriter, 
-                      OutOfCoreNormalizer, csv_chunks};
-pub use streaming::{StreamingTransformer, StreamingStandardScaler, StreamingMinMaxScaler, 
-                    StreamingQuantileTracker, WindowedStreamingTransformer};
-pub use text::{CountVectorizer, TfidfVectorizer, HashingVectorizer, StreamingCountVectorizer};
-pub use image::{PatchExtractor, HOGDescriptor, BlockNorm, ImageNormalizer, ImageNormMethod, 
-                rgb_to_grayscale, resize_images};
-pub use graph::{SpectralEmbedding, LaplacianType, DeepWalk, Node2Vec, GraphAutoencoder, 
-                ActivationType, edge_list_to_adjacency, adjacency_to_edge_list};
+pub use graph::{
+    adjacency_to_edge_list, edge_list_to_adjacency, ActivationType, DeepWalk, GraphAutoencoder,
+    LaplacianType, Node2Vec, SpectralEmbedding,
+};
+pub use image::{
+    resize_images, rgb_to_grayscale, BlockNorm, HOGDescriptor, ImageNormMethod, ImageNormalizer,
+    PatchExtractor,
+};
+pub use out_of_core::{
+    csv_chunks, ChunkedArrayReader, ChunkedArrayWriter, OutOfCoreConfig, OutOfCoreNormalizer,
+    OutOfCoreTransformer,
+};
+pub use streaming::{
+    StreamingMinMaxScaler, StreamingQuantileTracker, StreamingStandardScaler, StreamingTransformer,
+    WindowedStreamingTransformer,
+};
+pub use text::{CountVectorizer, HashingVectorizer, StreamingCountVectorizer, TfidfVectorizer};
 
 // GPU acceleration exports
 #[cfg(feature = "gpu")]
-pub use gpu::{GpuPCA, GpuMatrixOps, GpuTSNE};
+pub use gpu::{GpuMatrixOps, GpuPCA, GpuTSNE};
 
 // Distributed processing exports
 #[cfg(feature = "distributed")]
-pub use distributed::{DistributedConfig, DistributedCoordinator, DistributedPCA, NodeInfo, 
-                      PartitioningStrategy};
+pub use distributed::{
+    DistributedConfig, DistributedCoordinator, DistributedPCA, NodeInfo, PartitioningStrategy,
+};
 
 // Automated feature engineering exports
-pub use auto_feature_engineering::{AutoFeatureEngineer, DatasetMetaFeatures, TransformationType, 
-                                   TransformationConfig};
+pub use auto_feature_engineering::{
+    AutoFeatureEngineer, DatasetMetaFeatures, TransformationConfig, TransformationType,
+};
 
 // Production monitoring exports
 #[cfg(feature = "monitoring")]
-pub use monitoring::{TransformationMonitor, DriftMethod, DriftDetectionResult, PerformanceMetrics, 
-                     AlertConfig, AlertType};
+pub use monitoring::{
+    AlertConfig, AlertType, DriftDetectionResult, DriftMethod, PerformanceMetrics,
+    TransformationMonitor,
+};

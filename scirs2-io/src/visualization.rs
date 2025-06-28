@@ -123,6 +123,7 @@ pub struct Annotation {
 }
 
 /// Visualization builder
+#[derive(Debug, Clone)]
 pub struct VisualizationBuilder {
     data: Vec<DataSeries>,
     config: PlotConfig,
@@ -241,7 +242,7 @@ impl VisualizationBuilder {
         let flat_z: Vec<f64> = z.iter().cloned().collect();
         self.data.push(DataSeries {
             name: name.map(|s| s.to_string()),
-            x: Some(vec![z.shape()[1] as f64]),  // Store dimensions
+            x: Some(vec![z.shape()[1] as f64]), // Store dimensions
             y: vec![z.shape()[0] as f64],
             z: Some(flat_z),
             plot_type: PlotType::Heatmap,
@@ -265,8 +266,19 @@ impl VisualizationBuilder {
 
 /// Trait for visualization exporters
 trait VisualizationExporter {
-    fn export(&self, data: &[DataSeries], config: &PlotConfig, metadata: &Metadata, path: &Path) -> Result<()>;
-    fn to_string(&self, data: &[DataSeries], config: &PlotConfig, metadata: &Metadata) -> Result<String>;
+    fn export(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        metadata: &Metadata,
+        path: &Path,
+    ) -> Result<()>;
+    fn to_string(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        metadata: &Metadata,
+    ) -> Result<String>;
 }
 
 /// Get appropriate exporter for format
@@ -284,16 +296,28 @@ fn get_exporter(format: VisualizationFormat) -> Box<dyn VisualizationExporter> {
 struct PlotlyExporter;
 
 impl VisualizationExporter for PlotlyExporter {
-    fn export(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata, path: &Path) -> Result<()> {
+    fn export(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+        path: &Path,
+    ) -> Result<()> {
         let json_str = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
-        file.write_all(json_str.as_bytes()).map_err(|e| IoError::Io(e))?;
+        file.write_all(json_str.as_bytes())
+            .map_err(|e| IoError::Io(e))?;
         Ok(())
     }
 
-    fn to_string(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata) -> Result<String> {
+    fn to_string(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+    ) -> Result<String> {
         let mut traces = Vec::new();
-        
+
         for series in data {
             let trace = match series.plot_type {
                 PlotType::Line | PlotType::Scatter => {
@@ -325,11 +349,14 @@ impl VisualizationExporter for PlotlyExporter {
                 PlotType::Heatmap => {
                     let cols = series.x.as_ref().unwrap()[0] as usize;
                     let _rows = series.y[0] as usize;
-                    let z_data: Vec<Vec<f64>> = series.z.as_ref().unwrap()
+                    let z_data: Vec<Vec<f64>> = series
+                        .z
+                        .as_ref()
+                        .unwrap()
                         .chunks(cols)
                         .map(|chunk| chunk.to_vec())
                         .collect();
-                    
+
                     serde_json::json!({
                         "type": "heatmap",
                         "name": series.name,
@@ -341,7 +368,7 @@ impl VisualizationExporter for PlotlyExporter {
             };
             traces.push(trace);
         }
-        
+
         let layout = serde_json::json!({
             "title": config.title,
             "width": config.width,
@@ -365,12 +392,12 @@ impl VisualizationExporter for PlotlyExporter {
                 })
             }).collect::<Vec<_>>(),
         });
-        
+
         let plot_data = serde_json::json!({
             "data": traces,
             "layout": layout,
         });
-        
+
         serde_json::to_string_pretty(&plot_data)
             .map_err(|e| IoError::SerializationError(e.to_string()))
     }
@@ -380,22 +407,35 @@ impl VisualizationExporter for PlotlyExporter {
 struct MatplotlibExporter;
 
 impl VisualizationExporter for MatplotlibExporter {
-    fn export(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata, path: &Path) -> Result<()> {
+    fn export(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+        path: &Path,
+    ) -> Result<()> {
         let script = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
-        file.write_all(script.as_bytes()).map_err(|e| IoError::Io(e))?;
+        file.write_all(script.as_bytes())
+            .map_err(|e| IoError::Io(e))?;
         Ok(())
     }
 
-    fn to_string(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata) -> Result<String> {
+    fn to_string(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+    ) -> Result<String> {
         let mut script = String::from("import matplotlib.pyplot as plt\nimport numpy as np\n\n");
-        
+
         // Create figure
-        script.push_str(&format!("fig, ax = plt.subplots(figsize=({}, {}))\n\n",
+        script.push_str(&format!(
+            "fig, ax = plt.subplots(figsize=({}, {}))\n\n",
             config.width.unwrap_or(800) as f64 / 100.0,
             config.height.unwrap_or(600) as f64 / 100.0
         ));
-        
+
         // Plot data
         for series in data {
             match series.plot_type {
@@ -427,7 +467,7 @@ impl VisualizationExporter for MatplotlibExporter {
                 _ => continue,
             }
         }
-        
+
         // Configure axes
         if let Some(title) = &config.title {
             script.push_str(&format!("\nax.set_title('{}')\n", title));
@@ -438,12 +478,12 @@ impl VisualizationExporter for MatplotlibExporter {
         if let Some(ylabel) = &config.y_axis.title {
             script.push_str(&format!("ax.set_ylabel('{}')\n", ylabel));
         }
-        
+
         script.push_str("\nax.grid(True)\n");
         script.push_str("ax.legend()\n");
         script.push_str("plt.tight_layout()\n");
         script.push_str("plt.show()\n");
-        
+
         Ok(script)
     }
 }
@@ -452,21 +492,37 @@ impl VisualizationExporter for MatplotlibExporter {
 struct GnuplotExporter;
 
 impl VisualizationExporter for GnuplotExporter {
-    fn export(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata, path: &Path) -> Result<()> {
+    fn export(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+        path: &Path,
+    ) -> Result<()> {
         let script = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
-        file.write_all(script.as_bytes()).map_err(|e| IoError::Io(e))?;
+        file.write_all(script.as_bytes())
+            .map_err(|e| IoError::Io(e))?;
         Ok(())
     }
 
-    fn to_string(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata) -> Result<String> {
+    fn to_string(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+    ) -> Result<String> {
         let mut script = String::new();
-        
+
         // Set terminal and output
         script.push_str("set terminal png size ");
-        script.push_str(&format!("{},{}\n", config.width.unwrap_or(800), config.height.unwrap_or(600)));
+        script.push_str(&format!(
+            "{},{}\n",
+            config.width.unwrap_or(800),
+            config.height.unwrap_or(600)
+        ));
         script.push_str("set output 'plot.png'\n\n");
-        
+
         // Set title and labels
         if let Some(title) = &config.title {
             script.push_str(&format!("set title '{}'\n", title));
@@ -477,33 +533,37 @@ impl VisualizationExporter for GnuplotExporter {
         if let Some(ylabel) = &config.y_axis.title {
             script.push_str(&format!("set ylabel '{}'\n", ylabel));
         }
-        
+
         script.push_str("set grid\n\n");
-        
+
         // Plot command
         script.push_str("plot ");
         let mut first = true;
-        
+
         for (i, series) in data.iter().enumerate() {
             if !first {
                 script.push_str(", ");
             }
             first = false;
-            
+
             match series.plot_type {
                 PlotType::Line => {
-                    script.push_str(&format!("'-' using 1:2 with lines title '{}'", 
-                        series.name.as_deref().unwrap_or(&format!("Series {}", i))));
+                    script.push_str(&format!(
+                        "'-' using 1:2 with lines title '{}'",
+                        series.name.as_deref().unwrap_or(&format!("Series {}", i))
+                    ));
                 }
                 PlotType::Scatter => {
-                    script.push_str(&format!("'-' using 1:2 with points title '{}'", 
-                        series.name.as_deref().unwrap_or(&format!("Series {}", i))));
+                    script.push_str(&format!(
+                        "'-' using 1:2 with points title '{}'",
+                        series.name.as_deref().unwrap_or(&format!("Series {}", i))
+                    ));
                 }
                 _ => continue,
             }
         }
         script.push_str("\n\n");
-        
+
         // Data blocks
         for series in data {
             if let Some(x) = &series.x {
@@ -513,7 +573,7 @@ impl VisualizationExporter for GnuplotExporter {
             }
             script.push_str("e\n");
         }
-        
+
         Ok(script)
     }
 }
@@ -522,16 +582,28 @@ impl VisualizationExporter for GnuplotExporter {
 struct VegaLiteExporter;
 
 impl VisualizationExporter for VegaLiteExporter {
-    fn export(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata, path: &Path) -> Result<()> {
+    fn export(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+        path: &Path,
+    ) -> Result<()> {
         let spec = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
-        file.write_all(spec.as_bytes()).map_err(|e| IoError::Io(e))?;
+        file.write_all(spec.as_bytes())
+            .map_err(|e| IoError::Io(e))?;
         Ok(())
     }
 
-    fn to_string(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata) -> Result<String> {
+    fn to_string(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+    ) -> Result<String> {
         let mut data_values = Vec::new();
-        
+
         for series in data {
             if let Some(x) = &series.x {
                 for (xi, yi) in x.iter().zip(series.y.iter()) {
@@ -543,7 +615,7 @@ impl VisualizationExporter for VegaLiteExporter {
                 }
             }
         }
-        
+
         let spec = serde_json::json!({
             "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
             "title": config.title,
@@ -570,16 +642,15 @@ impl VisualizationExporter for VegaLiteExporter {
                 }
             }
         });
-        
-        serde_json::to_string_pretty(&spec)
-            .map_err(|e| IoError::SerializationError(e.to_string()))
+
+        serde_json::to_string_pretty(&spec).map_err(|e| IoError::SerializationError(e.to_string()))
     }
 }
 
 /// Quick plotting functions
 pub mod quick {
     use super::*;
-    
+
     /// Quick line plot
     pub fn plot_line(x: &[f64], y: &[f64], output: impl AsRef<Path>) -> Result<()> {
         VisualizationBuilder::new()
@@ -587,7 +658,7 @@ pub mod quick {
             .add_line(x, y, None)
             .export(VisualizationFormat::PlotlyJson, output)
     }
-    
+
     /// Quick scatter plot
     pub fn plot_scatter(x: &[f64], y: &[f64], output: impl AsRef<Path>) -> Result<()> {
         VisualizationBuilder::new()
@@ -595,7 +666,7 @@ pub mod quick {
             .add_scatter(x, y, None)
             .export(VisualizationFormat::PlotlyJson, output)
     }
-    
+
     /// Quick histogram
     pub fn plot_histogram(values: &[f64], output: impl AsRef<Path>) -> Result<()> {
         VisualizationBuilder::new()
@@ -603,7 +674,7 @@ pub mod quick {
             .add_histogram(values, None)
             .export(VisualizationFormat::PlotlyJson, output)
     }
-    
+
     /// Quick heatmap
     pub fn plot_heatmap(z: &Array2<f64>, output: impl AsRef<Path>) -> Result<()> {
         VisualizationBuilder::new()
@@ -622,14 +693,14 @@ mod tests {
     fn test_visualization_builder() {
         let x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
         let y = vec![0.0, 1.0, 4.0, 9.0, 16.0];
-        
+
         let result = VisualizationBuilder::new()
             .title("Test Plot")
             .x_axis("X values")
             .y_axis("Y values")
             .add_line(&x, &y, Some("y = x²"))
             .to_string(VisualizationFormat::PlotlyJson);
-        
+
         assert!(result.is_ok());
         let json_str = result.unwrap();
         assert!(json_str.contains("Test Plot"));
@@ -640,12 +711,12 @@ mod tests {
     fn test_matplotlib_export() {
         let x = vec![0.0, 1.0, 2.0, 3.0];
         let y = vec![0.0, 1.0, 4.0, 9.0];
-        
+
         let result = VisualizationBuilder::new()
             .title("Matplotlib Test")
             .add_scatter(&x, &y, Some("data"))
             .to_string(VisualizationFormat::MatplotlibPython);
-        
+
         assert!(result.is_ok());
         let script = result.unwrap();
         assert!(script.contains("import matplotlib.pyplot"));
@@ -655,11 +726,10 @@ mod tests {
 
 // Advanced Visualization Features
 
-use std::collections::HashMap;
-#[cfg(feature = "async")]
-use tokio::sync::mpsc;
 #[cfg(feature = "async")]
 use futures::StreamExt;
+#[cfg(feature = "async")]
+use tokio::sync::mpsc;
 
 /// Interactive visualization server for real-time updates
 #[cfg(feature = "async")]
@@ -689,7 +759,7 @@ impl VisualizationServer {
     /// Create a new visualization server
     pub async fn new(port: u16) -> Result<Self> {
         let (tx, mut rx) = mpsc::channel(100);
-        
+
         // Spawn server task
         tokio::spawn(async move {
             // In a real implementation, this would start an HTTP server
@@ -699,19 +769,21 @@ impl VisualizationServer {
                 // Process update
             }
         });
-        
+
         Ok(Self {
             port,
             update_channel: tx,
         })
     }
-    
+
     /// Send update to a plot
     pub async fn update_plot(&self, update: PlotUpdate) -> Result<()> {
-        self.update_channel.send(update).await
+        self.update_channel
+            .send(update)
+            .await
             .map_err(|_| IoError::Other("Failed to send update".to_string()))
     }
-    
+
     /// Get server URL
     pub fn url(&self) -> String {
         format!("http://localhost:{}", self.port)
@@ -818,7 +890,7 @@ impl Visualization3DBuilder {
             metadata: Metadata::new(),
         }
     }
-    
+
     /// Add 3D scatter plot
     pub fn add_scatter3d(mut self, x: &[f64], y: &[f64], z: &[f64], name: Option<&str>) -> Self {
         self.data.push(DataSeries3D {
@@ -831,9 +903,15 @@ impl Visualization3DBuilder {
         });
         self
     }
-    
+
     /// Add surface plot
-    pub fn add_surface(mut self, x: &[f64], y: &[f64], z: &Array2<f64>, name: Option<&str>) -> Self {
+    pub fn add_surface(
+        mut self,
+        x: &[f64],
+        y: &[f64],
+        z: &Array2<f64>,
+        name: Option<&str>,
+    ) -> Self {
         let z_flat: Vec<f64> = z.iter().cloned().collect();
         self.data.push(DataSeries3D {
             name: name.map(|s| s.to_string()),
@@ -845,7 +923,7 @@ impl Visualization3DBuilder {
         });
         self
     }
-    
+
     /// Export 3D visualization
     pub fn export(self, format: VisualizationFormat, path: impl AsRef<Path>) -> Result<()> {
         // Implementation would convert 3D data to appropriate format
@@ -947,7 +1025,7 @@ impl DashboardBuilder {
             },
         }
     }
-    
+
     /// Add plot to dashboard
     pub fn add_plot(mut self, plot: VisualizationBuilder, row: usize, col: usize) -> Self {
         self.plots.push(DashboardPlot {
@@ -961,17 +1039,19 @@ impl DashboardBuilder {
         });
         self
     }
-    
+
     /// Export dashboard as HTML
     pub fn export_html(self, path: impl AsRef<Path>) -> Result<()> {
         let html = self.generate_html()?;
         let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
-        file.write_all(html.as_bytes()).map_err(|e| IoError::Io(e))?;
+        file.write_all(html.as_bytes())
+            .map_err(|e| IoError::Io(e))?;
         Ok(())
     }
-    
+
     fn generate_html(&self) -> Result<String> {
-        let mut html = String::from(r#"<!DOCTYPE html>
+        let mut html = String::from(
+            r#"<!DOCTYPE html>
 <html>
 <head>
     <title>Dashboard</title>
@@ -993,33 +1073,41 @@ impl DashboardBuilder {
 </head>
 <body>
     <div class="dashboard-grid">
-"#);
-        
+"#,
+        );
+
         // Add plots
         for (i, dashboard_plot) in self.plots.iter().enumerate() {
-            let plot_data = dashboard_plot.plot.clone()
+            let plot_data = dashboard_plot
+                .plot
+                .clone()
                 .to_string(VisualizationFormat::PlotlyJson)?;
-            
-            html.push_str(&format!(r#"
+
+            html.push_str(&format!(
+                r#"
         <div class="plot-container" style="grid-row: {}; grid-column: {};">
             <div id="plot{}" style="width: 100%; height: 100%;"></div>
             <script>
                 Plotly.newPlot('plot{}', {});
             </script>
         </div>
-"#, 
+"#,
                 dashboard_plot.position.row + 1,
                 dashboard_plot.position.col + 1,
-                i, i, plot_data
+                i,
+                i,
+                plot_data
             ));
         }
-        
-        html.push_str(r#"
+
+        html.push_str(
+            r#"
     </div>
 </body>
 </html>
-"#);
-        
+"#,
+        );
+
         Ok(html
             .replace("{cols}", &self.layout.cols.to_string())
             .replace("{rows}", &self.layout.rows.to_string())
@@ -1033,15 +1121,28 @@ impl DashboardBuilder {
 struct D3Exporter;
 
 impl VisualizationExporter for D3Exporter {
-    fn export(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata, path: &Path) -> Result<()> {
+    fn export(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+        path: &Path,
+    ) -> Result<()> {
         let html = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
-        file.write_all(html.as_bytes()).map_err(|e| IoError::Io(e))?;
+        file.write_all(html.as_bytes())
+            .map_err(|e| IoError::Io(e))?;
         Ok(())
     }
-    
-    fn to_string(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata) -> Result<String> {
-        let mut html = String::from(r#"<!DOCTYPE html>
+
+    fn to_string(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+    ) -> Result<String> {
+        let mut html = String::from(
+            r#"<!DOCTYPE html>
 <html>
 <head>
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -1054,8 +1155,9 @@ impl VisualizationExporter for D3Exporter {
 <body>
     <svg id="chart"></svg>
     <script>
-"#);
-        
+"#,
+        );
+
         // D3.js visualization code
         html.push_str(&format!(
             "        const margin = {{top: 20, right: 20, bottom: 30, left: 50}};\n\
@@ -1070,16 +1172,18 @@ impl VisualizationExporter for D3Exporter {
             config.width.unwrap_or(800),
             config.height.unwrap_or(600)
         ));
-        
+
         // Add implementation for different plot types
         // This is a simplified version
-        
-        html.push_str(r#"
+
+        html.push_str(
+            r#"
     </script>
 </body>
 </html>
-"#);
-        
+"#,
+        );
+
         Ok(html)
     }
 }
@@ -1088,25 +1192,36 @@ impl VisualizationExporter for D3Exporter {
 struct BokehExporter;
 
 impl VisualizationExporter for BokehExporter {
-    fn export(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata, path: &Path) -> Result<()> {
+    fn export(
+        &self,
+        data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+        path: &Path,
+    ) -> Result<()> {
         let json = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
-        file.write_all(json.as_bytes()).map_err(|e| IoError::Io(e))?;
+        file.write_all(json.as_bytes())
+            .map_err(|e| IoError::Io(e))?;
         Ok(())
     }
-    
-    fn to_string(&self, _data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata) -> Result<String> {
+
+    fn to_string(
+        &self,
+        _data: &[DataSeries],
+        config: &PlotConfig,
+        _metadata: &Metadata,
+    ) -> Result<String> {
         let doc = serde_json::json!({
             "version": "2.4.0",
             "title": config.title,
             "roots": []
         });
-        
+
         // Build Bokeh document structure
         // This is a simplified version
-        
-        serde_json::to_string_pretty(&doc)
-            .map_err(|e| IoError::SerializationError(e.to_string()))
+
+        serde_json::to_string_pretty(&doc).map_err(|e| IoError::SerializationError(e.to_string()))
     }
 }
 
@@ -1120,16 +1235,28 @@ fn get_3d_exporter(format: VisualizationFormat) -> Box<dyn Visualization3DExport
 
 /// Trait for 3D visualization exporters
 trait Visualization3DExporter {
-    fn export_3d(&self, data: &[DataSeries3D], config: &Plot3DConfig, metadata: &Metadata, path: &Path) -> Result<()>;
+    fn export_3d(
+        &self,
+        data: &[DataSeries3D],
+        config: &Plot3DConfig,
+        metadata: &Metadata,
+        path: &Path,
+    ) -> Result<()>;
 }
 
 /// Plotly 3D exporter
 struct Plotly3DExporter;
 
 impl Visualization3DExporter for Plotly3DExporter {
-    fn export_3d(&self, data: &[DataSeries3D], config: &Plot3DConfig, _metadata: &Metadata, path: &Path) -> Result<()> {
+    fn export_3d(
+        &self,
+        data: &[DataSeries3D],
+        config: &Plot3DConfig,
+        _metadata: &Metadata,
+        path: &Path,
+    ) -> Result<()> {
         let mut traces = Vec::new();
-        
+
         for series in data {
             let trace = match series.plot_type {
                 PlotType3D::Scatter3D => {
@@ -1159,7 +1286,7 @@ impl Visualization3DExporter for Plotly3DExporter {
             };
             traces.push(trace);
         }
-        
+
         let layout = serde_json::json!({
             "title": config.title,
             "width": config.width,
@@ -1175,17 +1302,18 @@ impl Visualization3DExporter for Plotly3DExporter {
                 }
             }
         });
-        
+
         let plot_data = serde_json::json!({
             "data": traces,
             "layout": layout,
         });
-        
+
         let json_str = serde_json::to_string_pretty(&plot_data)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
-            
+
         let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
-        file.write_all(json_str.as_bytes()).map_err(|e| IoError::Io(e))?;
+        file.write_all(json_str.as_bytes())
+            .map_err(|e| IoError::Io(e))?;
         Ok(())
     }
 }
@@ -1193,18 +1321,18 @@ impl Visualization3DExporter for Plotly3DExporter {
 /// Integration with external visualization services
 pub mod external {
     use super::*;
-    
+
     /// Plotly cloud integration
     pub struct PlotlyCloud {
         api_key: String,
         username: String,
     }
-    
+
     impl PlotlyCloud {
         pub fn new(api_key: String, username: String) -> Self {
             Self { api_key, username }
         }
-        
+
         /// Upload visualization to Plotly cloud
         #[cfg(feature = "reqwest")]
         pub fn upload(&self, plot_data: &str, filename: &str) -> Result<String> {
@@ -1212,10 +1340,10 @@ pub mod external {
             Ok(format!("https://plot.ly/~{}/{}", self.username, filename))
         }
     }
-    
+
     /// Jupyter notebook integration
     pub struct JupyterIntegration;
-    
+
     impl JupyterIntegration {
         /// Generate notebook cell with visualization
         pub fn create_cell(viz: &VisualizationBuilder) -> serde_json::Value {

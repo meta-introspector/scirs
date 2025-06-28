@@ -392,7 +392,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Attention<F> {
 }
 
 /// Encoder for Seq2Seq models
-// TODO: Implement Debug and Clone manually once the contained types support it
+#[derive(Debug)]
 pub struct Seq2SeqEncoder<F: Float + Debug + ScalarOperand + Send + Sync> {
     /// Input embedding layer
     pub embedding: Embedding<F>,
@@ -667,7 +667,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Seq2SeqEncoder
 }
 
 /// Decoder for Seq2Seq models
-// TODO: Implement Debug and Clone manually once the contained types support it
+#[derive(Debug)]
 pub struct Seq2SeqDecoder<F: Float + Debug + ScalarOperand + Send + Sync> {
     /// Output embedding layer
     pub embedding: Embedding<F>,
@@ -1051,7 +1051,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Seq2SeqDecoder
 }
 
 /// Sequence-to-Sequence (Seq2Seq) model
-// TODO: Implement Debug and Clone manually once the contained types support it
+#[derive(Debug)]
 pub struct Seq2Seq<F: Float + Debug + ScalarOperand + Send + Sync> {
     /// Encoder component
     pub encoder: Seq2SeqEncoder<F>,

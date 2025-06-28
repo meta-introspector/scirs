@@ -14,15 +14,17 @@
 #![recursion_limit = "524288"]
 
 pub mod activations;
-pub mod autograd;
-pub mod callbacks;
-pub mod config;
 /// Data augmentation module
 pub mod augmentation;
+pub mod autograd;
 /// C/C++ bindings module
 pub mod bindings;
+pub mod callbacks;
 /// Model compression module
 pub mod compression;
+pub mod config;
+/// Continual and multi-task learning module
+pub mod continual;
 pub mod data;
 /// Knowledge distillation module
 pub mod distillation;
@@ -58,8 +60,6 @@ pub mod prelude;
 pub mod quantization;
 /// Reinforcement learning module
 pub mod reinforcement;
-/// Continual and multi-task learning module
-pub mod continual;
 pub mod serialization;
 /// Serving and deployment module
 pub mod serving;

@@ -213,9 +213,9 @@ where
     where
         Func: Fn(&[F]) -> F,
     {
-        let bounds = self
-            .bounds
-            .ok_or_else(|| InterpolateError::invalid_input("Bounds must be specified".to_string()))?;
+        let bounds = self.bounds.ok_or_else(|| {
+            InterpolateError::invalid_input("Bounds must be specified".to_string())
+        })?;
 
         if bounds.is_empty() {
             return Err(InterpolateError::invalid_input(
@@ -259,9 +259,9 @@ where
             ));
         }
 
-        let bounds = self
-            .bounds
-            .ok_or_else(|| InterpolateError::invalid_input("Bounds must be specified".to_string()))?;
+        let bounds = self.bounds.ok_or_else(|| {
+            InterpolateError::invalid_input("Bounds must be specified".to_string())
+        })?;
 
         let dimension = bounds.len();
 

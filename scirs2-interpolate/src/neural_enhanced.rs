@@ -441,15 +441,145 @@ where
                     ));
                 }
             }
-            _ => {
-                return Err(InterpolateError::InvalidValue(format!(
-                    "Enhancement strategy {:?} not fully implemented",
-                    self.strategy
-                )));
+            EnhancementStrategy::ParameterAdaptation => {
+                // Use neural network to adapt interpolation parameters
+                if let Some(ref base) = self.base_interpolator {
+                    // Get neural predictions for parameter adjustments
+                    let neural_output = self.neural_forward(&normalized_x.view())?;
+                    let parameter_adjustments = self.denormalize_output(&neural_output.view())?;
+
+                    // Create adaptive base interpolation with neural-guided parameters
+                    let mut adaptive_predictions = Array1::zeros(x_new.len());
+                    for (i, &x_val) in x_new.iter().enumerate() {
+                        // Apply parameter adaptation (simplified approach)
+                        let adaptation_factor =
+                            T::one() + parameter_adjustments[i] * T::from(0.1).unwrap_or_default();
+                        let base_pred = base.evaluate(x_val)?;
+                        adaptive_predictions[i] = base_pred * adaptation_factor;
+                    }
+                    adaptive_predictions
+                } else {
+                    return Err(InterpolateError::InvalidState(
+                        "Base interpolator not available for parameter adaptation".to_string(),
+                    ));
+                }
+            }
+            EnhancementStrategy::HierarchicalCombination => {
+                // Hierarchical combination at multiple scales
+                if let Some(ref base) = self.base_interpolator {
+                    let base_predictions = base.evaluate_array(x_new)?;
+                    let neural_predictions = self.neural_forward(&normalized_x.view())?;
+                    let denormalized_neural =
+                        self.denormalize_output(&neural_predictions.view())?;
+
+                    // Implement hierarchical combination with coarse and fine scales
+                    let mut hierarchical_predictions = Array1::zeros(x_new.len());
+
+                    for i in 0..x_new.len() {
+                        // Coarse scale: base interpolation (global structure)
+                        let coarse_scale = base_predictions[i];
+
+                        // Fine scale: neural network (local details)
+                        let fine_scale = denormalized_neural[i];
+
+                        // Adaptive weighting based on local data density
+                        let weight_fine = self.compute_local_density_weight(x_new[i], x_new)?;
+                        let weight_coarse = T::one() - weight_fine;
+
+                        hierarchical_predictions[i] =
+                            weight_coarse * coarse_scale + weight_fine * fine_scale;
+                    }
+
+                    hierarchical_predictions
+                } else {
+                    return Err(InterpolateError::InvalidState(
+                        "Base interpolator not available for hierarchical combination".to_string(),
+                    ));
+                }
+            }
+            EnhancementStrategy::EnsembleCombination => {
+                // Ensemble of multiple neural-enhanced models
+                if let Some(ref base) = self.base_interpolator {
+                    let base_predictions = base.evaluate_array(x_new)?;
+
+                    // Generate multiple neural predictions with different approaches
+                    let neural_predictions_1 = self.neural_forward(&normalized_x.view())?;
+                    let denormalized_neural_1 =
+                        self.denormalize_output(&neural_predictions_1.view())?;
+
+                    // Generate variations for ensemble (simplified approach)
+                    let mut neural_predictions_2 = neural_predictions_1.clone();
+                    let mut neural_predictions_3 = neural_predictions_1.clone();
+
+                    // Add small variations to create ensemble diversity
+                    let noise_scale = T::from(0.05).unwrap_or_default();
+                    for i in 0..neural_predictions_2.len() {
+                        // Simple pseudo-random variation (in practice, use different model architectures)
+                        let variation_1 = ((i % 7) as f64 - 3.0) / 10.0;
+                        let variation_2 = ((i % 11) as f64 - 5.0) / 20.0;
+
+                        neural_predictions_2[i] +=
+                            noise_scale * T::from(variation_1).unwrap_or_default();
+                        neural_predictions_3[i] +=
+                            noise_scale * T::from(variation_2).unwrap_or_default();
+                    }
+
+                    let denormalized_neural_2 =
+                        self.denormalize_output(&neural_predictions_2.view())?;
+                    let denormalized_neural_3 =
+                        self.denormalize_output(&neural_predictions_3.view())?;
+
+                    // Combine ensemble predictions
+                    let mut ensemble_predictions = Array1::zeros(x_new.len());
+                    let weight_base = T::from(0.4).unwrap_or_default();
+                    let weight_neural = T::from(0.2).unwrap_or_default(); // Each neural model gets 20%
+
+                    for i in 0..x_new.len() {
+                        ensemble_predictions[i] = weight_base * base_predictions[i]
+                            + weight_neural
+                                * (denormalized_neural_1[i]
+                                    + denormalized_neural_2[i]
+                                    + denormalized_neural_3[i]);
+                    }
+
+                    ensemble_predictions
+                } else {
+                    return Err(InterpolateError::InvalidState(
+                        "Base interpolator not available for ensemble combination".to_string(),
+                    ));
+                }
             }
         };
 
         Ok(predictions)
+    }
+
+    /// Compute local density weight for hierarchical combination
+    fn compute_local_density_weight(
+        &self,
+        x_target: T,
+        x_new: &ArrayView1<T>,
+    ) -> InterpolateResult<T> {
+        // Compute local data density around the target point
+        let mut nearby_count = 0;
+        let threshold_distance = T::from(0.1).unwrap_or_default(); // 10% of range
+
+        // Count nearby points
+        for &x_val in x_new.iter() {
+            if (x_val - x_target).abs() < threshold_distance {
+                nearby_count += 1;
+            }
+        }
+
+        // Weight fine scale more heavily in dense regions
+        let density_factor =
+            T::from(nearby_count).unwrap_or_default() / T::from(x_new.len()).unwrap_or(T::one());
+
+        // Sigmoid-like mapping to [0, 1]
+        let weight = T::from(2.0).unwrap_or_default() * density_factor
+            / (T::one() + T::from(2.0).unwrap_or_default() * density_factor);
+
+        Ok(weight.min(T::one()).max(T::zero()))
     }
 
     /// Predict uncertainty (if supported by the architecture)

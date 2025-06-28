@@ -6,7 +6,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{ArrayBase, Data, DataMut, Ix1};
 use num_traits::{Float, NumCast};
-use scirs2_core::simd_ops::{SimdUnifiedOps, AutoOptimizer};
+use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 
 /// SIMD-optimized quickselect algorithm for finding the k-th smallest element
 ///
@@ -25,7 +25,7 @@ where
 
     while left < right {
         let pivot_idx = partition_simd(arr, left, right, &optimizer);
-        
+
         if k == pivot_idx {
             return arr[k];
         } else if k < pivot_idx {
@@ -46,7 +46,7 @@ where
     // Choose pivot using median-of-three
     let mid = left + (right - left) / 2;
     let pivot = median_of_three(arr[left], arr[mid], arr[right]);
-    
+
     let mut i = left;
     let mut j = right;
 
@@ -60,7 +60,7 @@ where
             while i < j {
                 let chunk_size = (j - i).min(8);
                 let mut found = false;
-                
+
                 for offset in 0..chunk_size {
                     if arr[i + offset] >= pivot {
                         i += offset;
@@ -68,7 +68,7 @@ where
                         break;
                     }
                 }
-                
+
                 if !found {
                     i += chunk_size;
                 } else {
@@ -80,7 +80,7 @@ where
             while i < j {
                 let chunk_size = (j - i).min(8);
                 let mut found = false;
-                
+
                 for offset in 0..chunk_size {
                     if arr[j - offset] <= pivot {
                         j -= offset;
@@ -88,7 +88,7 @@ where
                         break;
                     }
                 }
-                
+
                 if !found {
                     j -= chunk_size;
                 } else {
@@ -150,22 +150,22 @@ fn median_of_three<F: Float>(a: F, b: F, c: F) -> F {
 /// # Returns
 ///
 /// The q-th quantile of the input data
-pub fn quantile_simd<F, D>(
-    x: &mut ArrayBase<D, Ix1>,
-    q: F,
-    method: &str,
-) -> StatsResult<F>
+pub fn quantile_simd<F, D>(x: &mut ArrayBase<D, Ix1>, q: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
     D: DataMut<Elem = F>,
 {
     let n = x.len();
     if n == 0 {
-        return Err(StatsError::invalid_argument("Cannot compute quantile of empty array"));
+        return Err(StatsError::invalid_argument(
+            "Cannot compute quantile of empty array",
+        ));
     }
 
     if q < F::zero() || q > F::one() {
-        return Err(StatsError::invalid_argument("Quantile must be between 0 and 1"));
+        return Err(StatsError::invalid_argument(
+            "Quantile must be between 0 and 1",
+        ));
     }
 
     // Special cases
@@ -207,7 +207,10 @@ where
                     Ok(upper_val)
                 }
             }
-            _ => Err(StatsError::invalid_argument(&format!("Unknown interpolation method: {}", method))),
+            _ => Err(StatsError::invalid_argument(&format!(
+                "Unknown interpolation method: {}",
+                method
+            ))),
         }
     }
 }
@@ -237,13 +240,17 @@ where
 {
     let n = x.len();
     if n == 0 {
-        return Err(StatsError::invalid_argument("Cannot compute quantiles of empty array"));
+        return Err(StatsError::invalid_argument(
+            "Cannot compute quantiles of empty array",
+        ));
     }
 
     // Validate quantiles
     for &q in quantiles.iter() {
         if q < F::zero() || q > F::one() {
-            return Err(StatsError::invalid_argument("All quantiles must be between 0 and 1"));
+            return Err(StatsError::invalid_argument(
+                "All quantiles must be between 0 and 1",
+            ));
         }
     }
 
@@ -297,12 +304,12 @@ fn insertion_sort<F: Float>(data: &mut [F]) {
     for i in 1..data.len() {
         let key = data[i];
         let mut j = i;
-        
+
         while j > 0 && data[j - 1] > key {
             data[j] = data[j - 1];
             j -= 1;
         }
-        
+
         data[j] = key;
     }
 }
@@ -337,7 +344,7 @@ fn introsort_simd<F>(
 
     // Partition and recurse
     let pivot_idx = partition_simd(data, left, right, optimizer);
-    
+
     if pivot_idx > left {
         introsort_simd(data, left, pivot_idx - 1, depth_limit - 1, optimizer);
     }
@@ -349,12 +356,12 @@ fn introsort_simd<F>(
 /// Heapsort fallback for worst-case scenarios
 fn heapsort<F: Float>(data: &mut [F]) {
     let n = data.len();
-    
+
     // Build heap
     for i in (0..n / 2).rev() {
         heapify(data, n, i);
     }
-    
+
     // Extract elements from heap
     for i in (1..n).rev() {
         data.swap(0, i);
@@ -366,15 +373,15 @@ fn heapify<F: Float>(data: &mut [F], n: usize, i: usize) {
     let mut largest = i;
     let left = 2 * i + 1;
     let right = 2 * i + 2;
-    
+
     if left < n && data[left] > data[largest] {
         largest = left;
     }
-    
+
     if right < n && data[right] > data[largest] {
         largest = right;
     }
-    
+
     if largest != i {
         data.swap(i, largest);
         heapify(data, n, largest);
@@ -382,16 +389,12 @@ fn heapify<F: Float>(data: &mut [F], n: usize, i: usize) {
 }
 
 /// Compute quantile from sorted array
-fn compute_quantile_from_sorted<F>(
-    sorted_data: &[F],
-    q: F,
-    method: &str,
-) -> StatsResult<F>
+fn compute_quantile_from_sorted<F>(sorted_data: &[F], q: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast,
 {
     let n = sorted_data.len();
-    
+
     if q == F::zero() {
         return Ok(sorted_data[0]);
     }
@@ -422,7 +425,10 @@ where
                     Ok(upper_val)
                 }
             }
-            _ => Err(StatsError::invalid_argument(&format!("Unknown interpolation method: {}", method))),
+            _ => Err(StatsError::invalid_argument(&format!(
+                "Unknown interpolation method: {}",
+                method
+            ))),
         }
     }
 }
@@ -441,27 +447,25 @@ where
 /// SIMD-optimized percentile computation
 ///
 /// Computes the p-th percentile (0-100) using SIMD acceleration
-pub fn percentile_simd<F, D>(
-    x: &mut ArrayBase<D, Ix1>,
-    p: F,
-    method: &str,
-) -> StatsResult<F>
+pub fn percentile_simd<F, D>(x: &mut ArrayBase<D, Ix1>, p: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
     D: DataMut<Elem = F>,
 {
     if p < F::zero() || p > F::from(100.0).unwrap() {
-        return Err(StatsError::invalid_argument("Percentile must be between 0 and 100"));
+        return Err(StatsError::invalid_argument(
+            "Percentile must be between 0 and 100",
+        ));
     }
-    
+
     quantile_simd(x, p / F::from(100.0).unwrap(), method)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_quickselect_simd() {
@@ -473,15 +477,15 @@ mod tests {
     #[test]
     fn test_quantile_simd() {
         let mut data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
-        
+
         // Test median
         let median = quantile_simd(&mut data.view_mut(), 0.5, "linear").unwrap();
         assert_relative_eq!(median, 5.0, epsilon = 1e-10);
-        
+
         // Test quartiles
         let q1 = quantile_simd(&mut data.view_mut(), 0.25, "linear").unwrap();
         assert_relative_eq!(q1, 3.0, epsilon = 1e-10);
-        
+
         let q3 = quantile_simd(&mut data.view_mut(), 0.75, "linear").unwrap();
         assert_relative_eq!(q3, 7.0, epsilon = 1e-10);
     }
@@ -490,9 +494,9 @@ mod tests {
     fn test_quantiles_simd() {
         let mut data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let quantiles = array![0.1, 0.25, 0.5, 0.75, 0.9];
-        
+
         let results = quantiles_simd(&mut data.view_mut(), &quantiles.view(), "linear").unwrap();
-        
+
         assert_relative_eq!(results[0], 1.9, epsilon = 1e-10); // 10th percentile
         assert_relative_eq!(results[1], 3.25, epsilon = 1e-10); // 25th percentile
         assert_relative_eq!(results[2], 5.5, epsilon = 1e-10); // 50th percentile
@@ -504,7 +508,7 @@ mod tests {
     fn test_simd_sort() {
         let mut data = vec![9.0, 3.0, 7.0, 1.0, 5.0, 8.0, 2.0, 6.0, 4.0];
         simd_sort(&mut data);
-        
+
         let expected = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
         for (a, b) in data.iter().zip(expected.iter()) {
             assert_relative_eq!(a, b, epsilon = 1e-10);

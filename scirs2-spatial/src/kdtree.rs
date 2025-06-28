@@ -365,9 +365,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         let n = end - start;
 
         if n == 0 {
-            return Err(SpatialError::ValueError("Empty point set in build_tree".to_string()));
+            return Err(SpatialError::ValueError(
+                "Empty point set in build_tree".to_string(),
+            ));
         }
-
 
         // Choose axis based on depth (cycle through axes)
         let axis = depth % self.ndim;
@@ -472,7 +473,6 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             return Ok((vec![], vec![]));
         }
 
-
         // Initialize priority queue for k nearest neighbors
         // We use a max-heap so we can efficiently replace the furthest point when we find a closer one
         let mut neighbors: Vec<(T, usize)> = Vec::with_capacity(k + 1);
@@ -480,13 +480,15 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         // Keep track of the maximum distance in the heap, for early termination
         let mut max_dist = T::infinity();
 
-
         if let Some(root) = self.root {
             // Search recursively
             self.query_recursive(root, point, k, &mut neighbors, &mut max_dist);
 
             // Sort by distance (ascending)
-            neighbors.sort_by(|a, b| safe_partial_cmp(&a.0, &b.0, "kdtree sort neighbors").unwrap_or(std::cmp::Ordering::Equal));
+            neighbors.sort_by(|a, b| {
+                safe_partial_cmp(&a.0, &b.0, "kdtree sort neighbors")
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
 
             // Trim to k elements if needed
             if neighbors.len() > k {
@@ -531,8 +533,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
 
             // Sort if we just filled to capacity to establish max-heap
             if neighbors.len() == k {
-                neighbors
-                    .sort_by(|a, b| safe_partial_cmp(&b.0, &a.0, "kdtree sort max-heap").unwrap_or(std::cmp::Ordering::Equal));
+                neighbors.sort_by(|a, b| {
+                    safe_partial_cmp(&b.0, &a.0, "kdtree sort max-heap")
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                });
                 *max_dist = neighbors[0].0;
             }
         } else if &dist < max_dist {
@@ -540,7 +544,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             neighbors[0] = (dist, idx);
 
             // Re-sort to maintain max-heap property
-            neighbors.sort_by(|a, b| safe_partial_cmp(&b.0, &a.0, "kdtree re-sort max-heap").unwrap_or(std::cmp::Ordering::Equal));
+            neighbors.sort_by(|a, b| {
+                safe_partial_cmp(&b.0, &a.0, "kdtree re-sort max-heap")
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
             *max_dist = neighbors[0].0;
         }
 
@@ -613,7 +620,6 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             ));
         }
 
-
         let mut indices = Vec::new();
         let mut distances = Vec::new();
 
@@ -630,7 +636,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             // Sort by distance
             if !indices.is_empty() {
                 let mut idx_dist: Vec<(usize, T)> = indices.into_iter().zip(distances).collect();
-                idx_dist.sort_by(|a, b| safe_partial_cmp(&a.1, &b.1, "kdtree sort radius results").unwrap_or(std::cmp::Ordering::Equal));
+                idx_dist.sort_by(|a, b| {
+                    safe_partial_cmp(&a.1, &b.1, "kdtree sort radius results")
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                });
 
                 indices = idx_dist.iter().map(|(idx, _)| *idx).collect();
                 distances = idx_dist.iter().map(|(_, dist)| *dist).collect();
@@ -725,7 +734,6 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
                 "Radius must be non-negative".to_string(),
             ));
         }
-
 
         let mut count = 0;
 

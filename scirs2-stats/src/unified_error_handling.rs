@@ -5,11 +5,17 @@
 //! standardization, and recovery suggestions into a single cohesive system.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_handling_v2::{ErrorCode, ErrorBuilder, EnhancedError, ErrorContext as ErrorContextV2, RecoverySuggestion};
-use crate::error_standardization::{ErrorMessages, ErrorValidator, RecoverySuggestions, StandardizedErrorReporter};
 use crate::error_diagnostics::{
-    ErrorMonitor, ErrorOccurrence, HealthReport, global_monitor, 
-    record_global_error, get_global_statistics, generate_global_health_report
+    generate_global_health_report, get_global_statistics, global_monitor, record_global_error,
+    ErrorMonitor, ErrorOccurrence, HealthReport,
+};
+use crate::error_handling_v2::{
+    EnhancedError, ErrorBuilder, ErrorCode, ErrorContext as ErrorContextV2, RecoverySuggestion,
+};
+use crate::error_standardization::{ErrorMessages, RecoverySuggestions, StandardizedErrorReporter};
+use scirs2_core::error::CoreResult;
+use scirs2_core::validation::{
+    check_1d, check_finite, check_not_empty, check_positive, check_probabilities,
 };
 use std::sync::Once;
 use std::time::Instant;
@@ -37,15 +43,14 @@ impl UnifiedErrorHandler {
         message: impl Into<String>,
     ) -> EnhancedError {
         let operation_str = operation.into();
-        
+
         // Record the error for monitoring
         record_global_error(code, &operation_str);
-        
+
         // Create enhanced error with context and suggestions
         let base_error = StatsError::computation(message);
-        let enhanced = ErrorBuilder::new(code, operation_str)
-            .build(base_error);
-        
+        let enhanced = ErrorBuilder::new(code, operation_str).build(base_error);
+
         enhanced
     }
 
@@ -59,16 +64,16 @@ impl UnifiedErrorHandler {
         validation_message: impl Into<String>,
     ) -> EnhancedError {
         let operation_str = operation.into();
-        
+
         // Record the error for monitoring
         record_global_error(code, &operation_str);
-        
+
         // Create enhanced error with parameter context
         let base_error = StatsError::invalid_argument(validation_message);
         let enhanced = ErrorBuilder::new(code, operation_str)
             .parameter(parameter_name, parameter_value)
             .build(base_error);
-        
+
         enhanced
     }
 
@@ -82,15 +87,11 @@ impl UnifiedErrorHandler {
     where
         T: PartialOrd + Copy,
     {
-        if let Err(err) = ErrorValidator::validate_array(data, name) {
-            let code = if data.is_empty() {
-                ErrorCode::E2004
-            } else {
-                ErrorCode::E2001
-            };
-            
+        // Use scirs2-core validation
+        if let Err(_) = check_not_empty(data, name) {
+            let code = ErrorCode::E2004;
             record_global_error(code, operation);
-            return Err(err);
+            return Err(ErrorMessages::empty_array(name));
         }
         Ok(())
     }
@@ -102,19 +103,26 @@ impl UnifiedErrorHandler {
         name: &str,
         operation: &str,
     ) -> StatsResult<()> {
-        if let Err(err) = ErrorValidator::validate_finite_array(data, name) {
-            let code = if data.is_empty() {
-                ErrorCode::E2004
-            } else if data.iter().any(|x| x.is_nan()) {
-                ErrorCode::E3005
-            } else if data.iter().any(|x| x.is_infinite()) {
-                ErrorCode::E3006
-            } else {
-                ErrorCode::E1001
-            };
-            
+        // Use scirs2-core validation
+        if let Err(_) = check_not_empty(data, name) {
+            let code = ErrorCode::E2004;
             record_global_error(code, operation);
-            return Err(err);
+            return Err(ErrorMessages::empty_array(name));
+        }
+
+        // Check for finite values using core validation
+        for &value in data {
+            if let Err(_) = check_finite(value, name) {
+                let code = if value.is_nan() {
+                    ErrorCode::E3005
+                } else if value.is_infinite() {
+                    ErrorCode::E3006
+                } else {
+                    ErrorCode::E1001
+                };
+                record_global_error(code, operation);
+                return Err(ErrorMessages::nan_detected(operation));
+            }
         }
         Ok(())
     }
@@ -126,7 +134,8 @@ impl UnifiedErrorHandler {
         name: &str,
         operation: &str,
     ) -> StatsResult<()> {
-        if let Err(err) = ErrorValidator::validate_probability(value, name) {
+        // Use scirs2-core validation
+        if let Err(_) = scirs2_core::validation::check_probability(value, name) {
             let code = if value.is_nan() {
                 ErrorCode::E3005
             } else if value < 0.0 || value > 1.0 {
@@ -134,9 +143,9 @@ impl UnifiedErrorHandler {
             } else {
                 ErrorCode::E1001
             };
-            
+
             record_global_error(code, operation);
-            return Err(err);
+            return Err(ErrorMessages::invalid_probability(name, value));
         }
         Ok(())
     }
@@ -148,7 +157,8 @@ impl UnifiedErrorHandler {
         name: &str,
         operation: &str,
     ) -> StatsResult<()> {
-        if let Err(err) = ErrorValidator::validate_positive(value, name) {
+        // Use scirs2-core validation
+        if let Err(_) = check_positive(value, name) {
             let code = if value.is_nan() {
                 ErrorCode::E3005
             } else if value.is_infinite() {
@@ -158,38 +168,50 @@ impl UnifiedErrorHandler {
             } else {
                 ErrorCode::E1001
             };
-            
+
             record_global_error(code, operation);
-            return Err(err);
+            return Err(ErrorMessages::non_positive_value(name, value));
         }
         Ok(())
     }
 
     /// Generate a comprehensive error report with diagnostics
-    pub fn generate_comprehensive_report(&self, error: &StatsError, context: Option<&str>) -> String {
+    pub fn generate_comprehensive_report(
+        &self,
+        error: &StatsError,
+        context: Option<&str>,
+    ) -> String {
         let mut report = StandardizedErrorReporter::generate_report(error, context);
-        
+
         // Add system health information
         let health_report = generate_global_health_report();
         if health_report.health_score < 80 {
             report.push_str("\n🚨 SYSTEM HEALTH ALERT:\n");
-            report.push_str(&format!("Overall health score: {}/100\n", health_report.health_score));
-            
+            report.push_str(&format!(
+                "Overall health score: {}/100\n",
+                health_report.health_score
+            ));
+
             if !health_report.critical_issues.is_empty() {
                 report.push_str("Critical issues detected:\n");
                 for issue in &health_report.critical_issues {
-                    report.push_str(&format!("  • {} (Severity: {})\n", issue.title, issue.severity));
+                    report.push_str(&format!(
+                        "  • {} (Severity: {})\n",
+                        issue.title, issue.severity
+                    ));
                 }
             }
         }
-        
+
         // Add monitoring statistics
         let stats = get_global_statistics();
         if stats.total_errors > 10 {
-            report.push_str(&format!("\n📊 Error Statistics: {} total errors, {:.4} errors/sec\n", 
-                stats.total_errors, stats.error_rate));
+            report.push_str(&format!(
+                "\n📊 Error Statistics: {} total errors, {:.4} errors/sec\n",
+                stats.total_errors, stats.error_rate
+            ));
         }
-        
+
         report
     }
 
@@ -240,10 +262,9 @@ pub fn global_error_handler() -> &'static UnifiedErrorHandler {
 #[macro_export]
 macro_rules! stats_error_unified {
     ($code:expr, $op:expr, $msg:expr) => {
-        $crate::unified_error_handling::global_error_handler()
-            .create_error($code, $op, $msg)
+        $crate::unified_error_handling::global_error_handler().create_error($code, $op, $msg)
     };
-    
+
     ($code:expr, $op:expr, $msg:expr, $param:expr => $value:expr) => {
         $crate::unified_error_handling::global_error_handler()
             .create_validation_error($code, $op, $param, $value, $msg)
@@ -257,17 +278,17 @@ macro_rules! validate_or_error {
         $crate::unified_error_handling::global_error_handler()
             .validate_array_or_error($data, $name, $op)?
     };
-    
+
     (finite: $data:expr, $name:expr, $op:expr) => {
         $crate::unified_error_handling::global_error_handler()
             .validate_finite_array_or_error($data, $name, $op)?
     };
-    
+
     (probability: $value:expr, $name:expr, $op:expr) => {
         $crate::unified_error_handling::global_error_handler()
             .validate_probability_or_error($value, $name, $op)?
     };
-    
+
     (positive: $value:expr, $name:expr, $op:expr) => {
         $crate::unified_error_handling::global_error_handler()
             .validate_positive_or_error($value, $name, $op)?
@@ -284,11 +305,17 @@ pub fn create_standardized_error(
     match error_type {
         "dimension_mismatch" => ErrorMessages::dimension_mismatch(parameter, value),
         "empty_array" => ErrorMessages::empty_array(parameter),
-        "non_positive" => ErrorMessages::non_positive_value(parameter, value.parse().unwrap_or(0.0)),
-        "invalid_probability" => ErrorMessages::invalid_probability(parameter, value.parse().unwrap_or(-1.0)),
+        "non_positive" => {
+            ErrorMessages::non_positive_value(parameter, value.parse().unwrap_or(0.0))
+        }
+        "invalid_probability" => {
+            ErrorMessages::invalid_probability(parameter, value.parse().unwrap_or(-1.0))
+        }
         "nan_detected" => ErrorMessages::nan_detected(operation),
         "infinite_detected" => ErrorMessages::infinite_value_detected(operation),
-        "convergence_failure" => ErrorMessages::convergence_failure(operation, value.parse().unwrap_or(100)),
+        "convergence_failure" => {
+            ErrorMessages::convergence_failure(operation, value.parse().unwrap_or(100))
+        }
         _ => StatsError::invalid_argument(format!("Unknown error type: {}", error_type)),
     }
 }
@@ -301,14 +328,10 @@ mod tests {
     #[test]
     fn test_unified_error_handler() {
         let handler = UnifiedErrorHandler::new();
-        
+
         // Test error creation
-        let error = handler.create_error(
-            ErrorCode::E3005,
-            "test_operation",
-            "Test error message"
-        );
-        
+        let error = handler.create_error(ErrorCode::E3005, "test_operation", "Test error message");
+
         assert_eq!(error.code, ErrorCode::E3005);
         assert_eq!(error.context.operation, "test_operation");
     }
@@ -316,21 +339,21 @@ mod tests {
     #[test]
     fn test_validation_errors() {
         let handler = UnifiedErrorHandler::new();
-        
+
         // Test empty array validation
         let empty_data: &[f64] = &[];
         let result = handler.validate_array_or_error(empty_data, "test_array", "test_op");
         assert!(result.is_err());
-        
+
         // Test NaN validation
         let nan_data = &[1.0, f64::NAN, 3.0];
         let result = handler.validate_finite_array_or_error(nan_data, "test_array", "test_op");
         assert!(result.is_err());
-        
+
         // Test invalid probability
         let result = handler.validate_probability_or_error(-0.5, "probability", "test_op");
         assert!(result.is_err());
-        
+
         // Test non-positive value
         let result = handler.validate_positive_or_error(-1.0, "positive_param", "test_op");
         assert!(result.is_err());
@@ -340,7 +363,7 @@ mod tests {
     fn test_global_handler() {
         let handler1 = global_error_handler();
         let handler2 = global_error_handler();
-        
+
         // Should be the same instance
         assert_eq!(handler1 as *const _, handler2 as *const _);
     }
@@ -348,12 +371,8 @@ mod tests {
     #[test]
     fn test_macros() {
         // Test error creation macro
-        let _error = stats_error_unified!(
-            ErrorCode::E1001,
-            "test_operation",
-            "Test message"
-        );
-        
+        let _error = stats_error_unified!(ErrorCode::E1001, "test_operation", "Test message");
+
         // Test validation macro would need valid arrays to test properly
         let valid_data = &[1.0, 2.0, 3.0];
         let result: Result<(), StatsError> = (|| {

@@ -47,16 +47,16 @@
 //! }
 //! ```
 
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use crate::error::{IoError, Result};
+use futures::{SinkExt, Stream, StreamExt};
+use ndarray::{Array1, Array2, ArrayD, ArrayView1, IxDyn};
+use scirs2_core::numeric::ScientificNumber;
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
-use ndarray::{Array1, Array2, ArrayView1, ArrayD, IxDyn};
-use tokio::sync::{mpsc, broadcast, RwLock};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+use tokio::sync::{broadcast, mpsc, RwLock};
 use tokio::time::{interval, sleep};
-use futures::{Stream, StreamExt, SinkExt};
-use crate::error::{IoError, Result};
-use scirs2_core::numeric::ScientificNumber;
 
 /// Streaming protocol types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -147,16 +147,16 @@ pub struct StreamClient {
 trait StreamConnection: Send + Sync {
     /// Connect to the stream
     async fn connect(&mut self) -> Result<()>;
-    
+
     /// Receive data from the stream
     async fn receive(&mut self) -> Result<Vec<u8>>;
-    
+
     /// Send data to the stream
     async fn send(&mut self, data: &[u8]) -> Result<()>;
-    
+
     /// Check if connected
     fn is_connected(&self) -> bool;
-    
+
     /// Close the connection
     async fn close(&mut self) -> Result<()>;
 }
@@ -203,29 +203,29 @@ impl StreamClient {
     pub async fn connect(&mut self) -> Result<()> {
         let mut attempts = 0;
         let mut delay = self.config.backoff.initial_delay;
-        
+
         loop {
             attempts += 1;
             self.metrics.write().await.connection_attempts += 1;
-            
+
             match self.create_connection().await {
-                Ok(mut conn) => {
-                    match conn.connect().await {
-                        Ok(()) => {
-                            self.connection = Some(conn);
-                            self.metrics.write().await.successful_connections += 1;
-                            return Ok(());
-                        }
-                        Err(e) if self.config.reconnect && attempts < self.config.backoff.max_retries => {
-                            eprintln!("Connection failed (attempt {}): {}", attempts, e);
-                            sleep(delay).await;
-                            delay = (delay.as_secs_f64() * self.config.backoff.multiplier)
-                                .min(self.config.backoff.max_delay.as_secs_f64());
-                            delay = Duration::from_secs_f64(delay.as_secs_f64());
-                        }
-                        Err(e) => return Err(e),
+                Ok(mut conn) => match conn.connect().await {
+                    Ok(()) => {
+                        self.connection = Some(conn);
+                        self.metrics.write().await.successful_connections += 1;
+                        return Ok(());
                     }
-                }
+                    Err(e)
+                        if self.config.reconnect && attempts < self.config.backoff.max_retries =>
+                    {
+                        eprintln!("Connection failed (attempt {}): {}", attempts, e);
+                        sleep(delay).await;
+                        delay = (delay.as_secs_f64() * self.config.backoff.multiplier)
+                            .min(self.config.backoff.max_delay.as_secs_f64());
+                        delay = Duration::from_secs_f64(delay.as_secs_f64());
+                    }
+                    Err(e) => return Err(e),
+                },
                 Err(e) => return Err(e),
             }
         }
@@ -311,10 +311,10 @@ impl StreamClientBuilder {
 
     /// Build the client
     pub fn build(self) -> Result<StreamClient> {
-        let endpoint = self.endpoint.ok_or_else(|| {
-            IoError::ParseError("Endpoint not specified".to_string())
-        })?;
-        
+        let endpoint = self
+            .endpoint
+            .ok_or_else(|| IoError::ParseError("Endpoint not specified".to_string()))?;
+
         let config = StreamConfig {
             protocol: self.protocol,
             endpoint,
@@ -325,7 +325,7 @@ impl StreamClientBuilder {
             timeout: self.timeout,
             compression: self.compression,
         };
-        
+
         Ok(StreamClient {
             config,
             connection: None,
@@ -389,7 +389,7 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
     /// Collect processed data
     pub async fn collect(mut self, max_items: usize) -> Result<Vec<Array1<T>>> {
         let mut results = Vec::new();
-        
+
         // Process streaming data with proper implementation
         while results.len() < max_items {
             // Receive data from stream
@@ -406,23 +406,23 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
                                     break;
                                 }
                             }
-                            
+
                             if passes_filters {
                                 // Apply transforms
                                 let mut transformed_data = parsed_data;
                                 for transform in &self.transforms {
                                     transformed_data = transform(transformed_data);
                                 }
-                                
+
                                 // Add to buffer and apply windowing
                                 self.buffer.push_back(transformed_data.clone());
-                                
+
                                 // Maintain window size
                                 if let Some(window_size) = self.window_size {
                                     while self.buffer.len() > window_size {
                                         self.buffer.pop_front();
                                     }
-                                    
+
                                     // Process windowed data when window is full
                                     if self.buffer.len() == window_size {
                                         results.push(self.process_window());
@@ -447,10 +447,10 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
                 break;
             }
         }
-        
+
         Ok(results)
     }
-    
+
     /// Parse raw data into Array1<T>
     fn parse_data(&self, raw_data: &[u8]) -> Result<Array1<T>> {
         // Implementation depends on data format and type T
@@ -459,21 +459,21 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
         let data: Vec<T> = (0..size).map(|_| T::zero()).collect();
         Ok(Array1::from_vec(data))
     }
-    
+
     /// Process current window into a single array
     fn process_window(&self) -> Array1<T> {
         if self.buffer.is_empty() {
             return Array1::from_vec(vec![T::zero()]);
         }
-        
+
         // For simplicity, concatenate all arrays in the window
         let total_len: usize = self.buffer.iter().map(|arr| arr.len()).sum();
         let mut result = Vec::with_capacity(total_len);
-        
+
         for array in &self.buffer {
             result.extend_from_slice(array.as_slice().unwrap());
         }
-        
+
         Array1::from_vec(result)
     }
 }
@@ -500,7 +500,7 @@ impl StreamConnection for WebSocketConnection {
         self.connected = true;
         Ok(())
     }
-    
+
     async fn receive(&mut self) -> Result<Vec<u8>> {
         if !self.connected {
             return Err(IoError::ParseError("Not connected".to_string()));
@@ -508,18 +508,18 @@ impl StreamConnection for WebSocketConnection {
         // Simplified - would receive actual data
         Ok(vec![0u8; 100])
     }
-    
+
     async fn send(&mut self, _data: &[u8]) -> Result<()> {
         if !self.connected {
             return Err(IoError::FileError("Not connected".to_string()));
         }
         Ok(())
     }
-    
+
     fn is_connected(&self) -> bool {
         self.connected
     }
-    
+
     async fn close(&mut self) -> Result<()> {
         self.connected = false;
         Ok(())
@@ -548,25 +548,25 @@ impl StreamConnection for TcpConnection {
         self.connected = true;
         Ok(())
     }
-    
+
     async fn receive(&mut self) -> Result<Vec<u8>> {
         if !self.connected {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
         Ok(vec![0u8; 100])
     }
-    
+
     async fn send(&mut self, _data: &[u8]) -> Result<()> {
         if !self.connected {
             return Err(IoError::FileError("Not connected".to_string()));
         }
         Ok(())
     }
-    
+
     fn is_connected(&self) -> bool {
         self.connected
     }
-    
+
     async fn close(&mut self) -> Result<()> {
         self.connected = false;
         Ok(())
@@ -597,30 +597,34 @@ impl StreamConnection for SSEConnection {
         self.connected = true;
         Ok(())
     }
-    
+
     async fn receive(&mut self) -> Result<Vec<u8>> {
         if !self.connected {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
-        
+
         // In real implementation, would parse SSE format (data: , event: , id: , retry:)
-        let event_data = format!("data: {{\"timestamp\": {}, \"value\": 42.0}}\n\n", 
-                                std::time::SystemTime::now()
-                                    .duration_since(std::time::UNIX_EPOCH)
-                                    .unwrap()
-                                    .as_secs());
+        let event_data = format!(
+            "data: {{\"timestamp\": {}, \"value\": 42.0}}\n\n",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+        );
         Ok(event_data.into_bytes())
     }
-    
+
     async fn send(&mut self, _data: &[u8]) -> Result<()> {
         // SSE is typically server-to-client only
-        Err(IoError::FileError("SSE does not support client-to-server messaging".to_string()))
+        Err(IoError::FileError(
+            "SSE does not support client-to-server messaging".to_string(),
+        ))
     }
-    
+
     fn is_connected(&self) -> bool {
         self.connected
     }
-    
+
     async fn close(&mut self) -> Result<()> {
         self.connected = false;
         Ok(())
@@ -651,32 +655,35 @@ impl StreamConnection for GrpcStreamConnection {
         self.connected = true;
         Ok(())
     }
-    
+
     async fn receive(&mut self) -> Result<Vec<u8>> {
         if !self.connected {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
-        
+
         // In real implementation, would receive protobuf messages
         self.sequence_id += 1;
-        let data = format!("{{\"seq\": {}, \"data\": [1.0, 2.0, 3.0]}}", self.sequence_id);
+        let data = format!(
+            "{{\"seq\": {}, \"data\": [1.0, 2.0, 3.0]}}",
+            self.sequence_id
+        );
         Ok(data.into_bytes())
     }
-    
+
     async fn send(&mut self, data: &[u8]) -> Result<()> {
         if !self.connected {
             return Err(IoError::FileError("Not connected".to_string()));
         }
-        
+
         // In real implementation, would send protobuf message via gRPC
         let _message_size = data.len();
         Ok(())
     }
-    
+
     fn is_connected(&self) -> bool {
         self.connected
     }
-    
+
     async fn close(&mut self) -> Result<()> {
         self.connected = false;
         Ok(())
@@ -709,19 +716,19 @@ impl StreamConnection for MqttConnection {
         self.connected = true;
         Ok(())
     }
-    
+
     async fn receive(&mut self) -> Result<Vec<u8>> {
         if !self.connected {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
-        
+
         // In real implementation, would receive from subscribed topics
         if let Ok(mut queue) = self.message_queue.lock() {
             if let Some(message) = queue.pop_front() {
                 return Ok(message);
             }
         }
-        
+
         // Simulate incoming message
         let payload = format!("{{\"topic\": \"{}\", \"timestamp\": {}, \"payload\": {{\"temp\": 23.5, \"humidity\": 65.2}}}}",
                              self.topic,
@@ -731,21 +738,21 @@ impl StreamConnection for MqttConnection {
                                  .as_millis());
         Ok(payload.into_bytes())
     }
-    
+
     async fn send(&mut self, data: &[u8]) -> Result<()> {
         if !self.connected {
             return Err(IoError::FileError("Not connected".to_string()));
         }
-        
+
         // In real implementation, would publish to MQTT topic
         let _payload_size = data.len();
         Ok(())
     }
-    
+
     fn is_connected(&self) -> bool {
         self.connected
     }
-    
+
     async fn close(&mut self) -> Result<()> {
         self.connected = false;
         Ok(())
@@ -776,40 +783,45 @@ impl StreamConnection for UdpConnection {
         self.connected = true;
         Ok(())
     }
-    
+
     async fn receive(&mut self) -> Result<Vec<u8>> {
         if !self.connected {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
-        
+
         // In real implementation, would receive UDP packets
         if let Ok(mut counter) = self.packet_counter.lock() {
             *counter += 1;
-            let packet_data = format!("UDP packet {}: {{\"data\": [{}]}}", 
-                                    *counter, 
-                                    (0..10).map(|i| format!("{:.2}", (*counter as f64 + i as f64) * 0.1))
-                                           .collect::<Vec<_>>()
-                                           .join(", "));
+            let packet_data = format!(
+                "UDP packet {}: {{\"data\": [{}]}}",
+                *counter,
+                (0..10)
+                    .map(|i| format!("{:.2}", (*counter as f64 + i as f64) * 0.1))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
             Ok(packet_data.into_bytes())
         } else {
-            Err(IoError::ParseError("Failed to access packet counter".to_string()))
+            Err(IoError::ParseError(
+                "Failed to access packet counter".to_string(),
+            ))
         }
     }
-    
+
     async fn send(&mut self, data: &[u8]) -> Result<()> {
         if !self.connected {
             return Err(IoError::FileError("Not connected".to_string()));
         }
-        
+
         // In real implementation, would send UDP packet
         let _packet_size = data.len();
         Ok(())
     }
-    
+
     fn is_connected(&self) -> bool {
         self.connected
     }
-    
+
     async fn close(&mut self) -> Result<()> {
         self.connected = false;
         Ok(())
@@ -884,20 +896,25 @@ impl StreamSynchronizer {
         // Start receiving from all streams
         let mut handles = Vec::new();
         let mut last_sync_time = Instant::now();
-        
+
         loop {
             let mut synchronized_data = Vec::new();
             let mut has_data = false;
-            
+
             // Collect data from all streams
             for stream_info in &mut self.streams {
                 // Try to connect if not connected
-                if !stream_info.client.connection.as_ref().map_or(false, |c| c.is_connected()) {
+                if !stream_info
+                    .client
+                    .connection
+                    .as_ref()
+                    .map_or(false, |c| c.is_connected())
+                {
                     if let Err(_) = stream_info.client.connect().await {
                         continue; // Skip this stream if connection fails
                     }
                 }
-                
+
                 // Receive data from stream
                 if let Some(ref mut connection) = stream_info.client.connection {
                     match connection.receive().await {
@@ -906,15 +923,15 @@ impl StreamSynchronizer {
                                 timestamp: Instant::now(),
                                 data: data.clone(),
                             };
-                            
+
                             stream_info.buffer.push_back(timestamped_data);
                             stream_info.last_timestamp = Some(Instant::now());
-                            
+
                             // Keep buffer within limits
                             while stream_info.buffer.len() > self.buffer_size {
                                 stream_info.buffer.pop_front();
                             }
-                            
+
                             has_data = true;
                         }
                         Err(_) => {
@@ -924,13 +941,13 @@ impl StreamSynchronizer {
                     }
                 }
             }
-            
+
             if !has_data {
                 // No data from any stream, short delay before retrying
                 tokio::time::sleep(Duration::from_millis(10)).await;
                 continue;
             }
-            
+
             // Apply synchronization strategy
             match self.sync_strategy {
                 SyncStrategy::Timestamp => {
@@ -943,7 +960,7 @@ impl StreamSynchronizer {
                             }
                         }
                     }
-                    
+
                     // Collect data with matching timestamps (within tolerance)
                     if let Some(target_time) = min_timestamp {
                         let tolerance = Duration::from_millis(100); // 100ms tolerance
@@ -951,7 +968,10 @@ impl StreamSynchronizer {
                             if let Some(front) = stream_info.buffer.front() {
                                 if front.timestamp <= target_time + tolerance {
                                     if let Some(data) = stream_info.buffer.pop_front() {
-                                        synchronized_data.push((stream_info.name.as_str(), data.data.as_slice()));
+                                        synchronized_data.push((
+                                            stream_info.name.as_str(),
+                                            data.data.as_slice(),
+                                        ));
                                     }
                                 }
                             }
@@ -962,7 +982,8 @@ impl StreamSynchronizer {
                     // Simple round-robin collection
                     for stream_info in &mut self.streams {
                         if let Some(data) = stream_info.buffer.pop_front() {
-                            synchronized_data.push((stream_info.name.as_str(), data.data.as_slice()));
+                            synchronized_data
+                                .push((stream_info.name.as_str(), data.data.as_slice()));
                         }
                     }
                 }
@@ -970,19 +991,20 @@ impl StreamSynchronizer {
                     // Collect any available data
                     for stream_info in &mut self.streams {
                         while let Some(data) = stream_info.buffer.pop_front() {
-                            synchronized_data.push((stream_info.name.as_str(), data.data.as_slice()));
+                            synchronized_data
+                                .push((stream_info.name.as_str(), data.data.as_slice()));
                         }
                     }
                 }
             }
-            
+
             // Process synchronized data if available
             if !synchronized_data.is_empty() {
                 if let Err(e) = processor(synchronized_data) {
                     eprintln!("Processor error: {}", e);
                 }
             }
-            
+
             // Honor output rate if specified
             if let Some(rate) = self.output_rate {
                 let elapsed = last_sync_time.elapsed();
@@ -1049,7 +1071,7 @@ impl<T: Clone> TimeSeriesBuffer<T> {
     /// Add a value
     pub fn push(&mut self, value: T) {
         let now = Instant::now();
-        
+
         // Remove old data if time window is set
         if let Some(duration) = self.window_duration {
             let cutoff = now - duration;
@@ -1062,19 +1084,19 @@ impl<T: Clone> TimeSeriesBuffer<T> {
                 }
             }
         }
-        
+
         // Remove oldest if at capacity
         if self.data.len() >= self.max_size {
             self.data.pop_front();
             self.stats.total_dropped += 1;
         }
-        
+
         // Add new point
         self.data.push_back(TimePoint {
             timestamp: now,
             value,
         });
-        
+
         // Update stats
         self.stats.total_added += 1;
         self.stats.current_size = self.data.len();
@@ -1091,7 +1113,8 @@ impl<T: Clone> TimeSeriesBuffer<T> {
 
     /// Get values within time range
     pub fn range(&self, start: Instant, end: Instant) -> Vec<T> {
-        self.data.iter()
+        self.data
+            .iter()
             .filter(|tp| tp.timestamp >= start && tp.timestamp <= end)
             .map(|tp| tp.value.clone())
             .collect()
@@ -1134,7 +1157,7 @@ impl<T: Clone + Send + 'static> StreamAggregator<T> {
     /// Create a new aggregator
     pub fn new(window: Duration) -> (Self, mpsc::Receiver<AggregationResult>) {
         let (tx, rx) = mpsc::channel(100);
-        
+
         let aggregator = Self {
             window,
             current_window: Vec::new(),
@@ -1142,7 +1165,7 @@ impl<T: Clone + Send + 'static> StreamAggregator<T> {
             aggregators: Vec::new(),
             results_tx: tx,
         };
-        
+
         (aggregator, rx)
     }
 
@@ -1157,13 +1180,13 @@ impl<T: Clone + Send + 'static> StreamAggregator<T> {
     /// Process a value
     pub async fn process(&mut self, value: T) -> Result<()> {
         let now = Instant::now();
-        
+
         // Check if we need to start a new window
         if now.duration_since(self.window_start) >= self.window {
             self.flush_window().await?;
             self.window_start = now;
         }
-        
+
         self.current_window.push(value);
         Ok(())
     }
@@ -1173,21 +1196,25 @@ impl<T: Clone + Send + 'static> StreamAggregator<T> {
         if self.current_window.is_empty() {
             return Ok(());
         }
-        
-        let values: Vec<f64> = self.aggregators.iter()
+
+        let values: Vec<f64> = self
+            .aggregators
+            .iter()
             .map(|f| f(&self.current_window))
             .collect();
-        
+
         let result = AggregationResult {
             window_start: self.window_start,
             window_end: Instant::now(),
             count: self.current_window.len(),
             values,
         };
-        
-        self.results_tx.send(result).await
+
+        self.results_tx
+            .send(result)
+            .await
             .map_err(|_| IoError::FileError("Failed to send aggregation result".to_string()))?;
-        
+
         self.current_window.clear();
         Ok(())
     }
@@ -1203,15 +1230,15 @@ mod tests {
     #[test]
     fn test_time_series_buffer() {
         let mut buffer = TimeSeriesBuffer::new(100);
-        
+
         for i in 0..150 {
             buffer.push(i as f64);
         }
-        
+
         assert_eq!(buffer.stats().total_added, 150);
         assert_eq!(buffer.stats().total_dropped, 50);
         assert_eq!(buffer.stats().current_size, 100);
-        
+
         let values = buffer.as_array();
         assert_eq!(values.len(), 100);
         assert_eq!(values[0], 50.0);
@@ -1223,7 +1250,7 @@ mod tests {
         let backoff = BackoffConfig::default();
         assert_eq!(backoff.initial_delay, Duration::from_millis(100));
         assert_eq!(backoff.multiplier, 2.0);
-        
+
         let mut delay = backoff.initial_delay.as_secs_f64();
         for _ in 0..5 {
             delay *= backoff.multiplier;
@@ -1234,20 +1261,18 @@ mod tests {
     #[tokio::test]
     async fn test_stream_aggregator() {
         let (mut aggregator, mut rx) = StreamAggregator::<f64>::new(Duration::from_secs(1));
-        
+
         // Add mean aggregator
-        aggregator.add_aggregator(|values| {
-            values.iter().sum::<f64>() / values.len() as f64
-        });
-        
+        aggregator.add_aggregator(|values| values.iter().sum::<f64>() / values.len() as f64);
+
         // Process some values
         for i in 0..10 {
             aggregator.process(i as f64).await.unwrap();
         }
-        
+
         // Force flush
         aggregator.flush_window().await.unwrap();
-        
+
         // Check result
         if let Some(result) = rx.recv().await {
             assert_eq!(result.count, 10);

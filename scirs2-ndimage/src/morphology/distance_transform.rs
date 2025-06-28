@@ -49,8 +49,8 @@ pub enum DistanceMetric {
 
 /// Optimized Euclidean distance transform using separable algorithm.
 ///
-/// This function implements a more efficient algorithm based on separable filtering
-/// that reduces complexity from O(n²) per pixel to O(n log n) overall.
+/// This function implements the Felzenszwalb & Huttenlocher separable algorithm
+/// that reduces complexity from O(n²) to O(n) per dimension.
 fn distance_transform_edt_optimized<D>(
     input: &Array<bool, D>,
     sampling: &[f64],
@@ -62,10 +62,226 @@ where
     D::Pattern: ndarray::NdIndex<D>,
     for<'a> &'a [usize]: ndarray::NdIndex<D>,
 {
-    // For now, fall back to the brute force algorithm to ensure correctness
-    // A proper separable EDT algorithm would require implementation of
-    // algorithms like Felzenszwalb & Huttenlocher's method
-    distance_transform_edt_brute_force(input, sampling, return_distances, return_indices)
+    let ndim = input.ndim();
+    let shape = input.shape();
+
+    // Initialize squared distance array (we'll take sqrt at the end)
+    let mut dist_sq = Array::<f64, D>::zeros(input.raw_dim());
+
+    // Initialize indices array if needed
+    let mut indices = if return_indices {
+        let mut ind_shape = Vec::with_capacity(ndim + 1);
+        ind_shape.push(ndim);
+        ind_shape.extend(shape);
+        Some(Array::zeros(IxDyn(&ind_shape)))
+    } else {
+        None
+    };
+
+    // Initialize: background pixels have distance 0, foreground have infinity
+    for idx in ndarray::indices(shape) {
+        let idx_vec: Vec<_> = idx.slice().to_vec();
+        if input[idx_vec.as_slice()] {
+            // Foreground pixel - initialize with infinity
+            dist_sq[idx_vec.as_slice()] = f64::INFINITY;
+        } else {
+            // Background pixel - distance is 0
+            dist_sq[idx_vec.as_slice()] = 0.0;
+            // Initialize indices to point to themselves
+            if let Some(ref mut ind) = indices {
+                for (d, &idx_val) in idx_vec.iter().enumerate() {
+                    let mut ind_slice = vec![d];
+                    ind_slice.extend(&idx_vec);
+                    ind[ind_slice.as_slice()] = idx_val as i32;
+                }
+            }
+        }
+    }
+
+    // Apply 1D distance transform along each dimension
+    for dim in 0..ndim {
+        felzenszwalb_1d_edt(&mut dist_sq, indices.as_mut(), dim, sampling[dim]);
+    }
+
+    // Convert squared distances to actual distances if requested
+    let distances = if return_distances {
+        let mut final_dist = Array::<f64, D>::zeros(input.raw_dim());
+        for idx in ndarray::indices(shape) {
+            let idx_vec: Vec<_> = idx.slice().to_vec();
+            final_dist[idx_vec.as_slice()] = dist_sq[idx_vec.as_slice()].sqrt();
+        }
+        Some(final_dist)
+    } else {
+        None
+    };
+
+    (distances, indices)
+}
+
+/// Apply 1D Euclidean distance transform along a specific dimension using
+/// the Felzenszwalb & Huttenlocher separable algorithm.
+///
+/// This function processes the distance transform one dimension at a time,
+/// using the envelope of parabolas method for O(n) complexity per dimension.
+fn felzenszwalb_1d_edt<D>(
+    dist_sq: &mut Array<f64, D>,
+    indices: Option<&mut Array<i32, IxDyn>>,
+    dim: usize,
+    sampling: f64,
+) where
+    D: Dimension,
+    for<'a> &'a [usize]: ndarray::NdIndex<D>,
+{
+    let shape = dist_sq.shape();
+    let ndim = dist_sq.ndim();
+    let n = shape[dim];
+
+    // For each line along the specified dimension
+    let mut coords = vec![0; ndim];
+    let total_slices = shape
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| *i != dim)
+        .map(|(_, &s)| s)
+        .product::<usize>();
+
+    for slice_idx in 0..total_slices {
+        // Convert linear slice index to coordinates (excluding the processing dimension)
+        let mut temp_idx = slice_idx;
+        let mut coord_idx = 0;
+        for i in 0..ndim {
+            if i == dim {
+                continue;
+            }
+            coords[i] = temp_idx % shape[i];
+            temp_idx /= shape[i];
+            coord_idx += 1;
+        }
+
+        // Extract 1D slice along the processing dimension
+        let mut slice_data = vec![0.0; n];
+        let mut slice_indices = if indices.is_some() {
+            Some(vec![0i32; n])
+        } else {
+            None
+        };
+
+        for j in 0..n {
+            coords[dim] = j;
+            slice_data[j] = dist_sq[coords.as_slice()];
+
+            if let (Some(ref mut slice_ind), Some(ref ind)) =
+                (slice_indices.as_mut(), indices.as_ref())
+            {
+                let mut ind_slice = vec![dim];
+                ind_slice.extend(&coords);
+                slice_ind[j] = ind[ind_slice.as_slice()];
+            }
+        }
+
+        // Apply 1D distance transform
+        let (transformed_dist, transformed_indices) =
+            felzenszwalb_1d_line(&slice_data, slice_indices.as_ref(), sampling);
+
+        // Write back transformed data
+        for j in 0..n {
+            coords[dim] = j;
+            dist_sq[coords.as_slice()] = transformed_dist[j];
+
+            if let (Some(ref trans_ind), Some(ref mut ind)) =
+                (transformed_indices.as_ref(), indices.as_mut())
+            {
+                let mut ind_slice = vec![dim];
+                ind_slice.extend(&coords);
+                ind[ind_slice.as_slice()] = trans_ind[j];
+            }
+        }
+    }
+}
+
+/// Core 1D distance transform algorithm using envelope of parabolas
+fn felzenszwalb_1d_line(
+    input: &[f64],
+    input_indices: Option<&[i32]>,
+    sampling: f64,
+) -> (Vec<f64>, Option<Vec<i32>>) {
+    let n = input.len();
+    if n == 0 {
+        return (Vec::new(), None);
+    }
+
+    let sampling_sq = sampling * sampling;
+
+    // Output arrays
+    let mut output_dist = vec![0.0; n];
+    let mut output_indices = if input_indices.is_some() {
+        Some(vec![0i32; n])
+    } else {
+        None
+    };
+
+    // Envelope computation: find the lower envelope of parabolas
+    let mut v = vec![0usize; n]; // Locations of parabolas in lower envelope
+    let mut z = vec![0.0; n + 1]; // Boundaries between parabolas
+
+    let mut k = 0; // Index of rightmost parabola in lower envelope
+    v[0] = 0;
+    z[0] = f64::NEG_INFINITY;
+    z[1] = f64::INFINITY;
+
+    // Build lower envelope
+    for q in 1..n {
+        // Remove parabolas that are no longer in the envelope
+        while k >= 0 {
+            let s = intersection_point(v[k], q, input, sampling_sq);
+            if s > z[k] {
+                break;
+            }
+            k -= 1;
+        }
+
+        k += 1;
+        v[k] = q;
+        z[k] = intersection_point(v[k - 1], v[k], input, sampling_sq);
+        z[k + 1] = f64::INFINITY;
+    }
+
+    // Fill in output by querying lower envelope
+    k = 0;
+    for q in 0..n {
+        while z[k + 1] < q as f64 {
+            k += 1;
+        }
+
+        let nearest_point = v[k];
+        let dx = (q as f64 - nearest_point as f64) * sampling;
+        output_dist[q] = input[nearest_point] + dx * dx;
+
+        if let (Some(ref mut out_ind), Some(inp_ind)) = (output_indices.as_mut(), input_indices) {
+            out_ind[q] = inp_ind[nearest_point];
+        }
+    }
+
+    (output_dist, output_indices)
+}
+
+/// Calculate intersection point between two parabolas
+fn intersection_point(p: usize, q: usize, f: &[f64], sampling_sq: f64) -> f64 {
+    if f[p].is_infinite() && f[q].is_infinite() {
+        return 0.0;
+    }
+    if f[p].is_infinite() {
+        return f64::NEG_INFINITY;
+    }
+    if f[q].is_infinite() {
+        return f64::INFINITY;
+    }
+
+    let p_f = p as f64;
+    let q_f = q as f64;
+
+    ((f[q] + q_f * q_f * sampling_sq) - (f[p] + p_f * p_f * sampling_sq))
+        / (2.0 * sampling_sq * (q_f - p_f))
 }
 
 /// Apply 1D distance transform along a specific dimension

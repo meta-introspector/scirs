@@ -4,7 +4,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
-use crate::traits::distribution::{ContinuousDistribution, Distribution as ScirsDist};
+use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand_distr::{Distribution, Uniform as RandUniform};

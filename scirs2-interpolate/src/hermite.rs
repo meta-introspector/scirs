@@ -492,7 +492,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
     pub fn get_order(&self) -> usize {
         self.order
     }
-    
+
     /// Compute the definite integral of the Hermite spline over an interval.
     ///
     /// # Arguments
@@ -505,7 +505,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
     /// The definite integral of the Hermite spline over [a, b]
     pub fn integrate(&self, a: T, b: T) -> InterpolateResult<T> {
         let n = self.x.len();
-        
+
         // Check bounds
         if a < self.x[0] || b > self.x[n - 1] {
             match self.extrapolate {
@@ -515,7 +515,10 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
                 ExtrapolateMode::Error => {
                     return Err(InterpolateError::OutOfBounds(format!(
                         "Integration bounds [{}, {}] are outside the interpolation range [{}, {}]",
-                        a, b, self.x[0], self.x[n - 1]
+                        a,
+                        b,
+                        self.x[0],
+                        self.x[n - 1]
                     )));
                 }
                 ExtrapolateMode::Nan => {
@@ -523,16 +526,16 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
                 }
             }
         }
-        
+
         if a > b {
             // If a > b, swap and negate the result
             return Ok(-self.integrate(b, a)?);
         }
-        
+
         // Find the indices of segments containing a and b
         let mut idx_a = 0;
         let mut idx_b = n - 2;
-        
+
         for i in 0..n - 1 {
             if a >= self.x[i] && a <= self.x[i + 1] {
                 idx_a = i;
@@ -542,29 +545,29 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
                 break;
             }
         }
-        
+
         let mut result = T::zero();
-        
+
         // Special case: a and b are in the same segment
         if idx_a == idx_b {
             result = self.integrate_segment(idx_a, a, b)?;
             return Ok(result);
         }
-        
+
         // First segment (partial)
         result = result + self.integrate_segment(idx_a, a, self.x[idx_a + 1])?;
-        
+
         // Middle segments (complete)
         for i in idx_a + 1..idx_b {
             result = result + self.integrate_segment(i, self.x[i], self.x[i + 1])?;
         }
-        
+
         // Last segment (partial)
         result = result + self.integrate_segment(idx_b, self.x[idx_b], b)?;
-        
+
         Ok(result)
     }
-    
+
     /// Integrate a single segment of the Hermite spline.
     fn integrate_segment(&self, idx: usize, a: T, b: T) -> InterpolateResult<T> {
         // Get the polynomial coefficients for this segment
@@ -572,22 +575,22 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
         let c1 = self.coeffs[[idx, 1]];
         let c2 = self.coeffs[[idx, 2]];
         let c3 = self.coeffs[[idx, 3]];
-        
+
         let x_i = self.x[idx];
-        
+
         // Shift to local coordinates
         let a_local = a - x_i;
         let b_local = b - x_i;
-        
+
         // Integrate the polynomial: ∫(c0 + c1*x + c2*x^2 + c3*x^3) dx
         // = c0*x + c1*x^2/2 + c2*x^3/3 + c3*x^4/4
         let antiderivative = |x: T| -> T {
-            c0 * x 
-            + c1 * x * x / T::from(2.0).unwrap()
-            + c2 * x * x * x / T::from(3.0).unwrap()
-            + c3 * x * x * x * x / T::from(4.0).unwrap()
+            c0 * x
+                + c1 * x * x / T::from(2.0).unwrap()
+                + c2 * x * x * x / T::from(3.0).unwrap()
+                + c3 * x * x * x * x / T::from(4.0).unwrap()
         };
-        
+
         // Evaluate the definite integral
         Ok(antiderivative(b_local) - antiderivative(a_local))
     }
@@ -826,7 +829,7 @@ mod tests {
         // Test interpolation inside the domain
         let x_test = Array::from_vec(vec![std::f64::consts::PI / 2.0, std::f64::consts::PI]);
         let y_test = spline.evaluate(&x_test.view()).unwrap();
-        
+
         // sin(π/2) = 1.0, sin(π) = 0.0
         assert_abs_diff_eq!(y_test[0], 1.0, epsilon = 1e-3);
         assert_abs_diff_eq!(y_test[1], 0.0, epsilon = 1e-3);

@@ -332,7 +332,11 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + Send + Sync> Train
     }
 
     fn downsample_metrics(&mut self) {
-        // TODO: Implement downsampling based on strategy
+        // Implement downsampling based on strategy
+        if self.metrics_history.len() <= self.config.performance.max_points_per_plot {
+            return; // No downsampling needed
+        }
+
         match self.config.performance.downsampling_strategy {
             DownsamplingStrategy::Uniform => {
                 // Keep every nth point
@@ -347,15 +351,222 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + Send + Sync> Train
                     self.metrics_history = downsampled;
                 }
             }
-            _ => {
-                // For now, just truncate to max size
-                if self.metrics_history.len() > self.config.performance.max_points_per_plot {
-                    let start =
-                        self.metrics_history.len() - self.config.performance.max_points_per_plot;
-                    self.metrics_history.drain(0..start);
-                }
+            DownsamplingStrategy::LTTB => {
+                // Largest Triangle Three Bucket algorithm - simplified implementation
+                self.downsample_lttb();
+            }
+            DownsamplingStrategy::MinMax => {
+                // Min-max decimation - keep local minima and maxima
+                self.downsample_minmax();
+            }
+            DownsamplingStrategy::Statistical => {
+                // Statistical sampling - sample based on variance/importance
+                self.downsample_statistical();
             }
         }
+    }
+
+    /// Largest Triangle Three Bucket (LTTB) downsampling algorithm
+    fn downsample_lttb(&mut self) {
+        let target_points = self.config.performance.max_points_per_plot;
+        if self.metrics_history.len() <= target_points {
+            return;
+        }
+
+        let bucket_size = self.metrics_history.len() as f64 / target_points as f64;
+        let mut downsampled = Vec::new();
+
+        // Always keep first point
+        downsampled.push(self.metrics_history[0].clone());
+
+        // For each bucket, select the point that forms the largest triangle
+        for bucket in 1..(target_points - 1) {
+            let bucket_start = (bucket as f64 * bucket_size) as usize;
+            let bucket_end =
+                ((bucket + 1) as f64 * bucket_size).min(self.metrics_history.len() as f64) as usize;
+
+            // Calculate average point of next bucket
+            let next_bucket_start = bucket_end;
+            let next_bucket_end =
+                ((bucket + 2) as f64 * bucket_size).min(self.metrics_history.len() as f64) as usize;
+
+            let avg_epoch = if next_bucket_end > next_bucket_start {
+                let sum: usize = (next_bucket_start..next_bucket_end)
+                    .map(|i| self.metrics_history[i].epoch)
+                    .sum();
+                sum as f64 / (next_bucket_end - next_bucket_start) as f64
+            } else {
+                self.metrics_history[self.metrics_history.len() - 1].epoch as f64
+            };
+
+            // Find point in current bucket that maximizes triangle area
+            let mut max_area = 0.0f64;
+            let mut selected_idx = bucket_start;
+
+            let prev_epoch = downsampled.last().unwrap().epoch as f64;
+
+            for i in bucket_start..bucket_end {
+                let curr_epoch = self.metrics_history[i].epoch as f64;
+
+                // Calculate triangle area (simplified - using epoch as primary metric)
+                let area = ((prev_epoch - avg_epoch) * (curr_epoch - prev_epoch)).abs();
+
+                if area > max_area {
+                    max_area = area;
+                    selected_idx = i;
+                }
+            }
+
+            downsampled.push(self.metrics_history[selected_idx].clone());
+        }
+
+        // Always keep last point
+        downsampled.push(self.metrics_history[self.metrics_history.len() - 1].clone());
+        self.metrics_history = downsampled;
+    }
+
+    /// Min-max decimation downsampling
+    fn downsample_minmax(&mut self) {
+        let target_points = self.config.performance.max_points_per_plot;
+        if self.metrics_history.len() <= target_points {
+            return;
+        }
+
+        let bucket_size = self.metrics_history.len() / (target_points / 2); // Divide by 2 because we keep min and max
+        let mut downsampled = Vec::new();
+
+        for chunk in self.metrics_history.chunks(bucket_size) {
+            if chunk.is_empty() {
+                continue;
+            }
+
+            // Find min and max based on a primary loss metric
+            let mut min_metric = &chunk[0];
+            let mut max_metric = &chunk[0];
+
+            for metric in chunk {
+                // Use first loss value as comparison metric, or epoch if no losses
+                let current_value = metric
+                    .losses
+                    .values()
+                    .next()
+                    .map(|v| v.to_f64().unwrap_or(0.0))
+                    .unwrap_or(metric.epoch as f64);
+
+                let min_value = min_metric
+                    .losses
+                    .values()
+                    .next()
+                    .map(|v| v.to_f64().unwrap_or(0.0))
+                    .unwrap_or(min_metric.epoch as f64);
+
+                let max_value = max_metric
+                    .losses
+                    .values()
+                    .next()
+                    .map(|v| v.to_f64().unwrap_or(0.0))
+                    .unwrap_or(max_metric.epoch as f64);
+
+                if current_value < min_value {
+                    min_metric = metric;
+                }
+                if current_value > max_value {
+                    max_metric = metric;
+                }
+            }
+
+            // Add min and max (avoid duplicates)
+            if min_metric.epoch <= max_metric.epoch {
+                downsampled.push(min_metric.clone());
+                if min_metric.epoch != max_metric.epoch {
+                    downsampled.push(max_metric.clone());
+                }
+            } else {
+                downsampled.push(max_metric.clone());
+                downsampled.push(min_metric.clone());
+            }
+        }
+
+        // Sort by epoch to maintain temporal order
+        downsampled.sort_by_key(|m| m.epoch);
+
+        // If still too many points, apply uniform sampling
+        if downsampled.len() > target_points {
+            let step = downsampled.len() / target_points;
+            let mut final_downsampled = Vec::new();
+            for (i, metric) in downsampled.iter().enumerate() {
+                if i % step == 0 {
+                    final_downsampled.push(metric.clone());
+                }
+            }
+            self.metrics_history = final_downsampled;
+        } else {
+            self.metrics_history = downsampled;
+        }
+    }
+
+    /// Statistical downsampling based on variance and importance
+    fn downsample_statistical(&mut self) {
+        let target_points = self.config.performance.max_points_per_plot;
+        if self.metrics_history.len() <= target_points {
+            return;
+        }
+
+        // Calculate importance scores for each point
+        let mut importance_scores: Vec<(usize, f64)> = Vec::new();
+
+        for (i, metric) in self.metrics_history.iter().enumerate() {
+            let mut score = 0.0f64;
+
+            // Base importance: changes in loss values
+            if i > 0 && i < self.metrics_history.len() - 1 {
+                let prev_metric = &self.metrics_history[i - 1];
+                let next_metric = &self.metrics_history[i + 1];
+
+                // Calculate variance in loss values
+                for (loss_name, &loss_value) in &metric.losses {
+                    if let (Some(&prev_loss), Some(&next_loss)) = (
+                        prev_metric.losses.get(loss_name),
+                        next_metric.losses.get(loss_name),
+                    ) {
+                        let prev_val = prev_loss.to_f64().unwrap_or(0.0);
+                        let curr_val = loss_value.to_f64().unwrap_or(0.0);
+                        let next_val = next_loss.to_f64().unwrap_or(0.0);
+
+                        // Second derivative (curvature) as importance measure
+                        let curvature = ((next_val - curr_val) - (curr_val - prev_val)).abs();
+                        score += curvature;
+                    }
+                }
+            }
+
+            // Always keep first and last points
+            if i == 0 || i == self.metrics_history.len() - 1 {
+                score += 1000.0; // High importance
+            }
+
+            importance_scores.push((i, score));
+        }
+
+        // Sort by importance score (descending)
+        importance_scores
+            .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Select top points and sort by original index to maintain temporal order
+        let mut selected_indices: Vec<usize> = importance_scores
+            .iter()
+            .take(target_points)
+            .map(|(idx, _)| *idx)
+            .collect();
+
+        selected_indices.sort();
+
+        let mut downsampled = Vec::new();
+        for &idx in &selected_indices {
+            downsampled.push(self.metrics_history[idx].clone());
+        }
+
+        self.metrics_history = downsampled;
     }
 
     fn create_loss_plot(&self) -> Result<Option<String>> {
@@ -363,38 +574,112 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + Send + Sync> Train
             return Ok(None);
         }
 
-        // TODO: Implement actual plotting library integration
-        // For now, return a placeholder HTML
-        let plot_html = r#"
+        // Extract loss data from metrics history
+        let mut loss_data = std::collections::HashMap::new();
+        let mut epochs = Vec::new();
+
+        for metric in &self.metrics_history {
+            epochs.push(metric.epoch);
+            for (loss_name, loss_value) in &metric.losses {
+                loss_data
+                    .entry(loss_name.clone())
+                    .or_insert_with(Vec::new)
+                    .push(loss_value.to_f64().unwrap_or(0.0));
+            }
+        }
+
+        if loss_data.is_empty() {
+            return Ok(None);
+        }
+
+        // Generate HTML with Plotly.js
+        let mut traces = Vec::new();
+        let colors = [
+            "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b",
+        ];
+
+        for (i, (loss_name, values)) in loss_data.iter().enumerate() {
+            let color = colors[i % colors.len()];
+            let epochs_json = serde_json::to_string(&epochs).unwrap_or_default();
+            let values_json = serde_json::to_string(values).unwrap_or_default();
+
+            traces.push(format!(
+                r#"{{
+                    x: {},
+                    y: {},
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: '{}',
+                    line: {{ color: '{}', width: 2 }},
+                    marker: {{ size: 6, color: '{}' }}
+                }}"#,
+                epochs_json, values_json, loss_name, color, color
+            ));
+        }
+
+        let traces_str = traces.join(",\n            ");
+
+        let plot_html = format!(
+            r#"
 <!DOCTYPE html>
 <html>
 <head>
     <title>Training Loss</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; }}
+        .plot-container {{ width: 100%; height: 600px; }}
+    </style>
 </head>
 <body>
-    <div id="lossPlot" style="width:100%;height:500px;"></div>
+    <h2>Training Loss Curves</h2>
+    <div id="lossPlot" class="plot-container"></div>
     <script>
-        // TODO: Implement actual loss curve plotting
-        var trace = {
-            x: [1, 2, 3, 4],
-            y: [0.8, 0.6, 0.4, 0.3],
-            type: 'scatter',
-            name: 'Training Loss'
-        };
+        var traces = [
+            {}
+        ];
         
-        var layout = {
-            title: 'Training Loss Over Time',
-            xaxis: { title: 'Epoch' },
-            yaxis: { title: 'Loss' }
-        };
+        var layout = {{
+            title: {{
+                text: 'Training Loss Over Time',
+                font: {{ size: 18 }}
+            }},
+            xaxis: {{ 
+                title: 'Epoch',
+                showgrid: true,
+                gridcolor: '#e0e0e0'
+            }},
+            yaxis: {{ 
+                title: 'Loss',
+                showgrid: true,
+                gridcolor: '#e0e0e0'
+            }},
+            hovermode: 'x unified',
+            legend: {{
+                x: 1,
+                y: 1,
+                bgcolor: 'rgba(255,255,255,0.8)',
+                bordercolor: '#000',
+                borderwidth: 1
+            }},
+            plot_bgcolor: '#ffffff',
+            paper_bgcolor: '#ffffff'
+        }};
         
-        Plotly.newPlot('lossPlot', [trace], layout);
+        var config = {{
+            responsive: true,
+            displayModeBar: true,
+            modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+        }};
+        
+        Plotly.newPlot('lossPlot', traces, layout, config);
     </script>
 </body>
-</html>"#;
+</html>"#,
+            traces_str
+        );
 
-        Ok(Some(plot_html.to_string()))
+        Ok(Some(plot_html))
     }
 
     fn create_accuracy_plot(&self) -> Result<Option<String>> {
@@ -402,8 +687,113 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + Send + Sync> Train
             return Ok(None);
         }
 
-        // TODO: Implement accuracy plotting
-        Ok(None)
+        // Extract accuracy data from metrics history
+        let mut accuracy_data = std::collections::HashMap::new();
+        let mut epochs = Vec::new();
+
+        for metric in &self.metrics_history {
+            epochs.push(metric.epoch);
+            for (acc_name, acc_value) in &metric.accuracies {
+                accuracy_data
+                    .entry(acc_name.clone())
+                    .or_insert_with(Vec::new)
+                    .push(acc_value.to_f64().unwrap_or(0.0));
+            }
+        }
+
+        if accuracy_data.is_empty() {
+            return Ok(None);
+        }
+
+        // Generate HTML with Plotly.js
+        let mut traces = Vec::new();
+        let colors = [
+            "#2ca02c", "#ff7f0e", "#1f77b4", "#d62728", "#9467bd", "#8c564b",
+        ];
+
+        for (i, (acc_name, values)) in accuracy_data.iter().enumerate() {
+            let color = colors[i % colors.len()];
+            let epochs_json = serde_json::to_string(&epochs).unwrap_or_default();
+            let values_json = serde_json::to_string(values).unwrap_or_default();
+
+            traces.push(format!(
+                r#"{{
+                    x: {},
+                    y: {},
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: '{}',
+                    line: {{ color: '{}', width: 2 }},
+                    marker: {{ size: 6, color: '{}' }}
+                }}"#,
+                epochs_json, values_json, acc_name, color, color
+            ));
+        }
+
+        let traces_str = traces.join(",\n            ");
+
+        let plot_html = format!(
+            r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Training Accuracy</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; }}
+        .plot-container {{ width: 100%; height: 600px; }}
+    </style>
+</head>
+<body>
+    <h2>Training Accuracy Curves</h2>
+    <div id="accuracyPlot" class="plot-container"></div>
+    <script>
+        var traces = [
+            {}
+        ];
+        
+        var layout = {{
+            title: {{
+                text: 'Training Accuracy Over Time',
+                font: {{ size: 18 }}
+            }},
+            xaxis: {{ 
+                title: 'Epoch',
+                showgrid: true,
+                gridcolor: '#e0e0e0'
+            }},
+            yaxis: {{ 
+                title: 'Accuracy',
+                showgrid: true,
+                gridcolor: '#e0e0e0',
+                range: [0, 1]
+            }},
+            hovermode: 'x unified',
+            legend: {{
+                x: 1,
+                y: 0,
+                bgcolor: 'rgba(255,255,255,0.8)',
+                bordercolor: '#000',
+                borderwidth: 1
+            }},
+            plot_bgcolor: '#ffffff',
+            paper_bgcolor: '#ffffff'
+        }};
+        
+        var config = {{
+            responsive: true,
+            displayModeBar: true,
+            modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+        }};
+        
+        Plotly.newPlot('accuracyPlot', traces, layout, config);
+    </script>
+</body>
+</html>"#,
+            traces_str
+        );
+
+        Ok(Some(plot_html))
     }
 
     fn create_learning_rate_plot(&self) -> Result<Option<String>> {
@@ -411,8 +801,83 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + Send + Sync> Train
             return Ok(None);
         }
 
-        // TODO: Implement learning rate plotting
-        Ok(None)
+        // Extract learning rate data from metrics history
+        let mut epochs = Vec::new();
+        let mut learning_rates = Vec::new();
+
+        for metric in &self.metrics_history {
+            epochs.push(metric.epoch);
+            learning_rates.push(metric.learning_rate.to_f64().unwrap_or(0.0));
+        }
+
+        if learning_rates.is_empty() {
+            return Ok(None);
+        }
+
+        let epochs_json = serde_json::to_string(&epochs).unwrap_or_default();
+        let lr_json = serde_json::to_string(&learning_rates).unwrap_or_default();
+
+        let plot_html = format!(
+            r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Learning Rate Schedule</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; }}
+        .plot-container {{ width: 100%; height: 600px; }}
+    </style>
+</head>
+<body>
+    <h2>Learning Rate Schedule</h2>
+    <div id="lrPlot" class="plot-container"></div>
+    <script>
+        var trace = {{
+            x: {},
+            y: {},
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Learning Rate',
+            line: {{ color: '#d62728', width: 3 }},
+            marker: {{ size: 8, color: '#d62728' }}
+        }};
+        
+        var layout = {{
+            title: {{
+                text: 'Learning Rate Over Time',
+                font: {{ size: 18 }}
+            }},
+            xaxis: {{ 
+                title: 'Epoch',
+                showgrid: true,
+                gridcolor: '#e0e0e0'
+            }},
+            yaxis: {{ 
+                title: 'Learning Rate',
+                type: 'log',
+                showgrid: true,
+                gridcolor: '#e0e0e0'
+            }},
+            hovermode: 'x unified',
+            plot_bgcolor: '#ffffff',
+            paper_bgcolor: '#ffffff'
+        }};
+        
+        var config = {{
+            responsive: true,
+            displayModeBar: true,
+            modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+        }};
+        
+        Plotly.newPlot('lrPlot', [trace], layout, config);
+    </script>
+</body>
+</html>"#,
+            epochs_json, lr_json
+        );
+
+        Ok(Some(plot_html))
     }
 
     fn create_system_metrics_plot(&self) -> Result<Option<String>> {
@@ -420,8 +885,143 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + Send + Sync> Train
             return Ok(None);
         }
 
-        // TODO: Implement system metrics plotting
-        Ok(None)
+        // Extract system metrics from history
+        let mut epochs = Vec::new();
+        let mut memory_usage = Vec::new();
+        let mut cpu_utilization = Vec::new();
+        let mut gpu_utilization = Vec::new();
+        let mut samples_per_second = Vec::new();
+
+        for metric in &self.metrics_history {
+            epochs.push(metric.epoch);
+            memory_usage.push(metric.system_metrics.memory_usage_mb);
+            cpu_utilization.push(metric.system_metrics.cpu_utilization);
+            if let Some(gpu_util) = metric.system_metrics.gpu_utilization {
+                gpu_utilization.push(gpu_util);
+            }
+            samples_per_second.push(metric.system_metrics.samples_per_second);
+        }
+
+        let epochs_json = serde_json::to_string(&epochs).unwrap_or_default();
+        let memory_json = serde_json::to_string(&memory_usage).unwrap_or_default();
+        let cpu_json = serde_json::to_string(&cpu_utilization).unwrap_or_default();
+        let gpu_json = if !gpu_utilization.is_empty() {
+            serde_json::to_string(&gpu_utilization).unwrap_or_default()
+        } else {
+            "[]".to_string()
+        };
+        let sps_json = serde_json::to_string(&samples_per_second).unwrap_or_default();
+
+        let plot_html = format!(
+            r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System Metrics</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; }}
+        .plot-container {{ width: 100%; height: 400px; margin-bottom: 20px; }}
+    </style>
+</head>
+<body>
+    <h2>System Performance Metrics</h2>
+    
+    <h3>Memory Usage</h3>
+    <div id="memoryPlot" class="plot-container"></div>
+    
+    <h3>CPU & GPU Utilization</h3>
+    <div id="utilizationPlot" class="plot-container"></div>
+    
+    <h3>Training Throughput</h3>
+    <div id="throughputPlot" class="plot-container"></div>
+    
+    <script>
+        // Memory usage plot
+        var memoryTrace = {{
+            x: {},
+            y: {},
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Memory Usage (MB)',
+            line: {{ color: '#ff7f0e', width: 2 }},
+            marker: {{ size: 6, color: '#ff7f0e' }}
+        }};
+        
+        var memoryLayout = {{
+            title: 'Memory Usage Over Time',
+            xaxis: {{ title: 'Epoch' }},
+            yaxis: {{ title: 'Memory (MB)' }},
+            showlegend: false
+        }};
+        
+        Plotly.newPlot('memoryPlot', [memoryTrace], memoryLayout);
+        
+        // CPU and GPU utilization plot
+        var traces = [{{
+            x: {},
+            y: {},
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'CPU Utilization (%)',
+            line: {{ color: '#1f77b4', width: 2 }},
+            marker: {{ size: 6, color: '#1f77b4' }}
+        }}];
+        
+        if ({}.length > 0) {{
+            traces.push({{
+                x: {},
+                y: {},
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'GPU Utilization (%)',
+                line: {{ color: '#2ca02c', width: 2 }},
+                marker: {{ size: 6, color: '#2ca02c' }}
+            }});
+        }}
+        
+        var utilizationLayout = {{
+            title: 'CPU & GPU Utilization',
+            xaxis: {{ title: 'Epoch' }},
+            yaxis: {{ title: 'Utilization (%)', range: [0, 100] }}
+        }};
+        
+        Plotly.newPlot('utilizationPlot', traces, utilizationLayout);
+        
+        // Throughput plot
+        var throughputTrace = {{
+            x: {},
+            y: {},
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Samples/Second',
+            line: {{ color: '#9467bd', width: 2 }},
+            marker: {{ size: 6, color: '#9467bd' }}
+        }};
+        
+        var throughputLayout = {{
+            title: 'Training Throughput',
+            xaxis: {{ title: 'Epoch' }},
+            yaxis: {{ title: 'Samples per Second' }},
+            showlegend: false
+        }};
+        
+        Plotly.newPlot('throughputPlot', [throughputTrace], throughputLayout);
+    </script>
+</body>
+</html>"#,
+            epochs_json,
+            memory_json,
+            epochs_json,
+            cpu_json,
+            gpu_json,
+            epochs_json,
+            gpu_json,
+            epochs_json,
+            sps_json
+        );
+
+        Ok(Some(plot_html))
     }
 }
 

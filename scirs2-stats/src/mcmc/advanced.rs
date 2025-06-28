@@ -3,12 +3,12 @@
 //! This module implements sophisticated MCMC algorithms including multiple-try Metropolis,
 //! parallel tempering, slice sampling, and ensemble methods.
 
+use super::{ProposalDistribution, TargetDistribution};
+use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, Axis};
 use rand::Rng;
 use rand_distr::{Distribution, Normal, Uniform};
-use crate::error::{StatsResult as Result, StatsError};
 use scirs2_core::validation::*;
-use super::{TargetDistribution, ProposalDistribution};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
@@ -35,24 +35,20 @@ pub struct MultipleTryMetropolis<T: TargetDistribution, P: ProposalDistribution>
 
 impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P> {
     /// Create a new multiple-try Metropolis sampler
-    pub fn new(
-        target: T,
-        proposal: P,
-        initial: Array1<f64>,
-        n_tries: usize,
-    ) -> Result<Self> {
+    pub fn new(target: T, proposal: P, initial: Array1<f64>, n_tries: usize) -> Result<Self> {
         check_array_finite(&initial, "initial")?;
         check_positive(n_tries, "n_tries")?;
-        
+
         if initial.len() != target.dim() {
-            return Err(StatsError::DimensionMismatch(
-                format!("initial dimension ({}) must match target dimension ({})", 
-                    initial.len(), target.dim())
-            ));
+            return Err(StatsError::DimensionMismatch(format!(
+                "initial dimension ({}) must match target dimension ({})",
+                initial.len(),
+                target.dim()
+            )));
         }
-        
+
         let current_log_density = target.log_density(&initial);
-        
+
         Ok(Self {
             target,
             proposal,
@@ -63,24 +59,24 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
             n_steps: 0,
         })
     }
-    
+
     /// Perform one step of multiple-try Metropolis
     pub fn step<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<Array1<f64>> {
         // Generate multiple proposals
         let mut proposals = Vec::with_capacity(self.n_tries);
         let mut log_densities = Vec::with_capacity(self.n_tries);
         let mut weights = Vec::with_capacity(self.n_tries);
-        
+
         for _ in 0..self.n_tries {
             let proposal = self.proposal.sample(&self.current, rng);
             let log_density = self.target.log_density(&proposal);
             let weight = log_density.exp();
-            
+
             proposals.push(proposal);
             log_densities.push(log_density);
             weights.push(weight);
         }
-        
+
         // Select proposal using weighted sampling
         let total_weight: f64 = weights.iter().sum();
         if total_weight <= 0.0 {
@@ -88,11 +84,11 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
             self.n_steps += 1;
             return Ok(self.current.clone());
         }
-        
+
         let u: f64 = rng.random();
         let mut cumsum = 0.0;
         let mut selected_idx = 0;
-        
+
         for (i, &weight) in weights.iter().enumerate() {
             cumsum += weight / total_weight;
             if u <= cumsum {
@@ -100,10 +96,10 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
                 break;
             }
         }
-        
+
         let selected_proposal = &proposals[selected_idx];
         let selected_log_density = log_densities[selected_idx];
-        
+
         // Compute reverse proposals from selected proposal
         let mut reverse_weights = Vec::with_capacity(self.n_tries);
         for _ in 0..self.n_tries {
@@ -112,29 +108,29 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
             let reverse_weight = reverse_log_density.exp();
             reverse_weights.push(reverse_weight);
         }
-        
+
         // Include current state in reverse proposals
         reverse_weights.push(self.current_log_density.exp());
-        
+
         let reverse_total_weight: f64 = reverse_weights.iter().sum();
-        
+
         // Compute acceptance ratio
-        let log_ratio = selected_log_density - self.current_log_density
-                      + reverse_total_weight.ln() - total_weight.ln();
-        
+        let log_ratio = selected_log_density - self.current_log_density + reverse_total_weight.ln()
+            - total_weight.ln();
+
         // Accept or reject
         let accept_u: f64 = rng.random();
         self.n_steps += 1;
-        
+
         if accept_u.ln() < log_ratio {
             self.current = selected_proposal.clone();
             self.current_log_density = selected_log_density;
             self.n_accepted += 1;
         }
-        
+
         Ok(self.current.clone())
     }
-    
+
     /// Sample multiple states
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
@@ -143,15 +139,15 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
     ) -> Result<Array2<f64>> {
         let dim = self.current.len();
         let mut samples = Array2::zeros((n_samples, dim));
-        
+
         for i in 0..n_samples {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
-        
+
         Ok(samples)
     }
-    
+
     /// Get acceptance rate
     pub fn acceptance_rate(&self) -> f64 {
         if self.n_steps == 0 {
@@ -166,7 +162,10 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
 ///
 /// Runs multiple chains at different temperatures in parallel and exchanges
 /// states between chains to improve mixing.
-pub struct ParallelTempering<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Send> {
+pub struct ParallelTempering<
+    T: TargetDistribution + Clone + Send,
+    P: ProposalDistribution + Clone + Send,
+> {
     /// Base target distribution
     pub base_target: T,
     /// Proposal distribution
@@ -191,9 +190,9 @@ pub struct ParallelTempering<T: TargetDistribution + Clone + Send, P: ProposalDi
     pub exchange_attempts: Vec<usize>,
 }
 
-impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Send> 
-    ParallelTempering<T, P> {
-    
+impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Send>
+    ParallelTempering<T, P>
+{
     /// Create a new parallel tempering sampler
     pub fn new(
         base_target: T,
@@ -203,20 +202,21 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
         exchange_freq: usize,
     ) -> Result<Self> {
         check_positive(exchange_freq, "exchange_freq")?;
-        
+
         let n_chains = temperatures.len();
         if initial_states.len() != n_chains {
-            return Err(StatsError::DimensionMismatch(
-                format!("initial_states length ({}) must match temperatures length ({})", 
-                    initial_states.len(), n_chains)
-            ));
+            return Err(StatsError::DimensionMismatch(format!(
+                "initial_states length ({}) must match temperatures length ({})",
+                initial_states.len(),
+                n_chains
+            )));
         }
-        
+
         // Check temperatures are positive and sorted
         for &temp in temperatures.iter() {
             check_positive(temp, "temperature")?;
         }
-        
+
         // Compute initial log densities
         let mut log_densities = Vec::with_capacity(n_chains);
         for (i, state) in initial_states.iter().enumerate() {
@@ -225,7 +225,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
             let log_density = base_target.log_density(state) / temp;
             log_densities.push(log_density);
         }
-        
+
         Ok(Self {
             base_target,
             proposal,
@@ -240,69 +240,70 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
             exchange_attempts: vec![0; n_chains - 1],
         })
     }
-    
+
     /// Perform one step for all chains
     pub fn step<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<()> {
         // Metropolis steps for all chains
         for i in 0..self.n_chains {
             let temp = self.temperatures[i];
             let current_state = &self.states[i];
-            
+
             // Generate proposal
             let proposal = self.proposal.sample(current_state, rng);
             let proposal_log_density = self.base_target.log_density(&proposal) / temp;
-            
+
             // Accept or reject
             let log_ratio = proposal_log_density - self.log_densities[i]
-                          + self.proposal.log_ratio(current_state, &proposal);
-            
+                + self.proposal.log_ratio(current_state, &proposal);
+
             self.move_attempts[i] += 1;
             let u: f64 = rng.random();
-            
+
             if u.ln() < log_ratio {
                 self.states[i] = proposal;
                 self.log_densities[i] = proposal_log_density;
                 self.move_accepted[i] += 1;
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Attempt exchanges between adjacent chains
     pub fn exchange_step<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<()> {
         for i in 0..(self.n_chains - 1) {
             let temp1 = self.temperatures[i];
             let temp2 = self.temperatures[i + 1];
-            
+
             let log_density1 = self.log_densities[i];
             let log_density2 = self.log_densities[i + 1];
-            
+
             // Compute exchange probability
             let log_ratio = (log_density1 * temp1 - log_density2 * temp2) / temp2
-                          - (log_density1 * temp1 - log_density2 * temp2) / temp1;
-            
+                - (log_density1 * temp1 - log_density2 * temp2) / temp1;
+
             self.exchange_attempts[i] += 1;
             let u: f64 = rng.random();
-            
+
             if u.ln() < log_ratio {
                 // Exchange states
                 self.states.swap(i, i + 1);
-                
+
                 // Update log densities for new temperatures
                 let state1_new_log_density = self.base_target.log_density(&self.states[i]) / temp1;
-                let state2_new_log_density = self.base_target.log_density(&self.states[i + 1]) / temp2;
-                
+                let state2_new_log_density =
+                    self.base_target.log_density(&self.states[i + 1]) / temp2;
+
                 self.log_densities[i] = state1_new_log_density;
                 self.log_densities[i + 1] = state2_new_log_density;
-                
+
                 self.exchange_accepted[i] += 1;
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Run the parallel tempering sampler
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
@@ -311,29 +312,30 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
     ) -> Result<Array2<f64>> {
         let dim = self.states[0].len();
         let mut samples = Array2::zeros((n_samples, dim));
-        
+
         for i in 0..n_samples {
             self.step(rng)?;
-            
+
             // Attempt exchanges periodically
             if i % self.exchange_freq == 0 {
                 self.exchange_step(rng)?;
             }
-            
+
             // Store sample from coldest chain (temperature = 1.0)
-            let coldest_idx = self.temperatures
+            let coldest_idx = self
+                .temperatures
                 .iter()
                 .enumerate()
                 .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                 .map(|(idx, _)| idx)
                 .unwrap_or(0);
-            
+
             samples.row_mut(i).assign(&self.states[coldest_idx]);
         }
-        
+
         Ok(samples)
     }
-    
+
     /// Get acceptance rates for moves
     pub fn move_acceptance_rates(&self) -> Array1<f64> {
         let mut rates = Array1::zeros(self.n_chains);
@@ -344,7 +346,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
         }
         rates
     }
-    
+
     /// Get acceptance rates for exchanges
     pub fn exchange_acceptance_rates(&self) -> Array1<f64> {
         let mut rates = Array1::zeros(self.n_chains - 1);
@@ -380,23 +382,20 @@ pub struct SliceSampler<T: TargetDistribution> {
 
 impl<T: TargetDistribution> SliceSampler<T> {
     /// Create a new slice sampler
-    pub fn new(
-        target: T,
-        initial: Array1<f64>,
-        step_size: f64,
-    ) -> Result<Self> {
+    pub fn new(target: T, initial: Array1<f64>, step_size: f64) -> Result<Self> {
         check_array_finite(&initial, "initial")?;
         check_positive(step_size, "step_size")?;
-        
+
         if initial.len() != target.dim() {
-            return Err(StatsError::DimensionMismatch(
-                format!("initial dimension ({}) must match target dimension ({})", 
-                    initial.len(), target.dim())
-            ));
+            return Err(StatsError::DimensionMismatch(format!(
+                "initial dimension ({}) must match target dimension ({})",
+                initial.len(),
+                target.dim()
+            )));
         }
-        
+
         let current_log_density = target.log_density(&initial);
-        
+
         Ok(Self {
             target,
             current: initial,
@@ -407,25 +406,25 @@ impl<T: TargetDistribution> SliceSampler<T> {
             n_proposed: 0,
         })
     }
-    
+
     /// Perform one step of slice sampling
     pub fn step<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<Array1<f64>> {
         let dim = self.current.len();
         let mut new_state = self.current.clone();
-        
+
         // Sample each dimension sequentially
         for d in 0..dim {
             new_state[d] = self.slice_sample_dimension(&new_state, d, rng)?;
         }
-        
+
         self.current = new_state;
         self.current_log_density = self.target.log_density(&self.current);
         self.n_proposed += 1;
         self.n_accepted += 1; // Slice sampling always accepts
-        
+
         Ok(self.current.clone())
     }
-    
+
     /// Sample a single dimension using slice sampling
     fn slice_sample_dimension<R: Rng + ?Sized>(
         &self,
@@ -435,61 +434,61 @@ impl<T: TargetDistribution> SliceSampler<T> {
     ) -> Result<f64> {
         let current_value = state[dimension];
         let current_log_density = self.target.log_density(state);
-        
+
         // Sample auxiliary variable (slice level)
         let u: f64 = rng.random();
         let slice_level = current_log_density + u.ln();
-        
+
         // Find initial interval
         let mut left = current_value - self.step_size * rng.random::<f64>();
         let mut right = left + self.step_size;
-        
+
         // Expand interval using doubling procedure
         for _ in 0..self.max_doublings {
             let mut left_state = state.clone();
             left_state[dimension] = left;
             let left_log_density = self.target.log_density(&left_state);
-            
+
             let mut right_state = state.clone();
             right_state[dimension] = right;
             let right_log_density = self.target.log_density(&right_state);
-            
+
             if left_log_density <= slice_level && right_log_density <= slice_level {
                 break;
             }
-            
+
             if rng.random::<bool>() {
                 left = left - (right - left);
             } else {
                 right = right + (right - left);
             }
         }
-        
+
         // Sample from interval using shrinkage
         loop {
             let proposal = left + (right - left) * rng.random::<f64>();
             let mut proposal_state = state.clone();
             proposal_state[dimension] = proposal;
             let proposal_log_density = self.target.log_density(&proposal_state);
-            
+
             if proposal_log_density > slice_level {
                 return Ok(proposal);
             }
-            
+
             // Shrink interval
             if proposal < current_value {
                 left = proposal;
             } else {
                 right = proposal;
             }
-            
+
             // Prevent infinite loop
             if (right - left).abs() < 1e-10 {
                 return Ok(current_value);
             }
         }
     }
-    
+
     /// Sample multiple states
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
@@ -498,15 +497,15 @@ impl<T: TargetDistribution> SliceSampler<T> {
     ) -> Result<Array2<f64>> {
         let dim = self.current.len();
         let mut samples = Array2::zeros((n_samples, dim));
-        
+
         for i in 0..n_samples {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
-        
+
         Ok(samples)
     }
-    
+
     /// Get acceptance rate (always 1.0 for slice sampling)
     pub fn acceptance_rate(&self) -> f64 {
         1.0
@@ -538,30 +537,28 @@ pub struct EnsembleSampler<T: TargetDistribution + Clone + Send + Sync> {
 
 impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
     /// Create a new ensemble sampler
-    pub fn new(
-        target: T,
-        initial_walkers: Array2<f64>,
-        scale: Option<f64>,
-    ) -> Result<Self> {
+    pub fn new(target: T, initial_walkers: Array2<f64>, scale: Option<f64>) -> Result<Self> {
         check_array_finite(&initial_walkers, "initial_walkers")?;
         let (n_walkers, dim) = initial_walkers.dim();
         let scale = scale.unwrap_or(2.0);
-        
+
         if n_walkers < 2 * dim {
-            return Err(StatsError::InvalidArgument(
-                format!("Number of walkers ({}) should be at least 2 * dim ({})", n_walkers, 2 * dim)
-            ));
+            return Err(StatsError::InvalidArgument(format!(
+                "Number of walkers ({}) should be at least 2 * dim ({})",
+                n_walkers,
+                2 * dim
+            )));
         }
-        
+
         check_positive(scale, "scale")?;
-        
+
         // Compute initial log densities
         let mut log_densities = Array1::zeros(n_walkers);
         for i in 0..n_walkers {
             let walker = initial_walkers.row(i);
             log_densities[i] = target.log_density(&walker.to_owned());
         }
-        
+
         Ok(Self {
             target: Arc::new(target),
             walkers: initial_walkers,
@@ -573,21 +570,21 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
             n_proposed: Array1::zeros(n_walkers),
         })
     }
-    
+
     /// Perform one step for all walkers
     pub fn step<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<()> {
         // Split walkers into two groups
         let n_half = self.n_walkers / 2;
-        
+
         // Update first half using second half as complementary ensemble
         self.update_group(0, n_half, n_half, self.n_walkers, rng)?;
-        
+
         // Update second half using first half as complementary ensemble
         self.update_group(n_half, self.n_walkers, 0, n_half, rng)?;
-        
+
         Ok(())
     }
-    
+
     /// Update a group of walkers
     fn update_group<R: Rng + ?Sized>(
         &mut self,
@@ -601,36 +598,36 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
             // Select random walker from complementary ensemble
             let comp_size = comp_end - comp_start;
             let j = comp_start + rng.gen_range(0..comp_size);
-            
+
             // Generate stretch parameter
             let z = ((self.scale - 1.0) * rng.random::<f64>() + 1.0).powf(2.0) / self.scale;
-            
+
             // Compute proposal
             let walker_i = self.walkers.row(i);
             let walker_j = self.walkers.row(j);
             let proposal = &walker_j.to_owned() + z * (&walker_i.to_owned() - &walker_j.to_owned());
-            
+
             // Compute log density
             let proposal_log_density = self.target.log_density(&proposal);
-            
+
             // Compute acceptance probability
-            let log_ratio = (self.dim as f64 - 1.0) * z.ln() 
-                          + proposal_log_density - self.log_densities[i];
-            
+            let log_ratio =
+                (self.dim as f64 - 1.0) * z.ln() + proposal_log_density - self.log_densities[i];
+
             // Accept or reject
             let u: f64 = rng.random();
             self.n_proposed[i] += 1;
-            
+
             if u.ln() < log_ratio {
                 self.walkers.row_mut(i).assign(&proposal);
                 self.log_densities[i] = proposal_log_density;
                 self.n_accepted[i] += 1;
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Sample multiple steps
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
@@ -639,20 +636,20 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
     ) -> Result<Array2<f64>> {
         let total_samples = n_samples * self.n_walkers;
         let mut samples = Array2::zeros((total_samples, self.dim));
-        
+
         for i in 0..n_samples {
             self.step(rng)?;
-            
+
             // Store all walker positions
             for j in 0..self.n_walkers {
                 let sample_idx = i * self.n_walkers + j;
                 samples.row_mut(sample_idx).assign(&self.walkers.row(j));
             }
         }
-        
+
         Ok(samples)
     }
-    
+
     /// Get acceptance rates for all walkers
     pub fn acceptance_rates(&self) -> Array1<f64> {
         let mut rates = Array1::zeros(self.n_walkers);
@@ -663,19 +660,19 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
         }
         rates
     }
-    
+
     /// Get current walker positions
     pub fn get_walkers(&self) -> &Array2<f64> {
         &self.walkers
     }
-    
+
     /// Compute chain statistics (mean, autocorrelation time, etc.)
     pub fn chain_statistics(&self, samples: &Array2<f64>) -> Result<ChainStatistics> {
         let (n_samples, dim) = samples.dim();
-        
+
         // Compute means
         let means = samples.mean_axis(Axis(0)).unwrap();
-        
+
         // Compute variances
         let mut variances = Array1::zeros(dim);
         for j in 0..dim {
@@ -684,13 +681,13 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
             let var_j = col.mapv(|x| (x - mean_j).powi(2)).mean().unwrap();
             variances[j] = var_j;
         }
-        
+
         // Estimate autocorrelation times (simplified)
         let mut autocorr_times = Array1::zeros(dim);
         for j in 0..dim {
             autocorr_times[j] = self.estimate_autocorr_time(&samples.column(j))?;
         }
-        
+
         Ok(ChainStatistics {
             means,
             variances,
@@ -699,39 +696,39 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
             dim,
         })
     }
-    
+
     /// Estimate autocorrelation time for a single chain
     fn estimate_autocorr_time(&self, chain: &ArrayView1<f64>) -> Result<f64> {
         let n = chain.len();
         if n < 4 {
             return Ok(1.0);
         }
-        
+
         let mean = chain.mean().unwrap();
         let variance = chain.mapv(|x| (x - mean).powi(2)).mean().unwrap();
-        
+
         if variance <= 0.0 {
             return Ok(1.0);
         }
-        
+
         // Compute autocorrelation function
         let max_lag = (n / 4).min(200);
         let mut autocorr = Array1::zeros(max_lag);
-        
+
         for lag in 0..max_lag {
             let mut sum = 0.0;
             let mut count = 0;
-            
+
             for i in 0..(n - lag) {
                 sum += (chain[i] - mean) * (chain[i + lag] - mean);
                 count += 1;
             }
-            
+
             if count > 0 {
                 autocorr[lag] = sum / (count as f64 * variance);
             }
         }
-        
+
         // Find first negative value or when autocorr drops below e^(-1)
         let threshold = std::f64::consts::E.recip();
         for lag in 1..max_lag {
@@ -739,7 +736,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
                 return Ok(lag as f64);
             }
         }
-        
+
         Ok(max_lag as f64)
     }
 }
@@ -770,13 +767,13 @@ impl ChainStatistics {
             }
         })
     }
-    
+
     /// Check if chains have converged (simplified Gelman-Rubin diagnostic)
     pub fn is_converged(&self, threshold: f64) -> bool {
         // For ensemble methods, check if autocorrelation times are reasonable
         let max_autocorr = self.autocorr_times.iter().cloned().fold(0.0f64, f64::max);
         let min_eff_samples = self.n_samples as f64 / (2.0 * max_autocorr);
-        
+
         min_eff_samples > threshold
     }
 }

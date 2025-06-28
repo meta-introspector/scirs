@@ -688,8 +688,6 @@ pub mod ops {
 
         Ok(result)
     }
-
-
 }
 
 #[cfg(test)]

@@ -9,10 +9,10 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
-use scirs2_core::parallel_ops::{
-    par_chunks, ParallelIterator, num_threads, IntoParallelIterator
-};
+use scirs2_core::parallel_ops::{num_threads, par_chunks, IntoParallelIterator, ParallelIterator};
+use scirs2_core::validation::{check_finite, check_not_empty};
 use std::sync::Arc;
+use std::time::Instant;
 
 /// Configuration for parallel operations
 #[derive(Debug, Clone)]
@@ -30,9 +30,9 @@ pub struct ParallelConfig {
 impl Default for ParallelConfig {
     fn default() -> Self {
         Self {
-            min_size: 5_000,  // Lower threshold than before
+            min_size: 5_000,   // Lower threshold than before
             chunk_size: None,  // Auto-determine
-            max_threads: None,  // Use all available
+            max_threads: None, // Use all available
             adaptive: true,
         }
     }
@@ -44,25 +44,40 @@ impl ParallelConfig {
         self.max_threads = Some(threads);
         self
     }
-    
+
     /// Create config with specific chunk size
     pub fn with_chunk_size(mut self, size: usize) -> Self {
         self.chunk_size = Some(size);
         self
     }
-    
+
     /// Determine if parallel execution should be used
     pub fn should_parallelize(&self, n: usize) -> bool {
         if self.adaptive {
             // Adaptive threshold based on system load and data size
             let threads = self.max_threads.unwrap_or_else(num_threads);
-            let overhead_factor = 1000; // Estimated overhead per thread
+
+            // Dynamic overhead estimation based on available cores
+            let base_overhead = 800;
+            let overhead_factor = base_overhead + (threads.saturating_sub(1) * 200);
+
+            // For very large arrays, always parallelize
+            if n > 100_000 {
+                return true;
+            }
+
+            // For small arrays, prefer sequential
+            if n < 1_000 {
+                return false;
+            }
+
+            // Adaptive decision for medium arrays
             n > threads * overhead_factor
         } else {
             n >= self.min_size
         }
     }
-    
+
     /// Get optimal chunk size for the given data size
     pub fn get_chunk_size(&self, n: usize) -> usize {
         if let Some(size) = self.chunk_size {
@@ -86,19 +101,19 @@ where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
     D: Data<Elem = F> + Sync,
 {
-    if x.is_empty() {
-        return Err(StatsError::invalid_argument("Cannot compute mean of empty array"));
-    }
-    
+    // Use scirs2-core validation
+    check_not_empty(x.as_slice().unwrap(), "x")
+        .map_err(|_| StatsError::invalid_argument("Cannot compute mean of empty array"))?;
+
     let config = config.unwrap_or_default();
     let n = x.len();
-    
+
     if !config.should_parallelize(n) {
         // Sequential computation
         let sum = x.iter().fold(F::zero(), |acc, &val| acc + val);
         return Ok(sum / F::from(n).unwrap());
     }
-    
+
     // Parallel computation with better handling
     let sum = if let Some(slice) = x.as_slice() {
         // Contiguous array - use slice-based parallelism
@@ -107,7 +122,7 @@ where
         // Non-contiguous array - use index-based parallelism
         parallel_sum_indexed(x, &config)
     };
-    
+
     Ok(sum / F::from(n).unwrap())
 }
 
@@ -126,21 +141,21 @@ where
     let n = x.len();
     if n <= ddof {
         return Err(StatsError::invalid_argument(
-            "Not enough data points for the given degrees of freedom"
+            "Not enough data points for the given degrees of freedom",
         ));
     }
-    
+
     let config = config.unwrap_or_default();
-    
+
     if !config.should_parallelize(n) {
         // Use sequential Welford's algorithm
         return variance_sequential_welford(x, ddof);
     }
-    
+
     // Parallel Welford's algorithm
     let chunk_size = config.get_chunk_size(n);
     let n_chunks = (n + chunk_size - 1) / chunk_size;
-    
+
     // Each chunk computes local mean and M2
     let chunk_stats: Vec<(F, F, usize)> = (0..n_chunks)
         .into_iter()
@@ -149,11 +164,11 @@ where
         .map(|chunk_idx| {
             let start = chunk_idx * chunk_size;
             let end = (start + chunk_size).min(n);
-            
+
             let mut local_mean = F::zero();
             let mut local_m2 = F::zero();
             let mut count = 0;
-            
+
             for i in start..end {
                 count += 1;
                 let val = x[i];
@@ -162,14 +177,14 @@ where
                 let delta2 = val - local_mean;
                 local_m2 = local_m2 + delta * delta2;
             }
-            
+
             (local_mean, local_m2, count)
         })
         .collect();
-    
+
     // Combine chunk statistics
     let (_total_mean, total_m2, _) = combine_welford_stats(&chunk_stats);
-    
+
     Ok(total_m2 / F::from(n - ddof).unwrap())
 }
 
@@ -185,13 +200,13 @@ where
     D: Data<Elem = F> + Sync,
 {
     let (n_samples, n_features) = data.dim();
-    
+
     if n_samples == 0 || n_features == 0 {
         return Err(StatsError::invalid_argument("Empty data matrix"));
     }
-    
+
     let config = config.unwrap_or_default();
-    
+
     // Compute means for each feature in parallel
     let means: Vec<F> = (0..n_features)
         .into_iter()
@@ -202,40 +217,35 @@ where
             mean_parallel_enhanced(&col, Some(config.clone())).unwrap_or(F::zero())
         })
         .collect();
-    
+
     // Compute correlation matrix in parallel
     let mut corr_matrix = Array2::zeros((n_features, n_features));
-    
+
     // Only compute upper triangle (correlation matrix is symmetric)
     let indices: Vec<(usize, usize)> = (0..n_features)
         .flat_map(|i| (i..n_features).map(move |j| (i, j)))
         .collect();
-    
+
     let correlations: Vec<((usize, usize), F)> = indices
         .into_par_iter()
         .map(|(i, j)| {
             let corr = if i == j {
-                F::one()  // Diagonal is always 1
+                F::one() // Diagonal is always 1
             } else {
-                compute_correlation_pair(
-                    &data.column(i),
-                    &data.column(j),
-                    means[i],
-                    means[j],
-                )
+                compute_correlation_pair(&data.column(i), &data.column(j), means[i], means[j])
             };
             ((i, j), corr)
         })
         .collect();
-    
+
     // Fill the correlation matrix
     for ((i, j), corr) in correlations {
         corr_matrix[(i, j)] = corr;
         if i != j {
-            corr_matrix[(j, i)] = corr;  // Symmetric
+            corr_matrix[(j, i)] = corr; // Symmetric
         }
     }
-    
+
     Ok(corr_matrix)
 }
 
@@ -255,34 +265,34 @@ where
     if data.is_empty() {
         return Err(StatsError::invalid_argument("Cannot bootstrap empty data"));
     }
-    
+
     let _config = config.unwrap_or_default();
     let data_arc = Arc::new(data.to_owned());
     let n = data.len();
-    
+
     // Generate bootstrap statistics in parallel
     let stats: Vec<F> = (0..n_samples)
         .into_iter()
         .collect::<Vec<_>>()
         .into_par_iter()
         .map(|sample_idx| {
-            use rand::{SeedableRng, Rng};
             use rand::rngs::StdRng;
-            
+            use rand::{Rng, SeedableRng};
+
             // Create deterministic RNG for reproducibility
             let mut rng = StdRng::seed_from_u64(sample_idx as u64);
             let mut sample = Array1::zeros(n);
-            
+
             // Generate bootstrap sample
             for i in 0..n {
                 let idx = rng.random_range(0..n);
                 sample[i] = data_arc[idx];
             }
-            
+
             statistic_fn(&sample.view())
         })
         .collect();
-    
+
     Ok(Array1::from(stats))
 }
 
@@ -292,7 +302,7 @@ where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
 {
     let chunk_size = config.get_chunk_size(slice.len());
-    
+
     par_chunks(slice, chunk_size)
         .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
         .reduce(|| F::zero(), |a, b| a + b)
@@ -307,7 +317,7 @@ where
     let n = arr.len();
     let chunk_size = config.get_chunk_size(n);
     let n_chunks = (n + chunk_size - 1) / chunk_size;
-    
+
     (0..n_chunks)
         .into_iter()
         .collect::<Vec<_>>()
@@ -315,7 +325,7 @@ where
         .map(|chunk_idx| {
             let start = chunk_idx * chunk_size;
             let end = (start + chunk_size).min(n);
-            
+
             (start..end)
                 .map(|i| arr[i])
                 .fold(F::zero(), |acc, val| acc + val)
@@ -324,10 +334,7 @@ where
 }
 
 /// Sequential Welford's algorithm (fallback)
-fn variance_sequential_welford<F, D>(
-    x: &ArrayBase<D, Ix1>,
-    ddof: usize,
-) -> StatsResult<F>
+fn variance_sequential_welford<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
     D: Data<Elem = F>,
@@ -335,7 +342,7 @@ where
     let mut mean = F::zero();
     let mut m2 = F::zero();
     let mut count = 0;
-    
+
     for &val in x.iter() {
         count += 1;
         let delta = val - mean;
@@ -343,7 +350,7 @@ where
         let delta2 = val - mean;
         m2 = m2 + delta * delta2;
     }
-    
+
     Ok(m2 / F::from(count - ddof).unwrap())
 }
 
@@ -358,21 +365,17 @@ where
             let count = count_a + count_b;
             let delta = mean_b - mean_a;
             let mean = mean_a + delta * F::from(count_b).unwrap() / F::from(count).unwrap();
-            let m2 = m2_a + m2_b + 
-                delta * delta * F::from(count_a).unwrap() * F::from(count_b).unwrap() / 
-                F::from(count).unwrap();
+            let m2 = m2_a
+                + m2_b
+                + delta * delta * F::from(count_a).unwrap() * F::from(count_b).unwrap()
+                    / F::from(count).unwrap();
             (mean, m2, count)
-        }
+        },
     )
 }
 
 /// Compute correlation between two vectors
-fn compute_correlation_pair<F>(
-    x: &ArrayView1<F>,
-    y: &ArrayView1<F>,
-    mean_x: F,
-    mean_y: F,
-) -> F
+fn compute_correlation_pair<F>(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, mean_y: F) -> F
 where
     F: Float + NumCast,
 {
@@ -380,7 +383,7 @@ where
     let mut cov = F::zero();
     let mut var_x = F::zero();
     let mut var_y = F::zero();
-    
+
     for i in 0..n {
         let dx = x[i] - mean_x;
         let dy = y[i] - mean_y;
@@ -388,7 +391,7 @@ where
         var_x = var_x + dx * dx;
         var_y = var_y + dy * dy;
     }
-    
+
     if var_x > F::epsilon() && var_y > F::epsilon() {
         cov / (var_x * var_y).sqrt()
     } else {
@@ -400,26 +403,26 @@ where
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[test]
     fn test_parallel_config() {
         let config = ParallelConfig::default();
         assert!(config.should_parallelize(100_000));
         assert!(!config.should_parallelize(100));
-        
+
         let config_fixed = ParallelConfig::default()
             .with_threads(4)
             .with_chunk_size(1000);
         assert_eq!(config_fixed.get_chunk_size(10_000), 1000);
     }
-    
+
     #[test]
     fn test_mean_parallel_enhanced() {
         let data = Array1::from_vec((0..10_000).map(|i| i as f64).collect());
         let mean = mean_parallel_enhanced(&data.view(), None).unwrap();
         assert!((mean - 4999.5).abs() < 1e-10);
     }
-    
+
     #[test]
     fn test_variance_parallel_enhanced() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];

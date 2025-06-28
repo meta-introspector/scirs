@@ -68,17 +68,21 @@ pub use error::{SpecialError, SpecialResult};
 
 // Modules
 mod airy;
+#[cfg(feature = "high-precision")]
+pub mod arbitrary_precision;
 pub mod array_ops;
 pub mod bessel;
 mod bessel_zeros;
 mod combinatorial;
 mod constants;
 pub mod convenience;
-pub mod cross_validation;
 mod coulomb;
+pub mod cross_validation;
 mod distributions;
 mod elliptic;
 mod erf;
+#[cfg(test)]
+mod extended_property_tests;
 mod fresnel;
 mod gamma;
 #[cfg(feature = "gpu")]
@@ -94,16 +98,12 @@ pub mod memory_efficient;
 pub mod optimizations;
 mod orthogonal;
 mod parabolic;
-pub mod precision;
-#[cfg(feature = "high-precision")]
-pub mod arbitrary_precision;
 pub mod physics_engineering;
+pub mod precision;
 mod property_tests;
 pub mod python_interop;
 #[cfg(test)]
 mod quickcheck_tests;
-#[cfg(test)]
-mod extended_property_tests;
 mod simd_ops;
 mod spherical_harmonics;
 mod spheroidal;
@@ -153,12 +153,19 @@ pub use bessel::{
     yn_prime,
 };
 pub use bessel_zeros::{
-    // Zeros of Bessel functions
-    j0_zeros, j1_zeros, jn_zeros, jnp_zeros,
-    y0_zeros, y1_zeros, yn_zeros,
-    jnyn_zeros, jnjnp_zeros,
+    besselpoly,
     // Bessel utilities
-    itj0y0, besselpoly,
+    itj0y0,
+    // Zeros of Bessel functions
+    j0_zeros,
+    j1_zeros,
+    jn_zeros,
+    jnjnp_zeros,
+    jnp_zeros,
+    jnyn_zeros,
+    y0_zeros,
+    y1_zeros,
+    yn_zeros,
 };
 pub use combinatorial::{
     bell_number, bernoulli_number, binomial, double_factorial, euler_number, factorial,
@@ -166,22 +173,34 @@ pub use combinatorial::{
 };
 pub use coulomb::{coulomb_f, coulomb_g, coulomb_h_minus, coulomb_h_plus, coulomb_phase_shift};
 pub use distributions::{
-    // Normal distribution
-    ndtr, log_ndtr, ndtri, ndtri_exp, ndtr_array,
     // Binomial distribution
-    bdtr, bdtrc, bdtri, bdtr_array,
-    // Poisson distribution
-    pdtr, pdtrc,
+    bdtr,
+    bdtr_array,
+    bdtrc,
+    bdtri,
     // Chi-square distribution
-    chdtr, chdtrc,
+    chdtr,
+    chdtrc,
+    // F distribution
+    fdtr,
+    fdtrc,
+    // Gamma distribution
+    gdtr,
+    gdtrc,
+    kolmogi,
+    // Kolmogorov-Smirnov distribution
+    kolmogorov,
+    log_ndtr,
+    // Normal distribution
+    ndtr,
+    ndtr_array,
+    ndtri,
+    ndtri_exp,
+    // Poisson distribution
+    pdtr,
+    pdtrc,
     // Student's t distribution
     stdtr,
-    // F distribution
-    fdtr, fdtrc,
-    // Gamma distribution
-    gdtr, gdtrc,
-    // Kolmogorov-Smirnov distribution
-    kolmogorov, kolmogi,
 };
 pub use elliptic::{
     elliptic_e, elliptic_e_inc, elliptic_f, elliptic_k, elliptic_pi, jacobi_cn, jacobi_dn,
@@ -191,13 +210,23 @@ pub use fresnel::{
     fresnel, fresnel_complex, fresnelc, fresnels, mod_fresnel_minus, mod_fresnel_plus,
 };
 pub use gamma::{
-    beta, betainc, betainc_regularized, betaincinv, betaln, digamma, gamma, gammaln, loggamma,
+    beta,
     // Safe versions with error handling
-    beta_safe, digamma_safe, gamma_safe,
+    beta_safe,
+    betainc,
+    betainc_regularized,
+    betaincinv,
+    betaln,
+    digamma,
+    digamma_safe,
+    gamma,
+    gamma_safe,
+    gammaln,
+    loggamma,
 };
 pub use incomplete_gamma::{
-    gammainc, gammaincc, gammaincinv, gammainccinv, 
-    gammainc_lower, gammainc_upper, gammastar, gammasgn,
+    gammainc, gammainc_lower, gammainc_upper, gammaincc, gammainccinv, gammaincinv, gammasgn,
+    gammastar,
 };
 // Complex gamma functions
 pub use gamma::complex::{beta_complex, digamma_complex, gamma_complex, loggamma_complex};
@@ -207,8 +236,8 @@ pub use bessel::complex::{i0_complex, j0_complex, j1_complex, jn_complex, jv_com
 pub use erf::complex::{erf_complex, erfc_complex, erfcx_complex, faddeeva_complex};
 pub use hypergeometric::{hyp1f1, hyp2f1, ln_pochhammer, pochhammer};
 pub use information_theory::{
-    entr, rel_entr, kl_div, huber, pseudo_huber,
-    entr_array, entropy, kl_divergence, huber_loss, binary_entropy, cross_entropy,
+    binary_entropy, cross_entropy, entr, entr_array, entropy, huber, huber_loss, kl_div,
+    kl_divergence, pseudo_huber, rel_entr,
 };
 pub use kelvin::{bei, beip, ber, berp, kei, keip, kelvin, ker, kerp};
 pub use lambert::{lambert_w, lambert_w_real};
@@ -232,16 +261,33 @@ pub use statistical::{
 };
 pub use struve::{it2_struve0, it_mod_struve0, it_struve0, mod_struve, struve};
 pub use utility::{
+    agm,
     // Basic functions
-    cbrt, exp10, exp2, round,
-    // Trigonometric in degrees
-    radian, cosdg, sindg, tandg, cotdg,
-    // Accurate computations
-    cosm1, powm1, xlogy, xlog1py, exprel,
-    // Special functions
-    diric, agm, log_expit, softplus, owens_t,
+    cbrt,
     // Array operations
-    cbrt_array, exp10_array, round_array,
+    cbrt_array,
+    cosdg,
+    // Accurate computations
+    cosm1,
+    cotdg,
+    // Special functions
+    diric,
+    exp10,
+    exp10_array,
+    exp2,
+    exprel,
+    log_expit,
+    owens_t,
+    powm1,
+    // Trigonometric in degrees
+    radian,
+    round,
+    round_array,
+    sindg,
+    softplus,
+    tandg,
+    xlog1py,
+    xlogy,
 };
 pub use wright::{wright_omega_optimized, wright_omega_real_optimized};
 pub use wright_bessel::{wright_bessel, wright_bessel_complex, wright_bessel_zeros};
@@ -271,11 +317,11 @@ pub use erf::{erf, erfc, erfcinv, erfinv};
 // Arbitrary precision functions (when enabled)
 #[cfg(feature = "high-precision")]
 pub use arbitrary_precision::{
-    PrecisionContext,
-    gamma::{gamma_ap, gamma_mp, log_gamma_ap, log_gamma_mp},
     bessel::{bessel_j_ap, bessel_j_mp, bessel_y_ap, bessel_y_mp},
+    cleanup_cache,
     error_function::{erf_ap, erf_mp, erfc_ap, erfc_mp},
-    to_f64, to_complex64, cleanup_cache,
+    gamma::{gamma_ap, gamma_mp, log_gamma_ap, log_gamma_mp},
+    to_complex64, to_f64, PrecisionContext,
 };
 
 #[cfg(test)]

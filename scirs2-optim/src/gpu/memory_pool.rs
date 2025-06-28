@@ -1,12 +1,12 @@
 //! CUDA memory pool management for efficient GPU memory allocation
-//! 
+//!
 //! This module provides memory pooling to reduce allocation overhead
 //! and improve performance for repeated GPU operations.
 
 use std::collections::{HashMap, VecDeque};
-use std::sync::{Arc, Mutex};
-use std::ptr;
 use std::fmt;
+use std::ptr;
+use std::sync::{Arc, Mutex};
 
 use crate::gpu::GpuOptimizerError;
 
@@ -18,22 +18,22 @@ use scirs2_core::gpu::GpuContext;
 pub struct MemoryStats {
     /// Total allocated memory
     pub total_allocated: usize,
-    
+
     /// Currently used memory
     pub current_used: usize,
-    
+
     /// Peak memory usage
     pub peak_usage: usize,
-    
+
     /// Number of allocations
     pub allocation_count: usize,
-    
+
     /// Number of deallocations
     pub deallocation_count: usize,
-    
+
     /// Number of cache hits
     pub cache_hits: usize,
-    
+
     /// Number of cache misses
     pub cache_misses: usize,
 }
@@ -43,16 +43,16 @@ pub struct MemoryStats {
 struct MemoryBlock {
     /// Pointer to GPU memory
     ptr: *mut u8,
-    
+
     /// Size of the block
     size: usize,
-    
+
     /// Whether block is currently in use
     in_use: bool,
-    
+
     /// Allocation timestamp
     allocated_at: std::time::Instant,
-    
+
     /// Last used timestamp
     last_used: std::time::Instant,
 }
@@ -68,12 +68,12 @@ impl MemoryBlock {
             last_used: now,
         }
     }
-    
+
     fn mark_used(&mut self) {
         self.in_use = true;
         self.last_used = std::time::Instant::now();
     }
-    
+
     fn mark_free(&mut self) {
         self.in_use = false;
     }
@@ -83,37 +83,37 @@ impl MemoryBlock {
 pub struct CudaMemoryPool {
     /// Free blocks organized by size
     free_blocks: HashMap<usize, VecDeque<MemoryBlock>>,
-    
+
     /// All allocated blocks
     all_blocks: Vec<MemoryBlock>,
-    
+
     /// Memory statistics
     stats: MemoryStats,
-    
+
     /// Maximum pool size
     max_pool_size: usize,
-    
+
     /// Minimum block size to pool
     min_block_size: usize,
-    
+
     /// Enable memory defragmentation
     enable_defrag: bool,
-    
+
     /// GPU context
     gpu_context: Option<Arc<GpuContext>>,
-    
+
     /// Large batch optimization settings
     large_batch_config: LargeBatchConfig,
-    
+
     /// Memory allocation strategy
     allocation_strategy: AllocationStrategy,
-    
+
     /// Adaptive sizing based on usage patterns
     adaptive_sizing: AdaptiveSizing,
-    
+
     /// Memory pressure monitoring
     pressure_monitor: MemoryPressureMonitor,
-    
+
     /// Pre-allocated large buffers for batch operations
     batch_buffers: Vec<BatchBuffer>,
 }
@@ -317,19 +317,19 @@ impl BatchBuffer {
             buffer_type,
         }
     }
-    
+
     /// Mark buffer as used
     pub fn mark_used(&mut self) {
         self.in_use = true;
         self.last_used = std::time::Instant::now();
         self.usage_count += 1;
     }
-    
+
     /// Mark buffer as free
     pub fn mark_free(&mut self) {
         self.in_use = false;
     }
-    
+
     /// Check if buffer has expired
     pub fn is_expired(&self, lifetime_secs: u64) -> bool {
         self.last_used.elapsed().as_secs() > lifetime_secs
@@ -354,7 +354,7 @@ impl CudaMemoryPool {
             batch_buffers: Vec::new(),
         }
     }
-    
+
     /// Create a new memory pool with custom configuration
     pub fn with_large_batch_config(max_pool_size: usize, config: LargeBatchConfig) -> Self {
         Self {
@@ -372,17 +372,17 @@ impl CudaMemoryPool {
             batch_buffers: Vec::new(),
         }
     }
-    
+
     /// Set GPU context
     pub fn set_gpu_context(&mut self, context: Arc<GpuContext>) {
         self.gpu_context = Some(context);
     }
-    
+
     /// Allocate memory from pool
     pub fn allocate(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         // Round up to nearest power of 2 for better reuse
         let aligned_size = size.next_power_of_two();
-        
+
         // Try to find a free block
         if let Some(blocks) = self.free_blocks.get_mut(&aligned_size) {
             if let Some(mut block) = blocks.pop_front() {
@@ -392,7 +392,7 @@ impl CudaMemoryPool {
                 return Ok(block.ptr);
             }
         }
-        
+
         // Try to find a larger block that can be reused
         for (&block_size, blocks) in self.free_blocks.iter_mut() {
             if block_size >= aligned_size {
@@ -404,23 +404,23 @@ impl CudaMemoryPool {
                 }
             }
         }
-        
+
         // Allocate new block if within limits
         if self.stats.total_allocated + aligned_size <= self.max_pool_size {
             let ptr = self.allocate_gpu_memory(aligned_size)?;
             let block = MemoryBlock::new(ptr, aligned_size);
-            
+
             self.all_blocks.push(block);
             self.stats.total_allocated += aligned_size;
             self.stats.current_used += aligned_size;
             self.stats.allocation_count += 1;
             self.stats.cache_misses += 1;
-            
+
             // Update peak usage
             if self.stats.current_used > self.stats.peak_usage {
                 self.stats.peak_usage = self.stats.current_used;
             }
-            
+
             Ok(ptr)
         } else {
             // Try defragmentation if enabled
@@ -428,14 +428,15 @@ impl CudaMemoryPool {
                 self.defragment()?;
                 return self.allocate(size);
             }
-            
-            Err(GpuOptimizerError::InvalidState(
-                format!("Memory pool limit exceeded: requested {}, available {}", 
-                        aligned_size, self.max_pool_size - self.stats.total_allocated)
-            ))
+
+            Err(GpuOptimizerError::InvalidState(format!(
+                "Memory pool limit exceeded: requested {}, available {}",
+                aligned_size,
+                self.max_pool_size - self.stats.total_allocated
+            )))
         }
     }
-    
+
     /// Deallocate memory back to pool
     pub fn deallocate(&mut self, ptr: *mut u8) {
         // Find the block
@@ -443,7 +444,7 @@ impl CudaMemoryPool {
             if block.ptr == ptr && block.in_use {
                 block.mark_free();
                 let size = block.size;
-                
+
                 // Add to free list
                 self.free_blocks
                     .entry(size)
@@ -455,19 +456,19 @@ impl CudaMemoryPool {
                         allocated_at: block.allocated_at,
                         last_used: block.last_used,
                     });
-                
+
                 self.stats.current_used -= size;
                 self.stats.deallocation_count += 1;
                 return;
             }
         }
     }
-    
+
     /// Defragment memory pool
     pub fn defragment(&mut self) -> Result<(), GpuOptimizerError> {
         // Remove blocks that haven't been used recently
         let cutoff = std::time::Instant::now() - std::time::Duration::from_secs(60);
-        
+
         let mut freed_memory = 0;
         for blocks in self.free_blocks.values_mut() {
             blocks.retain(|block| {
@@ -485,27 +486,31 @@ impl CudaMemoryPool {
                 }
             });
         }
-        
+
         self.stats.total_allocated -= freed_memory;
-        
+
         // Remove empty entries
         self.free_blocks.retain(|_, blocks| !blocks.is_empty());
-        
+
         Ok(())
     }
-    
+
     /// Get memory statistics
     pub fn get_stats(&self) -> &MemoryStats {
         &self.stats
     }
-    
+
     /// Allocate a large batch buffer
-    pub fn allocate_batch_buffer(&mut self, size: usize, buffer_type: BatchBufferType) -> Result<*mut u8, GpuOptimizerError> {
+    pub fn allocate_batch_buffer(
+        &mut self,
+        size: usize,
+        buffer_type: BatchBufferType,
+    ) -> Result<*mut u8, GpuOptimizerError> {
         if size < self.large_batch_config.min_batch_size {
             // Use regular allocation for small buffers
             return self.allocate(size);
         }
-        
+
         // Check for available batch buffer
         for buffer in &mut self.batch_buffers {
             if !buffer.in_use && buffer.size >= size && buffer.buffer_type == buffer_type {
@@ -513,7 +518,7 @@ impl CudaMemoryPool {
                 return Ok(buffer.ptr);
             }
         }
-        
+
         // Pre-allocate new batch buffer if under limit
         if self.batch_buffers.len() < self.large_batch_config.max_batch_buffers {
             let buffer_size = if self.large_batch_config.enable_coalescing {
@@ -521,23 +526,23 @@ impl CudaMemoryPool {
             } else {
                 size
             };
-            
+
             let ptr = self.allocate_gpu_memory(buffer_size)?;
             let mut buffer = BatchBuffer::new(ptr, buffer_size, buffer_type);
             buffer.mark_used();
             self.batch_buffers.push(buffer);
-            
+
             self.stats.total_allocated += buffer_size;
             self.stats.current_used += buffer_size;
             self.stats.allocation_count += 1;
-            
+
             return Ok(ptr);
         }
-        
+
         // Fallback to regular allocation
         self.allocate(size)
     }
-    
+
     /// Release a batch buffer
     pub fn release_batch_buffer(&mut self, ptr: *mut u8) {
         for buffer in &mut self.batch_buffers {
@@ -548,16 +553,16 @@ impl CudaMemoryPool {
                 return;
             }
         }
-        
+
         // Fallback to regular deallocation
         self.deallocate(ptr);
     }
-    
+
     /// Clean up expired batch buffers
     pub fn cleanup_expired_buffers(&mut self) -> Result<(), GpuOptimizerError> {
         let lifetime = self.large_batch_config.buffer_lifetime;
         let mut freed_memory = 0;
-        
+
         self.batch_buffers.retain(|buffer| {
             if !buffer.in_use && buffer.is_expired(lifetime) {
                 // Free the GPU memory
@@ -572,49 +577,51 @@ impl CudaMemoryPool {
                 true // Keep active and recent buffers
             }
         });
-        
+
         self.stats.total_allocated -= freed_memory;
         Ok(())
     }
-    
+
     /// Update memory pressure monitoring
     pub fn update_memory_pressure(&mut self) {
         if !self.pressure_monitor.enable_monitoring {
             return;
         }
-        
+
         let utilization = self.stats.current_used as f32 / self.max_pool_size as f32;
         self.pressure_monitor.current_pressure = utilization;
-        
+
         let reading = PressureReading {
             timestamp: std::time::Instant::now(),
             pressure: utilization,
             available_memory: self.max_pool_size - self.stats.current_used,
             allocated_memory: self.stats.current_used,
         };
-        
+
         self.pressure_monitor.pressure_history.push_back(reading);
-        
+
         // Limit history size
-        while self.pressure_monitor.pressure_history.len() > self.pressure_monitor.max_history_size {
+        while self.pressure_monitor.pressure_history.len() > self.pressure_monitor.max_history_size
+        {
             self.pressure_monitor.pressure_history.pop_front();
         }
-        
+
         // Trigger cleanup if pressure is too high
-        if self.pressure_monitor.auto_cleanup && 
-           utilization > self.pressure_monitor.cleanup_threshold {
+        if self.pressure_monitor.auto_cleanup
+            && utilization > self.pressure_monitor.cleanup_threshold
+        {
             let _ = self.cleanup_expired_buffers();
             let _ = self.defragment();
         }
     }
-    
+
     /// Adaptive allocation using strategy selection
     pub fn allocate_adaptive(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         self.update_memory_pressure();
-        
+
         // Record allocation event
         let start_time = std::time::Instant::now();
-        
+
         let result = match self.allocation_strategy {
             AllocationStrategy::FirstFit => self.allocate_first_fit(size),
             AllocationStrategy::BestFit => self.allocate_best_fit(size),
@@ -623,32 +630,33 @@ impl CudaMemoryPool {
             AllocationStrategy::SegregatedList => self.allocate_segregated_list(size),
             AllocationStrategy::Adaptive => self.allocate_adaptive_strategy(size),
         };
-        
+
         // Record allocation event for analysis
         let latency = start_time.elapsed().as_micros() as u64;
         let cache_hit = result.is_ok() && latency < 100; // Assume cache hit if very fast
-        
+
         let event = AllocationEvent {
             size,
             timestamp: std::time::Instant::now(),
             cache_hit,
             latency_us: latency,
         };
-        
+
         self.adaptive_sizing.allocation_history.push_back(event);
-        
+
         // Limit history size
-        while self.adaptive_sizing.allocation_history.len() > self.adaptive_sizing.max_history_size {
+        while self.adaptive_sizing.allocation_history.len() > self.adaptive_sizing.max_history_size
+        {
             self.adaptive_sizing.allocation_history.pop_front();
         }
-        
+
         result
     }
-    
+
     /// First-fit allocation strategy
     fn allocate_first_fit(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         let aligned_size = size.next_power_of_two();
-        
+
         // Find first available block that fits
         for (&block_size, blocks) in self.free_blocks.iter_mut() {
             if block_size >= aligned_size {
@@ -660,17 +668,17 @@ impl CudaMemoryPool {
                 }
             }
         }
-        
+
         // Allocate new block
         self.allocate_new_block(aligned_size)
     }
-    
+
     /// Best-fit allocation strategy
     fn allocate_best_fit(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         let aligned_size = size.next_power_of_two();
         let mut best_fit_size = None;
         let mut min_waste = usize::MAX;
-        
+
         // Find the smallest block that fits
         for &block_size in self.free_blocks.keys() {
             if block_size >= aligned_size {
@@ -681,7 +689,7 @@ impl CudaMemoryPool {
                 }
             }
         }
-        
+
         if let Some(block_size) = best_fit_size {
             if let Some(blocks) = self.free_blocks.get_mut(&block_size) {
                 if let Some(mut block) = blocks.pop_front() {
@@ -692,17 +700,17 @@ impl CudaMemoryPool {
                 }
             }
         }
-        
+
         // Allocate new block
         self.allocate_new_block(aligned_size)
     }
-    
+
     /// Worst-fit allocation strategy
     fn allocate_worst_fit(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         let aligned_size = size.next_power_of_two();
         let mut worst_fit_size = None;
         let mut max_waste = 0;
-        
+
         // Find the largest block that fits
         for &block_size in self.free_blocks.keys() {
             if block_size >= aligned_size {
@@ -713,7 +721,7 @@ impl CudaMemoryPool {
                 }
             }
         }
-        
+
         if let Some(block_size) = worst_fit_size {
             if let Some(blocks) = self.free_blocks.get_mut(&block_size) {
                 if let Some(mut block) = blocks.pop_front() {
@@ -724,47 +732,53 @@ impl CudaMemoryPool {
                 }
             }
         }
-        
+
         // Allocate new block
         self.allocate_new_block(aligned_size)
     }
-    
+
     /// Buddy system allocation strategy
     fn allocate_buddy_system(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         // Round up to next power of 2 for buddy system
         let buddy_size = size.next_power_of_two();
         self.allocate_first_fit(buddy_size)
     }
-    
+
     /// Segregated list allocation strategy
     fn allocate_segregated_list(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         // Use size classes for segregated allocation
         let size_class = self.get_size_class(size);
         self.allocate_first_fit(size_class)
     }
-    
+
     /// Adaptive allocation strategy selection
     fn allocate_adaptive_strategy(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         // Analyze recent allocation patterns to choose best strategy
-        let recent_history: Vec<_> = self.adaptive_sizing.allocation_history
+        let recent_history: Vec<_> = self
+            .adaptive_sizing
+            .allocation_history
             .iter()
             .rev()
             .take(self.adaptive_sizing.analysis_window)
             .collect();
-        
+
         if recent_history.is_empty() {
             return self.allocate_first_fit(size);
         }
-        
+
         // Analyze patterns
-        let avg_latency: f64 = recent_history.iter()
+        let avg_latency: f64 = recent_history
+            .iter()
             .map(|event| event.latency_us as f64)
-            .sum::<f64>() / recent_history.len() as f64;
-        
-        let cache_hit_rate = recent_history.iter()
+            .sum::<f64>()
+            / recent_history.len() as f64;
+
+        let cache_hit_rate = recent_history
+            .iter()
             .filter(|event| event.cache_hit)
-            .count() as f32 / recent_history.len() as f32;
-        
+            .count() as f32
+            / recent_history.len() as f32;
+
         // Choose strategy based on performance metrics
         if cache_hit_rate > 0.8 {
             // High cache hit rate, use first-fit for speed
@@ -780,39 +794,41 @@ impl CudaMemoryPool {
             self.allocate_first_fit(size)
         }
     }
-    
+
     /// Get size class for segregated allocation
     fn get_size_class(&self, size: usize) -> usize {
         // Define size classes (powers of 2)
-        let classes = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576];
-        
+        let classes = [
+            256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576,
+        ];
+
         for &class_size in &classes {
             if size <= class_size {
                 return class_size;
             }
         }
-        
+
         // For very large allocations, round up to next MB
         ((size + 1048575) / 1048576) * 1048576
     }
-    
+
     /// Allocate new memory block
     fn allocate_new_block(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         if self.stats.total_allocated + size <= self.max_pool_size {
             let ptr = self.allocate_gpu_memory(size)?;
             let block = MemoryBlock::new(ptr, size);
-            
+
             self.all_blocks.push(block);
             self.stats.total_allocated += size;
             self.stats.current_used += size;
             self.stats.allocation_count += 1;
             self.stats.cache_misses += 1;
-            
+
             // Update peak usage
             if self.stats.current_used > self.stats.peak_usage {
                 self.stats.peak_usage = self.stats.current_used;
             }
-            
+
             Ok(ptr)
         } else {
             // Try defragmentation if enabled
@@ -820,19 +836,20 @@ impl CudaMemoryPool {
                 self.defragment()?;
                 return self.allocate_new_block(size);
             }
-            
-            Err(GpuOptimizerError::InvalidState(
-                format!("Memory pool limit exceeded: requested {}, available {}", 
-                        size, self.max_pool_size - self.stats.total_allocated)
-            ))
+
+            Err(GpuOptimizerError::InvalidState(format!(
+                "Memory pool limit exceeded: requested {}, available {}",
+                size,
+                self.max_pool_size - self.stats.total_allocated
+            )))
         }
     }
-    
+
     /// Get current memory pressure level
     pub fn get_memory_pressure(&self) -> f32 {
         self.pressure_monitor.current_pressure
     }
-    
+
     /// Get allocation statistics for analysis
     pub fn get_allocation_analytics(&self) -> AllocationAnalytics {
         let recent_history: Vec<_> = self.adaptive_sizing.allocation_history
@@ -840,21 +857,22 @@ impl CudaMemoryPool {
             .rev()
             .take(1000) // Last 1000 allocations
             .collect();
-        
+
         if recent_history.is_empty() {
             return AllocationAnalytics::default();
         }
-        
+
         let total_allocations = recent_history.len();
         let cache_hits = recent_history.iter().filter(|e| e.cache_hit).count();
-        let avg_latency = recent_history.iter()
+        let avg_latency = recent_history
+            .iter()
             .map(|e| e.latency_us as f64)
-            .sum::<f64>() / total_allocations as f64;
-        
-        let avg_size = recent_history.iter()
-            .map(|e| e.size as f64)
-            .sum::<f64>() / total_allocations as f64;
-        
+            .sum::<f64>()
+            / total_allocations as f64;
+
+        let avg_size =
+            recent_history.iter().map(|e| e.size as f64).sum::<f64>() / total_allocations as f64;
+
         AllocationAnalytics {
             total_allocations,
             cache_hit_rate: cache_hits as f32 / total_allocations as f32,
@@ -864,43 +882,43 @@ impl CudaMemoryPool {
             fragmentation_ratio: self.calculate_fragmentation_ratio(),
         }
     }
-    
+
     /// Calculate memory fragmentation ratio
     fn calculate_fragmentation_ratio(&self) -> f32 {
         if self.free_blocks.is_empty() {
             return 0.0;
         }
-        
-        let total_free_blocks: usize = self.free_blocks.values()
-            .map(|blocks| blocks.len())
-            .sum();
-        
-        let total_free_memory: usize = self.free_blocks.iter()
+
+        let total_free_blocks: usize = self.free_blocks.values().map(|blocks| blocks.len()).sum();
+
+        let total_free_memory: usize = self
+            .free_blocks
+            .iter()
             .map(|(size, blocks)| size * blocks.len())
             .sum();
-        
+
         if total_free_memory == 0 {
             return 0.0;
         }
-        
+
         // Fragmentation ratio: more blocks with less total memory = higher fragmentation
         total_free_blocks as f32 / (total_free_memory as f32 / 1024.0) // Normalize by KB
     }
-    
+
     /// Clear all cached memory
     pub fn clear(&mut self) -> Result<(), GpuOptimizerError> {
         // Free all GPU memory
         for block in &self.all_blocks {
             self.free_gpu_memory(block.ptr)?;
         }
-        
+
         self.free_blocks.clear();
         self.all_blocks.clear();
         self.stats = MemoryStats::default();
-        
+
         Ok(())
     }
-    
+
     /// Allocate GPU memory (platform-specific)
     fn allocate_gpu_memory(&self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         #[cfg(feature = "gpu")]
@@ -913,15 +931,15 @@ impl CudaMemoryPool {
                 Err(GpuOptimizerError::NotInitialized)
             }
         }
-        
+
         #[cfg(not(feature = "gpu"))]
         {
             Err(GpuOptimizerError::UnsupportedOperation(
-                "GPU feature not enabled".to_string()
+                "GPU feature not enabled".to_string(),
             ))
         }
     }
-    
+
     /// Free GPU memory (platform-specific)
     fn free_gpu_memory(&self, ptr: *mut u8) -> Result<(), GpuOptimizerError> {
         #[cfg(feature = "gpu")]
@@ -934,11 +952,11 @@ impl CudaMemoryPool {
                 Err(GpuOptimizerError::NotInitialized)
             }
         }
-        
+
         #[cfg(not(feature = "gpu"))]
         {
             Err(GpuOptimizerError::UnsupportedOperation(
-                "GPU feature not enabled".to_string()
+                "GPU feature not enabled".to_string(),
             ))
         }
     }
@@ -956,7 +974,7 @@ impl ThreadSafeMemoryPool {
             pool: Arc::new(Mutex::new(CudaMemoryPool::new(max_pool_size))),
         }
     }
-    
+
     /// Allocate memory
     pub fn allocate(&self, size: usize) -> Result<PooledMemory, GpuOptimizerError> {
         let ptr = self.pool.lock().unwrap().allocate(size)?;
@@ -966,12 +984,12 @@ impl ThreadSafeMemoryPool {
             pool: Arc::clone(&self.pool),
         })
     }
-    
+
     /// Get statistics
     pub fn get_stats(&self) -> MemoryStats {
         self.pool.lock().unwrap().get_stats().clone()
     }
-    
+
     /// Clear pool
     pub fn clear(&self) -> Result<(), GpuOptimizerError> {
         self.pool.lock().unwrap().clear()
@@ -990,7 +1008,7 @@ impl PooledMemory {
     pub fn as_ptr(&self) -> *mut u8 {
         self.ptr
     }
-    
+
     /// Get size
     pub fn size(&self) -> usize {
         self.size
@@ -1061,31 +1079,31 @@ impl MemoryPoolConfig {
         self.max_pool_size = size;
         self
     }
-    
+
     /// Set minimum block size
     pub fn min_block_size(mut self, size: usize) -> Self {
         self.min_block_size = size;
         self
     }
-    
+
     /// Enable or disable defragmentation
     pub fn enable_defrag(mut self, enable: bool) -> Self {
         self.enable_defrag = enable;
         self
     }
-    
+
     /// Set large batch configuration
     pub fn large_batch_config(mut self, config: LargeBatchConfig) -> Self {
         self.large_batch_config = config;
         self
     }
-    
+
     /// Set allocation strategy
     pub fn allocation_strategy(mut self, strategy: AllocationStrategy) -> Self {
         self.allocation_strategy = strategy;
         self
     }
-    
+
     /// Build the memory pool
     pub fn build(self) -> CudaMemoryPool {
         let mut pool = CudaMemoryPool::new(self.max_pool_size);
@@ -1100,17 +1118,28 @@ impl MemoryPoolConfig {
 impl fmt::Display for MemoryStats {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "MemoryStats {{\n")?;
-        write!(f, "  Total Allocated: {} MB\n", self.total_allocated / (1024 * 1024))?;
-        write!(f, "  Current Used: {} MB\n", self.current_used / (1024 * 1024))?;
+        write!(
+            f,
+            "  Total Allocated: {} MB\n",
+            self.total_allocated / (1024 * 1024)
+        )?;
+        write!(
+            f,
+            "  Current Used: {} MB\n",
+            self.current_used / (1024 * 1024)
+        )?;
         write!(f, "  Peak Usage: {} MB\n", self.peak_usage / (1024 * 1024))?;
         write!(f, "  Allocations: {}\n", self.allocation_count)?;
         write!(f, "  Deallocations: {}\n", self.deallocation_count)?;
-        write!(f, "  Cache Hit Rate: {:.2}%\n", 
-               if self.cache_hits + self.cache_misses > 0 {
-                   100.0 * self.cache_hits as f64 / (self.cache_hits + self.cache_misses) as f64
-               } else {
-                   0.0
-               })?;
+        write!(
+            f,
+            "  Cache Hit Rate: {:.2}%\n",
+            if self.cache_hits + self.cache_misses > 0 {
+                100.0 * self.cache_hits as f64 / (self.cache_hits + self.cache_misses) as f64
+            } else {
+                0.0
+            }
+        )?;
         write!(f, "}}")
     }
 }
@@ -1118,14 +1147,14 @@ impl fmt::Display for MemoryStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_memory_pool_creation() {
         let pool = CudaMemoryPool::new(1024 * 1024 * 1024);
         assert_eq!(pool.stats.total_allocated, 0);
         assert_eq!(pool.stats.current_used, 0);
     }
-    
+
     #[test]
     fn test_memory_stats_display() {
         let mut stats = MemoryStats::default();
@@ -1133,20 +1162,20 @@ mod tests {
         stats.current_used = 1024 * 1024 * 50;
         stats.cache_hits = 80;
         stats.cache_misses = 20;
-        
+
         let display = format!("{}", stats);
         assert!(display.contains("100 MB"));
         assert!(display.contains("50 MB"));
         assert!(display.contains("80.00%"));
     }
-    
+
     #[test]
     fn test_thread_safe_pool() {
         let pool = ThreadSafeMemoryPool::new(1024 * 1024);
         let stats = pool.get_stats();
         assert_eq!(stats.total_allocated, 0);
     }
-    
+
     #[test]
     fn test_memory_pool_config() {
         let config = MemoryPoolConfig::default()
@@ -1154,14 +1183,14 @@ mod tests {
             .min_block_size(512)
             .enable_defrag(false)
             .allocation_strategy(AllocationStrategy::BestFit);
-        
+
         let pool = config.build();
         assert_eq!(pool.max_pool_size, 2 * 1024 * 1024 * 1024);
         assert_eq!(pool.min_block_size, 512);
         assert!(!pool.enable_defrag);
         assert_eq!(pool.allocation_strategy, AllocationStrategy::BestFit);
     }
-    
+
     #[test]
     fn test_large_batch_config() {
         let config = LargeBatchConfig {
@@ -1172,7 +1201,7 @@ mod tests {
             preallocation_threshold: 0.9,
             buffer_lifetime: 600,
         };
-        
+
         assert_eq!(config.min_batch_size, 2 * 1024 * 1024);
         assert_eq!(config.max_batch_buffers, 8);
         assert_eq!(config.growth_factor, 2.0);
@@ -1180,25 +1209,25 @@ mod tests {
         assert_eq!(config.preallocation_threshold, 0.9);
         assert_eq!(config.buffer_lifetime, 600);
     }
-    
+
     #[test]
     fn test_batch_buffer() {
         let ptr = std::ptr::null_mut();
         let mut buffer = BatchBuffer::new(ptr, 1024, BatchBufferType::General);
-        
+
         assert_eq!(buffer.size, 1024);
         assert!(!buffer.in_use);
         assert_eq!(buffer.usage_count, 0);
         assert_eq!(buffer.buffer_type, BatchBufferType::General);
-        
+
         buffer.mark_used();
         assert!(buffer.in_use);
         assert_eq!(buffer.usage_count, 1);
-        
+
         buffer.mark_free();
         assert!(!buffer.in_use);
     }
-    
+
     #[test]
     fn test_allocation_strategies() {
         let strategies = [
@@ -1209,14 +1238,14 @@ mod tests {
             AllocationStrategy::SegregatedList,
             AllocationStrategy::Adaptive,
         ];
-        
+
         for strategy in &strategies {
             let mut pool = CudaMemoryPool::new(1024 * 1024);
             pool.allocation_strategy = *strategy;
             assert_eq!(pool.allocation_strategy, *strategy);
         }
     }
-    
+
     #[test]
     fn test_memory_pressure_monitor() {
         let mut monitor = MemoryPressureMonitor::default();
@@ -1225,25 +1254,25 @@ mod tests {
         assert_eq!(monitor.current_pressure, 0.0);
         assert!(monitor.pressure_history.is_empty());
     }
-    
+
     #[test]
     fn test_adaptive_sizing() {
         let mut sizing = AdaptiveSizing::default();
         assert!(sizing.enable_adaptive_resize);
         assert_eq!(sizing.resize_threshold, 0.85);
         assert!(sizing.allocation_history.is_empty());
-        
+
         let event = AllocationEvent {
             size: 1024,
             timestamp: std::time::Instant::now(),
             cache_hit: true,
             latency_us: 50,
         };
-        
+
         sizing.allocation_history.push_back(event);
         assert_eq!(sizing.allocation_history.len(), 1);
     }
-    
+
     #[test]
     fn test_allocation_analytics() {
         let analytics = AllocationAnalytics::default();
@@ -1254,7 +1283,7 @@ mod tests {
         assert_eq!(analytics.memory_efficiency, 0.0);
         assert_eq!(analytics.fragmentation_ratio, 0.0);
     }
-    
+
     #[test]
     fn test_buffer_types() {
         let types = [
@@ -1264,17 +1293,17 @@ mod tests {
             BatchBufferType::Communication,
             BatchBufferType::Temporary,
         ];
-        
+
         for buffer_type in &types {
             let buffer = BatchBuffer::new(std::ptr::null_mut(), 1024, *buffer_type);
             assert_eq!(buffer.buffer_type, *buffer_type);
         }
     }
-    
+
     #[test]
     fn test_size_class_calculation() {
         let pool = CudaMemoryPool::new(1024 * 1024);
-        
+
         assert_eq!(pool.get_size_class(100), 256);
         assert_eq!(pool.get_size_class(300), 512);
         assert_eq!(pool.get_size_class(1000), 1024);
@@ -1282,7 +1311,7 @@ mod tests {
         assert_eq!(pool.get_size_class(1_000_000), 1048576);
         assert_eq!(pool.get_size_class(2_000_000), 2097152); // Next MB boundary
     }
-    
+
     #[test]
     fn test_memory_pool_with_large_batch() {
         let config = LargeBatchConfig {
@@ -1293,15 +1322,15 @@ mod tests {
             preallocation_threshold: 0.8,
             buffer_lifetime: 300,
         };
-        
+
         let pool = CudaMemoryPool::with_large_batch_config(1024 * 1024, config);
         assert_eq!(pool.large_batch_config.min_batch_size, 1024);
         assert_eq!(pool.large_batch_config.max_batch_buffers, 4);
         assert_eq!(pool.large_batch_config.growth_factor, 1.5);
         assert!(pool.large_batch_config.enable_coalescing);
     }
-    
-    #[test] 
+
+    #[test]
     fn test_pressure_reading() {
         let reading = PressureReading {
             timestamp: std::time::Instant::now(),
@@ -1309,7 +1338,7 @@ mod tests {
             available_memory: 256 * 1024 * 1024,
             allocated_memory: 768 * 1024 * 1024,
         };
-        
+
         assert_eq!(reading.pressure, 0.75);
         assert_eq!(reading.available_memory, 256 * 1024 * 1024);
         assert_eq!(reading.allocated_memory, 768 * 1024 * 1024);

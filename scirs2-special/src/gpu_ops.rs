@@ -5,10 +5,10 @@
 
 use crate::error::{SpecialError, SpecialResult};
 use ndarray::{ArrayView1, ArrayViewMut1};
-use scirs2_core::gpu::kernels::{DataType, KernelParams, KernelMetadata, OperationType};
-use scirs2_core::gpu::{GpuContext, GpuError, GpuBackend};
-use std::sync::Arc;
+use scirs2_core::gpu::kernels::{DataType, KernelMetadata, KernelParams, OperationType};
+use scirs2_core::gpu::{GpuBackend, GpuContext, GpuError};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[cfg(feature = "gpu")]
 use scirs2_core::simd_ops::AutoOptimizer;
@@ -25,19 +25,20 @@ fn execute_gpu_kernel<F>(
     params: &KernelParams,
     input: &ArrayView1<F>,
     output: &mut ArrayViewMut1<F>,
-) -> Result<(), GpuError> 
+) -> Result<(), GpuError>
 where
     F: num_traits::Float + num_traits::FromPrimitive + Send + Sync + 'static,
 {
     // Get the kernel from registry
     let registry = SpecialFunctionKernelRegistry::new();
-    let kernel = registry.get_kernel(kernel_name)
+    let kernel = registry
+        .get_kernel(kernel_name)
         .ok_or_else(|| GpuError::KernelNotFound(format!("Kernel '{}' not found", kernel_name)))?;
-    
+
     // Get kernel source for the current backend
     let backend = context.backend();
     let source = kernel.source_for_backend(backend)?;
-    
+
     // Verify data type compatibility
     let data_type = if std::mem::size_of::<F>() == 4 {
         DataType::Float32
@@ -48,21 +49,22 @@ where
             "Only f32 and f64 are supported for GPU operations".to_string(),
         ));
     };
-    
+
     if !kernel.supported_types().contains(&data_type) {
-        return Err(GpuError::UnsupportedDataType(
-            format!("Kernel '{}' does not support data type: {:?}", kernel_name, data_type),
-        ));
+        return Err(GpuError::UnsupportedDataType(format!(
+            "Kernel '{}' does not support data type: {:?}",
+            kernel_name, data_type
+        )));
     }
-    
+
     // Get kernel metadata for execution configuration
     let metadata = kernel.metadata();
     let workgroup_size = metadata.workgroup_size[0];
-    
+
     // Calculate optimal dispatch size
     let num_elements = input.len();
     let num_workgroups = (num_elements + workgroup_size - 1) / workgroup_size;
-    
+
     // Convert arrays to byte slices for GPU execution
     let input_bytes = unsafe {
         std::slice::from_raw_parts(
@@ -70,19 +72,27 @@ where
             input.len() * std::mem::size_of::<F>(),
         )
     };
-    
+
     let output_bytes = unsafe {
         std::slice::from_raw_parts_mut(
             output.as_mut_ptr() as *mut u8,
             output.len() * std::mem::size_of::<F>(),
         )
     };
-    
+
     // Attempt to compile and execute the kernel
     match context.backend() {
         GpuBackend::Wgpu => {
             // For WGPU backend, we need to compile the WGSL shader
-            execute_wgpu_kernel(context, &kernel, &source, params, input_bytes, output_bytes, num_workgroups)
+            execute_wgpu_kernel(
+                context,
+                &kernel,
+                &source,
+                params,
+                input_bytes,
+                output_bytes,
+                num_workgroups,
+            )
         }
         _ => {
             // For other backends (CUDA, Metal, etc.), we would have different compilation paths
@@ -108,21 +118,33 @@ fn execute_wgpu_kernel(
         GpuBackend::Wgpu => {
             // For now, since the WGPU backend is not fully implemented in scirs2-core,
             // we'll try to use the backend-agnostic kernel execution with enhanced error handling
-            log::debug!("Attempting GPU execution via kernel abstraction for {}", kernel.name());
-            
+            log::debug!(
+                "Attempting GPU execution via kernel abstraction for {}",
+                kernel.name()
+            );
+
             // Try to execute via the kernel's own execution method
             match kernel.execute(context, params, input_data, output_data) {
                 Ok(()) => {
-                    log::debug!("Successfully executed {} kernel via GPU abstraction", kernel.name());
+                    log::debug!(
+                        "Successfully executed {} kernel via GPU abstraction",
+                        kernel.name()
+                    );
                     Ok(())
                 }
-                Err(GpuError::BackendNotImplemented(_)) | 
-                Err(GpuError::UnsupportedBackend(_)) => {
-                    log::debug!("GPU backend not available for {}, falling back to optimized CPU", kernel.name());
+                Err(GpuError::BackendNotImplemented(_)) | Err(GpuError::UnsupportedBackend(_)) => {
+                    log::debug!(
+                        "GPU backend not available for {}, falling back to optimized CPU",
+                        kernel.name()
+                    );
                     execute_optimized_cpu_kernel(kernel, params, input_data, output_data)
                 }
                 Err(e) => {
-                    log::warn!("GPU execution failed for {}: {:?}, falling back to CPU", kernel.name(), e);
+                    log::warn!(
+                        "GPU execution failed for {}: {:?}, falling back to CPU",
+                        kernel.name(),
+                        e
+                    );
                     execute_optimized_cpu_kernel(kernel, params, input_data, output_data)
                 }
             }
@@ -145,7 +167,7 @@ fn execute_optimized_cpu_kernel(
     // Create a dummy context for CPU execution
     let cpu_context = GpuContext::new(GpuBackend::Cpu)
         .map_err(|_| GpuError::ExecutionError("Failed to create CPU context".to_string()))?;
-    
+
     // Use the kernel's CPU execution path
     kernel.execute(&cpu_context, params, input_data, output_data)
 }
@@ -274,7 +296,7 @@ where
             return Ok(());
         }
     }
-    
+
     // Sequential processing as fallback or for small arrays
     for (inp, out) in input.iter().zip(output.iter_mut()) {
         *out = gamma(*inp);
@@ -355,7 +377,7 @@ where
             return Ok(());
         }
     }
-    
+
     for (inp, out) in input.iter().zip(output.iter_mut()) {
         *out = j0(*inp);
     }
@@ -434,7 +456,7 @@ where
             return Ok(());
         }
     }
-    
+
     for (inp, out) in input.iter().zip(output.iter_mut()) {
         *out = erf(*inp);
     }
@@ -446,8 +468,16 @@ where
 #[cfg(feature = "gpu")]
 pub fn digamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + Send + Sync + 'static + std::fmt::Debug
-        + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign,
+    F: num_traits::Float
+        + num_traits::FromPrimitive
+        + Send
+        + Sync
+        + 'static
+        + std::fmt::Debug
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign,
 {
     if input.len() != output.len() {
         return Err(SpecialError::ValueError(
@@ -491,10 +521,20 @@ where
 
 /// CPU fallback for digamma function
 #[cfg(feature = "gpu")]
-fn digamma_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+fn digamma_cpu_fallback<F>(
+    input: &ArrayView1<F>,
+    output: &mut ArrayViewMut1<F>,
+) -> SpecialResult<()>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + Send + Sync + std::fmt::Debug
-        + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign,
+    F: num_traits::Float
+        + num_traits::FromPrimitive
+        + Send
+        + Sync
+        + std::fmt::Debug
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign,
 {
     use crate::gamma::digamma;
     #[cfg(feature = "parallel")]
@@ -515,7 +555,7 @@ where
             return Ok(());
         }
     }
-    
+
     for (inp, out) in input.iter().zip(output.iter_mut()) {
         *out = digamma(*inp);
     }
@@ -527,7 +567,12 @@ where
 #[cfg(feature = "gpu")]
 pub fn log_gamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + Send + Sync + 'static + std::fmt::Debug
+    F: num_traits::Float
+        + num_traits::FromPrimitive
+        + Send
+        + Sync
+        + 'static
+        + std::fmt::Debug
         + std::ops::AddAssign,
 {
     if input.len() != output.len() {
@@ -572,9 +617,16 @@ where
 
 /// CPU fallback for log gamma function
 #[cfg(feature = "gpu")]
-fn log_gamma_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+fn log_gamma_cpu_fallback<F>(
+    input: &ArrayView1<F>,
+    output: &mut ArrayViewMut1<F>,
+) -> SpecialResult<()>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + Send + Sync + std::fmt::Debug
+    F: num_traits::Float
+        + num_traits::FromPrimitive
+        + Send
+        + Sync
+        + std::fmt::Debug
         + std::ops::AddAssign,
 {
     use crate::gamma::loggamma;
@@ -596,7 +648,7 @@ where
             return Ok(());
         }
     }
-    
+
     for (inp, out) in input.iter().zip(output.iter_mut()) {
         *out = loggamma(*inp);
     }
@@ -642,18 +694,20 @@ impl SpecialFunctionKernelRegistry {
         // Error function kernel
         self.kernels
             .insert("erf".to_string(), Arc::new(ErfKernel::new()));
-            
+
         // Digamma function kernel
         self.kernels
             .insert("digamma".to_string(), Arc::new(DigammaKernel::new()));
-            
+
         // Log gamma function kernel
         self.kernels
             .insert("log_gamma".to_string(), Arc::new(LogGammaKernel::new()));
-            
+
         // Spherical Bessel j0 kernel
-        self.kernels
-            .insert("spherical_j0".to_string(), Arc::new(SphericalJ0Kernel::new()));
+        self.kernels.insert(
+            "spherical_j0".to_string(),
+            Arc::new(SphericalJ0Kernel::new()),
+        );
     }
 
     /// Get a kernel by name
@@ -670,10 +724,10 @@ trait GpuKernel: Send + Sync {
 
     /// Get supported data types
     fn supported_types(&self) -> Vec<DataType>;
-    
+
     /// Get kernel source for the specified backend
     fn source_for_backend(&self, backend: GpuBackend) -> Result<String, GpuError>;
-    
+
     /// Get kernel metadata
     fn metadata(&self) -> KernelMetadata;
 
@@ -696,7 +750,7 @@ impl GammaKernel {
     fn new() -> Self {
         Self
     }
-    
+
     /// Execute gamma computation for f32 data
     fn execute_f32(
         &self,
@@ -706,23 +760,20 @@ impl GammaKernel {
         len: usize,
     ) -> Result<(), GpuError> {
         // Convert byte slices to f32 slices
-        let input_f32 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f32, len)
-        };
-        let output_f32 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len)
-        };
-        
+        let input_f32 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f32, len) };
+        let output_f32 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len) };
+
         // For now, simulate GPU execution by using CPU implementation
         // In a real GPU implementation, this would dispatch the WGSL shader
         use crate::gamma::gamma;
         for (i, &val) in input_f32.iter().enumerate() {
             output_f32[i] = gamma(val as f64) as f32;
         }
-        
+
         Ok(())
     }
-    
+
     /// Execute gamma computation for f64 data
     fn execute_f64(
         &self,
@@ -732,19 +783,16 @@ impl GammaKernel {
         len: usize,
     ) -> Result<(), GpuError> {
         // Convert byte slices to f64 slices
-        let input_f64 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f64, len)
-        };
-        let output_f64 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len)
-        };
-        
+        let input_f64 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f64, len) };
+        let output_f64 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len) };
+
         // For now, simulate GPU execution by using CPU implementation
         use crate::gamma::gamma;
         for (i, &val) in input_f64.iter().enumerate() {
             output_f64[i] = gamma(val);
         }
-        
+
         Ok(())
     }
 }
@@ -758,17 +806,17 @@ impl GpuKernel for GammaKernel {
     fn supported_types(&self) -> Vec<DataType> {
         vec![DataType::Float32, DataType::Float64]
     }
-    
+
     fn source_for_backend(&self, backend: GpuBackend) -> Result<String, GpuError> {
         match backend {
             GpuBackend::Wgpu => {
                 // Load WGSL shader
                 Ok(include_str!("../shaders/gamma_compute.wgsl").to_string())
             }
-            _ => Err(GpuError::BackendNotSupported(backend))
+            _ => Err(GpuError::BackendNotSupported(backend)),
         }
     }
-    
+
     fn metadata(&self) -> KernelMetadata {
         KernelMetadata {
             workgroup_size: [256, 1, 1],
@@ -788,27 +836,24 @@ impl GpuKernel for GammaKernel {
     ) -> Result<(), GpuError> {
         // Determine data type from params
         let data_type = params.data_type;
-        
+
         // Get dimensions
         let input_len = params.input_dims.get(0).copied().unwrap_or(0);
         let output_len = params.output_dims.get(0).copied().unwrap_or(0);
-        
+
         if input_len != output_len {
             return Err(GpuError::InvalidDimensions(
                 "Input and output dimensions must match".to_string(),
             ));
         }
-        
+
         match data_type {
-            DataType::Float32 => {
-                self.execute_f32(context, input, output, input_len)
-            }
-            DataType::Float64 => {
-                self.execute_f64(context, input, output, input_len)
-            }
-            _ => Err(GpuError::UnsupportedDataType(
-                format!("Unsupported data type: {:?}", data_type),
-            )),
+            DataType::Float32 => self.execute_f32(context, input, output, input_len),
+            DataType::Float64 => self.execute_f64(context, input, output, input_len),
+            _ => Err(GpuError::UnsupportedDataType(format!(
+                "Unsupported data type: {:?}",
+                data_type
+            ))),
         }
     }
 }
@@ -821,7 +866,7 @@ impl BesselJ0Kernel {
     fn new() -> Self {
         Self
     }
-    
+
     /// Execute Bessel J0 computation for f32 data
     fn execute_f32(
         &self,
@@ -830,21 +875,18 @@ impl BesselJ0Kernel {
         output: &mut [u8],
         len: usize,
     ) -> Result<(), GpuError> {
-        let input_f32 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f32, len)
-        };
-        let output_f32 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len)
-        };
-        
+        let input_f32 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f32, len) };
+        let output_f32 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len) };
+
         use crate::bessel::j0;
         for (i, &val) in input_f32.iter().enumerate() {
             output_f32[i] = j0(val as f64) as f32;
         }
-        
+
         Ok(())
     }
-    
+
     /// Execute Bessel J0 computation for f64 data
     fn execute_f64(
         &self,
@@ -853,18 +895,15 @@ impl BesselJ0Kernel {
         output: &mut [u8],
         len: usize,
     ) -> Result<(), GpuError> {
-        let input_f64 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f64, len)
-        };
-        let output_f64 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len)
-        };
-        
+        let input_f64 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f64, len) };
+        let output_f64 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len) };
+
         use crate::bessel::j0;
         for (i, &val) in input_f64.iter().enumerate() {
             output_f64[i] = j0(val);
         }
-        
+
         Ok(())
     }
 }
@@ -878,17 +917,17 @@ impl GpuKernel for BesselJ0Kernel {
     fn supported_types(&self) -> Vec<DataType> {
         vec![DataType::Float32, DataType::Float64]
     }
-    
+
     fn source_for_backend(&self, backend: GpuBackend) -> Result<String, GpuError> {
         match backend {
             GpuBackend::Wgpu => {
                 // Load WGSL shader
                 Ok(include_str!("../shaders/bessel_j0_compute.wgsl").to_string())
             }
-            _ => Err(GpuError::BackendNotSupported(backend))
+            _ => Err(GpuError::BackendNotSupported(backend)),
         }
     }
-    
+
     fn metadata(&self) -> KernelMetadata {
         KernelMetadata {
             workgroup_size: [256, 1, 1],
@@ -909,23 +948,20 @@ impl GpuKernel for BesselJ0Kernel {
         let data_type = params.data_type;
         let input_len = params.input_dims.get(0).copied().unwrap_or(0);
         let output_len = params.output_dims.get(0).copied().unwrap_or(0);
-        
+
         if input_len != output_len {
             return Err(GpuError::InvalidDimensions(
                 "Input and output dimensions must match".to_string(),
             ));
         }
-        
+
         match data_type {
-            DataType::Float32 => {
-                self.execute_f32(context, input, output, input_len)
-            }
-            DataType::Float64 => {
-                self.execute_f64(context, input, output, input_len)
-            }
-            _ => Err(GpuError::UnsupportedDataType(
-                format!("Unsupported data type: {:?}", data_type),
-            )),
+            DataType::Float32 => self.execute_f32(context, input, output, input_len),
+            DataType::Float64 => self.execute_f64(context, input, output, input_len),
+            _ => Err(GpuError::UnsupportedDataType(format!(
+                "Unsupported data type: {:?}",
+                data_type
+            ))),
         }
     }
 }
@@ -938,7 +974,7 @@ impl ErfKernel {
     fn new() -> Self {
         Self
     }
-    
+
     /// Execute error function computation for f32 data
     fn execute_f32(
         &self,
@@ -947,21 +983,18 @@ impl ErfKernel {
         output: &mut [u8],
         len: usize,
     ) -> Result<(), GpuError> {
-        let input_f32 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f32, len)
-        };
-        let output_f32 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len)
-        };
-        
+        let input_f32 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f32, len) };
+        let output_f32 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len) };
+
         use crate::erf::erf;
         for (i, &val) in input_f32.iter().enumerate() {
             output_f32[i] = erf(val as f64) as f32;
         }
-        
+
         Ok(())
     }
-    
+
     /// Execute error function computation for f64 data
     fn execute_f64(
         &self,
@@ -970,18 +1003,15 @@ impl ErfKernel {
         output: &mut [u8],
         len: usize,
     ) -> Result<(), GpuError> {
-        let input_f64 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f64, len)
-        };
-        let output_f64 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len)
-        };
-        
+        let input_f64 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f64, len) };
+        let output_f64 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len) };
+
         use crate::erf::erf;
         for (i, &val) in input_f64.iter().enumerate() {
             output_f64[i] = erf(val);
         }
-        
+
         Ok(())
     }
 }
@@ -995,17 +1025,17 @@ impl GpuKernel for ErfKernel {
     fn supported_types(&self) -> Vec<DataType> {
         vec![DataType::Float32, DataType::Float64]
     }
-    
+
     fn source_for_backend(&self, backend: GpuBackend) -> Result<String, GpuError> {
         match backend {
             GpuBackend::Wgpu => {
                 // Load WGSL shader
                 Ok(include_str!("../shaders/erf_compute.wgsl").to_string())
             }
-            _ => Err(GpuError::BackendNotSupported(backend))
+            _ => Err(GpuError::BackendNotSupported(backend)),
         }
     }
-    
+
     fn metadata(&self) -> KernelMetadata {
         KernelMetadata {
             workgroup_size: [256, 1, 1],
@@ -1026,23 +1056,20 @@ impl GpuKernel for ErfKernel {
         let data_type = params.data_type;
         let input_len = params.input_dims.get(0).copied().unwrap_or(0);
         let output_len = params.output_dims.get(0).copied().unwrap_or(0);
-        
+
         if input_len != output_len {
             return Err(GpuError::InvalidDimensions(
                 "Input and output dimensions must match".to_string(),
             ));
         }
-        
+
         match data_type {
-            DataType::Float32 => {
-                self.execute_f32(context, input, output, input_len)
-            }
-            DataType::Float64 => {
-                self.execute_f64(context, input, output, input_len)
-            }
-            _ => Err(GpuError::UnsupportedDataType(
-                format!("Unsupported data type: {:?}", data_type),
-            )),
+            DataType::Float32 => self.execute_f32(context, input, output, input_len),
+            DataType::Float64 => self.execute_f64(context, input, output, input_len),
+            _ => Err(GpuError::UnsupportedDataType(format!(
+                "Unsupported data type: {:?}",
+                data_type
+            ))),
         }
     }
 }
@@ -1057,7 +1084,7 @@ impl DigammaKernel {
     fn new() -> Self {
         Self
     }
-    
+
     /// Execute digamma computation for f32 data
     fn execute_f32(
         &self,
@@ -1066,21 +1093,18 @@ impl DigammaKernel {
         output: &mut [u8],
         len: usize,
     ) -> Result<(), GpuError> {
-        let input_f32 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f32, len)
-        };
-        let output_f32 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len)
-        };
-        
+        let input_f32 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f32, len) };
+        let output_f32 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len) };
+
         use crate::gamma::digamma;
         for (i, &val) in input_f32.iter().enumerate() {
             output_f32[i] = digamma(val as f64) as f32;
         }
-        
+
         Ok(())
     }
-    
+
     /// Execute digamma computation for f64 data
     fn execute_f64(
         &self,
@@ -1089,18 +1113,15 @@ impl DigammaKernel {
         output: &mut [u8],
         len: usize,
     ) -> Result<(), GpuError> {
-        let input_f64 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f64, len)
-        };
-        let output_f64 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len)
-        };
-        
+        let input_f64 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f64, len) };
+        let output_f64 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len) };
+
         use crate::gamma::digamma;
         for (i, &val) in input_f64.iter().enumerate() {
             output_f64[i] = digamma(val);
         }
-        
+
         Ok(())
     }
 }
@@ -1114,16 +1135,14 @@ impl GpuKernel for DigammaKernel {
     fn supported_types(&self) -> Vec<DataType> {
         vec![DataType::Float32, DataType::Float64]
     }
-    
+
     fn source_for_backend(&self, backend: GpuBackend) -> Result<String, GpuError> {
         match backend {
-            GpuBackend::Wgpu => {
-                Ok(include_str!("../shaders/digamma_compute.wgsl").to_string())
-            }
-            _ => Err(GpuError::BackendNotSupported(backend))
+            GpuBackend::Wgpu => Ok(include_str!("../shaders/digamma_compute.wgsl").to_string()),
+            _ => Err(GpuError::BackendNotSupported(backend)),
         }
     }
-    
+
     fn metadata(&self) -> KernelMetadata {
         KernelMetadata {
             workgroup_size: [256, 1, 1],
@@ -1144,23 +1163,20 @@ impl GpuKernel for DigammaKernel {
         let data_type = params.data_type;
         let input_len = params.input_dims.get(0).copied().unwrap_or(0);
         let output_len = params.output_dims.get(0).copied().unwrap_or(0);
-        
+
         if input_len != output_len {
             return Err(GpuError::InvalidDimensions(
                 "Input and output dimensions must match".to_string(),
             ));
         }
-        
+
         match data_type {
-            DataType::Float32 => {
-                self.execute_f32(context, input, output, input_len)
-            }
-            DataType::Float64 => {
-                self.execute_f64(context, input, output, input_len)
-            }
-            _ => Err(GpuError::UnsupportedDataType(
-                format!("Unsupported data type: {:?}", data_type),
-            )),
+            DataType::Float32 => self.execute_f32(context, input, output, input_len),
+            DataType::Float64 => self.execute_f64(context, input, output, input_len),
+            _ => Err(GpuError::UnsupportedDataType(format!(
+                "Unsupported data type: {:?}",
+                data_type
+            ))),
         }
     }
 }
@@ -1173,7 +1189,7 @@ impl LogGammaKernel {
     fn new() -> Self {
         Self
     }
-    
+
     /// Execute log gamma computation for f32 data
     fn execute_f32(
         &self,
@@ -1182,21 +1198,18 @@ impl LogGammaKernel {
         output: &mut [u8],
         len: usize,
     ) -> Result<(), GpuError> {
-        let input_f32 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f32, len)
-        };
-        let output_f32 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len)
-        };
-        
+        let input_f32 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f32, len) };
+        let output_f32 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len) };
+
         use crate::gamma::loggamma;
         for (i, &val) in input_f32.iter().enumerate() {
             output_f32[i] = loggamma(val as f64) as f32;
         }
-        
+
         Ok(())
     }
-    
+
     /// Execute log gamma computation for f64 data
     fn execute_f64(
         &self,
@@ -1205,18 +1218,15 @@ impl LogGammaKernel {
         output: &mut [u8],
         len: usize,
     ) -> Result<(), GpuError> {
-        let input_f64 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f64, len)
-        };
-        let output_f64 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len)
-        };
-        
+        let input_f64 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f64, len) };
+        let output_f64 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len) };
+
         use crate::gamma::loggamma;
         for (i, &val) in input_f64.iter().enumerate() {
             output_f64[i] = loggamma(val);
         }
-        
+
         Ok(())
     }
 }
@@ -1230,16 +1240,14 @@ impl GpuKernel for LogGammaKernel {
     fn supported_types(&self) -> Vec<DataType> {
         vec![DataType::Float32, DataType::Float64]
     }
-    
+
     fn source_for_backend(&self, backend: GpuBackend) -> Result<String, GpuError> {
         match backend {
-            GpuBackend::Wgpu => {
-                Ok(include_str!("../shaders/log_gamma_compute.wgsl").to_string())
-            }
-            _ => Err(GpuError::BackendNotSupported(backend))
+            GpuBackend::Wgpu => Ok(include_str!("../shaders/log_gamma_compute.wgsl").to_string()),
+            _ => Err(GpuError::BackendNotSupported(backend)),
         }
     }
-    
+
     fn metadata(&self) -> KernelMetadata {
         KernelMetadata {
             workgroup_size: [256, 1, 1],
@@ -1256,27 +1264,24 @@ impl GpuKernel for LogGammaKernel {
         params: &KernelParams,
         input: &[u8],
         output: &mut [u8],
-        ) -> Result<(), GpuError> {
+    ) -> Result<(), GpuError> {
         let data_type = params.data_type;
         let input_len = params.input_dims.get(0).copied().unwrap_or(0);
         let output_len = params.output_dims.get(0).copied().unwrap_or(0);
-        
+
         if input_len != output_len {
             return Err(GpuError::InvalidDimensions(
                 "Input and output dimensions must match".to_string(),
             ));
         }
-        
+
         match data_type {
-            DataType::Float32 => {
-                self.execute_f32(context, input, output, input_len)
-            }
-            DataType::Float64 => {
-                self.execute_f64(context, input, output, input_len)
-            }
-            _ => Err(GpuError::UnsupportedDataType(
-                format!("Unsupported data type: {:?}", data_type),
-            )),
+            DataType::Float32 => self.execute_f32(context, input, output, input_len),
+            DataType::Float64 => self.execute_f64(context, input, output, input_len),
+            _ => Err(GpuError::UnsupportedDataType(format!(
+                "Unsupported data type: {:?}",
+                data_type
+            ))),
         }
     }
 }
@@ -1289,7 +1294,7 @@ impl SphericalJ0Kernel {
     fn new() -> Self {
         Self
     }
-    
+
     /// Execute spherical Bessel j0 computation for f32 data
     fn execute_f32(
         &self,
@@ -1298,21 +1303,18 @@ impl SphericalJ0Kernel {
         output: &mut [u8],
         len: usize,
     ) -> Result<(), GpuError> {
-        let input_f32 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f32, len)
-        };
-        let output_f32 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len)
-        };
-        
+        let input_f32 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f32, len) };
+        let output_f32 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, len) };
+
         use crate::bessel::spherical::spherical_jn;
         for (i, &val) in input_f32.iter().enumerate() {
             output_f32[i] = spherical_jn(0, val as f64) as f32;
         }
-        
+
         Ok(())
     }
-    
+
     /// Execute spherical Bessel j0 computation for f64 data
     fn execute_f64(
         &self,
@@ -1321,18 +1323,15 @@ impl SphericalJ0Kernel {
         output: &mut [u8],
         len: usize,
     ) -> Result<(), GpuError> {
-        let input_f64 = unsafe {
-            std::slice::from_raw_parts(input.as_ptr() as *const f64, len)
-        };
-        let output_f64 = unsafe {
-            std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len)
-        };
-        
+        let input_f64 = unsafe { std::slice::from_raw_parts(input.as_ptr() as *const f64, len) };
+        let output_f64 =
+            unsafe { std::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f64, len) };
+
         use crate::bessel::spherical::spherical_jn;
         for (i, &val) in input_f64.iter().enumerate() {
             output_f64[i] = spherical_jn(0, val);
         }
-        
+
         Ok(())
     }
 }
@@ -1346,16 +1345,16 @@ impl GpuKernel for SphericalJ0Kernel {
     fn supported_types(&self) -> Vec<DataType> {
         vec![DataType::Float32, DataType::Float64]
     }
-    
+
     fn source_for_backend(&self, backend: GpuBackend) -> Result<String, GpuError> {
         match backend {
             GpuBackend::Wgpu => {
                 Ok(include_str!("../shaders/spherical_j0_compute.wgsl").to_string())
             }
-            _ => Err(GpuError::BackendNotSupported(backend))
+            _ => Err(GpuError::BackendNotSupported(backend)),
         }
     }
-    
+
     fn metadata(&self) -> KernelMetadata {
         KernelMetadata {
             workgroup_size: [256, 1, 1],
@@ -1376,23 +1375,20 @@ impl GpuKernel for SphericalJ0Kernel {
         let data_type = params.data_type;
         let input_len = params.input_dims.get(0).copied().unwrap_or(0);
         let output_len = params.output_dims.get(0).copied().unwrap_or(0);
-        
+
         if input_len != output_len {
             return Err(GpuError::InvalidDimensions(
                 "Input and output dimensions must match".to_string(),
             ));
         }
-        
+
         match data_type {
-            DataType::Float32 => {
-                self.execute_f32(context, input, output, input_len)
-            }
-            DataType::Float64 => {
-                self.execute_f64(context, input, output, input_len)
-            }
-            _ => Err(GpuError::UnsupportedDataType(
-                format!("Unsupported data type: {:?}", data_type),
-            )),
+            DataType::Float32 => self.execute_f32(context, input, output, input_len),
+            DataType::Float64 => self.execute_f64(context, input, output, input_len),
+            _ => Err(GpuError::UnsupportedDataType(format!(
+                "Unsupported data type: {:?}",
+                data_type
+            ))),
         }
     }
 }

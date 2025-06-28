@@ -8,7 +8,7 @@ use ndarray::prelude::*;
 pub trait AggregationStrategy: Send + Sync {
     /// Aggregate client updates
     fn aggregate(&self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>>;
-    
+
     /// Get strategy name
     fn name(&self) -> &str;
 }
@@ -44,37 +44,38 @@ impl AggregationStrategy for FedAvg {
         if updates.is_empty() {
             return Ok(Vec::new());
         }
-        
+
         // Get number of weight tensors
         let num_tensors = updates[0].weight_updates.len();
         let mut aggregated = Vec::with_capacity(num_tensors);
-        
+
         // Aggregate each tensor
         for tensor_idx in 0..num_tensors {
             // Get shape from first update
             let shape = updates[0].weight_updates[tensor_idx].shape();
             let mut weighted_sum = Array2::<f32>::zeros((shape[0], shape[1]));
-            
+
             // Weighted sum of updates
             for (update, &weight) in updates.iter().zip(weights.iter()) {
                 if tensor_idx < update.weight_updates.len() {
                     weighted_sum = weighted_sum + weight * &update.weight_updates[tensor_idx];
                 }
             }
-            
+
             // Apply momentum if configured
             if let (Some(momentum), Some(ref prev_state)) = (self.momentum, &self.previous_state) {
                 if tensor_idx < prev_state.len() {
-                    weighted_sum = momentum * &prev_state[tensor_idx] + (1.0 - momentum) * weighted_sum;
+                    weighted_sum =
+                        momentum * &prev_state[tensor_idx] + (1.0 - momentum) * weighted_sum;
                 }
             }
-            
+
             aggregated.push(weighted_sum);
         }
-        
+
         Ok(aggregated)
     }
-    
+
     fn name(&self) -> &str {
         "FedAvg"
     }
@@ -100,7 +101,7 @@ impl AggregationStrategy for FedProx {
         let fedavg = FedAvg::new();
         fedavg.aggregate(updates, weights)
     }
-    
+
     fn name(&self) -> &str {
         "FedProx"
     }
@@ -150,18 +151,18 @@ impl AggregationStrategy for FedYogi {
         if updates.is_empty() {
             return Ok(Vec::new());
         }
-        
+
         let num_tensors = updates[0].weight_updates.len();
         let mut aggregated = Vec::with_capacity(num_tensors);
-        
+
         // First compute the weighted average (delta)
         let fedavg = FedAvg::new();
         let delta = fedavg.aggregate(updates, weights)?;
-        
+
         // Apply adaptive optimization
         for (tensor_idx, delta_t) in delta.into_iter().enumerate() {
             let shape = delta_t.shape();
-            
+
             // Initialize moment estimates if needed
             let m_t = if let Some(ref m) = self.m {
                 if tensor_idx < m.len() {
@@ -172,12 +173,13 @@ impl AggregationStrategy for FedYogi {
             } else {
                 (1.0 - self.beta1) * &delta_t
             };
-            
+
             let v_t = if let Some(ref v) = self.v {
                 if tensor_idx < v.len() {
                     // FedYogi update: v_t = v_{t-1} - (1-beta2) * sign(v_{t-1} - delta_t^2) * delta_t^2
                     let delta_sq = &delta_t * &delta_t;
-                    let sign = (&v[tensor_idx] - &delta_sq).mapv(|x| if x > 0.0 { 1.0 } else { -1.0 });
+                    let sign =
+                        (&v[tensor_idx] - &delta_sq).mapv(|x| if x > 0.0 { 1.0 } else { -1.0 });
                     &v[tensor_idx] - (1.0 - self.beta2) * sign * delta_sq
                 } else {
                     &delta_t * &delta_t
@@ -185,20 +187,20 @@ impl AggregationStrategy for FedYogi {
             } else {
                 &delta_t * &delta_t
             };
-            
+
             // Bias correction
             let step_f = (self.step + 1) as f32;
             let m_hat = &m_t / (1.0 - self.beta1.powf(step_f));
             let v_hat = &v_t / (1.0 - self.beta2.powf(step_f));
-            
+
             // Compute update
             let update = self.lr * m_hat / (v_hat.mapv(f32::sqrt) + self.epsilon);
             aggregated.push(update);
         }
-        
+
         Ok(aggregated)
     }
-    
+
     fn name(&self) -> &str {
         "FedYogi"
     }
@@ -222,40 +224,41 @@ impl AggregationStrategy for TrimmedMean {
         if updates.is_empty() {
             return Ok(Vec::new());
         }
-        
+
         let num_tensors = updates[0].weight_updates.len();
         let num_clients = updates.len();
         let trim_count = (num_clients as f32 * self.trim_ratio) as usize;
-        
+
         let mut aggregated = Vec::with_capacity(num_tensors);
-        
+
         for tensor_idx in 0..num_tensors {
             let shape = updates[0].weight_updates[tensor_idx].shape();
             let mut result = Array2::<f32>::zeros((shape[0], shape[1]));
-            
+
             // For each element in the tensor
             for i in 0..shape[0] {
                 for j in 0..shape[1] {
                     // Collect values from all clients
-                    let mut values: Vec<f32> = updates.iter()
+                    let mut values: Vec<f32> = updates
+                        .iter()
                         .map(|u| u.weight_updates[tensor_idx][[i, j]])
                         .collect();
-                    
+
                     // Sort and trim
                     values.sort_by(|a, b| a.partial_cmp(b).unwrap());
                     let trimmed = &values[trim_count..num_clients - trim_count];
-                    
+
                     // Compute mean of trimmed values
                     result[[i, j]] = trimmed.iter().sum::<f32>() / trimmed.len() as f32;
                 }
             }
-            
+
             aggregated.push(result);
         }
-        
+
         Ok(aggregated)
     }
-    
+
     fn name(&self) -> &str {
         "TrimmedMean"
     }
@@ -290,50 +293,49 @@ impl AggregationStrategy for Krum {
         if updates.is_empty() {
             return Ok(Vec::new());
         }
-        
+
         let num_clients = updates.len();
         let num_select = if self.multi_krum {
             num_clients - self.num_byzantine
         } else {
             1
         };
-        
+
         // Compute pairwise distances
         let mut distances = vec![vec![0.0; num_clients]; num_clients];
-        
+
         for i in 0..num_clients {
-            for j in (i+1)..num_clients {
+            for j in (i + 1)..num_clients {
                 let dist = self.compute_distance(&updates[i], &updates[j])?;
                 distances[i][j] = dist;
                 distances[j][i] = dist;
             }
         }
-        
+
         // Compute scores (sum of k nearest distances)
         let k = num_clients - self.num_byzantine - 2;
         let mut scores = vec![0.0; num_clients];
-        
+
         for i in 0..num_clients {
             let mut dists: Vec<f32> = distances[i].clone();
             dists.sort_by(|a, b| a.partial_cmp(b).unwrap());
             scores[i] = dists[1..=k].iter().sum(); // Skip self (0 distance)
         }
-        
+
         // Select clients with lowest scores
         let mut indices: Vec<usize> = (0..num_clients).collect();
         indices.sort_by(|&i, &j| scores[i].partial_cmp(&scores[j]).unwrap());
         let selected = &indices[..num_select];
-        
+
         // Average selected updates
         let fedavg = FedAvg::new();
-        let selected_updates: Vec<ClientUpdate> = selected.iter()
-            .map(|&i| updates[i].clone())
-            .collect();
+        let selected_updates: Vec<ClientUpdate> =
+            selected.iter().map(|&i| updates[i].clone()).collect();
         let equal_weights = vec![1.0 / num_select as f32; num_select];
-        
+
         fedavg.aggregate(&selected_updates, &equal_weights)
     }
-    
+
     fn name(&self) -> &str {
         if self.multi_krum {
             "Multi-Krum"
@@ -347,12 +349,16 @@ impl Krum {
     /// Compute L2 distance between two updates
     fn compute_distance(&self, update1: &ClientUpdate, update2: &ClientUpdate) -> Result<f32> {
         let mut total_dist = 0.0;
-        
-        for (w1, w2) in update1.weight_updates.iter().zip(update2.weight_updates.iter()) {
+
+        for (w1, w2) in update1
+            .weight_updates
+            .iter()
+            .zip(update2.weight_updates.iter())
+        {
             let diff = w1 - w2;
             total_dist += diff.iter().map(|x| x * x).sum::<f32>();
         }
-        
+
         Ok(total_dist.sqrt())
     }
 }
@@ -372,38 +378,39 @@ impl AggregationStrategy for Median {
         if updates.is_empty() {
             return Ok(Vec::new());
         }
-        
+
         let num_tensors = updates[0].weight_updates.len();
         let mut aggregated = Vec::with_capacity(num_tensors);
-        
+
         for tensor_idx in 0..num_tensors {
             let shape = updates[0].weight_updates[tensor_idx].shape();
             let mut result = Array2::<f32>::zeros((shape[0], shape[1]));
-            
+
             // For each element, compute median
             for i in 0..shape[0] {
                 for j in 0..shape[1] {
-                    let mut values: Vec<f32> = updates.iter()
+                    let mut values: Vec<f32> = updates
+                        .iter()
                         .map(|u| u.weight_updates[tensor_idx][[i, j]])
                         .collect();
-                    
+
                     values.sort_by(|a, b| a.partial_cmp(b).unwrap());
                     let median = if values.len() % 2 == 0 {
                         (values[values.len() / 2 - 1] + values[values.len() / 2]) / 2.0
                     } else {
                         values[values.len() / 2]
                     };
-                    
+
                     result[[i, j]] = median;
                 }
             }
-            
+
             aggregated.push(result);
         }
-        
+
         Ok(aggregated)
     }
-    
+
     fn name(&self) -> &str {
         "Median"
     }
@@ -437,7 +444,7 @@ mod tests {
         let aggregator = FedAvg::new();
         let updates = create_test_updates();
         let weights = vec![0.5, 0.5];
-        
+
         let result = aggregator.aggregate(&updates, &weights).unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0][[0, 0]], 1.5); // Average of 1 and 2
@@ -448,7 +455,7 @@ mod tests {
         let aggregator = Median::new();
         let updates = create_test_updates();
         let weights = vec![0.5, 0.5]; // Weights ignored for median
-        
+
         let result = aggregator.aggregate(&updates, &weights).unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0][[0, 0]], 1.5); // Median of [1, 2]

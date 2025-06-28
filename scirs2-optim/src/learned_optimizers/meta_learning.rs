@@ -4,46 +4,46 @@
 //! learned optimizers, including MAML, Reptile, Meta-SGD, and other advanced
 //! techniques for few-shot optimization and rapid adaptation.
 
-use ndarray::{Array, Array1, Array2, Array3, ArrayBase, Data, DataMut, Dimension, Axis, s};
+use ndarray::{s, Array, Array1, Array2, Array3, ArrayBase, Axis, Data, DataMut, Dimension};
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque, BTreeMap, HashSet};
+use rand::{thread_rng, Rng};
+use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
-use rand::{Rng, thread_rng};
 
+use super::{LearnedOptimizerConfig, LearnedOptimizerMetrics, MetaOptimizationStrategy};
 use crate::error::OptimizerError;
 use crate::optimizers::Optimizer;
-use super::{LearnedOptimizerConfig, MetaOptimizationStrategy, LearnedOptimizerMetrics};
 
 /// Meta-Learning Framework for Learned Optimizers
 pub struct MetaLearningFramework<T: Float> {
     /// Meta-learning configuration
     config: MetaLearningConfig,
-    
+
     /// Meta-learner implementation
     meta_learner: Box<dyn MetaLearner<T> + Send + Sync>,
-    
+
     /// Task distribution manager
     task_manager: TaskDistributionManager<T>,
-    
+
     /// Meta-validation system
     meta_validator: MetaValidator<T>,
-    
+
     /// Adaptation engine
     adaptation_engine: AdaptationEngine<T>,
-    
+
     /// Transfer learning manager
     transfer_manager: TransferLearningManager<T>,
-    
+
     /// Continual learning system
     continual_learner: ContinualLearningSystem<T>,
-    
+
     /// Multi-task coordinator
     multitask_coordinator: MultiTaskCoordinator<T>,
-    
+
     /// Meta-optimization tracker
     meta_tracker: MetaOptimizationTracker<T>,
-    
+
     /// Few-shot learning specialist
     few_shot_learner: FewShotLearner<T>,
 }
@@ -53,55 +53,55 @@ pub struct MetaLearningFramework<T: Float> {
 pub struct MetaLearningConfig {
     /// Meta-learning algorithm
     pub algorithm: MetaLearningAlgorithm,
-    
+
     /// Number of inner loop steps
     pub inner_steps: usize,
-    
+
     /// Number of outer loop steps
     pub outer_steps: usize,
-    
+
     /// Meta-learning rate
     pub meta_learning_rate: f64,
-    
+
     /// Inner learning rate
     pub inner_learning_rate: f64,
-    
+
     /// Task batch size
     pub task_batch_size: usize,
-    
+
     /// Support set size per task
     pub support_set_size: usize,
-    
+
     /// Query set size per task
     pub query_set_size: usize,
-    
+
     /// Enable second-order gradients
     pub second_order: bool,
-    
+
     /// Gradient clipping threshold
     pub gradient_clip: f64,
-    
+
     /// Adaptation strategies
     pub adaptation_strategies: Vec<AdaptationStrategy>,
-    
+
     /// Transfer learning settings
     pub transfer_settings: TransferLearningSettings,
-    
+
     /// Continual learning settings
     pub continual_settings: ContinualLearningSettings,
-    
+
     /// Multi-task settings
     pub multitask_settings: MultiTaskSettings,
-    
+
     /// Few-shot learning settings
     pub few_shot_settings: FewShotSettings,
-    
+
     /// Enable meta-regularization
     pub enable_meta_regularization: bool,
-    
+
     /// Meta-regularization strength
     pub meta_regularization_strength: f64,
-    
+
     /// Task sampling strategy
     pub task_sampling_strategy: TaskSamplingStrategy,
 }
@@ -111,40 +111,40 @@ pub struct MetaLearningConfig {
 pub enum MetaLearningAlgorithm {
     /// Model-Agnostic Meta-Learning
     MAML,
-    
+
     /// First-Order MAML (FOMAML)
     FOMAML,
-    
+
     /// Reptile algorithm
     Reptile,
-    
+
     /// Meta-SGD
     MetaSGD,
-    
+
     /// Learning to Learn by Gradient Descent
     L2L,
-    
+
     /// Gradient-Based Meta-Learning
     GBML,
-    
+
     /// Meta-Learning with Implicit Gradients
     iMAML,
-    
+
     /// Prototypical Networks
     ProtoNet,
-    
+
     /// Matching Networks
     MatchingNet,
-    
+
     /// Relation Networks
     RelationNet,
-    
+
     /// Memory-Augmented Neural Networks
     MANN,
-    
+
     /// Meta-Learning with Warped Gradient Descent
     WarpGrad,
-    
+
     /// Learned Gradient Descent
     LearnedGD,
 }
@@ -154,25 +154,25 @@ pub enum MetaLearningAlgorithm {
 pub enum AdaptationStrategy {
     /// Fine-tuning all parameters
     FullFineTuning,
-    
+
     /// Fine-tuning only specific layers
     LayerWiseFineTuning,
-    
+
     /// Parameter-efficient adaptation
     ParameterEfficient,
-    
+
     /// Adaptation via learned learning rates
     LearnedLearningRates,
-    
+
     /// Gradient-based adaptation
     GradientBased,
-    
+
     /// Memory-based adaptation
     MemoryBased,
-    
+
     /// Attention-based adaptation
     AttentionBased,
-    
+
     /// Modular adaptation
     ModularAdaptation,
 }
@@ -182,16 +182,16 @@ pub enum AdaptationStrategy {
 pub struct TransferLearningSettings {
     /// Enable domain adaptation
     pub domain_adaptation: bool,
-    
+
     /// Source domain weights
     pub source_domain_weights: Vec<f64>,
-    
+
     /// Transfer learning strategies
     pub strategies: Vec<TransferStrategy>,
-    
+
     /// Domain similarity measures
     pub similarity_measures: Vec<SimilarityMeasure>,
-    
+
     /// Enable progressive transfer
     pub progressive_transfer: bool,
 }
@@ -222,13 +222,13 @@ pub enum SimilarityMeasure {
 pub struct ContinualLearningSettings {
     /// Catastrophic forgetting mitigation
     pub anti_forgetting_strategies: Vec<AntiForgettingStrategy>,
-    
+
     /// Memory replay settings
     pub memory_replay: MemoryReplaySettings,
-    
+
     /// Task identification method
     pub task_identification: TaskIdentificationMethod,
-    
+
     /// Plasticity-stability trade-off
     pub plasticity_stability_balance: f64,
 }
@@ -237,9 +237,9 @@ pub struct ContinualLearningSettings {
 #[derive(Debug, Clone, Copy)]
 pub enum AntiForgettingStrategy {
     ElasticWeightConsolidation,
-    Synaptic Intelligence,
+    SynapticIntelligence,
     MemoryReplay,
-    Progressive Networks,
+    ProgressiveNetworks,
     PackNet,
     Piggyback,
     HAT,
@@ -250,13 +250,13 @@ pub enum AntiForgettingStrategy {
 pub struct MemoryReplaySettings {
     /// Memory buffer size
     pub buffer_size: usize,
-    
+
     /// Replay strategy
     pub replay_strategy: ReplayStrategy,
-    
+
     /// Replay frequency
     pub replay_frequency: usize,
-    
+
     /// Memory selection criteria
     pub selection_criteria: MemorySelectionCriteria,
 }
@@ -265,9 +265,9 @@ pub struct MemoryReplaySettings {
 #[derive(Debug, Clone, Copy)]
 pub enum ReplayStrategy {
     Random,
-    Gradient Based,
-    Uncertainty Based,
-    Diversity Based,
+    GradientBased,
+    UncertaintyBased,
+    DiversityBased,
     Temporal,
 }
 
@@ -275,11 +275,11 @@ pub enum ReplayStrategy {
 #[derive(Debug, Clone, Copy)]
 pub enum MemorySelectionCriteria {
     Random,
-    Gradient Magnitude,
-    Loss Based,
+    GradientMagnitude,
+    LossBased,
     Uncertainty,
     Diversity,
-    Temporal Proximity,
+    TemporalProximity,
 }
 
 /// Task identification methods
@@ -288,8 +288,8 @@ pub enum TaskIdentificationMethod {
     Oracle,
     Learned,
     Clustering,
-    Entropy Based,
-    Gradient Based,
+    EntropyBased,
+    GradientBased,
 }
 
 /// Multi-task settings
@@ -297,13 +297,13 @@ pub enum TaskIdentificationMethod {
 pub struct MultiTaskSettings {
     /// Task weighting strategy
     pub task_weighting: TaskWeightingStrategy,
-    
+
     /// Gradient balancing method
     pub gradient_balancing: GradientBalancingMethod,
-    
+
     /// Task interference mitigation
     pub interference_mitigation: InterferenceMitigationStrategy,
-    
+
     /// Shared representation learning
     pub shared_representation: SharedRepresentationStrategy,
 }
@@ -312,9 +312,9 @@ pub struct MultiTaskSettings {
 #[derive(Debug, Clone, Copy)]
 pub enum TaskWeightingStrategy {
     Uniform,
-    Uncertainty Based,
-    Gradient Magnitude,
-    Performance Based,
+    UncertaintyBased,
+    GradientMagnitude,
+    PerformanceBased,
     Adaptive,
     Learned,
 }
@@ -326,25 +326,25 @@ pub enum GradientBalancingMethod {
     GradNorm,
     PCGrad,
     CAGrad,
-    Nash MTL,
+    NashMTL,
 }
 
 /// Interference mitigation strategies
 #[derive(Debug, Clone, Copy)]
 pub enum InterferenceMitigationStrategy {
-    Orthogonal Gradients,
-    Task Specific Layers,
-    Attention Mechanisms,
-    Meta Gradients,
+    OrthogonalGradients,
+    TaskSpecificLayers,
+    AttentionMechanisms,
+    MetaGradients,
 }
 
 /// Shared representation strategies
 #[derive(Debug, Clone, Copy)]
 pub enum SharedRepresentationStrategy {
-    Hard Sharing,
-    Soft Sharing,
-    Hierarchical Sharing,
-    Attention Based,
+    HardSharing,
+    SoftSharing,
+    HierarchicalSharing,
+    AttentionBased,
     Modular,
 }
 
@@ -353,16 +353,16 @@ pub enum SharedRepresentationStrategy {
 pub struct FewShotSettings {
     /// Number of shots (examples per class)
     pub num_shots: usize,
-    
+
     /// Number of ways (classes)
     pub num_ways: usize,
-    
+
     /// Few-shot algorithm
     pub algorithm: FewShotAlgorithm,
-    
+
     /// Metric learning settings
     pub metric_learning: MetricLearningSettings,
-    
+
     /// Augmentation strategies
     pub augmentation_strategies: Vec<AugmentationStrategy>,
 }
@@ -383,10 +383,10 @@ pub enum FewShotAlgorithm {
 pub struct MetricLearningSettings {
     /// Distance metric
     pub distance_metric: DistanceMetric,
-    
+
     /// Embedding dimension
     pub embedding_dim: usize,
-    
+
     /// Learned metric parameters
     pub learned_metric: bool,
 }
@@ -416,9 +416,9 @@ pub enum AugmentationStrategy {
 pub enum TaskSamplingStrategy {
     Uniform,
     Curriculum,
-    Difficulty Based,
-    Diversity Based,
-    Active Learning,
+    DifficultyBased,
+    DiversityBased,
+    ActiveLearning,
     Adversarial,
 }
 
@@ -430,7 +430,7 @@ pub trait MetaLearner<T: Float>: Send + Sync {
         task_batch: &[MetaTask<T>],
         meta_parameters: &mut HashMap<String, Array1<T>>,
     ) -> Result<MetaTrainingResult<T>, OptimizerError>;
-    
+
     /// Adapt to new task
     fn adapt_to_task(
         &mut self,
@@ -438,14 +438,14 @@ pub trait MetaLearner<T: Float>: Send + Sync {
         meta_parameters: &HashMap<String, Array1<T>>,
         adaptation_steps: usize,
     ) -> Result<TaskAdaptationResult<T>, OptimizerError>;
-    
+
     /// Evaluate on query set
     fn evaluate_query_set(
         &self,
         task: &MetaTask<T>,
         adapted_parameters: &HashMap<String, Array1<T>>,
     ) -> Result<QueryEvaluationResult<T>, OptimizerError>;
-    
+
     /// Get meta-learner type
     fn get_algorithm(&self) -> MetaLearningAlgorithm;
 }
@@ -455,22 +455,22 @@ pub trait MetaLearner<T: Float>: Send + Sync {
 pub struct MetaTask<T: Float> {
     /// Task identifier
     pub id: String,
-    
+
     /// Support set (training data for adaptation)
     pub support_set: TaskDataset<T>,
-    
+
     /// Query set (test data for evaluation)
     pub query_set: TaskDataset<T>,
-    
+
     /// Task metadata
     pub metadata: TaskMetadata,
-    
+
     /// Task difficulty
     pub difficulty: T,
-    
+
     /// Task domain
     pub domain: String,
-    
+
     /// Task type
     pub task_type: TaskType,
 }
@@ -480,13 +480,13 @@ pub struct MetaTask<T: Float> {
 pub struct TaskDataset<T: Float> {
     /// Input features
     pub features: Vec<Array1<T>>,
-    
+
     /// Target values
     pub targets: Vec<T>,
-    
+
     /// Sample weights
     pub weights: Vec<T>,
-    
+
     /// Dataset metadata
     pub metadata: DatasetMetadata,
 }
@@ -496,16 +496,16 @@ pub struct TaskDataset<T: Float> {
 pub struct TaskMetadata {
     /// Task name
     pub name: String,
-    
+
     /// Task description
     pub description: String,
-    
+
     /// Task properties
     pub properties: HashMap<String, String>,
-    
+
     /// Creation timestamp
     pub created_at: Instant,
-    
+
     /// Task source
     pub source: String,
 }
@@ -515,13 +515,13 @@ pub struct TaskMetadata {
 pub struct DatasetMetadata {
     /// Number of samples
     pub num_samples: usize,
-    
+
     /// Feature dimension
     pub feature_dim: usize,
-    
+
     /// Data distribution type
     pub distribution_type: String,
-    
+
     /// Noise level
     pub noise_level: f64,
 }
@@ -532,8 +532,8 @@ pub enum TaskType {
     Regression,
     Classification,
     Optimization,
-    Reinforcement Learning,
-    Structured Prediction,
+    ReinforcementLearning,
+    StructuredPrediction,
     Generative,
 }
 
@@ -542,16 +542,16 @@ pub enum TaskType {
 pub struct MetaTrainingResult<T: Float> {
     /// Meta-loss
     pub meta_loss: T,
-    
+
     /// Per-task losses
     pub task_losses: Vec<T>,
-    
+
     /// Meta-gradients
     pub meta_gradients: HashMap<String, Array1<T>>,
-    
+
     /// Training metrics
     pub metrics: MetaTrainingMetrics<T>,
-    
+
     /// Adaptation statistics
     pub adaptation_stats: AdaptationStatistics<T>,
 }
@@ -561,13 +561,13 @@ pub struct MetaTrainingResult<T: Float> {
 pub struct MetaTrainingMetrics<T: Float> {
     /// Average adaptation speed
     pub avg_adaptation_speed: T,
-    
+
     /// Generalization performance
     pub generalization_performance: T,
-    
+
     /// Task diversity handled
     pub task_diversity: T,
-    
+
     /// Gradient alignment score
     pub gradient_alignment: T,
 }
@@ -577,13 +577,13 @@ pub struct MetaTrainingMetrics<T: Float> {
 pub struct AdaptationStatistics<T: Float> {
     /// Convergence steps per task
     pub convergence_steps: Vec<usize>,
-    
+
     /// Final losses per task
     pub final_losses: Vec<T>,
-    
+
     /// Adaptation efficiency
     pub adaptation_efficiency: T,
-    
+
     /// Stability metrics
     pub stability_metrics: StabilityMetrics<T>,
 }
@@ -593,13 +593,13 @@ pub struct AdaptationStatistics<T: Float> {
 pub struct StabilityMetrics<T: Float> {
     /// Parameter stability
     pub parameter_stability: T,
-    
+
     /// Performance stability
     pub performance_stability: T,
-    
+
     /// Gradient stability
     pub gradient_stability: T,
-    
+
     /// Catastrophic forgetting measure
     pub forgetting_measure: T,
 }
@@ -609,13 +609,13 @@ pub struct StabilityMetrics<T: Float> {
 pub struct TaskAdaptationResult<T: Float> {
     /// Adapted parameters
     pub adapted_parameters: HashMap<String, Array1<T>>,
-    
+
     /// Adaptation trajectory
     pub adaptation_trajectory: Vec<AdaptationStep<T>>,
-    
+
     /// Final adaptation loss
     pub final_loss: T,
-    
+
     /// Adaptation metrics
     pub metrics: TaskAdaptationMetrics<T>,
 }
@@ -625,16 +625,16 @@ pub struct TaskAdaptationResult<T: Float> {
 pub struct AdaptationStep<T: Float> {
     /// Step number
     pub step: usize,
-    
+
     /// Loss at this step
     pub loss: T,
-    
+
     /// Gradient norm
     pub gradient_norm: T,
-    
+
     /// Parameter change norm
     pub parameter_change_norm: T,
-    
+
     /// Learning rate used
     pub learning_rate: T,
 }
@@ -644,13 +644,13 @@ pub struct AdaptationStep<T: Float> {
 pub struct TaskAdaptationMetrics<T: Float> {
     /// Convergence speed
     pub convergence_speed: T,
-    
+
     /// Final performance
     pub final_performance: T,
-    
+
     /// Adaptation efficiency
     pub efficiency: T,
-    
+
     /// Robustness to noise
     pub robustness: T,
 }
@@ -660,16 +660,16 @@ pub struct TaskAdaptationMetrics<T: Float> {
 pub struct QueryEvaluationResult<T: Float> {
     /// Query set loss
     pub query_loss: T,
-    
+
     /// Prediction accuracy
     pub accuracy: T,
-    
+
     /// Per-sample predictions
     pub predictions: Vec<T>,
-    
+
     /// Confidence scores
     pub confidence_scores: Vec<T>,
-    
+
     /// Evaluation metrics
     pub metrics: QueryEvaluationMetrics<T>,
 }
@@ -679,13 +679,13 @@ pub struct QueryEvaluationResult<T: Float> {
 pub struct QueryEvaluationMetrics<T: Float> {
     /// Mean squared error (for regression)
     pub mse: Option<T>,
-    
+
     /// Classification accuracy (for classification)
     pub classification_accuracy: Option<T>,
-    
+
     /// AUC score
     pub auc: Option<T>,
-    
+
     /// Uncertainty estimation quality
     pub uncertainty_quality: T,
 }
@@ -694,19 +694,19 @@ pub struct QueryEvaluationMetrics<T: Float> {
 pub struct MAMLLearner<T: Float> {
     /// MAML configuration
     config: MAMLConfig,
-    
+
     /// Inner loop optimizer
     inner_optimizer: Box<dyn Optimizer<T> + Send + Sync>,
-    
+
     /// Outer loop optimizer
     outer_optimizer: Box<dyn Optimizer<T> + Send + Sync>,
-    
+
     /// Gradient computation engine
     gradient_engine: GradientComputationEngine<T>,
-    
+
     /// Second-order gradient computation
     second_order_engine: Option<SecondOrderGradientEngine<T>>,
-    
+
     /// Task adaptation history
     adaptation_history: VecDeque<TaskAdaptationResult<T>>,
 }
@@ -716,19 +716,19 @@ pub struct MAMLLearner<T: Float> {
 pub struct MAMLConfig {
     /// Enable second-order gradients
     pub second_order: bool,
-    
+
     /// Inner learning rate
     pub inner_lr: f64,
-    
+
     /// Outer learning rate
     pub outer_lr: f64,
-    
+
     /// Number of inner steps
     pub inner_steps: usize,
-    
+
     /// Allow unused parameters
     pub allow_unused: bool,
-    
+
     /// Gradient clipping
     pub gradient_clip: Option<f64>,
 }
@@ -738,13 +738,13 @@ pub struct MAMLConfig {
 pub struct GradientComputationEngine<T: Float> {
     /// Gradient computation method
     method: GradientComputationMethod,
-    
+
     /// Computational graph
     computation_graph: ComputationGraph<T>,
-    
+
     /// Gradient cache
     gradient_cache: HashMap<String, Array1<T>>,
-    
+
     /// Automatic differentiation engine
     autodiff_engine: AutoDiffEngine<T>,
 }
@@ -763,16 +763,16 @@ pub enum GradientComputationMethod {
 pub struct ComputationGraph<T: Float> {
     /// Graph nodes
     nodes: Vec<ComputationNode<T>>,
-    
+
     /// Node dependencies
     dependencies: HashMap<usize, Vec<usize>>,
-    
+
     /// Topological order
     topological_order: Vec<usize>,
-    
+
     /// Input nodes
     input_nodes: Vec<usize>,
-    
+
     /// Output nodes
     output_nodes: Vec<usize>,
 }
@@ -782,16 +782,16 @@ pub struct ComputationGraph<T: Float> {
 pub struct ComputationNode<T: Float> {
     /// Node ID
     pub id: usize,
-    
+
     /// Operation type
     pub operation: ComputationOperation<T>,
-    
+
     /// Input connections
     pub inputs: Vec<usize>,
-    
+
     /// Output value
     pub output: Option<Array1<T>>,
-    
+
     /// Gradient w.r.t. this node
     pub gradient: Option<Array1<T>>,
 }
@@ -832,10 +832,10 @@ pub enum LossFunction {
 pub struct AutoDiffEngine<T: Float> {
     /// Forward mode AD
     forward_mode: ForwardModeAD<T>,
-    
+
     /// Reverse mode AD
     reverse_mode: ReverseModeAD<T>,
-    
+
     /// Mixed mode AD
     mixed_mode: MixedModeAD<T>,
 }
@@ -845,7 +845,7 @@ pub struct AutoDiffEngine<T: Float> {
 pub struct ForwardModeAD<T: Float> {
     /// Dual numbers
     dual_numbers: Vec<DualNumber<T>>,
-    
+
     /// Jacobian matrix
     jacobian: Array2<T>,
 }
@@ -855,7 +855,7 @@ pub struct ForwardModeAD<T: Float> {
 pub struct DualNumber<T: Float> {
     /// Real part
     pub real: T,
-    
+
     /// Infinitesimal part
     pub dual: T,
 }
@@ -865,10 +865,10 @@ pub struct DualNumber<T: Float> {
 pub struct ReverseModeAD<T: Float> {
     /// Computational tape
     tape: Vec<TapeEntry<T>>,
-    
+
     /// Adjoint values
     adjoints: HashMap<usize, T>,
-    
+
     /// Gradient accumulator
     gradient_accumulator: Array1<T>,
 }
@@ -878,13 +878,13 @@ pub struct ReverseModeAD<T: Float> {
 pub struct TapeEntry<T: Float> {
     /// Operation ID
     pub op_id: usize,
-    
+
     /// Input IDs
     pub inputs: Vec<usize>,
-    
+
     /// Output ID
     pub output: usize,
-    
+
     /// Local gradients
     pub local_gradients: Vec<T>,
 }
@@ -894,10 +894,10 @@ pub struct TapeEntry<T: Float> {
 pub struct MixedModeAD<T: Float> {
     /// Forward mode component
     forward_component: ForwardModeAD<T>,
-    
+
     /// Reverse mode component
     reverse_component: ReverseModeAD<T>,
-    
+
     /// Mode selection strategy
     mode_selection: ModeSelectionStrategy,
 }
@@ -916,13 +916,13 @@ pub enum ModeSelectionStrategy {
 pub struct SecondOrderGradientEngine<T: Float> {
     /// Hessian computation method
     hessian_method: HessianComputationMethod,
-    
+
     /// Hessian matrix
     hessian: Array2<T>,
-    
+
     /// Hessian-vector product engine
     hvp_engine: HessianVectorProductEngine<T>,
-    
+
     /// Curvature estimation
     curvature_estimator: CurvatureEstimator<T>,
 }
@@ -942,10 +942,10 @@ pub enum HessianComputationMethod {
 pub struct HessianVectorProductEngine<T: Float> {
     /// HVP computation method
     method: HVPComputationMethod,
-    
+
     /// Vector cache
     vector_cache: Vec<Array1<T>>,
-    
+
     /// Product cache
     product_cache: Vec<Array1<T>>,
 }
@@ -963,10 +963,10 @@ pub enum HVPComputationMethod {
 pub struct CurvatureEstimator<T: Float> {
     /// Curvature estimation method
     method: CurvatureEstimationMethod,
-    
+
     /// Curvature history
     curvature_history: VecDeque<T>,
-    
+
     /// Local curvature estimates
     local_curvature: HashMap<String, T>,
 }
@@ -992,7 +992,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         let multitask_coordinator = MultiTaskCoordinator::new(&config.multitask_settings)?;
         let meta_tracker = MetaOptimizationTracker::new();
         let few_shot_learner = FewShotLearner::new(&config.few_shot_settings)?;
-        
+
         Ok(Self {
             config,
             meta_learner,
@@ -1006,8 +1006,10 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
             few_shot_learner,
         })
     }
-    
-    fn create_meta_learner(config: &MetaLearningConfig) -> Result<Box<dyn MetaLearner<T> + Send + Sync>, OptimizerError> {
+
+    fn create_meta_learner(
+        config: &MetaLearningConfig,
+    ) -> Result<Box<dyn MetaLearner<T> + Send + Sync>, OptimizerError> {
         match config.algorithm {
             MetaLearningAlgorithm::MAML => {
                 let maml_config = MAMLConfig {
@@ -1035,7 +1037,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
             }
         }
     }
-    
+
     /// Perform meta-training
     pub async fn meta_train(
         &mut self,
@@ -1045,45 +1047,50 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         let mut meta_parameters = self.initialize_meta_parameters()?;
         let mut training_history = Vec::new();
         let mut best_performance = T::neg_infinity();
-        
+
         for epoch in 0..num_epochs {
             // Sample task batch
-            let task_batch = self.task_manager.sample_task_batch(&tasks, self.config.task_batch_size)?;
-            
+            let task_batch = self
+                .task_manager
+                .sample_task_batch(&tasks, self.config.task_batch_size)?;
+
             // Perform meta-training step
-            let training_result = self.meta_learner.meta_train_step(
-                &task_batch,
-                &mut meta_parameters,
-            )?;
-            
+            let training_result = self
+                .meta_learner
+                .meta_train_step(&task_batch, &mut meta_parameters)?;
+
             // Update meta-parameters
             self.update_meta_parameters(&mut meta_parameters, &training_result.meta_gradients)?;
-            
+
             // Validate on meta-validation set
-            let validation_result = self.meta_validator.validate(&meta_parameters, &tasks).await?;
-            
+            let validation_result = self
+                .meta_validator
+                .validate(&meta_parameters, &tasks)
+                .await?;
+
             // Track progress
-            self.meta_tracker.record_epoch(epoch, &training_result, &validation_result)?;
-            
+            self.meta_tracker
+                .record_epoch(epoch, &training_result, &validation_result)?;
+
             // Check for improvement
             if validation_result.performance > best_performance {
                 best_performance = validation_result.performance;
                 self.meta_tracker.update_best_parameters(&meta_parameters)?;
             }
-            
+
             training_history.push(MetaTrainingEpoch {
                 epoch,
                 training_result,
                 validation_result,
                 meta_parameters: meta_parameters.clone(),
             });
-            
+
             // Early stopping check
             if self.should_early_stop(&training_history) {
                 break;
             }
         }
-        
+
         Ok(MetaTrainingResults {
             final_parameters: meta_parameters,
             training_history,
@@ -1091,21 +1098,23 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
             total_epochs: training_history.len(),
         })
     }
-    
+
     /// Adapt to new task
     pub async fn adapt_to_task(
         &mut self,
         task: &MetaTask<T>,
         meta_parameters: &HashMap<String, Array1<T>>,
     ) -> Result<TaskAdaptationResult<T>, OptimizerError> {
-        self.adaptation_engine.adapt(
-            task,
-            meta_parameters,
-            &mut *self.meta_learner,
-            self.config.inner_steps,
-        ).await
+        self.adaptation_engine
+            .adapt(
+                task,
+                meta_parameters,
+                &mut *self.meta_learner,
+                self.config.inner_steps,
+            )
+            .await
     }
-    
+
     /// Perform few-shot learning
     pub async fn few_shot_learning(
         &mut self,
@@ -1113,13 +1122,11 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         query_set: &TaskDataset<T>,
         meta_parameters: &HashMap<String, Array1<T>>,
     ) -> Result<FewShotResult<T>, OptimizerError> {
-        self.few_shot_learner.learn(
-            support_set,
-            query_set,
-            meta_parameters,
-        ).await
+        self.few_shot_learner
+            .learn(support_set, query_set, meta_parameters)
+            .await
     }
-    
+
     /// Transfer learning to new domain
     pub async fn transfer_to_domain(
         &mut self,
@@ -1127,61 +1134,57 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         target_tasks: &[MetaTask<T>],
         meta_parameters: &HashMap<String, Array1<T>>,
     ) -> Result<TransferLearningResult<T>, OptimizerError> {
-        self.transfer_manager.transfer(
-            source_tasks,
-            target_tasks,
-            meta_parameters,
-        ).await
+        self.transfer_manager
+            .transfer(source_tasks, target_tasks, meta_parameters)
+            .await
     }
-    
+
     /// Continual learning across task sequence
     pub async fn continual_learning(
         &mut self,
         task_sequence: &[MetaTask<T>],
         meta_parameters: &mut HashMap<String, Array1<T>>,
     ) -> Result<ContinualLearningResult<T>, OptimizerError> {
-        self.continual_learner.learn_sequence(
-            task_sequence,
-            meta_parameters,
-        ).await
+        self.continual_learner
+            .learn_sequence(task_sequence, meta_parameters)
+            .await
     }
-    
+
     /// Multi-task learning
     pub async fn multi_task_learning(
         &mut self,
         tasks: &[MetaTask<T>],
         meta_parameters: &mut HashMap<String, Array1<T>>,
     ) -> Result<MultiTaskResult<T>, OptimizerError> {
-        self.multitask_coordinator.learn_simultaneously(
-            tasks,
-            meta_parameters,
-        ).await
+        self.multitask_coordinator
+            .learn_simultaneously(tasks, meta_parameters)
+            .await
     }
-    
+
     fn initialize_meta_parameters(&self) -> Result<HashMap<String, Array1<T>>, OptimizerError> {
         // Initialize meta-parameters with proper initialization scheme
         let mut parameters = HashMap::new();
-        
+
         // Initialize optimizer parameters (simplified)
         parameters.insert(
             "lstm_weights".to_string(),
-            Array1::zeros(256 * 4) // LSTM weights
+            Array1::zeros(256 * 4), // LSTM weights
         );
         parameters.insert(
             "output_weights".to_string(),
-            Array1::zeros(256) // Output layer weights
+            Array1::zeros(256), // Output layer weights
         );
-        
+
         Ok(parameters)
     }
-    
+
     fn update_meta_parameters(
         &self,
         meta_parameters: &mut HashMap<String, Array1<T>>,
         meta_gradients: &HashMap<String, Array1<T>>,
     ) -> Result<(), OptimizerError> {
         let meta_lr = T::from(self.config.meta_learning_rate).unwrap();
-        
+
         for (name, gradient) in meta_gradients {
             if let Some(parameter) = meta_parameters.get_mut(name) {
                 // Gradient descent update
@@ -1190,15 +1193,15 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     fn should_early_stop(&self, history: &[MetaTrainingEpoch<T>]) -> bool {
         if history.len() < 10 {
             return false;
         }
-        
+
         // Check if validation performance has plateaued
         let recent_performances: Vec<_> = history
             .iter()
@@ -1206,16 +1209,20 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
             .take(5)
             .map(|epoch| epoch.validation_result.performance)
             .collect();
-        
-        let max_recent = recent_performances.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
-        let min_recent = recent_performances.iter().fold(T::infinity(), |a, &b| a.min(b));
-        
+
+        let max_recent = recent_performances
+            .iter()
+            .fold(T::neg_infinity(), |a, &b| a.max(b));
+        let min_recent = recent_performances
+            .iter()
+            .fold(T::infinity(), |a, &b| a.min(b));
+
         let performance_range = max_recent - min_recent;
         let threshold = T::from(1e-4).unwrap();
-        
+
         performance_range < threshold
     }
-    
+
     /// Get meta-learning statistics
     pub fn get_meta_learning_statistics(&self) -> MetaLearningStatistics<T> {
         MetaLearningStatistics {
@@ -1317,7 +1324,7 @@ impl<T: Float + Default + Clone + Send + Sync> MAMLLearner<T> {
             None
         };
         let adaptation_history = VecDeque::with_capacity(1000);
-        
+
         Ok(Self {
             config,
             inner_optimizer,
@@ -1338,34 +1345,37 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearner<T> for MAMLLearner<T>
         let mut total_meta_loss = T::zero();
         let mut task_losses = Vec::new();
         let mut meta_gradients = HashMap::new();
-        
+
         for task in task_batch {
             // Inner loop: adapt to task
-            let adaptation_result = self.adapt_to_task(task, meta_parameters, self.config.inner_steps)?;
-            
+            let adaptation_result =
+                self.adapt_to_task(task, meta_parameters, self.config.inner_steps)?;
+
             // Evaluate on query set
-            let query_result = self.evaluate_query_set(task, &adaptation_result.adapted_parameters)?;
-            
+            let query_result =
+                self.evaluate_query_set(task, &adaptation_result.adapted_parameters)?;
+
             task_losses.push(query_result.query_loss);
             total_meta_loss = total_meta_loss + query_result.query_loss;
-            
+
             // Compute meta-gradients (simplified)
             for (name, param) in meta_parameters.iter() {
                 let grad = Array1::zeros(param.len()); // Placeholder
-                meta_gradients.entry(name.clone())
+                meta_gradients
+                    .entry(name.clone())
                     .and_modify(|g| *g = g.clone() + &grad)
                     .or_insert(grad);
             }
         }
-        
+
         let batch_size = T::from(task_batch.len()).unwrap();
         let meta_loss = total_meta_loss / batch_size;
-        
+
         // Average meta-gradients
         for gradient in meta_gradients.values_mut() {
             *gradient = gradient.clone() / batch_size;
         }
-        
+
         Ok(MetaTrainingResult {
             meta_loss,
             task_losses,
@@ -1389,7 +1399,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearner<T> for MAMLLearner<T>
             },
         })
     }
-    
+
     fn adapt_to_task(
         &mut self,
         task: &MetaTask<T>,
@@ -1398,14 +1408,14 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearner<T> for MAMLLearner<T>
     ) -> Result<TaskAdaptationResult<T>, OptimizerError> {
         let mut adapted_parameters = meta_parameters.clone();
         let mut adaptation_trajectory = Vec::new();
-        
+
         for step in 0..adaptation_steps {
             // Compute loss on support set
             let loss = self.compute_support_loss(task, &adapted_parameters)?;
-            
+
             // Compute gradients
             let gradients = self.compute_gradients(&adapted_parameters, loss)?;
-            
+
             // Update parameters
             let learning_rate = T::from(self.config.inner_lr).unwrap();
             for (name, param) in adapted_parameters.iter_mut() {
@@ -1415,7 +1425,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearner<T> for MAMLLearner<T>
                     }
                 }
             }
-            
+
             // Record adaptation step
             adaptation_trajectory.push(AdaptationStep {
                 step,
@@ -1425,9 +1435,12 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearner<T> for MAMLLearner<T>
                 learning_rate,
             });
         }
-        
-        let final_loss = adaptation_trajectory.last().map(|s| s.loss).unwrap_or(T::zero());
-        
+
+        let final_loss = adaptation_trajectory
+            .last()
+            .map(|s| s.loss)
+            .unwrap_or(T::zero());
+
         Ok(TaskAdaptationResult {
             adapted_parameters,
             adaptation_trajectory,
@@ -1440,7 +1453,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearner<T> for MAMLLearner<T>
             },
         })
     }
-    
+
     fn evaluate_query_set(
         &self,
         task: &MetaTask<T>,
@@ -1450,20 +1463,20 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearner<T> for MAMLLearner<T>
         let mut predictions = Vec::new();
         let mut confidence_scores = Vec::new();
         let mut total_loss = T::zero();
-        
+
         for (features, target) in task.query_set.features.iter().zip(&task.query_set.targets) {
             // Simplified prediction computation
             let prediction = features.iter().sum::<T>() / T::from(features.len()).unwrap();
             let loss = (prediction - *target) * (prediction - *target);
-            
+
             predictions.push(prediction);
             confidence_scores.push(T::from(0.9).unwrap()); // Placeholder
             total_loss = total_loss + loss;
         }
-        
+
         let query_loss = total_loss / T::from(task.query_set.features.len()).unwrap();
         let accuracy = T::from(0.85).unwrap(); // Placeholder
-        
+
         Ok(QueryEvaluationResult {
             query_loss,
             accuracy,
@@ -1477,7 +1490,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearner<T> for MAMLLearner<T>
             },
         })
     }
-    
+
     fn get_algorithm(&self) -> MetaLearningAlgorithm {
         MetaLearningAlgorithm::MAML
     }
@@ -1490,36 +1503,161 @@ impl<T: Float + Default + Clone> MAMLLearner<T> {
         parameters: &HashMap<String, Array1<T>>,
     ) -> Result<T, OptimizerError> {
         let mut total_loss = T::zero();
-        
-        for (features, target) in task.support_set.features.iter().zip(&task.support_set.targets) {
+
+        for (features, target) in task
+            .support_set
+            .features
+            .iter()
+            .zip(&task.support_set.targets)
+        {
             // Simplified loss computation
             let prediction = features.iter().sum::<T>() / T::from(features.len()).unwrap();
             let loss = (prediction - *target) * (prediction - *target);
             total_loss = total_loss + loss;
         }
-        
+
         Ok(total_loss / T::from(task.support_set.features.len()).unwrap())
     }
-    
+
     fn compute_gradients(
         &self,
         parameters: &HashMap<String, Array1<T>>,
         loss: T,
     ) -> Result<HashMap<String, Array1<T>>, OptimizerError> {
         let mut gradients = HashMap::new();
-        
+
         // Simplified gradient computation
         for (name, param) in parameters {
             let grad = Array1::zeros(param.len()); // Placeholder
             gradients.insert(name.clone(), grad);
         }
-        
+
         Ok(gradients)
     }
 }
 
-// Supporting structure implementations would be added here
-// This provides a comprehensive foundation for meta-learning
+// Supporting structure implementations
+// Stub implementations for missing types to enable compilation
+
+/// Meta-validation system for meta-learning
+pub struct MetaValidator<T: Float> {
+    config: MetaLearningConfig,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: Float + Default + Clone> MetaValidator<T> {
+    pub fn new(config: &MetaLearningConfig) -> Result<Self, OptimizerError> {
+        Ok(Self {
+            config: config.clone(),
+            _phantom: std::marker::PhantomData,
+        })
+    }
+}
+
+/// Adaptation engine for meta-learning
+pub struct AdaptationEngine<T: Float> {
+    config: MetaLearningConfig,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: Float + Default + Clone> AdaptationEngine<T> {
+    pub fn new(config: &MetaLearningConfig) -> Result<Self, OptimizerError> {
+        Ok(Self {
+            config: config.clone(),
+            _phantom: std::marker::PhantomData,
+        })
+    }
+}
+
+/// Transfer learning manager
+pub struct TransferLearningManager<T: Float> {
+    settings: TransferLearningSettings,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: Float + Default + Clone> TransferLearningManager<T> {
+    pub fn new(settings: &TransferLearningSettings) -> Result<Self, OptimizerError> {
+        Ok(Self {
+            settings: settings.clone(),
+            _phantom: std::marker::PhantomData,
+        })
+    }
+}
+
+/// Continual learning system
+pub struct ContinualLearningSystem<T: Float> {
+    settings: ContinualLearningSettings,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: Float + Default + Clone> ContinualLearningSystem<T> {
+    pub fn new(settings: &ContinualLearningSettings) -> Result<Self, OptimizerError> {
+        Ok(Self {
+            settings: settings.clone(),
+            _phantom: std::marker::PhantomData,
+        })
+    }
+}
+
+/// Multi-task coordinator
+pub struct MultiTaskCoordinator<T: Float> {
+    settings: MultiTaskSettings,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: Float + Default + Clone> MultiTaskCoordinator<T> {
+    pub fn new(settings: &MultiTaskSettings) -> Result<Self, OptimizerError> {
+        Ok(Self {
+            settings: settings.clone(),
+            _phantom: std::marker::PhantomData,
+        })
+    }
+}
+
+/// Meta-optimization tracker
+pub struct MetaOptimizationTracker<T: Float> {
+    step_count: usize,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: Float + Default + Clone> MetaOptimizationTracker<T> {
+    pub fn new() -> Self {
+        Self {
+            step_count: 0,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
+/// Task distribution manager
+pub struct TaskDistributionManager<T: Float> {
+    config: MetaLearningConfig,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: Float + Default + Clone> TaskDistributionManager<T> {
+    pub fn new(config: &MetaLearningConfig) -> Result<Self, OptimizerError> {
+        Ok(Self {
+            config: config.clone(),
+            _phantom: std::marker::PhantomData,
+        })
+    }
+}
+
+/// Few-shot learner
+pub struct FewShotLearner<T: Float> {
+    settings: FewShotSettings,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: Float + Default + Clone> FewShotLearner<T> {
+    pub fn new(settings: &FewShotSettings) -> Result<Self, OptimizerError> {
+        Ok(Self {
+            settings: settings.clone(),
+            _phantom: std::marker::PhantomData,
+        })
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -1547,7 +1685,9 @@ mod tests {
                 progressive_transfer: false,
             },
             continual_settings: ContinualLearningSettings {
-                anti_forgetting_strategies: vec![AntiForgettingStrategy::ElasticWeightConsolidation],
+                anti_forgetting_strategies: vec![
+                    AntiForgettingStrategy::ElasticWeightConsolidation,
+                ],
                 memory_replay: MemoryReplaySettings {
                     buffer_size: 1000,
                     replay_strategy: ReplayStrategy::Random,
@@ -1560,8 +1700,8 @@ mod tests {
             multitask_settings: MultiTaskSettings {
                 task_weighting: TaskWeightingStrategy::Uniform,
                 gradient_balancing: GradientBalancingMethod::Uniform,
-                interference_mitigation: InterferenceMitigationStrategy::Orthogonal Gradients,
-                shared_representation: SharedRepresentationStrategy::Hard Sharing,
+                interference_mitigation: InterferenceMitigationStrategy::OrthogonalGradients,
+                shared_representation: SharedRepresentationStrategy::HardSharing,
             },
             few_shot_settings: FewShotSettings {
                 num_shots: 5,
@@ -1578,7 +1718,7 @@ mod tests {
             meta_regularization_strength: 0.01,
             task_sampling_strategy: TaskSamplingStrategy::Uniform,
         };
-        
+
         assert_eq!(config.inner_steps, 5);
         assert_eq!(config.task_batch_size, 16);
         assert!(config.second_order);
@@ -1595,7 +1735,7 @@ mod tests {
             allow_unused: true,
             gradient_clip: Some(1.0),
         };
-        
+
         assert!(config.second_order);
         assert_eq!(config.inner_steps, 5);
         assert_eq!(config.inner_lr, 0.01);

@@ -271,4 +271,5 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for RAdam<F> {
 }
 
 // Enable direct usage of scirs2-optim's RAdam when the optim feature is enabled
-// TODO: Uncomment when scirs2-optim crate is available
+#[cfg(feature = "optim")]
+pub use scirs2_optim::RAdam as OptimRAdam;

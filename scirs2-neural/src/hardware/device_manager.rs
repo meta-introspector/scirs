@@ -1,10 +1,10 @@
 //! Device management for hardware accelerators
 
 use crate::error::Result;
-use crate::hardware::{Accelerator, AcceleratorType};
 use crate::hardware::accelerator::AcceleratorFactory;
-use std::sync::{Arc, Mutex};
+use crate::hardware::{Accelerator, AcceleratorType};
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 /// Device information
 #[derive(Debug, Clone)]
@@ -42,22 +42,22 @@ impl DeviceManager {
             device_info: Arc::new(Mutex::new(Vec::new())),
             default_device: Arc::new(Mutex::new(None)),
         };
-        
+
         // Discover available devices
         manager.discover_devices()?;
-        
+
         Ok(manager)
     }
-    
+
     /// Discover available devices
     fn discover_devices(&self) -> Result<()> {
         let mut devices = self.devices.lock().unwrap();
         let mut device_info = self.device_info.lock().unwrap();
-        
+
         // Discover CPU devices (always available)
         let cpu_device = AcceleratorFactory::create(AcceleratorType::CPU)?;
         devices.insert((AcceleratorType::CPU, 0), cpu_device.clone());
-        
+
         device_info.push(DeviceInfo {
             id: 0,
             device_type: AcceleratorType::CPU,
@@ -68,23 +68,23 @@ impl DeviceManager {
             is_available: true,
             properties: HashMap::new(),
         });
-        
+
         // Discover CUDA devices
         self.discover_cuda_devices(&mut devices, &mut device_info)?;
-        
+
         // Discover other device types
         self.discover_metal_devices(&mut devices, &mut device_info)?;
         self.discover_rocm_devices(&mut devices, &mut device_info)?;
-        
+
         // Set default device
         if !device_info.is_empty() {
             let mut default = self.default_device.lock().unwrap();
             *default = Some((device_info[0].device_type, device_info[0].id));
         }
-        
+
         Ok(())
     }
-    
+
     /// Discover CUDA devices
     fn discover_cuda_devices(
         &self,
@@ -95,19 +95,19 @@ impl DeviceManager {
         if !Self::is_cuda_available() {
             return Ok(());
         }
-        
+
         // Simulate CUDA device discovery
         // In real implementation, this would use CUDA runtime API
         let num_cuda_devices = Self::get_cuda_device_count();
-        
+
         for i in 0..num_cuda_devices {
             if let Ok(cuda_device) = AcceleratorFactory::create(AcceleratorType::CUDA) {
                 devices.insert((AcceleratorType::CUDA, i), cuda_device.clone());
-                
+
                 let mut properties = HashMap::new();
                 properties.insert("cuda_version".to_string(), "11.8".to_string());
                 properties.insert("driver_version".to_string(), "520.61.05".to_string());
-                
+
                 device_info.push(DeviceInfo {
                     id: i,
                     device_type: AcceleratorType::CUDA,
@@ -120,10 +120,10 @@ impl DeviceManager {
                 });
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Discover Metal devices (macOS)
     fn discover_metal_devices(
         &self,
@@ -134,10 +134,10 @@ impl DeviceManager {
         {
             if let Ok(metal_device) = AcceleratorFactory::create(AcceleratorType::Metal) {
                 devices.insert((AcceleratorType::Metal, 0), metal_device.clone());
-                
+
                 let mut properties = HashMap::new();
                 properties.insert("metal_version".to_string(), "3.0".to_string());
-                
+
                 device_info.push(DeviceInfo {
                     id: 0,
                     device_type: AcceleratorType::Metal,
@@ -150,10 +150,10 @@ impl DeviceManager {
                 });
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Discover ROCm devices (AMD)
     fn discover_rocm_devices(
         &self,
@@ -163,71 +163,83 @@ impl DeviceManager {
         // ROCm device discovery would go here
         Ok(())
     }
-    
+
     /// List all available devices
     pub fn list_devices(&self) -> Vec<DeviceInfo> {
         self.device_info.lock().unwrap().clone()
     }
-    
+
     /// Get a specific device
-    pub fn get_device(&self, device_type: AcceleratorType, device_id: usize) -> Result<Arc<dyn Accelerator>> {
+    pub fn get_device(
+        &self,
+        device_type: AcceleratorType,
+        device_id: usize,
+    ) -> Result<Arc<dyn Accelerator>> {
         let devices = self.devices.lock().unwrap();
-        
-        devices.get(&(device_type, device_id))
+
+        devices
+            .get(&(device_type, device_id))
             .cloned()
-            .ok_or_else(|| crate::error::NeuralError::DeviceNotFound(
-                format!("{:?} device {} not found", device_type, device_id)
-            ))
+            .ok_or_else(|| {
+                crate::error::NeuralError::DeviceNotFound(format!(
+                    "{:?} device {} not found",
+                    device_type, device_id
+                ))
+            })
     }
-    
+
     /// Get default device
     pub fn get_default_device(&self) -> Result<Arc<dyn Accelerator>> {
         let default = self.default_device.lock().unwrap();
-        
+
         if let Some((device_type, device_id)) = *default {
             self.get_device(device_type, device_id)
         } else {
             Err(crate::error::NeuralError::DeviceNotFound(
-                "No default device available".to_string()
+                "No default device available".to_string(),
             ))
         }
     }
-    
+
     /// Set default device
     pub fn set_default_device(&self, device_type: AcceleratorType, device_id: usize) -> Result<()> {
         // Verify device exists
         let _ = self.get_device(device_type, device_id)?;
-        
+
         let mut default = self.default_device.lock().unwrap();
         *default = Some((device_type, device_id));
-        
+
         Ok(())
     }
-    
+
     /// Get device by capabilities
-    pub fn get_device_by_capabilities(&self, selector: &DeviceSelector) -> Result<Arc<dyn Accelerator>> {
+    pub fn get_device_by_capabilities(
+        &self,
+        selector: &DeviceSelector,
+    ) -> Result<Arc<dyn Accelerator>> {
         let device_info = self.device_info.lock().unwrap();
-        
+
         // Find best matching device
-        let best_device = device_info.iter()
+        let best_device = device_info
+            .iter()
             .filter(|info| selector.matches(info))
             .max_by_key(|info| selector.score(info));
-        
+
         if let Some(device) = best_device {
             self.get_device(device.device_type, device.id)
         } else {
             Err(crate::error::NeuralError::DeviceNotFound(
-                "No device matching requirements found".to_string()
+                "No device matching requirements found".to_string(),
             ))
         }
     }
-    
+
     /// Check if CUDA is available
     fn is_cuda_available() -> bool {
         // Simplified check
         std::env::var("CUDA_HOME").is_ok()
     }
-    
+
     /// Get CUDA device count
     fn get_cuda_device_count() -> usize {
         // In real implementation, use cudaGetDeviceCount
@@ -237,24 +249,24 @@ impl DeviceManager {
             0
         }
     }
-    
+
     /// Synchronize all devices
     pub fn synchronize_all(&self) -> Result<()> {
         let devices = self.devices.lock().unwrap();
-        
+
         for device in devices.values() {
             device.synchronize()?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Get total memory across all devices
     pub fn total_memory(&self) -> usize {
         let device_info = self.device_info.lock().unwrap();
         device_info.iter().map(|info| info.total_memory).sum()
     }
-    
+
     /// Get available memory across all devices
     pub fn available_memory(&self) -> usize {
         let device_info = self.device_info.lock().unwrap();
@@ -300,14 +312,14 @@ impl DeviceSelector {
                 return false;
             }
         }
-        
+
         // Check memory
         if let Some(min_memory) = self.min_memory {
             if info.available_memory < min_memory {
                 return false;
             }
         }
-        
+
         // Check compute capability
         if let Some((min_major, min_minor)) = self.min_compute_capability {
             let (major, minor) = info.compute_capability;
@@ -315,30 +327,30 @@ impl DeviceSelector {
                 return false;
             }
         }
-        
+
         // Check required features
         for feature in &self.required_features {
             if !info.properties.contains_key(feature) {
                 return false;
             }
         }
-        
+
         true
     }
-    
+
     /// Score device for selection
     pub fn score(&self, info: &DeviceInfo) -> u64 {
         let mut score = 0u64;
-        
+
         if self.prefer_memory {
             score += info.available_memory as u64;
         }
-        
+
         if self.prefer_compute {
             let (major, minor) = info.compute_capability;
             score += (major as u64 * 1000 + minor as u64) * 1_000_000_000;
         }
-        
+
         score
     }
 }
@@ -357,7 +369,7 @@ impl MultiDeviceContext {
             distribution_strategy: strategy,
         }
     }
-    
+
     /// Distribute work across devices
     pub fn distribute_work<F>(&self, work_items: usize, work_fn: F) -> Result<()>
     where
@@ -374,14 +386,15 @@ impl MultiDeviceContext {
                 // Simple load balancing based on available memory
                 // In practice, would use more sophisticated scheduling
                 let mut device_loads = vec![0usize; self.devices.len()];
-                
+
                 for item in 0..work_items {
-                    let min_load_idx = device_loads.iter()
+                    let min_load_idx = device_loads
+                        .iter()
                         .enumerate()
                         .min_by_key(|(_, &load)| load)
                         .map(|(idx, _)| idx)
                         .unwrap_or(0);
-                    
+
                     work_fn(item, &*self.devices[min_load_idx])?;
                     device_loads[min_load_idx] += 1;
                 }
@@ -389,21 +402,21 @@ impl MultiDeviceContext {
             DistributionStrategy::DataParallel => {
                 // Split work evenly across devices
                 let items_per_device = (work_items + self.devices.len() - 1) / self.devices.len();
-                
+
                 for (device_idx, device) in self.devices.iter().enumerate() {
                     let start = device_idx * items_per_device;
                     let end = ((device_idx + 1) * items_per_device).min(work_items);
-                    
+
                     for item in start..end {
                         work_fn(item, &**device)?;
                     }
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Synchronize all devices
     pub fn synchronize_all(&self) -> Result<()> {
         for device in &self.devices {
@@ -427,16 +440,18 @@ pub enum DistributionStrategy {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_device_manager() {
         let manager = DeviceManager::new().unwrap();
         let devices = manager.list_devices();
-        
+
         assert!(!devices.is_empty());
-        assert!(devices.iter().any(|d| d.device_type == AcceleratorType::CPU));
+        assert!(devices
+            .iter()
+            .any(|d| d.device_type == AcceleratorType::CPU));
     }
-    
+
     #[test]
     fn test_device_selector() {
         let selector = DeviceSelector {
@@ -444,7 +459,7 @@ mod tests {
             device_type: Some(AcceleratorType::CPU),
             ..Default::default()
         };
-        
+
         let device_info = DeviceInfo {
             id: 0,
             device_type: AcceleratorType::CPU,
@@ -455,28 +470,31 @@ mod tests {
             is_available: true,
             properties: HashMap::new(),
         };
-        
+
         assert!(selector.matches(&device_info));
     }
-    
+
     #[test]
     fn test_multi_device_context() {
         let cpu1 = AcceleratorFactory::create(AcceleratorType::CPU).unwrap();
         let cpu2 = AcceleratorFactory::create(AcceleratorType::CPU).unwrap();
-        
-        let context = MultiDeviceContext::new(
-            vec![cpu1, cpu2],
-            DistributionStrategy::RoundRobin,
-        );
-        
+
+        let context = MultiDeviceContext::new(vec![cpu1, cpu2], DistributionStrategy::RoundRobin);
+
         let mut work_distribution = vec![0; 2];
-        
-        context.distribute_work(10, |item, device| {
-            let device_idx = if device.accelerator_type() == AcceleratorType::CPU { 0 } else { 1 };
-            work_distribution[device_idx] += 1;
-            Ok(())
-        }).unwrap();
-        
+
+        context
+            .distribute_work(10, |item, device| {
+                let device_idx = if device.accelerator_type() == AcceleratorType::CPU {
+                    0
+                } else {
+                    1
+                };
+                work_distribution[device_idx] += 1;
+                Ok(())
+            })
+            .unwrap();
+
         // Round-robin should distribute evenly
         assert_eq!(work_distribution[0], 10); // All work goes to first device since both are CPU
     }

@@ -7,15 +7,15 @@
 //! - Canonical Correlation Analysis (CCA)
 //! - Partial Least Squares (PLS)
 
-mod pca;
-mod factor_analysis;
-mod discriminant_analysis;
 mod canonical_correlation;
+mod discriminant_analysis;
+mod factor_analysis;
+mod pca;
 
-pub use pca::*;
-pub use factor_analysis::*;
-pub use discriminant_analysis::*;
 pub use canonical_correlation::*;
+pub use discriminant_analysis::*;
+pub use factor_analysis::*;
+pub use pca::*;
 
 #[allow(unused_imports)]
 use crate::error::StatsResult as Result;

@@ -312,7 +312,7 @@ impl RlsFilter {
                 let kxp = dot_product(kx_row, &get_column(&p_matrix_copy, j));
                 if self.lambda.abs() < f64::EPSILON {
                     return Err(SignalError::ValueError(
-                        "Forgetting factor lambda is too close to zero".to_string()
+                        "Forgetting factor lambda is too close to zero".to_string(),
                     ));
                 }
                 *p_elem = (*p_elem - kxp) / self.lambda;
@@ -1258,9 +1258,10 @@ fn solve_linear_system_small(matrix: &[Vec<f64>], rhs: &[f64]) -> SignalResult<V
         for k in (i + 1)..n {
             // Check for singular matrix (diagonal element near zero)
             if aug_matrix[i][i].abs() < f64::EPSILON {
-                return Err(SignalError::ValueError(
-                    format!("Singular matrix detected at row {}", i)
-                ));
+                return Err(SignalError::ValueError(format!(
+                    "Singular matrix detected at row {}",
+                    i
+                )));
             }
             let factor = aug_matrix[k][i] / aug_matrix[i][i];
             for j in i..=n {

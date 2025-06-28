@@ -3,9 +3,9 @@
 //! This module provides low-level CUDA kernel implementations for common
 //! optimization operations, leveraging scirs2-core's GPU abstractions.
 
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2};
-use scirs2_core::error::{ScirsError, ScirsResult};
-use scirs2_core::gpu::{GpuContext, GpuArray, GpuKernel, GpuStream};
+use scirs2_core::gpu::{GpuArray, GpuContext, GpuKernel, GpuStream};
 use std::sync::Arc;
 
 /// CUDA kernel for parallel function evaluation
@@ -79,7 +79,7 @@ impl FunctionEvaluationKernel {
         "#;
 
         let kernel = context.compile_kernel("evaluate_batch", kernel_source)?;
-        
+
         Ok(Self { context, kernel })
     }
 
@@ -207,7 +207,7 @@ impl GradientKernel {
         "#;
 
         let kernel = context.compile_kernel("compute_gradient_finite_diff", kernel_source)?;
-        
+
         Ok(Self { context, kernel })
     }
 
@@ -478,7 +478,7 @@ impl ParticleSwarmKernel {
         "#;
 
         let kernel = context.compile_kernel("update_particles", kernel_source)?;
-        
+
         Ok(Self { context, kernel })
     }
 
@@ -740,11 +740,7 @@ impl ReductionKernel {
         self.sum_kernel.launch(
             (grid_size as u32, 1, 1),
             (block_size as u32, 1, 1),
-            &[
-                input.as_ptr(),
-                output.as_ptr(),
-                &(n as i32),
-            ],
+            &[input.as_ptr(), output.as_ptr(), &(n as i32)],
             None,
         )?;
 

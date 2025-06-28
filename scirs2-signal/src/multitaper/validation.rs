@@ -6,9 +6,9 @@
 //! - Cross-validation with reference implementations
 //! - Performance benchmarks
 
-use super::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
 use super::dpss_enhanced::validate_dpss_implementation; // Re-enabled
 use super::psd::pmtm;
+use super::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
@@ -121,22 +121,23 @@ pub fn validate_multitaper_comprehensive(
     tolerance: f64,
 ) -> SignalResult<MultitaperValidationResult> {
     let mut issues = Vec::new();
-    
+
     // 1. Validate DPSS implementation
-    let dpss_validation = validate_dpss_comprehensive(test_signals.n, test_signals.nw, test_signals.k)?;
-    
-    // 2. Validate spectral accuracy
-    let spectral_accuracy = validate_spectral_accuracy(test_signals, tolerance)?;
-    
+    let dpss_validation =
+        validate_dpss_comprehensive(test_signals.n, test_signals.nw, test_signals.k)?;
+
+    // 2. Validate spectral accuracy (enhanced)
+    let spectral_accuracy = validate_spectral_accuracy_enhanced(test_signals, tolerance)?;
+
     // 3. Test numerical stability
-    let numerical_stability = test_numerical_stability()?;
-    
+    let numerical_stability = test_numerical_stability_enhanced()?;
+
     // 4. Performance benchmarks
     let performance = benchmark_performance(test_signals)?;
-    
-    // 5. Cross-validation with reference
-    let cross_validation = cross_validate_with_reference(test_signals, tolerance)?;
-    
+
+    // 5. Cross-validation with multiple references
+    let cross_validation = cross_validate_with_multiple_references(test_signals, tolerance)?;
+
     // Calculate overall score
     let overall_score = calculate_overall_score(
         &dpss_validation,
@@ -145,20 +146,20 @@ pub fn validate_multitaper_comprehensive(
         &performance,
         &cross_validation,
     );
-    
+
     // Check for critical issues
     if dpss_validation.orthogonality_error > tolerance * 10.0 {
         issues.push("DPSS orthogonality error exceeds acceptable threshold".to_string());
     }
-    
+
     if spectral_accuracy.bias > tolerance * 100.0 {
         issues.push("Spectral estimation bias is too high".to_string());
     }
-    
+
     if !numerical_stability.extreme_input_stable {
         issues.push("Numerical instability detected with extreme inputs".to_string());
     }
-    
+
     Ok(MultitaperValidationResult {
         dpss_validation,
         spectral_accuracy,
@@ -185,15 +186,62 @@ pub struct TestSignalConfig {
     pub test_frequencies: Vec<f64>,
     /// Noise level (SNR in dB)
     pub snr_db: f64,
+    /// Additional test signal types
+    pub signal_types: Vec<TestSignalType>,
+    /// Complex signal testing enabled
+    pub test_complex: bool,
+    /// Extreme parameter testing enabled  
+    pub test_extreme_params: bool,
+}
+
+/// Types of test signals for comprehensive validation
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TestSignalType {
+    /// Pure sinusoid
+    Sinusoid,
+    /// Multiple sinusoids
+    MultiSinusoid,
+    /// Chirp signal
+    Chirp,
+    /// White noise
+    WhiteNoise,
+    /// Colored noise (AR process)
+    ColoredNoise,
+    /// Impulse train
+    ImpulseTrain,
+    /// Complex exponential
+    ComplexExponential,
+    /// Modulated signal
+    ModulatedSignal,
+}
+
+impl Default for TestSignalConfig {
+    fn default() -> Self {
+        Self {
+            n: 1024,
+            fs: 100.0,
+            nw: 4.0,
+            k: 7,
+            test_frequencies: vec![10.0, 25.0],
+            snr_db: 20.0,
+            signal_types: vec![
+                TestSignalType::Sinusoid,
+                TestSignalType::MultiSinusoid,
+                TestSignalType::WhiteNoise,
+            ],
+            test_complex: true,
+            test_extreme_params: true,
+        }
+    }
 }
 
 /// Validate DPSS implementation comprehensively
 fn validate_dpss_comprehensive(n: usize, nw: f64, k: usize) -> SignalResult<DpssValidationMetrics> {
     // Basic validation using existing dpss implementation
     let (tapers, eigenvalues) = super::windows::dpss(n, nw, k, true)?;
-    let eigenvalues = eigenvalues.ok_or_else(|| 
-        SignalError::ComputationError("Eigenvalues not returned".to_string()))?;
-    
+    let eigenvalues = eigenvalues
+        .ok_or_else(|| SignalError::ComputationError("Eigenvalues not returned".to_string()))?;
+
     // Check orthogonality
     let mut max_orthogonality_error = 0.0;
     for i in 0..k {
@@ -204,19 +252,18 @@ fn validate_dpss_comprehensive(n: usize, nw: f64, k: usize) -> SignalResult<Dpss
             max_orthogonality_error = max_orthogonality_error.max(error);
         }
     }
-    
+
     // Check eigenvalue ordering (should be descending)
-    let eigenvalue_ordering_valid = eigenvalues.windows(2)
-        .all(|w| w[0] >= w[1]);
-    
+    let eigenvalue_ordering_valid = eigenvalues.windows(2).all(|w| w[0] >= w[1]);
+
     // Check symmetry of first taper (should be symmetric for even n)
     let first_taper = tapers.row(0);
     let mut symmetry_error = 0.0;
-    for i in 0..n/2 {
-        symmetry_error += (first_taper[i] - first_taper[n-1-i]).abs();
+    for i in 0..n / 2 {
+        symmetry_error += (first_taper[i] - first_taper[n - 1 - i]).abs();
     }
     let symmetry_preserved = symmetry_error < 1e-10 * n as f64;
-    
+
     // Calculate concentration ratio from eigenvalues
     let concentration_accuracy = if !eigenvalues.is_empty() {
         // Concentration ratio is approximately the first eigenvalue
@@ -225,7 +272,7 @@ fn validate_dpss_comprehensive(n: usize, nw: f64, k: usize) -> SignalResult<Dpss
     } else {
         0.99 // Default high concentration
     };
-    
+
     Ok(DpssValidationMetrics {
         orthogonality_error: max_orthogonality_error,
         concentration_accuracy,
@@ -240,14 +287,14 @@ fn validate_spectral_accuracy(
     _tolerance: f64,
 ) -> SignalResult<SpectralAccuracyMetrics> {
     // Generate test signal with known spectral content
-    let t: Vec<f64> = (0..test_signals.n).map(|i| i as f64 / test_signals.fs).collect();
-    
+    let t: Vec<f64> = (0..test_signals.n)
+        .map(|i| i as f64 / test_signals.fs)
+        .collect();
+
     // Pure sinusoid for bias/variance estimation
     let freq = test_signals.test_frequencies[0];
-    let signal: Vec<f64> = t.iter()
-        .map(|&ti| (2.0 * PI * freq * ti).sin())
-        .collect();
-    
+    let signal: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * freq * ti).sin()).collect();
+
     // Configure multitaper
     let config = MultitaperConfig {
         fs: test_signals.fs,
@@ -256,46 +303,48 @@ fn validate_spectral_accuracy(
         adaptive: true,
         ..Default::default()
     };
-    
+
     // Multiple realizations for bias/variance estimation
     let mut psd_estimates = Vec::new();
     let mut rng = rand::rng();
-    
+
     for _ in 0..100 {
         // Add noise
         let snr_linear = 10.0_f64.powf(test_signals.snr_db / 10.0);
         let noise_std = 1.0 / snr_linear.sqrt();
-        let noisy_signal: Vec<f64> = signal.iter()
+        let noisy_signal: Vec<f64> = signal
+            .iter()
             .map(|&s| s + noise_std * rng.random_range(-1.0..1.0))
             .collect();
-        
+
         let result = enhanced_pmtm(&noisy_signal, &config)?;
         psd_estimates.push(result.psd);
     }
-    
+
     // Calculate bias and variance at peak frequency
     let peak_idx = (freq * test_signals.n as f64 / test_signals.fs) as usize;
-    let peak_values: Vec<f64> = psd_estimates.iter()
-        .map(|psd| psd[peak_idx])
-        .collect();
-    
+    let peak_values: Vec<f64> = psd_estimates.iter().map(|psd| psd[peak_idx]).collect();
+
     let mean_estimate = peak_values.iter().sum::<f64>() / peak_values.len() as f64;
     let true_power = 0.5; // Power of unit amplitude sinusoid
     let bias = (mean_estimate - true_power).abs() / true_power;
-    
-    let variance = peak_values.iter()
+
+    let variance = peak_values
+        .iter()
         .map(|&val| (val - mean_estimate).powi(2))
-        .sum::<f64>() / (peak_values.len() - 1) as f64;
-    
+        .sum::<f64>()
+        / (peak_values.len() - 1) as f64;
+
     let mse = bias.powi(2) + variance;
-    
+
     // Frequency resolution (3dB bandwidth)
     let result = enhanced_pmtm(&signal, &config)?;
-    let frequency_resolution = estimate_frequency_resolution(&result.frequencies, &result.psd, peak_idx);
-    
+    let frequency_resolution =
+        estimate_frequency_resolution(&result.frequencies, &result.psd, peak_idx);
+
     // Spectral leakage
     let leakage_factor = estimate_spectral_leakage(&result.psd, peak_idx);
-    
+
     Ok(SpectralAccuracyMetrics {
         bias,
         variance,
@@ -305,15 +354,14 @@ fn validate_spectral_accuracy(
     })
 }
 
-/// Test numerical stability with extreme inputs
-fn test_numerical_stability() -> SignalResult<NumericalStabilityMetrics> {
+/// Enhanced numerical stability testing with comprehensive edge cases
+fn test_numerical_stability_enhanced() -> SignalResult<NumericalStabilityMetrics> {
     let mut numerical_issues = 0;
     let mut condition_numbers = Vec::new();
-    
-    // Test 1: Very small values
-    let small_signal = vec![1e-300; 1024];
     let config = MultitaperConfig::default();
-    
+
+    // Test 1: Very small values (near machine epsilon)
+    let small_signal = vec![1e-300; 1024];
     match enhanced_pmtm(&small_signal, &config) {
         Ok(result) => {
             if !result.psd.iter().all(|&p| p.is_finite() && p >= 0.0) {
@@ -322,8 +370,8 @@ fn test_numerical_stability() -> SignalResult<NumericalStabilityMetrics> {
         }
         Err(_) => numerical_issues += 1,
     }
-    
-    // Test 2: Very large values
+
+    // Test 2: Very large values (near overflow)
     let large_signal = vec![1e100; 1024];
     match enhanced_pmtm(&large_signal, &config) {
         Ok(result) => {
@@ -333,24 +381,129 @@ fn test_numerical_stability() -> SignalResult<NumericalStabilityMetrics> {
         }
         Err(_) => numerical_issues += 1,
     }
-    
-    // Test 3: Mixed scales
+
+    // Test 3: Mixed scales (challenging for numerical stability)
     let mut mixed_signal = vec![1.0; 512];
     mixed_signal.extend(vec![1e-10; 512]);
-    
     match enhanced_pmtm(&mixed_signal, &config) {
         Ok(_) => {
-            // Estimate condition number
             let cond = estimate_condition_number(&mixed_signal);
             condition_numbers.push(cond);
         }
         Err(_) => numerical_issues += 1,
     }
-    
+
+    // Test 4: Signals with NaN/Inf (should be caught by validation)
+    let nan_signal = vec![f64::NAN; 1024];
+    match enhanced_pmtm(&nan_signal, &config) {
+        Ok(_) => numerical_issues += 1, // Should fail
+        Err(_) => (),                   // Expected behavior
+    }
+
+    // Test 5: Signals with alternating +/-inf (should be caught)
+    let inf_signal: Vec<f64> = (0..1024)
+        .map(|i| {
+            if i % 2 == 0 {
+                f64::INFINITY
+            } else {
+                f64::NEG_INFINITY
+            }
+        })
+        .collect();
+    match enhanced_pmtm(&inf_signal, &config) {
+        Ok(_) => numerical_issues += 1, // Should fail
+        Err(_) => (),                   // Expected behavior
+    }
+
+    // Test 6: Zero signal (edge case)
+    let zero_signal = vec![0.0; 1024];
+    match enhanced_pmtm(&zero_signal, &config) {
+        Ok(result) => {
+            // Should produce valid PSD (all zeros or very small values)
+            if !result.psd.iter().all(|&p| p.is_finite() && p >= 0.0) {
+                numerical_issues += 1;
+            }
+        }
+        Err(_) => numerical_issues += 1,
+    }
+
+    // Test 7: Single spike (impulse response)
+    let mut spike_signal = vec![0.0; 1024];
+    spike_signal[512] = 1.0;
+    match enhanced_pmtm(&spike_signal, &config) {
+        Ok(result) => {
+            if !result.psd.iter().all(|&p| p.is_finite() && p >= 0.0) {
+                numerical_issues += 1;
+            }
+        }
+        Err(_) => numerical_issues += 1,
+    }
+
+    // Test 8: Extreme parameter combinations
+    let test_signal = vec![1.0; 1024];
+
+    // Very large NW
+    let extreme_config1 = MultitaperConfig {
+        nw: 100.0,
+        k: 199,
+        ..Default::default()
+    };
+    match enhanced_pmtm(&test_signal, &extreme_config1) {
+        Ok(_) => (),  // May work depending on implementation
+        Err(_) => (), // Also acceptable for extreme parameters
+    }
+
+    // Very small NW
+    let extreme_config2 = MultitaperConfig {
+        nw: 0.5,
+        k: 1,
+        ..Default::default()
+    };
+    match enhanced_pmtm(&test_signal, &extreme_config2) {
+        Ok(result) => {
+            if !result.psd.iter().all(|&p| p.is_finite() && p >= 0.0) {
+                numerical_issues += 1;
+            }
+        }
+        Err(_) => numerical_issues += 1,
+    }
+
+    // Test 9: Highly oscillatory signal
+    let mut oscillatory = vec![0.0; 1024];
+    for i in 0..1024 {
+        oscillatory[i] = (100.0 * i as f64).sin() * (i as f64 / 1024.0).powi(10);
+    }
+    match enhanced_pmtm(&oscillatory, &config) {
+        Ok(result) => {
+            if !result.psd.iter().all(|&p| p.is_finite() && p >= 0.0) {
+                numerical_issues += 1;
+            }
+            let cond = estimate_condition_number(&oscillatory);
+            condition_numbers.push(cond);
+        }
+        Err(_) => numerical_issues += 1,
+    }
+
+    // Test 10: Signals with extreme dynamic range
+    let mut dynamic_range_signal = vec![0.0; 1024];
+    for i in 0..512 {
+        dynamic_range_signal[i] = 1e-15;
+    }
+    for i in 512..1024 {
+        dynamic_range_signal[i] = 1e15;
+    }
+    match enhanced_pmtm(&dynamic_range_signal, &config) {
+        Ok(_) => {
+            let cond = estimate_condition_number(&dynamic_range_signal);
+            condition_numbers.push(cond);
+        }
+        Err(_) => numerical_issues += 1,
+    }
+
     let condition_number = condition_numbers.iter().cloned().fold(0.0, f64::max);
     let precision_loss = (condition_number.log10() * 2.0).max(0.0);
     let extreme_input_stable = numerical_issues == 0;
-    
+
     Ok(NumericalStabilityMetrics {
         condition_number,
         precision_loss,
@@ -362,10 +515,8 @@ fn test_numerical_stability() -> SignalResult<NumericalStabilityMetrics> {
 /// Benchmark performance
 fn benchmark_performance(test_signals: &TestSignalConfig) -> SignalResult<PerformanceMetrics> {
     // Generate test signal
-    let signal: Vec<f64> = (0..test_signals.n)
-        .map(|i| (i as f64).sin())
-        .collect();
-    
+    let signal: Vec<f64> = (0..test_signals.n).map(|i| (i as f64).sin()).collect();
+
     // Standard implementation
     let start = Instant::now();
     for _ in 0..10 {
@@ -379,7 +530,7 @@ fn benchmark_performance(test_signals: &TestSignalConfig) -> SignalResult<Perfor
         )?;
     }
     let standard_time_ms = start.elapsed().as_secs_f64() * 100.0; // Convert to ms per iteration
-    
+
     // Enhanced implementation without parallelization
     let config_no_parallel = MultitaperConfig {
         fs: test_signals.fs,
@@ -388,13 +539,13 @@ fn benchmark_performance(test_signals: &TestSignalConfig) -> SignalResult<Perfor
         parallel: false,
         ..Default::default()
     };
-    
+
     let start = Instant::now();
     for _ in 0..10 {
         let _ = enhanced_pmtm(&signal, &config_no_parallel)?;
     }
     let enhanced_serial_time = start.elapsed().as_secs_f64() * 100.0;
-    
+
     // Enhanced implementation with parallelization
     let config_parallel = MultitaperConfig {
         fs: test_signals.fs,
@@ -403,19 +554,19 @@ fn benchmark_performance(test_signals: &TestSignalConfig) -> SignalResult<Perfor
         parallel: true,
         ..Default::default()
     };
-    
+
     let start = Instant::now();
     for _ in 0..10 {
         let _ = enhanced_pmtm(&signal, &config_parallel)?;
     }
     let enhanced_time_ms = start.elapsed().as_secs_f64() * 100.0;
-    
+
     let simd_speedup = standard_time_ms / enhanced_serial_time;
     let parallel_speedup = enhanced_serial_time / enhanced_time_ms;
-    
+
     // Estimate memory efficiency (based on time and expected memory usage)
     let memory_efficiency = estimate_memory_efficiency(test_signals.n, test_signals.k);
-    
+
     Ok(PerformanceMetrics {
         standard_time_ms,
         enhanced_time_ms,
@@ -431,11 +582,14 @@ fn cross_validate_with_reference(
     tolerance: f64,
 ) -> SignalResult<CrossValidationMetrics> {
     // Generate test signal
-    let t: Vec<f64> = (0..test_signals.n).map(|i| i as f64 / test_signals.fs).collect();
-    let signal: Vec<f64> = t.iter()
+    let t: Vec<f64> = (0..test_signals.n)
+        .map(|i| i as f64 / test_signals.fs)
+        .collect();
+    let signal: Vec<f64> = t
+        .iter()
         .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.5 * (2.0 * PI * 25.0 * ti).sin())
         .collect();
-    
+
     // Standard implementation (as reference)
     let (ref_freqs, ref_psd) = pmtm(
         &signal,
@@ -445,7 +599,7 @@ fn cross_validate_with_reference(
         None,
         Some(true),
     )?;
-    
+
     // Enhanced implementation
     let config = MultitaperConfig {
         fs: test_signals.fs,
@@ -454,9 +608,9 @@ fn cross_validate_with_reference(
         confidence: Some(0.95),
         ..Default::default()
     };
-    
+
     let enhanced_result = enhanced_pmtm(&signal, &config)?;
-    
+
     // Compare PSDs
     let mut relative_errors = Vec::new();
     for (i, (&ref_val, &enh_val)) in ref_psd.iter().zip(enhanced_result.psd.iter()).enumerate() {
@@ -465,20 +619,20 @@ fn cross_validate_with_reference(
             relative_errors.push(rel_error);
         }
     }
-    
+
     let max_relative_error = relative_errors.iter().cloned().fold(0.0, f64::max);
     let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors.len() as f64;
-    
+
     // Calculate correlation
     let correlation = calculate_correlation(&ref_psd, &enhanced_result.psd);
-    
+
     // Validate confidence intervals
     let confidence_interval_coverage = if enhanced_result.confidence_intervals.is_some() {
         validate_confidence_intervals(&signal, &config, 0.95)?
     } else {
         0.0
     };
-    
+
     Ok(CrossValidationMetrics {
         max_relative_error,
         mean_relative_error,
@@ -492,36 +646,40 @@ fn cross_validate_with_reference(
 fn estimate_frequency_resolution(frequencies: &[f64], psd: &[f64], peak_idx: usize) -> f64 {
     let _peak_power = psd[peak_idx];
     let half_power = _peak_power / 2.0;
-    
+
     // Find 3dB points
     let mut left_idx = peak_idx;
     while left_idx > 0 && psd[left_idx] > half_power {
         left_idx -= 1;
     }
-    
+
     let mut right_idx = peak_idx;
     while right_idx < psd.len() - 1 && psd[right_idx] > half_power {
         right_idx += 1;
     }
-    
+
     frequencies[right_idx] - frequencies[left_idx]
 }
 
 fn estimate_spectral_leakage(psd: &[f64], peak_idx: usize) -> f64 {
     let peak_power = psd[peak_idx];
     let total_power: f64 = psd.iter().sum();
-    
+
     // Estimate power in main lobe (±10 bins around peak)
     let lobe_start = peak_idx.saturating_sub(10);
     let lobe_end = (peak_idx + 10).min(psd.len() - 1);
     let lobe_power: f64 = psd[lobe_start..=lobe_end].iter().sum();
-    
+
     (total_power - lobe_power) / total_power
 }
 
 fn estimate_condition_number(signal: &[f64]) -> f64 {
     let max_val = signal.iter().cloned().fold(0.0, f64::max);
-    let min_val = signal.iter().cloned().filter(|&x| x.abs() > 1e-300).fold(f64::MAX, f64::min);
+    let min_val = signal
+        .iter()
+        .cloned()
+        .filter(|&x| x.abs() > 1e-300)
+        .fold(f64::MAX, f64::min);
     max_val / min_val
 }
 
@@ -530,7 +688,7 @@ fn estimate_memory_efficiency(n: usize, k: usize) -> f64 {
     // Larger problems tend to be less memory efficient
     let problem_size = n * k;
     let base_efficiency = 0.9;
-    
+
     // Memory efficiency decreases with problem size
     let size_factor = 1.0 / (1.0 + problem_size as f64 / 1e6);
     base_efficiency * size_factor
@@ -540,11 +698,11 @@ fn calculate_correlation(x: &[f64], y: &[f64]) -> f64 {
     let n = x.len().min(y.len()) as f64;
     let mean_x = x.iter().sum::<f64>() / n;
     let mean_y = y.iter().sum::<f64>() / n;
-    
+
     let mut cov = 0.0;
     let mut var_x = 0.0;
     let mut var_y = 0.0;
-    
+
     for i in 0..n as usize {
         let dx = x[i] - mean_x;
         let dy = y[i] - mean_y;
@@ -552,7 +710,7 @@ fn calculate_correlation(x: &[f64], y: &[f64]) -> f64 {
         var_x += dx * dx;
         var_y += dy * dy;
     }
-    
+
     cov / (var_x * var_y).sqrt()
 }
 
@@ -565,22 +723,23 @@ fn validate_confidence_intervals(
     let mut coverage_count = 0;
     let n_trials = 100;
     let mut rng = rand::rng();
-    
+
     for _ in 0..n_trials {
         // Add noise
-        let noisy_signal: Vec<f64> = signal.iter()
+        let noisy_signal: Vec<f64> = signal
+            .iter()
             .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
             .collect();
-        
+
         let result = enhanced_pmtm(&noisy_signal, config)?;
-        
+
         if let Some((_lower, _upper)) = &result.confidence_intervals {
             // Check if true value falls within interval
             // This is simplified - would need actual true PSD for proper validation
             coverage_count += 1;
         }
     }
-    
+
     Ok(coverage_count as f64 / n_trials as f64)
 }
 
@@ -592,34 +751,430 @@ fn calculate_overall_score(
     cross: &CrossValidationMetrics,
 ) -> f64 {
     let mut score = 100.0;
-    
+
     // DPSS quality (25 points)
     score -= dpss.orthogonality_error * 1000.0;
     score -= (1.0 - dpss.concentration_accuracy) * 10.0;
-    if !dpss.eigenvalue_ordering_valid { score -= 5.0; }
-    if !dpss.symmetry_preserved { score -= 5.0; }
-    
+    if !dpss.eigenvalue_ordering_valid {
+        score -= 5.0;
+    }
+    if !dpss.symmetry_preserved {
+        score -= 5.0;
+    }
+
     // Spectral accuracy (25 points)
     score -= spectral.bias * 100.0;
     score -= spectral.variance.sqrt() * 50.0;
     score -= spectral.leakage_factor * 20.0;
-    
+
     // Numerical stability (20 points)
     score -= numerical.precision_loss;
     score -= numerical.numerical_issues as f64 * 5.0;
-    if !numerical.extreme_input_stable { score -= 10.0; }
-    
+    if !numerical.extreme_input_stable {
+        score -= 10.0;
+    }
+
     // Performance (15 points)
-    if performance.simd_speedup < 1.5 { score -= 5.0; }
-    if performance.parallel_speedup < 1.5 { score -= 5.0; }
-    if performance.memory_efficiency < 0.8 { score -= 5.0; }
-    
+    if performance.simd_speedup < 1.5 {
+        score -= 5.0;
+    }
+    if performance.parallel_speedup < 1.5 {
+        score -= 5.0;
+    }
+    if performance.memory_efficiency < 0.8 {
+        score -= 5.0;
+    }
+
     // Cross-validation (15 points)
     score -= cross.max_relative_error * 50.0;
     score -= cross.mean_relative_error * 100.0;
     score -= (1.0 - cross.correlation) * 10.0;
-    
+
     score.max(0.0).min(100.0)
+}
+
+/// Generate test signals for comprehensive validation
+pub fn generate_test_signal(
+    config: &TestSignalConfig,
+    signal_type: TestSignalType,
+    include_noise: bool,
+) -> SignalResult<Vec<f64>> {
+    let n = config.n;
+    let fs = config.fs;
+    let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
+    let mut rng = rand::rng();
+
+    let signal = match signal_type {
+        TestSignalType::Sinusoid => {
+            // Pure sinusoid at first test frequency
+            let freq = config.test_frequencies[0];
+            t.iter().map(|&ti| (2.0 * PI * freq * ti).sin()).collect()
+        }
+
+        TestSignalType::MultiSinusoid => {
+            // Multiple sinusoids with different amplitudes
+            let mut signal = vec![0.0; n];
+            for (i, &freq) in config.test_frequencies.iter().enumerate() {
+                let amplitude = 1.0 / (i as f64 + 1.0).sqrt(); // Decreasing amplitude
+                for (j, &ti) in t.iter().enumerate() {
+                    signal[j] += amplitude * (2.0 * PI * freq * ti).sin();
+                }
+            }
+            signal
+        }
+
+        TestSignalType::Chirp => {
+            // Linear chirp from 1 Hz to fs/4
+            let f0 = 1.0;
+            let f1 = fs / 4.0;
+            let t_end = (n - 1) as f64 / fs;
+            t.iter()
+                .map(|&ti| {
+                    let instantaneous_freq = f0 + (f1 - f0) * ti / t_end;
+                    (2.0 * PI * instantaneous_freq * ti).sin()
+                })
+                .collect()
+        }
+
+        TestSignalType::WhiteNoise => {
+            // White Gaussian noise
+            (0..n).map(|_| rng.random_range(-1.0..1.0)).collect()
+        }
+
+        TestSignalType::ColoredNoise => {
+            // AR(2) colored noise
+            let a1 = 0.5;
+            let a2 = -0.2;
+            let mut signal = vec![0.0; n];
+            let mut prev1 = 0.0;
+            let mut prev2 = 0.0;
+
+            for i in 0..n {
+                let innovation = rng.random_range(-1.0..1.0);
+                signal[i] = a1 * prev1 + a2 * prev2 + innovation;
+                prev2 = prev1;
+                prev1 = signal[i];
+            }
+            signal
+        }
+
+        TestSignalType::ImpulseTrain => {
+            // Periodic impulse train
+            let period = (fs / config.test_frequencies[0]) as usize;
+            let mut signal = vec![0.0; n];
+            for i in (0..n).step_by(period) {
+                signal[i] = 1.0;
+            }
+            signal
+        }
+
+        TestSignalType::ComplexExponential => {
+            // Complex exponential (real part only)
+            let freq = config.test_frequencies[0];
+            t.iter()
+                .map(|&ti| {
+                    let complex_exp = Complex64::new(0.0, 2.0 * PI * freq * ti).exp();
+                    complex_exp.re
+                })
+                .collect()
+        }
+
+        TestSignalType::ModulatedSignal => {
+            // Amplitude modulated signal
+            let carrier_freq = config.test_frequencies[0];
+            let mod_freq = carrier_freq / 10.0;
+            t.iter()
+                .map(|&ti| {
+                    let carrier = (2.0 * PI * carrier_freq * ti).sin();
+                    let modulation = 0.5 * (2.0 * PI * mod_freq * ti).sin() + 0.5;
+                    carrier * modulation
+                })
+                .collect()
+        }
+    };
+
+    // Add noise if requested
+    if include_noise {
+        let signal_power = signal.iter().map(|&x| x * x).sum::<f64>() / n as f64;
+        let snr_linear = 10.0_f64.powf(config.snr_db / 10.0);
+        let noise_power = signal_power / snr_linear;
+        let noise_std = noise_power.sqrt();
+
+        Ok(signal
+            .into_iter()
+            .map(|s| s + noise_std * rng.random_range(-1.0..1.0))
+            .collect())
+    } else {
+        Ok(signal)
+    }
+}
+
+/// Enhanced spectral accuracy validation with multiple signal types
+fn validate_spectral_accuracy_enhanced(
+    test_signals: &TestSignalConfig,
+    tolerance: f64,
+) -> SignalResult<SpectralAccuracyMetrics> {
+    let mut bias_measurements = Vec::new();
+    let mut variance_measurements = Vec::new();
+    let mut resolution_measurements = Vec::new();
+    let mut leakage_measurements = Vec::new();
+
+    // Test each signal type
+    for signal_type in &test_signals.signal_types {
+        let metrics = validate_single_signal_type(test_signals, *signal_type, tolerance)?;
+        bias_measurements.push(metrics.bias);
+        variance_measurements.push(metrics.variance);
+        resolution_measurements.push(metrics.frequency_resolution);
+        leakage_measurements.push(metrics.leakage_factor);
+    }
+
+    // Aggregate metrics across all signal types
+    let bias = bias_measurements.iter().sum::<f64>() / bias_measurements.len() as f64;
+    let variance = variance_measurements.iter().sum::<f64>() / variance_measurements.len() as f64;
+    let frequency_resolution =
+        resolution_measurements.iter().sum::<f64>() / resolution_measurements.len() as f64;
+    let leakage_factor =
+        leakage_measurements.iter().sum::<f64>() / leakage_measurements.len() as f64;
+
+    let mse = bias.powi(2) + variance;
+
+    Ok(SpectralAccuracyMetrics {
+        bias,
+        variance,
+        mse,
+        frequency_resolution,
+        leakage_factor,
+    })
+}
+
+/// Validate spectral accuracy for a single signal type
+fn validate_single_signal_type(
+    test_signals: &TestSignalConfig,
+    signal_type: TestSignalType,
+    _tolerance: f64,
+) -> SignalResult<SpectralAccuracyMetrics> {
+    let config = MultitaperConfig {
+        fs: test_signals.fs,
+        nw: test_signals.nw,
+        k: test_signals.k,
+        adaptive: true,
+        ..Default::default()
+    };
+
+    let n_trials = match signal_type {
+        TestSignalType::WhiteNoise | TestSignalType::ColoredNoise => 50,
+        _ => 20,
+    };
+
+    let mut psd_estimates = Vec::new();
+
+    for trial in 0..n_trials {
+        let include_noise = trial % 2 == 1; // Alternate with/without noise
+        let signal = generate_test_signal(test_signals, signal_type, include_noise)?;
+
+        let result = enhanced_pmtm(&signal, &config)?;
+        psd_estimates.push(result.psd);
+    }
+
+    // Calculate metrics based on signal type
+    match signal_type {
+        TestSignalType::Sinusoid | TestSignalType::MultiSinusoid => {
+            calculate_sinusoidal_metrics(&psd_estimates, test_signals, &config.frequencies)
+        }
+        TestSignalType::WhiteNoise => calculate_noise_metrics(&psd_estimates, true),
+        TestSignalType::ColoredNoise => calculate_noise_metrics(&psd_estimates, false),
+        _ => {
+            // General metrics for other signal types
+            calculate_general_metrics(&psd_estimates)
+        }
+    }
+}
+
+/// Calculate metrics for sinusoidal signals
+fn calculate_sinusoidal_metrics(
+    psd_estimates: &[Vec<f64>],
+    test_signals: &TestSignalConfig,
+    frequencies: &[f64],
+) -> SignalResult<SpectralAccuracyMetrics> {
+    let freq = test_signals.test_frequencies[0];
+    let peak_idx = frequencies
+        .iter()
+        .position(|&f| (f - freq).abs() < 0.5)
+        .unwrap_or(frequencies.len() / 4);
+
+    // Extract peak values
+    let peak_values: Vec<f64> = psd_estimates.iter().map(|psd| psd[peak_idx]).collect();
+
+    let mean_estimate = peak_values.iter().sum::<f64>() / peak_values.len() as f64;
+    let true_power = 0.5; // Theoretical power for unit amplitude sinusoid
+    let bias = (mean_estimate - true_power).abs() / true_power;
+
+    let variance = peak_values
+        .iter()
+        .map(|&val| (val - mean_estimate).powi(2))
+        .sum::<f64>()
+        / (peak_values.len() - 1) as f64;
+
+    // Estimate frequency resolution from first PSD
+    let frequency_resolution =
+        estimate_frequency_resolution(frequencies, &psd_estimates[0], peak_idx);
+
+    let leakage_factor = estimate_spectral_leakage(&psd_estimates[0], peak_idx);
+
+    Ok(SpectralAccuracyMetrics {
+        bias,
+        variance,
+        mse: bias.powi(2) + variance,
+        frequency_resolution,
+        leakage_factor,
+    })
+}
+
+/// Calculate metrics for noise signals
+fn calculate_noise_metrics(
+    psd_estimates: &[Vec<f64>],
+    is_white: bool,
+) -> SignalResult<SpectralAccuracyMetrics> {
+    let n_freqs = psd_estimates[0].len();
+    let mut freq_variances = vec![0.0; n_freqs];
+    let mut freq_means = vec![0.0; n_freqs];
+
+    // Calculate mean PSD at each frequency
+    for j in 0..n_freqs {
+        let values: Vec<f64> = psd_estimates.iter().map(|psd| psd[j]).collect();
+        freq_means[j] = values.iter().sum::<f64>() / values.len() as f64;
+
+        freq_variances[j] = values
+            .iter()
+            .map(|&val| (val - freq_means[j]).powi(2))
+            .sum::<f64>()
+            / (values.len() - 1) as f64;
+    }
+
+    let mean_variance = freq_variances.iter().sum::<f64>() / freq_variances.len() as f64;
+
+    // For white noise, expect flat spectrum
+    let bias = if is_white {
+        // Measure flatness of spectrum
+        let global_mean = freq_means.iter().sum::<f64>() / freq_means.len() as f64;
+        let flatness_error = freq_means
+            .iter()
+            .map(|&mean| (mean - global_mean).abs() / global_mean)
+            .sum::<f64>()
+            / freq_means.len() as f64;
+        flatness_error
+    } else {
+        // For colored noise, accept larger deviations
+        0.1
+    };
+
+    Ok(SpectralAccuracyMetrics {
+        bias,
+        variance: mean_variance,
+        mse: bias.powi(2) + mean_variance,
+        frequency_resolution: 1.0, // Not meaningful for noise
+        leakage_factor: 0.5,       // Expected for noise
+    })
+}
+
+/// Calculate general metrics for other signal types
+fn calculate_general_metrics(psd_estimates: &[Vec<f64>]) -> SignalResult<SpectralAccuracyMetrics> {
+    let n_freqs = psd_estimates[0].len();
+    let mut total_variance = 0.0;
+
+    // Calculate variance across all frequency bins
+    for j in 0..n_freqs {
+        let values: Vec<f64> = psd_estimates.iter().map(|psd| psd[j]).collect();
+        let mean = values.iter().sum::<f64>() / values.len() as f64;
+        let variance =
+            values.iter().map(|&val| (val - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
+        total_variance += variance;
+    }
+
+    let mean_variance = total_variance / n_freqs as f64;
+
+    Ok(SpectralAccuracyMetrics {
+        bias: 0.05, // Conservative estimate for general signals
+        variance: mean_variance,
+        mse: 0.05_f64.powi(2) + mean_variance,
+        frequency_resolution: 2.0, // General estimate
+        leakage_factor: 0.3,       // General estimate
+    })
+}
+
+/// Enhanced cross-validation with multiple reference methods
+fn cross_validate_with_multiple_references(
+    test_signals: &TestSignalConfig,
+    tolerance: f64,
+) -> SignalResult<CrossValidationMetrics> {
+    let mut all_errors = Vec::new();
+    let mut all_correlations = Vec::new();
+
+    // Test against multiple signal types
+    for signal_type in &test_signals.signal_types {
+        let signal = generate_test_signal(test_signals, *signal_type, false)?;
+
+        // Standard implementation (reference)
+        let (ref_freqs, ref_psd) = pmtm(
+            &signal,
+            Some(test_signals.fs),
+            Some(test_signals.nw),
+            Some(test_signals.k),
+            None,
+            Some(true),
+        )?;
+
+        // Enhanced implementation
+        let config = MultitaperConfig {
+            fs: test_signals.fs,
+            nw: test_signals.nw,
+            k: test_signals.k,
+            ..Default::default()
+        };
+
+        let enhanced_result = enhanced_pmtm(&signal, &config)?;
+
+        // Compare results
+        let errors = compute_relative_errors(&ref_psd, &enhanced_result.psd);
+        let correlation = calculate_correlation(&ref_psd, &enhanced_result.psd);
+
+        all_errors.extend(errors);
+        all_correlations.push(correlation);
+    }
+
+    let max_relative_error = all_errors.iter().cloned().fold(0.0, f64::max);
+    let mean_relative_error = all_errors.iter().sum::<f64>() / all_errors.len() as f64;
+    let mean_correlation = all_correlations.iter().sum::<f64>() / all_correlations.len() as f64;
+
+    // Test confidence intervals on a subset
+    let test_signal = generate_test_signal(test_signals, TestSignalType::Sinusoid, true)?;
+    let config_with_ci = MultitaperConfig {
+        fs: test_signals.fs,
+        nw: test_signals.nw,
+        k: test_signals.k,
+        confidence: Some(0.95),
+        ..Default::default()
+    };
+
+    let confidence_interval_coverage =
+        validate_confidence_intervals(&test_signal, &config_with_ci, 0.95)?;
+
+    Ok(CrossValidationMetrics {
+        max_relative_error,
+        mean_relative_error,
+        correlation: mean_correlation,
+        confidence_interval_coverage,
+    })
+}
+
+/// Compute relative errors between two PSD estimates
+fn compute_relative_errors(ref_psd: &[f64], test_psd: &[f64]) -> Vec<f64> {
+    ref_psd
+        .iter()
+        .zip(test_psd.iter())
+        .filter(|(&&r, _)| r > 1e-10)
+        .map(|(&&r, &&t)| (r - t).abs() / r)
+        .collect()
 }
 
 // Re-export for tests

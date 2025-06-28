@@ -1,48 +1,48 @@
 //! Mixed precision training support with tensor cores
-//! 
+//!
 //! This module provides automatic mixed precision (AMP) training capabilities
 //! leveraging tensor cores on modern GPUs for accelerated computation.
 
 use ndarray::{Array, Dimension};
 use num_traits::Float;
-use std::sync::Arc;
 use std::marker::PhantomData;
+use std::sync::Arc;
 
 use crate::gpu::{GpuOptimizerConfig, GpuOptimizerError};
 
 #[cfg(feature = "gpu")]
-use scirs2_core::gpu::{GpuContext, GpuBuffer};
+use scirs2_core::gpu::{GpuBuffer, GpuContext};
 
 /// Mixed precision configuration
 #[derive(Debug, Clone)]
 pub struct MixedPrecisionConfig {
     /// Initial loss scale factor
     pub init_scale: f32,
-    
+
     /// Growth factor for loss scaling
     pub growth_factor: f32,
-    
+
     /// Backoff factor when overflow detected
     pub backoff_factor: f32,
-    
+
     /// Growth interval (steps between scale increases)
     pub growth_interval: i32,
-    
+
     /// Minimum loss scale
     pub min_scale: f32,
-    
+
     /// Maximum loss scale
     pub max_scale: f32,
-    
+
     /// Enable gradient clipping
     pub gradient_clipping: bool,
-    
+
     /// Maximum gradient norm
     pub max_grad_norm: f32,
-    
+
     /// Use bfloat16 instead of float16
     pub use_bfloat16: bool,
-    
+
     /// Enable tensor core operations
     pub use_tensor_cores: bool,
 }
@@ -68,13 +68,13 @@ impl Default for MixedPrecisionConfig {
 pub struct DynamicLossScaler {
     /// Current scale factor
     scale: f32,
-    
+
     /// Configuration
     config: MixedPrecisionConfig,
-    
+
     /// Steps since last scale update
     growth_tracker: i32,
-    
+
     /// Overflow history for debugging
     overflow_history: Vec<bool>,
 }
@@ -89,19 +89,19 @@ impl DynamicLossScaler {
             overflow_history: Vec::with_capacity(100),
         }
     }
-    
+
     /// Get current scale
     pub fn get_scale(&self) -> f32 {
         self.scale
     }
-    
+
     /// Update scale based on overflow status
     pub fn update(&mut self, has_overflow: bool) {
         self.overflow_history.push(has_overflow);
         if self.overflow_history.len() > 100 {
             self.overflow_history.remove(0);
         }
-        
+
         if has_overflow {
             // Decrease scale on overflow
             self.scale = (self.scale * self.config.backoff_factor).max(self.config.min_scale);
@@ -115,16 +115,20 @@ impl DynamicLossScaler {
             }
         }
     }
-    
+
     /// Get overflow statistics
     pub fn get_overflow_stats(&self) -> OverflowStats {
         let total = self.overflow_history.len();
         let overflows = self.overflow_history.iter().filter(|&&x| x).count();
-        
+
         OverflowStats {
             total_steps: total,
             overflow_count: overflows,
-            overflow_rate: if total > 0 { overflows as f32 / total as f32 } else { 0.0 },
+            overflow_rate: if total > 0 {
+                overflows as f32 / total as f32
+            } else {
+                0.0
+            },
             current_scale: self.scale,
         }
     }
@@ -143,28 +147,28 @@ pub struct OverflowStats {
 pub struct MixedPrecisionOptimizer<O, A: Float> {
     /// Underlying optimizer
     optimizer: O,
-    
+
     /// Loss scaler
     scaler: DynamicLossScaler,
-    
+
     /// GPU context
     gpu_context: Option<Arc<GpuContext>>,
-    
+
     /// FP32 master weights
     master_weights: Option<GpuBuffer<f32>>,
-    
+
     /// FP16/BF16 model weights
     model_weights_half: Option<GpuBuffer<u16>>,
-    
+
     /// Gradient buffer (FP16/BF16)
     gradients_half: Option<GpuBuffer<u16>>,
-    
+
     /// Overflow detection buffer
     overflow_flag: Option<GpuBuffer<i32>>,
-    
+
     /// Configuration
     config: MixedPrecisionConfig,
-    
+
     /// Phantom data
     _phantom: PhantomData<A>,
 }
@@ -173,7 +177,7 @@ impl<O, A: Float> MixedPrecisionOptimizer<O, A> {
     /// Create a new mixed precision optimizer
     pub fn new(optimizer: O, config: MixedPrecisionConfig) -> Self {
         let scaler = DynamicLossScaler::new(config.clone());
-        
+
         Self {
             optimizer,
             scaler,
@@ -186,7 +190,7 @@ impl<O, A: Float> MixedPrecisionOptimizer<O, A> {
             _phantom: PhantomData,
         }
     }
-    
+
     /// Initialize GPU resources
     pub fn initialize_gpu(
         &mut self,
@@ -196,24 +200,24 @@ impl<O, A: Float> MixedPrecisionOptimizer<O, A> {
         #[cfg(feature = "gpu")]
         {
             let context = Arc::new(GpuContext::new(gpu_config.backend)?);
-            
+
             // Allocate buffers
             self.master_weights = Some(context.create_buffer::<f32>(param_count));
             self.model_weights_half = Some(context.create_buffer::<u16>(param_count));
             self.gradients_half = Some(context.create_buffer::<u16>(param_count));
             self.overflow_flag = Some(context.create_buffer::<i32>(1));
-            
+
             self.gpu_context = Some(context);
         }
-        
+
         Ok(())
     }
-    
+
     /// Scale gradients before backward pass
     pub fn scale_loss(&self, loss: A) -> A {
         loss * A::from(self.scaler.get_scale()).unwrap()
     }
-    
+
     /// Unscale gradients and check for overflow
     pub fn unscale_and_check_overflow<D>(
         &mut self,
@@ -226,32 +230,36 @@ impl<O, A: Float> MixedPrecisionOptimizer<O, A> {
         {
             if let Some(ref context) = self.gpu_context {
                 let kernel = context.get_kernel("scale_gradients_check_overflow_f16")?;
-                
+
                 // Set kernel parameters
                 kernel.set_buffer("gradients", self.gradients_half.as_ref().unwrap());
                 kernel.set_buffer("has_overflow", self.overflow_flag.as_ref().unwrap());
                 kernel.set_f32("scale_factor", 1.0 / self.scaler.get_scale());
                 kernel.set_i32("n", gradients.len() as i32);
-                
+
                 // Launch kernel
-                let (grid_size, block_size) = crate::gpu::utils::calculate_block_size(gradients.len(), 256);
+                let (grid_size, block_size) =
+                    crate::gpu::utils::calculate_block_size(gradients.len(), 256);
                 kernel.dispatch([grid_size as u32, 1, 1]);
-                
+
                 // Check overflow flag
                 let mut overflow_flag = vec![0i32; 1];
-                self.overflow_flag.as_ref().unwrap().copy_to_host(&mut overflow_flag);
-                
+                self.overflow_flag
+                    .as_ref()
+                    .unwrap()
+                    .copy_to_host(&mut overflow_flag);
+
                 let has_overflow = overflow_flag[0] != 0;
                 self.scaler.update(has_overflow);
-                
+
                 return Ok(has_overflow);
             }
         }
-        
+
         // CPU fallback
         let scale = A::from(self.scaler.get_scale()).unwrap();
         let mut has_overflow = false;
-        
+
         gradients.mapv_inplace(|g| {
             let unscaled = g / scale;
             if !unscaled.is_finite() {
@@ -259,16 +267,16 @@ impl<O, A: Float> MixedPrecisionOptimizer<O, A> {
             }
             unscaled
         });
-        
+
         self.scaler.update(has_overflow);
         Ok(has_overflow)
     }
-    
+
     /// Get overflow statistics
     pub fn get_overflow_stats(&self) -> OverflowStats {
         self.scaler.get_overflow_stats()
     }
-    
+
     /// Get current loss scale
     pub fn get_scale(&self) -> f32 {
         self.scaler.get_scale()
@@ -278,18 +286,18 @@ impl<O, A: Float> MixedPrecisionOptimizer<O, A> {
 /// Tensor core optimization utilities
 pub mod tensor_core_utils {
     use super::*;
-    
+
     /// Pad tensor dimensions for tensor core alignment
     pub fn pad_for_tensor_cores(size: usize, alignment: usize) -> usize {
         (size + alignment - 1) / alignment * alignment
     }
-    
+
     /// Check if dimensions are tensor core friendly
     pub fn is_tensor_core_friendly(m: usize, n: usize, k: usize) -> bool {
         // Tensor cores work best with dimensions divisible by 16
         m % 16 == 0 && n % 16 == 0 && k % 16 == 0
     }
-    
+
     /// Get optimal matrix multiplication configuration
     pub fn get_optimal_gemm_config(m: usize, n: usize, k: usize) -> GemmConfig {
         if is_tensor_core_friendly(m, n, k) {
@@ -328,19 +336,20 @@ pub struct MixedPrecisionUtils;
 impl MixedPrecisionUtils {
     /// Convert FP32 to FP16 with saturation
     pub fn float_to_half(values: &[f32]) -> Vec<u16> {
-        values.iter().map(|&v| {
-            let clamped = v.max(-65504.0).min(65504.0);
-            F16::from_f32(clamped).to_bits()
-        }).collect()
+        values
+            .iter()
+            .map(|&v| {
+                let clamped = v.max(-65504.0).min(65504.0);
+                F16::from_f32(clamped).to_bits()
+            })
+            .collect()
     }
-    
+
     /// Convert FP16 to FP32
     pub fn half_to_float(values: &[u16]) -> Vec<f32> {
-        values.iter().map(|&v| {
-            F16::from_bits(v).to_f32()
-        }).collect()
+        values.iter().map(|&v| F16::from_bits(v).to_f32()).collect()
     }
-    
+
     /// Check if GPU supports tensor cores
     pub fn has_tensor_core_support(gpu_context: &GpuContext) -> bool {
         // Check compute capability
@@ -357,15 +366,15 @@ impl F16 {
         // Simplified conversion
         F16(0)
     }
-    
+
     fn to_f32(&self) -> f32 {
         0.0
     }
-    
+
     fn from_bits(bits: u16) -> Self {
         F16(bits)
     }
-    
+
     fn to_bits(&self) -> u16 {
         self.0
     }
@@ -374,7 +383,7 @@ impl F16 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_mixed_precision_config_default() {
         let config = MixedPrecisionConfig::default();
@@ -382,30 +391,30 @@ mod tests {
         assert_eq!(config.growth_factor, 2.0);
         assert!(config.use_tensor_cores);
     }
-    
+
     #[test]
     fn test_dynamic_loss_scaler() {
         let config = MixedPrecisionConfig::default();
         let mut scaler = DynamicLossScaler::new(config);
-        
+
         assert_eq!(scaler.get_scale(), 65536.0);
-        
+
         // Test scale decrease on overflow
         scaler.update(true);
         assert_eq!(scaler.get_scale(), 32768.0);
-        
+
         // Test scale increase after stable steps
         for _ in 0..2000 {
             scaler.update(false);
         }
         assert!(scaler.get_scale() > 32768.0);
     }
-    
+
     #[test]
     fn test_tensor_core_alignment() {
         assert_eq!(tensor_core_utils::pad_for_tensor_cores(100, 16), 112);
         assert_eq!(tensor_core_utils::pad_for_tensor_cores(128, 16), 128);
-        
+
         assert!(tensor_core_utils::is_tensor_core_friendly(256, 256, 128));
         assert!(!tensor_core_utils::is_tensor_core_friendly(100, 100, 100));
     }

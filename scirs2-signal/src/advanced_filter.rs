@@ -313,9 +313,10 @@ pub fn least_squares_design(
         let weight = if response.weights[i] >= 0.0 {
             response.weights[i].sqrt()
         } else {
-            return Err(SignalError::ValueError(
-                format!("Negative weight at index {}", i)
-            ));
+            return Err(SignalError::ValueError(format!(
+                "Negative weight at index {}",
+                i
+            )));
         };
         for j in 0..n_coeffs {
             design_matrix[[i, j]] *= weight;
@@ -362,7 +363,7 @@ pub fn least_squares_design(
         .zip(weighted_desired.iter())
         .map(|(&est, &des)| (est - des).powi(2))
         .sum::<f64>();
-    
+
     let error = if error >= 0.0 {
         error.sqrt()
     } else {
@@ -410,9 +411,10 @@ pub fn constrained_least_squares_design(
         let weight = if response.weights[i] >= 0.0 {
             response.weights[i].sqrt()
         } else {
-            return Err(SignalError::ValueError(
-                format!("Negative weight at index {}", i)
-            ));
+            return Err(SignalError::ValueError(format!(
+                "Negative weight at index {}",
+                i
+            )));
         };
         for j in 0..n_coeffs {
             let omega = PI * freq;

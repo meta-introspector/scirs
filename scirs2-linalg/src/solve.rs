@@ -297,9 +297,12 @@ where
 
         // Determine effective rank by thresholding singular values
         let max_dim = a.nrows().max(a.ncols());
-        let max_dim_f = F::from(max_dim).ok_or_else(|| LinalgError::NumericalError(
-            format!("Failed to convert matrix dimension {} to numeric type", max_dim)
-        ))?;
+        let max_dim_f = F::from(max_dim).ok_or_else(|| {
+            LinalgError::NumericalError(format!(
+                "Failed to convert matrix dimension {} to numeric type",
+                max_dim
+            ))
+        })?;
         let threshold = s[0] * max_dim_f * F::epsilon();
         let rank = s.iter().filter(|&&val| val > threshold).count();
 
@@ -464,16 +467,16 @@ mod tests {
         // Identity matrix
         let a = array![[1.0, 0.0], [0.0, 1.0]];
         let b = array![2.0, 3.0];
-        let x = solve(&a.view(), &b.view(), None)
-            .expect("Solve should succeed for identity matrix");
+        let x =
+            solve(&a.view(), &b.view(), None).expect("Solve should succeed for identity matrix");
         assert_relative_eq!(x[0], 2.0);
         assert_relative_eq!(x[1], 3.0);
 
         // General 2x2 matrix
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![5.0, 11.0];
-        let x = solve(&a.view(), &b.view(), None)
-            .expect("Solve should succeed for this test system");
+        let x =
+            solve(&a.view(), &b.view(), None).expect("Solve should succeed for this test system");
         assert_relative_eq!(x[0], 1.0);
         assert_relative_eq!(x[1], 2.0);
     }

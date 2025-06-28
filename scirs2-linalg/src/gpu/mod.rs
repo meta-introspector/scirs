@@ -56,18 +56,18 @@ pub struct GpuDeviceInfo {
 pub trait GpuBuffer<T>: Send + Sync {
     /// Get the size of the buffer in elements
     fn len(&self) -> usize;
-    
+
     /// Check if the buffer is empty
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    
+
     /// Copy data from host to device
     fn copy_from_host(&mut self, data: &[T]) -> LinalgResult<()>;
-    
+
     /// Copy data from device to host
     fn copy_to_host(&self, data: &mut [T]) -> LinalgResult<()>;
-    
+
     /// Get device pointer (platform-specific)
     fn device_ptr(&self) -> *mut std::ffi::c_void;
 }
@@ -76,16 +76,19 @@ pub trait GpuBuffer<T>: Send + Sync {
 pub trait GpuContext: Send + Sync {
     /// Get device information
     fn device_info(&self) -> &GpuDeviceInfo;
-    
+
     /// Allocate buffer on GPU
-    fn allocate_buffer<T: Clone + Send + Sync>(&self, size: usize) -> LinalgResult<Box<dyn GpuBuffer<T>>>;
-    
+    fn allocate_buffer<T: Clone + Send + Sync>(
+        &self,
+        size: usize,
+    ) -> LinalgResult<Box<dyn GpuBuffer<T>>>;
+
     /// Synchronize all operations
     fn synchronize(&self) -> LinalgResult<()>;
-    
+
     /// Get available memory in bytes
     fn available_memory(&self) -> LinalgResult<usize>;
-    
+
     /// Get total memory in bytes
     fn total_memory(&self) -> usize {
         self.device_info().total_memory
@@ -104,7 +107,7 @@ where
         a: &ArrayView2<T>,
         x: &ArrayView1<T>,
     ) -> LinalgResult<Array1<T>>;
-    
+
     /// GPU matrix-matrix multiplication  
     fn gpu_matmul(
         &self,
@@ -112,7 +115,7 @@ where
         a: &ArrayView2<T>,
         b: &ArrayView2<T>,
     ) -> LinalgResult<Array2<T>>;
-    
+
     /// GPU vector dot product
     fn gpu_dot(
         &self,
@@ -120,14 +123,10 @@ where
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
     ) -> LinalgResult<T>;
-    
+
     /// GPU vector norm computation
-    fn gpu_norm(
-        &self,
-        ctx: &dyn GpuContext,
-        x: &ArrayView1<T>,
-    ) -> LinalgResult<T>;
-    
+    fn gpu_norm(&self, ctx: &dyn GpuContext, x: &ArrayView1<T>) -> LinalgResult<T>;
+
     /// GPU element-wise operations
     fn gpu_elementwise_add(
         &self,
@@ -135,7 +134,7 @@ where
         a: &ArrayView2<T>,
         b: &ArrayView2<T>,
     ) -> LinalgResult<Array2<T>>;
-    
+
     /// GPU element-wise multiplication
     fn gpu_elementwise_mul(
         &self,
@@ -149,16 +148,16 @@ where
 pub trait GpuBackend: Send + Sync {
     /// Get backend name
     fn name(&self) -> &str;
-    
+
     /// Check if backend is available
     fn is_available(&self) -> bool;
-    
+
     /// List available devices
     fn list_devices(&self) -> LinalgResult<Vec<GpuDeviceInfo>>;
-    
+
     /// Create context for specified device
     fn create_context(&self, device_id: usize) -> LinalgResult<Box<dyn GpuContext>>;
-    
+
     /// Create context for best available device
     fn create_best_context(&self) -> LinalgResult<Box<dyn GpuContext>> {
         let devices = self.list_devices()?;
@@ -167,7 +166,7 @@ pub trait GpuBackend: Send + Sync {
                 "No GPU devices available".to_string(),
             ));
         }
-        
+
         // Find device with most memory as a simple heuristic
         let best_device = devices
             .iter()
@@ -175,7 +174,7 @@ pub trait GpuBackend: Send + Sync {
             .max_by_key(|(_, device)| device.total_memory)
             .map(|(idx, _)| idx)
             .unwrap();
-            
+
         self.create_context(best_device)
     }
 }
@@ -193,19 +192,19 @@ impl GpuManager {
             backends: Vec::new(),
         }
     }
-    
+
     /// Register a GPU backend
     pub fn register_backend(&mut self, backend: Box<dyn GpuBackend>) {
         if backend.is_available() {
             self.backends.push(backend);
         }
     }
-    
+
     /// Get all available backends
     pub fn available_backends(&self) -> &[Box<dyn GpuBackend>] {
         &self.backends
     }
-    
+
     /// Get backend by name
     pub fn get_backend(&self, name: &str) -> Option<&dyn GpuBackend> {
         self.backends
@@ -213,7 +212,7 @@ impl GpuManager {
             .find(|backend| backend.name() == name)
             .map(|b| b.as_ref())
     }
-    
+
     /// Create context using the best available backend
     pub fn create_best_context(&self) -> LinalgResult<Box<dyn GpuContext>> {
         if self.backends.is_empty() {
@@ -221,28 +220,28 @@ impl GpuManager {
                 "No GPU backends available".to_string(),
             ));
         }
-        
+
         // Try backends in order of preference
         for backend in &self.backends {
             if let Ok(context) = backend.create_best_context() {
                 return Ok(context);
             }
         }
-        
+
         Err(LinalgError::ComputationError(
             "Failed to create GPU context with any backend".to_string(),
         ))
     }
-    
+
     /// List all available devices across all backends
     pub fn list_all_devices(&self) -> LinalgResult<Vec<(String, Vec<GpuDeviceInfo>)>> {
         let mut all_devices = Vec::new();
-        
+
         for backend in &self.backends {
             let devices = backend.list_devices()?;
             all_devices.push((backend.name().to_string(), devices));
         }
-        
+
         Ok(all_devices)
     }
 }
@@ -250,7 +249,7 @@ impl GpuManager {
 /// Initialize GPU manager with all available backends
 pub fn initialize_gpu_manager() -> LinalgResult<GpuManager> {
     let mut manager = GpuManager::new();
-    
+
     // Register CUDA backend if available
     #[cfg(feature = "cuda")]
     {
@@ -258,7 +257,7 @@ pub fn initialize_gpu_manager() -> LinalgResult<GpuManager> {
             manager.register_backend(Box::new(cuda_backend));
         }
     }
-    
+
     // Register OpenCL backend if available
     #[cfg(feature = "opencl")]
     {
@@ -266,7 +265,7 @@ pub fn initialize_gpu_manager() -> LinalgResult<GpuManager> {
             manager.register_backend(Box::new(opencl_backend));
         }
     }
-    
+
     // Register ROCm backend if available
     #[cfg(feature = "rocm")]
     {
@@ -274,7 +273,7 @@ pub fn initialize_gpu_manager() -> LinalgResult<GpuManager> {
             manager.register_backend(Box::new(rocm_backend));
         }
     }
-    
+
     // Register Metal backend if available
     #[cfg(feature = "metal")]
     {
@@ -282,7 +281,7 @@ pub fn initialize_gpu_manager() -> LinalgResult<GpuManager> {
             manager.register_backend(Box::new(metal_backend));
         }
     }
-    
+
     Ok(manager)
 }
 
@@ -308,7 +307,7 @@ where
         x: &ArrayView1<T>,
         gpu_context: Option<&dyn GpuContext>,
     ) -> LinalgResult<Array1<T>>;
-    
+
     /// Automatically choose the best implementation for matrix-matrix multiplication
     fn auto_matmul(
         &self,
@@ -336,10 +335,10 @@ mod tests {
     fn test_should_use_gpu_threshold() {
         // Below threshold should not use GPU
         assert!(!should_use_gpu(100, 1000, None));
-        
+
         // Above threshold but no GPU context
         assert!(!should_use_gpu(2000, 1000, None));
-        
+
         // Would use GPU if context was available
         // (We can't test with actual context without GPU backends)
     }

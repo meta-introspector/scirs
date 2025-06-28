@@ -4,7 +4,7 @@
 //! that use memory-efficient sparse matrix representations.
 
 use crate::error::{Result, TextError};
-use crate::sparse::{CsrMatrix, SparseVector, SparseMatrixBuilder};
+use crate::sparse::{CsrMatrix, SparseMatrixBuilder, SparseVector};
 use crate::tokenize::{Tokenizer, WordTokenizer};
 use crate::vocabulary::Vocabulary;
 use ndarray::Array1;
@@ -218,9 +218,10 @@ impl SparseTfidfVectorizer {
                     }
                 }
                 _ => {
-                    return Err(TextError::InvalidInput(
-                        format!("Unknown normalization type: {}", norm_type)
-                    ));
+                    return Err(TextError::InvalidInput(format!(
+                        "Unknown normalization type: {}",
+                        norm_type
+                    )));
                 }
             }
         }
@@ -272,9 +273,11 @@ impl Default for SparseTfidfVectorizer {
 /// Compute cosine similarity between sparse vectors
 pub fn sparse_cosine_similarity(v1: &SparseVector, v2: &SparseVector) -> Result<f64> {
     if v1.size() != v2.size() {
-        return Err(TextError::InvalidInput(
-            format!("Vector dimensions don't match: {} vs {}", v1.size(), v2.size())
-        ));
+        return Err(TextError::InvalidInput(format!(
+            "Vector dimensions don't match: {} vs {}",
+            v1.size(),
+            v2.size()
+        )));
     }
 
     let dot = v1.dot_sparse(v2)?;
@@ -308,7 +311,7 @@ impl MemoryStats {
         let sparse_bytes = sparse.memory_usage();
         let total_elements = n_rows * n_cols;
         let nnz = sparse.nnz();
-        
+
         Self {
             sparse_bytes,
             dense_bytes,
@@ -324,8 +327,10 @@ impl MemoryStats {
         println!("  Dense representation: {} bytes", self.dense_bytes);
         println!("  Compression ratio: {:.2}x", self.compression_ratio);
         println!("  Sparsity: {:.1}%", self.sparsity * 100.0);
-        println!("  Memory saved: {:.1}%", 
-                (1.0 - 1.0 / self.compression_ratio) * 100.0);
+        println!(
+            "  Memory saved: {:.1}%",
+            (1.0 - 1.0 / self.compression_ratio) * 100.0
+        );
     }
 }
 
@@ -354,21 +359,17 @@ mod tests {
 
     #[test]
     fn test_sparse_tfidf_vectorizer() {
-        let texts = vec![
-            "the quick brown fox",
-            "the lazy dog",
-            "brown fox jumps",
-        ];
+        let texts = vec!["the quick brown fox", "the lazy dog", "brown fox jumps"];
 
         let mut vectorizer = SparseTfidfVectorizer::new();
         let sparse_matrix = vectorizer.fit_transform(&texts).unwrap();
 
         assert_eq!(sparse_matrix.shape().0, 3);
-        
+
         // Verify TF-IDF properties
         let first_doc = sparse_matrix.get_row(0).unwrap();
         assert!(first_doc.norm() > 0.0);
-        
+
         // With L2 normalization, the norm should be approximately 1
         assert!((first_doc.norm() - 1.0).abs() < 1e-6);
     }
@@ -388,7 +389,7 @@ mod tests {
         };
 
         let similarity = sparse_cosine_similarity(&v1, &v2).unwrap();
-        
+
         // Only index 2 overlaps with value 2.0 in both
         // v1 dot v2 = 2.0 * 2.0 = 4.0
         // |v1| = sqrt(1 + 4 + 9) = sqrt(14)
@@ -404,7 +405,7 @@ mod tests {
         let texts: Vec<String> = (0..100)
             .map(|i| format!("document {} contains word{}", i, i % 10))
             .collect();
-        
+
         let text_refs: Vec<&str> = texts.iter().map(|s| s.as_ref()).collect();
 
         let mut vectorizer = SparseCountVectorizer::new(false);

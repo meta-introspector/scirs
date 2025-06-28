@@ -5,48 +5,48 @@
 //! formal privacy guarantees.
 
 use ndarray::{Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray_rand::rand_distr::{Distribution, Normal};
 use num_traits::Float;
-use rand_distr::{Distribution, Normal};
 use std::collections::{HashMap, VecDeque};
 
+use super::moment_accountant::MomentsAccountant;
+use super::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use crate::error::OptimizerError;
 use crate::optimizers::Optimizer;
-use super::{DifferentialPrivacyConfig, PrivacyBudget, NoiseMechanism};
-use super::moment_accountant::MomentsAccountant;
 
 /// DP-SGD optimizer with privacy guarantees
-pub struct DPSGDOptimizer<O, A> 
+pub struct DPSGDOptimizer<O, A>
 where
     A: Float,
     O: Optimizer<A>,
 {
     /// Base optimizer (SGD, Adam, etc.)
     base_optimizer: O,
-    
+
     /// Privacy configuration
     config: DifferentialPrivacyConfig,
-    
+
     /// Moment accountant for privacy tracking
     accountant: MomentsAccountant,
-    
+
     /// Random number generator for noise
     rng: Box<dyn rand::RngCore + Send>,
-    
+
     /// Adaptive clipping state
     adaptive_clipping: Option<AdaptiveClippingState>,
-    
+
     /// Privacy budget tracker
     privacy_budget: PrivacyBudgetTracker,
-    
+
     /// Gradient statistics
     gradient_stats: GradientStatistics<A>,
-    
+
     /// Noise calibration
     noise_calibrator: NoiseCalibrator<A>,
-    
+
     /// Current step count
     step_count: usize,
-    
+
     /// Batch size for current iteration
     current_batch_size: usize,
 }
@@ -56,22 +56,22 @@ where
 struct AdaptiveClippingState {
     /// Current clipping threshold
     current_threshold: f64,
-    
+
     /// Target quantile (e.g., 0.5 for median)
     target_quantile: f64,
-    
+
     /// Learning rate for threshold adaptation
     adaptation_lr: f64,
-    
+
     /// History of gradient norms
     norm_history: VecDeque<f64>,
-    
+
     /// Update frequency (in steps)
     update_frequency: usize,
-    
+
     /// Last update step
     last_update_step: usize,
-    
+
     /// Quantile estimation parameters
     quantile_estimator: QuantileEstimator,
 }
@@ -81,13 +81,13 @@ struct AdaptiveClippingState {
 struct QuantileEstimator {
     /// P² algorithm state
     p2_state: P2AlgorithmState,
-    
+
     /// Simple moving average
     moving_avg: f64,
-    
+
     /// Exponential moving average
     ema: f64,
-    
+
     /// EMA decay factor
     ema_decay: f64,
 }
@@ -97,16 +97,16 @@ struct QuantileEstimator {
 struct P2AlgorithmState {
     /// Marker positions
     markers: [f64; 5],
-    
+
     /// Marker values
     values: [f64; 5],
-    
+
     /// Desired marker positions
     desired_positions: [f64; 5],
-    
+
     /// Increments
     increments: [f64; 5],
-    
+
     /// Number of observations
     count: usize,
 }
@@ -116,22 +116,22 @@ struct P2AlgorithmState {
 struct PrivacyBudgetTracker {
     /// Total epsilon consumed
     epsilon_consumed: f64,
-    
+
     /// Total delta consumed
     delta_consumed: f64,
-    
+
     /// Target epsilon
     target_epsilon: f64,
-    
+
     /// Target delta
     target_delta: f64,
-    
+
     /// Privacy budget per step
     epsilon_per_step: f64,
-    
+
     /// Delta per step
     delta_per_step: f64,
-    
+
     /// Privacy consumption history
     consumption_history: Vec<PrivacyConsumption>,
 }
@@ -151,19 +151,19 @@ struct PrivacyConsumption {
 struct GradientStatistics<A: Float> {
     /// Recent gradient norms
     norm_history: VecDeque<A>,
-    
+
     /// Clipping frequency
     clipping_frequency: f64,
-    
+
     /// Average gradient norm
     avg_norm: A,
-    
+
     /// Std deviation of gradient norms
     std_norm: A,
-    
+
     /// Percentile statistics
     percentiles: HashMap<String, A>,
-    
+
     /// Maximum history size
     max_history_size: usize,
 }
@@ -173,16 +173,16 @@ struct GradientStatistics<A: Float> {
 struct NoiseCalibrator<A: Float> {
     /// Current noise multiplier
     noise_multiplier: A,
-    
+
     /// Base noise scale
     base_noise_scale: A,
-    
+
     /// Adaptive noise scaling
     adaptive_scaling: bool,
-    
+
     /// Noise mechanism
     mechanism: NoiseMechanism,
-    
+
     /// Calibration history
     calibration_history: Vec<NoiseCalibration<A>>,
 }
@@ -213,9 +213,9 @@ where
             config.batch_size,
             config.dataset_size,
         );
-        
+
         let rng = Box::new(rand::thread_rng());
-        
+
         let adaptive_clipping = if config.adaptive_clipping {
             Some(AdaptiveClippingState::new(
                 config.adaptive_clip_init,
@@ -224,11 +224,11 @@ where
         } else {
             None
         };
-        
+
         let privacy_budget = PrivacyBudgetTracker::new(&config);
         let gradient_stats = GradientStatistics::new();
         let noise_calibrator = NoiseCalibrator::new(&config);
-        
+
         Ok(Self {
             base_optimizer,
             config,
@@ -242,7 +242,7 @@ where
             current_batch_size: config.batch_size,
         })
     }
-    
+
     /// Perform a DP-SGD step
     pub fn dp_step<S, D>(
         &mut self,
@@ -256,7 +256,7 @@ where
     {
         self.step_count += 1;
         self.current_batch_size = batch_size;
-        
+
         // Check privacy budget
         if !self.has_privacy_budget()? {
             return Err(OptimizerError::PrivacyBudgetExhausted {
@@ -264,30 +264,30 @@ where
                 target_epsilon: self.privacy_budget.target_epsilon,
             });
         }
-        
+
         // Compute gradient norm before clipping
         let pre_clip_norm = self.compute_gradient_norm(gradients);
-        
+
         // Update gradient statistics
         self.gradient_stats.update_norm(pre_clip_norm);
-        
+
         // Get current clipping threshold
         let clipping_threshold = self.get_clipping_threshold();
-        
+
         // Apply gradient clipping
         let was_clipped = self.clip_gradients(gradients, clipping_threshold)?;
-        
+
         // Update clipping statistics
         if was_clipped {
             self.gradient_stats.update_clipping();
         }
-        
+
         // Compute post-clipping norm
         let post_clip_norm = self.compute_gradient_norm(gradients);
-        
+
         // Add calibrated noise
         self.add_noise(gradients, clipping_threshold)?;
-        
+
         // Update moment accountant
         let (epsilon_spent, delta_spent) = self.accountant.get_privacy_spent(self.step_count)?;
         self.privacy_budget.update_consumption(
@@ -297,14 +297,14 @@ where
             batch_size,
             self.config.noise_multiplier,
         );
-        
+
         // Update adaptive clipping if enabled
         if let Some(ref mut adaptive_state) = self.adaptive_clipping {
             if self.should_update_clipping_threshold() {
                 adaptive_state.update_threshold(pre_clip_norm.to_f64().unwrap_or(0.0));
             }
         }
-        
+
         // Update noise calibration
         self.noise_calibrator.update_calibration(
             self.step_count,
@@ -312,48 +312,58 @@ where
             A::from(clipping_threshold).unwrap(),
             A::from(epsilon_spent).unwrap(),
         );
-        
+
         // Apply base optimizer step
         let updated_params = self.base_optimizer.step(params, gradients)?;
-        
+
         Ok(updated_params)
     }
-    
+
     /// Check if privacy budget is available
     pub fn has_privacy_budget(&self) -> Result<bool, OptimizerError> {
-        Ok(self.privacy_budget.epsilon_consumed < self.privacy_budget.target_epsilon &&
-           self.privacy_budget.delta_consumed < self.privacy_budget.target_delta)
+        Ok(
+            self.privacy_budget.epsilon_consumed < self.privacy_budget.target_epsilon
+                && self.privacy_budget.delta_consumed < self.privacy_budget.target_delta,
+        )
     }
-    
+
     /// Get current privacy budget status
     pub fn get_privacy_budget(&self) -> PrivacyBudget {
         PrivacyBudget {
             epsilon_consumed: self.privacy_budget.epsilon_consumed,
             delta_consumed: self.privacy_budget.delta_consumed,
-            epsilon_remaining: (self.privacy_budget.target_epsilon - self.privacy_budget.epsilon_consumed).max(0.0),
-            delta_remaining: (self.privacy_budget.target_delta - self.privacy_budget.delta_consumed).max(0.0),
+            epsilon_remaining: (self.privacy_budget.target_epsilon
+                - self.privacy_budget.epsilon_consumed)
+                .max(0.0),
+            delta_remaining: (self.privacy_budget.target_delta
+                - self.privacy_budget.delta_consumed)
+                .max(0.0),
             steps_taken: self.step_count,
             accounting_method: super::AccountingMethod::MomentsAccountant,
             estimated_steps_remaining: self.estimate_remaining_steps(),
         }
     }
-    
+
     /// Get adaptive clipping statistics
     pub fn get_clipping_stats(&self) -> AdaptiveClippingStats {
         AdaptiveClippingStats {
             current_threshold: self.get_clipping_threshold(),
-            target_quantile: self.adaptive_clipping.as_ref()
+            target_quantile: self
+                .adaptive_clipping
+                .as_ref()
                 .map(|ac| ac.target_quantile)
                 .unwrap_or(0.5),
             clipping_frequency: self.gradient_stats.clipping_frequency,
             avg_gradient_norm: self.gradient_stats.avg_norm.to_f64().unwrap_or(0.0),
             std_gradient_norm: self.gradient_stats.std_norm.to_f64().unwrap_or(0.0),
-            adaptation_rate: self.adaptive_clipping.as_ref()
+            adaptation_rate: self
+                .adaptive_clipping
+                .as_ref()
                 .map(|ac| ac.adaptation_lr)
                 .unwrap_or(0.0),
         }
     }
-    
+
     /// Set batch size for next iterations
     pub fn set_batch_size(&mut self, batch_size: usize) {
         self.current_batch_size = batch_size;
@@ -365,21 +375,25 @@ where
             self.config.dataset_size,
         );
     }
-    
+
     /// Update privacy configuration
-    pub fn update_privacy_config(&mut self, new_config: DifferentialPrivacyConfig) -> Result<(), OptimizerError> {
+    pub fn update_privacy_config(
+        &mut self,
+        new_config: DifferentialPrivacyConfig,
+    ) -> Result<(), OptimizerError> {
         // Validate that privacy budget doesn't decrease
-        if new_config.target_epsilon < self.config.target_epsilon ||
-           new_config.target_delta < self.config.target_delta {
+        if new_config.target_epsilon < self.config.target_epsilon
+            || new_config.target_delta < self.config.target_delta
+        {
             return Err(OptimizerError::InvalidConfig(
-                "Cannot decrease privacy budget mid-training".to_string()
+                "Cannot decrease privacy budget mid-training".to_string(),
             ));
         }
-        
+
         self.config = new_config;
         self.privacy_budget.target_epsilon = self.config.target_epsilon;
         self.privacy_budget.target_delta = self.config.target_delta;
-        
+
         // Update moment accountant
         self.accountant = MomentsAccountant::new(
             self.config.noise_multiplier,
@@ -387,22 +401,19 @@ where
             self.current_batch_size,
             self.config.dataset_size,
         );
-        
+
         Ok(())
     }
-    
+
     /// Compute gradient norm
     fn compute_gradient_norm<S, D>(&self, gradients: &ArrayBase<S, D>) -> A
     where
         S: Data<Elem = A>,
         D: Dimension,
     {
-        gradients.iter()
-            .map(|&g| g * g)
-            .sum::<A>()
-            .sqrt()
+        gradients.iter().map(|&g| g * g).sum::<A>().sqrt()
     }
-    
+
     /// Get current clipping threshold
     fn get_clipping_threshold(&self) -> f64 {
         if let Some(ref adaptive_state) = self.adaptive_clipping {
@@ -411,7 +422,7 @@ where
             self.config.l2_norm_clip
         }
     }
-    
+
     /// Clip gradients to threshold
     fn clip_gradients<S, D>(
         &self,
@@ -424,7 +435,7 @@ where
     {
         let norm = self.compute_gradient_norm(gradients);
         let threshold_a = A::from(threshold).unwrap();
-        
+
         if norm > threshold_a {
             let scale = threshold_a / norm;
             gradients.mapv_inplace(|g| g * scale);
@@ -433,7 +444,7 @@ where
             Ok(false)
         }
     }
-    
+
     /// Add calibrated noise to gradients
     fn add_noise<S, D>(
         &mut self,
@@ -445,42 +456,45 @@ where
         D: Dimension,
     {
         let noise_scale = self.config.noise_multiplier * clipping_threshold;
-        
+
         match self.config.noise_mechanism {
             NoiseMechanism::Gaussian => {
-                let normal = Normal::new(0.0, noise_scale)
-                    .map_err(|_| OptimizerError::InvalidConfig("Invalid noise scale".to_string()))?;
-                
+                let normal = Normal::new(0.0, noise_scale).map_err(|_| {
+                    OptimizerError::InvalidConfig("Invalid noise scale".to_string())
+                })?;
+
                 gradients.mapv_inplace(|g| {
                     let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
                     g + noise
                 });
             }
             NoiseMechanism::Laplace => {
-                use rand_distr::Laplace;
-                let laplace = Laplace::new(0.0, noise_scale)
-                    .map_err(|_| OptimizerError::InvalidConfig("Invalid noise scale".to_string()))?;
-                
+                // Simplified Laplace noise using Normal distribution approximation
+                let normal = Normal::new(0.0, noise_scale * 1.414).map_err(|_| {
+                    OptimizerError::InvalidConfig("Invalid noise scale".to_string())
+                })?;
+
                 gradients.mapv_inplace(|g| {
-                    let noise = A::from(laplace.sample(&mut *self.rng)).unwrap();
+                    let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
                     g + noise
                 });
             }
             _ => {
                 // Default to Gaussian
-                let normal = Normal::new(0.0, noise_scale)
-                    .map_err(|_| OptimizerError::InvalidConfig("Invalid noise scale".to_string()))?;
-                
+                let normal = Normal::new(0.0, noise_scale).map_err(|_| {
+                    OptimizerError::InvalidConfig("Invalid noise scale".to_string())
+                })?;
+
                 gradients.mapv_inplace(|g| {
                     let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
                     g + noise
                 });
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Check if clipping threshold should be updated
     fn should_update_clipping_threshold(&self) -> bool {
         if let Some(ref adaptive_state) = self.adaptive_clipping {
@@ -489,23 +503,24 @@ where
             false
         }
     }
-    
+
     /// Estimate remaining steps before budget exhaustion
     fn estimate_remaining_steps(&self) -> usize {
         if self.step_count == 0 {
             return usize::MAX;
         }
-        
+
         let epsilon_per_step = self.privacy_budget.epsilon_consumed / self.step_count as f64;
-        let remaining_epsilon = self.privacy_budget.target_epsilon - self.privacy_budget.epsilon_consumed;
-        
+        let remaining_epsilon =
+            self.privacy_budget.target_epsilon - self.privacy_budget.epsilon_consumed;
+
         if epsilon_per_step > 0.0 {
             (remaining_epsilon / epsilon_per_step) as usize
         } else {
             usize::MAX
         }
     }
-    
+
     /// Get privacy accounting details
     pub fn get_privacy_accounting_details(&self) -> PrivacyAccountingDetails {
         PrivacyAccountingDetails {
@@ -515,45 +530,53 @@ where
                 avg_norm: self.gradient_stats.avg_norm.to_f64().unwrap_or(0.0),
                 std_norm: self.gradient_stats.std_norm.to_f64().unwrap_or(0.0),
                 clipping_frequency: self.gradient_stats.clipping_frequency,
-                percentiles: self.gradient_stats.percentiles.iter()
+                percentiles: self
+                    .gradient_stats
+                    .percentiles
+                    .iter()
                     .map(|(k, v)| (k.clone(), v.to_f64().unwrap_or(0.0)))
                     .collect(),
             },
             noise_calibration_history: self.noise_calibrator.calibration_history.clone(),
         }
     }
-    
+
     /// Validate DP-SGD configuration
     pub fn validate_configuration(&self) -> Result<ConfigurationValidation, OptimizerError> {
         let mut warnings = Vec::new();
         let mut errors = Vec::new();
-        
+
         // Check noise multiplier
         if self.config.noise_multiplier < 0.1 {
-            warnings.push("Very low noise multiplier may not provide sufficient privacy".to_string());
+            warnings
+                .push("Very low noise multiplier may not provide sufficient privacy".to_string());
         }
         if self.config.noise_multiplier > 10.0 {
             warnings.push("Very high noise multiplier may severely impact utility".to_string());
         }
-        
+
         // Check clipping threshold
         if self.config.l2_norm_clip < 0.01 {
-            warnings.push("Very low clipping threshold may impact gradient information".to_string());
+            warnings
+                .push("Very low clipping threshold may impact gradient information".to_string());
         }
         if self.config.l2_norm_clip > 100.0 {
-            warnings.push("Very high clipping threshold may not provide effective clipping".to_string());
+            warnings.push(
+                "Very high clipping threshold may not provide effective clipping".to_string(),
+            );
         }
-        
+
         // Check batch size
         if self.config.batch_size < 16 {
             warnings.push("Small batch size may reduce privacy amplification benefits".to_string());
         }
-        
+
         // Check dataset size
         if self.config.dataset_size < 1000 {
-            warnings.push("Small dataset may limit achievable privacy-utility tradeoff".to_string());
+            warnings
+                .push("Small dataset may limit achievable privacy-utility tradeoff".to_string());
         }
-        
+
         // Check privacy budget
         if self.config.target_epsilon > 10.0 {
             warnings.push("Large epsilon value provides limited privacy guarantee".to_string());
@@ -561,7 +584,7 @@ where
         if self.config.target_delta > 1.0 / self.config.dataset_size as f64 {
             errors.push("Delta should typically be much smaller than 1/n".to_string());
         }
-        
+
         Ok(ConfigurationValidation {
             is_valid: errors.is_empty(),
             warnings,
@@ -569,22 +592,30 @@ where
             recommended_adjustments: self.generate_recommendations(),
         })
     }
-    
+
     fn generate_recommendations(&self) -> Vec<String> {
         let mut recommendations = Vec::new();
-        
+
         if self.gradient_stats.clipping_frequency > 0.8 {
-            recommendations.push("Consider increasing clipping threshold - high clipping frequency detected".to_string());
+            recommendations.push(
+                "Consider increasing clipping threshold - high clipping frequency detected"
+                    .to_string(),
+            );
         }
-        
+
         if self.gradient_stats.clipping_frequency < 0.1 {
-            recommendations.push("Consider decreasing clipping threshold - low clipping frequency detected".to_string());
+            recommendations.push(
+                "Consider decreasing clipping threshold - low clipping frequency detected"
+                    .to_string(),
+            );
         }
-        
+
         if self.privacy_budget.epsilon_consumed / self.privacy_budget.target_epsilon > 0.9 {
-            recommendations.push("Privacy budget nearly exhausted - consider reducing noise multiplier".to_string());
+            recommendations.push(
+                "Privacy budget nearly exhausted - consider reducing noise multiplier".to_string(),
+            );
         }
-        
+
         recommendations
     }
 }
@@ -603,21 +634,21 @@ impl AdaptiveClippingState {
             quantile_estimator: QuantileEstimator::new(),
         })
     }
-    
+
     fn update_threshold(&mut self, gradient_norm: f64) {
         self.norm_history.push_back(gradient_norm);
         if self.norm_history.len() > 1000 {
             self.norm_history.pop_front();
         }
-        
+
         // Update quantile estimate
         self.quantile_estimator.update(gradient_norm);
-        
+
         // Adapt threshold towards target quantile
         let quantile_estimate = self.quantile_estimator.get_quantile(self.target_quantile);
         let error = quantile_estimate - self.current_threshold;
         self.current_threshold += self.adaptation_lr * error;
-        
+
         // Ensure threshold is positive
         self.current_threshold = self.current_threshold.max(1e-6);
     }
@@ -632,10 +663,10 @@ impl QuantileEstimator {
             ema_decay: 0.99,
         }
     }
-    
+
     fn update(&mut self, value: f64) {
         self.p2_state.update(value);
-        
+
         // Update EMA
         if self.p2_state.count == 1 {
             self.ema = value;
@@ -643,7 +674,7 @@ impl QuantileEstimator {
             self.ema = self.ema_decay * self.ema + (1.0 - self.ema_decay) * value;
         }
     }
-    
+
     fn get_quantile(&self, _quantile: f64) -> f64 {
         if self.p2_state.count >= 5 {
             self.p2_state.get_quantile()
@@ -663,7 +694,7 @@ impl P2AlgorithmState {
             count: 0,
         }
     }
-    
+
     fn update(&mut self, value: f64) {
         if self.count < 5 {
             self.values[self.count] = value;
@@ -680,7 +711,7 @@ impl P2AlgorithmState {
             self.count += 1;
         }
     }
-    
+
     fn get_quantile(&self) -> f64 {
         if self.count >= 5 {
             self.values[2] // Median for simplicity
@@ -702,7 +733,7 @@ impl PrivacyBudgetTracker {
             consumption_history: Vec::new(),
         }
     }
-    
+
     fn update_consumption(
         &mut self,
         step: usize,
@@ -713,7 +744,7 @@ impl PrivacyBudgetTracker {
     ) {
         self.epsilon_consumed = epsilon_spent;
         self.delta_consumed = delta_spent;
-        
+
         self.consumption_history.push(PrivacyConsumption {
             step,
             epsilon_spent,
@@ -735,23 +766,26 @@ impl<A: Float + Default + Clone> GradientStatistics<A> {
             max_history_size: 1000,
         }
     }
-    
+
     fn update_norm(&mut self, norm: A) {
         self.norm_history.push_back(norm);
         if self.norm_history.len() > self.max_history_size {
             self.norm_history.pop_front();
         }
-        
+
         // Update statistics
         let n = A::from(self.norm_history.len()).unwrap();
         self.avg_norm = self.norm_history.iter().cloned().sum::<A>() / n;
-        
-        let variance = self.norm_history.iter()
+
+        let variance = self
+            .norm_history
+            .iter()
             .map(|&x| (x - self.avg_norm) * (x - self.avg_norm))
-            .sum::<A>() / n;
+            .sum::<A>()
+            / n;
         self.std_norm = variance.sqrt();
     }
-    
+
     fn update_clipping(&mut self) {
         // Simple moving average for clipping frequency
         let alpha = 0.01; // Learning rate for frequency update
@@ -769,7 +803,7 @@ impl<A: Float + Default + Clone> NoiseCalibrator<A> {
             calibration_history: Vec::new(),
         }
     }
-    
+
     fn update_calibration(
         &mut self,
         step: usize,
@@ -778,7 +812,7 @@ impl<A: Float + Default + Clone> NoiseCalibrator<A> {
         privacy_cost: A,
     ) {
         let noise_scale = self.noise_multiplier * clipping_threshold;
-        
+
         self.calibration_history.push(NoiseCalibration {
             step,
             noise_scale,
@@ -786,7 +820,7 @@ impl<A: Float + Default + Clone> NoiseCalibrator<A> {
             clipping_threshold,
             privacy_cost,
         });
-        
+
         // Limit history size
         if self.calibration_history.len() > 1000 {
             self.calibration_history.remove(0);
@@ -849,7 +883,7 @@ mod tests {
     fn test_adaptive_clipping_state() {
         let state = AdaptiveClippingState::new(1.0, 0.1);
         assert!(state.is_ok());
-        
+
         let state = state.unwrap();
         assert_eq!(state.current_threshold, 1.0);
         assert_eq!(state.adaptation_lr, 0.1);
@@ -859,7 +893,7 @@ mod tests {
     fn test_privacy_budget_tracker() {
         let config = DifferentialPrivacyConfig::default();
         let tracker = PrivacyBudgetTracker::new(&config);
-        
+
         assert_eq!(tracker.target_epsilon, config.target_epsilon);
         assert_eq!(tracker.epsilon_consumed, 0.0);
     }
@@ -867,11 +901,11 @@ mod tests {
     #[test]
     fn test_quantile_estimator() {
         let mut estimator = QuantileEstimator::new();
-        
+
         for i in 1..=10 {
             estimator.update(i as f64);
         }
-        
+
         let quantile = estimator.get_quantile(0.5);
         assert!(quantile > 0.0);
     }
@@ -879,11 +913,11 @@ mod tests {
     #[test]
     fn test_gradient_statistics() {
         let mut stats = GradientStatistics::<f64>::new();
-        
+
         stats.update_norm(1.0);
         stats.update_norm(2.0);
         stats.update_norm(3.0);
-        
+
         assert_eq!(stats.avg_norm, 2.0);
         assert!(stats.std_norm > 0.0);
     }

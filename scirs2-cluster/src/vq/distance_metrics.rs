@@ -289,9 +289,7 @@ where
 }
 
 /// Compute the covariance matrix of the given data
-fn compute_covariance_matrix<F>(
-    data: ArrayView2<F>,
-) -> Result<Array2<F>>
+fn compute_covariance_matrix<F>(data: ArrayView2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand,
 {

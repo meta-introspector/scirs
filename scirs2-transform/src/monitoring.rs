@@ -6,6 +6,7 @@
 
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -84,10 +85,10 @@ impl Default for AlertConfig {
     fn default() -> Self {
         AlertConfig {
             drift_threshold: 0.05,
-            performance_threshold: 2.0, // 2x baseline
-            error_rate_threshold: 0.05, // 5%
+            performance_threshold: 2.0,  // 2x baseline
+            error_rate_threshold: 0.05,  // 5%
             memory_threshold_mb: 1000.0, // 1GB
-            cooldown_seconds: 300, // 5 minutes
+            cooldown_seconds: 300,       // 5 minutes
         }
     }
 }
@@ -143,21 +144,40 @@ impl TransformationMonitor {
     pub fn new() -> Result<Self> {
         #[cfg(feature = "monitoring")]
         let metrics_registry = Registry::new();
-        
+
         #[cfg(feature = "monitoring")]
         let prometheus_metrics = PrometheusMetrics {
-            drift_detections: Counter::new("transform_drift_detections_total", "Total number of drift detections")
-                .map_err(|e| TransformError::ComputationError(format!("Failed to create counter: {}", e)))?,
-            processing_time: Histogram::new("transform_processing_time_seconds", "Processing time in seconds")
-                .map_err(|e| TransformError::ComputationError(format!("Failed to create histogram: {}", e)))?,
-            memory_usage: Gauge::new("transform_memory_usage_mb", "Memory usage in MB")
-                .map_err(|e| TransformError::ComputationError(format!("Failed to create gauge: {}", e)))?,
-            error_rate: Gauge::new("transform_error_rate", "Error rate")
-                .map_err(|e| TransformError::ComputationError(format!("Failed to create gauge: {}", e)))?,
-            throughput: Gauge::new("transform_throughput_samples_per_second", "Throughput in samples per second")
-                .map_err(|e| TransformError::ComputationError(format!("Failed to create gauge: {}", e)))?,
+            drift_detections: Counter::new(
+                "transform_drift_detections_total",
+                "Total number of drift detections",
+            )
+            .map_err(|e| {
+                TransformError::ComputationError(format!("Failed to create counter: {}", e))
+            })?,
+            processing_time: Histogram::new(
+                "transform_processing_time_seconds",
+                "Processing time in seconds",
+            )
+            .map_err(|e| {
+                TransformError::ComputationError(format!("Failed to create histogram: {}", e))
+            })?,
+            memory_usage: Gauge::new("transform_memory_usage_mb", "Memory usage in MB").map_err(
+                |e| TransformError::ComputationError(format!("Failed to create gauge: {}", e)),
+            )?,
+            error_rate: Gauge::new("transform_error_rate", "Error rate").map_err(|e| {
+                TransformError::ComputationError(format!("Failed to create gauge: {}", e))
+            })?,
+            throughput: Gauge::new(
+                "transform_throughput_samples_per_second",
+                "Throughput in samples per second",
+            )
+            .map_err(|e| {
+                TransformError::ComputationError(format!("Failed to create gauge: {}", e))
+            })?,
             data_quality: Gauge::new("transform_data_quality_score", "Data quality score")
-                .map_err(|e| TransformError::ComputationError(format!("Failed to create gauge: {}", e)))?,
+                .map_err(|e| {
+                    TransformError::ComputationError(format!("Failed to create gauge: {}", e))
+                })?,
         };
 
         #[cfg(feature = "monitoring")]
@@ -187,9 +207,13 @@ impl TransformationMonitor {
     }
 
     /// Set reference data for drift detection
-    pub fn set_reference_data(&mut self, data: Array2<f64>, feature_names: Option<Vec<String>>) -> Result<()> {
+    pub fn set_reference_data(
+        &mut self,
+        data: Array2<f64>,
+        feature_names: Option<Vec<String>>,
+    ) -> Result<()> {
         self.reference_data = Some(data.clone());
-        
+
         if let Some(names) = feature_names {
             if names.len() != data.ncols() {
                 return Err(TransformError::InvalidInput(
@@ -205,10 +229,8 @@ impl TransformationMonitor {
 
         // Set default drift detection methods
         for feature_name in &self.feature_names {
-            self.drift_methods.insert(
-                feature_name.clone(),
-                DriftMethod::KolmogorovSmirnov,
-            );
+            self.drift_methods
+                .insert(feature_name.clone(), DriftMethod::KolmogorovSmirnov);
         }
 
         Ok(())
@@ -217,9 +239,10 @@ impl TransformationMonitor {
     /// Configure drift detection method for a specific feature
     pub fn set_drift_method(&mut self, feature_name: &str, method: DriftMethod) -> Result<()> {
         if !self.feature_names.contains(&feature_name.to_string()) {
-            return Err(TransformError::InvalidInput(
-                format!("Unknown feature name: {}", feature_name),
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Unknown feature name: {}",
+                feature_name
+            )));
         }
 
         self.drift_methods.insert(feature_name.to_string(), method);
@@ -237,8 +260,13 @@ impl TransformationMonitor {
     }
 
     /// Detect data drift in new data
-    pub fn detect_drift(&mut self, new_data: &ArrayView2<f64>) -> Result<Vec<DriftDetectionResult>> {
-        let reference_data = self.reference_data.as_ref()
+    pub fn detect_drift(
+        &mut self,
+        new_data: &ArrayView2<f64>,
+    ) -> Result<Vec<DriftDetectionResult>> {
+        let reference_data = self
+            .reference_data
+            .as_ref()
             .ok_or_else(|| TransformError::InvalidInput("Reference data not set".to_string()))?;
 
         if new_data.ncols() != reference_data.ncols() {
@@ -251,7 +279,9 @@ impl TransformationMonitor {
         let timestamp = current_timestamp();
 
         for (i, feature_name) in self.feature_names.iter().enumerate() {
-            let method = self.drift_methods.get(feature_name)
+            let method = self
+                .drift_methods
+                .get(feature_name)
                 .unwrap_or(&DriftMethod::KolmogorovSmirnov);
 
             let reference_feature = reference_data.column(i);
@@ -278,7 +308,9 @@ impl TransformationMonitor {
         #[cfg(feature = "monitoring")]
         {
             let drift_count = results.iter().filter(|r| r.is_drift_detected).count();
-            self.prometheus_metrics.drift_detections.inc_by(drift_count as u64);
+            self.prometheus_metrics
+                .drift_detections
+                .inc_by(drift_count as u64);
         }
 
         Ok(results)
@@ -296,12 +328,17 @@ impl TransformationMonitor {
         // Update Prometheus metrics
         #[cfg(feature = "monitoring")]
         {
-            self.prometheus_metrics.processing_time
+            self.prometheus_metrics
+                .processing_time
                 .observe(metrics.processing_time_ms / 1000.0);
-            self.prometheus_metrics.memory_usage.set(metrics.memory_usage_mb);
+            self.prometheus_metrics
+                .memory_usage
+                .set(metrics.memory_usage_mb);
             self.prometheus_metrics.error_rate.set(metrics.error_rate);
             self.prometheus_metrics.throughput.set(metrics.throughput);
-            self.prometheus_metrics.data_quality.set(metrics.data_quality_score);
+            self.prometheus_metrics
+                .data_quality
+                .set(metrics.data_quality_score);
         }
 
         // Check for alerts
@@ -314,16 +351,20 @@ impl TransformationMonitor {
         let mut summary = HashMap::new();
 
         for feature_name in &self.feature_names {
-            let recent_detections: Vec<_> = self.drift_history.iter()
+            let recent_detections: Vec<_> = self
+                .drift_history
+                .iter()
                 .filter(|r| r.timestamp >= cutoff_time && r.feature_name == *feature_name)
                 .collect();
 
             let drift_rate = if recent_detections.is_empty() {
                 0.0
             } else {
-                recent_detections.iter()
+                recent_detections
+                    .iter()
                     .filter(|r| r.is_drift_detected)
-                    .count() as f64 / recent_detections.len() as f64
+                    .count() as f64
+                    / recent_detections.len() as f64
             };
 
             summary.insert(feature_name.clone(), drift_rate);
@@ -335,7 +376,9 @@ impl TransformationMonitor {
     /// Get performance trends
     pub fn get_performance_trends(&self, lookback_hours: u64) -> Result<HashMap<String, f64>> {
         let cutoff_time = current_timestamp() - (lookback_hours * 3600);
-        let recent_metrics: Vec<_> = self.performance_history.iter()
+        let recent_metrics: Vec<_> = self
+            .performance_history
+            .iter()
             .filter(|m| m.timestamp >= cutoff_time)
             .collect();
 
@@ -379,24 +422,32 @@ impl TransformationMonitor {
         method: &DriftMethod,
         timestamp: u64,
     ) -> Result<DriftDetectionResult> {
+        check_not_empty(reference, "reference")?;
+        check_not_empty(new_data, "new_data")?;
+        check_finite(reference, "reference")?;
+        check_finite(new_data, "new_data")?;
+
         let (statistic, p_value, is_drift) = match method {
             DriftMethod::KolmogorovSmirnov => {
                 let (stat, p_val) = self.kolmogorov_smirnov_test(reference, new_data)?;
                 (stat, Some(p_val), p_val < self.alert_config.drift_threshold)
-            },
+            }
+            DriftMethod::ChiSquare => {
+                let (stat, p_val) = self.chi_square_test(reference, new_data)?;
+                (stat, Some(p_val), p_val < self.alert_config.drift_threshold)
+            }
             DriftMethod::PopulationStabilityIndex => {
                 let psi = self.population_stability_index(reference, new_data)?;
                 (psi, None, psi > 0.1) // PSI > 0.1 indicates drift
-            },
+            }
+            DriftMethod::MaximumMeanDiscrepancy => {
+                let mmd = self.maximum_mean_discrepancy(reference, new_data)?;
+                (mmd, None, mmd > self.alert_config.drift_threshold)
+            }
             DriftMethod::WassersteinDistance => {
                 let distance = self.wasserstein_distance(reference, new_data)?;
                 (distance, None, distance > self.alert_config.drift_threshold)
-            },
-            _ => {
-                // Fallback to KS test for other methods
-                let (stat, p_val) = self.kolmogorov_smirnov_test(reference, new_data)?;
-                (stat, Some(p_val), p_val < self.alert_config.drift_threshold)
-            },
+            }
         };
 
         let severity = if let Some(p_val) = p_value {
@@ -416,7 +467,11 @@ impl TransformationMonitor {
         })
     }
 
-    fn kolmogorov_smirnov_test(&self, x: &ArrayView1<f64>, y: &ArrayView1<f64>) -> Result<(f64, f64)> {
+    fn kolmogorov_smirnov_test(
+        &self,
+        x: &ArrayView1<f64>,
+        y: &ArrayView1<f64>,
+    ) -> Result<(f64, f64)> {
         // Simplified KS test implementation
         let mut x_sorted = x.to_vec();
         let mut y_sorted = y.to_vec();
@@ -450,11 +505,15 @@ impl TransformationMonitor {
         Ok((statistic, p_value.max(0.0).min(1.0)))
     }
 
-    fn population_stability_index(&self, reference: &ArrayView1<f64>, new_data: &ArrayView1<f64>) -> Result<f64> {
+    fn population_stability_index(
+        &self,
+        reference: &ArrayView1<f64>,
+        new_data: &ArrayView1<f64>,
+    ) -> Result<f64> {
         // Create bins based on reference data
         let mut ref_sorted = reference.to_vec();
         ref_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         let n_bins = 10;
         let mut bins = Vec::new();
         for i in 0..=n_bins {
@@ -472,7 +531,7 @@ impl TransformationMonitor {
         for i in 0..n_bins {
             let ref_pct = ref_freq[i];
             let new_pct = new_freq[i];
-            
+
             if ref_pct > 0.0 && new_pct > 0.0 {
                 psi += (new_pct - ref_pct) * (new_pct / ref_pct).ln();
             }
@@ -482,27 +541,63 @@ impl TransformationMonitor {
     }
 
     fn calculate_bin_frequencies(&self, data: &ArrayView1<f64>, bins: &[f64]) -> Vec<f64> {
+        if bins.len() < 2 {
+            return vec![];
+        }
+
         let mut frequencies = vec![0; bins.len() - 1];
-        
+
         for &value in data.iter() {
+            if !value.is_finite() {
+                continue;
+            }
+
+            // Find appropriate bin for this value
+            let mut placed = false;
             for i in 0..bins.len() - 1 {
-                if value >= bins[i] && value < bins[i + 1] {
+                if i == bins.len() - 2 {
+                    // Last bin includes upper bound
+                    if value >= bins[i] && value <= bins[i + 1] {
+                        frequencies[i] += 1;
+                        placed = true;
+                        break;
+                    }
+                } else if value >= bins[i] && value < bins[i + 1] {
                     frequencies[i] += 1;
+                    placed = true;
                     break;
+                }
+            }
+
+            // Handle values outside the range
+            if !placed {
+                if value < bins[0] {
+                    frequencies[0] += 1;
+                } else if value > bins[bins.len() - 1] {
+                    frequencies[frequencies.len() - 1] += 1;
                 }
             }
         }
 
-        let total = data.len() as f64;
-        frequencies.iter().map(|&f| f as f64 / total).collect()
+        let total = data.iter().filter(|&&v| v.is_finite()).count() as f64;
+        if total == 0.0 {
+            vec![0.0; frequencies.len()]
+        } else {
+            frequencies.iter().map(|&f| f as f64 / total).collect()
+        }
     }
 
     fn wasserstein_distance(&self, x: &ArrayView1<f64>, y: &ArrayView1<f64>) -> Result<f64> {
         // Simplified 1D Wasserstein distance (Earth Mover's Distance)
-        let mut x_sorted = x.to_vec();
-        let mut y_sorted = y.to_vec();
-        x_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        y_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let mut x_sorted: Vec<f64> = x.iter().filter(|&&v| v.is_finite()).copied().collect();
+        let mut y_sorted: Vec<f64> = y.iter().filter(|&&v| v.is_finite()).copied().collect();
+
+        if x_sorted.is_empty() || y_sorted.is_empty() {
+            return Ok(0.0);
+        }
+
+        x_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        y_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let n1 = x_sorted.len();
         let n2 = y_sorted.len();
@@ -510,12 +605,214 @@ impl TransformationMonitor {
 
         let mut distance = 0.0;
         for i in 0..max_len {
-            let x_val = if i < n1 { x_sorted[i] } else { x_sorted[n1 - 1] };
-            let y_val = if i < n2 { y_sorted[i] } else { y_sorted[n2 - 1] };
+            let x_val = if i < n1 {
+                x_sorted[i]
+            } else {
+                x_sorted[n1 - 1]
+            };
+            let y_val = if i < n2 {
+                y_sorted[i]
+            } else {
+                y_sorted[n2 - 1]
+            };
             distance += (x_val - y_val).abs();
         }
 
         Ok(distance / max_len as f64)
+    }
+
+    /// Chi-square test for categorical data drift detection
+    fn chi_square_test(
+        &self,
+        reference: &ArrayView1<f64>,
+        new_data: &ArrayView1<f64>,
+    ) -> Result<(f64, f64)> {
+        // For continuous data, we'll bin it first and then apply chi-square test
+        let n_bins = 10;
+
+        // Combine data to determine common bins
+        let mut combined_data: Vec<f64> = reference
+            .iter()
+            .chain(new_data.iter())
+            .filter(|&&v| v.is_finite())
+            .copied()
+            .collect();
+
+        if combined_data.len() < n_bins {
+            return Ok((0.0, 1.0)); // Not enough data for meaningful test
+        }
+
+        combined_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Create bins based on quantiles
+        let mut bins = Vec::new();
+        for i in 0..=n_bins {
+            let percentile = i as f64 / n_bins as f64;
+            let index = ((combined_data.len() - 1) as f64 * percentile) as usize;
+            bins.push(combined_data[index]);
+        }
+
+        // Remove duplicate bin edges
+        bins.dedup_by(|a, b| (a - b).abs() < f64::EPSILON);
+
+        if bins.len() < 2 {
+            return Ok((0.0, 1.0));
+        }
+
+        let ref_freq = self.calculate_bin_frequencies(reference, &bins);
+        let new_freq = self.calculate_bin_frequencies(new_data, &bins);
+
+        let ref_total = reference.iter().filter(|&&v| v.is_finite()).count() as f64;
+        let new_total = new_data.iter().filter(|&&v| v.is_finite()).count() as f64;
+
+        if ref_total == 0.0 || new_total == 0.0 {
+            return Ok((0.0, 1.0));
+        }
+
+        // Calculate chi-square statistic
+        let mut chi_square = 0.0;
+        let mut degrees_of_freedom = 0;
+
+        for i in 0..ref_freq.len() {
+            let observed_ref = ref_freq[i] * ref_total;
+            let observed_new = new_freq[i] * new_total;
+
+            // Calculate expected frequencies under null hypothesis
+            let total_in_bin = observed_ref + observed_new;
+            let expected_ref_null = total_in_bin * ref_total / (ref_total + new_total);
+            let expected_new_null = total_in_bin * new_total / (ref_total + new_total);
+
+            if expected_ref_null > 5.0 && expected_new_null > 5.0 {
+                chi_square += (observed_ref - expected_ref_null).powi(2) / expected_ref_null;
+                chi_square += (observed_new - expected_new_null).powi(2) / expected_new_null;
+                degrees_of_freedom += 1;
+            }
+        }
+
+        // Approximate p-value using chi-square distribution
+        let p_value = if degrees_of_freedom > 0 {
+            self.chi_square_cdf_complement(chi_square, degrees_of_freedom as f64)
+        } else {
+            1.0
+        };
+
+        Ok((chi_square, p_value))
+    }
+
+    /// Maximum Mean Discrepancy (MMD) test for distribution comparison
+    fn maximum_mean_discrepancy(&self, x: &ArrayView1<f64>, y: &ArrayView1<f64>) -> Result<f64> {
+        let x_clean: Vec<f64> = x.iter().filter(|&&v| v.is_finite()).copied().collect();
+        let y_clean: Vec<f64> = y.iter().filter(|&&v| v.is_finite()).copied().collect();
+
+        if x_clean.is_empty() || y_clean.is_empty() {
+            return Ok(0.0);
+        }
+
+        let n = x_clean.len();
+        let m = y_clean.len();
+
+        // Use RBF kernel with adaptive bandwidth
+        let all_data: Vec<f64> = x_clean.iter().chain(y_clean.iter()).copied().collect();
+        let mut sorted_data = all_data;
+        sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Use median absolute deviation for bandwidth selection
+        let median = sorted_data[sorted_data.len() / 2];
+        let mad: f64 =
+            sorted_data.iter().map(|&x| (x - median).abs()).sum::<f64>() / sorted_data.len() as f64;
+        let bandwidth = mad.max(1.0); // Ensure reasonable bandwidth
+
+        // Calculate MMD^2 = E[k(X,X')] + E[k(Y,Y')] - 2*E[k(X,Y)]
+        let mut kxx = 0.0;
+        let mut kyy = 0.0;
+        let mut kxy = 0.0;
+
+        // E[k(X,X')] - sample without replacement
+        if n > 1 {
+            for i in 0..n {
+                for j in (i + 1)..n {
+                    kxx += self.rbf_kernel(x_clean[i], x_clean[j], bandwidth);
+                }
+            }
+            kxx = 2.0 * kxx / (n * (n - 1)) as f64;
+        }
+
+        // E[k(Y,Y')] - sample without replacement
+        if m > 1 {
+            for i in 0..m {
+                for j in (i + 1)..m {
+                    kyy += self.rbf_kernel(y_clean[i], y_clean[j], bandwidth);
+                }
+            }
+            kyy = 2.0 * kyy / (m * (m - 1)) as f64;
+        }
+
+        // E[k(X,Y)]
+        for i in 0..n {
+            for j in 0..m {
+                kxy += self.rbf_kernel(x_clean[i], y_clean[j], bandwidth);
+            }
+        }
+        kxy /= (n * m) as f64;
+
+        let mmd_squared = kxx + kyy - 2.0 * kxy;
+        Ok(mmd_squared.max(0.0).sqrt()) // Take square root and ensure non-negative
+    }
+
+    /// RBF (Gaussian) kernel function
+    fn rbf_kernel(&self, x: f64, y: f64, bandwidth: f64) -> f64 {
+        let diff = x - y;
+        (-diff * diff / (2.0 * bandwidth * bandwidth)).exp()
+    }
+
+    /// Complement of chi-square CDF (approximate)
+    fn chi_square_cdf_complement(&self, x: f64, df: f64) -> f64 {
+        if x <= 0.0 {
+            return 1.0;
+        }
+        if df <= 0.0 {
+            return 0.0;
+        }
+
+        // Simple approximation using gamma function properties
+        // For large df, chi-square approaches normal distribution
+        if df >= 30.0 {
+            let z = ((2.0 * x).sqrt() - (2.0 * df - 1.0).sqrt()).abs();
+            return 0.5 * (1.0 - self.erf(z / 2.0_f64.sqrt()));
+        }
+
+        // For smaller df, use a rough approximation
+        let ratio = x / df;
+        if ratio > 3.0 {
+            0.001 // Very small p-value
+        } else if ratio > 2.0 {
+            0.01
+        } else if ratio > 1.5 {
+            0.05
+        } else if ratio > 1.0 {
+            0.1
+        } else {
+            0.5
+        }
+    }
+
+    /// Error function approximation
+    fn erf(&self, x: f64) -> f64 {
+        // Abramowitz and Stegun approximation
+        let a1 = 0.254829592;
+        let a2 = -0.284496736;
+        let a3 = 1.421413741;
+        let a4 = -1.453152027;
+        let a5 = 1.061405429;
+        let p = 0.3275911;
+
+        let sign = if x >= 0.0 { 1.0 } else { -1.0 };
+        let x = x.abs();
+
+        let t = 1.0 / (1.0 + p * x);
+        let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * (-x * x).exp();
+
+        sign * y
     }
 
     fn check_performance_alerts(&mut self, metrics: &PerformanceMetrics) -> Result<Vec<AlertType>> {
@@ -563,7 +860,8 @@ impl TransformationMonitor {
         }
 
         if !alerts.is_empty() {
-            self.last_alert_times.insert(cooldown_key.to_string(), current_time);
+            self.last_alert_times
+                .insert(cooldown_key.to_string(), current_time);
         }
 
         Ok(alerts)
@@ -575,14 +873,15 @@ impl TransformationMonitor {
         use prometheus::Encoder;
         let encoder = prometheus::TextEncoder::new();
         let metric_families = self.metrics_registry.gather();
-        encoder.encode_to_string(&metric_families)
-            .map_err(|e| TransformError::ComputationError(format!("Failed to encode metrics: {}", e)))
+        encoder.encode_to_string(&metric_families).map_err(|e| {
+            TransformError::ComputationError(format!("Failed to encode metrics: {}", e))
+        })
     }
 }
 
 fn current_timestamp() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_else(|_| Duration::from_secs(0))
         .as_secs()
 }

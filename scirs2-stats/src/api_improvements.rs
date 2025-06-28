@@ -6,6 +6,7 @@ use crate::error::StatsResult;
 use crate::tests::ttest::Alternative;
 use ndarray::{ArrayBase, Data, Ix1};
 use num_traits::Float;
+use scirs2_core::validation::check_not_empty;
 
 /// Standard correlation result that includes both coefficient and p-value
 #[derive(Debug, Clone, Copy)]
@@ -52,9 +53,10 @@ impl CorrelationMethod {
             "pearson" => Ok(CorrelationMethod::Pearson),
             "spearman" => Ok(CorrelationMethod::Spearman),
             "kendall" | "kendall_tau" | "kendalltau" => Ok(CorrelationMethod::KendallTau),
-            _ => Err(crate::error::StatsError::InvalidArgument(
-                format!("Invalid correlation method: '{}'", s)
-            )),
+            _ => Err(crate::error::StatsError::InvalidArgument(format!(
+                "Invalid correlation method: '{}'",
+                s
+            ))),
         }
     }
 }
@@ -161,8 +163,18 @@ impl<F: Float> StatsBuilder<F> {
         }
     }
 
-    /// Set the data
-    pub fn data(mut self, data: Vec<F>) -> Self {
+    /// Set the data with validation
+    pub fn data(mut self, data: Vec<F>) -> StatsResult<Self> {
+        // Use scirs2-core validation
+        check_not_empty(&data, "data")
+            .map_err(|_| crate::error::StatsError::invalid_argument("Data cannot be empty"))?;
+
+        self.data = Some(data);
+        Ok(self)
+    }
+
+    /// Set data without validation (for performance-critical paths)
+    pub fn data_unchecked(mut self, data: Vec<F>) -> Self {
         self.data = Some(data);
         self
     }
@@ -183,6 +195,32 @@ impl<F: Float> StatsBuilder<F> {
     pub fn optimization(mut self, opt: OptimizationHint) -> Self {
         self.config.optimization = opt;
         self
+    }
+
+    /// Validate the current configuration
+    pub fn validate(&self) -> StatsResult<()> {
+        if self.data.is_none() {
+            return Err(crate::error::StatsError::invalid_argument(
+                "No data provided to builder",
+            ));
+        }
+
+        if let Some(ref data) = self.data {
+            check_not_empty(data, "data")
+                .map_err(|_| crate::error::StatsError::invalid_argument("Data cannot be empty"))?;
+        }
+
+        Ok(())
+    }
+
+    /// Get a reference to the data
+    pub fn get_data(&self) -> Option<&Vec<F>> {
+        self.data.as_ref()
+    }
+
+    /// Get the configuration
+    pub fn get_config(&self) -> &StatsConfig {
+        &self.config
     }
 }
 
@@ -238,9 +276,18 @@ mod tests {
 
     #[test]
     fn test_correlation_method_from_str() {
-        assert_eq!(CorrelationMethod::from_str("pearson").unwrap(), CorrelationMethod::Pearson);
-        assert_eq!(CorrelationMethod::from_str("spearman").unwrap(), CorrelationMethod::Spearman);
-        assert_eq!(CorrelationMethod::from_str("kendall").unwrap(), CorrelationMethod::KendallTau);
+        assert_eq!(
+            CorrelationMethod::from_str("pearson").unwrap(),
+            CorrelationMethod::Pearson
+        );
+        assert_eq!(
+            CorrelationMethod::from_str("spearman").unwrap(),
+            CorrelationMethod::Spearman
+        );
+        assert_eq!(
+            CorrelationMethod::from_str("kendall").unwrap(),
+            CorrelationMethod::KendallTau
+        );
         assert!(CorrelationMethod::from_str("invalid").is_err());
     }
 
@@ -249,7 +296,7 @@ mod tests {
         let config = StatsConfig::default()
             .with_p_value()
             .with_alternative(Alternative::Greater);
-        
+
         assert!(config.compute_p_value);
         assert_eq!(config.alternative, Alternative::Greater);
         assert_eq!(config.optimization, OptimizationHint::Auto);

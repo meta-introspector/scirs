@@ -61,7 +61,7 @@ fn generate_probability_distributions(n_samples: usize) -> (Array1<f64>, Array1<
     // Generate unnormalized weights
     let mut sum_p = 0.0;
     let mut sum_q = 0.0;
-    
+
     for i in 0..n_samples {
         p[i] = (i + 1) as f64;
         q[i] = ((i + 1) * 2) as f64;

@@ -3,10 +3,10 @@
 //! CCA finds linear combinations of two sets of variables that are maximally correlated.
 //! It's useful for understanding relationships between two multivariate datasets.
 
-use ndarray::{Array1, Array2, ArrayView2, Axis};
-use crate::error::{StatsResult as Result, StatsError};
-use crate::unified_error_handling::{global_error_handler, validate_or_error};
+use crate::error::{StatsError, StatsResult as Result};
 use crate::error_handling_v2::ErrorCode;
+use crate::{unified_error_handling::global_error_handler, validate_or_error};
+use ndarray::{Array1, Array2, ArrayView2, Axis};
 use scirs2_core::validation::*;
 
 /// Canonical Correlation Analysis
@@ -118,48 +118,59 @@ impl CanonicalCorrelationAnalysis {
         let (n_samples_y, n_features_y) = y.dim();
 
         if n_samples_x != n_samples_y {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2001,
-                "CCA fit",
-                "sample_size_mismatch",
-                format!("x: {}, y: {}", n_samples_x, n_samples_y),
-                "X and Y must have the same number of samples"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2001,
+                    "CCA fit",
+                    "sample_size_mismatch",
+                    format!("x: {}, y: {}", n_samples_x, n_samples_y),
+                    "X and Y must have the same number of samples",
+                )
+                .error);
         }
 
         let n_samples = n_samples_x;
         if n_samples < 2 {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2003,
-                "CCA fit",
-                "n_samples",
-                n_samples,
-                "CCA requires at least 2 samples"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2003,
+                    "CCA fit",
+                    "n_samples",
+                    n_samples,
+                    "CCA requires at least 2 samples",
+                )
+                .error);
         }
 
         if n_features_x == 0 || n_features_y == 0 {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2004,
-                "CCA fit",
-                "n_features",
-                format!("x: {}, y: {}", n_features_x, n_features_y),
-                "Both X and Y must have at least one feature"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2004,
+                    "CCA fit",
+                    "n_features",
+                    format!("x: {}, y: {}", n_features_x, n_features_y),
+                    "Both X and Y must have at least one feature",
+                )
+                .error);
         }
 
         // Determine number of components
         let max_components = n_features_x.min(n_features_y).min(n_samples - 1);
-        let n_components = self.n_components.unwrap_or(max_components).min(max_components);
+        let n_components = self
+            .n_components
+            .unwrap_or(max_components)
+            .min(max_components);
 
         if n_components == 0 {
-            return Err(handler.create_validation_error(
-                ErrorCode::E1001,
-                "CCA fit",
-                "n_components",
-                n_components,
-                "Number of components must be positive"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E1001,
+                    "CCA fit",
+                    "n_components",
+                    n_components,
+                    "Number of components must be positive",
+                )
+                .error);
         }
 
         // Center and optionally scale the data
@@ -170,7 +181,8 @@ impl CanonicalCorrelationAnalysis {
         let (cxx, cyy, cxy) = self.compute_covariance_matrices(&x_centered, &y_centered)?;
 
         // Solve the generalized eigenvalue problem
-        let (x_weights, y_weights, correlations) = self.solve_cca_eigenvalue_problem(&cxx, &cyy, &cxy, n_components)?;
+        let (x_weights, y_weights, correlations) =
+            self.solve_cca_eigenvalue_problem(&cxx, &cyy, &cxy, n_components)?;
 
         // Compute loadings and cross-loadings
         let x_canonical = x_centered.dot(&x_weights);
@@ -182,8 +194,10 @@ impl CanonicalCorrelationAnalysis {
         let y_cross_loadings = self.compute_loadings(&y_centered, &x_canonical)?;
 
         // Compute explained variance ratios
-        let x_explained_variance_ratio = self.compute_explained_variance(&x_centered, &x_canonical)?;
-        let y_explained_variance_ratio = self.compute_explained_variance(&y_centered, &y_canonical)?;
+        let x_explained_variance_ratio =
+            self.compute_explained_variance(&x_centered, &x_canonical)?;
+        let y_explained_variance_ratio =
+            self.compute_explained_variance(&y_centered, &y_canonical)?;
 
         Ok(CCAResult {
             x_weights,
@@ -204,7 +218,10 @@ impl CanonicalCorrelationAnalysis {
     }
 
     /// Center and optionally scale data
-    fn center_and_scale(&self, data: ArrayView2<f64>) -> Result<(Array2<f64>, Array1<f64>, Option<Array1<f64>>)> {
+    fn center_and_scale(
+        &self,
+        data: ArrayView2<f64>,
+    ) -> Result<(Array2<f64>, Array1<f64>, Option<Array1<f64>>)> {
         let mean = data.mean_axis(Axis(0)).unwrap();
         let mut centered = data.to_owned();
 
@@ -275,7 +292,8 @@ impl CanonicalCorrelationAnalysis {
         let k = cxx_inv_sqrt.dot(cxy).dot(&cyy_inv_sqrt);
 
         // SVD of K
-        let (u, s, vt) = k.svd(true, true)
+        let (u, s, vt) = k
+            .svd(true, true)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed in CCA: {}", e)))?;
 
         let u = u.unwrap();
@@ -311,15 +329,18 @@ impl CanonicalCorrelationAnalysis {
     fn compute_inverse_sqrt(&self, matrix: &Array2<f64>) -> Result<Array2<f64>> {
         use ndarray_linalg::Eigh;
 
-        let (eigenvalues, eigenvectors) = matrix.eigh(ndarray_linalg::UPLO::Upper)
-            .map_err(|e| StatsError::ComputationError(format!("Eigenvalue decomposition failed: {}", e)))?;
+        let (eigenvalues, eigenvectors) =
+            matrix.eigh(ndarray_linalg::UPLO::Upper).map_err(|e| {
+                StatsError::ComputationError(format!("Eigenvalue decomposition failed: {}", e))
+            })?;
 
         // Check for positive definiteness
         let min_eigenvalue = eigenvalues.iter().cloned().fold(f64::INFINITY, f64::min);
         if min_eigenvalue <= 1e-10 {
-            return Err(StatsError::ComputationError(
-                format!("Matrix is not positive definite (min eigenvalue: {})", min_eigenvalue)
-            ));
+            return Err(StatsError::ComputationError(format!(
+                "Matrix is not positive definite (min eigenvalue: {})",
+                min_eigenvalue
+            )));
         }
 
         // Compute inverse square root
@@ -341,7 +362,11 @@ impl CanonicalCorrelationAnalysis {
     }
 
     /// Compute loadings (correlations between original variables and canonical variates)
-    fn compute_loadings(&self, original: &Array2<f64>, canonical: &Array2<f64>) -> Result<Array2<f64>> {
+    fn compute_loadings(
+        &self,
+        original: &Array2<f64>,
+        canonical: &Array2<f64>,
+    ) -> Result<Array2<f64>> {
         let n_samples = original.nrows() as f64;
         let n_original = original.ncols();
         let n_canonical = canonical.ncols();
@@ -368,7 +393,11 @@ impl CanonicalCorrelationAnalysis {
     }
 
     /// Compute explained variance ratio
-    fn compute_explained_variance(&self, original: &Array2<f64>, canonical: &Array2<f64>) -> Result<Array1<f64>> {
+    fn compute_explained_variance(
+        &self,
+        original: &Array2<f64>,
+        canonical: &Array2<f64>,
+    ) -> Result<Array1<f64>> {
         let n_samples = original.nrows() as f64;
         let n_canonical = canonical.ncols();
 
@@ -396,29 +425,38 @@ impl CanonicalCorrelationAnalysis {
     }
 
     /// Transform new data using fitted CCA model
-    pub fn transform(&self, x: ArrayView2<f64>, y: ArrayView2<f64>, result: &CCAResult) -> Result<(Array2<f64>, Array2<f64>)> {
+    pub fn transform(
+        &self,
+        x: ArrayView2<f64>,
+        y: ArrayView2<f64>,
+        result: &CCAResult,
+    ) -> Result<(Array2<f64>, Array2<f64>)> {
         let handler = global_error_handler();
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "CCA transform");
         validate_or_error!(finite: y.as_slice().unwrap(), "y", "CCA transform");
 
         if x.ncols() != result.x_mean.len() {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2001,
-                "CCA transform",
-                "x_features",
-                format!("input: {}, expected: {}", x.ncols(), result.x_mean.len()),
-                "X must have the same number of features as training data"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2001,
+                    "CCA transform",
+                    "x_features",
+                    format!("input: {}, expected: {}", x.ncols(), result.x_mean.len()),
+                    "X must have the same number of features as training data",
+                )
+                .error);
         }
 
         if y.ncols() != result.y_mean.len() {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2001,
-                "CCA transform",
-                "y_features",
-                format!("input: {}, expected: {}", y.ncols(), result.y_mean.len()),
-                "Y must have the same number of features as training data"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2001,
+                    "CCA transform",
+                    "y_features",
+                    format!("input: {}, expected: {}", y.ncols(), result.y_mean.len()),
+                    "Y must have the same number of features as training data",
+                )
+                .error);
         }
 
         // Center and scale X
@@ -457,7 +495,12 @@ impl CanonicalCorrelationAnalysis {
     }
 
     /// Compute canonical correlations for new data
-    pub fn score(&self, x: ArrayView2<f64>, y: ArrayView2<f64>, result: &CCAResult) -> Result<Array1<f64>> {
+    pub fn score(
+        &self,
+        x: ArrayView2<f64>,
+        y: ArrayView2<f64>,
+        result: &CCAResult,
+    ) -> Result<Array1<f64>> {
         let (x_canonical, y_canonical) = self.transform(x, y, result)?;
         let n_samples = x_canonical.nrows() as f64;
         let n_components = result.n_components;
@@ -552,17 +595,22 @@ impl PLSCanonical {
         let (n_samples_y, n_y_features) = y.dim();
 
         if n_samples != n_samples_y {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2001,
-                "PLS fit",
-                "sample_size_mismatch",
-                format!("x: {}, y: {}", n_samples, n_samples_y),
-                "X and Y must have the same number of samples"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2001,
+                    "PLS fit",
+                    "sample_size_mismatch",
+                    format!("x: {}, y: {}", n_samples, n_samples_y),
+                    "X and Y must have the same number of samples",
+                )
+                .error);
         }
 
         // Center and scale data
-        let cca = CanonicalCorrelationAnalysis { scale: self.scale, ..Default::default() };
+        let cca = CanonicalCorrelationAnalysis {
+            scale: self.scale,
+            ..Default::default()
+        };
         let (mut x_current, x_mean, x_std) = cca.center_and_scale(x)?;
         let (mut y_current, y_mean, y_std) = cca.center_and_scale(y)?;
 
@@ -585,7 +633,9 @@ impl PLSCanonical {
                 let w = x_current.t().dot(&u);
                 let w_norm = (w.dot(&w)).sqrt();
                 if w_norm < 1e-10 {
-                    return Err(StatsError::ComputationError("X weights became zero".to_string()));
+                    return Err(StatsError::ComputationError(
+                        "X weights became zero".to_string(),
+                    ));
                 }
                 let w = w / w_norm;
 
@@ -596,7 +646,9 @@ impl PLSCanonical {
                 let c = y_current.t().dot(&t);
                 let c_norm = (c.dot(&c)).sqrt();
                 if c_norm < 1e-10 {
-                    return Err(StatsError::ComputationError("Y weights became zero".to_string()));
+                    return Err(StatsError::ComputationError(
+                        "Y weights became zero".to_string(),
+                    ));
                 }
                 let c = c / c_norm;
 
@@ -632,20 +684,32 @@ impl PLSCanonical {
 
             // Deflate matrices
             let tt = Array1::from_vec(vec![t.dot(&t)]);
-            let outer_product = &t.view().insert_axis(Axis(1)).dot(&p.view().insert_axis(Axis(0)));
+            let outer_product = &t
+                .view()
+                .insert_axis(Axis(1))
+                .dot(&p.view().insert_axis(Axis(0)));
             x_current = x_current - outer_product;
 
             let uu = Array1::from_vec(vec![u.dot(&u)]);
-            let outer_product_y = &u.view().insert_axis(Axis(1)).dot(&q.view().insert_axis(Axis(0)));
+            let outer_product_y = &u
+                .view()
+                .insert_axis(Axis(1))
+                .dot(&q.view().insert_axis(Axis(0)));
             y_current = y_current - outer_product_y;
         }
 
         // Compute rotation matrices
-        let x_rotations = x_weights.dot(&scirs2_linalg::inv(&(x_loadings.t().dot(&x_weights)).view(), None)
-            .map_err(|e| StatsError::ComputationError(format!("Failed to compute X rotations: {}", e)))?);
+        let x_rotations = x_weights.dot(
+            &scirs2_linalg::inv(&(x_loadings.t().dot(&x_weights)).view(), None).map_err(|e| {
+                StatsError::ComputationError(format!("Failed to compute X rotations: {}", e))
+            })?,
+        );
 
-        let y_rotations = y_weights.dot(&scirs2_linalg::inv(&(y_loadings.t().dot(&y_weights)).view(), None)
-            .map_err(|e| StatsError::ComputationError(format!("Failed to compute Y rotations: {}", e)))?);
+        let y_rotations = y_weights.dot(
+            &scirs2_linalg::inv(&(y_loadings.t().dot(&y_weights)).view(), None).map_err(|e| {
+                StatsError::ComputationError(format!("Failed to compute Y rotations: {}", e))
+            })?,
+        );
 
         Ok(PLSResult {
             x_weights,
@@ -669,13 +733,15 @@ impl PLSCanonical {
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "PLS transform");
 
         if x.ncols() != result.x_mean.len() {
-            return Err(handler.create_validation_error(
-                ErrorCode::E2001,
-                "PLS transform",
-                "n_features",
-                format!("input: {}, expected: {}", x.ncols(), result.x_mean.len()),
-                "Number of features must match training data"
-            ).error);
+            return Err(handler
+                .create_validation_error(
+                    ErrorCode::E2001,
+                    "PLS transform",
+                    "n_features",
+                    format!("input: {}, expected: {}", x.ncols(), result.x_mean.len()),
+                    "Number of features must match training data",
+                )
+                .error);
         }
 
         // Center and scale
@@ -737,13 +803,7 @@ mod tests {
 
     #[test]
     fn test_pls_basic() {
-        let x = array![
-            [1.0, 2.0],
-            [2.0, 3.0],
-            [3.0, 4.0],
-            [4.0, 5.0],
-            [5.0, 6.0],
-        ];
+        let x = array![[1.0, 2.0], [2.0, 3.0], [3.0, 4.0], [4.0, 5.0], [5.0, 6.0],];
 
         let y = array![
             [2.0, 4.0],

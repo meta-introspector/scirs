@@ -4,10 +4,10 @@
 //! multiple reference implementations like SciPy, GSL, and MPFR.
 
 use scirs2_special::{
-    gamma, beta, digamma,
     bessel::{j0, j1, y0},
-    erf, erfc,
+    beta,
     cross_validation::{CrossValidator, PythonValidator},
+    digamma, erf, erfc, gamma,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -16,10 +16,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Run basic cross-validation
     basic_validation()?;
-    
+
     // Demonstrate Python validation
     python_validation()?;
-    
+
     // Show comprehensive validation
     comprehensive_validation()?;
 
@@ -116,7 +116,10 @@ fn comprehensive_validation() -> Result<(), Box<dyn std::error::Error>> {
 
     // Validate multiple functions
     let functions = vec![
-        ("gamma", Box::new(|args: &[f64]| gamma(args[0])) as Box<dyn Fn(&[f64]) -> f64>),
+        (
+            "gamma",
+            Box::new(|args: &[f64]| gamma(args[0])) as Box<dyn Fn(&[f64]) -> f64>,
+        ),
         ("digamma", Box::new(|args: &[f64]| digamma(args[0]))),
         ("j0", Box::new(|args: &[f64]| j0(args[0]))),
         ("y0", Box::new(|args: &[f64]| y0(args[0]))),
@@ -141,9 +144,11 @@ fn comprehensive_validation() -> Result<(), Box<dyn std::error::Error>> {
 
 fn print_summary(summary: &scirs2_special::cross_validation::ValidationSummary) {
     println!("  Total tests: {}", summary.total_tests);
-    println!("  Passed: {} ({:.1}%)", 
-             summary.passed, 
-             100.0 * summary.passed as f64 / summary.total_tests as f64);
+    println!(
+        "  Passed: {} ({:.1}%)",
+        summary.passed,
+        100.0 * summary.passed as f64 / summary.total_tests as f64
+    );
     println!("  Failed: {}", summary.failed);
     println!("  Max error: {:.2e}", summary.max_error);
     println!("  Mean error: {:.2e}", summary.mean_error);
@@ -152,24 +157,28 @@ fn print_summary(summary: &scirs2_special::cross_validation::ValidationSummary) 
 
 fn print_detailed_summary(summary: &scirs2_special::cross_validation::ValidationSummary) {
     println!("\n{} Validation:", summary.function);
-    println!("  Tests: {} total, {} passed, {} failed",
-             summary.total_tests, summary.passed, summary.failed);
-    
+    println!(
+        "  Tests: {} total, {} passed, {} failed",
+        summary.total_tests, summary.passed, summary.failed
+    );
+
     if summary.failed > 0 {
         println!("  Failed cases:");
         for (i, result) in summary.failed_cases.iter().take(3).enumerate() {
-            println!("    {}: inputs={:?}, expected={:.6e}, computed={:.6e}, rel_err={:.2e}",
-                     i + 1,
-                     result.test_case.inputs,
-                     result.test_case.expected,
-                     result.computed,
-                     result.relative_error);
+            println!(
+                "    {}: inputs={:?}, expected={:.6e}, computed={:.6e}, rel_err={:.2e}",
+                i + 1,
+                result.test_case.inputs,
+                result.test_case.expected,
+                result.computed,
+                result.relative_error
+            );
         }
         if summary.failed > 3 {
             println!("    ... and {} more", summary.failed - 3);
         }
     }
-    
+
     println!("  Error statistics:");
     println!("    Max error: {:.2e}", summary.max_error);
     println!("    Mean error: {:.2e}", summary.mean_error);

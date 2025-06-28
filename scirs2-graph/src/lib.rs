@@ -73,43 +73,106 @@ pub mod weighted;
 stable!("graph_core", "0.1.0-beta.1");
 pub use algorithms::{
     // Core algorithms - stable for 1.0
-    articulation_points, astar_search, astar_search_digraph, betweenness_centrality, 
-    bidirectional_search, bidirectional_search_digraph, breadth_first_search, 
-    breadth_first_search_digraph, bridges, connected_components, depth_first_search, 
-    depth_first_search_digraph, diameter, dijkstra_path, floyd_warshall, floyd_warshall_digraph,
-    minimum_spanning_tree, pagerank, shortest_path_digraph, strongly_connected_components,
-    topological_sort,
-    
-    // Community detection algorithms - stable for 1.0
-    louvain_communities_result, label_propagation_result, modularity, 
-    
-    // Centrality measures - stable for 1.0  
-    closeness_centrality, eigenvector_centrality,
-    
-    // Flow algorithms - stable for 1.0
-    dinic_max_flow, minimum_cut, push_relabel_max_flow,
-    
-    // Matching algorithms - stable for 1.0
-    maximal_matching, maximum_bipartite_matching, maximum_cardinality_matching, 
-    minimum_weight_bipartite_matching, stable_marriage,
-    
+    articulation_points,
+    astar_search,
+    astar_search_digraph,
+    betweenness_centrality,
+    bidirectional_search,
+    bidirectional_search_digraph,
+    breadth_first_search,
+    breadth_first_search_digraph,
+    bridges,
+    // Additional stable algorithms for 1.0
+    center_nodes,
+    // Centrality measures - stable for 1.0
+    closeness_centrality,
     // Graph transformations - stable for 1.0
-    complement, subgraph, subdigraph, edge_subgraph,
-    
-    // Advanced/experimental algorithms
-    are_graphs_isomorphic, are_graphs_isomorphic_enhanced, cartesian_product, 
-    center_nodes, chromatic_number, cosine_similarity, eulerian_type,
-    find_isomorphism, find_isomorphism_vf2, find_motifs, find_subgraph_matches,
-    fluid_communities, graph_edit_distance, greedy_coloring, greedy_modularity_optimization,
-    has_hamiltonian_circuit, has_hamiltonian_path, hierarchical_communities, 
-    infomap_communities, is_bipartite, jaccard_similarity, k_core_decomposition, 
-    k_shortest_paths, line_digraph, line_graph, modularity_optimization,
-    personalized_pagerank, radius, random_walk, tensor_product, transition_matrix, 
+    complement,
+    connected_components,
+    cosine_similarity,
+    depth_first_search,
+    depth_first_search_digraph,
+    diameter,
+    dijkstra_path,
+    // Flow algorithms - stable for 1.0
+    dinic_max_flow,
+    edge_subgraph,
+
+    eigenvector_centrality,
+
+    eulerian_type,
+    floyd_warshall,
+    floyd_warshall_digraph,
+    fluid_communities,
+    greedy_coloring,
+    greedy_modularity_optimization,
+    hierarchical_communities,
+    infomap_communities,
+    is_bipartite,
+    jaccard_similarity,
+    k_core_decomposition,
+    k_shortest_paths,
+    label_propagation_result,
+    line_digraph,
+    line_graph,
+    // Community detection algorithms - stable for 1.0
+    louvain_communities_result,
+    // Matching algorithms - stable for 1.0
+    maximal_matching,
+    maximum_bipartite_matching,
+    maximum_cardinality_matching,
+    minimum_cut,
+    minimum_spanning_tree,
+    minimum_weight_bipartite_matching,
+    modularity,
+
+    modularity_optimization,
+    pagerank,
+    personalized_pagerank,
+    push_relabel_max_flow,
+
+    radius,
+    random_walk,
+    shortest_path_digraph,
+    stable_marriage,
+
+    strongly_connected_components,
+    subdigraph,
+    subgraph,
+    tensor_product,
+    topological_sort,
+
+    transition_matrix,
     weight_filtered_subgraph,
-    
+
     // Result types - stable for 1.0
-    AStarResult, BipartiteMatching, BipartiteResult, CommunityResult, CommunityStructure, 
-    EulerianType, GraphColoring, InfomapResult, MaximumMatching, MotifType,
+    AStarResult,
+    BipartiteMatching,
+    BipartiteResult,
+    CommunityResult,
+    CommunityStructure,
+    EulerianType,
+    GraphColoring,
+    InfomapResult,
+    MaximumMatching,
+    MotifType,
+};
+
+// Experimental algorithms - unstable, may change in future versions
+unstable!("graph_advanced", "none");
+pub use algorithms::{
+    // Isomorphism and advanced matching - experimental
+    are_graphs_isomorphic,
+    are_graphs_isomorphic_enhanced,
+    cartesian_product,
+    chromatic_number,
+    find_isomorphism,
+    find_isomorphism_vf2,
+    find_motifs,
+    find_subgraph_matches,
+    graph_edit_distance,
+    has_hamiltonian_circuit,
+    has_hamiltonian_path,
 };
 
 // Add deprecation warnings for legacy functions
@@ -120,7 +183,7 @@ pub use algorithms::{
 pub use algorithms::shortest_path;
 
 #[deprecated(
-    since = "0.1.0-beta.2", 
+    since = "0.1.0-beta.2",
     note = "Use `louvain_communities_result` instead"
 )]
 pub use algorithms::louvain_communities;
@@ -142,7 +205,7 @@ pub use base::{
     BipartiteGraph, DiGraph, Edge, EdgeWeight, Graph, Hyperedge, Hypergraph, IndexType,
     MultiDiGraph, MultiGraph, Node,
 };
-// Graph embeddings - experimental features  
+// Graph embeddings - experimental features
 unstable!("graph_embeddings", "none");
 pub use embeddings::{
     DeepWalk, DeepWalkConfig, Embedding, EmbeddingModel, Node2Vec, Node2VecConfig, RandomWalk,
@@ -183,7 +246,7 @@ pub use memory::{
 // Performance monitoring - stable for 1.0
 stable!("graph_performance", "0.1.0-beta.1");
 pub use performance::{
-    LargeGraphIterator, LargeGraphOps, MemoryMetrics, ParallelConfig, PerformanceMonitor, 
+    LargeGraphIterator, LargeGraphOps, MemoryMetrics, ParallelConfig, PerformanceMonitor,
     PerformanceReport, RealTimeMemoryProfiler, StreamingGraphProcessor,
 };
 

@@ -159,7 +159,12 @@ mod validation;
 // pub mod distributed;
 
 // GPU acceleration foundations
-#[cfg(any(feature = "cuda", feature = "opencl", feature = "rocm", feature = "metal"))]
+#[cfg(any(
+    feature = "cuda",
+    feature = "opencl",
+    feature = "rocm",
+    feature = "metal"
+))]
 pub mod gpu;
 
 // Automatic differentiation support
@@ -480,7 +485,7 @@ pub mod prelude {
     #[cfg(feature = "tensor_contraction")]
     pub use super::tensor_contraction::{batch_matmul, contract, einsum, hosvd};
     pub use super::tensor_train::{tt_add, tt_decomposition, tt_hadamard, TTTensor};
-    
+
     // Distributed computing (temporarily disabled)
     // pub use super::distributed::{
     //     initialize_distributed, finalize_distributed, DistributedConfig, DistributedContext,

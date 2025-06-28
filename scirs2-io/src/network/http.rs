@@ -73,13 +73,13 @@ impl HttpClient {
             #[cfg(feature = "reqwest")]
             client: None,
         };
-        
+
         // Auto-initialize if reqwest feature is enabled
         #[cfg(feature = "reqwest")]
         {
             let _ = client.init();
         }
-        
+
         client
     }
 

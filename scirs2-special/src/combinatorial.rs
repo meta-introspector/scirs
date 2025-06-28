@@ -422,14 +422,21 @@ pub fn euler_number(n: u32) -> SpecialResult<f64> {
         _ => {}
     }
 
-    // For larger values, use recurrence relation
-    // This gets computationally expensive for large n
-    if n > 20 {
-        return Err(SpecialError::NotImplementedError(
-            "Euler numbers for n > 20 not implemented".to_string(),
-        ));
+    // For larger values, use more efficient algorithms
+    if n > 100 {
+        // For very large n, use asymptotic approximation
+        return euler_number_asymptotic(n as i32);
+    } else if n > 20 {
+        // For moderate values, use improved recurrence with rational arithmetic
+        return euler_number_improved_recurrence(n as i32);
     }
 
+    // Use standard recurrence relation for small values
+    euler_number_standard_recurrence(n as i32)
+}
+
+/// Standard recurrence relation for Euler numbers (small n)
+fn euler_number_standard_recurrence(n: i32) -> SpecialResult<f64> {
     // Use recurrence relation based on generating function
     let mut euler = vec![0.0; (n + 1) as usize];
     euler[0] = 1.0;
@@ -444,6 +451,129 @@ pub fn euler_number(n: u32) -> SpecialResult<f64> {
     }
 
     Ok(euler[n as usize])
+}
+
+/// Improved recurrence relation for Euler numbers using rational arithmetic (moderate n)
+fn euler_number_improved_recurrence(n: i32) -> SpecialResult<f64> {
+    // Use the recurrence relation with better numerical stability
+    // E_n = -sum_{k=0}^{n-1} C(n,k) * E_k for even n
+
+    if n % 2 == 1 {
+        return Ok(0.0); // Euler numbers are zero for odd indices
+    }
+
+    // For moderate values, use a more memory-efficient approach
+    // that doesn't store all intermediate values
+
+    let mut prev_eulr = [0.0; 2]; // Only store last two values
+    prev_eulr[0] = 1.0; // E_0 = 1
+
+    if n == 0 {
+        return Ok(1.0);
+    }
+
+    // Store a few more values for better efficiency
+    let mut euler_cache = vec![0.0; (n / 2 + 1) as usize];
+    euler_cache[0] = 1.0; // E_0 = 1
+
+    for m in (2..=n).step_by(2) {
+        let m_idx = (m / 2) as usize;
+        let mut sum = 0.0;
+
+        for k in (0..m).step_by(2) {
+            let k_idx = (k / 2) as usize;
+
+            // Use more efficient binomial coefficient computation
+            let binom_coeff = efficient_binomial(m as u32, k as u32)?;
+            sum += binom_coeff * euler_cache[k_idx];
+        }
+
+        euler_cache[m_idx] = -sum;
+    }
+
+    Ok(euler_cache[(n / 2) as usize])
+}
+
+/// Asymptotic approximation for Euler numbers (large n)
+fn euler_number_asymptotic(n: i32) -> SpecialResult<f64> {
+    if n % 2 == 1 {
+        return Ok(0.0); // Euler numbers are zero for odd indices
+    }
+
+    // For large even n, use the asymptotic formula:
+    // |E_n| ~ 8 * sqrt(2/π) * (2^{n+2} * n! / π^{n+1}) * [1 + O(1/n)]
+
+    use std::f64::consts::PI;
+
+    let n_f = n as f64;
+
+    // Use Stirling's approximation for n!
+    // ln(n!) ≈ n*ln(n) - n + 0.5*ln(2πn)
+    let ln_n_factorial = n_f * n_f.ln() - n_f + 0.5 * (2.0 * PI * n_f).ln();
+
+    // Calculate log of the asymptotic approximation to avoid overflow
+    // ln|E_n| ≈ ln(8) + 0.5*ln(2/π) + (n+2)*ln(2) + ln(n!) - (n+1)*ln(π)
+
+    let ln_8 = 3.0_f64.ln();
+    let ln_sqrt_2_over_pi = 0.5 * (2.0 / PI).ln();
+    let power_of_2_term = (n_f + 2.0) * 2.0_f64.ln();
+    let pi_power_term = -(n_f + 1.0) * PI.ln();
+
+    let ln_magnitude = ln_8 + ln_sqrt_2_over_pi + power_of_2_term + ln_n_factorial + pi_power_term;
+
+    // Check if the result would overflow
+    if ln_magnitude > 700.0 {
+        return Err(SpecialError::OverflowError(
+            "Euler number too large to represent as f64".to_string(),
+        ));
+    }
+
+    let magnitude = ln_magnitude.exp();
+
+    // Apply the correct sign: E_n = (-1)^{n/2} * |E_n|
+    let sign = if (n / 2) % 2 == 0 { 1.0 } else { -1.0 };
+
+    Ok(sign * magnitude)
+}
+
+/// More efficient binomial coefficient computation for moderate values
+fn efficient_binomial(n: u32, k: u32) -> SpecialResult<f64> {
+    if k > n {
+        return Ok(0.0);
+    }
+
+    if k == 0 || k == n {
+        return Ok(1.0);
+    }
+
+    // Use symmetry to reduce computation
+    let k_use = if k > n - k { n - k } else { k };
+
+    // For larger values, use logarithmic computation to avoid overflow
+    if n > 30 {
+        use crate::gamma::gamma;
+
+        // C(n,k) = Γ(n+1) / (Γ(k+1) * Γ(n-k+1))
+        let ln_result = (gamma((n + 1) as f64).ln())
+            - (gamma((k_use + 1) as f64).ln())
+            - (gamma((n - k_use + 1) as f64).ln());
+
+        if ln_result > 700.0 {
+            return Err(SpecialError::OverflowError(
+                "Binomial coefficient too large".to_string(),
+            ));
+        }
+
+        Ok(ln_result.exp())
+    } else {
+        // Use the standard multiplication approach for smaller values
+        let mut result = 1.0;
+        for i in 0..k_use {
+            result *= (n - i) as f64;
+            result /= (i + 1) as f64;
+        }
+        Ok(result)
+    }
 }
 
 #[cfg(test)]

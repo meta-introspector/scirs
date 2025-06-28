@@ -9,9 +9,9 @@
 use scirs2_core::error::CoreResult;
 #[cfg(feature = "parallel")]
 use scirs2_core::parallel::{
-    nested_scope, nested_scope_with_limits, with_nested_policy, DataDistribution, DataPartitioner,
-    LoadBalancer, NestedConfig, NestedPolicy, PartitionerConfig, ResourceLimits,
-    SchedulerConfigBuilder, TaskPriority, WorkStealingScheduler,
+    nested_scope, nested_scope_with_limits, with_nested_policy, DataPartitioner, LoadBalancer,
+    NestedConfig, NestedPolicy, PartitionerConfig, ResourceLimits, SchedulerConfigBuilder,
+    WorkStealingScheduler,
 };
 #[cfg(feature = "parallel")]
 use scirs2_core::parallel_ops::*;
@@ -76,7 +76,7 @@ fn example_custom_partitioning() -> CoreResult<()> {
 
     // Analyze and partition uniform data
     println!("Uniform distribution:");
-    let uniform_dist = partitioner.analyze_distribution::<f64>(&uniform_data);
+    let uniform_dist = partitioner.analyze_distribution(&uniform_data);
     println!("  Detected: {:?}", uniform_dist);
     let uniform_strategy = partitioner.create_strategy(&uniform_dist, uniform_data.len())?;
     let uniform_partitions = partitioner.partition(&uniform_data, &uniform_strategy)?;
@@ -84,7 +84,7 @@ fn example_custom_partitioning() -> CoreResult<()> {
 
     // Analyze and partition skewed data
     println!("\nSkewed distribution:");
-    let skewed_dist = partitioner.analyze_distribution::<f64>(&skewed_data);
+    let skewed_dist = partitioner.analyze_distribution(&skewed_data);
     println!("  Detected: {:?}", skewed_dist);
     let skewed_strategy = partitioner.create_strategy(&skewed_dist, skewed_data.len())?;
     let skewed_partitions = partitioner.partition(&skewed_data, &skewed_strategy)?;
@@ -92,7 +92,7 @@ fn example_custom_partitioning() -> CoreResult<()> {
 
     // Analyze and partition Gaussian data
     println!("\nGaussian distribution:");
-    let gaussian_dist = partitioner.analyze_distribution::<f64>(&gaussian_data);
+    let gaussian_dist = partitioner.analyze_distribution(&gaussian_data);
     println!("  Detected: {:?}", gaussian_dist);
     let gaussian_strategy = partitioner.create_strategy(&gaussian_dist, gaussian_data.len())?;
     let gaussian_partitions = partitioner.partition(&gaussian_data, &gaussian_strategy)?;
@@ -116,8 +116,7 @@ fn example_work_stealing_scheduler() -> CoreResult<()> {
         .adaptive(true)
         .build();
 
-    let mut scheduler = WorkStealingScheduler::new(config)?;
-    scheduler.start()?;
+    let mut scheduler = WorkStealingScheduler::new(config);
 
     // Submit tasks with different priorities
     let start = Instant::now();
@@ -146,15 +145,15 @@ fn example_work_stealing_scheduler() -> CoreResult<()> {
     // Wait for completion
     std::thread::sleep(Duration::from_secs(2));
 
-    let stats = scheduler.get_stats();
+    let stats = scheduler.stats();
     println!("\nScheduler Statistics:");
     println!("  Tasks submitted: {}", stats.tasks_submitted);
     println!("  Tasks completed: {}", stats.tasks_completed);
-    println!("  Tasks stolen: {}", stats.tasks_stolen);
+    println!("  Tasks stolen: {}", stats.successful_steals);
     println!("  Failed steals: {}", stats.failed_steals);
     println!("  Execution time: {:?}", start.elapsed());
 
-    scheduler.stop()?;
+    scheduler.shutdown();
     println!();
     Ok(())
 }
@@ -175,10 +174,7 @@ fn example_nested_parallelism() -> CoreResult<()> {
 
     // Execute with nested parallelism
     let result = nested_scope_with_limits(limits, |outer_scope| {
-        println!(
-            "Outer level (depth 0) - max threads: {}",
-            outer_scope.context.max_threads_at_level()
-        );
+        println!("Outer level (depth 0) - starting nested processing");
 
         // Parallel processing at outer level
         let outer_data: Vec<i32> = (0..100).collect();
@@ -189,7 +185,7 @@ fn example_nested_parallelism() -> CoreResult<()> {
 
                 let inner_data: Vec<i32> = (0..10).collect();
                 let inner_sum: i32 = inner_scope
-                    .par_iter(inner_data, |y| {
+                    .par_iter(inner_data, |_y| {
                         // Deeply nested operation
                         nested_scope(|deep_scope| {
                             let deep_data: Vec<i32> = (0..5).collect();
@@ -227,7 +223,7 @@ fn example_load_balancing() -> CoreResult<()> {
     let mut balancer = LoadBalancer::new(4, 1.2);
 
     // Simulate workload execution with varying times
-    let partition_times = vec![
+    let partition_times = [
         vec![100, 95, 105, 98],   // Partition 0: consistent ~100ms
         vec![200, 190, 210, 195], // Partition 1: consistent ~200ms
         vec![150, 145, 155, 148], // Partition 2: consistent ~150ms

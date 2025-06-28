@@ -36,7 +36,7 @@ pub enum IntegrateError {
     /// Step size too small error
     #[error("Step size too small: {0}")]
     StepSizeTooSmall(String),
-    
+
     /// Index error
     #[error("Index error: {0}")]
     IndexError(String),

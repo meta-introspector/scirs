@@ -401,6 +401,143 @@ impl<F: Float + NumAssign> LinearOperator<F> for ProductOperator<F> {
     }
 }
 
+/// Function-based linear operator for matrix-free implementations
+pub struct FunctionOperator<F> {
+    shape: (usize, usize),
+    matvec_fn: Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>,
+    rmatvec_fn: Option<Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>>,
+}
+
+impl<F: Float> FunctionOperator<F> {
+    /// Create a new function-based operator
+    pub fn new<MV, RMV>(shape: (usize, usize), matvec_fn: MV, rmatvec_fn: Option<RMV>) -> Self
+    where
+        MV: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
+        RMV: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
+    {
+        Self {
+            shape,
+            matvec_fn: Box::new(matvec_fn),
+            rmatvec_fn: rmatvec_fn
+                .map(|f| Box::new(f) as Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>),
+        }
+    }
+
+    /// Create a matrix-free operator from a function
+    pub fn from_function<F_MV>(shape: (usize, usize), matvec_fn: F_MV) -> Self
+    where
+        F_MV: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
+    {
+        Self::new(shape, matvec_fn, None::<fn(&[F]) -> SparseResult<Vec<F>>>)
+    }
+}
+
+impl<F: Float> LinearOperator<F> for FunctionOperator<F> {
+    fn shape(&self) -> (usize, usize) {
+        self.shape
+    }
+
+    fn matvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
+        (self.matvec_fn)(x)
+    }
+
+    fn rmatvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
+        match &self.rmatvec_fn {
+            Some(f) => f(x),
+            None => Err(SparseError::OperationNotSupported(
+                "adjoint not implemented for this function operator".to_string(),
+            )),
+        }
+    }
+
+    fn has_adjoint(&self) -> bool {
+        self.rmatvec_fn.is_some()
+    }
+}
+
+/// Inverse operator: A^(-1)
+/// Note: This is a conceptual operator, actual implementation depends on the specific matrix
+pub struct InverseOperator<F> {
+    original: Box<dyn LinearOperator<F>>,
+    solver_fn: Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>,
+}
+
+impl<F: Float> InverseOperator<F> {
+    /// Create a new inverse operator with a custom solver function
+    pub fn new<S>(original: Box<dyn LinearOperator<F>>, solver_fn: S) -> SparseResult<Self>
+    where
+        S: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
+    {
+        let (rows, cols) = original.shape();
+        if rows != cols {
+            return Err(SparseError::ValueError(
+                "Cannot invert non-square operator".to_string(),
+            ));
+        }
+
+        Ok(Self {
+            original,
+            solver_fn: Box::new(solver_fn),
+        })
+    }
+}
+
+impl<F: Float> LinearOperator<F> for InverseOperator<F> {
+    fn shape(&self) -> (usize, usize) {
+        self.original.shape()
+    }
+
+    fn matvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
+        // A^(-1) * x is equivalent to solving A * y = x for y
+        (self.solver_fn)(x)
+    }
+
+    fn rmatvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
+        // (A^(-1))^H = (A^H)^(-1)
+        // So we need to solve A^H * y = x for y
+        if !self.original.has_adjoint() {
+            return Err(SparseError::OperationNotSupported(
+                "adjoint not supported for original operator".to_string(),
+            ));
+        }
+
+        // This is a conceptual implementation - in practice, you'd need
+        // a solver for the adjoint system
+        Err(SparseError::OperationNotSupported(
+            "adjoint of inverse operator not yet implemented".to_string(),
+        ))
+    }
+
+    fn has_adjoint(&self) -> bool {
+        false // Simplified for now
+    }
+}
+
+/// Utility functions for operator composition
+impl<F: Float + NumAssign> LinearOperator<F> {
+    /// Add two operators: self + other
+    pub fn add_op(
+        self: Box<Self>,
+        other: Box<dyn LinearOperator<F>>,
+    ) -> SparseResult<Box<dyn LinearOperator<F>>> {
+        Ok(Box::new(SumOperator::new(self, other)?))
+    }
+
+    /// Multiply two operators: self * other  
+    pub fn mul_op(
+        self: Box<Self>,
+        other: Box<dyn LinearOperator<F>>,
+    ) -> SparseResult<Box<dyn LinearOperator<F>>> {
+        Ok(Box::new(ProductOperator::new(self, other)?))
+    }
+
+    /// Scale an operator: alpha * self
+    pub fn scale(self: Box<Self>, alpha: F) -> Box<dyn LinearOperator<F>> {
+        let scaled_identity = Box::new(ScaledIdentityOperator::new(self.shape().0, alpha));
+        Box::new(ProductOperator::new(scaled_identity, self).unwrap())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

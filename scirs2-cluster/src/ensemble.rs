@@ -11,14 +11,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 
-use crate::error::{ClusteringError, Result};
-use crate::metrics::{adjusted_rand_index, normalized_mutual_info, silhouette_score};
-use crate::vq::{kmeans, kmeans2};
-use crate::density::dbscan;
-use crate::meanshift::mean_shift;
-use crate::hierarchy::linkage;
-use crate::spectral::spectral_clustering;
 use crate::affinity::affinity_propagation;
+use crate::density::dbscan;
+use crate::error::{ClusteringError, Result};
+use crate::hierarchy::linkage;
+use crate::meanshift::mean_shift;
+use crate::metrics::{adjusted_rand_index, normalized_mutual_info, silhouette_score};
+use crate::spectral::spectral_clustering;
+use crate::vq::{kmeans, kmeans2};
 
 /// Configuration for ensemble clustering
 #[derive(Debug, Clone)]
@@ -43,22 +43,16 @@ pub struct EnsembleConfig {
 #[derive(Debug, Clone)]
 pub enum SamplingStrategy {
     /// Bootstrap sampling with replacement
-    Bootstrap {
-        sample_ratio: f64,
-    },
+    Bootstrap { sample_ratio: f64 },
     /// Random subspace sampling (feature selection)
-    RandomSubspace {
-        feature_ratio: f64,
-    },
+    RandomSubspace { feature_ratio: f64 },
     /// Combined bootstrap and subspace sampling
     BootstrapSubspace {
         sample_ratio: f64,
         feature_ratio: f64,
     },
     /// Random projection to lower dimensions
-    RandomProjection {
-        target_dimensions: usize,
-    },
+    RandomProjection { target_dimensions: usize },
     /// Noise injection for robustness testing
     NoiseInjection {
         noise_level: f64,
@@ -87,17 +81,11 @@ pub enum ConsensusMethod {
     /// Weighted consensus based on quality scores
     WeightedConsensus,
     /// Graph-based consensus clustering
-    GraphBased {
-        similarity_threshold: f64,
-    },
+    GraphBased { similarity_threshold: f64 },
     /// Hierarchical consensus
-    Hierarchical {
-        linkage_method: String,
-    },
+    Hierarchical { linkage_method: String },
     /// Co-association matrix approach
-    CoAssociation {
-        threshold: f64,
-    },
+    CoAssociation { threshold: f64 },
     /// Evidence accumulation clustering
     EvidenceAccumulation,
 }
@@ -119,39 +107,27 @@ pub enum DiversityStrategy {
         sampling_strategies: Vec<SamplingStrategy>,
     },
     /// Combined diversity strategy
-    Combined {
-        strategies: Vec<DiversityStrategy>,
-    },
+    Combined { strategies: Vec<DiversityStrategy> },
 }
 
 /// Supported clustering algorithms for ensemble
 #[derive(Debug, Clone)]
 pub enum ClusteringAlgorithm {
     /// K-means clustering
-    KMeans {
-        k_range: (usize, usize),
-    },
+    KMeans { k_range: (usize, usize) },
     /// DBSCAN clustering
     DBSCAN {
         eps_range: (f64, f64),
         min_samples_range: (usize, usize),
     },
     /// Mean shift clustering
-    MeanShift {
-        bandwidth_range: (f64, f64),
-    },
+    MeanShift { bandwidth_range: (f64, f64) },
     /// Hierarchical clustering
-    Hierarchical {
-        methods: Vec<String>,
-    },
+    Hierarchical { methods: Vec<String> },
     /// Spectral clustering
-    Spectral {
-        k_range: (usize, usize),
-    },
+    Spectral { k_range: (usize, usize) },
     /// Affinity propagation
-    AffinityPropagation {
-        damping_range: (f64, f64),
-    },
+    AffinityPropagation { damping_range: (f64, f64) },
 }
 
 /// Parameter ranges for diversity
@@ -235,8 +211,9 @@ pub struct EnsembleClusterer<F: Float> {
     _phantom: std::marker::PhantomData<F>,
 }
 
-impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync>
-    EnsembleClusterer<F>
+impl<
+        F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync,
+    > EnsembleClusterer<F>
 where
     f64: From<F>,
 {
@@ -251,30 +228,31 @@ where
     /// Perform ensemble clustering
     pub fn fit(&self, data: ArrayView2<F>) -> Result<EnsembleResult> {
         let start_time = std::time::Instant::now();
-        
+
         // Generate diverse clustering results
         let individual_results = self.generate_diverse_clusterings(data)?;
-        
+
         // Filter results based on quality threshold
         let filtered_results = self.filter_by_quality(&individual_results);
-        
+
         // Combine results using consensus method
         let consensus_labels = self.build_consensus(&filtered_results, data)?;
-        
+
         // Calculate ensemble statistics
-        let consensus_stats = self.calculate_consensus_statistics(&filtered_results, &consensus_labels)?;
+        let consensus_stats =
+            self.calculate_consensus_statistics(&filtered_results, &consensus_labels)?;
         let diversity_metrics = self.calculate_diversity_metrics(&filtered_results)?;
-        
+
         // Calculate overall quality
         let data_f64 = data.mapv(|x| x.to_f64().unwrap_or(0.0));
-        let ensemble_quality = silhouette_score(data_f64.view(), consensus_labels.view())
-            .unwrap_or(0.0);
-        
+        let ensemble_quality =
+            silhouette_score(data_f64.view(), consensus_labels.view()).unwrap_or(0.0);
+
         // Calculate stability score
         let stability_score = self.calculate_stability_score(&consensus_stats);
-        
+
         let total_time = start_time.elapsed().as_secs_f64();
-        
+
         Ok(EnsembleResult {
             consensus_labels,
             individual_results: filtered_results,
@@ -295,29 +273,28 @@ where
 
         for i in 0..self.config.n_estimators {
             let clustering_start = std::time::Instant::now();
-            
+
             // Apply sampling strategy
             let (sampled_data, sample_indices) = self.apply_sampling_strategy(data, &mut rng)?;
-            
+
             // Select algorithm and parameters based on diversity strategy
             let (algorithm, parameters) = self.select_algorithm_and_parameters(i, &mut rng)?;
-            
+
             // Run clustering
             let mut labels = self.run_clustering(&sampled_data, &algorithm, &parameters)?;
-            
+
             // Map labels back to original data size if needed
             if sample_indices.len() != data.nrows() {
                 labels = self.map_labels_to_full_data(&labels, &sample_indices, data.nrows())?;
             }
-            
+
             // Calculate quality score
             let data_f64 = data.mapv(|x| x.to_f64().unwrap_or(0.0));
-            let quality_score = silhouette_score(data_f64.view(), labels.view())
-                .unwrap_or(-1.0);
-            
+            let quality_score = silhouette_score(data_f64.view(), labels.view()).unwrap_or(-1.0);
+
             let runtime = clustering_start.elapsed().as_secs_f64();
             let n_clusters = self.count_clusters(&labels);
-            
+
             let result = ClusteringResult {
                 labels,
                 algorithm: format!("{:?}", algorithm),
@@ -327,7 +304,7 @@ where
                 n_clusters,
                 runtime,
             };
-            
+
             results.push(result);
         }
 
@@ -347,11 +324,11 @@ where
             SamplingStrategy::Bootstrap { sample_ratio } => {
                 let sample_size = (n_samples as f64 * sample_ratio) as usize;
                 let mut indices = Vec::new();
-                
+
                 for _ in 0..sample_size {
                     indices.push(rng.gen_range(0..n_samples));
                 }
-                
+
                 let sampled_data = self.extract_samples(data, &indices)?;
                 Ok((sampled_data, indices))
             }
@@ -360,40 +337,48 @@ where
                 let mut feature_indices: Vec<usize> = (0..n_features).collect();
                 feature_indices.shuffle(rng);
                 feature_indices.truncate(n_selected_features);
-                
+
                 let sample_indices: Vec<usize> = (0..n_samples).collect();
                 let sampled_data = self.extract_features(data, &feature_indices)?;
                 Ok((sampled_data, sample_indices))
             }
-            SamplingStrategy::BootstrapSubspace { sample_ratio, feature_ratio } => {
+            SamplingStrategy::BootstrapSubspace {
+                sample_ratio,
+                feature_ratio,
+            } => {
                 // First apply bootstrap sampling
                 let sample_size = (n_samples as f64 * sample_ratio) as usize;
                 let mut sample_indices = Vec::new();
-                
+
                 for _ in 0..sample_size {
                     sample_indices.push(rng.gen_range(0..n_samples));
                 }
-                
+
                 // Then apply feature sampling
                 let n_selected_features = (n_features as f64 * feature_ratio) as usize;
                 let mut feature_indices: Vec<usize> = (0..n_features).collect();
                 feature_indices.shuffle(rng);
                 feature_indices.truncate(n_selected_features);
-                
+
                 let bootstrap_data = self.extract_samples(data, &sample_indices)?;
-                let sampled_data = self.extract_features(bootstrap_data.view(), &feature_indices)?;
-                
+                let sampled_data =
+                    self.extract_features(bootstrap_data.view(), &feature_indices)?;
+
                 Ok((sampled_data, sample_indices))
             }
-            SamplingStrategy::NoiseInjection { noise_level, noise_type } => {
+            SamplingStrategy::NoiseInjection {
+                noise_level,
+                noise_type,
+            } => {
                 let sample_indices: Vec<usize> = (0..n_samples).collect();
                 let mut noisy_data = data.to_owned();
-                
+
                 match noise_type {
                     NoiseType::Gaussian => {
                         for i in 0..n_samples {
                             for j in 0..n_features {
-                                let noise = F::from(rng.gen::<f64>() * 2.0 - 1.0).unwrap() * F::from(*noise_level).unwrap();
+                                let noise = F::from(rng.gen::<f64>() * 2.0 - 1.0).unwrap()
+                                    * F::from(*noise_level).unwrap();
                                 noisy_data[[i, j]] = noisy_data[[i, j]] + noise;
                             }
                         }
@@ -401,7 +386,8 @@ where
                     NoiseType::Uniform => {
                         for i in 0..n_samples {
                             for j in 0..n_features {
-                                let noise = F::from((rng.gen::<f64>() * 2.0 - 1.0) * noise_level).unwrap();
+                                let noise =
+                                    F::from((rng.gen::<f64>() * 2.0 - 1.0) * noise_level).unwrap();
                                 noisy_data[[i, j]] = noisy_data[[i, j]] + noise;
                             }
                         }
@@ -417,7 +403,7 @@ where
                         }
                     }
                 }
-                
+
                 Ok((noisy_data, sample_indices))
             }
             SamplingStrategy::None => {
@@ -436,27 +422,33 @@ where
     fn extract_samples(&self, data: ArrayView2<F>, indices: &[usize]) -> Result<Array2<F>> {
         let n_features = data.ncols();
         let mut sampled_data = Array2::zeros((indices.len(), n_features));
-        
+
         for (new_idx, &old_idx) in indices.iter().enumerate() {
             if old_idx < data.nrows() {
                 sampled_data.row_mut(new_idx).assign(&data.row(old_idx));
             }
         }
-        
+
         Ok(sampled_data)
     }
 
     /// Extract features based on indices
-    fn extract_features(&self, data: ArrayView2<F>, feature_indices: &[usize]) -> Result<Array2<F>> {
+    fn extract_features(
+        &self,
+        data: ArrayView2<F>,
+        feature_indices: &[usize],
+    ) -> Result<Array2<F>> {
         let n_samples = data.nrows();
         let mut sampled_data = Array2::zeros((n_samples, feature_indices.len()));
-        
+
         for (new_feat_idx, &old_feat_idx) in feature_indices.iter().enumerate() {
             if old_feat_idx < data.ncols() {
-                sampled_data.column_mut(new_feat_idx).assign(&data.column(old_feat_idx));
+                sampled_data
+                    .column_mut(new_feat_idx)
+                    .assign(&data.column(old_feat_idx));
             }
         }
-        
+
         Ok(sampled_data)
     }
 
@@ -472,7 +464,10 @@ where
                 let parameters = self.generate_random_parameters(&algorithm, rng)?;
                 Ok((algorithm, parameters))
             }
-            Some(DiversityStrategy::ParameterDiversity { algorithm, parameter_ranges }) => {
+            Some(DiversityStrategy::ParameterDiversity {
+                algorithm,
+                parameter_ranges,
+            }) => {
                 let parameters = self.sample_parameter_ranges(parameter_ranges, rng)?;
                 Ok((algorithm.clone(), parameters))
             }
@@ -494,13 +489,16 @@ where
         rng: &mut rand::rngs::StdRng,
     ) -> Result<HashMap<String, String>> {
         let mut parameters = HashMap::new();
-        
+
         match algorithm {
             ClusteringAlgorithm::KMeans { k_range } => {
                 let k = rng.gen_range(k_range.0..=k_range.1);
                 parameters.insert("k".to_string(), k.to_string());
             }
-            ClusteringAlgorithm::DBSCAN { eps_range, min_samples_range } => {
+            ClusteringAlgorithm::DBSCAN {
+                eps_range,
+                min_samples_range,
+            } => {
                 let eps = rng.gen_range(eps_range.0..=eps_range.1);
                 let min_samples = rng.gen_range(min_samples_range.0..=min_samples_range.1);
                 parameters.insert("eps".to_string(), eps.to_string());
@@ -523,7 +521,7 @@ where
                 parameters.insert("damping".to_string(), damping.to_string());
             }
         }
-        
+
         Ok(parameters)
     }
 
@@ -534,25 +532,19 @@ where
         rng: &mut rand::rngs::StdRng,
     ) -> Result<HashMap<String, String>> {
         let mut parameters = HashMap::new();
-        
+
         for (param_name, range) in parameter_ranges {
             let value = match range {
-                ParameterRange::Integer(min, max) => {
-                    rng.gen_range(*min..=*max).to_string()
-                }
-                ParameterRange::Float(min, max) => {
-                    rng.gen_range(*min..=*max).to_string()
-                }
+                ParameterRange::Integer(min, max) => rng.gen_range(*min..=*max).to_string(),
+                ParameterRange::Float(min, max) => rng.gen_range(*min..=*max).to_string(),
                 ParameterRange::Categorical(choices) => {
                     choices[rng.gen_range(0..choices.len())].clone()
                 }
-                ParameterRange::Boolean => {
-                    rng.gen_bool(0.5).to_string()
-                }
+                ParameterRange::Boolean => rng.gen_bool(0.5).to_string(),
             };
             parameters.insert(param_name.clone(), value);
         }
-        
+
         Ok(parameters)
     }
 
@@ -564,13 +556,14 @@ where
         parameters: &HashMap<String, String>,
     ) -> Result<Array1<i32>> {
         let data_f64 = data.mapv(|x| x.to_f64().unwrap_or(0.0));
-        
+
         match algorithm {
             ClusteringAlgorithm::KMeans { .. } => {
-                let k = parameters.get("k")
+                let k = parameters
+                    .get("k")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(3);
-                
+
                 match kmeans2(
                     data.view(),
                     k,
@@ -589,13 +582,15 @@ where
                 }
             }
             ClusteringAlgorithm::DBSCAN { .. } => {
-                let eps = parameters.get("eps")
+                let eps = parameters
+                    .get("eps")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(0.5);
-                let min_samples = parameters.get("min_samples")
+                let min_samples = parameters
+                    .get("min_samples")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(5);
-                
+
                 match dbscan(data_f64.view(), eps, min_samples) {
                     Ok(labels) => Ok(labels),
                     Err(_) => {
@@ -606,10 +601,11 @@ where
             }
             _ => {
                 // For other algorithms, fallback to k-means
-                let k = parameters.get("k")
+                let k = parameters
+                    .get("k")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(3);
-                
+
                 match kmeans2(
                     data.view(),
                     k,
@@ -635,20 +631,20 @@ where
         full_size: usize,
     ) -> Result<Array1<i32>> {
         let mut full_labels = Array1::from_elem(full_size, -1); // Use -1 for unassigned
-        
+
         for (sample_idx, &label) in sample_indices.iter().zip(labels.iter()) {
             if *sample_idx < full_size {
                 full_labels[*sample_idx] = label;
             }
         }
-        
+
         // Assign unassigned points to nearest cluster (simplified)
         for i in 0..full_size {
             if full_labels[i] == -1 {
                 full_labels[i] = 0; // Assign to cluster 0 as fallback
             }
         }
-        
+
         Ok(full_labels)
     }
 
@@ -686,12 +682,8 @@ where
         let n_samples = data.nrows();
 
         match &self.config.consensus_method {
-            ConsensusMethod::MajorityVoting => {
-                self.majority_voting_consensus(results, n_samples)
-            }
-            ConsensusMethod::WeightedConsensus => {
-                self.weighted_consensus(results, n_samples)
-            }
+            ConsensusMethod::MajorityVoting => self.majority_voting_consensus(results, n_samples),
+            ConsensusMethod::WeightedConsensus => self.weighted_consensus(results, n_samples),
             ConsensusMethod::CoAssociation { threshold } => {
                 self.co_association_consensus(results, n_samples, *threshold)
             }
@@ -713,7 +705,7 @@ where
     ) -> Result<Array1<i32>> {
         // Build co-association matrix
         let mut co_association = Array2::zeros((n_samples, n_samples));
-        
+
         for result in results {
             for i in 0..n_samples {
                 for j in 0..n_samples {
@@ -725,10 +717,10 @@ where
                 }
             }
         }
-        
+
         // Normalize by number of results
         co_association /= results.len() as f64;
-        
+
         // Extract clusters using threshold
         self.extract_clusters_from_matrix(&co_association, 0.5)
     }
@@ -741,11 +733,11 @@ where
     ) -> Result<Array1<i32>> {
         let mut weighted_co_association = Array2::zeros((n_samples, n_samples));
         let mut total_weight = 0.0;
-        
+
         for result in results {
             let weight = (result.quality_score + 1.0).max(0.0); // Ensure positive weight
             total_weight += weight;
-            
+
             for i in 0..n_samples {
                 for j in 0..n_samples {
                     if i < result.labels.len() && j < result.labels.len() {
@@ -756,12 +748,12 @@ where
                 }
             }
         }
-        
+
         // Normalize by total weight
         if total_weight > 0.0 {
             weighted_co_association /= total_weight;
         }
-        
+
         // Extract clusters using threshold
         self.extract_clusters_from_matrix(&weighted_co_association, 0.5)
     }
@@ -774,7 +766,7 @@ where
         threshold: f64,
     ) -> Result<Array1<i32>> {
         let mut co_association = Array2::zeros((n_samples, n_samples));
-        
+
         for result in results {
             for i in 0..n_samples {
                 for j in 0..n_samples {
@@ -786,10 +778,10 @@ where
                 }
             }
         }
-        
+
         // Normalize
         co_association /= results.len() as f64;
-        
+
         // Extract clusters using specified threshold
         self.extract_clusters_from_matrix(&co_association, threshold)
     }
@@ -821,15 +813,15 @@ where
             if !visited[i] {
                 let mut component = Vec::new();
                 let mut stack = vec![i];
-                
+
                 while let Some(node) = stack.pop() {
                     if visited[node] {
                         continue;
                     }
-                    
+
                     visited[node] = true;
                     component.push(node);
-                    
+
                     // Find connected nodes
                     for j in 0..n_samples {
                         if !visited[j] && matrix[[node, j]] >= threshold {
@@ -837,7 +829,7 @@ where
                         }
                     }
                 }
-                
+
                 // Assign cluster label to component
                 for &node in &component {
                     labels[node] = current_cluster;
@@ -845,7 +837,7 @@ where
                 current_cluster += 1;
             }
         }
-        
+
         Ok(labels)
     }
 
@@ -857,7 +849,7 @@ where
     ) -> Result<ConsensusStatistics> {
         let n_samples = consensus_labels.len();
         let n_results = results.len();
-        
+
         // Calculate agreement matrix
         let mut agreement_matrix = Array2::zeros((n_results, n_results));
         for i in 0..n_results {
@@ -866,28 +858,30 @@ where
                     let ari = adjusted_rand_index::<f64>(
                         results[i].labels.view(),
                         results[j].labels.view(),
-                    ).unwrap_or(0.0);
+                    )
+                    .unwrap_or(0.0);
                     agreement_matrix[[i, j]] = ari;
                 }
             }
         }
-        
+
         // Calculate consensus strength per sample
         let mut consensus_strength = Array1::zeros(n_samples);
         let mut agreement_counts = Array1::zeros(n_samples);
-        
+
         for i in 0..n_samples {
             let mut agreements = 0;
             let consensus_cluster = consensus_labels[i];
-            
+
             for result in results {
                 if i < result.labels.len() {
                     // Check if this result agrees with consensus
                     let mut agrees = false;
                     for j in 0..n_samples {
-                        if j < result.labels.len() 
+                        if j < result.labels.len()
                             && consensus_labels[j] == consensus_cluster
-                            && result.labels[j] == result.labels[i] {
+                            && result.labels[j] == result.labels[i]
+                        {
                             agrees = true;
                             break;
                         }
@@ -897,15 +891,15 @@ where
                     }
                 }
             }
-            
+
             agreement_counts[i] = agreements;
             consensus_strength[i] = agreements as f64 / n_results as f64;
         }
-        
+
         // Calculate cluster stability (simplified)
         let unique_clusters: HashSet<i32> = consensus_labels.iter().cloned().collect();
         let mut cluster_stability = Vec::new();
-        
+
         for &cluster_id in &unique_clusters {
             let cluster_points: Vec<usize> = consensus_labels
                 .iter()
@@ -913,19 +907,20 @@ where
                 .filter(|(_, &label)| label == cluster_id)
                 .map(|(i, _)| i)
                 .collect();
-            
+
             let stability = if cluster_points.is_empty() {
                 0.0
             } else {
                 cluster_points
                     .iter()
                     .map(|&i| consensus_strength[i])
-                    .sum::<f64>() / cluster_points.len() as f64
+                    .sum::<f64>()
+                    / cluster_points.len() as f64
             };
-            
+
             cluster_stability.push(stability);
         }
-        
+
         Ok(ConsensusStatistics {
             agreement_matrix,
             consensus_strength,
@@ -940,40 +935,41 @@ where
         results: &[ClusteringResult],
     ) -> Result<DiversityMetrics> {
         let n_results = results.len();
-        
+
         // Calculate diversity matrix (1 - ARI for each pair)
         let mut diversity_matrix = Array2::zeros((n_results, n_results));
         let mut total_diversity = 0.0;
         let mut diversity_count = 0;
-        
+
         for i in 0..n_results {
             for j in (i + 1)..n_results {
-                let ari = adjusted_rand_index::<f64>(
-                    results[i].labels.view(),
-                    results[j].labels.view(),
-                ).unwrap_or(0.0);
-                
+                let ari =
+                    adjusted_rand_index::<f64>(results[i].labels.view(), results[j].labels.view())
+                        .unwrap_or(0.0);
+
                 let diversity = 1.0 - ari;
                 diversity_matrix[[i, j]] = diversity;
                 diversity_matrix[[j, i]] = diversity;
-                
+
                 total_diversity += diversity;
                 diversity_count += 1;
             }
         }
-        
+
         let average_diversity = if diversity_count > 0 {
             total_diversity / diversity_count as f64
         } else {
             0.0
         };
-        
+
         // Calculate algorithm distribution
         let mut algorithm_distribution = HashMap::new();
         for result in results {
-            *algorithm_distribution.entry(result.algorithm.clone()).or_insert(0) += 1;
+            *algorithm_distribution
+                .entry(result.algorithm.clone())
+                .or_insert(0) += 1;
         }
-        
+
         // Calculate parameter diversity (simplified)
         let mut parameter_diversity = HashMap::new();
         let all_param_names: HashSet<String> = results
@@ -981,18 +977,18 @@ where
             .flat_map(|r| r.parameters.keys())
             .cloned()
             .collect();
-        
+
         for param_name in all_param_names {
             let unique_values: HashSet<String> = results
                 .iter()
                 .filter_map(|r| r.parameters.get(&param_name))
                 .cloned()
                 .collect();
-            
+
             let diversity = unique_values.len() as f64 / results.len() as f64;
             parameter_diversity.insert(param_name, diversity);
         }
-        
+
         Ok(DiversityMetrics {
             average_diversity,
             diversity_matrix,
@@ -1019,9 +1015,9 @@ impl Default for EnsembleConfig {
             diversity_strategy: Some(DiversityStrategy::AlgorithmDiversity {
                 algorithms: vec![
                     ClusteringAlgorithm::KMeans { k_range: (2, 10) },
-                    ClusteringAlgorithm::DBSCAN { 
-                        eps_range: (0.1, 1.0), 
-                        min_samples_range: (3, 10) 
+                    ClusteringAlgorithm::DBSCAN {
+                        eps_range: (0.1, 1.0),
+                        min_samples_range: (3, 10),
                     },
                 ],
             }),
@@ -1038,7 +1034,14 @@ pub mod convenience {
     /// Simple ensemble clustering with default parameters
     pub fn ensemble_clustering<F>(data: ArrayView2<F>) -> Result<EnsembleResult>
     where
-        F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + 'static
+            + std::iter::Sum
+            + std::fmt::Display
+            + Send
+            + Sync,
         f64: From<F>,
     {
         let config = EnsembleConfig::default();
@@ -1053,7 +1056,14 @@ pub mod convenience {
         sample_ratio: f64,
     ) -> Result<EnsembleResult>
     where
-        F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + 'static
+            + std::iter::Sum
+            + std::fmt::Display
+            + Send
+            + Sync,
         f64: From<F>,
     {
         let config = EnsembleConfig {
@@ -1071,7 +1081,14 @@ pub mod convenience {
         algorithms: Vec<ClusteringAlgorithm>,
     ) -> Result<EnsembleResult>
     where
-        F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + 'static
+            + std::iter::Sum
+            + std::fmt::Display
+            + Send
+            + Sync,
         f64: From<F>,
     {
         let config = EnsembleConfig {
@@ -1092,7 +1109,10 @@ mod tests {
     fn test_ensemble_config_default() {
         let config = EnsembleConfig::default();
         assert_eq!(config.n_estimators, 10);
-        assert!(matches!(config.consensus_method, ConsensusMethod::MajorityVoting));
+        assert!(matches!(
+            config.consensus_method,
+            ConsensusMethod::MajorityVoting
+        ));
         assert!(config.diversity_strategy.is_some());
     }
 
@@ -1101,7 +1121,10 @@ mod tests {
         let config = EnsembleConfig::default();
         let ensemble: EnsembleClusterer<f64> = EnsembleClusterer::new(config);
         // Test that ensemble can be created successfully
-        assert_eq!(std::mem::size_of_val(&ensemble), std::mem::size_of::<EnsembleConfig>());
+        assert_eq!(
+            std::mem::size_of_val(&ensemble),
+            std::mem::size_of::<EnsembleConfig>()
+        );
     }
 
     #[test]
@@ -1110,7 +1133,7 @@ mod tests {
             sampling_strategy: SamplingStrategy::Bootstrap { sample_ratio: 0.8 },
             ..Default::default()
         };
-        
+
         // Test that sampling strategy is correctly set
         match config.sampling_strategy {
             SamplingStrategy::Bootstrap { sample_ratio } => {
@@ -1124,14 +1147,14 @@ mod tests {
     fn test_clustering_algorithms() {
         let algorithms = vec![
             ClusteringAlgorithm::KMeans { k_range: (2, 5) },
-            ClusteringAlgorithm::DBSCAN { 
-                eps_range: (0.1, 1.0), 
-                min_samples_range: (3, 10) 
+            ClusteringAlgorithm::DBSCAN {
+                eps_range: (0.1, 1.0),
+                min_samples_range: (3, 10),
             },
         ];
-        
+
         assert_eq!(algorithms.len(), 2);
-        
+
         match &algorithms[0] {
             ClusteringAlgorithm::KMeans { k_range } => {
                 assert_eq!(k_range.0, 2);
@@ -1146,7 +1169,8 @@ mod tests {
         let data = Array2::from_shape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
-        ).unwrap();
+        )
+        .unwrap();
 
         // Test bootstrap ensemble
         let result = convenience::bootstrap_ensemble(data.view(), 3, 0.8);

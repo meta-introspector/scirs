@@ -143,10 +143,20 @@ where
             })
         });
 
+        // Apply bounds to initial x0 if specified
+        let mut x0_bounded = x0.clone();
+        if let Some(ref bounds) = options.bounds {
+            for (i, &(lb, ub)) in bounds.iter().enumerate() {
+                if i < x0_bounded.len() {
+                    x0_bounded[i] = x0_bounded[i].max(lb).min(ub);
+                }
+            }
+        }
+
         // Perform initial minimization to get starting point
         let initial_result = minimize(
             func.clone(),
-            &x0.to_vec(),
+            &x0_bounded.to_vec(),
             options.minimizer_method,
             Some(Options {
                 bounds: options.bounds.clone().map(|b| {

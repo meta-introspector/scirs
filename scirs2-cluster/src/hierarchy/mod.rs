@@ -254,9 +254,10 @@ pub fn coords_to_condensed_index(n: usize, i: usize, j: usize) -> Result<usize> 
     }
 
     if i >= n || j >= n {
-        return Err(ClusteringError::InvalidInput(
-            format!("Indices ({}, {}) out of bounds for matrix size {}", i, j, n),
-        ));
+        return Err(ClusteringError::InvalidInput(format!(
+            "Indices ({}, {}) out of bounds for matrix size {}",
+            i, j, n
+        )));
     }
 
     let (i_min, j_min) = if i < j { (i, j) } else { (j, i) };
@@ -428,10 +429,10 @@ pub fn fcluster<F: Float + FromPrimitive + PartialOrd + Debug>(
         ClusterCriterion::Inconsistent => {
             // t represents an inconsistency threshold
             let t_float = F::from_usize(t).unwrap();
-            
+
             // Calculate inconsistency values with default depth of 2
             let inconsistency_matrix = dendrogram::inconsistent(z, None)?;
-            
+
             // Cut tree based on inconsistency threshold
             agglomerative::cut_tree_by_inconsistency(z, t_float, &inconsistency_matrix)
         }
@@ -482,9 +483,10 @@ pub fn fcluster_generic<F: Float + FromPrimitive + PartialOrd + Debug>(
     match criterion {
         ClusterCriterion::MaxClust => {
             // t represents the number of clusters
-            let n_clusters = t.to_usize()
-                .ok_or_else(|| ClusteringError::InvalidInput("Invalid number of clusters".into()))?;
-            
+            let n_clusters = t.to_usize().ok_or_else(|| {
+                ClusteringError::InvalidInput("Invalid number of clusters".into())
+            })?;
+
             if n_clusters == 0 || n_clusters > n_samples {
                 return Err(ClusteringError::InvalidInput(format!(
                     "Number of clusters must be between 1 and {}",
@@ -502,7 +504,7 @@ pub fn fcluster_generic<F: Float + FromPrimitive + PartialOrd + Debug>(
             // t represents an inconsistency threshold
             // Calculate inconsistency values with default depth of 2
             let inconsistency_matrix = dendrogram::inconsistent(z, None)?;
-            
+
             // Cut tree based on inconsistency threshold
             agglomerative::cut_tree_by_inconsistency(z, t, &inconsistency_matrix)
         }
@@ -638,7 +640,8 @@ mod tests {
         let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
 
         // Test with Inconsistent criterion using fcluster_generic
-        let labels = fcluster_generic(&linkage_matrix, 1.0, ClusterCriterion::Inconsistent).unwrap();
+        let labels =
+            fcluster_generic(&linkage_matrix, 1.0, ClusterCriterion::Inconsistent).unwrap();
 
         // Should have 6 labels
         assert_eq!(labels.len(), 6);
@@ -658,17 +661,21 @@ mod tests {
         let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
 
         // Test MaxClust
-        let labels_maxclust = fcluster_generic(&linkage_matrix, 2.0, ClusterCriterion::MaxClust).unwrap();
+        let labels_maxclust =
+            fcluster_generic(&linkage_matrix, 2.0, ClusterCriterion::MaxClust).unwrap();
         assert_eq!(labels_maxclust.len(), 6);
-        let unique_maxclust: std::collections::HashSet<_> = labels_maxclust.iter().cloned().collect();
+        let unique_maxclust: std::collections::HashSet<_> =
+            labels_maxclust.iter().cloned().collect();
         assert_eq!(unique_maxclust.len(), 2);
 
         // Test Distance
-        let labels_distance = fcluster_generic(&linkage_matrix, 2.5, ClusterCriterion::Distance).unwrap();
+        let labels_distance =
+            fcluster_generic(&linkage_matrix, 2.5, ClusterCriterion::Distance).unwrap();
         assert_eq!(labels_distance.len(), 6);
 
         // Test Inconsistent
-        let labels_inconsistent = fcluster_generic(&linkage_matrix, 0.5, ClusterCriterion::Inconsistent).unwrap();
+        let labels_inconsistent =
+            fcluster_generic(&linkage_matrix, 0.5, ClusterCriterion::Inconsistent).unwrap();
         assert_eq!(labels_inconsistent.len(), 6);
     }
 }

@@ -3,6 +3,8 @@
 //! This module provides functionality for detecting and extracting features
 //! from images.
 
+pub mod advanced_enhancement;
+pub mod advanced_tracking;
 pub mod brief;
 pub mod canny;
 pub mod descriptor;
@@ -20,6 +22,7 @@ pub mod lbp;
 pub mod log_blob;
 pub mod matching;
 pub mod mser;
+pub mod neural_features;
 pub mod nms;
 pub mod optical_flow;
 pub mod orb;
@@ -31,6 +34,14 @@ pub mod tamura;
 pub mod template_matching;
 pub mod tracker;
 
+pub use advanced_enhancement::{
+    AdvancedDenoiser, DenoisingMethod, HDRProcessor, SuperResolutionMethod,
+    SuperResolutionProcessor, ToneMappingMethod,
+};
+pub use advanced_tracking::{
+    AppearanceExtractor, BoundingBox as TrackingBoundingBox, DeepSORT, Detection, KalmanFilter,
+    Track, TrackState, TrackingMetrics,
+};
 pub use brief::*;
 pub use canny::*;
 pub use descriptor::*;
@@ -48,6 +59,7 @@ pub use lbp::*;
 pub use log_blob::*;
 pub use matching::*;
 pub use mser::*;
+pub use neural_features::*;
 pub use nms::*;
 pub use optical_flow::*;
 pub use orb::*;

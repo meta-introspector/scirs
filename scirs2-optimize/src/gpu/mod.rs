@@ -4,15 +4,31 @@
 //! algorithms and supporting functionality. It leverages scirs2-core's GPU
 //! abstractions to provide high-performance computing capabilities.
 
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::error::{ScirsError, ScirsResult};
-use scirs2_core::gpu::{GpuContext, GpuArray, GpuDevice};
+use scirs2_core::gpu::{GpuArray, GpuBackend, GpuBuffer, GpuDevice};
 use std::sync::Arc;
 
-pub mod cuda_kernels;
-pub mod tensor_core_optimization;
+// Implement error conversion for GPU errors
+impl From<scirs2_core::gpu::GpuError> for ScirsError {
+    fn from(error: scirs2_core::gpu::GpuError) -> Self {
+        match error {
+            scirs2_core::gpu::GpuError::OutOfMemory(msg) => ScirsError::OutOfMemory(msg),
+            scirs2_core::gpu::GpuError::InvalidOperation(msg) => ScirsError::InvalidInput(msg),
+            scirs2_core::gpu::GpuError::ComputationError(msg) => ScirsError::ComputationError(msg),
+            _ => ScirsError::ComputationError(format!("GPU error: {}", error)),
+        }
+    }
+}
+
+// Real GPU array type backed by scirs2-core
+pub type OptimGpuArray<T> = GpuArray<T>;
+pub type GpuContext = GpuDevice;
+
 pub mod acceleration;
+pub mod cuda_kernels;
 pub mod memory_management;
+pub mod tensor_core_optimization;
 
 /// GPU-accelerated optimization configuration
 #[derive(Debug, Clone)]
@@ -55,14 +71,16 @@ pub enum GpuPrecision {
 /// GPU-accelerated function evaluation interface
 pub trait GpuFunction {
     /// Evaluate function on GPU for a batch of points
-    fn evaluate_batch_gpu(&self, points: &GpuArray<f64>) -> ScirsResult<GpuArray<f64>>;
-    
+    fn evaluate_batch_gpu(&self, points: &OptimGpuArray<f64>) -> ScirsResult<OptimGpuArray<f64>>;
+
     /// Evaluate gradient on GPU for a batch of points
-    fn gradient_batch_gpu(&self, points: &GpuArray<f64>) -> ScirsResult<GpuArray<f64>>;
-    
+    fn gradient_batch_gpu(&self, points: &OptimGpuArray<f64>) -> ScirsResult<OptimGpuArray<f64>>;
+
     /// Evaluate hessian on GPU (if supported)
-    fn hessian_batch_gpu(&self, points: &GpuArray<f64>) -> ScirsResult<GpuArray<f64>> {
-        Err(ScirsError::NotImplemented("Hessian evaluation not implemented".to_string()))
+    fn hessian_batch_gpu(&self, points: &OptimGpuArray<f64>) -> ScirsResult<OptimGpuArray<f64>> {
+        Err(ScirsError::NotImplemented(
+            "Hessian evaluation not implemented".to_string(),
+        ))
     }
 
     /// Check if function supports GPU acceleration
@@ -81,11 +99,8 @@ pub struct GpuOptimizationContext {
 impl GpuOptimizationContext {
     /// Create a new GPU optimization context
     pub fn new(config: GpuOptimizationConfig) -> ScirsResult<Self> {
-        let context = Arc::new(GpuContext::new(config.device)?);
-        let memory_pool = memory_management::GpuMemoryPool::new(
-            Arc::clone(&context),
-            config.memory_limit,
-        )?;
+        let context = Arc::new(config.device);
+        let memory_pool = memory_management::GpuMemoryPool::new_stub();
 
         Ok(Self {
             config,
@@ -105,24 +120,60 @@ impl GpuOptimizationContext {
     }
 
     /// Allocate GPU memory for optimization data
-    pub fn allocate_workspace(&mut self, size: usize) -> ScirsResult<memory_management::GpuWorkspace> {
+    pub fn allocate_workspace(
+        &mut self,
+        size: usize,
+    ) -> ScirsResult<memory_management::GpuWorkspace> {
         self.memory_pool.allocate_workspace(size)
     }
 
-    /// Transfer data from CPU to GPU
-    pub fn transfer_to_gpu<T>(&self, data: &Array2<T>) -> ScirsResult<GpuArray<T>>
+    /// Transfer data from CPU to GPU using scirs2-core GPU abstractions
+    pub fn transfer_to_gpu<T>(&self, data: &Array2<T>) -> ScirsResult<OptimGpuArray<T>>
     where
-        T: Clone + Send + Sync,
+        T: Clone + Send + Sync + 'static,
     {
-        self.context.upload_array(data)
+        // Use scirs2-core GPU array creation
+        let shape = data.dim();
+        let mut gpu_array = OptimGpuArray::zeros(&self.context, [shape.0, shape.1])?;
+
+        // Copy data to GPU
+        gpu_array.copy_from_host(data.as_slice().unwrap())?;
+
+        Ok(gpu_array)
     }
 
-    /// Transfer data from GPU to CPU
-    pub fn transfer_from_gpu<T>(&self, gpu_data: &GpuArray<T>) -> ScirsResult<Array2<T>>
+    /// Transfer data from GPU to CPU using scirs2-core GPU abstractions
+    pub fn transfer_from_gpu<T>(&self, gpu_data: &OptimGpuArray<T>) -> ScirsResult<Array2<T>>
     where
-        T: Clone + Send + Sync,
+        T: Clone + Send + Sync + Default + 'static,
     {
-        self.context.download_array(gpu_data)
+        // Get shape from GPU array
+        let shape = gpu_data.shape();
+        let total_size = shape.iter().product();
+
+        // Allocate host memory and copy from GPU
+        let mut host_data = vec![T::default(); total_size];
+        gpu_data.copy_to_host(&mut host_data)?;
+
+        // Reshape to ndarray
+        Array2::from_shape_vec((shape[0], shape[1]), host_data)
+            .map_err(|e| ScirsError::ComputationError(format!("Shape error: {}", e)))
+    }
+
+    /// Upload array to GPU (alias for transfer_to_gpu)
+    pub fn upload_array<T>(&self, data: &Array2<T>) -> ScirsResult<OptimGpuArray<T>>
+    where
+        T: Clone + Send + Sync + 'static,
+    {
+        self.transfer_to_gpu(data)
+    }
+
+    /// Download array from GPU (alias for transfer_from_gpu)
+    pub fn download_array<T>(&self, gpu_data: &OptimGpuArray<T>) -> ScirsResult<Array2<T>>
+    where
+        T: Clone + Send + Sync + Default + 'static,
+    {
+        self.transfer_from_gpu(gpu_data)
     }
 
     /// Execute batch function evaluation
@@ -136,7 +187,7 @@ impl GpuOptimizationContext {
     {
         if !function.supports_gpu() {
             return Err(ScirsError::InvalidInput(
-                "Function does not support GPU acceleration".to_string()
+                "Function does not support GPU acceleration".to_string(),
             ));
         }
 
@@ -159,13 +210,45 @@ impl GpuOptimizationContext {
     {
         if !function.supports_gpu() {
             return Err(ScirsError::InvalidInput(
-                "Function does not support GPU acceleration".to_string()
+                "Function does not support GPU acceleration".to_string(),
             ));
         }
 
         let gpu_points = self.transfer_to_gpu(points)?;
         let gpu_gradients = function.gradient_batch_gpu(&gpu_points)?;
         self.transfer_from_gpu(&gpu_gradients)
+    }
+
+    /// Compute gradient using finite differences
+    pub fn compute_gradient_finite_diff<F>(
+        &self,
+        function: &F,
+        x: &Array1<f64>,
+        h: f64,
+    ) -> ScirsResult<Array1<f64>>
+    where
+        F: Fn(&ArrayView1<f64>) -> f64,
+    {
+        let n = x.len();
+        let mut gradient = Array1::zeros(n);
+
+        // CPU finite differences for now - could be GPU-accelerated in the future
+        for i in 0..n {
+            let mut x_plus = x.clone();
+            let mut x_minus = x.clone();
+            x_plus[i] += h;
+            x_minus[i] -= h;
+
+            gradient[i] = (function(&x_plus.view()) - function(&x_minus.view())) / (2.0 * h);
+        }
+
+        Ok(gradient)
+    }
+
+    /// Compute search direction (simple steepest descent for now)
+    pub fn compute_search_direction(&self, gradient: &Array1<f64>) -> ScirsResult<Array1<f64>> {
+        // Simple steepest descent - could be enhanced with GPU-accelerated quasi-Newton methods
+        Ok(-gradient.clone())
     }
 }
 
@@ -221,7 +304,7 @@ pub mod algorithms {
             F: GpuFunction,
         {
             let dims = bounds.len();
-            
+
             // Initialize population on GPU
             let mut population = self.initialize_population_gpu(bounds)?;
             let mut fitness = self.evaluate_population_gpu(function, &population)?;
@@ -243,7 +326,12 @@ pub mod algorithms {
                 let trial_fitness = self.evaluate_population_gpu(function, &trial_population)?;
 
                 // Selection on GPU
-                self.selection_gpu(&mut population, &mut fitness, &trial_population, &trial_fitness)?;
+                self.selection_gpu(
+                    &mut population,
+                    &mut fitness,
+                    &trial_population,
+                    &trial_fitness,
+                )?;
 
                 function_evaluations += self.population_size;
 
@@ -280,15 +368,15 @@ pub mod algorithms {
 
         fn initialize_population_gpu(&self, bounds: &[(f64, f64)]) -> ScirsResult<Array2<f64>> {
             use rand::Rng;
-            let mut rng = rand::thread_rng();
-            
+            let mut rng = rand::rng();
+
             let dims = bounds.len();
             let mut population = Array2::zeros((self.population_size, dims));
 
             for i in 0..self.population_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    population[[i, j]] = rng.gen_range(low..=high);
+                    population[[i, j]] = rng.random_range(low..=high);
                 }
             }
 
@@ -306,12 +394,15 @@ pub mod algorithms {
             self.context.evaluate_function_batch(function, population)
         }
 
-        fn generate_trial_population_gpu(&self, population: &Array2<f64>) -> ScirsResult<Array2<f64>> {
+        fn generate_trial_population_gpu(
+            &self,
+            population: &Array2<f64>,
+        ) -> ScirsResult<Array2<f64>> {
             // For now, implement on CPU and transfer to GPU
             // In a full implementation, this would use GPU kernels
             use rand::Rng;
-            let mut rng = rand::thread_rng();
-            
+            let mut rng = rand::rng();
+
             let (pop_size, dims) = population.dim();
             let mut trial_population = Array2::zeros((pop_size, dims));
 
@@ -319,7 +410,7 @@ pub mod algorithms {
                 // Select three random individuals different from current
                 let mut indices = Vec::new();
                 while indices.len() < 3 {
-                    let idx = rng.gen_range(0..pop_size);
+                    let idx = rng.random_range(0..pop_size);
                     if idx != i && !indices.contains(&idx) {
                         indices.push(idx);
                     }
@@ -328,11 +419,11 @@ pub mod algorithms {
                 let [a, b, c] = [indices[0], indices[1], indices[2]];
 
                 // Mutation and crossover
-                let j_rand = rng.gen_range(0..dims);
+                let j_rand = rng.random_range(0..dims);
                 for j in 0..dims {
-                    if rng.gen::<f64>() < self.crossover_rate || j == j_rand {
-                        trial_population[[i, j]] = population[[a, j]] + 
-                            self.f_scale * (population[[b, j]] - population[[c, j]]);
+                    if rng.random::<f64>() < self.crossover_rate || j == j_rand {
+                        trial_population[[i, j]] = population[[a, j]]
+                            + self.f_scale * (population[[b, j]] - population[[c, j]]);
                     } else {
                         trial_population[[i, j]] = population[[i, j]];
                     }
@@ -362,9 +453,8 @@ pub mod algorithms {
 
         fn calculate_fitness_std(&self, fitness: &Array1<f64>) -> f64 {
             let mean = fitness.mean().unwrap_or(0.0);
-            let variance = fitness.iter()
-                .map(|&x| (x - mean).powi(2))
-                .sum::<f64>() / fitness.len() as f64;
+            let variance =
+                fitness.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / fitness.len() as f64;
             variance.sqrt()
         }
     }
@@ -374,9 +464,9 @@ pub mod algorithms {
         context: GpuOptimizationContext,
         swarm_size: usize,
         max_iterations: usize,
-        w: f64,      // Inertia weight
-        c1: f64,     // Cognitive parameter
-        c2: f64,     // Social parameter
+        w: f64,  // Inertia weight
+        c1: f64, // Cognitive parameter
+        c2: f64, // Social parameter
     }
 
     impl GpuParticleSwarm {
@@ -414,7 +504,7 @@ pub mod algorithms {
             F: GpuFunction,
         {
             let dims = bounds.len();
-            
+
             // Initialize swarm positions and velocities
             let mut positions = self.initialize_positions_gpu(bounds)?;
             let mut velocities = Array2::zeros((self.swarm_size, dims));
@@ -486,15 +576,15 @@ pub mod algorithms {
 
         fn initialize_positions_gpu(&self, bounds: &[(f64, f64)]) -> ScirsResult<Array2<f64>> {
             use rand::Rng;
-            let mut rng = rand::thread_rng();
-            
+            let mut rng = rand::rng();
+
             let dims = bounds.len();
             let mut positions = Array2::zeros((self.swarm_size, dims));
 
             for i in 0..self.swarm_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    positions[[i, j]] = rng.gen_range(low..=high);
+                    positions[[i, j]] = rng.random_range(low..=high);
                 }
             }
 
@@ -521,19 +611,19 @@ pub mod algorithms {
             bounds: &[(f64, f64)],
         ) -> ScirsResult<()> {
             use rand::Rng;
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             let (swarm_size, dims) = positions.dim();
 
             for i in 0..swarm_size {
                 for j in 0..dims {
-                    let r1: f64 = rng.gen();
-                    let r2: f64 = rng.gen();
+                    let r1: f64 = rng.random();
+                    let r2: f64 = rng.random();
 
                     // Update velocity
-                    velocities[[i, j]] = self.w * velocities[[i, j]] +
-                        self.c1 * r1 * (personal_best[[i, j]] - positions[[i, j]]) +
-                        self.c2 * r2 * (global_best[j] - positions[[i, j]]);
+                    velocities[[i, j]] = self.w * velocities[[i, j]]
+                        + self.c1 * r1 * (personal_best[[i, j]] - positions[[i, j]])
+                        + self.c2 * r2 * (global_best[j] - positions[[i, j]]);
 
                     // Update position
                     positions[[i, j]] += velocities[[i, j]];
@@ -555,9 +645,8 @@ pub mod algorithms {
 
         fn calculate_fitness_std(&self, fitness: &Array1<f64>) -> f64 {
             let mean = fitness.mean().unwrap_or(0.0);
-            let variance = fitness.iter()
-                .map(|&x| (x - mean).powi(2))
-                .sum::<f64>() / fitness.len() as f64;
+            let variance =
+                fitness.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / fitness.len() as f64;
             variance.sqrt()
         }
     }
@@ -587,7 +676,7 @@ pub mod utils {
 
         let memory_per_point = problem_dims * element_size * 3; // Input, output, temp
         let batch_size = available_memory / memory_per_point;
-        
+
         // Ensure batch size is reasonable
         batch_size.max(1).min(65536)
     }
@@ -597,9 +686,9 @@ pub mod utils {
         problem_dims: usize,
         expected_evaluations: usize,
     ) -> ScirsResult<GpuOptimizationConfig> {
-        let device = GpuDevice::default();
+        let device = GpuDevice::new(scirs2_core::gpu::GpuBackend::Cuda, 0);
         let available_memory = device.memory_info()?.free;
-        
+
         let batch_size = estimate_optimal_batch_size(
             problem_dims,
             available_memory / 2, // Use half of available memory
@@ -633,9 +722,9 @@ mod tests {
     #[test]
     fn test_optimal_batch_size_estimation() {
         let batch_size = utils::estimate_optimal_batch_size(
-            10,           // 10-dimensional problem
-            1024 * 1024,  // 1MB memory
-            GpuPrecision::F64
+            10,          // 10-dimensional problem
+            1024 * 1024, // 1MB memory
+            GpuPrecision::F64,
         );
         assert!(batch_size > 0);
         assert!(batch_size <= 65536);
@@ -643,8 +732,8 @@ mod tests {
 
     #[test]
     fn test_gpu_usage_heuristic() {
-        assert!(!utils::should_use_gpu(10, 10));     // Small problem
-        assert!(utils::should_use_gpu(1000, 100));   // Large problem
-        assert!(utils::should_use_gpu(100, 1000));   // Large batch
+        assert!(!utils::should_use_gpu(10, 10)); // Small problem
+        assert!(utils::should_use_gpu(1000, 100)); // Large problem
+        assert!(utils::should_use_gpu(100, 1000)); // Large batch
     }
 }

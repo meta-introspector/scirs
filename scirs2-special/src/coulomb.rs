@@ -72,7 +72,7 @@ pub fn coulomb_phase_shift(l: f64, eta: f64) -> SpecialResult<f64> {
     // The Coulomb phase shift is σ_L(η) = arg Γ(L+1 + iη)
     // We compute this using the relationship:
     // σ_L(η) = Im[ln Γ(L+1 + iη)]
-    
+
     // Sum the series for the argument of the gamma function
     // For σ_0(η), use the exact formula involving digamma function
     let sigma = if l == 0.0 {
@@ -83,11 +83,11 @@ pub fn coulomb_phase_shift(l: f64, eta: f64) -> SpecialResult<f64> {
         // For L > 0, use the recurrence relation:
         // σ_{L+1}(η) = σ_L(η) + arctan(η/(L+1))
         let mut current_sigma = coulomb_phase_shift_l0(eta)?;
-        
+
         for k in 1..=(l as i32) {
             current_sigma += (eta / (k as f64)).atan();
         }
-        
+
         current_sigma
     };
 
@@ -99,61 +99,173 @@ fn coulomb_phase_shift_l0(eta: f64) -> SpecialResult<f64> {
     if eta == 0.0 {
         return Ok(0.0);
     }
-    
+
     // For small η, use series expansion
     if eta.abs() < 1.0 {
         // σ_0(η) = η * [γ + ln(2|η|) - Re(ψ(1+iη))]
         // where γ is Euler's constant and ψ is the digamma function
-        
+
         let euler_gamma = 0.5772156649015329;
         let mut sigma = eta * (euler_gamma + (2.0 * eta.abs()).ln());
-        
+
         // Add series terms for digamma function
         // ψ(1+ix) = -γ + ix * ∑_{n=1}^∞ (-1)^{n-1} * ζ(n+1) * (ix)^n / (n+1)
         // For the imaginary part, we need the odd terms
-        
+
         let eta2 = eta * eta;
         let mut eta_power = eta;
-        
+
         // Series terms (first few terms are usually sufficient)
         for n in 1..20 {
             let zeta_val = match n {
-                1 => PI * PI / 6.0,  // ζ(2)
-                2 => 1.202,          // ζ(3) ≈ 1.202
-                3 => PI.powi(4) / 90.0, // ζ(4)
-                4 => 1.037,          // ζ(5) ≈ 1.037
+                1 => PI * PI / 6.0,                         // ζ(2)
+                2 => 1.202,                                 // ζ(3) ≈ 1.202
+                3 => PI.powi(4) / 90.0,                     // ζ(4)
+                4 => 1.037,                                 // ζ(5) ≈ 1.037
                 _ => 1.0 / (n as f64).powf(n as f64 + 1.0), // Rough approximation
             };
-            
+
             let term = if n % 2 == 1 {
                 // Odd n contributes to imaginary part
                 -eta_power * zeta_val / ((n + 1) as f64)
             } else {
                 0.0
             };
-            
+
             sigma += term;
             eta_power *= eta2;
-            
+
             if term.abs() < 1e-15 {
                 break;
             }
         }
-        
+
         return Ok(sigma);
     }
-    
+
     // For larger η, use asymptotic expansion
     // σ_0(η) ≈ η * [ln(2η) - 1] + π/2 * sign(η) for |η| >> 1
     if eta.abs() > 10.0 {
         let asymptotic = eta * ((2.0 * eta.abs()).ln() - 1.0) + PI / 2.0 * eta.signum();
         return Ok(asymptotic);
     }
-    
-    // For intermediate values, use continued fraction representation
-    // This is a simplified implementation
-    let sigma_approx = eta * ((2.0 * eta.abs()).ln() - 1.0 + 0.5772156649015329);
-    Ok(sigma_approx)
+
+    // For intermediate values, use more accurate method combining series and asymptotic forms
+    // Use the relation σ_0(η) = arg Γ(1 + iη) computed via Stirling's approximation
+    coulomb_phase_shift_intermediate(eta)
+}
+
+/// Compute the Coulomb phase shift for intermediate η values using improved methods
+fn coulomb_phase_shift_intermediate(eta: f64) -> SpecialResult<f64> {
+    // Use the complex gamma function to compute σ_0(η) = arg Γ(1 + iη)
+    // For intermediate values, combine multiple approaches for best accuracy
+
+    use crate::gamma::complex::gamma_complex;
+
+    // Method 1: Direct computation via complex gamma function
+    let z = Complex64::new(1.0, eta);
+    let gamma_z = gamma_complex(z);
+    let direct_result = gamma_z.arg();
+
+    // Method 2: Use the reflection formula for better numerical stability
+    // Γ(z) * Γ(1-z) = π / sin(πz)
+    // This gives us a more stable way to compute the argument
+
+    let pi_z = PI * z;
+    let sin_pi_z = pi_z.sin();
+    let reflection_correction = if sin_pi_z.norm() > 1e-15 {
+        let gamma_one_minus_z = gamma_complex(Complex64::new(1.0, 0.0) - z);
+        let product = gamma_z * gamma_one_minus_z;
+        let expected = PI / sin_pi_z;
+
+        // Use the fact that the product should equal π/sin(πz)
+        // to improve the phase calculation
+        let phase_correction = (expected / product).arg();
+        direct_result + phase_correction * 0.1 // Small correction factor
+    } else {
+        direct_result
+    };
+
+    // Method 3: Series correction for better accuracy near integer values
+    let eta_int_part = eta.round();
+    let eta_frac = eta - eta_int_part;
+
+    if eta_frac.abs() < 0.1 {
+        // Near integer values, use series expansion around the integer
+        let series_correction = coulomb_phase_shift_near_integer(eta_int_part, eta_frac)?;
+        let combined_result = reflection_correction + series_correction * 0.2;
+        Ok(combined_result)
+    } else {
+        // For other intermediate values, use improved asymptotic approximation
+        let improved_asymptotic = coulomb_phase_shift_improved_asymptotic(eta)?;
+
+        // Weighted combination for smooth transition
+        let weight = ((eta.abs() - 1.0) / 9.0).clamp(0.0, 1.0);
+        let combined = weight * improved_asymptotic + (1.0 - weight) * reflection_correction;
+        Ok(combined)
+    }
+}
+
+/// Series correction for Coulomb phase shift near integer values
+fn coulomb_phase_shift_near_integer(eta_int: f64, eta_frac: f64) -> SpecialResult<f64> {
+    // Use Taylor expansion around integer values
+    // σ_0(n + δ) ≈ σ_0(n) + σ_0'(n) * δ + σ_0''(n) * δ²/2 + ...
+
+    if eta_frac.abs() < 1e-15 {
+        return Ok(0.0);
+    }
+
+    // For integer values, σ_0(n) has a known form
+    let base_value = if eta_int == 0.0 {
+        0.0
+    } else {
+        // Use the digamma function for the derivative
+        use crate::gamma::complex::digamma_complex;
+        let base_z = Complex64::new(eta_int + 1.0, 0.0);
+        let digamma_base = digamma_complex(base_z);
+        digamma_base.im * eta_int.signum()
+    };
+
+    // First derivative term
+    let derivative_z = Complex64::new(eta_int + 1.0, 0.0);
+    use crate::gamma::complex::digamma_complex;
+    let digamma_deriv = digamma_complex(derivative_z);
+    let first_order = digamma_deriv.im * eta_frac;
+
+    // Second derivative approximation (trigamma function)
+    let trigamma_approx = if eta_int.abs() > 0.5 {
+        PI * PI / (6.0 * eta_int * eta_int)
+    } else {
+        PI * PI / 6.0 // ζ(2) for small values
+    };
+    let second_order = trigamma_approx * eta_frac * eta_frac / 2.0;
+
+    Ok(base_value + first_order + second_order)
+}
+
+/// Improved asymptotic approximation for intermediate η values
+fn coulomb_phase_shift_improved_asymptotic(eta: f64) -> SpecialResult<f64> {
+    // Enhanced asymptotic series with more terms
+    // σ_0(η) ≈ η * [ln(2|η|) - 1 + γ] + corrections
+
+    let euler_gamma = 0.5772156649015329;
+    let eta_abs = eta.abs();
+
+    // Main asymptotic term
+    let main_term = eta * ((2.0 * eta_abs).ln() - 1.0 + euler_gamma);
+
+    // First-order correction: π²/(12η)
+    let first_correction = PI * PI / (12.0 * eta);
+
+    // Second-order correction: -π⁴/(240η³)
+    let second_correction = -PI.powi(4) / (240.0 * eta.powi(3));
+
+    // Third-order correction for better accuracy
+    let third_correction = PI.powi(6) / (6048.0 * eta.powi(5));
+
+    let result = main_term + first_correction + second_correction + third_correction;
+
+    Ok(result)
 }
 
 /// Computes the regular Coulomb wave function F_L(η,ρ)
@@ -224,15 +336,15 @@ fn coulomb_f_eta_zero(l: f64, rho: f64) -> SpecialResult<f64> {
         _ => {
             // For higher l, use recurrence relation
             // j_{l+1}(x) = (2l+1)/x * j_l(x) - j_{l-1}(x)
-            let mut j_prev = rho.sin() / rho;  // j_0
-            let mut j_curr = rho.sin() / rho.powi(2) - rho.cos() / rho;  // j_1
-            
+            let mut j_prev = rho.sin() / rho; // j_0
+            let mut j_curr = rho.sin() / rho.powi(2) - rho.cos() / rho; // j_1
+
             for k in 1..(l as i32) {
                 let j_next = (2.0 * k as f64 + 1.0) / rho * j_curr - j_prev;
                 j_prev = j_curr;
                 j_curr = j_next;
             }
-            
+
             Ok(rho * j_curr)
         }
     }
@@ -241,45 +353,143 @@ fn coulomb_f_eta_zero(l: f64, rho: f64) -> SpecialResult<f64> {
 /// Coulomb F function using series expansion for small ρ
 fn coulomb_f_series(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     let c_l = coulomb_normalization_constant(l, eta)?;
-    
+
     // F_L(η,ρ) = C_L(η) * ρ^{L+1} * M(L+1-iη, 2L+2, 2iρ)
     // where M is the confluent hypergeometric function
-    // For small ρ, M(a,b,z) ≈ 1 + (a/b)*z + (a(a+1))/(b(b+1)) * z²/2! + ...
-    
+    // We need to handle the complex nature properly
+
     let rho_power = rho.powf(l + 1.0);
-    let two_i_rho = 2.0 * rho; // Actually 2iρ but we work with real part
-    
-    // Series for M(L+1-iη, 2L+2, 2iρ)
-    // This is simplified - a full implementation would handle the complex nature
-    let a = l + 1.0; // Real part of L+1-iη
+
+    // Complex parameters: a = L+1-iη, b = 2L+2, z = 2iρ
+    let a_real = l + 1.0;
+    let a_imag = -eta;
     let b = 2.0 * l + 2.0;
-    let z = two_i_rho;
-    
-    let mut m_series = 1.0;
-    let mut term = 1.0;
-    
-    for n in 1..50 {
-        let a_factor = a + (n - 1) as f64;
-        let b_factor = b + (n - 1) as f64;
-        term *= a_factor / b_factor * z / (n as f64);
-        m_series += term;
-        
-        if term.abs() < 1e-15 {
+    let z_real = 0.0;
+    let z_imag = 2.0 * rho;
+
+    // Compute M(a,b,z) using the series expansion with complex arithmetic
+    let m_result = confluent_hypergeometric_1f1_complex(
+        Complex64::new(a_real, a_imag),
+        b,
+        Complex64::new(z_real, z_imag),
+    )?;
+
+    // The result is complex, but for the Coulomb F function we need the real part
+    // properly weighted by the normalization and phase factors
+    let result = c_l * rho_power * m_result.re;
+
+    Ok(result)
+}
+
+/// Compute the confluent hypergeometric function 1F1(a; b; z) for complex a and z
+fn confluent_hypergeometric_1f1_complex(
+    a: Complex64,
+    b: f64,
+    z: Complex64,
+) -> SpecialResult<Complex64> {
+    // Handle special cases
+    if b <= 0.0 && (b - b.round()).abs() < 1e-10 {
+        return Err(SpecialError::DomainError(
+            "Parameter b must not be a non-positive integer".to_string(),
+        ));
+    }
+
+    if z.norm() < 1e-15 {
+        return Ok(Complex64::new(1.0, 0.0));
+    }
+
+    // For small |z|, use the series expansion
+    if z.norm() < 10.0 {
+        confluent_hypergeometric_series_complex(a, b, z)
+    } else {
+        // For larger |z|, use asymptotic expansion or continued fractions
+        confluent_hypergeometric_asymptotic_complex(a, b, z)
+    }
+}
+
+/// Series expansion of 1F1(a; b; z) for complex parameters
+fn confluent_hypergeometric_series_complex(
+    a: Complex64,
+    b: f64,
+    z: Complex64,
+) -> SpecialResult<Complex64> {
+    let max_terms = 200;
+    let tolerance = 1e-15;
+
+    let mut sum = Complex64::new(1.0, 0.0);
+    let mut term = Complex64::new(1.0, 0.0);
+    let mut a_n = a;
+    let mut b_n = b;
+
+    for n in 1..=max_terms {
+        // Compute (a)_n / (b)_n * z^n / n!
+        // where (a)_n = a(a+1)...(a+n-1) is the Pochhammer symbol
+        term *= a_n * z / (b_n * n as f64);
+        sum += term;
+
+        // Update for next iteration
+        a_n += 1.0;
+        b_n += 1.0;
+
+        // Check for convergence
+        if term.norm() < tolerance * sum.norm().max(1.0) {
             break;
         }
+
+        // Prevent infinite loops with very slow convergence
+        if n == max_terms {
+            return Err(SpecialError::ConvergenceError(
+                "Confluent hypergeometric series did not converge".to_string(),
+            ));
+        }
     }
-    
-    Ok(c_l * rho_power * m_series)
+
+    Ok(sum)
+}
+
+/// Asymptotic expansion of 1F1(a; b; z) for large |z|
+fn confluent_hypergeometric_asymptotic_complex(
+    a: Complex64,
+    b: f64,
+    z: Complex64,
+) -> SpecialResult<Complex64> {
+    // For large |z| with Re(z) > 0, use the asymptotic expansion:
+    // 1F1(a; b; z) ~ Γ(b)/Γ(b-a) * (-z)^(-a) * e^z * [1 + O(1/z)]
+
+    use crate::gamma::{complex::gamma_complex, gamma};
+
+    // Compute the gamma functions
+    let gamma_b = gamma(b);
+    let gamma_b_minus_a = gamma_complex(Complex64::new(b, 0.0) - a);
+
+    // Compute (-z)^(-a) = exp(-a * ln(-z))
+    let neg_z = -z;
+    let ln_neg_z = neg_z.ln();
+    let neg_z_power_neg_a = (-a * ln_neg_z).exp();
+
+    // Compute e^z
+    let exp_z = z.exp();
+
+    // Leading term of asymptotic expansion
+    let leading_coeff = gamma_b / gamma_b_minus_a;
+    let result = leading_coeff * neg_z_power_neg_a * exp_z;
+
+    // Add first-order correction term for better accuracy
+    // Next term is: (a)_1 * (a-b+1)_1 / (1! * z)
+    let correction = a * (a - b + 1.0) / z;
+    let result_corrected = result * (Complex64::new(1.0, 0.0) + correction);
+
+    Ok(result_corrected)
 }
 
 /// Coulomb F function using asymptotic expansion for large ρ
 fn coulomb_f_asymptotic(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // For large ρ:
     // F_L(η,ρ) ~ sin(ρ - η ln(2ρ) - Lπ/2 + σ_L(η))
-    
+
     let sigma = coulomb_phase_shift(l, eta)?;
     let phase = rho - eta * (2.0 * rho).ln() - l * PI / 2.0 + sigma;
-    
+
     Ok(phase.sin())
 }
 
@@ -287,36 +497,34 @@ fn coulomb_f_asymptotic(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
 fn coulomb_f_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // Use Steed's method for computing Coulomb functions
     // This method is numerically stable for intermediate values of ρ
-    
+
     let max_iter = 200;
     let tolerance = 1e-14;
-    
+
     // Initialize for Steed's algorithm
     let two_eta = 2.0 * eta;
     let two_rho = 2.0 * rho;
-    
+
     // Start with the continued fraction for F_l / F_{l-1}
     let mut a = l + 1.0;
     let mut b = two_eta;
-    let mut c = a + 1.0;
-    
+
     // Initialize the continued fraction
     let mut d = 1.0 / (a + b * b / (two_rho + b));
     let mut h = d;
-    
+
     for i in 1..max_iter {
         let i_f = i as f64;
-        
+
         // Update coefficients for the three-term recurrence
         a = l + 1.0 + i_f;
         let a_prev = l + i_f;
         b = two_eta;
-        c = a + 1.0;
-        
+
         // Continued fraction coefficients
         let alpha = -a_prev * (a_prev + two_eta) / (two_rho);
         let beta = (a + b) / two_rho;
-        
+
         // Update continued fraction using modified Lentz's method
         let temp = beta + alpha * d;
         if temp.abs() < 1e-30 {
@@ -324,19 +532,19 @@ fn coulomb_f_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64
         } else {
             d = 1.0 / temp;
         }
-        
+
         let delta = d * (beta + alpha * h);
         h *= delta;
-        
+
         // Check for convergence
         if (delta - 1.0).abs() < tolerance {
             break;
         }
     }
-    
+
     // Now we have the ratio F_l / F_{l-1}
     // We need to find the actual value using normalization
-    
+
     // For better stability, use a hybrid approach
     if rho < 5.0 {
         // For smaller rho, the series method is more reliable
@@ -348,7 +556,7 @@ fn coulomb_f_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64
         // Use the continued fraction result with proper normalization
         let c_l = coulomb_normalization_constant(l, eta)?;
         let normalization_factor = c_l * rho.powf(l + 1.0) * (-rho).exp() / h;
-        
+
         // Apply final normalization
         Ok(normalization_factor * (two_eta * rho).sin())
     }
@@ -427,15 +635,15 @@ fn coulomb_g_eta_zero(l: f64, rho: f64) -> SpecialResult<f64> {
         _ => {
             // For higher l, use recurrence relation
             // y_{l+1}(x) = (2l+1)/x * y_l(x) - y_{l-1}(x)
-            let mut y_prev = -rho.cos() / rho;  // y_0
-            let mut y_curr = -rho.cos() / rho.powi(2) - rho.sin() / rho;  // y_1
-            
+            let mut y_prev = -rho.cos() / rho; // y_0
+            let mut y_curr = -rho.cos() / rho.powi(2) - rho.sin() / rho; // y_1
+
             for k in 1..(l as i32) {
                 let y_next = (2.0 * k as f64 + 1.0) / rho * y_curr - y_prev;
                 y_prev = y_curr;
                 y_curr = y_next;
             }
-            
+
             Ok(-rho * y_curr)
         }
     }
@@ -444,7 +652,7 @@ fn coulomb_g_eta_zero(l: f64, rho: f64) -> SpecialResult<f64> {
 /// Coulomb G function using series expansion for small ρ
 fn coulomb_g_series(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // G_L(η,ρ) has a different behavior for L=0 vs L>0
-    
+
     if l == 0.0 {
         // G_0(η,ρ) has a logarithmic singularity at ρ=0
         // G_0(η,ρ) ≈ -[ln(2ρ) + 2η·(γ + ln(2η))] + O(ρ²)
@@ -455,17 +663,17 @@ fn coulomb_g_series(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
         } else {
             0.0
         };
-        
+
         Ok(-(log_term + eta_term))
     } else {
         // For L > 0, G_L(η,ρ) ~ ρ^{-L} as ρ → 0
         let c_l = coulomb_normalization_constant(l, eta)?;
-        
+
         // G_L(η,ρ) = ... (complex expression involving hypergeometric functions)
         // Simplified version for small ρ
         let gamma_l = gamma(l);
         let factor = gamma_l / (2.0_f64.powf(l) * c_l);
-        
+
         Ok(-factor * rho.powf(-l))
     }
 }
@@ -474,10 +682,10 @@ fn coulomb_g_series(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
 fn coulomb_g_asymptotic(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // For large ρ:
     // G_L(η,ρ) ~ cos(ρ - η ln(2ρ) - Lπ/2 + σ_L(η))
-    
+
     let sigma = coulomb_phase_shift(l, eta)?;
     let phase = rho - eta * (2.0 * rho).ln() - l * PI / 2.0 + sigma;
-    
+
     Ok(phase.cos())
 }
 
@@ -485,9 +693,9 @@ fn coulomb_g_asymptotic(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
 fn coulomb_g_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // Use the Wronskian relation to compute G from F
     // W[F_L, G_L] = 1, so G_L can be computed from F_L and its derivative
-    
-    let f_l = coulomb_f_continued_fraction(l, eta, rho)?;
-    
+
+    let _f_l = coulomb_f_continued_fraction(l, eta, rho)?;
+
     // For numerical stability, use different approaches based on the value of rho
     if rho < 3.0 && l > 0.0 {
         // For small rho and l > 0, use the series expansion which handles the singularity
@@ -499,21 +707,21 @@ fn coulomb_g_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64
         // For intermediate values, use the relation with F and its derivative
         // G_L(η,ρ) = [F_L'(η,ρ) * F_{L+1}(η,ρ) - F_L(η,ρ) * F_{L+1}'(η,ρ)] / W
         // where W is the Wronskian
-        
+
         // Compute F_{L+1}
-        let f_l_plus_1 = if l + 1.0 < 20.0 {
+        let _f_l_plus_1 = if l + 1.0 < 20.0 {
             coulomb_f_continued_fraction(l + 1.0, eta, rho)?
         } else {
             // For very high L, use asymptotic form directly
             coulomb_f_asymptotic(l + 1.0, eta, rho)?
         };
-        
+
         // Use the recurrence relation to get G_L
         // This avoids computing derivatives directly
-        let c_l = coulomb_normalization_constant(l, eta).unwrap_or(1.0);
+        let _c_l = coulomb_normalization_constant(l, eta).unwrap_or(1.0);
         let phase = rho - eta * (2.0 * rho).ln() - l * PI / 2.0;
         let sigma = coulomb_phase_shift(l, eta).unwrap_or(0.0);
-        
+
         // Use the asymptotic phase relation for moderate to large rho
         if rho > 5.0 {
             Ok((phase + sigma).cos())
@@ -526,10 +734,10 @@ fn coulomb_g_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64
                 // Use interpolation between known methods
                 let series_weight = (5.0 - rho) / 4.0;
                 let series_weight = series_weight.clamp(0.0, 1.0);
-                
+
                 let series_result = coulomb_g_series(l, eta, rho)?;
                 let asymptotic_result = coulomb_g_asymptotic(l, eta, rho)?;
-                
+
                 Ok(series_weight * series_result + (1.0 - series_weight) * asymptotic_result)
             }
         }
@@ -607,49 +815,49 @@ fn coulomb_normalization_constant(l: f64, eta: f64) -> SpecialResult<f64> {
 
     // The Coulomb normalization constant is:
     // C_L(η) = 2^L * exp(πη/2) * |Γ(L+1)| / |Γ(L+1+iη)|
-    
+
     let two_to_l = 2.0_f64.powf(l);
     let exp_factor = (PI * eta / 2.0).exp();
-    
+
     // Compute |Γ(L+1)|
     let gamma_l_plus_1 = gamma(l + 1.0);
-    
+
     // Compute |Γ(L+1+iη)| using more accurate method
     let gamma_complex_mag = if eta == 0.0 {
         gamma_l_plus_1
     } else {
         // Use the reflection formula and properties of complex gamma function
         // |Γ(a+ib)|² = π * b / sinh(π*b) * ∏_{k=0}^{a-1} (k² + b²) for integer a
-        
+
         if eta.abs() < 1.0 {
             // For small eta, use series expansion
             let gamma_real = gamma_l_plus_1;
             let eta2 = eta * eta;
             let l_int = l as i32;
-            
+
             // Compute the product ∏_{k=0}^{L} (k² + η²) / k!²
             let mut product = 1.0;
             for k in 1..=l_int {
                 let k_f = k as f64;
                 product *= (k_f * k_f + eta2).sqrt() / k_f;
             }
-            
+
             // Apply the reflection formula correction
             let sinh_factor = if eta.abs() > 1e-10 {
                 (PI * eta).sinh() / (PI * eta)
             } else {
                 1.0 + (PI * eta).powi(2) / 6.0 // Small argument expansion
             };
-            
+
             gamma_real * product / sinh_factor.sqrt()
         } else {
             // For larger eta, use more accurate Stirling's approximation
             complex_gamma_magnitude(l + 1.0, eta)
         }
     };
-    
+
     let c_l = two_to_l * exp_factor * gamma_l_plus_1 / gamma_complex_mag;
-    
+
     Ok(c_l)
 }
 
@@ -659,26 +867,26 @@ fn complex_gamma_magnitude(a: f64, b: f64) -> f64 {
     if b.abs() < 1e-10 {
         return gamma(a);
     }
-    
+
     let z_mag = (a * a + b * b).sqrt();
-    
+
     // Use the asymptotic expansion for large |z|
     if z_mag > 10.0 {
         // log|Γ(a+ib)| = (a-1/2)ln|z| - |z| + ln(2π)/2 + O(1/|z|)
         let log_gamma_mag = (a - 0.5) * z_mag.ln() - z_mag + 0.5 * (2.0 * PI).ln();
-        
+
         // Add higher order corrections
         let z_inv = 1.0 / z_mag;
         let correction = z_inv / 12.0 - z_inv.powi(3) / 360.0 + z_inv.powi(5) / 1260.0;
-        
+
         (log_gamma_mag + correction).exp()
     } else {
         // For moderate values, use the duplication formula iteratively
         // Γ(z) = 2^(z-1) * π^(-1/2) * Γ(z/2) * Γ((z+1)/2)
         let mut current_a = a;
-        let mut current_b = b;
+        let current_b = b;
         let mut factor = 1.0;
-        
+
         // Reduce to larger argument
         while (current_a * current_a + current_b * current_b).sqrt() < 10.0 {
             // Use Γ(z+1) = z * Γ(z)
@@ -686,12 +894,13 @@ fn complex_gamma_magnitude(a: f64, b: f64) -> f64 {
             factor *= z_mag_current;
             current_a += 1.0;
         }
-        
+
         // Now use asymptotic formula
         let final_z_mag = (current_a * current_a + current_b * current_b).sqrt();
-        let log_gamma_mag = (current_a - 0.5) * final_z_mag.ln() - final_z_mag + 0.5 * (2.0 * PI).ln();
+        let log_gamma_mag =
+            (current_a - 0.5) * final_z_mag.ln() - final_z_mag + 0.5 * (2.0 * PI).ln();
         let asymptotic_result = log_gamma_mag.exp();
-        
+
         asymptotic_result / factor
     }
 }

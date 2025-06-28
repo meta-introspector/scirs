@@ -139,35 +139,40 @@ pub use linalg::{
     bicg,
     bicgstab,
     cg,
+    cholesky_decomposition,
     diag_matrix,
+    eigs,
+    eigsh,
     expm,
     // Functions from matfuncs
     expm_multiply,
     eye,
+    // GCROT solver
+    gcrot,
     gmres,
+    incomplete_cholesky,
+    incomplete_lu,
     inv,
+    lanczos,
+    // Decomposition functions
+    lu_decomposition,
     matmul,
     matrix_power,
     multiply,
     norm,
     onenormest,
+    // Eigenvalue functions
+    power_iteration,
+    qr_decomposition,
     sparse_direct_solve,
     sparse_lstsq,
     spsolve,
-    // Eigenvalue functions
-    power_iteration,
-    lanczos,
-    eigs,
-    eigsh,
+    svd_truncated,
     // SVD functions
     svds,
-    svd_truncated,
-    // Decomposition functions
-    lu_decomposition,
-    qr_decomposition,
-    cholesky_decomposition,
-    incomplete_lu,
-    incomplete_cholesky,
+    // TFQMR solver
+    tfqmr,
+    ArpackOptions,
     // Interfaces
     AsLinearOperator,
     // Types from iterative
@@ -177,32 +182,35 @@ pub use linalg::{
     CGOptions,
     CGSOptions,
     CGSResult,
-    // Eigenvalue types
-    PowerIterationOptions,
-    LanczosOptions,
-    EigenResult,
-    EigenvalueMethod,
-    ArpackOptions,
-    // SVD types
-    SVDOptions,
-    SVDResult,
-    // Decomposition types
-    LUResult,
-    QRResult,
     CholeskyResult,
-    ILUOptions,
-    ICOptions,
     // Operator types
     DiagonalOperator,
+    EigenResult,
+    EigenvalueMethod,
+    GCROTOptions,
+    GCROTResult,
     GMRESOptions,
+    ICOptions,
     // Preconditioners
     ILU0Preconditioner,
+    ILUOptions,
     IdentityOperator,
     IterationResult,
     JacobiPreconditioner,
+    // Decomposition types
+    LUResult,
+    LanczosOptions,
     LinearOperator,
+    // Eigenvalue types
+    PowerIterationOptions,
+    QRResult,
     SSORPreconditioner,
+    // SVD types
+    SVDOptions,
+    SVDResult,
     ScaledIdentityOperator,
+    TFQMROptions,
+    TFQMRResult,
 };
 
 // Format conversions
@@ -226,28 +234,66 @@ pub use sym_ops::{
     sym_coo_matvec, sym_csr_matvec, sym_csr_quadratic_form, sym_csr_rank1_update, sym_csr_trace,
 };
 
+// GPU-accelerated operations
+pub mod gpu_ops;
+pub use gpu_ops::{
+    gpu_sparse_matvec, gpu_sym_sparse_matvec, GpuMemoryManager, GpuOptions, GpuProfiler,
+};
+
+// SIMD-accelerated operations
+pub mod simd_ops;
+pub use simd_ops::{
+    simd_csr_matvec, simd_sparse_elementwise, simd_sparse_matmul, ElementwiseOp, SimdOptions,
+};
+
 // Compressed sparse graph algorithms
 pub mod csgraph;
 pub use csgraph::{
-    // Graph algorithms
-    shortest_path, connected_components, traverse_graph, minimum_spanning_tree,
-    // Graph utilities
-    validate_graph, to_adjacency_list, num_vertices, num_edges,
-    // Shortest path algorithms
-    single_source_shortest_path, all_pairs_shortest_path, dijkstra_single_source, 
-    bellman_ford_single_source, floyd_warshall, reconstruct_path,
-    // Connected components
-    undirected_connected_components, weakly_connected_components, 
-    strongly_connected_components, is_connected, largest_component,
+    all_pairs_shortest_path,
+    bellman_ford_single_source,
+    bfs_distances,
     // Traversal algorithms
-    breadth_first_search, depth_first_search, bfs_distances, has_path, 
-    reachable_vertices, topological_sort,
-    // Laplacian matrices
-    laplacian, compute_laplacian_matrix, degree_matrix, is_laplacian,
+    breadth_first_search,
+    compute_laplacian_matrix,
+    connected_components,
+    degree_matrix,
+    depth_first_search,
+    dijkstra_single_source,
+    floyd_warshall,
+    has_path,
+    is_connected,
+    is_laplacian,
+    is_spanning_tree,
     // Minimum spanning trees
-    kruskal_mst, prim_mst, is_spanning_tree, spanning_tree_weight,
+    kruskal_mst,
+    // Laplacian matrices
+    laplacian,
+    largest_component,
+    minimum_spanning_tree,
+    num_edges,
+    num_vertices,
+    prim_mst,
+    reachable_vertices,
+    reconstruct_path,
+    // Graph algorithms
+    shortest_path,
+    // Shortest path algorithms
+    single_source_shortest_path,
+    spanning_tree_weight,
+    strongly_connected_components,
+    to_adjacency_list,
+    topological_sort,
+    traverse_graph,
+    // Connected components
+    undirected_connected_components,
+    // Graph utilities
+    validate_graph,
+    weakly_connected_components,
+    LaplacianType,
+    MSTAlgorithm,
     // Enums and types
-    ShortestPathMethod, TraversalOrder, LaplacianType, MSTAlgorithm,
+    ShortestPathMethod,
+    TraversalOrder,
 };
 
 // Re-export warnings from scipy for compatibility

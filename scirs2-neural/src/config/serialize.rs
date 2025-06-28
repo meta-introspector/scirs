@@ -25,8 +25,9 @@ impl ConfigSerializer {
 
     /// Serialize a model configuration to YAML
     pub fn to_yaml(config: &ModelConfig) -> Result<String> {
-        serde_yaml::to_string(config)
-            .map_err(|e| NeuralError::SerializationError(format!("Failed to serialize to YAML: {}", e)))
+        serde_yaml::to_string(config).map_err(|e| {
+            NeuralError::SerializationError(format!("Failed to serialize to YAML: {}", e))
+        })
     }
 
     /// Deserialize a model configuration from JSON

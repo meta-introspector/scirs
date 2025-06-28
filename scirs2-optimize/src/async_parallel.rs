@@ -652,7 +652,9 @@ mod tests {
             .expect("Setting bounds should succeed for valid dimensions")
             .with_parameters(0.8, 0.7, 50, 1e-6);
 
-        let (result, stats) = optimizer.optimize(objective).await
+        let (result, stats) = optimizer
+            .optimize(objective)
+            .await
             .expect("Optimization should complete successfully");
 
         assert!(result.success);
@@ -694,7 +696,9 @@ mod tests {
             .expect("Setting bounds should succeed for valid dimensions")
             .with_parameters(0.8, 0.7, 30, 1e-4);
 
-        let (result, stats) = optimizer.optimize(objective).await
+        let (result, stats) = optimizer
+            .optimize(objective)
+            .await
             .expect("Optimization should complete successfully");
 
         assert!(result.success);
@@ -741,7 +745,9 @@ mod tests {
             .expect("Setting bounds should succeed for valid dimensions")
             .with_parameters(0.8, 0.7, 10, 1e-3);
 
-        let (result, stats) = optimizer.optimize(objective).await
+        let (result, stats) = optimizer
+            .optimize(objective)
+            .await
             .expect("Optimization should complete successfully");
 
         // Should still succeed despite timeouts

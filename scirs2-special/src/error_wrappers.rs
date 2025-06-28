@@ -68,10 +68,8 @@ where
     /// Evaluate the function with full error handling
     pub fn evaluate(&self, x: T) -> SpecialResult<T> {
         // Validate input
-        validation::check_finite(x, "x").with_context(|| {
-            ErrorContext::new(self.name, "input validation")
-                .with_param("x", x)
-        })?;
+        validation::check_finite(x, "x")
+            .with_context(|| ErrorContext::new(self.name, "input validation").with_param("x", x))?;
 
         // Check for special cases that might cause issues
         if x.is_nan() {
@@ -89,7 +87,7 @@ where
                     return Ok(recovered);
                 }
             }
-            
+
             return Err(special_error!(
                 computation: self.name, "evaluation",
                 "x" => x
@@ -270,7 +268,7 @@ where
 /// Create error-wrapped versions of functions
 pub mod wrapped {
     use super::*;
-    use crate::{gamma, digamma, beta, erf, erfc};
+    use crate::{beta, digamma, erf, erfc, gamma};
 
     /// Create a wrapped gamma function with error handling
     pub fn gamma_wrapped() -> SingleArgWrapper<fn(f64) -> f64, f64> {
@@ -300,23 +298,23 @@ pub mod wrapped {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::wrapped::*;
+    use super::*;
 
     #[test]
     fn test_gamma_wrapped() {
         let gamma = gamma_wrapped();
-        
+
         // Valid input
         let result = gamma.evaluate(5.0);
         assert!(result.is_ok());
         assert!((result.unwrap() - 24.0).abs() < 1e-10);
-        
+
         // Invalid input (NaN)
         let result = gamma.evaluate(f64::NAN);
         assert!(result.is_ok()); // NaN input returns NaN output
         assert!(result.unwrap().is_nan());
-        
+
         // Invalid input (infinity)
         let result = gamma.evaluate(f64::INFINITY);
         assert!(result.is_ok());
@@ -326,11 +324,11 @@ mod tests {
     #[test]
     fn test_beta_wrapped() {
         let beta = beta_wrapped();
-        
+
         // Valid inputs
         let result = beta.evaluate(2.0, 3.0);
         assert!(result.is_ok());
-        
+
         // Invalid inputs (negative)
         let result = beta.evaluate(-1.0, 2.0);
         assert!(result.is_err());
@@ -339,16 +337,15 @@ mod tests {
     #[test]
     fn test_array_wrapper() {
         use ndarray::arr1;
-        
-        let arr_gamma = ArrayWrapper::new("gamma_array", |x: &ArrayView1<f64>| {
-            x.mapv(gamma::<f64>)
-        });
-        
+
+        let arr_gamma =
+            ArrayWrapper::new("gamma_array", |x: &ArrayView1<f64>| x.mapv(gamma::<f64>));
+
         // Valid array
         let input = arr1(&[1.0, 2.0, 3.0, 4.0]);
         let result = arr_gamma.evaluate(&input);
         assert!(result.is_ok());
-        
+
         // Array with NaN
         let input = arr1(&[1.0, f64::NAN, 3.0]);
         let result = arr_gamma.evaluate(&input);

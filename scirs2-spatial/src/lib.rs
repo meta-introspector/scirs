@@ -376,23 +376,33 @@ pub(crate) mod safe_conversions;
 // Distance metrics
 pub mod distance;
 pub use distance::{
+    // Basic distance functions
+    braycurtis,
     canberra,
     cdist,
     chebyshev,
     correlation,
     cosine,
+    dice,
     // Convenience functions
     euclidean,
     is_valid_condensed_distance_matrix,
     jaccard,
-
+    kulsinski,
+    mahalanobis,
     manhattan,
     minkowski,
     // Distance matrix computation
     pdist,
+    rogerstanimoto,
+    russellrao,
+    seuclidean,
+    sokalmichener,
+    sokalsneath,
     sqeuclidean,
     squareform,
     squareform_to_condensed,
+    yule,
     ChebyshevDistance,
     // Core distance traits and structs
     Distance,
@@ -470,8 +480,9 @@ pub use set_distance::{
 // Polygon operations
 pub mod polygon;
 pub use polygon::{
-    convex_hull_graham, is_simple_polygon, point_in_polygon, point_on_boundary, polygon_area,
-    polygon_centroid, polygon_contains_polygon,
+    convex_hull_graham, douglas_peucker_simplify, is_simple_polygon, point_in_polygon,
+    point_on_boundary, polygon_area, polygon_centroid, polygon_contains_polygon,
+    visvalingam_whyatt_simplify,
 };
 
 // R-tree for efficient spatial indexing
@@ -506,13 +517,36 @@ pub use collision::shapes::{
 };
 // Re-export narrowphase collision functions
 pub use collision::narrowphase::{
-    box2d_box2d_collision, box3d_box3d_collision, circle_box2d_collision, circle_circle_collision,
-    point_box2d_collision, point_box3d_collision, point_circle_collision, point_sphere_collision,
-    point_triangle2d_collision, ray_box3d_collision, ray_sphere_collision,
-    ray_triangle3d_collision, sphere_box3d_collision, sphere_sphere_collision,
+    box2d_box2d_collision,
+    box3d_box3d_collision,
+    circle_box2d_collision,
+    circle_circle_collision,
+    // GJK collision detection functions
+    gjk_box_box_collision,
+    gjk_collision_detection,
+    gjk_sphere_box_collision,
+    gjk_sphere_sphere_collision,
+    point_box2d_collision,
+    point_box3d_collision,
+    point_circle_collision,
+    point_sphere_collision,
+    point_triangle2d_collision,
+    ray_box3d_collision,
+    ray_sphere_collision,
+    ray_triangle3d_collision,
+    sphere_box3d_collision,
+    sphere_sphere_collision,
+    // GJK trait for advanced users
+    GJKShape,
 };
 // Re-export continuous collision functions
 pub use collision::continuous::continuous_sphere_sphere_collision;
+
+// Spatial statistics and pattern analysis
+pub mod spatial_stats;
+pub use spatial_stats::{
+    clark_evans_index, distance_weights_matrix, gearys_c, getis_ord_gi, local_morans_i, morans_i,
+};
 
 // SIMD-accelerated distance calculations
 pub mod simd_distance;
@@ -523,6 +557,18 @@ pub use simd_distance::{
 
 // Utility functions
 mod utils;
+
+// Generic traits and algorithms for flexible spatial computing
+pub mod generic_traits;
+pub use generic_traits::{
+    ChebyshevMetric, DistanceMetric, EuclideanMetric, ManhattanMetric, Point, SpatialArray,
+    SpatialPoint, SpatialScalar,
+};
+
+pub mod generic_algorithms;
+pub use generic_algorithms::{
+    GenericConvexHull, GenericDistanceMatrix, GenericKDTree, GenericKMeans, KMeansResult,
+};
 
 #[cfg(test)]
 mod tests {

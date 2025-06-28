@@ -7,9 +7,9 @@ use ndarray::Array1;
 use scirs2_integrate::{
     ode::{solve_ivp, ODEMethod, ODEOptions},
     verification::{
-        exponential_solution, trigonometric_solution_2d, trigonometric_solution_3d,
-        combined_solution, polynomial_solution, ConvergenceAnalysis,
-        MMSODEProblem, MMSPDEProblem, VerificationWorkflow, VerificationTestCase,
+        combined_solution, exponential_solution, polynomial_solution, trigonometric_solution_2d,
+        trigonometric_solution_3d, ConvergenceAnalysis, MMSODEProblem, MMSPDEProblem,
+        VerificationTestCase, VerificationWorkflow,
     },
 };
 use std::f64::consts::PI;
@@ -50,8 +50,10 @@ fn exponential_ode_verification() -> Result<(), Box<dyn std::error::Error>> {
     let step_sizes = vec![0.1, 0.05, 0.025, 0.0125];
     let mut errors = Vec::new();
 
-    println!("\nStep Size   Final Error   Expected: y(1) = 2*exp(-3) ≈ {:.6}", 
-             2.0 * (-3.0_f64).exp());
+    println!(
+        "\nStep Size   Final Error   Expected: y(1) = 2*exp(-3) ≈ {:.6}",
+        2.0 * (-3.0_f64).exp()
+    );
     println!("{}", "─".repeat(50));
 
     for &h in &step_sizes {
@@ -60,7 +62,7 @@ fn exponential_ode_verification() -> Result<(), Box<dyn std::error::Error>> {
             |t: f64, _y: ndarray::ArrayView1<f64>| Array1::from_vec(vec![problem.source_term(t)]);
 
         let options = ODEOptions {
-            method: ODEMethod::Radau,  // Good for stiff exponential decay
+            method: ODEMethod::Radau, // Good for stiff exponential decay
             rtol: 1e-12,
             atol: 1e-12,
             max_step: Some(h),
@@ -93,7 +95,10 @@ fn exponential_ode_verification() -> Result<(), Box<dyn std::error::Error>> {
         if analysis.verify_order(5.0, 1.0) {
             println!("✅ High-order accuracy confirmed (Radau method)");
         } else {
-            println!("⚠️  Order: {:.2} (Radau typically achieves 5th order)", analysis.order);
+            println!(
+                "⚠️  Order: {:.2} (Radau typically achieves 5th order)",
+                analysis.order
+            );
         }
     }
 
@@ -141,19 +146,14 @@ fn three_d_pde_verification() -> Result<(), Box<dyn std::error::Error>> {
     // Create 3D Poisson problem: -∇²u = f
     // Exact solution: u(x,y,z) = sin(πx) * cos(πy) * sin(πz)
     let exact_solution = trigonometric_solution_3d(PI, PI, PI);
-    let problem = MMSPDEProblem::new_poisson_3d(
-        exact_solution,
-        [0.0, 1.0],
-        [0.0, 1.0], 
-        [0.0, 1.0]
-    );
+    let problem = MMSPDEProblem::new_poisson_3d(exact_solution, [0.0, 1.0], [0.0, 1.0], [0.0, 1.0]);
 
     println!("Exact solution: u(x,y,z) = sin(πx) * cos(πy) * sin(πz)");
     println!("3D Poisson equation: -∇²u = 3π²sin(πx)cos(πy)sin(πz)");
 
     // Test different grid sizes
     let grid_sizes = vec![0.2, 0.1, 0.05];
-    
+
     println!("\nGrid Size   Source Term at (0.5,0,0.5)");
     println!("{}", "─".repeat(35));
 
@@ -161,9 +161,9 @@ fn three_d_pde_verification() -> Result<(), Box<dyn std::error::Error>> {
         let coords = [0.5, 0.0, 0.5];
         let source = problem.source_term(&coords);
         let exact_val = problem.exact_at_3d(coords[0], coords[1], coords[2]);
-        
+
         println!("{:8.2}   {:15.6}", h, source);
-        
+
         // Verify source term: should be 3π²u
         let expected_source = 3.0 * PI * PI * exact_val;
         let relative_error = (source - expected_source).abs() / expected_source.abs();
@@ -196,9 +196,9 @@ fn helmholtz_verification() -> Result<(), Box<dyn std::error::Error>> {
     // So f = ∇²u + k²u = -5π²u + k²u = (k² - 5π²)u
 
     let test_points = vec![
-        [0.25, 0.0],  // cos(πy) = 1
-        [0.5, 0.0],   // sin(2πx) = 0
-        [0.25, 0.5],  // cos(πy) = 0
+        [0.25, 0.0], // cos(πy) = 1
+        [0.5, 0.0],  // sin(2πx) = 0
+        [0.25, 0.5], // cos(πy) = 0
     ];
 
     println!("\nPoint (x,y)    Exact u    Source f    Theoretical f");
@@ -208,7 +208,7 @@ fn helmholtz_verification() -> Result<(), Box<dyn std::error::Error>> {
         let u_exact = problem.exact_at(coords[0], coords[1]);
         let f_computed = problem.source_term(coords);
         let f_theoretical = (k * k - 5.0 * PI * PI) * u_exact;
-        
+
         println!(
             "({:4.2},{:4.1})   {:8.4}   {:9.4}   {:11.4}",
             coords[0], coords[1], u_exact, f_computed, f_theoretical
@@ -217,7 +217,10 @@ fn helmholtz_verification() -> Result<(), Box<dyn std::error::Error>> {
         // Verify computation
         if u_exact.abs() > 1e-10 {
             let relative_error = (f_computed - f_theoretical).abs() / f_theoretical.abs();
-            assert!(relative_error < 1e-10, "Helmholtz source term verification failed");
+            assert!(
+                relative_error < 1e-10,
+                "Helmholtz source term verification failed"
+            );
         }
     }
 
@@ -264,26 +267,33 @@ fn automated_workflow_example() -> Result<(), Box<dyn std::error::Error>> {
 
     // Mock solvers with different orders of accuracy
     let solvers: Vec<(&str, Box<dyn Fn(&[f64]) -> Result<f64, _>>)> = vec![
-        ("First-order", Box::new(|h: &[f64]| Ok(0.1 * h[0]))),           // O(h)
-        ("Second-order", Box::new(|h: &[f64]| Ok(0.1 * h[0] * h[0]))),   // O(h²)  
-        ("Fourth-order", Box::new(|h: &[f64]| Ok(0.1 * h[0].powi(4)))),  // O(h⁴)
+        ("First-order", Box::new(|h: &[f64]| Ok(0.1 * h[0]))), // O(h)
+        ("Second-order", Box::new(|h: &[f64]| Ok(0.1 * h[0] * h[0]))), // O(h²)
+        ("Fourth-order", Box::new(|h: &[f64]| Ok(0.1 * h[0].powi(4)))), // O(h⁴)
     ];
 
     println!("Running automated verification workflow...\n");
 
     for (i, (solver_name, solver)) in solvers.iter().enumerate() {
         println!("Testing {}", solver_name);
-        
+
         // Run verification for this solver on the corresponding test case
         let single_case_workflow = VerificationWorkflow {
             test_cases: vec![workflow.test_cases[i].clone()],
         };
-        
+
         let results = single_case_workflow.run_verification(solver);
-        
+
         for result in &results {
             println!("  Test: {}", result.test_name);
-            println!("  Status: {}", if result.passed { "✅ PASSED" } else { "❌ FAILED" });
+            println!(
+                "  Status: {}",
+                if result.passed {
+                    "✅ PASSED"
+                } else {
+                    "❌ FAILED"
+                }
+            );
             if let Some(order) = result.computed_order {
                 println!("  Computed order: {:.2}", order);
             }
@@ -296,7 +306,7 @@ fn automated_workflow_example() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("📊 Automated workflows enable:");
     println!("   • Continuous integration testing");
-    println!("   • Regression detection"); 
+    println!("   • Regression detection");
     println!("   • Method comparison");
     println!("   • Performance benchmarking");
     println!();

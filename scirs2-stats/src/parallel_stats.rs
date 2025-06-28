@@ -4,10 +4,10 @@
 //! that can significantly improve performance on multi-core systems.
 
 use crate::error::{StatsError, StatsResult};
-use crate::{mean, var, quantile, QuantileInterpolation};
-use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1, Ix2, s};
+use crate::{mean, quantile, var, QuantileInterpolation};
+use ndarray::{s, Array1, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
-use scirs2_core::parallel_ops::{par_chunks, parallel_map, ParallelIterator, num_threads};
+use scirs2_core::parallel_ops::{num_threads, par_chunks, parallel_map, ParallelIterator};
 
 /// Threshold for using parallel operations (number of elements)
 const PARALLEL_THRESHOLD: usize = 10_000;
@@ -30,11 +30,13 @@ where
     D: Data<Elem = F> + Sync,
 {
     if x.is_empty() {
-        return Err(StatsError::invalid_argument("Cannot compute mean of empty array"));
+        return Err(StatsError::invalid_argument(
+            "Cannot compute mean of empty array",
+        ));
     }
 
     let n = x.len();
-    
+
     if n < PARALLEL_THRESHOLD {
         // Use sequential version for small arrays
         return mean(&x.view());
@@ -67,7 +69,7 @@ where
     let n = x.len();
     if n <= ddof {
         return Err(StatsError::invalid_argument(
-            "Not enough data points for the given degrees of freedom"
+            "Not enough data points for the given degrees of freedom",
         ));
     }
 
@@ -82,7 +84,8 @@ where
     let chunk_size = (n / num_threads()).max(1000);
     let sum_sq_dev: F = par_chunks(x.as_slice().unwrap(), chunk_size)
         .map(|chunk| {
-            chunk.iter()
+            chunk
+                .iter()
                 .map(|&val| {
                     let dev = val - mean_val;
                     dev * dev
@@ -118,7 +121,9 @@ where
     D: Data<Elem = F> + Sync,
 {
     if x.is_empty() {
-        return Err(StatsError::invalid_argument("Cannot compute quantiles of empty array"));
+        return Err(StatsError::invalid_argument(
+            "Cannot compute quantiles of empty array",
+        ));
     }
 
     // Validate quantiles
@@ -129,7 +134,7 @@ where
     }
 
     let n = x.len();
-    
+
     if n < PARALLEL_THRESHOLD || quantiles.len() < 4 {
         // Use sequential version for small arrays or few quantiles
         let mut results = Array1::zeros(quantiles.len());
@@ -141,7 +146,10 @@ where
 
     // Sort array once (this is the expensive operation)
     let mut sorted = x.to_owned();
-    sorted.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted
+        .as_slice_mut()
+        .unwrap()
+        .sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     // Compute all quantiles in parallel
     let results: Vec<F> = parallel_map(quantiles, |&q| {
@@ -149,9 +157,9 @@ where
         let pos = q * F::from(n - 1).unwrap();
         let idx = pos.floor();
         let frac = pos - idx;
-        
+
         let idx_usize: usize = NumCast::from(idx).unwrap();
-        
+
         if frac == F::zero() {
             sorted[idx_usize]
         } else {
@@ -186,7 +194,7 @@ where
     S: Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync,
 {
     let nrows = data.nrows();
-    
+
     if nrows < PARALLEL_THRESHOLD / data.ncols() {
         // Sequential processing for small number of rows
         let mut results = Vec::with_capacity(nrows);
@@ -198,11 +206,10 @@ where
 
     // Process rows in parallel
     let row_indices: Vec<usize> = (0..nrows).collect();
-    let results: Result<Vec<F>, StatsError> = parallel_map(&row_indices, |&i| {
-        stat_fn(&data.slice(s![i, ..]).view())
-    })
-    .into_iter()
-    .collect();
+    let results: Result<Vec<F>, StatsError> =
+        parallel_map(&row_indices, |&i| stat_fn(&data.slice(s![i, ..]).view()))
+            .into_iter()
+            .collect();
 
     Ok(Array1::from_vec(results?))
 }
@@ -219,17 +226,15 @@ where
 /// # Returns
 ///
 /// Correlation matrix
-pub fn corrcoef_parallel<F, D>(
-    data: &ArrayBase<D, Ix2>,
-) -> StatsResult<ndarray::Array2<F>>
+pub fn corrcoef_parallel<F, D>(data: &ArrayBase<D, Ix2>) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Debug,
     D: Data<Elem = F> + Sync,
 {
     use crate::pearson_r;
-    
+
     let n_vars = data.ncols();
-    
+
     if n_vars * n_vars < PARALLEL_THRESHOLD {
         // Use sequential version for small matrices
         return crate::corrcoef(&data.view(), "pearson");
@@ -256,7 +261,7 @@ where
     for i in 0..n_vars {
         corr_matrix[(i, i)] = F::one();
     }
-    
+
     for ((i, j), corr) in correlations {
         corr_matrix[(i, j)] = corr;
         corr_matrix[(j, i)] = corr; // Symmetric
@@ -290,7 +295,7 @@ where
     S: Fn(&ArrayBase<ndarray::ViewRepr<&F>, Ix1>) -> StatsResult<F> + Send + Sync,
 {
     use crate::sampling::bootstrap;
-    
+
     if n_samples < PARALLEL_THRESHOLD / data.len() {
         // Sequential bootstrap for small number of samples
         let samples = bootstrap(&data.view(), n_samples, seed)?;

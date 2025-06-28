@@ -22,15 +22,15 @@ pub use gemm::{
     simd_matmul_optimized_f64, GemmBlockSizes,
 };
 #[cfg(feature = "simd")]
+pub use hardware_specific::{
+    hardware_optimized_dot, hardware_optimized_matvec, HardwareCapabilities,
+};
+#[cfg(feature = "simd")]
 pub use norms::{
     simd_frobenius_norm_f32, simd_frobenius_norm_f64, simd_vector_norm_f32, simd_vector_norm_f64,
 };
 #[cfg(feature = "simd")]
 pub use transpose::{simd_transpose_f32, simd_transpose_f64};
-#[cfg(feature = "simd")]
-pub use hardware_specific::{
-    HardwareCapabilities, hardware_optimized_dot, hardware_optimized_matvec,
-};
 
 use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};

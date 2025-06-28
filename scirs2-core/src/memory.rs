@@ -103,7 +103,7 @@ where
         // Calculate number of chunks in each dimension
         let mut num_chunks_per_dim = vec![];
         for i in 0..array_shape.len() {
-            let n_chunks = (array_shape[i] + chunk_shape[i] - 1) / chunk_shape[i];
+            let n_chunks = array_shape[i].div_ceil(chunk_shape[i]);
             num_chunks_per_dim.push(n_chunks);
         }
 
@@ -174,7 +174,7 @@ where
 
         let mut total_chunks = 1;
         for i in 0..array_shape.len() {
-            let n_chunks = (array_shape[i] + chunk_shape[i] - 1) / chunk_shape[i];
+            let n_chunks = array_shape[i].div_ceil(chunk_shape[i]);
             total_chunks *= n_chunks;
         }
 

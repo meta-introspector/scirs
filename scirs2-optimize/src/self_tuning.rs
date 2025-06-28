@@ -4,8 +4,8 @@
 //! that automatically tune optimization algorithm parameters based on problem
 //! characteristics and optimization progress.
 
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::{ScirsError, ScirsResult};
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
@@ -76,9 +76,13 @@ impl SelfTuningOptimizer {
     }
 
     /// Register tunable parameters for an optimization algorithm
-    pub fn register_parameter<T>(&mut self, name: &str, param: TunableParameter<T>) -> ScirsResult<()>
+    pub fn register_parameter<T>(
+        &mut self,
+        name: &str,
+        param: TunableParameter<T>,
+    ) -> ScirsResult<()>
     where
-        T: Clone + PartialOrd + std::fmt::Debug + 'static,
+        T: Clone + PartialOrd + std::fmt::Debug + 'static + Send + Sync,
     {
         self.parameter_manager.register(name, param)
     }
@@ -154,15 +158,30 @@ impl SelfTuningOptimizer {
         // Performance summary
         let metrics = self.performance_tracker.compute_metrics();
         report.push_str("Performance Metrics:\n");
-        report.push_str(&format!("  Convergence Rate: {:.6}\n", metrics.convergence_rate));
-        report.push_str(&format!("  Average Improvement: {:.6e}\n", metrics.average_improvement));
-        report.push_str(&format!("  Stability Score: {:.3}\n", metrics.stability_score));
+        report.push_str(&format!(
+            "  Convergence Rate: {:.6}\n",
+            metrics.convergence_rate
+        ));
+        report.push_str(&format!(
+            "  Average Improvement: {:.6e}\n",
+            metrics.average_improvement
+        ));
+        report.push_str(&format!(
+            "  Stability Score: {:.3}\n",
+            metrics.stability_score
+        ));
         report.push('\n');
 
         // Adaptation history
-        report.push_str(&format!("Total Adaptations: {}\n", self.tuning_history.adaptations.len()));
+        report.push_str(&format!(
+            "Total Adaptations: {}\n",
+            self.tuning_history.adaptations.len()
+        ));
         if let Some(last_adaptation) = self.tuning_history.adaptations.last() {
-            report.push_str(&format!("Last Adaptation at Iteration: {}\n", last_adaptation.iteration));
+            report.push_str(&format!(
+                "Last Adaptation at Iteration: {}\n",
+                last_adaptation.iteration
+            ));
         }
 
         report
@@ -187,14 +206,15 @@ impl ParameterManager {
 
     fn register<T>(&mut self, name: &str, param: TunableParameter<T>) -> ScirsResult<()>
     where
-        T: Clone + PartialOrd + std::fmt::Debug + 'static,
+        T: Clone + PartialOrd + std::fmt::Debug + 'static + Send + Sync,
     {
         let value = ParameterValue::from_typed(&param.current_value);
         let min_bound = ParameterValue::from_typed(&param.min_value);
         let max_bound = ParameterValue::from_typed(&param.max_value);
 
         self.current_values.insert(name.to_string(), value);
-        self.parameter_bounds.insert(name.to_string(), (min_bound, max_bound));
+        self.parameter_bounds
+            .insert(name.to_string(), (min_bound, max_bound));
         self.parameters.insert(name.to_string(), Box::new(param));
 
         Ok(())
@@ -203,15 +223,15 @@ impl ParameterManager {
     fn update_parameter(&mut self, name: &str, new_value: ParameterValue) -> ScirsResult<()> {
         if let Some((min_bound, max_bound)) = self.parameter_bounds.get(name) {
             if new_value < *min_bound || new_value > *max_bound {
-                return Err(ScirsError::InvalidInput(
-                    format!("Parameter {} value {:?} is out of bounds [{:?}, {:?}]",
-                            name, new_value, min_bound, max_bound)
-                ));
+                return Err(ScirsError::InvalidInput(format!(
+                    "Parameter {} value {:?} is out of bounds [{:?}, {:?}]",
+                    name, new_value, min_bound, max_bound
+                )));
             }
         }
 
         self.current_values.insert(name.to_string(), new_value);
-        
+
         if let Some(param) = self.parameters.get_mut(name) {
             param.set_value(new_value)?;
         }
@@ -246,7 +266,7 @@ pub struct TunableParameter<T> {
 
 impl<T> TunableParameter<T>
 where
-    T: Clone + PartialOrd + std::fmt::Debug + 'static,
+    T: Clone + PartialOrd + std::fmt::Debug + 'static + Send + Sync,
 {
     /// Create a new tunable parameter
     pub fn new(current: T, min: T, max: T) -> Self {
@@ -267,18 +287,86 @@ where
 
 impl<T> TunableParam for TunableParameter<T>
 where
-    T: Clone + PartialOrd + std::fmt::Debug + 'static,
+    T: Clone + PartialOrd + std::fmt::Debug + 'static + Send + Sync,
 {
     fn set_value(&mut self, value: ParameterValue) -> ScirsResult<()> {
-        match (&self.current_value, &value) {
-            // This is a simplified implementation
-            // In practice, we'd need proper type checking and conversion
-            _ => {
-                // For now, we'll just update the internal representation
-                // Real implementation would need proper type conversion
-                Ok(())
+        use std::any::{Any, TypeId};
+
+        let type_id = TypeId::of::<T>();
+
+        // Convert ParameterValue to the correct type T
+        if type_id == TypeId::of::<f64>() {
+            if let Some(f_val) = value.as_f64() {
+                if let Some(self_any) =
+                    (&mut self.current_value as &mut dyn Any).downcast_mut::<f64>()
+                {
+                    *self_any = f_val;
+                    return Ok(());
+                }
+            }
+        } else if type_id == TypeId::of::<f32>() {
+            if let Some(f_val) = value.as_f64() {
+                if let Some(self_any) =
+                    (&mut self.current_value as &mut dyn Any).downcast_mut::<f32>()
+                {
+                    *self_any = f_val as f32;
+                    return Ok(());
+                }
+            }
+        } else if type_id == TypeId::of::<i64>() {
+            if let Some(i_val) = value.as_i64() {
+                if let Some(self_any) =
+                    (&mut self.current_value as &mut dyn Any).downcast_mut::<i64>()
+                {
+                    *self_any = i_val;
+                    return Ok(());
+                }
+            }
+        } else if type_id == TypeId::of::<i32>() {
+            if let Some(i_val) = value.as_i64() {
+                if let Some(self_any) =
+                    (&mut self.current_value as &mut dyn Any).downcast_mut::<i32>()
+                {
+                    *self_any = i_val as i32;
+                    return Ok(());
+                }
+            }
+        } else if type_id == TypeId::of::<usize>() {
+            if let Some(i_val) = value.as_i64() {
+                if i_val >= 0 {
+                    if let Some(self_any) =
+                        (&mut self.current_value as &mut dyn Any).downcast_mut::<usize>()
+                    {
+                        *self_any = i_val as usize;
+                        return Ok(());
+                    }
+                }
+            }
+        } else if type_id == TypeId::of::<bool>() {
+            if let Some(b_val) = value.as_bool() {
+                if let Some(self_any) =
+                    (&mut self.current_value as &mut dyn Any).downcast_mut::<bool>()
+                {
+                    *self_any = b_val;
+                    return Ok(());
+                }
+            }
+        } else if type_id == TypeId::of::<String>() {
+            if let ParameterValue::String(s_val) = value {
+                if let Some(self_any) =
+                    (&mut self.current_value as &mut dyn Any).downcast_mut::<String>()
+                {
+                    *self_any = s_val;
+                    return Ok(());
+                }
             }
         }
+
+        Err(ScirsError::InvalidInput(format!(
+            "Cannot convert parameter value {:?} to type {}",
+            value,
+            std::any::type_name::<T>()
+        )))
     }
 
     fn get_value(&self) -> ParameterValue {
@@ -305,11 +393,56 @@ pub enum ParameterValue {
 impl ParameterValue {
     fn from_typed<T>(value: &T) -> Self
     where
-        T: std::fmt::Debug,
+        T: std::fmt::Debug + 'static,
     {
-        // This is a simplified implementation
-        // In practice, we'd need proper type introspection
-        ParameterValue::Float(0.0) // Placeholder
+        // Use Any trait for type introspection
+        use std::any::{Any, TypeId};
+
+        let type_id = TypeId::of::<T>();
+
+        // Handle common types
+        if type_id == TypeId::of::<f64>() {
+            if let Some(f_val) = (value as &dyn Any).downcast_ref::<f64>() {
+                return ParameterValue::Float(*f_val);
+            }
+        } else if type_id == TypeId::of::<f32>() {
+            if let Some(f_val) = (value as &dyn Any).downcast_ref::<f32>() {
+                return ParameterValue::Float(*f_val as f64);
+            }
+        } else if type_id == TypeId::of::<i64>() {
+            if let Some(i_val) = (value as &dyn Any).downcast_ref::<i64>() {
+                return ParameterValue::Integer(*i_val);
+            }
+        } else if type_id == TypeId::of::<i32>() {
+            if let Some(i_val) = (value as &dyn Any).downcast_ref::<i32>() {
+                return ParameterValue::Integer(*i_val as i64);
+            }
+        } else if type_id == TypeId::of::<usize>() {
+            if let Some(u_val) = (value as &dyn Any).downcast_ref::<usize>() {
+                return ParameterValue::Integer(*u_val as i64);
+            }
+        } else if type_id == TypeId::of::<bool>() {
+            if let Some(b_val) = (value as &dyn Any).downcast_ref::<bool>() {
+                return ParameterValue::Boolean(*b_val);
+            }
+        } else if type_id == TypeId::of::<String>() {
+            if let Some(s_val) = (value as &dyn Any).downcast_ref::<String>() {
+                return ParameterValue::String(s_val.clone());
+            }
+        } else if type_id == TypeId::of::<&str>() {
+            if let Some(s_val) = (value as &dyn Any).downcast_ref::<&str>() {
+                return ParameterValue::String(s_val.to_string());
+            }
+        }
+
+        // Fallback - try to parse as float from debug representation
+        let debug_str = format!("{:?}", value);
+        if let Ok(f_val) = debug_str.parse::<f64>() {
+            ParameterValue::Float(f_val)
+        } else {
+            // Last resort - return a default value
+            ParameterValue::Float(0.0)
+        }
     }
 
     /// Extract as f64 if possible
@@ -391,7 +524,8 @@ impl PerformanceTracker {
 
     fn compute_metrics(&self) -> PerformanceMetrics {
         let convergence_rate = self.compute_convergence_rate();
-        let average_improvement = self.improvements.iter().sum::<f64>() / self.improvements.len() as f64;
+        let average_improvement =
+            self.improvements.iter().sum::<f64>() / self.improvements.len() as f64;
         let stability_score = self.compute_stability_score();
         let progress_rate = self.compute_progress_rate();
 
@@ -414,8 +548,8 @@ impl PerformanceTracker {
         let values: Vec<f64> = self.function_values.iter().copied().collect();
 
         for i in 1..values.len() {
-            if values[i-1] != 0.0 && values[i-1] != values[i] {
-                let rate = (values[i-1] - values[i]).abs() / values[i-1].abs();
+            if values[i - 1] != 0.0 && values[i - 1] != values[i] {
+                let rate = (values[i - 1] - values[i]).abs() / values[i - 1].abs();
                 if rate.is_finite() {
                     rates.push(rate);
                 }
@@ -436,12 +570,14 @@ impl PerformanceTracker {
 
         let improvements: Vec<f64> = self.improvements.iter().copied().collect();
         let mean = improvements.iter().sum::<f64>() / improvements.len() as f64;
-        let variance = improvements.iter()
+        let variance = improvements
+            .iter()
             .map(|&x| (x - mean).powi(2))
-            .sum::<f64>() / improvements.len() as f64;
+            .sum::<f64>()
+            / improvements.len() as f64;
 
         let std_dev = variance.sqrt();
-        
+
         // Higher stability score for lower variance
         if std_dev == 0.0 {
             1.0
@@ -455,7 +591,10 @@ impl PerformanceTracker {
             return 0.0;
         }
 
-        let time_elapsed = self.timestamps.back().unwrap()
+        let time_elapsed = self
+            .timestamps
+            .back()
+            .unwrap()
             .duration_since(*self.timestamps.front().unwrap())
             .as_secs_f64();
 
@@ -494,13 +633,19 @@ struct AdaptationEngine {
 
 impl AdaptationEngine {
     fn new(strategy: AdaptationStrategy) -> Self {
-        let rl_agent = if matches!(strategy, AdaptationStrategy::ReinforcementLearning | AdaptationStrategy::Hybrid) {
+        let rl_agent = if matches!(
+            strategy,
+            AdaptationStrategy::ReinforcementLearning | AdaptationStrategy::Hybrid
+        ) {
             Some(ReinforcementLearningAgent::new())
         } else {
             None
         };
 
-        let bayesian_optimizer = if matches!(strategy, AdaptationStrategy::BayesianOptimization | AdaptationStrategy::Hybrid) {
+        let bayesian_optimizer = if matches!(
+            strategy,
+            AdaptationStrategy::BayesianOptimization | AdaptationStrategy::Hybrid
+        ) {
             Some(BayesianParameterOptimizer::new())
         } else {
             None
@@ -560,7 +705,9 @@ impl AdaptationEngine {
             // Slow convergence - increase exploration
             for (name, value) in parameter_manager.current_values().clone() {
                 if name.contains("learning_rate") || name.contains("step_size") {
-                    if let Some(new_value) = self.increase_parameter(value, 1.1, parameter_manager.get_bounds(name)) {
+                    if let Some(new_value) =
+                        self.increase_parameter(value, 1.1, parameter_manager.get_bounds(&name))
+                    {
                         parameter_manager.update_parameter(name, new_value.clone())?;
                         changes.push(ParameterChange {
                             name: name.clone(),
@@ -576,7 +723,9 @@ impl AdaptationEngine {
             // Fast convergence - might overshoot
             for (name, value) in parameter_manager.current_values().clone() {
                 if name.contains("learning_rate") || name.contains("step_size") {
-                    if let Some(new_value) = self.decrease_parameter(value, 0.9, parameter_manager.get_bounds(name)) {
+                    if let Some(new_value) =
+                        self.decrease_parameter(value, 0.9, parameter_manager.get_bounds(&name))
+                    {
                         parameter_manager.update_parameter(name, new_value.clone())?;
                         changes.push(ParameterChange {
                             name: name.clone(),
@@ -616,7 +765,7 @@ impl AdaptationEngine {
     ) -> ScirsResult<AdaptationResult> {
         let action = agent.select_action(metrics);
         let changes = agent.apply_action(action, parameter_manager)?;
-        
+
         Ok(AdaptationResult {
             parameters_changed: !changes.is_empty(),
             changes,
@@ -631,9 +780,10 @@ impl AdaptationEngine {
         metrics: &PerformanceMetrics,
         config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
-        let suggestions = optimizer.suggest_parameters(parameter_manager.current_values(), metrics)?;
+        let suggestions =
+            optimizer.suggest_parameters(parameter_manager.current_values(), metrics)?;
         let mut changes = Vec::new();
-        
+
         for (name, new_value) in suggestions {
             if let Some(old_value) = parameter_manager.current_values().get(&name) {
                 parameter_manager.update_parameter(&name, new_value.clone())?;
@@ -645,7 +795,7 @@ impl AdaptationEngine {
                 });
             }
         }
-        
+
         Ok(AdaptationResult {
             parameters_changed: !changes.is_empty(),
             changes,
@@ -856,8 +1006,104 @@ impl ReinforcementLearningAgent {
         action: RLAction,
         parameter_manager: &mut ParameterManager,
     ) -> ScirsResult<Vec<ParameterChange>> {
-        // Simplified action application
-        Ok(Vec::new())
+        let mut changes = Vec::new();
+
+        match action {
+            RLAction::IncreaseExploration => {
+                // Increase step size/learning rate parameters
+                for (name, value) in parameter_manager.current_values().clone() {
+                    if name.contains("step_size")
+                        || name.contains("learning_rate")
+                        || name.contains("f_scale")
+                    {
+                        if let Some(new_value) = self.multiply_parameter(
+                            value.clone(),
+                            1.2,
+                            parameter_manager.get_bounds(&name),
+                        ) {
+                            parameter_manager.update_parameter(&name, new_value.clone())?;
+                            changes.push(ParameterChange {
+                                name: name.clone(),
+                                old_value: value,
+                                new_value,
+                                reason: "RL: Increase exploration".to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+            RLAction::DecreaseExploration => {
+                // Decrease step size/learning rate parameters
+                for (name, value) in parameter_manager.current_values().clone() {
+                    if name.contains("step_size")
+                        || name.contains("learning_rate")
+                        || name.contains("f_scale")
+                    {
+                        if let Some(new_value) = self.multiply_parameter(
+                            value.clone(),
+                            0.8,
+                            parameter_manager.get_bounds(&name),
+                        ) {
+                            parameter_manager.update_parameter(&name, new_value.clone())?;
+                            changes.push(ParameterChange {
+                                name: name.clone(),
+                                old_value: value,
+                                new_value,
+                                reason: "RL: Decrease exploration".to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+            RLAction::MaintainParameters => {
+                // No changes
+            }
+        }
+
+        Ok(changes)
+    }
+
+    fn multiply_parameter(
+        &self,
+        value: ParameterValue,
+        factor: f64,
+        bounds: Option<&(ParameterValue, ParameterValue)>,
+    ) -> Option<ParameterValue> {
+        match value {
+            ParameterValue::Float(f) => {
+                let new_value = f * factor;
+                if let Some((min_bound, max_bound)) = bounds {
+                    if let (Some(min_f), Some(max_f)) = (min_bound.as_f64(), max_bound.as_f64()) {
+                        if new_value >= min_f && new_value <= max_f {
+                            Some(ParameterValue::Float(new_value))
+                        } else {
+                            None
+                        }
+                    } else {
+                        Some(ParameterValue::Float(new_value))
+                    }
+                } else {
+                    Some(ParameterValue::Float(new_value))
+                }
+            }
+            ParameterValue::Integer(i) => {
+                let new_value = ((i as f64) * factor) as i64;
+                if let Some((min_bound, max_bound)) = bounds {
+                    if let (Some(min_i), Some(max_i)) = (min_bound.as_i64(), max_bound.as_i64()) {
+                        if new_value >= min_i && new_value <= max_i {
+                            Some(ParameterValue::Integer(new_value))
+                        } else {
+                            None
+                        }
+                    } else {
+                        Some(ParameterValue::Integer(new_value))
+                    }
+                } else {
+                    Some(ParameterValue::Integer(new_value))
+                }
+            }
+            _ => None,
+        }
     }
 }
 
@@ -887,11 +1133,85 @@ impl BayesianParameterOptimizer {
         metrics: &PerformanceMetrics,
     ) -> ScirsResult<HashMap<String, ParameterValue>> {
         // Record current observation
-        self.observations.push((current_params.clone(), metrics.current_function_value));
+        self.observations
+            .push((current_params.clone(), metrics.current_function_value));
 
-        // Simplified parameter suggestion
-        // In practice, this would use Gaussian processes and acquisition functions
-        Ok(HashMap::new())
+        let mut suggestions = HashMap::new();
+
+        // Simplified Bayesian optimization approach
+        // In practice, this would use proper Gaussian processes and acquisition functions
+        if self.observations.len() >= 2 {
+            // Find best observation so far
+            let best_observation = self
+                .observations
+                .iter()
+                .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+
+            if let Some((best_params, _)) = best_observation {
+                // Suggest parameter modifications based on best observation
+                for (name, value) in current_params {
+                    if let Some(best_value) = best_params.get(name) {
+                        // Move toward best observed value with some exploration
+                        let suggested_value =
+                            self.interpolate_toward_best(value.clone(), best_value.clone(), 0.3);
+                        if let Some(new_value) = suggested_value {
+                            if new_value != *value {
+                                suggestions.insert(name.clone(), new_value);
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // Not enough observations, suggest small random perturbations
+            for (name, value) in current_params {
+                if name.contains("step_size") || name.contains("learning_rate") {
+                    // Add small random perturbation for exploration
+                    use rand::Rng;
+                    let mut rng = rand::rng();
+                    let perturbation_factor = 1.0 + (rng.random_range(-0.1..=0.1));
+
+                    let perturbed_value = match value {
+                        ParameterValue::Float(f) => {
+                            Some(ParameterValue::Float(f * perturbation_factor))
+                        }
+                        ParameterValue::Integer(i) => {
+                            let new_val = ((*i as f64) * perturbation_factor) as i64;
+                            Some(ParameterValue::Integer(new_val.max(1)))
+                        }
+                        _ => None,
+                    };
+
+                    if let Some(new_value) = perturbed_value {
+                        if new_value != *value {
+                            suggestions.insert(name.clone(), new_value);
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(suggestions)
+    }
+
+    fn interpolate_toward_best(
+        &self,
+        current: ParameterValue,
+        best: ParameterValue,
+        alpha: f64, // interpolation factor (0.0 = current, 1.0 = best)
+    ) -> Option<ParameterValue> {
+        match (current, best) {
+            (ParameterValue::Float(curr), ParameterValue::Float(best_val)) => {
+                let interpolated = curr * (1.0 - alpha) + best_val * alpha;
+                Some(ParameterValue::Float(interpolated))
+            }
+            (ParameterValue::Integer(curr), ParameterValue::Integer(best_val)) => {
+                let interpolated =
+                    ((curr as f64) * (1.0 - alpha) + (best_val as f64) * alpha) as i64;
+                Some(ParameterValue::Integer(interpolated))
+            }
+            _ => None,
+        }
     }
 }
 
@@ -938,34 +1258,31 @@ pub mod presets {
     /// Create tunable parameters for BFGS algorithm
     pub fn bfgs_parameters() -> HashMap<String, TunableParameter<f64>> {
         let mut params = HashMap::new();
-        
+
         params.insert(
             "line_search_tolerance".to_string(),
             TunableParameter::new(1e-4, 1e-8, 1e-1),
         );
-        
+
         params.insert(
             "gradient_tolerance".to_string(),
             TunableParameter::new(1e-5, 1e-12, 1e-2),
         );
-        
+
         params
     }
 
     /// Create tunable parameters for differential evolution
     pub fn differential_evolution_parameters() -> HashMap<String, TunableParameter<f64>> {
         let mut params = HashMap::new();
-        
-        params.insert(
-            "f_scale".to_string(),
-            TunableParameter::new(0.8, 0.1, 2.0),
-        );
-        
+
+        params.insert("f_scale".to_string(), TunableParameter::new(0.8, 0.1, 2.0));
+
         params.insert(
             "crossover_rate".to_string(),
             TunableParameter::new(0.7, 0.1, 1.0),
         );
-        
+
         params
     }
 }
@@ -977,7 +1294,10 @@ mod tests {
     #[test]
     fn test_self_tuning_config() {
         let config = SelfTuningConfig::default();
-        assert_eq!(config.adaptation_strategy, AdaptationStrategy::PerformanceBased);
+        assert_eq!(
+            config.adaptation_strategy,
+            AdaptationStrategy::PerformanceBased
+        );
         assert_eq!(config.update_frequency, 50);
         assert!(config.use_bayesian_tuning);
     }
@@ -986,20 +1306,19 @@ mod tests {
     fn test_parameter_value() {
         let float_val = ParameterValue::Float(3.14);
         assert_eq!(float_val.as_f64(), Some(3.14));
-        
+
         let int_val = ParameterValue::Integer(42);
         assert_eq!(int_val.as_i64(), Some(42));
         assert_eq!(int_val.as_f64(), Some(42.0));
-        
+
         let bool_val = ParameterValue::Boolean(true);
         assert_eq!(bool_val.as_bool(), Some(true));
     }
 
     #[test]
     fn test_tunable_parameter() {
-        let param = TunableParameter::new(1.0, 0.0, 10.0)
-            .with_adaptation_rate(0.2);
-        
+        let param = TunableParameter::new(1.0, 0.0, 10.0).with_adaptation_rate(0.2);
+
         assert_eq!(param.adaptation_rate, 0.2);
         assert_eq!(param.current_value, 1.0);
     }
@@ -1007,11 +1326,11 @@ mod tests {
     #[test]
     fn test_performance_tracker() {
         let mut tracker = PerformanceTracker::new(10);
-        
+
         tracker.record_performance(1, 100.0, Some(10.0), 5.0);
         tracker.record_performance(2, 95.0, Some(8.0), 5.0);
         tracker.record_performance(3, 90.0, Some(6.0), 5.0);
-        
+
         let metrics = tracker.compute_metrics();
         assert!(metrics.convergence_rate > 0.0);
         assert_eq!(metrics.average_improvement, 5.0);
@@ -1022,12 +1341,14 @@ mod tests {
     fn test_parameter_manager() {
         let mut manager = ParameterManager::new();
         let param = TunableParameter::new(1.0, 0.0, 10.0);
-        
+
         manager.register("test_param", param).unwrap();
         assert!(manager.current_values().contains_key("test_param"));
-        
+
         let new_value = ParameterValue::Float(2.0);
-        manager.update_parameter("test_param", new_value.clone()).unwrap();
+        manager
+            .update_parameter("test_param", new_value.clone())
+            .unwrap();
         assert_eq!(manager.current_values()["test_param"], new_value);
     }
 
@@ -1035,10 +1356,13 @@ mod tests {
     fn test_presets() {
         let de_config = presets::differential_evolution_config();
         assert_eq!(de_config.update_frequency, 25);
-        
+
         let grad_config = presets::gradient_based_config();
-        assert_eq!(grad_config.adaptation_strategy, AdaptationStrategy::ConvergenceBased);
-        
+        assert_eq!(
+            grad_config.adaptation_strategy,
+            AdaptationStrategy::ConvergenceBased
+        );
+
         let de_params = presets::differential_evolution_parameters();
         assert!(de_params.contains_key("f_scale"));
         assert!(de_params.contains_key("crossover_rate"));

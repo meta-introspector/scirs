@@ -153,11 +153,13 @@ impl<F: IntegrateFloat> LsodaState<F> {
 
             // Optionally reduce step size when switching to non-stiff method
             if self.rejected_steps > 2 {
-                let half = F::from_f64(0.5).ok_or_else(|| {
-                    IntegrateError::ComputationError(
-                        "Failed to convert constant 0.5 to float type".to_string()
-                    )
-                }).unwrap_or_else(|_| F::from(0.5).unwrap()); // Fallback to safe conversion
+                let half = F::from_f64(0.5)
+                    .ok_or_else(|| {
+                        IntegrateError::ComputationError(
+                            "Failed to convert constant 0.5 to float type".to_string(),
+                        )
+                    })
+                    .unwrap_or_else(|_| F::from(0.5).unwrap()); // Fallback to safe conversion
                 self.h *= half;
             }
         }
@@ -191,11 +193,13 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
             min_steps_before_switch: 5,
             stiffness_threshold: 3,
             non_stiffness_threshold: 5,
-            step_size_ratio_threshold: F::from_f64(0.1).ok_or_else(|| {
-                IntegrateError::ComputationError(
-                    "Failed to convert constant 0.1 to float type".to_string()
-                )
-            }).unwrap_or_else(|_| F::from(0.1).unwrap()), // Fallback to safe conversion
+            step_size_ratio_threshold: F::from_f64(0.1)
+                .ok_or_else(|| {
+                    IntegrateError::ComputationError(
+                        "Failed to convert constant 0.1 to float type".to_string(),
+                    )
+                })
+                .unwrap_or_else(|_| F::from(0.1).unwrap()), // Fallback to safe conversion
         }
     }
 

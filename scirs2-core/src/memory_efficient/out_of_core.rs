@@ -284,7 +284,7 @@ where
                 }
             }
 
-            // Try (1, len) orientation  
+            // Try (1, len) orientation
             if let Ok(reshaped) = array.into_shape_with_order((1, len)) {
                 if let Ok(converted) = reshaped.into_dimensionality::<D>() {
                     return Ok(converted);
@@ -309,6 +309,7 @@ where
             ChunkingStrategy::Fixed(size) => size,
             ChunkingStrategy::FixedBytes(bytes) => bytes / std::mem::size_of::<A>(),
             ChunkingStrategy::NumChunks(n) => self.size.div_ceil(n),
+            ChunkingStrategy::Advanced(_) => OPTIMAL_CHUNK_SIZE / std::mem::size_of::<A>(),
         }
     }
 
@@ -319,6 +320,7 @@ where
             ChunkingStrategy::Fixed(size) => size,
             ChunkingStrategy::FixedBytes(bytes) => bytes / std::mem::size_of::<A>(),
             ChunkingStrategy::NumChunks(n) => self.size.div_ceil(n),
+            ChunkingStrategy::Advanced(_) => OPTIMAL_CHUNK_SIZE / std::mem::size_of::<A>(),
         };
 
         self.size.div_ceil(chunk_size)

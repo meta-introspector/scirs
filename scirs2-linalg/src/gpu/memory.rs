@@ -1,7 +1,7 @@
 //! GPU memory management utilities
 
-use crate::error::{LinalgError, LinalgResult};
 use super::{GpuBuffer, GpuContext};
+use crate::error::{LinalgError, LinalgResult};
 
 /// Memory allocation strategies for GPU operations
 #[derive(Debug, Clone, Copy)]
@@ -32,7 +32,7 @@ impl<T: Clone + Send + Sync + 'static> MemoryPool<T> {
             total_allocated: 0,
         }
     }
-    
+
     /// Get a buffer from the pool or allocate a new one
     pub fn get_buffer(
         &mut self,
@@ -45,13 +45,13 @@ impl<T: Clone + Send + Sync + 'static> MemoryPool<T> {
                 return Ok(self.buffers.swap_remove(i));
             }
         }
-        
+
         // No suitable buffer found, allocate a new one
         let buffer = context.allocate_buffer(size)?;
         self.total_allocated += size;
         Ok(buffer)
     }
-    
+
     /// Return a buffer to the pool
     pub fn return_buffer(&mut self, buffer: Box<dyn GpuBuffer<T>>) {
         if self.buffers.len() < self.max_pool_size {
@@ -59,18 +59,18 @@ impl<T: Clone + Send + Sync + 'static> MemoryPool<T> {
         }
         // If pool is full, buffer will be dropped
     }
-    
+
     /// Clear all buffers from the pool
     pub fn clear(&mut self) {
         self.buffers.clear();
         self.total_allocated = 0;
     }
-    
+
     /// Get total allocated memory in elements
     pub fn total_allocated(&self) -> usize {
         self.total_allocated
     }
-    
+
     /// Get number of buffers in pool
     pub fn pool_size(&self) -> usize {
         self.buffers.len()
@@ -85,14 +85,14 @@ pub trait MemoryTransfer<T> {
         host_data: &[T],
         device_buffer: &mut dyn GpuBuffer<T>,
     ) -> LinalgResult<()>;
-    
+
     /// Copy data from device to host asynchronously
     fn copy_device_to_host_async(
         &self,
         device_buffer: &dyn GpuBuffer<T>,
         host_data: &mut [T],
     ) -> LinalgResult<()>;
-    
+
     /// Copy data between device buffers
     fn copy_device_to_device(
         &self,
@@ -113,7 +113,7 @@ impl MemoryBandwidthProfiler {
             measurements: Vec::new(),
         }
     }
-    
+
     /// Measure memory bandwidth for a given transfer size
     pub fn measure_bandwidth<T>(
         &mut self,
@@ -124,36 +124,36 @@ impl MemoryBandwidthProfiler {
         T: Clone + Send + Sync + Default + 'static,
     {
         let start_time = std::time::Instant::now();
-        
+
         // Allocate buffers
         let mut buffer1 = context.allocate_buffer::<T>(transfer_size)?;
         let mut buffer2 = context.allocate_buffer::<T>(transfer_size)?;
-        
+
         // Create test data
         let test_data: Vec<T> = (0..transfer_size).map(|_| T::default()).collect();
-        
+
         // Measure host-to-device transfer
         let h2d_start = std::time::Instant::now();
         buffer1.copy_from_host(&test_data)?;
         context.synchronize()?;
         let h2d_time = h2d_start.elapsed().as_secs_f64();
-        
+
         // Measure device-to-host transfer
         let mut result_data = vec![T::default(); transfer_size];
         let d2h_start = std::time::Instant::now();
         buffer1.copy_to_host(&mut result_data)?;
         context.synchronize()?;
         let d2h_time = d2h_start.elapsed().as_secs_f64();
-        
+
         // Calculate bandwidth (bytes per second -> GB/s)
         let bytes_transferred = transfer_size * std::mem::size_of::<T>();
         let total_time = h2d_time + d2h_time;
         let bandwidth_gb_s = (bytes_transferred as f64 * 2.0) / (total_time * 1e9);
-        
+
         self.measurements.push(bandwidth_gb_s);
         Ok(bandwidth_gb_s)
     }
-    
+
     /// Get average measured bandwidth
     pub fn average_bandwidth(&self) -> f64 {
         if self.measurements.is_empty() {
@@ -162,7 +162,7 @@ impl MemoryBandwidthProfiler {
             self.measurements.iter().sum::<f64>() / self.measurements.len() as f64
         }
     }
-    
+
     /// Get peak measured bandwidth
     pub fn peak_bandwidth(&self) -> f64 {
         self.measurements.iter().copied().fold(0.0, f64::max)
@@ -183,46 +183,50 @@ impl MemoryOptimizer {
             peak_usage: 0,
         }
     }
-    
+
     /// Record memory usage
     pub fn record_usage(&mut self, usage_bytes: usize) {
         self.usage_history.push(usage_bytes);
         self.peak_usage = self.peak_usage.max(usage_bytes);
     }
-    
+
     /// Get optimization suggestions based on usage patterns
     pub fn get_suggestions(&self, device_memory: usize) -> Vec<String> {
         let mut suggestions = Vec::new();
-        
+
         if self.peak_usage > device_memory / 2 {
-            suggestions.push("Consider using memory pooling to reduce allocation overhead".to_string());
+            suggestions
+                .push("Consider using memory pooling to reduce allocation overhead".to_string());
         }
-        
+
         if self.usage_history.len() > 10 {
             let recent_usage: Vec<_> = self.usage_history.iter().rev().take(10).collect();
             let avg_recent = recent_usage.iter().copied().sum::<usize>() / recent_usage.len();
-            
+
             if avg_recent < self.peak_usage / 4 {
-                suggestions.push("Memory usage varies significantly - consider dynamic allocation".to_string());
+                suggestions.push(
+                    "Memory usage varies significantly - consider dynamic allocation".to_string(),
+                );
             }
         }
-        
+
         if self.peak_usage > device_memory * 3 / 4 {
-            suggestions.push("High memory usage detected - consider out-of-core algorithms".to_string());
+            suggestions
+                .push("High memory usage detected - consider out-of-core algorithms".to_string());
         }
-        
+
         suggestions
     }
-    
+
     /// Calculate memory efficiency score (0-100)
     pub fn efficiency_score(&self, device_memory: usize) -> f64 {
         if self.usage_history.is_empty() {
             return 100.0;
         }
-        
+
         let avg_usage = self.usage_history.iter().sum::<usize>() / self.usage_history.len();
         let utilization = avg_usage as f64 / device_memory as f64;
-        
+
         // Score based on reasonable utilization (30-70% is good)
         if utilization < 0.3 {
             utilization * 100.0 / 0.3 * 50.0
@@ -240,14 +244,11 @@ pub fn check_memory_requirements(
     matrices_sizes: &[(usize, usize)],
     element_size: usize,
 ) -> LinalgResult<bool> {
-    let total_elements: usize = matrices_sizes
-        .iter()
-        .map(|(rows, cols)| rows * cols)
-        .sum();
-    
+    let total_elements: usize = matrices_sizes.iter().map(|(rows, cols)| rows * cols).sum();
+
     let total_bytes = total_elements * element_size;
     let available_memory = context.available_memory()?;
-    
+
     // Need some overhead for temporary variables
     Ok(total_bytes < available_memory / 2)
 }
@@ -259,7 +260,7 @@ pub fn suggest_memory_strategy(
     unified_memory_available: bool,
 ) -> MemoryStrategy {
     let memory_ratio = problem_size as f64 / available_memory as f64;
-    
+
     if memory_ratio > 0.8 {
         // Large problem relative to memory
         if unified_memory_available {
@@ -287,7 +288,7 @@ mod tests {
         let mut pool = MemoryPool::<f32>::new(5);
         assert_eq!(pool.pool_size(), 0);
         assert_eq!(pool.total_allocated(), 0);
-        
+
         // Can't test actual allocation without a real GPU context
         pool.clear();
         assert_eq!(pool.pool_size(), 0);
@@ -296,15 +297,15 @@ mod tests {
     #[test]
     fn test_memory_optimizer() {
         let mut optimizer = MemoryOptimizer::new();
-        
+
         // Record some usage patterns
         optimizer.record_usage(1000);
         optimizer.record_usage(2000);
         optimizer.record_usage(1500);
-        
+
         let efficiency = optimizer.efficiency_score(10000);
         assert!(efficiency >= 0.0 && efficiency <= 100.0);
-        
+
         let suggestions = optimizer.get_suggestions(10000);
         // Should have some suggestions for this usage pattern
         assert!(!suggestions.is_empty());
@@ -315,11 +316,11 @@ mod tests {
         // Large problem
         let strategy = suggest_memory_strategy(1000000, 1000000, true);
         assert!(matches!(strategy, MemoryStrategy::Unified));
-        
+
         // Small problem
         let strategy = suggest_memory_strategy(10000, 1000000, false);
         assert!(matches!(strategy, MemoryStrategy::Pinned));
-        
+
         // Medium problem
         let strategy = suggest_memory_strategy(300000, 1000000, false);
         assert!(matches!(strategy, MemoryStrategy::Pooled));
@@ -329,12 +330,12 @@ mod tests {
     fn test_check_memory_requirements() {
         let backend = CpuFallbackBackend::new();
         let context = backend.create_context(0).unwrap();
-        
+
         // Small matrices should fit
         let matrices = vec![(10, 10), (10, 10)];
         let fits = check_memory_requirements(context.as_ref(), &matrices, 8).unwrap();
         assert!(fits);
-        
+
         // Very large matrices might not fit (depends on system memory)
         let matrices = vec![(100000, 100000)];
         let fits = check_memory_requirements(context.as_ref(), &matrices, 8).unwrap();

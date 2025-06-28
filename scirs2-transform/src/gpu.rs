@@ -30,7 +30,7 @@ impl GpuPCA {
     /// Create a new GPU PCA instance
     pub fn new(n_components: usize) -> Result<Self> {
         check_positive(n_components, "n_components")?;
-        
+
         let cuda_context = CudaContext::new().map_err(|e| {
             TransformError::ComputationError(format!("Failed to initialize CUDA: {}", e))
         })?;
@@ -71,50 +71,96 @@ impl GpuPCA {
             (gpu_x, None)
         };
 
-        // Compute covariance matrix on GPU
+        // Compute covariance matrix on GPU with optimized approach selection
         let gpu_cov = if n_samples > n_features {
-            // Use X^T X approach when n_features < n_samples
-            let gpu_xt = gpu_x_centered.transpose()?;
-            let gpu_cov = gpu_xt.matmul(&gpu_x_centered)?;
-            gpu_cov.scale(1.0 / (n_samples - 1) as f64)?
+            // Use X^T X approach when n_features < n_samples (more efficient)
+            let gpu_xt = gpu_x_centered.transpose()
+                .context("Failed to transpose data matrix on GPU")?;
+            let gpu_cov = gpu_xt.matmul(&gpu_x_centered)
+                .context("Failed to compute covariance matrix (X^T X) on GPU")?;
+            gpu_cov.scale(1.0 / (n_samples - 1) as f64)
+                .context("Failed to scale covariance matrix on GPU")?
         } else {
             // Use X X^T approach when n_samples < n_features
-            let gpu_gram = gpu_x_centered.matmul(&gpu_x_centered.transpose()?)?;
-            gpu_gram.scale(1.0 / (n_samples - 1) as f64)?
+            let gpu_xt = gpu_x_centered.transpose()
+                .context("Failed to transpose data matrix on GPU")?;
+            let gpu_gram = gpu_x_centered.matmul(&gpu_xt)
+                .context("Failed to compute Gram matrix (X X^T) on GPU")?;
+            gpu_gram.scale(1.0 / (n_samples - 1) as f64)
+                .context("Failed to scale Gram matrix on GPU")?
         };
 
         // Compute eigendecomposition on GPU
         let (gpu_eigenvalues, gpu_eigenvectors) = gpu_cov.eigh()?;
 
-        // Sort eigenvalues and eigenvectors in descending order
-        let (gpu_eigenvalues_sorted, gpu_eigenvectors_sorted) = 
-            gpu_eigenvalues.sort_with_vectors(&gpu_eigenvectors, false)?;
+        // Sort eigenvalues and eigenvectors in descending order with validation
+        let (gpu_eigenvalues_sorted, gpu_eigenvectors_sorted) =
+            gpu_eigenvalues.sort_with_vectors(&gpu_eigenvectors, false)
+                .context("Failed to sort eigenvalues and eigenvectors on GPU")?;
 
-        // Take top n_components
-        let gpu_components = gpu_eigenvectors_sorted.slice((.., ..self.n_components))?;
-        let gpu_explained_var = gpu_eigenvalues_sorted.slice(..self.n_components)?;
+        // Take top n_components with bounds checking
+        let gpu_components = gpu_eigenvectors_sorted.slice((.., ..self.n_components))
+            .context("Failed to slice eigenvectors for components on GPU")?;
+        let gpu_explained_var = gpu_eigenvalues_sorted.slice(..self.n_components)
+            .context("Failed to slice eigenvalues for explained variance on GPU")?;
 
-        // Transfer results back to host
-        self.components = Some(gpu_components.to_ndarray()?.t().to_owned());
-        self.explained_variance = Some(gpu_explained_var.to_ndarray()?);
+        // Transfer results back to host with validation
+        let components_host = gpu_components.to_ndarray()
+            .context("Failed to transfer components from GPU to host")?;
+        let explained_var_host = gpu_explained_var.to_ndarray()
+            .context("Failed to transfer explained variance from GPU to host")?;
+            
+        // Validate components matrix
+        if components_host.dim().0 != n_features || components_host.dim().1 != self.n_components {
+            return Err(TransformError::ComputationError(
+                "Component matrix has incorrect dimensions after GPU computation".to_string(),
+            ));
+        }
+        
+        // Validate explained variance values
+        if explained_var_host.iter().any(|&x| !x.is_finite() || x < 0.0) {
+            return Err(TransformError::ComputationError(
+                "Invalid explained variance values computed on GPU".to_string(),
+            ));
+        }
+        
+        self.components = Some(components_host.t().to_owned());
+        self.explained_variance = Some(explained_var_host);
         self.mean = mean;
 
         Ok(())
     }
 
-    /// Transform data using the fitted PCA model on GPU
+    /// Transform data using the fitted PCA model on GPU with enhanced validation
     pub fn transform(&self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
-        let components = self.components.as_ref()
+        // Validate input
+        check_not_empty(x, "x")?;
+        check_finite(x, "x")?;
+        
+        let components = self
+            .components
+            .as_ref()
             .ok_or_else(|| TransformError::NotFitted("PCA model not fitted".to_string()))?;
+            
+        // Validate input dimensions match training data
+        let (_, n_features) = x.dim();
+        if n_features != components.dim().1 {
+            return Err(TransformError::InvalidInput(
+                format!("Input has {} features, but model was trained on {} features", 
+                    n_features, components.dim().1)
+            ));
+        }
 
         let cuda_ctx = self.cuda_context.as_ref().unwrap();
 
         // Transfer data to GPU
-        let gpu_x = GpuArray::from_ndarray(x, cuda_ctx)?;
+        let gpu_x = GpuArray::from_ndarray(x, cuda_ctx)
+            .context("Failed to transfer transform data to GPU")?;
 
         // Center data if needed
         let gpu_x_processed = if let Some(ref mean) = self.mean {
-            let gpu_mean = GpuArray::from_ndarray(&mean.view().insert_axis(ndarray::Axis(0)), cuda_ctx)?;
+            let gpu_mean =
+                GpuArray::from_ndarray(&mean.view().insert_axis(ndarray::Axis(0)), cuda_ctx)?;
             gpu_x.subtract_broadcast(&gpu_mean)?
         } else {
             gpu_x
@@ -136,7 +182,9 @@ impl GpuPCA {
 
     /// Get the explained variance ratio
     pub fn explained_variance_ratio(&self) -> Result<Array1<f64>> {
-        let explained_var = self.explained_variance.as_ref()
+        let explained_var = self
+            .explained_variance
+            .as_ref()
             .ok_or_else(|| TransformError::NotFitted("PCA model not fitted".to_string()))?;
 
         let total_var = explained_var.sum();
@@ -173,7 +221,7 @@ impl GpuMatrixOps {
     pub fn svd(&self, a: &ArrayView2<f64>) -> Result<(Array2<f64>, Array1<f64>, Array2<f64>)> {
         let gpu_a = GpuArray::from_ndarray(a, &self.cuda_context)?;
         let (gpu_u, gpu_s, gpu_vt) = gpu_a.svd()?;
-        
+
         Ok((
             gpu_u.to_ndarray()?,
             gpu_s.to_ndarray()?,
@@ -185,11 +233,8 @@ impl GpuMatrixOps {
     pub fn eigh(&self, a: &ArrayView2<f64>) -> Result<(Array1<f64>, Array2<f64>)> {
         let gpu_a = GpuArray::from_ndarray(a, &self.cuda_context)?;
         let (gpu_eigenvals, gpu_eigenvecs) = gpu_a.eigh()?;
-        
-        Ok((
-            gpu_eigenvals.to_ndarray()?,
-            gpu_eigenvecs.to_ndarray()?,
-        ))
+
+        Ok((gpu_eigenvals.to_ndarray()?, gpu_eigenvecs.to_ndarray()?))
     }
 }
 
@@ -213,7 +258,7 @@ impl GpuTSNE {
     /// Create new GPU t-SNE instance
     pub fn new(n_components: usize) -> Result<Self> {
         check_positive(n_components, "n_components")?;
-        
+
         let cuda_context = CudaContext::new().map_err(|e| {
             TransformError::ComputationError(format!("Failed to initialize CUDA: {}", e))
         })?;
@@ -248,7 +293,7 @@ impl GpuTSNE {
     /// Fit and transform data using GPU-accelerated t-SNE
     pub fn fit_transform(&self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
         let (n_samples, _) = x.dim();
-        
+
         // Transfer data to GPU
         let gpu_x = GpuArray::from_ndarray(x, &self.cuda_context)?;
 
@@ -259,10 +304,8 @@ impl GpuTSNE {
         let gpu_p = self.compute_p_matrix(&gpu_distances)?;
 
         // Initialize embedding randomly on GPU
-        let mut gpu_y = GpuArray::random_normal(
-            (n_samples, self.n_components),
-            &self.cuda_context,
-        )?;
+        let mut gpu_y =
+            GpuArray::random_normal((n_samples, self.n_components), &self.cuda_context)?;
 
         // Optimize embedding using gradient descent on GPU
         for _iter in 0..self.max_iter {
@@ -278,7 +321,7 @@ impl GpuTSNE {
     fn compute_pairwise_distances(&self, gpu_x: &GpuArray) -> Result<GpuArray> {
         // Implement efficient pairwise distance computation on GPU
         let gpu_x_norm = gpu_x.norm_squared_axis(1)?;
-        let gpu_distances_sq = gpu_x_norm.broadcast_add(&gpu_x_norm.transpose()?)? 
+        let gpu_distances_sq = gpu_x_norm.broadcast_add(&gpu_x_norm.transpose()?)?
             - gpu_x.matmul(&gpu_x.transpose()?)?.scale(2.0)?;
         gpu_distances_sq.sqrt()
     }
@@ -299,14 +342,20 @@ impl GpuTSNE {
         gpu_q.scale(1.0)?.divide_scalar(gpu_q_sum)
     }
 
-    fn compute_gradient(&self, gpu_p: &GpuArray, gpu_q: &GpuArray, gpu_y: &GpuArray) -> Result<GpuArray> {
+    fn compute_gradient(
+        &self,
+        gpu_p: &GpuArray,
+        gpu_q: &GpuArray,
+        gpu_y: &GpuArray,
+    ) -> Result<GpuArray> {
         // Compute gradient of KL divergence
         let gpu_pq_diff = gpu_p.subtract(gpu_q)?;
         let gpu_y_diff = gpu_y.unsqueeze(1)?.subtract(&gpu_y.unsqueeze(0)?)?;
         let gpu_distances = self.compute_pairwise_distances(gpu_y)?;
         let gpu_weights = (gpu_distances.square()? + 1.0)?.pow(-1.0)?;
-        
-        gpu_pq_diff.unsqueeze(-1)?
+
+        gpu_pq_diff
+            .unsqueeze(-1)?
             .multiply(&gpu_y_diff)?
             .multiply(&gpu_weights.unsqueeze(-1)?)?
             .sum_axis(1)?

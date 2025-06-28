@@ -779,7 +779,7 @@ impl TrendAnalysisMetrics {
             let autocorr = self.calculate_autocorrelation(time_series, k)?;
             lb_statistic += autocorr * autocorr / (n - k) as f64;
         }
-        
+
         lb_statistic *= n as f64 * (n + 2) as f64;
 
         // Approximate p-value using chi-square distribution
@@ -816,7 +816,7 @@ impl TrendAnalysisMetrics {
 
         // Simple ADF regression: Δy_t = α + γy_{t-1} + ε_t
         let diff_subset = &diff_series[1..];
-        
+
         // Calculate regression coefficient γ (simplified)
         let n_reg = diff_subset.len();
         if n_reg == 0 {

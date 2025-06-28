@@ -12,6 +12,44 @@ use std::fmt::Debug;
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{convolve, BorderMode};
 
+/// Helper function for safe conversion of hardcoded constants
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
+/// Helper function for safe usize conversion
+fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
+    value.to_usize().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert value to usize".to_string())
+    })
+}
+
+/// Helper function for safe f64 conversion
+fn safe_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
+    value
+        .to_f64()
+        .ok_or_else(|| NdimageError::ComputationError("Failed to convert value to f64".to_string()))
+}
+
+/// Helper function for safe isize conversion to float
+fn safe_isize_to_float<T: Float + FromPrimitive>(value: isize) -> NdimageResult<T> {
+    T::from_isize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert isize {} to float type", value))
+    })
+}
+
+/// Helper function for safe usize conversion to float
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
+    T::from_usize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+    })
+}
+
 /// Gabor filter parameters
 #[derive(Debug, Clone)]
 pub struct GaborParams<T> {
@@ -35,10 +73,10 @@ where
 {
     fn default() -> Self {
         Self {
-            wavelength: T::from_f64(4.0).unwrap(),
+            wavelength: safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4.0)),
             orientation: T::zero(),
-            sigma_x: T::from_f64(2.0).unwrap(),
-            sigma_y: T::from_f64(2.0).unwrap(),
+            sigma_x: safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0)),
+            sigma_y: safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0)),
             phase: T::zero(),
             aspect_ratio: None,
         }
@@ -99,7 +137,7 @@ where
         params.sigma_x.max(params.sigma_y)
     };
 
-    let auto_size = (sigma_max * T::from_f64(6.0).unwrap())
+    let auto_size = (sigma_max * safe_f64_to_float(6.0).unwrap_or_else(|_| T::from(6.0)))
         .to_usize()
         .unwrap_or(21);
     let size = kernel_size.unwrap_or(auto_size);
@@ -138,13 +176,13 @@ where
     // Pre-compute constants
     let sigma_x_sq = sigma_x * sigma_x;
     let sigma_y_sq = sigma_y * sigma_y;
-    let two_pi = T::from_f64(2.0 * std::f64::consts::PI).unwrap();
-    let two = T::from_f64(2.0).unwrap();
+    let two_pi = safe_f64_to_float(2.0 * std::f64::consts::PI)?;
+    let two = safe_f64_to_float(2.0)?;
 
     for i in 0..size {
         for j in 0..size {
-            let x = T::from_isize(j as isize - center).unwrap();
-            let y = T::from_isize(i as isize - center).unwrap();
+            let x = safe_isize_to_float(j as isize - center)?;
+            let y = safe_isize_to_float(i as isize - center)?;
 
             // Rotate coordinates
             let x_rot = x * cos_theta + y * sin_theta;
@@ -193,12 +231,12 @@ where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
 {
     let mut results = Vec::with_capacity(num_orientations);
-    let pi = T::from_f64(std::f64::consts::PI).unwrap();
-    let angle_step = pi / T::from_usize(num_orientations).unwrap();
+    let pi = safe_f64_to_float(std::f64::consts::PI)?;
+    let angle_step = pi / safe_usize_to_float(num_orientations)?;
 
     for i in 0..num_orientations {
         let mut params = base_params.clone();
-        params.orientation = T::from_usize(i).unwrap() * angle_step;
+        params.orientation = safe_usize_to_float(i)? * angle_step;
 
         let filtered = gabor_filter(input, &params, kernel_size, mode)?;
         results.push(filtered);
@@ -237,7 +275,7 @@ where
     let (height, width) = input.dim();
 
     // Validate inputs
-    let center_freq_f64 = center_freq.to_f64().unwrap();
+    let center_freq_f64 = safe_to_f64(center_freq)?;
     if center_freq_f64 <= 0.0 || center_freq_f64 >= 0.5 {
         return Err(NdimageError::InvalidInput(
             "Center frequency must be between 0.0 and 0.5".into(),
@@ -245,7 +283,7 @@ where
     }
 
     // Convert input to f64 for FFT processing
-    let input_f64: Array2<f64> = input.mapv(|x| x.to_f64().unwrap());
+    let input_f64: Array2<f64> = input.mapv(|x| safe_to_f64(x).unwrap_or(0.0));
 
     // Apply 2D FFT
     let fft_result = apply_2d_fft(&input_f64)?;
@@ -255,9 +293,9 @@ where
         height,
         width,
         center_freq_f64,
-        bandwidth.to_f64().unwrap(),
-        orientation.to_f64().unwrap(),
-        angular_bandwidth.to_f64().unwrap(),
+        safe_to_f64(bandwidth)?,
+        safe_to_f64(orientation)?,
+        safe_to_f64(angular_bandwidth)?,
     )?;
 
     // Apply filter in frequency domain
@@ -267,7 +305,8 @@ where
     let result_f64 = apply_2d_ifft(&filtered_fft)?;
 
     // Convert back to original type and take real part
-    let output: Array2<T> = result_f64.mapv(|x| T::from_f64(x.re).unwrap());
+    let output: Array2<T> =
+        result_f64.mapv(|x| safe_f64_to_float(x.re).unwrap_or_else(|_| T::zero()));
 
     Ok(output)
 }
@@ -549,7 +588,9 @@ fn generate_steerable_basis<T>(order: usize, sigma: T) -> NdimageResult<Vec<Arra
 where
     T: Float + FromPrimitive + Debug,
 {
-    let size = (sigma * T::from_f64(6.0).unwrap()).to_usize().unwrap_or(15);
+    let size = (sigma * safe_f64_to_float(6.0).unwrap_or_else(|_| T::from(6.0)))
+        .to_usize()
+        .unwrap_or(15);
     let size = if size % 2 == 0 { size + 1 } else { size };
     let center = (size / 2) as isize;
 
@@ -560,16 +601,16 @@ where
             // First-order steerable filter (G1 basis)
             for angle in [0.0, std::f64::consts::PI / 2.0] {
                 let mut kernel = Array2::zeros((size, size));
-                let cos_theta = T::from_f64(angle.cos()).unwrap();
-                let sin_theta = T::from_f64(angle.sin()).unwrap();
+                let cos_theta = safe_f64_to_float(angle.cos())?;
+                let sin_theta = safe_f64_to_float(angle.sin())?;
 
                 for i in 0..size {
                     for j in 0..size {
-                        let x = T::from_isize(j as isize - center).unwrap();
-                        let y = T::from_isize(i as isize - center).unwrap();
+                        let x = safe_isize_to_float(j as isize - center)?;
+                        let y = safe_isize_to_float(i as isize - center)?;
 
                         let r_sq = x * x + y * y;
-                        let gauss = (-r_sq / (T::from_f64(2.0).unwrap() * sigma * sigma)).exp();
+                        let gauss = (-r_sq / (safe_f64_to_float(2.0)? * sigma * sigma)).exp();
 
                         // First derivative of Gaussian
                         let deriv = if angle == 0.0 { x } else { y };
@@ -586,18 +627,16 @@ where
 
                 for i in 0..size {
                     for j in 0..size {
-                        let x = T::from_isize(j as isize - center).unwrap();
-                        let y = T::from_isize(i as isize - center).unwrap();
+                        let x = safe_isize_to_float(j as isize - center)?;
+                        let y = safe_isize_to_float(i as isize - center)?;
 
                         let r_sq = x * x + y * y;
-                        let gauss = (-r_sq / (T::from_f64(2.0).unwrap() * sigma * sigma)).exp();
+                        let gauss = (-r_sq / (safe_f64_to_float(2.0)? * sigma * sigma)).exp();
                         let sigma_sq = sigma * sigma;
 
                         let value = match angle as i32 {
                             0 => (x * x - sigma_sq) * gauss / (sigma_sq * sigma_sq), // G2a
-                            1 => {
-                                (T::from_f64(2.0).unwrap() * x * y) * gauss / (sigma_sq * sigma_sq)
-                            } // G2b
+                            1 => (safe_f64_to_float(2.0)? * x * y) * gauss / (sigma_sq * sigma_sq), // G2b
                             _ => (y * y - sigma_sq) * gauss / (sigma_sq * sigma_sq), // G2c
                         };
 
@@ -616,11 +655,11 @@ where
 
                 for i in 0..size {
                     for j in 0..size {
-                        let x = T::from_isize(j as isize - center).unwrap();
-                        let y = T::from_isize(i as isize - center).unwrap();
+                        let x = safe_isize_to_float(j as isize - center)?;
+                        let y = safe_isize_to_float(i as isize - center)?;
 
                         let r_sq = x * x + y * y;
-                        let gauss = (-r_sq / (T::from_f64(2.0).unwrap() * sigma * sigma)).exp();
+                        let gauss = (-r_sq / (safe_f64_to_float(2.0)? * sigma * sigma)).exp();
                         let sigma_cubed = sigma * sigma * sigma;
                         let sigma_sq = sigma * sigma;
 
@@ -630,7 +669,7 @@ where
                                 // d³/dx³
                                 let x3 = x * x * x;
                                 let term1 = x3 / (sigma_cubed * sigma_cubed);
-                                let term2 = T::from_f64(3.0).unwrap() * x / (sigma_cubed);
+                                let term2 = safe_f64_to_float(3.0)? * x / (sigma_cubed);
                                 (term1 - term2) * gauss
                             }
                             1 => {
@@ -651,7 +690,7 @@ where
                                 // d³/dy³
                                 let y3 = y * y * y;
                                 let term1 = y3 / (sigma_cubed * sigma_cubed);
-                                let term2 = T::from_f64(3.0).unwrap() * y / (sigma_cubed);
+                                let term2 = safe_f64_to_float(3.0)? * y / (sigma_cubed);
                                 (term1 - term2) * gauss
                             }
                         };
@@ -682,7 +721,11 @@ where
             let cos2 = cos_theta * cos_theta;
             let sin2 = sin_theta * sin_theta;
             let cos_sin = cos_theta * sin_theta;
-            vec![cos2, T::from_f64(2.0).unwrap() * cos_sin, sin2]
+            vec![
+                cos2,
+                safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0)) * cos_sin,
+                sin2,
+            ]
         }
         3 => {
             let cos3 = cos_theta * cos_theta * cos_theta;
@@ -691,8 +734,8 @@ where
             let cos_sin2 = cos_theta * sin_theta * sin_theta;
             vec![
                 cos3,
-                T::from_f64(3.0).unwrap() * cos2_sin,
-                T::from_f64(3.0).unwrap() * cos_sin2,
+                safe_f64_to_float(3.0).unwrap_or_else(|_| T::from(3.0)) * cos2_sin,
+                safe_f64_to_float(3.0).unwrap_or_else(|_| T::from(3.0)) * cos_sin2,
                 sin3,
             ]
         }
@@ -726,7 +769,7 @@ where
     let (height, width) = input.dim();
     let mut output = Array2::zeros((height, width));
 
-    let window_size = (spatial_sigma * T::from_f64(6.0).unwrap())
+    let window_size = (spatial_sigma * safe_f64_to_float(6.0).unwrap_or_else(|_| T::from(6.0)))
         .to_usize()
         .unwrap_or(7);
     let window_size = if window_size % 2 == 0 {
@@ -736,8 +779,10 @@ where
     };
     let half_window = window_size / 2;
 
-    let spatial_factor = -T::from_f64(0.5).unwrap() / (spatial_sigma * spatial_sigma);
-    let range_factor = -T::from_f64(0.5).unwrap() / (range_sigma * range_sigma);
+    let spatial_factor =
+        -safe_f64_to_float(0.5).unwrap_or_else(|_| T::from(0.5)) / (spatial_sigma * spatial_sigma);
+    let range_factor =
+        -safe_f64_to_float(0.5).unwrap_or_else(|_| T::from(0.5)) / (range_sigma * range_sigma);
 
     // Process each pixel
     for i in half_window..height - half_window {
@@ -754,8 +799,10 @@ where
                     let neighbor_val = input[[ni, nj]];
 
                     // Spatial weight
-                    let dx = T::from_isize((dj as isize) - (half_window as isize)).unwrap();
-                    let dy = T::from_isize((di as isize) - (half_window as isize)).unwrap();
+                    let dx = safe_isize_to_float((dj as isize) - (half_window as isize))
+                        .unwrap_or_else(|_| T::zero());
+                    let dy = safe_isize_to_float((di as isize) - (half_window as isize))
+                        .unwrap_or_else(|_| T::zero());
                     let spatial_dist = dx * dx + dy * dy;
                     let spatial_weight = (spatial_dist * spatial_factor).exp();
 
@@ -823,7 +870,7 @@ where
     let (height, width) = input.dim();
     let mut image = input.to_owned();
 
-    let gamma_quarter = gamma / T::from_f64(4.0).unwrap();
+    let gamma_quarter = gamma / safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4.0));
 
     for _ in 0..num_iterations {
         let mut new_image = image.clone();
@@ -905,7 +952,7 @@ where
     let patch_radius = patch_size / 2;
     let search_radius = search_window / 2;
     let h_squared = h * h;
-    let patch_area = T::from_usize(patch_size * patch_size).unwrap();
+    let patch_area = safe_usize_to_float(patch_size * patch_size).unwrap_or_else(|_| T::one());
 
     for i in patch_radius..height - patch_radius {
         for j in patch_radius..width - patch_radius {
@@ -1003,13 +1050,13 @@ where
                 .iter()
                 .cloned()
                 .fold(T::zero(), |acc, x| acc + x)
-                / T::from_usize(local_values.len()).unwrap();
+                / safe_usize_to_float(local_values.len()).unwrap_or_else(|_| T::one());
 
             let local_variance = local_values
                 .iter()
                 .map(|&x| (x - local_mean) * (x - local_mean))
                 .fold(T::zero(), |acc, x| acc + x)
-                / T::from_usize(local_values.len()).unwrap();
+                / safe_usize_to_float(local_values.len()).unwrap_or_else(|_| T::one());
 
             // Wiener filter coefficient
             let signal_variance = (local_variance - noise_variance).max(T::zero());
@@ -1077,8 +1124,10 @@ where
     for i in 1..height - 1 {
         for j in 1..width - 1 {
             // Compute gradients on smoothed image
-            let grad_x = (smoothed[[i, j + 1]] - smoothed[[i, j - 1]]) / T::from_f64(2.0).unwrap();
-            let grad_y = (smoothed[[i + 1, j]] - smoothed[[i - 1, j]]) / T::from_f64(2.0).unwrap();
+            let grad_x = (smoothed[[i, j + 1]] - smoothed[[i, j - 1]])
+                / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
+            let grad_y = (smoothed[[i + 1, j]] - smoothed[[i - 1, j]])
+                / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
             let grad_magnitude = (grad_x * grad_x + grad_y * grad_y).sqrt();
 
             if grad_magnitude > T::zero() {
@@ -1087,16 +1136,21 @@ where
                 let grad_y_norm = grad_y / grad_magnitude;
 
                 // Second directional derivative (along gradient direction)
-                let uxx = input[[i, j + 1]] - T::from_f64(2.0).unwrap() * input[[i, j]]
+                let uxx = input[[i, j + 1]]
+                    - safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0)) * input[[i, j]]
                     + input[[i, j - 1]];
-                let uyy = input[[i + 1, j]] - T::from_f64(2.0).unwrap() * input[[i, j]]
+                let uyy = input[[i + 1, j]]
+                    - safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0)) * input[[i, j]]
                     + input[[i - 1, j]];
                 let uxy = (input[[i + 1, j + 1]] - input[[i + 1, j - 1]] - input[[i - 1, j + 1]]
                     + input[[i - 1, j - 1]])
-                    / T::from_f64(4.0).unwrap();
+                    / safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4.0));
 
                 let directional_curvature = grad_x_norm * grad_x_norm * uxx
-                    + T::from_f64(2.0).unwrap() * grad_x_norm * grad_y_norm * uxy
+                    + safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0))
+                        * grad_x_norm
+                        * grad_y_norm
+                        * uxy
                     + grad_y_norm * grad_y_norm * uyy;
 
                 // Shock filter update: enhance if curvature is negative (edge), smooth if positive
@@ -1163,13 +1217,15 @@ where
     let (height, width) = input.dim();
     let mut output = input.to_owned();
 
-    let dt = T::from_f64(0.25).unwrap(); // Time step
+    let dt = safe_f64_to_float(0.25).unwrap_or_else(|_| T::from(0.25)); // Time step
 
     for i in 1..height - 1 {
         for j in 1..width - 1 {
             // Compute structure tensor
-            let grad_x = (input[[i, j + 1]] - input[[i, j - 1]]) / T::from_f64(2.0).unwrap();
-            let grad_y = (input[[i + 1, j]] - input[[i - 1, j]]) / T::from_f64(2.0).unwrap();
+            let grad_x = (input[[i, j + 1]] - input[[i, j - 1]])
+                / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
+            let grad_y = (input[[i + 1, j]] - input[[i - 1, j]])
+                / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
 
             let j11 = grad_x * grad_x;
             let j12 = grad_x * grad_y;
@@ -1178,12 +1234,15 @@ where
             // Compute eigenvalues of structure tensor
             let trace = j11 + j22;
             let det = j11 * j22 - j12 * j12;
-            let discriminant = (trace * trace - T::from_f64(4.0).unwrap() * det)
+            let discriminant = (trace * trace
+                - safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4.0)) * det)
                 .max(T::zero())
                 .sqrt();
 
-            let lambda1 = (trace + discriminant) / T::from_f64(2.0).unwrap();
-            let lambda2 = (trace - discriminant) / T::from_f64(2.0).unwrap();
+            let lambda1 =
+                (trace + discriminant) / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
+            let lambda2 =
+                (trace - discriminant) / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
 
             // Compute diffusivities
             let coherence = if lambda1 > T::zero() {
@@ -1198,10 +1257,11 @@ where
             // Compute diffusion update (simplified)
             let laplacian =
                 input[[i + 1, j]] + input[[i - 1, j]] + input[[i, j + 1]] + input[[i, j - 1]]
-                    - T::from_f64(4.0).unwrap() * input[[i, j]];
+                    - safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4.0)) * input[[i, j]];
 
             // Average diffusivity for simplification
-            let avg_diffusivity = (d1 + d2) / T::from_f64(2.0).unwrap();
+            let avg_diffusivity =
+                (d1 + d2) / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
 
             output[[i, j]] = input[[i, j]] + dt * avg_diffusivity * laplacian;
         }

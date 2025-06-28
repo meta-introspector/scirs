@@ -10,7 +10,7 @@
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
 use crate::filter::FilterType;
-use ndarray::{Array1, Array2, ArrayView1, ArrayViewMut1, Axis, Zip, s};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1, Axis, Zip};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -433,7 +433,7 @@ pub fn optimized_convolve_2d(
                 tile_coords.push((row_start, row_end, col_start, col_end));
             }
         }
-        
+
         // Process tiles in parallel and collect results
         let tile_results: Vec<Array2<f64>> = tile_coords
             .into_par_iter()
@@ -454,7 +454,9 @@ pub fn optimized_convolve_2d(
             .into_iter()
             .map(|(tile, row_start, row_end, col_start, col_end)| {
                 // Copy tile result back to main output
-                output.slice_mut(s![row_start..row_end, col_start..col_end]).assign(&tile);
+                output
+                    .slice_mut(s![row_start..row_end, col_start..col_end])
+                    .assign(&tile);
                 tile
             })
             .collect();
@@ -500,7 +502,7 @@ fn process_tile_simd_independent(
         for local_col in 0..(global_col_end - global_col_start) {
             let global_row = global_row_start + local_row;
             let global_col = global_col_start + local_col;
-            
+
             let mut sum = 0.0;
 
             // Flatten kernel and image patch for SIMD

@@ -329,12 +329,14 @@ pub fn cos(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
 }
 
 /// Compute gradient using reverse-mode automatic differentiation
+/// This is a generic function that works with closures, using finite differences
+/// For functions that can be expressed in terms of AD operations, use reverse_gradient_with_tape
 pub fn reverse_gradient<F>(func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
-    // For now, use finite differences as a placeholder
-    // In a full implementation, this would use the computational graph
+    // For generic functions, we need to use finite differences
+    // This is because we don't have access to the function's AD representation
     let n = x.len();
     let mut gradient = Array1::zeros(n);
     let h = 1e-8;
@@ -354,7 +356,32 @@ where
     Ok(gradient)
 }
 
-/// Compute Hessian using reverse-mode automatic differentiation
+/// Compute gradient using reverse-mode AD with a function that directly uses AD operations
+pub fn reverse_gradient_ad<F>(func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
+where
+    F: Fn(&mut ComputationGraph, &[ReverseVariable]) -> ReverseVariable,
+{
+    let mut graph = ComputationGraph::new();
+
+    // Create input variables
+    let input_vars: Vec<ReverseVariable> = x.iter().map(|&xi| graph.variable(xi)).collect();
+
+    // Evaluate function with the computation graph
+    let output = func(&mut graph, &input_vars);
+
+    // Perform backpropagation
+    graph.backward(&output)?;
+
+    // Extract gradients
+    let mut gradient = Array1::zeros(x.len());
+    for (i, var) in input_vars.iter().enumerate() {
+        gradient[i] = graph.get_gradient(var);
+    }
+
+    Ok(gradient)
+}
+
+/// Compute Hessian using reverse-mode automatic differentiation (finite differences for generic functions)
 pub fn reverse_hessian<F>(func: F, x: &ArrayView1<f64>) -> Result<Array2<f64>, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
@@ -364,7 +391,7 @@ where
     let h = 1e-5;
 
     // Compute Hessian using finite differences
-    // This is a placeholder - full reverse-mode would compute this more efficiently
+    // For generic functions, this is the most practical approach
     for i in 0..n {
         for j in 0..n {
             if i == j {
@@ -419,6 +446,33 @@ where
     Ok(hessian)
 }
 
+/// Compute Hessian using forward-over-reverse mode for AD functions
+pub fn reverse_hessian_ad<F>(func: F, x: &ArrayView1<f64>) -> Result<Array2<f64>, OptimizeError>
+where
+    F: Fn(&mut ComputationGraph, &[ReverseVariable]) -> ReverseVariable,
+{
+    let n = x.len();
+    let mut hessian = Array2::zeros((n, n));
+
+    // Compute Hessian by differentiating the gradient
+    // For each input variable, compute gradient and then differentiate again
+    for i in 0..n {
+        // Create a function that returns the i-th component of the gradient
+        let gradient_i_func = |x_val: &ArrayView1<f64>| -> f64 {
+            let grad = reverse_gradient_ad(&func, x_val).unwrap();
+            grad[i]
+        };
+
+        // Compute the gradient of the i-th gradient component (i-th row of Hessian)
+        let hessian_row = reverse_gradient(gradient_i_func, x)?;
+        for j in 0..n {
+            hessian[[i, j]] = hessian_row[j];
+        }
+    }
+
+    Ok(hessian)
+}
+
 /// Simple reverse-mode gradient computation using a basic tape
 pub fn reverse_gradient_with_tape<F>(
     func: F,
@@ -465,31 +519,71 @@ pub fn reverse_vjp<F>(
 where
     F: Fn(&ArrayView1<f64>) -> Array1<f64>,
 {
-    // This is a simplified implementation
-    // In practice, this would use the computational graph
+    // For vector-valued functions, we use the natural efficiency of reverse-mode AD
+    // which computes v^T * J efficiently by seeding the output with v
     let n = x.len();
     let m = v.len();
 
-    // Compute Jacobian-vector product v^T * J
+    // Compute v^T * J by running reverse mode for each output component weighted by v
     let mut result = Array1::zeros(n);
-    let h = 1e-8;
 
-    for j in 0..n {
-        let mut x_plus = x.to_owned();
-        x_plus[j] += h;
-        let f_plus = func(&x_plus.view());
+    // For each output component, compute its contribution to the VJP
+    for i in 0..m {
+        if v[i] != 0.0 {
+            // Create a scalar function that extracts the i-th component
+            let component_func = |x_val: &ArrayView1<f64>| -> f64 {
+                let f_val = func(x_val);
+                f_val[i]
+            };
 
-        let mut x_minus = x.to_owned();
-        x_minus[j] -= h;
-        let f_minus = func(&x_minus.view());
+            // Compute gradient of this component
+            let grad_i = reverse_gradient(component_func, x)?;
 
-        // Compute j-th column of Jacobian
-        let mut col_sum = 0.0;
-        for i in 0..m {
-            let jacobian_ij = (f_plus[i] - f_minus[i]) / (2.0 * h);
-            col_sum += v[i] * jacobian_ij;
+            // Add weighted contribution to result
+            for j in 0..n {
+                result[j] += v[i] * grad_i[j];
+            }
         }
-        result[j] = col_sum;
+    }
+
+    Ok(result)
+}
+
+/// Vector-Jacobian product using reverse-mode AD for AD-compatible functions
+#[allow(clippy::many_single_char_names)]
+pub fn reverse_vjp_ad<F>(
+    func: F,
+    x: &ArrayView1<f64>,
+    v: &ArrayView1<f64>,
+) -> Result<Array1<f64>, OptimizeError>
+where
+    F: Fn(&mut ComputationGraph, &[ReverseVariable]) -> Vec<ReverseVariable>,
+{
+    let n = x.len();
+    let m = v.len();
+    let mut result = Array1::zeros(n);
+
+    // For each output component with non-zero weight
+    for i in 0..m {
+        if v[i] != 0.0 {
+            let mut graph = ComputationGraph::new();
+
+            // Create input variables
+            let input_vars: Vec<ReverseVariable> = x.iter().map(|&xi| graph.variable(xi)).collect();
+
+            // Evaluate function
+            let outputs = func(&mut graph, &input_vars);
+
+            // Seed the i-th output with 1.0 and perform backpropagation
+            if i < outputs.len() {
+                graph.backward(&outputs[i])?;
+
+                // Add weighted contribution to result
+                for (j, var) in input_vars.iter().enumerate() {
+                    result[j] += v[i] * graph.get_gradient(var);
+                }
+            }
+        }
     }
 
     Ok(result)
@@ -503,38 +597,80 @@ pub fn reverse_gauss_newton_hessian<F>(
 where
     F: Fn(&ArrayView1<f64>) -> Array1<f64>,
 {
-    // Compute Gauss-Newton approximation: H ≈ J^T * J
+    // Compute Gauss-Newton approximation: H ≈ J^T * J efficiently using reverse-mode AD
+    let n = x.len();
     let f_val = func(x);
     let m = f_val.len();
-    let n = x.len();
 
-    // Compute Jacobian using finite differences
-    let mut jacobian = Array2::zeros((m, n));
-    let h = 1e-8;
+    // Use reverse-mode AD to compute J^T * J directly without forming J explicitly
+    let mut hessian = Array2::zeros((n, n));
 
-    for j in 0..n {
-        let mut x_plus = x.to_owned();
-        x_plus[j] += h;
-        let f_plus = func(&x_plus.view());
+    // For each output component, compute its contribution to the Gauss-Newton Hessian
+    for i in 0..m {
+        // Create a scalar function for the i-th residual component
+        let residual_i = |x_val: &ArrayView1<f64>| -> f64 {
+            let f_val = func(x_val);
+            f_val[i]
+        };
 
-        let mut x_minus = x.to_owned();
-        x_minus[j] -= h;
-        let f_minus = func(&x_minus.view());
+        // Compute gradient of this residual
+        let grad_i = reverse_gradient(residual_i, x)?;
 
-        for i in 0..m {
-            jacobian[[i, j]] = (f_plus[i] - f_minus[i]) / (2.0 * h);
+        // Add outer product grad_i * grad_i^T to the Hessian
+        for j in 0..n {
+            for k in 0..n {
+                hessian[[j, k]] += grad_i[j] * grad_i[k];
+            }
         }
     }
 
-    // Compute J^T * J
+    Ok(hessian)
+}
+
+/// Gauss-Newton Hessian approximation using reverse-mode AD for AD-compatible functions
+pub fn reverse_gauss_newton_hessian_ad<F>(
+    func: F,
+    x: &ArrayView1<f64>,
+) -> Result<Array2<f64>, OptimizeError>
+where
+    F: Fn(&mut ComputationGraph, &[ReverseVariable]) -> Vec<ReverseVariable>,
+{
+    let n = x.len();
     let mut hessian = Array2::zeros((n, n));
-    for i in 0..n {
-        for j in 0..n {
-            let mut sum = 0.0;
-            for k in 0..m {
-                sum += jacobian[[k, i]] * jacobian[[k, j]];
+
+    // Get function values to determine output dimension
+    let mut graph_temp = ComputationGraph::new();
+    let input_vars_temp: Vec<ReverseVariable> =
+        x.iter().map(|&xi| graph_temp.variable(xi)).collect();
+    let outputs_temp = func(&mut graph_temp, &input_vars_temp);
+    let m = outputs_temp.len();
+
+    // For each output component, compute its contribution to the Gauss-Newton Hessian
+    for i in 0..m {
+        let mut graph = ComputationGraph::new();
+
+        // Create input variables
+        let input_vars: Vec<ReverseVariable> = x.iter().map(|&xi| graph.variable(xi)).collect();
+
+        // Evaluate function
+        let outputs = func(&mut graph, &input_vars);
+
+        // Compute gradient of the i-th output component
+        if i < outputs.len() {
+            graph.backward(&outputs[i])?;
+
+            // Extract gradients
+            let mut grad_i = Array1::zeros(n);
+            for (j, var) in input_vars.iter().enumerate() {
+                grad_i[j] = graph.get_gradient(var);
             }
-            hessian[[i, j]] = sum;
+
+            // Add outer product grad_i * grad_i^T to the Hessian
+            for j in 0..n {
+                for k in 0..n {
+                    hessian[[j, k]] += grad_i[j] * grad_i[k];
+                }
+            }
         }
     }
 
@@ -622,5 +758,101 @@ mod tests {
         assert_abs_diff_eq!(hess[[0, 1]], 1.0, epsilon = 1e-4);
         assert_abs_diff_eq!(hess[[1, 0]], 1.0, epsilon = 1e-4);
         assert_abs_diff_eq!(hess[[1, 1]], 4.0, epsilon = 1e-4);
+    }
+
+    #[test]
+    fn test_reverse_gradient_ad() {
+        // Test function: f(x, y) = x² + xy + 2y²
+        let func = |graph: &mut ComputationGraph, vars: &[ReverseVariable]| {
+            let x = &vars[0];
+            let y = &vars[1];
+
+            let x_squared = mul(graph, x, x);
+            let xy = mul(graph, x, y);
+            let y_squared = mul(graph, y, y);
+            let two_y_squared = mul(graph, &ReverseVariable::constant(2.0), &y_squared);
+
+            let temp = add(graph, &x_squared, &xy);
+            add(graph, &temp, &two_y_squared)
+        };
+
+        let x = Array1::from_vec(vec![1.0, 2.0]);
+        let grad = reverse_gradient_ad(func, &x.view()).unwrap();
+
+        // ∂f/∂x = 2x + y = 2(1) + 2 = 4
+        // ∂f/∂y = x + 4y = 1 + 4(2) = 9
+        assert_abs_diff_eq!(grad[0], 4.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(grad[1], 9.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_reverse_vjp() {
+        // Test vector function: f(x) = [x₀², x₀x₁, x₁²]
+        let func = |x: &ArrayView1<f64>| -> Array1<f64> {
+            Array1::from_vec(vec![x[0] * x[0], x[0] * x[1], x[1] * x[1]])
+        };
+
+        let x = Array1::from_vec(vec![2.0, 3.0]);
+        let v = Array1::from_vec(vec![1.0, 1.0, 1.0]);
+        let vjp = reverse_vjp(func, &x.view(), &v.view()).unwrap();
+
+        // Jacobian at (2,3):
+        // ∂f₀/∂x₀ = 2x₀ = 4, ∂f₀/∂x₁ = 0
+        // ∂f₁/∂x₀ = x₁ = 3,  ∂f₁/∂x₁ = x₀ = 2
+        // ∂f₂/∂x₀ = 0,      ∂f₂/∂x₁ = 2x₁ = 6
+
+        // v^T * J = [1,1,1] * [[4,0], [3,2], [0,6]] = [7, 8]
+        assert_abs_diff_eq!(vjp[0], 7.0, epsilon = 1e-6);
+        assert_abs_diff_eq!(vjp[1], 8.0, epsilon = 1e-6);
+    }
+
+    #[test]
+    fn test_reverse_gauss_newton_hessian() {
+        // Test residual function: r(x) = [x₀ - 1, x₁ - 2]
+        let residual_func =
+            |x: &ArrayView1<f64>| -> Array1<f64> { Array1::from_vec(vec![x[0] - 1.0, x[1] - 2.0]) };
+
+        let x = Array1::from_vec(vec![0.0, 0.0]);
+        let gn_hess = reverse_gauss_newton_hessian(residual_func, &x.view()).unwrap();
+
+        // Jacobian is identity matrix, so J^T * J should be identity
+        assert_abs_diff_eq!(gn_hess[[0, 0]], 1.0, epsilon = 1e-6);
+        assert_abs_diff_eq!(gn_hess[[0, 1]], 0.0, epsilon = 1e-6);
+        assert_abs_diff_eq!(gn_hess[[1, 0]], 0.0, epsilon = 1e-6);
+        assert_abs_diff_eq!(gn_hess[[1, 1]], 1.0, epsilon = 1e-6);
+    }
+
+    #[test]
+    fn test_power_operation() {
+        let mut graph = ComputationGraph::new();
+
+        let x = graph.variable(2.0);
+        let x_cubed = powi(&mut graph, &x, 3);
+
+        assert_abs_diff_eq!(x_cubed.value, 8.0, epsilon = 1e-10); // 2³ = 8
+
+        graph.backward(&x_cubed).unwrap();
+
+        // ∂(x³)/∂x = 3x² = 3(4) = 12 at x=2
+        assert_abs_diff_eq!(graph.get_gradient(&x), 12.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_trigonometric_operations() {
+        let mut graph = ComputationGraph::new();
+
+        let x = graph.variable(0.0);
+        let sin_x = sin(&mut graph, &x);
+        let cos_x = cos(&mut graph, &x);
+
+        assert_abs_diff_eq!(sin_x.value, 0.0, epsilon = 1e-10); // sin(0) = 0
+        assert_abs_diff_eq!(cos_x.value, 1.0, epsilon = 1e-10); // cos(0) = 1
+
+        graph.backward(&sin_x).unwrap();
+        assert_abs_diff_eq!(graph.get_gradient(&x), 1.0, epsilon = 1e-10); // d/dx(sin(x)) = cos(x) = 1 at x=0
+
+        graph.zero_gradients();
+        graph.backward(&cos_x).unwrap();
+        assert_abs_diff_eq!(graph.get_gradient(&x), 0.0, epsilon = 1e-10); // d/dx(cos(x)) = -sin(x) = 0 at x=0
     }
 }

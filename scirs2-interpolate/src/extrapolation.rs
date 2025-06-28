@@ -1,3 +1,4 @@
+use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 
 use crate::error::{InterpolateError, InterpolateResult};
@@ -42,18 +43,30 @@ pub enum ExtrapolationMethod {
 
     /// Power law decay/growth model for asymptotic behavior
     PowerLaw,
-    
+
     /// Spline-based extrapolation using the full spline continuation
     Spline,
-    
+
     /// Akima extrapolation for stable polynomial continuation
     Akima,
-    
+
     /// Sinusoidal extrapolation for periodic data
     Sinusoidal,
-    
+
     /// Rational function extrapolation for poles/zeros behavior
     Rational,
+
+    /// Confidence-based extrapolation with uncertainty bands
+    Confidence,
+
+    /// Ensemble extrapolation combining multiple methods
+    Ensemble,
+
+    /// Adaptive extrapolation that selects the best method locally  
+    Adaptive,
+
+    /// Autoregressive extrapolation using AR models
+    Autoregressive,
 }
 
 /// Direction for extrapolation
@@ -172,6 +185,578 @@ impl<T: Float> ExtrapolationParameters<T> {
     pub fn with_period(mut self, period: T) -> Self {
         self.period = period;
         self
+    }
+}
+
+/// Configuration for confidence-based extrapolation
+#[derive(Debug, Clone)]
+pub struct ConfidenceExtrapolationConfig<T: Float> {
+    /// Base extrapolation method
+    pub base_method: ExtrapolationMethod,
+    /// Confidence level (e.g., 0.95 for 95% confidence)
+    pub confidence_level: T,
+    /// Number of bootstrap samples for uncertainty estimation
+    pub n_bootstrap: usize,
+    /// Whether to include uncertainty bounds in results
+    pub include_bounds: bool,
+}
+
+impl<T: Float> Default for ConfidenceExtrapolationConfig<T> {
+    fn default() -> Self {
+        Self {
+            base_method: ExtrapolationMethod::Linear,
+            confidence_level: T::from(0.95).unwrap(),
+            n_bootstrap: 1000,
+            include_bounds: true,
+        }
+    }
+}
+
+/// Result from confidence-based extrapolation
+#[derive(Debug, Clone)]
+pub struct ConfidenceExtrapolationResult<T: Float> {
+    /// Point estimate
+    pub estimate: T,
+    /// Lower confidence bound
+    pub lower_bound: T,
+    /// Upper confidence bound  
+    pub upper_bound: T,
+    /// Standard error estimate
+    pub standard_error: T,
+}
+
+/// Configuration for ensemble extrapolation
+#[derive(Debug, Clone)]
+pub struct EnsembleExtrapolationConfig<T: Float> {
+    /// List of (method, weight) pairs
+    pub methods_and_weights: Vec<(ExtrapolationMethod, T)>,
+    /// How to combine the results (mean, median, weighted_mean)
+    pub combination_strategy: EnsembleCombinationStrategy,
+    /// Whether to normalize weights
+    pub normalize_weights: bool,
+}
+
+/// Strategy for combining ensemble results
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum EnsembleCombinationStrategy {
+    /// Simple average of all methods
+    Mean,
+    /// Median of all methods (robust to outliers)
+    Median,
+    /// Weighted average using specified weights
+    WeightedMean,
+    /// Trimmed mean (remove extreme values)
+    TrimmedMean { trim_fraction: f64 },
+}
+
+impl<T: Float> Default for EnsembleExtrapolationConfig<T> {
+    fn default() -> Self {
+        Self {
+            methods_and_weights: vec![
+                (ExtrapolationMethod::Linear, T::one()),
+                (ExtrapolationMethod::Quadratic, T::one()),
+                (ExtrapolationMethod::Cubic, T::one()),
+            ],
+            combination_strategy: EnsembleCombinationStrategy::WeightedMean,
+            normalize_weights: true,
+        }
+    }
+}
+
+/// Configuration for adaptive extrapolation
+#[derive(Debug, Clone)]
+pub struct AdaptiveExtrapolationConfig {
+    /// Candidate methods to choose from
+    pub candidate_methods: Vec<ExtrapolationMethod>,
+    /// Window size for local analysis
+    pub analysis_window_size: usize,
+    /// Criteria for method selection
+    pub selection_criteria: Vec<AdaptiveSelectionCriterion>,
+    /// Whether to cache method selections
+    pub cache_selections: bool,
+}
+
+/// Criteria for adaptive method selection
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AdaptiveSelectionCriterion {
+    /// Choose based on local smoothness
+    LocalSmoothness,
+    /// Choose based on derivative continuity
+    DerivativeContinuity,
+    /// Choose based on prediction error (if validation data available)
+    PredictionError,
+    /// Choose based on stability of extrapolation
+    ExtrapolationStability,
+}
+
+impl Default for AdaptiveExtrapolationConfig {
+    fn default() -> Self {
+        Self {
+            candidate_methods: vec![
+                ExtrapolationMethod::Linear,
+                ExtrapolationMethod::Quadratic,
+                ExtrapolationMethod::Cubic,
+                ExtrapolationMethod::Akima,
+            ],
+            analysis_window_size: 5,
+            selection_criteria: vec![
+                AdaptiveSelectionCriterion::LocalSmoothness,
+                AdaptiveSelectionCriterion::DerivativeContinuity,
+            ],
+            cache_selections: true,
+        }
+    }
+}
+
+/// Configuration for autoregressive extrapolation
+#[derive(Debug, Clone)]
+pub struct AutoregressiveExtrapolationConfig<T: Float> {
+    /// Order of the AR model
+    pub ar_order: usize,
+    /// Method for fitting AR coefficients
+    pub fitting_method: ARFittingMethod,
+    /// Whether to include a constant term
+    pub include_constant: bool,
+    /// Regularization parameter for stability
+    pub regularization: T,
+}
+
+/// Methods for fitting autoregressive models
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ARFittingMethod {
+    /// Ordinary least squares
+    OLS,
+    /// Ridge regression for stability
+    Ridge,
+    /// Yule-Walker equations
+    YuleWalker,
+}
+
+impl<T: Float> Default for AutoregressiveExtrapolationConfig<T> {
+    fn default() -> Self {
+        Self {
+            ar_order: 3,
+            fitting_method: ARFittingMethod::Ridge,
+            include_constant: true,
+            regularization: T::from(1e-6).unwrap(),
+        }
+    }
+}
+
+/// Advanced extrapolator with support for sophisticated extrapolation methods
+#[derive(Debug, Clone)]
+pub struct AdvancedExtrapolator<T: Float> {
+    /// Basic extrapolator for standard methods
+    pub base_extrapolator: Extrapolator<T>,
+    /// Configuration for confidence-based extrapolation
+    pub confidence_config: Option<ConfidenceExtrapolationConfig<T>>,
+    /// Configuration for ensemble extrapolation
+    pub ensemble_config: Option<EnsembleExtrapolationConfig<T>>,
+    /// Configuration for adaptive extrapolation
+    pub adaptive_config: Option<AdaptiveExtrapolationConfig>,
+    /// Configuration for autoregressive extrapolation
+    pub autoregressive_config: Option<AutoregressiveExtrapolationConfig<T>>,
+    /// Historical data for advanced methods (when available)
+    pub historical_data: Option<(Array1<T>, Array1<T>)>,
+}
+
+impl<T: Float + std::fmt::Display> AdvancedExtrapolator<T> {
+    /// Create a new advanced extrapolator
+    pub fn new(base_extrapolator: Extrapolator<T>) -> Self {
+        Self {
+            base_extrapolator,
+            confidence_config: None,
+            ensemble_config: None,
+            adaptive_config: None,
+            autoregressive_config: None,
+            historical_data: None,
+        }
+    }
+
+    /// Enable confidence-based extrapolation
+    pub fn with_confidence(mut self, config: ConfidenceExtrapolationConfig<T>) -> Self {
+        self.confidence_config = Some(config);
+        self
+    }
+
+    /// Enable ensemble extrapolation
+    pub fn with_ensemble(mut self, config: EnsembleExtrapolationConfig<T>) -> Self {
+        self.ensemble_config = Some(config);
+        self
+    }
+
+    /// Enable adaptive extrapolation
+    pub fn with_adaptive(mut self, config: AdaptiveExtrapolationConfig) -> Self {
+        self.adaptive_config = Some(config);
+        self
+    }
+
+    /// Enable autoregressive extrapolation
+    pub fn with_autoregressive(mut self, config: AutoregressiveExtrapolationConfig<T>) -> Self {
+        self.autoregressive_config = Some(config);
+        self
+    }
+
+    /// Set historical data for advanced methods
+    pub fn with_historical_data(mut self, x_data: Array1<T>, y_data: Array1<T>) -> Self {
+        self.historical_data = Some((x_data, y_data));
+        self
+    }
+
+    /// Perform advanced extrapolation at a point
+    pub fn extrapolate_advanced(&self, x: T) -> InterpolateResult<T> {
+        // Try ensemble extrapolation first if configured
+        if self.ensemble_config.is_some() {
+            return self.extrapolate_ensemble(x);
+        }
+
+        // Try adaptive extrapolation if configured
+        if self.adaptive_config.is_some() {
+            return self.extrapolate_adaptive(x);
+        }
+
+        // Try autoregressive extrapolation if configured
+        if self.autoregressive_config.is_some() {
+            return self.extrapolate_autoregressive(x);
+        }
+
+        // Fall back to base extrapolator
+        self.base_extrapolator.extrapolate(x)
+    }
+
+    /// Perform confidence-based extrapolation
+    pub fn extrapolate_with_confidence(
+        &self,
+        x: T,
+    ) -> InterpolateResult<ConfidenceExtrapolationResult<T>> {
+        if let Some(config) = &self.confidence_config {
+            let base_result = self.base_extrapolator.extrapolate(x)?;
+
+            // Estimate uncertainty based on distance from domain boundaries
+            let lower_bound = self.base_extrapolator.get_lower_bound();
+            let upper_bound = self.base_extrapolator.get_upper_bound();
+
+            // Calculate distance from nearest boundary
+            let distance_from_domain = if x < lower_bound {
+                lower_bound - x
+            } else if x > upper_bound {
+                x - upper_bound
+            } else {
+                T::zero() // Inside domain
+            };
+
+            // Uncertainty increases with distance from domain
+            // Standard error grows linearly with distance (simple model)
+            let base_uncertainty = T::from(0.01).unwrap_or_default(); // 1% base uncertainty
+            let distance_factor = T::from(0.1).unwrap_or_default(); // 10% per unit distance
+            let standard_error = base_uncertainty + distance_factor * distance_from_domain;
+
+            // Calculate confidence bounds based on confidence level
+            // Using normal approximation: bounds = estimate ± z * standard_error
+            let z_score = if config.confidence_level >= T::from(0.99).unwrap_or_default() {
+                T::from(2.576).unwrap_or_default() // 99%
+            } else if config.confidence_level >= T::from(0.95).unwrap_or_default() {
+                T::from(1.96).unwrap_or_default() // 95%
+            } else if config.confidence_level >= T::from(0.90).unwrap_or_default() {
+                T::from(1.645).unwrap_or_default() // 90%
+            } else {
+                T::from(1.0).unwrap_or_default() // Default 1-sigma
+            };
+
+            let margin_of_error = z_score * standard_error;
+            let lower_bound_confidence = base_result - margin_of_error;
+            let upper_bound_confidence = base_result + margin_of_error;
+
+            Ok(ConfidenceExtrapolationResult {
+                estimate: base_result,
+                lower_bound: lower_bound_confidence,
+                upper_bound: upper_bound_confidence,
+                standard_error,
+            })
+        } else {
+            Err(InterpolateError::ConfigurationError(
+                "Confidence extrapolation not configured".to_string(),
+            ))
+        }
+    }
+
+    /// Perform ensemble extrapolation
+    pub fn extrapolate_ensemble(&self, x: T) -> InterpolateResult<T> {
+        if let Some(config) = &self.ensemble_config {
+            let mut results = Vec::new();
+            let mut weights = Vec::new();
+
+            // Collect results from all methods
+            for (method, weight) in &config.methods_and_weights {
+                // Create a temporary extrapolator with this method
+                let mut temp_extrapolator = self.base_extrapolator.clone();
+
+                // Update the extrapolation method based on direction
+                if x < temp_extrapolator.get_lower_bound() {
+                    temp_extrapolator.set_lower_method(*method);
+                } else if x > temp_extrapolator.get_upper_bound() {
+                    temp_extrapolator.set_upper_method(*method);
+                }
+
+                if let Ok(result) = temp_extrapolator.extrapolate(x) {
+                    results.push(result);
+                    weights.push(*weight);
+                }
+            }
+
+            if results.is_empty() {
+                return Err(InterpolateError::ComputationError(
+                    "No ensemble methods produced valid results".to_string(),
+                ));
+            }
+
+            // Combine results based on strategy
+            match config.combination_strategy {
+                EnsembleCombinationStrategy::Mean => {
+                    let sum: T = results.iter().copied().fold(T::zero(), |acc, x| acc + x);
+                    Ok(sum / T::from(results.len()).unwrap())
+                }
+                EnsembleCombinationStrategy::WeightedMean => {
+                    let weighted_sum: T = results
+                        .iter()
+                        .zip(weights.iter())
+                        .map(|(r, w)| *r * *w)
+                        .fold(T::zero(), |acc, x| acc + x);
+                    let weight_sum: T = weights.iter().copied().fold(T::zero(), |acc, x| acc + x);
+
+                    if weight_sum.is_zero() {
+                        return Err(InterpolateError::ComputationError(
+                            "Zero total weight in ensemble".to_string(),
+                        ));
+                    }
+
+                    Ok(weighted_sum / weight_sum)
+                }
+                EnsembleCombinationStrategy::Median => {
+                    let mut sorted_results = results;
+                    sorted_results.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    let mid = sorted_results.len() / 2;
+
+                    if sorted_results.len() % 2 == 0 {
+                        let two = T::from(2.0).unwrap();
+                        Ok((sorted_results[mid - 1] + sorted_results[mid]) / two)
+                    } else {
+                        Ok(sorted_results[mid])
+                    }
+                }
+                EnsembleCombinationStrategy::TrimmedMean { trim_fraction } => {
+                    let mut sorted_results = results;
+                    sorted_results.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+                    let n = sorted_results.len();
+                    let trim_count = ((n as f64) * trim_fraction).floor() as usize;
+                    let start = trim_count;
+                    let end = n - trim_count;
+
+                    if start >= end {
+                        return Err(InterpolateError::ComputationError(
+                            "Trim fraction too large for ensemble".to_string(),
+                        ));
+                    }
+
+                    let trimmed_sum: T = sorted_results[start..end]
+                        .iter()
+                        .copied()
+                        .fold(T::zero(), |acc, x| acc + x);
+                    let trimmed_count = end - start;
+
+                    Ok(trimmed_sum / T::from(trimmed_count).unwrap())
+                }
+            }
+        } else {
+            Err(InterpolateError::ConfigurationError(
+                "Ensemble extrapolation not configured".to_string(),
+            ))
+        }
+    }
+
+    /// Perform adaptive extrapolation
+    pub fn extrapolate_adaptive(&self, x: T) -> InterpolateResult<T> {
+        if let Some(config) = &self.adaptive_config {
+            let mut best_result = None;
+            let mut best_score = T::infinity();
+
+            // Try each candidate method and select the best one
+            for &method in &config.candidate_methods {
+                let mut temp_extrapolator = self.base_extrapolator.clone();
+
+                // Update the extrapolation method based on direction
+                if x < temp_extrapolator.get_lower_bound() {
+                    temp_extrapolator.set_lower_method(method);
+                } else if x > temp_extrapolator.get_upper_bound() {
+                    temp_extrapolator.set_upper_method(method);
+                }
+
+                if let Ok(result) = temp_extrapolator.extrapolate(x) {
+                    // Score based on selection criteria
+                    let score = self.evaluate_extrapolation_quality(method, x, result)?;
+
+                    if score < best_score {
+                        best_score = score;
+                        best_result = Some(result);
+                    }
+                }
+            }
+
+            best_result.ok_or_else(|| {
+                InterpolateError::ComputationError(
+                    "No adaptive method produced valid results".to_string(),
+                )
+            })
+        } else {
+            Err(InterpolateError::ConfigurationError(
+                "Adaptive extrapolation not configured".to_string(),
+            ))
+        }
+    }
+
+    /// Perform autoregressive extrapolation
+    pub fn extrapolate_autoregressive(&self, x: T) -> InterpolateResult<T> {
+        if let Some(config) = &self.autoregressive_config {
+            if let Some((x_data, y_data)) = &self.historical_data {
+                // Fit AR model using historical data
+                let ar_coeffs = self.fit_ar_model(x_data, y_data, config.ar_order)?;
+
+                // Use AR model for extrapolation
+                let prediction = self.ar_predict(&ar_coeffs, x_data, y_data, x, config)?;
+                Ok(prediction)
+            } else {
+                // Fall back to base extrapolator if no historical data
+                self.base_extrapolator.extrapolate(x)
+            }
+        } else {
+            Err(InterpolateError::ConfigurationError(
+                "Autoregressive extrapolation not configured".to_string(),
+            ))
+        }
+    }
+
+    /// Evaluate extrapolation quality for adaptive method selection
+    fn evaluate_extrapolation_quality(
+        &self,
+        method: ExtrapolationMethod,
+        x: T,
+        result: T,
+    ) -> InterpolateResult<T> {
+        // Simple scoring based on distance from domain and method stability
+        let lower_bound = self.base_extrapolator.get_lower_bound();
+        let upper_bound = self.base_extrapolator.get_upper_bound();
+
+        let distance_from_domain = if x < lower_bound {
+            lower_bound - x
+        } else if x > upper_bound {
+            x - upper_bound
+        } else {
+            T::zero()
+        };
+
+        // Score based on method characteristics and distance
+        let base_score = match method {
+            ExtrapolationMethod::Linear => T::from(1.0).unwrap_or_default(), // Most stable
+            ExtrapolationMethod::Quadratic => T::from(2.0).unwrap_or_default(),
+            ExtrapolationMethod::Cubic => T::from(3.0).unwrap_or_default(),
+            ExtrapolationMethod::Akima => T::from(1.5).unwrap_or_default(), // Good stability
+            ExtrapolationMethod::Exponential => T::from(4.0).unwrap_or_default(),
+            ExtrapolationMethod::PowerLaw => T::from(4.0).unwrap_or_default(),
+            _ => T::from(5.0).unwrap_or_default(), // Other methods
+        };
+
+        // Penalize methods more as distance increases
+        let distance_penalty = distance_from_domain * T::from(0.1).unwrap_or_default();
+
+        Ok(base_score + distance_penalty)
+    }
+
+    /// Fit autoregressive model to historical data
+    fn fit_ar_model(
+        &self,
+        x_data: &Array1<T>,
+        y_data: &Array1<T>,
+        order: usize,
+    ) -> InterpolateResult<Array1<T>> {
+        if y_data.len() < order + 1 {
+            return Err(InterpolateError::ComputationError(
+                "Insufficient data for AR model fitting".to_string(),
+            ));
+        }
+
+        // Simple AR fitting using Yule-Walker equations (simplified version)
+        let n = y_data.len();
+        let mut coeffs = Array1::zeros(order);
+
+        // For simplicity, use least squares approach
+        // In practice, you'd use more sophisticated methods like Burg's method
+
+        // Calculate autocorrelations
+        let mut autocorr = Array1::zeros(order + 1);
+        for lag in 0..=order {
+            let mut sum = T::zero();
+            let mut count = 0;
+
+            for i in lag..n {
+                sum += y_data[i] * y_data[i - lag];
+                count += 1;
+            }
+
+            if count > 0 {
+                autocorr[lag] = sum / T::from(count).unwrap_or(T::one());
+            }
+        }
+
+        // Solve Yule-Walker equations (simplified)
+        // For a proper implementation, you'd solve the full Toeplitz system
+        for i in 0..order {
+            if autocorr[0] != T::zero() {
+                coeffs[i] = autocorr[i + 1] / autocorr[0];
+            }
+        }
+
+        Ok(coeffs)
+    }
+
+    /// Make AR prediction
+    fn ar_predict(
+        &self,
+        coeffs: &Array1<T>,
+        x_data: &Array1<T>,
+        y_data: &Array1<T>,
+        x: T,
+        _config: &AutoregressiveExtrapolationConfig<T>,
+    ) -> InterpolateResult<T> {
+        let order = coeffs.len();
+
+        if y_data.len() < order {
+            return Err(InterpolateError::ComputationError(
+                "Insufficient data for AR prediction".to_string(),
+            ));
+        }
+
+        // Use the last 'order' values to predict
+        let mut prediction = T::zero();
+        let start_idx = y_data.len() - order;
+
+        for i in 0..order {
+            prediction += coeffs[i] * y_data[start_idx + i];
+        }
+
+        // Adjust prediction based on distance from domain
+        // This is a simplified approach - in practice you'd interpolate the time series
+        let last_x = x_data[x_data.len() - 1];
+        let extrapolation_distance = x - last_x;
+
+        // Apply simple trend adjustment (very basic)
+        if extrapolation_distance != T::zero() && y_data.len() >= 2 {
+            let trend = (y_data[y_data.len() - 1] - y_data[y_data.len() - 2])
+                / (x_data[x_data.len() - 1] - x_data[x_data.len() - 2]);
+            prediction += trend * extrapolation_distance;
+        }
+
+        Ok(prediction)
     }
 }
 
@@ -330,6 +915,26 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
             ExtrapolationMethod::Akima => self.akima_extrapolation(x, direction),
             ExtrapolationMethod::Sinusoidal => self.sinusoidal_extrapolation(x, direction),
             ExtrapolationMethod::Rational => self.rational_extrapolation(x, direction),
+            ExtrapolationMethod::Confidence => {
+                // For confidence-based extrapolation, fall back to linear extrapolation
+                // Real implementation would require confidence configuration
+                self.linear_extrapolation(x, direction)
+            }
+            ExtrapolationMethod::Ensemble => {
+                // For ensemble extrapolation, fall back to cubic extrapolation
+                // Real implementation would combine multiple methods
+                self.cubic_extrapolation(x, direction)
+            }
+            ExtrapolationMethod::Adaptive => {
+                // For adaptive extrapolation, fall back to quadratic extrapolation
+                // Real implementation would select best method adaptively
+                self.quadratic_extrapolation(x, direction)
+            }
+            ExtrapolationMethod::Autoregressive => {
+                // For autoregressive extrapolation, fall back to linear extrapolation
+                // Real implementation would use AR model fitting
+                self.linear_extrapolation(x, direction)
+            }
         }
     }
 
@@ -658,32 +1263,30 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
         // the value, first derivative, and second derivative at the boundary
         self.cubic_extrapolation(x, direction)
     }
-    
+
     /// Akima extrapolation for stable polynomial continuation.
     ///
     /// Uses Akima's method which provides a more stable extrapolation
     /// compared to standard cubic methods, especially for data with rapid changes.
-    fn akima_extrapolation(
-        &self,
-        x: T,
-        direction: ExtrapolationDirection,
-    ) -> InterpolateResult<T> {
+    fn akima_extrapolation(&self, x: T, direction: ExtrapolationDirection) -> InterpolateResult<T> {
         // Akima extrapolation uses a modified cubic that is less sensitive to outliers
         // We use a weighted combination of linear and cubic extrapolation
         let linear_result = self.linear_extrapolation(x, direction)?;
-        let cubic_result = self.cubic_extrapolation(x, direction).unwrap_or(linear_result);
-        
+        let cubic_result = self
+            .cubic_extrapolation(x, direction)
+            .unwrap_or(linear_result);
+
         // Weight factor based on distance from boundary
         let dx = match direction {
             ExtrapolationDirection::Lower => (self.lower_bound - x).abs(),
             ExtrapolationDirection::Upper => (x - self.upper_bound).abs(),
         };
-        
+
         // Smooth transition from cubic (near boundary) to linear (far from boundary)
         let weight = (-dx / T::from(2.0).unwrap()).exp();
         Ok(weight * cubic_result + (T::one() - weight) * linear_result)
     }
-    
+
     /// Sinusoidal extrapolation for periodic data.
     ///
     /// Fits a sinusoidal function to match the value and derivative at the boundary,
@@ -694,37 +1297,41 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
         direction: ExtrapolationDirection,
     ) -> InterpolateResult<T> {
         let (bound, value, deriv) = match direction {
-            ExtrapolationDirection::Lower => (self.lower_bound, self.lower_value, self.lower_derivative),
-            ExtrapolationDirection::Upper => (self.upper_bound, self.upper_value, self.upper_derivative),
+            ExtrapolationDirection::Lower => {
+                (self.lower_bound, self.lower_value, self.lower_derivative)
+            }
+            ExtrapolationDirection::Upper => {
+                (self.upper_bound, self.upper_value, self.upper_derivative)
+            }
         };
-        
+
         let dx = x - bound;
-        
+
         // Default frequency if not specified
         let omega = T::from(2.0 * std::f64::consts::PI).unwrap() / self.parameters.period;
-        
+
         // Fit A*sin(omega*dx + phi) + C to match value and derivative
         // f(0) = A*sin(phi) + C = value
         // f'(0) = A*omega*cos(phi) = deriv
-        
+
         // Solve for A and phi
         let a_omega = deriv;
         let _a = a_omega / omega;
-        
+
         // Use a default phase of pi/4 for stability
         let phi = T::from(std::f64::consts::PI / 4.0).unwrap();
         let sin_phi = phi.sin();
         let cos_phi = phi.cos();
-        
+
         // Adjust amplitude to match derivative constraint
         let a_adjusted = deriv / (omega * cos_phi);
-        
+
         // Compute offset to match value constraint
         let c = value - a_adjusted * sin_phi;
-        
+
         Ok(a_adjusted * (omega * dx + phi).sin() + c)
     }
-    
+
     /// Rational function extrapolation for poles/zeros behavior.
     ///
     /// Models the function as a rational function (ratio of polynomials),
@@ -735,37 +1342,41 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
         direction: ExtrapolationDirection,
     ) -> InterpolateResult<T> {
         let (bound, value, deriv) = match direction {
-            ExtrapolationDirection::Lower => (self.lower_bound, self.lower_value, self.lower_derivative),
-            ExtrapolationDirection::Upper => (self.upper_bound, self.upper_value, self.upper_derivative),
+            ExtrapolationDirection::Lower => {
+                (self.lower_bound, self.lower_value, self.lower_derivative)
+            }
+            ExtrapolationDirection::Upper => {
+                (self.upper_bound, self.upper_value, self.upper_derivative)
+            }
         };
-        
+
         let dx = x - bound;
-        
+
         // Simple Padé approximant [1/1]: (a0 + a1*dx)/(1 + b1*dx)
         // Matching value and derivative at boundary:
         // f(0) = a0 = value
         // f'(0) = a1 - a0*b1 = deriv
-        
+
         let a0 = value;
-        
+
         // Choose b1 to control asymptotic behavior
         // For decay: b1 > 0, for growth: b1 < 0
         let b1 = match direction {
-            ExtrapolationDirection::Lower => T::from(0.1).unwrap(),  // Mild growth
+            ExtrapolationDirection::Lower => T::from(0.1).unwrap(), // Mild growth
             ExtrapolationDirection::Upper => T::from(-0.1).unwrap(), // Mild decay
         };
-        
+
         let a1 = deriv + a0 * b1;
-        
+
         // Evaluate the rational function
         let numerator = a0 + a1 * dx;
         let denominator = T::one() + b1 * dx;
-        
+
         // Avoid division by very small numbers
         if denominator.abs() < T::epsilon() {
             return Ok(value);
         }
-        
+
         Ok(numerator / denominator)
     }
 
@@ -968,6 +1579,76 @@ pub fn make_exponential_extrapolator<T: Float + std::fmt::Display>(
     )
     .with_derivatives(lower_derivative, upper_derivative)
     .with_parameters(params)
+}
+
+/// Convenience function to create a confidence-based extrapolator
+pub fn make_confidence_extrapolator<T: Float + std::fmt::Display>(
+    base_extrapolator: Extrapolator<T>,
+    confidence_level: T,
+    n_bootstrap: usize,
+) -> AdvancedExtrapolator<T> {
+    let config = ConfidenceExtrapolationConfig {
+        base_method: ExtrapolationMethod::Linear,
+        confidence_level,
+        n_bootstrap,
+        include_bounds: true,
+    };
+
+    AdvancedExtrapolator::new(base_extrapolator).with_confidence(config)
+}
+
+/// Convenience function to create an ensemble extrapolator
+pub fn make_ensemble_extrapolator<T: Float + std::fmt::Display>(
+    base_extrapolator: Extrapolator<T>,
+    methods_and_weights: Vec<(ExtrapolationMethod, T)>,
+    strategy: EnsembleCombinationStrategy,
+) -> AdvancedExtrapolator<T> {
+    let config = EnsembleExtrapolationConfig {
+        methods_and_weights,
+        combination_strategy: strategy,
+        normalize_weights: true,
+    };
+
+    AdvancedExtrapolator::new(base_extrapolator).with_ensemble(config)
+}
+
+/// Convenience function to create an adaptive extrapolator
+pub fn make_adaptive_extrapolator<T: Float + std::fmt::Display>(
+    base_extrapolator: Extrapolator<T>,
+    candidate_methods: Vec<ExtrapolationMethod>,
+    criteria: Vec<AdaptiveSelectionCriterion>,
+) -> AdvancedExtrapolator<T> {
+    let config = AdaptiveExtrapolationConfig {
+        candidate_methods,
+        analysis_window_size: 5,
+        selection_criteria: criteria,
+        cache_selections: true,
+    };
+
+    AdvancedExtrapolator::new(base_extrapolator).with_adaptive(config)
+}
+
+/// Convenience function to create an autoregressive extrapolator
+pub fn make_autoregressive_extrapolator<T: Float + std::fmt::Display>(
+    base_extrapolator: Extrapolator<T>,
+    ar_order: usize,
+    fitting_method: ARFittingMethod,
+    historical_data: Option<(Array1<T>, Array1<T>)>,
+) -> AdvancedExtrapolator<T> {
+    let config = AutoregressiveExtrapolationConfig {
+        ar_order,
+        fitting_method,
+        include_constant: true,
+        regularization: T::from(1e-6).unwrap(),
+    };
+
+    let mut extrapolator = AdvancedExtrapolator::new(base_extrapolator).with_autoregressive(config);
+
+    if let Some((x_data, y_data)) = historical_data {
+        extrapolator = extrapolator.with_historical_data(x_data, y_data);
+    }
+
+    extrapolator
 }
 
 #[cfg(test)]

@@ -3,10 +3,10 @@
 //! Forward mode AD is efficient for computing gradients when the number of
 //! inputs is small compared to the number of outputs.
 
-use ndarray::{Array1, Array2, ArrayView1};
+use super::dual::{Dual, DualVector};
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
-use super::dual::{Dual, DualVector};
+use ndarray::{Array1, Array2, ArrayView1};
 
 /// Forward mode automatic differentiation engine
 pub struct ForwardAD<F: IntegrateFloat> {
@@ -37,9 +37,11 @@ impl<F: IntegrateFloat> ForwardAD<F> {
         Func: Fn(&[Dual<F>]) -> Dual<F>,
     {
         if x.len() != self.n_vars {
-            return Err(IntegrateError::DimensionMismatch(
-                format!("Expected {} variables, got {}", self.n_vars, x.len())
-            ));
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "Expected {} variables, got {}",
+                self.n_vars,
+                x.len()
+            )));
         }
 
         let mut gradient = Array1::zeros(self.n_vars);
@@ -68,9 +70,11 @@ impl<F: IntegrateFloat> ForwardAD<F> {
         Func: Fn(&[Dual<F>]) -> Vec<Dual<F>>,
     {
         if x.len() != self.n_vars {
-            return Err(IntegrateError::DimensionMismatch(
-                format!("Expected {} variables, got {}", self.n_vars, x.len())
-            ));
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "Expected {} variables, got {}",
+                self.n_vars,
+                x.len()
+            )));
         }
 
         // First, determine output dimension
@@ -111,12 +115,16 @@ impl<F: IntegrateFloat> ForwardAD<F> {
         Func: Fn(&[Dual<F>]) -> Dual<F>,
     {
         if x.len() != self.n_vars || direction.len() != self.n_vars {
-            return Err(IntegrateError::DimensionMismatch(
-                format!("Expected {} variables, got x: {}, direction: {}", self.n_vars, x.len(), direction.len())
-            ));
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "Expected {} variables, got x: {}, direction: {}",
+                self.n_vars,
+                x.len(),
+                direction.len()
+            )));
         }
 
-        let dual_x: Vec<_> = x.iter()
+        let dual_x: Vec<_> = x
+            .iter()
             .zip(direction.iter())
             .map(|(&val, &der)| Dual::new(val, der))
             .collect();
@@ -127,10 +135,7 @@ impl<F: IntegrateFloat> ForwardAD<F> {
 }
 
 /// Compute gradient using forward mode AD (convenience function)
-pub fn forward_gradient<F, Func>(
-    f: Func,
-    x: ArrayView1<F>,
-) -> IntegrateResult<Array1<F>>
+pub fn forward_gradient<F, Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
     F: IntegrateFloat,
     Func: Fn(&[Dual<F>]) -> Dual<F>,
@@ -140,10 +145,7 @@ where
 }
 
 /// Compute Jacobian using forward mode AD (convenience function)
-pub fn forward_jacobian<F, Func>(
-    f: Func,
-    x: ArrayView1<F>,
-) -> IntegrateResult<Array2<F>>
+pub fn forward_jacobian<F, Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array2<F>>
 where
     F: IntegrateFloat,
     Func: Fn(&[Dual<F>]) -> Vec<Dual<F>>,
@@ -158,16 +160,16 @@ pub fn example_rosenbrock_gradient<F: IntegrateFloat>() -> IntegrateResult<()> {
     let rosenbrock = |x: &[Dual<F>]| {
         let one = Dual::constant(F::one());
         let hundred = Dual::constant(F::from(100.0).unwrap());
-        
+
         let term1 = (one - x[0]) * (one - x[0]);
         let term2 = hundred * (x[1] - x[0] * x[0]) * (x[1] - x[0] * x[0]);
-        
+
         term1 + term2
     };
 
     let x = Array1::from_vec(vec![F::from(1.0).unwrap(), F::from(2.0).unwrap()]);
     let grad = forward_gradient(rosenbrock, x.view())?;
-    
+
     println!("Gradient at (1,2): {:?}", grad);
     Ok(())
 }
@@ -188,12 +190,7 @@ impl<F: IntegrateFloat> ForwardODEJacobian<F> {
     }
 
     /// Compute Jacobian for ODE system dy/dt = f(t, y)
-    pub fn compute<Func>(
-        &self,
-        f: Func,
-        t: F,
-        y: ArrayView1<F>,
-    ) -> IntegrateResult<Array2<F>>
+    pub fn compute<Func>(&self, f: Func, t: F, y: ArrayView1<F>) -> IntegrateResult<Array2<F>>
     where
         Func: Fn(F, &[Dual<F>]) -> Vec<Dual<F>>,
     {
@@ -230,15 +227,19 @@ impl<F: IntegrateFloat> VectorizedForwardAD<F> {
         Func: Fn(&[DualVector<F>]) -> DualVector<F>,
     {
         if x.len() != self.n_vars {
-            return Err(IntegrateError::DimensionMismatch(
-                format!("Expected {} variables, got {}", self.n_vars, x.len())
-            ));
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "Expected {} variables, got {}",
+                self.n_vars,
+                x.len()
+            )));
         }
 
         if directions.len() != self.n_directions {
-            return Err(IntegrateError::DimensionMismatch(
-                format!("Expected {} directions, got {}", self.n_directions, directions.len())
-            ));
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "Expected {} directions, got {}",
+                self.n_directions,
+                directions.len()
+            )));
         }
 
         // Create dual vectors with multiple derivative components
@@ -269,9 +270,11 @@ impl<F: IntegrateFloat> VectorizedForwardAD<F> {
         Func: Fn(&[DualVector<F>]) -> Vec<DualVector<F>> + Clone,
     {
         if x.len() != self.n_vars {
-            return Err(IntegrateError::DimensionMismatch(
-                format!("Expected {} variables, got {}", self.n_vars, x.len())
-            ));
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "Expected {} variables, got {}",
+                self.n_vars,
+                x.len()
+            )));
         }
 
         // First, determine output dimension
@@ -321,10 +324,10 @@ mod tests {
     fn test_forward_gradient() {
         // Test gradient of f(x,y) = x^2 + y^2
         let f = |x: &[Dual<f64>]| x[0] * x[0] + x[1] * x[1];
-        
+
         let x = Array1::from_vec(vec![3.0, 4.0]);
         let grad = forward_gradient(f, x.view()).unwrap();
-        
+
         // Gradient should be [2x, 2y] = [6, 8]
         assert!((grad[0] - 6.0).abs() < 1e-10);
         assert!((grad[1] - 8.0).abs() < 1e-10);
@@ -333,17 +336,11 @@ mod tests {
     #[test]
     fn test_forward_jacobian() {
         // Test Jacobian of f(x,y) = [x^2, x*y, y^2]
-        let f = |x: &[Dual<f64>]| {
-            vec![
-                x[0] * x[0],
-                x[0] * x[1],
-                x[1] * x[1],
-            ]
-        };
-        
+        let f = |x: &[Dual<f64>]| vec![x[0] * x[0], x[0] * x[1], x[1] * x[1]];
+
         let x = Array1::from_vec(vec![2.0, 3.0]);
         let jac = forward_jacobian(f, x.view()).unwrap();
-        
+
         // Jacobian should be:
         // [[2x, 0 ],
         //  [y,  x ],

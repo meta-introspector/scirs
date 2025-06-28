@@ -169,7 +169,7 @@ impl MigrationGuide {
         );
 
         // Additional mappings for comprehensive coverage
-        
+
         // Airy functions
         mappings.insert(
             "scipy.special.airy".to_string(),
@@ -229,7 +229,10 @@ impl MigrationGuide {
             reverse_mappings.insert(mapping.scirs2_name.clone(), scipy_name.clone());
         }
 
-        MigrationGuide { mappings, reverse_mappings }
+        MigrationGuide {
+            mappings,
+            reverse_mappings,
+        }
     }
 
     /// Get mapping for a SciPy function
@@ -327,7 +330,7 @@ pub mod codegen {
         {
             generate_rust_equivalent_regex(scipy_code)
         }
-        
+
         #[cfg(not(feature = "python-interop"))]
         {
             generate_rust_equivalent_simple(scipy_code)
@@ -371,7 +374,7 @@ pub mod codegen {
         for import in &imports {
             rust_code.push_str(&format!("use {};\n", import));
         }
-        
+
         if !imports.is_empty() {
             rust_code.push('\n');
         }
@@ -380,28 +383,22 @@ pub mod codegen {
         let mut transformed = scipy_code.to_string();
         for (scipy_func, mapping) in &found_functions {
             // Add transformation comments
-            code_lines.push(format!(
-                "// {} -> {}", 
-                scipy_func, 
-                mapping.scirs2_name
-            ));
-            
+            code_lines.push(format!("// {} -> {}", scipy_func, mapping.scirs2_name));
+
             // Simple replacement (this is a simplified example)
             transformed = transformed.replace(
                 &format!("scipy.special.{}", scipy_func),
-                &mapping.scirs2_name
+                &mapping.scirs2_name,
             );
-            transformed = transformed.replace(
-                &format!("special.{}", scipy_func),
-                &mapping.scirs2_name
-            );
+            transformed =
+                transformed.replace(&format!("special.{}", scipy_func), &mapping.scirs2_name);
         }
 
         // Add transformation notes
         if !found_functions.is_empty() {
             rust_code.push_str("// Transformed code:\n");
             rust_code.push_str(&format!("// {}\n", transformed));
-            
+
             rust_code.push_str("\n// Notes:\n");
             for (_, mapping) in &found_functions {
                 for note in &mapping.notes {
@@ -423,14 +420,17 @@ pub mod codegen {
 
         // Simple pattern matching for common cases without regex
         let known_functions = vec!["gamma", "erf", "j0", "j1", "beta", "gammaln"];
-        
+
         for func in known_functions {
             let scipy_pattern = format!("scipy.special.{}", func);
             if scipy_code.contains(&scipy_pattern) {
                 let full_name = format!("scipy.special.{}", func);
                 if let Some(mapping) = guide.get_mapping(&full_name) {
                     rust_code.push_str(&format!("use {};\n", mapping.module_path));
-                    rust_code.push_str(&format!("// Replace {} with {}\n", scipy_pattern, mapping.scirs2_name));
+                    rust_code.push_str(&format!(
+                        "// Replace {} with {}\n",
+                        scipy_pattern, mapping.scirs2_name
+                    ));
                 }
             }
         }
@@ -615,4 +615,3 @@ mod tests {
         assert!(report.contains("5.0x faster"));
     }
 }
-

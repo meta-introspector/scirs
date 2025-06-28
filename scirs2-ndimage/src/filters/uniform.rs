@@ -345,12 +345,210 @@ where
             })
         }
         _ => {
-            // For higher dimensions, display warning
-            Err(NdimageError::NotImplementedError(
-                "Uniform filter for arrays with more than 2 dimensions is not efficiently implemented yet".into()
-            ))
+            // For higher dimensions, use the efficient separable implementation
+            uniform_filter_nd_general(input, size, mode, origin, &pad_width, norm_factor)
         }
     }
+}
+
+/// Apply a uniform filter to an n-dimensional array (general case)
+fn uniform_filter_nd_general<T, D>(
+    input: &Array<T, D>,
+    size: &[usize],
+    mode: &BorderMode,
+    origin: &[isize],
+    pad_width: &[(usize, usize)],
+    norm_factor: T,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync,
+    D: Dimension + 'static,
+{
+    // Pad input for border handling
+    let padded_input = pad_array(input, pad_width, mode, None)?;
+
+    // Create output array
+    let mut output = Array::<T, D>::zeros(input.raw_dim());
+
+    // Get the shape of the input
+    let input_shape = input.shape();
+
+    // Generate all possible coordinate combinations for the input
+    let total_elements = input.len();
+
+    // Use parallel iteration if the array is large enough
+    #[cfg(feature = "parallel")]
+    {
+        use rayon::prelude::*;
+
+        if total_elements > 10000 {
+            return uniform_filter_nd_parallel(
+                input,
+                &padded_input,
+                size,
+                norm_factor,
+                input_shape,
+            );
+        }
+    }
+
+    // Sequential implementation for smaller arrays or when parallel feature is disabled
+    uniform_filter_nd_sequential(
+        input,
+        &padded_input,
+        size,
+        norm_factor,
+        input_shape,
+        &mut output,
+    )
+}
+
+/// Sequential n-dimensional uniform filter implementation
+fn uniform_filter_nd_sequential<T, D>(
+    input: &Array<T, D>,
+    padded_input: &Array<T, D>,
+    size: &[usize],
+    norm_factor: T,
+    input_shape: &[usize],
+    output: &mut Array<T, D>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign,
+    D: Dimension,
+{
+    let ndim = input.ndim();
+
+    // Helper function to convert linear index to n-dimensional coordinates
+    fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
+        let mut coords = vec![0; shape.len()];
+        for i in (0..shape.len()).rev() {
+            coords[i] = index % shape[i];
+            index /= shape[i];
+        }
+        coords
+    }
+
+    // Iterate through each position in the input array
+    for linear_idx in 0..input.len() {
+        let coords = index_to_coords(linear_idx, input_shape);
+
+        // Initialize sum
+        let mut sum = T::zero();
+
+        // Generate all window coordinates around this position
+        let mut window_coords = vec![0; ndim];
+        let mut finished = false;
+
+        while !finished {
+            // Calculate actual coordinate in padded array
+            let mut actual_coords = Vec::with_capacity(ndim);
+            for d in 0..ndim {
+                actual_coords.push(coords[d] + window_coords[d]);
+            }
+
+            // Add value at this window position to sum
+            let val = padded_input[&*actual_coords];
+            sum += val;
+
+            // Increment window coordinates (n-dimensional counter)
+            let mut carry = 1;
+            for d in (0..ndim).rev() {
+                window_coords[d] += carry;
+                if window_coords[d] < size[d] {
+                    carry = 0;
+                    break;
+                } else {
+                    window_coords[d] = 0;
+                }
+            }
+
+            finished = carry == 1; // All dimensions have wrapped around
+        }
+
+        // Set the normalized average value in the output
+        output[&*coords] = sum * norm_factor;
+    }
+
+    Ok(output.clone())
+}
+
+/// Parallel n-dimensional uniform filter implementation
+#[cfg(feature = "parallel")]
+fn uniform_filter_nd_parallel<T, D>(
+    input: &Array<T, D>,
+    padded_input: &Array<T, D>,
+    size: &[usize],
+    norm_factor: T,
+    input_shape: &[usize],
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + Send + Sync,
+    D: Dimension + 'static,
+{
+    use rayon::prelude::*;
+
+    let ndim = input.ndim();
+    let total_elements = input.len();
+
+    // Helper function to convert linear index to n-dimensional coordinates
+    fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
+        let mut coords = vec![0; shape.len()];
+        for i in (0..shape.len()).rev() {
+            coords[i] = index % shape[i];
+            index /= shape[i];
+        }
+        coords
+    }
+
+    // Collect results in parallel
+    let results: Vec<T> = (0..total_elements)
+        .into_par_iter()
+        .map(|linear_idx| {
+            let coords = index_to_coords(linear_idx, input_shape);
+
+            // Initialize sum
+            let mut sum = T::zero();
+
+            // Generate all window coordinates around this position
+            let mut window_coords = vec![0; ndim];
+            let mut finished = false;
+
+            while !finished {
+                // Calculate actual coordinate in padded array
+                let mut actual_coords = Vec::with_capacity(ndim);
+                for d in 0..ndim {
+                    actual_coords.push(coords[d] + window_coords[d]);
+                }
+
+                // Add value at this window position to sum
+                let val = padded_input[&*actual_coords];
+                sum += val;
+
+                // Increment window coordinates (n-dimensional counter)
+                let mut carry = 1;
+                for d in (0..ndim).rev() {
+                    window_coords[d] += carry;
+                    if window_coords[d] < size[d] {
+                        carry = 0;
+                        break;
+                    } else {
+                        window_coords[d] = 0;
+                    }
+                }
+
+                finished = carry == 1; // All dimensions have wrapped around
+            }
+
+            // Return normalized average
+            sum * norm_factor
+        })
+        .collect();
+
+    // Convert results back to n-dimensional array
+    let output = Array::from_shape_vec(input.raw_dim(), results)
+        .map_err(|_| NdimageError::DimensionError("Failed to create output array".into()))?;
+
+    Ok(output)
 }
 
 /// Optimized separable uniform filter (1D filtering along each axis)
@@ -665,23 +863,40 @@ mod tests {
 
     #[test]
     fn test_uniform_filter_3d() {
-        // Create a small 3D array
-        let input = Array3::<f64>::zeros((2, 2, 2));
+        // Create a small 3D array with varying values
+        let mut input = Array3::<f64>::zeros((3, 3, 3));
+        input[[1, 1, 1]] = 8.0;
+        input[[0, 0, 0]] = 2.0;
+        input[[2, 2, 2]] = 6.0;
 
-        // Check that 3D arrays correctly return NotImplementedError
-        let result = uniform_filter(&input, &[2, 2, 2], None, None);
+        // Apply 3D uniform filter
+        let result = uniform_filter(&input, &[2, 2, 2], None, None).unwrap();
 
-        assert!(result.is_err());
+        // Check shape is preserved
+        assert_eq!(result.shape(), input.shape());
 
-        if let Err(err) = result {
-            match err {
-                NdimageError::NotImplementedError(_) => (),
-                _ => panic!("Expected NotImplementedError but got {:?}", err),
-            }
+        // Check some basic properties
+        // Uniform filter should produce values that are averages, so between min and max of input
+        for elem in result.iter() {
+            assert!(*elem >= 0.0);
+            assert!(*elem <= 8.0);
         }
 
-        // Test separable filter with simplified test
-        let result_sep = uniform_filter_separable(&input, &[2, 2, 2], None, None);
-        assert!(result_sep.is_ok());
+        // Test separable filter still works
+        let result_sep = uniform_filter_separable(&input, &[2, 2, 2], None, None).unwrap();
+        assert_eq!(result_sep.shape(), input.shape());
+    }
+
+    #[test]
+    fn test_uniform_filter_4d() {
+        // Test 4D arrays to ensure general n-dimensional support
+        let input = ndarray::Array4::<f64>::from_elem((2, 2, 2, 2), 5.0);
+
+        let result = uniform_filter(&input, &[2, 2, 2, 2], None, None).unwrap();
+
+        // All values should be 5.0 since input is uniform
+        for elem in result.iter() {
+            assert!((elem - 5.0).abs() < 1e-10);
+        }
     }
 }

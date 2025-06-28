@@ -9,6 +9,86 @@ use std::collections::HashMap;
 
 use crate::error::{Result, TransformError};
 
+/// Simple sparse matrix representation in COO (Coordinate) format
+#[derive(Debug, Clone)]
+pub struct SparseMatrix {
+    /// Shape of the matrix (rows, cols)
+    pub shape: (usize, usize),
+    /// Row indices of non-zero values
+    pub row_indices: Vec<usize>,
+    /// Column indices of non-zero values
+    pub col_indices: Vec<usize>,
+    /// Non-zero values
+    pub values: Vec<f64>,
+}
+
+impl SparseMatrix {
+    /// Create a new empty sparse matrix
+    pub fn new(shape: (usize, usize)) -> Self {
+        SparseMatrix {
+            shape,
+            row_indices: Vec::new(),
+            col_indices: Vec::new(),
+            values: Vec::new(),
+        }
+    }
+
+    /// Add a non-zero value at (row, col)
+    pub fn push(&mut self, row: usize, col: usize, value: f64) {
+        if row < self.shape.0 && col < self.shape.1 && value != 0.0 {
+            self.row_indices.push(row);
+            self.col_indices.push(col);
+            self.values.push(value);
+        }
+    }
+
+    /// Convert to dense Array2
+    pub fn to_dense(&self) -> Array2<f64> {
+        let mut dense = Array2::zeros(self.shape);
+        for ((&row, &col), &val) in self
+            .row_indices
+            .iter()
+            .zip(self.col_indices.iter())
+            .zip(self.values.iter())
+        {
+            dense[[row, col]] = val;
+        }
+        dense
+    }
+
+    /// Get number of non-zero elements
+    pub fn nnz(&self) -> usize {
+        self.values.len()
+    }
+}
+
+/// Output format for encoded data
+#[derive(Debug, Clone)]
+pub enum EncodedOutput {
+    /// Dense matrix representation
+    Dense(Array2<f64>),
+    /// Sparse matrix representation
+    Sparse(SparseMatrix),
+}
+
+impl EncodedOutput {
+    /// Convert to dense matrix (creates copy if sparse)
+    pub fn to_dense(&self) -> Array2<f64> {
+        match self {
+            EncodedOutput::Dense(arr) => arr.clone(),
+            EncodedOutput::Sparse(sparse) => sparse.to_dense(),
+        }
+    }
+
+    /// Get shape of the output
+    pub fn shape(&self) -> (usize, usize) {
+        match self {
+            EncodedOutput::Dense(arr) => (arr.nrows(), arr.ncols()),
+            EncodedOutput::Sparse(sparse) => sparse.shape,
+        }
+    }
+}
+
 /// OneHotEncoder for converting categorical features to binary features
 ///
 /// This transformer converts categorical features into a one-hot encoded representation,
@@ -47,12 +127,6 @@ impl OneHotEncoder {
         if handle_unknown != "error" && handle_unknown != "ignore" {
             return Err(TransformError::InvalidInput(
                 "handle_unknown must be 'error' or 'ignore'".to_string(),
-            ));
-        }
-
-        if sparse {
-            return Err(TransformError::InvalidInput(
-                "Sparse output is not yet implemented".to_string(),
             ));
         }
 
@@ -114,8 +188,8 @@ impl OneHotEncoder {
     /// * `x` - The input categorical data, shape (n_samples, n_features)
     ///
     /// # Returns
-    /// * `Result<Array2<f64>>` - The one-hot encoded data
-    pub fn transform<S>(&self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    /// * `Result<EncodedOutput>` - The one-hot encoded data (dense or sparse)
+    pub fn transform<S>(&self, x: &ArrayBase<S, Ix2>) -> Result<EncodedOutput>
     where
         S: Data,
         S::Elem: Float + NumCast,
@@ -166,8 +240,6 @@ impl OneHotEncoder {
             total_features += n_output_cats;
         }
 
-        let mut transformed = Array2::zeros((n_samples, total_features));
-
         // Create mappings from category values to column indices
         let mut category_mappings = Vec::new();
         let mut current_col = 0;
@@ -193,42 +265,82 @@ impl OneHotEncoder {
             current_col += n_output_cats;
         }
 
-        // Fill the transformed array
-        for i in 0..n_samples {
-            for j in 0..n_features {
-                let value = x_u64[[i, j]];
+        // Create output based on sparse setting
+        if self.sparse {
+            // Sparse output
+            let mut sparse_matrix = SparseMatrix::new((n_samples, total_features));
 
-                if let Some(&col_idx) = category_mappings[j].get(&value) {
-                    transformed[[i, col_idx]] = 1.0;
-                } else {
-                    // Check if this is a dropped category (which should be represented as all zeros)
-                    let feature_categories = &categories[j];
-                    let is_dropped_category = match &self.drop {
-                        Some(strategy) if strategy == "first" => {
-                            // If it's the first category in the sorted list, it was dropped
-                            !feature_categories.is_empty() && value == feature_categories[0]
-                        }
-                        Some(strategy)
-                            if strategy == "if_binary" && feature_categories.len() == 2 =>
-                        {
-                            // If it's the second category (index 1) in a binary feature, it was dropped
-                            feature_categories.len() == 2 && value == feature_categories[1]
-                        }
-                        _ => false,
-                    };
+            for i in 0..n_samples {
+                for j in 0..n_features {
+                    let value = x_u64[[i, j]];
 
-                    if !is_dropped_category && self.handle_unknown == "error" {
-                        return Err(TransformError::InvalidInput(format!(
-                            "Found unknown category {} in feature {}",
-                            value, j
-                        )));
+                    if let Some(&col_idx) = category_mappings[j].get(&value) {
+                        sparse_matrix.push(i, col_idx, 1.0);
+                    } else {
+                        // Check if this is a dropped category
+                        let feature_categories = &categories[j];
+                        let is_dropped_category = match &self.drop {
+                            Some(strategy) if strategy == "first" => {
+                                !feature_categories.is_empty() && value == feature_categories[0]
+                            }
+                            Some(strategy)
+                                if strategy == "if_binary" && feature_categories.len() == 2 =>
+                            {
+                                feature_categories.len() == 2 && value == feature_categories[1]
+                            }
+                            _ => false,
+                        };
+
+                        if !is_dropped_category && self.handle_unknown == "error" {
+                            return Err(TransformError::InvalidInput(format!(
+                                "Found unknown category {} in feature {}",
+                                value, j
+                            )));
+                        }
+                        // If it's a dropped category or handle_unknown == "ignore", we don't add anything (sparse)
                     }
-                    // If it's a dropped category or handle_unknown == "ignore", we just leave it as 0
                 }
             }
-        }
 
-        Ok(transformed)
+            Ok(EncodedOutput::Sparse(sparse_matrix))
+        } else {
+            // Dense output
+            let mut transformed = Array2::zeros((n_samples, total_features));
+
+            for i in 0..n_samples {
+                for j in 0..n_features {
+                    let value = x_u64[[i, j]];
+
+                    if let Some(&col_idx) = category_mappings[j].get(&value) {
+                        transformed[[i, col_idx]] = 1.0;
+                    } else {
+                        // Check if this is a dropped category
+                        let feature_categories = &categories[j];
+                        let is_dropped_category = match &self.drop {
+                            Some(strategy) if strategy == "first" => {
+                                !feature_categories.is_empty() && value == feature_categories[0]
+                            }
+                            Some(strategy)
+                                if strategy == "if_binary" && feature_categories.len() == 2 =>
+                            {
+                                feature_categories.len() == 2 && value == feature_categories[1]
+                            }
+                            _ => false,
+                        };
+
+                        if !is_dropped_category && self.handle_unknown == "error" {
+                            return Err(TransformError::InvalidInput(format!(
+                                "Found unknown category {} in feature {}",
+                                value, j
+                            )));
+                        }
+                        // If it's a dropped category or handle_unknown == "ignore", we just leave it as 0
+                    }
+                }
+            }
+
+            Ok(EncodedOutput::Dense(transformed))
+        }
     }
 
     /// Fits the OneHotEncoder to the input data and transforms it
@@ -237,14 +349,44 @@ impl OneHotEncoder {
     /// * `x` - The input categorical data, shape (n_samples, n_features)
     ///
     /// # Returns
-    /// * `Result<Array2<f64>>` - The one-hot encoded data
-    pub fn fit_transform<S>(&mut self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    /// * `Result<EncodedOutput>` - The one-hot encoded data (dense or sparse)
+    pub fn fit_transform<S>(&mut self, x: &ArrayBase<S, Ix2>) -> Result<EncodedOutput>
     where
         S: Data,
         S::Elem: Float + NumCast,
     {
         self.fit(x)?;
         self.transform(x)
+    }
+
+    /// Convenience method that always returns dense output for backward compatibility
+    ///
+    /// # Arguments
+    /// * `x` - The input categorical data, shape (n_samples, n_features)
+    ///
+    /// # Returns
+    /// * `Result<Array2<f64>>` - The one-hot encoded data as dense matrix
+    pub fn transform_dense<S>(&self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        Ok(self.transform(x)?.to_dense())
+    }
+
+    /// Convenience method that fits and transforms returning dense output
+    ///
+    /// # Arguments
+    /// * `x` - The input categorical data, shape (n_samples, n_features)
+    ///
+    /// # Returns
+    /// * `Result<Array2<f64>>` - The one-hot encoded data as dense matrix
+    pub fn fit_transform_dense<S>(&mut self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        Ok(self.fit_transform(x)?.to_dense())
     }
 
     /// Returns the categories for each feature
@@ -1833,5 +1975,147 @@ mod tests {
         assert_eq!(binary_encoded.shape()[1], 4); // ceil(log2(10)) = 4
         assert_eq!(onehot_encoded.shape()[1], 10); // 10 categories = 10 features
         assert!(binary_encoded.shape()[1] < onehot_encoded.shape()[1]);
+    }
+
+    #[test]
+    fn test_sparse_matrix_basic() {
+        let mut sparse = SparseMatrix::new((3, 4));
+        sparse.push(0, 1, 1.0);
+        sparse.push(1, 2, 1.0);
+        sparse.push(2, 0, 1.0);
+
+        assert_eq!(sparse.shape, (3, 4));
+        assert_eq!(sparse.nnz(), 3);
+
+        let dense = sparse.to_dense();
+        assert_eq!(dense.shape(), &[3, 4]);
+        assert_eq!(dense[[0, 1]], 1.0);
+        assert_eq!(dense[[1, 2]], 1.0);
+        assert_eq!(dense[[2, 0]], 1.0);
+        assert_eq!(dense[[0, 0]], 0.0); // Verify zeros
+    }
+
+    #[test]
+    fn test_onehot_sparse_output() {
+        let data =
+            Array::from_shape_vec((4, 2), vec![0.0, 1.0, 1.0, 2.0, 2.0, 0.0, 0.0, 1.0]).unwrap();
+
+        // Test sparse output
+        let mut encoder_sparse = OneHotEncoder::new(None, "error", true).unwrap();
+        let result_sparse = encoder_sparse.fit_transform(&data).unwrap();
+
+        match result_sparse {
+            EncodedOutput::Sparse(sparse) => {
+                assert_eq!(sparse.shape, (4, 5)); // 3 categories + 2 categories = 5 features
+                assert_eq!(sparse.nnz(), 8); // 4 samples * 2 features = 8 non-zeros
+
+                // Convert to dense for comparison
+                let dense = sparse.to_dense();
+
+                // First sample [0, 1] should have [1,0,0,0,1]
+                assert_eq!(dense[[0, 0]], 1.0); // category 0 in feature 0
+                assert_eq!(dense[[0, 4]], 1.0); // category 1 in feature 1
+                assert_eq!(dense[[0, 1]], 0.0); // not category 1 in feature 0
+            }
+            EncodedOutput::Dense(_) => panic!("Expected sparse output"),
+        }
+
+        // Test dense output for comparison
+        let mut encoder_dense = OneHotEncoder::new(None, "error", false).unwrap();
+        let result_dense = encoder_dense.fit_transform(&data).unwrap();
+
+        match result_dense {
+            EncodedOutput::Dense(dense) => {
+                assert_eq!(dense.shape(), &[4, 5]);
+                // Verify dense and sparse produce same results
+                let sparse_as_dense = result_sparse.to_dense();
+                for i in 0..4 {
+                    for j in 0..5 {
+                        assert_abs_diff_eq!(
+                            dense[[i, j]],
+                            sparse_as_dense[[i, j]],
+                            epsilon = 1e-10
+                        );
+                    }
+                }
+            }
+            EncodedOutput::Sparse(_) => panic!("Expected dense output"),
+        }
+    }
+
+    #[test]
+    fn test_onehot_sparse_with_drop() {
+        let data = Array::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+
+        let mut encoder = OneHotEncoder::new(Some("first".to_string()), "error", true).unwrap();
+        let result = encoder.fit_transform(&data).unwrap();
+
+        match result {
+            EncodedOutput::Sparse(sparse) => {
+                assert_eq!(sparse.shape, (3, 2)); // 3 categories - 1 dropped = 2 features
+                assert_eq!(sparse.nnz(), 2); // Only categories 1 and 2 are encoded
+
+                let dense = sparse.to_dense();
+                assert_eq!(dense[[0, 0]], 0.0); // Category 0 dropped, all zeros
+                assert_eq!(dense[[0, 1]], 0.0);
+                assert_eq!(dense[[1, 0]], 1.0); // Category 1 maps to first output
+                assert_eq!(dense[[2, 1]], 1.0); // Category 2 maps to second output
+            }
+            EncodedOutput::Dense(_) => panic!("Expected sparse output"),
+        }
+    }
+
+    #[test]
+    fn test_onehot_sparse_backward_compatibility() {
+        let data = Array::from_shape_vec((2, 1), vec![0.0, 1.0]).unwrap();
+
+        let mut encoder = OneHotEncoder::new(None, "error", true).unwrap();
+        encoder.fit(&data).unwrap();
+
+        // Test that the convenience methods work
+        let dense_result = encoder.transform_dense(&data).unwrap();
+        assert_eq!(dense_result.shape(), &[2, 2]);
+        assert_eq!(dense_result[[0, 0]], 1.0);
+        assert_eq!(dense_result[[1, 1]], 1.0);
+
+        let mut encoder2 = OneHotEncoder::new(None, "error", true).unwrap();
+        let dense_result2 = encoder2.fit_transform_dense(&data).unwrap();
+        assert_eq!(dense_result2.shape(), &[2, 2]);
+
+        // Results should be identical
+        for i in 0..2 {
+            for j in 0..2 {
+                assert_abs_diff_eq!(dense_result[[i, j]], dense_result2[[i, j]], epsilon = 1e-10);
+            }
+        }
+    }
+
+    #[test]
+    fn test_encoded_output_methods() {
+        let dense_array =
+            Array::from_shape_vec((2, 3), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0]).unwrap();
+        let dense_output = EncodedOutput::Dense(dense_array);
+
+        let mut sparse_matrix = SparseMatrix::new((2, 3));
+        sparse_matrix.push(0, 0, 1.0);
+        sparse_matrix.push(1, 1, 1.0);
+        let sparse_output = EncodedOutput::Sparse(sparse_matrix);
+
+        // Test shape method
+        assert_eq!(dense_output.shape(), (2, 3));
+        assert_eq!(sparse_output.shape(), (2, 3));
+
+        // Test to_dense method
+        let dense_from_dense = dense_output.to_dense();
+        let dense_from_sparse = sparse_output.to_dense();
+
+        assert_eq!(dense_from_dense.shape(), &[2, 3]);
+        assert_eq!(dense_from_sparse.shape(), &[2, 3]);
+
+        // Verify values are equivalent
+        assert_eq!(dense_from_dense[[0, 0]], 1.0);
+        assert_eq!(dense_from_sparse[[0, 0]], 1.0);
+        assert_eq!(dense_from_dense[[1, 1]], 1.0);
+        assert_eq!(dense_from_sparse[[1, 1]], 1.0);
     }
 }

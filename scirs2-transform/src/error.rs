@@ -110,3 +110,138 @@ pub enum TransformError {
 
 /// Result type for data transformation operations
 pub type Result<T> = std::result::Result<T, TransformError>;
+
+/// Context trait for adding context to errors
+pub trait ErrorContext<T> {
+    /// Add context to an error
+    fn context(self, msg: &str) -> Result<T>;
+    
+    /// Add context with a format string
+    fn with_context<F>(self, f: F) -> Result<T>
+    where
+        F: FnOnce() -> String;
+}
+
+impl<T> ErrorContext<T> for Result<T> {
+    fn context(self, msg: &str) -> Result<T> {
+        self.map_err(|e| TransformError::Other(format!("{}: {}", msg, e)))
+    }
+    
+    fn with_context<F>(self, f: F) -> Result<T>
+    where
+        F: FnOnce() -> String,
+    {
+        self.map_err(|e| TransformError::Other(format!("{}: {}", f(), e)))
+    }
+}
+
+impl<T, E> ErrorContext<T> for std::result::Result<T, E>
+where
+    E: std::fmt::Display,
+{
+    fn context(self, msg: &str) -> Result<T> {
+        self.map_err(|e| TransformError::Other(format!("{}: {}", msg, e)))
+    }
+    
+    fn with_context<F>(self, f: F) -> Result<T>
+    where
+        F: FnOnce() -> String,
+    {
+        self.map_err(|e| TransformError::Other(format!("{}: {}", f(), e)))
+    }
+}
+
+/// Error kind for categorizing errors
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ErrorKind {
+    /// Input validation errors
+    Validation,
+    /// Computation errors
+    Computation,
+    /// Configuration errors
+    Configuration,
+    /// Resource errors (memory, GPU, etc.)
+    Resource,
+    /// External errors (IO, network, etc.)
+    External,
+    /// Internal errors (bugs, not implemented, etc.)
+    Internal,
+}
+
+impl TransformError {
+    /// Get the error kind
+    pub fn kind(&self) -> ErrorKind {
+        match self {
+            TransformError::InvalidInput(_) 
+            | TransformError::DataValidationError(_) 
+            | TransformError::ConfigurationError(_) => ErrorKind::Validation,
+            
+            TransformError::ComputationError(_)
+            | TransformError::TransformationError(_)
+            | TransformError::ConvergenceError(_)
+            | TransformError::SimdError(_) => ErrorKind::Computation,
+            
+            TransformError::MemoryError(_)
+            | TransformError::GpuError(_)
+            | TransformError::TimeoutError(_) => ErrorKind::Resource,
+            
+            TransformError::IoError(_)
+            | TransformError::DistributedError(_)
+            | TransformError::StreamingError(_)
+            | TransformError::MonitoringError(_) => ErrorKind::External,
+            
+            TransformError::NotImplemented(_)
+            | TransformError::NotFitted(_)
+            | TransformError::FeatureNotEnabled(_)
+            | TransformError::Other(_) => ErrorKind::Internal,
+            
+            TransformError::CoreError(_)
+            | TransformError::LinalgError(_) => ErrorKind::External,
+            
+            TransformError::ParallelError(_)
+            | TransformError::CrossValidationError(_)
+            | TransformError::ParseError(_) => ErrorKind::Computation,
+            
+            #[cfg(feature = "monitoring")]
+            TransformError::PrometheusError(_) => ErrorKind::External,
+            
+            #[cfg(feature = "distributed")]
+            TransformError::SerializationError(_) => ErrorKind::External,
+        }
+    }
+    
+    /// Check if the error is recoverable
+    pub fn is_recoverable(&self) -> bool {
+        match self.kind() {
+            ErrorKind::Validation | ErrorKind::Configuration => false,
+            ErrorKind::Resource | ErrorKind::External => true,
+            ErrorKind::Computation => true, // May be recoverable with different params
+            ErrorKind::Internal => false,
+        }
+    }
+    
+    /// Check if the error should trigger a retry
+    pub fn should_retry(&self) -> bool {
+        match self {
+            TransformError::TimeoutError(_)
+            | TransformError::MemoryError(_)
+            | TransformError::DistributedError(_)
+            | TransformError::StreamingError(_)
+            | TransformError::ParallelError(_) => true,
+            TransformError::IoError(_) => true,
+            _ => false,
+        }
+    }
+    
+    /// Get user-friendly error message
+    pub fn user_message(&self) -> String {
+        match self {
+            TransformError::InvalidInput(_) => "Invalid input data provided".to_string(),
+            TransformError::NotFitted(_) => "Model must be fitted before use".to_string(),
+            TransformError::MemoryError(_) => "Insufficient memory for operation".to_string(),
+            TransformError::TimeoutError(_) => "Operation timed out".to_string(),
+            TransformError::FeatureNotEnabled(_) => "Required feature is not enabled".to_string(),
+            _ => "An error occurred during transformation".to_string(),
+        }
+    }
+}

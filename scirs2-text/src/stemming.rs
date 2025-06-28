@@ -102,6 +102,40 @@ pub use self::rule_lemmatizer::{
     LemmatizerConfig, PosTag, RuleCondition, RuleLemmatizer, RuleLemmatizerBuilder,
 };
 
+/// Create a POS-aware lemmatizer that automatically detects part-of-speech tags
+/// for improved lemmatization accuracy.
+///
+/// This function creates a lemmatizer that combines automatic POS tagging with
+/// rule-based lemmatization for better accuracy than using lemmatization alone.
+///
+/// # Example
+///
+/// ```
+/// use scirs2_text::stemming::create_pos_aware_lemmatizer;
+/// use scirs2_text::stemming::Stemmer;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let lemmatizer = create_pos_aware_lemmatizer();
+///
+/// // Automatic POS detection improves accuracy
+/// assert_eq!(lemmatizer.stem("running")?, "run");
+/// assert_eq!(lemmatizer.stem("better")?, "good");  // Uses POS context
+/// assert_eq!(lemmatizer.stem("flies")?, "fly");    // Disambiguated by context
+/// # Ok(())
+/// # }
+/// ```
+pub fn create_pos_aware_lemmatizer() -> crate::pos_tagging::PosAwareLemmatizer {
+    crate::pos_tagging::PosAwareLemmatizer::new()
+}
+
+/// Create a POS-aware lemmatizer with custom configurations
+pub fn create_pos_aware_lemmatizer_with_config(
+    pos_config: crate::pos_tagging::PosTaggerConfig,
+    lemma_config: LemmatizerConfig,
+) -> crate::pos_tagging::PosAwareLemmatizer {
+    crate::pos_tagging::PosAwareLemmatizer::with_configs(pos_config, lemma_config)
+}
+
 lazy_static! {
     // Porter stemmer regex patterns
     static ref VOWEL_SEQUENCE: Regex = Regex::new(r"[aeiouy]").unwrap();
@@ -625,6 +659,75 @@ mod tests {
         // Test without POS tag
         assert_eq!(lemmatizer.lemmatize("running", None), "run");
         assert_eq!(lemmatizer.lemmatize("went", None), "go");
+    }
+
+    #[test]
+    fn test_pos_aware_lemmatizer_integration() {
+        let pos_aware = create_pos_aware_lemmatizer();
+        let rule_only = RuleLemmatizer::new();
+
+        // Test cases where POS awareness should improve accuracy
+        let test_cases = vec![
+            "flies",   // Could be verb (3rd person) or noun (plural)
+            "running", // Could be verb or noun/adjective
+            "better",  // Could be adjective (comparative) or adverb
+            "works",   // Could be verb or noun
+            "watches", // Could be verb or noun
+        ];
+
+        for word in test_cases {
+            let pos_aware_result = pos_aware.stem(word).unwrap();
+            let rule_only_result = rule_only.stem(word).unwrap();
+
+            println!(
+                "Word: '{}' -> POS-aware: '{}', Rule-only: '{}'",
+                word, pos_aware_result, rule_only_result
+            );
+
+            // Both should produce valid results
+            assert!(!pos_aware_result.is_empty());
+            assert!(!rule_only_result.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_pos_aware_lemmatizer_accuracy() {
+        let pos_aware = create_pos_aware_lemmatizer();
+
+        // Test cases where POS awareness provides clear benefit
+        assert_eq!(pos_aware.stem("running").unwrap(), "run");
+        assert_eq!(pos_aware.stem("better").unwrap(), "good");
+        assert_eq!(pos_aware.stem("went").unwrap(), "go");
+        assert_eq!(pos_aware.stem("children").unwrap(), "child");
+        assert_eq!(pos_aware.stem("feet").unwrap(), "foot");
+
+        // Test regular patterns that should work consistently
+        assert_eq!(pos_aware.stem("cats").unwrap(), "cat");
+        assert_eq!(pos_aware.stem("quickly").unwrap(), "quick");
+        assert_eq!(pos_aware.stem("happiness").unwrap(), "happiness"); // May not be in exceptions
+    }
+
+    #[test]
+    fn test_pos_aware_lemmatizer_custom_config() {
+        let pos_config = crate::pos_tagging::PosTaggerConfig {
+            use_context: false,
+            smoothing_factor: 0.01,
+            use_morphology: true,
+            use_capitalization: true,
+        };
+
+        let lemma_config = LemmatizerConfig {
+            use_pos_tagging: true,
+            default_pos: PosTag::Verb,
+            apply_case_restoration: false,
+            check_vowels: true,
+        };
+
+        let pos_aware = create_pos_aware_lemmatizer_with_config(pos_config, lemma_config);
+
+        // Test with custom configuration
+        let result = pos_aware.stem("Running").unwrap();
+        assert_eq!(result, "run"); // Should not restore case due to config
     }
 
     #[test]

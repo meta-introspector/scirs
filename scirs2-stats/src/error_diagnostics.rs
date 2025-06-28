@@ -4,10 +4,15 @@
 //! recovery strategies for production statistical computing environments.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_handling_v2::{ErrorCode, EnhancedError, ErrorContext, RecoverySuggestion, PerformanceImpact};
+use crate::error_handling_v2::{
+    EnhancedError, ErrorCode, ErrorContext, PerformanceImpact, RecoverySuggestion,
+};
 use crate::error_standardization::{ErrorMessages, RecoverySuggestions};
 use std::collections::{HashMap, VecDeque};
-use std::sync::{Arc, Mutex, atomic::{AtomicUsize, Ordering}};
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc, Mutex,
+};
 use std::time::{Duration, Instant, SystemTime};
 
 /// Error pattern detection and analysis
@@ -98,12 +103,12 @@ impl ErrorMonitor {
             error_rate_thresholds: HashMap::new(),
             start_time: Instant::now(),
         };
-        
+
         monitor.initialize_default_patterns();
         monitor.initialize_default_thresholds();
         monitor
     }
-    
+
     /// Initialize default error patterns
     fn initialize_default_patterns(&mut self) {
         // Memory pressure pattern
@@ -113,19 +118,24 @@ impl ErrorMonitor {
             3,
             Duration::from_secs(60),
             "High memory allocation failures indicating memory pressure",
-            "Reduce data size, enable streaming processing, or increase available memory"
+            "Reduce data size, enable streaming processing, or increase available memory",
         ));
-        
+
         // Numerical instability pattern
         self.patterns.push(ErrorPattern::new(
             "numerical_instability",
-            vec![ErrorCode::E3001, ErrorCode::E3002, ErrorCode::E3005, ErrorCode::E3006],
+            vec![
+                ErrorCode::E3001,
+                ErrorCode::E3002,
+                ErrorCode::E3005,
+                ErrorCode::E3006,
+            ],
             5,
             Duration::from_secs(30),
             "Frequent numerical errors indicating data quality or algorithm issues",
-            "Check data preprocessing, scaling, and consider more stable algorithms"
+            "Check data preprocessing, scaling, and consider more stable algorithms",
         ));
-        
+
         // Convergence issues pattern
         self.patterns.push(ErrorPattern::new(
             "convergence_issues",
@@ -133,20 +143,25 @@ impl ErrorMonitor {
             3,
             Duration::from_secs(120),
             "Repeated convergence failures in iterative algorithms",
-            "Adjust algorithm parameters, improve initial conditions, or use different methods"
+            "Adjust algorithm parameters, improve initial conditions, or use different methods",
         ));
-        
+
         // Data quality pattern
         self.patterns.push(ErrorPattern::new(
             "data_quality_issues",
-            vec![ErrorCode::E2003, ErrorCode::E2004, ErrorCode::E1001, ErrorCode::E1002],
+            vec![
+                ErrorCode::E2003,
+                ErrorCode::E2004,
+                ErrorCode::E1001,
+                ErrorCode::E1002,
+            ],
             4,
             Duration::from_secs(60),
             "Frequent data validation errors indicating poor data quality",
-            "Implement comprehensive data validation and cleaning pipeline"
+            "Implement comprehensive data validation and cleaning pipeline",
         ));
     }
-    
+
     /// Initialize default error rate thresholds
     fn initialize_default_thresholds(&mut self) {
         self.error_rate_thresholds.insert(ErrorCode::E5001, 0.01); // Memory errors - very low tolerance
@@ -154,7 +169,7 @@ impl ErrorMonitor {
         self.error_rate_thresholds.insert(ErrorCode::E3005, 0.10); // NaN - moderate tolerance
         self.error_rate_thresholds.insert(ErrorCode::E4001, 0.20); // Max iterations - higher tolerance
     }
-    
+
     /// Record an error occurrence
     pub fn record_error(&self, code: ErrorCode, operation: impl Into<String>) {
         let occurrence = ErrorOccurrence {
@@ -165,7 +180,7 @@ impl ErrorMonitor {
             resolved: false,
             recovery_action: None,
         };
-        
+
         // Update history
         {
             let mut history = self.error_history.lock().unwrap();
@@ -174,57 +189,58 @@ impl ErrorMonitor {
             }
             history.push_back(occurrence);
         }
-        
+
         // Update counters
         {
             let mut counts = self.error_counts.lock().unwrap();
-            counts.entry(code)
+            counts
+                .entry(code)
                 .or_insert_with(|| AtomicUsize::new(0))
                 .fetch_add(1, Ordering::Relaxed);
         }
-        
+
         // Check for patterns if enabled
         if self.pattern_detection_enabled {
             self.check_patterns();
         }
     }
-    
+
     /// Check for error patterns in recent history
     fn check_patterns(&self) {
         let history = self.error_history.lock().unwrap();
         let now = Instant::now();
-        
+
         for pattern in &self.patterns {
-            let relevant_errors: Vec<_> = history.iter()
+            let relevant_errors: Vec<_> = history
+                .iter()
                 .filter(|err| {
-                    pattern.error_codes.contains(&err.code) &&
-                    now.duration_since(err.timestamp) <= pattern.time_window
+                    pattern.error_codes.contains(&err.code)
+                        && now.duration_since(err.timestamp) <= pattern.time_window
                 })
                 .collect();
-            
+
             if relevant_errors.len() >= pattern.frequency_threshold {
                 eprintln!(
-                    "⚠️  ERROR PATTERN DETECTED: {} - {} ({})", 
-                    pattern.id, 
-                    pattern.description,
-                    pattern.mitigation
+                    "⚠️  ERROR PATTERN DETECTED: {} - {} ({})",
+                    pattern.id, pattern.description, pattern.mitigation
                 );
             }
         }
     }
-    
+
     /// Get error statistics
     pub fn get_statistics(&self) -> ErrorStatistics {
         let counts = self.error_counts.lock().unwrap();
         let history = self.error_history.lock().unwrap();
-        
-        let total_errors: usize = counts.values()
+
+        let total_errors: usize = counts
+            .values()
             .map(|counter| counter.load(Ordering::Relaxed))
             .sum();
-        
+
         let uptime = self.start_time.elapsed();
         let error_rate = total_errors as f64 / uptime.as_secs_f64();
-        
+
         // Calculate error distribution
         let mut error_distribution = HashMap::new();
         for (code, counter) in counts.iter() {
@@ -233,19 +249,20 @@ impl ErrorMonitor {
                 error_distribution.insert(*code, count);
             }
         }
-        
+
         // Find most frequent errors
         let mut frequent_errors: Vec<_> = error_distribution.iter().collect();
         frequent_errors.sort_by(|a, b| b.1.cmp(a.1));
         let top_errors: Vec<_> = frequent_errors.into_iter().take(5).collect();
-        
+
         // Calculate recent error rate (last hour)
         let one_hour_ago = Instant::now() - Duration::from_secs(3600);
-        let recent_errors = history.iter()
+        let recent_errors = history
+            .iter()
             .filter(|err| err.timestamp > one_hour_ago)
             .count();
         let recent_error_rate = recent_errors as f64 / 3600.0;
-        
+
         ErrorStatistics {
             total_errors,
             error_rate,
@@ -256,46 +273,47 @@ impl ErrorMonitor {
             active_patterns: self.detect_active_patterns(),
         }
     }
-    
+
     /// Detect currently active error patterns
     fn detect_active_patterns(&self) -> Vec<String> {
         let history = self.error_history.lock().unwrap();
         let now = Instant::now();
         let mut active_patterns = Vec::new();
-        
+
         for pattern in &self.patterns {
-            let recent_errors: Vec<_> = history.iter()
+            let recent_errors: Vec<_> = history
+                .iter()
                 .filter(|err| {
-                    pattern.error_codes.contains(&err.code) &&
-                    now.duration_since(err.timestamp) <= pattern.time_window
+                    pattern.error_codes.contains(&err.code)
+                        && now.duration_since(err.timestamp) <= pattern.time_window
                 })
                 .collect();
-            
+
             if recent_errors.len() >= pattern.frequency_threshold {
                 active_patterns.push(pattern.id.clone());
             }
         }
-        
+
         active_patterns
     }
-    
+
     /// Generate comprehensive health report
     pub fn generate_health_report(&self) -> HealthReport {
         let stats = self.get_statistics();
         let history = self.error_history.lock().unwrap();
-        
+
         // Calculate health score (0-100)
         let health_score = self.calculate_health_score(&stats);
-        
+
         // Identify critical issues
         let critical_issues = self.identify_critical_issues(&stats);
-        
+
         // Generate recommendations
         let recommendations = self.generate_recommendations(&stats, &critical_issues);
-        
+
         // Calculate trend information
         let trend = self.calculate_error_trend(&history);
-        
+
         HealthReport {
             health_score,
             critical_issues,
@@ -305,11 +323,11 @@ impl ErrorMonitor {
             timestamp: SystemTime::now(),
         }
     }
-    
+
     /// Calculate overall system health score
     fn calculate_health_score(&self, stats: &ErrorStatistics) -> u8 {
         let mut score = 100.0;
-        
+
         // Penalty for high error rates
         if stats.error_rate > 1.0 {
             score -= 30.0;
@@ -318,40 +336,46 @@ impl ErrorMonitor {
         } else if stats.error_rate > 0.01 {
             score -= 10.0;
         }
-        
+
         // Penalty for active patterns
         score -= stats.active_patterns.len() as f64 * 15.0;
-        
+
         // Penalty for critical errors
         for (code, count) in &stats.top_errors {
             if code.severity() <= 2 {
                 score -= *count as f64 * 5.0;
             }
         }
-        
+
         // Penalty for recent error spike
         if stats.recent_error_rate > stats.error_rate * 2.0 {
             score -= 20.0;
         }
-        
+
         score.max(0.0).min(100.0) as u8
     }
-    
+
     /// Identify critical issues requiring immediate attention
     fn identify_critical_issues(&self, stats: &ErrorStatistics) -> Vec<CriticalIssue> {
         let mut issues = Vec::new();
-        
+
         // Check for severe error patterns
-        if stats.active_patterns.contains(&"memory_pressure".to_string()) {
+        if stats
+            .active_patterns
+            .contains(&"memory_pressure".to_string())
+        {
             issues.push(CriticalIssue {
                 severity: 1,
                 title: "Memory Pressure Detected".to_string(),
-                description: "High memory allocation failures indicate system memory pressure".to_string(),
-                impact: "May cause application crashes or severe performance degradation".to_string(),
-                action_required: "Immediate memory optimization or resource scaling required".to_string(),
+                description: "High memory allocation failures indicate system memory pressure"
+                    .to_string(),
+                impact: "May cause application crashes or severe performance degradation"
+                    .to_string(),
+                action_required: "Immediate memory optimization or resource scaling required"
+                    .to_string(),
             });
         }
-        
+
         // Check for high critical error rates
         for (code, count) in &stats.top_errors {
             if code.severity() <= 2 && *count > 10 {
@@ -364,7 +388,7 @@ impl ErrorMonitor {
                 });
             }
         }
-        
+
         // Check for error rate spikes
         if stats.recent_error_rate > stats.error_rate * 3.0 {
             issues.push(CriticalIssue {
@@ -375,16 +399,23 @@ impl ErrorMonitor {
                 action_required: "Monitor closely and investigate recent changes".to_string(),
             });
         }
-        
+
         issues
     }
-    
+
     /// Generate actionable recommendations
-    fn generate_recommendations(&self, stats: &ErrorStatistics, issues: &[CriticalIssue]) -> Vec<Recommendation> {
+    fn generate_recommendations(
+        &self,
+        stats: &ErrorStatistics,
+        issues: &[CriticalIssue],
+    ) -> Vec<Recommendation> {
         let mut recommendations = Vec::new();
-        
+
         // Recommendations based on error patterns
-        if stats.active_patterns.contains(&"numerical_instability".to_string()) {
+        if stats
+            .active_patterns
+            .contains(&"numerical_instability".to_string())
+        {
             recommendations.push(Recommendation {
                 priority: 1,
                 category: "Data Quality".to_string(),
@@ -398,7 +429,7 @@ impl ErrorMonitor {
                 expected_impact: "Reduce numerical errors by 70-90%".to_string(),
             });
         }
-        
+
         // Recommendations based on frequent errors
         for (code, _count) in &stats.top_errors {
             match code {
@@ -421,10 +452,12 @@ impl ErrorMonitor {
                         priority: 2,
                         category: "Algorithm Tuning".to_string(),
                         title: "Optimize Convergence Parameters".to_string(),
-                        description: "Adjust algorithm parameters for better convergence".to_string(),
+                        description: "Adjust algorithm parameters for better convergence"
+                            .to_string(),
                         steps: vec![
                             "Increase maximum iterations for iterative algorithms".to_string(),
-                            "Adjust convergence tolerance based on data characteristics".to_string(),
+                            "Adjust convergence tolerance based on data characteristics"
+                                .to_string(),
                             "Consider using different initialization strategies".to_string(),
                         ],
                         expected_impact: "Improve convergence rate by 50-80%".to_string(),
@@ -433,7 +466,7 @@ impl ErrorMonitor {
                 _ => {}
             }
         }
-        
+
         // General recommendations based on health score
         if stats.error_rate > 0.1 {
             recommendations.push(Recommendation {
@@ -449,10 +482,10 @@ impl ErrorMonitor {
                 expected_impact: "Reduce overall error rate significantly".to_string(),
             });
         }
-        
+
         recommendations
     }
-    
+
     /// Calculate error trend over time
     fn calculate_error_trend(&self, history: &VecDeque<ErrorOccurrence>) -> ErrorTrend {
         if history.len() < 10 {
@@ -463,25 +496,27 @@ impl ErrorMonitor {
                 description: "Insufficient data for trend analysis".to_string(),
             };
         }
-        
+
         let now = Instant::now();
         let recent_window = Duration::from_secs(1800); // 30 minutes
         let older_window = Duration::from_secs(3600); // 1 hour
-        
-        let recent_errors = history.iter()
+
+        let recent_errors = history
+            .iter()
             .filter(|err| now.duration_since(err.timestamp) <= recent_window)
             .count();
-        
-        let older_errors = history.iter()
+
+        let older_errors = history
+            .iter()
             .filter(|err| {
                 let age = now.duration_since(err.timestamp);
                 age > recent_window && age <= older_window
             })
             .count();
-        
+
         let recent_rate = recent_errors as f64 / recent_window.as_secs_f64();
         let older_rate = older_errors as f64 / recent_window.as_secs_f64(); // Same window size for comparison
-        
+
         let change_ratio = if older_rate > 0.0 {
             recent_rate / older_rate
         } else if recent_rate > 0.0 {
@@ -489,18 +524,27 @@ impl ErrorMonitor {
         } else {
             1.0 // No change
         };
-        
+
         let (direction, description) = if change_ratio > 1.5 {
-            (TrendDirection::Increasing, "Error rate is increasing significantly".to_string())
+            (
+                TrendDirection::Increasing,
+                "Error rate is increasing significantly".to_string(),
+            )
         } else if change_ratio < 0.5 {
-            (TrendDirection::Decreasing, "Error rate is decreasing significantly".to_string())
+            (
+                TrendDirection::Decreasing,
+                "Error rate is decreasing significantly".to_string(),
+            )
         } else {
-            (TrendDirection::Stable, "Error rate is relatively stable".to_string())
+            (
+                TrendDirection::Stable,
+                "Error rate is relatively stable".to_string(),
+            )
         };
-        
+
         let magnitude = (change_ratio - 1.0).abs();
         let confidence = if history.len() > 50 { 0.8 } else { 0.5 };
-        
+
         ErrorTrend {
             direction,
             magnitude,
@@ -609,11 +653,14 @@ impl HealthReport {
     /// Generate a formatted text report
     pub fn to_formatted_string(&self) -> String {
         let mut report = String::new();
-        
+
         report.push_str("=== STATISTICAL COMPUTING HEALTH REPORT ===\n\n");
-        report.push_str(&format!("📊 Overall Health Score: {}/100\n", self.health_score));
+        report.push_str(&format!(
+            "📊 Overall Health Score: {}/100\n",
+            self.health_score
+        ));
         report.push_str(&format!("⏱️  Report Generated: {:?}\n\n", self.timestamp));
-        
+
         // Health indicator
         let health_indicator = match self.health_score {
             90..=100 => "🟢 EXCELLENT",
@@ -623,42 +670,63 @@ impl HealthReport {
             _ => "🚨 CRITICAL",
         };
         report.push_str(&format!("Status: {}\n\n", health_indicator));
-        
+
         // Critical Issues
         if !self.critical_issues.is_empty() {
             report.push_str("🚨 CRITICAL ISSUES:\n");
             for (i, issue) in self.critical_issues.iter().enumerate() {
                 report.push_str(&format!(
                     "{}. {} (Severity: {})\n   {}\n   Impact: {}\n   Action: {}\n\n",
-                    i + 1, issue.title, issue.severity, issue.description, issue.impact, issue.action_required
+                    i + 1,
+                    issue.title,
+                    issue.severity,
+                    issue.description,
+                    issue.impact,
+                    issue.action_required
                 ));
             }
         }
-        
+
         // Statistics Summary
         report.push_str("📈 STATISTICS SUMMARY:\n");
-        report.push_str(&format!("• Total Errors: {}\n", self.statistics.total_errors));
-        report.push_str(&format!("• Error Rate: {:.4} errors/sec\n", self.statistics.error_rate));
-        report.push_str(&format!("• Recent Rate: {:.4} errors/sec\n", self.statistics.recent_error_rate));
-        report.push_str(&format!("• Uptime: {:.2} hours\n", self.statistics.uptime.as_secs_f64() / 3600.0));
-        
+        report.push_str(&format!(
+            "• Total Errors: {}\n",
+            self.statistics.total_errors
+        ));
+        report.push_str(&format!(
+            "• Error Rate: {:.4} errors/sec\n",
+            self.statistics.error_rate
+        ));
+        report.push_str(&format!(
+            "• Recent Rate: {:.4} errors/sec\n",
+            self.statistics.recent_error_rate
+        ));
+        report.push_str(&format!(
+            "• Uptime: {:.2} hours\n",
+            self.statistics.uptime.as_secs_f64() / 3600.0
+        ));
+
         if !self.statistics.top_errors.is_empty() {
             report.push_str("\n📋 TOP ERRORS:\n");
             for (i, (code, count)) in self.statistics.top_errors.iter().enumerate() {
                 report.push_str(&format!("   {}. {}: {} occurrences\n", i + 1, code, count));
             }
         }
-        
+
         // Trend Analysis
         report.push_str(&format!("\n📊 TREND: {}\n", self.trend.description));
-        
+
         // Recommendations
         if !self.recommendations.is_empty() {
             report.push_str("\n💡 RECOMMENDATIONS:\n");
             for (i, rec) in self.recommendations.iter().enumerate() {
                 report.push_str(&format!(
                     "{}. {} (Priority: {})\n   {}\n   Expected Impact: {}\n",
-                    i + 1, rec.title, rec.priority, rec.description, rec.expected_impact
+                    i + 1,
+                    rec.title,
+                    rec.priority,
+                    rec.description,
+                    rec.expected_impact
                 ));
                 if !rec.steps.is_empty() {
                     report.push_str("   Steps:\n");
@@ -669,14 +737,13 @@ impl HealthReport {
                 report.push('\n');
             }
         }
-        
+
         report
     }
-    
+
     /// Check if immediate action is required
     pub fn requires_immediate_action(&self) -> bool {
-        self.health_score < 50 || 
-        self.critical_issues.iter().any(|issue| issue.severity <= 2)
+        self.health_score < 50 || self.critical_issues.iter().any(|issue| issue.severity <= 2)
     }
 }
 
@@ -707,44 +774,44 @@ pub fn generate_global_health_report() -> HealthReport {
 mod tests {
     use super::*;
     use std::thread;
-    
+
     #[test]
     fn test_error_monitor_basic() {
         let monitor = ErrorMonitor::new();
         monitor.record_error(ErrorCode::E3005, "test_operation");
-        
+
         let stats = monitor.get_statistics();
         assert_eq!(stats.total_errors, 1);
         assert!(stats.error_distribution.contains_key(&ErrorCode::E3005));
     }
-    
+
     #[test]
     fn test_pattern_detection() {
         let monitor = ErrorMonitor::new();
-        
+
         // Record multiple memory errors to trigger pattern
         for _ in 0..5 {
             monitor.record_error(ErrorCode::E5001, "memory_test");
             thread::sleep(Duration::from_millis(10));
         }
-        
+
         let stats = monitor.get_statistics();
         // Pattern detection should identify memory pressure
         // (This would be more testable with dependency injection)
     }
-    
+
     #[test]
     fn test_health_score_calculation() {
         let monitor = ErrorMonitor::new();
-        
+
         // Fresh monitor should have perfect health
         let health_report = monitor.generate_health_report();
         assert_eq!(health_report.health_score, 100);
-        
+
         // Record some errors and check health degrades
         monitor.record_error(ErrorCode::E3001, "overflow_test");
         monitor.record_error(ErrorCode::E5001, "memory_test");
-        
+
         let health_report = monitor.generate_health_report();
         assert!(health_report.health_score < 100);
     }

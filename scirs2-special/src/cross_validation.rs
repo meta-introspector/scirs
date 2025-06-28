@@ -5,9 +5,9 @@
 //! and high-precision arbitrary precision libraries.
 
 use crate::error::SpecialResult;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::process::Command;
-use serde::{Deserialize, Serialize};
 
 /// Reference implementation sources
 #[derive(Debug, Clone, Copy)]
@@ -72,31 +72,31 @@ impl CrossValidator {
             results: HashMap::new(),
         }
     }
-    
+
     /// Load test cases from reference implementations
     pub fn load_test_cases(&mut self) -> SpecialResult<()> {
         // Load SciPy reference values
         self.load_scipy_references()?;
-        
+
         // Load GSL reference values
         self.load_gsl_references()?;
-        
+
         // Load high-precision reference values
         self.load_mpfr_references()?;
-        
+
         Ok(())
     }
-    
+
     /// Load reference values from SciPy
     fn load_scipy_references(&mut self) -> SpecialResult<()> {
         // This would typically read from a file or run a Python script
         // For now, we'll add some hardcoded test cases
-        
+
         let gamma_tests = vec![
             TestCase {
                 function: "gamma".to_string(),
                 inputs: vec![0.5],
-                expected: 1.7724538509055159,  // sqrt(pi)
+                expected: 1.7724538509055159, // sqrt(pi)
                 source: "SciPy".to_string(),
                 tolerance: 1e-15,
             },
@@ -115,9 +115,9 @@ impl CrossValidator {
                 tolerance: 1e-10,
             },
         ];
-        
+
         self.test_cases.insert("gamma".to_string(), gamma_tests);
-        
+
         let bessel_tests = vec![
             TestCase {
                 function: "j0".to_string(),
@@ -134,12 +134,13 @@ impl CrossValidator {
                 tolerance: 1e-15,
             },
         ];
-        
-        self.test_cases.insert("bessel_j0".to_string(), bessel_tests);
-        
+
+        self.test_cases
+            .insert("bessel_j0".to_string(), bessel_tests);
+
         Ok(())
     }
-    
+
     /// Load reference values from GSL
     fn load_gsl_references(&mut self) -> SpecialResult<()> {
         // Additional test cases from GNU Scientific Library
@@ -159,14 +160,15 @@ impl CrossValidator {
                 tolerance: 1e-15,
             },
         ];
-        
-        self.test_cases.entry("erf".to_string())
+
+        self.test_cases
+            .entry("erf".to_string())
             .or_default()
             .extend(erf_tests);
-        
+
         Ok(())
     }
-    
+
     /// Load high-precision reference values from MPFR
     fn load_mpfr_references(&mut self) -> SpecialResult<()> {
         // High-precision test cases for edge cases
@@ -186,14 +188,15 @@ impl CrossValidator {
                 tolerance: 1e-10,
             },
         ];
-        
-        self.test_cases.entry("gamma".to_string())
+
+        self.test_cases
+            .entry("gamma".to_string())
             .or_default()
             .extend(edge_cases);
-        
+
         Ok(())
     }
-    
+
     /// Run validation for a specific function
     pub fn validate_function<F>(&mut self, name: &str, func: F) -> ValidationSummary
     where
@@ -203,7 +206,7 @@ impl CrossValidator {
         let mut results = Vec::new();
         let mut errors = Vec::new();
         let mut ulp_errors = Vec::new();
-        
+
         for test in test_cases {
             let computed = func(&test.inputs);
             let error = (computed - test.expected).abs();
@@ -212,10 +215,10 @@ impl CrossValidator {
             } else {
                 error
             };
-            
+
             let ulp_error = compute_ulp_error(computed, test.expected);
             let passed = relative_error <= test.tolerance;
-            
+
             let result = ValidationResult {
                 test_case: test.clone(),
                 computed,
@@ -224,18 +227,18 @@ impl CrossValidator {
                 ulp_error,
                 passed,
             };
-            
+
             if !passed {
                 results.push(result.clone());
             }
-            
+
             errors.push(error);
             ulp_errors.push(ulp_error);
         }
-        
+
         let total = errors.len();
         let passed = errors.iter().filter(|&&e| e <= 1e-10).count();
-        
+
         ValidationSummary {
             function: name.to_string(),
             total_tests: total,
@@ -247,29 +250,41 @@ impl CrossValidator {
             failed_cases: results,
         }
     }
-    
+
     /// Generate validation report
     pub fn generate_report(&self) -> String {
         let mut report = String::from("# Cross-Validation Report\n\n");
-        
+
         for (function, results) in &self.results {
             report.push_str(&format!("## {}\n\n", function));
-            
+
             // Summary statistics
             let total: usize = results.len();
             let passed = results.iter().filter(|r| r.passed).count();
             let failed = total - passed;
-            
+
             report.push_str(&format!("- Total tests: {}\n", total));
-            report.push_str(&format!("- Passed: {} ({:.1}%)\n", passed, 100.0 * passed as f64 / total as f64));
-            report.push_str(&format!("- Failed: {} ({:.1}%)\n", failed, 100.0 * failed as f64 / total as f64));
-            
+            report.push_str(&format!(
+                "- Passed: {} ({:.1}%)\n",
+                passed,
+                100.0 * passed as f64 / total as f64
+            ));
+            report.push_str(&format!(
+                "- Failed: {} ({:.1}%)\n",
+                failed,
+                100.0 * failed as f64 / total as f64
+            ));
+
             // Failed cases
             if failed > 0 {
                 report.push_str("\n### Failed Cases\n\n");
-                report.push_str("| Inputs | Expected | Computed | Rel Error | ULP Error | Source |\n");
-                report.push_str("|--------|----------|----------|-----------|-----------|--------|\n");
-                
+                report.push_str(
+                    "| Inputs | Expected | Computed | Rel Error | ULP Error | Source |\n",
+                );
+                report.push_str(
+                    "|--------|----------|----------|-----------|-----------|--------|\n",
+                );
+
                 for result in results.iter().filter(|r| !r.passed).take(10) {
                     report.push_str(&format!(
                         "| {:?} | {:.6e} | {:.6e} | {:.2e} | {} | {} |\n",
@@ -281,15 +296,15 @@ impl CrossValidator {
                         result.test_case.source,
                     ));
                 }
-                
+
                 if failed > 10 {
                     report.push_str(&format!("\n... and {} more failed cases\n", failed - 10));
                 }
             }
-            
+
             report.push('\n');
         }
-        
+
         report
     }
 }
@@ -299,10 +314,10 @@ fn compute_ulp_error(a: f64, b: f64) -> i64 {
     if a == b {
         return 0;
     }
-    
+
     let a_bits = a.to_bits() as i64;
     let b_bits = b.to_bits() as i64;
-    
+
     (a_bits - b_bits).abs()
 }
 
@@ -323,7 +338,7 @@ impl PythonValidator {
             python_path: "python3".to_string(),
         }
     }
-    
+
     /// Run Python script to compute reference values
     pub fn compute_reference(&self, function: &str, args: &[f64]) -> SpecialResult<f64> {
         let script = format!(
@@ -335,23 +350,28 @@ result = sp.{}({})
 print(result)
 "#,
             function,
-            args.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", ")
+            args.iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
         );
-        
+
         let output = Command::new(&self.python_path)
             .arg("-c")
             .arg(&script)
             .output()
             .map_err(|e| crate::error::SpecialError::ComputationError(e.to_string()))?;
-        
+
         if !output.status.success() {
             return Err(crate::error::SpecialError::ComputationError(
-                String::from_utf8_lossy(&output.stderr).to_string()
+                String::from_utf8_lossy(&output.stderr).to_string(),
             ));
         }
-        
+
         let result_str = String::from_utf8_lossy(&output.stdout);
-        result_str.trim().parse::<f64>()
+        result_str
+            .trim()
+            .parse::<f64>()
             .map_err(|e| crate::error::SpecialError::ComputationError(e.to_string()))
     }
 }
@@ -360,13 +380,13 @@ print(result)
 pub fn generate_test_suite() -> SpecialResult<()> {
     let mut validator = CrossValidator::new();
     validator.load_test_cases()?;
-    
+
     // Generate Rust test code
     let mut test_code = String::from("// Auto-generated cross-validation tests\n\n");
     test_code.push_str("#[cfg(test)]\nmod cross_validation_tests {\n");
     test_code.push_str("    use super::*;\n");
     test_code.push_str("    use approx::assert_relative_eq;\n\n");
-    
+
     for (function, cases) in validator.test_cases {
         for (i, case) in cases.iter().enumerate() {
             test_code.push_str(&format!(
@@ -380,20 +400,27 @@ pub fn generate_test_suite() -> SpecialResult<()> {
                 function,
                 case.source.to_lowercase(),
                 i,
-                case.inputs[0].to_string().replace('.', "_").replace('-', "neg"),
+                case.inputs[0]
+                    .to_string()
+                    .replace('.', "_")
+                    .replace('-', "neg"),
                 function,
-                case.inputs.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", "),
+                case.inputs
+                    .iter()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", "),
                 case.expected,
                 case.tolerance,
             ));
         }
     }
-    
+
     test_code.push_str("}\n");
-    
+
     std::fs::write("src/generated_cross_validation_tests.rs", test_code)
         .map_err(|e| crate::error::SpecialError::ComputationError(e.to_string()))?;
-    
+
     Ok(())
 }
 
@@ -401,19 +428,19 @@ pub fn generate_test_suite() -> SpecialResult<()> {
 mod tests {
     use super::*;
     use crate::gamma;
-    
+
     #[test]
     fn test_cross_validator() {
         let mut validator = CrossValidator::new();
         validator.load_test_cases().unwrap();
-        
+
         let summary = validator.validate_function("gamma", |args| gamma(args[0]));
-        
+
         assert!(summary.total_tests > 0);
         assert!(summary.passed > 0);
         assert!(summary.mean_error < 1e-10);
     }
-    
+
     #[test]
     fn test_ulp_error() {
         assert_eq!(compute_ulp_error(1.0, 1.0), 0);

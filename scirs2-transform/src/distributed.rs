@@ -4,13 +4,13 @@
 //! across multiple nodes using async Rust and message passing.
 
 #[cfg(feature = "distributed")]
-use tokio::sync::{mpsc, RwLock};
-#[cfg(feature = "distributed")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "distributed")]
 use std::collections::HashMap;
 #[cfg(feature = "distributed")]
 use std::sync::Arc;
+#[cfg(feature = "distributed")]
+use tokio::sync::{mpsc, RwLock};
 
 use crate::error::{Result, TransformError};
 use ndarray::{Array2, ArrayView2};
@@ -133,7 +133,9 @@ impl DistributedCoordinator {
         };
 
         // Start worker management tasks
-        coordinator.start_workers(task_receiver, result_sender).await?;
+        coordinator
+            .start_workers(task_receiver, result_sender)
+            .await?;
 
         Ok(coordinator)
     }
@@ -145,19 +147,21 @@ impl DistributedCoordinator {
         result_sender: mpsc::UnboundedSender<TaskResult>,
     ) -> Result<()> {
         let nodes = self.nodes.clone();
-        
+
         tokio::spawn(async move {
             while let Some(task) = task_receiver.recv().await {
                 let nodes_guard = nodes.read().await;
                 let available_node = Self::select_best_node(&*nodes_guard, &task);
-                
+
                 if let Some(node) = available_node {
                     let result_sender_clone = result_sender.clone();
                     let node_clone = node.clone();
                     let task_clone = task.clone();
-                    
+
                     tokio::spawn(async move {
-                        if let Ok(result) = Self::execute_task_on_node(&node_clone, &task_clone).await {
+                        if let Ok(result) =
+                            Self::execute_task_on_node(&node_clone, &task_clone).await
+                        {
                             let _ = result_sender_clone.send(result);
                         }
                     });
@@ -169,9 +173,13 @@ impl DistributedCoordinator {
     }
 
     /// Select the best node for a given task
-    fn select_best_node(nodes: &HashMap<NodeId, NodeInfo>, task: &DistributedTask) -> Option<NodeInfo> {
+    fn select_best_node(
+        nodes: &HashMap<NodeId, NodeInfo>,
+        task: &DistributedTask,
+    ) -> Option<NodeInfo> {
         // Simple load balancing - select node with most available resources
-        nodes.values()
+        nodes
+            .values()
             .max_by(|a, b| {
                 let score_a = a.memory_gb + a.cpu_cores as f64 + if a.has_gpu { 10.0 } else { 0.0 };
                 let score_b = b.memory_gb + b.cpu_cores as f64 + if b.has_gpu { 10.0 } else { 0.0 };
@@ -183,21 +191,21 @@ impl DistributedCoordinator {
     /// Execute a task on a specific node
     async fn execute_task_on_node(node: &NodeInfo, task: &DistributedTask) -> Result<TaskResult> {
         let start_time = std::time::Instant::now();
-        
+
         // Simulate task execution (in real implementation, this would be network communication)
         let result = match task {
             DistributedTask::Fit { task_id, .. } => {
                 // Simulate fitting a transformer
                 bincode::serialize(&vec![1.0, 2.0, 3.0]).unwrap()
-            },
+            }
             DistributedTask::Transform { task_id, .. } => {
                 // Simulate transforming data
                 bincode::serialize(&vec![4.0, 5.0, 6.0]).unwrap()
-            },
+            }
             DistributedTask::Aggregate { task_id, .. } => {
                 // Simulate aggregating results
                 bincode::serialize(&vec![7.0, 8.0, 9.0]).unwrap()
-            },
+            }
         };
 
         let execution_time = start_time.elapsed();
@@ -240,7 +248,7 @@ impl DistributedCoordinator {
                 results_guard.insert(result.task_id.clone(), result.clone());
                 drop(results_guard);
                 drop(receiver_guard);
-                
+
                 if &result.task_id == task_id {
                     return Ok(result);
                 }
@@ -266,7 +274,7 @@ impl DistributedPCA {
     /// Create a new distributed PCA instance
     pub async fn new(n_components: usize, config: DistributedConfig) -> Result<Self> {
         let coordinator = DistributedCoordinator::new(config).await?;
-        
+
         Ok(DistributedPCA {
             n_components,
             coordinator,
@@ -278,10 +286,10 @@ impl DistributedPCA {
     /// Fit PCA using distributed computation
     pub async fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         let (n_samples, n_features) = x.dim();
-        
+
         // Partition data across nodes
         let partitions = self.partition_data(x).await?;
-        
+
         // Submit tasks to compute local statistics
         let mut task_ids = Vec::new();
         for (i, partition) in partitions.iter().enumerate() {
@@ -289,10 +297,13 @@ impl DistributedPCA {
             let task = DistributedTask::Fit {
                 task_id: task_id.clone(),
                 transformer_type: "PCA".to_string(),
-                parameters: [("n_components".to_string(), self.n_components as f64)].iter().cloned().collect(),
+                parameters: [("n_components".to_string(), self.n_components as f64)]
+                    .iter()
+                    .cloned()
+                    .collect(),
                 data_partition: partition.clone(),
             };
-            
+
             self.coordinator.submit_task(task).await?;
             task_ids.push(task_id);
         }
@@ -310,7 +321,7 @@ impl DistributedPCA {
             task_id: aggregate_task_id.clone(),
             partial_results,
         };
-        
+
         self.coordinator.submit_task(aggregate_task).await?;
         let final_result = self.coordinator.get_result(&aggregate_task_id).await?;
 
@@ -320,12 +331,11 @@ impl DistributedPCA {
         })?;
 
         // Reshape to proper dimensions (placeholder implementation)
-        self.components = Some(Array2::from_shape_vec(
-            (self.n_components, n_features),
-            components,
-        ).map_err(|e| {
-            TransformError::ComputationError(format!("Failed to reshape components: {}", e))
-        })?);
+        self.components = Some(
+            Array2::from_shape_vec((self.n_components, n_features), components).map_err(|e| {
+                TransformError::ComputationError(format!("Failed to reshape components: {}", e))
+            })?,
+        );
 
         Ok(())
     }
@@ -333,7 +343,9 @@ impl DistributedPCA {
     /// Transform data using distributed computation
     pub async fn transform(&self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
         if self.components.is_none() {
-            return Err(TransformError::NotFitted("PCA model not fitted".to_string()));
+            return Err(TransformError::NotFitted(
+                "PCA model not fitted".to_string(),
+            ));
         }
 
         let partitions = self.partition_data(x).await?;
@@ -343,13 +355,13 @@ impl DistributedPCA {
         for (i, partition) in partitions.iter().enumerate() {
             let task_id = format!("pca_transform_{}", i);
             let transformer_state = bincode::serialize(self.components.as_ref().unwrap()).unwrap();
-            
+
             let task = DistributedTask::Transform {
                 task_id: task_id.clone(),
                 transformer_state,
                 data_partition: partition.clone(),
             };
-            
+
             self.coordinator.submit_task(task).await?;
             task_ids.push(task_id);
         }
@@ -364,8 +376,9 @@ impl DistributedPCA {
 
         // Reshape to final array
         let (n_samples, _) = x.dim();
-        Array2::from_shape_vec((n_samples, self.n_components), all_results)
-            .map_err(|e| TransformError::ComputationError(format!("Failed to reshape result: {}", e)))
+        Array2::from_shape_vec((n_samples, self.n_components), all_results).map_err(|e| {
+            TransformError::ComputationError(format!("Failed to reshape result: {}", e))
+        })
     }
 
     /// Partition data for distributed processing
@@ -378,10 +391,11 @@ impl DistributedPCA {
         for i in 0..n_nodes {
             let start_row = i * rows_per_node;
             let end_row = ((i + 1) * rows_per_node).min(n_samples);
-            
+
             if start_row < end_row {
                 let partition = x.slice(ndarray::s![start_row..end_row, ..]);
-                let partition_vec: Vec<Vec<f64>> = partition.rows()
+                let partition_vec: Vec<Vec<f64>> = partition
+                    .rows()
                     .into_iter()
                     .map(|row| row.to_vec())
                     .collect();

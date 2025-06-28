@@ -187,6 +187,196 @@ where
     rank_filter(input, rank, size, Some(border_mode))
 }
 
+/// Apply a percentile filter with a custom footprint to an n-dimensional array
+///
+/// # Arguments
+///
+/// * `input` - Input array to filter
+/// * `percentile` - Percentile value (0-100)
+/// * `footprint` - Boolean array defining the filter footprint
+/// * `mode` - Border handling mode
+/// * `origin` - Origin of the filter kernel
+///
+/// # Returns
+///
+/// * `Result<Array<T, D>>` - Filtered array
+pub fn percentile_filter_footprint<T, D>(
+    input: ArrayView<T, D>,
+    percentile: f64,
+    footprint: ArrayView<bool, D>,
+    mode: BorderMode,
+    origin: Vec<isize>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    // Validate inputs
+    if input.ndim() == 0 {
+        return Err(NdimageError::InvalidInput(
+            "Input array cannot be 0-dimensional".into(),
+        ));
+    }
+
+    if footprint.ndim() != input.ndim() {
+        return Err(NdimageError::DimensionError(format!(
+            "Footprint must have same dimensionality as input (got {} expected {})",
+            footprint.ndim(),
+            input.ndim()
+        )));
+    }
+
+    if !(0.0..=100.0).contains(&percentile) {
+        return Err(NdimageError::InvalidInput(format!(
+            "Percentile must be between 0 and 100, got {}",
+            percentile
+        )));
+    }
+
+    if origin.len() != input.ndim() {
+        return Err(NdimageError::DimensionError(format!(
+            "Origin must have same length as input dimensions (got {} expected {})",
+            origin.len(),
+            input.ndim()
+        )));
+    }
+
+    // Count the number of true values in the footprint
+    let total_size = footprint.iter().filter(|&&x| x).count();
+
+    if total_size == 0 {
+        return Err(NdimageError::InvalidInput(
+            "Footprint cannot be empty (must have at least one true value)".into(),
+        ));
+    }
+
+    // Calculate the rank from the percentile
+    let rank = ((percentile / 100.0) * (total_size as f64 - 1.0)).round() as usize;
+
+    // Sanity check on the rank
+    if rank >= total_size {
+        return Err(NdimageError::InvalidInput(format!(
+            "Calculated rank {} is out of bounds for footprint of size {}",
+            rank, total_size
+        )));
+    }
+
+    // Use the rank filter implementation with the calculated rank
+    rank_filter_footprint(input, rank, footprint, mode, origin)
+}
+
+/// Apply a rank filter with a custom footprint to an n-dimensional array
+///
+/// # Arguments
+///
+/// * `input` - Input array to filter
+/// * `rank` - Rank of the element to select (0 = min, size-1 = max)
+/// * `footprint` - Boolean array defining the filter footprint
+/// * `mode` - Border handling mode
+/// * `origin` - Origin of the filter kernel
+///
+/// # Returns
+///
+/// * `Result<Array<T, D>>` - Filtered array
+pub fn rank_filter_footprint<T, D>(
+    input: ArrayView<T, D>,
+    rank: usize,
+    footprint: ArrayView<bool, D>,
+    mode: BorderMode,
+    origin: Vec<isize>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    // Validate inputs
+    if input.ndim() == 0 {
+        return Err(NdimageError::InvalidInput(
+            "Input array cannot be 0-dimensional".into(),
+        ));
+    }
+
+    if footprint.ndim() != input.ndim() {
+        return Err(NdimageError::DimensionError(format!(
+            "Footprint must have same dimensionality as input (got {} expected {})",
+            footprint.ndim(),
+            input.ndim()
+        )));
+    }
+
+    // Count the number of true values in the footprint
+    let total_size = footprint.iter().filter(|&&x| x).count();
+
+    if total_size == 0 {
+        return Err(NdimageError::InvalidInput(
+            "Footprint cannot be empty (must have at least one true value)".into(),
+        ));
+    }
+
+    if rank >= total_size {
+        return Err(NdimageError::InvalidInput(format!(
+            "Rank {} is out of bounds for footprint of size {}",
+            rank, total_size
+        )));
+    }
+
+    // Handle scalar or constant case
+    if input.len() <= 1 {
+        return Ok(input.to_owned());
+    }
+
+    // Create output array
+    let mut output = Array::<T, D>::zeros(input.raw_dim());
+
+    // Get the center of the footprint for offset calculations
+    let footprint_shape = footprint.shape();
+    let footprint_center: Vec<isize> = footprint_shape.iter().map(|&s| (s / 2) as isize).collect();
+
+    // Calculate padding based on footprint size and origin
+    let mut pad_width = Vec::new();
+    for d in 0..input.ndim() {
+        let left_pad = (footprint_center[d] + origin[d]) as usize;
+        let right_pad = footprint_shape[d] - 1 - left_pad;
+        pad_width.push((left_pad, right_pad));
+    }
+
+    // Pad the input array
+    let padded_input = pad_array(&input.to_owned(), &pad_width, &mode, None)?;
+
+    // Iterate through each position in the output array
+    for (output_idx, output_elem) in output.indexed_iter_mut() {
+        let output_coords: Vec<usize> = output_idx.into_pattern().as_array_view().to_vec();
+
+        // Collect values within the footprint at this position
+        let mut values = Vec::new();
+
+        // Iterate through the footprint
+        for (footprint_idx, &is_active) in footprint.indexed_iter() {
+            if is_active {
+                let footprint_coords: Vec<usize> =
+                    footprint_idx.into_pattern().as_array_view().to_vec();
+
+                // Calculate the corresponding position in the padded input
+                let mut input_coords = Vec::new();
+                for d in 0..input.ndim() {
+                    let coord = output_coords[d] + footprint_coords[d];
+                    input_coords.push(coord);
+                }
+
+                // Get the value from the padded input
+                let value = padded_input[&*input_coords];
+                values.push(value);
+            }
+        }
+
+        // Sort values and select the rank-th element
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        *output_elem = values[rank];
+    }
+
+    Ok(output)
+}
+
 /// Apply a rank filter to an n-dimensional array
 ///
 /// # Arguments

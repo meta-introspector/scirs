@@ -37,8 +37,12 @@ impl EnhancedError {
     }
 
     /// Add multiple recovery suggestions
-    pub fn with_suggestions(mut self, suggestions: impl IntoIterator<Item = impl Into<String>>) -> Self {
-        self.suggestions.extend(suggestions.into_iter().map(|s| s.into()));
+    pub fn with_suggestions(
+        mut self,
+        suggestions: impl IntoIterator<Item = impl Into<String>>,
+    ) -> Self {
+        self.suggestions
+            .extend(suggestions.into_iter().map(|s| s.into()));
         self
     }
 
@@ -51,21 +55,21 @@ impl EnhancedError {
     /// Convert to StatsError with formatted message
     pub fn into_error(self) -> StatsError {
         let mut message = format!("{}\nContext: {}", self.error, self.context);
-        
+
         if !self.suggestions.is_empty() {
             message.push_str("\n\nSuggestions:");
             for (i, suggestion) in self.suggestions.iter().enumerate() {
                 message.push_str(&format!("\n  {}. {}", i + 1, suggestion));
             }
         }
-        
+
         if !self.see_also.is_empty() {
             message.push_str("\n\nSee also:");
             for reference in &self.see_also {
                 message.push_str(&format!("\n  - {}", reference));
             }
         }
-        
+
         StatsError::computation(message)
     }
 }
@@ -100,8 +104,14 @@ pub mod enhanced_validation {
                 ParamType::NonNegative => {
                     if value < F::zero() {
                         return Err(EnhancedError::new(
-                            StatsError::domain(format!("{} must be non-negative, got {}", name, value)),
-                            format!("Invalid {} parameter for {} distribution", name, distribution_name),
+                            StatsError::domain(format!(
+                                "{} must be non-negative, got {}",
+                                name, value
+                            )),
+                            format!(
+                                "Invalid {} parameter for {} distribution",
+                                name, distribution_name
+                            ),
                         )
                         .with_suggestions(vec![
                             format!("Ensure {} >= 0", name),
@@ -113,8 +123,14 @@ pub mod enhanced_validation {
                 ParamType::Probability => {
                     if value < F::zero() || value > F::one() {
                         return Err(EnhancedError::new(
-                            StatsError::domain(format!("{} must be in [0, 1], got {}", name, value)),
-                            format!("Invalid probability parameter '{}' for {} distribution", name, distribution_name),
+                            StatsError::domain(format!(
+                                "{} must be in [0, 1], got {}",
+                                name, value
+                            )),
+                            format!(
+                                "Invalid probability parameter '{}' for {} distribution",
+                                name, distribution_name
+                            ),
                         )
                         .with_suggestions(vec![
                             "Ensure probability is between 0 and 1 (inclusive)",
@@ -127,8 +143,14 @@ pub mod enhanced_validation {
                 ParamType::Integer => {
                     if value.floor() != value {
                         return Err(EnhancedError::new(
-                            StatsError::domain(format!("{} must be an integer, got {}", name, value)),
-                            format!("Invalid {} parameter for {} distribution", name, distribution_name),
+                            StatsError::domain(format!(
+                                "{} must be an integer, got {}",
+                                name, value
+                            )),
+                            format!(
+                                "Invalid {} parameter for {} distribution",
+                                name, distribution_name
+                            ),
                         )
                         .with_suggestions(vec![
                             "Round to the nearest integer if appropriate",
@@ -140,8 +162,14 @@ pub mod enhanced_validation {
                 ParamType::PositiveInteger => {
                     if value.floor() != value || value <= F::zero() {
                         return Err(EnhancedError::new(
-                            StatsError::domain(format!("{} must be a positive integer, got {}", name, value)),
-                            format!("Invalid {} parameter for {} distribution", name, distribution_name),
+                            StatsError::domain(format!(
+                                "{} must be a positive integer, got {}",
+                                name, value
+                            )),
+                            format!(
+                                "Invalid {} parameter for {} distribution",
+                                name, distribution_name
+                            ),
                         )
                         .with_suggestions(vec![
                             "Ensure the value is a positive whole number",
@@ -177,10 +205,13 @@ pub mod numerical {
             .map(|v| v.to_string())
             .collect::<Vec<_>>()
             .join(", ");
-        
+
         EnhancedError::new(
             StatsError::computation("Numerical overflow"),
-            format!("Overflow occurred during {} with values: [{}]", operation, value_str),
+            format!(
+                "Overflow occurred during {} with values: [{}]",
+                operation, value_str
+            ),
         )
         .with_suggestions(vec![
             "Scale your input data to smaller magnitudes",
@@ -239,11 +270,7 @@ pub mod data_validation {
     use num_traits::Float;
 
     /// Validate input data with enhanced error messages
-    pub fn validate_data_quality<T>(
-        data: &[T],
-        context: &str,
-        allow_empty: bool,
-    ) -> StatsResult<()>
+    pub fn validate_data_quality<T>(data: &[T], context: &str, allow_empty: bool) -> StatsResult<()>
     where
         T: Float + Display,
     {
@@ -319,7 +346,8 @@ pub mod data_validation {
             .into_error());
         }
 
-        for (i, (&actual, &expected)) in actual_shape.iter().zip(expected_shape.iter()).enumerate() {
+        for (i, (&actual, &expected)) in actual_shape.iter().zip(expected_shape.iter()).enumerate()
+        {
             if let Some(expected_dim) = expected {
                 if actual != expected_dim {
                     return Err(EnhancedError::new(

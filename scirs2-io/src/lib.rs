@@ -71,6 +71,13 @@ pub mod database;
 /// - Progress tracking for distributed operations
 pub mod distributed;
 pub mod error;
+/// Domain-specific file formats
+///
+/// Provides specialized support for scientific file formats:
+/// - Bioinformatics: FASTA, FASTQ, SAM/BAM, VCF
+/// - Geospatial: GeoTIFF, Shapefile, GeoJSON, KML
+/// - Astronomical: FITS, VOTable
+pub mod formats;
 /// Fortran unformatted file format module
 ///
 /// Provides functionality for reading and writing Fortran unformatted files:
@@ -80,13 +87,6 @@ pub mod error;
 /// - Arrays stored in column-major order (Fortran convention)
 /// - Support for all common Fortran data types
 pub mod fortran;
-/// Domain-specific file formats
-///
-/// Provides specialized support for scientific file formats:
-/// - Bioinformatics: FASTA, FASTQ, SAM/BAM, VCF
-/// - Geospatial: GeoTIFF, Shapefile, GeoJSON, KML
-/// - Astronomical: FITS, VOTable
-pub mod formats;
 /// Harwell-Boeing sparse matrix format module
 ///
 /// Provides functionality for reading and writing Harwell-Boeing sparse matrix files:
@@ -142,6 +142,15 @@ pub mod matrix_market;
 /// - Format-specific extensions
 /// - Standard metadata keys for scientific data
 pub mod metadata;
+/// Machine learning framework compatibility
+///
+/// Provides conversion utilities and interfaces for ML frameworks:
+/// - Support for PyTorch, TensorFlow, ONNX, SafeTensors formats
+/// - Model and tensor serialization/deserialization
+/// - Data type conversions between frameworks
+/// - Dataset utilities for ML pipelines
+/// - Seamless integration with ndarray
+pub mod ml_framework;
 /// Memory-mapped file I/O module
 ///
 /// Provides memory-mapped file operations for efficient handling of large arrays:
@@ -176,15 +185,6 @@ pub mod metadata;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 pub mod mmap;
-/// Machine learning framework compatibility
-///
-/// Provides conversion utilities and interfaces for ML frameworks:
-/// - Support for PyTorch, TensorFlow, ONNX, SafeTensors formats
-/// - Model and tensor serialization/deserialization
-/// - Data type conversions between frameworks
-/// - Dataset utilities for ML pipelines
-/// - Seamless integration with ndarray
-pub mod ml_framework;
 /// NetCDF file format module
 ///
 /// Provides functionality for reading and writing NetCDF files:
@@ -193,15 +193,6 @@ pub mod ml_framework;
 /// - Conversion between NetCDF and ndarray data structures
 /// - Memory-efficient access to large datasets
 pub mod netcdf;
-/// Out-of-core processing for terabyte-scale datasets
-///
-/// Provides infrastructure for processing datasets too large for memory:
-/// - Memory-mapped arrays with virtual memory management
-/// - Chunked processing with configurable chunk sizes
-/// - Disk-based algorithms for sorting and aggregation
-/// - Virtual arrays combining multiple data sources
-/// - Sliding window iterators for streaming operations
-pub mod out_of_core;
 /// Network I/O and cloud storage integration
 ///
 /// Provides functionality for reading and writing files over network protocols
@@ -223,6 +214,15 @@ pub mod out_of_core;
 /// println!("Network client created for file operations");
 /// ```
 pub mod network;
+/// Out-of-core processing for terabyte-scale datasets
+///
+/// Provides infrastructure for processing datasets too large for memory:
+/// - Memory-mapped arrays with virtual memory management
+/// - Chunked processing with configurable chunk sizes
+/// - Disk-based algorithms for sorting and aggregation
+/// - Virtual arrays combining multiple data sources
+/// - Sliding window iterators for streaming operations
+pub mod out_of_core;
 /// Data pipeline APIs
 ///
 /// Provides a flexible framework for building data processing pipelines:
@@ -241,6 +241,15 @@ pub mod pipeline;
 /// - Structured data serialization
 /// - Sparse matrix serialization
 pub mod serialize;
+/// SIMD-accelerated I/O operations
+///
+/// Provides SIMD-optimized implementations of common I/O operations:
+/// - Data type conversions with SIMD
+/// - Audio normalization and processing
+/// - CSV parsing acceleration
+/// - Compression utilities with SIMD
+/// - Checksum calculations
+pub mod simd_io;
 /// Comprehensive sparse matrix format support
 ///
 /// Provides unified support for common sparse matrix formats:
@@ -276,15 +285,6 @@ pub mod serialize;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 pub mod sparse;
-/// SIMD-accelerated I/O operations
-///
-/// Provides SIMD-optimized implementations of common I/O operations:
-/// - Data type conversions with SIMD
-/// - Audio normalization and processing
-/// - CSV parsing acceleration
-/// - Compression utilities with SIMD
-/// - Checksum calculations
-pub mod simd_io;
 /// Streaming and iterator interfaces for large data handling
 ///
 /// Provides memory-efficient streaming interfaces for processing large datasets:
@@ -321,6 +321,17 @@ pub mod streaming;
 /// - Real-time progress monitoring for async operations
 #[cfg(feature = "async")]
 pub mod async_io;
+/// GPU-accelerated I/O operations
+///
+/// Provides GPU-accelerated implementations of I/O operations using the scirs2-core GPU abstraction:
+/// - GPU-accelerated compression and decompression
+/// - GPU-accelerated data type conversions
+/// - GPU-accelerated matrix operations for file I/O
+/// - GPU-accelerated checksum computation
+/// - Support for multiple GPU backends (CUDA, Metal, OpenCL)
+/// - Automatic fallback to CPU when GPU is not available
+#[cfg(feature = "gpu")]
+pub mod gpu_io;
 /// Real-time data streaming protocols
 ///
 /// Provides infrastructure for real-time data streaming and processing:
@@ -379,14 +390,3 @@ pub mod workflow;
 /// - Binary data reading without copying
 /// - Minimized memory allocations for large datasets
 pub mod zero_copy;
-/// GPU-accelerated I/O operations
-///
-/// Provides GPU-accelerated implementations of I/O operations using the scirs2-core GPU abstraction:
-/// - GPU-accelerated compression and decompression
-/// - GPU-accelerated data type conversions
-/// - GPU-accelerated matrix operations for file I/O
-/// - GPU-accelerated checksum computation
-/// - Support for multiple GPU backends (CUDA, Metal, OpenCL)
-/// - Automatic fallback to CPU when GPU is not available
-#[cfg(feature = "gpu")]
-pub mod gpu_io;

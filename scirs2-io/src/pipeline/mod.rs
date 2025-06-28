@@ -9,7 +9,6 @@
 
 use crate::error::{IoError, Result};
 use crate::metadata::{Metadata, ProcessingHistoryEntry};
-use ndarray::{ArrayBase, DataMut, Dimension};
 use scirs2_core::parallel_ops::*;
 use std::any::Any;
 use std::collections::HashMap;
@@ -145,14 +144,14 @@ pub struct PipelineConfig {
 mod serde_duration {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use std::time::Duration;
-    
+
     pub fn serialize<S>(duration: &Duration, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         duration.as_secs().serialize(serializer)
     }
-    
+
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
     where
         D: Deserializer<'de>,
@@ -252,19 +251,21 @@ impl<I, O> Pipeline<I, O> {
         // Execute each stage
         for (i, stage) in self.stages.iter().enumerate() {
             let stage_start = Instant::now();
-            
+
             // Update metadata with processing history
             let entry = ProcessingHistoryEntry::new(stage.name())
                 .with_parameter("stage_index", i as i64)
                 .with_parameter("stage_type", stage.stage_type());
-            data.metadata.add_processing_history(entry);
+            data.metadata.add_processing_history(entry)?;
 
             // Execute stage
             data = stage.execute(data)?;
 
             // Update statistics
             let mut stats = data.context.stats.lock().unwrap();
-            stats.stage_times.insert(stage.name(), stage_start.elapsed());
+            stats
+                .stage_times
+                .insert(stage.name(), stage_start.elapsed());
             stats.items_processed += 1;
         }
 
@@ -291,27 +292,29 @@ impl<I, O> Pipeline<I, O> {
         let start_time = Instant::now();
         let mut data = PipelineData::new(Box::new(input) as Box<dyn Any + Send + Sync>);
         data.context.config = self.config.clone();
-        
+
         let total_stages = self.stages.len();
 
         // Execute each stage with progress
         for (i, stage) in self.stages.iter().enumerate() {
-            progress_callback(i + 1, total_stages, stage.name());
-            
+            progress_callback(i + 1, total_stages, &stage.name());
+
             let stage_start = Instant::now();
-            
+
             // Update metadata
             let entry = ProcessingHistoryEntry::new(stage.name())
                 .with_parameter("stage_index", i as i64)
                 .with_parameter("stage_type", stage.stage_type());
-            data.metadata.add_processing_history(entry);
+            data.metadata.add_processing_history(entry)?;
 
             // Execute stage
             data = stage.execute(data)?;
 
             // Update statistics
             let mut stats = data.context.stats.lock().unwrap();
-            stats.stage_times.insert(stage.name(), stage_start.elapsed());
+            stats
+                .stage_times
+                .insert(stage.name(), stage_start.elapsed());
             stats.items_processed += 1;
         }
 
@@ -337,16 +340,19 @@ impl<I, O> Pipeline<I, O> {
 /// Trait for pipeline stages
 pub trait PipelineStage: Send + Sync {
     /// Execute the stage
-    fn execute(&self, input: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>>;
-    
+    fn execute(
+        &self,
+        input: PipelineData<Box<dyn Any + Send + Sync>>,
+    ) -> Result<PipelineData<Box<dyn Any + Send + Sync>>>;
+
     /// Get stage name
     fn name(&self) -> String;
-    
+
     /// Get stage type
     fn stage_type(&self) -> String {
         "generic".to_string()
     }
-    
+
     /// Check if stage can handle the input type
     fn can_handle(&self, input_type: &str) -> bool {
         true
@@ -400,7 +406,8 @@ where
     Box::new(FunctionStage {
         name: name.to_string(),
         function: Box::new(move |input: Box<dyn Any + Send + Sync>| {
-            let typed_input = input.downcast::<I>()
+            let typed_input = input
+                .downcast::<I>()
                 .map_err(|_| IoError::Other("Type mismatch in function stage".to_string()))?;
             let output = f(*typed_input)?;
             Ok(Box::new(output) as Box<dyn Any + Send + Sync>)
@@ -410,11 +417,15 @@ where
 
 struct FunctionStage {
     name: String,
-    function: Box<dyn Fn(Box<dyn Any + Send + Sync>) -> Result<Box<dyn Any + Send + Sync>> + Send + Sync>,
+    function:
+        Box<dyn Fn(Box<dyn Any + Send + Sync>) -> Result<Box<dyn Any + Send + Sync>> + Send + Sync>,
 }
 
 impl PipelineStage for FunctionStage {
-    fn execute(&self, mut input: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
+    fn execute(
+        &self,
+        mut input: PipelineData<Box<dyn Any + Send + Sync>>,
+    ) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
         input.data = (self.function)(input.data)?;
         Ok(input)
     }
@@ -430,8 +441,8 @@ impl PipelineStage for FunctionStage {
 
 // Advanced Pipeline Features
 
-use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// Pipeline serialization for saving/loading pipeline configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -458,28 +469,30 @@ impl<I, O> Pipeline<I, O> {
             name: "pipeline".to_string(),
             version: "1.0.0".to_string(),
             description: String::new(),
-            stages: self.stages.iter().map(|s| SerializedStage {
-                name: s.name(),
-                stage_type: s.stage_type(),
-                config: serde_json::Value::Null, // Stages would need to implement serialization
-            }).collect(),
+            stages: self
+                .stages
+                .iter()
+                .map(|s| SerializedStage {
+                    name: s.name(),
+                    stage_type: s.stage_type(),
+                    config: serde_json::Value::Null, // Stages would need to implement serialization
+                })
+                .collect(),
             config: self.config.clone(),
             metadata: Metadata::new(),
         };
-        
+
         let json = serde_json::to_string_pretty(&serialized)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
-        
+
         std::fs::write(path, json).map_err(|e| IoError::Io(e))
     }
-    
+
     /// Load pipeline configuration from a file
     pub fn load_config(path: impl AsRef<Path>) -> Result<SerializedPipeline> {
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| IoError::Io(e))?;
-        
-        serde_json::from_str(&content)
-            .map_err(|e| IoError::SerializationError(e.to_string()))
+        let content = std::fs::read_to_string(path).map_err(|e| IoError::Io(e))?;
+
+        serde_json::from_str(&content).map_err(|e| IoError::SerializationError(e.to_string()))
     }
 }
 
@@ -498,7 +511,7 @@ where
     pub fn new(first: Pipeline<I, M>, second: Pipeline<M, O>) -> Self {
         Self { first, second }
     }
-    
+
     pub fn execute(&self, input: I) -> Result<O> {
         let intermediate = self.first.execute(input)?;
         self.second.execute(intermediate)
@@ -535,26 +548,32 @@ impl DataLineage {
             last_modified: now,
         }
     }
-    
+
     pub fn add_transformation(&mut self, record: TransformationRecord) {
         self.transformations.push(record);
         self.last_modified = Utc::now();
     }
-    
+
     /// Generate a lineage graph in DOT format
     pub fn to_dot(&self) -> String {
         let mut dot = String::from("digraph DataLineage {\n");
         dot.push_str("  rankdir=LR;\n");
-        dot.push_str(&format!("  source [label=\"{}\" shape=box];\n", self.source));
-        
+        dot.push_str(&format!(
+            "  source [label=\"{}\" shape=box];\n",
+            self.source
+        ));
+
         let mut prev = "source".to_string();
         for (i, transform) in self.transformations.iter().enumerate() {
             let node_id = format!("t{}", i);
-            dot.push_str(&format!("  {} [label=\"{}\"];\n", node_id, transform.stage_name));
+            dot.push_str(&format!(
+                "  {} [label=\"{}\"];\n",
+                node_id, transform.stage_name
+            ));
             dot.push_str(&format!("  {} -> {};\n", prev, node_id));
             prev = node_id;
         }
-        
+
         dot.push_str("}\n");
         dot
     }
@@ -570,7 +589,8 @@ impl PipelineOptimizer {
             suggestions: vec![
                 OptimizationSuggestion {
                     category: "performance".to_string(),
-                    description: "Consider moving filter stages earlier in the pipeline".to_string(),
+                    description: "Consider moving filter stages earlier in the pipeline"
+                        .to_string(),
                     impact: "high".to_string(),
                 },
                 OptimizationSuggestion {
@@ -582,20 +602,20 @@ impl PipelineOptimizer {
             estimated_improvement: 0.25,
         }
     }
-    
+
     /// Optimize stage ordering for better performance
     pub fn optimize_ordering(stages: Vec<Box<dyn PipelineStage>>) -> Vec<Box<dyn PipelineStage>> {
         // Simple heuristic: move filters and validations earlier
         let mut filters = Vec::new();
         let mut others = Vec::new();
-        
+
         for stage in stages {
             match stage.stage_type().as_str() {
                 "filter" | "validation" => filters.push(stage),
                 _ => others.push(stage),
             }
         }
-        
+
         filters.extend(others);
         filters
     }
@@ -637,7 +657,11 @@ macro_rules! stage {
     };
     (filter $pred:expr) => {
         function_stage("filter", move |data| {
-            if $pred(&data) { Ok(data) } else { Err(IoError::Other("Filtered out".to_string())) }
+            if $pred(&data) {
+                Ok(data)
+            } else {
+                Err(IoError::Other("Filtered out".to_string()))
+            }
         })
     };
     (write $path:expr) => {
@@ -681,34 +705,43 @@ impl PipelineMonitor {
             alerts: Vec::new(),
         }
     }
-    
+
     pub fn check_metrics(&mut self, stats: &PipelineStats) {
         // Check execution time
         if stats.total_time > self.thresholds.max_execution_time {
             self.alerts.push(Alert {
                 timestamp: Utc::now(),
                 severity: AlertSeverity::Warning,
-                message: format!("Pipeline execution time ({:?}) exceeded threshold ({:?})",
-                    stats.total_time, self.thresholds.max_execution_time),
+                message: format!(
+                    "Pipeline execution time ({:?}) exceeded threshold ({:?})",
+                    stats.total_time, self.thresholds.max_execution_time
+                ),
                 stage: None,
             });
         }
-        
+
         // Check error rate
         let total = stats.items_processed as f64;
-        let error_rate = if total > 0.0 { stats.errors as f64 / total } else { 0.0 };
-        
+        let error_rate = if total > 0.0 {
+            stats.errors as f64 / total
+        } else {
+            0.0
+        };
+
         if error_rate > self.thresholds.max_error_rate {
             self.alerts.push(Alert {
                 timestamp: Utc::now(),
                 severity: AlertSeverity::Error,
-                message: format!("Error rate ({:.2}%) exceeded threshold ({:.2}%)",
-                    error_rate * 100.0, self.thresholds.max_error_rate * 100.0),
+                message: format!(
+                    "Error rate ({:.2}%) exceeded threshold ({:.2}%)",
+                    error_rate * 100.0,
+                    self.thresholds.max_error_rate * 100.0
+                ),
                 stage: None,
             });
         }
     }
-    
+
     pub fn get_alerts(&self) -> &[Alert] {
         &self.alerts
     }

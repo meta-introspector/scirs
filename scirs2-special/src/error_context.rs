@@ -44,25 +44,22 @@ impl ErrorContext {
 
     /// Convert to a formatted error message
     pub fn to_error_message(&self) -> String {
-        let mut msg = format!(
-            "Error in {} during {}", 
-            self.function_name, 
-            self.operation
-        );
-        
+        let mut msg = format!("Error in {} during {}", self.function_name, self.operation);
+
         if !self.parameters.is_empty() {
             msg.push_str(" with parameters: ");
-            let params: Vec<String> = self.parameters
+            let params: Vec<String> = self
+                .parameters
                 .iter()
                 .map(|(name, value)| format!("{}={}", name, value))
                 .collect();
             msg.push_str(&params.join(", "));
         }
-        
+
         if let Some(ref info) = self.additional_info {
             msg.push_str(&format!(". {}", info));
         }
-        
+
         msg
     }
 }
@@ -106,10 +103,10 @@ impl<T> ErrorContextExt<T> for SpecialResult<T> {
 pub trait ValidatedFunction<Input, Output> {
     /// Validate inputs before computation
     fn validate_inputs(&self, input: &Input) -> SpecialResult<()>;
-    
+
     /// Compute the function with validated inputs
     fn compute_validated(&self, input: Input) -> SpecialResult<Output>;
-    
+
     /// Main entry point that combines validation and computation
     fn evaluate(&self, input: Input) -> SpecialResult<Output> {
         self.validate_inputs(&input)?;
@@ -144,13 +141,13 @@ macro_rules! special_error {
         $(ctx = ctx.with_param($param, $value);)*
         $crate::error::SpecialError::DomainError(ctx.to_error_message())
     }};
-    
+
     (convergence: $func:expr, $op:expr, $($param:expr => $value:expr),* $(,)?) => {{
         let mut ctx = $crate::error_context::ErrorContext::new($func, $op);
         $(ctx = ctx.with_param($param, $value);)*
         $crate::error::SpecialError::ConvergenceError(ctx.to_error_message())
     }};
-    
+
     (computation: $func:expr, $op:expr, $($param:expr => $value:expr),* $(,)?) => {{
         let mut ctx = $crate::error_context::ErrorContext::new($func, $op);
         $(ctx = ctx.with_param($param, $value);)*
@@ -180,7 +177,7 @@ mod tests {
         let ctx = ErrorContext::new("gamma", "computation")
             .with_param("x", -1.0)
             .with_info("Gamma function is undefined at negative integers");
-            
+
         let msg = ctx.to_error_message();
         assert!(msg.contains("gamma"));
         assert!(msg.contains("x=-1"));
@@ -194,7 +191,7 @@ mod tests {
             "n" => 5,
             "x" => -10.0
         );
-        
+
         match err {
             SpecialError::DomainError(msg) => {
                 assert!(msg.contains("bessel_j"));

@@ -7,6 +7,13 @@ use std::fmt::Debug;
 use super::{convolve, BorderMode};
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion of hardcoded constants
+fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
+    T::from_i32(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
+    })
+}
+
 /// Apply a Sobel filter to calculate gradients in an n-dimensional array
 ///
 /// The Sobel operator computes an approximation of the gradient of the image intensity function.
@@ -546,10 +553,10 @@ where
     //  [-1, -2, -1]]
     let mut kernel = Array2::<T>::zeros((3, 3));
     kernel[[0, 0]] = T::one();
-    kernel[[0, 1]] = T::from(2).unwrap();
+    kernel[[0, 1]] = safe_i32_to_float(2)?;
     kernel[[0, 2]] = T::one();
     kernel[[2, 0]] = -T::one();
-    kernel[[2, 1]] = -T::from(2).unwrap();
+    kernel[[2, 1]] = -safe_i32_to_float(2)?;
     kernel[[2, 2]] = -T::one();
 
     // Apply convolution
@@ -567,10 +574,10 @@ where
     //  [-1,  0,  1]]
     let mut kernel = Array2::<T>::zeros((3, 3));
     kernel[[0, 0]] = -T::one();
-    kernel[[1, 0]] = -T::from(2).unwrap();
+    kernel[[1, 0]] = -safe_i32_to_float(2)?;
     kernel[[2, 0]] = -T::one();
     kernel[[0, 2]] = T::one();
-    kernel[[1, 2]] = T::from(2).unwrap();
+    kernel[[1, 2]] = safe_i32_to_float(2)?;
     kernel[[2, 2]] = T::one();
 
     // Apply convolution
@@ -624,7 +631,7 @@ where
     let mut kernel = Array2::<T>::zeros((3, 3));
     kernel[[0, 1]] = T::one();
     kernel[[1, 0]] = T::one();
-    kernel[[1, 1]] = -T::from(4).unwrap();
+    kernel[[1, 1]] = -safe_i32_to_float(4)?;
     kernel[[1, 2]] = T::one();
     kernel[[2, 1]] = T::one();
 
@@ -649,7 +656,7 @@ where
     kernel[[0, 1]] = -T::one();
     kernel[[0, 2]] = -T::one();
     kernel[[1, 0]] = -T::one();
-    kernel[[1, 1]] = T::from(8).unwrap();
+    kernel[[1, 1]] = safe_i32_to_float(8)?;
     kernel[[1, 2]] = -T::one();
     kernel[[2, 0]] = -T::one();
     kernel[[2, 1]] = -T::one();
@@ -672,8 +679,8 @@ mod tests {
         image[[2, 2]] = 1.0;
 
         // Apply Sobel filter in both directions
-        let sobel_x = sobel(&image, 0, None).unwrap(); // Vertical gradient (y direction)
-        let sobel_y = sobel(&image, 1, None).unwrap(); // Horizontal gradient (x direction)
+        let sobel_x = sobel(&image, 0, None).expect("sobel filter should succeed"); // Vertical gradient (y direction)
+        let sobel_y = sobel(&image, 1, None).expect("sobel filter should succeed"); // Horizontal gradient (x direction)
 
         // Check shape
         assert_eq!(sobel_x.shape(), image.shape());
@@ -696,8 +703,8 @@ mod tests {
         image[[2, 2]] = 1.0;
 
         // Apply Scharr filter in both directions
-        let scharr_x = scharr(&image, 0, None).unwrap(); // Vertical gradient (y direction)
-        let scharr_y = scharr(&image, 1, None).unwrap(); // Horizontal gradient (x direction)
+        let scharr_x = scharr(&image, 0, None).expect("scharr filter should succeed"); // Vertical gradient (y direction)
+        let scharr_y = scharr(&image, 1, None).expect("scharr filter should succeed"); // Horizontal gradient (x direction)
 
         // Check shape
         assert_eq!(scharr_x.shape(), image.shape());
@@ -713,8 +720,8 @@ mod tests {
         assert!(scharr_y[[2, 1]] < 0.0); // Left of point (negative x gradient)
 
         // Scharr should give stronger diagonal response than Sobel
-        let sobel_x = sobel(&image, 0, None).unwrap();
-        let sobel_y = sobel(&image, 1, None).unwrap();
+        let sobel_x = sobel(&image, 0, None).expect("sobel filter for comparison should succeed");
+        let sobel_y = sobel(&image, 1, None).expect("sobel filter for comparison should succeed");
 
         // Check diagonal values
         assert!(scharr_x[[1, 1]].abs() > sobel_x[[1, 1]].abs());
@@ -728,7 +735,7 @@ mod tests {
         image[[2, 2]] = 1.0;
 
         // Apply default 4-connected filter
-        let result = laplace(&image, None, None).unwrap();
+        let result = laplace(&image, None, None).expect("laplace filter should succeed");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), image.shape());
@@ -755,7 +762,8 @@ mod tests {
         image[[2, 2]] = 1.0;
 
         // Apply 8-connected filter
-        let result = laplace(&image, None, Some(true)).unwrap();
+        let result =
+            laplace(&image, None, Some(true)).expect("laplace 8-connected filter should succeed");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), image.shape());
@@ -788,8 +796,8 @@ mod tests {
         image[[2, 2]] = 1.0;
 
         // Apply Prewitt filter in both directions
-        let prewitt_x = prewitt(&image, 0, None).unwrap(); // Vertical gradient (y direction)
-        let prewitt_y = prewitt(&image, 1, None).unwrap(); // Horizontal gradient (x direction)
+        let prewitt_x = prewitt(&image, 0, None).expect("prewitt filter should succeed"); // Vertical gradient (y direction)
+        let prewitt_y = prewitt(&image, 1, None).expect("prewitt filter should succeed"); // Horizontal gradient (x direction)
 
         // Check shape
         assert_eq!(prewitt_x.shape(), image.shape());
@@ -817,15 +825,18 @@ mod tests {
         image[[2, 2]] = 0.0;
 
         // Apply Roberts filter in both directions
-        let roberts_x = roberts(&image, None, Some(0)).unwrap(); // x-component
-        let roberts_y = roberts(&image, None, Some(1)).unwrap(); // y-component
+        let roberts_x =
+            roberts(&image, None, Some(0)).expect("roberts filter x-component should succeed"); // x-component
+        let roberts_y =
+            roberts(&image, None, Some(1)).expect("roberts filter y-component should succeed"); // y-component
 
         // Check shape
         assert_eq!(roberts_x.shape(), image.shape());
         assert_eq!(roberts_y.shape(), image.shape());
 
         // The combined magnitude should show the edges
-        let roberts_mag = roberts(&image, None, None).unwrap();
+        let roberts_mag =
+            roberts(&image, None, None).expect("roberts magnitude filter should succeed");
 
         // The center 2x2 area is where we expect the response
         let center_region = roberts_mag.slice(ndarray::s![1..3, 1..3]);
@@ -876,10 +887,14 @@ mod tests {
         ];
 
         // Calculate gradient magnitude with different methods
-        let result_sobel = gradient_magnitude(&image, None, None).unwrap();
-        let result_prewitt = gradient_magnitude(&image, None, Some("prewitt")).unwrap();
-        let result_roberts = gradient_magnitude(&image, None, Some("roberts")).unwrap();
-        let result_scharr = gradient_magnitude(&image, None, Some("scharr")).unwrap();
+        let result_sobel = gradient_magnitude(&image, None, None)
+            .expect("gradient_magnitude with sobel should succeed");
+        let result_prewitt = gradient_magnitude(&image, None, Some("prewitt"))
+            .expect("gradient_magnitude with prewitt should succeed");
+        let result_roberts = gradient_magnitude(&image, None, Some("roberts"))
+            .expect("gradient_magnitude with roberts should succeed");
+        let result_scharr = gradient_magnitude(&image, None, Some("scharr"))
+            .expect("gradient_magnitude with scharr should succeed");
 
         // Check shapes
         assert_eq!(result_sobel.shape(), image.shape());
@@ -956,15 +971,15 @@ mod tests {
         }
 
         // Test Sobel along axis 0 (x-axis)
-        let result_x = sobel(&volume, 0, None).unwrap();
+        let result_x = sobel(&volume, 0, None).expect("sobel 3D x-axis should succeed");
         assert_eq!(result_x.shape(), volume.shape());
 
         // Test Sobel along axis 1 (y-axis)
-        let result_y = sobel(&volume, 1, None).unwrap();
+        let result_y = sobel(&volume, 1, None).expect("sobel 3D y-axis should succeed");
         assert_eq!(result_y.shape(), volume.shape());
 
         // Test Sobel along axis 2 (z-axis)
-        let result_z = sobel(&volume, 2, None).unwrap();
+        let result_z = sobel(&volume, 2, None).expect("sobel 3D z-axis should succeed");
         assert_eq!(result_z.shape(), volume.shape());
 
         // The gradient should be strongest along the z-axis
@@ -1079,12 +1094,12 @@ where
     //  [ 0,   0,  0],
     //  [-3, -10, -3]]
     let mut kernel = Array2::<T>::zeros((3, 3));
-    kernel[[0, 0]] = T::from(3).unwrap();
-    kernel[[0, 1]] = T::from(10).unwrap();
-    kernel[[0, 2]] = T::from(3).unwrap();
-    kernel[[2, 0]] = T::from(-3).unwrap();
-    kernel[[2, 1]] = T::from(-10).unwrap();
-    kernel[[2, 2]] = T::from(-3).unwrap();
+    kernel[[0, 0]] = safe_i32_to_float(3)?;
+    kernel[[0, 1]] = safe_i32_to_float(10)?;
+    kernel[[0, 2]] = safe_i32_to_float(3)?;
+    kernel[[2, 0]] = safe_i32_to_float(-3)?;
+    kernel[[2, 1]] = safe_i32_to_float(-10)?;
+    kernel[[2, 2]] = safe_i32_to_float(-3)?;
 
     // Apply convolution
     convolve(input, &kernel, Some(*mode))
@@ -1100,12 +1115,12 @@ where
     //  [-10,  0, 10],
     //  [ -3,  0,  3]]
     let mut kernel = Array2::<T>::zeros((3, 3));
-    kernel[[0, 0]] = T::from(-3).unwrap();
-    kernel[[1, 0]] = T::from(-10).unwrap();
-    kernel[[2, 0]] = T::from(-3).unwrap();
-    kernel[[0, 2]] = T::from(3).unwrap();
-    kernel[[1, 2]] = T::from(10).unwrap();
-    kernel[[2, 2]] = T::from(3).unwrap();
+    kernel[[0, 0]] = safe_i32_to_float(-3)?;
+    kernel[[1, 0]] = safe_i32_to_float(-10)?;
+    kernel[[2, 0]] = safe_i32_to_float(-3)?;
+    kernel[[0, 2]] = safe_i32_to_float(3)?;
+    kernel[[1, 2]] = safe_i32_to_float(10)?;
+    kernel[[2, 2]] = safe_i32_to_float(3)?;
 
     // Apply convolution
     convolve(input, &kernel, Some(*mode))
@@ -1124,7 +1139,7 @@ where
     let mut result = correlate1d(input, &deriv_kernel, axis, Some(*mode), None)?;
 
     // Then apply the smoothing filter [1, 2, 1] along all other axes
-    let smooth_kernel = array![T::one(), T::from(2).unwrap(), T::one()];
+    let smooth_kernel = array![T::one(), safe_i32_to_float(2)?, T::one()];
 
     for ax in 0..input.ndim() {
         if ax != axis {

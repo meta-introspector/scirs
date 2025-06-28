@@ -698,7 +698,7 @@ impl CudaOperations {
 
     /// Perform matrix multiplication using cuBLAS
     #[allow(clippy::too_many_arguments)]
-    pub fn gemm_f32(
+    pub(crate) fn gemm_f32(
         &self,
         _m: i32,
         _n: i32,

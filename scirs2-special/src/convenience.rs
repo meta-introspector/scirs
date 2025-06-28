@@ -714,7 +714,7 @@ pub mod bioinformatics {
         }
 
         let mut velocity = Array1::zeros(substrate.len());
-        
+
         for (i, &s) in substrate.iter().enumerate() {
             if s < 0.0 {
                 return Err(crate::SpecialError::ValueError(
@@ -733,11 +733,7 @@ pub mod bioinformatics {
     /// * `ligand` - Ligand concentration array
     /// * `kd` - Dissociation constant
     /// * `n` - Hill coefficient
-    pub fn hill_equation(
-        ligand: &ArrayView1<f64>,
-        kd: f64,
-        n: f64,
-    ) -> SpecialResult<Array1<f64>> {
+    pub fn hill_equation(ligand: &ArrayView1<f64>, kd: f64, n: f64) -> SpecialResult<Array1<f64>> {
         if kd <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Kd must be positive".to_string(),
@@ -745,7 +741,7 @@ pub mod bioinformatics {
         }
 
         let mut fraction = Array1::zeros(ligand.len());
-        
+
         for (i, &l) in ligand.iter().enumerate() {
             if l < 0.0 {
                 return Err(crate::SpecialError::ValueError(
@@ -780,7 +776,7 @@ pub mod bioinformatics {
 
         let mut population = Array1::zeros(t.len());
         let a = (k - p0) / p0;
-        
+
         for (i, &ti) in t.iter().enumerate() {
             population[i] = k / (1.0 + a * (-r * ti).exp());
         }
@@ -848,14 +844,14 @@ pub mod geophysics {
         let l = 0.0065; // K/m
 
         let mut pressure = Array1::zeros(altitude.len());
-        
+
         for (i, &h) in altitude.iter().enumerate() {
             if !(-500.0..=11000.0).contains(&h) {
                 return Err(crate::SpecialError::ValueError(
                     "Altitude out of troposphere range".to_string(),
                 ));
             }
-            
+
             let temp_ratio = 1.0 - l * h / t0;
             pressure[i] = sea_level_pressure * temp_ratio.powf(g * m / (r * l));
         }
@@ -922,7 +918,7 @@ pub mod chemistry {
 
         let r = 8.314462618; // J/(mol·K)
         let mut rate = Array1::zeros(temperature.len());
-        
+
         for (i, &t) in temperature.iter().enumerate() {
             if t <= 0.0 {
                 return Err(crate::SpecialError::ValueError(
@@ -954,8 +950,8 @@ pub mod chemistry {
 
         // Debye-Hückel limiting law constant
         let a = 0.509 * (temperature / 298.15).powf(-1.5);
-        let log_gamma = -a * charge * charge * ionic_strength.sqrt() 
-                        / (1.0 + ionic_strength.sqrt());
+        let log_gamma =
+            -a * charge * charge * ionic_strength.sqrt() / (1.0 + ionic_strength.sqrt());
 
         Ok(10.0_f64.powf(log_gamma))
     }
@@ -965,10 +961,7 @@ pub mod chemistry {
     /// # Arguments
     /// * `pressure` - Pressure array in Pa
     /// * `k` - Adsorption constant
-    pub fn langmuir_isotherm(
-        pressure: &ArrayView1<f64>,
-        k: f64,
-    ) -> SpecialResult<Array1<f64>> {
+    pub fn langmuir_isotherm(pressure: &ArrayView1<f64>, k: f64) -> SpecialResult<Array1<f64>> {
         if k <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Adsorption constant must be positive".to_string(),
@@ -976,7 +969,7 @@ pub mod chemistry {
         }
 
         let mut coverage = Array1::zeros(pressure.len());
-        
+
         for (i, &p) in pressure.iter().enumerate() {
             if p < 0.0 {
                 return Err(crate::SpecialError::ValueError(
@@ -1053,11 +1046,11 @@ pub mod astronomy {
 
         // Thermal de Broglie wavelength
         let lambda_th = h / (2.0 * PI * m_e * k_ev * temperature * 1.602e-19).sqrt();
-        
+
         // Saha equation
         let g_ratio = 2.0; // Statistical weight ratio (simplified)
         let exponent = -ionization_energy / (k_ev * temperature);
-        
+
         Ok(g_ratio * electron_density * lambda_th.powi(3) * exponent.exp())
     }
 
@@ -1118,7 +1111,7 @@ pub mod astronomy {
     /// * `relativistic` - Use relativistic formula if true
     pub fn velocity_to_redshift(velocity: f64, relativistic: bool) -> SpecialResult<f64> {
         let c = 299792458.0; // Speed of light
-        
+
         if velocity >= c {
             return Err(crate::SpecialError::ValueError(
                 "Velocity cannot exceed speed of light".to_string(),
@@ -1133,4 +1126,3 @@ pub mod astronomy {
         }
     }
 }
-

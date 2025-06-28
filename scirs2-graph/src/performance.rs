@@ -290,20 +290,15 @@ where
 pub mod simd_ops {
     #[allow(unused_imports)]
     use super::*;
+    use scirs2_core::simd_ops::SimdUnifiedOps;
 
     /// SIMD-optimized vector addition for graph metrics
     #[allow(dead_code)]
     pub fn simd_vector_add(a: &[f64], b: &[f64]) -> Vec<f64> {
         assert_eq!(a.len(), b.len());
 
-        let mut result = vec![0.0; a.len()];
-
-        // Use standard operations for now - full SIMD would require more dependencies
-        for ((dst, &src_a), &src_b) in result.iter_mut().zip(a.iter()).zip(b.iter()) {
-            *dst = src_a + src_b;
-        }
-
-        result
+        // Use scirs2-core SIMD operations for optimal performance
+        f64::simd_add(a, b)
     }
 
     /// SIMD-optimized dot product for similarity computations
@@ -311,47 +306,248 @@ pub mod simd_ops {
     pub fn simd_dot_product(a: &[f64], b: &[f64]) -> f64 {
         assert_eq!(a.len(), b.len());
 
+        // Use scirs2-core SIMD optimized dot product
+        f64::simd_dot_product(a, b)
+    }
+
+    /// SIMD-optimized vector normalization
+    #[allow(dead_code)]
+    pub fn simd_normalize(vector: &mut [f64]) {
+        let norm = f64::simd_norm(vector);
+        if norm > 0.0 {
+            f64::simd_scale_assign(vector, 1.0 / norm);
+        }
+    }
+
+    /// SIMD-optimized cosine similarity
+    #[allow(dead_code)]
+    pub fn simd_cosine_similarity(a: &[f64], b: &[f64]) -> f64 {
+        assert_eq!(a.len(), b.len());
+        f64::simd_cosine_similarity(a, b)
+    }
+
+    /// SIMD-optimized euclidean distance
+    #[allow(dead_code)]
+    pub fn simd_euclidean_distance(a: &[f64], b: &[f64]) -> f64 {
+        assert_eq!(a.len(), b.len());
+        f64::simd_euclidean_distance(a, b)
+    }
+
+    /// SIMD-optimized batch centrality computation
+    #[allow(dead_code)]
+    pub fn simd_batch_centrality_update(
+        centralities: &mut [f64],
+        contributions: &[f64],
+        weights: &[f64],
+    ) {
+        assert_eq!(centralities.len(), contributions.len());
+        assert_eq!(centralities.len(), weights.len());
+
+        // Multiply contributions by weights and add to centralities
+        let weighted_contribs = f64::simd_multiply(contributions, weights);
+        f64::simd_add_assign(centralities, &weighted_contribs);
+    }
+
+    /// SIMD-optimized matrix-vector multiplication for PageRank-style algorithms
+    #[allow(dead_code)]
+    pub fn simd_sparse_matvec(
+        row_ptr: &[usize],
+        col_idx: &[usize],
+        values: &[f64],
+        x: &[f64],
+        y: &mut [f64],
+    ) {
+        y.fill(0.0);
+
+        for (i, y_i) in y.iter_mut().enumerate() {
+            let row_start = row_ptr[i];
+            let row_end = row_ptr[i + 1];
+
+            // Process row elements in SIMD-optimized chunks
+            let row_values = &values[row_start..row_end];
+            let row_indices = &col_idx[row_start..row_end];
+
+            // Gather x values corresponding to column indices
+            let x_vals: Vec<f64> = row_indices.iter().map(|&j| x[j]).collect();
+
+            // SIMD dot product for this row
+            *y_i = f64::simd_dot_product(row_values, &x_vals);
+        }
+    }
+
+    /// SIMD-optimized degree computation for multiple nodes
+    #[allow(dead_code)]
+    pub fn simd_batch_degree_computation(row_ptr: &[usize], degrees: &mut [usize]) {
+        for (i, degree) in degrees.iter_mut().enumerate() {
+            *degree = row_ptr[i + 1] - row_ptr[i];
+        }
+    }
+}
+
+/// Non-x86_64 fallback implementations
+#[cfg(not(target_arch = "x86_64"))]
+pub mod simd_ops {
+    /// Fallback vector addition
+    #[allow(dead_code)]
+    pub fn simd_vector_add(a: &[f64], b: &[f64]) -> Vec<f64> {
+        assert_eq!(a.len(), b.len());
+        a.iter().zip(b.iter()).map(|(&x, &y)| x + y).collect()
+    }
+
+    /// Fallback dot product
+    #[allow(dead_code)]
+    pub fn simd_dot_product(a: &[f64], b: &[f64]) -> f64 {
+        assert_eq!(a.len(), b.len());
         a.iter().zip(b.iter()).map(|(&x, &y)| x * y).sum()
+    }
+
+    /// Fallback normalization
+    #[allow(dead_code)]
+    pub fn simd_normalize(vector: &mut [f64]) {
+        let norm: f64 = vector.iter().map(|x| x * x).sum::<f64>().sqrt();
+        if norm > 0.0 {
+            for x in vector.iter_mut() {
+                *x /= norm;
+            }
+        }
+    }
+
+    /// Fallback cosine similarity
+    #[allow(dead_code)]
+    pub fn simd_cosine_similarity(a: &[f64], b: &[f64]) -> f64 {
+        assert_eq!(a.len(), b.len());
+        let dot: f64 = a.iter().zip(b.iter()).map(|(&x, &y)| x * y).sum();
+        let norm_a: f64 = a.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let norm_b: f64 = b.iter().map(|x| x * x).sum::<f64>().sqrt();
+
+        if norm_a == 0.0 || norm_b == 0.0 {
+            0.0
+        } else {
+            dot / (norm_a * norm_b)
+        }
+    }
+
+    /// Fallback euclidean distance
+    #[allow(dead_code)]
+    pub fn simd_euclidean_distance(a: &[f64], b: &[f64]) -> f64 {
+        assert_eq!(a.len(), b.len());
+        a.iter()
+            .zip(b.iter())
+            .map(|(&x, &y)| (x - y) * (x - y))
+            .sum::<f64>()
+            .sqrt()
+    }
+
+    /// Fallback batch centrality update
+    #[allow(dead_code)]
+    pub fn simd_batch_centrality_update(
+        centralities: &mut [f64],
+        contributions: &[f64],
+        weights: &[f64],
+    ) {
+        for ((cent, &contrib), &weight) in centralities
+            .iter_mut()
+            .zip(contributions.iter())
+            .zip(weights.iter())
+        {
+            *cent += contrib * weight;
+        }
+    }
+
+    /// Fallback sparse matrix-vector multiplication
+    #[allow(dead_code)]
+    pub fn simd_sparse_matvec(
+        row_ptr: &[usize],
+        col_idx: &[usize],
+        values: &[f64],
+        x: &[f64],
+        y: &mut [f64],
+    ) {
+        y.fill(0.0);
+
+        for (i, y_i) in y.iter_mut().enumerate() {
+            let row_start = row_ptr[i];
+            let row_end = row_ptr[i + 1];
+
+            for j in row_start..row_end {
+                *y_i += values[j] * x[col_idx[j]];
+            }
+        }
+    }
+
+    /// Fallback batch degree computation
+    #[allow(dead_code)]
+    pub fn simd_batch_degree_computation(row_ptr: &[usize], degrees: &mut [usize]) {
+        for (i, degree) in degrees.iter_mut().enumerate() {
+            *degree = row_ptr[i + 1] - row_ptr[i];
+        }
     }
 }
 
 /// Lazy evaluation wrapper for expensive graph computations
 pub struct LazyGraphMetric<T> {
-    /// The computed value (None if not yet computed)
-    value: Option<T>,
-    /// Computation function
-    #[allow(dead_code)]
-    compute_fn: Box<dyn FnOnce() -> Result<T>>,
+    /// The computed value stored in a thread-safe cell
+    value: std::sync::OnceLock<Result<T, GraphError>>,
+    /// Computation function stored in a mutex for thread safety
+    compute_fn: std::sync::Mutex<Option<Box<dyn FnOnce() -> Result<T> + Send + 'static>>>,
 }
 
-impl<T> LazyGraphMetric<T> {
+impl<T> LazyGraphMetric<T>
+where
+    T: Send + 'static,
+{
     /// Create a new lazy metric
     pub fn new<F>(compute_fn: F) -> Self
     where
-        F: FnOnce() -> Result<T> + 'static,
+        F: FnOnce() -> Result<T> + Send + 'static,
     {
         LazyGraphMetric {
-            value: None,
-            compute_fn: Box::new(compute_fn),
+            value: std::sync::OnceLock::new(),
+            compute_fn: std::sync::Mutex::new(Some(Box::new(compute_fn))),
         }
     }
 
-    /// Get the value, computing it if necessary
-    pub fn get(&mut self) -> Result<&T> {
-        if self.value.is_none() {
-            // This is a bit tricky due to ownership. In a real implementation,
-            // we'd use something like OnceCell or lazy_static for thread safety
-            return Err(GraphError::AlgorithmError(
-                "Lazy evaluation not fully implemented".to_string(),
-            ));
-        }
+    /// Get the value, computing it if necessary (thread-safe)
+    pub fn get(&self) -> Result<&T> {
+        let result = self.value.get_or_init(|| {
+            // Extract the computation function from the mutex
+            let mut fn_guard = self.compute_fn.lock().unwrap();
+            if let Some(compute_fn) = fn_guard.take() {
+                // Execute the computation
+                compute_fn()
+            } else {
+                // Function already consumed, this shouldn't happen in normal usage
+                Err(GraphError::AlgorithmError(
+                    "Computation function already consumed".to_string(),
+                ))
+            }
+        });
 
-        Ok(self.value.as_ref().unwrap())
+        match result {
+            Ok(value) => Ok(value),
+            Err(e) => Err(GraphError::AlgorithmError(format!(
+                "Lazy computation failed: {}",
+                e
+            ))),
+        }
     }
 
     /// Check if the value has been computed
     pub fn is_computed(&self) -> bool {
-        self.value.is_some()
+        self.value.get().is_some()
+    }
+
+    /// Force computation if not already done
+    pub fn force(&self) -> Result<()> {
+        self.get().map(|_| ())
+    }
+
+    /// Get the cached result if available, without triggering computation
+    pub fn try_get(&self) -> Option<Result<&T, &GraphError>> {
+        self.value.get().map(|result| match result {
+            Ok(value) => Ok(value),
+            Err(error) => Err(error),
+        })
     }
 }
 
@@ -416,7 +612,8 @@ impl RealTimeMemoryProfiler {
 
     /// Record a memory measurement
     pub fn sample_memory(&mut self, current_memory: usize) {
-        self.samples.push((std::time::Instant::now(), current_memory));
+        self.samples
+            .push((std::time::Instant::now(), current_memory));
     }
 
     /// Record an allocation
@@ -453,7 +650,11 @@ impl RealTimeMemoryProfiler {
             let last = &self.samples[self.samples.len() - 1];
             let time_diff = last.0.duration_since(first.0).as_secs_f64();
             let memory_diff = last.1 as f64 - first.1 as f64;
-            if time_diff > 0.0 { memory_diff / time_diff } else { 0.0 }
+            if time_diff > 0.0 {
+                memory_diff / time_diff
+            } else {
+                0.0
+            }
         } else {
             0.0
         };
@@ -475,18 +676,29 @@ impl RealTimeMemoryProfiler {
         let mut warnings = Vec::new();
 
         // Check for rapid memory growth
-        if metrics.growth_rate > 1_000_000.0 { // 1MB/second
-            warnings.push(format!("High memory growth rate: {:.2} bytes/second", metrics.growth_rate));
+        if metrics.growth_rate > 1_000_000.0 {
+            // 1MB/second
+            warnings.push(format!(
+                "High memory growth rate: {:.2} bytes/second",
+                metrics.growth_rate
+            ));
         }
 
         // Check for potential leaks
         if metrics.potential_leaks > 1000 {
-            warnings.push(format!("Potential memory leak detected: {} unmatched allocations", metrics.potential_leaks));
+            warnings.push(format!(
+                "Potential memory leak detected: {} unmatched allocations",
+                metrics.potential_leaks
+            ));
         }
 
         // Check for excessive peak memory
-        if metrics.peak_bytes > 1_000_000_000 { // 1GB
-            warnings.push(format!("High peak memory usage: {:.2} MB", metrics.peak_bytes as f64 / 1_000_000.0));
+        if metrics.peak_bytes > 1_000_000_000 {
+            // 1GB
+            warnings.push(format!(
+                "High peak memory usage: {:.2} MB",
+                metrics.peak_bytes as f64 / 1_000_000.0
+            ));
         }
 
         warnings
@@ -494,10 +706,13 @@ impl RealTimeMemoryProfiler {
 
     /// Export memory timeline for visualization
     pub fn export_timeline(&self) -> Vec<(f64, usize)> {
-        self.samples.iter().map(|(time, memory)| {
-            let elapsed = time.duration_since(self.start_time).as_secs_f64();
-            (elapsed, *memory)
-        }).collect()
+        self.samples
+            .iter()
+            .map(|(time, memory)| {
+                let elapsed = time.duration_since(self.start_time).as_secs_f64();
+                (elapsed, *memory)
+            })
+            .collect()
     }
 }
 
@@ -569,7 +784,7 @@ impl PerformanceMonitor {
     /// Finish monitoring and return comprehensive performance metrics
     pub fn finish(self) -> PerformanceReport {
         self.sampling_active.store(false, Ordering::Relaxed);
-        
+
         let duration = self.start_time.elapsed();
         let memory_metrics = self.memory_profiler.generate_metrics();
         let memory_warnings = self.memory_profiler.analyze_memory_health();
@@ -731,20 +946,20 @@ mod tests {
     #[test]
     fn test_performance_monitor() {
         let mut monitor = PerformanceMonitor::start("test_operation".to_string());
-        
+
         // Simulate memory usage
         monitor.record_memory(1024);
         monitor.record_memory(2048);
         monitor.record_memory(1536);
-        
+
         // Simulate allocations
         monitor.record_allocation(1024);
         monitor.record_allocation(512);
         monitor.record_deallocation(256);
-        
+
         std::thread::sleep(std::time::Duration::from_millis(10));
         let report = monitor.finish();
-        
+
         assert!(report.duration.as_millis() >= 10);
         assert_eq!(report.memory_metrics.peak_bytes, 2048);
         assert_eq!(report.memory_metrics.current_bytes, 1536);
@@ -756,19 +971,19 @@ mod tests {
     #[test]
     fn test_real_time_memory_profiler() {
         let mut profiler = RealTimeMemoryProfiler::new(50);
-        
+
         // Record memory samples
         profiler.sample_memory(1000);
         std::thread::sleep(std::time::Duration::from_millis(10));
         profiler.sample_memory(2000);
         std::thread::sleep(std::time::Duration::from_millis(10));
         profiler.sample_memory(1500);
-        
+
         // Record allocations/deallocations
         profiler.record_allocation(1000);
         profiler.record_allocation(500);
         profiler.record_deallocation(200);
-        
+
         let metrics = profiler.generate_metrics();
         assert_eq!(metrics.current_bytes, 1500);
         assert_eq!(metrics.peak_bytes, 2000);
@@ -776,7 +991,7 @@ mod tests {
         assert_eq!(metrics.allocation_count, 2);
         assert_eq!(metrics.deallocation_count, 1);
         assert_eq!(metrics.potential_leaks, 1);
-        
+
         // Test timeline export
         let timeline = profiler.export_timeline();
         assert_eq!(timeline.len(), 3);
@@ -788,24 +1003,24 @@ mod tests {
     #[test]
     fn test_memory_health_analysis() {
         let mut profiler = RealTimeMemoryProfiler::new(100);
-        
+
         // Simulate high memory growth
         profiler.sample_memory(100_000_000);
         std::thread::sleep(std::time::Duration::from_millis(50));
         profiler.sample_memory(200_000_000);
-        
+
         // Simulate many unmatched allocations
         for _ in 0..1500 {
             profiler.record_allocation(1024);
         }
-        
+
         let warnings = profiler.analyze_memory_health();
         assert!(!warnings.is_empty());
-        
+
         // Should warn about high growth rate and potential leaks
         let has_growth_warning = warnings.iter().any(|w| w.contains("growth rate"));
         let has_leak_warning = warnings.iter().any(|w| w.contains("leak"));
-        
+
         assert!(has_growth_warning);
         assert!(has_leak_warning);
     }
@@ -813,30 +1028,29 @@ mod tests {
     #[test]
     fn test_memory_metrics_calculation() {
         let mut profiler = RealTimeMemoryProfiler::new(100);
-        
+
         // Create a clear growth pattern
         profiler.sample_memory(1000);
         std::thread::sleep(std::time::Duration::from_millis(100));
         profiler.sample_memory(2000);
         std::thread::sleep(std::time::Duration::from_millis(100));
         profiler.sample_memory(3000);
-        
+
         let metrics = profiler.generate_metrics();
-        
+
         // Should have positive growth rate
         assert!(metrics.growth_rate > 0.0);
-        
+
         // Average should be around 2000
         assert!(metrics.average_bytes >= 1500 && metrics.average_bytes <= 2500);
-        
+
         // Peak should be 3000
         assert_eq!(metrics.peak_bytes, 3000);
-        
+
         // Current should be 3000
         assert_eq!(metrics.current_bytes, 3000);
     }
 
-    #[cfg(target_arch = "x86_64")]
     #[test]
     fn test_simd_operations() {
         use crate::performance::simd_ops::*;
@@ -844,10 +1058,147 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0];
         let b = vec![4.0, 5.0, 6.0];
 
+        // Test vector addition
         let sum = simd_vector_add(&a, &b);
         assert_eq!(sum, vec![5.0, 7.0, 9.0]);
 
+        // Test dot product
         let dot = simd_dot_product(&a, &b);
         assert_eq!(dot, 32.0); // 1*4 + 2*5 + 3*6
+
+        // Test cosine similarity
+        let similarity = simd_cosine_similarity(&a, &b);
+        assert!((similarity - 0.9746318461970762).abs() < 1e-10); // Known cosine similarity
+
+        // Test euclidean distance
+        let distance = simd_euclidean_distance(&a, &b);
+        assert!((distance - 5.196152422706632).abs() < 1e-10); // sqrt((4-1)^2 + (5-2)^2 + (6-3)^2)
+
+        // Test vector normalization
+        let mut vector = vec![3.0, 4.0, 0.0];
+        simd_normalize(&mut vector);
+        let expected_norm =
+            (vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]).sqrt();
+        assert!((expected_norm - 1.0).abs() < 1e-10);
+
+        // Test batch centrality update
+        let mut centralities = vec![1.0, 2.0, 3.0];
+        let contributions = vec![0.5, 1.0, 1.5];
+        let weights = vec![2.0, 2.0, 2.0];
+        simd_batch_centrality_update(&mut centralities, &contributions, &weights);
+        assert_eq!(centralities, vec![2.0, 4.0, 6.0]); // 1+0.5*2, 2+1*2, 3+1.5*2
+    }
+
+    #[test]
+    fn test_sparse_matvec() {
+        use crate::performance::simd_ops::*;
+
+        // Create a simple 3x3 sparse matrix in CSR format:
+        // [1 0 2]
+        // [0 3 0]
+        // [1 0 4]
+        let row_ptr = vec![0, 2, 3, 5];
+        let col_idx = vec![0, 2, 1, 0, 2];
+        let values = vec![1.0, 2.0, 3.0, 1.0, 4.0];
+        let x = vec![1.0, 1.0, 1.0];
+        let mut y = vec![0.0; 3];
+
+        simd_sparse_matvec(&row_ptr, &col_idx, &values, &x, &mut y);
+
+        // Expected: [1*1 + 2*1, 3*1, 1*1 + 4*1] = [3, 3, 5]
+        assert_eq!(y, vec![3.0, 3.0, 5.0]);
+    }
+
+    #[test]
+    fn test_batch_degree_computation() {
+        use crate::performance::simd_ops::*;
+
+        // Row pointers for nodes with degrees [2, 1, 2]
+        let row_ptr = vec![0, 2, 3, 5];
+        let mut degrees = vec![0; 3];
+
+        simd_batch_degree_computation(&row_ptr, &mut degrees);
+
+        assert_eq!(degrees, vec![2, 1, 2]);
+    }
+
+    #[test]
+    fn test_lazy_graph_metric() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Arc;
+
+        // Test basic lazy evaluation
+        let counter = Arc::new(AtomicUsize::new(0));
+        let counter_clone = counter.clone();
+
+        let lazy_metric = LazyGraphMetric::new(move || {
+            counter_clone.fetch_add(1, Ordering::Relaxed);
+            Ok(42i32)
+        });
+
+        // Initially not computed
+        assert!(!lazy_metric.is_computed());
+        assert_eq!(counter.load(Ordering::Relaxed), 0);
+
+        // First access computes the value
+        let result1 = lazy_metric.get().unwrap();
+        assert_eq!(*result1, 42);
+        assert!(lazy_metric.is_computed());
+        assert_eq!(counter.load(Ordering::Relaxed), 1);
+
+        // Second access returns cached value
+        let result2 = lazy_metric.get().unwrap();
+        assert_eq!(*result2, 42);
+        assert_eq!(counter.load(Ordering::Relaxed), 1); // Not incremented again
+
+        // try_get should return the cached value
+        assert!(lazy_metric.try_get().is_some());
+    }
+
+    #[test]
+    fn test_lazy_graph_metric_error() {
+        let lazy_metric =
+            LazyGraphMetric::new(|| Err(GraphError::AlgorithmError("Test error".to_string())));
+
+        // Should propagate the error
+        let result = lazy_metric.get();
+        assert!(result.is_err());
+
+        // Subsequent calls should return the same error
+        let result2 = lazy_metric.get();
+        assert!(result2.is_err());
+    }
+
+    #[test]
+    fn test_lazy_graph_metric_thread_safety() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Arc;
+        use std::thread;
+
+        let counter = Arc::new(AtomicUsize::new(0));
+        let counter_clone = counter.clone();
+
+        let lazy_metric = Arc::new(LazyGraphMetric::new(move || {
+            counter_clone.fetch_add(1, Ordering::Relaxed);
+            std::thread::sleep(std::time::Duration::from_millis(10)); // Simulate work
+            Ok(100i32)
+        }));
+
+        // Spawn multiple threads that try to access the value
+        let handles: Vec<_> = (0..10)
+            .map(|_| {
+                let metric = lazy_metric.clone();
+                thread::spawn(move || metric.get().unwrap().clone())
+            })
+            .collect();
+
+        // Wait for all threads and collect results
+        let results: Vec<i32> = handles.into_iter().map(|h| h.join().unwrap()).collect();
+
+        // All threads should get the same value
+        assert!(results.iter().all(|&x| x == 100));
+
+        // Computation should only happen once
+        assert_eq!(counter.load(Ordering::Relaxed), 1);
     }
 }

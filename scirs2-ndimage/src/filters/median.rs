@@ -29,6 +29,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///
 /// # Examples
 ///
+/// ## Basic 1D noise removal
 /// ```
 /// use ndarray::Array1;
 /// use scirs2_ndimage::filters::{median_filter, BorderMode};
@@ -37,6 +38,61 @@ use crate::error::{NdimageError, NdimageResult};
 /// let noisy_signal = Array1::from_vec(vec![1.0, 2.0, 100.0, 4.0, 5.0]);
 /// let filtered = median_filter(&noisy_signal, &[3], None).unwrap();
 /// assert_eq!(filtered[2], 2.0); // Outlier replaced by median
+/// ```
+///
+/// ## 2D image denoising
+/// ```
+/// use ndarray::Array2;
+/// use scirs2_ndimage::filters::{median_filter, BorderMode};
+///
+/// // Create a noisy image with salt-and-pepper noise
+/// let mut image = Array2::from_shape_fn((100, 100), |(i, j)| {
+///     ((i + j) as f64 / 10.0).sin()
+/// });
+///
+/// // Add some impulse noise
+/// image[[10, 10]] = 1000.0;  // salt noise
+/// image[[20, 20]] = -1000.0; // pepper noise
+///
+/// // Apply 3x3 median filter to remove noise
+/// let denoised = median_filter(&image, &[3, 3], Some(BorderMode::Reflect)).unwrap();
+///
+/// // Verify noise removal while preserving edges
+/// assert!(denoised[[10, 10]].abs() < 10.0); // noise removed
+/// assert_eq!(denoised.shape(), image.shape()); // shape preserved
+/// ```
+///
+/// ## Different window sizes for varying noise levels
+/// ```
+/// use ndarray::Array2;
+/// use scirs2_ndimage::filters::median_filter;
+///
+/// let noisy_image = Array2::from_shape_fn((50, 50), |(i, j)| {
+///     if (i + j) % 10 == 0 { 255.0 } else { (i * j) as f64 }
+/// });
+///
+/// // Light denoising with small window
+/// let light_filter = median_filter(&noisy_image, &[3, 3], None).unwrap();
+///
+/// // Heavy denoising with larger window  
+/// let heavy_filter = median_filter(&noisy_image, &[5, 5], None).unwrap();
+///
+/// // Very aggressive denoising (may blur edges)
+/// let aggressive_filter = median_filter(&noisy_image, &[7, 7], None).unwrap();
+/// ```
+///
+/// ## 3D volume processing
+/// ```
+/// use ndarray::Array3;
+/// use scirs2_ndimage::filters::median_filter;
+///
+/// let volume = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| {
+///     if i == 10 && j == 10 && k == 10 { 1000.0 } else { (i + j + k) as f64 }
+/// });
+///
+/// // Apply 3D median filter
+/// let filtered_volume = median_filter(&volume, &[3, 3, 3], None).unwrap();
+/// assert_eq!(filtered_volume.shape(), volume.shape());
 /// ```
 ///
 /// # Performance Notes

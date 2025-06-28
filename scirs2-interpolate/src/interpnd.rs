@@ -2,12 +2,12 @@
 //!
 //! This module provides functionality for interpolating multidimensional data.
 
-use crate::error::{InterpolateError, InterpolateResult};
 use crate::advanced::rbf::{RBFInterpolator, RBFKernel};
+use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array, Array1, Array2, ArrayView1, ArrayView2, IxDyn};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
-use std::ops::AddAssign;
+use std::ops::{AddAssign, SubAssign};
 
 /// Available grid types for N-dimensional interpolation
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -372,11 +372,12 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
                 if self.points.len() == 2 {
                     self.spline_interpolate_2d(point)
                 } else {
-                    Err(InterpolateError::NotImplemented(
-                        format!("Spline interpolation only supports 2D grids, got {}D", self.points.len()),
-                    ))
+                    Err(InterpolateError::NotImplemented(format!(
+                        "Spline interpolation only supports 2D grids, got {}D",
+                        self.points.len()
+                    )))
                 }
-            },
+            }
         }
     }
 
@@ -473,44 +474,42 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
     /// Interpolated value at the point
     fn spline_interpolate_2d(&self, point: &ArrayView1<F>) -> InterpolateResult<F> {
         use crate::interp2d::{Interp2d, Interp2dKind};
-        
+
         if self.points.len() != 2 {
             return Err(InterpolateError::invalid_input(
-                "spline_interpolate_2d requires exactly 2 dimensions"
+                "spline_interpolate_2d requires exactly 2 dimensions",
             ));
         }
-        
+
         // Convert the N-D grid to 2D format
         let x = &self.points[0];
         let y = &self.points[1];
-        
+
         // The values should be in a 2D array format
         let shape = self.values.shape();
         if shape.len() != 2 {
             return Err(InterpolateError::invalid_input(
-                "spline_interpolate_2d requires 2D value array"
+                "spline_interpolate_2d requires 2D value array",
             ));
         }
-        
+
         // Create 2D array from N-D array
-        let z = self.values.clone().into_dimensionality::<ndarray::Ix2>()
+        let z = self
+            .values
+            .clone()
+            .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| InterpolateError::invalid_input("Failed to convert to 2D array"))?;
-        
+
         // Create 2D interpolator
-        let interp = Interp2d::new(
-            &x.view(),
-            &y.view(), 
-            &z.view(),
-            Interp2dKind::Cubic
-        )?;
-        
+        let interp = Interp2d::new(&x.view(), &y.view(), &z.view(), Interp2dKind::Cubic)?;
+
         // Evaluate at the point
         if point.len() != 2 {
             return Err(InterpolateError::invalid_input(
-                "Point must have 2 coordinates for 2D spline interpolation"
+                "Point must have 2 coordinates for 2D spline interpolation",
             ));
         }
-        
+
         interp.evaluate(point[0], point[1])
     }
 }
@@ -577,7 +576,19 @@ pub enum ScatteredInterpolationMethod {
     RBF,
 }
 
-impl<F: Float + FromPrimitive + Debug + Display> ScatteredInterpolator<F> {
+impl<
+        F: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + AddAssign
+            + SubAssign
+            + std::fmt::LowerExp
+            + Send
+            + Sync
+            + 'static,
+    > ScatteredInterpolator<F>
+{
     /// Create a new ScatteredInterpolator
     ///
     /// # Arguments
@@ -818,7 +829,16 @@ impl<F: Float + FromPrimitive + Debug + Display> ScatteredInterpolator<F> {
     /// Interpolated value at the point
     fn rbf_interpolate(&self, point: &ArrayView1<F>) -> InterpolateResult<F>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + std::ops::SubAssign + std::fmt::LowerExp + Send + Sync + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + AddAssign
+            + std::ops::SubAssign
+            + std::fmt::LowerExp
+            + Send
+            + Sync
+            + 'static,
     {
         // Create RBF interpolator
         let epsilon = F::from_f64(1.0).unwrap(); // Default shape parameter

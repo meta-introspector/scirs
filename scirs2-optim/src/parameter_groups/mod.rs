@@ -576,136 +576,216 @@ pub mod checkpointing {
         fn save_checkpoint<P: AsRef<Path>>(&self, path: P) -> Result<()> {
             use std::fs::File;
             use std::io::{BufWriter, Write};
-            
+
             let checkpoint = self.create_checkpoint()?;
             let path = path.as_ref();
-            
+
             // Create the file
-            let file = File::create(path)
-                .map_err(|e| OptimError::InvalidConfig(format!("Failed to create checkpoint file: {}", e)))?;
+            let file = File::create(path).map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to create checkpoint file: {}", e))
+            })?;
             let mut writer = BufWriter::new(file);
-            
+
             // Write header
-            writeln!(writer, "# ScirS2 Optimizer Checkpoint v1.0").map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write checkpoint header: {}", e)))?;
-            writeln!(writer, "# Timestamp: {}", checkpoint.metadata.timestamp).map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write timestamp: {}", e)))?;
-            writeln!(writer, "# Optimizer Version: {}", checkpoint.metadata.optimizer_version).map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write version: {}", e)))?;
-            writeln!(writer, "# Step: {}", checkpoint.step).map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write step: {}", e)))?;
-            writeln!(writer).map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write newline: {}", e)))?;
-            
+            writeln!(writer, "# ScirS2 Optimizer Checkpoint v1.0").map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to write checkpoint header: {}", e))
+            })?;
+            writeln!(writer, "# Timestamp: {}", checkpoint.metadata.timestamp).map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to write timestamp: {}", e))
+            })?;
+            writeln!(
+                writer,
+                "# Optimizer Version: {}",
+                checkpoint.metadata.optimizer_version
+            )
+            .map_err(|e| OptimError::InvalidConfig(format!("Failed to write version: {}", e)))?;
+            writeln!(writer, "# Step: {}", checkpoint.step)
+                .map_err(|e| OptimError::InvalidConfig(format!("Failed to write step: {}", e)))?;
+            writeln!(writer).map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
+            })?;
+
             // Write custom metadata
-            writeln!(writer, "[METADATA]").map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write metadata section: {}", e)))?;
+            writeln!(writer, "[METADATA]").map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to write metadata section: {}", e))
+            })?;
             for (key, value) in &checkpoint.metadata.custom {
-                writeln!(writer, "{}={}", key, value).map_err(|e| 
-                    OptimError::InvalidConfig(format!("Failed to write metadata entry: {}", e)))?;
+                writeln!(writer, "{}={}", key, value).map_err(|e| {
+                    OptimError::InvalidConfig(format!("Failed to write metadata entry: {}", e))
+                })?;
             }
-            writeln!(writer).map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write newline: {}", e)))?;
-            
+            writeln!(writer).map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
+            })?;
+
             // Write global state
-            writeln!(writer, "[GLOBAL_STATE]").map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write global state section: {}", e)))?;
+            writeln!(writer, "[GLOBAL_STATE]").map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to write global state section: {}", e))
+            })?;
             for (key, value) in &checkpoint.global_state {
-                writeln!(writer, "{}={}", key, value).map_err(|e| 
-                    OptimError::InvalidConfig(format!("Failed to write global state entry: {}", e)))?;
+                writeln!(writer, "{}={}", key, value).map_err(|e| {
+                    OptimError::InvalidConfig(format!("Failed to write global state entry: {}", e))
+                })?;
             }
-            writeln!(writer).map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write newline: {}", e)))?;
-            
+            writeln!(writer).map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
+            })?;
+
             // Write parameter groups
-            writeln!(writer, "[GROUPS]").map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write groups section: {}", e)))?;
-            writeln!(writer, "count={}", checkpoint.groups.len()).map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write group count: {}", e)))?;
-            writeln!(writer).map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to write newline: {}", e)))?;
-            
+            writeln!(writer, "[GROUPS]").map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to write groups section: {}", e))
+            })?;
+            writeln!(writer, "count={}", checkpoint.groups.len()).map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to write group count: {}", e))
+            })?;
+            writeln!(writer).map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
+            })?;
+
             for group in &checkpoint.groups {
                 // Write group header
-                writeln!(writer, "[GROUP_{}]", group.id).map_err(|e| 
-                    OptimError::InvalidConfig(format!("Failed to write group header: {}", e)))?;
-                
+                writeln!(writer, "[GROUP_{}]", group.id).map_err(|e| {
+                    OptimError::InvalidConfig(format!("Failed to write group header: {}", e))
+                })?;
+
                 // Write group config
-                writeln!(writer, "learning_rate={}", 
-                    group.config.learning_rate.map(|lr| lr.to_string()).unwrap_or_else(|| "None".to_string())
-                ).map_err(|e| OptimError::InvalidConfig(format!("Failed to write learning rate: {}", e)))?;
-                writeln!(writer, "weight_decay={}", 
-                    group.config.weight_decay.map(|wd| wd.to_string()).unwrap_or_else(|| "None".to_string())
-                ).map_err(|e| OptimError::InvalidConfig(format!("Failed to write weight decay: {}", e)))?;
-                writeln!(writer, "momentum={}", 
-                    group.config.momentum.map(|m| m.to_string()).unwrap_or_else(|| "None".to_string())
-                ).map_err(|e| OptimError::InvalidConfig(format!("Failed to write momentum: {}", e)))?;
-                
+                writeln!(
+                    writer,
+                    "learning_rate={}",
+                    group
+                        .config
+                        .learning_rate
+                        .map(|lr| lr.to_string())
+                        .unwrap_or_else(|| "None".to_string())
+                )
+                .map_err(|e| {
+                    OptimError::InvalidConfig(format!("Failed to write learning rate: {}", e))
+                })?;
+                writeln!(
+                    writer,
+                    "weight_decay={}",
+                    group
+                        .config
+                        .weight_decay
+                        .map(|wd| wd.to_string())
+                        .unwrap_or_else(|| "None".to_string())
+                )
+                .map_err(|e| {
+                    OptimError::InvalidConfig(format!("Failed to write weight decay: {}", e))
+                })?;
+                writeln!(
+                    writer,
+                    "momentum={}",
+                    group
+                        .config
+                        .momentum
+                        .map(|m| m.to_string())
+                        .unwrap_or_else(|| "None".to_string())
+                )
+                .map_err(|e| {
+                    OptimError::InvalidConfig(format!("Failed to write momentum: {}", e))
+                })?;
+
                 // Write custom params
-                writeln!(writer, "custom_params_count={}", group.config.custom_params.len()).map_err(|e| 
-                    OptimError::InvalidConfig(format!("Failed to write custom params count: {}", e)))?;
+                writeln!(
+                    writer,
+                    "custom_params_count={}",
+                    group.config.custom_params.len()
+                )
+                .map_err(|e| {
+                    OptimError::InvalidConfig(format!("Failed to write custom params count: {}", e))
+                })?;
                 for (key, value) in &group.config.custom_params {
-                    writeln!(writer, "custom_{}={}", key, value).map_err(|e| 
-                        OptimError::InvalidConfig(format!("Failed to write custom param: {}", e)))?;
+                    writeln!(writer, "custom_{}={}", key, value).map_err(|e| {
+                        OptimError::InvalidConfig(format!("Failed to write custom param: {}", e))
+                    })?;
                 }
-                
+
                 // Write parameters
-                writeln!(writer, "param_count={}", group.params.len()).map_err(|e| 
-                    OptimError::InvalidConfig(format!("Failed to write param count: {}", e)))?;
+                writeln!(writer, "param_count={}", group.params.len()).map_err(|e| {
+                    OptimError::InvalidConfig(format!("Failed to write param count: {}", e))
+                })?;
                 for (i, param) in group.params.iter().enumerate() {
-                    writeln!(writer, "param_{}_shape={:?}", i, param.shape()).map_err(|e| 
-                        OptimError::InvalidConfig(format!("Failed to write param shape: {}", e)))?;
-                    write!(writer, "param_{}_data=", i).map_err(|e| 
-                        OptimError::InvalidConfig(format!("Failed to write param data label: {}", e)))?;
-                    
+                    writeln!(writer, "param_{}_shape={:?}", i, param.shape()).map_err(|e| {
+                        OptimError::InvalidConfig(format!("Failed to write param shape: {}", e))
+                    })?;
+                    write!(writer, "param_{}_data=", i).map_err(|e| {
+                        OptimError::InvalidConfig(format!(
+                            "Failed to write param data label: {}",
+                            e
+                        ))
+                    })?;
+
                     // Write array data as space-separated values
                     for (j, &val) in param.iter().enumerate() {
                         if j > 0 {
-                            write!(writer, " ").map_err(|e| 
-                                OptimError::InvalidConfig(format!("Failed to write space: {}", e)))?;
+                            write!(writer, " ").map_err(|e| {
+                                OptimError::InvalidConfig(format!("Failed to write space: {}", e))
+                            })?;
                         }
-                        write!(writer, "{}", val).map_err(|e| 
-                            OptimError::InvalidConfig(format!("Failed to write value: {}", e)))?;
+                        write!(writer, "{}", val).map_err(|e| {
+                            OptimError::InvalidConfig(format!("Failed to write value: {}", e))
+                        })?;
                     }
-                    writeln!(writer).map_err(|e| 
-                        OptimError::InvalidConfig(format!("Failed to write newline: {}", e)))?;
+                    writeln!(writer).map_err(|e| {
+                        OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
+                    })?;
                 }
-                
+
                 // Write optimizer state
-                writeln!(writer, "state_count={}", group.state.len()).map_err(|e| 
-                    OptimError::InvalidConfig(format!("Failed to write state count: {}", e)))?;
+                writeln!(writer, "state_count={}", group.state.len()).map_err(|e| {
+                    OptimError::InvalidConfig(format!("Failed to write state count: {}", e))
+                })?;
                 for (state_name, state_arrays) in &group.state {
-                    writeln!(writer, "state_name={}", state_name).map_err(|e| 
-                        OptimError::InvalidConfig(format!("Failed to write state name: {}", e)))?;
-                    writeln!(writer, "state_array_count={}", state_arrays.len()).map_err(|e| 
-                        OptimError::InvalidConfig(format!("Failed to write state array count: {}", e)))?;
+                    writeln!(writer, "state_name={}", state_name).map_err(|e| {
+                        OptimError::InvalidConfig(format!("Failed to write state name: {}", e))
+                    })?;
+                    writeln!(writer, "state_array_count={}", state_arrays.len()).map_err(|e| {
+                        OptimError::InvalidConfig(format!(
+                            "Failed to write state array count: {}",
+                            e
+                        ))
+                    })?;
                     for (i, array) in state_arrays.iter().enumerate() {
-                        writeln!(writer, "state_{}_shape={:?}", i, array.shape()).map_err(|e| 
-                            OptimError::InvalidConfig(format!("Failed to write state shape: {}", e)))?;
-                        write!(writer, "state_{}_data=", i).map_err(|e| 
-                            OptimError::InvalidConfig(format!("Failed to write state data label: {}", e)))?;
-                        
+                        writeln!(writer, "state_{}_shape={:?}", i, array.shape()).map_err(|e| {
+                            OptimError::InvalidConfig(format!("Failed to write state shape: {}", e))
+                        })?;
+                        write!(writer, "state_{}_data=", i).map_err(|e| {
+                            OptimError::InvalidConfig(format!(
+                                "Failed to write state data label: {}",
+                                e
+                            ))
+                        })?;
+
                         // Write array data
                         for (j, &val) in array.iter().enumerate() {
                             if j > 0 {
-                                write!(writer, " ").map_err(|e| 
-                                    OptimError::InvalidConfig(format!("Failed to write space: {}", e)))?;
+                                write!(writer, " ").map_err(|e| {
+                                    OptimError::InvalidConfig(format!(
+                                        "Failed to write space: {}",
+                                        e
+                                    ))
+                                })?;
                             }
-                            write!(writer, "{}", val).map_err(|e| 
-                                OptimError::InvalidConfig(format!("Failed to write value: {}", e)))?;
+                            write!(writer, "{}", val).map_err(|e| {
+                                OptimError::InvalidConfig(format!("Failed to write value: {}", e))
+                            })?;
                         }
-                        writeln!(writer).map_err(|e| 
-                            OptimError::InvalidConfig(format!("Failed to write newline: {}", e)))?;
+                        writeln!(writer).map_err(|e| {
+                            OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
+                        })?;
                     }
                 }
-                
-                writeln!(writer).map_err(|e| 
-                    OptimError::InvalidConfig(format!("Failed to write newline: {}", e)))?;
+
+                writeln!(writer).map_err(|e| {
+                    OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
+                })?;
             }
-            
-            writer.flush().map_err(|e| 
-                OptimError::InvalidConfig(format!("Failed to flush checkpoint file: {}", e)))?;
-            
+
+            writer.flush().map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to flush checkpoint file: {}", e))
+            })?;
+
             Ok(())
         }
 
@@ -714,31 +794,34 @@ pub mod checkpointing {
             use std::fs::File;
             use std::io::{BufRead, BufReader};
             use std::str::FromStr;
-            
+
             let path = path.as_ref();
-            let file = File::open(path)
-                .map_err(|e| OptimError::InvalidConfig(format!("Failed to open checkpoint file: {}", e)))?;
+            let file = File::open(path).map_err(|e| {
+                OptimError::InvalidConfig(format!("Failed to open checkpoint file: {}", e))
+            })?;
             let reader = BufReader::new(file);
             let mut lines = reader.lines();
-            
+
             // Read header
             let mut step = 0;
             let mut optimizer_version = String::new();
             let mut timestamp = String::new();
-            
+
             while let Some(Ok(line)) = lines.next() {
                 if line.starts_with("# Step: ") {
-                    step = line.trim_start_matches("# Step: ").parse()
-                        .map_err(|_| OptimError::InvalidConfig("Invalid step format".to_string()))?;
+                    step = line.trim_start_matches("# Step: ").parse().map_err(|_| {
+                        OptimError::InvalidConfig("Invalid step format".to_string())
+                    })?;
                 } else if line.starts_with("# Optimizer Version: ") {
-                    optimizer_version = line.trim_start_matches("# Optimizer Version: ").to_string();
+                    optimizer_version =
+                        line.trim_start_matches("# Optimizer Version: ").to_string();
                 } else if line.starts_with("# Timestamp: ") {
                     timestamp = line.trim_start_matches("# Timestamp: ").to_string();
                 } else if line.starts_with("[METADATA]") {
                     break;
                 }
             }
-            
+
             // Read metadata
             let mut custom_metadata = HashMap::new();
             while let Some(Ok(line)) = lines.next() {
@@ -752,7 +835,7 @@ pub mod checkpointing {
                     custom_metadata.insert(key.to_string(), value.to_string());
                 }
             }
-            
+
             // Read global state
             let mut global_state = HashMap::new();
             while let Some(Ok(line)) = lines.next() {
@@ -766,17 +849,18 @@ pub mod checkpointing {
                     global_state.insert(key.to_string(), value.to_string());
                 }
             }
-            
+
             // Read groups count
             let mut group_count = 0;
             while let Some(Ok(line)) = lines.next() {
                 if line.starts_with("count=") {
-                    group_count = line.trim_start_matches("count=").parse()
-                        .map_err(|_| OptimError::InvalidConfig("Invalid group count".to_string()))?;
+                    group_count = line.trim_start_matches("count=").parse().map_err(|_| {
+                        OptimError::InvalidConfig("Invalid group count".to_string())
+                    })?;
                     break;
                 }
             }
-            
+
             // Read parameter groups
             let mut groups = Vec::new();
             for _ in 0..group_count {
@@ -785,52 +869,66 @@ pub mod checkpointing {
                 while let Some(Ok(line)) = lines.next() {
                     if line.starts_with("[GROUP_") {
                         let id_str = line.trim_start_matches("[GROUP_").trim_end_matches(']');
-                        group_id = id_str.parse()
-                            .map_err(|_| OptimError::InvalidConfig("Invalid group ID".to_string()))?;
+                        group_id = id_str.parse().map_err(|_| {
+                            OptimError::InvalidConfig("Invalid group ID".to_string())
+                        })?;
                         break;
                     }
                 }
-                
+
                 // Read group config
                 let mut learning_rate = None;
                 let mut weight_decay = None;
                 let mut momentum = None;
                 let mut custom_params = HashMap::new();
                 let mut custom_params_count = 0;
-                
+
                 while let Some(Ok(line)) = lines.next() {
                     if line.starts_with("learning_rate=") {
                         let val_str = line.trim_start_matches("learning_rate=");
                         if val_str != "None" {
-                            learning_rate = Some(A::from_str(val_str)
-                                .map_err(|_| OptimError::InvalidConfig("Invalid learning rate".to_string()))?);
+                            learning_rate = Some(A::from_str(val_str).map_err(|_| {
+                                OptimError::InvalidConfig("Invalid learning rate".to_string())
+                            })?);
                         }
                     } else if line.starts_with("weight_decay=") {
                         let val_str = line.trim_start_matches("weight_decay=");
                         if val_str != "None" {
-                            weight_decay = Some(A::from_str(val_str)
-                                .map_err(|_| OptimError::InvalidConfig("Invalid weight decay".to_string()))?);
+                            weight_decay = Some(A::from_str(val_str).map_err(|_| {
+                                OptimError::InvalidConfig("Invalid weight decay".to_string())
+                            })?);
                         }
                     } else if line.starts_with("momentum=") {
                         let val_str = line.trim_start_matches("momentum=");
                         if val_str != "None" {
-                            momentum = Some(A::from_str(val_str)
-                                .map_err(|_| OptimError::InvalidConfig("Invalid momentum".to_string()))?);
+                            momentum = Some(A::from_str(val_str).map_err(|_| {
+                                OptimError::InvalidConfig("Invalid momentum".to_string())
+                            })?);
                         }
                     } else if line.starts_with("custom_params_count=") {
-                        custom_params_count = line.trim_start_matches("custom_params_count=").parse()
-                            .map_err(|_| OptimError::InvalidConfig("Invalid custom params count".to_string()))?;
+                        custom_params_count = line
+                            .trim_start_matches("custom_params_count=")
+                            .parse()
+                            .map_err(|_| {
+                                OptimError::InvalidConfig("Invalid custom params count".to_string())
+                            })?;
                     } else if line.starts_with("custom_") {
                         if let Some((key_with_prefix, value)) = line.split_once('=') {
                             let key = key_with_prefix.trim_start_matches("custom_");
-                            custom_params.insert(key.to_string(), A::from_str(value)
-                                .map_err(|_| OptimError::InvalidConfig("Invalid custom param value".to_string()))?);
+                            custom_params.insert(
+                                key.to_string(),
+                                A::from_str(value).map_err(|_| {
+                                    OptimError::InvalidConfig(
+                                        "Invalid custom param value".to_string(),
+                                    )
+                                })?,
+                            );
                         }
                     } else if line.starts_with("param_count=") {
                         break;
                     }
                 }
-                
+
                 // Create group config
                 let config = ParameterGroupConfig {
                     learning_rate,
@@ -839,111 +937,161 @@ pub mod checkpointing {
                     constraints: Vec::new(), // Constraints are not persisted in this simple format
                     custom_params,
                 };
-                
+
                 // Read parameters
-                let param_count: usize = lines.next()
+                let param_count: usize = lines
+                    .next()
                     .ok_or_else(|| OptimError::InvalidConfig("Missing param count".to_string()))?
                     .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {}", e)))?
                     .trim_start_matches("param_count=")
                     .parse()
                     .map_err(|_| OptimError::InvalidConfig("Invalid param count".to_string()))?;
-                
+
                 let mut params = Vec::new();
                 for i in 0..param_count {
                     // Read shape
-                    let shape_line = lines.next()
-                        .ok_or_else(|| OptimError::InvalidConfig("Missing param shape".to_string()))?
-                        .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {}", e)))?;
-                    
+                    let shape_line = lines
+                        .next()
+                        .ok_or_else(|| {
+                            OptimError::InvalidConfig("Missing param shape".to_string())
+                        })?
+                        .map_err(|e| {
+                            OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                        })?;
+
                     let shape_str = shape_line
                         .trim_start_matches(&format!("param_{}_shape=", i))
                         .trim_start_matches('[')
                         .trim_end_matches(']');
-                    
+
                     let shape: Vec<usize> = shape_str
                         .split(", ")
-                        .map(|s| s.parse().map_err(|_| OptimError::InvalidConfig("Invalid shape".to_string())))
+                        .map(|s| {
+                            s.parse()
+                                .map_err(|_| OptimError::InvalidConfig("Invalid shape".to_string()))
+                        })
                         .collect::<Result<Vec<_>>>()?;
-                    
+
                     // Read data
-                    let data_line = lines.next()
+                    let data_line = lines
+                        .next()
                         .ok_or_else(|| OptimError::InvalidConfig("Missing param data".to_string()))?
-                        .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {}", e)))?;
-                    
+                        .map_err(|e| {
+                            OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                        })?;
+
                     let data_str = data_line.trim_start_matches(&format!("param_{}_data=", i));
                     let data: Vec<A> = data_str
                         .split(' ')
                         .filter(|s| !s.is_empty())
-                        .map(|s| A::from_str(s).map_err(|_| OptimError::InvalidConfig("Invalid data value".to_string())))
+                        .map(|s| {
+                            A::from_str(s).map_err(|_| {
+                                OptimError::InvalidConfig("Invalid data value".to_string())
+                            })
+                        })
                         .collect::<Result<Vec<_>>>()?;
-                    
+
                     // Create array from shape and data
-                    let array = Array::from_shape_vec(shape, data)
-                        .map_err(|e| OptimError::InvalidConfig(format!("Failed to create array: {}", e)))?;
+                    let array = Array::from_shape_vec(shape, data).map_err(|e| {
+                        OptimError::InvalidConfig(format!("Failed to create array: {}", e))
+                    })?;
                     params.push(array);
                 }
-                
+
                 // Read optimizer state
-                let state_count: usize = lines.next()
+                let state_count: usize = lines
+                    .next()
                     .ok_or_else(|| OptimError::InvalidConfig("Missing state count".to_string()))?
                     .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {}", e)))?
                     .trim_start_matches("state_count=")
                     .parse()
                     .map_err(|_| OptimError::InvalidConfig("Invalid state count".to_string()))?;
-                
+
                 let mut state = HashMap::new();
                 for _ in 0..state_count {
-                    let state_name = lines.next()
+                    let state_name = lines
+                        .next()
                         .ok_or_else(|| OptimError::InvalidConfig("Missing state name".to_string()))?
-                        .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {}", e)))?
+                        .map_err(|e| {
+                            OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                        })?
                         .trim_start_matches("state_name=")
                         .to_string();
-                    
-                    let array_count: usize = lines.next()
-                        .ok_or_else(|| OptimError::InvalidConfig("Missing state array count".to_string()))?
-                        .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {}", e)))?
+
+                    let array_count: usize = lines
+                        .next()
+                        .ok_or_else(|| {
+                            OptimError::InvalidConfig("Missing state array count".to_string())
+                        })?
+                        .map_err(|e| {
+                            OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                        })?
                         .trim_start_matches("state_array_count=")
                         .parse()
-                        .map_err(|_| OptimError::InvalidConfig("Invalid state array count".to_string()))?;
-                    
+                        .map_err(|_| {
+                            OptimError::InvalidConfig("Invalid state array count".to_string())
+                        })?;
+
                     let mut state_arrays = Vec::new();
                     for i in 0..array_count {
                         // Read shape
-                        let shape_line = lines.next()
-                            .ok_or_else(|| OptimError::InvalidConfig("Missing state shape".to_string()))?
-                            .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {}", e)))?;
-                        
+                        let shape_line = lines
+                            .next()
+                            .ok_or_else(|| {
+                                OptimError::InvalidConfig("Missing state shape".to_string())
+                            })?
+                            .map_err(|e| {
+                                OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                            })?;
+
                         let shape_str = shape_line
                             .trim_start_matches(&format!("state_{}_shape=", i))
                             .trim_start_matches('[')
                             .trim_end_matches(']');
-                        
+
                         let shape: Vec<usize> = shape_str
                             .split(", ")
-                            .map(|s| s.parse().map_err(|_| OptimError::InvalidConfig("Invalid state shape".to_string())))
+                            .map(|s| {
+                                s.parse().map_err(|_| {
+                                    OptimError::InvalidConfig("Invalid state shape".to_string())
+                                })
+                            })
                             .collect::<Result<Vec<_>>>()?;
-                        
+
                         // Read data
-                        let data_line = lines.next()
-                            .ok_or_else(|| OptimError::InvalidConfig("Missing state data".to_string()))?
-                            .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {}", e)))?;
-                        
+                        let data_line = lines
+                            .next()
+                            .ok_or_else(|| {
+                                OptimError::InvalidConfig("Missing state data".to_string())
+                            })?
+                            .map_err(|e| {
+                                OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                            })?;
+
                         let data_str = data_line.trim_start_matches(&format!("state_{}_data=", i));
                         let data: Vec<A> = data_str
                             .split(' ')
                             .filter(|s| !s.is_empty())
-                            .map(|s| A::from_str(s).map_err(|_| OptimError::InvalidConfig("Invalid state value".to_string())))
+                            .map(|s| {
+                                A::from_str(s).map_err(|_| {
+                                    OptimError::InvalidConfig("Invalid state value".to_string())
+                                })
+                            })
                             .collect::<Result<Vec<_>>>()?;
-                        
+
                         // Create array
-                        let array = Array::from_shape_vec(shape, data)
-                            .map_err(|e| OptimError::InvalidConfig(format!("Failed to create state array: {}", e)))?;
+                        let array = Array::from_shape_vec(shape, data).map_err(|e| {
+                            OptimError::InvalidConfig(format!(
+                                "Failed to create state array: {}",
+                                e
+                            ))
+                        })?;
                         state_arrays.push(array);
                     }
-                    
+
                     state.insert(state_name, state_arrays);
                 }
-                
+
                 // Create group checkpoint
                 groups.push(ParameterGroupCheckpoint {
                     id: group_id,
@@ -952,12 +1100,12 @@ pub mod checkpointing {
                     state,
                 });
             }
-            
+
             // Create checkpoint metadata
             let mut metadata = CheckpointMetadata::new(optimizer_version);
             metadata.timestamp = timestamp;
             metadata.custom = custom_metadata;
-            
+
             // Create the checkpoint
             let checkpoint = OptimizerCheckpoint {
                 step,
@@ -965,7 +1113,7 @@ pub mod checkpointing {
                 global_state,
                 metadata,
             };
-            
+
             // Restore the checkpoint
             self.restore_checkpoint(&checkpoint)
         }

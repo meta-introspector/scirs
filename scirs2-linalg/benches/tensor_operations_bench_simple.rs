@@ -5,7 +5,7 @@
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Array3};
-use scirs2_linalg::tensor_contraction::{mode_n_product, contract, einsum, hosvd, batch_matmul};
+use scirs2_linalg::tensor_contraction::{batch_matmul, contract, einsum, hosvd, mode_n_product};
 use std::hint::black_box;
 use std::time::Duration;
 
@@ -68,14 +68,7 @@ fn bench_tensor_contraction(c: &mut Criterion) {
             BenchmarkId::new("tensor_contract", size),
             &tensor_3d,
             |b, t| {
-                b.iter(|| {
-                    contract(
-                        black_box(&t.view()),
-                        black_box(&t.view()),
-                        &[0],
-                        &[1]
-                    ).unwrap()
-                })
+                b.iter(|| contract(black_box(&t.view()), black_box(&t.view()), &[0], &[1]).unwrap())
             },
         );
     }
@@ -103,7 +96,10 @@ fn bench_einsum_operations(c: &mut Criterion) {
                 b.iter(|| {
                     einsum(
                         "ij,jk->ik",
-                        &[black_box(&a.view().into_dyn()), black_box(&matrix_b.view().into_dyn())],
+                        &[
+                            black_box(&a.view().into_dyn()),
+                            black_box(&matrix_b.view().into_dyn()),
+                        ],
                     )
                     .unwrap()
                 })
@@ -115,7 +111,16 @@ fn bench_einsum_operations(c: &mut Criterion) {
             BenchmarkId::new("einsum_matvec", size),
             &(&matrix_a, &vector),
             |b, (m, v)| {
-                b.iter(|| einsum("ij,j->i", &[black_box(&m.view().into_dyn()), black_box(&v.view().into_dyn())]).unwrap())
+                b.iter(|| {
+                    einsum(
+                        "ij,j->i",
+                        &[
+                            black_box(&m.view().into_dyn()),
+                            black_box(&v.view().into_dyn()),
+                        ],
+                    )
+                    .unwrap()
+                })
             },
         );
 
@@ -141,7 +146,8 @@ fn bench_hosvd_operations(c: &mut Criterion) {
     group.sample_size(10);
     group.measurement_time(Duration::from_secs(30));
 
-    for &size in &[8, 12, 16] { // Smaller sizes for HOSVD due to computational cost
+    for &size in &[8, 12, 16] {
+        // Smaller sizes for HOSVD due to computational cost
         let tensor_3d = create_test_tensor_3d(size, size, size);
 
         group.throughput(Throughput::Elements(
@@ -159,7 +165,13 @@ fn bench_hosvd_operations(c: &mut Criterion) {
             BenchmarkId::new("hosvd_3d_reduced", size),
             &tensor_3d,
             |b, t| {
-                b.iter(|| hosvd(black_box(&t.view()), &[reduced_rank, reduced_rank, reduced_rank]).unwrap())
+                b.iter(|| {
+                    hosvd(
+                        black_box(&t.view()),
+                        &[reduced_rank, reduced_rank, reduced_rank],
+                    )
+                    .unwrap()
+                })
             },
         );
     }

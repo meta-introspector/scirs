@@ -218,16 +218,16 @@ where
 {
     // Validate input
     validation::check_finite(x, "x")?;
-    
+
     // Special cases
     if x.is_nan() {
         return Ok(F::nan());
     }
-    
+
     if x == F::zero() {
         return Ok(F::infinity()); // Gamma(0) = +infinity
     }
-    
+
     // For negative x, check if it's a negative integer (where gamma is undefined)
     if x < F::zero() {
         let x_f64 = x.to_f64().unwrap();
@@ -239,10 +239,10 @@ where
             )));
         }
     }
-    
+
     // Use the existing gamma implementation
     let result = gamma(x);
-    
+
     // Validate output
     if result.is_nan() && !x.is_nan() {
         return Err(SpecialError::ComputationError(format!(
@@ -250,7 +250,7 @@ where
             x
         )));
     }
-    
+
     Ok(result)
 }
 
@@ -514,12 +514,18 @@ pub fn digamma<
 /// ```
 pub fn digamma_safe<F>(x: F) -> SpecialResult<F>
 where
-    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign
-        + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign,
 {
     // Validate input
     validation::check_finite(x, "x")?;
-    
+
     // Check for poles (negative integers and zero)
     if x <= F::zero() {
         let x_f64 = x.to_f64().unwrap();
@@ -531,10 +537,10 @@ where
             )));
         }
     }
-    
+
     // Use the existing digamma implementation
     let result = digamma(x);
-    
+
     // Validate output
     if result.is_nan() && !x.is_nan() {
         return Err(SpecialError::ComputationError(format!(
@@ -542,7 +548,7 @@ where
             x
         )));
     }
-    
+
     Ok(result)
 }
 
@@ -713,10 +719,10 @@ where
     // Validate inputs
     validation::check_positive(a, "a")?;
     validation::check_positive(b, "b")?;
-    
+
     // Use the existing beta implementation
     let result = beta(a, b);
-    
+
     // Validate output
     if result.is_nan() {
         return Err(SpecialError::ComputationError(format!(
@@ -724,7 +730,7 @@ where
             a, b
         )));
     }
-    
+
     Ok(result)
 }
 

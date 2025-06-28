@@ -93,7 +93,7 @@ where
 {
     /// Create a new fast B-spline evaluator from a reference
     ///
-    /// Note: This method clones the spline for internal storage. 
+    /// Note: This method clones the spline for internal storage.
     /// For better performance, consider using `from_owned` or `from_arc` instead.
     ///
     /// # Arguments

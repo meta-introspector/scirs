@@ -32,15 +32,14 @@
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
 
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::path::{Path, PathBuf};
-use std::fs::File;
-use std::io::{Read, Write, Seek, SeekFrom};
-use ndarray::Array2;
 use crate::error::{IoError, Result};
 use crate::thread_pool::ThreadPool;
-use scirs2_core::parallel_ops::*;
+use ndarray::Array2;
+use std::fs::File;
+use std::io::{Read, Seek, SeekFrom, Write};
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 /// Partition strategy for distributed processing
 #[derive(Clone)]
@@ -58,16 +57,22 @@ pub enum PartitionStrategy {
 impl std::fmt::Debug for PartitionStrategy {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::RowBased { chunk_size } => f.debug_struct("RowBased")
+            Self::RowBased { chunk_size } => f
+                .debug_struct("RowBased")
                 .field("chunk_size", chunk_size)
                 .finish(),
-            Self::SizeBased { chunk_size_bytes } => f.debug_struct("SizeBased")
+            Self::SizeBased { chunk_size_bytes } => f
+                .debug_struct("SizeBased")
                 .field("chunk_size_bytes", chunk_size_bytes)
                 .finish(),
-            Self::BlockBased { blocks_per_partition } => f.debug_struct("BlockBased")
+            Self::BlockBased {
+                blocks_per_partition,
+            } => f
+                .debug_struct("BlockBased")
                 .field("blocks_per_partition", blocks_per_partition)
                 .finish(),
-            Self::Custom(_) => f.debug_struct("Custom")
+            Self::Custom(_) => f
+                .debug_struct("Custom")
                 .field("function", &"<function>")
                 .finish(),
         }
@@ -112,7 +117,9 @@ impl DistributedReader {
     pub fn new<P: AsRef<Path>>(path: P) -> Self {
         Self {
             file_path: path.as_ref().to_path_buf(),
-            partition_strategy: PartitionStrategy::SizeBased { chunk_size_bytes: 64 * 1024 * 1024 }, // 64MB default
+            partition_strategy: PartitionStrategy::SizeBased {
+                chunk_size_bytes: 64 * 1024 * 1024,
+            }, // 64MB default
             num_workers: num_cpus::get(),
             worker_pool: None,
             progress_callback: None,
@@ -132,7 +139,7 @@ impl DistributedReader {
     }
 
     /// Set progress callback
-    pub fn progress_callback<F>(mut self, callback: F) -> Self 
+    pub fn progress_callback<F>(mut self, callback: F) -> Self
     where
         F: Fn(&[WorkerInfo]) + Send + Sync + 'static,
     {
@@ -150,18 +157,18 @@ impl DistributedReader {
     /// Create partitions based on strategy
     fn create_partitions(&self) -> Result<Vec<(usize, usize)>> {
         let file_size = self.get_file_size()?;
-        
+
         match &self.partition_strategy {
             PartitionStrategy::SizeBased { chunk_size_bytes } => {
                 let mut partitions = Vec::new();
                 let mut offset = 0;
-                
+
                 while offset < file_size {
                     let end = (offset + chunk_size_bytes).min(file_size);
                     partitions.push((offset, end - offset));
                     offset = end;
                 }
-                
+
                 Ok(partitions)
             }
             PartitionStrategy::RowBased { chunk_size } => {
@@ -170,33 +177,33 @@ impl DistributedReader {
                 let total_rows = self.estimate_row_count()?;
                 let mut partitions = Vec::new();
                 let mut row_offset = 0;
-                
+
                 while row_offset < total_rows {
                     let rows = (*chunk_size).min(total_rows - row_offset);
                     partitions.push((row_offset, rows));
                     row_offset += rows;
                 }
-                
+
                 Ok(partitions)
             }
-            PartitionStrategy::BlockBased { blocks_per_partition } => {
+            PartitionStrategy::BlockBased {
+                blocks_per_partition,
+            } => {
                 // For block-based formats
                 let block_size = 4096; // Example block size
                 let total_blocks = (file_size + block_size - 1) / block_size;
                 let mut partitions = Vec::new();
                 let mut block_offset = 0;
-                
+
                 while block_offset < total_blocks {
                     let blocks = (*blocks_per_partition).min(total_blocks - block_offset);
                     partitions.push((block_offset * block_size, blocks * block_size));
                     block_offset += blocks;
                 }
-                
+
                 Ok(partitions)
             }
-            PartitionStrategy::Custom(f) => {
-                Ok(f(file_size))
-            }
+            PartitionStrategy::Custom(f) => Ok(f(file_size)),
         }
     }
 
@@ -205,19 +212,20 @@ impl DistributedReader {
         // Simplified: sample first few KB and estimate
         let mut file = File::open(&self.file_path)
             .map_err(|_| IoError::FileNotFound(self.file_path.to_string_lossy().to_string()))?;
-        
+
         let mut buffer = vec![0u8; 8192];
-        let bytes_read = file.read(&mut buffer)
+        let bytes_read = file
+            .read(&mut buffer)
             .map_err(|e| IoError::ParseError(format!("Failed to read sample: {}", e)))?;
-        
+
         let newlines = buffer[..bytes_read].iter().filter(|&&b| b == b'\n').count();
         if newlines == 0 {
             return Ok(1);
         }
-        
+
         let file_size = self.get_file_size()?;
         let estimated_rows = (file_size as f64 / bytes_read as f64 * newlines as f64) as usize;
-        
+
         Ok(estimated_rows)
     }
 
@@ -229,26 +237,29 @@ impl DistributedReader {
     {
         let partitions = self.create_partitions()?;
         let num_partitions = partitions.len();
-        
+
         // Create worker info tracking
         let worker_infos = Arc::new(Mutex::new(
-            (0..num_partitions).map(|i| WorkerInfo {
-                id: i,
-                status: WorkerStatus::Idle,
-                progress: 0.0,
-                items_processed: 0,
-                error: None,
-            }).collect::<Vec<_>>()
+            (0..num_partitions)
+                .map(|i| WorkerInfo {
+                    id: i,
+                    status: WorkerStatus::Idle,
+                    progress: 0.0,
+                    items_processed: 0,
+                    error: None,
+                })
+                .collect::<Vec<_>>(),
         ));
-        
+
         // Process partitions in parallel
         let results = Arc::new(Mutex::new(Vec::with_capacity(num_partitions)));
         let processor = Arc::new(processor);
         let file_path = self.file_path.clone();
         let progress_callback = self.progress_callback.clone();
-        
+
         // Use thread pool or spawn threads
-        let handles: Vec<_> = partitions.into_iter()
+        let handles: Vec<_> = partitions
+            .into_iter()
             .enumerate()
             .map(|(idx, (offset, size))| {
                 let file_path = file_path.clone();
@@ -256,29 +267,31 @@ impl DistributedReader {
                 let results = results.clone();
                 let worker_infos = worker_infos.clone();
                 let progress_callback = progress_callback.clone();
-                
+
                 thread::spawn(move || {
                     // Update status
                     {
                         let mut infos = worker_infos.lock().unwrap();
                         infos[idx].status = WorkerStatus::Processing;
                     }
-                    
+
                     // Read partition
                     let partition_result = (|| -> Result<T> {
-                        let mut file = File::open(&file_path)
-                            .map_err(|_| IoError::FileNotFound(file_path.to_string_lossy().to_string()))?;
-                        
+                        let mut file = File::open(&file_path).map_err(|_| {
+                            IoError::FileNotFound(file_path.to_string_lossy().to_string())
+                        })?;
+
                         file.seek(SeekFrom::Start(offset as u64))
                             .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
-                        
+
                         let mut buffer = vec![0u8; size];
-                        file.read_exact(&mut buffer)
-                            .map_err(|e| IoError::ParseError(format!("Failed to read partition: {}", e)))?;
-                        
+                        file.read_exact(&mut buffer).map_err(|e| {
+                            IoError::ParseError(format!("Failed to read partition: {}", e))
+                        })?;
+
                         processor(buffer)
                     })();
-                    
+
                     // Update status and store result
                     match partition_result {
                         Ok(result) => {
@@ -287,7 +300,7 @@ impl DistributedReader {
                             infos[idx].progress = 1.0;
                             infos[idx].items_processed = 1;
                             drop(infos);
-                            
+
                             let mut results_guard = results.lock().unwrap();
                             results_guard.push((idx, Ok(result)));
                         }
@@ -296,12 +309,12 @@ impl DistributedReader {
                             infos[idx].status = WorkerStatus::Failed;
                             infos[idx].error = Some(e.to_string());
                             drop(infos);
-                            
+
                             let mut results_guard = results.lock().unwrap();
                             results_guard.push((idx, Err(e)));
                         }
                     }
-                    
+
                     // Call progress callback
                     if let Some(callback) = &progress_callback {
                         let infos = worker_infos.lock().unwrap();
@@ -310,17 +323,25 @@ impl DistributedReader {
                 })
             })
             .collect();
-        
+
         // Wait for all workers
         for handle in handles {
-            handle.join().map_err(|_| IoError::ParseError("Worker thread panicked".to_string()))?;
+            handle
+                .join()
+                .map_err(|_| IoError::ParseError("Worker thread panicked".to_string()))?;
         }
-        
+
         // Sort results by partition index and extract values
         let mut results_guard = results.lock().unwrap();
         results_guard.sort_by_key(|(idx, _)| *idx);
-        
-        results_guard.into_iter()
+
+        // Drain the results to own them, avoiding cloning issues
+        let sorted_results: Vec<_> = results_guard.drain(..).collect();
+        drop(results_guard);
+
+        // Extract the actual results
+        sorted_results
+            .into_iter()
             .map(|(_, result)| result)
             .collect()
     }
@@ -330,12 +351,12 @@ impl DistributedReader {
 pub struct DistributedWriter {
     output_dir: PathBuf,
     num_partitions: usize,
-    partition_naming: Box<dyn Fn(usize) -> String + Send + Sync>,
+    partition_naming: Arc<dyn Fn(usize) -> String + Send + Sync>,
     merge_strategy: MergeStrategy,
 }
 
 /// Strategy for merging distributed write outputs
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum MergeStrategy {
     /// No merging - keep separate files
     None,
@@ -345,13 +366,26 @@ pub enum MergeStrategy {
     Custom(Arc<dyn Fn(&[PathBuf], &Path) -> Result<()> + Send + Sync>),
 }
 
+impl std::fmt::Debug for MergeStrategy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MergeStrategy::None => write!(f, "MergeStrategy::None"),
+            MergeStrategy::Concatenate { output_file } => f
+                .debug_struct("MergeStrategy::Concatenate")
+                .field("output_file", output_file)
+                .finish(),
+            MergeStrategy::Custom(_) => write!(f, "MergeStrategy::Custom(<function>)"),
+        }
+    }
+}
+
 impl DistributedWriter {
     /// Create a new distributed writer
     pub fn new<P: AsRef<Path>>(output_dir: P) -> Self {
         Self {
             output_dir: output_dir.as_ref().to_path_buf(),
             num_partitions: num_cpus::get(),
-            partition_naming: Box::new(|idx| format!("partition_{:04}.dat", idx)),
+            partition_naming: Arc::new(|idx| format!("partition_{:04}.dat", idx)),
             merge_strategy: MergeStrategy::None,
         }
     }
@@ -367,7 +401,7 @@ impl DistributedWriter {
     where
         F: Fn(usize) -> String + Send + Sync + 'static,
     {
-        self.partition_naming = Box::new(naming);
+        self.partition_naming = Arc::new(naming);
         self
     }
 
@@ -380,60 +414,64 @@ impl DistributedWriter {
     /// Write data in parallel
     pub fn write_parallel<T, F>(&self, data: Vec<T>, writer: F) -> Result<Vec<PathBuf>>
     where
-        T: Send + 'static,
+        T: Send + 'static + Clone,
         F: Fn(&T, &mut File) -> Result<()> + Send + Sync + 'static,
     {
         // Create output directory
         std::fs::create_dir_all(&self.output_dir)
             .map_err(|e| IoError::FileError(format!("Failed to create output directory: {}", e)))?;
-        
+
         // Partition data
         let chunk_size = (data.len() + self.num_partitions - 1) / self.num_partitions;
-        let chunks: Vec<_> = data.into_iter()
+        let chunks: Vec<_> = data
+            .into_iter()
             .collect::<Vec<_>>()
             .chunks(chunk_size)
             .map(|chunk| chunk.to_vec())
             .collect();
-        
+
         let writer = Arc::new(writer);
         let output_dir = self.output_dir.clone();
-        let partition_naming = Arc::new(self.partition_naming.as_ref());
-        
+        let partition_naming = self.partition_naming.clone();
+
         // Write partitions in parallel
-        let handles: Vec<_> = chunks.into_iter()
+        let handles: Vec<_> = chunks
+            .into_iter()
             .enumerate()
             .map(|(idx, chunk)| {
                 let writer = writer.clone();
                 let output_dir = output_dir.clone();
                 let partition_naming = partition_naming.clone();
-                
+
                 thread::spawn(move || -> Result<PathBuf> {
                     let filename = partition_naming(idx);
                     let filepath = output_dir.join(&filename);
-                    
-                    let mut file = File::create(&filepath)
-                        .map_err(|e| IoError::FileError(format!("Failed to create partition file: {}", e)))?;
-                    
+
+                    let mut file = File::create(&filepath).map_err(|e| {
+                        IoError::FileError(format!("Failed to create partition file: {}", e))
+                    })?;
+
                     for item in chunk {
                         writer(&item, &mut file)?;
                     }
-                    
+
                     file.sync_all()
                         .map_err(|e| IoError::FileError(format!("Failed to sync file: {}", e)))?;
-                    
+
                     Ok(filepath)
                 })
             })
             .collect();
-        
+
         // Collect results
         let mut partition_files = Vec::new();
         for handle in handles {
-            let filepath = handle.join()
+            let filepath = handle
+                .join()
                 .map_err(|_| IoError::FileError("Writer thread panicked".to_string()))??;
             partition_files.push(filepath);
         }
-        
+
         // Apply merge strategy
         match &self.merge_strategy {
             MergeStrategy::None => Ok(partition_files),
@@ -453,23 +491,24 @@ impl DistributedWriter {
     fn merge_files(&self, partitions: &[PathBuf], output: &Path) -> Result<()> {
         let mut output_file = File::create(output)
             .map_err(|e| IoError::FileError(format!("Failed to create merge output: {}", e)))?;
-        
+
         for partition in partitions {
             let mut input = File::open(partition)
                 .map_err(|_| IoError::FileNotFound(partition.to_string_lossy().to_string()))?;
-            
+
             std::io::copy(&mut input, &mut output_file)
                 .map_err(|e| IoError::FileError(format!("Failed to copy partition: {}", e)))?;
         }
-        
-        output_file.sync_all()
+
+        output_file
+            .sync_all()
             .map_err(|e| IoError::FileError(format!("Failed to sync merged file: {}", e)))?;
-        
+
         // Optionally delete partition files
         for partition in partitions {
             let _ = std::fs::remove_file(partition);
         }
-        
+
         Ok(())
     }
 }
@@ -496,7 +535,10 @@ pub enum Distribution {
     /// Cyclic distribution
     Cyclic { cycle_size: usize },
     /// Block-cyclic distribution
-    BlockCyclic { block_size: usize, cycle_size: usize },
+    BlockCyclic {
+        block_size: usize,
+        cycle_size: usize,
+    },
 }
 
 impl DistributedArray {
@@ -525,7 +567,8 @@ impl DistributedArray {
 
     /// Get local partition for a node
     pub fn get_local_partition(&self, node_id: usize) -> Option<&Array2<f64>> {
-        self.partitions.iter()
+        self.partitions
+            .iter()
             .find(|p| p.node_id == node_id)
             .map(|p| &p.data)
     }
@@ -533,39 +576,45 @@ impl DistributedArray {
     /// Gather all partitions into a single array
     pub fn gather(&self) -> Result<Array2<f64>> {
         if self.shape.len() != 2 {
-            return Err(IoError::ParseError("Only 2D arrays supported for gather".to_string()));
+            return Err(IoError::ParseError(
+                "Only 2D arrays supported for gather".to_string(),
+            ));
         }
-        
+
         let mut result = Array2::zeros((self.shape[0], self.shape[1]));
-        
+
         for partition in &self.partitions {
             let (rows, cols) = partition.data.dim();
             let row_start = partition.global_offset[0];
             let col_start = partition.global_offset[1];
-            
+
             for i in 0..rows {
                 for j in 0..cols {
                     result[[row_start + i, col_start + j]] = partition.data[[i, j]];
                 }
             }
         }
-        
+
         Ok(result)
     }
 
     /// Scatter a single array into distributed partitions
-    pub fn scatter(array: &Array2<f64>, distribution: Distribution, num_nodes: usize) -> Result<Self> {
+    pub fn scatter(
+        array: &Array2<f64>,
+        distribution: Distribution,
+        num_nodes: usize,
+    ) -> Result<Self> {
         let shape = vec![array.nrows(), array.ncols()];
         let mut distributed = Self::new(shape.clone(), distribution.clone());
-        
+
         match distribution {
             Distribution::Block { block_size } => {
                 let rows_per_node = (array.nrows() + num_nodes - 1) / num_nodes;
-                
+
                 for node_id in 0..num_nodes {
                     let row_start = node_id * rows_per_node;
                     let row_end = ((node_id + 1) * rows_per_node).min(array.nrows());
-                    
+
                     if row_start < array.nrows() {
                         let partition = array.slice(s![row_start..row_end, ..]).to_owned();
                         distributed.add_partition(partition, vec![row_start, 0], node_id);
@@ -573,10 +622,12 @@ impl DistributedArray {
                 }
             }
             _ => {
-                return Err(IoError::ParseError("Unsupported distribution for scatter".to_string()));
+                return Err(IoError::ParseError(
+                    "Unsupported distribution for scatter".to_string(),
+                ));
             }
         }
-        
+
         Ok(distributed)
     }
 }
@@ -585,16 +636,16 @@ impl DistributedArray {
 pub trait DistributedFileSystem: Send + Sync {
     /// Open a file for reading
     fn open_read(&self, path: &Path) -> Result<Box<dyn Read + Send>>;
-    
+
     /// Create a file for writing
     fn create_write(&self, path: &Path) -> Result<Box<dyn Write + Send>>;
-    
+
     /// List files in a directory
     fn list_dir(&self, path: &Path) -> Result<Vec<PathBuf>>;
-    
+
     /// Get file metadata
     fn metadata(&self, path: &Path) -> Result<FileMetadata>;
-    
+
     /// Check if path exists
     fn exists(&self, path: &Path) -> bool;
 }
@@ -616,38 +667,40 @@ impl DistributedFileSystem for LocalFileSystem {
             .map_err(|_| IoError::FileNotFound(path.to_string_lossy().to_string()))?;
         Ok(Box::new(file))
     }
-    
+
     fn create_write(&self, path: &Path) -> Result<Box<dyn Write + Send>> {
         let file = File::create(path)
             .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
         Ok(Box::new(file))
     }
-    
+
     fn list_dir(&self, path: &Path) -> Result<Vec<PathBuf>> {
         let entries = std::fs::read_dir(path)
             .map_err(|e| IoError::ParseError(format!("Failed to read directory: {}", e)))?;
-        
+
         let mut paths = Vec::new();
         for entry in entries {
-            let entry = entry.map_err(|e| IoError::ParseError(format!("Failed to read entry: {}", e)))?;
+            let entry =
+                entry.map_err(|e| IoError::ParseError(format!("Failed to read entry: {}", e)))?;
             paths.push(entry.path());
         }
-        
+
         Ok(paths)
     }
-    
+
     fn metadata(&self, path: &Path) -> Result<FileMetadata> {
         let meta = std::fs::metadata(path)
             .map_err(|_| IoError::FileNotFound(path.to_string_lossy().to_string()))?;
-        
+
         Ok(FileMetadata {
             size: meta.len(),
-            modified: meta.modified()
+            modified: meta
+                .modified()
                 .map_err(|e| IoError::ParseError(format!("Failed to get modified time: {}", e)))?,
             is_dir: meta.is_dir(),
         })
     }
-    
+
     fn exists(&self, path: &Path) -> bool {
         path.exists()
     }
@@ -665,13 +718,15 @@ mod tests {
     fn test_partition_strategies() {
         let temp_file = TempDir::new().unwrap().path().join("test.dat");
         std::fs::write(&temp_file, vec![0u8; 10000]).unwrap();
-        
-        let reader = DistributedReader::new(&temp_file)
-            .partition_strategy(PartitionStrategy::SizeBased { chunk_size_bytes: 1000 });
-        
+
+        let reader =
+            DistributedReader::new(&temp_file).partition_strategy(PartitionStrategy::SizeBased {
+                chunk_size_bytes: 1000,
+            });
+
         let partitions = reader.create_partitions().unwrap();
         assert_eq!(partitions.len(), 10);
-        
+
         for (offset, size) in &partitions {
             assert_eq!(*size, 1000);
         }
@@ -680,15 +735,18 @@ mod tests {
     #[test]
     fn test_distributed_array() {
         let array = Array2::from_shape_fn((100, 50), |(i, j)| (i * 50 + j) as f64);
-        
+
         let distributed = DistributedArray::scatter(
             &array,
-            Distribution::Block { block_size: vec![25, 50] },
-            4
-        ).unwrap();
-        
+            Distribution::Block {
+                block_size: vec![25, 50],
+            },
+            4,
+        )
+        .unwrap();
+
         assert_eq!(distributed.partitions.len(), 4);
-        
+
         let gathered = distributed.gather().unwrap();
         assert_eq!(array, gathered);
     }
@@ -696,18 +754,19 @@ mod tests {
     #[test]
     fn test_distributed_writer() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         let data: Vec<i32> = (0..100).collect();
-        let writer = DistributedWriter::new(temp_dir.path())
-            .num_partitions(4);
-        
-        let files = writer.write_parallel(data, |&value, file| {
-            writeln!(file, "{}", value)
-                .map_err(|e| IoError::FileError(format!("Failed to write: {}", e)))
-        }).unwrap();
-        
+        let writer = DistributedWriter::new(temp_dir.path()).num_partitions(4);
+
+        let files = writer
+            .write_parallel(data, |&value, file| {
+                writeln!(file, "{}", value)
+                    .map_err(|e| IoError::FileError(format!("Failed to write: {}", e)))
+            })
+            .unwrap();
+
         assert_eq!(files.len(), 4);
-        
+
         // Verify all files exist
         for file in &files {
             assert!(file.exists());

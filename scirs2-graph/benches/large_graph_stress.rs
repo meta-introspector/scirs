@@ -6,12 +6,10 @@
 #![allow(unused_imports)]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use scirs2_graph::{
-    algorithms, generators, measures, DiGraph, Graph, Node, EdgeWeight,
-};
-use std::time::{Duration, Instant};
+use scirs2_graph::{algorithms, generators, measures, DiGraph, EdgeWeight, Graph, Node};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
+use std::time::{Duration, Instant};
 
 /// Configuration for stress tests
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -99,7 +97,7 @@ struct TestSummary {
 /// Memory monitoring utilities
 mod memory {
     use std::fs;
-    
+
     pub fn get_current_memory_mb() -> f64 {
         #[cfg(target_os = "linux")]
         {
@@ -115,20 +113,20 @@ mod memory {
                 }
             }
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             // macOS memory monitoring would go here
         }
-        
+
         #[cfg(target_os = "windows")]
         {
             // Windows memory monitoring would go here
         }
-        
+
         0.0
     }
-    
+
     pub fn check_memory_limit(limit_mb: usize) -> bool {
         get_current_memory_mb() < limit_mb as f64
     }
@@ -139,10 +137,11 @@ fn bench_graph_generation(c: &mut Criterion) {
     let mut group = c.benchmark_group("large_graph_generation");
     group.sample_size(10);
     group.measurement_time(Duration::from_secs(60));
-    
+
     let config = StressTestConfig::default();
-    
-    for &node_count in &config.node_counts[..3] { // Test first 3 sizes
+
+    for &node_count in &config.node_counts[..3] {
+        // Test first 3 sizes
         // Erdős-Rényi
         for &density in &config.edge_densities {
             let id = format!("erdos_renyi_{}_density_{}", node_count, density);
@@ -157,7 +156,7 @@ fn bench_graph_generation(c: &mut Criterion) {
                 },
             );
         }
-        
+
         // Barabási-Albert
         group.bench_with_input(
             BenchmarkId::new("barabasi_albert", node_count),
@@ -169,14 +168,14 @@ fn bench_graph_generation(c: &mut Criterion) {
                 });
             },
         );
-        
+
         // Check memory
         if !memory::check_memory_limit(config.memory_limit_mb) {
             println!("Memory limit reached, stopping generation benchmarks");
             break;
         }
     }
-    
+
     group.finish();
 }
 
@@ -184,29 +183,34 @@ fn bench_graph_generation(c: &mut Criterion) {
 fn bench_large_algorithms(c: &mut Criterion) {
     let mut group = c.benchmark_group("large_graph_algorithms");
     group.sample_size(10);
-    
+
     // Pre-generate test graphs
     let test_graphs = vec![
-        ("small", generators::barabasi_albert_graph(100_000, 3, None).unwrap()),
-        ("medium", generators::barabasi_albert_graph(500_000, 3, None).unwrap()),
-        ("large", generators::barabasi_albert_graph(1_000_000, 3, None).unwrap()),
+        (
+            "small",
+            generators::barabasi_albert_graph(100_000, 3, None).unwrap(),
+        ),
+        (
+            "medium",
+            generators::barabasi_albert_graph(500_000, 3, None).unwrap(),
+        ),
+        (
+            "large",
+            generators::barabasi_albert_graph(1_000_000, 3, None).unwrap(),
+        ),
     ];
-    
+
     for (size_name, graph) in &test_graphs {
         let node_count = graph.node_count();
-        
+
         // BFS from random node
-        group.bench_with_input(
-            BenchmarkId::new("bfs", size_name),
-            graph,
-            |b, g| {
-                b.iter(|| {
-                    let result = algorithms::breadth_first_search(g, &0).unwrap();
-                    black_box(result)
-                });
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("bfs", size_name), graph, |b, g| {
+            b.iter(|| {
+                let result = algorithms::breadth_first_search(g, &0).unwrap();
+                black_box(result)
+            });
+        });
+
         // Connected components
         group.bench_with_input(
             BenchmarkId::new("connected_components", size_name),
@@ -218,7 +222,7 @@ fn bench_large_algorithms(c: &mut Criterion) {
                 });
             },
         );
-        
+
         // PageRank (limited iterations)
         group.bench_with_input(
             BenchmarkId::new("pagerank_10iter", size_name),
@@ -230,22 +234,20 @@ fn bench_large_algorithms(c: &mut Criterion) {
                 });
             },
         );
-        
+
         // Degree distribution
         group.bench_with_input(
             BenchmarkId::new("degree_distribution", size_name),
             graph,
             |b, g| {
                 b.iter(|| {
-                    let degrees: Vec<usize> = (0..g.node_count())
-                        .map(|i| g.degree(i))
-                        .collect();
+                    let degrees: Vec<usize> = (0..g.node_count()).map(|i| g.degree(i)).collect();
                     black_box(degrees)
                 });
             },
         );
     }
-    
+
     group.finish();
 }
 
@@ -253,11 +255,11 @@ fn bench_large_algorithms(c: &mut Criterion) {
 fn bench_streaming_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("streaming_operations");
     group.sample_size(10);
-    
+
     // Test processing graphs in chunks
     let chunk_sizes = vec![10_000, 50_000, 100_000];
     let total_nodes = 1_000_000;
-    
+
     for &chunk_size in &chunk_sizes {
         group.bench_with_input(
             BenchmarkId::new("streaming_degree_calc", chunk_size),
@@ -266,24 +268,24 @@ fn bench_streaming_operations(c: &mut Criterion) {
                 b.iter(|| {
                     let mut total_degree = 0u64;
                     let mut max_degree = 0usize;
-                    
+
                     for chunk_start in (0..total).step_by(chunk) {
                         let chunk_end = (chunk_start + chunk).min(total);
                         let chunk_graph = generators::path_graph(chunk_end - chunk_start);
-                        
+
                         for i in 0..chunk_graph.node_count() {
                             let degree = chunk_graph.degree(i);
                             total_degree += degree as u64;
                             max_degree = max_degree.max(degree);
                         }
                     }
-                    
+
                     black_box((total_degree, max_degree))
                 });
             },
         );
     }
-    
+
     group.finish();
 }
 
@@ -306,27 +308,28 @@ fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
             warnings: Vec::new(),
         },
     };
-    
+
     let mut memory_samples = Vec::new();
     let initial_memory = memory::get_current_memory_mb();
-    
+
     // Test graph generation
     for &node_count in &config.node_counts {
         if !memory::check_memory_limit(config.memory_limit_mb) {
-            results.summary.warnings.push(format!(
-                "Skipping {} nodes due to memory limit", node_count
-            ));
+            results
+                .summary
+                .warnings
+                .push(format!("Skipping {} nodes due to memory limit", node_count));
             continue;
         }
-        
+
         let gen_start = Instant::now();
         let pre_gen_memory = memory::get_current_memory_mb();
-        
+
         match generators::barabasi_albert_graph(node_count, 3, None) {
             Ok(graph) => {
                 let gen_time = gen_start.elapsed();
                 let post_gen_memory = memory::get_current_memory_mb();
-                
+
                 results.graph_generation.push(GraphGenerationResult {
                     nodes: graph.node_count(),
                     edges: graph.edge_count(),
@@ -334,12 +337,12 @@ fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
                     memory_used_mb: post_gen_memory - pre_gen_memory,
                     graph_type: "barabasi_albert".to_string(),
                 });
-                
-                results.summary.largest_graph_tested = 
+
+                results.summary.largest_graph_tested =
                     results.summary.largest_graph_tested.max(node_count);
-                
+
                 memory_samples.push(post_gen_memory);
-                
+
                 // Test algorithms on this graph
                 for algorithm in &config.algorithms {
                     if let Some(result) = test_algorithm(&graph, algorithm, &config) {
@@ -349,60 +352,53 @@ fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
             }
             Err(e) => {
                 results.summary.failures.push(format!(
-                    "Failed to generate {} node graph: {}", node_count, e
+                    "Failed to generate {} node graph: {}",
+                    node_count, e
                 ));
             }
         }
     }
-    
+
     // Calculate memory profile
     if !memory_samples.is_empty() {
-        results.memory_profile.peak_memory_mb = memory_samples.iter()
-            .fold(0.0f64, |a, &b| a.max(b));
-        results.memory_profile.average_memory_mb = memory_samples.iter()
-            .sum::<f64>() / memory_samples.len() as f64;
-        results.memory_profile.memory_efficiency_ratio = 
+        results.memory_profile.peak_memory_mb =
+            memory_samples.iter().fold(0.0f64, |a, &b| a.max(b));
+        results.memory_profile.average_memory_mb =
+            memory_samples.iter().sum::<f64>() / memory_samples.len() as f64;
+        results.memory_profile.memory_efficiency_ratio =
             results.memory_profile.average_memory_mb / results.memory_profile.peak_memory_mb;
     }
-    
+
     results.summary.total_runtime_seconds = start_time.elapsed().as_secs_f64();
     results
 }
 
 fn test_algorithm(
-    graph: &Graph<usize, f64>, 
+    graph: &Graph<usize, f64>,
     algorithm: &str,
-    config: &StressTestConfig
+    config: &StressTestConfig,
 ) -> Option<AlgorithmResult> {
     let start = Instant::now();
     let pre_memory = memory::get_current_memory_mb();
-    
+
     let result_summary = match algorithm {
-        "bfs" => {
-            match algorithms::breadth_first_search(graph, &0) {
-                Ok(order) => format!("Visited {} nodes", order.len()),
-                Err(e) => return None,
+        "bfs" => match algorithms::breadth_first_search(graph, &0) {
+            Ok(order) => format!("Visited {} nodes", order.len()),
+            Err(e) => return None,
+        },
+        "connected_components" => match algorithms::connected_components(graph) {
+            Ok(components) => format!("Found {} components", components.len()),
+            Err(e) => return None,
+        },
+        "pagerank" => match algorithms::pagerank(graph, 0.85, Some(10)) {
+            Ok(ranks) => {
+                let max_rank = ranks.iter().fold(0.0f64, |a, &b| a.max(b));
+                format!("Max PageRank: {:.6}", max_rank)
             }
-        }
-        "connected_components" => {
-            match algorithms::connected_components(graph) {
-                Ok(components) => format!("Found {} components", components.len()),
-                Err(e) => return None,
-            }
-        }
-        "pagerank" => {
-            match algorithms::pagerank(graph, 0.85, Some(10)) {
-                Ok(ranks) => {
-                    let max_rank = ranks.iter().fold(0.0f64, |a, &b| a.max(b));
-                    format!("Max PageRank: {:.6}", max_rank)
-                }
-                Err(e) => return None,
-            }
-        }
+            Err(e) => return None,
+        },
         "degree_distribution" => {
-            let degrees: Vec<usize> = (0..graph.node_count())
-                .map(|i| graph.degree(i))
-                .collect();
+            let degrees: Vec<usize> = (0..graph.node_count()).map(|i| graph.degree(i)).collect();
             let max_degree = degrees.iter().max().unwrap_or(&0);
             format!("Max degree: {}", max_degree)
         }
@@ -417,14 +413,17 @@ fn test_algorithm(
                     sum += cc;
                 }
             }
-            format!("Avg clustering (sampled): {:.4}", sum / config.sample_size as f64)
+            format!(
+                "Avg clustering (sampled): {:.4}",
+                sum / config.sample_size as f64
+            )
         }
         _ => return None,
     };
-    
+
     let execution_time = start.elapsed();
     let post_memory = memory::get_current_memory_mb();
-    
+
     Some(AlgorithmResult {
         algorithm: algorithm.to_string(),
         graph_size: graph.node_count(),
@@ -438,49 +437,72 @@ fn test_algorithm(
 /// Print stress test report
 fn print_stress_test_report(results: &StressTestResults) {
     println!("\n========== STRESS TEST REPORT ==========");
-    println!("Total runtime: {:.2}s", results.summary.total_runtime_seconds);
-    println!("Largest graph tested: {} nodes", results.summary.largest_graph_tested);
-    
+    println!(
+        "Total runtime: {:.2}s",
+        results.summary.total_runtime_seconds
+    );
+    println!(
+        "Largest graph tested: {} nodes",
+        results.summary.largest_graph_tested
+    );
+
     println!("\n--- Graph Generation Performance ---");
     for gen in &results.graph_generation {
-        println!("  {} nodes, {} edges: {:.2}s, {:.1}MB",
-                 gen.nodes, gen.edges,
-                 gen.generation_time_ms as f64 / 1000.0,
-                 gen.memory_used_mb);
+        println!(
+            "  {} nodes, {} edges: {:.2}s, {:.1}MB",
+            gen.nodes,
+            gen.edges,
+            gen.generation_time_ms as f64 / 1000.0,
+            gen.memory_used_mb
+        );
     }
-    
+
     println!("\n--- Algorithm Performance ---");
     for algo_name in &results.config.algorithms {
         println!("\n  {}:", algo_name);
-        for result in results.algorithm_performance.iter()
-            .filter(|r| r.algorithm == *algo_name) {
-            println!("    {} nodes: {:.3}s, {:.1}MB delta | {}",
-                     result.graph_size,
-                     result.execution_time_ms as f64 / 1000.0,
-                     result.memory_delta_mb,
-                     result.result_summary);
+        for result in results
+            .algorithm_performance
+            .iter()
+            .filter(|r| r.algorithm == *algo_name)
+        {
+            println!(
+                "    {} nodes: {:.3}s, {:.1}MB delta | {}",
+                result.graph_size,
+                result.execution_time_ms as f64 / 1000.0,
+                result.memory_delta_mb,
+                result.result_summary
+            );
         }
     }
-    
+
     println!("\n--- Memory Profile ---");
-    println!("  Peak memory: {:.1}MB", results.memory_profile.peak_memory_mb);
-    println!("  Average memory: {:.1}MB", results.memory_profile.average_memory_mb);
-    println!("  Efficiency ratio: {:.2}", results.memory_profile.memory_efficiency_ratio);
-    
+    println!(
+        "  Peak memory: {:.1}MB",
+        results.memory_profile.peak_memory_mb
+    );
+    println!(
+        "  Average memory: {:.1}MB",
+        results.memory_profile.average_memory_mb
+    );
+    println!(
+        "  Efficiency ratio: {:.2}",
+        results.memory_profile.memory_efficiency_ratio
+    );
+
     if !results.summary.failures.is_empty() {
         println!("\n--- Failures ---");
         for failure in &results.summary.failures {
             println!("  ❌ {}", failure);
         }
     }
-    
+
     if !results.summary.warnings.is_empty() {
         println!("\n--- Warnings ---");
         for warning in &results.summary.warnings {
             println!("  ⚠️  {}", warning);
         }
     }
-    
+
     println!("\n=====================================");
 }
 
@@ -504,7 +526,7 @@ criterion_main!(benches);
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     #[ignore] // Run with: cargo test --release -- --ignored stress_test_million_nodes
     fn stress_test_million_nodes() {
@@ -522,14 +544,14 @@ mod tests {
             sample_size: 1000,
             parallel: true,
         };
-        
+
         let results = run_stress_test_suite(config);
         print_stress_test_report(&results);
-        
+
         // Save results
         let _ = save_results(&results, "stress_test_results.json");
     }
-    
+
     #[test]
     #[ignore]
     fn stress_test_five_million_nodes() {
@@ -545,10 +567,10 @@ mod tests {
             sample_size: 10000,
             parallel: true,
         };
-        
+
         let results = run_stress_test_suite(config);
         print_stress_test_report(&results);
-        
+
         // Save results
         let _ = save_results(&results, "stress_test_5m_results.json");
     }

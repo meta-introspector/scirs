@@ -2,8 +2,8 @@
 
 use ndarray::array;
 use scirs2_cluster::{
-    euclidean_distance, leader_clustering, manhattan_distance,
-    LeaderClustering, LeaderTree, LeaderNode,
+    euclidean_distance, leader_clustering, manhattan_distance, LeaderClustering, LeaderNode,
+    LeaderTree,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 1: Basic leader clustering with Euclidean distance
     println!("Example 1: Basic Leader Clustering (Euclidean distance, threshold=2.0)");
     let (leaders, labels) = leader_clustering(data.view(), 2.0, euclidean_distance)?;
-    
+
     println!("Number of clusters: {}", leaders.nrows());
     println!("Cluster leaders:");
     for (i, leader) in leaders.rows().into_iter().enumerate() {
@@ -60,30 +60,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 4: Using LeaderClustering class
     println!("Example 4: Using LeaderClustering class");
     let mut leader_model = LeaderClustering::new(2.0)?;
-    
+
     // Fit the model
     leader_model.fit(data.view())?;
     println!("Number of clusters found: {}", leader_model.n_clusters());
-    
+
     // Get cluster centers
     let centers = leader_model.get_leaders();
     println!("Cluster centers:");
     for (i, center) in centers.rows().into_iter().enumerate() {
         println!("  Center {}: [{:.2}, {:.2}]", i, center[0], center[1]);
     }
-    
+
     // Predict on new data
     let new_data = array![
-        [1.5, 1.5],    // Should be assigned to cluster 1
-        [5.5, 5.5],    // Should be assigned to cluster 2
-        [10.5, 1.5],   // Should be assigned to cluster 3
-        [7.5, 3.0],    // Between clusters, will be assigned to closest
+        [1.5, 1.5],  // Should be assigned to cluster 1
+        [5.5, 5.5],  // Should be assigned to cluster 2
+        [10.5, 1.5], // Should be assigned to cluster 3
+        [7.5, 3.0],  // Between clusters, will be assigned to closest
     ];
-    
+
     let predictions = leader_model.predict(new_data.view())?;
     println!("\nPredictions for new data:");
-    for (i, (point, &label)) in new_data.rows().into_iter().zip(predictions.iter()).enumerate() {
-        println!("  Point [{:.1}, {:.1}] -> Cluster {}", point[0], point[1], label);
+    for (i, (point, &label)) in new_data
+        .rows()
+        .into_iter()
+        .zip(predictions.iter())
+        .enumerate()
+    {
+        println!(
+            "  Point [{:.1}, {:.1}] -> Cluster {}",
+            point[0], point[1], label
+        );
     }
     println!();
 
@@ -91,11 +99,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Example 5: Hierarchical Leader Tree");
     let thresholds = vec![5.0, 2.0, 1.0];
     let tree = LeaderTree::build_hierarchical(data.view(), &thresholds)?;
-    
+
     println!("Hierarchical clustering with thresholds: {:?}", thresholds);
     println!("Number of root clusters: {}", tree.roots.len());
     println!("Total nodes in tree: {}", tree.node_count());
-    
+
     // Print tree structure
     println!("\nTree structure:");
     for (i, root) in tree.roots.iter().enumerate() {
@@ -119,14 +127,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         [5.1, 5.1],
         [10.1, 1.1],
     ];
-    
+
     let (leaders_orig, _) = leader_clustering(data.view(), 1.5, euclidean_distance)?;
     let (leaders_shuf, _) = leader_clustering(shuffled_data.view(), 1.5, euclidean_distance)?;
-    
+
     println!("Original order - {} clusters", leaders_orig.nrows());
     println!("Shuffled order - {} clusters", leaders_shuf.nrows());
     println!("(Results may differ due to order-dependent nature of Leader algorithm)");
-
 
     Ok(())
 }
@@ -145,7 +152,7 @@ fn print_tree_node<F: num_traits::Float + std::fmt::Display>(
         node.leader[1],
         node.members.len()
     );
-    
+
     for (i, child) in node.children.iter().enumerate() {
         print_tree_node(child, depth + 1, i);
     }

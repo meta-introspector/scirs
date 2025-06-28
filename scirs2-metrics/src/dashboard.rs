@@ -17,7 +17,7 @@
 //!
 //! let dashboard = InteractiveDashboard::default();
 //! dashboard.add_metric("accuracy", 0.95).unwrap();
-//! 
+//!
 //! // Start the HTTP server
 //! let server = start_http_server(dashboard).unwrap();
 //! # }
@@ -312,23 +312,36 @@ impl InteractiveDashboard {
         self.data.add_metrics(points)
     }
 
-    /// Start the dashboard server (placeholder for actual web server)
+    /// Start the dashboard server
     pub fn start_server(&self) -> Result<DashboardServer> {
-        println!(
-            "Starting dashboard server at http://{}",
-            self.config.address
-        );
-        println!("Dashboard title: {}", self.config.title);
-        println!("Refresh interval: {} seconds", self.config.refresh_interval);
-        println!("Real-time updates: {}", self.config.enable_realtime);
+        #[cfg(feature = "dashboard_server")]
+        {
+            // Use actual HTTP server when feature is enabled
+            let _http_server = server::start_http_server(self.clone())?;
 
-        // In a real implementation, this would start an actual web server
-        // For now, we return a mock server
-        // To use the actual HTTP server, call start_http_server() instead
-        Ok(DashboardServer {
-            address: self.config.address,
-            is_running: true,
-        })
+            Ok(DashboardServer {
+                address: self.config.address,
+                is_running: true,
+            })
+        }
+
+        #[cfg(not(feature = "dashboard_server"))]
+        {
+            println!(
+                "Dashboard server feature not enabled. Starting mock server at http://{}",
+                self.config.address
+            );
+            println!("Dashboard title: {}", self.config.title);
+            println!("Refresh interval: {} seconds", self.config.refresh_interval);
+            println!("Real-time updates: {}", self.config.enable_realtime);
+            println!("To use the real HTTP server, enable the 'dashboard_server' feature");
+
+            // Return mock server when feature is not enabled
+            Ok(DashboardServer {
+                address: self.config.address,
+                is_running: true,
+            })
+        }
     }
 
     /// Export data to JSON

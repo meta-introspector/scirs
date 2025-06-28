@@ -9,7 +9,7 @@ use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Write, BufReader, BufWriter, Seek, SeekFrom};
+use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
 use crate::error::{ClusteringError, Result};
@@ -546,7 +546,7 @@ mod tests {
 /// Enhanced memory management for out-of-core clustering
 pub mod memory_management {
     use super::*;
-    
+
     /// Adaptive memory manager that monitors system resources
     #[derive(Debug, Clone)]
     pub struct AdaptiveMemoryManager {
@@ -580,21 +580,25 @@ pub mod memory_management {
         }
 
         /// Estimate memory usage for storing data
-        pub fn estimate_memory_usage<F: Float>(&self, n_samples: usize, n_features: usize) -> usize {
+        pub fn estimate_memory_usage<F: Float>(
+            &self,
+            n_samples: usize,
+            n_features: usize,
+        ) -> usize {
             std::mem::size_of::<F>() * n_samples * n_features
         }
 
         /// Allocate memory for data
         pub fn allocate<F: Float>(&mut self, n_samples: usize, n_features: usize) -> Result<()> {
             let required = self.estimate_memory_usage::<F>(n_samples, n_features);
-            
+
             if self.current_usage + required > self.max_memory {
                 if self.enable_disk_storage {
                     // Allow allocation but mark that we need disk storage
                     Ok(())
                 } else {
                     Err(ClusteringError::InvalidInput(
-                        "Not enough memory and disk storage is disabled".to_string()
+                        "Not enough memory and disk storage is disabled".to_string(),
                     ))
                 }
             } else {
@@ -617,7 +621,7 @@ pub mod memory_management {
         pub fn optimal_batch_size<F: Float>(&self, n_features: usize) -> usize {
             let available = self.available_memory();
             let bytes_per_sample = std::mem::size_of::<F>() * n_features;
-            
+
             if bytes_per_sample == 0 {
                 1000 // Default fallback
             } else {
@@ -639,7 +643,7 @@ pub mod memory_management {
         /// Create a new disk-backed storage
         pub fn new(temp_dir: Option<PathBuf>, buffer_size: usize) -> Self {
             let temp_dir = temp_dir.unwrap_or_else(std::env::temp_dir);
-            
+
             Self {
                 temp_files: Vec::new(),
                 temp_dir,
@@ -651,8 +655,10 @@ pub mod memory_management {
         /// Write data chunk to disk
         pub fn write_chunk(&mut self, data: ArrayView2<F>) -> Result<usize> {
             let chunk_id = self.temp_files.len();
-            let file_path = self.temp_dir.join(format!("cluster_chunk_{}.bin", chunk_id));
-            
+            let file_path = self
+                .temp_dir
+                .join(format!("cluster_chunk_{}.bin", chunk_id));
+
             let file = File::create(&file_path).map_err(|e| {
                 ClusteringError::InvalidInput(format!("Failed to create temp file: {}", e))
             })?;
@@ -690,7 +696,7 @@ pub mod memory_management {
         pub fn read_chunk(&self, chunk_id: usize) -> Result<Array2<F>> {
             if chunk_id >= self.temp_files.len() {
                 return Err(ClusteringError::InvalidInput(
-                    "Invalid chunk ID".to_string()
+                    "Invalid chunk ID".to_string(),
                 ));
             }
 
@@ -776,10 +782,10 @@ pub mod advanced_streaming {
         pub fn new(epsilon: f64, delta: f64) -> Self {
             let width = (std::f64::consts::E / epsilon).ceil() as usize;
             let depth = (1.0 / delta).ln().ceil() as usize;
-            
+
             let mut tables = Vec::new();
             let mut hash_params = Vec::new();
-            
+
             for i in 0..depth {
                 tables.push(vec![0u64; width]);
                 // Simple hash parameters (in practice, use better hash functions)
@@ -809,13 +815,13 @@ pub mod advanced_streaming {
         /// Estimate the frequency of an item
         pub fn estimate(&self, item: u64) -> u64 {
             let mut min_count = u64::MAX;
-            
+
             for i in 0..self.depth {
                 let hash = self.hash(item, i);
                 let idx = (hash as usize) % self.width;
                 min_count = min_count.min(self.tables[i][idx]);
             }
-            
+
             min_count
         }
 
@@ -918,8 +924,10 @@ pub mod advanced_streaming {
 
             // Initialize parameter if not exists
             if !self.model_state.contains_key(param_name) {
-                self.model_state.insert(param_name.to_string(), vec![F::zero(); gradient.len()]);
-                self.gradient_memory.insert(param_name.to_string(), vec![F::zero(); gradient.len()]);
+                self.model_state
+                    .insert(param_name.to_string(), vec![F::zero(); gradient.len()]);
+                self.gradient_memory
+                    .insert(param_name.to_string(), vec![F::zero(); gradient.len()]);
             }
 
             let params = self.model_state.get_mut(param_name).unwrap();
@@ -993,16 +1001,19 @@ pub mod intelligent_loading {
             }
 
             // Calculate moving average
-            let avg_time = self.performance_history.iter().sum::<f64>() / self.performance_history.len() as f64;
+            let avg_time = self.performance_history.iter().sum::<f64>()
+                / self.performance_history.len() as f64;
 
             // Adjust batch size based on performance
             if avg_time > self.target_time * 1.2 {
                 // Too slow, reduce batch size
-                let new_size = (self.current_batch_size as f64 * (1.0 - self.adjustment_factor)) as usize;
+                let new_size =
+                    (self.current_batch_size as f64 * (1.0 - self.adjustment_factor)) as usize;
                 self.current_batch_size = new_size.max(self.min_batch_size);
             } else if avg_time < self.target_time * 0.8 {
                 // Too fast, increase batch size
-                let new_size = (self.current_batch_size as f64 * (1.0 + self.adjustment_factor)) as usize;
+                let new_size =
+                    (self.current_batch_size as f64 * (1.0 + self.adjustment_factor)) as usize;
                 self.current_batch_size = new_size.min(self.max_batch_size);
             }
         }
@@ -1019,7 +1030,7 @@ pub mod intelligent_loading {
             } else {
                 self.performance_history.iter().sum::<f64>() / self.performance_history.len() as f64
             };
-            
+
             let efficiency = if avg_time > 0.0 {
                 self.target_time / avg_time
             } else {
@@ -1108,7 +1119,7 @@ pub mod intelligent_loading {
             for i in 0..n_samples {
                 self.sample_count += 1;
                 let sample = data.row(i);
-                
+
                 for j in 0..n_features {
                     if sample[j].is_finite() {
                         // Online update of mean and variance (Welford's algorithm)
@@ -1156,7 +1167,8 @@ pub mod intelligent_loading {
                     for (i, mut row) in data.rows_mut().into_iter().enumerate() {
                         for (j, elem) in row.iter_mut().enumerate() {
                             if j < mean.len() && var[j] > F::zero() {
-                                let std_dev = (var[j] / F::from(self.sample_count - 1).unwrap()).sqrt();
+                                let std_dev =
+                                    (var[j] / F::from(self.sample_count - 1).unwrap()).sqrt();
                                 if std_dev > F::zero() {
                                     *elem = (*elem - mean[j]) / std_dev;
                                 }
@@ -1173,10 +1185,10 @@ pub mod intelligent_loading {
             // Simple outlier detection: clip values beyond threshold standard deviations
             for elem in data.iter_mut() {
                 if elem.abs() > self.outlier_threshold {
-                    *elem = if *elem > F::zero() { 
-                        self.outlier_threshold 
-                    } else { 
-                        -self.outlier_threshold 
+                    *elem = if *elem > F::zero() {
+                        self.outlier_threshold
+                    } else {
+                        -self.outlier_threshold
                     };
                 }
             }
@@ -1198,7 +1210,7 @@ pub mod intelligent_loading {
 pub mod online_algorithms {
     use super::*;
     use std::collections::VecDeque;
-    
+
     /// Online K-means with adaptive learning rate
     #[derive(Debug, Clone)]
     pub struct AdaptiveOnlineKMeans<F: Float> {
@@ -1213,7 +1225,7 @@ pub mod online_algorithms {
         /// Performance metrics
         metrics: OnlineMetrics,
     }
-    
+
     /// Learning rate scheduling strategies
     #[derive(Debug, Clone)]
     pub enum LearningRateSchedule {
@@ -1222,11 +1234,19 @@ pub mod online_algorithms {
         /// Decreasing with iteration: lr / (1 + decay * iteration)
         Decay { initial_lr: f64, decay: f64 },
         /// Step decay: lr * factor every step_size iterations
-        StepDecay { initial_lr: f64, factor: f64, step_size: usize },
+        StepDecay {
+            initial_lr: f64,
+            factor: f64,
+            step_size: usize,
+        },
         /// Adaptive based on cluster stability
-        Adaptive { min_lr: f64, max_lr: f64, stability_window: usize },
+        Adaptive {
+            min_lr: f64,
+            max_lr: f64,
+            stability_window: usize,
+        },
     }
-    
+
     /// Adaptive parameters for online learning
     #[derive(Debug, Clone)]
     pub struct AdaptiveParams<F: Float> {
@@ -1243,7 +1263,7 @@ pub mod online_algorithms {
         /// Merge threshold for combining clusters
         pub merge_threshold: F,
     }
-    
+
     /// Online performance metrics
     #[derive(Debug, Clone, Default)]
     pub struct OnlineMetrics {
@@ -1258,7 +1278,7 @@ pub mod online_algorithms {
         /// Processing time per batch
         pub batch_processing_times: VecDeque<f64>,
     }
-    
+
     impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineKMeans<F> {
         /// Create a new adaptive online K-means instance
         pub fn new(
@@ -1274,7 +1294,7 @@ pub mod online_algorithms {
                 split_threshold: F::from(2.0).unwrap(),
                 merge_threshold: F::from(0.5).unwrap(),
             };
-            
+
             Self {
                 centers: initial_centers,
                 learning_rate_schedule,
@@ -1283,45 +1303,49 @@ pub mod online_algorithms {
                 metrics: OnlineMetrics::default(),
             }
         }
-        
+
         /// Process a new sample and update clusters
         pub fn update(&mut self, sample: ArrayView1<F>) -> Result<usize> {
             let start_time = std::time::Instant::now();
-            
+
             // Find nearest cluster
             let (nearest_cluster, min_distance) = self.find_nearest_cluster(sample)?;
-            
+
             // Get current learning rate
             let lr = self.get_current_learning_rate();
-            
+
             // Update cluster center
             let old_center = self.centers.row(nearest_cluster).to_owned();
             self.update_center(nearest_cluster, sample, lr)?;
-            
+
             // Track center movement for adaptive learning
             let movement = euclidean_distance(old_center.view(), self.centers.row(nearest_cluster));
             self.adaptive_params.center_movements.push_back(movement);
             if self.adaptive_params.center_movements.len() > 100 {
                 self.adaptive_params.center_movements.pop_front();
             }
-            
+
             // Update metrics
-            self.update_metrics(nearest_cluster, min_distance, start_time.elapsed().as_secs_f64());
-            
+            self.update_metrics(
+                nearest_cluster,
+                min_distance,
+                start_time.elapsed().as_secs_f64(),
+            );
+
             // Check for adaptive cluster adjustments
             if self.adaptive_params.auto_k_adjustment {
                 self.maybe_adjust_clusters(sample, min_distance)?;
             }
-            
+
             self.iteration += 1;
             Ok(nearest_cluster)
         }
-        
+
         /// Find the nearest cluster to a sample
         fn find_nearest_cluster(&self, sample: ArrayView1<F>) -> Result<(usize, F)> {
             let mut min_distance = F::infinity();
             let mut nearest_cluster = 0;
-            
+
             for (i, center) in self.centers.rows().into_iter().enumerate() {
                 let distance = euclidean_distance(sample, center);
                 if distance < min_distance {
@@ -1329,15 +1353,20 @@ pub mod online_algorithms {
                     nearest_cluster = i;
                 }
             }
-            
+
             Ok((nearest_cluster, min_distance))
         }
-        
+
         /// Update a cluster center using momentum
-        fn update_center(&mut self, cluster_idx: usize, sample: ArrayView1<F>, lr: f64) -> Result<()> {
+        fn update_center(
+            &mut self,
+            cluster_idx: usize,
+            sample: ArrayView1<F>,
+            lr: f64,
+        ) -> Result<()> {
             let learning_rate = F::from(lr).unwrap();
             let momentum = self.adaptive_params.momentum;
-            
+
             let mut center = self.centers.row_mut(cluster_idx);
             for (i, &sample_val) in sample.iter().enumerate() {
                 if i < center.len() {
@@ -1347,10 +1376,10 @@ pub mod online_algorithms {
                     center[i] = momentum * old_val + (F::one() - momentum) * (old_val + update);
                 }
             }
-            
+
             Ok(())
         }
-        
+
         /// Get current learning rate based on schedule
         fn get_current_learning_rate(&self) -> f64 {
             match &self.learning_rate_schedule {
@@ -1358,78 +1387,92 @@ pub mod online_algorithms {
                 LearningRateSchedule::Decay { initial_lr, decay } => {
                     initial_lr / (1.0 + decay * self.iteration as f64)
                 }
-                LearningRateSchedule::StepDecay { initial_lr, factor, step_size } => {
+                LearningRateSchedule::StepDecay {
+                    initial_lr,
+                    factor,
+                    step_size,
+                } => {
                     let steps = self.iteration / step_size;
                     initial_lr * factor.powi(steps as i32)
                 }
-                LearningRateSchedule::Adaptive { min_lr, max_lr, stability_window } => {
-                    let recent_movements: Vec<F> = self.adaptive_params.center_movements
+                LearningRateSchedule::Adaptive {
+                    min_lr,
+                    max_lr,
+                    stability_window,
+                } => {
+                    let recent_movements: Vec<F> = self
+                        .adaptive_params
+                        .center_movements
                         .iter()
                         .rev()
                         .take(*stability_window)
                         .cloned()
                         .collect();
-                    
+
                     if recent_movements.is_empty() {
                         return *max_lr;
                     }
-                    
-                    let avg_movement = recent_movements.iter().sum::<F>() / F::from(recent_movements.len()).unwrap();
+
+                    let avg_movement = recent_movements.iter().sum::<F>()
+                        / F::from(recent_movements.len()).unwrap();
                     let stability = F::one() / (F::one() + avg_movement);
-                    
+
                     // High stability = low learning rate, low stability = high learning rate
-                    let adaptive_lr = min_lr + (max_lr - min_lr) * (F::one() - stability).to_f64().unwrap();
+                    let adaptive_lr =
+                        min_lr + (max_lr - min_lr) * (F::one() - stability).to_f64().unwrap();
                     adaptive_lr.clamp(*min_lr, *max_lr)
                 }
             }
         }
-        
+
         /// Update performance metrics
         fn update_metrics(&mut self, cluster_idx: usize, distance: F, processing_time: f64) {
             self.metrics.samples_processed += 1;
-            
+
             // Update WCSS estimate
             let distance_sq = distance.to_f64().unwrap().powi(2);
             let n = self.metrics.samples_processed as f64;
             self.metrics.wcss = ((n - 1.0) * self.metrics.wcss + distance_sq) / n;
-            
+
             // Update cluster distribution
             if cluster_idx >= self.metrics.cluster_distribution.len() {
                 self.metrics.cluster_distribution.resize(cluster_idx + 1, 0);
             }
             self.metrics.cluster_distribution[cluster_idx] += 1;
-            
+
             // Track processing times
-            self.metrics.batch_processing_times.push_back(processing_time);
+            self.metrics
+                .batch_processing_times
+                .push_back(processing_time);
             if self.metrics.batch_processing_times.len() > 1000 {
                 self.metrics.batch_processing_times.pop_front();
             }
-            
+
             // Update frequency calculation
             let total_updates = self.metrics.cluster_distribution.iter().sum::<usize>() as f64;
             self.metrics.update_frequency = total_updates / self.iteration.max(1) as f64;
         }
-        
+
         /// Get current cluster centers
         pub fn get_centers(&self) -> &Array2<F> {
             &self.centers
         }
-        
+
         /// Get current metrics
         pub fn get_metrics(&self) -> &OnlineMetrics {
             &self.metrics
         }
-        
+
         /// Predict cluster for new samples
         pub fn predict(&self, samples: ArrayView2<F>) -> Result<Array1<usize>> {
             let n_samples = samples.nrows();
             let mut predictions = Array1::zeros(n_samples);
-            
+
             for (i, sample) in samples.rows().into_iter().enumerate() {
                 let (cluster, _) = self.find_nearest_cluster(sample)?;
                 predictions[i] = cluster;
             }
-            
+
             Ok(predictions)
         }
     }

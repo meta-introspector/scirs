@@ -77,7 +77,7 @@ pub enum RoundingMode {
 
 impl RoundingMode {
     /// Convert to rug::float::Round
-    fn to_rug_round(&self) -> Round {
+    fn to_rug_round(self) -> Round {
         match self {
             RoundingMode::Nearest => Round::Nearest,
             RoundingMode::Zero => Round::Zero,
@@ -692,16 +692,11 @@ impl ArbitraryRational {
         })
     }
 
-    /// Create from string (e.g., "22/7" or "3.14159")
-    pub fn from_str(s: &str) -> CoreResult<Self> {
-        RugRational::from_str(s)
-            .map(|value| Self { value })
-            .map_err(|_| {
-                CoreError::ValidationError(ErrorContext::new(format!(
-                    "Failed to parse rational from string: {}",
-                    s
-                )))
-            })
+    /// Create from string (e.g., "22/7" or "3.14159")  
+    /// Note: This is deprecated, use `str::parse()` instead
+    #[deprecated(note = "Use str::parse() instead")]
+    pub fn parse_rational(s: &str) -> CoreResult<Self> {
+        s.parse()
     }
 
     /// Convert to f64 (may lose precision)
@@ -767,6 +762,21 @@ impl fmt::Debug for ArbitraryRational {
 impl Default for ArbitraryRational {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl FromStr for ArbitraryRational {
+    type Err = CoreError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        RugRational::from_str(s)
+            .map(|value| Self { value })
+            .map_err(|_| {
+                CoreError::ValidationError(ErrorContext::new(format!(
+                    "Failed to parse rational from string: {}",
+                    s
+                )))
+            })
     }
 }
 

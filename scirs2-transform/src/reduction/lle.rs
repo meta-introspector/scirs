@@ -1,13 +1,13 @@
 //! Locally Linear Embedding (LLE) for non-linear dimensionality reduction
 //!
 //! LLE is a non-linear dimensionality reduction method that assumes the data lies
-//! on a low-dimensional manifold that is locally linear. It preserves local 
+//! on a low-dimensional manifold that is locally linear. It preserves local
 //! neighborhood structure in the embedding space.
 
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
 use num_traits::{Float, NumCast};
-use scirs2_linalg::{eigh, solve};
 use scirs2_core::validation::{check_positive, check_shape};
+use scirs2_linalg::{eigh, solve};
 use std::collections::BinaryHeap;
 
 use crate::error::{Result, TransformError};
@@ -88,7 +88,7 @@ impl LLE {
                         dist += diff * diff;
                     }
                     dist = dist.sqrt();
-                    
+
                     let dist_fixed = (dist * 1e9) as i64;
                     heap.push((std::cmp::Reverse(dist_fixed), j));
                 }
@@ -119,7 +119,7 @@ impl LLE {
         let n_samples = x.shape()[0];
         let n_features = x.shape()[1];
         let k = self.n_neighbors;
-        
+
         let mut weights = Array2::zeros((n_samples, n_samples));
 
         for i in 0..n_samples {
@@ -131,11 +131,11 @@ impl LLE {
             for j in 0..k {
                 let neighbor_j = neighbors[[i, j]];
                 let xj = x.index_axis(Axis(0), neighbor_j);
-                
+
                 for l in 0..k {
                     let neighbor_l = neighbors[[i, l]];
                     let xl = x.index_axis(Axis(0), neighbor_l);
-                    
+
                     let mut dot = 0.0;
                     for m in 0..n_features {
                         let diff_j = num_traits::cast::<S::Elem, f64>(xi[m] - xj[m]).unwrap_or(0.0);
@@ -187,19 +187,20 @@ impl LLE {
 
         // Construct the cost matrix M = (I - W)^T (I - W)
         let mut m = Array2::zeros((n_samples, n_samples));
-        
+
         for i in 0..n_samples {
             for j in 0..n_samples {
                 let mut sum = 0.0;
-                
+
                 if i == j {
                     // Diagonal element
                     sum += 1.0 - 2.0 * weights[[i, j]] + weights.column(j).dot(&weights.column(j));
                 } else {
                     // Off-diagonal element
-                    sum += -weights[[i, j]] - weights[[j, i]] + weights.column(i).dot(&weights.column(j));
+                    sum += -weights[[i, j]] - weights[[j, i]]
+                        + weights.column(i).dot(&weights.column(j));
                 }
-                
+
                 m[[i, j]] = sum;
             }
         }
@@ -240,12 +241,12 @@ impl LLE {
         S::Elem: Float + NumCast,
     {
         let (n_samples, n_features) = x.dim();
-        
+
         // Validate inputs
         check_positive(self.n_neighbors, "n_neighbors")?;
         check_positive(self.n_components, "n_components")?;
         check_shape(x, (Some(n_samples), Some(n_features)), "x")?;
-        
+
         if n_samples <= self.n_neighbors {
             return Err(TransformError::InvalidInput(format!(
                 "n_neighbors={} must be < n_samples={}",
@@ -297,10 +298,11 @@ impl LLE {
             ));
         }
 
-        let training_data = self.training_data.as_ref().ok_or_else(|| {
-            TransformError::NotFitted("Training data not available".to_string())
-        })?;
-        
+        let training_data = self
+            .training_data
+            .as_ref()
+            .ok_or_else(|| TransformError::NotFitted("Training data not available".to_string()))?;
+
         let x_f64 = x.mapv(|v| num_traits::cast::<S::Elem, f64>(v).unwrap_or(0.0));
 
         // Check if this is the training data
@@ -337,13 +339,13 @@ impl LLE {
     pub fn reconstruction_weights(&self) -> Option<&Array2<f64>> {
         self.weights.as_ref()
     }
-    
+
     /// Check if the input data is the same as training data
     fn is_same_data(&self, x: &Array2<f64>, training_data: &Array2<f64>) -> bool {
         if x.dim() != training_data.dim() {
             return false;
         }
-        
+
         let (n_samples, n_features) = x.dim();
         for i in 0..n_samples {
             for j in 0..n_features {
@@ -354,41 +356,39 @@ impl LLE {
         }
         true
     }
-    
+
     /// Transform new data using out-of-sample extension
     fn transform_new_data(&self, x_new: &Array2<f64>) -> Result<Array2<f64>> {
         let training_data = self.training_data.as_ref().unwrap();
         let training_embedding = self.embedding.as_ref().unwrap();
-        
+
         let (n_new, n_features) = x_new.dim();
         let (n_training, _) = training_data.dim();
-        
+
         if n_features != training_data.ncols() {
             return Err(TransformError::InvalidInput(format!(
                 "Input features {} must match training features {}",
-                n_features, training_data.ncols()
+                n_features,
+                training_data.ncols()
             )));
         }
-        
+
         let mut new_embedding = Array2::zeros((n_new, self.n_components));
-        
+
         // For each new point, find its reconstruction weights w.r.t. training data
         // and use these weights to compute its embedding coordinates
         for i in 0..n_new {
-            let new_coords = self.compute_new_point_embedding(
-                &x_new.row(i),
-                training_data,
-                training_embedding,
-            )?;
-            
+            let new_coords =
+                self.compute_new_point_embedding(&x_new.row(i), training_data, training_embedding)?;
+
             for j in 0..self.n_components {
                 new_embedding[[i, j]] = new_coords[j];
             }
         }
-        
+
         Ok(new_embedding)
     }
-    
+
     /// Compute embedding coordinates for a single new point
     fn compute_new_point_embedding(
         &self,
@@ -398,7 +398,7 @@ impl LLE {
     ) -> Result<Array1<f64>> {
         let n_training = training_data.nrows();
         let n_features = training_data.ncols();
-        
+
         // Step 1: Find k nearest neighbors in training data
         let mut distances: Vec<(f64, usize)> = Vec::new();
         for j in 0..n_training {
@@ -409,22 +409,17 @@ impl LLE {
             }
             distances.push((dist_sq.sqrt(), j));
         }
-        
+
         // Sort by distance and take k nearest
         distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
         let k = self.n_neighbors.min(n_training);
-        let neighbor_indices: Vec<usize> = distances.into_iter()
-            .take(k)
-            .map(|(_, idx)| idx)
-            .collect();
-        
+        let neighbor_indices: Vec<usize> =
+            distances.into_iter().take(k).map(|(_, idx)| idx).collect();
+
         // Step 2: Compute reconstruction weights
-        let weights = self.compute_reconstruction_weights_for_point(
-            x_new,
-            training_data,
-            &neighbor_indices,
-        )?;
-        
+        let weights =
+            self.compute_reconstruction_weights_for_point(x_new, training_data, &neighbor_indices)?;
+
         // Step 3: Compute embedding as weighted combination of neighbor embeddings
         let mut new_coords = Array1::zeros(self.n_components);
         for (i, &neighbor_idx) in neighbor_indices.iter().enumerate() {
@@ -432,10 +427,10 @@ impl LLE {
                 new_coords[dim] += weights[i] * training_embedding[[neighbor_idx, dim]];
             }
         }
-        
+
         Ok(new_coords)
     }
-    
+
     /// Compute reconstruction weights for a single point given its neighbors
     fn compute_reconstruction_weights_for_point(
         &self,
@@ -445,15 +440,15 @@ impl LLE {
     ) -> Result<Array1<f64>> {
         let k = neighbor_indices.len();
         let n_features = training_data.ncols();
-        
+
         // Build local covariance matrix C
         let mut c = Array2::zeros((k, k));
-        
+
         for i in 0..k {
             let neighbor_i = neighbor_indices[i];
             for j in 0..k {
                 let neighbor_j = neighbor_indices[j];
-                
+
                 let mut dot = 0.0;
                 for m in 0..n_features {
                     let diff_i = x_point[m] - training_data[[neighbor_i, m]];
@@ -463,14 +458,14 @@ impl LLE {
                 c[[i, j]] = dot;
             }
         }
-        
+
         // Add regularization to diagonal
         let trace = (0..k).map(|i| c[[i, i]]).sum::<f64>();
         let reg_value = self.reg * trace / k as f64;
         for i in 0..k {
             c[[i, i]] += reg_value;
         }
-        
+
         // Solve C * w = 1 for weights
         let ones = Array1::ones(k);
         let w = match solve(&c.view(), &ones.view(), None) {
@@ -480,7 +475,7 @@ impl LLE {
                 Array1::from_elem(k, 1.0 / k as f64)
             }
         };
-        
+
         // Normalize weights to sum to 1
         let w_sum = w.sum();
         let w_normalized = if w_sum.abs() > 1e-10 {
@@ -488,7 +483,7 @@ impl LLE {
         } else {
             Array1::from_elem(k, 1.0 / k as f64)
         };
-        
+
         Ok(w_normalized)
     }
 }

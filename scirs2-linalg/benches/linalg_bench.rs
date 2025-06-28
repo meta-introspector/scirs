@@ -12,7 +12,7 @@ use scirs2_linalg::mixed_precision::{
     mixed_precision_dot, mixed_precision_matmul, mixed_precision_solve,
 };
 use scirs2_linalg::prelude::*;
-use scirs2_linalg::structured::{solve_toeplitz, solve_circulant};
+use scirs2_linalg::structured::{solve_circulant, solve_toeplitz};
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix
@@ -169,7 +169,12 @@ fn bench_mixed_precision(c: &mut Criterion) {
             BenchmarkId::new("mixed_solve", size),
             &(&matrix_f32, &vector_f32),
             |b, (m, v)| {
-                b.iter(|| mixed_precision_solve::<f32, f32, f32, f64>(black_box(&m.view()), black_box(&v.view())))
+                b.iter(|| {
+                    mixed_precision_solve::<f32, f32, f32, f64>(
+                        black_box(&m.view()),
+                        black_box(&v.view()),
+                    )
+                })
             },
         );
     }
@@ -192,9 +197,7 @@ fn bench_structured_matrices(c: &mut Criterion) {
             BenchmarkId::new("toeplitz_solve", size),
             &(&first_row, &rhs),
             |b, (r, rhs)| {
-                b.iter(|| {
-                    solve_toeplitz(r.view(), r.view(), black_box(rhs.view())).unwrap()
-                })
+                b.iter(|| solve_toeplitz(r.view(), r.view(), black_box(rhs.view())).unwrap())
             },
         );
 
@@ -202,11 +205,7 @@ fn bench_structured_matrices(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("circulant_solve", size),
             &(&first_row, &rhs),
-            |b, (r, rhs)| {
-                b.iter(|| {
-                    solve_circulant(r.view(), black_box(rhs.view())).unwrap()
-                })
-            },
+            |b, (r, rhs)| b.iter(|| solve_circulant(r.view(), black_box(rhs.view())).unwrap()),
         );
     }
 

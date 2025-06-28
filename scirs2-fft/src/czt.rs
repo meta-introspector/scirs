@@ -181,13 +181,19 @@ impl CZT {
             let x_1d: Array1<Complex<f64>> = x
                 .to_owned()
                 .into_shape_with_order(x.len())
-                .map_err(|e| FFTError::ComputationError(
-                    format!("Failed to reshape input array to 1D: {}", e)
-                ))?
+                .map_err(|e| {
+                    FFTError::ComputationError(format!(
+                        "Failed to reshape input array to 1D: {}",
+                        e
+                    ))
+                })?
                 .into_dimensionality()
-                .map_err(|e| FFTError::ComputationError(
-                    format!("Failed to convert array dimensionality: {}", e)
-                ))?;
+                .map_err(|e| {
+                    FFTError::ComputationError(format!(
+                        "Failed to convert array dimensionality: {}",
+                        e
+                    ))
+                })?;
             let y = self.transform_1d(&x_1d)?;
             return Ok(y.into_dyn());
         }
@@ -198,9 +204,12 @@ impl CZT {
             let x_1d: Array1<Complex<f64>> = x_slice
                 .to_owned()
                 .into_shape_with_order(x_slice.len())
-                .map_err(|e| FFTError::ComputationError(
-                    format!("Failed to reshape slice to 1D array: {}", e)
-                ))?;
+                .map_err(|e| {
+                    FFTError::ComputationError(format!(
+                        "Failed to reshape slice to 1D array: {}",
+                        e
+                    ))
+                })?;
             let y = self.transform_1d(&x_1d)?;
 
             // Dynamic slicing based on the number of dimensions
@@ -388,13 +397,17 @@ mod tests {
         let n = 8;
         let x: Array1<Complex<f64>> = Array1::linspace(0.0, 7.0, n).mapv(|v| Complex::new(v, 0.0));
 
-        let czt_result = czt(&x.view(), None, None, None, None).expect("CZT computation should succeed for test data");
+        let czt_result = czt(&x.view(), None, None, None, None)
+            .expect("CZT computation should succeed for test data");
 
         // czt returns ArrayD, need to convert to Array1
         assert_eq!(czt_result.ndim(), 1);
-        let czt_result_1d: Array1<Complex<f64>> = czt_result.into_dimensionality().expect("CZT result should convert to 1D array");
+        let czt_result_1d: Array1<Complex<f64>> = czt_result
+            .into_dimensionality()
+            .expect("CZT result should convert to 1D array");
 
-        let fft_result_vec = crate::fft::fft(&x.to_vec(), None).expect("FFT computation should succeed for test data");
+        let fft_result_vec = crate::fft::fft(&x.to_vec(), None)
+            .expect("FFT computation should succeed for test data");
         let fft_result = Array1::from_vec(fft_result_vec);
 
         for i in 0..n {
@@ -416,11 +429,14 @@ mod tests {
 
         // Zoom in on a wider frequency range to ensure we capture the signal
         let m = 16;
-        let zoom_result = zoom_fft(&x.view(), m, 0.0, 0.5, None).expect("Zoom FFT should succeed for test data");
+        let zoom_result =
+            zoom_fft(&x.view(), m, 0.0, 0.5, None).expect("Zoom FFT should succeed for test data");
 
         // Basic validation - check that we got a result and it's the right size
         assert_eq!(zoom_result.ndim(), 1);
-        let zoom_result_1d: Array1<Complex<f64>> = zoom_result.into_dimensionality().expect("Zoom FFT result should convert to 1D array");
+        let zoom_result_1d: Array1<Complex<f64>> = zoom_result
+            .into_dimensionality()
+            .expect("Zoom FFT result should convert to 1D array");
         assert_eq!(zoom_result_1d.len(), m);
 
         // Simple check - there should be some non-zero values in the result

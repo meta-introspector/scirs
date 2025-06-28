@@ -1,12 +1,8 @@
-// Example file for circular distributions (not fully implemented yet)
-//
-// NOTE: This example uses features that are still in development.
-// Circular distributions (vonmises, wrapcauchy) are listed in the TODO.md
-// and will be implemented in a future release.
-//
-// This file is commented out until the implementation is complete.
+//! Circular distributions example
+//!
+//! This example demonstrates the von Mises and wrapped Cauchy distributions
+//! which are specialized for circular data (angles, directions, etc.).
 
-/*
 use ndarray::Array1;
 use scirs2_stats::distributions::{vonmises, wrapcauchy};
 use scirs2_stats::traits::CircularDistribution;
@@ -126,12 +122,4 @@ fn main() {
             wc.mean_resultant_length()
         );
     }
-}
-*/
-
-// Placeholder main function until circular distributions are implemented
-fn main() {
-    println!("Circular distributions are not yet fully implemented.");
-    println!("This example will be enabled in a future release.");
-    println!("See the TODO.md file for the implementation status.");
 }

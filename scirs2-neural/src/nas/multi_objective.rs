@@ -5,7 +5,7 @@
 //! such as accuracy, latency, FLOPs, memory usage, and energy consumption.
 
 use crate::error::Result;
-use crate::nas::{SearchResult, EvaluationMetrics, architecture_encoding::ArchitectureEncoding};
+use crate::nas::{architecture_encoding::ArchitectureEncoding, EvaluationMetrics, SearchResult};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -132,11 +132,11 @@ impl MultiObjectiveSolution {
     /// Check if this solution dominates another
     pub fn dominates(&self, other: &Self, config: &MultiObjectiveConfig) -> bool {
         let mut better_in_at_least_one = false;
-        
+
         for (i, obj) in config.objectives.iter().enumerate() {
             let self_val = self.objectives[i];
             let other_val = other.objectives[i];
-            
+
             if obj.minimize {
                 if self_val > other_val {
                     return false; // Self is worse
@@ -145,13 +145,13 @@ impl MultiObjectiveSolution {
                 }
             } else {
                 if self_val < other_val {
-                    return false; // Self is worse  
+                    return false; // Self is worse
                 } else if self_val > other_val {
                     better_in_at_least_one = true;
                 }
             }
         }
-        
+
         better_in_at_least_one
     }
 }
@@ -180,16 +180,13 @@ impl MultiObjectiveOptimizer {
     /// Initialize population from search results
     pub fn initialize_population(&mut self, results: &[SearchResult]) -> Result<()> {
         self.population.clear();
-        
+
         for result in results.iter().take(self.config.population_size) {
             let objectives = self.extract_objectives(&result.metrics)?;
-            let solution = MultiObjectiveSolution::new(
-                result.architecture.clone(),
-                objectives
-            );
+            let solution = MultiObjectiveSolution::new(result.architecture.clone(), objectives);
             self.population.push(solution);
         }
-        
+
         // Fill remaining population with random solutions if needed
         while self.population.len() < self.config.population_size {
             let random_arch = self.generate_random_architecture()?;
@@ -197,7 +194,7 @@ impl MultiObjectiveOptimizer {
             let solution = MultiObjectiveSolution::new(random_arch, random_objectives);
             self.population.push(solution);
         }
-        
+
         Ok(())
     }
 
@@ -211,16 +208,16 @@ impl MultiObjectiveOptimizer {
             MultiObjectiveAlgorithm::WeightedSum => self.weighted_sum_step()?,
             MultiObjectiveAlgorithm::ConstraintHandling => self.constraint_handling_step()?,
         }
-        
+
         self.generation += 1;
-        
+
         // Update Pareto front
         self.update_pareto_front()?;
-        
+
         // Compute hypervolume
         let hv = self.compute_hypervolume()?;
         self.hypervolume_history.push(hv);
-        
+
         Ok(())
     }
 
@@ -228,17 +225,17 @@ impl MultiObjectiveOptimizer {
     fn nsga2_step(&mut self) -> Result<()> {
         // Create offspring through crossover and mutation
         let offspring = self.create_offspring()?;
-        
+
         // Combine parent and offspring populations
         let mut combined_population = self.population.clone();
         combined_population.extend(offspring);
-        
+
         // Non-dominated sorting
         self.non_dominated_sort(&mut combined_population)?;
-        
+
         // Select next generation
         self.population = self.environmental_selection(combined_population)?;
-        
+
         Ok(())
     }
 
@@ -246,11 +243,11 @@ impl MultiObjectiveOptimizer {
     fn spea2_step(&mut self) -> Result<()> {
         // Calculate fitness based on strength and raw fitness
         self.calculate_spea2_fitness()?;
-        
+
         // Environmental selection
         let offspring = self.create_offspring()?;
         self.population = self.spea2_environmental_selection(offspring)?;
-        
+
         Ok(())
     }
 
@@ -258,17 +255,17 @@ impl MultiObjectiveOptimizer {
     fn moead_step(&mut self) -> Result<()> {
         // Decompose problem into scalar subproblems
         let weight_vectors = self.generate_weight_vectors()?;
-        
+
         // Update each subproblem
         for (i, weights) in weight_vectors.iter().enumerate() {
             if i < self.population.len() {
                 let new_solution = self.update_subproblem(i, weights)?;
-                
+
                 // Update neighboring subproblems
                 self.update_neighbors(i, &new_solution)?;
             }
         }
-        
+
         Ok(())
     }
 
@@ -276,13 +273,13 @@ impl MultiObjectiveOptimizer {
     fn hypere_step(&mut self) -> Result<()> {
         // Select parents based on hypervolume contribution
         let parents = self.hypervolume_selection()?;
-        
+
         // Create offspring
         let offspring = self.create_offspring_from_parents(&parents)?;
-        
+
         // Environmental selection based on hypervolume
         self.population = self.hypervolume_environmental_selection(offspring)?;
-        
+
         Ok(())
     }
 
@@ -290,25 +287,26 @@ impl MultiObjectiveOptimizer {
     fn weighted_sum_step(&mut self) -> Result<()> {
         // Convert multi-objective to single objective using weights
         for solution in &mut self.population {
-            let weighted_sum = solution.objectives.iter()
+            let weighted_sum = solution
+                .objectives
+                .iter()
                 .zip(self.config.objectives.iter())
                 .map(|(obj_val, obj_config)| obj_val * obj_config.weight)
                 .sum::<f64>();
-            
+
             // Store as single objective
             solution.objectives = vec![weighted_sum];
         }
-        
+
         // Sort by weighted sum and select best
-        self.population.sort_by(|a, b| {
-            a.objectives[0].partial_cmp(&b.objectives[0]).unwrap()
-        });
-        
+        self.population
+            .sort_by(|a, b| a.objectives[0].partial_cmp(&b.objectives[0]).unwrap());
+
         // Create new population through mutation of best solutions
         let offspring = self.create_offspring()?;
         self.population.extend(offspring);
         self.population.truncate(self.config.population_size);
-        
+
         Ok(())
     }
 
@@ -318,12 +316,12 @@ impl MultiObjectiveOptimizer {
         for solution in &mut self.population {
             solution.constraint_violations = self.evaluate_constraints(solution)?;
         }
-        
+
         // Sort by constraint violation first, then by objectives
         self.population.sort_by(|a, b| {
             let a_violations: f64 = a.constraint_violations.iter().sum();
             let b_violations: f64 = b.constraint_violations.iter().sum();
-            
+
             if a_violations != b_violations {
                 a_violations.partial_cmp(&b_violations).unwrap()
             } else {
@@ -331,13 +329,13 @@ impl MultiObjectiveOptimizer {
                 self.compare_objectives(a, b)
             }
         });
-        
+
         // Create offspring and apply constraint handling
         let offspring = self.create_offspring()?;
-        
+
         // Select next generation with constraint preference
         self.population = self.constraint_environmental_selection(offspring)?;
-        
+
         Ok(())
     }
 
@@ -345,47 +343,51 @@ impl MultiObjectiveOptimizer {
     fn non_dominated_sort(&self, population: &mut [MultiObjectiveSolution]) -> Result<()> {
         let mut fronts: Vec<Vec<usize>> = Vec::new();
         let mut current_front = Vec::new();
-        
+
         // Initialize domination relationships
         for (i, solution_i) in population.iter().enumerate() {
             for (j, solution_j) in population.iter().enumerate() {
                 if i != j {
                     if solution_i.dominates(solution_j, &self.config) {
                         unsafe {
-                            let solution_i_mut = &mut *(solution_i as *const _ as *mut MultiObjectiveSolution);
+                            let solution_i_mut =
+                                &mut *(solution_i as *const _ as *mut MultiObjectiveSolution);
                             solution_i_mut.dominated_solutions.push(j);
                         }
                     } else if solution_j.dominates(solution_i, &self.config) {
                         unsafe {
-                            let solution_i_mut = &mut *(solution_i as *const _ as *mut MultiObjectiveSolution);
+                            let solution_i_mut =
+                                &mut *(solution_i as *const _ as *mut MultiObjectiveSolution);
                             solution_i_mut.dominance_count += 1;
                         }
                     }
                 }
             }
-            
+
             if population[i].dominance_count == 0 {
                 unsafe {
-                    let solution_i_mut = &mut *(population[i] as *const _ as *mut MultiObjectiveSolution);
+                    let solution_i_mut =
+                        &mut *(population[i] as *const _ as *mut MultiObjectiveSolution);
                     solution_i_mut.rank = 0;
                 }
                 current_front.push(i);
             }
         }
-        
+
         fronts.push(current_front.clone());
-        
+
         // Build subsequent fronts
         let mut front_index = 0;
         while !fronts[front_index].is_empty() {
             let mut next_front = Vec::new();
-            
+
             for &i in &fronts[front_index] {
                 for &j in &population[i].dominated_solutions {
                     unsafe {
-                        let solution_j_mut = &mut *(population[j] as *const _ as *mut MultiObjectiveSolution);
+                        let solution_j_mut =
+                            &mut *(population[j] as *const _ as *mut MultiObjectiveSolution);
                         solution_j_mut.dominance_count -= 1;
-                        
+
                         if solution_j_mut.dominance_count == 0 {
                             solution_j_mut.rank = front_index + 1;
                             next_front.push(j);
@@ -393,26 +395,31 @@ impl MultiObjectiveOptimizer {
                     }
                 }
             }
-            
+
             front_index += 1;
             fronts.push(next_front);
         }
-        
+
         Ok(())
     }
 
     /// Calculate crowding distance for diversity
-    fn calculate_crowding_distance(&self, front: &[usize], population: &mut [MultiObjectiveSolution]) -> Result<()> {
+    fn calculate_crowding_distance(
+        &self,
+        front: &[usize],
+        population: &mut [MultiObjectiveSolution],
+    ) -> Result<()> {
         if front.len() <= 2 {
             for &i in front {
                 unsafe {
-                    let solution_mut = &mut *(population[i] as *const _ as *mut MultiObjectiveSolution);
+                    let solution_mut =
+                        &mut *(population[i] as *const _ as *mut MultiObjectiveSolution);
                     solution_mut.crowding_distance = f64::INFINITY;
                 }
             }
             return Ok(());
         }
-        
+
         // Initialize crowding distance
         for &i in front {
             unsafe {
@@ -420,7 +427,7 @@ impl MultiObjectiveOptimizer {
                 solution_mut.crowding_distance = 0.0;
             }
         }
-        
+
         // For each objective
         for obj_idx in 0..self.config.objectives.len() {
             // Sort by objective value
@@ -430,50 +437,55 @@ impl MultiObjectiveOptimizer {
                     .partial_cmp(&population[b].objectives[obj_idx])
                     .unwrap()
             });
-            
+
             // Set boundary points to infinity
             unsafe {
-                let first_mut = &mut *(population[sorted_indices[0]] as *const _ as *mut MultiObjectiveSolution);
+                let first_mut = &mut *(population[sorted_indices[0]] as *const _
+                    as *mut MultiObjectiveSolution);
                 first_mut.crowding_distance = f64::INFINITY;
-                
-                let last_mut = &mut *(population[sorted_indices[sorted_indices.len() - 1]] as *const _ as *mut MultiObjectiveSolution);
+
+                let last_mut = &mut *(population[sorted_indices[sorted_indices.len() - 1]]
+                    as *const _
+                    as *mut MultiObjectiveSolution);
                 last_mut.crowding_distance = f64::INFINITY;
             }
-            
+
             // Calculate crowding distance for intermediate points
             let obj_min = population[sorted_indices[0]].objectives[obj_idx];
             let obj_max = population[sorted_indices[sorted_indices.len() - 1]].objectives[obj_idx];
             let obj_range = obj_max - obj_min;
-            
+
             if obj_range > 0.0 {
                 for i in 1..sorted_indices.len() - 1 {
                     let prev_obj = population[sorted_indices[i - 1]].objectives[obj_idx];
                     let next_obj = population[sorted_indices[i + 1]].objectives[obj_idx];
-                    
+
                     unsafe {
-                        let solution_mut = &mut *(population[sorted_indices[i]] as *const _ as *mut MultiObjectiveSolution);
+                        let solution_mut = &mut *(population[sorted_indices[i]] as *const _
+                            as *mut MultiObjectiveSolution);
                         solution_mut.crowding_distance += (next_obj - prev_obj) / obj_range;
                     }
                 }
             }
         }
-        
+
         Ok(())
     }
 
     /// Environmental selection for NSGA-II
-    fn environmental_selection(&self, mut population: Vec<MultiObjectiveSolution>) -> Result<Vec<MultiObjectiveSolution>> {
+    fn environmental_selection(
+        &self,
+        mut population: Vec<MultiObjectiveSolution>,
+    ) -> Result<Vec<MultiObjectiveSolution>> {
         let mut result = Vec::new();
         let mut current_front = 0;
-        
+
         // Group solutions by rank
         let mut fronts: HashMap<usize, Vec<usize>> = HashMap::new();
         for (i, solution) in population.iter().enumerate() {
-            fronts.entry(solution.rank)
-                .or_insert_with(Vec::new)
-                .push(i);
+            fronts.entry(solution.rank).or_insert_with(Vec::new).push(i);
         }
-        
+
         // Add complete fronts
         while current_front < fronts.len() {
             if let Some(front) = fronts.get(&current_front) {
@@ -484,13 +496,14 @@ impl MultiObjectiveOptimizer {
                 } else {
                     // Calculate crowding distance for the last front
                     self.calculate_crowding_distance(front, &mut population)?;
-                    
+
                     // Sort by crowding distance and add remaining solutions
-                    let mut front_with_distance: Vec<_> = front.iter()
+                    let mut front_with_distance: Vec<_> = front
+                        .iter()
                         .map(|&i| (i, population[i].crowding_distance))
                         .collect();
                     front_with_distance.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-                    
+
                     let remaining = self.config.population_size - result.len();
                     for i in 0..remaining {
                         let idx = front_with_distance[i].0;
@@ -501,32 +514,34 @@ impl MultiObjectiveOptimizer {
             }
             current_front += 1;
         }
-        
+
         Ok(result)
     }
 
     /// Create offspring through crossover and mutation
     fn create_offspring(&self) -> Result<Vec<MultiObjectiveSolution>> {
         let mut offspring = Vec::new();
-        
+
         for _ in 0..self.config.population_size {
             // Tournament selection for parents
             let parent1 = self.tournament_selection()?;
             let parent2 = self.tournament_selection()?;
-            
+
             // Crossover
-            let child_arch = parent1.architecture.crossover(parent2.architecture.as_ref())?;
-            
+            let child_arch = parent1
+                .architecture
+                .crossover(parent2.architecture.as_ref())?;
+
             // Mutation
             let mutated_arch = child_arch.mutate(0.1)?;
-            
+
             // Evaluate objectives for offspring
             let objectives = self.estimate_objectives(&mutated_arch)?;
-            
+
             let child = MultiObjectiveSolution::new(mutated_arch, objectives);
             offspring.push(child);
         }
-        
+
         Ok(offspring)
     }
 
@@ -534,19 +549,19 @@ impl MultiObjectiveOptimizer {
     fn tournament_selection(&self) -> Result<&MultiObjectiveSolution> {
         use rand::prelude::*;
         let mut rng = rand::thread_rng();
-        
+
         let tournament_size = 3;
         let mut best_idx = rng.gen_range(0..self.population.len());
-        
+
         for _ in 1..tournament_size {
             let candidate_idx = rng.gen_range(0..self.population.len());
-            
+
             // Compare based on dominance and crowding distance
             if self.is_better(&self.population[candidate_idx], &self.population[best_idx]) {
                 best_idx = candidate_idx;
             }
         }
-        
+
         Ok(&self.population[best_idx])
     }
 
@@ -565,23 +580,24 @@ impl MultiObjectiveOptimizer {
     /// Extract objectives from evaluation metrics
     fn extract_objectives(&self, metrics: &EvaluationMetrics) -> Result<Vec<f64>> {
         let mut objectives = Vec::new();
-        
+
         for obj_config in &self.config.objectives {
-            let value = metrics.get(&obj_config.name)
-                .copied()
-                .unwrap_or(0.0);
+            let value = metrics.get(&obj_config.name).copied().unwrap_or(0.0);
             objectives.push(value);
         }
-        
+
         Ok(objectives)
     }
 
     /// Estimate objectives for an architecture
-    fn estimate_objectives(&self, architecture: &Arc<dyn ArchitectureEncoding>) -> Result<Vec<f64>> {
+    fn estimate_objectives(
+        &self,
+        architecture: &Arc<dyn ArchitectureEncoding>,
+    ) -> Result<Vec<f64>> {
         // Simplified objective estimation
         // In practice, would use actual evaluation or prediction models
         let mut objectives = Vec::new();
-        
+
         for obj_config in &self.config.objectives {
             let value = match obj_config.name.as_str() {
                 "validation_accuracy" => 0.7 + 0.2 * rand::random::<f64>(),
@@ -592,7 +608,7 @@ impl MultiObjectiveOptimizer {
             };
             objectives.push(value);
         }
-        
+
         Ok(objectives)
     }
 
@@ -600,53 +616,57 @@ impl MultiObjectiveOptimizer {
     fn generate_random_architecture(&self) -> Result<Arc<dyn ArchitectureEncoding>> {
         use rand::prelude::*;
         let mut rng = rand::thread_rng();
-        
+
         let encoding = crate::nas::architecture_encoding::SequentialEncoding::random(&mut rng)?;
         Ok(Arc::new(encoding) as Arc<dyn ArchitectureEncoding>)
     }
 
     /// Estimate random objectives
     fn estimate_random_objectives(&self) -> Vec<f64> {
-        self.config.objectives.iter().map(|obj| {
-            match obj.name.as_str() {
+        self.config
+            .objectives
+            .iter()
+            .map(|obj| match obj.name.as_str() {
                 "validation_accuracy" => 0.3 + 0.4 * rand::random::<f64>(),
                 "model_flops" => 1e5 + 1e6 * rand::random::<f64>(),
                 "model_params" => 1e4 + 1e5 * rand::random::<f64>(),
                 "inference_latency" => 1.0 + 20.0 * rand::random::<f64>(),
                 _ => rand::random::<f64>(),
-            }
-        }).collect()
+            })
+            .collect()
     }
 
     /// Update Pareto front
     fn update_pareto_front(&mut self) -> Result<()> {
         // Find non-dominated solutions from current population
         let mut pareto_solutions = Vec::new();
-        
+
         for solution in &self.population {
             let mut is_dominated = false;
-            
+
             for other in &self.population {
                 if other.dominates(solution, &self.config) {
                     is_dominated = true;
                     break;
                 }
             }
-            
+
             if !is_dominated {
                 pareto_solutions.push(solution.clone());
             }
         }
-        
+
         // Limit Pareto front size
         if pareto_solutions.len() > self.config.pareto_front_limit {
             // Use crowding distance to select diverse solutions
             pareto_solutions.sort_by(|a, b| {
-                b.crowding_distance.partial_cmp(&a.crowding_distance).unwrap()
+                b.crowding_distance
+                    .partial_cmp(&a.crowding_distance)
+                    .unwrap()
             });
             pareto_solutions.truncate(self.config.pareto_front_limit);
         }
-        
+
         self.pareto_front = pareto_solutions;
         Ok(())
     }
@@ -656,33 +676,39 @@ impl MultiObjectiveOptimizer {
         if self.pareto_front.is_empty() {
             return Ok(0.0);
         }
-        
+
         // Simplified hypervolume computation
         // In practice, would use more sophisticated algorithms
-        let reference_point = self.config.reference_point.as_ref()
+        let reference_point = self
+            .config
+            .reference_point
+            .as_ref()
             .cloned()
             .unwrap_or_else(|| vec![0.0; self.config.objectives.len()]);
-        
+
         let mut volume = 0.0;
-        
+
         for solution in &self.pareto_front {
             let mut contribution = 1.0;
-            
-            for (i, (&obj_val, &ref_val)) in solution.objectives.iter()
-                .zip(reference_point.iter()).enumerate() {
-                
+
+            for (i, (&obj_val, &ref_val)) in solution
+                .objectives
+                .iter()
+                .zip(reference_point.iter())
+                .enumerate()
+            {
                 let diff = if self.config.objectives[i].minimize {
                     (ref_val - obj_val).max(0.0)
                 } else {
                     (obj_val - ref_val).max(0.0)
                 };
-                
+
                 contribution *= diff;
             }
-            
+
             volume += contribution;
         }
-        
+
         Ok(volume)
     }
 
@@ -702,7 +728,10 @@ impl MultiObjectiveOptimizer {
     }
 
     // Placeholder implementations for other algorithms
-    fn spea2_environmental_selection(&self, offspring: Vec<MultiObjectiveSolution>) -> Result<Vec<MultiObjectiveSolution>> {
+    fn spea2_environmental_selection(
+        &self,
+        offspring: Vec<MultiObjectiveSolution>,
+    ) -> Result<Vec<MultiObjectiveSolution>> {
         Ok(offspring)
     }
 
@@ -711,7 +740,10 @@ impl MultiObjectiveOptimizer {
     }
 
     fn generate_weight_vectors(&self) -> Result<Vec<Vec<f64>>> {
-        Ok(vec![vec![0.5; self.config.objectives.len()]; self.config.population_size])
+        Ok(vec![
+            vec![0.5; self.config.objectives.len()];
+            self.config.population_size
+        ])
     }
 
     fn update_subproblem(&self, index: usize, weights: &[f64]) -> Result<MultiObjectiveSolution> {
@@ -728,33 +760,46 @@ impl MultiObjectiveOptimizer {
         Ok(self.population.iter().take(10).collect())
     }
 
-    fn create_offspring_from_parents(&self, parents: &[&MultiObjectiveSolution]) -> Result<Vec<MultiObjectiveSolution>> {
+    fn create_offspring_from_parents(
+        &self,
+        parents: &[&MultiObjectiveSolution],
+    ) -> Result<Vec<MultiObjectiveSolution>> {
         self.create_offspring()
     }
 
-    fn hypervolume_environmental_selection(&self, offspring: Vec<MultiObjectiveSolution>) -> Result<Vec<MultiObjectiveSolution>> {
+    fn hypervolume_environmental_selection(
+        &self,
+        offspring: Vec<MultiObjectiveSolution>,
+    ) -> Result<Vec<MultiObjectiveSolution>> {
         Ok(offspring)
     }
 
     fn evaluate_constraints(&self, solution: &MultiObjectiveSolution) -> Result<Vec<f64>> {
         let mut violations = Vec::new();
-        
+
         for (i, obj_config) in self.config.objectives.iter().enumerate() {
             if let (Some(target), Some(tolerance)) = (obj_config.target, obj_config.tolerance) {
                 let violation = (solution.objectives[i] - target).abs() - tolerance;
                 violations.push(violation.max(0.0));
             }
         }
-        
+
         Ok(violations)
     }
 
-    fn compare_objectives(&self, a: &MultiObjectiveSolution, b: &MultiObjectiveSolution) -> std::cmp::Ordering {
+    fn compare_objectives(
+        &self,
+        a: &MultiObjectiveSolution,
+        b: &MultiObjectiveSolution,
+    ) -> std::cmp::Ordering {
         // Simple comparison based on first objective
         a.objectives[0].partial_cmp(&b.objectives[0]).unwrap()
     }
 
-    fn constraint_environmental_selection(&self, offspring: Vec<MultiObjectiveSolution>) -> Result<Vec<MultiObjectiveSolution>> {
+    fn constraint_environmental_selection(
+        &self,
+        offspring: Vec<MultiObjectiveSolution>,
+    ) -> Result<Vec<MultiObjectiveSolution>> {
         Ok(offspring)
     }
 }
@@ -773,13 +818,17 @@ mod tests {
     #[test]
     fn test_solution_dominance() {
         let config = MultiObjectiveConfig::default();
-        
-        let arch1 = Arc::new(crate::nas::architecture_encoding::SequentialEncoding::new(vec![]));
-        let arch2 = Arc::new(crate::nas::architecture_encoding::SequentialEncoding::new(vec![]));
-        
+
+        let arch1 = Arc::new(crate::nas::architecture_encoding::SequentialEncoding::new(
+            vec![],
+        ));
+        let arch2 = Arc::new(crate::nas::architecture_encoding::SequentialEncoding::new(
+            vec![],
+        ));
+
         let sol1 = MultiObjectiveSolution::new(arch1, vec![0.9, 1000.0, 500.0, 5.0]); // High acc, high cost
         let sol2 = MultiObjectiveSolution::new(arch2, vec![0.8, 500.0, 250.0, 2.5]); // Lower acc, lower cost
-        
+
         // Neither should dominate the other (trade-off)
         assert!(!sol1.dominates(&sol2, &config));
         assert!(!sol2.dominates(&sol1, &config));

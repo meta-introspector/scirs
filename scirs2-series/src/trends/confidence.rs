@@ -223,7 +223,7 @@ where
         _ => {
             // Approximate normal quantile for arbitrary confidence level
             let p = (F::one() + F::from_f64(options.level).unwrap()) / F::from_f64(2.0).unwrap();
-            normal_quantile(p.to_f64().unwrap())
+            normal_quantile(p.to_f64().unwrap())?
         }
     };
 
@@ -278,7 +278,7 @@ where
         _ => {
             // Approximate normal quantile for arbitrary confidence level
             let p = (F::one() + F::from_f64(options.level).unwrap()) / F::from_f64(2.0).unwrap();
-            normal_quantile(p.to_f64().unwrap())
+            normal_quantile(p.to_f64().unwrap())?
         }
     };
 
@@ -306,9 +306,12 @@ where
 }
 
 /// Approximation of the normal quantile function
-fn normal_quantile(p: f64) -> f64 {
+fn normal_quantile(p: f64) -> Result<f64> {
     if p <= 0.0 || p >= 1.0 {
-        panic!("Probability must be between 0 and 1");
+        return Err(TimeSeriesError::InvalidInput(format!(
+            "Probability must be between 0 and 1, got {}",
+            p
+        )));
     }
 
     // Constants for Beasley-Springer-Moro algorithm
@@ -342,7 +345,7 @@ fn normal_quantile(p: f64) -> f64 {
         let r = q * q;
         let mut result = q * (a[0] + r * (a[1] + r * (a[2] + r * a[3])));
         result /= 1.0 + r * (b[0] + r * (b[1] + r * (b[2] + r * b[3])));
-        return result;
+        return Ok(result);
     }
 
     // Approximation in the tails
@@ -357,11 +360,7 @@ fn normal_quantile(p: f64) -> f64 {
             + q * (c[2]
                 + q * (c[3] + q * (c[4] + q * (c[5] + q * (c[6] + q * (c[7] + q * c[8])))))));
 
-    if p < 0.08 {
-        -result
-    } else {
-        result
-    }
+    Ok(if p < 0.08 { -result } else { result })
 }
 
 /// Creates a trend estimate along with confidence intervals

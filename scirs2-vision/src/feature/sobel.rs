@@ -137,32 +137,33 @@ pub fn sobel_edges_simd(
     // Check if SIMD is available
     if f32::simd_available() {
         let array = image_to_array(img)?;
-        
+
         // Use SIMD-accelerated gradient computation
         let (grad_x, grad_y, magnitude) = simd_ops::simd_sobel_gradients(&array.view())?;
-        
+
         // Compute orientation if requested
         let orientation = if compute_orientation {
             let (height, width) = array.dim();
             let mut orient = Array2::zeros((height, width));
-            
+
             // Compute orientation using atan2
             for y in 0..height {
                 for x in 0..width {
                     orient[[y, x]] = grad_y[[y, x]].atan2(grad_x[[y, x]]);
                 }
             }
-            
+
             Some(orient)
         } else {
             None
         };
-        
+
         // Create binary edge image
-        let edges = crate::feature::array_to_image(
-            &magnitude.mapv(|x| if x > threshold { 1.0 } else { 0.0 })
-        )?;
-        
+        let edges =
+            crate::feature::array_to_image(
+                &magnitude.mapv(|x| if x > threshold { 1.0 } else { 0.0 }),
+            )?;
+
         Ok((edges, orientation))
     } else {
         // Fall back to regular implementation
@@ -416,7 +417,7 @@ mod tests {
         let sum: f32 = histogram.iter().sum();
         assert!((sum - 1.0).abs() < 1e-6);
     }
-    
+
     #[test]
     fn test_sobel_simd() {
         // Create test image with vertical edge
@@ -427,18 +428,18 @@ mod tests {
             }
         }
         let dynamic_img = DynamicImage::ImageLuma8(img);
-        
+
         // Test SIMD implementation
         let result = sobel_edges_simd(&dynamic_img, 100.0, true);
         assert!(result.is_ok());
-        
+
         let (edges, orientations) = result.unwrap();
         assert!(orientations.is_some());
         assert_eq!(edges.dimensions(), (10, 10));
-        
+
         // Compare with regular implementation
         let (edges_regular, _) = sobel_edges_oriented(&dynamic_img, 100.0, true).unwrap();
-        
+
         // Results should be similar (allowing for minor numerical differences)
         assert_eq!(edges.dimensions(), edges_regular.dimensions());
     }

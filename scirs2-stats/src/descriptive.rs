@@ -6,6 +6,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast, Signed};
+use scirs2_core::validation::{check_finite, check_not_empty, check_same_shape};
 
 /// Compute the arithmetic mean of a data set.
 ///
@@ -31,11 +32,9 @@ pub fn mean<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
 {
-    if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Empty array provided".to_string(),
-        ));
-    }
+    // Use scirs2-core validation
+    check_not_empty(x.as_slice().unwrap(), "x")
+        .map_err(|_| StatsError::InvalidArgument("Empty array provided".to_string()))?;
 
     let sum = x.iter().cloned().sum::<F>();
     let count = NumCast::from(x.len()).unwrap();
@@ -69,11 +68,12 @@ pub fn weighted_mean<F>(x: &ArrayView1<F>, weights: &ArrayView1<F>) -> StatsResu
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + Signed,
 {
-    if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Empty array provided".to_string(),
-        ));
-    }
+    // Use scirs2-core validation
+    check_not_empty(x.as_slice().unwrap(), "x")
+        .map_err(|_| StatsError::InvalidArgument("Empty array provided".to_string()))?;
+
+    check_not_empty(weights.as_slice().unwrap(), "weights")
+        .map_err(|_| StatsError::InvalidArgument("Empty weights array provided".to_string()))?;
 
     if x.len() != weights.len() {
         return Err(StatsError::DimensionMismatch(format!(

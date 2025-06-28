@@ -290,7 +290,7 @@ where
 
     for resample_idx in 0..n_resamples {
         let mut sample_idx = 0;
-        
+
         // Sample from each group proportionally
         for (_, indices) in group_indices.iter() {
             for _ in 0..indices.len() {
@@ -388,24 +388,24 @@ where
 
     for resample_idx in 0..n_resamples {
         let mut sample_pos = 0;
-        
+
         // Fill the resample with blocks
         while sample_pos < data_len {
             // Choose a random starting position for the block
             let start_pos = rng.random_range(0..max_start_pos);
-            
+
             // Copy the block (with wrapping if circular)
             for block_offset in 0..block_size {
                 if sample_pos >= data_len {
                     break;
                 }
-                
+
                 let data_idx = if circular {
                     (start_pos + block_offset) % data_len
                 } else {
                     start_pos + block_offset
                 };
-                
+
                 samples[[resample_idx, sample_pos]] = x[data_idx];
                 sample_pos += 1;
             }
@@ -475,17 +475,17 @@ where
 
     for resample_idx in 0..n_resamples {
         let mut sample_pos = 0;
-        
+
         // Sample enough blocks to fill the resample
         for _ in 0..n_blocks_needed {
             if sample_pos >= data_len {
                 break;
             }
-            
+
             // Choose a random block
             let block_idx = rng.random_range(0..blocks.len());
             let selected_block = &blocks[block_idx];
-            
+
             // Copy elements from the block
             for &value in selected_block {
                 if sample_pos >= data_len {
@@ -555,27 +555,27 @@ where
 
     for resample_idx in 0..n_resamples {
         let mut sample_pos = 0;
-        
+
         while sample_pos < data_len {
             // Choose a random starting position
             let start_pos = rng.random_range(0..data_len);
             let mut current_pos = start_pos;
-            
+
             // Generate a block with geometric length
             loop {
                 samples[[resample_idx, sample_pos]] = x[current_pos];
                 sample_pos += 1;
-                
+
                 if sample_pos >= data_len {
                     break;
                 }
-                
+
                 // Decide whether to continue the block (with probability 1-p)
                 let u: f64 = rng.random();
                 if u < p {
                     break; // End the block
                 }
-                
+
                 // Continue the block (move to next position with wrapping)
                 current_pos = (current_pos + 1) % data_len;
             }
@@ -629,7 +629,7 @@ where
     // First level bootstrap
     let first_level_samples = bootstrap(x, n_resamples1, seed)?;
     let mut first_level_stats = Array1::zeros(n_resamples1);
-    
+
     // Prepare RNG for second level
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value + 1),
@@ -650,7 +650,7 @@ where
         // Second level bootstrap for this sample
         let second_seed = rng.random::<u64>();
         let second_level_samples = bootstrap(&first_sample, n_resamples2, Some(second_seed))?;
-        
+
         let mut second_level_stats = Array1::zeros(n_resamples2);
         for j in 0..n_resamples2 {
             let second_sample = second_level_samples.row(j);
@@ -664,7 +664,7 @@ where
 
     // Overall bias estimate
     let overall_bias = bias_estimates.mean().unwrap();
-    
+
     // Bias-corrected estimate
     let _first_level_mean = first_level_stats.mean().unwrap();
     let bias_corrected = original_stat - overall_bias;
@@ -711,7 +711,7 @@ where
     // Generate bootstrap samples
     let bootstrap_samples = bootstrap(x, n_resamples, seed)?;
     let mut bootstrap_stats = Array1::zeros(n_resamples);
-    
+
     for i in 0..n_resamples {
         let sample = bootstrap_samples.row(i);
         bootstrap_stats[i] = statistic(&sample)?;
@@ -729,7 +729,7 @@ where
     let upper_idx = ((1.0 - alpha / 2.0) * n) as usize;
     let percentile_ci = (
         sorted_stats[lower_idx.min(n_resamples - 1)],
-        sorted_stats[upper_idx.min(n_resamples - 1)]
+        sorted_stats[upper_idx.min(n_resamples - 1)],
     );
 
     // Bias-correction
@@ -785,15 +785,15 @@ where
 
     let bca_lower_idx = (alpha1 * n) as usize;
     let bca_upper_idx = (alpha2 * n) as usize;
-    
+
     let bc_ci = (
         sorted_stats[bca_lower_idx.min(n_resamples - 1)],
-        sorted_stats[bca_upper_idx.min(n_resamples - 1)]
+        sorted_stats[bca_upper_idx.min(n_resamples - 1)],
     );
 
     let bca_ci = (
         sorted_stats[bca_lower_idx.min(n_resamples - 1)],
-        sorted_stats[bca_upper_idx.min(n_resamples - 1)]
+        sorted_stats[bca_upper_idx.min(n_resamples - 1)],
     );
 
     Ok((percentile_ci, bc_ci, bca_ci))
@@ -813,12 +813,12 @@ fn erf(x: f64) -> f64 {
     let a4 = -1.453152027;
     let a5 = 1.061405429;
     let p = 0.3275911;
-    
+
     let sign = if x >= 0.0 { 1.0 } else { -1.0 };
     let x = x.abs();
-    
+
     let t = 1.0 / (1.0 + p * x);
     let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * (-x * x).exp();
-    
+
     sign * y
 }

@@ -102,7 +102,7 @@ impl<T: Clone> RTree<T> {
         }
 
         // Implement Sort-Tile-Recursive (STR) bulk loading algorithm
-        
+
         // Validate all points have correct dimensions
         for (i, (point, _)) in points.iter().enumerate() {
             if point.len() != ndim {
@@ -114,7 +114,7 @@ impl<T: Clone> RTree<T> {
                 )));
             }
         }
-        
+
         // Convert points to leaf entries
         let mut entries: Vec<Entry<T>> = points
             .into_iter()
@@ -125,11 +125,12 @@ impl<T: Clone> RTree<T> {
                 index,
             })
             .collect();
-        
+
         // Build the tree recursively
         rtree.root = rtree.str_build_node(&mut entries, 0)?;
-        rtree.root.is_leaf = rtree.root.entries.is_empty() || matches!(rtree.root.entries[0], Entry::Leaf { .. });
-        
+        rtree.root.is_leaf =
+            rtree.root.entries.is_empty() || matches!(rtree.root.entries[0], Entry::Leaf { .. });
+
         // Update tree height
         let height = rtree.calculate_height(&rtree.root);
         for _ in 1..height {
@@ -138,51 +139,53 @@ impl<T: Clone> RTree<T> {
 
         Ok(rtree)
     }
-    
+
     /// Build a node using the STR algorithm
     fn str_build_node(&self, entries: &mut Vec<Entry<T>>, level: usize) -> SpatialResult<Node<T>> {
         let n = entries.len();
-        
+
         if n == 0 {
             return Ok(Node::new(level == 0, level));
         }
-        
+
         // If we can fit all entries in one node, create it
         if n <= self.max_entries {
             let mut node = Node::new(level == 0, level);
             node.entries = std::mem::take(entries);
             return Ok(node);
         }
-        
+
         // Calculate the number of leaf nodes needed
         let leaf_capacity = self.max_entries;
         let num_leaves = n.div_ceil(leaf_capacity);
-        
+
         // Calculate the number of slices along each dimension
         let slice_count = (num_leaves as f64).powf(1.0 / self.ndim() as f64).ceil() as usize;
-        
+
         // Sort entries by the first dimension
         let dim = level % self.ndim();
         entries.sort_by(|a, b| {
             let a_center = (a.mbr().min[dim] + a.mbr().max[dim]) / 2.0;
             let b_center = (b.mbr().min[dim] + b.mbr().max[dim]) / 2.0;
-            a_center.partial_cmp(&b_center).unwrap_or(std::cmp::Ordering::Equal)
+            a_center
+                .partial_cmp(&b_center)
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
-        
+
         // Create child nodes
         let mut children = Vec::new();
         let entries_per_slice = n.div_ceil(slice_count);
-        
+
         for i in 0..slice_count {
             let start = i * entries_per_slice;
             let end = ((i + 1) * entries_per_slice).min(n);
-            
+
             if start >= n {
                 break;
             }
-            
+
             let mut slice_entries: Vec<Entry<T>> = entries[start..end].to_vec();
-            
+
             // Recursively build child nodes
             if level == 0 {
                 // These are leaf entries, group them into leaf nodes
@@ -190,7 +193,7 @@ impl<T: Clone> RTree<T> {
                     let mut node = Node::new(true, 0);
                     let take_count = slice_entries.len().min(self.max_entries);
                     node.entries = slice_entries.drain(..take_count).collect();
-                    
+
                     if let Ok(Some(mbr)) = node.mbr() {
                         children.push(Entry::NonLeaf {
                             mbr,
@@ -209,10 +212,10 @@ impl<T: Clone> RTree<T> {
                 }
             }
         }
-        
+
         // Clear the input entries as they've been moved to children
         entries.clear();
-        
+
         // If we have too many children, build another level
         if children.len() > self.max_entries {
             self.str_build_node(&mut children, level + 1)
@@ -222,7 +225,7 @@ impl<T: Clone> RTree<T> {
             Ok(node)
         }
     }
-    
+
     /// Calculate the height of the tree
     #[allow(clippy::only_used_in_recursion)]
     fn calculate_height(&self, node: &Node<T>) -> usize {

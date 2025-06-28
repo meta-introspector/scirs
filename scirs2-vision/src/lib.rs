@@ -58,13 +58,37 @@ pub use error::{Result, VisionError};
 pub use feature::{
     array_to_image,
     descriptor::{detect_and_compute, match_descriptors, Descriptor, KeyPoint},
-    harris_corners, image_to_array,
+    harris_corners,
+    image_to_array,
     laplacian::{laplacian_edges, laplacian_of_gaussian},
     log_blob::{log_blob_detect, log_blobs_to_image, LogBlob, LogBlobConfig},
     orb::{detect_and_compute_orb, match_orb_descriptors, OrbConfig, OrbDescriptor},
     prewitt::prewitt_edges,
-    sobel_edges,
     sobel::sobel_edges_simd,
+    sobel_edges,
+    AdvancedDenoiser,
+    AppearanceExtractor,
+    AttentionFeatureMatcher,
+    DeepSORT,
+    DenoisingMethod,
+    Detection,
+    // Advanced enhancement features
+    HDRProcessor,
+    KalmanFilter,
+    LearnedSIFT,
+    NeuralFeatureConfig,
+    NeuralFeatureMatcher,
+    SIFTConfig,
+    // Neural features
+    SuperPointNet,
+    SuperResolutionMethod,
+    SuperResolutionProcessor,
+    ToneMappingMethod,
+    Track,
+    TrackState,
+    // Advanced tracking features
+    TrackingBoundingBox,
+    TrackingMetrics,
 };
 // Re-export with unique name to avoid ambiguity
 pub use feature::homography::warp_perspective as feature_warp_perspective;
@@ -97,8 +121,8 @@ pub use simd_ops::{
 
 // Re-export GPU operations
 pub use gpu_ops::{
-    gpu_batch_process, gpu_convolve_2d, gpu_gaussian_blur, gpu_harris_corners,
-    gpu_sobel_gradients, GpuBenchmark, GpuMemoryStats, GpuVisionContext,
+    gpu_batch_process, gpu_convolve_2d, gpu_gaussian_blur, gpu_harris_corners, gpu_sobel_gradients,
+    GpuBenchmark, GpuMemoryStats, GpuVisionContext,
 };
 
 // Re-export streaming operations

@@ -1,5 +1,4 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use std::hint::black_box;
 use ndarray::{Array1, Array2, ArrayView2};
 use scirs2_linalg::quantization::{
     calibration::{calibrate_matrix, CalibrationConfig, CalibrationMethod},
@@ -7,6 +6,7 @@ use scirs2_linalg::quantization::{
     simd::{simd_quantized_matmul, simd_quantized_matvec},
     QuantizationMethod,
 };
+use std::hint::black_box;
 
 // Helper functions to generate test data
 fn create_random_array2_f32(rows: usize, cols: usize) -> Array2<f32> {

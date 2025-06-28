@@ -6,18 +6,26 @@
 //! - Sparse Jacobian optimization
 //! - Sensitivity analysis tools
 
+pub mod dual;
 pub mod forward;
 pub mod reverse;
-pub mod sparse;
 pub mod sensitivity;
-pub mod dual;
+pub mod sparse;
 
 // Re-export main types and functions
-pub use forward::{ForwardAD, forward_gradient, forward_jacobian, VectorizedForwardAD, ForwardODEJacobian};
-pub use reverse::{ReverseAD, reverse_gradient, reverse_jacobian, TapeNode, Tape, CheckpointStrategy};
-pub use sparse::{SparsePattern, SparseJacobian, detect_sparsity, compress_jacobian, 
-                 CSRJacobian, CSCJacobian, ColGrouping, colored_jacobian, detect_sparsity_adaptive,
-                 SparseJacobianUpdater, BlockPattern, HybridJacobian};
-pub use sensitivity::{SensitivityAnalysis, ParameterSensitivity, compute_sensitivities,
-                      SobolSensitivity, MorrisScreening, EFAST};
 pub use dual::{Dual, DualVector};
+pub use forward::{
+    forward_gradient, forward_jacobian, ForwardAD, ForwardODEJacobian, VectorizedForwardAD,
+};
+pub use reverse::{
+    reverse_gradient, reverse_jacobian, CheckpointStrategy, ReverseAD, Tape, TapeNode,
+};
+pub use sensitivity::{
+    compute_sensitivities, MorrisScreening, ParameterSensitivity, SensitivityAnalysis,
+    SobolSensitivity, EFAST,
+};
+pub use sparse::{
+    colored_jacobian, compress_jacobian, detect_sparsity, detect_sparsity_adaptive, BlockPattern,
+    CSCJacobian, CSRJacobian, ColGrouping, HybridJacobian, SparseJacobian, SparseJacobianUpdater,
+    SparsePattern,
+};

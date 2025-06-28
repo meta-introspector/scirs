@@ -16,16 +16,16 @@ use scirs2_core::gpu::GpuKernelHandle;
 pub struct AdamGpu<A: Float + ScalarOperand + Debug> {
     /// CPU Adam optimizer for fallback
     cpu_optimizer: Adam<A>,
-    
+
     /// GPU memory manager
     gpu_memory: Option<GpuOptimizerMemory<A>>,
-    
+
     /// GPU kernel handle
     kernel_handle: Option<Arc<GpuKernelHandle>>,
-    
+
     /// Whether optimizer is on GPU
     on_gpu: bool,
-    
+
     /// Step count for bias correction
     step_count: usize,
 }
@@ -41,7 +41,7 @@ impl<A: Float + ScalarOperand + Debug> AdamGpu<A> {
             step_count: 0,
         }
     }
-    
+
     /// Create with full configuration
     pub fn new_with_config(
         learning_rate: A,
@@ -51,20 +51,30 @@ impl<A: Float + ScalarOperand + Debug> AdamGpu<A> {
         weight_decay: A,
     ) -> Self {
         Self {
-            cpu_optimizer: Adam::new_with_config(learning_rate, beta1, beta2, epsilon, weight_decay),
+            cpu_optimizer: Adam::new_with_config(
+                learning_rate,
+                beta1,
+                beta2,
+                epsilon,
+                weight_decay,
+            ),
             gpu_memory: None,
             kernel_handle: None,
             on_gpu: false,
             step_count: 0,
         }
     }
-    
+
     /// Initialize GPU resources
-    pub fn initialize_gpu(&mut self, size: usize, config: GpuOptimizerConfig) -> Result<(), GpuOptimizerError> {
+    pub fn initialize_gpu(
+        &mut self,
+        size: usize,
+        config: GpuOptimizerConfig,
+    ) -> Result<(), GpuOptimizerError> {
         // Create GPU memory manager
         let mut gpu_memory = GpuOptimizerMemory::new(size, config)?;
         gpu_memory.allocate()?;
-        
+
         // Load Adam kernel
         #[cfg(feature = "gpu")]
         {
@@ -74,34 +84,34 @@ impl<A: Float + ScalarOperand + Debug> AdamGpu<A> {
                 "adam_update_f64"
             } else {
                 return Err(GpuOptimizerError::UnsupportedOperation(
-                    "Unsupported data type for GPU Adam".to_string()
+                    "Unsupported data type for GPU Adam".to_string(),
                 ));
             };
-            
+
             let kernel_handle = gpu_memory.context().get_kernel(kernel_name)?;
             self.kernel_handle = Some(Arc::new(kernel_handle));
         }
-        
+
         self.gpu_memory = Some(gpu_memory);
         Ok(())
     }
-    
+
     /// Move optimizer state to GPU
     pub fn to_gpu(&mut self) -> Result<(), GpuOptimizerError> {
         if self.gpu_memory.is_none() {
             return Err(GpuOptimizerError::NotInitialized);
         }
-        
+
         self.on_gpu = true;
         Ok(())
     }
-    
+
     /// Move optimizer state back to CPU
     pub fn to_cpu(&mut self) -> Result<(), GpuOptimizerError> {
         self.on_gpu = false;
         Ok(())
     }
-    
+
     /// Perform optimization step on GPU
     pub fn step_gpu<S1, S2, D>(
         &mut self,
@@ -115,32 +125,37 @@ impl<A: Float + ScalarOperand + Debug> AdamGpu<A> {
     {
         if !self.on_gpu {
             return Err(GpuOptimizerError::InvalidState(
-                "Optimizer not on GPU".to_string()
+                "Optimizer not on GPU".to_string(),
             ));
         }
-        
-        let gpu_memory = self.gpu_memory.as_mut()
+
+        let gpu_memory = self
+            .gpu_memory
+            .as_mut()
             .ok_or(GpuOptimizerError::NotInitialized)?;
-        
-        let kernel = self.kernel_handle.as_ref()
+
+        let kernel = self
+            .kernel_handle
+            .as_ref()
             .ok_or(GpuOptimizerError::NotInitialized)?;
-        
+
         // Copy data to GPU
         gpu_memory.copy_params_to_gpu(params)?;
-        
+
         // Copy gradients to GPU
         if let Some(ref grads_gpu) = gpu_memory.grads_gpu {
-            let grads_slice = gradients.as_slice()
-                .ok_or_else(|| GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string()))?;
+            let grads_slice = gradients.as_slice().ok_or_else(|| {
+                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+            })?;
             grads_gpu.copy_from_host(grads_slice);
         }
-        
+
         self.step_count += 1;
-        
+
         // Compute bias correction terms
         let bias_correction1 = A::one() - self.cpu_optimizer.beta1.powi(self.step_count as i32);
         let bias_correction2 = A::one() - self.cpu_optimizer.beta2.powi(self.step_count as i32);
-        
+
         // Set kernel parameters
         #[cfg(feature = "gpu")]
         {
@@ -148,38 +163,51 @@ impl<A: Float + ScalarOperand + Debug> AdamGpu<A> {
             kernel.set_buffer("grads", gpu_memory.grads_gpu.as_ref().unwrap());
             kernel.set_buffer("m", gpu_memory.m_gpu.as_ref().unwrap());
             kernel.set_buffer("v", gpu_memory.v_gpu.as_ref().unwrap());
-            
+
             // Convert Float values to concrete types for kernel
             if std::any::TypeId::of::<A>() == std::any::TypeId::of::<f32>() {
-                kernel.set_f32("lr", self.cpu_optimizer.get_learning_rate().to_f32().unwrap());
+                kernel.set_f32(
+                    "lr",
+                    self.cpu_optimizer.get_learning_rate().to_f32().unwrap(),
+                );
                 kernel.set_f32("beta1", self.cpu_optimizer.beta1.to_f32().unwrap());
                 kernel.set_f32("beta2", self.cpu_optimizer.beta2.to_f32().unwrap());
                 kernel.set_f32("eps", self.cpu_optimizer.epsilon.to_f32().unwrap());
-                kernel.set_f32("weight_decay", self.cpu_optimizer.weight_decay.to_f32().unwrap());
+                kernel.set_f32(
+                    "weight_decay",
+                    self.cpu_optimizer.weight_decay.to_f32().unwrap(),
+                );
                 kernel.set_f32("bias_correction1", bias_correction1.to_f32().unwrap());
                 kernel.set_f32("bias_correction2", bias_correction2.to_f32().unwrap());
             } else {
-                kernel.set_f64("lr", self.cpu_optimizer.get_learning_rate().to_f64().unwrap());
+                kernel.set_f64(
+                    "lr",
+                    self.cpu_optimizer.get_learning_rate().to_f64().unwrap(),
+                );
                 kernel.set_f64("beta1", self.cpu_optimizer.beta1.to_f64().unwrap());
                 kernel.set_f64("beta2", self.cpu_optimizer.beta2.to_f64().unwrap());
                 kernel.set_f64("eps", self.cpu_optimizer.epsilon.to_f64().unwrap());
-                kernel.set_f64("weight_decay", self.cpu_optimizer.weight_decay.to_f64().unwrap());
+                kernel.set_f64(
+                    "weight_decay",
+                    self.cpu_optimizer.weight_decay.to_f64().unwrap(),
+                );
                 kernel.set_f64("bias_correction1", bias_correction1.to_f64().unwrap());
                 kernel.set_f64("bias_correction2", bias_correction2.to_f64().unwrap());
             }
-            
+
             kernel.set_i32("n", params.len() as i32);
-            
+
             // Calculate grid and block dimensions
-            let (grid_size, block_size) = crate::gpu::utils::calculate_block_size(params.len(), 1024);
-            
+            let (grid_size, block_size) =
+                crate::gpu::utils::calculate_block_size(params.len(), 1024);
+
             // Launch kernel
             kernel.dispatch([grid_size as u32, 1, 1]);
         }
-        
+
         // Copy results back to CPU
         gpu_memory.copy_params_from_gpu(params)?;
-        
+
         Ok(())
     }
 }
@@ -207,11 +235,11 @@ where
             self.cpu_optimizer.step(params, gradients)
         }
     }
-    
+
     fn get_learning_rate(&self) -> A {
         self.cpu_optimizer.get_learning_rate()
     }
-    
+
     fn set_learning_rate(&mut self, learning_rate: A) {
         self.cpu_optimizer.set_learning_rate(learning_rate);
     }
@@ -220,30 +248,30 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array1;
     use approx::assert_relative_eq;
-    
+    use ndarray::Array1;
+
     #[test]
     fn test_adam_gpu_creation() {
         let optimizer = AdamGpu::<f32>::new(0.001);
         assert_eq!(optimizer.get_learning_rate(), 0.001);
         assert!(!optimizer.on_gpu);
     }
-    
+
     #[test]
     fn test_adam_gpu_cpu_fallback() {
         let mut optimizer = AdamGpu::new(0.001);
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let grads = Array1::from_vec(vec![0.1, 0.2, 0.3]);
-        
+
         // Should use CPU implementation when not on GPU
         let result = optimizer.step(&params, &grads);
         assert!(result.is_ok());
-        
+
         let updated = result.unwrap();
         assert_eq!(updated.len(), 3);
     }
-    
+
     #[test]
     fn test_gpu_initialization() {
         let mut optimizer = AdamGpu::<f32>::new(0.001);
@@ -251,7 +279,7 @@ mod tests {
             backend: scirs2_core::gpu::GpuBackend::Cpu,
             ..Default::default()
         };
-        
+
         let result = optimizer.initialize_gpu(1000, config);
         assert!(result.is_ok());
     }

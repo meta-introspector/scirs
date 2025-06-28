@@ -1,10 +1,10 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use std::hint::black_box;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_linalg::{
     blas_accelerated,
     simd_ops::{simd_dot_f32, simd_matmul_f32, simd_matvec_f32},
 };
+use std::hint::black_box;
 
 fn regular_matmul_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> Array2<f32> {
     let (m, k) = a.dim();

@@ -95,7 +95,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdMaxAbsScaler<F> {
             let row = x.row(i);
             let row_array = row.to_owned();
             let scaled_row = F::simd_mul(&row_array.view(), &scale.view());
-            
+
             for j in 0..n_features {
                 result[[i, j]] = scaled_row[j];
             }
@@ -219,13 +219,13 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdRobustScaler<F> {
         for i in 0..n_samples {
             let row = x.row(i);
             let row_array = row.to_owned();
-            
+
             // Subtract median
             let centered = F::simd_sub(&row_array.view(), &median.view());
-            
+
             // Scale by IQR
             let scaled = F::simd_mul(&centered.view(), &scale.view());
-            
+
             for j in 0..n_features {
                 result[[i, j]] = scaled[j];
             }
@@ -297,21 +297,17 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdStandardScaler<F> {
             for j in 0..n_features {
                 let col = x.column(j);
                 let col_array = col.to_owned();
-                
+
                 // Compute variance
-                let m = if self.with_mean {
-                    mean[j]
-                } else {
-                    F::zero()
-                };
-                
+                let m = if self.with_mean { mean[j] } else { F::zero() };
+
                 let mean_array = Array1::from_elem(n_samples, m);
                 let centered = F::simd_sub(&col_array.view(), &mean_array.view());
                 let squared = F::simd_mul(&centered.view(), &centered.view());
                 let variance = F::simd_sum(&squared.view()) / n_samples_f;
-                
+
                 std[j] = variance.sqrt();
-                
+
                 // Avoid division by zero
                 if std[j] <= F::from(EPSILON).unwrap() {
                     std[j] = F::one();
@@ -356,17 +352,17 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdStandardScaler<F> {
         for i in 0..n_samples {
             let row = x.row(i);
             let mut row_array = row.to_owned();
-            
+
             if self.with_mean {
                 // Center the data
                 row_array = F::simd_sub(&row_array.view(), &mean.view());
             }
-            
+
             if self.with_std {
                 // Scale to unit variance
                 row_array = F::simd_div(&row_array.view(), &std.view());
             }
-            
+
             for j in 0..n_features {
                 result[[i, j]] = row_array[j];
             }

@@ -234,7 +234,7 @@ where
     })
 }
 
-/// Detects seasonal periods using the Fast Fourier Transform (FFT)
+/// Detects seasonal periods using spectral analysis (DFT-based periodogram)
 fn detect_periods_fft<F>(
     ts: &Array1<F>,
     options: &PeriodDetectionOptions,
@@ -244,27 +244,33 @@ where
 {
     let n = ts.len();
 
-    // FFT implementation would normally go here
-    // For now, we'll use a simplified approach with the ACF
-    // In a real implementation, we would use a package like rustfft
-
-    // Calculate ACF as a placeholder for spectral analysis
-    let acf = autocorrelation(ts, Some(n / 2))?;
-
-    // Generate a simple periodogram from ACF for demonstration purposes
+    // Calculate the periodogram using Discrete Fourier Transform (DFT)
+    // This is a more robust approach than the previous simplified version
     let mut periodogram = Array1::zeros(n / 2 + 1);
-    for i in 0..=n / 2 {
-        // This is a very simplified approximation
-        let _freq = F::from_f64(i as f64 / n as f64).unwrap();
-        let mut power = F::zero();
-        for j in 1..acf.len() {
-            let cos_term = F::from_f64(2.0 * std::f64::consts::PI * j as f64 * i as f64 / n as f64)
-                .unwrap()
-                .cos();
-            power = power + acf[j] * cos_term;
+
+    // Remove the mean to center the data
+    let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).unwrap();
+    let centered_ts = Array1::from_shape_fn(n, |i| ts[i] - mean);
+
+    // Compute the periodogram using DFT
+    for k in 0..=n / 2 {
+        let mut real_part = F::zero();
+        let mut imag_part = F::zero();
+
+        for (j, &x) in centered_ts.iter().enumerate() {
+            let angle =
+                F::from_f64(-2.0 * std::f64::consts::PI * k as f64 * j as f64 / n as f64).unwrap();
+            real_part = real_part + x * angle.cos();
+            imag_part = imag_part + x * angle.sin();
         }
-        periodogram[i] = power.abs();
+
+        // Power spectral density
+        let power = (real_part * real_part + imag_part * imag_part) / F::from_usize(n).unwrap();
+        periodogram[k] = power;
     }
+
+    // For autocorrelation fallback (used in combined method)
+    let acf = autocorrelation(&centered_ts, Some(n / 2))?;
 
     // Find peaks in the periodogram
     let mut peaks = Vec::new();

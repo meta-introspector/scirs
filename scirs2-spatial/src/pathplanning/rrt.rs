@@ -168,10 +168,9 @@ impl RRTPlanner {
 
     /// Sample a random point in the configuration space
     fn sample_random_point(&mut self) -> SpatialResult<Array1<f64>> {
-        let (min_bounds, max_bounds) = self
-            .bounds
-            .as_ref()
-            .ok_or_else(|| SpatialError::ValueError("Bounds must be set before sampling".to_string()))?;
+        let (min_bounds, max_bounds) = self.bounds.as_ref().ok_or_else(|| {
+            SpatialError::ValueError("Bounds must be set before sampling".to_string())
+        })?;
         let mut point = Array1::zeros(self.dimension);
 
         for i in 0..self.dimension {
@@ -198,8 +197,7 @@ impl RRTPlanner {
         kdtree: &KDTree<f64, EuclideanDistance<f64>>,
     ) -> SpatialResult<usize> {
         let point_vec = point.to_vec();
-        let (indices, _) = kdtree
-            .query(point_vec.as_slice(), 1)?;
+        let (indices, _) = kdtree.query(point_vec.as_slice(), 1)?;
         Ok(indices[0])
     }
 

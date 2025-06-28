@@ -20,11 +20,7 @@ use std::fmt::Debug;
 /// # Returns
 ///
 /// * Convolution result
-pub fn parallel_convolve1d<T, U>(
-    a: &[T],
-    v: &[U],
-    mode: &str,
-) -> SignalResult<Vec<f64>>
+pub fn parallel_convolve1d<T, U>(a: &[T], v: &[U], mode: &str) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug + Send + Sync,
     U: Float + NumCast + Debug + Send + Sync,
@@ -34,15 +30,15 @@ where
         .iter()
         .map(|&val| NumCast::from(val).unwrap_or(0.0))
         .collect();
-    
+
     let v_vec: Vec<f64> = v
         .iter()
         .map(|&val| NumCast::from(val).unwrap_or(0.0))
         .collect();
-    
+
     // Determine if parallel processing is beneficial
     let use_parallel = a_vec.len() > 1000 || (a_vec.len() > 100 && v_vec.len() > 10);
-    
+
     if use_parallel {
         parallel_convolve_impl(&a_vec, &v_vec, mode)
     } else {
@@ -52,21 +48,17 @@ where
 }
 
 /// Core parallel convolution implementation
-fn parallel_convolve_impl(
-    a: &[f64],
-    v: &[f64],
-    mode: &str,
-) -> SignalResult<Vec<f64>> {
+fn parallel_convolve_impl(a: &[f64], v: &[f64], mode: &str) -> SignalResult<Vec<f64>> {
     let na = a.len();
     let nv = v.len();
-    
+
     if na == 0 || nv == 0 {
         return Ok(vec![]);
     }
-    
+
     // Full convolution length
     let n_full = na + nv - 1;
-    
+
     // Use different strategies based on kernel size
     let result = if nv <= 32 {
         // Small kernel: parallelize over output elements
@@ -75,7 +67,7 @@ fn parallel_convolve_impl(
         // Large kernel: use overlap-save method
         parallel_overlap_save_conv(a, v, n_full)
     };
-    
+
     // Apply mode
     apply_conv_mode(result, na, nv, mode)
 }
@@ -84,33 +76,34 @@ fn parallel_convolve_impl(
 fn parallel_direct_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
     let na = a.len();
     let nv = v.len();
-    
+
     // Parallel computation of output elements
     let result: Vec<f64> = par_iter_with_setup(
         0..n_full,
         || {},
         |_, &i| {
             let mut sum = 0.0;
-            
+
             // Compute valid range for convolution at position i
             let j_start = i.saturating_sub(na - 1);
             let j_end = (i + 1).min(nv);
-            
+
             for j in j_start..j_end {
                 let a_idx = i - j;
                 if a_idx < na {
                     sum += a[a_idx] * v[j];
                 }
             }
-            
+
             Ok(sum)
         },
         |results, val| {
             results.push(val?);
             Ok(())
         },
-    ).unwrap_or_else(|_| vec![0.0; n_full]);
-    
+    )
+    .unwrap_or_else(|_| vec![0.0; n_full]);
+
     result
 }
 
@@ -118,15 +111,15 @@ fn parallel_direct_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
 fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
     let na = a.len();
     let nv = v.len();
-    
+
     // Choose chunk size (power of 2 for potential FFT optimization)
     let chunk_size = 4096.max(nv * 4);
     let overlap = nv - 1;
     let step = chunk_size - overlap;
-    
+
     // Number of chunks
     let n_chunks = (na + step - 1) / step;
-    
+
     // Process chunks in parallel
     let chunk_results: Vec<Vec<f64>> = par_iter_with_setup(
         0..n_chunks,
@@ -134,13 +127,13 @@ fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
         |_, &chunk_idx| {
             let start = chunk_idx * step;
             let end = (start + chunk_size).min(na + overlap);
-            
+
             // Create padded chunk
             let mut chunk = vec![0.0; chunk_size];
             for i in start..end.min(na) {
                 chunk[i - start] = a[i];
             }
-            
+
             // Convolve chunk with kernel
             let mut chunk_result = vec![0.0; chunk_size + nv - 1];
             for i in 0..chunk_size {
@@ -148,20 +141,21 @@ fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
                     chunk_result[i + j] += chunk[i] * v[j];
                 }
             }
-            
+
             Ok(chunk_result)
         },
         |results, res| {
             results.push(res?);
             Ok(())
         },
-    ).unwrap_or_else(|_| vec![]);
-    
+    )
+    .unwrap_or_else(|_| vec![]);
+
     // Combine chunk results
     let mut result = vec![0.0; n_full];
     for (chunk_idx, chunk_result) in chunk_results.iter().enumerate() {
         let start = chunk_idx * step;
-        
+
         // Copy non-overlapping portion
         let copy_start = if chunk_idx == 0 { 0 } else { overlap };
         let copy_end = if chunk_idx == n_chunks - 1 {
@@ -169,24 +163,19 @@ fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
         } else {
             step + overlap
         };
-        
+
         for i in copy_start..copy_end.min(chunk_result.len()) {
             if start + i < n_full {
                 result[start + i] = chunk_result[i];
             }
         }
     }
-    
+
     result
 }
 
 /// Apply convolution mode (full, same, valid)
-fn apply_conv_mode(
-    result: Vec<f64>,
-    na: usize,
-    nv: usize,
-    mode: &str,
-) -> SignalResult<Vec<f64>> {
+fn apply_conv_mode(result: Vec<f64>, na: usize, nv: usize, mode: &str) -> SignalResult<Vec<f64>> {
     match mode {
         "full" => Ok(result),
         "same" => {
@@ -227,11 +216,7 @@ fn apply_conv_mode(
 /// # Returns
 ///
 /// * Cross-correlation result
-pub fn parallel_correlate<T, U>(
-    a: &[T],
-    v: &[U],
-    mode: &str,
-) -> SignalResult<Vec<f64>>
+pub fn parallel_correlate<T, U>(a: &[T], v: &[U], mode: &str) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug + Send + Sync,
     U: Float + NumCast + Debug + Send + Sync,
@@ -241,15 +226,15 @@ where
         .iter()
         .map(|&val| NumCast::from(val).unwrap_or(0.0))
         .collect();
-    
+
     let mut v_vec: Vec<f64> = v
         .iter()
         .map(|&val| NumCast::from(val).unwrap_or(0.0))
         .collect();
-    
+
     // Correlation is convolution with reversed kernel
     v_vec.reverse();
-    
+
     parallel_convolve_impl(&a_vec, &v_vec, mode)
 }
 
@@ -271,13 +256,13 @@ pub fn parallel_convolve2d_ndarray(
 ) -> SignalResult<Array2<f64>> {
     let (img_rows, img_cols) = image.dim();
     let (ker_rows, ker_cols) = kernel.dim();
-    
+
     if ker_rows > img_rows || ker_cols > img_cols {
         return Err(SignalError::ValueError(
             "Kernel dimensions must not exceed image dimensions".to_string(),
         ));
     }
-    
+
     // Determine output dimensions
     let (out_rows, out_cols) = match mode {
         "full" => (img_rows + ker_rows - 1, img_cols + ker_cols - 1),
@@ -285,14 +270,14 @@ pub fn parallel_convolve2d_ndarray(
         "valid" => (img_rows - ker_rows + 1, img_cols - ker_cols + 1),
         _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
     };
-    
+
     // Parallel processing over output rows
     let row_results: Vec<Vec<f64>> = par_iter_with_setup(
         0..out_rows,
         || {},
         |_, &out_i| {
             let mut row = vec![0.0; out_cols];
-            
+
             // Determine input row range based on mode
             let (i_start, i_offset) = match mode {
                 "full" => (0, out_i as isize),
@@ -300,7 +285,7 @@ pub fn parallel_convolve2d_ndarray(
                 "valid" => (out_i, 0),
                 _ => (0, 0),
             };
-            
+
             for out_j in 0..out_cols {
                 // Determine input column range
                 let (j_start, j_offset) = match mode {
@@ -309,30 +294,31 @@ pub fn parallel_convolve2d_ndarray(
                     "valid" => (out_j, 0),
                     _ => (0, 0),
                 };
-                
+
                 let mut sum = 0.0;
-                
+
                 // Perform 2D convolution at this output position
                 for ki in 0..ker_rows {
                     let img_i = (i_offset + ki as isize) as usize;
                     if img_i >= img_rows {
                         continue;
                     }
-                    
+
                     for kj in 0..ker_cols {
                         let img_j = (j_offset + kj as isize) as usize;
                         if img_j >= img_cols {
                             continue;
                         }
-                        
+
                         // Flip kernel for convolution
-                        sum += image[[img_i, img_j]] * kernel[[ker_rows - 1 - ki, ker_cols - 1 - kj]];
+                        sum +=
+                            image[[img_i, img_j]] * kernel[[ker_rows - 1 - ki, ker_cols - 1 - kj]];
                     }
                 }
-                
+
                 row[out_j] = sum;
             }
-            
+
             Ok(row)
         },
         |results, row| {
@@ -340,7 +326,7 @@ pub fn parallel_convolve2d_ndarray(
             Ok(())
         },
     )?;
-    
+
     // Convert to Array2
     let mut output = Array2::zeros((out_rows, out_cols));
     for (i, row) in row_results.iter().enumerate() {
@@ -348,7 +334,7 @@ pub fn parallel_convolve2d_ndarray(
             output[[i, j]] = val;
         }
     }
-    
+
     Ok(output)
 }
 
@@ -374,7 +360,7 @@ pub fn parallel_separable_convolve2d(
     mode: &str,
 ) -> SignalResult<Array2<f64>> {
     let (img_rows, img_cols) = image.dim();
-    
+
     // First, convolve each row with row_kernel
     let row_convolved: Vec<Vec<f64>> = par_iter_with_setup(
         0..img_rows,
@@ -389,10 +375,10 @@ pub fn parallel_separable_convolve2d(
             Ok(())
         },
     )?;
-    
+
     // Determine intermediate dimensions
     let inter_cols = row_convolved[0].len();
-    
+
     // Convert to Array2 for column processing
     let mut intermediate = Array2::zeros((img_rows, inter_cols));
     for (i, row) in row_convolved.iter().enumerate() {
@@ -400,7 +386,7 @@ pub fn parallel_separable_convolve2d(
             intermediate[[i, j]] = val;
         }
     }
-    
+
     // Then, convolve each column with col_kernel
     let col_convolved: Vec<Vec<f64>> = par_iter_with_setup(
         0..inter_cols,
@@ -415,11 +401,11 @@ pub fn parallel_separable_convolve2d(
             Ok(())
         },
     )?;
-    
+
     // Determine final dimensions
     let final_rows = col_convolved[0].len();
     let final_cols = inter_cols;
-    
+
     // Transpose to get final result
     let mut output = Array2::zeros((final_rows, final_cols));
     for (j, col) in col_convolved.iter().enumerate() {
@@ -427,6 +413,6 @@ pub fn parallel_separable_convolve2d(
             output[[i, j]] = val;
         }
     }
-    
+
     Ok(output)
 }

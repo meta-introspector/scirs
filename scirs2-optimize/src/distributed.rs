@@ -4,8 +4,8 @@
 //! multiple nodes using Message Passing Interface (MPI), enabling optimization
 //! of computationally expensive problems across compute clusters.
 
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::{ScirsError, ScirsResult};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -13,33 +13,38 @@ use std::time::Instant;
 pub trait MPIInterface {
     /// Get the rank of this process
     fn rank(&self) -> i32;
-    
+
     /// Get the total number of processes
     fn size(&self) -> i32;
-    
+
     /// Broadcast data from root to all processes
     fn broadcast<T>(&self, data: &mut [T], root: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync;
-    
+
     /// Gather data from all processes to root
     fn gather<T>(&self, send_data: &[T], recv_data: Option<&mut [T]>, root: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync;
-    
+
     /// All-to-all reduction operation
-    fn allreduce<T>(&self, send_data: &[T], recv_data: &mut [T], op: ReductionOp) -> ScirsResult<()>
+    fn allreduce<T>(
+        &self,
+        send_data: &[T],
+        recv_data: &mut [T],
+        op: ReductionOp,
+    ) -> ScirsResult<()>
     where
         T: Clone + Send + Sync + std::ops::Add<Output = T> + PartialOrd;
-    
+
     /// Barrier synchronization
     fn barrier(&self) -> ScirsResult<()>;
-    
+
     /// Send data to specific process
     fn send<T>(&self, data: &[T], dest: i32, tag: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync;
-    
+
     /// Receive data from specific process
     fn recv<T>(&self, data: &mut [T], source: i32, tag: i32) -> ScirsResult<()>
     where
@@ -177,7 +182,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
         let rank = mpi.rank();
         let size = mpi.size();
         let work_distribution = WorkDistribution::new(rank, size, config.distribution_strategy);
-        
+
         Self {
             mpi,
             config,
@@ -224,11 +229,18 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
         if self.is_master() {
             let total_size = local_result.len() * self.size as usize;
             let mut gathered_data = vec![0.0; total_size];
-            self.mpi.gather(local_result.as_slice().unwrap(), Some(&mut gathered_data), 0)?;
-            
+            self.mpi.gather(
+                local_result.as_slice().unwrap(),
+                Some(&mut gathered_data),
+                0,
+            )?;
+
             // Reshape into 2D array
-            let result = Array2::from_shape_vec((self.size as usize, local_result.len()), gathered_data)
-                .map_err(|e| ScirsError::InvalidInput(format!("Failed to reshape gathered data: {}", e)))?;
+            let result =
+                Array2::from_shape_vec((self.size as usize, local_result.len()), gathered_data)
+                    .map_err(|e| {
+                        ScirsError::InvalidInput(format!("Failed to reshape gathered data: {}", e))
+                    })?;
             Ok(Some(result))
         } else {
             self.mpi.gather(local_result.as_slice().unwrap(), None, 0)?;
@@ -262,7 +274,11 @@ struct WorkDistribution {
 
 impl WorkDistribution {
     fn new(rank: i32, size: i32, strategy: DistributionStrategy) -> Self {
-        Self { rank, size, strategy }
+        Self {
+            rank,
+            size,
+            strategy,
+        }
     }
 
     fn assign_work(&self, total_work: usize) -> WorkAssignment {
@@ -277,12 +293,15 @@ impl WorkDistribution {
     fn data_parallel_assignment(&self, total_work: usize) -> WorkAssignment {
         let work_per_process = total_work / self.size as usize;
         let remainder = total_work % self.size as usize;
-        
-        let start = self.rank as usize * work_per_process + 
-                   (self.rank as usize).min(remainder);
-        let extra = if (self.rank as usize) < remainder { 1 } else { 0 };
+
+        let start = self.rank as usize * work_per_process + (self.rank as usize).min(remainder);
+        let extra = if (self.rank as usize) < remainder {
+            1
+        } else {
+            0
+        };
         let count = work_per_process + extra;
-        
+
         WorkAssignment {
             start_index: start,
             count,
@@ -318,12 +337,16 @@ impl WorkDistribution {
             let work_per_worker = total_work / worker_count as usize;
             let remainder = total_work % worker_count as usize;
             let worker_rank = self.rank - 1;
-            
-            let start = worker_rank as usize * work_per_worker + 
-                       (worker_rank as usize).min(remainder);
-            let extra = if (worker_rank as usize) < remainder { 1 } else { 0 };
+
+            let start =
+                worker_rank as usize * work_per_worker + (worker_rank as usize).min(remainder);
+            let extra = if (worker_rank as usize) < remainder {
+                1
+            } else {
+                0
+            };
             let count = work_per_worker + extra;
-            
+
             WorkAssignment {
                 start_index: start,
                 count,
@@ -349,7 +372,7 @@ impl WorkAssignment {
     pub fn range(&self) -> std::ops::Range<usize> {
         self.start_index..(self.start_index + self.count)
     }
-    
+
     /// Check if this assignment is empty
     pub fn is_empty(&self) -> bool {
         self.count == 0
@@ -403,7 +426,7 @@ pub mod algorithms {
             F: Fn(&ArrayView1<f64>) -> f64 + Clone + Send + Sync,
         {
             let dims = bounds.len();
-            
+
             // Initialize local population
             let local_pop_size = self.population_size / self.context.size() as usize;
             let mut local_population = self.initialize_local_population(local_pop_size, bounds)?;
@@ -421,13 +444,19 @@ pub mod algorithms {
                 let trial_fitness = self.evaluate_local_population(&function, &trial_population)?;
 
                 // Selection
-                self.selection(&mut local_population, &mut local_fitness, &trial_population, &trial_fitness);
+                self.selection(
+                    &mut local_population,
+                    &mut local_fitness,
+                    &trial_population,
+                    &trial_fitness,
+                );
 
                 total_evaluations += local_pop_size;
 
                 // Exchange information between processes
                 if iteration % 10 == 0 {
-                    let new_global_best = self.find_global_best(&local_population, &local_fitness)?;
+                    let new_global_best =
+                        self.find_global_best(&local_population, &local_fitness)?;
                     if new_global_best.1 < global_best_fitness {
                         global_best = new_global_best;
                         global_best_fitness = global_best.1;
@@ -470,15 +499,15 @@ pub mod algorithms {
             bounds: &[(f64, f64)],
         ) -> ScirsResult<Array2<f64>> {
             use rand::Rng;
-            let mut rng = rand::thread_rng();
-            
+            let mut rng = rand::rng();
+
             let dims = bounds.len();
             let mut population = Array2::zeros((local_size, dims));
 
             for i in 0..local_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    population[[i, j]] = rng.gen_range(low..=high);
+                    population[[i, j]] = rng.random_range(low..=high);
                 }
             }
 
@@ -494,12 +523,12 @@ pub mod algorithms {
             F: Fn(&ArrayView1<f64>) -> f64,
         {
             let mut fitness = Array1::zeros(population.nrows());
-            
+
             for i in 0..population.nrows() {
                 let individual = population.row(i);
                 fitness[i] = function(&individual);
             }
-            
+
             Ok(fitness)
         }
 
@@ -523,7 +552,7 @@ pub mod algorithms {
             // Find global best across all processes
             let mut global_fitness = Array1::from_elem(1, best_fitness);
             let global_fitness_sum = self.context.allreduce_sum(&global_fitness)?;
-            
+
             // For simplicity, we'll use the local best for now
             // In a full implementation, we'd need to communicate the actual best individual
             Ok((local_best, best_fitness))
@@ -531,8 +560,8 @@ pub mod algorithms {
 
         fn generate_trial_population(&self, population: &Array2<f64>) -> ScirsResult<Array2<f64>> {
             use rand::Rng;
-            let mut rng = rand::thread_rng();
-            
+            let mut rng = rand::rng();
+
             let (pop_size, dims) = population.dim();
             let mut trial_population = Array2::zeros((pop_size, dims));
 
@@ -540,7 +569,7 @@ pub mod algorithms {
                 // Select three random individuals
                 let mut indices = Vec::new();
                 while indices.len() < 3 {
-                    let idx = rng.gen_range(0..pop_size);
+                    let idx = rng.random_range(0..pop_size);
                     if idx != i && !indices.contains(&idx) {
                         indices.push(idx);
                     }
@@ -549,11 +578,11 @@ pub mod algorithms {
                 let [a, b, c] = [indices[0], indices[1], indices[2]];
 
                 // Mutation and crossover
-                let j_rand = rng.gen_range(0..dims);
+                let j_rand = rng.random_range(0..dims);
                 for j in 0..dims {
-                    if rng.gen::<f64>() < self.crossover_rate || j == j_rand {
-                        trial_population[[i, j]] = population[[a, j]] + 
-                            self.f_scale * (population[[b, j]] - population[[c, j]]);
+                    if rng.random::<f64>() < self.crossover_rate || j == j_rand {
+                        trial_population[[i, j]] = population[[a, j]]
+                            + self.f_scale * (population[[b, j]] - population[[c, j]]);
                     } else {
                         trial_population[[i, j]] = population[[i, j]];
                     }
@@ -590,7 +619,8 @@ pub mod algorithms {
                 return Ok(());
             }
 
-            let best_idx = fitness.iter()
+            let best_idx = fitness
+                .iter()
                 .enumerate()
                 .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                 .map(|(i, _)| i)
@@ -611,12 +641,14 @@ pub mod algorithms {
 
         fn check_convergence(&mut self, local_fitness: &Array1<f64>) -> ScirsResult<bool> {
             let mean = local_fitness.mean().unwrap_or(0.0);
-            let variance = local_fitness.iter()
+            let variance = local_fitness
+                .iter()
                 .map(|&x| (x - mean).powi(2))
-                .sum::<f64>() / local_fitness.len() as f64;
-            
+                .sum::<f64>()
+                / local_fitness.len() as f64;
+
             let std_dev = variance.sqrt();
-            
+
             // Simple convergence criterion
             Ok(std_dev < 1e-12)
         }
@@ -627,9 +659,9 @@ pub mod algorithms {
         context: DistributedOptimizationContext<M>,
         swarm_size: usize,
         max_iterations: usize,
-        w: f64,   // Inertia weight
-        c1: f64,  // Cognitive parameter
-        c2: f64,  // Social parameter
+        w: f64,  // Inertia weight
+        c1: f64, // Cognitive parameter
+        c2: f64, // Social parameter
     }
 
     impl<M: MPIInterface> DistributedParticleSwarm<M> {
@@ -683,7 +715,13 @@ pub mod algorithms {
 
             for iteration in 0..self.max_iterations {
                 // Update swarm
-                self.update_swarm(&mut positions, &mut velocities, &personal_best, &global_best.0, bounds)?;
+                self.update_swarm(
+                    &mut positions,
+                    &mut velocities,
+                    &personal_best,
+                    &global_best.0,
+                    bounds,
+                )?;
 
                 // Evaluate new positions
                 let fitness = self.evaluate_swarm(&function, &positions)?;
@@ -701,7 +739,8 @@ pub mod algorithms {
 
                 // Update global best
                 if iteration % 10 == 0 {
-                    let new_global_best = self.find_global_best(&personal_best, &personal_best_fitness)?;
+                    let new_global_best =
+                        self.find_global_best(&personal_best, &personal_best_fitness)?;
                     if new_global_best.1 < global_best_fitness {
                         global_best = new_global_best;
                         global_best_fitness = global_best.1;
@@ -720,34 +759,42 @@ pub mod algorithms {
             })
         }
 
-        fn initialize_positions(&self, local_size: usize, bounds: &[(f64, f64)]) -> ScirsResult<Array2<f64>> {
+        fn initialize_positions(
+            &self,
+            local_size: usize,
+            bounds: &[(f64, f64)],
+        ) -> ScirsResult<Array2<f64>> {
             use rand::Rng;
-            let mut rng = rand::thread_rng();
-            
+            let mut rng = rand::rng();
+
             let dims = bounds.len();
             let mut positions = Array2::zeros((local_size, dims));
 
             for i in 0..local_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    positions[[i, j]] = rng.gen_range(low..=high);
+                    positions[[i, j]] = rng.random_range(low..=high);
                 }
             }
 
             Ok(positions)
         }
 
-        fn evaluate_swarm<F>(&self, function: &F, positions: &Array2<f64>) -> ScirsResult<Array1<f64>>
+        fn evaluate_swarm<F>(
+            &self,
+            function: &F,
+            positions: &Array2<f64>,
+        ) -> ScirsResult<Array1<f64>>
         where
             F: Fn(&ArrayView1<f64>) -> f64,
         {
             let mut fitness = Array1::zeros(positions.nrows());
-            
+
             for i in 0..positions.nrows() {
                 let particle = positions.row(i);
                 fitness[i] = function(&particle);
             }
-            
+
             Ok(fitness)
         }
 
@@ -767,7 +814,7 @@ pub mod algorithms {
             }
 
             let local_best = positions.row(best_idx).to_owned();
-            
+
             // In a full implementation, we would find the global best across all processes
             Ok((local_best, best_fitness))
         }
@@ -781,19 +828,19 @@ pub mod algorithms {
             bounds: &[(f64, f64)],
         ) -> ScirsResult<()> {
             use rand::Rng;
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             let (swarm_size, dims) = positions.dim();
 
             for i in 0..swarm_size {
                 for j in 0..dims {
-                    let r1: f64 = rng.gen();
-                    let r2: f64 = rng.gen();
+                    let r1: f64 = rng.random();
+                    let r2: f64 = rng.random();
 
                     // Update velocity
-                    velocities[[i, j]] = self.w * velocities[[i, j]] +
-                        self.c1 * r1 * (personal_best[[i, j]] - positions[[i, j]]) +
-                        self.c2 * r2 * (global_best[j] - positions[[i, j]]);
+                    velocities[[i, j]] = self.w * velocities[[i, j]]
+                        + self.c1 * r1 * (personal_best[[i, j]] - positions[[i, j]])
+                        + self.c2 * r2 * (global_best[j] - positions[[i, j]]);
 
                     // Update position
                     positions[[i, j]] += velocities[[i, j]];
@@ -887,17 +934,41 @@ impl MockMPI {
 
 #[cfg(test)]
 impl MPIInterface for MockMPI {
-    fn rank(&self) -> i32 { self.rank }
-    fn size(&self) -> i32 { self.size }
-    
+    fn rank(&self) -> i32 {
+        self.rank
+    }
+    fn size(&self) -> i32 {
+        self.size
+    }
+
     fn broadcast<T>(&self, _data: &mut [T], _root: i32) -> ScirsResult<()>
-    where T: Clone + Send + Sync { Ok(()) }
-    
-    fn gather<T>(&self, _send_data: &[T], _recv_data: Option<&mut [T]>, _root: i32) -> ScirsResult<()>
-    where T: Clone + Send + Sync { Ok(()) }
-    
-    fn allreduce<T>(&self, send_data: &[T], recv_data: &mut [T], _op: ReductionOp) -> ScirsResult<()>
-    where T: Clone + Send + Sync + std::ops::Add<Output = T> + PartialOrd {
+    where
+        T: Clone + Send + Sync,
+    {
+        Ok(())
+    }
+
+    fn gather<T>(
+        &self,
+        _send_data: &[T],
+        _recv_data: Option<&mut [T]>,
+        _root: i32,
+    ) -> ScirsResult<()>
+    where
+        T: Clone + Send + Sync,
+    {
+        Ok(())
+    }
+
+    fn allreduce<T>(
+        &self,
+        send_data: &[T],
+        recv_data: &mut [T],
+        _op: ReductionOp,
+    ) -> ScirsResult<()>
+    where
+        T: Clone + Send + Sync + std::ops::Add<Output = T> + PartialOrd,
+    {
         for (i, item) in send_data.iter().enumerate() {
             if i < recv_data.len() {
                 recv_data[i] = item.clone();
@@ -905,12 +976,22 @@ impl MPIInterface for MockMPI {
         }
         Ok(())
     }
-    
-    fn barrier(&self) -> ScirsResult<()> { Ok(()) }
+
+    fn barrier(&self) -> ScirsResult<()> {
+        Ok(())
+    }
     fn send<T>(&self, _data: &[T], _dest: i32, _tag: i32) -> ScirsResult<()>
-    where T: Clone + Send + Sync { Ok(()) }
+    where
+        T: Clone + Send + Sync,
+    {
+        Ok(())
+    }
     fn recv<T>(&self, _data: &mut [T], _source: i32, _tag: i32) -> ScirsResult<()>
-    where T: Clone + Send + Sync { Ok(()) }
+    where
+        T: Clone + Send + Sync,
+    {
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -922,7 +1003,7 @@ mod tests {
     fn test_work_distribution() {
         let distribution = WorkDistribution::new(0, 4, DistributionStrategy::DataParallel);
         let assignment = distribution.assign_work(100);
-        
+
         assert_eq!(assignment.count, 25);
         assert_eq!(assignment.start_index, 0);
         assert_eq!(assignment.range(), 0..25);
@@ -932,7 +1013,7 @@ mod tests {
     fn test_work_assignment_remainder() {
         let distribution = WorkDistribution::new(3, 4, DistributionStrategy::DataParallel);
         let assignment = distribution.assign_work(10);
-        
+
         // 10 items, 4 processes: 2, 3, 3, 2
         assert_eq!(assignment.count, 2);
         assert_eq!(assignment.start_index, 8);
@@ -942,12 +1023,12 @@ mod tests {
     fn test_master_worker_distribution() {
         let master_distribution = WorkDistribution::new(0, 4, DistributionStrategy::MasterWorker);
         let master_assignment = master_distribution.assign_work(100);
-        
+
         assert_eq!(master_assignment.count, 0); // Master doesn't do computation
-        
+
         let worker_distribution = WorkDistribution::new(1, 4, DistributionStrategy::MasterWorker);
         let worker_assignment = worker_distribution.assign_work(100);
-        
+
         assert!(worker_assignment.count > 0); // Worker does computation
     }
 
@@ -956,7 +1037,7 @@ mod tests {
         let mpi = MockMPI::new(0, 4);
         let config = DistributedConfig::default();
         let context = DistributedOptimizationContext::new(mpi, config);
-        
+
         assert_eq!(context.rank(), 0);
         assert_eq!(context.size(), 4);
         assert!(context.is_master());
@@ -967,7 +1048,7 @@ mod tests {
         let mut stats = DistributedStats::new();
         stats.computation_time = 80.0;
         stats.communication_time = 20.0;
-        
+
         assert_eq!(stats.parallel_efficiency(), 0.8);
     }
 }

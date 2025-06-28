@@ -4,10 +4,13 @@
 //! memory-intensive optimizers like Adam and LAMB that can benefit from
 //! custom GPU acceleration.
 
-use ndarray::{Array, Dimension};
+use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::Float;
+use std::collections::{HashMap, VecDeque};
 use std::ffi::c_void;
 use std::ptr;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 #[cfg(feature = "cuda")]
 use scirs2_core::gpu::{CudaContext, CudaKernel, CudaStream};
@@ -17,26 +20,196 @@ pub struct OptimizerKernel {
     /// CUDA context
     #[cfg(feature = "cuda")]
     context: CudaContext,
-    
+
     /// Compiled kernel functions
     #[cfg(feature = "cuda")]
     adam_kernel: CudaKernel,
-    
+
     #[cfg(feature = "cuda")]
     lamb_kernel: CudaKernel,
-    
+
     #[cfg(feature = "cuda")]
     adamw_kernel: CudaKernel,
-    
+
     /// CUDA stream for async execution
     #[cfg(feature = "cuda")]
     stream: CudaStream,
-    
+
     /// Block size for kernel launches
     block_size: u32,
-    
+
     /// Maximum threads per block
     max_threads: u32,
+
+    /// Kernel profiler for performance monitoring
+    profiler: Option<Arc<KernelProfiler>>,
+
+    /// Tensor core support detector
+    tensor_core_support: TensorCoreSupport,
+
+    /// Advanced memory allocator
+    memory_allocator: Option<Arc<CudaMemoryAllocator>>,
+
+    /// Pipeline manager for overlapping execution
+    pipeline_manager: PipelineManager,
+}
+
+/// Kernel profiler for performance monitoring
+#[derive(Debug)]
+pub struct KernelProfiler {
+    /// Timing data for different kernels
+    timing_data: Mutex<HashMap<String, VecDeque<Duration>>>,
+
+    /// Performance metrics
+    metrics: Mutex<PerformanceMetrics>,
+
+    /// Profiling configuration
+    config: ProfilingConfig,
+}
+
+/// Performance metrics collected during profiling
+#[derive(Debug, Clone)]
+pub struct PerformanceMetrics {
+    /// Total kernel executions
+    pub total_executions: usize,
+
+    /// Average execution time per kernel
+    pub avg_execution_times: HashMap<String, Duration>,
+
+    /// Memory bandwidth utilization
+    pub memory_bandwidth_utilization: f64,
+
+    /// Compute utilization
+    pub compute_utilization: f64,
+
+    /// Tensor core utilization
+    pub tensor_core_utilization: f64,
+}
+
+/// Profiling configuration
+#[derive(Debug, Clone)]
+pub struct ProfilingConfig {
+    /// Enable detailed profiling
+    pub detailed_profiling: bool,
+
+    /// Maximum history size per kernel
+    pub max_history_size: usize,
+
+    /// Profiling frequency (1 = every call, 10 = every 10th call)
+    pub profiling_frequency: usize,
+}
+
+/// Tensor core support detection and configuration
+#[derive(Debug, Clone)]
+pub struct TensorCoreSupport {
+    /// Available tensor core generations
+    pub available_generations: Vec<TensorCoreGeneration>,
+
+    /// Preferred tensor core generation
+    pub preferred_generation: Option<TensorCoreGeneration>,
+
+    /// Mixed precision capabilities
+    pub mixed_precision_support: MixedPrecisionSupport,
+}
+
+/// Tensor core generations
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TensorCoreGeneration {
+    V1, // Volta
+    V2, // Turing
+    V3, // Ampere
+    V4, // Ada Lovelace/Hopper
+}
+
+/// Mixed precision support configuration
+#[derive(Debug, Clone)]
+pub struct MixedPrecisionSupport {
+    /// FP16 support
+    pub fp16_support: bool,
+
+    /// BF16 support
+    pub bf16_support: bool,
+
+    /// INT8 support
+    pub int8_support: bool,
+
+    /// TF32 support
+    pub tf32_support: bool,
+}
+
+/// Advanced CUDA memory allocator
+#[derive(Debug)]
+pub struct CudaMemoryAllocator {
+    /// Memory pools for different sizes
+    memory_pools: Mutex<HashMap<usize, Vec<*mut c_void>>>,
+
+    /// Total allocated memory
+    total_allocated: Mutex<usize>,
+
+    /// Memory allocation strategy
+    allocation_strategy: AllocationStrategy,
+
+    /// Memory alignment requirements
+    alignment_requirements: usize,
+}
+
+/// Memory allocation strategies
+#[derive(Debug, Clone, Copy)]
+pub enum AllocationStrategy {
+    /// Simple first-fit allocation
+    FirstFit,
+
+    /// Best-fit allocation
+    BestFit,
+
+    /// Buddy allocation system
+    Buddy,
+
+    /// Pool-based allocation
+    Pool,
+}
+
+/// Pipeline manager for overlapping kernel execution
+#[derive(Debug)]
+pub struct PipelineManager {
+    /// Multiple CUDA streams for pipelining
+    #[cfg(feature = "cuda")]
+    streams: Vec<CudaStream>,
+
+    /// Current stream index
+    current_stream_index: usize,
+
+    /// Pipeline configuration
+    config: PipelineConfig,
+
+    /// Execution statistics
+    stats: PipelineStatistics,
+}
+
+/// Pipeline configuration
+#[derive(Debug, Clone)]
+pub struct PipelineConfig {
+    /// Number of parallel streams
+    pub num_streams: usize,
+
+    /// Enable overlapping execution
+    pub enable_overlapping: bool,
+
+    /// Stream priority levels
+    pub stream_priorities: Vec<i32>,
+}
+
+/// Pipeline execution statistics
+#[derive(Debug, Clone)]
+pub struct PipelineStatistics {
+    /// Total pipeline operations
+    pub total_operations: usize,
+
+    /// Average pipeline efficiency
+    pub avg_efficiency: f64,
+
+    /// Stream utilization
+    pub stream_utilization: Vec<f64>,
 }
 
 impl OptimizerKernel {
@@ -46,15 +219,44 @@ impl OptimizerKernel {
         {
             let context = CudaContext::new(0)?; // Use device 0
             let stream = CudaStream::new(&context)?;
-            
+
             // Compile kernels from embedded PTX
             let adam_kernel = CudaKernel::from_ptx(&context, ADAM_KERNEL_PTX, "adam_step_kernel")?;
             let lamb_kernel = CudaKernel::from_ptx(&context, LAMB_KERNEL_PTX, "lamb_step_kernel")?;
-            let adamw_kernel = CudaKernel::from_ptx(&context, ADAMW_KERNEL_PTX, "adamw_step_kernel")?;
-            
-            let max_threads = context.get_device_attribute(cuda_driver_api::CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK)? as u32;
+            let adamw_kernel =
+                CudaKernel::from_ptx(&context, ADAMW_KERNEL_PTX, "adamw_step_kernel")?;
+
+            let max_threads = context
+                .get_device_attribute(cuda_driver_api::CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK)?
+                as u32;
             let block_size = 256.min(max_threads);
-            
+
+            // Initialize profiler
+            let profiler = Some(Arc::new(KernelProfiler::new(ProfilingConfig {
+                detailed_profiling: true,
+                max_history_size: 1000,
+                profiling_frequency: 1,
+            })));
+
+            // Detect tensor core support
+            let tensor_core_support = TensorCoreSupport::detect(&context)?;
+
+            // Initialize memory allocator
+            let memory_allocator = Some(Arc::new(CudaMemoryAllocator::new(
+                AllocationStrategy::Pool,
+                256, // 256-byte alignment
+            )?));
+
+            // Initialize pipeline manager
+            let pipeline_manager = PipelineManager::new(
+                &context,
+                PipelineConfig {
+                    num_streams: 4,
+                    enable_overlapping: true,
+                    stream_priorities: vec![0, 0, 0, 0], // Normal priority
+                },
+            )?;
+
             Ok(Self {
                 context,
                 adam_kernel,
@@ -63,18 +265,26 @@ impl OptimizerKernel {
                 stream,
                 block_size,
                 max_threads,
+                profiler,
+                tensor_core_support,
+                memory_allocator,
+                pipeline_manager,
             })
         }
-        
+
         #[cfg(not(feature = "cuda"))]
         {
             Ok(Self {
                 block_size: 256,
                 max_threads: 1024,
+                profiler: None,
+                tensor_core_support: TensorCoreSupport::default(),
+                memory_allocator: None,
+                pipeline_manager: PipelineManager::default(),
             })
         }
     }
-    
+
     /// Launch Adam optimizer kernel
     pub fn launch_adam_kernel<T: Float>(
         &self,
@@ -93,7 +303,7 @@ impl OptimizerKernel {
         #[cfg(feature = "cuda")]
         {
             let grid_size = (size as u32 + self.block_size - 1) / self.block_size;
-            
+
             let args = [
                 &(params as *mut c_void) as *const _ as *mut c_void,
                 &(grads as *const c_void) as *const _ as *mut c_void,
@@ -107,7 +317,11 @@ impl OptimizerKernel {
                 &step as *const _ as *mut c_void,
                 &(size as u32) as *const _ as *mut c_void,
             ];
-            
+
+            if let Some(ref profiler) = self.profiler {
+                profiler.start_timing("adam");
+            }
+
             self.adam_kernel.launch(
                 grid_size,
                 self.block_size,
@@ -115,19 +329,23 @@ impl OptimizerKernel {
                 0, // shared memory
                 Some(&self.stream),
             )?;
-            
+
             self.stream.synchronize()?;
+
+            if let Some(ref profiler) = self.profiler {
+                profiler.end_timing("adam");
+            }
         }
-        
+
         #[cfg(not(feature = "cuda"))]
         {
             // Fallback to CPU implementation
             return Err(OptimizerKernelError::CudaNotAvailable);
         }
-        
+
         Ok(())
     }
-    
+
     /// Launch LAMB optimizer kernel
     pub fn launch_lamb_kernel<T: Float>(
         &self,
@@ -146,7 +364,7 @@ impl OptimizerKernel {
         #[cfg(feature = "cuda")]
         {
             let grid_size = (size as u32 + self.block_size - 1) / self.block_size;
-            
+
             let args = [
                 &(params as *mut c_void) as *const _ as *mut c_void,
                 &(grads as *const c_void) as *const _ as *mut c_void,
@@ -160,7 +378,7 @@ impl OptimizerKernel {
                 &step as *const _ as *mut c_void,
                 &(size as u32) as *const _ as *mut c_void,
             ];
-            
+
             self.lamb_kernel.launch(
                 grid_size,
                 self.block_size,
@@ -168,18 +386,18 @@ impl OptimizerKernel {
                 0,
                 Some(&self.stream),
             )?;
-            
+
             self.stream.synchronize()?;
         }
-        
+
         #[cfg(not(feature = "cuda"))]
         {
             return Err(OptimizerKernelError::CudaNotAvailable);
         }
-        
+
         Ok(())
     }
-    
+
     /// Launch AdamW optimizer kernel with improved weight decay
     pub fn launch_adamw_kernel<T: Float>(
         &self,
@@ -198,7 +416,7 @@ impl OptimizerKernel {
         #[cfg(feature = "cuda")]
         {
             let grid_size = (size as u32 + self.block_size - 1) / self.block_size;
-            
+
             let args = [
                 &(params as *mut c_void) as *const _ as *mut c_void,
                 &(grads as *const c_void) as *const _ as *mut c_void,
@@ -212,7 +430,7 @@ impl OptimizerKernel {
                 &step as *const _ as *mut c_void,
                 &(size as u32) as *const _ as *mut c_void,
             ];
-            
+
             self.adamw_kernel.launch(
                 grid_size,
                 self.block_size,
@@ -220,18 +438,18 @@ impl OptimizerKernel {
                 0,
                 Some(&self.stream),
             )?;
-            
+
             self.stream.synchronize()?;
         }
-        
+
         #[cfg(not(feature = "cuda"))]
         {
             return Err(OptimizerKernelError::CudaNotAvailable);
         }
-        
+
         Ok(())
     }
-    
+
     /// Get optimal block size for given problem size
     pub fn get_optimal_block_size(&self, size: usize) -> u32 {
         let optimal_threads = match size {
@@ -242,7 +460,7 @@ impl OptimizerKernel {
         };
         optimal_threads.min(self.max_threads)
     }
-    
+
     /// Check if CUDA acceleration is available
     pub fn is_cuda_available(&self) -> bool {
         #[cfg(feature = "cuda")]
@@ -263,19 +481,19 @@ pub enum OptimizerKernelError {
     #[error("CUDA error: {0}")]
     #[cfg(feature = "cuda")]
     CudaError(#[from] scirs2_core::gpu::CudaError),
-    
+
     /// CUDA not available
     #[error("CUDA acceleration not available")]
     CudaNotAvailable,
-    
+
     /// Invalid kernel parameters
     #[error("Invalid kernel parameters: {0}")]
     InvalidParameters(String),
-    
+
     /// Kernel compilation error
     #[error("Kernel compilation failed: {0}")]
     CompilationError(String),
-    
+
     /// Memory allocation error
     #[error("GPU memory allocation failed")]
     MemoryError,
@@ -566,10 +784,10 @@ exit:
 pub struct MemoryEfficientKernelLauncher {
     /// Maximum memory per chunk (in elements)
     max_chunk_size: usize,
-    
+
     /// Overlap computation and memory transfer
     use_streams: bool,
-    
+
     /// Number of streams for overlapping
     num_streams: usize,
 }
@@ -579,14 +797,14 @@ impl MemoryEfficientKernelLauncher {
     pub fn new(max_memory_mb: usize, use_streams: bool) -> Self {
         let max_chunk_size = (max_memory_mb * 1024 * 1024) / (4 * 4); // 4 bytes per f32, 4 arrays
         let num_streams = if use_streams { 4 } else { 1 };
-        
+
         Self {
             max_chunk_size,
             use_streams,
             num_streams,
         }
     }
-    
+
     /// Launch kernel in chunks to manage memory usage
     pub fn launch_chunked<T: Float>(
         &self,
@@ -605,16 +823,16 @@ impl MemoryEfficientKernelLauncher {
     ) -> Result<(), OptimizerKernelError> {
         let total_size = params.len();
         let chunk_size = self.max_chunk_size.min(total_size);
-        
+
         for chunk_start in (0..total_size).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(total_size);
             let current_chunk_size = chunk_end - chunk_start;
-            
+
             let params_chunk = &mut params[chunk_start..chunk_end];
             let grads_chunk = &grads[chunk_start..chunk_end];
             let exp_avg_chunk = &mut exp_avg[chunk_start..chunk_end];
             let exp_avg_sq_chunk = &mut exp_avg_sq[chunk_start..chunk_end];
-            
+
             match optimizer_type {
                 OptimizerType::Adam => {
                     kernel.launch_adam_kernel(
@@ -663,7 +881,7 @@ impl MemoryEfficientKernelLauncher {
                 }
             }
         }
-        
+
         Ok(())
     }
 }
@@ -674,6 +892,226 @@ pub enum OptimizerType {
     Adam,
     LAMB,
     AdamW,
+}
+
+// Implementation of new structures
+
+impl KernelProfiler {
+    /// Create new kernel profiler
+    pub fn new(config: ProfilingConfig) -> Self {
+        Self {
+            timing_data: Mutex::new(HashMap::new()),
+            metrics: Mutex::new(PerformanceMetrics {
+                total_executions: 0,
+                avg_execution_times: HashMap::new(),
+                memory_bandwidth_utilization: 0.0,
+                compute_utilization: 0.0,
+                tensor_core_utilization: 0.0,
+            }),
+            config,
+        }
+    }
+
+    /// Start timing for a kernel
+    pub fn start_timing(&self, kernel_name: &str) {
+        if !self.config.detailed_profiling {
+            return;
+        }
+
+        // Implementation would use CUDA events for accurate timing
+        // This is a simplified placeholder
+    }
+
+    /// End timing for a kernel
+    pub fn end_timing(&self, kernel_name: &str) {
+        if !self.config.detailed_profiling {
+            return;
+        }
+
+        // Implementation would use CUDA events for accurate timing
+        // This is a simplified placeholder
+    }
+
+    /// Get performance metrics
+    pub fn get_metrics(&self) -> PerformanceMetrics {
+        self.metrics.lock().unwrap().clone()
+    }
+}
+
+impl TensorCoreSupport {
+    /// Detect available tensor core support
+    #[cfg(feature = "cuda")]
+    pub fn detect(_context: &CudaContext) -> Result<Self, OptimizerKernelError> {
+        // In a real implementation, this would query the device
+        Ok(Self {
+            available_generations: vec![TensorCoreGeneration::V3],
+            preferred_generation: Some(TensorCoreGeneration::V3),
+            mixed_precision_support: MixedPrecisionSupport {
+                fp16_support: true,
+                bf16_support: true,
+                int8_support: true,
+                tf32_support: true,
+            },
+        })
+    }
+
+    #[cfg(not(feature = "cuda"))]
+    pub fn detect(_context: &()) -> Result<Self, OptimizerKernelError> {
+        Ok(Self::default())
+    }
+}
+
+impl Default for TensorCoreSupport {
+    fn default() -> Self {
+        Self {
+            available_generations: Vec::new(),
+            preferred_generation: None,
+            mixed_precision_support: MixedPrecisionSupport {
+                fp16_support: false,
+                bf16_support: false,
+                int8_support: false,
+                tf32_support: false,
+            },
+        }
+    }
+}
+
+impl CudaMemoryAllocator {
+    /// Create new CUDA memory allocator
+    pub fn new(
+        strategy: AllocationStrategy,
+        alignment: usize,
+    ) -> Result<Self, OptimizerKernelError> {
+        Ok(Self {
+            memory_pools: Mutex::new(HashMap::new()),
+            total_allocated: Mutex::new(0),
+            allocation_strategy: strategy,
+            alignment_requirements: alignment,
+        })
+    }
+
+    /// Allocate memory with specified size
+    pub fn allocate(&self, size: usize) -> Result<*mut c_void, OptimizerKernelError> {
+        let aligned_size =
+            (size + self.alignment_requirements - 1) & !(self.alignment_requirements - 1);
+
+        let mut pools = self.memory_pools.lock().unwrap();
+
+        // Check if we have a suitable block in the pool
+        if let Some(pool) = pools.get_mut(&aligned_size) {
+            if let Some(ptr) = pool.pop() {
+                return Ok(ptr);
+            }
+        }
+
+        // Allocate new memory (simplified - would use CUDA malloc)
+        let ptr = std::ptr::null_mut(); // Placeholder
+
+        *self.total_allocated.lock().unwrap() += aligned_size;
+
+        Ok(ptr)
+    }
+
+    /// Deallocate memory
+    pub fn deallocate(&self, ptr: *mut c_void, size: usize) -> Result<(), OptimizerKernelError> {
+        let aligned_size =
+            (size + self.alignment_requirements - 1) & !(self.alignment_requirements - 1);
+
+        let mut pools = self.memory_pools.lock().unwrap();
+        pools.entry(aligned_size).or_insert_with(Vec::new).push(ptr);
+
+        Ok(())
+    }
+
+    /// Get memory usage statistics
+    pub fn get_stats(&self) -> (usize, usize) {
+        let total_allocated = *self.total_allocated.lock().unwrap();
+        let pools = self.memory_pools.lock().unwrap();
+        let pooled_memory = pools.values().map(|pool| pool.len()).sum::<usize>();
+
+        (total_allocated, pooled_memory)
+    }
+}
+
+impl PipelineManager {
+    /// Create new pipeline manager
+    #[cfg(feature = "cuda")]
+    pub fn new(
+        context: &CudaContext,
+        config: PipelineConfig,
+    ) -> Result<Self, OptimizerKernelError> {
+        let mut streams = Vec::with_capacity(config.num_streams);
+
+        for _i in 0..config.num_streams {
+            streams.push(CudaStream::new(context)?);
+        }
+
+        Ok(Self {
+            streams,
+            current_stream_index: 0,
+            config,
+            stats: PipelineStatistics {
+                total_operations: 0,
+                avg_efficiency: 0.0,
+                stream_utilization: vec![0.0; config.num_streams],
+            },
+        })
+    }
+
+    #[cfg(not(feature = "cuda"))]
+    pub fn new(_context: &(), config: PipelineConfig) -> Result<Self, OptimizerKernelError> {
+        Ok(Self {
+            current_stream_index: 0,
+            config,
+            stats: PipelineStatistics {
+                total_operations: 0,
+                avg_efficiency: 0.0,
+                stream_utilization: vec![0.0; config.num_streams],
+            },
+        })
+    }
+
+    /// Get next available stream
+    #[cfg(feature = "cuda")]
+    pub fn get_next_stream(&mut self) -> &CudaStream {
+        let stream = &self.streams[self.current_stream_index];
+        self.current_stream_index = (self.current_stream_index + 1) % self.config.num_streams;
+        stream
+    }
+
+    /// Synchronize all streams
+    #[cfg(feature = "cuda")]
+    pub fn synchronize_all(&self) -> Result<(), OptimizerKernelError> {
+        for stream in &self.streams {
+            stream.synchronize()?;
+        }
+        Ok(())
+    }
+
+    /// Get pipeline statistics
+    pub fn get_stats(&self) -> &PipelineStatistics {
+        &self.stats
+    }
+}
+
+impl Default for PipelineManager {
+    fn default() -> Self {
+        Self {
+            #[cfg(feature = "cuda")]
+            streams: Vec::new(),
+            current_stream_index: 0,
+            config: PipelineConfig {
+                num_streams: 1,
+                enable_overlapping: false,
+                stream_priorities: vec![0],
+            },
+            stats: PipelineStatistics {
+                total_operations: 0,
+                avg_efficiency: 0.0,
+                stream_utilization: vec![0.0],
+            },
+        }
+    }
 }
 
 #[cfg(test)]
@@ -702,7 +1140,7 @@ mod tests {
         let launcher = MemoryEfficientKernelLauncher::new(128, true);
         assert!(launcher.max_chunk_size > 0);
         assert_eq!(launcher.num_streams, 4);
-        
+
         let launcher_no_streams = MemoryEfficientKernelLauncher::new(128, false);
         assert_eq!(launcher_no_streams.num_streams, 1);
     }

@@ -52,7 +52,7 @@ where
 
     let mean = F::simd_mean(&array.view());
     let n = F::from(array.len()).unwrap();
-    
+
     // Compute variance
     let mean_array = Array1::from_elem(array.len(), mean);
     let centered = F::simd_sub(&array.view(), &mean_array.view());

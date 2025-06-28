@@ -581,7 +581,7 @@ impl SphericalVoronoi {
             // Use both absolute and relative tolerance (OR logic)
             let abs_error = (dist - radius).abs();
             let rel_error = abs_error / radius;
-            
+
             if abs_error > threshold_abs || rel_error > threshold_rel {
                 return Ok(false);
             }
@@ -615,14 +615,15 @@ impl SphericalVoronoi {
             }
 
             // Calculate the circumcenter of this simplex on the sphere
-            let circumcenter = match Self::calculate_spherical_circumcenter(&simplex_points, center, radius) {
-                Ok(c) => c,
-                Err(_) => {
-                    // Skip degenerate simplices
-                    simplex_to_vertex.push(None);
-                    continue;
-                }
-            };
+            let circumcenter =
+                match Self::calculate_spherical_circumcenter(&simplex_points, center, radius) {
+                    Ok(c) => c,
+                    Err(_) => {
+                        // Skip degenerate simplices
+                        simplex_to_vertex.push(None);
+                        continue;
+                    }
+                };
 
             // Store the circumcenter
             all_circumcenters.push(circumcenter.clone());
@@ -646,7 +647,7 @@ impl SphericalVoronoi {
                 vertices_vec.push(circumcenter.clone());
                 vertices_vec.len() - 1
             };
-            
+
             simplex_to_vertex.push(Some(vertex_idx));
         }
 
@@ -690,16 +691,16 @@ impl SphericalVoronoi {
         // Normalize vectors to unit sphere
         let u1 = p1 / norm(p1);
         let u2 = p2 / norm(p2);
-        
+
         // Calculate the dot product, clamped to [-1, 1] to avoid numerical errors
         let dot = (u1.dot(&u2)).clamp(-1.0, 1.0);
-        
+
         // The spherical distance is radius * arccos(dot_product)
         radius * dot.acos()
     }
 
     /// Calculates the circumcenter of a simplex on the sphere.
-    /// 
+    ///
     /// For a spherical triangle, the circumcenter is the point that is equidistant
     /// (in spherical distance) from all vertices of the triangle.
     fn calculate_spherical_circumcenter(
@@ -735,7 +736,7 @@ impl SphericalVoronoi {
         let ac = &c - &a;
         let normal = cross_3d(&ab, &ac);
         let normal_norm = norm(&normal);
-        
+
         if normal_norm < 1e-10 * radius {
             return Err(SpatialError::ComputationError(
                 "Degenerate simplex: points are nearly collinear".into(),
@@ -745,18 +746,18 @@ impl SphericalVoronoi {
         // Use the improved spherical circumcenter algorithm
         // The circumcenter of a spherical triangle can be found using the fact that
         // it lies at the intersection of great circles perpendicular to the sides
-        
+
         // Method: Use the dual of the spherical triangle
         // The circumcenter is the pole of the great circle containing the triangle
         let circumcenter = Self::compute_spherical_circumcenter_dual(&a, &b, &c, center, radius)?;
-        
+
         Ok(circumcenter)
     }
 
     /// Helper function to compute spherical circumcenter using the dual method
     fn compute_spherical_circumcenter_dual(
         a: &Array1<f64>,
-        b: &Array1<f64>, 
+        b: &Array1<f64>,
         c: &Array1<f64>,
         center: &Array1<f64>,
         radius: f64,
@@ -769,67 +770,67 @@ impl SphericalVoronoi {
         // Compute normals to great circles formed by pairs of points
         let n1 = cross_3d(&u1, &u2); // Normal to great circle through u1, u2
         let n2 = cross_3d(&u2, &u3); // Normal to great circle through u2, u3
-        
+
         // The circumcenter is at the intersection of the great circles
         // perpendicular to the sides of the triangle
         let perpendicular_to_side1 = cross_3d(&n1, &u1); // Perpendicular to side u1-u2
         let perpendicular_to_side2 = cross_3d(&n2, &u2); // Perpendicular to side u2-u3
-        
+
         // Find intersection of these two great circles
         let circumcenter_direction = cross_3d(&perpendicular_to_side1, &perpendicular_to_side2);
         let circumcenter_norm = norm(&circumcenter_direction);
-        
+
         if circumcenter_norm < 1e-12 {
             // Try alternative method: use the normal to the triangle plane
             let triangle_normal = cross_3d(&(&u2 - &u1), &(&u3 - &u1));
             let triangle_normal_norm = norm(&triangle_normal);
-            
+
             if triangle_normal_norm < 1e-12 {
                 return Err(SpatialError::ComputationError(
                     "Cannot compute circumcenter: degenerate configuration".into(),
                 ));
             }
-            
+
             // Use the triangle normal (or its negative) as circumcenter direction
             let normalized_normal = &triangle_normal / triangle_normal_norm;
             let circumcenter = center + (radius * &normalized_normal);
-            
+
             // Check if this point is equidistant from the three vertices
             // If not, try the antipodal point
             let dist1 = Self::spherical_distance(&circumcenter, &(center + a), radius);
             let dist2 = Self::spherical_distance(&circumcenter, &(center + b), radius);
             let dist3 = Self::spherical_distance(&circumcenter, &(center + c), radius);
-            
+
             if (dist1 - dist2).abs() > 1e-8 || (dist1 - dist3).abs() > 1e-8 {
                 // Try antipodal point
                 let antipodal = center - (radius * &normalized_normal);
                 return Ok(antipodal);
             }
-            
+
             return Ok(circumcenter);
         }
-        
+
         // Normalize and scale to sphere
         let circumcenter_unit = &circumcenter_direction / circumcenter_norm;
         let circumcenter = center + (radius * &circumcenter_unit);
-        
+
         // Verify the circumcenter is equidistant from all three points
         let dist1 = Self::spherical_distance(&circumcenter, &(center + a), radius);
         let dist2 = Self::spherical_distance(&circumcenter, &(center + b), radius);
         let dist3 = Self::spherical_distance(&circumcenter, &(center + c), radius);
-        
+
         // If distances are not equal, try the antipodal point
         if (dist1 - dist2).abs() > 1e-6 || (dist1 - dist3).abs() > 1e-6 {
             let antipodal = center - (radius * &circumcenter_unit);
             let dist1_ant = Self::spherical_distance(&antipodal, &(center + a), radius);
             let dist2_ant = Self::spherical_distance(&antipodal, &(center + b), radius);
             let dist3_ant = Self::spherical_distance(&antipodal, &(center + c), radius);
-            
+
             if (dist1_ant - dist2_ant).abs() < 1e-6 && (dist1_ant - dist3_ant).abs() < 1e-6 {
                 return Ok(antipodal);
             }
         }
-        
+
         Ok(circumcenter)
     }
 
@@ -1185,9 +1186,9 @@ mod tests {
         // Normalize to sphere surface
         let norm_val = norm(&test_point);
         let test_point_normalized = test_point / norm_val;
-        
+
         let (nearest_idx, _) = sv.nearest_generator(&test_point_normalized.view()).unwrap();
-        
+
         // The test point should be closest to one of the equatorial points
         assert!(
             (2..=5).contains(&nearest_idx),

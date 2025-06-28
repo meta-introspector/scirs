@@ -100,44 +100,43 @@ where
     F: Float + NumAssign + Sum + Send + Sync + 'static + Default,
     M: SparseMatrix<F> + Sync,
 {
-    
     let n = matrix.nrows();
     if n != matrix.ncols() {
         return Err(LinalgError::ShapeError(
             "Matrix must be square for eigenvalue decomposition".to_string(),
         ));
     }
-    
+
     if k >= n {
         return Err(LinalgError::InvalidInputError(
             "Number of eigenvalues requested must be less than matrix size".to_string(),
         ));
     }
-    
+
     // Initialize Lanczos vectors
     let mut v_prev = Array1::<F>::zeros(n);
     let mut v_curr = Array1::<F>::zeros(n);
     let mut v_next = Array1::<F>::zeros(n);
-    
+
     // Random initial vector
     let mut rng = rng();
     for i in 0..n {
         v_curr[i] = F::from(rng.random::<f64>()).unwrap();
     }
-    
+
     // Normalize initial vector
     let norm = v_curr.iter().map(|x| (*x) * (*x)).sum::<F>().sqrt();
     v_curr.mapv_inplace(|x| x / norm);
-    
+
     // Tridiagonal matrix elements
     let mut alpha = Vec::with_capacity(max_iter);
     let mut beta = Vec::with_capacity(max_iter);
-    
+
     // Main Lanczos iteration
     for iter in 0..max_iter.min(n - 1) {
         // Matrix-vector multiplication (parallel)
         matrix.matvec(&v_curr.view(), &mut v_next)?;
-        
+
         // Orthogonalize against previous vector
         if iter > 0 {
             let beta_curr = beta[iter - 1];
@@ -145,66 +144,65 @@ where
                 v_next[j] -= beta_curr * v_prev[j];
             }
         }
-        
+
         // Compute alpha (diagonal element)
-        let alpha_curr = v_curr.iter().zip(v_next.iter())
+        let alpha_curr = v_curr
+            .iter()
+            .zip(v_next.iter())
             .map(|(v, av)| (*v) * (*av))
             .sum::<F>();
         alpha.push(alpha_curr);
-        
+
         // Update v_next
         for j in 0..n {
             v_next[j] -= alpha_curr * v_curr[j];
         }
-        
+
         // Compute beta (off-diagonal element)
         let beta_curr = v_next.iter().map(|x| (*x) * (*x)).sum::<F>().sqrt();
-        
+
         // Check for convergence or breakdown
         if beta_curr < tol {
             break;
         }
-        
+
         beta.push(beta_curr);
-        
+
         // Normalize for next iteration
         v_next.mapv_inplace(|x| x / beta_curr);
-        
+
         // Shift vectors
         v_prev = std::mem::take(&mut v_curr);
         v_curr = std::mem::take(&mut v_next);
         v_next = Array1::<F>::zeros(n);
-        
+
         // Check convergence of eigenvalues every few iterations
         if iter > k && iter % 5 == 0 && check_lanczos_convergence(&alpha, &beta, k, tol) {
             break;
         }
     }
-    
+
     // Solve tridiagonal eigenvalue problem
     let (eigenvals, eigenvecs) = solve_tridiagonal_eigenproblem(&alpha, &beta, which, target, k)?;
-    
+
     // Convert to complex format
     let complex_eigenvals = eigenvals.mapv(|x| Complex::new(x, F::zero()));
     let complex_eigenvecs = eigenvecs.mapv(|x| Complex::new(x, F::zero()));
-    
+
     Ok((complex_eigenvals, complex_eigenvecs))
 }
 
 // Helper function to check Lanczos convergence
-fn check_lanczos_convergence<F: Float>(
-    _alpha: &[F], 
-    beta: &[F], 
-    k: usize, 
-    tol: F
-) -> bool {
+fn check_lanczos_convergence<F: Float>(_alpha: &[F], beta: &[F], k: usize, tol: F) -> bool {
     // Simple convergence check based on beta values
     if beta.len() < k {
         return false;
     }
-    
+
     let recent_betas = &beta[beta.len().saturating_sub(k)..];
-    recent_betas.iter().all(|&b| b < tol * F::from(10.0).unwrap())
+    recent_betas
+        .iter()
+        .all(|&b| b < tol * F::from(10.0).unwrap())
 }
 
 // Helper function to solve tridiagonal eigenvalue problem
@@ -215,22 +213,21 @@ fn solve_tridiagonal_eigenproblem<F: Float + NumAssign + Sum + Send + Sync + 'st
     target: F,
     k: usize,
 ) -> LinalgResult<(Array1<F>, Array2<F>)> {
-    
     let n = alpha.len();
     if n == 0 {
         return Err(LinalgError::InvalidInputError(
             "Empty tridiagonal matrix".to_string(),
         ));
     }
-    
+
     // Create tridiagonal matrix
     let mut tri_matrix = Array2::<F>::zeros((n, n));
-    
+
     // Fill diagonal
     for i in 0..n {
         tri_matrix[[i, i]] = alpha[i];
     }
-    
+
     // Fill off-diagonals
     for i in 0..n.saturating_sub(1) {
         if i < beta.len() {
@@ -238,87 +235,87 @@ fn solve_tridiagonal_eigenproblem<F: Float + NumAssign + Sum + Send + Sync + 'st
             tri_matrix[[i + 1, i]] = beta[i];
         }
     }
-    
+
     // Use QR algorithm for small tridiagonal matrices
     let (eigenvals, eigenvecs) = qr_algorithm_tridiagonal(&tri_matrix)?;
-    
+
     // Select requested eigenvalues based on 'which' parameter
     let selected_indices = select_eigenvalues(&eigenvals, which, target, k);
-    
+
     let mut result_eigenvals = Array1::<F>::zeros(k);
     let mut result_eigenvecs = Array2::<F>::zeros((n, k));
-    
+
     for (i, &idx) in selected_indices.iter().enumerate() {
         result_eigenvals[i] = eigenvals[idx];
         for j in 0..n {
             result_eigenvecs[[j, i]] = eigenvecs[[j, idx]];
         }
     }
-    
+
     Ok((result_eigenvals, result_eigenvecs))
 }
 
 // Helper function for QR algorithm on tridiagonal matrices
 fn qr_algorithm_tridiagonal<F: Float + NumAssign + Sum + 'static>(
-    matrix: &Array2<F>
+    matrix: &Array2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)> {
     let n = matrix.nrows();
     let mut a = matrix.clone();
     let mut q_total = Array2::<F>::eye(n);
-    
+
     let max_iterations = 1000;
     let tolerance = F::from(1e-12).unwrap();
-    
+
     for _iter in 0..max_iterations {
         // Check for convergence
         let mut converged = true;
-        for i in 0..n-1 {
-            if a[[i+1, i]].abs() > tolerance {
+        for i in 0..n - 1 {
+            if a[[i + 1, i]].abs() > tolerance {
                 converged = false;
                 break;
             }
         }
-        
+
         if converged {
             break;
         }
-        
+
         // QR decomposition step
         let (q, r) = qr_decomposition_tridiagonal(&a)?;
         a = r.dot(&q);
         q_total = q_total.dot(&q);
     }
-    
+
     // Extract eigenvalues from diagonal
     let eigenvals = (0..n).map(|i| a[[i, i]]).collect::<Array1<F>>();
-    
+
     Ok((eigenvals, q_total))
 }
 
 // Simplified QR decomposition for tridiagonal matrices
 fn qr_decomposition_tridiagonal<F: Float + NumAssign + Sum>(
-    matrix: &Array2<F>
+    matrix: &Array2<F>,
 ) -> LinalgResult<(Array2<F>, Array2<F>)> {
     let n = matrix.nrows();
     let mut q = Array2::<F>::eye(n);
     let mut r = matrix.clone();
-    
+
     // Use Givens rotations for tridiagonal matrices
-    for i in 0..n-1 {
+    for i in 0..n - 1 {
         let a = r[[i, i]];
-        let b = r[[i+1, i]];
-        
+        let b = r[[i + 1, i]];
+
         if b.abs() > F::from(1e-15).unwrap() {
             let (c, s) = givens_rotation(a, b);
-            
+
             // Apply rotation to R
-            apply_givens_rotation(&mut r, i, i+1, c, s);
-            
+            apply_givens_rotation(&mut r, i, i + 1, c, s);
+
             // Apply rotation to Q
-            apply_givens_rotation_transpose(&mut q, i, i+1, c, s);
+            apply_givens_rotation_transpose(&mut q, i, i + 1, c, s);
         }
     }
-    
+
     Ok((q, r))
 }
 
@@ -327,18 +324,18 @@ fn givens_rotation<F: Float>(a: F, b: F) -> (F, F) {
     if b.abs() < F::from(1e-15).unwrap() {
         (F::one(), F::zero())
     } else {
-        let r = (a*a + b*b).sqrt();
+        let r = (a * a + b * b).sqrt();
         (a / r, -b / r)
     }
 }
 
 // Apply Givens rotation to matrix
 fn apply_givens_rotation<F: Float + NumAssign>(
-    matrix: &mut Array2<F>, 
-    i: usize, 
-    j: usize, 
-    c: F, 
-    s: F
+    matrix: &mut Array2<F>,
+    i: usize,
+    j: usize,
+    c: F,
+    s: F,
 ) {
     let n = matrix.ncols();
     for k in 0..n {
@@ -351,11 +348,11 @@ fn apply_givens_rotation<F: Float + NumAssign>(
 
 // Apply Givens rotation transpose to matrix
 fn apply_givens_rotation_transpose<F: Float + NumAssign>(
-    matrix: &mut Array2<F>, 
-    i: usize, 
-    j: usize, 
-    c: F, 
-    s: F
+    matrix: &mut Array2<F>,
+    i: usize,
+    j: usize,
+    c: F,
+    s: F,
 ) {
     let n = matrix.nrows();
     for k in 0..n {
@@ -368,35 +365,39 @@ fn apply_givens_rotation_transpose<F: Float + NumAssign>(
 
 // Helper function to select eigenvalues based on criteria
 fn select_eigenvalues<F: Float>(
-    eigenvals: &Array1<F>, 
-    which: &str, 
-    target: F, 
-    k: usize
+    eigenvals: &Array1<F>,
+    which: &str,
+    target: F,
+    k: usize,
 ) -> Vec<usize> {
-    let mut indices_and_values: Vec<(usize, F)> = 
-        eigenvals.iter().enumerate().map(|(i, &val)| (i, val)).collect();
-    
+    let mut indices_and_values: Vec<(usize, F)> = eigenvals
+        .iter()
+        .enumerate()
+        .map(|(i, &val)| (i, val))
+        .collect();
+
     match which {
         "largest" | "LM" => {
             indices_and_values.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        },
+        }
         "smallest" | "SM" => {
             indices_and_values.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-        },
+        }
         "target" | "nearest" => {
             indices_and_values.sort_by(|a, b| {
                 let dist_a = (a.1 - target).abs();
                 let dist_b = (b.1 - target).abs();
                 dist_a.partial_cmp(&dist_b).unwrap()
             });
-        },
+        }
         _ => {
             // Default to largest
             indices_and_values.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         }
     }
-    
-    indices_and_values.into_iter()
+
+    indices_and_values
+        .into_iter()
         .take(k)
         .map(|(idx, _)| idx)
         .collect()
@@ -444,90 +445,91 @@ where
     F: Float + NumAssign + Sum + Send + Sync + 'static + Default,
     M: SparseMatrix<F> + Sync,
 {
-    
     let n = matrix.nrows();
     if n != matrix.ncols() {
         return Err(LinalgError::ShapeError(
             "Matrix must be square for eigenvalue decomposition".to_string(),
         ));
     }
-    
+
     if k >= n {
         return Err(LinalgError::InvalidInputError(
             "Number of eigenvalues requested must be less than matrix size".to_string(),
         ));
     }
-    
+
     let m = (max_iter + 1).min(n);
-    
+
     // Arnoldi vectors (Krylov basis)
     let mut v_vectors = vec![Array1::<F>::zeros(n); m + 1];
-    
+
     // Hessenberg matrix
     let mut h_matrix = Array2::<F>::zeros((m + 1, m));
-    
+
     // Random initial vector
     let mut rng = rng();
     for i in 0..n {
         v_vectors[0][i] = F::from(rng.random::<f64>()).unwrap();
     }
-    
+
     // Normalize initial vector
     let norm = v_vectors[0].iter().map(|x| (*x) * (*x)).sum::<F>().sqrt();
     v_vectors[0].mapv_inplace(|x| x / norm);
-    
+
     // Main Arnoldi iteration
     let mut actual_m = 0;
     for j in 0..m {
         actual_m = j + 1;
-        
+
         // Matrix-vector multiplication: w = A * v_j
         let mut w = Array1::<F>::zeros(n);
         matrix.matvec(&v_vectors[j].view(), &mut w)?;
-        
+
         // Modified Gram-Schmidt orthogonalization
         for i in 0..=j {
             // h[i][j] = <w, v_i>
-            let h_ij = w.iter().zip(v_vectors[i].iter())
+            let h_ij = w
+                .iter()
+                .zip(v_vectors[i].iter())
                 .map(|(w_val, v_val)| (*w_val) * (*v_val))
                 .sum::<F>();
             h_matrix[[i, j]] = h_ij;
-            
+
             // w = w - h[i][j] * v_i
             for l in 0..n {
                 w[l] -= h_ij * v_vectors[i][l];
             }
         }
-        
+
         // h[j+1][j] = ||w||
         let h_j1_j = w.iter().map(|x| (*x) * (*x)).sum::<F>().sqrt();
-        
+
         // Check for breakdown or convergence
         if h_j1_j < tol {
             break;
         }
-        
+
         if j + 1 < m {
             h_matrix[[j + 1, j]] = h_j1_j;
-            
+
             // v_{j+1} = w / h[j+1][j]
             for l in 0..n {
                 v_vectors[j + 1][l] = w[l] / h_j1_j;
             }
         }
-        
+
         // Check convergence of Ritz values every few iterations
         if j >= k && j % 5 == 0 && check_arnoldi_convergence(&h_matrix, j + 1, k, tol) {
             break;
         }
     }
-    
+
     // Extract the m x m upper Hessenberg matrix
     let h_reduced = h_matrix.slice(s![..actual_m, ..actual_m]).to_owned();
-    
+
     // Solve eigenvalue problem for Hessenberg matrix
     let (ritz_values, ritz_vectors) = solve_hessenberg_eigenproblem(&h_reduced)?;
-    
+
     // Convert Ritz values to eigenvalue estimates
     let eigenvals = if target.im == F::zero() {
         // Real target - select closest real eigenvalues
@@ -536,13 +538,14 @@ where
         // Complex target - select closest eigenvalues
         select_closest_complex_eigenvalues(&ritz_values, target, k)
     };
-    
+
     // Compute eigenvectors by combining Ritz vectors with Arnoldi basis
     let mut eigenvecs = Array2::<Complex<F>>::zeros((n, k));
-    let v_basis = v_vectors[..actual_m].iter()
+    let v_basis = v_vectors[..actual_m]
+        .iter()
         .map(|v| v.mapv(|x| Complex::new(x, F::zero())))
         .collect::<Vec<_>>();
-    
+
     for (i, &ritz_idx) in eigenvals.iter().enumerate() {
         for j in 0..n {
             let mut eigenvec_j = Complex::new(F::zero(), F::zero());
@@ -552,26 +555,22 @@ where
             eigenvecs[[j, i]] = eigenvec_j;
         }
     }
-    
-    let final_eigenvals = eigenvals.iter()
+
+    let final_eigenvals = eigenvals
+        .iter()
         .map(|&idx| ritz_values[idx])
         .collect::<Array1<_>>();
-    
+
     Ok((final_eigenvals, eigenvecs))
 }
 
 // Helper function to check Arnoldi convergence
-fn check_arnoldi_convergence<F: Float>(
-    h_matrix: &Array2<F>,
-    m: usize,
-    k: usize,
-    tol: F,
-) -> bool {
+fn check_arnoldi_convergence<F: Float>(h_matrix: &Array2<F>, m: usize, k: usize, tol: F) -> bool {
     // Simple convergence check based on subdiagonal elements
     if m < k + 1 {
         return false;
     }
-    
+
     // Check if the last k subdiagonal elements are small
     (0..k).all(|i| {
         let row = m - 1 - i;
@@ -586,10 +585,10 @@ fn check_arnoldi_convergence<F: Float>(
 
 // Helper function to solve Hessenberg eigenvalue problem
 fn solve_hessenberg_eigenproblem<F: Float + NumAssign + Sum + 'static>(
-    h_matrix: &Array2<F>
+    h_matrix: &Array2<F>,
 ) -> SparseEigenResult<F> {
     let n = h_matrix.nrows();
-    
+
     // For simplicity, convert to general eigenvalue problem
     // In practice, specialized Hessenberg QR algorithm would be better
     let mut matrix_complex = Array2::<Complex<F>>::zeros((n, n));
@@ -598,99 +597,101 @@ fn solve_hessenberg_eigenproblem<F: Float + NumAssign + Sum + 'static>(
             matrix_complex[[i, j]] = Complex::new(h_matrix[[i, j]], F::zero());
         }
     }
-    
+
     // Use QR algorithm for complex matrices
     qr_algorithm_complex(&matrix_complex)
 }
 
 // Simplified QR algorithm for complex matrices
 fn qr_algorithm_complex<F: Float + NumAssign + Sum + 'static>(
-    matrix: &Array2<Complex<F>>
+    matrix: &Array2<Complex<F>>,
 ) -> SparseEigenResult<F> {
     let n = matrix.nrows();
     let mut a = matrix.clone();
     let mut q_total = Array2::<Complex<F>>::eye(n);
-    
+
     let max_iterations = 1000;
     let tolerance = F::from(1e-12).unwrap();
-    
+
     for _iter in 0..max_iterations {
         // Check for convergence (simplified)
         let mut converged = true;
-        for i in 0..n-1 {
-            if a[[i+1, i]].norm() > tolerance {
+        for i in 0..n - 1 {
+            if a[[i + 1, i]].norm() > tolerance {
                 converged = false;
                 break;
             }
         }
-        
+
         if converged {
             break;
         }
-        
+
         // Simplified QR step (this should use specialized Hessenberg QR)
         let (q, r) = householder_qr_complex(&a)?;
         a = r.dot(&q);
         q_total = q_total.dot(&q);
     }
-    
+
     // Extract eigenvalues from diagonal
     let eigenvals = (0..n).map(|i| a[[i, i]]).collect::<Array1<_>>();
-    
+
     Ok((eigenvals, q_total))
 }
 
 // Simplified Householder QR for complex matrices
-fn householder_qr_complex<F: Float + NumAssign + Sum>(
-    matrix: &Array2<Complex<F>>
-) -> QrResult<F> {
+fn householder_qr_complex<F: Float + NumAssign + Sum>(matrix: &Array2<Complex<F>>) -> QrResult<F> {
     let (m, n) = matrix.dim();
     let mut q = Array2::<Complex<F>>::eye(m);
     let mut r = matrix.clone();
-    
+
     let min_dim = m.min(n);
-    
+
     for k in 0..min_dim {
         // Extract column for Householder reflection
         let x = r.slice(s![k.., k]).to_owned();
         let (house_vec, tau) = householder_vector_complex(&x);
-        
+
         // Apply Householder reflection to R
         apply_householder_left_complex(&mut r, &house_vec, tau, k);
-        
+
         // Apply to Q (accumulate transformations)
         apply_householder_right_complex(&mut q, &house_vec, tau.conj(), k);
     }
-    
+
     Ok((q, r))
 }
 
 // Helper function for complex Householder vector
 fn householder_vector_complex<F: Float + NumAssign + Sum>(
-    x: &Array1<Complex<F>>
+    x: &Array1<Complex<F>>,
 ) -> (Array1<Complex<F>>, Complex<F>) {
     let n = x.len();
     if n == 0 {
         return (Array1::zeros(0), Complex::new(F::zero(), F::zero()));
     }
-    
+
     let norm_x = x.iter().map(|z| z.norm_sqr()).sum::<F>().sqrt();
-    
+
     if norm_x == F::zero() {
         return (Array1::zeros(n), Complex::new(F::zero(), F::zero()));
     }
-    
+
     let mut v = x.clone();
-    let sign = if x[0].re >= F::zero() { F::one() } else { -F::one() };
+    let sign = if x[0].re >= F::zero() {
+        F::one()
+    } else {
+        -F::one()
+    };
     v[0] += Complex::new(sign * norm_x, F::zero());
-    
+
     let norm_v = v.iter().map(|z| z.norm_sqr()).sum::<F>().sqrt();
     if norm_v > F::zero() {
         v.mapv_inplace(|z| z / norm_v);
     }
-    
+
     let tau = Complex::new(F::from(2.0).unwrap(), F::zero());
-    
+
     (v, tau)
 }
 
@@ -703,7 +704,7 @@ fn apply_householder_left_complex<F: Float + NumAssign>(
 ) {
     let (m, n) = matrix.dim();
     let house_len = house_vec.len();
-    
+
     for j in k..n {
         let mut sum = Complex::new(F::zero(), F::zero());
         for i in 0..house_len {
@@ -711,7 +712,7 @@ fn apply_householder_left_complex<F: Float + NumAssign>(
                 sum += house_vec[i].conj() * matrix[[k + i, j]];
             }
         }
-        
+
         for i in 0..house_len {
             if k + i < m {
                 matrix[[k + i, j]] -= tau * house_vec[i] * sum;
@@ -720,7 +721,7 @@ fn apply_householder_left_complex<F: Float + NumAssign>(
     }
 }
 
-// Apply Householder reflection from right  
+// Apply Householder reflection from right
 fn apply_householder_right_complex<F: Float + NumAssign>(
     matrix: &mut Array2<Complex<F>>,
     house_vec: &Array1<Complex<F>>,
@@ -729,7 +730,7 @@ fn apply_householder_right_complex<F: Float + NumAssign>(
 ) {
     let (m, _n) = matrix.dim();
     let house_len = house_vec.len();
-    
+
     for i in 0..m {
         let mut sum = Complex::new(F::zero(), F::zero());
         for j in 0..house_len {
@@ -737,7 +738,7 @@ fn apply_householder_right_complex<F: Float + NumAssign>(
                 sum += matrix[[i, k + j]] * house_vec[j];
             }
         }
-        
+
         for j in 0..house_len {
             if k + j < matrix.ncols() {
                 matrix[[i, k + j]] -= sum * tau.conj() * house_vec[j].conj();
@@ -752,19 +753,21 @@ fn select_closest_real_eigenvalues<F: Float>(
     target: F,
     k: usize,
 ) -> Vec<usize> {
-    let mut real_eigenvals: Vec<(usize, F)> = eigenvals.iter()
+    let mut real_eigenvals: Vec<(usize, F)> = eigenvals
+        .iter()
         .enumerate()
         .filter(|(_, z)| z.im.abs() < F::from(1e-10).unwrap())
         .map(|(i, z)| (i, z.re))
         .collect();
-    
+
     real_eigenvals.sort_by(|a, b| {
         let dist_a = (a.1 - target).abs();
         let dist_b = (b.1 - target).abs();
         dist_a.partial_cmp(&dist_b).unwrap()
     });
-    
-    real_eigenvals.into_iter()
+
+    real_eigenvals
+        .into_iter()
         .take(k)
         .map(|(idx, _)| idx)
         .collect()
@@ -775,17 +778,19 @@ fn select_closest_complex_eigenvalues<F: Float>(
     target: Complex<F>,
     k: usize,
 ) -> Vec<usize> {
-    let mut eigenvals_with_dist: Vec<(usize, F)> = eigenvals.iter()
+    let mut eigenvals_with_dist: Vec<(usize, F)> = eigenvals
+        .iter()
         .enumerate()
         .map(|(i, z)| {
             let diff = *z - target;
             (i, diff.norm())
         })
         .collect();
-    
+
     eigenvals_with_dist.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-    
-    eigenvals_with_dist.into_iter()
+
+    eigenvals_with_dist
+        .into_iter()
         .take(k)
         .map(|(idx, _)| idx)
         .collect()

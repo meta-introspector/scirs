@@ -40,20 +40,20 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
     /// Create a new CommunityResult from a node-to-community mapping
     pub fn from_node_map(node_communities: HashMap<N, usize>) -> Self {
         let mut communities: HashMap<usize, HashSet<N>> = HashMap::new();
-        
+
         for (node, comm_id) in &node_communities {
             communities
                 .entry(*comm_id)
                 .or_insert_with(HashSet::new)
                 .insert(node.clone());
         }
-        
+
         let mut communities_vec: Vec<HashSet<N>> = communities.into_values().collect();
         communities_vec.sort_by_key(|c| c.len());
         communities_vec.reverse(); // Largest communities first
-        
+
         let num_communities = communities_vec.len();
-        
+
         Self {
             node_communities,
             communities: communities_vec,
@@ -62,15 +62,17 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
             metadata: HashMap::new(),
         }
     }
-    
+
     /// Create from a CommunityStructure (for backward compatibility)
     pub fn from_community_structure(cs: CommunityStructure<N>) -> Self {
         let mut result = Self::from_node_map(cs.node_communities);
         result.quality_score = Some(cs.modularity);
-        result.metadata.insert("modularity".to_string(), cs.modularity);
+        result
+            .metadata
+            .insert("modularity".to_string(), cs.modularity);
         result
     }
-    
+
     /// Convert to the legacy CommunityStructure format
     pub fn to_community_structure(self) -> CommunityStructure<N> {
         CommunityStructure {
@@ -78,17 +80,17 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
             modularity: self.quality_score.unwrap_or(0.0),
         }
     }
-    
+
     /// Get communities as a vector of sets (NetworkX-style)
     pub fn as_community_sets(&self) -> &Vec<HashSet<N>> {
         &self.communities
     }
-    
+
     /// Get the community assignment for a specific node
     pub fn get_community(&self, node: &N) -> Option<usize> {
         self.node_communities.get(node).copied()
     }
-    
+
     /// Get all nodes in a specific community
     pub fn get_community_members(&self, community_id: usize) -> Option<&HashSet<N>> {
         self.communities.get(community_id)
@@ -127,11 +129,11 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
 /// # Example
 /// ```rust
 /// use scirs2_graph::{Graph, louvain_communities_result};
-/// 
+///
 /// let mut graph = Graph::new();
 /// // ... add nodes and edges ...
 /// let result = louvain_communities_result(&graph);
-/// 
+///
 /// println!("Found {} communities", result.num_communities);
 /// for (i, community) in result.communities.iter().enumerate() {
 ///     println!("Community {}: {} members", i, community.len());
@@ -151,7 +153,10 @@ where
 ///
 /// **Note**: This function is deprecated in favor of `louvain_communities_result`.
 /// It will be removed in version 2.0.
-#[deprecated(since = "0.1.0-beta.1", note = "Use `louvain_communities_result` instead")]
+#[deprecated(
+    since = "0.1.0-beta.1",
+    note = "Use `louvain_communities_result` instead"
+)]
 pub fn louvain_communities<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityStructure<N>
 where
     N: Node,
@@ -352,7 +357,10 @@ where
 ///
 /// # Space Complexity
 /// O(n) for storing labels and temporary data structures.
-#[deprecated(since = "0.1.0-beta.2", note = "Use `label_propagation_result` instead")]
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `label_propagation_result` instead"
+)]
 pub fn label_propagation<N, E, Ix>(graph: &Graph<N, E, Ix>, max_iter: usize) -> HashMap<N, usize>
 where
     N: Node + Clone + Hash + Eq,
@@ -448,17 +456,20 @@ where
 /// # Example
 /// ```rust
 /// use scirs2_graph::{Graph, label_propagation_result};
-/// 
+///
 /// let mut graph = Graph::new();
 /// // ... add nodes and edges ...
 /// let result = label_propagation_result(&graph, 100);
-/// 
+///
 /// println!("Found {} communities", result.num_communities);
 /// for (i, community) in result.communities.iter().enumerate() {
 ///     println!("Community {}: {} members", i, community.len());
 /// }
 /// ```
-pub fn label_propagation_result<N, E, Ix>(graph: &Graph<N, E, Ix>, max_iter: usize) -> CommunityResult<N>
+pub fn label_propagation_result<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    max_iter: usize,
+) -> CommunityResult<N>
 where
     N: Node + Clone + Hash + Eq,
     E: EdgeWeight,

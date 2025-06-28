@@ -10,9 +10,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub mod forward_mode;
-pub mod reverse_mode;
 pub mod higher_order;
 pub mod meta_gradients;
+pub mod reverse_mode;
 
 use crate::error::{OptimError, OptimizerError};
 
@@ -21,28 +21,28 @@ use crate::error::{OptimError, OptimizerError};
 pub struct AutodiffConfig {
     /// Enable forward-mode AD
     pub enable_forward_mode: bool,
-    
+
     /// Enable reverse-mode AD (backpropagation)
     pub enable_reverse_mode: bool,
-    
+
     /// Maximum order of derivatives to compute
     pub max_derivative_order: usize,
-    
+
     /// Enable Hessian computation
     pub enable_hessian: bool,
-    
+
     /// Use sparse Hessian computation
     pub sparse_hessian: bool,
-    
+
     /// Hessian approximation method
     pub hessian_approximation: HessianApproximation,
-    
+
     /// Enable meta-gradient computation
     pub enable_meta_gradients: bool,
-    
+
     /// Gradient checkpointing for memory efficiency
     pub gradient_checkpointing: bool,
-    
+
     /// Chunk size for checkpointing
     pub checkpoint_chunk_size: usize,
 }
@@ -85,19 +85,19 @@ pub enum HessianApproximation {
 pub struct ADNode<T: Float> {
     /// Value at this node
     pub value: T,
-    
+
     /// Gradient with respect to inputs
     pub gradient: Vec<T>,
-    
+
     /// Hessian (if computed)
     pub hessian: Option<Array2<T>>,
-    
+
     /// Operation that produced this node
     pub operation: Operation,
-    
+
     /// Parent nodes in the computational graph
     pub parents: Vec<usize>,
-    
+
     /// Node ID
     pub id: usize,
 }
@@ -128,19 +128,19 @@ pub enum Operation {
 pub struct AutodiffEngine<T: Float> {
     /// Configuration
     config: AutodiffConfig,
-    
+
     /// Computational graph
     graph: Vec<ADNode<T>>,
-    
+
     /// Variable registry
     variables: HashMap<String, usize>,
-    
+
     /// Gradient tape for reverse-mode AD
     tape: Vec<TapeEntry<T>>,
-    
+
     /// Current computation context
     context: ComputationContext,
-    
+
     /// Hessian approximation state
     hessian_state: Option<HessianApproximationState<T>>,
 }
@@ -159,10 +159,10 @@ struct TapeEntry<T: Float> {
 struct ComputationContext {
     /// Current forward pass ID
     forward_pass_id: usize,
-    
+
     /// Enable gradient recording
     record_gradients: bool,
-    
+
     /// Enable higher-order derivatives
     higher_order: bool,
 }
@@ -172,19 +172,19 @@ struct ComputationContext {
 struct HessianApproximationState<T: Float> {
     /// Approximation method
     method: HessianApproximation,
-    
+
     /// History of gradients
     gradient_history: Vec<Array1<T>>,
-    
+
     /// History of parameter updates
     update_history: Vec<Array1<T>>,
-    
+
     /// BFGS inverse Hessian approximation
     inverse_hessian: Option<Array2<T>>,
-    
+
     /// L-BFGS memory
     lbfgs_memory: Option<LBFGSMemory<T>>,
-    
+
     /// Maximum history size
     max_history: usize,
 }
@@ -194,16 +194,16 @@ struct HessianApproximationState<T: Float> {
 struct LBFGSMemory<T: Float> {
     /// Gradient differences (y_k = g_{k+1} - g_k)
     y_history: Vec<Array1<T>>,
-    
+
     /// Parameter differences (s_k = x_{k+1} - x_k)
     s_history: Vec<Array1<T>>,
-    
+
     /// Scaling factor (rho_k = 1 / (y_k^T s_k))
     rho_history: Vec<T>,
-    
+
     /// Memory size
     memory_size: usize,
-    
+
     /// Current position in circular buffer
     current_pos: usize,
 }
@@ -213,13 +213,13 @@ struct LBFGSMemory<T: Float> {
 struct ComputationCheckpoint<T: Float> {
     /// Saved node values
     values: Vec<T>,
-    
+
     /// Saved graph state
     graph_state: Vec<ADNode<T>>,
-    
+
     /// Checkpoint ID
     id: usize,
-    
+
     /// Memory usage estimate
     memory_usage: usize,
 }
@@ -240,7 +240,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
             hessian_state: None,
         }
     }
-    
+
     /// Create a new variable
     pub fn create_variable(&mut self, name: &str, value: T) -> usize {
         let node = ADNode {
@@ -251,37 +251,40 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
             parents: Vec::new(),
             id: self.graph.len(),
         };
-        
+
         let id = self.graph.len();
         self.graph.push(node);
         self.variables.insert(name.to_string(), id);
         id
     }
-    
+
     /// Compute gradients using reverse-mode AD
     pub fn backward(&mut self, output_id: usize) -> Result<Vec<T>, OptimizerError> {
         if output_id >= self.graph.len() {
-            return Err(OptimizerError::InvalidConfig("Invalid output node ID".to_string()));
+            return Err(OptimizerError::InvalidConfig(
+                "Invalid output node ID".to_string(),
+            ));
         }
-        
+
         // Initialize gradient of output
         let mut gradients = vec![T::zero(); self.graph.len()];
         gradients[output_id] = T::one();
-        
+
         // Reverse pass through the tape
         for entry in self.tape.iter().rev() {
             let output_grad = gradients[entry.output];
-            
+
             for (i, &input_id) in entry.inputs.iter().enumerate() {
                 if i < entry.local_gradients.len() {
-                    gradients[input_id] = gradients[input_id] + output_grad * entry.local_gradients[i];
+                    gradients[input_id] =
+                        gradients[input_id] + output_grad * entry.local_gradients[i];
                 }
             }
         }
-        
+
         Ok(gradients)
     }
-    
+
     /// Compute Hessian matrix
     pub fn compute_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimizerError> {
         match self.config.hessian_approximation {
@@ -289,14 +292,16 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
             HessianApproximation::BFGS => self.compute_bfgs_hessian(),
             HessianApproximation::LBFGS => self.compute_lbfgs_hessian(),
             HessianApproximation::Diagonal => self.compute_diagonal_hessian(output_id),
-            _ => Err(OptimizerError::InvalidConfig("Unsupported Hessian approximation".to_string())),
+            _ => Err(OptimizerError::InvalidConfig(
+                "Unsupported Hessian approximation".to_string(),
+            )),
         }
     }
-    
+
     fn compute_exact_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimizerError> {
         let n_vars = self.variables.len();
         let mut hessian = Array2::zeros((n_vars, n_vars));
-        
+
         // Compute second derivatives using forward-over-reverse mode
         for i in 0..n_vars {
             for j in i..n_vars {
@@ -305,152 +310,179 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
                 hessian[[j, i]] = second_deriv; // Hessian is symmetric
             }
         }
-        
+
         Ok(hessian)
     }
-    
-    fn compute_second_derivative(&mut self, output_id: usize, var1: usize, var2: usize) -> Result<T, OptimizerError> {
+
+    fn compute_second_derivative(
+        &mut self,
+        output_id: usize,
+        var1: usize,
+        var2: usize,
+    ) -> Result<T, OptimizerError> {
         // Enhanced second derivative computation with checkpointing
         if self.config.gradient_checkpointing {
             return self.compute_second_derivative_checkpointed(output_id, var1, var2);
         }
-        
+
         let eps = T::from(1e-8).unwrap();
-        
+
         // Finite difference approximation for now
         let original_val1 = self.graph[var1].value;
         let original_val2 = self.graph[var2].value;
-        
+
         // f(x+h, y+h)
         self.graph[var1].value = original_val1 + eps;
         self.graph[var2].value = original_val2 + eps;
         let f_pp = self.evaluate_node(output_id)?;
-        
+
         // f(x+h, y-h)
         self.graph[var2].value = original_val2 - eps;
         let f_pm = self.evaluate_node(output_id)?;
-        
+
         // f(x-h, y+h)
         self.graph[var1].value = original_val1 - eps;
         self.graph[var2].value = original_val2 + eps;
         let f_mp = self.evaluate_node(output_id)?;
-        
+
         // f(x-h, y-h)
         self.graph[var2].value = original_val2 - eps;
         let f_mm = self.evaluate_node(output_id)?;
-        
+
         // Restore original values
         self.graph[var1].value = original_val1;
         self.graph[var2].value = original_val2;
-        
+
         // Second derivative approximation
         let second_deriv = (f_pp - f_pm - f_mp + f_mm) / (T::from(4.0).unwrap() * eps * eps);
-        
+
         Ok(second_deriv)
     }
-    
+
     /// Memory-efficient second derivative computation with checkpointing
-    fn compute_second_derivative_checkpointed(&mut self, output_id: usize, var1: usize, var2: usize) -> Result<T, OptimizerError> {
+    fn compute_second_derivative_checkpointed(
+        &mut self,
+        output_id: usize,
+        var1: usize,
+        var2: usize,
+    ) -> Result<T, OptimizerError> {
         let chunk_size = self.config.checkpoint_chunk_size;
         let eps = T::from(1e-8).unwrap();
-        
+
         // Create checkpoint
         let checkpoint = self.create_checkpoint();
-        
+
         // Compute derivatives in chunks
         let mut results = Vec::new();
         for chunk_start in (0..4).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(4);
-            
+
             // Restore from checkpoint
             self.restore_checkpoint(&checkpoint)?;
-            
+
             // Compute chunk
             for i in chunk_start..chunk_end {
                 let point_values = match i {
-                    0 => (eps, eps),      // f(x+h, y+h)
-                    1 => (eps, -eps),     // f(x+h, y-h)  
-                    2 => (-eps, eps),     // f(x-h, y+h)
-                    3 => (-eps, -eps),    // f(x-h, y-h)
+                    0 => (eps, eps),   // f(x+h, y+h)
+                    1 => (eps, -eps),  // f(x+h, y-h)
+                    2 => (-eps, eps),  // f(x-h, y+h)
+                    3 => (-eps, -eps), // f(x-h, y-h)
                     _ => continue,
                 };
-                
+
                 self.graph[var1].value = checkpoint.values[var1] + point_values.0;
                 self.graph[var2].value = checkpoint.values[var2] + point_values.1;
-                
+
                 let result = self.evaluate_node(output_id)?;
                 results.push(result);
             }
         }
-        
+
         // Restore original state
         self.restore_checkpoint(&checkpoint)?;
-        
+
         // Compute second derivative
         if results.len() >= 4 {
-            let second_deriv = (results[0] - results[1] - results[2] + results[3]) / (T::from(4.0).unwrap() * eps * eps);
+            let second_deriv = (results[0] - results[1] - results[2] + results[3])
+                / (T::from(4.0).unwrap() * eps * eps);
             Ok(second_deriv)
         } else {
-            Err(OptimizerError::InvalidConfig("Insufficient results for second derivative".to_string()))
+            Err(OptimizerError::InvalidConfig(
+                "Insufficient results for second derivative".to_string(),
+            ))
         }
     }
-    
+
     fn evaluate_node(&self, node_id: usize) -> Result<T, OptimizerError> {
         if node_id >= self.graph.len() {
             return Err(OptimizerError::InvalidConfig("Invalid node ID".to_string()));
         }
-        
+
         Ok(self.graph[node_id].value)
     }
-    
+
     fn compute_bfgs_hessian(&self) -> Result<Array2<T>, OptimizerError> {
         if let Some(ref state) = self.hessian_state {
             if let Some(ref inv_hessian) = state.inverse_hessian {
                 return Ok(inv_hessian.clone());
             }
         }
-        
-        Err(OptimizerError::InvalidConfig("BFGS Hessian not initialized".to_string()))
+
+        Err(OptimizerError::InvalidConfig(
+            "BFGS Hessian not initialized".to_string(),
+        ))
     }
-    
+
     fn compute_lbfgs_hessian(&self) -> Result<Array2<T>, OptimizerError> {
         if let Some(ref state) = self.hessian_state {
             if let Some(ref lbfgs) = state.lbfgs_memory {
                 return self.lbfgs_two_loop_recursion(lbfgs);
             }
         }
-        
-        Err(OptimizerError::InvalidConfig("L-BFGS memory not initialized".to_string()))
+
+        Err(OptimizerError::InvalidConfig(
+            "L-BFGS memory not initialized".to_string(),
+        ))
     }
-    
-    fn lbfgs_two_loop_recursion(&self, lbfgs: &LBFGSMemory<T>) -> Result<Array2<T>, OptimizerError> {
-        let n = lbfgs.s_history.get(0)
+
+    fn lbfgs_two_loop_recursion(
+        &self,
+        lbfgs: &LBFGSMemory<T>,
+    ) -> Result<Array2<T>, OptimizerError> {
+        let n = lbfgs
+            .s_history
+            .get(0)
             .ok_or_else(|| OptimizerError::InvalidConfig("Empty L-BFGS history".to_string()))?
             .len();
-        
+
         let mut result = Array2::eye(n);
-        
+
         // Two-loop recursion would be implemented here
         // This is a placeholder returning identity matrix
-        
+
         Ok(result)
     }
-    
+
     fn compute_diagonal_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimizerError> {
         let n_vars = self.variables.len();
         let mut hessian = Array2::zeros((n_vars, n_vars));
-        
+
         // Compute only diagonal elements (much faster)
         for i in 0..n_vars {
             let second_deriv = self.compute_second_derivative(output_id, i, i)?;
             hessian[[i, i]] = second_deriv;
         }
-        
+
         Ok(hessian)
     }
-    
+
     /// Update BFGS approximation
-    pub fn update_bfgs(&mut self, gradient_new: &Array1<T>, gradient_old: &Array1<T>, step: &Array1<T>) -> Result<(), OptimizerError> {
+    pub fn update_bfgs(
+        &mut self,
+        gradient_new: &Array1<T>,
+        gradient_old: &Array1<T>,
+        step: &Array1<T>,
+    ) -> Result<(), OptimizerError> {
         if self.hessian_state.is_none() {
             let n = gradient_new.len();
             self.hessian_state = Some(HessianApproximationState {
@@ -462,26 +494,26 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
                 max_history: 100,
             });
         }
-        
+
         let state = self.hessian_state.as_mut().unwrap();
-        
+
         let y = gradient_new - gradient_old; // Gradient difference
         let s = step; // Parameter update
-        
+
         let sy = s.dot(&y);
         if sy.abs() < T::from(1e-10).unwrap() {
             return Ok(()); // Skip update if curvature condition not satisfied
         }
-        
+
         if let Some(ref mut h_inv) = state.inverse_hessian {
             // BFGS update: H_{k+1}^{-1} = (I - ρ s y^T) H_k^{-1} (I - ρ y s^T) + ρ s s^T
             let rho = T::one() / sy;
             let n = s.len();
-            
+
             let mut sy_outer = Array2::zeros((n, n));
             let mut ys_outer = Array2::zeros((n, n));
             let mut ss_outer = Array2::zeros((n, n));
-            
+
             for i in 0..n {
                 for j in 0..n {
                     sy_outer[[i, j]] = s[i] * y[j];
@@ -489,48 +521,54 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
                     ss_outer[[i, j]] = s[i] * s[j];
                 }
             }
-            
+
             let identity = Array2::eye(n);
             let term1 = &identity - &(sy_outer * rho);
             let term2 = &identity - &(ys_outer * rho);
-            
+
             *h_inv = term1.dot(h_inv).dot(&term2) + ss_outer * rho;
         }
-        
+
         // Store history
         state.gradient_history.push(gradient_new.clone());
         state.update_history.push(step.clone());
-        
+
         // Limit history size
         if state.gradient_history.len() > state.max_history {
             state.gradient_history.remove(0);
             state.update_history.remove(0);
         }
-        
+
         Ok(())
     }
-    
+
     /// Compute meta-gradients for meta-learning
-    pub fn compute_meta_gradients(&mut self, inner_steps: usize, outer_objective_id: usize) -> Result<Vec<T>, OptimizerError> {
+    pub fn compute_meta_gradients(
+        &mut self,
+        inner_steps: usize,
+        outer_objective_id: usize,
+    ) -> Result<Vec<T>, OptimizerError> {
         if !self.config.enable_meta_gradients {
-            return Err(OptimizerError::InvalidConfig("Meta-gradients not enabled".to_string()));
+            return Err(OptimizerError::InvalidConfig(
+                "Meta-gradients not enabled".to_string(),
+            ));
         }
-        
+
         // Simplified meta-gradient computation
         // In practice, this would involve:
         // 1. Running inner optimization loop
         // 2. Computing gradients of outer objective with respect to initial parameters
         // 3. Using implicit function theorem or gradient tape
-        
+
         let meta_grads = self.backward(outer_objective_id)?;
         Ok(meta_grads)
     }
-    
+
     /// Enable gradient checkpointing for memory efficiency
     pub fn enable_checkpointing(&mut self, enabled: bool) {
         self.config.gradient_checkpointing = enabled;
     }
-    
+
     /// Get computational graph statistics
     pub fn get_graph_stats(&self) -> GraphStats {
         GraphStats {
@@ -540,22 +578,22 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
             memory_usage_estimate: self.estimate_memory_usage(),
         }
     }
-    
+
     fn estimate_memory_usage(&self) -> usize {
         // Rough estimate in bytes
         let node_size = std::mem::size_of::<ADNode<T>>();
         let tape_size = std::mem::size_of::<TapeEntry<T>>();
-        
+
         self.graph.len() * node_size + self.tape.len() * tape_size
     }
-    
+
     /// Create computation checkpoint for gradient checkpointing
     fn create_checkpoint(&self) -> ComputationCheckpoint<T> {
         let values: Vec<T> = self.graph.iter().map(|node| node.value).collect();
         let graph_state = self.graph.clone();
-        let memory_usage = values.len() * std::mem::size_of::<T>() + 
-                          graph_state.len() * std::mem::size_of::<ADNode<T>>();
-        
+        let memory_usage = values.len() * std::mem::size_of::<T>()
+            + graph_state.len() * std::mem::size_of::<ADNode<T>>();
+
         ComputationCheckpoint {
             values,
             graph_state,
@@ -563,28 +601,33 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
             memory_usage,
         }
     }
-    
+
     /// Restore computation state from checkpoint
-    fn restore_checkpoint(&mut self, checkpoint: &ComputationCheckpoint<T>) -> Result<(), OptimizerError> {
+    fn restore_checkpoint(
+        &mut self,
+        checkpoint: &ComputationCheckpoint<T>,
+    ) -> Result<(), OptimizerError> {
         if checkpoint.values.len() != self.graph.len() {
-            return Err(OptimizerError::InvalidConfig("Checkpoint size mismatch".to_string()));
+            return Err(OptimizerError::InvalidConfig(
+                "Checkpoint size mismatch".to_string(),
+            ));
         }
-        
+
         // Restore node values
         for (i, &value) in checkpoint.values.iter().enumerate() {
             if i < self.graph.len() {
                 self.graph[i].value = value;
             }
         }
-        
+
         // Restore graph state if needed
         if checkpoint.graph_state.len() == self.graph.len() {
             self.graph = checkpoint.graph_state.clone();
         }
-        
+
         Ok(())
     }
-    
+
     /// External framework integration hooks
     pub fn integrate_with_candle(&mut self, enable: bool) -> Result<(), OptimizerError> {
         if enable {
@@ -594,7 +637,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         }
         Ok(())
     }
-    
+
     /// PyTorch-style autograd integration
     pub fn set_pytorch_compatibility(&mut self, enable: bool) {
         // Enable PyTorch-compatible gradient computation
@@ -603,7 +646,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
             self.config.enable_meta_gradients = true;
         }
     }
-    
+
     /// JAX-style transformation compatibility  
     pub fn enable_jax_transforms(&mut self, enable: bool) -> Result<(), OptimizerError> {
         if enable {
@@ -638,24 +681,24 @@ impl AutodiffUtils {
     ) -> Result<GradientCheckResult<T>, OptimizerError> {
         let analytical_grad = gradient_fn(point);
         let mut numerical_grad = vec![T::zero(); point.len()];
-        
+
         for i in 0..point.len() {
             let mut point_plus = point.to_vec();
             let mut point_minus = point.to_vec();
-            
+
             point_plus[i] = point_plus[i] + epsilon;
             point_minus[i] = point_minus[i] - epsilon;
-            
+
             let f_plus = forward_fn(&point_plus);
             let f_minus = forward_fn(&point_minus);
-            
+
             numerical_grad[i] = (f_plus - f_minus) / (T::from(2.0).unwrap() * epsilon);
         }
-        
+
         // Compute relative error
         let mut max_error = T::zero();
         let mut total_error = T::zero();
-        
+
         for i in 0..point.len() {
             let error = (analytical_grad[i] - numerical_grad[i]).abs();
             let relative_error = if analytical_grad[i].abs() > T::from(1e-8).unwrap() {
@@ -663,16 +706,16 @@ impl AutodiffUtils {
             } else {
                 error
             };
-            
+
             if relative_error > max_error {
                 max_error = relative_error;
             }
-            
+
             total_error = total_error + relative_error;
         }
-        
+
         let avg_error = total_error / T::from(point.len()).unwrap();
-        
+
         Ok(GradientCheckResult {
             analytical_gradient: analytical_grad,
             numerical_gradient: numerical_grad,
@@ -710,7 +753,7 @@ mod tests {
     fn test_autodiff_engine_creation() {
         let config = AutodiffConfig::default();
         let mut engine = AutodiffEngine::<f64>::new(config);
-        
+
         let var_id = engine.create_variable("x", 5.0);
         assert_eq!(engine.graph.len(), 1);
         assert_eq!(engine.graph[var_id].value, 5.0);
@@ -720,10 +763,10 @@ mod tests {
     fn test_gradient_check() {
         let forward_fn = |x: &[f64]| x[0] * x[0] + 2.0 * x[0] * x[1] + x[1] * x[1];
         let gradient_fn = |x: &[f64]| vec![2.0 * x[0] + 2.0 * x[1], 2.0 * x[0] + 2.0 * x[1]];
-        
+
         let point = [3.0, 4.0];
         let result = AutodiffUtils::check_gradients(forward_fn, gradient_fn, &point, 1e-8).unwrap();
-        
+
         assert!(result.is_correct);
         assert!(result.max_relative_error < 1e-4);
     }
@@ -734,13 +777,13 @@ mod tests {
             hessian_approximation: HessianApproximation::BFGS,
             ..Default::default()
         };
-        
+
         let mut engine = AutodiffEngine::<f64>::new(config);
-        
+
         let grad_new = Array1::from_vec(vec![1.0, 2.0]);
         let grad_old = Array1::from_vec(vec![0.5, 1.5]);
         let step = Array1::from_vec(vec![0.1, 0.2]);
-        
+
         let result = engine.update_bfgs(&grad_new, &grad_old, &step);
         assert!(result.is_ok());
     }

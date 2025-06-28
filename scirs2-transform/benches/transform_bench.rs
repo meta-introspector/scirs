@@ -14,11 +14,11 @@ const FEATURE_SIZES: &[usize] = &[10, 50, 100];
 /// Benchmark normalization operations
 fn bench_normalization(c: &mut Criterion) {
     let mut group = c.benchmark_group("Normalization");
-    
+
     for &n_samples in SAMPLE_SIZES {
         for &n_features in FEATURE_SIZES {
             let data = Array2::random((n_samples, n_features), Uniform::new(-100.0, 100.0));
-            
+
             // MinMax normalization
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
             group.bench_with_input(
@@ -26,62 +26,49 @@ fn bench_normalization(c: &mut Criterion) {
                 &data,
                 |b, data| {
                     b.iter(|| {
-                        let _result = normalize_array(
-                            black_box(data),
-                            NormalizationMethod::MinMax,
-                            0,
-                        );
+                        let _result =
+                            normalize_array(black_box(data), NormalizationMethod::MinMax, 0);
                     });
                 },
             );
-            
+
             // Z-score normalization
             group.bench_with_input(
                 BenchmarkId::new("ZScore", format!("{}x{}", n_samples, n_features)),
                 &data,
                 |b, data| {
                     b.iter(|| {
-                        let _result = normalize_array(
-                            black_box(data),
-                            NormalizationMethod::ZScore,
-                            0,
-                        );
+                        let _result =
+                            normalize_array(black_box(data), NormalizationMethod::ZScore, 0);
                     });
                 },
             );
-            
+
             // L2 normalization
             group.bench_with_input(
                 BenchmarkId::new("L2", format!("{}x{}", n_samples, n_features)),
                 &data,
                 |b, data| {
                     b.iter(|| {
-                        let _result = normalize_array(
-                            black_box(data),
-                            NormalizationMethod::L2,
-                            1,
-                        );
+                        let _result = normalize_array(black_box(data), NormalizationMethod::L2, 1);
                     });
                 },
             );
-            
+
             // Robust normalization
             group.bench_with_input(
                 BenchmarkId::new("Robust", format!("{}x{}", n_samples, n_features)),
                 &data,
                 |b, data| {
                     b.iter(|| {
-                        let _result = normalize_array(
-                            black_box(data),
-                            NormalizationMethod::Robust,
-                            0,
-                        );
+                        let _result =
+                            normalize_array(black_box(data), NormalizationMethod::Robust, 0);
                     });
                 },
             );
         }
     }
-    
+
     group.finish();
 }
 
@@ -89,13 +76,13 @@ fn bench_normalization(c: &mut Criterion) {
 #[cfg(feature = "simd")]
 fn bench_simd_normalization(c: &mut Criterion) {
     use scirs2_transform::normalize_simd::*;
-    
+
     let mut group = c.benchmark_group("SIMD_Normalization");
-    
+
     for &n_samples in SAMPLE_SIZES {
         for &n_features in FEATURE_SIZES {
             let data = Array2::random((n_samples, n_features), Uniform::new(-100.0, 100.0));
-            
+
             // SIMD MinMax normalization
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
             group.bench_with_input(
@@ -103,43 +90,37 @@ fn bench_simd_normalization(c: &mut Criterion) {
                 &data,
                 |b, data| {
                     b.iter(|| {
-                        let _result = simd_normalize_array(
-                            black_box(data),
-                            NormalizationMethod::MinMax,
-                            0,
-                        );
+                        let _result =
+                            simd_normalize_array(black_box(data), NormalizationMethod::MinMax, 0);
                     });
                 },
             );
-            
+
             // SIMD Z-score normalization
             group.bench_with_input(
                 BenchmarkId::new("SIMD_ZScore", format!("{}x{}", n_samples, n_features)),
                 &data,
                 |b, data| {
                     b.iter(|| {
-                        let _result = simd_normalize_array(
-                            black_box(data),
-                            NormalizationMethod::ZScore,
-                            0,
-                        );
+                        let _result =
+                            simd_normalize_array(black_box(data), NormalizationMethod::ZScore, 0);
                     });
                 },
             );
         }
     }
-    
+
     group.finish();
 }
 
 /// Benchmark scaling operations
 fn bench_scaling(c: &mut Criterion) {
     let mut group = c.benchmark_group("Scaling");
-    
+
     for &n_samples in SAMPLE_SIZES {
         for &n_features in FEATURE_SIZES {
             let data = Array2::random((n_samples, n_features), Uniform::new(-100.0, 100.0));
-            
+
             // MaxAbsScaler
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
             group.bench_with_input(
@@ -148,21 +129,24 @@ fn bench_scaling(c: &mut Criterion) {
                 |b, data| {
                     let mut scaler = MaxAbsScaler::new();
                     scaler.fit(data).unwrap();
-                    
+
                     b.iter(|| {
                         let _result = scaler.transform(black_box(data));
                     });
                 },
             );
-            
+
             // QuantileTransformer
             group.bench_with_input(
-                BenchmarkId::new("QuantileTransformer", format!("{}x{}", n_samples, n_features)),
+                BenchmarkId::new(
+                    "QuantileTransformer",
+                    format!("{}x{}", n_samples, n_features),
+                ),
                 &data,
                 |b, data| {
                     let mut transformer = QuantileTransformer::new(100, "uniform", false).unwrap();
                     transformer.fit(data).unwrap();
-                    
+
                     b.iter(|| {
                         let _result = transformer.transform(black_box(data));
                     });
@@ -170,32 +154,37 @@ fn bench_scaling(c: &mut Criterion) {
             );
         }
     }
-    
+
     group.finish();
 }
 
 /// Benchmark feature engineering operations
 fn bench_feature_engineering(c: &mut Criterion) {
     let mut group = c.benchmark_group("Feature_Engineering");
-    
-    for &n_samples in &[100, 1000] {  // Smaller sizes for polynomial features
-        for &n_features in &[5, 10, 20] {  // Fewer features due to polynomial expansion
+
+    for &n_samples in &[100, 1000] {
+        // Smaller sizes for polynomial features
+        for &n_features in &[5, 10, 20] {
+            // Fewer features due to polynomial expansion
             let data = Array2::random((n_samples, n_features), Uniform::new(-10.0, 10.0));
-            
+
             // Polynomial features (degree 2)
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
             group.bench_with_input(
-                BenchmarkId::new("PolynomialFeatures", format!("{}x{}", n_samples, n_features)),
+                BenchmarkId::new(
+                    "PolynomialFeatures",
+                    format!("{}x{}", n_samples, n_features),
+                ),
                 &data,
                 |b, data| {
                     let poly = PolynomialFeatures::new(2, false, false).unwrap();
-                    
+
                     b.iter(|| {
                         let _result = poly.transform(black_box(data));
                     });
                 },
             );
-            
+
             // Power transformation
             group.bench_with_input(
                 BenchmarkId::new("PowerTransform", format!("{}x{}", n_samples, n_features)),
@@ -203,13 +192,13 @@ fn bench_feature_engineering(c: &mut Criterion) {
                 |b, data| {
                     let mut pt = PowerTransformer::new("yeo-johnson").unwrap();
                     pt.fit(data).unwrap();
-                    
+
                     b.iter(|| {
                         let _result = pt.transform(black_box(data));
                     });
                 },
             );
-            
+
             // Binarization
             group.bench_with_input(
                 BenchmarkId::new("Binarize", format!("{}x{}", n_samples, n_features)),
@@ -222,19 +211,20 @@ fn bench_feature_engineering(c: &mut Criterion) {
             );
         }
     }
-    
+
     group.finish();
 }
 
 /// Benchmark dimensionality reduction operations
 fn bench_dimensionality_reduction(c: &mut Criterion) {
     let mut group = c.benchmark_group("Dimensionality_Reduction");
-    
-    for &n_samples in &[100, 500] {  // Smaller sizes for expensive operations
+
+    for &n_samples in &[100, 500] {
+        // Smaller sizes for expensive operations
         for &n_features in &[20, 50] {
             let data = Array2::random((n_samples, n_features), Uniform::new(-10.0, 10.0));
             let n_components = n_features / 2;
-            
+
             // PCA
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
             group.bench_with_input(
@@ -243,13 +233,13 @@ fn bench_dimensionality_reduction(c: &mut Criterion) {
                 |b, data| {
                     let mut pca = PCA::new(n_components, true, false);
                     pca.fit(data).unwrap();
-                    
+
                     b.iter(|| {
                         let _result = pca.transform(black_box(data));
                     });
                 },
             );
-            
+
             // TruncatedSVD
             group.bench_with_input(
                 BenchmarkId::new("TruncatedSVD", format!("{}x{}", n_samples, n_features)),
@@ -257,7 +247,7 @@ fn bench_dimensionality_reduction(c: &mut Criterion) {
                 |b, data| {
                     let mut svd = TruncatedSVD::new(n_components);
                     svd.fit(data).unwrap();
-                    
+
                     b.iter(|| {
                         let _result = svd.transform(black_box(data));
                     });
@@ -265,16 +255,17 @@ fn bench_dimensionality_reduction(c: &mut Criterion) {
             );
         }
     }
-    
+
     group.finish();
 }
 
 /// Benchmark imputation operations
 fn bench_imputation(c: &mut Criterion) {
     let mut group = c.benchmark_group("Imputation");
-    
+
     for &n_samples in SAMPLE_SIZES {
-        for &n_features in &[10, 20] {  // Smaller feature sizes for imputation
+        for &n_features in &[10, 20] {
+            // Smaller feature sizes for imputation
             // Create data with missing values
             let mut data = Array2::random((n_samples, n_features), Uniform::new(-10.0, 10.0));
             // Insert NaN values randomly (about 10%)
@@ -285,7 +276,7 @@ fn bench_imputation(c: &mut Criterion) {
                     }
                 }
             }
-            
+
             // SimpleImputer
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
             group.bench_with_input(
@@ -294,22 +285,26 @@ fn bench_imputation(c: &mut Criterion) {
                 |b, data| {
                     let mut imputer = SimpleImputer::new(ImputeStrategy::Mean);
                     imputer.fit(data).unwrap();
-                    
+
                     b.iter(|| {
                         let _result = imputer.transform(black_box(data));
                     });
                 },
             );
-            
+
             // KNNImputer (only for smaller datasets)
             if n_samples <= 1000 {
                 group.bench_with_input(
                     BenchmarkId::new("KNNImputer", format!("{}x{}", n_samples, n_features)),
                     &data,
                     |b, data| {
-                        let mut imputer = KNNImputer::new(5, WeightingScheme::Distance, DistanceMetric::Euclidean);
+                        let mut imputer = KNNImputer::new(
+                            5,
+                            WeightingScheme::Distance,
+                            DistanceMetric::Euclidean,
+                        );
                         imputer.fit(data).unwrap();
-                        
+
                         b.iter(|| {
                             let _result = imputer.transform(black_box(data));
                         });
@@ -318,34 +313,37 @@ fn bench_imputation(c: &mut Criterion) {
             }
         }
     }
-    
+
     group.finish();
 }
 
 /// Benchmark pipeline operations
 fn bench_pipeline(c: &mut Criterion) {
     let mut group = c.benchmark_group("Pipeline");
-    
+
     for &n_samples in &[100, 1000] {
         for &n_features in &[10, 20] {
             let data = Array2::random((n_samples, n_features), Uniform::new(-10.0, 10.0));
-            
+
             // Simple pipeline: StandardScaler -> PCA
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
             group.bench_with_input(
-                BenchmarkId::new("StandardScaler_PCA", format!("{}x{}", n_samples, n_features)),
+                BenchmarkId::new(
+                    "StandardScaler_PCA",
+                    format!("{}x{}", n_samples, n_features),
+                ),
                 &data,
                 |b, data| {
                     // Create pipeline
                     let normalizer = Normalizer::new(NormalizationMethod::ZScore, 0);
                     let pca = PCA::new(n_features / 2, true, false);
-                    
+
                     // Note: Since we don't have the adapter implementations compiled,
                     // we'll benchmark the operations separately
                     b.iter(|| {
                         let mut norm = normalizer.clone();
                         let normalized = norm.fit_transform(black_box(data)).unwrap();
-                        
+
                         let mut pca_copy = pca.clone();
                         let _result = pca_copy.fit_transform(&normalized);
                     });
@@ -353,7 +351,7 @@ fn bench_pipeline(c: &mut Criterion) {
             );
         }
     }
-    
+
     group.finish();
 }
 
@@ -369,10 +367,7 @@ criterion_group!(
 );
 
 #[cfg(feature = "simd")]
-criterion_group!(
-    simd_benches,
-    bench_simd_normalization
-);
+criterion_group!(simd_benches, bench_simd_normalization);
 
 #[cfg(not(feature = "simd"))]
 criterion_main!(benches);

@@ -51,7 +51,12 @@ impl<T: Clone> RTree<T> {
     /// # Returns
     ///
     /// A `SpatialResult` containing nothing if successful, or an error if the rectangle has invalid dimensions
-    pub fn insert_rectangle(&mut self, min: Array1<f64>, max: Array1<f64>, data: T) -> SpatialResult<()> {
+    pub fn insert_rectangle(
+        &mut self,
+        min: Array1<f64>,
+        max: Array1<f64>,
+        data: T,
+    ) -> SpatialResult<()> {
         if min.len() != self.ndim() {
             return Err(crate::error::SpatialError::DimensionError(format!(
                 "Min coordinate dimension {} does not match RTree dimension {}",
@@ -478,11 +483,13 @@ mod tests {
         assert_eq!(rtree.size(), 4);
 
         // Test searching for rectangles that overlap with a query range
-        let results = rtree.search_range(&array![0.5, 0.5].view(), &array![2.0, 2.0].view()).unwrap();
-        
+        let results = rtree
+            .search_range(&array![0.5, 0.5].view(), &array![2.0, 2.0].view())
+            .unwrap();
+
         // Should find rectangles A, C, and D
         assert_eq!(results.len(), 3);
-        
+
         // Verify that the results contain the expected values
         let result_values: Vec<&str> = results.iter().map(|(_, v)| *v).collect();
         assert!(result_values.contains(&"A"));

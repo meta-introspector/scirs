@@ -7,13 +7,13 @@
 //! - Variational inference
 
 mod conjugate;
-mod regression;
 mod hierarchical;
+mod regression;
 mod variational;
 
 pub use conjugate::*;
-pub use regression::*;
 pub use hierarchical::*;
+pub use regression::*;
 pub use variational::*;
 
 #[allow(unused_imports)]

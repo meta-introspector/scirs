@@ -3,14 +3,14 @@
 //! This module provides a complete benchmarking suite for comparing different
 //! optimization algorithms across various test problems, metrics, and scenarios.
 
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::{ScirsError, ScirsResult};
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
 use std::path::Path;
+use std::time::{Duration, Instant};
 
 use crate::result::OptimizeResults;
-use crate::visualization::{OptimizationVisualizer, VisualizationConfig, OptimizationTrajectory};
+use crate::visualization::{OptimizationTrajectory, OptimizationVisualizer, VisualizationConfig};
 
 /// Standard test functions for optimization benchmarking
 pub mod test_functions {
@@ -20,8 +20,8 @@ pub mod test_functions {
     pub fn rosenbrock(x: &ArrayView1<f64>) -> f64 {
         let n = x.len();
         let mut sum = 0.0;
-        for i in 0..(n-1) {
-            let term1 = x[i+1] - x[i].powi(2);
+        for i in 0..(n - 1) {
+            let term1 = x[i + 1] - x[i].powi(2);
             let term2 = 1.0 - x[i];
             sum += 100.0 * term1.powi(2) + term2.powi(2);
         }
@@ -37,25 +37,35 @@ pub mod test_functions {
     pub fn rastrigin(x: &ArrayView1<f64>) -> f64 {
         let a = 10.0;
         let n = x.len() as f64;
-        a * n + x.iter().map(|&xi| xi.powi(2) - a * (2.0 * std::f64::consts::PI * xi).cos()).sum::<f64>()
+        a * n
+            + x.iter()
+                .map(|&xi| xi.powi(2) - a * (2.0 * std::f64::consts::PI * xi).cos())
+                .sum::<f64>()
     }
 
     /// Ackley function (multimodal with global structure)
     pub fn ackley(x: &ArrayView1<f64>) -> f64 {
         let n = x.len() as f64;
         let sum_sq = x.iter().map(|&xi| xi.powi(2)).sum::<f64>();
-        let sum_cos = x.iter().map(|&xi| (2.0 * std::f64::consts::PI * xi).cos()).sum::<f64>();
-        
-        -20.0 * (-0.2 * (sum_sq / n).sqrt()).exp() - (sum_cos / n).exp() + 20.0 + std::f64::consts::E
+        let sum_cos = x
+            .iter()
+            .map(|&xi| (2.0 * std::f64::consts::PI * xi).cos())
+            .sum::<f64>();
+
+        -20.0 * (-0.2 * (sum_sq / n).sqrt()).exp() - (sum_cos / n).exp()
+            + 20.0
+            + std::f64::consts::E
     }
 
     /// Griewank function (multimodal with product term)
     pub fn griewank(x: &ArrayView1<f64>) -> f64 {
         let sum_term = x.iter().map(|&xi| xi.powi(2)).sum::<f64>() / 4000.0;
-        let prod_term = x.iter().enumerate()
+        let prod_term = x
+            .iter()
+            .enumerate()
             .map(|(i, &xi)| (xi / ((i + 1) as f64).sqrt()).cos())
             .product::<f64>();
-        
+
         sum_term - prod_term + 1.0
     }
 
@@ -63,20 +73,27 @@ pub mod test_functions {
     pub fn levy(x: &ArrayView1<f64>) -> f64 {
         let w: Vec<f64> = x.iter().map(|&xi| 1.0 + (xi - 1.0) / 4.0).collect();
         let n = w.len();
-        
+
         let term1 = (std::f64::consts::PI * w[0]).sin().powi(2);
-        let term2 = (0..(n-1)).map(|i| {
-            (w[i] - 1.0).powi(2) * (1.0 + 10.0 * (std::f64::consts::PI * w[i+1]).sin().powi(2))
-        }).sum::<f64>();
-        let term3 = (w[n-1] - 1.0).powi(2) * (1.0 + (2.0 * std::f64::consts::PI * w[n-1]).sin().powi(2));
-        
+        let term2 = (0..(n - 1))
+            .map(|i| {
+                (w[i] - 1.0).powi(2)
+                    * (1.0 + 10.0 * (std::f64::consts::PI * w[i + 1]).sin().powi(2))
+            })
+            .sum::<f64>();
+        let term3 = (w[n - 1] - 1.0).powi(2)
+            * (1.0 + (2.0 * std::f64::consts::PI * w[n - 1]).sin().powi(2));
+
         term1 + term2 + term3
     }
 
     /// Schwefel function (multimodal with shifted optimum)
     pub fn schwefel(x: &ArrayView1<f64>) -> f64 {
         let n = x.len() as f64;
-        418.9829 * n - x.iter().map(|&xi| xi * (xi.abs().sqrt()).sin()).sum::<f64>()
+        418.9829 * n
+            - x.iter()
+                .map(|&xi| xi * (xi.abs().sqrt()).sin())
+                .sum::<f64>()
     }
 
     /// Get bounds for a test function
@@ -164,13 +181,13 @@ impl TestProblem {
     /// Generate random starting points for the problem
     pub fn generate_starting_points(&self, count: usize) -> ScirsResult<Vec<Array1<f64>>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut points = Vec::with_capacity(count);
 
         for _ in 0..count {
             let mut point = Array1::zeros(self.dimensions);
             for (i, &(low, high)) in self.bounds.iter().enumerate() {
-                point[i] = rng.gen_range(low..=high);
+                point[i] = rng.random_range(low..=high);
             }
             points.push(point);
         }
@@ -195,14 +212,54 @@ pub struct ProblemCharacteristics {
 impl ProblemCharacteristics {
     fn from_function_name(name: &str) -> Self {
         match name {
-            "sphere" => Self { multimodal: false, separable: true, convex: true, difficulty: 1 },
-            "rosenbrock" => Self { multimodal: false, separable: false, convex: false, difficulty: 3 },
-            "rastrigin" => Self { multimodal: true, separable: true, convex: false, difficulty: 4 },
-            "ackley" => Self { multimodal: true, separable: false, convex: false, difficulty: 4 },
-            "griewank" => Self { multimodal: true, separable: false, convex: false, difficulty: 4 },
-            "levy" => Self { multimodal: true, separable: false, convex: false, difficulty: 4 },
-            "schwefel" => Self { multimodal: true, separable: true, convex: false, difficulty: 5 },
-            _ => Self { multimodal: false, separable: true, convex: true, difficulty: 1 },
+            "sphere" => Self {
+                multimodal: false,
+                separable: true,
+                convex: true,
+                difficulty: 1,
+            },
+            "rosenbrock" => Self {
+                multimodal: false,
+                separable: false,
+                convex: false,
+                difficulty: 3,
+            },
+            "rastrigin" => Self {
+                multimodal: true,
+                separable: true,
+                convex: false,
+                difficulty: 4,
+            },
+            "ackley" => Self {
+                multimodal: true,
+                separable: false,
+                convex: false,
+                difficulty: 4,
+            },
+            "griewank" => Self {
+                multimodal: true,
+                separable: false,
+                convex: false,
+                difficulty: 4,
+            },
+            "levy" => Self {
+                multimodal: true,
+                separable: false,
+                convex: false,
+                difficulty: 4,
+            },
+            "schwefel" => Self {
+                multimodal: true,
+                separable: true,
+                convex: false,
+                difficulty: 5,
+            },
+            _ => Self {
+                multimodal: false,
+                separable: true,
+                convex: true,
+                difficulty: 1,
+            },
         }
     }
 }
@@ -308,30 +365,64 @@ impl BenchmarkResults {
 
         // Configuration summary
         report.push_str("Benchmark Configuration:\n");
-        report.push_str(&format!("  Test Problems: {:?}\n", self.config.test_problems));
+        report.push_str(&format!(
+            "  Test Problems: {:?}\n",
+            self.config.test_problems
+        ));
         report.push_str(&format!("  Dimensions: {:?}\n", self.config.dimensions));
-        report.push_str(&format!("  Runs per Problem: {}\n", self.config.runs_per_problem));
-        report.push_str(&format!("  Max Function Evaluations: {}\n", self.config.max_function_evaluations));
-        report.push_str(&format!("  Target Accuracy: {:.2e}\n", self.config.target_accuracy));
+        report.push_str(&format!(
+            "  Runs per Problem: {}\n",
+            self.config.runs_per_problem
+        ));
+        report.push_str(&format!(
+            "  Max Function Evaluations: {}\n",
+            self.config.max_function_evaluations
+        ));
+        report.push_str(&format!(
+            "  Target Accuracy: {:.2e}\n",
+            self.config.target_accuracy
+        ));
         report.push_str("\n");
 
         // Overall summary
         report.push_str("Overall Summary:\n");
         report.push_str(&format!("  Total Runs: {}\n", self.runs.len()));
-        report.push_str(&format!("  Successful Runs: {}\n", self.summary.successful_runs));
-        report.push_str(&format!("  Success Rate: {:.1}%\n", self.summary.overall_success_rate * 100.0));
-        report.push_str(&format!("  Average Runtime: {:.3}s\n", self.summary.average_runtime.as_secs_f64()));
+        report.push_str(&format!(
+            "  Successful Runs: {}\n",
+            self.summary.successful_runs
+        ));
+        report.push_str(&format!(
+            "  Success Rate: {:.1}%\n",
+            self.summary.overall_success_rate * 100.0
+        ));
+        report.push_str(&format!(
+            "  Average Runtime: {:.3}s\n",
+            self.summary.average_runtime.as_secs_f64()
+        ));
         report.push_str("\n");
 
         // Algorithm rankings
         report.push_str("Algorithm Rankings:\n");
         let mut ranked_algorithms: Vec<_> = self.rankings.iter().collect();
-        ranked_algorithms.sort_by(|a, b| a.1.overall_score.partial_cmp(&b.1.overall_score).unwrap().reverse());
+        ranked_algorithms.sort_by(|a, b| {
+            a.1.overall_score
+                .partial_cmp(&b.1.overall_score)
+                .unwrap()
+                .reverse()
+        });
 
         for (i, (algorithm, ranking)) in ranked_algorithms.iter().enumerate() {
-            report.push_str(&format!("  {}. {} (Score: {:.3})\n", i + 1, algorithm, ranking.overall_score));
-            report.push_str(&format!("     Success Rate: {:.1}%, Avg Runtime: {:.3}s\n",
-                ranking.success_rate * 100.0, ranking.average_runtime.as_secs_f64()));
+            report.push_str(&format!(
+                "  {}. {} (Score: {:.3})\n",
+                i + 1,
+                algorithm,
+                ranking.overall_score
+            ));
+            report.push_str(&format!(
+                "     Success Rate: {:.1}%, Avg Runtime: {:.3}s\n",
+                ranking.success_rate * 100.0,
+                ranking.average_runtime.as_secs_f64()
+            ));
         }
         report.push_str("\n");
 
@@ -339,20 +430,27 @@ impl BenchmarkResults {
         report.push_str("Problem-Specific Results:\n");
         for problem in &self.config.test_problems {
             report.push_str(&format!("  {}:\n", problem));
-            
-            let problem_runs: Vec<_> = self.runs.iter()
+
+            let problem_runs: Vec<_> = self
+                .runs
+                .iter()
                 .filter(|run| run.problem_name == *problem)
                 .collect();
-            
+
             if !problem_runs.is_empty() {
                 let success_count = problem_runs.iter().filter(|run| run.success).count();
                 let success_rate = success_count as f64 / problem_runs.len() as f64;
-                let avg_distance = problem_runs.iter()
+                let avg_distance = problem_runs
+                    .iter()
                     .map(|run| run.distance_to_optimum)
-                    .sum::<f64>() / problem_runs.len() as f64;
-                
+                    .sum::<f64>()
+                    / problem_runs.len() as f64;
+
                 report.push_str(&format!("    Success Rate: {:.1}%\n", success_rate * 100.0));
-                report.push_str(&format!("    Avg Distance to Optimum: {:.6e}\n", avg_distance));
+                report.push_str(&format!(
+                    "    Avg Distance to Optimum: {:.6e}\n",
+                    avg_distance
+                ));
             }
         }
 
@@ -471,7 +569,7 @@ impl BenchmarkSystem {
     /// Create a new benchmark system
     pub fn new(config: BenchmarkConfig) -> Self {
         let mut test_problems = Vec::new();
-        
+
         for problem_name in &config.test_problems {
             for &dim in &config.dimensions {
                 test_problems.push(TestProblem::new(problem_name, dim));
@@ -485,14 +583,21 @@ impl BenchmarkSystem {
     }
 
     /// Run benchmark for a specific algorithm
-    pub fn benchmark_algorithm<F>(&self, algorithm_name: &str, optimize_fn: F) -> ScirsResult<BenchmarkResults>
+    pub fn benchmark_algorithm<F>(
+        &self,
+        algorithm_name: &str,
+        optimize_fn: F,
+    ) -> ScirsResult<BenchmarkResults>
     where
         F: Fn(&TestProblem, &Array1<f64>) -> ScirsResult<OptimizeResults> + Clone,
     {
         let mut runs = Vec::new();
 
         for problem in &self.test_problems {
-            println!("Benchmarking {} on {} ({}D)", algorithm_name, problem.name, problem.dimensions);
+            println!(
+                "Benchmarking {} on {} ({}D)",
+                algorithm_name, problem.name, problem.dimensions
+            );
 
             let starting_points = problem.generate_starting_points(self.config.runs_per_problem)?;
 
@@ -518,7 +623,8 @@ impl BenchmarkSystem {
 
                         let runtime_stats = RuntimeStats {
                             total_time: runtime,
-                            time_per_evaluation: runtime / opt_result.function_evaluations.max(1) as u32,
+                            time_per_evaluation: runtime
+                                / opt_result.function_evaluations.max(1) as u32,
                             peak_memory: 0, // Would need system monitoring
                             convergence_checks: opt_result.iterations,
                         };
@@ -571,7 +677,10 @@ impl BenchmarkSystem {
         // Compute summary statistics
         let summary = self.compute_summary(&runs);
         let mut rankings = HashMap::new();
-        rankings.insert(algorithm_name.to_string(), self.compute_ranking(algorithm_name, &runs));
+        rankings.insert(
+            algorithm_name.to_string(),
+            self.compute_ranking(algorithm_name, &runs),
+        );
 
         Ok(BenchmarkResults {
             config: self.config.clone(),
@@ -589,28 +698,31 @@ impl BenchmarkSystem {
         let total_runtime: Duration = runs.iter().map(|run| run.runtime_stats.total_time).sum();
         let average_runtime = total_runtime / runs.len() as u32;
 
-        let average_function_evaluations = runs.iter()
+        let average_function_evaluations = runs
+            .iter()
             .map(|run| run.results.function_evaluations as f64)
-            .sum::<f64>() / runs.len() as f64;
+            .sum::<f64>()
+            / runs.len() as f64;
 
-        let distances: Vec<f64> = runs.iter()
+        let distances: Vec<f64> = runs
+            .iter()
             .filter(|run| run.distance_to_optimum.is_finite())
             .map(|run| run.distance_to_optimum)
             .collect();
 
-        let best_distance_to_optimum = distances.iter().cloned()
-            .fold(f64::INFINITY, f64::min);
-        let worst_distance_to_optimum = distances.iter().cloned()
-            .fold(f64::NEG_INFINITY, f64::max);
+        let best_distance_to_optimum = distances.iter().cloned().fold(f64::INFINITY, f64::min);
+        let worst_distance_to_optimum = distances.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 
         // Compute runtime standard deviation
         let mean_runtime_ms = average_runtime.as_millis() as f64;
-        let variance = runs.iter()
+        let variance = runs
+            .iter()
             .map(|run| {
                 let diff = run.runtime_stats.total_time.as_millis() as f64 - mean_runtime_ms;
                 diff * diff
             })
-            .sum::<f64>() / runs.len() as f64;
+            .sum::<f64>()
+            / runs.len() as f64;
         let runtime_std = Duration::from_millis(variance.sqrt() as u64);
 
         BenchmarkSummary {
@@ -632,7 +744,8 @@ impl BenchmarkSystem {
         let total_runtime: Duration = runs.iter().map(|run| run.runtime_stats.total_time).sum();
         let average_runtime = total_runtime / runs.len() as u32;
 
-        let finite_distances: Vec<f64> = runs.iter()
+        let finite_distances: Vec<f64> = runs
+            .iter()
             .filter(|run| run.distance_to_optimum.is_finite())
             .map(|run| run.distance_to_optimum)
             .collect();
@@ -651,12 +764,14 @@ impl BenchmarkSystem {
         // Compute problem-specific rankings
         let mut problem_rankings = HashMap::new();
         for problem_name in &self.config.test_problems {
-            let problem_runs: Vec<_> = runs.iter()
+            let problem_runs: Vec<_> = runs
+                .iter()
                 .filter(|run| run.problem_name == *problem_name)
                 .collect();
-            
+
             if !problem_runs.is_empty() {
-                let problem_success = problem_runs.iter().filter(|run| run.success).count() as f64 / problem_runs.len() as f64;
+                let problem_success = problem_runs.iter().filter(|run| run.success).count() as f64
+                    / problem_runs.len() as f64;
                 problem_rankings.insert(problem_name.clone(), problem_success);
             }
         }
@@ -738,13 +853,13 @@ mod tests {
     #[test]
     fn test_test_functions() {
         let x = array![0.0, 0.0];
-        
+
         // Test that global optima are correct
         assert!((test_functions::sphere(&x.view()) - 0.0).abs() < 1e-10);
         assert!((test_functions::rastrigin(&x.view()) - 0.0).abs() < 1e-10);
         assert!((test_functions::ackley(&x.view()) - 0.0).abs() < 1e-10);
         assert!((test_functions::griewank(&x.view()) - 0.0).abs() < 1e-10);
-        
+
         let x_ones = array![1.0, 1.0];
         assert!((test_functions::rosenbrock(&x_ones.view()) - 0.0).abs() < 1e-10);
         assert!((test_functions::levy(&x_ones.view()) - 0.0).abs() < 1e-10);

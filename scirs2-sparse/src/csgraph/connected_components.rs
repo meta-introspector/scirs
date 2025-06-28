@@ -3,7 +3,7 @@
 //! This module provides efficient algorithms for finding connected components
 //! in sparse graphs represented as matrices.
 
-use super::{to_adjacency_list, validate_graph, num_vertices};
+use super::{num_vertices, to_adjacency_list, validate_graph};
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::Array1;
@@ -51,24 +51,22 @@ where
     S: SparseArray<T>,
 {
     validate_graph(graph, directed)?;
-    
+
     let connection_type = match connection.to_lowercase().as_str() {
         "weak" => ConnectionType::Weak,
         "strong" => ConnectionType::Strong,
-        _ => return Err(SparseError::ValueError(format!(
-            "Unknown connection type: {}. Use 'weak' or 'strong'",
-            connection
-        ))),
+        _ => {
+            return Err(SparseError::ValueError(format!(
+                "Unknown connection type: {}. Use 'weak' or 'strong'",
+                connection
+            )))
+        }
     };
 
     if directed {
         match connection_type {
-            ConnectionType::Weak => {
-                weakly_connected_components(graph, return_labels)
-            }
-            ConnectionType::Strong => {
-                strongly_connected_components(graph, return_labels)
-            }
+            ConnectionType::Weak => weakly_connected_components(graph, return_labels),
+            ConnectionType::Strong => strongly_connected_components(graph, return_labels),
         }
     } else {
         // For undirected graphs, weak and strong connectivity are the same
@@ -96,14 +94,14 @@ where
 {
     let n = num_vertices(graph);
     let adj_list = to_adjacency_list(graph, false)?; // Undirected
-    
+
     let mut visited = vec![false; n];
     let mut labels = if return_labels {
         Some(Array1::zeros(n))
     } else {
         None
     };
-    
+
     let mut component_count = 0;
 
     for start in 0..n {
@@ -141,9 +139,9 @@ where
 {
     let n = num_vertices(graph);
     let adj_list = to_adjacency_list(graph, true)?; // Directed
-    
+
     let mut tarjan = TarjanSCC::<T>::new(n, return_labels);
-    
+
     for v in 0..n {
         if tarjan.indices[v] == -1 {
             tarjan.strongconnect(v, &adj_list);
@@ -160,23 +158,22 @@ fn dfs_component<T>(
     visited: &mut [bool],
     component_id: usize,
     labels: &mut Option<Array1<usize>>,
-)
-where
+) where
     T: Float + Debug + Copy + 'static,
 {
     let mut stack = vec![start];
-    
+
     while let Some(node) = stack.pop() {
         if visited[node] {
             continue;
         }
-        
+
         visited[node] = true;
-        
+
         if let Some(ref mut label_array) = labels {
             label_array[node] = component_id;
         }
-        
+
         // Add all unvisited neighbors to the stack
         for &(neighbor, _) in &adj_list[node] {
             if !visited[neighbor] {
@@ -247,11 +244,11 @@ where
             loop {
                 let w = self.stack.pop().unwrap();
                 self.on_stack[w] = false;
-                
+
                 if let Some(ref mut labels) = self.labels {
                     labels[w] = self.component_count;
                 }
-                
+
                 if w == v {
                     break;
                 }
@@ -334,13 +331,13 @@ where
 {
     let (n_components, labels) = connected_components(graph, directed, connection, true)?;
     let labels = labels.unwrap();
-    
+
     // Count the size of each component
     let mut component_sizes = vec![0; n_components];
     for &label in labels.iter() {
         component_sizes[label] += 1;
     }
-    
+
     // Find the largest component
     let largest_component_id = component_sizes
         .iter()
@@ -348,9 +345,9 @@ where
         .max_by_key(|(_, &size)| size)
         .map(|(id, _)| id)
         .unwrap_or(0);
-    
+
     let largest_size = component_sizes[largest_component_id];
-    
+
     // Collect indices of vertices in the largest component
     let largest_indices: Vec<usize> = labels
         .iter()
@@ -363,7 +360,7 @@ where
             }
         })
         .collect();
-    
+
     Ok((largest_size, largest_indices))
 }
 
@@ -391,19 +388,19 @@ where
     S: SparseArray<T> + Clone,
 {
     let (_, vertex_indices) = largest_component(graph, directed, connection)?;
-    
+
     // Create mapping from old to new indices
     let mut old_to_new = vec![None; num_vertices(graph)];
     for (new_idx, &old_idx) in vertex_indices.iter().enumerate() {
         old_to_new[old_idx] = Some(new_idx);
     }
-    
+
     // Extract edges within the largest component
     let (row_indices, col_indices, values) = graph.find();
     let mut new_rows = Vec::new();
     let mut new_cols = Vec::new();
     let mut new_values = Vec::new();
-    
+
     for (i, (&old_row, &old_col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         if let (Some(new_row), Some(new_col)) = (old_to_new[old_row], old_to_new[old_col]) {
             new_rows.push(new_row);
@@ -411,13 +408,13 @@ where
             new_values.push(values[i]);
         }
     }
-    
+
     // Create the subgraph
     // Note: This is a simplified approach. In a real implementation,
     // we would need to create the specific sparse array type.
     // For now, we'll return the original graph as a placeholder.
     let subgraph = graph.clone();
-    
+
     Ok((subgraph, vertex_indices))
 }
 
@@ -433,7 +430,7 @@ mod tests {
         let rows = vec![0, 1, 2, 3];
         let cols = vec![1, 0, 3, 2];
         let data = vec![1.0, 1.0, 1.0, 1.0];
-        
+
         CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
     }
 
@@ -444,7 +441,7 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![1, 2, 0];
         let data = vec![1.0, 1.0, 1.0];
-        
+
         CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
     }
 
@@ -452,9 +449,9 @@ mod tests {
     fn test_undirected_connected_components() {
         let graph = create_disconnected_graph();
         let (n_components, labels) = undirected_connected_components(&graph, true).unwrap();
-        
+
         assert_eq!(n_components, 2);
-        
+
         let labels = labels.unwrap();
         // Vertices 0 and 1 should be in the same component
         assert_eq!(labels[0], labels[1]);
@@ -467,11 +464,11 @@ mod tests {
     #[test]
     fn test_connected_components_api() {
         let graph = create_disconnected_graph();
-        
+
         // Test undirected
         let (n_components, _) = connected_components(&graph, false, "weak", false).unwrap();
         assert_eq!(n_components, 2);
-        
+
         // Test directed weak connectivity
         let (n_components, _) = connected_components(&graph, true, "weak", false).unwrap();
         assert_eq!(n_components, 2);
@@ -481,10 +478,10 @@ mod tests {
     fn test_strongly_connected_components() {
         let graph = create_strongly_connected_graph();
         let (n_components, labels) = strongly_connected_components(&graph, true).unwrap();
-        
+
         // Should have 2 components: {0,1,2} and {3}
         assert_eq!(n_components, 2);
-        
+
         let labels = labels.unwrap();
         // Vertices 0, 1, 2 should be in the same strongly connected component
         assert_eq!(labels[0], labels[1]);
@@ -497,13 +494,13 @@ mod tests {
     fn test_is_connected() {
         let disconnected = create_disconnected_graph();
         assert!(!is_connected(&disconnected, false).unwrap());
-        
+
         // Create a connected graph
         let rows = vec![0, 1, 1, 2];
         let cols = vec![1, 0, 2, 1];
         let data = vec![1.0, 1.0, 1.0, 1.0];
         let connected = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
-        
+
         assert!(is_connected(&connected, false).unwrap());
     }
 
@@ -517,9 +514,9 @@ mod tests {
         let cols = vec![1, 0, 2, 1, 4, 3];
         let data = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (6, 6), false).unwrap();
-        
+
         let (size, indices) = largest_component(&graph, false, "weak").unwrap();
-        
+
         assert_eq!(size, 3);
         assert_eq!(indices.len(), 3);
         // Should contain vertices 0, 1, 2
@@ -535,10 +532,10 @@ mod tests {
         let cols = vec![1, 0, 2, 1];
         let data = vec![1.0, 1.0, 1.0, 1.0];
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
-        
+
         let (n_components, _) = connected_components(&graph, false, "weak", false).unwrap();
         assert_eq!(n_components, 1);
-        
+
         let (size, indices) = largest_component(&graph, false, "weak").unwrap();
         assert_eq!(size, 3);
         assert_eq!(indices, vec![0, 1, 2]);
@@ -551,12 +548,12 @@ mod tests {
         let cols = vec![1];
         let data = vec![1.0];
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap();
-        
+
         let (n_components, labels) = connected_components(&graph, false, "weak", true).unwrap();
-        
+
         // Should have 3 components: {0,1}, {2}, {3}
         assert_eq!(n_components, 3);
-        
+
         let labels = labels.unwrap();
         assert_eq!(labels[0], labels[1]); // 0 and 1 connected
         assert_ne!(labels[0], labels[2]); // 2 is isolated

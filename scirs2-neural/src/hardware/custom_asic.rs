@@ -5,12 +5,12 @@
 //! tensor processing units (TPUs), and other domain-specific accelerators.
 
 use crate::error::Result;
-use crate::hardware::{Accelerator, AcceleratorType, AcceleratorCapabilities};
 use crate::hardware::accelerator::DeviceBuffer;
-use crate::hardware::accelerator::{Kernel, MemoryInfo, ComputeStream, ProfilingInfo};
+use crate::hardware::accelerator::{ComputeStream, Kernel, MemoryInfo, ProfilingInfo};
+use crate::hardware::{Accelerator, AcceleratorCapabilities, AcceleratorType};
 use ndarray::prelude::*;
-use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 /// Custom ASIC configuration
 #[derive(Debug, Clone)]
@@ -103,7 +103,10 @@ pub enum DataType {
     /// Binary (1-bit)
     Binary,
     /// Custom fixed-point
-    FixedPoint { integer_bits: u8, fractional_bits: u8 },
+    FixedPoint {
+        integer_bits: u8,
+        fractional_bits: u8,
+    },
     /// Posit arithmetic
     Posit { nbits: u8, es: u8 },
 }
@@ -112,7 +115,7 @@ pub enum DataType {
 #[derive(Debug, Clone, PartialEq)]
 pub enum NativeOperation {
     /// Matrix multiplication
-    MatMul { 
+    MatMul {
         tile_sizes: Vec<(usize, usize)>,
         datatypes: Vec<DataType>,
     },
@@ -269,10 +272,11 @@ impl CustomASIC {
     pub fn new(config: ASICConfig) -> Result<Self> {
         let capabilities = Self::build_capabilities(&config);
         let memory_manager = ASICMemoryManager::new(&config.memory_hierarchy);
-        let instruction_cache = InstructionCache::new(config.memory_hierarchy.cache_config.icache_size);
+        let instruction_cache =
+            InstructionCache::new(config.memory_hierarchy.cache_config.icache_size);
         let performance_counters = PerformanceCounters::new();
         let runtime_state = RuntimeState::new();
-        
+
         Ok(Self {
             config,
             capabilities,
@@ -282,20 +286,23 @@ impl CustomASIC {
             runtime_state: Arc::new(Mutex::new(runtime_state)),
         })
     }
-    
+
     /// Build accelerator capabilities from ASIC config
     fn build_capabilities(config: &ASICConfig) -> AcceleratorCapabilities {
         // Calculate peak performance estimates
         let peak_ops_per_cycle = config.processing_elements as f32 * 2.0; // Estimate
         let clock_freq_ghz = 1.0; // Assume 1 GHz for simplicity
         let peak_tflops_fp32 = peak_ops_per_cycle * clock_freq_ghz;
-        
+
         // Estimate memory bandwidth
-        let total_bandwidth = config.memory_hierarchy.external_memory.bandwidth +
-            config.memory_hierarchy.sram_levels.iter()
+        let total_bandwidth = config.memory_hierarchy.external_memory.bandwidth
+            + config
+                .memory_hierarchy
+                .sram_levels
+                .iter()
                 .map(|level| level.bandwidth)
                 .sum::<f32>();
-        
+
         AcceleratorCapabilities {
             name: format!("{} {}", config.vendor, config.model),
             compute_capability: (1, 0), // Custom versioning
@@ -307,7 +314,10 @@ impl CustomASIC {
             peak_tflops_int8: peak_tflops_fp32 * 4.0,
             features: crate::hardware::accelerator::AcceleratorFeatures {
                 mixed_precision: config.supported_datatypes.len() > 1,
-                tensor_cores: config.native_operations.iter().any(|op| matches!(op, NativeOperation::MatMul { .. })),
+                tensor_cores: config
+                    .native_operations
+                    .iter()
+                    .any(|op| matches!(op, NativeOperation::MatMul { .. })),
                 sparse_ops: false, // Would need to check config
                 unified_memory: true,
                 multi_device: false,
@@ -317,16 +327,16 @@ impl CustomASIC {
             },
         }
     }
-    
+
     /// Compile a high-level operation to ASIC instruction sequence
     pub fn compile_operation(&self, operation: &ASICOperation) -> Result<ASICProgram> {
         let mut program = ASICProgram::new();
-        
+
         match operation {
             ASICOperation::MatMul { m, n, k, datatype } => {
                 // Find optimal tiling strategy
                 let tile_config = self.find_optimal_tiling(*m, *n, *k)?;
-                
+
                 // Generate instruction sequence
                 for tile in &tile_config.tiles {
                     // Load data instructions
@@ -336,20 +346,20 @@ impl CustomASIC {
                         rows: tile.rows,
                         cols: tile.cols,
                     });
-                    
+
                     program.add_instruction(ASICInstruction::LoadMatrix {
                         src_addr: tile.b_addr,
                         dst_pe: tile.pe_id,
                         rows: tile.rows,
                         cols: tile.cols,
                     });
-                    
+
                     // Compute instruction
                     program.add_instruction(ASICInstruction::MatMul {
                         pe_id: tile.pe_id,
                         accumulate: tile.accumulate,
                     });
-                    
+
                     // Store result
                     program.add_instruction(ASICInstruction::StoreMatrix {
                         src_pe: tile.pe_id,
@@ -358,42 +368,43 @@ impl CustomASIC {
                         cols: tile.cols,
                     });
                 }
-                
+
                 // Add synchronization
                 program.add_instruction(ASICInstruction::Synchronize);
             }
-            
+
             ASICOperation::Convolution { .. } => {
                 // Convolution compilation would go here
                 return Err(crate::error::NeuralError::NotImplemented(
-                    "Convolution compilation not yet implemented".to_string()
+                    "Convolution compilation not yet implemented".to_string(),
                 ));
             }
-            
+
             ASICOperation::Custom { name, .. } => {
-                return Err(crate::error::NeuralError::NotImplemented(
-                    format!("Custom operation {} not implemented", name)
-                ));
+                return Err(crate::error::NeuralError::NotImplemented(format!(
+                    "Custom operation {} not implemented",
+                    name
+                )));
             }
         }
-        
+
         Ok(program)
     }
-    
+
     /// Execute an ASIC program
     pub fn execute_program(&self, program: &ASICProgram) -> Result<()> {
         let mut counters = self.performance_counters.lock().unwrap();
         let start_time = std::time::Instant::now();
-        
+
         for instruction in &program.instructions {
             self.execute_instruction(instruction)?;
             counters.instructions_executed += 1;
         }
-        
+
         counters.execution_time += start_time.elapsed();
         Ok(())
     }
-    
+
     /// Execute a single instruction
     fn execute_instruction(&self, instruction: &ASICInstruction) -> Result<()> {
         match instruction {
@@ -401,45 +412,45 @@ impl CustomASIC {
                 // Simulate memory load
                 std::thread::sleep(std::time::Duration::from_nanos(100));
             }
-            
+
             ASICInstruction::StoreMatrix { .. } => {
                 // Simulate memory store
                 std::thread::sleep(std::time::Duration::from_nanos(100));
             }
-            
+
             ASICInstruction::MatMul { .. } => {
                 // Simulate matrix multiplication
                 std::thread::sleep(std::time::Duration::from_nanos(200));
             }
-            
+
             ASICInstruction::Synchronize => {
                 // Synchronize all processing elements
                 std::thread::sleep(std::time::Duration::from_nanos(50));
             }
-            
+
             ASICInstruction::Custom { .. } => {
                 // Custom instruction execution
                 std::thread::sleep(std::time::Duration::from_nanos(100));
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Find optimal tiling strategy for matrix multiplication
     fn find_optimal_tiling(&self, m: usize, n: usize, k: usize) -> Result<TilingConfig> {
         // Simple tiling strategy based on available PEs and memory
         let num_pes = self.config.processing_elements as usize;
         let tile_size = 64; // Default tile size
-        
+
         let mut tiles = Vec::new();
         let mut pe_id = 0;
-        
+
         for i in (0..m).step_by(tile_size) {
             for j in (0..n).step_by(tile_size) {
                 let tile_rows = tile_size.min(m - i);
                 let tile_cols = tile_size.min(n - j);
-                
+
                 tiles.push(MatMulTile {
                     pe_id: pe_id % num_pes,
                     rows: tile_rows,
@@ -449,18 +460,18 @@ impl CustomASIC {
                     c_addr: i * n * 4 + j * 4,
                     accumulate: false,
                 });
-                
+
                 pe_id += 1;
             }
         }
-        
+
         Ok(TilingConfig { tiles })
     }
-    
+
     /// Get performance statistics
     pub fn get_performance_stats(&self) -> PerformanceStats {
         let counters = self.performance_counters.lock().unwrap();
-        
+
         PerformanceStats {
             instructions_executed: counters.instructions_executed,
             total_execution_time: counters.execution_time,
@@ -475,20 +486,21 @@ impl CustomASIC {
             power_consumption: self.estimate_power_consumption(),
         }
     }
-    
+
     /// Estimate current power consumption
     fn estimate_power_consumption(&self) -> f32 {
         let counters = self.performance_counters.lock().unwrap();
         let base_power = self.config.power_profile.idle_power;
-        
+
         // Simple power model based on instruction execution rate
         let dynamic_power = if counters.execution_time.as_secs_f64() > 0.0 {
-            let ipc = (counters.instructions_executed as f64) / counters.execution_time.as_secs_f64();
+            let ipc =
+                (counters.instructions_executed as f64) / counters.execution_time.as_secs_f64();
             ipc as f32 * self.config.power_profile.dynamic_power_per_op
         } else {
             0.0
         };
-        
+
         base_power + dynamic_power
     }
 }
@@ -496,25 +508,49 @@ impl CustomASIC {
 /// High-level ASIC operations
 #[derive(Debug, Clone)]
 pub enum ASICOperation {
-    MatMul { m: usize, n: usize, k: usize, datatype: DataType },
-    Convolution { 
+    MatMul {
+        m: usize,
+        n: usize,
+        k: usize,
+        datatype: DataType,
+    },
+    Convolution {
         input_shape: (usize, usize, usize, usize),
         kernel_shape: (usize, usize, usize, usize),
         stride: (usize, usize),
         padding: (usize, usize),
         datatype: DataType,
     },
-    Custom { name: String, parameters: HashMap<String, f32> },
+    Custom {
+        name: String,
+        parameters: HashMap<String, f32>,
+    },
 }
 
 /// ASIC instruction set
 #[derive(Debug, Clone)]
 pub enum ASICInstruction {
-    LoadMatrix { src_addr: usize, dst_pe: usize, rows: usize, cols: usize },
-    StoreMatrix { src_pe: usize, dst_addr: usize, rows: usize, cols: usize },
-    MatMul { pe_id: usize, accumulate: bool },
+    LoadMatrix {
+        src_addr: usize,
+        dst_pe: usize,
+        rows: usize,
+        cols: usize,
+    },
+    StoreMatrix {
+        src_pe: usize,
+        dst_addr: usize,
+        rows: usize,
+        cols: usize,
+    },
+    MatMul {
+        pe_id: usize,
+        accumulate: bool,
+    },
     Synchronize,
-    Custom { opcode: u32, operands: Vec<u32> },
+    Custom {
+        opcode: u32,
+        operands: Vec<u32>,
+    },
 }
 
 /// ASIC program (sequence of instructions)
@@ -531,7 +567,7 @@ impl ASICProgram {
             metadata: ProgramMetadata::default(),
         }
     }
-    
+
     fn add_instruction(&mut self, instruction: ASICInstruction) {
         self.instructions.push(instruction);
     }
@@ -659,67 +695,64 @@ impl Accelerator for CustomASIC {
     fn accelerator_type(&self) -> AcceleratorType {
         AcceleratorType::ASIC
     }
-    
+
     fn capabilities(&self) -> &AcceleratorCapabilities {
         &self.capabilities
     }
-    
+
     fn initialize(&mut self) -> Result<()> {
         // Initialize the ASIC hardware
         Ok(())
     }
-    
+
     fn is_available(&self) -> bool {
         true
     }
-    
+
     fn allocate(&self, size: usize) -> Result<DeviceBuffer> {
         // Simplified allocation
         let ptr = Box::into_raw(Box::new(vec![0u8; size])) as *mut u8;
         Ok(DeviceBuffer::new(ptr, size, 0))
     }
-    
+
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let buffer = self.allocate(size)?;
-        
+
         // Copy data (simplified)
         unsafe {
-            std::ptr::copy_nonoverlapping(
-                data.as_ptr() as *const u8,
-                buffer.ptr,
-                size,
-            );
+            std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
-    
+
     fn download(&self, buffer: &DeviceBuffer) -> Result<Array2<f32>> {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1); // Simplified
-        
+
         let mut data = Array2::zeros(shape);
         unsafe {
-            std::ptr::copy_nonoverlapping(
-                buffer.ptr as *const f32,
-                data.as_mut_ptr(),
-                elements,
-            );
+            std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
-    
-    fn execute_kernel(&self, kernel: &dyn Kernel, _inputs: &[&DeviceBuffer], _outputs: &mut [&mut DeviceBuffer]) -> Result<()> {
+
+    fn execute_kernel(
+        &self,
+        kernel: &dyn Kernel,
+        _inputs: &[&DeviceBuffer],
+        _outputs: &mut [&mut DeviceBuffer],
+    ) -> Result<()> {
         println!("Executing kernel: {} on Custom ASIC", kernel.name());
         Ok(())
     }
-    
+
     fn synchronize(&self) -> Result<()> {
         Ok(())
     }
-    
+
     fn memory_usage(&self) -> Result<MemoryInfo> {
         Ok(MemoryInfo {
             total: self.capabilities.total_memory,
@@ -728,7 +761,7 @@ impl Accelerator for CustomASIC {
             reserved: 0,
         })
     }
-    
+
     fn create_stream(&self) -> Result<ComputeStream> {
         Ok(ComputeStream {
             handle: std::ptr::null_mut(),
@@ -736,7 +769,7 @@ impl Accelerator for CustomASIC {
             device_id: 0,
         })
     }
-    
+
     fn profile_kernel(&self, kernel: &dyn Kernel) -> Result<ProfilingInfo> {
         Ok(ProfilingInfo {
             kernel_name: kernel.name().to_string(),
@@ -752,7 +785,7 @@ impl Accelerator for CustomASIC {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     fn create_test_asic_config() -> ASICConfig {
         ASICConfig {
             vendor: "TestCorp".to_string(),
@@ -760,15 +793,13 @@ mod tests {
             architecture_version: "v1.0".to_string(),
             processing_elements: 256,
             memory_hierarchy: MemoryHierarchy {
-                sram_levels: vec![
-                    MemoryLevel {
-                        name: "L1".to_string(),
-                        size: 64 * 1024,
-                        latency_cycles: 1,
-                        bandwidth: 1000.0,
-                        shared: false,
-                    },
-                ],
+                sram_levels: vec![MemoryLevel {
+                    name: "L1".to_string(),
+                    size: 64 * 1024,
+                    latency_cycles: 1,
+                    bandwidth: 1000.0,
+                    shared: false,
+                }],
                 external_memory: ExternalMemoryConfig {
                     memory_type: "HBM2".to_string(),
                     capacity: 32 * 1024 * 1024 * 1024,
@@ -783,12 +814,10 @@ mod tests {
                 },
             },
             supported_datatypes: vec![DataType::Float32, DataType::Int8],
-            native_operations: vec![
-                NativeOperation::MatMul {
-                    tile_sizes: vec![(16, 16), (32, 32)],
-                    datatypes: vec![DataType::Float32],
-                },
-            ],
+            native_operations: vec![NativeOperation::MatMul {
+                tile_sizes: vec![(16, 16), (32, 32)],
+                datatypes: vec![DataType::Float32],
+            }],
             power_profile: PowerProfile {
                 idle_power: 50.0,
                 peak_power: 300.0,
@@ -796,52 +825,61 @@ mod tests {
                 efficiency_tops_per_watt: 100.0,
             },
             interconnect: InterconnectTopology {
-                topology_type: TopologyType::Mesh2D { width: 16, height: 16 },
+                topology_type: TopologyType::Mesh2D {
+                    width: 16,
+                    height: 16,
+                },
                 noc_config: None,
                 bus_config: None,
             },
         }
     }
-    
+
     #[test]
     fn test_custom_asic_creation() {
         let config = create_test_asic_config();
         let asic = CustomASIC::new(config).unwrap();
-        
+
         assert_eq!(asic.accelerator_type(), AcceleratorType::ASIC);
         assert!(asic.is_available());
     }
-    
+
     #[test]
     fn test_asic_operation_compilation() {
         let config = create_test_asic_config();
         let asic = CustomASIC::new(config).unwrap();
-        
+
         let operation = ASICOperation::MatMul {
             m: 128,
             n: 128,
             k: 128,
             datatype: DataType::Float32,
         };
-        
+
         let program = asic.compile_operation(&operation).unwrap();
         assert!(!program.instructions.is_empty());
     }
-    
+
     #[test]
     fn test_datatype_support() {
-        let dt1 = DataType::FixedPoint { integer_bits: 8, fractional_bits: 8 };
+        let dt1 = DataType::FixedPoint {
+            integer_bits: 8,
+            fractional_bits: 8,
+        };
         let dt2 = DataType::Posit { nbits: 16, es: 1 };
-        
+
         // Test custom datatypes
         match dt1 {
-            DataType::FixedPoint { integer_bits, fractional_bits } => {
+            DataType::FixedPoint {
+                integer_bits,
+                fractional_bits,
+            } => {
                 assert_eq!(integer_bits, 8);
                 assert_eq!(fractional_bits, 8);
             }
             _ => panic!("Unexpected datatype"),
         }
-        
+
         match dt2 {
             DataType::Posit { nbits, es } => {
                 assert_eq!(nbits, 16);

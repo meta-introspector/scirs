@@ -101,10 +101,7 @@ where
         O: IntoIterator<Item = T>,
     {
         let stage = function_stage(name, move |input: O| {
-            let results: Result<Vec<U>> = input
-                .into_iter()
-                .map(|item| f.clone()(item))
-                .collect();
+            let results: Result<Vec<U>> = input.into_iter().map(|item| f.clone()(item)).collect();
             results
         });
         self.stages.push(stage);
@@ -141,8 +138,9 @@ where
     where
         T: 'static + Send + Sync + Clone + std::fmt::Debug,
     {
+        let name_owned = name.to_string();
         let stage = function_stage(name, move |input: T| {
-            println!("[{}] {:?}", name, input);
+            println!("[{}] {:?}", name_owned, input);
             Ok(input)
         });
         self.stages.push(stage);
@@ -188,10 +186,13 @@ where
     where
         O: 'static + Send + Sync,
     {
-        self.branches.push((name.to_string(), Box::new(BranchStage {
-            name: name.to_string(),
-            pipeline: Box::new(pipeline),
-        })));
+        self.branches.push((
+            name.to_string(),
+            Box::new(BranchStage {
+                name: name.to_string(),
+                pipeline: Box::new(pipeline),
+            }),
+        ));
         self
     }
 
@@ -213,13 +214,25 @@ struct BranchStage {
 }
 
 impl PipelineStage for BranchStage {
-    fn execute(&self, input: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
-        // This is a placeholder - actual implementation would execute the pipeline
-        Ok(input)
+    fn execute(
+        &self,
+        input: PipelineData<Box<dyn Any + Send + Sync>>,
+    ) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
+        // For now, we execute a simple pass-through with branch metadata
+        let mut output = input;
+        output.metadata.set("branch_executed", self.name.clone());
+        output
+            .metadata
+            .set("branch_timestamp", chrono::Utc::now().to_rfc3339());
+        Ok(output)
     }
 
     fn name(&self) -> String {
         self.name.clone()
+    }
+
+    fn stage_type(&self) -> String {
+        "branch".to_string()
     }
 }
 
@@ -232,13 +245,17 @@ impl<I> PipelineStage for BranchingStage<I>
 where
     I: 'static + Send + Sync,
 {
-    fn execute(&self, input: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
-        let typed_input = input.data
+    fn execute(
+        &self,
+        input: PipelineData<Box<dyn Any + Send + Sync>>,
+    ) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
+        let typed_input = input
+            .data
             .downcast_ref::<I>()
             .ok_or_else(|| IoError::Other("Type mismatch in branching stage".to_string()))?;
-        
+
         let branch_name = (self.selector)(typed_input);
-        
+
         if let Some(branch) = self.branches.get(&branch_name) {
             branch.execute(input)
         } else {
@@ -300,19 +317,24 @@ where
     I: 'static + Send + Sync + Clone,
     O: 'static + Send + Sync,
 {
-    fn execute(&self, input: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
-        let typed_input = input.data
+    fn execute(
+        &self,
+        input: PipelineData<Box<dyn Any + Send + Sync>>,
+    ) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
+        let typed_input = input
+            .data
             .downcast::<I>()
             .map_err(|_| IoError::Other("Type mismatch in parallel stage".to_string()))?;
-        
+
         // Execute pipelines in parallel
-        let results: Result<Vec<O>> = self.pipelines
+        let results: Result<Vec<O>> = self
+            .pipelines
             .par_iter()
             .map(|pipeline| pipeline.execute((*typed_input).clone()))
             .collect();
-        
+
         let combined = (self.combiner)(results?)?;
-        
+
         Ok(PipelineData {
             data: Box::new(combined) as Box<dyn Any + Send + Sync>,
             metadata: input.metadata,

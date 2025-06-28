@@ -240,7 +240,9 @@ pub fn wasserstein_distance<T: Float + Send + Sync>(
     }
 
     if set2.shape()[1] != dims {
-        return Err(crate::error::SpatialError::DimensionError("Dimension mismatch: sets must have the same number of dimensions".to_string()));
+        return Err(crate::error::SpatialError::DimensionError(
+            "Dimension mismatch: sets must have the same number of dimensions".to_string(),
+        ));
     }
 
     // For simplicity in this implementation, we'll use a greedy approach

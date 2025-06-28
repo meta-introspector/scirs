@@ -5,9 +5,9 @@
 
 use crate::error::GraphError;
 use ndarray::Array2;
-use std::mem;
 use std::fs::File;
-use std::io::{self, BufWriter, Write, Read, Seek, SeekFrom};
+use std::io::{self, BufWriter, Read, Seek, SeekFrom, Write};
+use std::mem;
 use std::path::Path;
 
 /// Compressed Sparse Row (CSR) format for sparse graphs
@@ -36,10 +36,10 @@ impl CSRGraph {
         // Pre-allocate with exact sizes to avoid reallocations
         let mut col_idx = Vec::with_capacity(n_edges);
         let mut weights = Vec::with_capacity(n_edges);
-        
+
         // Use counting sort for better performance when source nodes are dense
         let mut degree = vec![0; n_nodes];
-        
+
         // First pass: count degrees and validate nodes
         for &(src, dst, _) in &edges {
             if src >= n_nodes || dst >= n_nodes {
@@ -73,7 +73,7 @@ impl CSRGraph {
         for node in 0..n_nodes {
             let start = row_ptr[node];
             let end = row_ptr[node + 1];
-            
+
             if end > start {
                 // Create pairs for sorting
                 let mut pairs: Vec<(usize, f64)> = col_idx[start..end]
@@ -81,10 +81,10 @@ impl CSRGraph {
                     .zip(&weights[start..end])
                     .map(|(&c, &w)| (c, w))
                     .collect();
-                
+
                 // Sort by column index
                 pairs.sort_unstable_by_key(|&(col, _)| col);
-                
+
                 // Write back sorted data
                 for (i, (col, weight)) in pairs.into_iter().enumerate() {
                     col_idx[start + i] = col;
@@ -233,18 +233,18 @@ impl BitPackedGraph {
             // For directed graphs, check outgoing edges
             let start_bit = node * self.n_nodes;
             let end_bit = start_bit + self.n_nodes;
-            
+
             let start_word = start_bit / 64;
             let end_word = (end_bit + 63) / 64;
-            
+
             for word_idx in start_word..end_word {
                 if word_idx >= self.bits.len() {
                     break;
                 }
-                
+
                 let mut word = self.bits[word_idx];
                 let word_start_bit = word_idx * 64;
-                
+
                 // Mask out bits outside our range
                 if word_start_bit < start_bit {
                     let skip_bits = start_bit - word_start_bit;
@@ -254,7 +254,7 @@ impl BitPackedGraph {
                     let keep_bits = end_bit - word_start_bit;
                     word &= (1u64 << keep_bits) - 1;
                 }
-                
+
                 // Extract set bits efficiently
                 while word != 0 {
                     let bit_pos = word.trailing_zeros() as usize;
@@ -287,19 +287,19 @@ impl BitPackedGraph {
         if self.directed {
             let start_bit = node * self.n_nodes;
             let end_bit = start_bit + self.n_nodes;
-            
+
             let start_word = start_bit / 64;
             let end_word = (end_bit + 63) / 64;
             let mut count = 0;
-            
+
             for word_idx in start_word..end_word {
                 if word_idx >= self.bits.len() {
                     break;
                 }
-                
+
                 let mut word = self.bits[word_idx];
                 let word_start_bit = word_idx * 64;
-                
+
                 // Mask out bits outside our range
                 if word_start_bit < start_bit {
                     let skip_bits = start_bit - word_start_bit;
@@ -309,10 +309,10 @@ impl BitPackedGraph {
                     let keep_bits = end_bit - word_start_bit;
                     word &= (1u64 << keep_bits) - 1;
                 }
-                
+
                 count += word.count_ones() as usize;
             }
-            
+
             count
         } else {
             // For undirected graphs, count efficiently
@@ -523,37 +523,37 @@ impl MemmapGraph {
     pub fn from_csr<P: AsRef<Path>>(csr: &CSRGraph, path: P) -> io::Result<Self> {
         let mut file = File::create(&path)?;
         let mut writer = BufWriter::new(&mut file);
-        
+
         // Write header
         writer.write_all(&csr.n_nodes.to_le_bytes())?;
         writer.write_all(&csr.n_edges.to_le_bytes())?;
-        
+
         // Write row pointers
         for &ptr in &csr.row_ptr {
             writer.write_all(&ptr.to_le_bytes())?;
         }
-        
+
         // Write column indices
         for &idx in &csr.col_idx {
             writer.write_all(&idx.to_le_bytes())?;
         }
-        
+
         // Write weights
         for &weight in &csr.weights {
             writer.write_all(&weight.to_le_bytes())?;
         }
-        
+
         writer.flush()?;
         drop(writer);
-        
+
         // Reopen for reading
         let file = File::open(path)?;
-        
+
         let header_size = 16; // n_nodes + n_edges
         let row_ptr_offset = header_size;
         let col_idx_offset = row_ptr_offset + (csr.n_nodes + 1) * 8;
         let weights_offset = col_idx_offset + csr.n_edges * 8;
-        
+
         Ok(MemmapGraph {
             n_nodes: csr.n_nodes,
             n_edges: csr.n_edges,
@@ -564,28 +564,27 @@ impl MemmapGraph {
             weights_offset,
         })
     }
-    
+
     /// Load an existing memory-mapped graph
     pub fn from_file<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         let mut file = File::open(path)?;
         let mut buffer = [0u8; 16];
-        
+
         // Read header
         file.read_exact(&mut buffer)?;
         let n_nodes = usize::from_le_bytes([
-            buffer[0], buffer[1], buffer[2], buffer[3],
-            buffer[4], buffer[5], buffer[6], buffer[7],
+            buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], buffer[7],
         ]);
         let n_edges = usize::from_le_bytes([
-            buffer[8], buffer[9], buffer[10], buffer[11],
-            buffer[12], buffer[13], buffer[14], buffer[15],
+            buffer[8], buffer[9], buffer[10], buffer[11], buffer[12], buffer[13], buffer[14],
+            buffer[15],
         ]);
-        
+
         let header_size = 16;
         let row_ptr_offset = header_size;
         let col_idx_offset = row_ptr_offset + (n_nodes + 1) * 8;
         let weights_offset = col_idx_offset + n_edges * 8;
-        
+
         Ok(MemmapGraph {
             n_nodes,
             n_edges,
@@ -596,89 +595,100 @@ impl MemmapGraph {
             weights_offset,
         })
     }
-    
+
     /// Get row pointers for a node (reads from disk)
     fn get_row_ptrs(&mut self, node: usize) -> io::Result<(usize, usize)> {
         if node >= self.n_nodes {
             return Ok((0, 0));
         }
-        
+
         let mut buffer = [0u8; 16];
         let offset = self.row_ptr_offset + node * 8;
-        
+
         self.file.seek(SeekFrom::Start(offset as u64))?;
         self.file.read_exact(&mut buffer)?;
-        
+
         let start = usize::from_le_bytes([
-            buffer[0], buffer[1], buffer[2], buffer[3],
-            buffer[4], buffer[5], buffer[6], buffer[7],
+            buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], buffer[7],
         ]);
         let end = usize::from_le_bytes([
-            buffer[8], buffer[9], buffer[10], buffer[11],
-            buffer[12], buffer[13], buffer[14], buffer[15],
+            buffer[8], buffer[9], buffer[10], buffer[11], buffer[12], buffer[13], buffer[14],
+            buffer[15],
         ]);
-        
+
         Ok((start, end))
     }
-    
+
     /// Get neighbors of a node (reads from disk)
     pub fn neighbors(&mut self, node: usize) -> io::Result<Vec<(usize, f64)>> {
         let (start, end) = self.get_row_ptrs(node)?;
         let degree = end - start;
-        
+
         if degree == 0 {
             return Ok(Vec::new());
         }
-        
+
         // Read column indices
         let mut col_buffer = vec![0u8; degree * 8];
         let col_offset = self.col_idx_offset + start * 8;
         self.file.seek(SeekFrom::Start(col_offset as u64))?;
         self.file.read_exact(&mut col_buffer)?;
-        
+
         // Read weights
         let mut weight_buffer = vec![0u8; degree * 8];
         let weight_offset = self.weights_offset + start * 8;
         self.file.seek(SeekFrom::Start(weight_offset as u64))?;
         self.file.read_exact(&mut weight_buffer)?;
-        
+
         // Parse neighbors
         let mut neighbors = Vec::with_capacity(degree);
         for i in 0..degree {
             let col_bytes = &col_buffer[i * 8..(i + 1) * 8];
             let weight_bytes = &weight_buffer[i * 8..(i + 1) * 8];
-            
+
             let col_idx = usize::from_le_bytes([
-                col_bytes[0], col_bytes[1], col_bytes[2], col_bytes[3],
-                col_bytes[4], col_bytes[5], col_bytes[6], col_bytes[7],
+                col_bytes[0],
+                col_bytes[1],
+                col_bytes[2],
+                col_bytes[3],
+                col_bytes[4],
+                col_bytes[5],
+                col_bytes[6],
+                col_bytes[7],
             ]);
             let weight = f64::from_le_bytes([
-                weight_bytes[0], weight_bytes[1], weight_bytes[2], weight_bytes[3],
-                weight_bytes[4], weight_bytes[5], weight_bytes[6], weight_bytes[7],
+                weight_bytes[0],
+                weight_bytes[1],
+                weight_bytes[2],
+                weight_bytes[3],
+                weight_bytes[4],
+                weight_bytes[5],
+                weight_bytes[6],
+                weight_bytes[7],
             ]);
-            
+
             neighbors.push((col_idx, weight));
         }
-        
+
         Ok(neighbors)
     }
-    
+
     /// Get degree of a node
     pub fn degree(&mut self, node: usize) -> io::Result<usize> {
         let (start, end) = self.get_row_ptrs(node)?;
         Ok(end - start)
     }
-    
+
     /// Get number of nodes
     pub fn node_count(&self) -> usize {
         self.n_nodes
     }
-    
+
     /// Get number of edges
     pub fn edge_count(&self) -> usize {
         self.n_edges
     }
-    
+
     /// Check if an edge exists (requires reading neighbors)
     pub fn has_edge(&mut self, from: usize, to: usize) -> io::Result<bool> {
         let neighbors = self.neighbors(from)?;
@@ -691,18 +701,18 @@ impl MemmapGraph {
     /// Read multiple nodes' neighbors in one operation (more efficient)
     pub fn batch_neighbors(&mut self, nodes: &[usize]) -> io::Result<Vec<Vec<(usize, f64)>>> {
         let mut results = Vec::with_capacity(nodes.len());
-        
+
         // Sort nodes to minimize seeking
         let mut sorted_nodes: Vec<_> = nodes.iter().enumerate().collect();
         sorted_nodes.sort_by_key(|(_, &node)| node);
-        
+
         for (_, &node) in sorted_nodes {
             results.push(self.neighbors(node)?);
         }
-        
+
         Ok(results)
     }
-    
+
     /// Stream through all edges without loading everything into memory
     pub fn stream_edges<F>(&mut self, mut callback: F) -> io::Result<()>
     where

@@ -169,10 +169,15 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
 
         if m == 0 {
             // Not enough history for acceleration
-            return self.g_history.back()
-                .ok_or_else(|| IntegrateError::ComputationError(
-                    "No history available for Anderson acceleration".to_string()
-                )).cloned();
+            return self
+                .g_history
+                .back()
+                .ok_or_else(|| {
+                    IntegrateError::ComputationError(
+                        "No history available for Anderson acceleration".to_string(),
+                    )
+                })
+                .cloned();
         }
 
         // Build residual difference matrix: ΔR = [r_1 - r_0, r_2 - r_1, ..., r_m - r_{m-1}]
@@ -186,10 +191,11 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
         }
 
         // Solve least squares problem: min_α ||ΔR α + r_m||²
-        let r_m = self.residual_history.back()
-            .ok_or_else(|| IntegrateError::ComputationError(
-                "No residual history available for Anderson acceleration".to_string()
-            ))?;
+        let r_m = self.residual_history.back().ok_or_else(|| {
+            IntegrateError::ComputationError(
+                "No residual history available for Anderson acceleration".to_string(),
+            )
+        })?;
         let alpha = self.solve_least_squares(&delta_r, r_m.view())?;
 
         // Compute accelerated update
@@ -202,14 +208,16 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
         let weight_m = F::one() - alpha_sum;
 
         // Add contribution from most recent iterate
-        let x_m = self.x_history.back()
-            .ok_or_else(|| IntegrateError::ComputationError(
-                "No x history available for Anderson acceleration".to_string()
-            ))?;
-        let g_m = self.g_history.back()
-            .ok_or_else(|| IntegrateError::ComputationError(
-                "No g history available for Anderson acceleration".to_string()
-            ))?;
+        let x_m = self.x_history.back().ok_or_else(|| {
+            IntegrateError::ComputationError(
+                "No x history available for Anderson acceleration".to_string(),
+            )
+        })?;
+        let g_m = self.g_history.back().ok_or_else(|| {
+            IntegrateError::ComputationError(
+                "No g history available for Anderson acceleration".to_string(),
+            )
+        })?;
 
         x_accelerated = &x_accelerated + &(x_m * weight_m);
         g_accelerated = &g_accelerated + &(g_m * weight_m);
@@ -330,7 +338,7 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
                 // Check for zero diagonal element to prevent division by zero
                 if a[[k, k]].abs() < F::from_f64(1e-14).unwrap_or_else(|| F::from(1e-14).unwrap()) {
                     return Err(IntegrateError::ComputationError(
-                        "Zero diagonal element in Gaussian elimination".to_string()
+                        "Zero diagonal element in Gaussian elimination".to_string(),
                     ));
                 }
                 let factor = a[[i, k]] / a[[k, k]];
@@ -351,7 +359,7 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
             // Check for zero diagonal element
             if a[[i, i]].abs() < F::from_f64(1e-14).unwrap_or_else(|| F::from(1e-14).unwrap()) {
                 return Err(IntegrateError::ComputationError(
-                    "Zero diagonal element in back substitution".to_string()
+                    "Zero diagonal element in back substitution".to_string(),
                 ));
             }
             x[i] = (b[i] - sum) / a[[i, i]];

@@ -41,12 +41,12 @@ pub trait OutOfCoreTransformer: Send + Sync {
     fn fit_chunks<I>(&mut self, chunks: I) -> Result<()>
     where
         I: Iterator<Item = Result<Array2<f64>>>;
-    
+
     /// Transform data in chunks
     fn transform_chunks<I>(&self, chunks: I) -> Result<ChunkedArrayWriter>
     where
         I: Iterator<Item = Result<Array2<f64>>>;
-    
+
     /// Get the expected shape of transformed data
     fn get_transform_shape(&self, input_shape: (usize, usize)) -> (usize, usize);
 }
@@ -66,7 +66,7 @@ impl ChunkedArrayReader {
         let file = File::open(path).map_err(|e| {
             TransformError::TransformationError(format!("Failed to open file: {}", e))
         })?;
-        
+
         Ok(ChunkedArrayReader {
             file: BufReader::new(file),
             shape,
@@ -75,16 +75,16 @@ impl ChunkedArrayReader {
             dtype_size: std::mem::size_of::<f64>(),
         })
     }
-    
+
     /// Read the next chunk of data
     pub fn read_chunk(&mut self) -> Result<Option<Array2<f64>>> {
         if self.current_row >= self.shape.0 {
             return Ok(None);
         }
-        
+
         let rows_to_read = (self.chunk_size).min(self.shape.0 - self.current_row);
         let mut chunk = Array2::zeros((rows_to_read, self.shape.1));
-        
+
         // Read data row by row
         for i in 0..rows_to_read {
             for j in 0..self.shape.1 {
@@ -92,15 +92,15 @@ impl ChunkedArrayReader {
                 self.file.read_exact(&mut bytes).map_err(|e| {
                     TransformError::TransformationError(format!("Failed to read data: {}", e))
                 })?;
-                
+
                 chunk[[i, j]] = f64::from_le_bytes(bytes.try_into().unwrap());
             }
         }
-        
+
         self.current_row += rows_to_read;
         Ok(Some(chunk))
     }
-    
+
     /// Create an iterator over chunks
     pub fn chunks(self) -> ChunkedArrayIterator {
         ChunkedArrayIterator { reader: self }
@@ -114,7 +114,7 @@ pub struct ChunkedArrayIterator {
 
 impl Iterator for ChunkedArrayIterator {
     type Item = Result<Array2<f64>>;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         match self.reader.read_chunk() {
             Ok(Some(chunk)) => Some(Ok(chunk)),
@@ -139,7 +139,7 @@ impl ChunkedArrayWriter {
         let file = File::create(&path).map_err(|e| {
             TransformError::TransformationError(format!("Failed to create file: {}", e))
         })?;
-        
+
         Ok(ChunkedArrayWriter {
             file: BufWriter::new(file),
             shape,
@@ -147,21 +147,23 @@ impl ChunkedArrayWriter {
             path: path_str,
         })
     }
-    
+
     /// Write a chunk of data
     pub fn write_chunk(&mut self, chunk: &Array2<f64>) -> Result<()> {
         if chunk.shape()[1] != self.shape.1 {
-            return Err(TransformError::InvalidInput(
-                format!("Chunk has {} columns, expected {}", chunk.shape()[1], self.shape.1)
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Chunk has {} columns, expected {}",
+                chunk.shape()[1],
+                self.shape.1
+            )));
         }
-        
+
         if self.rows_written + chunk.shape()[0] > self.shape.0 {
             return Err(TransformError::InvalidInput(
-                "Too many rows written".to_string()
+                "Too many rows written".to_string(),
             ));
         }
-        
+
         // Write data row by row
         for i in 0..chunk.shape()[0] {
             for j in 0..chunk.shape()[1] {
@@ -171,23 +173,24 @@ impl ChunkedArrayWriter {
                 })?;
             }
         }
-        
+
         self.rows_written += chunk.shape()[0];
         Ok(())
     }
-    
+
     /// Finalize the writer and flush data
     pub fn finalize(mut self) -> Result<String> {
         self.file.flush().map_err(|e| {
             TransformError::TransformationError(format!("Failed to flush data: {}", e))
         })?;
-        
+
         if self.rows_written != self.shape.0 {
-            return Err(TransformError::InvalidInput(
-                format!("Expected {} rows, but wrote {}", self.shape.0, self.rows_written)
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} rows, but wrote {}",
+                self.shape.0, self.rows_written
+            )));
         }
-        
+
         Ok(self.path)
     }
 }
@@ -223,7 +226,7 @@ impl OutOfCoreNormalizer {
             stats: None,
         }
     }
-    
+
     /// Compute statistics in a single pass for simple methods
     fn compute_simple_stats<I>(&mut self, chunks: I, n_features: usize) -> Result<()>
     where
@@ -234,12 +237,12 @@ impl OutOfCoreNormalizer {
         let mut sum = Array1::zeros(n_features);
         let mut sum_sq = Array1::zeros(n_features);
         let mut count = 0;
-        
+
         // First pass: compute min, max, sum, sum_sq
         for chunk_result in chunks {
             let chunk = chunk_result?;
             count += chunk.shape()[0];
-            
+
             for j in 0..n_features {
                 let col = chunk.column(j);
                 for &val in col.iter() {
@@ -250,12 +253,12 @@ impl OutOfCoreNormalizer {
                 }
             }
         }
-        
+
         // Compute mean and std
         let mean = sum / count as f64;
         let variance = sum_sq / count as f64 - &mean * &mean;
         let std = variance.mapv(|v: f64| v.sqrt());
-        
+
         self.stats = Some(NormalizationStats {
             min,
             max,
@@ -265,7 +268,93 @@ impl OutOfCoreNormalizer {
             iqr: Array1::zeros(n_features),    // Not used for simple methods
             count,
         });
-        
+
+        Ok(())
+    }
+
+    /// Compute robust statistics using approximate quantile estimation
+    fn compute_robust_stats<I>(&mut self, chunks: I, n_features: usize) -> Result<()>
+    where
+        I: Iterator<Item = Result<Array2<f64>>>,
+    {
+        // Use reservoir sampling to approximate quantiles
+        const RESERVOIR_SIZE: usize = 10000; // Sample size for quantile estimation
+
+        let mut reservoirs: Vec<Vec<f64>> = vec![Vec::with_capacity(RESERVOIR_SIZE); n_features];
+        let mut count = 0;
+        let mut rng = rand::thread_rng();
+
+        // First pass: build reservoirs using reservoir sampling
+        for chunk_result in chunks {
+            let chunk = chunk_result?;
+
+            for i in 0..chunk.shape()[0] {
+                count += 1;
+
+                for j in 0..n_features {
+                    let val = chunk[[i, j]];
+
+                    if reservoirs[j].len() < RESERVOIR_SIZE {
+                        // Reservoir not full, just add the element
+                        reservoirs[j].push(val);
+                    } else {
+                        // Reservoir full, randomly replace with decreasing probability
+                        let k = (count as f64 * rng.random::<f64>()) as usize;
+                        if k < RESERVOIR_SIZE {
+                            reservoirs[j][k] = val;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Compute median and IQR from reservoirs
+        let mut median = Array1::zeros(n_features);
+        let mut iqr = Array1::zeros(n_features);
+
+        for j in 0..n_features {
+            if !reservoirs[j].is_empty() {
+                reservoirs[j].sort_by(|a, b| a.partial_cmp(b).unwrap());
+                let len = reservoirs[j].len();
+
+                // Median (50th percentile)
+                median[j] = if len % 2 == 0 {
+                    (reservoirs[j][len / 2 - 1] + reservoirs[j][len / 2]) / 2.0
+                } else {
+                    reservoirs[j][len / 2]
+                };
+
+                // First quartile (25th percentile)
+                let q1_idx = len / 4;
+                let q1 = reservoirs[j][q1_idx];
+
+                // Third quartile (75th percentile)
+                let q3_idx = 3 * len / 4;
+                let q3 = reservoirs[j][q3_idx.min(len - 1)];
+
+                // Interquartile range
+                iqr[j] = q3 - q1;
+
+                // Ensure IQR is not zero (add small epsilon for numerical stability)
+                if iqr[j] < 1e-10 {
+                    iqr[j] = 1.0;
+                }
+            } else {
+                median[j] = 0.0;
+                iqr[j] = 1.0;
+            }
+        }
+
+        self.stats = Some(NormalizationStats {
+            min: Array1::zeros(n_features),  // Not used for robust scaling
+            max: Array1::zeros(n_features),  // Not used for robust scaling
+            mean: Array1::zeros(n_features), // Not used for robust scaling
+            std: Array1::zeros(n_features),  // Not used for robust scaling
+            median,
+            iqr,
+            count,
+        });
+
         Ok(())
     }
 }
@@ -280,60 +369,61 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
         let n_features = match chunks_iter.peek() {
             Some(Ok(chunk)) => chunk.shape()[1],
             Some(Err(_)) => return chunks_iter.next().unwrap().map(|_| ()),
-            None => return Err(TransformError::InvalidInput("No chunks provided".to_string())),
+            None => {
+                return Err(TransformError::InvalidInput(
+                    "No chunks provided".to_string(),
+                ))
+            }
         };
-        
+
         match self.method {
-            NormalizationMethod::MinMax | 
-            NormalizationMethod::MinMaxCustom(_, _) |
-            NormalizationMethod::ZScore |
-            NormalizationMethod::MaxAbs => {
+            NormalizationMethod::MinMax
+            | NormalizationMethod::MinMaxCustom(_, _)
+            | NormalizationMethod::ZScore
+            | NormalizationMethod::MaxAbs => {
                 self.compute_simple_stats(chunks_iter, n_features)?;
             }
             NormalizationMethod::Robust => {
-                // Robust scaling requires multiple passes or approximate methods
-                // For now, we'll use a reservoir sampling approach
-                return Err(TransformError::NotImplemented(
-                    "Robust scaling not yet implemented for out-of-core processing".to_string()
-                ));
+                // Robust scaling using approximate quantile estimation
+                self.compute_robust_stats(chunks_iter, n_features)?;
             }
             _ => {
                 return Err(TransformError::NotImplemented(
-                    "This normalization method is not supported for out-of-core processing".to_string()
+                    "This normalization method is not supported for out-of-core processing"
+                        .to_string(),
                 ));
             }
         }
-        
+
         Ok(())
     }
-    
+
     fn transform_chunks<I>(&self, chunks: I) -> Result<ChunkedArrayWriter>
     where
         I: Iterator<Item = Result<Array2<f64>>>,
     {
         if self.stats.is_none() {
             return Err(TransformError::TransformationError(
-                "Normalizer has not been fitted".to_string()
+                "Normalizer has not been fitted".to_string(),
             ));
         }
-        
+
         let stats = self.stats.as_ref().unwrap();
-        
+
         // Create temporary output file
-        let output_path = format!("{}/transform_output_{}.bin", 
-                                  std::env::temp_dir().to_string_lossy(),
-                                  std::process::id());
-        
-        let mut writer = ChunkedArrayWriter::new(
-            &output_path,
-            (stats.count, stats.min.len())
-        )?;
-        
+        let output_path = format!(
+            "{}/transform_output_{}.bin",
+            std::env::temp_dir().to_string_lossy(),
+            std::process::id()
+        );
+
+        let mut writer = ChunkedArrayWriter::new(&output_path, (stats.count, stats.min.len()))?;
+
         // Transform each chunk
         for chunk_result in chunks {
             let chunk = chunk_result?;
             let mut transformed = Array2::zeros((chunk.nrows(), chunk.ncols()));
-            
+
             match self.method {
                 NormalizationMethod::MinMax => {
                     let range = &stats.max - &stats.min;
@@ -351,7 +441,8 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
                     for i in 0..chunk.shape()[0] {
                         for j in 0..chunk.shape()[1] {
                             if stats.std[j] > 1e-10 {
-                                transformed[[i, j]] = (chunk[[i, j]] - stats.mean[j]) / stats.std[j];
+                                transformed[[i, j]] =
+                                    (chunk[[i, j]] - stats.mean[j]) / stats.std[j];
                             } else {
                                 transformed[[i, j]] = 0.0;
                             }
@@ -370,19 +461,32 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
                         }
                     }
                 }
+                NormalizationMethod::Robust => {
+                    for i in 0..chunk.shape()[0] {
+                        for j in 0..chunk.shape()[1] {
+                            // Robust scaling: (x - median) / IQR
+                            if stats.iqr[j] > 1e-10 {
+                                transformed[[i, j]] =
+                                    (chunk[[i, j]] - stats.median[j]) / stats.iqr[j];
+                            } else {
+                                transformed[[i, j]] = 0.0;
+                            }
+                        }
+                    }
+                }
                 _ => {
                     return Err(TransformError::NotImplemented(
-                        "This normalization method is not supported".to_string()
+                        "This normalization method is not supported".to_string(),
                     ));
                 }
             }
-            
+
             writer.write_chunk(&transformed)?;
         }
-        
+
         Ok(writer)
     }
-    
+
     fn get_transform_shape(&self, input_shape: (usize, usize)) -> (usize, usize) {
         input_shape // Normalization doesn't change shape
     }
@@ -397,8 +501,12 @@ pub fn csv_chunks<P: AsRef<Path>>(
     let file = File::open(path).map_err(|e| {
         TransformError::TransformationError(format!("Failed to open CSV file: {}", e))
     })?;
-    
-    Ok(CsvChunkIterator::new(BufReader::new(file), chunk_size, has_header))
+
+    Ok(CsvChunkIterator::new(
+        BufReader::new(file),
+        chunk_size,
+        has_header,
+    ))
 }
 
 /// Iterator that reads CSV in chunks
@@ -422,68 +530,151 @@ impl CsvChunkIterator {
 
 impl Iterator for CsvChunkIterator {
     type Item = Result<Array2<f64>>;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         use std::io::BufRead;
-        
+
         let mut rows = Vec::new();
         let mut n_cols = None;
-        
+
         for line_result in (&mut self.reader).lines().take(self.chunk_size) {
             let line = match line_result {
                 Ok(l) => l,
                 Err(e) => return Some(Err(TransformError::IoError(e))),
             };
-            
+
             // Skip header if needed
             if self.skip_header && !self.header_skipped {
                 self.header_skipped = true;
                 continue;
             }
-            
+
             // Parse CSV line
             let values: Result<Vec<f64>> = line
                 .split(',')
-                .map(|s| s.trim().parse::<f64>()
-                    .map_err(|e| TransformError::ParseError(
-                        format!("Failed to parse number: {}", e)
-                    )))
+                .map(|s| {
+                    s.trim().parse::<f64>().map_err(|e| {
+                        TransformError::ParseError(format!("Failed to parse number: {}", e))
+                    })
+                })
                 .collect();
-            
+
             let values = match values {
                 Ok(v) => v,
                 Err(e) => return Some(Err(e)),
             };
-            
+
             // Check column consistency
             if let Some(nc) = n_cols {
                 if values.len() != nc {
                     return Some(Err(TransformError::InvalidInput(
-                        "Inconsistent number of columns in CSV".to_string()
+                        "Inconsistent number of columns in CSV".to_string(),
                     )));
                 }
             } else {
                 n_cols = Some(values.len());
             }
-            
+
             rows.push(values);
         }
-        
+
         if rows.is_empty() {
             return None;
         }
-        
+
         // Convert to Array2
         let n_rows = rows.len();
         let n_cols = n_cols.unwrap();
         let mut array = Array2::zeros((n_rows, n_cols));
-        
+
         for (i, row) in rows.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
                 array[[i, j]] = val;
             }
         }
-        
+
         Some(Ok(array))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::Array;
+
+    #[test]
+    fn test_out_of_core_robust_scaling() {
+        // Create test data with known quantiles
+        let data = vec![
+            Array::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap(),
+            Array::from_shape_vec((3, 2), vec![4.0, 40.0, 5.0, 50.0, 6.0, 60.0]).unwrap(),
+            Array::from_shape_vec((3, 2), vec![7.0, 70.0, 8.0, 80.0, 9.0, 90.0]).unwrap(),
+        ];
+
+        // Create chunks iterator
+        let chunks = data.into_iter().map(|chunk| Ok(chunk));
+
+        // Fit robust normalizer
+        let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust, 0);
+        normalizer.fit_chunks(chunks).unwrap();
+
+        // Check that statistics were computed
+        let stats = normalizer.stats.as_ref().unwrap();
+        assert_eq!(stats.median.len(), 2);
+        assert_eq!(stats.iqr.len(), 2);
+
+        // For the first column: [1,2,3,4,5,6,7,8,9]
+        // Median should be around 5.0, IQR should be around 4.0 (Q3=7.5, Q1=2.5)
+        assert!((stats.median[0] - 5.0).abs() < 1.0); // Allow some approximation error
+        assert!(stats.iqr[0] > 0.0);
+
+        // For the second column: [10,20,30,40,50,60,70,80,90]
+        // Median should be around 50.0, IQR should be around 40.0
+        assert!((stats.median[1] - 50.0).abs() < 10.0); // Allow some approximation error
+        assert!(stats.iqr[1] > 0.0);
+    }
+
+    #[test]
+    fn test_out_of_core_robust_transform() {
+        // Create simple test data
+        let fit_data = vec![
+            Array::from_shape_vec((2, 1), vec![1.0, 2.0]).unwrap(),
+            Array::from_shape_vec((2, 1), vec![3.0, 4.0]).unwrap(),
+            Array::from_shape_vec((1, 1), vec![5.0]).unwrap(),
+        ];
+
+        let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust, 0);
+        normalizer
+            .fit_chunks(fit_data.into_iter().map(|chunk| Ok(chunk)))
+            .unwrap();
+
+        // Transform new data
+        let transform_data = vec![Array::from_shape_vec((2, 1), vec![3.0, 6.0]).unwrap()];
+
+        let result = normalizer.transform_chunks(transform_data.into_iter().map(|chunk| Ok(chunk)));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_out_of_core_normalizer_not_fitted() {
+        let normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust, 0);
+        let data = vec![Array::zeros((2, 2))];
+
+        let result = normalizer.transform_chunks(data.into_iter().map(|chunk| Ok(chunk)));
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not been fitted"));
+    }
+
+    #[test]
+    fn test_out_of_core_empty_chunks() {
+        let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust, 0);
+        let empty_chunks: Vec<Result<Array2<f64>>> = vec![];
+
+        let result = normalizer.fit_chunks(empty_chunks.into_iter());
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("No chunks provided"));
     }
 }

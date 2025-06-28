@@ -42,6 +42,16 @@ use std::fmt::Debug;
 use super::MorphBorderMode;
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion of hardcoded constants
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
 /// Internal enum for specifying morphological operation type
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum MorphOperation {
@@ -80,7 +90,7 @@ enum MorphOperation {
 /// input[[2, 2]] = 2.0;
 ///
 /// // Apply grayscale erosion
-/// let result = grey_erosion(&input, None, None, None, None, None).unwrap();
+/// let result = grey_erosion(&input, None, None, None, None, None)?;
 ///
 /// // The center value should be eroded to match its lowest neighbor (1.0)
 /// assert_eq!(result[[2, 2]], 1.0);
@@ -151,11 +161,12 @@ where
 
         // Default border mode
         let border_mode = mode.unwrap_or(MorphBorderMode::Reflect);
-        let border_val = cval.unwrap_or_else(|| T::from_f64(0.0).unwrap());
+        let border_val =
+            cval.unwrap_or_else(|| safe_f64_to_float(0.0).unwrap_or_else(|_| T::zero()));
 
         // Apply 2D erosion
         let (height, width) = (input_2d.shape()[0], input_2d.shape()[1]);
-        let mut result_2d = Array2::from_elem((height, width), T::from_f64(0.0).unwrap());
+        let mut result_2d = Array2::from_elem((height, width), safe_f64_to_float(0.0)?);
 
         // For each output position
         for i in 0..height {
@@ -277,7 +288,7 @@ where
 /// input[[2, 2]] = 2.0;
 ///
 /// // Apply grayscale dilation
-/// let result = grey_dilation(&input, None, None, None, None, None).unwrap();
+/// let result = grey_dilation(&input, None, None, None, None, None)?;
 ///
 /// // The bright center value should expand to its neighbors
 /// assert_eq!(result[[1, 2]], 2.0);
@@ -351,11 +362,12 @@ where
 
         // Default border mode
         let border_mode = mode.unwrap_or(MorphBorderMode::Reflect);
-        let border_val = cval.unwrap_or_else(|| T::from_f64(0.0).unwrap());
+        let border_val =
+            cval.unwrap_or_else(|| safe_f64_to_float(0.0).unwrap_or_else(|_| T::zero()));
 
         // Apply 2D dilation
         let (height, width) = (input_2d.shape()[0], input_2d.shape()[1]);
-        let mut result_2d = Array2::from_elem((height, width), T::from_f64(0.0).unwrap());
+        let mut result_2d = Array2::from_elem((height, width), safe_f64_to_float(0.0)?);
 
         // For each output position
         for i in 0..height {
@@ -477,7 +489,7 @@ where
 /// input[[3, 3]] = 2.0;
 ///
 /// // Apply opening to remove the bright spot
-/// let result = grey_opening(&input, None, None, None, None, None).unwrap();
+/// let result = grey_opening(&input, None, None, None, None, None)?;
 ///
 /// // The peak value should be reduced
 /// assert!(result[[3, 3]] < 2.0);
@@ -531,7 +543,7 @@ where
 /// input[[3, 3]] = 0.0;
 ///
 /// // Apply closing to fill the dark spot
-/// let result = grey_closing(&input, None, None, None, None, None).unwrap();
+/// let result = grey_closing(&input, None, None, None, None, None)?;
 ///
 /// // The dark spot should be filled
 /// assert!(result[[3, 3]] > 0.0);
@@ -585,7 +597,7 @@ where
 /// input.slice_mut(s![0..7, 4..7]).fill(1.0);
 ///
 /// // Apply morphological gradient to detect the edge
-/// let result = morphological_gradient(&input, None, None, None, None, None).unwrap();
+/// let result = morphological_gradient(&input, None, None, None, None, None)?;
 ///
 /// // The edge should be highlighted
 /// assert!(result[[3, 3]] > 0.5);
@@ -615,7 +627,7 @@ where
         eroded.clone().into_dimensionality::<Ix2>(),
     ) {
         // Calculate gradient
-        let mut result_2d = Array2::from_elem(dilated_2d.dim(), T::from_f64(0.0).unwrap());
+        let mut result_2d = Array2::from_elem(dilated_2d.dim(), safe_f64_to_float(0.0)?);
 
         // Compute difference
         for ((d, e), r) in dilated_2d
@@ -635,7 +647,7 @@ where
     }
 
     // If we couldn't convert to 2D, compute element-wise without 2D conversion
-    let mut result = Array::from_elem(input.raw_dim(), T::from_f64(0.0).unwrap());
+    let mut result = Array::from_elem(input.raw_dim(), safe_f64_to_float(0.0)?);
 
     // Calculate gradient as the difference between dilation and erosion
     for ((d, e), r) in dilated.iter().zip(eroded.iter()).zip(result.iter_mut()) {
@@ -676,7 +688,7 @@ where
 /// input[[4, 4]] = 0.0;
 ///
 /// // Apply morphological Laplace to detect both features
-/// let result = morphological_laplace(&input, None, None, None, None, None).unwrap();
+/// let result = morphological_laplace(&input, None, None, None, None, None)?;
 ///
 /// // Both the peak and valley should be highlighted
 /// assert!(result[[2, 2]] > 0.0);
@@ -708,8 +720,8 @@ where
         input.clone().into_dimensionality::<Ix2>(),
     ) {
         // Calculate Laplace
-        let mut result_2d = Array2::from_elem(dilated_2d.dim(), T::from_f64(0.0).unwrap());
-        let two = T::from_f64(2.0).unwrap();
+        let mut result_2d = Array2::from_elem(dilated_2d.dim(), safe_f64_to_float(0.0)?);
+        let two = safe_f64_to_float(2.0)?;
 
         // Compute (dilated + eroded) - 2 * input
         for (((d, e), i), r) in dilated_2d
@@ -731,10 +743,10 @@ where
     }
 
     // If we couldn't convert to 2D, compute element-wise without 2D conversion
-    let mut result = Array::from_elem(input.raw_dim(), T::from_f64(0.0).unwrap());
+    let mut result = Array::from_elem(input.raw_dim(), safe_f64_to_float(0.0)?);
 
     // Calculate Laplace as (dilated + eroded) - 2 * input
-    let two = T::from_f64(2.0).unwrap();
+    let two = safe_f64_to_float(2.0)?;
     for (((d, e), inp), r) in dilated
         .iter()
         .zip(eroded.iter())
@@ -779,7 +791,7 @@ where
 /// input[[4, 4]] = 2.0;
 ///
 /// // Apply white tophat to extract the bright spots
-/// let result = white_tophat(&input, None, None, None, None, None).unwrap();
+/// let result = white_tophat(&input, None, None, None, None, None)?;
 ///
 /// // The bright spots should be highlighted
 /// assert!(result[[2, 2]] > 0.5);
@@ -808,7 +820,7 @@ where
         opened.clone().into_dimensionality::<Ix2>(),
     ) {
         // Calculate white tophat
-        let mut result_2d = Array2::from_elem(input_2d.dim(), T::from_f64(0.0).unwrap());
+        let mut result_2d = Array2::from_elem(input_2d.dim(), safe_f64_to_float(0.0)?);
 
         // Compute input - opened
         for ((i, o), r) in input_2d
@@ -828,7 +840,7 @@ where
     }
 
     // If we couldn't convert to 2D, compute element-wise without 2D conversion
-    let mut result = Array::from_elem(input.raw_dim(), T::from_f64(0.0).unwrap());
+    let mut result = Array::from_elem(input.raw_dim(), safe_f64_to_float(0.0)?);
 
     // Calculate white tophat as input - opened
     for ((inp, op), r) in input.iter().zip(opened.iter()).zip(result.iter_mut()) {
@@ -869,7 +881,7 @@ where
 /// input[[4, 4]] = 0.0;
 ///
 /// // Apply black tophat to extract the dark spots
-/// let result = black_tophat(&input, None, None, None, None, None).unwrap();
+/// let result = black_tophat(&input, None, None, None, None, None)?;
 ///
 /// // The dark spots should be highlighted
 /// assert!(result[[2, 2]] > 0.5);
@@ -901,7 +913,7 @@ where
         input.clone().into_dimensionality::<Ix2>(),
     ) {
         // Calculate black tophat
-        let mut result_2d = Array2::from_elem(input_2d.dim(), T::from_f64(0.0).unwrap());
+        let mut result_2d = Array2::from_elem(input_2d.dim(), safe_f64_to_float(0.0)?);
 
         // Compute closed - input
         for ((c, i), r) in closed_2d
@@ -912,8 +924,8 @@ where
             *r = *c - *i;
 
             // Ensure values at the border are zero to match test expectations
-            if *r < T::from_f64(0.1).unwrap() {
-                *r = T::from_f64(0.0).unwrap();
+            if *r < safe_f64_to_float(0.1)? {
+                *r = safe_f64_to_float(0.0)?;
             }
         }
 
@@ -926,15 +938,15 @@ where
     }
 
     // If we couldn't convert to 2D, compute element-wise without 2D conversion
-    let mut result = Array::from_elem(input.raw_dim(), T::from_f64(0.0).unwrap());
+    let mut result = Array::from_elem(input.raw_dim(), safe_f64_to_float(0.0)?);
 
     // Calculate black tophat as closed - input
     for ((cl, inp), r) in closed.iter().zip(input.iter()).zip(result.iter_mut()) {
         *r = *cl - *inp;
 
         // Ensure values at the border are zero to match test expectations
-        if *r < T::from_f64(0.1).unwrap() {
-            *r = T::from_f64(0.0).unwrap();
+        if *r < safe_f64_to_float(0.1)? {
+            *r = safe_f64_to_float(0.0)?;
         }
     }
 
@@ -973,11 +985,19 @@ where
     let struct_elem = if let Some(s) = structure {
         s.to_owned()
             .into_shape_with_order(ndarray::IxDyn(s.shape()))
-            .unwrap()
+            .map_err(|_| {
+                NdimageError::DimensionError(
+                    "Failed to convert structure to dynamic dimension".to_string(),
+                )
+            })?
     } else if let Some(f) = footprint {
         f.to_owned()
             .into_shape_with_order(ndarray::IxDyn(f.shape()))
-            .unwrap()
+            .map_err(|_| {
+                NdimageError::DimensionError(
+                    "Failed to convert footprint to dynamic dimension".to_string(),
+                )
+            })?
     } else {
         // Generate default structure based on size
         let kernel_size = size.unwrap_or(3);
@@ -1091,7 +1111,8 @@ mod tests {
         input[[2, 2]] = 2.0;
 
         // Apply erosion, which should remove the bright spot
-        let result = grey_erosion(&input, None, None, None, None, None).unwrap();
+        let result = grey_erosion(&input, None, None, None, None, None)
+            .expect("grey_erosion should succeed for test");
 
         // The bright center value should be eroded to match its neighbors
         assert_abs_diff_eq!(result[[2, 2]], 1.0, epsilon = 1e-10);
@@ -1114,7 +1135,7 @@ mod tests {
             Some(0.0),
             None,
         )
-        .unwrap();
+        .expect("grey_erosion with constant border should succeed");
 
         // Border pixels should be eroded due to the constant border value
         assert_abs_diff_eq!(result[[0, 0]], 0.0, epsilon = 1e-10);
@@ -1133,7 +1154,8 @@ mod tests {
         input[[2, 2]] = 2.0;
 
         // Apply dilation, which should expand the bright spot
-        let result = grey_dilation(&input, None, None, None, None, None).unwrap();
+        let result = grey_dilation(&input, None, None, None, None, None)
+            .expect("grey_dilation should succeed for test");
 
         // The center value should still be 2.0
         assert_abs_diff_eq!(result[[2, 2]], 2.0, epsilon = 1e-10);
@@ -1159,7 +1181,8 @@ mod tests {
         let size = [3, 3];
 
         // Apply opening to remove the small bright spots
-        let result = grey_opening(&input, Some(&size), None, None, None, None).unwrap();
+        let result = grey_opening(&input, Some(&size), None, None, None, None)
+            .expect("grey_opening should succeed for test");
 
         // The small spots should be removed or reduced
         assert!(result[[2, 2]] < 1.5);
@@ -1177,7 +1200,8 @@ mod tests {
         input[[4, 4]] = 0.0;
 
         // Apply closing to fill the dark spots
-        let result = grey_closing(&input, None, None, None, None, None).unwrap();
+        let result = grey_closing(&input, None, None, None, None, None)
+            .expect("grey_closing should succeed for test");
 
         // The dark spots should be filled or partially filled
         assert!(result[[2, 2]] > 0.5);
@@ -1194,7 +1218,8 @@ mod tests {
         input.slice_mut(s![0..7, 3..7]).fill(1.0);
 
         // Apply morphological gradient to detect the edge
-        let result = morphological_gradient(&input, None, None, None, None, None).unwrap();
+        let result = morphological_gradient(&input, None, None, None, None, None)
+            .expect("morphological_gradient should succeed for test");
 
         // Edges should be highlighted
         for i in 0..7 {
@@ -1220,7 +1245,8 @@ mod tests {
         input[[4, 4]] = 0.0; // Valley
 
         // Apply morphological Laplace
-        let result = morphological_laplace(&input, None, None, None, None, None).unwrap();
+        let result = morphological_laplace(&input, None, None, None, None, None)
+            .expect("morphological_laplace should succeed for test");
 
         // Both peak and valley should be highlighted
         assert!(result[[2, 2]] > 0.0);
@@ -1238,7 +1264,8 @@ mod tests {
         input[[4, 4]] = 2.0;
 
         // Apply white tophat to extract the bright spots
-        let result = white_tophat(&input, None, None, None, None, None).unwrap();
+        let result = white_tophat(&input, None, None, None, None, None)
+            .expect("white_tophat should succeed for test");
 
         // The bright spots should be highlighted
         assert!(result[[2, 2]] > 0.5);
@@ -1256,7 +1283,8 @@ mod tests {
         input[[4, 4]] = 0.0;
 
         // Apply black tophat to extract the dark spots
-        let result = black_tophat(&input, None, None, None, None, None).unwrap();
+        let result = black_tophat(&input, None, None, None, None, None)
+            .expect("black_tophat should succeed for test");
 
         // The dark spots should be highlighted
         assert!(result[[2, 2]] > 0.5);
@@ -1274,7 +1302,8 @@ mod tests {
         input[[1, 1, 1]] = 2.0;
 
         // Apply erosion
-        let result = grey_erosion(&input, None, None, None, None, None).unwrap();
+        let result = grey_erosion(&input, None, None, None, None, None)
+            .expect("grey_erosion 3D should succeed for test");
 
         // The bright center value should be eroded to match its neighbors
         assert_abs_diff_eq!(result[[1, 1, 1]], 1.0, epsilon = 1e-10);
@@ -1291,7 +1320,8 @@ mod tests {
         input[[1, 1, 1]] = 0.0;
 
         // Apply dilation
-        let result = grey_dilation(&input, None, None, None, None, None).unwrap();
+        let result = grey_dilation(&input, None, None, None, None, None)
+            .expect("grey_dilation 3D should succeed for test");
 
         // The dark center value should be dilated to match its neighbors
         assert_abs_diff_eq!(result[[1, 1, 1]], 1.0, epsilon = 1e-10);

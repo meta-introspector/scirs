@@ -4,43 +4,41 @@
 //! CUDA, OpenCL, ROCm, and others. Each backend provides a consistent
 //! interface for GPU-accelerated linear algebra operations.
 
+use super::{GpuBackend, GpuBuffer, GpuContext, GpuDeviceInfo, GpuDeviceType};
 use crate::error::{LinalgError, LinalgResult};
-use super::{GpuBackend, GpuContext, GpuDeviceInfo, GpuDeviceType, GpuBuffer};
 use std::collections::HashMap;
 
 /// Placeholder CUDA backend (requires CUDA feature and runtime)
 #[cfg(feature = "cuda")]
 pub mod cuda {
     use super::*;
-    
+
     pub struct CudaBackend {
         initialized: bool,
     }
-    
+
     impl CudaBackend {
         pub fn new() -> LinalgResult<Self> {
             // In a real implementation, this would initialize CUDA runtime
-            Ok(Self {
-                initialized: false,
-            })
+            Ok(Self { initialized: false })
         }
     }
-    
+
     impl GpuBackend for CudaBackend {
         fn name(&self) -> &str {
             "CUDA"
         }
-        
+
         fn is_available(&self) -> bool {
             // In a real implementation, check CUDA runtime availability
             false
         }
-        
+
         fn list_devices(&self) -> LinalgResult<Vec<GpuDeviceInfo>> {
             // In a real implementation, enumerate CUDA devices
             Ok(vec![])
         }
-        
+
         fn create_context(&self, _device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
             Err(LinalgError::ComputationError(
                 "CUDA backend not fully implemented".to_string(),
@@ -53,11 +51,11 @@ pub mod cuda {
 #[cfg(feature = "opencl")]
 pub mod opencl {
     use super::*;
-    
+
     pub struct OpenClBackend {
         platforms: Vec<String>,
     }
-    
+
     impl OpenClBackend {
         pub fn new() -> LinalgResult<Self> {
             // In a real implementation, this would initialize OpenCL
@@ -66,22 +64,22 @@ pub mod opencl {
             })
         }
     }
-    
+
     impl GpuBackend for OpenClBackend {
         fn name(&self) -> &str {
             "OpenCL"
         }
-        
+
         fn is_available(&self) -> bool {
             // In a real implementation, check OpenCL availability
             false
         }
-        
+
         fn list_devices(&self) -> LinalgResult<Vec<GpuDeviceInfo>> {
             // In a real implementation, enumerate OpenCL devices
             Ok(vec![])
         }
-        
+
         fn create_context(&self, _device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
             Err(LinalgError::ComputationError(
                 "OpenCL backend not fully implemented".to_string(),
@@ -94,11 +92,11 @@ pub mod opencl {
 #[cfg(feature = "rocm")]
 pub mod rocm {
     use super::*;
-    
+
     pub struct RocmBackend {
         devices: Vec<String>,
     }
-    
+
     impl RocmBackend {
         pub fn new() -> LinalgResult<Self> {
             // In a real implementation, this would initialize ROCm/HIP
@@ -107,22 +105,22 @@ pub mod rocm {
             })
         }
     }
-    
+
     impl GpuBackend for RocmBackend {
         fn name(&self) -> &str {
             "ROCm"
         }
-        
+
         fn is_available(&self) -> bool {
             // In a real implementation, check ROCm availability
             false
         }
-        
+
         fn list_devices(&self) -> LinalgResult<Vec<GpuDeviceInfo>> {
             // In a real implementation, enumerate ROCm devices
             Ok(vec![])
         }
-        
+
         fn create_context(&self, _device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
             Err(LinalgError::ComputationError(
                 "ROCm backend not fully implemented".to_string(),
@@ -135,11 +133,11 @@ pub mod rocm {
 #[cfg(feature = "metal")]
 pub mod metal {
     use super::*;
-    
+
     pub struct MetalBackend {
         device_registry: HashMap<String, String>,
     }
-    
+
     impl MetalBackend {
         pub fn new() -> LinalgResult<Self> {
             // In a real implementation, this would initialize Metal
@@ -148,22 +146,22 @@ pub mod metal {
             })
         }
     }
-    
+
     impl GpuBackend for MetalBackend {
         fn name(&self) -> &str {
             "Metal"
         }
-        
+
         fn is_available(&self) -> bool {
             // In a real implementation, check Metal availability (macOS/iOS only)
             cfg!(target_os = "macos") || cfg!(target_os = "ios")
         }
-        
+
         fn list_devices(&self) -> LinalgResult<Vec<GpuDeviceInfo>> {
             // In a real implementation, enumerate Metal devices
             Ok(vec![])
         }
-        
+
         fn create_context(&self, _device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
             Err(LinalgError::ComputationError(
                 "Metal backend not fully implemented".to_string(),
@@ -199,22 +197,22 @@ impl GpuBackend for CpuFallbackBackend {
     fn name(&self) -> &str {
         "CPU Fallback"
     }
-    
+
     fn is_available(&self) -> bool {
         true // CPU is always available
     }
-    
+
     fn list_devices(&self) -> LinalgResult<Vec<GpuDeviceInfo>> {
         Ok(vec![self.device_info.clone()])
     }
-    
+
     fn create_context(&self, device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
         if device_id != 0 {
             return Err(LinalgError::ComputationError(
                 "CPU fallback only has one device".to_string(),
             ));
         }
-        
+
         Ok(Box::new(CpuFallbackContext {
             device_info: self.device_info.clone(),
         }))
@@ -230,16 +228,19 @@ impl GpuContext for CpuFallbackContext {
     fn device_info(&self) -> &GpuDeviceInfo {
         &self.device_info
     }
-    
-    fn allocate_buffer<T: Clone + Send + Sync>(&self, size: usize) -> LinalgResult<Box<dyn GpuBuffer<T>>> {
+
+    fn allocate_buffer<T: Clone + Send + Sync>(
+        &self,
+        size: usize,
+    ) -> LinalgResult<Box<dyn GpuBuffer<T>>> {
         Ok(Box::new(CpuBuffer::new(size)))
     }
-    
+
     fn synchronize(&self) -> LinalgResult<()> {
         // CPU operations are always synchronous
         Ok(())
     }
-    
+
     fn available_memory(&self) -> LinalgResult<usize> {
         // Return a reasonable estimate for available system memory
         Ok(self.device_info.total_memory / 2)
@@ -263,23 +264,21 @@ impl<T: Clone + Send + Sync> GpuBuffer<T> for CpuBuffer<T> {
     fn len(&self) -> usize {
         self.data.len()
     }
-    
+
     fn copy_from_host(&mut self, data: &[T]) -> LinalgResult<()> {
         self.data.clear();
         self.data.extend_from_slice(data);
         Ok(())
     }
-    
+
     fn copy_to_host(&self, data: &mut [T]) -> LinalgResult<()> {
         if data.len() != self.data.len() {
-            return Err(LinalgError::ShapeError(
-                "Buffer size mismatch".to_string(),
-            ));
+            return Err(LinalgError::ShapeError("Buffer size mismatch".to_string()));
         }
         data.copy_from_slice(&self.data);
         Ok(())
     }
-    
+
     fn device_ptr(&self) -> *mut std::ffi::c_void {
         self.data.as_ptr() as *mut std::ffi::c_void
     }
@@ -294,7 +293,7 @@ mod tests {
         let backend = CpuFallbackBackend::new();
         assert_eq!(backend.name(), "CPU Fallback");
         assert!(backend.is_available());
-        
+
         let devices = backend.list_devices().unwrap();
         assert_eq!(devices.len(), 1);
         assert_eq!(devices[0].name, "CPU Fallback");
@@ -304,7 +303,7 @@ mod tests {
     fn test_cpu_fallback_context() {
         let backend = CpuFallbackBackend::new();
         let context = backend.create_context(0).unwrap();
-        
+
         assert_eq!(context.device_info().name, "CPU Fallback");
         assert!(context.available_memory().unwrap() > 0);
         assert!(context.synchronize().is_ok());
@@ -314,14 +313,14 @@ mod tests {
     fn test_cpu_buffer() {
         let backend = CpuFallbackBackend::new();
         let context = backend.create_context(0).unwrap();
-        
+
         let mut buffer = context.allocate_buffer::<f32>(10).unwrap();
         assert_eq!(buffer.len(), 0); // Initially empty
-        
+
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         buffer.copy_from_host(&data).unwrap();
         assert_eq!(buffer.len(), 5);
-        
+
         let mut output = vec![0.0; 5];
         buffer.copy_to_host(&mut output).unwrap();
         assert_eq!(output, data);

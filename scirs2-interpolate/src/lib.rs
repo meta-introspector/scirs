@@ -134,8 +134,8 @@ pub mod error;
 pub use error::{InterpolateError, InterpolateResult};
 
 // Common traits and API standards
-pub mod traits;
 pub mod api_standards;
+pub mod traits;
 
 // Interpolation modules
 pub mod adaptive_gp;
@@ -181,12 +181,12 @@ pub mod sparse_grid;
 pub mod spatial;
 pub mod spline;
 pub mod statistical;
+pub mod stress_testing;
 pub mod tension;
 pub mod tensor;
 pub mod timeseries;
 pub mod utils;
 pub mod voronoi;
-pub mod stress_testing;
 
 // Re-exports for convenience
 pub use adaptive_gp::{
@@ -244,25 +244,46 @@ pub use cache_aware::{
     CacheOptimizedStats, CacheSizes,
 };
 pub use constrained::{
-    ConstrainedSpline, Constraint, ConstraintRegion, ConstraintType, FittingMethod,
+    ConstrainedSpline, Constraint, ConstraintRegion, ConstraintSatisfactionSummary, ConstraintType,
+    ConstraintViolationInfo, FittingMethod,
 };
 pub use extrapolation::{
-    make_cubic_extrapolator, make_exponential_extrapolator, make_linear_extrapolator,
-    make_periodic_extrapolator, make_reflection_extrapolator, ExtrapolationMethod,
-    ExtrapolationParameters, Extrapolator,
+    make_adaptive_extrapolator,
+    make_autoregressive_extrapolator,
+    // Advanced extrapolation convenience functions
+    make_confidence_extrapolator,
+    make_cubic_extrapolator,
+    make_ensemble_extrapolator,
+    make_exponential_extrapolator,
+    make_linear_extrapolator,
+    make_periodic_extrapolator,
+    make_reflection_extrapolator,
+    ARFittingMethod,
+    AdaptiveExtrapolationConfig,
+    AdaptiveSelectionCriterion,
+    // Advanced extrapolation
+    AdvancedExtrapolator,
+    AutoregressiveExtrapolationConfig,
+    ConfidenceExtrapolationConfig,
+    ConfidenceExtrapolationResult,
+    EnsembleCombinationStrategy,
+    EnsembleExtrapolationConfig,
+    ExtrapolationMethod,
+    ExtrapolationParameters,
+    Extrapolator,
 };
 pub use fast_bspline::{
-    make_cached_fast_bspline_evaluator, make_fast_bspline_evaluator, 
-    make_fast_bspline_evaluator_owned, FastBSplineEvaluator,
-    TensorProductFastEvaluator,
+    make_cached_fast_bspline_evaluator, make_fast_bspline_evaluator,
+    make_fast_bspline_evaluator_owned, FastBSplineEvaluator, TensorProductFastEvaluator,
 };
 pub use geospatial::{
     make_climate_interpolator, make_elevation_interpolator, CoordinateSystem, GeospatialConfig,
     GeospatialInterpolator, GeospatialResult, InterpolationModel, SpatialStats,
 };
 pub use gpu_accelerated::{
-    get_gpu_device_info, is_gpu_acceleration_available, make_gpu_rbf_interpolator,
-    GpuBatchSplineEvaluator, GpuConfig, GpuDeviceInfo, GpuRBFInterpolator, GpuRBFKernel, GpuStats,
+    get_gpu_device_info, gpu_utils, is_gpu_acceleration_available, make_gpu_rbf_interpolator,
+    GpuBatchSplineEvaluator, GpuConfig, GpuDeviceInfo, GpuKernelConfig, GpuMemoryManager,
+    GpuRBFInterpolator, GpuRBFKernel, GpuStats,
 };
 pub use grid::{
     create_regular_grid, map_grid_to_points, resample_grid_to_grid, resample_to_grid,
@@ -308,8 +329,8 @@ pub use neural_enhanced::{
     NeuralEnhancedInterpolator, NeuralTrainingConfig, TrainingStats,
 };
 pub use numerical_stability::{
-    analyze_interpolation_edge_cases, apply_tikhonov_regularization, assess_matrix_condition, 
-    check_safe_division, early_numerical_warning_system, machine_epsilon, safe_reciprocal, 
+    analyze_interpolation_edge_cases, apply_tikhonov_regularization, assess_matrix_condition,
+    check_safe_division, early_numerical_warning_system, machine_epsilon, safe_reciprocal,
     solve_with_stability_monitoring, BoundaryAnalysis, ConditionReport, EdgeCaseAnalysis,
     StabilityDiagnostics, StabilityLevel,
 };
@@ -347,15 +368,39 @@ pub use sparse_grid::{
     make_sparse_grid_interpolator, GridPoint, MultiIndex, SparseGridBuilder,
     SparseGridInterpolator, SparseGridStats,
 };
-pub use statistical::{
-    make_bayesian_interpolator, make_bootstrap_linear_interpolator, make_median_interpolator,
-    make_robust_interpolator, make_stochastic_interpolator, BayesianConfig, BayesianInterpolator,
-    BootstrapConfig, BootstrapInterpolator, BootstrapResult, QuantileInterpolator,
-    RobustInterpolator, StochasticInterpolator,
-};
 pub use spatial::balltree::BallTree;
 pub use spatial::kdtree::KdTree;
-pub use spline::{make_interp_spline, SplineBoundaryCondition, CubicSpline, CubicSplineBuilder};
+pub use spline::{make_interp_spline, CubicSpline, CubicSplineBuilder, SplineBoundaryCondition};
+pub use statistical::{
+    make_auto_kde_interpolator,
+    make_bayesian_interpolator,
+    make_bootstrap_linear_interpolator,
+    make_decreasing_isotonic_interpolator,
+    make_empirical_bayes_interpolator,
+    make_ensemble_interpolator,
+    make_isotonic_interpolator,
+    make_kde_interpolator,
+    make_kfold_uncertainty,
+    make_loocv_uncertainty,
+    make_median_interpolator,
+    make_robust_interpolator,
+    make_stochastic_interpolator,
+    BayesianConfig,
+    BayesianInterpolator,
+    BootstrapConfig,
+    BootstrapInterpolator,
+    BootstrapResult,
+    CrossValidationUncertainty,
+    EmpiricalBayesInterpolator,
+    EnsembleInterpolator,
+    // Advanced statistical interpolation methods
+    IsotonicInterpolator,
+    KDEInterpolator,
+    KDEKernel,
+    QuantileInterpolator,
+    RobustInterpolator,
+    StochasticInterpolator,
+};
 pub use structured_matrix::{
     create_bspline_band_matrix, solve_band_system, solve_sparse_system,
     solve_structured_least_squares, BandMatrix, CSRMatrix,

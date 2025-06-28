@@ -6,18 +6,74 @@ use super::{pad_array, BorderMode};
 use crate::error::{NdimageError, NdimageResult};
 use scirs2_core::{parallel_ops, CoreError};
 
-/// Apply a gaussian filter to an n-dimensional array of f64 values
+/// Apply a Gaussian filter to an n-dimensional array of f64 values
+///
+/// Gaussian filtering is a fundamental image processing operation that applies a
+/// Gaussian kernel to smooth the input array, reducing noise while preserving
+/// edges better than simple averaging filters.
 ///
 /// # Arguments
 ///
 /// * `input` - Input array to filter
-/// * `sigma` - Standard deviation for Gaussian kernel
-/// * `mode` - Border handling mode (defaults to Reflect)
+/// * `sigma` - Standard deviation for Gaussian kernel (controls smoothing strength)
+/// * `mode` - Border handling mode (defaults to Reflect). Options include:
+///   - `BorderMode::Reflect`: Mirror the input along the boundary
+///   - `BorderMode::Constant`: Use a constant value outside boundaries  
+///   - `BorderMode::Nearest`: Extend the edge values
+///   - `BorderMode::Wrap`: Wrap around periodically
 /// * `truncate` - Truncate the filter at this many standard deviations (defaults to 4.0)
 ///
 /// # Returns
 ///
-/// * `Result<Array<f64, D>>` - Filtered array
+/// * `Result<Array<f64, D>>` - Smoothed array with same shape as input
+///
+/// # Examples
+///
+/// ## Basic 1D smoothing
+/// ```
+/// use ndarray::array;
+/// use scirs2_ndimage::filters::gaussian_filter;
+///
+/// let data = array![1.0, 5.0, 2.0, 8.0, 3.0];
+/// let smoothed = gaussian_filter(&data, 0.8, None, None).unwrap();
+/// // Result will be smoother with reduced sharp transitions
+/// ```
+///
+/// ## 2D image smoothing with different border modes
+/// ```
+/// use ndarray::Array2;
+/// use scirs2_ndimage::filters::{gaussian_filter, BorderMode};
+///
+/// let image = Array2::from_shape_fn((10, 10), |(i, j)| {
+///     ((i * j) as f64).sin()
+/// });
+///
+/// // Light smoothing with reflective boundaries
+/// let smooth1 = gaussian_filter(&image, 1.0, Some(BorderMode::Reflect), None).unwrap();
+///
+/// // Heavy smoothing with constant boundaries  
+/// let smooth2 = gaussian_filter(&image, 3.0, Some(BorderMode::Constant), None).unwrap();
+/// ```
+///
+/// ## 3D volume smoothing
+/// ```
+/// use ndarray::Array3;
+/// use scirs2_ndimage::filters::gaussian_filter;
+///
+/// let volume = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| {
+///     (i + j + k) as f64
+/// });
+///
+/// let smoothed_volume = gaussian_filter(&volume, 2.0, None, None).unwrap();
+/// assert_eq!(smoothed_volume.shape(), volume.shape());
+/// ```
+///
+/// # Performance Notes
+///
+/// - Uses separable filtering for O(n) complexity instead of O(n²) for 2D
+/// - Automatically switches to parallel processing for large arrays
+/// - Kernel size is automatically determined from sigma and truncate parameters
+/// - For σ < 0.5, consider using other smoothing methods for better efficiency
 pub fn gaussian_filter<D>(
     input: &Array<f64, D>,
     sigma: f64,

@@ -8,25 +8,22 @@
 //! - Momentum conservation (Lagrangian systems)
 
 pub mod lie_group;
-pub mod volume_preserving;
 pub mod structure_preserving;
+pub mod volume_preserving;
 
 pub use lie_group::{
-    LieGroupIntegrator, LieAlgebra, ExponentialMap, LieGroupMethod,
-    SO3, SO3Integrator, So3, 
-    SE3, SE3Integrator, Se3,
-    SLn, Sln, GLn, Gln, Sp2n, 
-    HeisenbergGroup, HeisenbergAlgebra
-};
-pub use volume_preserving::{
-    VolumePreservingIntegrator, VolumePreservingMethod, DivergenceFreeFlow, IncompressibleFlow,
-    CircularFlow2D, ABCFlow, DoubleGyre, VolumeChecker,
-    StreamFunction, StuartVortex, TaylorGreenVortex, HamiltonianFlow,
-    ModifiedMidpointIntegrator, VariationalIntegrator, DiscreteGradientIntegrator
+    ExponentialMap, GLn, Gln, HeisenbergAlgebra, HeisenbergGroup, LieAlgebra, LieGroupIntegrator,
+    LieGroupMethod, SE3Integrator, SLn, SO3Integrator, Se3, Sln, So3, Sp2n, SE3, SO3,
 };
 pub use structure_preserving::{
-    StructurePreservingIntegrator, StructurePreservingMethod, ConservationChecker, GeometricInvariant,
-    EnergyPreservingMethod, MomentumPreservingMethod,
-    SplittingIntegrator, EnergyMomentumIntegrator, ConstrainedIntegrator, MultiSymplecticIntegrator,
-    invariants::{EnergyInvariant, LinearMomentumInvariant, AngularMomentumInvariant2D}
+    invariants::{AngularMomentumInvariant2D, EnergyInvariant, LinearMomentumInvariant},
+    ConservationChecker, ConstrainedIntegrator, EnergyMomentumIntegrator, EnergyPreservingMethod,
+    GeometricInvariant, MomentumPreservingMethod, MultiSymplecticIntegrator, SplittingIntegrator,
+    StructurePreservingIntegrator, StructurePreservingMethod,
+};
+pub use volume_preserving::{
+    ABCFlow, CircularFlow2D, DiscreteGradientIntegrator, DivergenceFreeFlow, DoubleGyre,
+    HamiltonianFlow, IncompressibleFlow, ModifiedMidpointIntegrator, StreamFunction, StuartVortex,
+    TaylorGreenVortex, VariationalIntegrator, VolumeChecker, VolumePreservingIntegrator,
+    VolumePreservingMethod,
 };

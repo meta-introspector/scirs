@@ -17,6 +17,51 @@ use std::sync::{Arc, RwLock};
 use super::{BoundaryMode, InterpolationOrder};
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion of hardcoded constants
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
+/// Helper function for safe i32 conversion
+fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
+    T::from_i32(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
+    })
+}
+
+/// Helper function for safe usize conversion
+fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
+    value.to_usize().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert value to usize".to_string())
+    })
+}
+
+/// Helper function for safe isize conversion
+fn safe_to_isize<T: Float>(value: T) -> NdimageResult<isize> {
+    value.to_isize().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert value to isize".to_string())
+    })
+}
+
+/// Helper function for safe i32 conversion
+fn safe_to_i32<T: Float>(value: T) -> NdimageResult<i32> {
+    value
+        .to_i32()
+        .ok_or_else(|| NdimageError::ComputationError("Failed to convert value to i32".to_string()))
+}
+
+/// Helper function for safe usize to float conversion
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
+    T::from_usize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+    })
+}
+
 /// Cache for pre-computed interpolation coefficients
 pub struct CoefficientCache<T> {
     cache: Arc<RwLock<HashMap<CacheKey, Vec<T>>>>,
@@ -38,9 +83,13 @@ impl<T: Float + FromPrimitive + Debug + Clone> CoefficientCache<T> {
     }
 
     /// Get or compute interpolation coefficients
-    pub fn get_coefficients(&self, order: InterpolationOrder, offset: T) -> Vec<T> {
+    pub fn get_coefficients(&self, order: InterpolationOrder, offset: T) -> NdimageResult<Vec<T>> {
         // Quantize offset for caching
-        let offset_quantized = (offset * T::from_i32(1000).unwrap()).to_i32().unwrap();
+        let offset_quantized = (offset * safe_i32_to_float(1000)?)
+            .to_i32()
+            .ok_or_else(|| {
+                NdimageError::ComputationError("Failed to quantize offset for caching".to_string())
+            })?;
         let key = CacheKey {
             order: order as u8,
             offset: offset_quantized,
@@ -48,56 +97,73 @@ impl<T: Float + FromPrimitive + Debug + Clone> CoefficientCache<T> {
 
         // Try to get from cache
         {
-            let cache = self.cache.read().unwrap();
+            let cache = self.cache.read().map_err(|_| {
+                NdimageError::ComputationError(
+                    "Failed to acquire read lock on coefficient cache".to_string(),
+                )
+            })?;
             if let Some(coeffs) = cache.get(&key) {
-                return coeffs.clone();
+                return Ok(coeffs.clone());
             }
         }
 
         // Compute coefficients
-        let coeffs = compute_interpolation_coefficients(order, offset);
+        let coeffs = compute_interpolation_coefficients(order, offset)?;
 
         // Store in cache if not full
         {
-            let mut cache = self.cache.write().unwrap();
+            let mut cache = self.cache.write().map_err(|_| {
+                NdimageError::ComputationError(
+                    "Failed to acquire write lock on coefficient cache".to_string(),
+                )
+            })?;
             if cache.len() < self.max_entries {
                 cache.insert(key, coeffs.clone());
             }
         }
 
-        coeffs
+        Ok(coeffs)
     }
 
     /// Clear the cache
-    pub fn clear(&self) {
-        self.cache.write().unwrap().clear();
+    pub fn clear(&self) -> NdimageResult<()> {
+        self.cache
+            .write()
+            .map_err(|_| {
+                NdimageError::ComputationError(
+                    "Failed to acquire write lock to clear cache".to_string(),
+                )
+            })?
+            .clear();
+        Ok(())
     }
 }
 
 /// Compute interpolation coefficients for a given order and offset
-fn compute_interpolation_coefficients<T>(order: InterpolationOrder, offset: T) -> Vec<T>
+fn compute_interpolation_coefficients<T>(
+    order: InterpolationOrder,
+    offset: T,
+) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive,
 {
     match order {
-        InterpolationOrder::Nearest => vec![T::one()],
-        InterpolationOrder::Linear => {
-            vec![T::one() - offset, offset]
-        }
+        InterpolationOrder::Nearest => Ok(vec![T::one()]),
+        InterpolationOrder::Linear => Ok(vec![T::one() - offset, offset]),
         InterpolationOrder::Cubic => {
             // Cubic interpolation coefficients (Catmull-Rom)
             let t = offset;
             let t2 = t * t;
             let t3 = t2 * t;
 
-            vec![
-                T::from_f64(-0.5).unwrap() * t3 + t2 - T::from_f64(0.5).unwrap() * t,
-                T::from_f64(1.5).unwrap() * t3 - T::from_f64(2.5).unwrap() * t2 + T::one(),
-                T::from_f64(-1.5).unwrap() * t3
-                    + T::from_f64(2.0).unwrap() * t2
-                    + T::from_f64(0.5).unwrap() * t,
-                T::from_f64(0.5).unwrap() * t3 - T::from_f64(0.5).unwrap() * t2,
-            ]
+            Ok(vec![
+                safe_f64_to_float(-0.5)? * t3 + t2 - safe_f64_to_float(0.5)? * t,
+                safe_f64_to_float(1.5)? * t3 - safe_f64_to_float(2.5)? * t2 + T::one(),
+                safe_f64_to_float(-1.5)? * t3
+                    + safe_f64_to_float(2.0)? * t2
+                    + safe_f64_to_float(0.5)? * t,
+                safe_f64_to_float(0.5)? * t3 - safe_f64_to_float(0.5)? * t2,
+            ])
         }
         InterpolationOrder::Spline => {
             // B-spline coefficients (order 5)
@@ -107,7 +173,7 @@ where
 }
 
 /// Compute B-spline coefficients
-fn compute_bspline_coefficients<T>(order: usize, offset: T) -> Vec<T>
+fn compute_bspline_coefficients<T>(order: usize, offset: T) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive,
 {
@@ -122,42 +188,42 @@ where
         let t5 = t4 * t;
 
         // Pre-computed B-spline basis functions
-        coeffs[0] = T::from_f64(1.0 / 120.0).unwrap()
-            * (-t5 + T::from_f64(5.0).unwrap() * t4 - T::from_f64(10.0).unwrap() * t3
-                + T::from_f64(10.0).unwrap() * t2
-                - T::from_f64(5.0).unwrap() * t
+        coeffs[0] = safe_f64_to_float(1.0 / 120.0)?
+            * (-t5 + safe_f64_to_float(5.0)? * t4 - safe_f64_to_float(10.0)? * t3
+                + safe_f64_to_float(10.0)? * t2
+                - safe_f64_to_float(5.0)? * t
                 + T::one());
-        coeffs[1] = T::from_f64(1.0 / 24.0).unwrap()
-            * (t5 - T::from_f64(2.0).unwrap() * t4 - T::from_f64(3.0).unwrap() * t3
-                + T::from_f64(6.0).unwrap() * t2
-                + T::from_f64(4.0).unwrap() * t
+        coeffs[1] = safe_f64_to_float(1.0 / 24.0)?
+            * (t5 - safe_f64_to_float(2.0)? * t4 - safe_f64_to_float(3.0)? * t3
+                + safe_f64_to_float(6.0)? * t2
+                + safe_f64_to_float(4.0)? * t
                 + T::one());
-        coeffs[2] = T::from_f64(1.0 / 12.0).unwrap()
-            * (-t5 + t4 + T::from_f64(3.0).unwrap() * t3 + T::from_f64(3.0).unwrap() * t2
-                - T::from_f64(3.0).unwrap() * t
+        coeffs[2] = safe_f64_to_float(1.0 / 12.0)?
+            * (-t5 + t4 + safe_f64_to_float(3.0)? * t3 + safe_f64_to_float(3.0)? * t2
+                - safe_f64_to_float(3.0)? * t
                 + T::one());
-        coeffs[3] = T::from_f64(1.0 / 12.0).unwrap()
-            * (t5 - t4 - T::from_f64(3.0).unwrap() * t3
-                + T::from_f64(3.0).unwrap() * t2
-                + T::from_f64(3.0).unwrap() * t
+        coeffs[3] = safe_f64_to_float(1.0 / 12.0)?
+            * (t5 - t4 - safe_f64_to_float(3.0)? * t3
+                + safe_f64_to_float(3.0)? * t2
+                + safe_f64_to_float(3.0)? * t
                 + T::one());
-        coeffs[4] = T::from_f64(1.0 / 24.0).unwrap()
+        coeffs[4] = safe_f64_to_float(1.0 / 24.0)?
             * (-t5
-                + T::from_f64(2.0).unwrap() * t4
-                + T::from_f64(3.0).unwrap() * t3
-                + T::from_f64(6.0).unwrap() * t2
-                - T::from_f64(4.0).unwrap() * t
+                + safe_f64_to_float(2.0)? * t4
+                + safe_f64_to_float(3.0)? * t3
+                + safe_f64_to_float(6.0)? * t2
+                - safe_f64_to_float(4.0)? * t
                 + T::one());
-        coeffs[5] = T::from_f64(1.0 / 120.0).unwrap()
+        coeffs[5] = safe_f64_to_float(1.0 / 120.0)?
             * (t5
-                + T::from_f64(5.0).unwrap() * t4
-                + T::from_f64(10.0).unwrap() * t3
-                + T::from_f64(10.0).unwrap() * t2
-                + T::from_f64(5.0).unwrap() * t
+                + safe_f64_to_float(5.0)? * t4
+                + safe_f64_to_float(10.0)? * t3
+                + safe_f64_to_float(10.0)? * t2
+                + safe_f64_to_float(5.0)? * t
                 + T::one());
     }
 
-    coeffs
+    Ok(coeffs)
 }
 
 /// Optimized 1D interpolation with coefficient caching
@@ -176,18 +242,24 @@ impl<T: Float + FromPrimitive + Debug + Clone> Interpolator1D<T> {
 
     /// Interpolate a single value
     #[inline]
-    pub fn interpolate(&self, data: &ArrayView1<T>, position: T, mode: BoundaryMode, cval: T) -> T {
+    pub fn interpolate(
+        &self,
+        data: &ArrayView1<T>,
+        position: T,
+        mode: BoundaryMode,
+        cval: T,
+    ) -> NdimageResult<T> {
         let n = data.len();
         let idx = position.floor();
         let offset = position - idx;
 
         // Get coefficients
-        let coeffs = self.cache.get_coefficients(self.order, offset);
+        let coeffs = self.cache.get_coefficients(self.order, offset)?;
         let num_coeffs = coeffs.len();
 
         // Compute interpolated value
         let mut result = T::zero();
-        let base_idx = idx.to_isize().unwrap() - ((num_coeffs / 2) as isize - 1);
+        let base_idx = safe_to_isize(idx)? - ((num_coeffs / 2) as isize - 1);
 
         for (i, &coeff) in coeffs.iter().enumerate() {
             let sample_idx = base_idx + i as isize;
@@ -195,7 +267,7 @@ impl<T: Float + FromPrimitive + Debug + Clone> Interpolator1D<T> {
             result = result + coeff * sample_val;
         }
 
-        result
+        Ok(result)
     }
 }
 
@@ -315,15 +387,15 @@ impl<T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static> Interpola
         let xf = x - xi;
 
         // Get coefficients
-        let y_coeffs = self.cache.get_coefficients(self.order, yf);
-        let x_coeffs = self.cache.get_coefficients(self.order, xf);
+        let y_coeffs = self.cache.get_coefficients(self.order, yf)?;
+        let x_coeffs = self.cache.get_coefficients(self.order, xf)?;
 
         let ny = y_coeffs.len();
         let nx = x_coeffs.len();
 
         // Base indices
-        let base_y = yi.to_isize().unwrap() - ((ny / 2) as isize - 1);
-        let base_x = xi.to_isize().unwrap() - ((nx / 2) as isize - 1);
+        let base_y = safe_to_isize(yi)? - ((ny / 2) as isize - 1);
+        let base_x = safe_to_isize(xi)? - ((nx / 2) as isize - 1);
 
         // Perform 2D interpolation
         let mut result = T::zero();
@@ -479,14 +551,10 @@ where
     let cval = cval.unwrap_or_else(T::zero);
 
     let (h, w) = input.dim();
-    let new_h = (T::from_usize(h).unwrap() * zoom_factors[0])
-        .round()
-        .to_usize()
-        .unwrap();
-    let new_w = (T::from_usize(w).unwrap() * zoom_factors[1])
-        .round()
-        .to_usize()
-        .unwrap();
+    let new_h = (safe_usize_to_float(h)? * zoom_factors[0]).round();
+    let new_h = safe_to_usize(new_h)?;
+    let new_w = (safe_usize_to_float(w)? * zoom_factors[1]).round();
+    let new_w = safe_to_usize(new_w)?;
 
     let mut output = Array2::zeros((new_h, new_w));
 
@@ -499,10 +567,14 @@ where
 
         let process_row = |&row: &usize| -> Result<Vec<T>, scirs2_core::CoreError> {
             let mut row_data = Vec::with_capacity(new_w);
-            let y = T::from_usize(row).unwrap() / zoom_factors[0];
+            let y = safe_usize_to_float(row)
+                .map_err(|e| scirs2_core::CoreError::General(e.to_string()))?
+                / zoom_factors[0];
 
             for col in 0..new_w {
-                let x = T::from_usize(col).unwrap() / zoom_factors[1];
+                let x = safe_usize_to_float(col)
+                    .map_err(|e| scirs2_core::CoreError::General(e.to_string()))?
+                    / zoom_factors[1];
                 let val = interpolator.interpolate_single(input.view(), y, x, mode, cval)?;
                 row_data.push(val);
             }
@@ -521,10 +593,10 @@ where
     } else {
         // Sequential processing
         for row in 0..new_h {
-            let y = T::from_usize(row).unwrap() / zoom_factors[0];
+            let y = safe_usize_to_float(row)? / zoom_factors[0];
 
             for col in 0..new_w {
-                let x = T::from_usize(col).unwrap() / zoom_factors[1];
+                let x = safe_usize_to_float(col)? / zoom_factors[1];
                 output[[row, col]] =
                     interpolator.interpolate_single(input.view(), y, x, mode, cval)?;
             }
@@ -561,23 +633,30 @@ mod tests {
 
         // Test exact positions
         assert_eq!(
-            interpolator.interpolate(&data.view(), 0.0, BoundaryMode::Constant, 0.0),
+            interpolator
+                .interpolate(&data.view(), 0.0, BoundaryMode::Constant, 0.0)
+                .expect("interpolation at exact position should succeed"),
             1.0
         );
         assert_eq!(
-            interpolator.interpolate(&data.view(), 1.0, BoundaryMode::Constant, 0.0),
+            interpolator
+                .interpolate(&data.view(), 1.0, BoundaryMode::Constant, 0.0)
+                .expect("interpolation at exact position should succeed"),
             2.0
         );
 
         // Test interpolated position
-        let result = interpolator.interpolate(&data.view(), 1.5, BoundaryMode::Constant, 0.0);
+        let result = interpolator
+            .interpolate(&data.view(), 1.5, BoundaryMode::Constant, 0.0)
+            .expect("interpolation should succeed");
         assert!((result - 2.5).abs() < 1e-10);
     }
 
     #[test]
     fn test_zoom_optimized() {
         let input = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
-        let result = zoom_optimized(&input, &[2.0, 2.0], None, None, None).unwrap();
+        let result = zoom_optimized(&input, &[2.0, 2.0], None, None, None)
+            .expect("zoom_optimized should succeed for test");
 
         assert_eq!(result.shape(), &[4, 4]);
 

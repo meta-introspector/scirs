@@ -162,16 +162,16 @@ where
 
         let trace = a11 + a22;
         let det = a11 * a22 - a12 * a21;
-        let four = F::from(4.0).ok_or_else(|| LinalgError::ComputationError(
-            "Failed to convert 4.0 to target type".to_string()
-        ))?;
+        let four = F::from(4.0).ok_or_else(|| {
+            LinalgError::ComputationError("Failed to convert 4.0 to target type".to_string())
+        })?;
         let discriminant = trace * trace - four * det;
 
         if discriminant >= F::zero() {
             let sqrt_disc = discriminant.sqrt();
-            let two = F::from(2.0).ok_or_else(|| LinalgError::ComputationError(
-                "Failed to convert 2.0 to target type".to_string()
-            ))?;
+            let two = F::from(2.0).ok_or_else(|| {
+                LinalgError::ComputationError("Failed to convert 2.0 to target type".to_string())
+            })?;
             let lambda1 = (trace + sqrt_disc) / two;
             let lambda2 = (trace - sqrt_disc) / two;
 
@@ -232,7 +232,7 @@ where
 }
 
 /// Ultra-precision symmetric eigenvalue solver using advanced numerical techniques
-/// 
+///
 /// This function implements multiple advanced techniques to achieve 1e-10+ accuracy:
 /// - Kahan summation for numerically stable arithmetic
 /// - Enhanced Rayleigh quotient iteration with multiple precision passes
@@ -247,10 +247,10 @@ where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
 {
     let n = a.nrows();
-    
+
     // Use symmetric eigenvalue solver as initial approximation
     let (mut eigenvalues, mut eigenvectors) = eigh(a, None)?;
-    
+
     // Adaptive tolerance based on matrix condition
     let condition_estimate = estimate_condition_number(a);
     let adaptive_tolerance = if condition_estimate > F::from(1e12).unwrap() {
@@ -258,85 +258,93 @@ where
     } else {
         tolerance
     };
-    
+
     // Enhanced iterative refinement with multiple precision passes
     let max_iterations = 50; // More iterations for ultra-precision
     let mut converged = false;
-    
+
     for iter in 0..max_iterations {
         let mut max_residual = F::zero();
         let mut improvement_made = false;
-        
+
         for i in 0..n {
             // Enhanced Rayleigh quotient iteration with Kahan summation
             let v = eigenvectors.column(i);
             let lambda = eigenvalues[i];
-            
+
             // Compute Av using compensated summation (Kahan algorithm)
             let av = kahan_matrix_vector_product(a, &v);
-            
+
             // Enhanced residual computation: Av - λv
             let lambda_v = v.mapv(|x| x * lambda);
             let residual = kahan_vector_subtraction(&av, &lambda_v);
             let residual_norm = kahan_dot_product(&residual, &residual).sqrt();
-            
+
             if residual_norm > max_residual {
                 max_residual = residual_norm;
             }
-            
+
             // Multiple-precision Rayleigh quotient refinement
             let vt_av = kahan_dot_product(&v.to_owned(), &av);
             let vt_v = kahan_dot_product(&v.to_owned(), &v.to_owned());
-            
+
             if vt_v > F::epsilon() {
                 let new_eigenvalue = vt_av / vt_v;
-                
+
                 // Newton's method correction for final precision
-                let correction = newton_eigenvalue_correction(a, &v.to_owned(), new_eigenvalue, adaptive_tolerance);
+                let correction = newton_eigenvalue_correction(
+                    a,
+                    &v.to_owned(),
+                    new_eigenvalue,
+                    adaptive_tolerance,
+                );
                 let corrected_eigenvalue = new_eigenvalue + correction;
-                
+
                 if (corrected_eigenvalue - eigenvalues[i]).abs() > F::epsilon() {
                     eigenvalues[i] = corrected_eigenvalue;
                     improvement_made = true;
                 }
             }
-            
+
             // Enhanced inverse iteration for eigenvector refinement
             if residual_norm > adaptive_tolerance {
-                let refined_vector = enhanced_inverse_iteration(a, lambda, &v.to_owned(), adaptive_tolerance)?;
+                let refined_vector =
+                    enhanced_inverse_iteration(a, lambda, &v.to_owned(), adaptive_tolerance)?;
                 eigenvectors.column_mut(i).assign(&refined_vector);
                 improvement_made = true;
             }
         }
-        
+
         // Enhanced Gram-Schmidt orthogonalization with multiple passes
         if improvement_made {
             enhanced_gram_schmidt_orthogonalization(&mut eigenvectors, adaptive_tolerance);
         }
-        
+
         // Check convergence with strict criteria
         if max_residual < adaptive_tolerance && !improvement_made {
             converged = true;
             break;
         }
-        
+
         // Additional convergence check: verify eigenvalue equation
         if iter % 5 == 4 {
-            let verification_passed = verify_eigenvalue_accuracy(a, &eigenvalues, &eigenvectors, adaptive_tolerance);
+            let verification_passed =
+                verify_eigenvalue_accuracy(a, &eigenvalues, &eigenvectors, adaptive_tolerance);
             if verification_passed {
                 converged = true;
                 break;
             }
         }
     }
-    
+
     if !converged {
         eprintln!("Warning: Ultra-precision eigenvalue solver did not fully converge to desired tolerance");
     }
-    
+
     // Final verification and sorting
-    let (sorted_eigenvalues, sorted_eigenvectors) = sort_eigenvalues_and_vectors(eigenvalues, eigenvectors);
-    
+    let (sorted_eigenvalues, sorted_eigenvectors) =
+        sort_eigenvalues_and_vectors(eigenvalues, eigenvectors);
+
     Ok((sorted_eigenvalues, sorted_eigenvectors))
 }
 
@@ -351,12 +359,12 @@ where
     // For non-symmetric matrices, this is a simplified implementation
     // In a full implementation, this would use advanced QR algorithm with shifts
     // and handle complex eigenvalues properly
-    
+
     // Check if matrix is nearly symmetric within tolerance
     let n = a.nrows();
     let mut nearly_symmetric = true;
     let symmetry_tolerance = tolerance * F::from(10.0).unwrap();
-    
+
     for i in 0..n {
         for j in i + 1..n {
             if (a[[i, j]] - a[[j, i]]).abs() > symmetry_tolerance {
@@ -368,7 +376,7 @@ where
             break;
         }
     }
-    
+
     if nearly_symmetric {
         // Treat as symmetric with enhanced precision
         ultra_precision_symmetric_eigensolver(a, tolerance)
@@ -388,21 +396,21 @@ where
 {
     let n = a.nrows();
     let mut result = Array1::zeros(n);
-    
+
     for i in 0..n {
         let mut sum = F::zero();
         let mut compensation = F::zero();
-        
+
         for j in 0..a.ncols() {
             let term = a[[i, j]] * v[j] - compensation;
             let new_sum = sum + term;
             compensation = (new_sum - sum) - term;
             sum = new_sum;
         }
-        
+
         result[i] = sum;
     }
-    
+
     result
 }
 
@@ -421,54 +429,49 @@ where
 {
     let mut sum = F::zero();
     let mut compensation = F::zero();
-    
+
     for (ai, bi) in a.iter().zip(b.iter()) {
         let term = (*ai) * (*bi) - compensation;
         let new_sum = sum + term;
         compensation = (new_sum - sum) - term;
         sum = new_sum;
     }
-    
+
     sum
 }
 
 /// Newton's method for eigenvalue correction to achieve ultra-high precision
-fn newton_eigenvalue_correction<F>(
-    a: &ArrayView2<F>,
-    v: &Array1<F>,
-    lambda: F,
-    tolerance: F,
-) -> F
+fn newton_eigenvalue_correction<F>(a: &ArrayView2<F>, v: &Array1<F>, lambda: F, tolerance: F) -> F
 where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand,
 {
     let max_newton_iterations = 5;
     let mut correction = F::zero();
-    
+
     for _ in 0..max_newton_iterations {
         // Compute f(λ) = v^T * (A - λI) * v
         let av = a.dot(v);
         let lambda_v = v.mapv(|x| x * lambda);
         let residual = &av - &lambda_v;
         let f_lambda = v.dot(&residual);
-        
+
         if f_lambda.abs() < tolerance * F::from(0.01).unwrap() {
             break;
         }
-        
+
         // Compute derivative f'(λ) = -v^T * v
         let f_prime = -v.dot(v);
-        
+
         if f_prime.abs() > F::epsilon() {
             let delta = f_lambda / f_prime;
             correction += delta;
-            
+
             if delta.abs() < tolerance * F::from(0.1).unwrap() {
                 break;
             }
         }
     }
-    
+
     correction
 }
 
@@ -484,19 +487,19 @@ where
 {
     let n = a.nrows();
     let mut refined_v = v.clone();
-    
+
     // Create (A - λI)
     let mut shifted_matrix = a.to_owned();
     for i in 0..n {
         shifted_matrix[[i, i]] -= lambda;
     }
-    
+
     // Add regularization for numerical stability
     let regularization = tolerance * F::from(1e-6).unwrap();
     for i in 0..n {
         shifted_matrix[[i, i]] += regularization;
     }
-    
+
     // Solve (A - λI + εI) * y = v for improved eigenvector
     if let Ok(y) = crate::solve::solve(&shifted_matrix.view(), &refined_v.view(), None) {
         // Normalize the result
@@ -505,20 +508,18 @@ where
             refined_v = y / norm;
         }
     }
-    
+
     Ok(refined_v)
 }
 
 /// Enhanced Gram-Schmidt orthogonalization with multiple passes
-fn enhanced_gram_schmidt_orthogonalization<F>(
-    vectors: &mut Array2<F>,
-    tolerance: F,
-) where
+fn enhanced_gram_schmidt_orthogonalization<F>(vectors: &mut Array2<F>, tolerance: F)
+where
     F: Float + NumAssign + Sum,
 {
     let n = vectors.ncols();
     let num_passes = 3; // Multiple passes for better orthogonality
-    
+
     for _pass in 0..num_passes {
         for i in 0..n {
             // Orthogonalize against all previous vectors
@@ -526,16 +527,16 @@ fn enhanced_gram_schmidt_orthogonalization<F>(
                 let vi = vectors.column(i).to_owned();
                 let vj = vectors.column(j).to_owned();
                 let proj = kahan_dot_product(&vi, &vj);
-                
+
                 for k in 0..vectors.nrows() {
                     vectors[[k, i]] -= proj * vj[k];
                 }
             }
-            
+
             // Normalize with enhanced precision
             let vi = vectors.column(i).to_owned();
             let norm = kahan_dot_product(&vi, &vi).sqrt();
-            
+
             if norm > tolerance {
                 for k in 0..vectors.nrows() {
                     vectors[[k, i]] /= norm;
@@ -556,21 +557,21 @@ where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand,
 {
     let n = eigenvalues.len();
-    
+
     for i in 0..n {
         let v = eigenvectors.column(i);
         let lambda = eigenvalues[i];
-        
+
         let av = kahan_matrix_vector_product(a, &v);
         let lambda_v = v.mapv(|x| x * lambda);
         let residual = kahan_vector_subtraction(&av, &lambda_v);
         let residual_norm = kahan_dot_product(&residual, &residual).sqrt();
-        
+
         if residual_norm > tolerance {
             return false;
         }
     }
-    
+
     true
 }
 
@@ -584,20 +585,25 @@ where
 {
     let n = eigenvalues.len();
     let mut indices: Vec<usize> = (0..n).collect();
-    
+
     // Sort indices by eigenvalue magnitude (descending)
     indices.sort_by(|&i, &j| {
-        eigenvalues[j].abs().partial_cmp(&eigenvalues[i].abs()).unwrap()
+        eigenvalues[j]
+            .abs()
+            .partial_cmp(&eigenvalues[i].abs())
+            .unwrap()
     });
-    
+
     // Reorder eigenvalues and eigenvectors
     let sorted_eigenvalues = indices.iter().map(|&i| eigenvalues[i]).collect();
     let mut sorted_eigenvectors = Array2::zeros(eigenvectors.raw_dim());
-    
+
     for (new_idx, &old_idx) in indices.iter().enumerate() {
-        sorted_eigenvectors.column_mut(new_idx).assign(&eigenvectors.column(old_idx));
+        sorted_eigenvectors
+            .column_mut(new_idx)
+            .assign(&eigenvectors.column(old_idx));
     }
-    
+
     (sorted_eigenvalues, sorted_eigenvectors)
 }
 
@@ -723,30 +729,58 @@ where
     // Base tolerance
     let hundred = F::from(100.0).unwrap_or_else(|| {
         // Build 100 from ones if conversion fails
-        let ten = F::one() + F::one() + F::one() + F::one() + F::one() 
-                 + F::one() + F::one() + F::one() + F::one() + F::one();
+        let ten = F::one()
+            + F::one()
+            + F::one()
+            + F::one()
+            + F::one()
+            + F::one()
+            + F::one()
+            + F::one()
+            + F::one()
+            + F::one();
         ten * ten
     });
     let base_tol = F::epsilon() * hundred;
 
     // Adjust based on condition number
-    let threshold_1e12 = F::from(1e12).unwrap_or_else(|| F::max_value() / F::from(1000.0).unwrap_or(F::one()));
-    let threshold_1e8 = F::from(1e8).unwrap_or_else(|| F::max_value() / F::from(10000.0).unwrap_or(F::one()));
+    let threshold_1e12 =
+        F::from(1e12).unwrap_or_else(|| F::max_value() / F::from(1000.0).unwrap_or(F::one()));
+    let threshold_1e8 =
+        F::from(1e8).unwrap_or_else(|| F::max_value() / F::from(10000.0).unwrap_or(F::one()));
     let threshold_1e4 = F::from(1e4).unwrap_or_else(|| F::from(10000.0).unwrap_or(F::one()));
-    
+
     if condition_number > threshold_1e12 {
-        base_tol * F::from(1000.0).unwrap_or_else(|| {
-            let ten = F::one() + F::one() + F::one() + F::one() + F::one()
-                     + F::one() + F::one() + F::one() + F::one() + F::one();
-            ten * ten * ten
-        })
+        base_tol
+            * F::from(1000.0).unwrap_or_else(|| {
+                let ten = F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one();
+                ten * ten * ten
+            })
     } else if condition_number > threshold_1e8 {
         base_tol * hundred
     } else if condition_number > threshold_1e4 {
-        base_tol * F::from(10.0).unwrap_or_else(|| {
-            F::one() + F::one() + F::one() + F::one() + F::one()
-            + F::one() + F::one() + F::one() + F::one() + F::one()
-        })
+        base_tol
+            * F::from(10.0).unwrap_or_else(|| {
+                F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+                    + F::one()
+            })
     } else {
         base_tol
     }

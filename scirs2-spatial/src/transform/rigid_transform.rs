@@ -275,7 +275,9 @@ impl RigidTransform {
     /// ```
     pub fn apply(&self, point: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
         if point.len() != 3 {
-            return Err(SpatialError::DimensionError("Point must have 3 elements".to_string()));
+            return Err(SpatialError::DimensionError(
+                "Point must have 3 elements".to_string(),
+            ));
         }
 
         // Apply rotation then translation
@@ -307,7 +309,9 @@ impl RigidTransform {
     /// ```
     pub fn apply_multiple(&self, points: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
         if points.ncols() != 3 {
-            return Err(SpatialError::DimensionError("Each point must have 3 elements".to_string()));
+            return Err(SpatialError::DimensionError(
+                "Each point must have 3 elements".to_string(),
+            ));
         }
 
         let npoints = points.nrows();
@@ -587,12 +591,12 @@ mod tests {
         assert_relative_eq!(matrix[[2, 0]], 0.0, epsilon = 1e-10);
         assert_relative_eq!(matrix[[2, 1]], 0.0, epsilon = 1e-10);
         assert_relative_eq!(matrix[[2, 2]], 1.0, epsilon = 1e-10);
-        
+
         // Check the translation part
         assert_relative_eq!(matrix[[0, 3]], 1.0, epsilon = 1e-10);
         assert_relative_eq!(matrix[[1, 3]], 2.0, epsilon = 1e-10);
         assert_relative_eq!(matrix[[2, 3]], 3.0, epsilon = 1e-10);
-        
+
         // Check the homogeneous row
         assert_relative_eq!(matrix[[3, 0]], 0.0, epsilon = 1e-10);
         assert_relative_eq!(matrix[[3, 1]], 0.0, epsilon = 1e-10);
@@ -665,17 +669,17 @@ mod tests {
 
         // Check that we get the correct transformed points
         assert_eq!(transformed.shape(), points.shape());
-        
+
         // [1, 0, 0] -> [0, 1, 0] -> [1, 3, 3]
         assert_relative_eq!(transformed[[0, 0]], 1.0, epsilon = 1e-10);
         assert_relative_eq!(transformed[[0, 1]], 3.0, epsilon = 1e-10);
         assert_relative_eq!(transformed[[0, 2]], 3.0, epsilon = 1e-10);
-        
+
         // [0, 1, 0] -> [-1, 0, 0] -> [0, 2, 3]
         assert_relative_eq!(transformed[[1, 0]], 0.0, epsilon = 1e-10);
         assert_relative_eq!(transformed[[1, 1]], 2.0, epsilon = 1e-10);
         assert_relative_eq!(transformed[[1, 2]], 3.0, epsilon = 1e-10);
-        
+
         // [0, 0, 1] -> [0, 0, 1] -> [1, 2, 4]
         assert_relative_eq!(transformed[[2, 0]], 1.0, epsilon = 1e-10);
         assert_relative_eq!(transformed[[2, 1]], 2.0, epsilon = 1e-10);

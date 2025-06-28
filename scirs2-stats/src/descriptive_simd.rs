@@ -6,7 +6,7 @@
 use crate::error::StatsResult;
 use ndarray::{ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
-use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities, AutoOptimizer};
+use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 
 /// Calculate the mean of an array using SIMD operations when available
 ///
@@ -40,13 +40,13 @@ where
 {
     if x.is_empty() {
         return Err(crate::error::StatsError::invalid_argument(
-            "Cannot compute mean of empty array"
+            "Cannot compute mean of empty array",
         ));
     }
-    
+
     let n = x.len();
     let optimizer = AutoOptimizer::new();
-    
+
     // Let the optimizer decide the best approach
     let sum = if optimizer.should_use_simd(n) {
         // Use SIMD operations for sum
@@ -55,7 +55,7 @@ where
         // Fallback to scalar sum for small arrays
         x.iter().fold(F::zero(), |acc, &val| acc + val)
     };
-    
+
     Ok(sum / F::from(n).unwrap())
 }
 
@@ -80,23 +80,23 @@ where
     let n = x.len();
     if n <= ddof {
         return Err(crate::error::StatsError::invalid_argument(
-            "Not enough data points for the given degrees of freedom"
+            "Not enough data points for the given degrees of freedom",
         ));
     }
-    
+
     // First compute the mean
     let mean = mean_simd(x)?;
-    
+
     // Use SIMD to compute sum of squared deviations
     let optimizer = AutoOptimizer::new();
-    
+
     let sum_sq_dev = if optimizer.should_use_simd(n) {
         // Create a constant array filled with mean for SIMD subtraction
         let mean_array = ndarray::Array1::from_elem(x.len(), mean);
-        
+
         // Compute (x - mean)
         let deviations = F::simd_sub(&x.view(), &mean_array.view());
-        
+
         // Compute (x - mean)² using element-wise multiplication
         let squared_devs = F::simd_mul(&deviations.view(), &deviations.view());
         F::simd_sum(&squared_devs.view())
@@ -109,7 +109,7 @@ where
             })
             .fold(F::zero(), |acc, val| acc + val)
     };
-    
+
     Ok(sum_sq_dev / F::from(n - ddof).unwrap())
 }
 
@@ -143,39 +143,37 @@ where
 /// # Returns
 ///
 /// * A tuple containing (mean, variance, min, max)
-pub fn descriptive_stats_simd<F, D>(
-    x: &ArrayBase<D, Ix1>
-) -> StatsResult<(F, F, F, F)>
+pub fn descriptive_stats_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F)>
 where
     F: Float + NumCast + SimdUnifiedOps,
     D: Data<Elem = F>,
 {
     if x.is_empty() {
         return Err(crate::error::StatsError::invalid_argument(
-            "Cannot compute statistics of empty array"
+            "Cannot compute statistics of empty array",
         ));
     }
-    
+
     let n = x.len();
     let capabilities = PlatformCapabilities::detect();
     let optimizer = AutoOptimizer::new();
-    
+
     if optimizer.should_use_simd(n) && capabilities.simd_available {
         // Use SIMD operations for all statistics
         let sum = F::simd_sum(&x.view());
         let mean = sum / F::from(n).unwrap();
-        
+
         // For min/max, we use element reduction operations
         let min = F::simd_min_element(&x.view());
         let max = F::simd_max_element(&x.view());
-        
+
         // Variance calculation
         let mean_array = ndarray::Array1::from_elem(x.len(), mean);
         let deviations = F::simd_sub(&x.view(), &mean_array.view());
         let squared_devs = F::simd_mul(&deviations.view(), &deviations.view());
         let sum_sq_dev = F::simd_sum(&squared_devs.view());
         let variance = sum_sq_dev / F::from(n - 1).unwrap();
-        
+
         Ok((mean, variance, min, max))
     } else {
         // Scalar fallback with single-pass algorithm
@@ -183,7 +181,7 @@ where
         let mut sum_sq = F::zero();
         let mut min = x[0];
         let mut max = x[0];
-        
+
         for &val in x.iter() {
             sum = sum + val;
             sum_sq = sum_sq + val * val;
@@ -194,10 +192,10 @@ where
                 max = val;
             }
         }
-        
+
         let mean = sum / F::from(n).unwrap();
         let variance = (sum_sq - sum * sum / F::from(n).unwrap()) / F::from(n - 1).unwrap();
-        
+
         Ok((mean, variance, min, max))
     }
 }
@@ -205,16 +203,16 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
-    
+    use ndarray::array;
+
     #[test]
     fn test_mean_simd() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let result = mean_simd(&data.view()).unwrap();
         assert_relative_eq!(result, 4.5, epsilon = 1e-10);
     }
-    
+
     #[test]
     fn test_variance_simd() {
         let data = array![2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
@@ -222,27 +220,27 @@ mod tests {
         // Expected variance with ddof=1 is 4.0
         assert_relative_eq!(result, 4.0, epsilon = 1e-10);
     }
-    
+
     #[test]
     fn test_descriptive_stats_simd() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let (mean, var, min, max) = descriptive_stats_simd(&data.view()).unwrap();
-        
+
         assert_relative_eq!(mean, 3.0, epsilon = 1e-10);
-        assert_relative_eq!(var, 2.5, epsilon = 1e-10);  // Sample variance
+        assert_relative_eq!(var, 2.5, epsilon = 1e-10); // Sample variance
         assert_relative_eq!(min, 1.0, epsilon = 1e-10);
         assert_relative_eq!(max, 5.0, epsilon = 1e-10);
     }
-    
+
     #[test]
     fn test_simd_consistency() {
         // Test that SIMD and scalar paths produce identical results
         let data = array![1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9];
-        
+
         // Compare with non-SIMD version
         let simd_mean = mean_simd(&data.view()).unwrap();
         let scalar_mean = crate::mean(&data.view()).unwrap();
-        
+
         assert_relative_eq!(simd_mean, scalar_mean, epsilon = 1e-10);
     }
 }

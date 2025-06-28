@@ -24,7 +24,7 @@ const DEFAULT_MAX_CACHE_SIZE: u64 = 500 * 1024 * 1024;
 const CACHE_DIR_ENV: &str = "SCIRS2_CACHE_DIR";
 
 /// Compute SHA256 hash of a file
-fn sha256_hash_file(path: &Path) -> std::result::Result<String, String> {
+pub fn sha256_hash_file(path: &Path) -> std::result::Result<String, String> {
     use sha2::{Digest, Sha256};
 
     let mut file = File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;

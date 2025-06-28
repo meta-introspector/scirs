@@ -4,12 +4,12 @@
 //! natural gradients, advanced exploration strategies, and meta-learning approaches.
 
 use crate::error::Result;
-use crate::reinforcement::{RLAgent, ExperienceBatch, LossInfo};
 use crate::reinforcement::policy::PolicyNetwork;
 use crate::reinforcement::value::ValueNetwork;
+use crate::reinforcement::{ExperienceBatch, LossInfo, RLAgent};
 use ndarray::prelude::*;
-use std::collections::HashMap;
 use num_traits::Float;
+use std::collections::HashMap;
 
 /// Natural Policy Gradients (NPG) implementation
 pub struct NaturalPolicyGradient {
@@ -72,7 +72,7 @@ impl NaturalPolicyGradient {
     ) -> Result<Self> {
         let policy = PolicyNetwork::new(state_dim, action_dim, hidden_sizes.clone(), continuous)?;
         let value_function = ValueNetwork::new(state_dim, 1, hidden_sizes)?;
-        
+
         Ok(Self {
             policy,
             value_function,
@@ -81,85 +81,95 @@ impl NaturalPolicyGradient {
             experience_buffer: Vec::new(),
         })
     }
-    
+
     /// Compute Generalized Advantage Estimation (GAE)
     fn compute_gae(&self, rewards: &[f32], values: &[f32], dones: &[bool]) -> Vec<f32> {
         let mut advantages = vec![0.0; rewards.len()];
         let mut gae = 0.0;
-        
+
         for t in (0..rewards.len()).rev() {
-            let next_value = if t == rewards.len() - 1 { 0.0 } else { values[t + 1] };
-            let delta = rewards[t] + self.config.gamma * next_value * (1.0 - dones[t] as u8 as f32) - values[t];
-            gae = delta + self.config.gamma * self.config.lambda * (1.0 - dones[t] as u8 as f32) * gae;
+            let next_value = if t == rewards.len() - 1 {
+                0.0
+            } else {
+                values[t + 1]
+            };
+            let delta = rewards[t] + self.config.gamma * next_value * (1.0 - dones[t] as u8 as f32)
+                - values[t];
+            gae = delta
+                + self.config.gamma * self.config.lambda * (1.0 - dones[t] as u8 as f32) * gae;
             advantages[t] = gae;
         }
-        
+
         advantages
     }
-    
+
     /// Estimate Fisher Information Matrix (simplified)
     fn estimate_fisher_information(&mut self, batch: &ExperienceBatch) -> Result<Array2<f32>> {
         let batch_size = batch.states.shape()[0];
-        
+
         // For simplicity, we'll create a diagonal Fisher matrix
         // In practice, this would involve computing second derivatives of the log-policy
         let num_params = 100; // Simplified parameter count
         let mut fisher = Array2::eye(num_params);
-        
+
         // Add some structure based on policy gradients
         for i in 0..batch_size.min(self.config.fisher_batch_size) {
             let state = batch.states.row(i);
             let action = batch.actions.row(i);
-            
+
             // Compute log probability and its gradient (simplified)
             let log_prob = self.policy.log_prob(&state, &action)?;
-            
+
             // In a full implementation, we'd compute the outer product of gradients
             // For now, we'll just add some diagonal entries
             for j in 0..num_params.min(state.len()) {
                 fisher[[j, j]] += log_prob.abs() * 0.01;
             }
         }
-        
+
         // Add damping
         for i in 0..num_params {
             fisher[[i, i]] += self.config.fisher_damping;
         }
-        
+
         Ok(fisher)
     }
-    
+
     /// Conjugate Gradient method to solve Fx = g for natural gradient
-    fn conjugate_gradient(&self, fisher: &Array2<f32>, gradient: &Array1<f32>) -> Result<Array1<f32>> {
+    fn conjugate_gradient(
+        &self,
+        fisher: &Array2<f32>,
+        gradient: &Array1<f32>,
+    ) -> Result<Array1<f32>> {
         let n = gradient.len();
         let mut x = Array1::zeros(n);
         let mut r = gradient.clone();
         let mut p = r.clone();
         let mut rsold = r.dot(&r);
-        
+
         for _ in 0..self.config.cg_iterations {
             let ap = fisher.dot(&p);
             let alpha = rsold / p.dot(&ap);
             x = x + alpha * &p;
             r = r - alpha * &ap;
             let rsnew = r.dot(&r);
-            
+
             if rsnew.sqrt() < self.config.cg_tolerance {
                 break;
             }
-            
+
             let beta = rsnew / rsold;
             p = &r + beta * &p;
             rsold = rsnew;
         }
-        
+
         Ok(x)
     }
-    
+
     /// Update using Natural Policy Gradients
     pub fn update_npg(&mut self, batch: &ExperienceBatch) -> Result<LossInfo> {
         let batch_size = batch.states.shape()[0];
-        
+
         // Compute value predictions
         let mut values = Vec::new();
         for i in 0..batch_size {
@@ -167,33 +177,33 @@ impl NaturalPolicyGradient {
             let value = self.value_function.predict(&state)?;
             values.push(value);
         }
-        
+
         // Compute advantages using GAE
         let advantages = self.compute_gae(&batch.rewards.to_vec(), &values, &batch.dones.to_vec());
-        
+
         // Compute policy gradient
         let mut policy_gradient = Array1::zeros(100); // Simplified
         for (i, &advantage) in advantages.iter().enumerate() {
             let state = batch.states.row(i);
             let action = batch.actions.row(i);
             let log_prob = self.policy.log_prob(&state, &action)?;
-            
+
             // Accumulate gradient (simplified)
             for j in 0..policy_gradient.len().min(state.len()) {
                 policy_gradient[j] += log_prob * advantage * state[j];
             }
         }
         policy_gradient /= batch_size as f32;
-        
+
         // Estimate Fisher Information Matrix
         let fisher = self.estimate_fisher_information(batch)?;
-        
+
         // Compute natural gradient using conjugate gradient
         let natural_gradient = self.conjugate_gradient(&fisher, &policy_gradient)?;
-        
+
         // Update policy parameters (simplified)
         let policy_loss = policy_gradient.dot(&natural_gradient);
-        
+
         // Update value function
         let mut value_loss = 0.0;
         for (i, &advantage) in advantages.iter().enumerate() {
@@ -204,12 +214,15 @@ impl NaturalPolicyGradient {
             value_loss += error * error;
         }
         value_loss /= batch_size as f32;
-        
+
         let mut metrics = HashMap::new();
         metrics.insert("policy_loss".to_string(), policy_loss);
         metrics.insert("value_loss".to_string(), value_loss);
-        metrics.insert("avg_advantage".to_string(), advantages.iter().sum::<f32>() / advantages.len() as f32);
-        
+        metrics.insert(
+            "avg_advantage".to_string(),
+            advantages.iter().sum::<f32>() / advantages.len() as f32,
+        );
+
         Ok(LossInfo {
             policy_loss: Some(policy_loss),
             value_loss: Some(value_loss),
@@ -224,17 +237,17 @@ impl RLAgent for NaturalPolicyGradient {
     fn act(&self, observation: &ArrayView1<f32>, _training: bool) -> Result<Array1<f32>> {
         self.policy.sample_action(observation)
     }
-    
+
     fn update(&mut self, batch: &ExperienceBatch) -> Result<LossInfo> {
         self.experience_buffer.push(batch.clone());
         self.update_npg(batch)
     }
-    
+
     fn save(&self, path: &str) -> Result<()> {
         std::fs::create_dir_all(std::path::Path::new(path).parent().unwrap())?;
         Ok(())
     }
-    
+
     fn load(&mut self, path: &str) -> Result<()> {
         Ok(())
     }
@@ -298,27 +311,39 @@ pub struct ForwardModel {
 }
 
 impl ForwardModel {
-    pub fn new(state_dim: usize, action_dim: usize, feature_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+    pub fn new(
+        state_dim: usize,
+        action_dim: usize,
+        feature_dim: usize,
+        hidden_sizes: Vec<usize>,
+    ) -> Result<Self> {
         let feature_encoder = ValueNetwork::new(state_dim, feature_dim, hidden_sizes.clone())?;
-        let dynamics_network = ValueNetwork::new(feature_dim + action_dim, feature_dim, hidden_sizes)?;
-        
+        let dynamics_network =
+            ValueNetwork::new(feature_dim + action_dim, feature_dim, hidden_sizes)?;
+
         Ok(Self {
             feature_encoder,
             dynamics_network,
         })
     }
-    
+
     /// Predict next state features
-    pub fn predict(&self, state_features: &ArrayView1<f32>, action: &ArrayView1<f32>) -> Result<Array1<f32>> {
+    pub fn predict(
+        &self,
+        state_features: &ArrayView1<f32>,
+        action: &ArrayView1<f32>,
+    ) -> Result<Array1<f32>> {
         // Concatenate state features and action
         let mut input = Array1::zeros(state_features.len() + action.len());
-        input.slice_mut(s![..state_features.len()]).assign(state_features);
+        input
+            .slice_mut(s![..state_features.len()])
+            .assign(state_features);
         input.slice_mut(s![state_features.len()..]).assign(action);
-        
+
         let predicted_features = self.dynamics_network.predict(&input.view())?;
         Ok(Array1::from_vec(vec![predicted_features])) // Simplified
     }
-    
+
     /// Encode state to features
     pub fn encode_state(&self, state: &ArrayView1<f32>) -> Result<Array1<f32>> {
         let features = self.feature_encoder.predict(state)?;
@@ -335,19 +360,25 @@ pub struct InverseModel {
 impl InverseModel {
     pub fn new(feature_dim: usize, action_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
         let action_predictor = ValueNetwork::new(feature_dim * 2, action_dim, hidden_sizes)?;
-        
-        Ok(Self {
-            action_predictor,
-        })
+
+        Ok(Self { action_predictor })
     }
-    
+
     /// Predict action from state features
-    pub fn predict_action(&self, state_features: &ArrayView1<f32>, next_state_features: &ArrayView1<f32>) -> Result<Array1<f32>> {
+    pub fn predict_action(
+        &self,
+        state_features: &ArrayView1<f32>,
+        next_state_features: &ArrayView1<f32>,
+    ) -> Result<Array1<f32>> {
         // Concatenate current and next state features
         let mut input = Array1::zeros(state_features.len() + next_state_features.len());
-        input.slice_mut(s![..state_features.len()]).assign(state_features);
-        input.slice_mut(s![state_features.len()..]).assign(next_state_features);
-        
+        input
+            .slice_mut(s![..state_features.len()])
+            .assign(state_features);
+        input
+            .slice_mut(s![state_features.len()..])
+            .assign(next_state_features);
+
         let predicted_action = self.action_predictor.predict(&input.view())?;
         Ok(Array1::from_vec(vec![predicted_action])) // Simplified
     }
@@ -369,7 +400,7 @@ impl RunningStats {
             var: 1.0,
         }
     }
-    
+
     pub fn update(&mut self, value: f32) {
         self.count += 1;
         let delta = value - self.mean;
@@ -377,7 +408,7 @@ impl RunningStats {
         let delta2 = value - self.mean;
         self.var += delta * delta2;
     }
-    
+
     pub fn normalize(&self, value: f32) -> f32 {
         if self.count > 1 {
             let std = (self.var / (self.count - 1) as f32).sqrt();
@@ -399,9 +430,14 @@ impl CuriosityDrivenAgent {
     ) -> Result<Self> {
         let policy = PolicyNetwork::new(state_dim, action_dim, hidden_sizes.clone(), continuous)?;
         let value_function = ValueNetwork::new(state_dim, 1, hidden_sizes.clone())?;
-        let forward_model = ForwardModel::new(state_dim, action_dim, config.feature_dim, hidden_sizes.clone())?;
+        let forward_model = ForwardModel::new(
+            state_dim,
+            action_dim,
+            config.feature_dim,
+            hidden_sizes.clone(),
+        )?;
         let inverse_model = InverseModel::new(config.feature_dim, action_dim, hidden_sizes)?;
-        
+
         Ok(Self {
             policy,
             value_function,
@@ -411,87 +447,100 @@ impl CuriosityDrivenAgent {
             intrinsic_reward_stats: RunningStats::new(),
         })
     }
-    
+
     /// Compute intrinsic reward using forward model prediction error
     pub fn compute_intrinsic_reward(&mut self, batch: &ExperienceBatch) -> Result<Array1<f32>> {
         let batch_size = batch.states.shape()[0];
         let mut intrinsic_rewards = Array1::zeros(batch_size);
-        
+
         for i in 0..batch_size {
             let state = batch.states.row(i);
             let action = batch.actions.row(i);
             let next_state = batch.next_states.row(i);
-            
+
             // Encode states to features
             let state_features = self.forward_model.encode_state(&state)?;
             let next_state_features = self.forward_model.encode_state(&next_state)?;
-            
+
             // Predict next state features
-            let predicted_features = self.forward_model.predict(&state_features.view(), &action)?;
-            
+            let predicted_features = self
+                .forward_model
+                .predict(&state_features.view(), &action)?;
+
             // Compute prediction error as intrinsic reward
-            let error = (&next_state_features - &predicted_features).mapv(|x| x * x).sum().sqrt();
+            let error = (&next_state_features - &predicted_features)
+                .mapv(|x| x * x)
+                .sum()
+                .sqrt();
             intrinsic_rewards[i] = error;
-            
+
             // Update running statistics
             self.intrinsic_reward_stats.update(error);
         }
-        
+
         // Normalize intrinsic rewards
         for reward in intrinsic_rewards.iter_mut() {
             *reward = self.intrinsic_reward_stats.normalize(*reward);
         }
-        
+
         Ok(intrinsic_rewards)
     }
-    
+
     /// Update curiosity models
     pub fn update_curiosity_models(&mut self, batch: &ExperienceBatch) -> Result<(f32, f32)> {
         let batch_size = batch.states.shape()[0];
         let mut forward_loss = 0.0;
         let mut inverse_loss = 0.0;
-        
+
         for i in 0..batch_size {
             let state = batch.states.row(i);
             let action = batch.actions.row(i);
             let next_state = batch.next_states.row(i);
-            
+
             // Encode states
             let state_features = self.forward_model.encode_state(&state)?;
             let next_state_features = self.forward_model.encode_state(&next_state)?;
-            
+
             // Forward model loss
-            let predicted_features = self.forward_model.predict(&state_features.view(), &action)?;
-            let forward_error = (&next_state_features - &predicted_features).mapv(|x| x * x).sum();
+            let predicted_features = self
+                .forward_model
+                .predict(&state_features.view(), &action)?;
+            let forward_error = (&next_state_features - &predicted_features)
+                .mapv(|x| x * x)
+                .sum();
             forward_loss += forward_error;
-            
+
             // Inverse model loss
-            let predicted_action = self.inverse_model.predict_action(&state_features.view(), &next_state_features.view())?;
-            let inverse_error = (&action.to_owned() - &predicted_action).mapv(|x| x * x).sum();
+            let predicted_action = self
+                .inverse_model
+                .predict_action(&state_features.view(), &next_state_features.view())?;
+            let inverse_error = (&action.to_owned() - &predicted_action)
+                .mapv(|x| x * x)
+                .sum();
             inverse_loss += inverse_error;
         }
-        
+
         forward_loss /= batch_size as f32;
         inverse_loss /= batch_size as f32;
-        
+
         Ok((forward_loss, inverse_loss))
     }
-    
+
     /// Update the curiosity-driven agent
     pub fn update_curiosity(&mut self, batch: &ExperienceBatch) -> Result<LossInfo> {
         // Compute intrinsic rewards
         let intrinsic_rewards = self.compute_intrinsic_reward(batch)?;
-        
+
         // Combine extrinsic and intrinsic rewards
         let total_rewards = &batch.rewards + &(intrinsic_rewards * self.config.intrinsic_coeff);
-        
+
         // Create modified batch with total rewards
         let mut modified_batch = batch.clone();
         modified_batch.rewards = total_rewards;
-        
+
         // Update curiosity models
         let (forward_loss, inverse_loss) = self.update_curiosity_models(batch)?;
-        
+
         // Update policy using combined rewards (simplified)
         let mut policy_loss = 0.0;
         for i in 0..batch.states.shape()[0] {
@@ -501,18 +550,24 @@ impl CuriosityDrivenAgent {
             policy_loss -= log_prob * modified_batch.rewards[i];
         }
         policy_loss /= batch.states.shape()[0] as f32;
-        
-        let total_loss = policy_loss + 
-            self.config.forward_loss_coeff * forward_loss + 
-            self.config.feature_loss_coeff * inverse_loss;
-        
+
+        let total_loss = policy_loss
+            + self.config.forward_loss_coeff * forward_loss
+            + self.config.feature_loss_coeff * inverse_loss;
+
         let mut metrics = HashMap::new();
         metrics.insert("policy_loss".to_string(), policy_loss);
         metrics.insert("forward_loss".to_string(), forward_loss);
         metrics.insert("inverse_loss".to_string(), inverse_loss);
-        metrics.insert("avg_intrinsic_reward".to_string(), intrinsic_rewards.mean().unwrap());
-        metrics.insert("avg_extrinsic_reward".to_string(), batch.rewards.mean().unwrap());
-        
+        metrics.insert(
+            "avg_intrinsic_reward".to_string(),
+            intrinsic_rewards.mean().unwrap(),
+        );
+        metrics.insert(
+            "avg_extrinsic_reward".to_string(),
+            batch.rewards.mean().unwrap(),
+        );
+
         Ok(LossInfo {
             policy_loss: Some(policy_loss),
             value_loss: None,
@@ -527,16 +582,16 @@ impl RLAgent for CuriosityDrivenAgent {
     fn act(&self, observation: &ArrayView1<f32>, _training: bool) -> Result<Array1<f32>> {
         self.policy.sample_action(observation)
     }
-    
+
     fn update(&mut self, batch: &ExperienceBatch) -> Result<LossInfo> {
         self.update_curiosity(batch)
     }
-    
+
     fn save(&self, path: &str) -> Result<()> {
         std::fs::create_dir_all(std::path::Path::new(path).parent().unwrap())?;
         Ok(())
     }
-    
+
     fn load(&mut self, path: &str) -> Result<()> {
         Ok(())
     }
@@ -601,9 +656,10 @@ impl MAMLAgent {
         continuous: bool,
         config: MAMLConfig,
     ) -> Result<Self> {
-        let meta_policy = PolicyNetwork::new(state_dim, action_dim, hidden_sizes.clone(), continuous)?;
+        let meta_policy =
+            PolicyNetwork::new(state_dim, action_dim, hidden_sizes.clone(), continuous)?;
         let meta_value = ValueNetwork::new(state_dim, 1, hidden_sizes)?;
-        
+
         Ok(Self {
             meta_policy,
             meta_value,
@@ -611,46 +667,49 @@ impl MAMLAgent {
             task_buffer: Vec::new(),
         })
     }
-    
+
     /// Add task experience for meta-learning
     pub fn add_task_experience(&mut self, task_experience: TaskExperience) {
         self.task_buffer.push(task_experience);
-        
+
         // Keep only recent tasks
         if self.task_buffer.len() > self.config.tasks_per_update * 2 {
             self.task_buffer.remove(0);
         }
     }
-    
+
     /// Inner loop adaptation for a single task
-    fn inner_loop_adaptation(&self, support_batch: &ExperienceBatch) -> Result<(PolicyNetwork, f32)> {
+    fn inner_loop_adaptation(
+        &self,
+        support_batch: &ExperienceBatch,
+    ) -> Result<(PolicyNetwork, f32)> {
         // Clone the meta-policy for adaptation
         let mut adapted_policy = self.meta_policy.clone();
         let mut total_loss = 0.0;
-        
+
         // Perform inner loop updates
         for _ in 0..self.config.inner_steps {
             let mut loss = 0.0;
-            
+
             for i in 0..support_batch.states.shape()[0] {
                 let state = support_batch.states.row(i);
                 let action = support_batch.actions.row(i);
                 let reward = support_batch.rewards[i];
-                
+
                 let log_prob = adapted_policy.log_prob(&state, &action)?;
                 loss -= log_prob * reward; // Simplified policy gradient
             }
-            
+
             loss /= support_batch.states.shape()[0] as f32;
             total_loss += loss;
-            
+
             // In a complete implementation, we would compute gradients and update adapted_policy
             // For now, this is a placeholder
         }
-        
+
         Ok((adapted_policy, total_loss))
     }
-    
+
     /// Meta-update using MAML
     pub fn meta_update(&mut self) -> Result<LossInfo> {
         if self.task_buffer.len() < self.config.tasks_per_update {
@@ -662,45 +721,47 @@ impl MAMLAgent {
                 metrics: HashMap::new(),
             });
         }
-        
+
         let mut meta_gradients = Vec::new();
         let mut total_meta_loss = 0.0;
-        
+
         // Sample tasks for meta-update
-        let task_indices: Vec<usize> = (0..self.config.tasks_per_update.min(self.task_buffer.len())).collect();
-        
+        let task_indices: Vec<usize> =
+            (0..self.config.tasks_per_update.min(self.task_buffer.len())).collect();
+
         for &task_idx in &task_indices {
             let task_exp = &self.task_buffer[task_idx];
-            
+
             // Inner loop adaptation on support set
-            let (adapted_policy, support_loss) = self.inner_loop_adaptation(&task_exp.support_batch)?;
-            
+            let (adapted_policy, support_loss) =
+                self.inner_loop_adaptation(&task_exp.support_batch)?;
+
             // Compute loss on query set using adapted policy
             let mut query_loss = 0.0;
             for i in 0..task_exp.query_batch.states.shape()[0] {
                 let state = task_exp.query_batch.states.row(i);
                 let action = task_exp.query_batch.actions.row(i);
                 let reward = task_exp.query_batch.rewards[i];
-                
+
                 let log_prob = adapted_policy.log_prob(&state, &action)?;
                 query_loss -= log_prob * reward;
             }
             query_loss /= task_exp.query_batch.states.shape()[0] as f32;
-            
+
             total_meta_loss += query_loss;
-            
+
             // In a complete implementation, we would compute second-order gradients here
         }
-        
+
         total_meta_loss /= task_indices.len() as f32;
-        
+
         // Update meta-parameters (simplified)
         // In practice, this would involve computing and applying second-order gradients
-        
+
         let mut metrics = HashMap::new();
         metrics.insert("meta_loss".to_string(), total_meta_loss);
         metrics.insert("num_tasks".to_string(), task_indices.len() as f32);
-        
+
         Ok(LossInfo {
             policy_loss: Some(total_meta_loss),
             value_loss: None,
@@ -709,7 +770,7 @@ impl MAMLAgent {
             metrics,
         })
     }
-    
+
     /// Fast adaptation to a new task
     pub fn fast_adapt(&self, support_batch: &ExperienceBatch) -> Result<PolicyNetwork> {
         let (adapted_policy, _) = self.inner_loop_adaptation(support_batch)?;
@@ -721,18 +782,18 @@ impl RLAgent for MAMLAgent {
     fn act(&self, observation: &ArrayView1<f32>, _training: bool) -> Result<Array1<f32>> {
         self.meta_policy.sample_action(observation)
     }
-    
+
     fn update(&mut self, batch: &ExperienceBatch) -> Result<LossInfo> {
         // For MAML, we expect task experiences rather than regular batches
         // This is a simplified implementation
         self.meta_update()
     }
-    
+
     fn save(&self, path: &str) -> Result<()> {
         std::fs::create_dir_all(std::path::Path::new(path).parent().unwrap())?;
         Ok(())
     }
-    
+
     fn load(&mut self, path: &str) -> Result<()> {
         Ok(())
     }
@@ -742,47 +803,47 @@ impl RLAgent for MAMLAgent {
 mod tests {
     use super::*;
     use ndarray::Array2;
-    
+
     #[test]
     fn test_natural_policy_gradient() {
         let config = NPGConfig::default();
         let npg = NaturalPolicyGradient::new(4, 2, vec![64], true, config).unwrap();
-        
+
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let action = npg.act(&state.view(), true).unwrap();
         assert_eq!(action.len(), 2);
     }
-    
+
     #[test]
     fn test_curiosity_driven_agent() {
         let config = CuriosityConfig::default();
         let agent = CuriosityDrivenAgent::new(4, 2, vec![32], true, config).unwrap();
-        
+
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let action = agent.act(&state.view(), true).unwrap();
         assert_eq!(action.len(), 2);
     }
-    
+
     #[test]
     fn test_maml_agent() {
         let config = MAMLConfig::default();
         let agent = MAMLAgent::new(4, 2, vec![32], true, config).unwrap();
-        
+
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let action = agent.act(&state.view(), true).unwrap();
         assert_eq!(action.len(), 2);
     }
-    
+
     #[test]
     fn test_running_stats() {
         let mut stats = RunningStats::new();
-        
+
         stats.update(1.0);
         stats.update(2.0);
         stats.update(3.0);
-        
+
         assert!((stats.mean - 2.0).abs() < 1e-6);
-        
+
         let normalized = stats.normalize(4.0);
         assert!(normalized > 0.0); // Should be positive since 4.0 > mean
     }

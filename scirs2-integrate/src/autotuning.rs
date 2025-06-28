@@ -244,9 +244,11 @@ impl HardwareDetector {
     fn detect_gpu() -> Option<GpuInfo> {
         // Use scirs2-core's GPU detection functionality
         let detection_result = scirs2_core::gpu::backends::detect_gpu_backends();
-        
+
         // Find the first non-CPU device
-        detection_result.devices.into_iter()
+        detection_result
+            .devices
+            .into_iter()
             .find(|device| device.backend != scirs2_core::gpu::GpuBackend::Cpu)
             .map(|device| GpuInfo {
                 vendor: match device.backend {

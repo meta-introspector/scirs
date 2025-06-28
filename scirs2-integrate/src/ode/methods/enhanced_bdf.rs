@@ -238,7 +238,7 @@ where
 
             // Evaluate function at the current iterate
             let f_eval = f(next_t, y_next.view());
-            
+
             // Initialize residual with c_0 * y_{n+1} term
             let mut residual = y_next.clone() * coeffs[0];
 

@@ -521,7 +521,7 @@ impl BayesianOptimizer {
                     for (i, (low, high)) in self.space.bounds.iter().enumerate() {
                         // For single sample, pick random position in interval
                         let interval_size = (high - low) / n_samples as f64;
-                        let offset = self.rng.gen::<f64>() * interval_size;
+                        let offset = self.rng.random::<f64>() * interval_size;
                         sample[i] = low + offset;
                     }
 

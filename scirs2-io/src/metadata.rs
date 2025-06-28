@@ -5,13 +5,13 @@
 
 use crate::error::{IoError, Result};
 use chrono::{DateTime, Utc};
-use indexmap::{IndexMap, indexmap};
+use indexmap::{indexmap, IndexMap};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet, VecDeque};
+use sha2::{Digest, Sha256};
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
-use sha2::{Sha256, Digest};
 
 /// Standard metadata keys commonly used across scientific data formats
 pub mod standard_keys {
@@ -63,7 +63,14 @@ impl fmt::Display for MetadataValue {
             Self::Float(fl) => write!(f, "{}", fl),
             Self::Boolean(b) => write!(f, "{}", b),
             Self::DateTime(dt) => write!(f, "{}", dt.to_rfc3339()),
-            Self::Array(arr) => write!(f, "[{}]", arr.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(", ")),
+            Self::Array(arr) => write!(
+                f,
+                "[{}]",
+                arr.iter()
+                    .map(|v| v.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
             Self::Object(_) => write!(f, "[object]"),
             Self::Binary(b) => write!(f, "[binary: {} bytes]", b.len()),
         }
@@ -136,7 +143,12 @@ impl Metadata {
     }
 
     /// Set format-specific extension metadata
-    pub fn set_extension(&mut self, format: &str, key: impl Into<String>, value: impl Into<MetadataValue>) {
+    pub fn set_extension(
+        &mut self,
+        format: &str,
+        key: impl Into<String>,
+        value: impl Into<MetadataValue>,
+    ) {
         self.extensions
             .entry(format.to_string())
             .or_insert_with(IndexMap::new)
@@ -154,7 +166,10 @@ impl Metadata {
             self.data.insert(key.clone(), value.clone());
         }
         for (format, ext_data) in &other.extensions {
-            let ext = self.extensions.entry(format.clone()).or_insert_with(IndexMap::new);
+            let ext = self
+                .extensions
+                .entry(format.clone())
+                .or_insert_with(IndexMap::new);
             for (key, value) in ext_data {
                 ext.insert(key.clone(), value.clone());
             }
@@ -171,55 +186,60 @@ impl Metadata {
         match format {
             MetadataFormat::Json => serde_json::to_string_pretty(self)
                 .map_err(|e| IoError::SerializationError(e.to_string())),
-            MetadataFormat::Yaml => serde_yaml::to_string(self)
-                .map_err(|e| IoError::SerializationError(e.to_string())),
-            MetadataFormat::Toml => toml::to_string_pretty(self)
-                .map_err(|e| IoError::SerializationError(e.to_string())),
+            MetadataFormat::Yaml => {
+                serde_yaml::to_string(self).map_err(|e| IoError::SerializationError(e.to_string()))
+            }
+            MetadataFormat::Toml => {
+                toml::to_string_pretty(self).map_err(|e| IoError::SerializationError(e.to_string()))
+            }
         }
     }
 
     /// Load metadata from a file
     pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
         let path = path.as_ref();
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| IoError::Io(e))?;
-        
-        let extension = path.extension()
-            .and_then(|ext| ext.to_str())
-            .unwrap_or("");
-        
+        let content = std::fs::read_to_string(path).map_err(|e| IoError::Io(e))?;
+
+        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
+
         match extension {
             "json" => serde_json::from_str(&content)
                 .map_err(|e| IoError::SerializationError(e.to_string())),
             "yaml" | "yml" => serde_yaml::from_str(&content)
                 .map_err(|e| IoError::SerializationError(e.to_string())),
-            "toml" => toml::from_str(&content)
-                .map_err(|e| IoError::SerializationError(e.to_string())),
-            _ => Err(IoError::UnsupportedFormat(format!("Unknown metadata format: {}", extension))),
+            "toml" => {
+                toml::from_str(&content).map_err(|e| IoError::SerializationError(e.to_string()))
+            }
+            _ => Err(IoError::UnsupportedFormat(format!(
+                "Unknown metadata format: {}",
+                extension
+            ))),
         }
     }
 
     /// Save metadata to a file
     pub fn to_file(&self, path: impl AsRef<Path>) -> Result<()> {
         let path = path.as_ref();
-        let extension = path.extension()
-            .and_then(|ext| ext.to_str())
-            .unwrap_or("");
-        
+        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
+
         let format = match extension {
             "json" => MetadataFormat::Json,
             "yaml" | "yml" => MetadataFormat::Yaml,
             "toml" => MetadataFormat::Toml,
-            _ => return Err(IoError::UnsupportedFormat(format!("Unknown metadata format: {}", extension))),
+            _ => {
+                return Err(IoError::UnsupportedFormat(format!(
+                    "Unknown metadata format: {}",
+                    extension
+                )))
+            }
         };
-        
+
         let content = self.to_format(format)?;
-        std::fs::write(path, content)
-            .map_err(|e| IoError::Io(e))
+        std::fs::write(path, content).map_err(|e| IoError::Io(e))
     }
 
     /// Add processing history entry
-    pub fn add_processing_history(&mut self, entry: ProcessingHistoryEntry) {
+    pub fn add_processing_history(&mut self, entry: ProcessingHistoryEntry) -> Result<()> {
         let history = match self.data.get_mut(standard_keys::PROCESSING_HISTORY) {
             Some(MetadataValue::Array(arr)) => arr,
             _ => {
@@ -227,26 +247,34 @@ impl Metadata {
                     standard_keys::PROCESSING_HISTORY.to_string(),
                     MetadataValue::Array(Vec::new()),
                 );
-                match self.data.get_mut(standard_keys::PROCESSING_HISTORY).unwrap() {
-                    MetadataValue::Array(arr) => arr,
-                    _ => unreachable!(),
+                match self.data.get_mut(standard_keys::PROCESSING_HISTORY) {
+                    Some(MetadataValue::Array(arr)) => arr,
+                    _ => {
+                        return Err(IoError::Other(
+                            "Failed to create processing history array".to_string(),
+                        ))
+                    }
                 }
             }
         };
-        
+
         let entry_obj = indexmap! {
             "timestamp".to_string() => MetadataValue::DateTime(entry.timestamp),
             "operation".to_string() => MetadataValue::String(entry.operation),
             "parameters".to_string() => MetadataValue::Object(entry.parameters),
             "user".to_string() => MetadataValue::String(entry.user.unwrap_or_else(|| "unknown".to_string())),
         };
-        
+
         history.push(MetadataValue::Object(entry_obj));
+        Ok(())
     }
 
     /// Update modification timestamp
     pub fn update_modification_date(&mut self) {
-        self.set(standard_keys::MODIFICATION_DATE, MetadataValue::DateTime(Utc::now()));
+        self.set(
+            standard_keys::MODIFICATION_DATE,
+            MetadataValue::DateTime(Utc::now()),
+        );
     }
 }
 
@@ -269,7 +297,11 @@ impl ProcessingHistoryEntry {
         }
     }
 
-    pub fn with_parameter(mut self, key: impl Into<String>, value: impl Into<MetadataValue>) -> Self {
+    pub fn with_parameter(
+        mut self,
+        key: impl Into<String>,
+        value: impl Into<MetadataValue>,
+    ) -> Self {
         self.parameters.insert(key.into(), value.into());
         self
     }
@@ -338,7 +370,10 @@ impl MetadataSchema {
         // Check required fields
         for field in &self.required_fields {
             if metadata.get(field).is_none() {
-                return Err(IoError::ValidationError(format!("Required field '{}' is missing", field)));
+                return Err(IoError::ValidationError(format!(
+                    "Required field '{}' is missing",
+                    field
+                )));
             }
         }
 
@@ -346,9 +381,10 @@ impl MetadataSchema {
         for (field, expected_type) in &self.field_types {
             if let Some(value) = metadata.get(field) {
                 if !self.validate_type(value, expected_type) {
-                    return Err(IoError::ValidationError(
-                        format!("Field '{}' has incorrect type", field)
-                    ));
+                    return Err(IoError::ValidationError(format!(
+                        "Field '{}' has incorrect type",
+                        field
+                    )));
                 }
             }
         }
@@ -381,38 +417,43 @@ impl MetadataSchema {
             MetadataConstraint::MinValue(field, min) => {
                 if let Some(val) = metadata.get_float(field) {
                     if val < *min {
-                        return Err(IoError::ValidationError(
-                            format!("Field '{}' value {} is less than minimum {}", field, val, min)
-                        ));
+                        return Err(IoError::ValidationError(format!(
+                            "Field '{}' value {} is less than minimum {}",
+                            field, val, min
+                        )));
                     }
                 }
             }
             MetadataConstraint::MaxValue(field, max) => {
                 if let Some(val) = metadata.get_float(field) {
                     if val > *max {
-                        return Err(IoError::ValidationError(
-                            format!("Field '{}' value {} is greater than maximum {}", field, val, max)
-                        ));
+                        return Err(IoError::ValidationError(format!(
+                            "Field '{}' value {} is greater than maximum {}",
+                            field, val, max
+                        )));
                     }
                 }
             }
             MetadataConstraint::Pattern(field, pattern) => {
                 if let Some(val) = metadata.get_string(field) {
-                    let re = regex::Regex::new(pattern)
-                        .map_err(|e| IoError::ValidationError(format!("Invalid regex pattern: {}", e)))?;
+                    let re = regex::Regex::new(pattern).map_err(|e| {
+                        IoError::ValidationError(format!("Invalid regex pattern: {}", e))
+                    })?;
                     if !re.is_match(val) {
-                        return Err(IoError::ValidationError(
-                            format!("Field '{}' value '{}' does not match pattern '{}'", field, val, pattern)
-                        ));
+                        return Err(IoError::ValidationError(format!(
+                            "Field '{}' value '{}' does not match pattern '{}'",
+                            field, val, pattern
+                        )));
                     }
                 }
             }
             MetadataConstraint::OneOf(field, allowed) => {
                 if let Some(val) = metadata.get(field) {
                     if !allowed.contains(val) {
-                        return Err(IoError::ValidationError(
-                            format!("Field '{}' value is not in allowed set", field)
-                        ));
+                        return Err(IoError::ValidationError(format!(
+                            "Field '{}' value is not in allowed set",
+                            field
+                        )));
                     }
                 }
             }
@@ -447,7 +488,11 @@ impl MetadataTransformer {
         output.schema_version = input.schema_version.clone();
 
         for (key, value) in &input.data {
-            let new_key = self.mappings.get(key).cloned().unwrap_or_else(|| key.clone());
+            let new_key = self
+                .mappings
+                .get(key)
+                .cloned()
+                .unwrap_or_else(|| key.clone());
             let new_value = if let Some(transform) = self.transformations.get(key) {
                 transform(value)
             } else {
@@ -486,7 +531,10 @@ pub mod schemas {
             .field_type("start_time", MetadataFieldType::DateTime)
             .field_type("sampling_rate", MetadataFieldType::Float)
             .field_type("units", MetadataFieldType::String)
-            .constraint(MetadataConstraint::MinValue("sampling_rate".to_string(), 0.0))
+            .constraint(MetadataConstraint::MinValue(
+                "sampling_rate".to_string(),
+                0.0,
+            ))
     }
 
     /// Schema for geospatial metadata
@@ -494,7 +542,10 @@ pub mod schemas {
         MetadataSchema::new()
             .require("coordinate_system")
             .field_type("coordinate_system", MetadataFieldType::String)
-            .field_type("bounds", MetadataFieldType::Array(Box::new(MetadataFieldType::Float)))
+            .field_type(
+                "bounds",
+                MetadataFieldType::Array(Box::new(MetadataFieldType::Float)),
+            )
             .field_type("projection", MetadataFieldType::String)
     }
 }
@@ -545,7 +596,7 @@ mod tests {
         metadata.set("title", "Test Dataset");
         metadata.set("version", 1i64);
         metadata.set("temperature", 25.5f64);
-        
+
         assert_eq!(metadata.get_string("title"), Some("Test Dataset"));
         assert_eq!(metadata.get_integer("version"), Some(1));
         assert_eq!(metadata.get_float("temperature"), Some(25.5));
@@ -558,25 +609,25 @@ mod tests {
             .require("version")
             .field_type("version", MetadataFieldType::Integer)
             .constraint(MetadataConstraint::MinValue("version".to_string(), 1.0));
-        
+
         let mut metadata = Metadata::new();
         metadata.set("title", "Test");
         metadata.set("version", 2i64);
-        
+
         assert!(schema.validate(&metadata).is_ok());
     }
 
     #[test]
     fn test_processing_history() {
         let mut metadata = Metadata::new();
-        
+
         let entry = ProcessingHistoryEntry::new("normalize")
             .with_parameter("method", "z-score")
             .with_parameter("mean", 0.0)
             .with_parameter("std", 1.0);
-        
-        metadata.add_processing_history(entry);
-        
+
+        metadata.add_processing_history(entry).unwrap();
+
         let history = metadata.get(standard_keys::PROCESSING_HISTORY);
         assert!(matches!(history, Some(MetadataValue::Array(_))));
     }
@@ -673,7 +724,12 @@ impl MetadataIndex {
     }
 
     /// Search for metadata by date range
-    pub fn search_date_range(&self, field: &str, start: DateTime<Utc>, end: DateTime<Utc>) -> HashSet<String> {
+    pub fn search_date_range(
+        &self,
+        field: &str,
+        start: DateTime<Utc>,
+        end: DateTime<Utc>,
+    ) -> HashSet<String> {
         self.date_index
             .get(field)
             .map(|values| {
@@ -732,7 +788,7 @@ impl MetadataVersionControl {
     pub fn commit(&self, metadata: Metadata, message: impl Into<String>) -> Result<String> {
         let mut history = self.history.write().unwrap();
         let parent_id = history.last().map(|v| v.id.clone());
-        
+
         let version = MetadataVersion {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp: Utc::now(),
@@ -748,11 +804,13 @@ impl MetadataVersionControl {
 
         // Prune old versions if necessary
         if history.len() > self.max_versions {
-            history.drain(0..history.len() - self.max_versions);
+            let keep_count = self.max_versions;
+            let remove_count = history.len() - keep_count;
+            history.drain(0..remove_count);
         }
 
         *self.current.write().unwrap() = metadata;
-        
+
         Ok(version_id)
     }
 
@@ -776,16 +834,20 @@ impl MetadataVersionControl {
         let history = self.history.read().unwrap();
         let v1 = history.iter().find(|v| v.id == version1)?;
         let v2 = history.iter().find(|v| v.id == version2)?;
-        
+
         Some(MetadataDiff::compute(&v1.metadata, &v2.metadata))
     }
 
     /// Rollback to a specific version
     pub fn rollback(&self, version_id: &str) -> Result<()> {
-        let version = self.get_version(version_id)
+        let version = self
+            .get_version(version_id)
             .ok_or_else(|| IoError::NotFound(format!("Version {} not found", version_id)))?;
-        
-        self.commit(version.metadata.clone(), format!("Rollback to {}", version_id))?;
+
+        self.commit(
+            version.metadata.clone(),
+            format!("Rollback to {}", version_id),
+        )?;
         Ok(())
     }
 
@@ -831,7 +893,11 @@ impl MetadataDiff {
             }
         }
 
-        Self { added, removed, modified }
+        Self {
+            added,
+            removed,
+            modified,
+        }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -872,7 +938,11 @@ impl MetadataTemplate {
         self
     }
 
-    pub fn default_value(mut self, field: impl Into<String>, value: impl Into<MetadataValue>) -> Self {
+    pub fn default_value(
+        mut self,
+        field: impl Into<String>,
+        value: impl Into<MetadataValue>,
+    ) -> Self {
         self.defaults.insert(field.into(), value.into());
         self
     }
@@ -891,9 +961,10 @@ impl MetadataTemplate {
         // Apply overrides
         for (key, value) in overrides {
             if !self.overridable.contains(&key) && self.base.data.contains_key(&key) {
-                return Err(IoError::ValidationError(
-                    format!("Field '{}' cannot be overridden", key)
-                ));
+                return Err(IoError::ValidationError(format!(
+                    "Field '{}' cannot be overridden",
+                    key
+                )));
             }
             metadata.set(key, value);
         }
@@ -901,9 +972,10 @@ impl MetadataTemplate {
         // Check required fields
         for field in &self.required {
             if !metadata.data.contains_key(field) {
-                return Err(IoError::ValidationError(
-                    format!("Required field '{}' is missing", field)
-                ));
+                return Err(IoError::ValidationError(format!(
+                    "Required field '{}' is missing",
+                    field
+                )));
             }
         }
 
@@ -932,10 +1004,10 @@ impl MetadataReferenceResolver {
     pub fn register(&self, id: impl Into<String>, metadata: Metadata) -> Result<()> {
         let id = id.into();
         let refs = self.extract_references(&metadata);
-        
+
         self.registry.write().unwrap().insert(id.clone(), metadata);
         self.references.write().unwrap().insert(id, refs);
-        
+
         Ok(())
     }
 
@@ -954,7 +1026,10 @@ impl MetadataReferenceResolver {
                     if let Some(referenced) = registry.get(ref_id) {
                         *value = MetadataValue::Object(referenced.data.clone());
                     } else {
-                        return Err(IoError::NotFound(format!("Reference '{}' not found", ref_id)));
+                        return Err(IoError::NotFound(format!(
+                            "Reference '{}' not found",
+                            ref_id
+                        )));
                     }
                 }
                 MetadataValue::Object(obj) => {
@@ -979,7 +1054,11 @@ impl MetadataReferenceResolver {
         refs
     }
 
-    fn extract_refs_from_value(&self, data: &IndexMap<String, MetadataValue>, refs: &mut HashSet<String>) {
+    fn extract_refs_from_value(
+        &self,
+        data: &IndexMap<String, MetadataValue>,
+        refs: &mut HashSet<String>,
+    ) {
         for value in data.values() {
             match value {
                 MetadataValue::String(s) if s.starts_with("ref:") => {
@@ -1042,45 +1121,52 @@ impl MetadataProvenance {
     }
 
     /// Add a provenance entry
-    pub fn add_entry(&mut self, action: impl Into<String>, agent: impl Into<String>, metadata: &Metadata) {
+    pub fn add_entry(
+        &mut self,
+        action: impl Into<String>,
+        agent: impl Into<String>,
+        metadata: &Metadata,
+    ) {
         let previous_hash = self.chain.last().map(|e| e.data_hash.clone());
-        
+
         let entry = ProvenanceEntry {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp: Utc::now(),
             action: action.into(),
             agent: agent.into(),
-            previous_hash,
+            previous_hash: previous_hash.clone(),
             data_hash: self.compute_hash(metadata, previous_hash.as_deref()),
             metadata_snapshot: Some(metadata.clone()),
         };
-        
+
         self.chain.push(entry);
     }
 
     /// Verify the integrity of the provenance chain
     pub fn verify_chain(&self) -> Result<()> {
         let mut previous_hash: Option<String> = None;
-        
+
         for entry in &self.chain {
             if entry.previous_hash != previous_hash {
-                return Err(IoError::ValidationError(
-                    format!("Provenance chain broken at entry {}", entry.id)
-                ));
+                return Err(IoError::ValidationError(format!(
+                    "Provenance chain broken at entry {}",
+                    entry.id
+                )));
             }
-            
+
             if let Some(metadata) = &entry.metadata_snapshot {
                 let expected_hash = self.compute_hash(metadata, previous_hash.as_deref());
                 if entry.data_hash != expected_hash {
-                    return Err(IoError::ValidationError(
-                        format!("Data hash mismatch at entry {}", entry.id)
-                    ));
+                    return Err(IoError::ValidationError(format!(
+                        "Data hash mismatch at entry {}",
+                        entry.id
+                    )));
                 }
             }
-            
+
             previous_hash = Some(entry.data_hash.clone());
         }
-        
+
         Ok(())
     }
 
@@ -1096,8 +1182,7 @@ impl MetadataProvenance {
 
     /// Export provenance as a verifiable certificate
     pub fn export_certificate(&self) -> Result<String> {
-        serde_json::to_string_pretty(self)
-            .map_err(|e| IoError::SerializationError(e.to_string()))
+        serde_json::to_string_pretty(self).map_err(|e| IoError::SerializationError(e.to_string()))
     }
 }
 
@@ -1129,64 +1214,81 @@ impl MetadataRepository {
         if let Some(metadata) = self.cache.read().unwrap().get(id) {
             return Ok(metadata.clone());
         }
-        
+
         // Fetch from repository
         let url = format!("{}/metadata/{}", self.url, id);
-        let response = self.client.get(&url)
+        let response = self
+            .client
+            .get(&url)
             .send()
             .map_err(|e| IoError::NetworkError(e.to_string()))?;
-        
+
         if !response.status().is_success() {
-            return Err(IoError::NetworkError(
-                format!("Failed to fetch metadata: {}", response.status())
-            ));
+            return Err(IoError::NetworkError(format!(
+                "Failed to fetch metadata: {}",
+                response.status()
+            )));
         }
-        
-        let metadata: Metadata = response.json()
+
+        let metadata: Metadata = response
+            .json()
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
-        
+
         // Update cache
-        self.cache.write().unwrap().insert(id.to_string(), metadata.clone());
-        
+        self.cache
+            .write()
+            .unwrap()
+            .insert(id.to_string(), metadata.clone());
+
         Ok(metadata)
     }
 
     /// Push metadata to repository
     pub fn push(&self, id: &str, metadata: &Metadata) -> Result<()> {
         let url = format!("{}/metadata/{}", self.url, id);
-        let response = self.client.put(&url)
+        let response = self
+            .client
+            .put(&url)
             .json(metadata)
             .send()
             .map_err(|e| IoError::NetworkError(e.to_string()))?;
-        
+
         if !response.status().is_success() {
-            return Err(IoError::NetworkError(
-                format!("Failed to push metadata: {}", response.status())
-            ));
+            return Err(IoError::NetworkError(format!(
+                "Failed to push metadata: {}",
+                response.status()
+            )));
         }
-        
+
         // Update cache
-        self.cache.write().unwrap().insert(id.to_string(), metadata.clone());
-        
+        self.cache
+            .write()
+            .unwrap()
+            .insert(id.to_string(), metadata.clone());
+
         Ok(())
     }
 
     /// Search repository
     pub fn search(&self, query: &str) -> Result<Vec<String>> {
         let url = format!("{}/search?q={}", self.url, urlencoding::encode(query));
-        let response = self.client.get(&url)
+        let response = self
+            .client
+            .get(&url)
             .send()
             .map_err(|e| IoError::NetworkError(e.to_string()))?;
-        
+
         if !response.status().is_success() {
-            return Err(IoError::NetworkError(
-                format!("Search failed: {}", response.status())
-            ));
+            return Err(IoError::NetworkError(format!(
+                "Search failed: {}",
+                response.status()
+            )));
         }
-        
-        let results: Vec<String> = response.json()
+
+        let results: Vec<String> = response
+            .json()
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
-        
+
         Ok(results)
     }
 }
@@ -1201,7 +1303,7 @@ impl MetadataExtractor {
         let mut extractor = Self {
             extractors: HashMap::new(),
         };
-        
+
         // Register default extractors
         extractor.register_defaults();
         extractor
@@ -1209,20 +1311,24 @@ impl MetadataExtractor {
 
     fn register_defaults(&mut self) {
         // Image metadata extractor
-        self.register("image", Box::new(|path| {
-            let mut metadata = Metadata::new();
-            
-            // Use image crate to extract metadata
-            if let Ok(img) = image::open(path) {
-                metadata.set("width", img.width() as i64);
-                metadata.set("height", img.height() as i64);
-                metadata.set("color_type", format!("{:?}", img.color()));
-            }
-            
-            // Extract EXIF data if available
-            if let Ok(file) = std::fs::File::open(path) {
-                if let Ok(exif_reader) = exif::Reader::new() {
-                    if let Ok(exif) = exif_reader.read_from_container(&mut std::io::BufReader::new(file)) {
+        self.register(
+            "image",
+            Box::new(|path| {
+                let mut metadata = Metadata::new();
+
+                // Use image crate to extract metadata
+                if let Ok(img) = image::open(path) {
+                    metadata.set("width", img.width() as i64);
+                    metadata.set("height", img.height() as i64);
+                    metadata.set("color_type", format!("{:?}", img.color()));
+                }
+
+                // Extract EXIF data if available
+                if let Ok(file) = std::fs::File::open(path) {
+                    let exif_reader = exif::Reader::new();
+                    if let Ok(exif) =
+                        exif_reader.read_from_container(&mut std::io::BufReader::new(file))
+                    {
                         for field in exif.fields() {
                             let key = format!("exif.{}", field.tag);
                             let value = field.display_value().to_string();
@@ -1230,83 +1336,99 @@ impl MetadataExtractor {
                         }
                     }
                 }
-            }
-            
-            Ok(metadata)
-        }));
+
+                Ok(metadata)
+            }),
+        );
 
         // Audio metadata extractor
-        self.register("audio", Box::new(|path| {
-            let mut metadata = Metadata::new();
-            
-            // Basic audio file info
-            if let Ok(meta) = std::fs::metadata(path) {
-                metadata.set("file_size", meta.len() as i64);
-                if let Ok(modified) = meta.modified() {
-                    metadata.set("modified", MetadataValue::DateTime(modified.into()));
+        self.register(
+            "audio",
+            Box::new(|path| {
+                let mut metadata = Metadata::new();
+
+                // Basic audio file info
+                if let Ok(meta) = std::fs::metadata(path) {
+                    metadata.set("file_size", meta.len() as i64);
+                    if let Ok(modified) = meta.modified() {
+                        metadata.set("modified", MetadataValue::DateTime(modified.into()));
+                    }
                 }
-            }
-            
-            // Extract audio-specific metadata
-            // This would use audio-specific libraries in a real implementation
-            
-            Ok(metadata)
-        }));
+
+                // Extract audio-specific metadata
+                // This would use audio-specific libraries in a real implementation
+
+                Ok(metadata)
+            }),
+        );
 
         // NetCDF metadata extractor
-        self.register("netcdf", Box::new(|path| {
-            let mut metadata = Metadata::new();
-            
-            // Extract NetCDF global attributes
-            // This would use the netcdf module in a real implementation
-            
-            Ok(metadata)
-        }));
+        self.register(
+            "netcdf",
+            Box::new(|path| {
+                let mut metadata = Metadata::new();
+
+                // Extract NetCDF global attributes
+                // This would use the netcdf module in a real implementation
+
+                Ok(metadata)
+            }),
+        );
     }
 
     /// Register a custom extractor
-    pub fn register(&mut self, format: &str, extractor: Box<dyn Fn(&Path) -> Result<Metadata> + Send + Sync>) {
+    pub fn register(
+        &mut self,
+        format: &str,
+        extractor: Box<dyn Fn(&Path) -> Result<Metadata> + Send + Sync>,
+    ) {
         self.extractors.insert(format.to_string(), extractor);
     }
 
     /// Extract metadata from a file
     pub fn extract(&self, path: impl AsRef<Path>) -> Result<Metadata> {
         let path = path.as_ref();
-        let extension = path.extension()
-            .and_then(|ext| ext.to_str())
-            .unwrap_or("");
-        
+        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
+
         // Determine format from extension
         let format = match extension {
             "png" | "jpg" | "jpeg" | "gif" | "bmp" | "tiff" => "image",
             "wav" | "mp3" | "flac" | "ogg" => "audio",
             "nc" | "nc4" => "netcdf",
             "h5" | "hdf5" => "hdf5",
-            _ => return Err(IoError::UnsupportedFormat(format!("No extractor for format: {}", extension))),
+            _ => {
+                return Err(IoError::UnsupportedFormat(format!(
+                    "No extractor for format: {}",
+                    extension
+                )))
+            }
         };
-        
+
         if let Some(extractor) = self.extractors.get(format) {
             extractor(path)
         } else {
-            Err(IoError::UnsupportedFormat(format!("No extractor for format: {}", format)))
+            Err(IoError::UnsupportedFormat(format!(
+                "No extractor for format: {}",
+                format
+            )))
         }
     }
 
     /// Extract and merge metadata from multiple sources
     pub fn extract_composite(&self, paths: &[impl AsRef<Path>]) -> Result<Metadata> {
         let mut composite = Metadata::new();
-        
+
         for (i, path) in paths.iter().enumerate() {
             let metadata = self.extract(path)?;
-            
+
             // Store each file's metadata under a numbered key
             let key = format!("file_{}", i);
             composite.set(key, MetadataValue::Object(metadata.data));
         }
-        
+
         composite.set("file_count", paths.len() as i64);
         composite.update_modification_date();
-        
+
         Ok(composite)
     }
 }

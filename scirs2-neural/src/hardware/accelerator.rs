@@ -77,37 +77,42 @@ pub struct AcceleratorFeatures {
 pub trait Accelerator: Send + Sync {
     /// Get accelerator type
     fn accelerator_type(&self) -> AcceleratorType;
-    
+
     /// Get device capabilities
     fn capabilities(&self) -> &AcceleratorCapabilities;
-    
+
     /// Initialize the accelerator
     fn initialize(&mut self) -> Result<()>;
-    
+
     /// Check if accelerator is available
     fn is_available(&self) -> bool;
-    
+
     /// Allocate memory on device
     fn allocate(&self, size: usize) -> Result<DeviceBuffer>;
-    
+
     /// Transfer data to device
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer>;
-    
+
     /// Transfer data from device
     fn download(&self, buffer: &DeviceBuffer) -> Result<Array2<f32>>;
-    
+
     /// Execute a kernel
-    fn execute_kernel(&self, kernel: &dyn Kernel, inputs: &[&DeviceBuffer], outputs: &mut [&mut DeviceBuffer]) -> Result<()>;
-    
+    fn execute_kernel(
+        &self,
+        kernel: &dyn Kernel,
+        inputs: &[&DeviceBuffer],
+        outputs: &mut [&mut DeviceBuffer],
+    ) -> Result<()>;
+
     /// Synchronize device
     fn synchronize(&self) -> Result<()>;
-    
+
     /// Get current memory usage
     fn memory_usage(&self) -> Result<MemoryInfo>;
-    
+
     /// Create a compute stream
     fn create_stream(&self) -> Result<ComputeStream>;
-    
+
     /// Profile kernel execution
     fn profile_kernel(&self, kernel: &dyn Kernel) -> Result<ProfilingInfo>;
 }
@@ -132,7 +137,7 @@ impl DeviceBuffer {
     pub fn new(ptr: *mut u8, size: usize, device_id: usize) -> Self {
         static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let id = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        
+
         Self {
             ptr,
             size,
@@ -146,16 +151,16 @@ impl DeviceBuffer {
 pub trait Kernel: Send + Sync {
     /// Get kernel name
     fn name(&self) -> &str;
-    
+
     /// Get kernel source or binary
     fn source(&self) -> KernelSource;
-    
+
     /// Get work dimensions
     fn work_dimensions(&self) -> WorkDimensions;
-    
+
     /// Get memory requirements
     fn memory_requirements(&self) -> KernelMemoryRequirements;
-    
+
     /// Validate inputs
     fn validate_inputs(&self, inputs: &[&DeviceBuffer]) -> Result<()>;
 }
@@ -279,76 +284,74 @@ impl Accelerator for CPUAccelerator {
     fn accelerator_type(&self) -> AcceleratorType {
         AcceleratorType::CPU
     }
-    
+
     fn capabilities(&self) -> &AcceleratorCapabilities {
         &self.capabilities
     }
-    
+
     fn initialize(&mut self) -> Result<()> {
         Ok(())
     }
-    
+
     fn is_available(&self) -> bool {
         true
     }
-    
+
     fn allocate(&self, size: usize) -> Result<DeviceBuffer> {
         let layout = std::alloc::Layout::from_size_align(size, 64)
             .map_err(|e| crate::error::NeuralError::AllocationError(e.to_string()))?;
-        
+
         let ptr = unsafe { std::alloc::alloc(layout) };
         if ptr.is_null() {
-            return Err(crate::error::NeuralError::AllocationError(
-                format!("Failed to allocate {} bytes", size)
-            ));
+            return Err(crate::error::NeuralError::AllocationError(format!(
+                "Failed to allocate {} bytes",
+                size
+            )));
         }
-        
+
         Ok(DeviceBuffer::new(ptr, size, 0))
     }
-    
+
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
-            std::ptr::copy_nonoverlapping(
-                data.as_ptr() as *const u8,
-                buffer.ptr,
-                size,
-            );
+            std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
-    
+
     fn download(&self, buffer: &DeviceBuffer) -> Result<Array2<f32>> {
         // For CPU, we need to know the shape - this is simplified
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1); // Simplified - would need actual shape
-        
+
         let mut data = Array2::zeros(shape);
         unsafe {
-            std::ptr::copy_nonoverlapping(
-                buffer.ptr as *const f32,
-                data.as_mut_ptr(),
-                elements,
-            );
+            std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
-    
-    fn execute_kernel(&self, kernel: &dyn Kernel, _inputs: &[&DeviceBuffer], _outputs: &mut [&mut DeviceBuffer]) -> Result<()> {
+
+    fn execute_kernel(
+        &self,
+        kernel: &dyn Kernel,
+        _inputs: &[&DeviceBuffer],
+        _outputs: &mut [&mut DeviceBuffer],
+    ) -> Result<()> {
         // CPU execution would happen here
         println!("Executing kernel: {} on CPU", kernel.name());
         Ok(())
     }
-    
+
     fn synchronize(&self) -> Result<()> {
         // CPU is always synchronized
         Ok(())
     }
-    
+
     fn memory_usage(&self) -> Result<MemoryInfo> {
         Ok(MemoryInfo {
             total: self.capabilities.total_memory,
@@ -357,7 +360,7 @@ impl Accelerator for CPUAccelerator {
             reserved: 0,
         })
     }
-    
+
     fn create_stream(&self) -> Result<ComputeStream> {
         Ok(ComputeStream {
             handle: std::ptr::null_mut(),
@@ -365,7 +368,7 @@ impl Accelerator for CPUAccelerator {
             device_id: 0,
         })
     }
-    
+
     fn profile_kernel(&self, kernel: &dyn Kernel) -> Result<ProfilingInfo> {
         Ok(ProfilingInfo {
             kernel_name: kernel.name().to_string(),
@@ -397,30 +400,31 @@ impl AcceleratorFactory {
     pub fn create(accelerator_type: AcceleratorType) -> Result<Arc<dyn Accelerator>> {
         match accelerator_type {
             AcceleratorType::CPU => Ok(Arc::new(CPUAccelerator::default())),
-            _ => Err(crate::error::NeuralError::NotImplemented(
-                format!("Accelerator type {:?} not implemented", accelerator_type)
-            )),
+            _ => Err(crate::error::NeuralError::NotImplemented(format!(
+                "Accelerator type {:?} not implemented",
+                accelerator_type
+            ))),
         }
     }
-    
+
     /// List available accelerators
     pub fn list_available() -> Vec<AcceleratorType> {
         let mut available = vec![AcceleratorType::CPU];
-        
+
         // Check for CUDA
         if Self::check_cuda() {
             available.push(AcceleratorType::CUDA);
         }
-        
+
         // Check for Metal (macOS)
         #[cfg(target_os = "macos")]
         {
             available.push(AcceleratorType::Metal);
         }
-        
+
         available
     }
-    
+
     /// Check if CUDA is available
     fn check_cuda() -> bool {
         // Simplified check - would actually check for CUDA runtime
@@ -431,33 +435,33 @@ impl AcceleratorFactory {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_cpu_accelerator() {
         let mut cpu = CPUAccelerator::default();
         assert_eq!(cpu.accelerator_type(), AcceleratorType::CPU);
         assert!(cpu.is_available());
-        
+
         cpu.initialize().unwrap();
-        
+
         let buffer = cpu.allocate(1024).unwrap();
         assert_eq!(buffer.size, 1024);
     }
-    
+
     #[test]
     fn test_accelerator_factory() {
         let available = AcceleratorFactory::list_available();
         assert!(available.contains(&AcceleratorType::CPU));
-        
+
         let cpu = AcceleratorFactory::create(AcceleratorType::CPU).unwrap();
         assert_eq!(cpu.accelerator_type(), AcceleratorType::CPU);
     }
-    
+
     #[test]
     fn test_device_buffer() {
         let ptr = Box::into_raw(Box::new([0u8; 1024])) as *mut u8;
         let buffer = DeviceBuffer::new(ptr, 1024, 0);
-        
+
         assert_eq!(buffer.size, 1024);
         assert_eq!(buffer.device_id, 0);
         assert!(!buffer.ptr.is_null());

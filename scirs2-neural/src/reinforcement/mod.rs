@@ -3,31 +3,35 @@
 //! This module provides reinforcement learning capabilities including
 //! policy gradient methods, value-based methods, and actor-critic architectures.
 
-pub mod policy;
-pub mod value;
 pub mod actor_critic;
-pub mod environments;
-pub mod replay_buffer;
-pub mod algorithms;
-pub mod trpo;
-pub mod curiosity;
-pub mod model_based;
 pub mod advanced_algorithms;
 pub mod advanced_environments;
+pub mod algorithms;
+pub mod curiosity;
+pub mod environments;
+pub mod model_based;
+pub mod policy;
 pub mod policy_optimization;
+pub mod replay_buffer;
+pub mod trpo;
+pub mod value;
 
-pub use policy::{Policy, PolicyNetwork, PolicyGradient};
-pub use value::{ValueNetwork, QNetwork, DQN, DoubleDQN};
 pub use actor_critic::{ActorCritic, A2C, A3C, PPO, SAC};
-pub use environments::{Environment, Observation, Action, Reward};
-pub use replay_buffer::{ReplayBuffer, PrioritizedReplayBuffer};
+pub use advanced_algorithms::{IMPALAConfig, RainbowConfig, RainbowDQN, TD3Config, IMPALA, TD3};
+pub use advanced_environments::{
+    MultiAgentEnvironment, MultiAgentGridWorld, MultiAgentWrapper, PursuitEvasion,
+};
 pub use algorithms::{RLAlgorithm, TrainingConfig};
-pub use trpo::{TRPO, TRPOConfig};
-pub use curiosity::{ICM, RND, NoveltyExploration, EpisodicCuriosity};
-pub use model_based::{DynamicsModel, MPC, Dyna, WorldModel};
-pub use advanced_algorithms::{TD3, TD3Config, RainbowDQN, RainbowConfig, IMPALA, IMPALAConfig};
-pub use advanced_environments::{MultiAgentEnvironment, MultiAgentGridWorld, PursuitEvasion, MultiAgentWrapper};
-pub use policy_optimization::{NaturalPolicyGradient, NPGConfig, CuriosityDrivenAgent, CuriosityConfig, MAMLAgent, MAMLConfig};
+pub use curiosity::{EpisodicCuriosity, NoveltyExploration, ICM, RND};
+pub use environments::{Action, Environment, Observation, Reward};
+pub use model_based::{Dyna, DynamicsModel, WorldModel, MPC};
+pub use policy::{Policy, PolicyGradient, PolicyNetwork};
+pub use policy_optimization::{
+    CuriosityConfig, CuriosityDrivenAgent, MAMLAgent, MAMLConfig, NPGConfig, NaturalPolicyGradient,
+};
+pub use replay_buffer::{PrioritizedReplayBuffer, ReplayBuffer};
+pub use trpo::{TRPOConfig, TRPO};
+pub use value::{DoubleDQN, QNetwork, ValueNetwork, DQN};
 
 use crate::error::Result;
 use ndarray::prelude::*;
@@ -88,18 +92,20 @@ impl Default for RLConfig {
 pub trait RLAgent: Send + Sync {
     /// Select an action given an observation
     fn act(&self, observation: &ArrayView1<f32>, training: bool) -> Result<Array1<f32>>;
-    
+
     /// Update the agent with a batch of experiences
     fn update(&mut self, batch: &ExperienceBatch) -> Result<LossInfo>;
-    
+
     /// Save the agent's state
     fn save(&self, path: &str) -> Result<()>;
-    
+
     /// Load the agent's state
     fn load(&mut self, path: &str) -> Result<()>;
-    
+
     /// Get current exploration rate (if applicable)
-    fn exploration_rate(&self) -> f32 { 0.0 }
+    fn exploration_rate(&self) -> f32 {
+        0.0
+    }
 }
 
 /// Experience batch for training
@@ -152,7 +158,7 @@ impl<E: Environment> RLTrainer<E> {
         } else {
             None
         };
-        
+
         Self {
             agent,
             environment,
@@ -162,115 +168,138 @@ impl<E: Environment> RLTrainer<E> {
             episode_lengths: Vec::new(),
         }
     }
-    
+
     /// Train the agent for a number of episodes
     pub fn train(&mut self, num_episodes: usize) -> Result<TrainingStats> {
         let mut total_steps = 0;
         let mut episode_rewards = Vec::new();
         let mut episode_lengths = Vec::new();
-        
+
         for episode in 0..num_episodes {
             let mut state = self.environment.reset()?;
             let mut episode_reward = 0.0;
             let mut episode_length = 0;
             let mut done = false;
-            
+
             while !done {
                 // Select action
                 let action = self.agent.act(&state.view(), true)?;
-                
+
                 // Take action in environment
                 let (next_state, reward, done_flag, _info) = self.environment.step(&action)?;
-                
+
                 // Store experience if using replay buffer
                 if let Some(buffer) = &mut self.replay_buffer {
-                    buffer.add(state.clone(), action.clone(), reward, next_state.clone(), done_flag)?;
-                    
+                    buffer.add(
+                        state.clone(),
+                        action.clone(),
+                        reward,
+                        next_state.clone(),
+                        done_flag,
+                    )?;
+
                     // Update agent from replay buffer
                     if buffer.len() >= self.config.batch_size {
                         let batch = buffer.sample(self.config.batch_size)?;
                         let _loss_info = Arc::get_mut(&mut self.agent)
-                            .ok_or_else(|| crate::error::NeuralError::InvalidArgument("Cannot get mutable reference to agent".to_string()))?
+                            .ok_or_else(|| {
+                                crate::error::NeuralError::InvalidArgument(
+                                    "Cannot get mutable reference to agent".to_string(),
+                                )
+                            })?
                             .update(&batch)?;
                     }
                 }
-                
+
                 state = next_state;
                 episode_reward += reward;
                 episode_length += 1;
                 total_steps += 1;
                 done = done_flag;
-                
+
                 // Max episode length
                 if episode_length >= 1000 {
                     break;
                 }
             }
-            
+
             episode_rewards.push(episode_reward);
             episode_lengths.push(episode_length);
-            
+
             // Log progress
             if (episode + 1) % 100 == 0 {
                 let avg_reward = episode_rewards[episode.saturating_sub(99)..=episode]
                     .iter()
-                    .sum::<f32>() / 100.0;
+                    .sum::<f32>()
+                    / 100.0;
                 println!("Episode {}: Avg Reward = {:.2}", episode + 1, avg_reward);
             }
         }
-        
+
         self.episode_rewards.extend(&episode_rewards);
         self.episode_lengths.extend(&episode_lengths);
-        
+
         Ok(TrainingStats {
             total_episodes: num_episodes,
             total_steps,
             episode_rewards,
             episode_lengths,
-            final_avg_reward: self.episode_rewards.iter().rev().take(100).sum::<f32>() / 100.0.min(self.episode_rewards.len() as f32),
+            final_avg_reward: self.episode_rewards.iter().rev().take(100).sum::<f32>()
+                / 100.0.min(self.episode_rewards.len() as f32),
         })
     }
-    
+
     /// Evaluate the agent
     pub fn evaluate(&mut self, num_episodes: usize) -> Result<EvaluationStats> {
         let mut episode_rewards = Vec::new();
         let mut episode_lengths = Vec::new();
-        
+
         for _ in 0..num_episodes {
             let mut state = self.environment.reset()?;
             let mut episode_reward = 0.0;
             let mut episode_length = 0;
             let mut done = false;
-            
+
             while !done && episode_length < 1000 {
                 let action = self.agent.act(&state.view(), false)?;
                 let (next_state, reward, done_flag, _info) = self.environment.step(&action)?;
-                
+
                 state = next_state;
                 episode_reward += reward;
                 episode_length += 1;
                 done = done_flag;
             }
-            
+
             episode_rewards.push(episode_reward);
             episode_lengths.push(episode_length);
         }
-        
+
         let mean_reward = episode_rewards.iter().sum::<f32>() / episode_rewards.len() as f32;
         let std_reward = {
-            let variance = episode_rewards.iter()
+            let variance = episode_rewards
+                .iter()
                 .map(|r| (r - mean_reward).powi(2))
-                .sum::<f32>() / episode_rewards.len() as f32;
+                .sum::<f32>()
+                / episode_rewards.len() as f32;
             variance.sqrt()
         };
-        
+
         Ok(EvaluationStats {
             num_episodes,
             mean_reward,
             std_reward,
-            min_reward: episode_rewards.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).copied().unwrap_or(0.0),
-            max_reward: episode_rewards.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).copied().unwrap_or(0.0),
-            mean_length: episode_lengths.iter().sum::<usize>() as f32 / episode_lengths.len() as f32,
+            min_reward: episode_rewards
+                .iter()
+                .min_by(|a, b| a.partial_cmp(b).unwrap())
+                .copied()
+                .unwrap_or(0.0),
+            max_reward: episode_rewards
+                .iter()
+                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .copied()
+                .unwrap_or(0.0),
+            mean_length: episode_lengths.iter().sum::<usize>() as f32
+                / episode_lengths.len() as f32,
         })
     }
 }

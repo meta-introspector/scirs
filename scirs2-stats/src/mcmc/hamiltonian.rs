@@ -3,10 +3,10 @@
 //! HMC is a sophisticated MCMC method that uses gradient information to make
 //! more efficient proposals than random walk methods.
 
+use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
-use crate::error::{StatsResult as Result, StatsError};
 use scirs2_core::validation::*;
 use std::fmt::Debug;
 
@@ -14,13 +14,13 @@ use std::fmt::Debug;
 pub trait DifferentiableTarget: Send + Sync {
     /// Compute the log probability density
     fn log_density(&self, x: &Array1<f64>) -> f64;
-    
+
     /// Compute the gradient of the log density
     fn gradient(&self, x: &Array1<f64>) -> Array1<f64>;
-    
+
     /// Get the dimensionality
     fn dim(&self) -> usize;
-    
+
     /// Optional: compute both log density and gradient together for efficiency
     fn log_density_and_gradient(&self, x: &Array1<f64>) -> (f64, Array1<f64>) {
         (self.log_density(x), self.gradient(x))
@@ -51,28 +51,24 @@ pub struct HamiltonianMonteCarlo<T: DifferentiableTarget> {
 
 impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     /// Create a new HMC sampler
-    pub fn new(
-        target: T,
-        initial: Array1<f64>,
-        step_size: f64,
-        n_steps: usize,
-    ) -> Result<Self> {
+    pub fn new(target: T, initial: Array1<f64>, step_size: f64, n_steps: usize) -> Result<Self> {
         check_array_finite(&initial, "initial")?;
         check_positive(step_size, "step_size")?;
         check_positive(n_steps, "n_steps")?;
-        
+
         if initial.len() != target.dim() {
-            return Err(StatsError::DimensionMismatch(
-                format!("initial dimension ({}) must match target dimension ({})", 
-                    initial.len(), target.dim())
-            ));
+            return Err(StatsError::DimensionMismatch(format!(
+                "initial dimension ({}) must match target dimension ({})",
+                initial.len(),
+                target.dim()
+            )));
         }
-        
+
         let dim = initial.len();
         let mass_matrix = Array2::eye(dim);
         let mass_inv = Array2::eye(dim);
         let current_log_density = target.log_density(&initial);
-        
+
         Ok(Self {
             target,
             position: initial,
@@ -85,57 +81,59 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
             n_proposed: 0,
         })
     }
-    
+
     /// Set custom mass matrix
     pub fn with_mass_matrix(mut self, mass_matrix: Array2<f64>) -> Result<Self> {
         check_array_finite(&mass_matrix, "mass_matrix")?;
-        
-        if mass_matrix.nrows() != self.position.len() || mass_matrix.ncols() != self.position.len() {
-            return Err(StatsError::DimensionMismatch(
-                format!("mass_matrix shape ({}, {}) must be ({}, {})", 
-                    mass_matrix.nrows(), mass_matrix.ncols(), 
-                    self.position.len(), self.position.len())
-            ));
+
+        if mass_matrix.nrows() != self.position.len() || mass_matrix.ncols() != self.position.len()
+        {
+            return Err(StatsError::DimensionMismatch(format!(
+                "mass_matrix shape ({}, {}) must be ({}, {})",
+                mass_matrix.nrows(),
+                mass_matrix.ncols(),
+                self.position.len(),
+                self.position.len()
+            )));
         }
-        
+
         // Compute inverse
-        let mass_inv = scirs2_linalg::inv(&mass_matrix.view(), None)
-            .map_err(|e| StatsError::ComputationError(format!("Failed to invert mass matrix: {}", e)))?;
-        
+        let mass_inv = scirs2_linalg::inv(&mass_matrix.view(), None).map_err(|e| {
+            StatsError::ComputationError(format!("Failed to invert mass matrix: {}", e))
+        })?;
+
         self.mass_matrix = mass_matrix;
         self.mass_inv = mass_inv;
         Ok(self)
     }
-    
+
     /// Perform one HMC step
     pub fn step<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<Array1<f64>> {
         let dim = self.position.len();
-        
+
         // Sample momentum from N(0, M)
         let momentum = self.sample_momentum(rng)?;
-        
+
         // Store initial state
         let initial_position = self.position.clone();
         let initial_momentum = momentum.clone();
         let initial_log_density = self.current_log_density;
-        
+
         // Perform leapfrog integration
-        let (final_position, final_momentum) = self.leapfrog(
-            initial_position.clone(),
-            momentum,
-        )?;
-        
+        let (final_position, final_momentum) = self.leapfrog(initial_position.clone(), momentum)?;
+
         // Compute Hamiltonian for initial and final states
-        let initial_hamiltonian = -initial_log_density + 0.5 * self.kinetic_energy(&initial_momentum);
+        let initial_hamiltonian =
+            -initial_log_density + 0.5 * self.kinetic_energy(&initial_momentum);
         let final_log_density = self.target.log_density(&final_position);
         let final_hamiltonian = -final_log_density + 0.5 * self.kinetic_energy(&final_momentum);
-        
+
         // Metropolis acceptance step
         let log_alpha = -(final_hamiltonian - initial_hamiltonian);
         let u: f64 = rng.random();
-        
+
         self.n_proposed += 1;
-        
+
         if u.ln() < log_alpha {
             // Accept
             self.position = final_position;
@@ -143,29 +141,30 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
             self.n_accepted += 1;
         }
         // If rejected, keep current position
-        
+
         Ok(self.position.clone())
     }
-    
+
     /// Sample momentum from N(0, M)
     fn sample_momentum<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<Array1<f64>> {
         let dim = self.position.len();
-        let normal = Normal::new(0.0, 1.0)
-            .map_err(|e| StatsError::ComputationError(format!("Failed to create normal distribution: {}", e)))?;
-        
+        let normal = Normal::new(0.0, 1.0).map_err(|e| {
+            StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
+        })?;
+
         // Sample from standard normal
         let z = Array1::from_shape_fn(dim, |_| normal.sample(rng));
-        
+
         // Transform to p ~ N(0, M) using Cholesky decomposition
         // For simplicity, assume diagonal mass matrix
         let mut momentum = Array1::zeros(dim);
         for i in 0..dim {
             momentum[i] = z[i] * self.mass_matrix[[i, i]].sqrt();
         }
-        
+
         Ok(momentum)
     }
-    
+
     /// Compute kinetic energy: 0.5 * p^T * M^{-1} * p
     fn kinetic_energy(&self, momentum: &Array1<f64>) -> f64 {
         // For diagonal mass matrix, this simplifies
@@ -175,7 +174,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
         }
         0.5 * energy
     }
-    
+
     /// Leapfrog integration
     fn leapfrog(
         &self,
@@ -185,43 +184,47 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
         // Initial half step for momentum
         let gradient = self.target.gradient(&position);
         momentum = momentum + 0.5 * self.step_size * gradient;
-        
+
         // Alternating full steps
         for _ in 0..self.n_steps {
             // Full step for position
             let momentum_update = self.mass_inv.dot(&momentum);
             position = position + self.step_size * momentum_update;
-            
+
             // Full step for momentum (except last iteration)
             if self.n_steps > 1 {
                 let gradient = self.target.gradient(&position);
                 momentum = momentum + self.step_size * gradient;
             }
         }
-        
+
         // Final half step for momentum
         let gradient = self.target.gradient(&position);
         momentum = momentum + 0.5 * self.step_size * gradient;
-        
+
         // Negate momentum for reversibility
         momentum = -momentum;
-        
+
         Ok((position, momentum))
     }
-    
+
     /// Sample multiple states
-    pub fn sample<R: Rng + ?Sized>(&mut self, n_samples: usize, rng: &mut R) -> Result<Array2<f64>> {
+    pub fn sample<R: Rng + ?Sized>(
+        &mut self,
+        n_samples: usize,
+        rng: &mut R,
+    ) -> Result<Array2<f64>> {
         let dim = self.position.len();
         let mut samples = Array2::zeros((n_samples, dim));
-        
+
         for i in 0..n_samples {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
-        
+
         Ok(samples)
     }
-    
+
     /// Sample with burn-in
     pub fn sample_with_burnin<R: Rng + ?Sized>(
         &mut self,
@@ -230,19 +233,19 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         check_positive(burnin, "burnin")?;
-        
+
         // Burn-in
         for _ in 0..burnin {
             self.step(rng)?;
         }
-        
+
         // Reset counters after burn-in
         self.reset_counters();
-        
+
         // Collect samples
         self.sample(n_samples, rng)
     }
-    
+
     /// Get acceptance rate
     pub fn acceptance_rate(&self) -> f64 {
         if self.n_proposed == 0 {
@@ -251,7 +254,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
             self.n_accepted as f64 / self.n_proposed as f64
         }
     }
-    
+
     /// Reset acceptance counters
     pub fn reset_counters(&mut self) {
         self.n_accepted = 0;
@@ -303,37 +306,33 @@ impl DualAveragingAdaptation {
             h_avg: 0.0,
         }
     }
-    
+
     /// Update step size based on acceptance probability
     pub fn update(&mut self, alpha: f64) -> f64 {
         self.iteration += 1;
         let m = self.iteration as f64;
-        
+
         // Update H statistic
-        self.h_avg = (1.0 - 1.0 / (m + self.t0)) * self.h_avg 
-                   + (self.target - alpha) / (m + self.t0);
-        
+        self.h_avg =
+            (1.0 - 1.0 / (m + self.t0)) * self.h_avg + (self.target - alpha) / (m + self.t0);
+
         // Update log step size
         let log_step = self.log_step_avg - self.h_avg / (self.gamma * m.powf(self.kappa));
-        
+
         // Update average
         let weight = m.powf(-self.kappa);
         self.log_step_avg = (1.0 - weight) * self.log_step_avg + weight * log_step;
-        
+
         log_step.exp()
     }
 }
 
 impl<T: DifferentiableTarget> NoUTurnSampler<T> {
     /// Create new NUTS sampler
-    pub fn new(
-        target: T,
-        initial: Array1<f64>,
-        initial_step_size: f64,
-    ) -> Result<Self> {
+    pub fn new(target: T, initial: Array1<f64>, initial_step_size: f64) -> Result<Self> {
         let hmc = HamiltonianMonteCarlo::new(target, initial, initial_step_size, 1)?;
         let step_size_adaptation = DualAveragingAdaptation::new(0.8, initial_step_size.ln());
-        
+
         Ok(Self {
             hmc,
             max_tree_depth: 10,
@@ -341,36 +340,35 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
             step_size_adaptation,
         })
     }
-    
+
     /// Perform one NUTS step
     pub fn step<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<Array1<f64>> {
         // Sample momentum
         let momentum = self.hmc.sample_momentum(rng)?;
-        
+
         // Build tree and sample
-        let (new_position, alpha) = self.build_tree(
-            self.hmc.position.clone(),
-            momentum,
-            0.0,
-            1,
-            rng,
-        )?;
-        
+        let (new_position, alpha) =
+            self.build_tree(self.hmc.position.clone(), momentum, 0.0, 1, rng)?;
+
         // Update step size during adaptation
         let new_step_size = self.step_size_adaptation.update(alpha);
         self.hmc.step_size = new_step_size;
-        
+
         // Update position if different
-        if !new_position.iter().zip(self.hmc.position.iter()).all(|(a, b)| (a - b).abs() < f64::EPSILON) {
+        if !new_position
+            .iter()
+            .zip(self.hmc.position.iter())
+            .all(|(a, b)| (a - b).abs() < f64::EPSILON)
+        {
             self.hmc.position = new_position;
             self.hmc.current_log_density = self.hmc.target.log_density(&self.hmc.position);
             self.hmc.n_accepted += 1;
         }
-        
+
         self.hmc.n_proposed += 1;
         Ok(self.hmc.position.clone())
     }
-    
+
     /// Build tree for NUTS algorithm (simplified version)
     fn build_tree<R: Rng + ?Sized>(
         &self,
@@ -384,26 +382,27 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
             // Base case: return input position with low acceptance
             return Ok((position, 0.0));
         }
-        
+
         // Perform leapfrog step
         let (new_position, new_momentum) = self.hmc.leapfrog(position.clone(), momentum)?;
-        
+
         // Compute log probability for new state
         let new_log_density = self.hmc.target.log_density(&new_position);
         let new_hamiltonian = -new_log_density + 0.5 * self.hmc.kinetic_energy(&new_momentum);
-        
+
         // Check if proposal is acceptable
-        let current_hamiltonian = -self.hmc.current_log_density + 0.5 * self.hmc.kinetic_energy(&momentum);
+        let current_hamiltonian =
+            -self.hmc.current_log_density + 0.5 * self.hmc.kinetic_energy(&momentum);
         let log_alpha = -(new_hamiltonian - current_hamiltonian);
         let alpha = log_alpha.exp().min(1.0);
-        
+
         if log_u <= log_alpha {
             Ok((new_position, alpha))
         } else {
             Ok((position, alpha))
         }
     }
-    
+
     /// Sample with adaptation
     pub fn sample_adaptive<R: Rng + ?Sized>(
         &mut self,
@@ -415,19 +414,19 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
         for _ in 0..n_adapt {
             self.step(rng)?;
         }
-        
+
         // Reset counters
         self.hmc.reset_counters();
-        
+
         // Sampling phase
         let dim = self.hmc.position.len();
         let mut samples = Array2::zeros((n_samples, dim));
-        
+
         for i in 0..n_samples {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
-        
+
         Ok(samples)
     }
 }
@@ -450,28 +449,39 @@ impl MultivariateNormalHMC {
     pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
         check_array_finite(&mean, "mean")?;
         check_array_finite(&covariance, "covariance")?;
-        
+
         if covariance.nrows() != mean.len() || covariance.ncols() != mean.len() {
-            return Err(StatsError::DimensionMismatch(
-                format!("covariance shape ({}, {}) must be ({}, {})", 
-                    covariance.nrows(), covariance.ncols(), mean.len(), mean.len())
+            return Err(StatsError::DimensionMismatch(format!(
+                "covariance shape ({}, {}) must be ({}, {})",
+                covariance.nrows(),
+                covariance.ncols(),
+                mean.len(),
+                mean.len()
+            )));
+        }
+
+        let precision = scirs2_linalg::inv(&covariance.view(), None).map_err(|e| {
+            StatsError::ComputationError(format!("Failed to invert covariance: {}", e))
+        })?;
+
+        let det = scirs2_linalg::det(&covariance.view(), None).map_err(|e| {
+            StatsError::ComputationError(format!("Failed to compute determinant: {}", e))
+        })?;
+
+        if det <= 0.0 {
+            return Err(StatsError::InvalidArgument(
+                "Covariance must be positive definite".to_string(),
             ));
         }
-        
-        let precision = scirs2_linalg::inv(&covariance.view(), None)
-            .map_err(|e| StatsError::ComputationError(format!("Failed to invert covariance: {}", e)))?;
-        
-        let det = scirs2_linalg::det(&covariance.view(), None)
-            .map_err(|e| StatsError::ComputationError(format!("Failed to compute determinant: {}", e)))?;
-        
-        if det <= 0.0 {
-            return Err(StatsError::InvalidArgument("Covariance must be positive definite".to_string()));
-        }
-        
+
         let d = mean.len() as f64;
         let log_norm_const = -0.5 * (d * (2.0 * std::f64::consts::PI).ln() + det.ln());
-        
-        Ok(Self { mean, precision, log_norm_const })
+
+        Ok(Self {
+            mean,
+            precision,
+            log_norm_const,
+        })
     }
 }
 
@@ -481,16 +491,16 @@ impl DifferentiableTarget for MultivariateNormalHMC {
         let quad_form = diff.dot(&self.precision.dot(&diff));
         self.log_norm_const - 0.5 * quad_form
     }
-    
+
     fn gradient(&self, x: &Array1<f64>) -> Array1<f64> {
         let diff = x - &self.mean;
         -self.precision.dot(&diff)
     }
-    
+
     fn dim(&self) -> usize {
         self.mean.len()
     }
-    
+
     fn log_density_and_gradient(&self, x: &Array1<f64>) -> (f64, Array1<f64>) {
         let diff = x - &self.mean;
         let quad_form = diff.dot(&self.precision.dot(&diff));
@@ -514,7 +524,11 @@ impl<F, G> CustomDifferentiableTarget<F, G> {
     /// Create new custom target
     pub fn new(dim: usize, log_density_fn: F, gradient_fn: G) -> Result<Self> {
         check_positive(dim, "dim")?;
-        Ok(Self { log_density_fn, gradient_fn, dim })
+        Ok(Self {
+            log_density_fn,
+            gradient_fn,
+            dim,
+        })
     }
 }
 
@@ -526,11 +540,11 @@ where
     fn log_density(&self, x: &Array1<f64>) -> f64 {
         (self.log_density_fn)(x)
     }
-    
+
     fn gradient(&self, x: &Array1<f64>) -> Array1<f64> {
         (self.gradient_fn)(x)
     }
-    
+
     fn dim(&self) -> usize {
         self.dim
     }

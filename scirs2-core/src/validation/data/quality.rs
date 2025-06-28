@@ -438,7 +438,7 @@ impl QualityAnalyzer {
         // Combine scores: lower variance in differences = higher consistency
         // Also consider periodic patterns
         let diff_consistency = if variance > 0.0 {
-            (-variance.ln()).exp().min(1.0).max(0.0)
+            (-variance.ln()).exp().clamp(0.0, 1.0)
         } else {
             1.0 // Perfect arithmetic progression
         };
@@ -446,7 +446,7 @@ impl QualityAnalyzer {
         // Final score is weighted average
         let consistency_score = 0.7 * diff_consistency + 0.3 * period_score;
 
-        Ok(consistency_score.min(1.0).max(0.0))
+        Ok(consistency_score.clamp(0.0, 1.0))
     }
 
     /// Add specific recommendations based on detected issues

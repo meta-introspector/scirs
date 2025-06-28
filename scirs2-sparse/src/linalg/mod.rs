@@ -3,13 +3,18 @@
 //! This module provides linear algebra operations for sparse matrices,
 //! including solvers, eigenvalue computations, and matrix functions.
 
+mod amg;
 mod cgs;
+mod decomposition;
 mod eigen;
 mod expm;
+mod gcrot;
 mod ic;
 mod interface;
 mod iterative;
 mod lgmres;
+mod lsmr;
+mod lsqr;
 mod matfuncs;
 mod minres;
 mod preconditioners;
@@ -18,14 +23,20 @@ mod qmr_simple;
 mod solvers;
 mod spai;
 mod svd;
-mod decomposition;
+mod tfqmr;
 
+pub use amg::{AMGOptions, AMGPreconditioner, CycleType, InterpolationType, SmootherType};
 pub use cgs::{cgs, CGSOptions, CGSResult};
+pub use decomposition::{
+    cholesky_decomposition, incomplete_cholesky, incomplete_lu, lu_decomposition, qr_decomposition,
+    CholeskyResult, ICOptions, ILUOptions, LUResult, QRResult,
+};
 pub use eigen::{
-    power_iteration, lanczos, eigs, eigsh, PowerIterationOptions, LanczosOptions, EigenResult,
-    EigenvalueMethod, ArpackOptions,
+    eigs, eigsh, lanczos, power_iteration, ArpackOptions, EigenResult, EigenvalueMethod,
+    LanczosOptions, PowerIterationOptions,
 };
 pub use expm::expm;
+pub use gcrot::{gcrot, GCROTOptions, GCROTResult};
 pub use ic::IC0Preconditioner;
 pub use interface::{
     AsLinearOperator, DiagonalOperator, IdentityOperator, LinearOperator, ScaledIdentityOperator,
@@ -35,6 +46,8 @@ pub use iterative::{
     GMRESOptions, IterationResult, IterativeSolver,
 };
 pub use lgmres::{lgmres, LGMRESOptions, LGMRESResult};
+pub use lsmr::{lsmr, LSMROptions, LSMRResult};
+pub use lsqr::{lsqr, LSQROptions, LSQRResult};
 pub use matfuncs::{expm_multiply, onenormest};
 pub use minres::{minres, MINRESOptions, MINRESResult};
 pub use preconditioners::{ILU0Preconditioner, JacobiPreconditioner, SSORPreconditioner};
@@ -44,8 +57,5 @@ pub use solvers::{
     sparse_lstsq, spsolve,
 };
 pub use spai::{SpaiOptions, SpaiPreconditioner};
-pub use svd::{svds, SVDOptions, SVDResult, svd_truncated};
-pub use decomposition::{
-    lu_decomposition, qr_decomposition, cholesky_decomposition, LUResult, QRResult, CholeskyResult,
-    incomplete_lu, incomplete_cholesky, ILUOptions, ICOptions,
-};
+pub use svd::{svd_truncated, svds, SVDOptions, SVDResult};
+pub use tfqmr::{tfqmr, TFQMROptions, TFQMRResult};
