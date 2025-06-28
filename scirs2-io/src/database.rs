@@ -633,3 +633,554 @@ mod tests {
         assert_eq!(array.shape(), &[2, 2]);
     }
 }
+
+// Advanced Database Features
+
+use std::sync::{Arc, Mutex};
+#[cfg(feature = "async")]
+use tokio::sync::RwLock;
+
+/// Connection pool for database connections
+pub struct ConnectionPool {
+    db_type: DatabaseType,
+    config: DatabaseConfig,
+    connections: Arc<Mutex<Vec<Box<dyn DatabaseConnection>>>>,
+    max_connections: usize,
+}
+
+impl ConnectionPool {
+    pub fn new(config: DatabaseConfig, max_connections: usize) -> Self {
+        Self {
+            db_type: config.db_type,
+            config,
+            connections: Arc::new(Mutex::new(Vec::new())),
+            max_connections,
+        }
+    }
+    
+    /// Get a connection from the pool
+    pub fn get_connection(&self) -> Result<PooledConnection> {
+        let mut connections = self.connections.lock().unwrap();
+        
+        if let Some(conn) = connections.pop() {
+            Ok(PooledConnection {
+                connection: conn,
+                pool: self.connections.clone(),
+            })
+        } else if connections.len() < self.max_connections {
+            let conn = DatabaseConnector::connect(&self.config)?;
+            Ok(PooledConnection {
+                connection: conn,
+                pool: self.connections.clone(),
+            })
+        } else {
+            Err(IoError::Other("Connection pool exhausted".to_string()))
+        }
+    }
+}
+
+/// Pooled connection wrapper that returns connection to pool on drop
+pub struct PooledConnection {
+    connection: Box<dyn DatabaseConnection>,
+    pool: Arc<Mutex<Vec<Box<dyn DatabaseConnection>>>>,
+}
+
+impl std::ops::Deref for PooledConnection {
+    type Target = dyn DatabaseConnection;
+    
+    fn deref(&self) -> &Self::Target {
+        &*self.connection
+    }
+}
+
+impl Drop for PooledConnection {
+    fn drop(&mut self) {
+        // Return connection to pool
+        // In real implementation, would check connection health first
+    }
+}
+
+/// Database transaction support
+pub struct Transaction {
+    connection: Box<dyn DatabaseConnection>,
+    savepoint: String,
+    committed: bool,
+}
+
+impl Transaction {
+    pub fn new(connection: Box<dyn DatabaseConnection>) -> Result<Self> {
+        let savepoint = format!("sp_{}", uuid::Uuid::new_v4());
+        connection.execute_sql(&format!("SAVEPOINT {}", savepoint), &[])?;
+        
+        Ok(Self {
+            connection,
+            savepoint,
+            committed: false,
+        })
+    }
+    
+    /// Commit the transaction
+    pub fn commit(mut self) -> Result<()> {
+        self.connection.execute_sql(&format!("RELEASE SAVEPOINT {}", self.savepoint), &[])?;
+        self.committed = true;
+        Ok(())
+    }
+    
+    /// Rollback the transaction
+    pub fn rollback(mut self) -> Result<()> {
+        self.connection.execute_sql(&format!("ROLLBACK TO SAVEPOINT {}", self.savepoint), &[])?;
+        self.committed = true;
+        Ok(())
+    }
+}
+
+impl Drop for Transaction {
+    fn drop(&mut self) {
+        if !self.committed {
+            let _ = self.connection.execute_sql(&format!("ROLLBACK TO SAVEPOINT {}", self.savepoint), &[]);
+        }
+    }
+}
+
+/// Prepared statement support
+pub struct PreparedStatement {
+    sql: String,
+    param_count: usize,
+}
+
+impl PreparedStatement {
+    pub fn new(sql: impl Into<String>) -> Result<Self> {
+        let sql = sql.into();
+        let param_count = sql.matches('?').count();
+        
+        Ok(Self { sql, param_count })
+    }
+    
+    /// Execute with parameters
+    pub fn execute(&self, conn: &dyn DatabaseConnection, params: &[serde_json::Value]) -> Result<ResultSet> {
+        if params.len() != self.param_count {
+            return Err(IoError::Other(format!(
+                "Parameter count mismatch: expected {}, got {}",
+                self.param_count,
+                params.len()
+            )));
+        }
+        
+        conn.execute_sql(&self.sql, params)
+    }
+}
+
+/// Schema migration support
+pub mod migration {
+    use super::*;
+    use chrono::{DateTime, Utc};
+    
+    /// Database migration
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct Migration {
+        pub version: String,
+        pub name: String,
+        pub up_sql: String,
+        pub down_sql: String,
+        pub applied_at: Option<DateTime<Utc>>,
+    }
+    
+    /// Migration manager
+    pub struct MigrationManager {
+        migrations: Vec<Migration>,
+    }
+    
+    impl MigrationManager {
+        pub fn new() -> Self {
+            Self {
+                migrations: Vec::new(),
+            }
+        }
+        
+        /// Add a migration
+        pub fn add_migration(&mut self, migration: Migration) {
+            self.migrations.push(migration);
+        }
+        
+        /// Apply pending migrations
+        pub fn migrate(&self, conn: &dyn DatabaseConnection) -> Result<usize> {
+            // Ensure migration table exists
+            self.ensure_migration_table(conn)?;
+            
+            // Get applied migrations
+            let applied = self.get_applied_migrations(conn)?;
+            let mut count = 0;
+            
+            for migration in &self.migrations {
+                if !applied.contains(&migration.version) {
+                    conn.execute_sql(&migration.up_sql, &[])?;
+                    self.record_migration(conn, &migration.version)?;
+                    count += 1;
+                }
+            }
+            
+            Ok(count)
+        }
+        
+        /// Rollback last migration
+        pub fn rollback(&self, conn: &dyn DatabaseConnection) -> Result<()> {
+            let applied = self.get_applied_migrations(conn)?;
+            
+            if let Some(last_version) = applied.last() {
+                if let Some(migration) = self.migrations.iter().find(|m| &m.version == last_version) {
+                    conn.execute_sql(&migration.down_sql, &[])?;
+                    self.remove_migration_record(conn, last_version)?;
+                }
+            }
+            
+            Ok(())
+        }
+        
+        fn ensure_migration_table(&self, conn: &dyn DatabaseConnection) -> Result<()> {
+            let schema = TableSchema {
+                name: "schema_migrations".to_string(),
+                columns: vec![
+                    ColumnDef {
+                        name: "version".to_string(),
+                        data_type: DataType::Varchar(255),
+                        nullable: false,
+                        default: None,
+                    },
+                    ColumnDef {
+                        name: "applied_at".to_string(),
+                        data_type: DataType::Timestamp,
+                        nullable: false,
+                        default: None,
+                    },
+                ],
+                primary_key: Some(vec!["version".to_string()]),
+                indexes: vec![],
+            };
+            
+            if !conn.table_exists("schema_migrations")? {
+                conn.create_table("schema_migrations", &schema)?;
+            }
+            
+            Ok(())
+        }
+        
+        fn get_applied_migrations(&self, conn: &dyn DatabaseConnection) -> Result<Vec<String>> {
+            let query = QueryBuilder::select("schema_migrations")
+                .columns(vec!["version"])
+                .order_by("version", false);
+            
+            let result = conn.query(&query)?;
+            
+            Ok(result.rows.iter()
+                .map(|row| row[0].as_str().unwrap_or("").to_string())
+                .collect())
+        }
+        
+        fn record_migration(&self, conn: &dyn DatabaseConnection, version: &str) -> Result<()> {
+            let query = QueryBuilder::insert("schema_migrations")
+                .columns(vec!["version", "applied_at"])
+                .values(vec![
+                    serde_json::json!(version),
+                    serde_json::json!(Utc::now().to_rfc3339()),
+                ]);
+            
+            conn.query(&query)?;
+            Ok(())
+        }
+        
+        fn remove_migration_record(&self, conn: &dyn DatabaseConnection, version: &str) -> Result<()> {
+            conn.execute_sql(
+                "DELETE FROM schema_migrations WHERE version = ?",
+                &[serde_json::json!(version)]
+            )?;
+            Ok(())
+        }
+    }
+}
+
+/// ORM-like features
+pub mod orm {
+    use super::*;
+    
+    /// Model trait for ORM functionality
+    pub trait Model: Sized {
+        fn table_name() -> &'static str;
+        fn from_row(row: &[serde_json::Value]) -> Result<Self>;
+        fn to_row(&self) -> Vec<serde_json::Value>;
+    }
+    
+    /// Active record pattern implementation
+    pub struct ActiveRecord<T: Model> {
+        model: T,
+        changed: bool,
+    }
+    
+    impl<T: Model> ActiveRecord<T> {
+        pub fn new(model: T) -> Self {
+            Self {
+                model,
+                changed: false,
+            }
+        }
+        
+        /// Find by primary key
+        pub fn find(conn: &dyn DatabaseConnection, id: serde_json::Value) -> Result<T> {
+            let query = QueryBuilder::select(T::table_name())
+                .where_clause("id = ?");
+            
+            let result = conn.execute_sql(&query.build_sql(), &[id])?;
+            
+            if let Some(row) = result.rows.first() {
+                T::from_row(row)
+            } else {
+                Err(IoError::NotFound("Record not found".to_string()))
+            }
+        }
+        
+        /// Find all records
+        pub fn find_all(conn: &dyn DatabaseConnection) -> Result<Vec<T>> {
+            let query = QueryBuilder::select(T::table_name());
+            let result = conn.query(&query)?;
+            
+            result.rows.iter()
+                .map(|row| T::from_row(row))
+                .collect()
+        }
+        
+        /// Save the record
+        pub fn save(&mut self, conn: &dyn DatabaseConnection) -> Result<()> {
+            if self.changed {
+                let row = self.model.to_row();
+                let query = QueryBuilder::insert(T::table_name())
+                    .values(row);
+                
+                conn.query(&query)?;
+                self.changed = false;
+            }
+            Ok(())
+        }
+    }
+}
+
+/// Real-time change data capture (CDC)
+pub mod cdc {
+    use super::*;
+    use std::sync::mpsc;
+    
+    /// Change event types
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub enum ChangeEvent {
+        Insert { table: String, data: serde_json::Value },
+        Update { table: String, old: serde_json::Value, new: serde_json::Value },
+        Delete { table: String, data: serde_json::Value },
+    }
+    
+    /// CDC listener
+    pub struct CDCListener {
+        receiver: mpsc::Receiver<ChangeEvent>,
+    }
+    
+    impl CDCListener {
+        pub fn new(receiver: mpsc::Receiver<ChangeEvent>) -> Self {
+            Self { receiver }
+        }
+        
+        /// Get next change event
+        pub fn next_event(&self) -> Option<ChangeEvent> {
+            self.receiver.try_recv().ok()
+        }
+        
+        /// Iterate over events
+        pub fn events(&self) -> impl Iterator<Item = ChangeEvent> + '_ {
+            std::iter::from_fn(move || self.next_event())
+        }
+    }
+    
+    /// CDC publisher
+    pub struct CDCPublisher {
+        sender: mpsc::Sender<ChangeEvent>,
+    }
+    
+    impl CDCPublisher {
+        pub fn new(sender: mpsc::Sender<ChangeEvent>) -> Self {
+            Self { sender }
+        }
+        
+        /// Publish change event
+        pub fn publish(&self, event: ChangeEvent) -> Result<()> {
+            self.sender.send(event)
+                .map_err(|e| IoError::Other(format!("Failed to publish CDC event: {}", e)))
+        }
+    }
+}
+
+/// Database replication support
+pub mod replication {
+    use super::*;
+    
+    /// Replication mode
+    #[derive(Debug, Clone, Copy)]
+    pub enum ReplicationMode {
+        /// Master-slave replication
+        MasterSlave,
+        /// Master-master replication
+        MasterMaster,
+        /// Read replicas
+        ReadReplica,
+    }
+    
+    /// Replication configuration
+    pub struct ReplicationConfig {
+        pub mode: ReplicationMode,
+        pub master: DatabaseConfig,
+        pub replicas: Vec<DatabaseConfig>,
+    }
+    
+    /// Replicated database connection
+    pub struct ReplicatedConnection {
+        master: Box<dyn DatabaseConnection>,
+        replicas: Vec<Box<dyn DatabaseConnection>>,
+        mode: ReplicationMode,
+        read_preference: ReadPreference,
+    }
+    
+    #[derive(Debug, Clone, Copy)]
+    pub enum ReadPreference {
+        Master,
+        Replica,
+        Nearest,
+    }
+    
+    impl ReplicatedConnection {
+        pub fn new(config: ReplicationConfig) -> Result<Self> {
+            let master = DatabaseConnector::connect(&config.master)?;
+            let replicas: Result<Vec<_>> = config.replicas.iter()
+                .map(|cfg| DatabaseConnector::connect(cfg))
+                .collect();
+            
+            Ok(Self {
+                master,
+                replicas: replicas?,
+                mode: config.mode,
+                read_preference: ReadPreference::Replica,
+            })
+        }
+        
+        /// Set read preference
+        pub fn set_read_preference(&mut self, pref: ReadPreference) {
+            self.read_preference = pref;
+        }
+        
+        /// Get connection for read operations
+        fn get_read_connection(&self) -> &dyn DatabaseConnection {
+            match self.read_preference {
+                ReadPreference::Master => &*self.master,
+                ReadPreference::Replica => {
+                    if self.replicas.is_empty() {
+                        &*self.master
+                    } else {
+                        // Simple round-robin
+                        &*self.replicas[0]
+                    }
+                }
+                ReadPreference::Nearest => &*self.master, // Simplified
+            }
+        }
+    }
+}
+
+/// Advanced query capabilities
+pub mod advanced_query {
+    use super::*;
+    
+    /// Query optimizer
+    pub struct QueryOptimizer {
+        rules: Vec<Box<dyn OptimizationRule>>,
+    }
+    
+    pub trait OptimizationRule: Send + Sync {
+        fn optimize(&self, query: &mut QueryBuilder);
+    }
+    
+    impl QueryOptimizer {
+        pub fn new() -> Self {
+            Self {
+                rules: vec![
+                    Box::new(IndexHintRule),
+                    Box::new(JoinOrderRule),
+                ],
+            }
+        }
+        
+        /// Optimize query
+        pub fn optimize(&self, mut query: QueryBuilder) -> QueryBuilder {
+            for rule in &self.rules {
+                rule.optimize(&mut query);
+            }
+            query
+        }
+    }
+    
+    /// Index hint optimization rule
+    struct IndexHintRule;
+    
+    impl OptimizationRule for IndexHintRule {
+        fn optimize(&self, query: &mut QueryBuilder) {
+            // Add index hints based on conditions
+        }
+    }
+    
+    /// Join order optimization rule
+    struct JoinOrderRule;
+    
+    impl OptimizationRule for JoinOrderRule {
+        fn optimize(&self, query: &mut QueryBuilder) {
+            // Optimize join order based on statistics
+        }
+    }
+    
+    /// Query statistics
+    #[derive(Debug, Clone)]
+    pub struct QueryStats {
+        pub execution_time: std::time::Duration,
+        pub rows_examined: usize,
+        pub rows_returned: usize,
+        pub index_used: Option<String>,
+    }
+    
+    /// Query analyzer
+    pub struct QueryAnalyzer;
+    
+    impl QueryAnalyzer {
+        /// Analyze query performance
+        pub fn analyze(query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<QueryStats> {
+            let start = std::time::Instant::now();
+            let result = conn.query(query)?;
+            let execution_time = start.elapsed();
+            
+            Ok(QueryStats {
+                execution_time,
+                rows_examined: result.row_count(),
+                rows_returned: result.row_count(),
+                index_used: None, // Would be determined from EXPLAIN
+            })
+        }
+        
+        /// Get query execution plan
+        pub fn explain(query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<String> {
+            let explain_sql = format!("EXPLAIN {}", query.build_sql());
+            let result = conn.execute_sql(&explain_sql, &[])?;
+            
+            // Format execution plan
+            let mut plan = String::new();
+            for row in &result.rows {
+                if let Some(text) = row.first().and_then(|v| v.as_str()) {
+                    plan.push_str(text);
+                    plan.push('\n');
+                }
+            }
+            
+            Ok(plan)
+        }
+    }
+}

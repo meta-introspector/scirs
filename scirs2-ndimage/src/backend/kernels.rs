@@ -88,6 +88,8 @@ pub trait GpuBuffer<T>: Send + Sync {
     fn size(&self) -> usize;
     fn copy_from_host(&mut self, data: &[T]) -> NdimageResult<()>;
     fn copy_to_host(&self, data: &mut [T]) -> NdimageResult<()>;
+    fn as_any(&self) -> &dyn std::any::Any;
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 }
 
 /// Abstract GPU kernel executor

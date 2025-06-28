@@ -40,6 +40,51 @@ impl<T: Clone> RTree<T> {
         Ok(())
     }
 
+    /// Insert a rectangle into the R-tree
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - The minimum coordinates of the rectangle
+    /// * `max` - The maximum coordinates of the rectangle
+    /// * `data` - The data associated with the rectangle
+    ///
+    /// # Returns
+    ///
+    /// A `SpatialResult` containing nothing if successful, or an error if the rectangle has invalid dimensions
+    pub fn insert_rectangle(&mut self, min: Array1<f64>, max: Array1<f64>, data: T) -> SpatialResult<()> {
+        if min.len() != self.ndim() {
+            return Err(crate::error::SpatialError::DimensionError(format!(
+                "Min coordinate dimension {} does not match RTree dimension {}",
+                min.len(),
+                self.ndim()
+            )));
+        }
+
+        if max.len() != self.ndim() {
+            return Err(crate::error::SpatialError::DimensionError(format!(
+                "Max coordinate dimension {} does not match RTree dimension {}",
+                max.len(),
+                self.ndim()
+            )));
+        }
+
+        // Create a leaf entry for the rectangle
+        let mbr = Rectangle::new(min, max)?;
+        let entry = Entry::Leaf {
+            mbr,
+            data,
+            index: self.size(),
+        };
+
+        // Insert the entry and handle node splits
+        self.insert_entry(&entry, 0)?;
+
+        // Increment the size after successful insertion
+        self.increment_size();
+
+        Ok(())
+    }
+
     /// Helper function to insert an entry into the tree
     pub(crate) fn insert_entry(
         &mut self,
@@ -410,5 +455,39 @@ mod tests {
         // Check the size
         assert_eq!(rtree.size(), 10);
         assert!(!rtree.is_empty());
+    }
+
+    #[test]
+    fn test_rtree_insert_rectangle() {
+        // Create a new R-tree
+        let mut rtree: RTree<&str> = RTree::new(2, 2, 4).unwrap();
+
+        // Insert some rectangles
+        let rectangles = vec![
+            (array![0.0, 0.0], array![1.0, 1.0], "A"),
+            (array![2.0, 2.0], array![3.0, 3.0], "B"),
+            (array![1.5, 0.0], array![2.5, 1.0], "C"),
+            (array![0.0, 1.5], array![1.0, 2.5], "D"),
+        ];
+
+        for (min, max, value) in rectangles {
+            rtree.insert_rectangle(min, max, value).unwrap();
+        }
+
+        // Check the size
+        assert_eq!(rtree.size(), 4);
+
+        // Test searching for rectangles that overlap with a query range
+        let results = rtree.search_range(&array![0.5, 0.5].view(), &array![2.0, 2.0].view()).unwrap();
+        
+        // Should find rectangles A, C, and D
+        assert_eq!(results.len(), 3);
+        
+        // Verify that the results contain the expected values
+        let result_values: Vec<&str> = results.iter().map(|(_, v)| *v).collect();
+        assert!(result_values.contains(&"A"));
+        assert!(result_values.contains(&"C"));
+        assert!(result_values.contains(&"D"));
+        assert!(!result_values.contains(&"B"));
     }
 }

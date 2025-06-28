@@ -241,7 +241,7 @@ impl StreamClient {
     }
 
     /// Create a stream processor
-    pub fn stream<T: Numeric>(&mut self) -> StreamProcessor<T> {
+    pub fn stream<T: ScientificNumber>(&mut self) -> StreamProcessor<T> {
         StreamProcessor::new(self)
     }
 
@@ -340,7 +340,7 @@ pub struct StreamProcessor<'a, T> {
     transforms: Vec<Box<dyn Fn(Array1<T>) -> Array1<T> + Send>>,
 }
 
-impl<'a, T: Numeric + Clone> StreamProcessor<'a, T> {
+impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
     /// Create a new stream processor
     fn new(client: &'a mut StreamClient) -> Self {
         Self {

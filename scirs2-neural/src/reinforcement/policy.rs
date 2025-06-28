@@ -4,7 +4,7 @@ use crate::error::Result;
 use crate::layers::{Dense, Layer};
 use crate::activations::Activation;
 use ndarray::prelude::*;
-use rand::distributions::{Distribution, Normal};
+use rand_distr::{Distribution, Normal};
 use std::sync::Arc;
 
 /// Base trait for policies

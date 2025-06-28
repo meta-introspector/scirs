@@ -230,6 +230,53 @@ pub fn example_damped_oscillator<F: IntegrateFloat>(
     higher_order_to_first_order(&ode)
 }
 
+/// Example: Convert a driven pendulum equation to first-order system
+pub fn example_driven_pendulum<F: IntegrateFloat>(
+    g: F,    // gravity
+    l: F,    // length
+    gamma: F, // damping coefficient
+    a: F,    // driving amplitude
+    omega: F, // driving frequency
+) -> IntegrateResult<FirstOrderSystem<F>> {
+    // Pendulum equation: θ'' + (g/l)*sin(θ) + γ*θ' = A*cos(ω*t)
+    // Rearranged: θ'' = -γ*θ' - (g/l)*sin(θ) + A*cos(ω*t)
+    
+    let theta = SymbolicExpression::var("θ");
+    let theta_prime = SymbolicExpression::var("θ'");
+    let t = SymbolicExpression::var("t");
+    
+    let g_over_l = SymbolicExpression::constant(g / l);
+    let gamma_const = SymbolicExpression::constant(gamma);
+    let a_const = SymbolicExpression::constant(a);
+    let omega_const = SymbolicExpression::constant(omega);
+    
+    // Using operator overloading
+    let damping_term = -gamma_const * theta_prime;
+    let gravity_term = -g_over_l * SymbolicExpression::Sin(Box::new(theta));
+    let driving_term = a_const * SymbolicExpression::Cos(Box::new(omega_const * t));
+    
+    let expression = damping_term + gravity_term + driving_term;
+    
+    let ode = HigherOrderODE::new(2, "θ", "t", expression)?;
+    higher_order_to_first_order(&ode)
+}
+
+/// Example: Convert a beam equation (4th order) to first-order system
+pub fn example_euler_bernoulli_beam<F: IntegrateFloat>(
+    ei: F,    // flexural rigidity
+    rho_a: F, // mass per unit length
+    f: F,     // distributed load
+) -> IntegrateResult<FirstOrderSystem<F>> {
+    // Euler-Bernoulli beam equation: EI*w'''' + ρA*∂²w/∂t² = f(x,t)
+    // For static case: EI*w'''' = f(x)
+    // Rearranged: w'''' = f/(EI)
+    
+    let f_over_ei = SymbolicExpression::constant(f / ei);
+    
+    let ode = HigherOrderODE::new(4, "w", "x", f_over_ei)?;
+    higher_order_to_first_order(&ode)
+}
+
 /// Convert a system of higher-order ODEs to first-order
 pub struct SystemConverter<F: IntegrateFloat> {
     odes: Vec<HigherOrderODE<F>>,

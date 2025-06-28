@@ -8,6 +8,7 @@ use ndarray::{Array2, ArrayView2};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 /// File reading stage
 pub struct FileReadStage {
@@ -327,13 +328,38 @@ impl CacheStage {
 }
 
 impl PipelineStage for CacheStage {
-    fn execute(&self, input: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
+    fn execute(&self, mut input: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
         // Create cache directory if needed
         std::fs::create_dir_all(&self.cache_dir).map_err(|e| IoError::Io(e))?;
         
         let cache_path = self.cache_dir.join(format!("{}.cache", self.cache_key));
         
-        // For now, just pass through - real implementation would serialize/deserialize
+        // Check if cache exists
+        if cache_path.exists() {
+            // Try to load from cache
+            if let Ok(cache_data) = std::fs::read(&cache_path) {
+                // Update metadata to indicate cache hit
+                input.metadata.set("cache_hit", true);
+                input.metadata.set("cache_key", self.cache_key.clone());
+                
+                // For demonstration, we'll store a simple flag in context
+                input.context.set("cached_from", self.cache_key.clone());
+                
+                return Ok(input);
+            }
+        }
+        
+        // Cache miss - save data for future use
+        // Note: In a real implementation, we would serialize the actual data
+        // For now, we'll just create a marker file
+        let cache_marker = format!("Cache entry for: {}\nCreated: {:?}\n", 
+            self.cache_key, chrono::Utc::now());
+        std::fs::write(&cache_path, cache_marker).map_err(|e| IoError::Io(e))?;
+        
+        // Update metadata
+        input.metadata.set("cache_hit", false);
+        input.metadata.set("cache_key", self.cache_key.clone());
+        
         Ok(input)
     }
     
@@ -401,8 +427,20 @@ impl ErrorHandlingStage {
 
 impl PipelineStage for ErrorHandlingStage {
     fn execute(&self, input: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
-        // This would wrap the next stage execution with error handling
-        Ok(input)
+        // In a real pipeline, this would wrap the next stage's execution
+        // For now, we'll simulate error handling by checking context for errors
+        
+        // Check if there's an error flag in the context
+        if let Some(error_msg) = input.context.get::<String>("pipeline_error") {
+            // Create an error from the message
+            let error = IoError::Other(error_msg);
+            
+            // Let the handler decide what to do
+            self.handler.handle_error(error, input)
+        } else {
+            // No error, pass through
+            Ok(input)
+        }
     }
     
     fn name(&self) -> String {
@@ -411,6 +449,85 @@ impl PipelineStage for ErrorHandlingStage {
     
     fn stage_type(&self) -> String {
         "error_handling".to_string()
+    }
+}
+
+/// Default error handler that logs and retries
+pub struct RetryErrorHandler {
+    max_retries: usize,
+    retry_delay: Duration,
+}
+
+impl RetryErrorHandler {
+    pub fn new(max_retries: usize) -> Self {
+        Self {
+            max_retries,
+            retry_delay: Duration::from_secs(1),
+        }
+    }
+    
+    pub fn with_delay(mut self, delay: Duration) -> Self {
+        self.retry_delay = delay;
+        self
+    }
+}
+
+impl ErrorHandler for RetryErrorHandler {
+    fn handle_error(&self, error: IoError, mut data: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
+        // Get current retry count
+        let retry_count = data.context.get::<usize>("retry_count").unwrap_or(0);
+        
+        if retry_count < self.max_retries {
+            // Increment retry count
+            data.context.set("retry_count", retry_count + 1);
+            
+            // Log retry attempt
+            data.metadata.set("last_error", format!("{:?}", error));
+            data.metadata.set("retry_attempt", retry_count + 1);
+            
+            // Clear error flag to retry
+            data.context.set::<Option<String>>("pipeline_error", None);
+            
+            Ok(data)
+        } else {
+            // Max retries exceeded
+            Err(error)
+        }
+    }
+}
+
+/// Skip error handler that continues on error
+pub struct SkipErrorHandler;
+
+impl ErrorHandler for SkipErrorHandler {
+    fn handle_error(&self, _error: IoError, mut data: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
+        // Mark as skipped in metadata
+        data.metadata.set("skipped", true);
+        data.metadata.set("skip_reason", "error_occurred");
+        
+        // Continue processing
+        Ok(data)
+    }
+}
+
+/// Fallback error handler that provides default values
+pub struct FallbackErrorHandler<T: Any + Send + Sync + Clone + 'static> {
+    fallback_value: T,
+}
+
+impl<T: Any + Send + Sync + Clone + 'static> FallbackErrorHandler<T> {
+    pub fn new(fallback_value: T) -> Self {
+        Self { fallback_value }
+    }
+}
+
+impl<T: Any + Send + Sync + Clone + 'static> ErrorHandler for FallbackErrorHandler<T> {
+    fn handle_error(&self, _error: IoError, mut data: PipelineData<Box<dyn Any + Send + Sync>>) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
+        // Replace data with fallback value
+        data.data = Box::new(self.fallback_value.clone());
+        data.metadata.set("used_fallback", true);
+        
+        Ok(data)
     }
 }
 

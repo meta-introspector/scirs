@@ -7,9 +7,11 @@ use crate::error::{IoError, Result};
 use chrono::{DateTime, Utc};
 use indexmap::{IndexMap, indexmap};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::path::Path;
+use std::sync::{Arc, RwLock};
+use sha2::{Sha256, Digest};
 
 /// Standard metadata keys commonly used across scientific data formats
 pub mod standard_keys {
@@ -577,5 +579,734 @@ mod tests {
         
         let history = metadata.get(standard_keys::PROCESSING_HISTORY);
         assert!(matches!(history, Some(MetadataValue::Array(_))));
+    }
+}
+
+/// Advanced metadata index for fast searching and querying
+#[derive(Debug, Clone)]
+pub struct MetadataIndex {
+    /// Inverted index for text search
+    text_index: HashMap<String, HashSet<String>>,
+    /// Numeric index for range queries
+    numeric_index: HashMap<String, Vec<(String, f64)>>,
+    /// Date index for temporal queries
+    date_index: HashMap<String, Vec<(String, DateTime<Utc>)>>,
+}
+
+impl MetadataIndex {
+    pub fn new() -> Self {
+        Self {
+            text_index: HashMap::new(),
+            numeric_index: HashMap::new(),
+            date_index: HashMap::new(),
+        }
+    }
+
+    /// Index a metadata collection
+    pub fn index_metadata(&mut self, id: &str, metadata: &Metadata) {
+        for (key, value) in &metadata.data {
+            self.index_value(id, key, value);
+        }
+    }
+
+    fn index_value(&mut self, id: &str, key: &str, value: &MetadataValue) {
+        match value {
+            MetadataValue::String(s) => {
+                // Tokenize and index text
+                for token in s.to_lowercase().split_whitespace() {
+                    self.text_index
+                        .entry(format!("{}:{}", key, token))
+                        .or_insert_with(HashSet::new)
+                        .insert(id.to_string());
+                }
+            }
+            MetadataValue::Integer(i) => {
+                self.numeric_index
+                    .entry(key.to_string())
+                    .or_insert_with(Vec::new)
+                    .push((id.to_string(), *i as f64));
+            }
+            MetadataValue::Float(f) => {
+                self.numeric_index
+                    .entry(key.to_string())
+                    .or_insert_with(Vec::new)
+                    .push((id.to_string(), *f));
+            }
+            MetadataValue::DateTime(dt) => {
+                self.date_index
+                    .entry(key.to_string())
+                    .or_insert_with(Vec::new)
+                    .push((id.to_string(), *dt));
+            }
+            MetadataValue::Array(arr) => {
+                for (i, item) in arr.iter().enumerate() {
+                    self.index_value(id, &format!("{}[{}]", key, i), item);
+                }
+            }
+            MetadataValue::Object(obj) => {
+                for (sub_key, sub_value) in obj {
+                    self.index_value(id, &format!("{}.{}", key, sub_key), sub_value);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Search for metadata by text query
+    pub fn search_text(&self, field: &str, query: &str) -> HashSet<String> {
+        let key = format!("{}:{}", field, query.to_lowercase());
+        self.text_index.get(&key).cloned().unwrap_or_default()
+    }
+
+    /// Search for metadata by numeric range
+    pub fn search_range(&self, field: &str, min: f64, max: f64) -> HashSet<String> {
+        self.numeric_index
+            .get(field)
+            .map(|values| {
+                values
+                    .iter()
+                    .filter(|(_, v)| *v >= min && *v <= max)
+                    .map(|(id, _)| id.clone())
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// Search for metadata by date range
+    pub fn search_date_range(&self, field: &str, start: DateTime<Utc>, end: DateTime<Utc>) -> HashSet<String> {
+        self.date_index
+            .get(field)
+            .map(|values| {
+                values
+                    .iter()
+                    .filter(|(_, dt)| *dt >= start && *dt <= end)
+                    .map(|(id, _)| id.clone())
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+}
+
+/// Metadata version control system
+#[derive(Debug, Clone)]
+pub struct MetadataVersionControl {
+    /// Current version
+    current: Arc<RwLock<Metadata>>,
+    /// Version history
+    history: Arc<RwLock<Vec<MetadataVersion>>>,
+    /// Maximum number of versions to keep
+    max_versions: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct MetadataVersion {
+    pub id: String,
+    pub timestamp: DateTime<Utc>,
+    pub metadata: Metadata,
+    pub parent_id: Option<String>,
+    pub message: String,
+    pub author: Option<String>,
+    pub hash: String,
+}
+
+impl MetadataVersionControl {
+    pub fn new(initial: Metadata) -> Self {
+        let version = MetadataVersion {
+            id: uuid::Uuid::new_v4().to_string(),
+            timestamp: Utc::now(),
+            metadata: initial.clone(),
+            parent_id: None,
+            message: "Initial version".to_string(),
+            author: std::env::var("USER").ok(),
+            hash: Self::compute_hash(&initial),
+        };
+
+        Self {
+            current: Arc::new(RwLock::new(initial)),
+            history: Arc::new(RwLock::new(vec![version])),
+            max_versions: 100,
+        }
+    }
+
+    /// Commit a new version
+    pub fn commit(&self, metadata: Metadata, message: impl Into<String>) -> Result<String> {
+        let mut history = self.history.write().unwrap();
+        let parent_id = history.last().map(|v| v.id.clone());
+        
+        let version = MetadataVersion {
+            id: uuid::Uuid::new_v4().to_string(),
+            timestamp: Utc::now(),
+            metadata: metadata.clone(),
+            parent_id,
+            message: message.into(),
+            author: std::env::var("USER").ok(),
+            hash: Self::compute_hash(&metadata),
+        };
+
+        let version_id = version.id.clone();
+        history.push(version);
+
+        // Prune old versions if necessary
+        if history.len() > self.max_versions {
+            history.drain(0..history.len() - self.max_versions);
+        }
+
+        *self.current.write().unwrap() = metadata;
+        
+        Ok(version_id)
+    }
+
+    /// Get a specific version
+    pub fn get_version(&self, version_id: &str) -> Option<MetadataVersion> {
+        self.history
+            .read()
+            .unwrap()
+            .iter()
+            .find(|v| v.id == version_id)
+            .cloned()
+    }
+
+    /// Get version history
+    pub fn get_history(&self) -> Vec<MetadataVersion> {
+        self.history.read().unwrap().clone()
+    }
+
+    /// Compute diff between two versions
+    pub fn diff(&self, version1: &str, version2: &str) -> Option<MetadataDiff> {
+        let history = self.history.read().unwrap();
+        let v1 = history.iter().find(|v| v.id == version1)?;
+        let v2 = history.iter().find(|v| v.id == version2)?;
+        
+        Some(MetadataDiff::compute(&v1.metadata, &v2.metadata))
+    }
+
+    /// Rollback to a specific version
+    pub fn rollback(&self, version_id: &str) -> Result<()> {
+        let version = self.get_version(version_id)
+            .ok_or_else(|| IoError::NotFound(format!("Version {} not found", version_id)))?;
+        
+        self.commit(version.metadata.clone(), format!("Rollback to {}", version_id))?;
+        Ok(())
+    }
+
+    fn compute_hash(metadata: &Metadata) -> String {
+        let json = serde_json::to_string(metadata).unwrap_or_default();
+        let mut hasher = Sha256::new();
+        hasher.update(json.as_bytes());
+        format!("{:x}", hasher.finalize())
+    }
+}
+
+/// Represents differences between two metadata objects
+#[derive(Debug, Clone)]
+pub struct MetadataDiff {
+    pub added: IndexMap<String, MetadataValue>,
+    pub removed: IndexMap<String, MetadataValue>,
+    pub modified: IndexMap<String, (MetadataValue, MetadataValue)>,
+}
+
+impl MetadataDiff {
+    pub fn compute(old: &Metadata, new: &Metadata) -> Self {
+        let mut added = IndexMap::new();
+        let mut removed = IndexMap::new();
+        let mut modified = IndexMap::new();
+
+        // Find removed and modified fields
+        for (key, old_value) in &old.data {
+            match new.data.get(key) {
+                None => {
+                    removed.insert(key.clone(), old_value.clone());
+                }
+                Some(new_value) if new_value != old_value => {
+                    modified.insert(key.clone(), (old_value.clone(), new_value.clone()));
+                }
+                _ => {}
+            }
+        }
+
+        // Find added fields
+        for (key, new_value) in &new.data {
+            if !old.data.contains_key(key) {
+                added.insert(key.clone(), new_value.clone());
+            }
+        }
+
+        Self { added, removed, modified }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.added.is_empty() && self.removed.is_empty() && self.modified.is_empty()
+    }
+}
+
+/// Metadata inheritance and composition system
+#[derive(Debug, Clone)]
+pub struct MetadataTemplate {
+    /// Base metadata to inherit from
+    base: Metadata,
+    /// Fields that can be overridden
+    overridable: HashSet<String>,
+    /// Fields that must be provided
+    required: HashSet<String>,
+    /// Default values for optional fields
+    defaults: IndexMap<String, MetadataValue>,
+}
+
+impl MetadataTemplate {
+    pub fn new(base: Metadata) -> Self {
+        Self {
+            base,
+            overridable: HashSet::new(),
+            required: HashSet::new(),
+            defaults: IndexMap::new(),
+        }
+    }
+
+    pub fn allow_override(mut self, field: impl Into<String>) -> Self {
+        self.overridable.insert(field.into());
+        self
+    }
+
+    pub fn require_field(mut self, field: impl Into<String>) -> Self {
+        self.required.insert(field.into());
+        self
+    }
+
+    pub fn default_value(mut self, field: impl Into<String>, value: impl Into<MetadataValue>) -> Self {
+        self.defaults.insert(field.into(), value.into());
+        self
+    }
+
+    /// Create a new metadata instance from this template
+    pub fn instantiate(&self, overrides: IndexMap<String, MetadataValue>) -> Result<Metadata> {
+        let mut metadata = self.base.clone();
+
+        // Apply defaults
+        for (key, value) in &self.defaults {
+            if !metadata.data.contains_key(key) {
+                metadata.set(key.clone(), value.clone());
+            }
+        }
+
+        // Apply overrides
+        for (key, value) in overrides {
+            if !self.overridable.contains(&key) && self.base.data.contains_key(&key) {
+                return Err(IoError::ValidationError(
+                    format!("Field '{}' cannot be overridden", key)
+                ));
+            }
+            metadata.set(key, value);
+        }
+
+        // Check required fields
+        for field in &self.required {
+            if !metadata.data.contains_key(field) {
+                return Err(IoError::ValidationError(
+                    format!("Required field '{}' is missing", field)
+                ));
+            }
+        }
+
+        Ok(metadata)
+    }
+}
+
+/// Cross-reference resolution system
+#[derive(Debug, Clone)]
+pub struct MetadataReferenceResolver {
+    /// Registry of metadata objects by ID
+    registry: Arc<RwLock<HashMap<String, Metadata>>>,
+    /// Reference graph for dependency tracking
+    references: Arc<RwLock<HashMap<String, HashSet<String>>>>,
+}
+
+impl MetadataReferenceResolver {
+    pub fn new() -> Self {
+        Self {
+            registry: Arc::new(RwLock::new(HashMap::new())),
+            references: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
+
+    /// Register a metadata object
+    pub fn register(&self, id: impl Into<String>, metadata: Metadata) -> Result<()> {
+        let id = id.into();
+        let refs = self.extract_references(&metadata);
+        
+        self.registry.write().unwrap().insert(id.clone(), metadata);
+        self.references.write().unwrap().insert(id, refs);
+        
+        Ok(())
+    }
+
+    /// Resolve all references in a metadata object
+    pub fn resolve(&self, metadata: &mut Metadata) -> Result<()> {
+        self.resolve_value(&mut metadata.data)?;
+        Ok(())
+    }
+
+    fn resolve_value(&self, data: &mut IndexMap<String, MetadataValue>) -> Result<()> {
+        for value in data.values_mut() {
+            match value {
+                MetadataValue::String(s) if s.starts_with("ref:") => {
+                    let ref_id = s.strip_prefix("ref:").unwrap();
+                    let registry = self.registry.read().unwrap();
+                    if let Some(referenced) = registry.get(ref_id) {
+                        *value = MetadataValue::Object(referenced.data.clone());
+                    } else {
+                        return Err(IoError::NotFound(format!("Reference '{}' not found", ref_id)));
+                    }
+                }
+                MetadataValue::Object(obj) => {
+                    self.resolve_value(obj)?;
+                }
+                MetadataValue::Array(arr) => {
+                    for item in arr {
+                        if let MetadataValue::Object(obj) = item {
+                            self.resolve_value(obj)?;
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+
+    fn extract_references(&self, metadata: &Metadata) -> HashSet<String> {
+        let mut refs = HashSet::new();
+        self.extract_refs_from_value(&metadata.data, &mut refs);
+        refs
+    }
+
+    fn extract_refs_from_value(&self, data: &IndexMap<String, MetadataValue>, refs: &mut HashSet<String>) {
+        for value in data.values() {
+            match value {
+                MetadataValue::String(s) if s.starts_with("ref:") => {
+                    if let Some(ref_id) = s.strip_prefix("ref:") {
+                        refs.insert(ref_id.to_string());
+                    }
+                }
+                MetadataValue::Object(obj) => {
+                    self.extract_refs_from_value(obj, refs);
+                }
+                MetadataValue::Array(arr) => {
+                    for item in arr {
+                        if let MetadataValue::Object(obj) = item {
+                            self.extract_refs_from_value(obj, refs);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    /// Get all objects that reference a given ID
+    pub fn get_referencing(&self, id: &str) -> Vec<String> {
+        let references = self.references.read().unwrap();
+        references
+            .iter()
+            .filter(|(_, refs)| refs.contains(id))
+            .map(|(referencing_id, _)| referencing_id.clone())
+            .collect()
+    }
+}
+
+/// Metadata provenance tracking with cryptographic verification
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MetadataProvenance {
+    /// Chain of custody
+    chain: Vec<ProvenanceEntry>,
+    /// Cryptographic signatures
+    signatures: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProvenanceEntry {
+    pub id: String,
+    pub timestamp: DateTime<Utc>,
+    pub action: String,
+    pub agent: String,
+    pub previous_hash: Option<String>,
+    pub data_hash: String,
+    pub metadata_snapshot: Option<Metadata>,
+}
+
+impl MetadataProvenance {
+    pub fn new() -> Self {
+        Self {
+            chain: Vec::new(),
+            signatures: HashMap::new(),
+        }
+    }
+
+    /// Add a provenance entry
+    pub fn add_entry(&mut self, action: impl Into<String>, agent: impl Into<String>, metadata: &Metadata) {
+        let previous_hash = self.chain.last().map(|e| e.data_hash.clone());
+        
+        let entry = ProvenanceEntry {
+            id: uuid::Uuid::new_v4().to_string(),
+            timestamp: Utc::now(),
+            action: action.into(),
+            agent: agent.into(),
+            previous_hash,
+            data_hash: self.compute_hash(metadata, previous_hash.as_deref()),
+            metadata_snapshot: Some(metadata.clone()),
+        };
+        
+        self.chain.push(entry);
+    }
+
+    /// Verify the integrity of the provenance chain
+    pub fn verify_chain(&self) -> Result<()> {
+        let mut previous_hash: Option<String> = None;
+        
+        for entry in &self.chain {
+            if entry.previous_hash != previous_hash {
+                return Err(IoError::ValidationError(
+                    format!("Provenance chain broken at entry {}", entry.id)
+                ));
+            }
+            
+            if let Some(metadata) = &entry.metadata_snapshot {
+                let expected_hash = self.compute_hash(metadata, previous_hash.as_deref());
+                if entry.data_hash != expected_hash {
+                    return Err(IoError::ValidationError(
+                        format!("Data hash mismatch at entry {}", entry.id)
+                    ));
+                }
+            }
+            
+            previous_hash = Some(entry.data_hash.clone());
+        }
+        
+        Ok(())
+    }
+
+    fn compute_hash(&self, metadata: &Metadata, previous: Option<&str>) -> String {
+        let mut hasher = Sha256::new();
+        if let Some(prev) = previous {
+            hasher.update(prev.as_bytes());
+        }
+        let json = serde_json::to_string(metadata).unwrap_or_default();
+        hasher.update(json.as_bytes());
+        format!("{:x}", hasher.finalize())
+    }
+
+    /// Export provenance as a verifiable certificate
+    pub fn export_certificate(&self) -> Result<String> {
+        serde_json::to_string_pretty(self)
+            .map_err(|e| IoError::SerializationError(e.to_string()))
+    }
+}
+
+/// External metadata repository integration
+#[cfg(feature = "reqwest")]
+#[derive(Debug, Clone)]
+pub struct MetadataRepository {
+    /// Repository URL
+    url: String,
+    /// Local cache
+    cache: Arc<RwLock<HashMap<String, Metadata>>>,
+    /// HTTP client
+    client: reqwest::blocking::Client,
+}
+
+#[cfg(feature = "reqwest")]
+impl MetadataRepository {
+    pub fn new(url: impl Into<String>) -> Self {
+        Self {
+            url: url.into(),
+            cache: Arc::new(RwLock::new(HashMap::new())),
+            client: reqwest::blocking::Client::new(),
+        }
+    }
+
+    /// Fetch metadata from repository
+    pub fn fetch(&self, id: &str) -> Result<Metadata> {
+        // Check cache first
+        if let Some(metadata) = self.cache.read().unwrap().get(id) {
+            return Ok(metadata.clone());
+        }
+        
+        // Fetch from repository
+        let url = format!("{}/metadata/{}", self.url, id);
+        let response = self.client.get(&url)
+            .send()
+            .map_err(|e| IoError::NetworkError(e.to_string()))?;
+        
+        if !response.status().is_success() {
+            return Err(IoError::NetworkError(
+                format!("Failed to fetch metadata: {}", response.status())
+            ));
+        }
+        
+        let metadata: Metadata = response.json()
+            .map_err(|e| IoError::SerializationError(e.to_string()))?;
+        
+        // Update cache
+        self.cache.write().unwrap().insert(id.to_string(), metadata.clone());
+        
+        Ok(metadata)
+    }
+
+    /// Push metadata to repository
+    pub fn push(&self, id: &str, metadata: &Metadata) -> Result<()> {
+        let url = format!("{}/metadata/{}", self.url, id);
+        let response = self.client.put(&url)
+            .json(metadata)
+            .send()
+            .map_err(|e| IoError::NetworkError(e.to_string()))?;
+        
+        if !response.status().is_success() {
+            return Err(IoError::NetworkError(
+                format!("Failed to push metadata: {}", response.status())
+            ));
+        }
+        
+        // Update cache
+        self.cache.write().unwrap().insert(id.to_string(), metadata.clone());
+        
+        Ok(())
+    }
+
+    /// Search repository
+    pub fn search(&self, query: &str) -> Result<Vec<String>> {
+        let url = format!("{}/search?q={}", self.url, urlencoding::encode(query));
+        let response = self.client.get(&url)
+            .send()
+            .map_err(|e| IoError::NetworkError(e.to_string()))?;
+        
+        if !response.status().is_success() {
+            return Err(IoError::NetworkError(
+                format!("Search failed: {}", response.status())
+            ));
+        }
+        
+        let results: Vec<String> = response.json()
+            .map_err(|e| IoError::SerializationError(e.to_string()))?;
+        
+        Ok(results)
+    }
+}
+
+/// Automatic metadata extraction from files
+pub struct MetadataExtractor {
+    extractors: HashMap<String, Box<dyn Fn(&Path) -> Result<Metadata> + Send + Sync>>,
+}
+
+impl MetadataExtractor {
+    pub fn new() -> Self {
+        let mut extractor = Self {
+            extractors: HashMap::new(),
+        };
+        
+        // Register default extractors
+        extractor.register_defaults();
+        extractor
+    }
+
+    fn register_defaults(&mut self) {
+        // Image metadata extractor
+        self.register("image", Box::new(|path| {
+            let mut metadata = Metadata::new();
+            
+            // Use image crate to extract metadata
+            if let Ok(img) = image::open(path) {
+                metadata.set("width", img.width() as i64);
+                metadata.set("height", img.height() as i64);
+                metadata.set("color_type", format!("{:?}", img.color()));
+            }
+            
+            // Extract EXIF data if available
+            if let Ok(file) = std::fs::File::open(path) {
+                if let Ok(exif_reader) = exif::Reader::new() {
+                    if let Ok(exif) = exif_reader.read_from_container(&mut std::io::BufReader::new(file)) {
+                        for field in exif.fields() {
+                            let key = format!("exif.{}", field.tag);
+                            let value = field.display_value().to_string();
+                            metadata.set_extension("exif", key, value);
+                        }
+                    }
+                }
+            }
+            
+            Ok(metadata)
+        }));
+
+        // Audio metadata extractor
+        self.register("audio", Box::new(|path| {
+            let mut metadata = Metadata::new();
+            
+            // Basic audio file info
+            if let Ok(meta) = std::fs::metadata(path) {
+                metadata.set("file_size", meta.len() as i64);
+                if let Ok(modified) = meta.modified() {
+                    metadata.set("modified", MetadataValue::DateTime(modified.into()));
+                }
+            }
+            
+            // Extract audio-specific metadata
+            // This would use audio-specific libraries in a real implementation
+            
+            Ok(metadata)
+        }));
+
+        // NetCDF metadata extractor
+        self.register("netcdf", Box::new(|path| {
+            let mut metadata = Metadata::new();
+            
+            // Extract NetCDF global attributes
+            // This would use the netcdf module in a real implementation
+            
+            Ok(metadata)
+        }));
+    }
+
+    /// Register a custom extractor
+    pub fn register(&mut self, format: &str, extractor: Box<dyn Fn(&Path) -> Result<Metadata> + Send + Sync>) {
+        self.extractors.insert(format.to_string(), extractor);
+    }
+
+    /// Extract metadata from a file
+    pub fn extract(&self, path: impl AsRef<Path>) -> Result<Metadata> {
+        let path = path.as_ref();
+        let extension = path.extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("");
+        
+        // Determine format from extension
+        let format = match extension {
+            "png" | "jpg" | "jpeg" | "gif" | "bmp" | "tiff" => "image",
+            "wav" | "mp3" | "flac" | "ogg" => "audio",
+            "nc" | "nc4" => "netcdf",
+            "h5" | "hdf5" => "hdf5",
+            _ => return Err(IoError::UnsupportedFormat(format!("No extractor for format: {}", extension))),
+        };
+        
+        if let Some(extractor) = self.extractors.get(format) {
+            extractor(path)
+        } else {
+            Err(IoError::UnsupportedFormat(format!("No extractor for format: {}", format)))
+        }
+    }
+
+    /// Extract and merge metadata from multiple sources
+    pub fn extract_composite(&self, paths: &[impl AsRef<Path>]) -> Result<Metadata> {
+        let mut composite = Metadata::new();
+        
+        for (i, path) in paths.iter().enumerate() {
+            let metadata = self.extract(path)?;
+            
+            // Store each file's metadata under a numbered key
+            let key = format!("file_{}", i);
+            composite.set(key, MetadataValue::Object(metadata.data));
+        }
+        
+        composite.set("file_count", paths.len() as i64);
+        composite.update_modification_date();
+        
+        Ok(composite)
     }
 }

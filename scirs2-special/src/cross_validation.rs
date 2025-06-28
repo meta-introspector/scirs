@@ -5,7 +5,6 @@
 //! and high-precision arbitrary precision libraries.
 
 use crate::error::SpecialResult;
-use ndarray::{Array1, Array2};
 use std::collections::HashMap;
 use std::process::Command;
 use serde::{Deserialize, Serialize};

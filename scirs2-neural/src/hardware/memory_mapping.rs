@@ -1,9 +1,36 @@
 //! Memory mapping and management for hardware accelerators
 
 use crate::error::Result;
-use crate::hardware::{DeviceBuffer, MemoryStrategy, MemoryRequirements, MemoryStatistics};
+use crate::hardware::accelerator::DeviceBuffer;
+use crate::hardware::MemoryStrategy;
 use std::sync::{Arc, Mutex};
 use std::collections::{HashMap, VecDeque};
+
+/// Memory requirements for a layer or operation
+#[derive(Debug, Clone)]
+pub struct MemoryMapRequirements {
+    /// Minimum memory required in bytes
+    pub min_bytes: usize,
+    /// Preferred memory size in bytes
+    pub preferred_bytes: usize,
+    /// Memory alignment requirement
+    pub alignment: usize,
+    /// Whether the memory can be shared
+    pub can_share: bool,
+}
+
+/// Memory statistics
+#[derive(Debug, Clone)]
+pub struct MemoryStatistics {
+    /// Total allocated memory
+    pub total_allocated: usize,
+    /// Peak allocated memory
+    pub peak_allocated: usize,
+    /// Number of allocations
+    pub num_allocations: usize,
+    /// Number of deallocations
+    pub num_deallocations: usize,
+}
 
 /// Memory mapper for efficient device memory management
 pub struct MemoryMapper {

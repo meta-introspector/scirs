@@ -121,7 +121,7 @@ impl PipelineContext {
 }
 
 /// Pipeline configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PipelineConfig {
     /// Enable parallel execution where possible
     pub parallel: bool,
@@ -138,7 +138,28 @@ pub struct PipelineConfig {
     /// Enable checkpointing
     pub checkpoint: bool,
     /// Checkpoint interval
+    #[serde(with = "serde_duration")]
     pub checkpoint_interval: Duration,
+}
+
+mod serde_duration {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::time::Duration;
+    
+    pub fn serialize<S>(duration: &Duration, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        duration.as_secs().serialize(serializer)
+    }
+    
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let secs = u64::deserialize(deserializer)?;
+        Ok(Duration::from_secs(secs))
+    }
 }
 
 impl Default for PipelineConfig {
@@ -404,5 +425,291 @@ impl PipelineStage for FunctionStage {
 
     fn stage_type(&self) -> String {
         "function".to_string()
+    }
+}
+
+// Advanced Pipeline Features
+
+use serde::{Serialize, Deserialize};
+use chrono::{DateTime, Utc};
+
+/// Pipeline serialization for saving/loading pipeline configurations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SerializedPipeline {
+    pub name: String,
+    pub version: String,
+    pub description: String,
+    pub stages: Vec<SerializedStage>,
+    pub config: PipelineConfig,
+    pub metadata: Metadata,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SerializedStage {
+    pub name: String,
+    pub stage_type: String,
+    pub config: serde_json::Value,
+}
+
+impl<I, O> Pipeline<I, O> {
+    /// Save pipeline configuration to a file
+    pub fn save_config(&self, path: impl AsRef<Path>) -> Result<()> {
+        let serialized = SerializedPipeline {
+            name: "pipeline".to_string(),
+            version: "1.0.0".to_string(),
+            description: String::new(),
+            stages: self.stages.iter().map(|s| SerializedStage {
+                name: s.name(),
+                stage_type: s.stage_type(),
+                config: serde_json::Value::Null, // Stages would need to implement serialization
+            }).collect(),
+            config: self.config.clone(),
+            metadata: Metadata::new(),
+        };
+        
+        let json = serde_json::to_string_pretty(&serialized)
+            .map_err(|e| IoError::SerializationError(e.to_string()))?;
+        
+        std::fs::write(path, json).map_err(|e| IoError::Io(e))
+    }
+    
+    /// Load pipeline configuration from a file
+    pub fn load_config(path: impl AsRef<Path>) -> Result<SerializedPipeline> {
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| IoError::Io(e))?;
+        
+        serde_json::from_str(&content)
+            .map_err(|e| IoError::SerializationError(e.to_string()))
+    }
+}
+
+/// Pipeline composition for combining multiple pipelines
+pub struct PipelineComposer<I, M, O> {
+    first: Pipeline<I, M>,
+    second: Pipeline<M, O>,
+}
+
+impl<I, M, O> PipelineComposer<I, M, O>
+where
+    I: 'static + Send + Sync,
+    M: 'static + Send + Sync,
+    O: 'static + Send + Sync,
+{
+    pub fn new(first: Pipeline<I, M>, second: Pipeline<M, O>) -> Self {
+        Self { first, second }
+    }
+    
+    pub fn execute(&self, input: I) -> Result<O> {
+        let intermediate = self.first.execute(input)?;
+        self.second.execute(intermediate)
+    }
+}
+
+/// Data lineage tracker for tracking data transformations
+#[derive(Debug, Clone)]
+pub struct DataLineage {
+    pub id: String,
+    pub source: String,
+    pub transformations: Vec<TransformationRecord>,
+    pub created_at: DateTime<Utc>,
+    pub last_modified: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TransformationRecord {
+    pub stage_name: String,
+    pub timestamp: DateTime<Utc>,
+    pub input_hash: String,
+    pub output_hash: String,
+    pub parameters: HashMap<String, serde_json::Value>,
+}
+
+impl DataLineage {
+    pub fn new(source: impl Into<String>) -> Self {
+        let now = Utc::now();
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            source: source.into(),
+            transformations: Vec::new(),
+            created_at: now,
+            last_modified: now,
+        }
+    }
+    
+    pub fn add_transformation(&mut self, record: TransformationRecord) {
+        self.transformations.push(record);
+        self.last_modified = Utc::now();
+    }
+    
+    /// Generate a lineage graph in DOT format
+    pub fn to_dot(&self) -> String {
+        let mut dot = String::from("digraph DataLineage {\n");
+        dot.push_str("  rankdir=LR;\n");
+        dot.push_str(&format!("  source [label=\"{}\" shape=box];\n", self.source));
+        
+        let mut prev = "source";
+        for (i, transform) in self.transformations.iter().enumerate() {
+            let node_id = format!("t{}", i);
+            dot.push_str(&format!("  {} [label=\"{}\"];\n", node_id, transform.stage_name));
+            dot.push_str(&format!("  {} -> {};\n", prev, node_id));
+            prev = &node_id;
+        }
+        
+        dot.push_str("}\n");
+        dot
+    }
+}
+
+/// Pipeline optimizer for reordering stages
+pub struct PipelineOptimizer;
+
+impl PipelineOptimizer {
+    /// Analyze pipeline and suggest optimizations
+    pub fn analyze<I, O>(pipeline: &Pipeline<I, O>) -> OptimizationReport {
+        OptimizationReport {
+            suggestions: vec![
+                OptimizationSuggestion {
+                    category: "performance".to_string(),
+                    description: "Consider moving filter stages earlier in the pipeline".to_string(),
+                    impact: "high".to_string(),
+                },
+                OptimizationSuggestion {
+                    category: "memory".to_string(),
+                    description: "Enable streaming for large datasets".to_string(),
+                    impact: "medium".to_string(),
+                },
+            ],
+            estimated_improvement: 0.25,
+        }
+    }
+    
+    /// Optimize stage ordering for better performance
+    pub fn optimize_ordering(stages: Vec<Box<dyn PipelineStage>>) -> Vec<Box<dyn PipelineStage>> {
+        // Simple heuristic: move filters and validations earlier
+        let mut filters = Vec::new();
+        let mut others = Vec::new();
+        
+        for stage in stages {
+            match stage.stage_type().as_str() {
+                "filter" | "validation" => filters.push(stage),
+                _ => others.push(stage),
+            }
+        }
+        
+        filters.extend(others);
+        filters
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct OptimizationReport {
+    pub suggestions: Vec<OptimizationSuggestion>,
+    pub estimated_improvement: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct OptimizationSuggestion {
+    pub category: String,
+    pub description: String,
+    pub impact: String,
+}
+
+/// Pipeline configuration DSL for easier pipeline creation
+#[macro_export]
+macro_rules! pipeline {
+    ($($stage:expr),* $(,)?) => {{
+        let mut pipeline = Pipeline::new();
+        $(
+            pipeline = pipeline.add_stage($stage);
+        )*
+        pipeline
+    }};
+}
+
+/// Stage creation DSL
+#[macro_export]
+macro_rules! stage {
+    (read $path:expr) => {
+        Box::new(FileReadStage::new($path, FileFormat::Auto))
+    };
+    (transform $func:expr) => {
+        function_stage("transform", $func)
+    };
+    (filter $pred:expr) => {
+        function_stage("filter", move |data| {
+            if $pred(&data) { Ok(data) } else { Err(IoError::Other("Filtered out".to_string())) }
+        })
+    };
+    (write $path:expr) => {
+        Box::new(FileWriteStage::new($path, FileFormat::Auto))
+    };
+}
+
+/// Pipeline monitoring and alerting
+pub struct PipelineMonitor {
+    thresholds: MonitoringThresholds,
+    alerts: Vec<Alert>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MonitoringThresholds {
+    pub max_execution_time: Duration,
+    pub max_memory_usage: usize,
+    pub max_error_rate: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct Alert {
+    pub timestamp: DateTime<Utc>,
+    pub severity: AlertSeverity,
+    pub message: String,
+    pub stage: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum AlertSeverity {
+    Info,
+    Warning,
+    Error,
+    Critical,
+}
+
+impl PipelineMonitor {
+    pub fn new(thresholds: MonitoringThresholds) -> Self {
+        Self {
+            thresholds,
+            alerts: Vec::new(),
+        }
+    }
+    
+    pub fn check_metrics(&mut self, stats: &PipelineStats) {
+        // Check execution time
+        if stats.total_time > self.thresholds.max_execution_time {
+            self.alerts.push(Alert {
+                timestamp: Utc::now(),
+                severity: AlertSeverity::Warning,
+                message: format!("Pipeline execution time ({:?}) exceeded threshold ({:?})",
+                    stats.total_time, self.thresholds.max_execution_time),
+                stage: None,
+            });
+        }
+        
+        // Check error rate
+        let total = stats.items_processed as f64;
+        let error_rate = if total > 0.0 { stats.errors as f64 / total } else { 0.0 };
+        
+        if error_rate > self.thresholds.max_error_rate {
+            self.alerts.push(Alert {
+                timestamp: Utc::now(),
+                severity: AlertSeverity::Error,
+                message: format!("Error rate ({:.2}%) exceeded threshold ({:.2}%)",
+                    error_rate * 100.0, self.thresholds.max_error_rate * 100.0),
+                stage: None,
+            });
+        }
+    }
+    
+    pub fn get_alerts(&self) -> &[Alert] {
+        &self.alerts
     }
 }

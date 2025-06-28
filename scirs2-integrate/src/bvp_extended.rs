@@ -7,7 +7,7 @@
 use crate::bvp::{BVPOptions, BVPResult};
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
-use ndarray::{Array1, ArrayView1};
+use ndarray::{Array1, Array2, ArrayView1};
 
 /// Boundary condition types for extended BVP solver
 #[derive(Debug, Clone)]
@@ -419,6 +419,7 @@ where
         // Set up collocation system
         let options = options.unwrap_or_default();
         let mut residuals = vec![F::zero(); total_points * n_dim];
+        let mut max_residual = F::zero();
         
         // Newton's method for solving the collocation system
         for _iter in 0..options.max_iter {
@@ -434,20 +435,22 @@ where
             )?;
             
             // Check convergence
-            let max_residual = residuals.iter()
+            max_residual = residuals.iter()
                 .map(|&r| r.abs())
                 .fold(F::zero(), |a, b| if a > b { a } else { b });
                 
             if max_residual < options.tol {
                 // Converged
-                let x = Array1::from_vec(global_mesh);
+                let x = global_mesh.clone();
                 let y = transpose_solution(y_solution);
                 
                 return Ok(BVPResult {
-                    x,
+                    x: x.to_vec(),
                     y,
-                    converged: true,
-                    iterations: _iter + 1,
+                    n_iter: _iter + 1,
+                    success: true,
+                    message: Some("Converged".to_string()),
+                    residual_norm: max_residual,
                 });
             }
             
@@ -459,7 +462,7 @@ where
                 &boundary_conditions,
                 &multipoint,
                 n_dim,
-                options.jacobian_eps,
+                F::from(1e-6).unwrap(), // Default jacobian epsilon
             )?;
             
             // Solve J * delta_y = -residuals
@@ -474,14 +477,16 @@ where
         }
         
         // Did not converge
-        let x = Array1::from_vec(global_mesh);
+        let x = global_mesh;
         let y = transpose_solution(y_solution);
         
         Ok(BVPResult {
             x,
             y,
-            converged: false,
-            iterations: options.max_iter,
+            n_iter: options.max_iter,
+            success: false,
+            message: Some("Did not converge within max iterations".to_string()),
+            residual_norm: max_residual,
         })
     }
 }

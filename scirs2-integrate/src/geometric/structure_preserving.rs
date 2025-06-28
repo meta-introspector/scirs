@@ -491,7 +491,7 @@ impl EnergyMomentumIntegrator {
         let v_new = v + &a_alg * dt;
         
         // Energy-momentum correction
-        let momentum_error: f64 = (&v_new * &self.mass).sum() - (&v * &self.mass).sum();
+        let momentum_error: f64 = (&v_new * &self.mass).sum() - (v.to_owned() * &self.mass).sum();
         if momentum_error.abs() > 1e-12 {
             let v_corrected = &v_new - momentum_error / self.mass.sum();
             Ok((u_new, v_corrected))
@@ -676,7 +676,9 @@ impl MultiSymplecticIntegrator {
             let residual = self.K.dot(&z_t) + self.L.dot(&z_x) - grad_S;
             
             // Newton iteration (simplified)
-            z_new.row_mut(i).assign(&(&z_new.row(i) - &residual * 0.5));
+            let current_row = z_new.row(i).to_owned();
+            let update = &current_row - &residual * 0.5;
+            z_new.row_mut(i).assign(&update);
         }
         
         Ok(z_new)

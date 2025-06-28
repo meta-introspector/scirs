@@ -7,17 +7,18 @@
 
 // Import internal modules
 mod adaptive;
-pub mod dpss_enhanced;
+// pub mod dpss_enhanced; // Disabled - requires ndarray-linalg
 pub mod enhanced;
 mod ftest;
 mod jackknife;
 mod psd;
 mod utils;
+mod validation;
 mod windows;
 
 // Re-export public components
 pub use adaptive::adaptive_psd;
-pub use dpss_enhanced::{dpss_enhanced, validate_dpss_implementation};
+// pub use dpss_enhanced::{dpss_enhanced, validate_dpss_implementation}; // Disabled - requires ndarray-linalg
 pub use enhanced::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
 pub use ftest::{harmonic_ftest, multitaper_ftest, multitaper_ftest_complex};
 pub use jackknife::{
@@ -25,6 +26,9 @@ pub use jackknife::{
 };
 pub use psd::{multitaper_spectrogram, pmtm};
 pub use utils::{coherence, multitaper_filtfilt};
+pub use validation::{
+    validate_multitaper_comprehensive, MultitaperValidationResult, TestSignalConfig,
+};
 pub use windows::dpss;
 
 // No direct imports needed for the module - submodules import their own dependencies

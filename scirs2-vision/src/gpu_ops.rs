@@ -93,11 +93,11 @@ impl GpuVisionContext {
 /// - Optimal for kernels larger than 5x5
 /// - Batch processing support for multiple images
 pub fn gpu_convolve_2d(
-    _ctx: &GpuVisionContext,
+    ctx: &GpuVisionContext,
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
 ) -> Result<Array2<f32>> {
-    let (_height, _width) = image.dim();
+    let (height, width) = image.dim();
     let (k_height, k_width) = kernel.dim();
     
     // Validate kernel dimensions
@@ -107,14 +107,198 @@ pub fn gpu_convolve_2d(
         ));
     }
     
-    // For now, fall back to CPU implementation
-    // In a full implementation, we would:
-    // 1. Upload image and kernel to GPU
-    // 2. Execute convolution kernel
-    // 3. Download result
+    // If GPU is not available, fall back to SIMD
+    if !ctx.is_gpu_available() {
+        return crate::simd_ops::simd_convolve_2d(image, kernel);
+    }
     
-    // Placeholder: use CPU fallback
-    crate::simd_ops::simd_convolve_2d(image, kernel)
+    // Calculate output dimensions
+    let out_height = height;
+    let out_width = width;
+    
+    // Flatten the image and kernel for GPU transfer
+    let image_flat: Vec<f32> = image.iter().cloned().collect();
+    let kernel_flat: Vec<f32> = kernel.iter().cloned().collect();
+    
+    // Create GPU buffers
+    let image_buffer = ctx.context.create_buffer_from_slice(&image_flat);
+    let kernel_buffer = ctx.context.create_buffer_from_slice(&kernel_flat);
+    let output_buffer = ctx.context.create_buffer::<f32>(out_height * out_width);
+    
+    // Try to get the conv2d kernel from the registry
+    match ctx.context.get_kernel("conv2d") {
+        Ok(kernel_handle) => {
+            // Set kernel parameters
+            kernel_handle.set_buffer("input", &image_buffer);
+            kernel_handle.set_buffer("kernel", &kernel_buffer);
+            kernel_handle.set_buffer("output", &output_buffer);
+            kernel_handle.set_u32("batch_size", 1);
+            kernel_handle.set_u32("in_channels", 1);
+            kernel_handle.set_u32("out_channels", 1);
+            kernel_handle.set_u32("input_height", height as u32);
+            kernel_handle.set_u32("input_width", width as u32);
+            kernel_handle.set_u32("output_height", out_height as u32);
+            kernel_handle.set_u32("output_width", out_width as u32);
+            kernel_handle.set_u32("kernel_height", k_height as u32);
+            kernel_handle.set_u32("kernel_width", k_width as u32);
+            kernel_handle.set_u32("stride_y", 1);
+            kernel_handle.set_u32("stride_x", 1);
+            kernel_handle.set_u32("padding_y", (k_height / 2) as u32);
+            kernel_handle.set_u32("padding_x", (k_width / 2) as u32);
+            
+            // Calculate work groups
+            let workgroup_size = 16;
+            let work_groups_x = (out_height + workgroup_size - 1) / workgroup_size;
+            let work_groups_y = (out_width + workgroup_size - 1) / workgroup_size;
+            
+            // Dispatch the kernel
+            kernel_handle.dispatch([work_groups_x as u32, work_groups_y as u32, 1]);
+            
+            // Copy result back to host
+            let mut result_flat = vec![0.0f32; out_height * out_width];
+            output_buffer.copy_to_host(&mut result_flat);
+            
+            // Reshape to 2D array
+            Ok(Array2::from_shape_vec((out_height, out_width), result_flat)
+                .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))?)
+        }
+        Err(_) => {
+            // Kernel not found, fall back to custom implementation or SIMD
+            gpu_convolve_2d_custom(ctx, image, kernel)
+        }
+    }
+}
+
+/// Custom GPU convolution implementation when standard kernel is not available
+fn gpu_convolve_2d_custom(
+    ctx: &GpuVisionContext,
+    image: &ArrayView2<f32>,
+    kernel: &ArrayView2<f32>,
+) -> Result<Array2<f32>> {
+    // Define custom convolution kernel source for vision-specific operations
+    let conv_kernel_source = match ctx.backend() {
+        GpuBackend::Cuda => r#"
+extern "C" __global__ void conv2d_vision(
+    const float* __restrict__ input,
+    const float* __restrict__ kernel,
+    float* __restrict__ output,
+    int height,
+    int width,
+    int k_height,
+    int k_width
+) {
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if (y >= height || x >= width) return;
+    
+    int k_half_h = k_height / 2;
+    int k_half_w = k_width / 2;
+    float sum = 0.0f;
+    
+    for (int ky = 0; ky < k_height; ky++) {
+        for (int kx = 0; kx < k_width; kx++) {
+            int src_y = y + ky - k_half_h;
+            int src_x = x + kx - k_half_w;
+            
+            if (src_y >= 0 && src_y < height && src_x >= 0 && src_x < width) {
+                sum += input[src_y * width + src_x] * kernel[ky * k_width + kx];
+            }
+        }
+    }
+    
+    output[y * width + x] = sum;
+}
+"#,
+        GpuBackend::Wgpu => r#"
+struct Params {
+    height: u32,
+    width: u32,
+    k_height: u32,
+    k_width: u32,
+};
+
+@group(0) @binding(0) var<storage, read> input: array<f32>;
+@group(0) @binding(1) var<storage, read> kernel: array<f32>;
+@group(0) @binding(2) var<storage, write> output: array<f32>;
+@group(0) @binding(3) var<uniform> params: Params;
+
+@compute @workgroup_size(16, 16)
+fn conv2d_vision(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let y = global_id.y;
+    let x = global_id.x;
+    
+    if (y >= params.height || x >= params.width) {
+        return;
+    }
+    
+    let k_half_h = i32(params.k_height / 2u);
+    let k_half_w = i32(params.k_width / 2u);
+    var sum = 0.0;
+    
+    for (var ky = 0u; ky < params.k_height; ky = ky + 1u) {
+        for (var kx = 0u; kx < params.k_width; kx = kx + 1u) {
+            let src_y = i32(y) + i32(ky) - k_half_h;
+            let src_x = i32(x) + i32(kx) - k_half_w;
+            
+            if (src_y >= 0 && src_y < i32(params.height) && src_x >= 0 && src_x < i32(params.width)) {
+                let src_idx = u32(src_y) * params.width + u32(src_x);
+                let kernel_idx = ky * params.k_width + kx;
+                sum += input[src_idx] * kernel[kernel_idx];
+            }
+        }
+    }
+    
+    output[y * params.width + x] = sum;
+}
+"#,
+        _ => {
+            // Fall back to SIMD for unsupported backends
+            return crate::simd_ops::simd_convolve_2d(image, kernel);
+        }
+    };
+    
+    // Compile and execute custom kernel
+    ctx.context.execute(|compiler| {
+        match compiler.compile(conv_kernel_source) {
+            Ok(kernel_handle) => {
+                // Setup and execute similar to above
+                let (height, width) = image.dim();
+                let (k_height, k_width) = kernel.dim();
+                
+                let image_flat: Vec<f32> = image.iter().cloned().collect();
+                let kernel_flat: Vec<f32> = kernel.iter().cloned().collect();
+                
+                let image_buffer = ctx.context.create_buffer_from_slice(&image_flat);
+                let kernel_buffer = ctx.context.create_buffer_from_slice(&kernel_flat);
+                let output_buffer = ctx.context.create_buffer::<f32>(height * width);
+                
+                kernel_handle.set_buffer("input", &image_buffer);
+                kernel_handle.set_buffer("kernel", &kernel_buffer);
+                kernel_handle.set_buffer("output", &output_buffer);
+                kernel_handle.set_u32("height", height as u32);
+                kernel_handle.set_u32("width", width as u32);
+                kernel_handle.set_u32("k_height", k_height as u32);
+                kernel_handle.set_u32("k_width", k_width as u32);
+                
+                let workgroup_size = 16;
+                let work_groups_x = (height + workgroup_size - 1) / workgroup_size;
+                let work_groups_y = (width + workgroup_size - 1) / workgroup_size;
+                
+                kernel_handle.dispatch([work_groups_x as u32, work_groups_y as u32, 1]);
+                
+                let mut result_flat = vec![0.0f32; height * width];
+                output_buffer.copy_to_host(&mut result_flat);
+                
+                Array2::from_shape_vec((height, width), result_flat)
+                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
+            }
+            Err(_) => {
+                // Fall back to SIMD if compilation fails
+                crate::simd_ops::simd_convolve_2d(image, kernel)
+            }
+        }
+    })
 }
 
 /// GPU-accelerated Sobel edge detection
@@ -160,21 +344,108 @@ pub fn gpu_sobel_gradients(
 ///
 /// Computes sqrt(gx^2 + gy^2) on GPU.
 fn gpu_gradient_magnitude(
-    _ctx: &GpuVisionContext,
+    ctx: &GpuVisionContext,
     grad_x: &ArrayView2<f32>,
     grad_y: &ArrayView2<f32>,
 ) -> Result<Array2<f32>> {
     let (height, width) = grad_x.dim();
-    let mut magnitude = Array2::zeros((height, width));
     
-    // Placeholder: CPU fallback
-    for ((m, gx), gy) in magnitude.iter_mut()
-        .zip(grad_x.iter())
-        .zip(grad_y.iter()) {
-        *m = (gx * gx + gy * gy).sqrt();
+    if !ctx.is_gpu_available() {
+        // CPU fallback with SIMD optimization
+        let mut magnitude = Array2::zeros((height, width));
+        for ((m, gx), gy) in magnitude.iter_mut()
+            .zip(grad_x.iter())
+            .zip(grad_y.iter()) {
+            *m = (gx * gx + gy * gy).sqrt();
+        }
+        return Ok(magnitude);
     }
     
-    Ok(magnitude)
+    // GPU implementation
+    let grad_x_flat: Vec<f32> = grad_x.iter().cloned().collect();
+    let grad_y_flat: Vec<f32> = grad_y.iter().cloned().collect();
+    
+    let grad_x_buffer = ctx.context.create_buffer_from_slice(&grad_x_flat);
+    let grad_y_buffer = ctx.context.create_buffer_from_slice(&grad_y_flat);
+    let output_buffer = ctx.context.create_buffer::<f32>(height * width);
+    
+    // Define gradient magnitude kernel
+    let kernel_source = match ctx.backend() {
+        GpuBackend::Cuda => r#"
+extern "C" __global__ void gradient_magnitude(
+    const float* __restrict__ grad_x,
+    const float* __restrict__ grad_y,
+    float* __restrict__ magnitude,
+    int size
+) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        float gx = grad_x[idx];
+        float gy = grad_y[idx];
+        magnitude[idx] = sqrtf(gx * gx + gy * gy);
+    }
+}
+"#,
+        GpuBackend::Wgpu => r#"
+@group(0) @binding(0) var<storage, read> grad_x: array<f32>;
+@group(0) @binding(1) var<storage, read> grad_y: array<f32>;
+@group(0) @binding(2) var<storage, write> magnitude: array<f32>;
+@group(0) @binding(3) var<uniform> size: u32;
+
+@compute @workgroup_size(256)
+fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let idx = global_id.x;
+    if (idx >= size) {
+        return;
+    }
+    let gx = grad_x[idx];
+    let gy = grad_y[idx];
+    magnitude[idx] = sqrt(gx * gx + gy * gy);
+}
+"#,
+        _ => {
+            // Fall back to CPU for unsupported backends
+            let mut magnitude = Array2::zeros((height, width));
+            for ((m, gx), gy) in magnitude.iter_mut()
+                .zip(grad_x.iter())
+                .zip(grad_y.iter()) {
+                *m = (gx * gx + gy * gy).sqrt();
+            }
+            return Ok(magnitude);
+        }
+    };
+    
+    ctx.context.execute(|compiler| {
+        match compiler.compile(kernel_source) {
+            Ok(kernel_handle) => {
+                kernel_handle.set_buffer("grad_x", &grad_x_buffer);
+                kernel_handle.set_buffer("grad_y", &grad_y_buffer);
+                kernel_handle.set_buffer("magnitude", &output_buffer);
+                kernel_handle.set_u32("size", (height * width) as u32);
+                
+                let workgroup_size = 256;
+                let work_groups = ((height * width) + workgroup_size - 1) / workgroup_size;
+                
+                kernel_handle.dispatch([work_groups as u32, 1, 1]);
+                
+                let mut result_flat = vec![0.0f32; height * width];
+                output_buffer.copy_to_host(&mut result_flat);
+                
+                Array2::from_shape_vec((height, width), result_flat)
+                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
+            }
+            Err(_) => {
+                // Fall back to CPU
+                let mut magnitude = Array2::zeros((height, width));
+                for ((m, gx), gy) in magnitude.iter_mut()
+                    .zip(grad_x.iter())
+                    .zip(grad_y.iter()) {
+                    *m = (gx * gx + gy * gy).sqrt();
+                }
+                Ok(magnitude)
+            }
+        }
+    })
 }
 
 /// GPU-accelerated Gaussian blur
@@ -228,13 +499,129 @@ fn generate_gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
 ///
 /// Performs convolution with a separable kernel (horizontal then vertical).
 fn gpu_separable_convolution(
-    _ctx: &GpuVisionContext,
+    ctx: &GpuVisionContext,
     image: &ArrayView2<f32>,
     kernel_1d: &[f32],
 ) -> Result<Array2<f32>> {
-    // Placeholder: CPU fallback
-    // In full implementation, would use GPU kernels for separable convolution
-    crate::simd_ops::simd_gaussian_blur(image, kernel_1d.len() as f32 / 6.0)
+    let (height, width) = image.dim();
+    let kernel_size = kernel_1d.len();
+    
+    if !ctx.is_gpu_available() {
+        // Fall back to SIMD
+        return crate::simd_ops::simd_gaussian_blur(image, kernel_size as f32 / 6.0);
+    }
+    
+    // GPU implementation - two pass separable convolution
+    let image_flat: Vec<f32> = image.iter().cloned().collect();
+    
+    // First pass: horizontal convolution
+    let horizontal_result = gpu_separable_1d_pass(
+        ctx,
+        &image_flat,
+        kernel_1d,
+        height,
+        width,
+        true, // horizontal
+    )?;
+    
+    // Second pass: vertical convolution
+    let final_result = gpu_separable_1d_pass(
+        ctx,
+        &horizontal_result,
+        kernel_1d,
+        height,
+        width,
+        false, // vertical
+    )?;
+    
+    Array2::from_shape_vec((height, width), final_result)
+        .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
+}
+
+/// Perform a single 1D convolution pass (horizontal or vertical)
+fn gpu_separable_1d_pass(
+    ctx: &GpuVisionContext,
+    input: &[f32],
+    kernel: &[f32],
+    height: usize,
+    width: usize,
+    horizontal: bool,
+) -> Result<Vec<f32>> {
+    let input_buffer = ctx.context.create_buffer_from_slice(input);
+    let kernel_buffer = ctx.context.create_buffer_from_slice(kernel);
+    let output_buffer = ctx.context.create_buffer::<f32>(height * width);
+    
+    let kernel_source = match ctx.backend() {
+        GpuBackend::Cuda => format!(r#"
+extern "C" __global__ void separable_conv_1d(
+    const float* __restrict__ input,
+    const float* __restrict__ kernel,
+    float* __restrict__ output,
+    int height,
+    int width,
+    int kernel_size,
+    int horizontal
+) {{
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int total_size = height * width;
+    
+    if (idx >= total_size) return;
+    
+    int y = idx / width;
+    int x = idx % width;
+    int half_kernel = kernel_size / 2;
+    float sum = 0.0f;
+    
+    if (horizontal) {{
+        // Horizontal pass
+        for (int k = 0; k < kernel_size; k++) {{
+            int src_x = x + k - half_kernel;
+            if (src_x >= 0 && src_x < width) {{
+                sum += input[y * width + src_x] * kernel[k];
+            }}
+        }}
+    }} else {{
+        // Vertical pass
+        for (int k = 0; k < kernel_size; k++) {{
+            int src_y = y + k - half_kernel;
+            if (src_y >= 0 && src_y < height) {{
+                sum += input[src_y * width + x] * kernel[k];
+            }}
+        }}
+    }}
+    
+    output[idx] = sum;
+}}
+"#),
+        _ => {
+            // Fall back for unsupported backends
+            return Ok(input.to_vec());
+        }
+    };
+    
+    ctx.context.execute(|compiler| {
+        match compiler.compile(&kernel_source) {
+            Ok(kernel_handle) => {
+                kernel_handle.set_buffer("input", &input_buffer);
+                kernel_handle.set_buffer("kernel", &kernel_buffer);
+                kernel_handle.set_buffer("output", &output_buffer);
+                kernel_handle.set_i32("height", height as i32);
+                kernel_handle.set_i32("width", width as i32);
+                kernel_handle.set_i32("kernel_size", kernel.len() as i32);
+                kernel_handle.set_i32("horizontal", if horizontal { 1 } else { 0 });
+                
+                let workgroup_size = 256;
+                let work_groups = ((height * width) + workgroup_size - 1) / workgroup_size;
+                
+                kernel_handle.dispatch([work_groups as u32, 1, 1]);
+                
+                let mut result = vec![0.0f32; height * width];
+                output_buffer.copy_to_host(&mut result);
+                Ok(result)
+            }
+            Err(_) => Ok(input.to_vec()),
+        }
+    })
 }
 
 /// GPU-accelerated Harris corner detection
@@ -277,17 +664,82 @@ pub fn gpu_harris_corners(
 
 /// GPU element-wise multiplication
 fn gpu_element_wise_multiply(
-    _ctx: &GpuVisionContext,
+    ctx: &GpuVisionContext,
     a: &ArrayView2<f32>,
     b: &ArrayView2<f32>,
 ) -> Result<Array2<f32>> {
-    // Placeholder: CPU fallback
-    Ok(a * b)
+    let (height, width) = a.dim();
+    
+    if !ctx.is_gpu_available() {
+        return Ok(a * b);
+    }
+    
+    let a_flat: Vec<f32> = a.iter().cloned().collect();
+    let b_flat: Vec<f32> = b.iter().cloned().collect();
+    
+    let a_buffer = ctx.context.create_buffer_from_slice(&a_flat);
+    let b_buffer = ctx.context.create_buffer_from_slice(&b_flat);
+    let output_buffer = ctx.context.create_buffer::<f32>(height * width);
+    
+    let kernel_source = match ctx.backend() {
+        GpuBackend::Cuda => r#"
+extern "C" __global__ void element_wise_multiply(
+    const float* __restrict__ a,
+    const float* __restrict__ b,
+    float* __restrict__ output,
+    int size
+) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = a[idx] * b[idx];
+    }
+}
+"#,
+        GpuBackend::Wgpu => r#"
+@group(0) @binding(0) var<storage, read> a: array<f32>;
+@group(0) @binding(1) var<storage, read> b: array<f32>;
+@group(0) @binding(2) var<storage, write> output: array<f32>;
+@group(0) @binding(3) var<uniform> size: u32;
+
+@compute @workgroup_size(256)
+fn element_wise_multiply(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let idx = global_id.x;
+    if (idx >= size) {
+        return;
+    }
+    output[idx] = a[idx] * b[idx];
+}
+"#,
+        _ => return Ok(a * b),
+    };
+    
+    ctx.context.execute(|compiler| {
+        match compiler.compile(kernel_source) {
+            Ok(kernel_handle) => {
+                kernel_handle.set_buffer("a", &a_buffer);
+                kernel_handle.set_buffer("b", &b_buffer);
+                kernel_handle.set_buffer("output", &output_buffer);
+                kernel_handle.set_u32("size", (height * width) as u32);
+                
+                let workgroup_size = 256;
+                let work_groups = ((height * width) + workgroup_size - 1) / workgroup_size;
+                
+                kernel_handle.dispatch([work_groups as u32, 1, 1]);
+                
+                let mut result_flat = vec![0.0f32; height * width];
+                output_buffer.copy_to_host(&mut result_flat);
+                
+                Array2::from_shape_vec((height, width), result_flat)
+                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
+            }
+            Err(_) => Ok(a * b),
+        }
+    })
 }
 
 /// Compute Harris corner response
 fn gpu_harris_response(
-    _ctx: &GpuVisionContext,
+    ctx: &GpuVisionContext,
     sxx: &ArrayView2<f32>,
     syy: &ArrayView2<f32>,
     sxy: &ArrayView2<f32>,
@@ -295,21 +747,123 @@ fn gpu_harris_response(
     threshold: f32,
 ) -> Result<Array2<f32>> {
     let (height, width) = sxx.dim();
-    let mut response = Array2::zeros((height, width));
     
-    // R = det(M) - k * trace(M)^2
-    // det(M) = sxx * syy - sxy^2
-    // trace(M) = sxx + syy
-    for y in 0..height {
-        for x in 0..width {
-            let det = sxx[[y, x]] * syy[[y, x]] - sxy[[y, x]] * sxy[[y, x]];
-            let trace = sxx[[y, x]] + syy[[y, x]];
-            let r = det - k * trace * trace;
-            response[[y, x]] = if r > threshold { r } else { 0.0 };
+    if !ctx.is_gpu_available() {
+        // CPU fallback
+        let mut response = Array2::zeros((height, width));
+        for y in 0..height {
+            for x in 0..width {
+                let det = sxx[[y, x]] * syy[[y, x]] - sxy[[y, x]] * sxy[[y, x]];
+                let trace = sxx[[y, x]] + syy[[y, x]];
+                let r = det - k * trace * trace;
+                response[[y, x]] = if r > threshold { r } else { 0.0 };
+            }
         }
+        return Ok(response);
     }
     
-    Ok(response)
+    let sxx_flat: Vec<f32> = sxx.iter().cloned().collect();
+    let syy_flat: Vec<f32> = syy.iter().cloned().collect();
+    let sxy_flat: Vec<f32> = sxy.iter().cloned().collect();
+    
+    let sxx_buffer = ctx.context.create_buffer_from_slice(&sxx_flat);
+    let syy_buffer = ctx.context.create_buffer_from_slice(&syy_flat);
+    let sxy_buffer = ctx.context.create_buffer_from_slice(&sxy_flat);
+    let output_buffer = ctx.context.create_buffer::<f32>(height * width);
+    
+    let kernel_source = match ctx.backend() {
+        GpuBackend::Cuda => r#"
+extern "C" __global__ void harris_response(
+    const float* __restrict__ sxx,
+    const float* __restrict__ syy,
+    const float* __restrict__ sxy,
+    float* __restrict__ response,
+    float k,
+    float threshold,
+    int size
+) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        float det = sxx[idx] * syy[idx] - sxy[idx] * sxy[idx];
+        float trace = sxx[idx] + syy[idx];
+        float r = det - k * trace * trace;
+        response[idx] = (r > threshold) ? r : 0.0f;
+    }
+}
+"#,
+        GpuBackend::Wgpu => r#"
+@group(0) @binding(0) var<storage, read> sxx: array<f32>;
+@group(0) @binding(1) var<storage, read> syy: array<f32>;
+@group(0) @binding(2) var<storage, read> sxy: array<f32>;
+@group(0) @binding(3) var<storage, write> response: array<f32>;
+@group(0) @binding(4) var<uniform> k: f32;
+@group(0) @binding(5) var<uniform> threshold: f32;
+@group(0) @binding(6) var<uniform> size: u32;
+
+@compute @workgroup_size(256)
+fn harris_response(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let idx = global_id.x;
+    if (idx >= size) {
+        return;
+    }
+    let det = sxx[idx] * syy[idx] - sxy[idx] * sxy[idx];
+    let trace = sxx[idx] + syy[idx];
+    let r = det - k * trace * trace;
+    response[idx] = select(0.0, r, r > threshold);
+}
+"#,
+        _ => {
+            // CPU fallback
+            let mut response = Array2::zeros((height, width));
+            for y in 0..height {
+                for x in 0..width {
+                    let det = sxx[[y, x]] * syy[[y, x]] - sxy[[y, x]] * sxy[[y, x]];
+                    let trace = sxx[[y, x]] + syy[[y, x]];
+                    let r = det - k * trace * trace;
+                    response[[y, x]] = if r > threshold { r } else { 0.0 };
+                }
+            }
+            return Ok(response);
+        }
+    };
+    
+    ctx.context.execute(|compiler| {
+        match compiler.compile(kernel_source) {
+            Ok(kernel_handle) => {
+                kernel_handle.set_buffer("sxx", &sxx_buffer);
+                kernel_handle.set_buffer("syy", &syy_buffer);
+                kernel_handle.set_buffer("sxy", &sxy_buffer);
+                kernel_handle.set_buffer("response", &output_buffer);
+                kernel_handle.set_f32("k", k);
+                kernel_handle.set_f32("threshold", threshold);
+                kernel_handle.set_u32("size", (height * width) as u32);
+                
+                let workgroup_size = 256;
+                let work_groups = ((height * width) + workgroup_size - 1) / workgroup_size;
+                
+                kernel_handle.dispatch([work_groups as u32, 1, 1]);
+                
+                let mut result_flat = vec![0.0f32; height * width];
+                output_buffer.copy_to_host(&mut result_flat);
+                
+                Array2::from_shape_vec((height, width), result_flat)
+                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
+            }
+            Err(_) => {
+                // CPU fallback
+                let mut response = Array2::zeros((height, width));
+                for y in 0..height {
+                    for x in 0..width {
+                        let det = sxx[[y, x]] * syy[[y, x]] - sxy[[y, x]] * sxy[[y, x]];
+                        let trace = sxx[[y, x]] + syy[[y, x]];
+                        let r = det - k * trace * trace;
+                        response[[y, x]] = if r > threshold { r } else { 0.0 };
+                    }
+                }
+                Ok(response)
+            }
+        }
+    })
 }
 
 /// GPU-accelerated batch processing

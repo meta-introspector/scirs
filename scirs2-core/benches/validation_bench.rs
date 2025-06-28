@@ -2,6 +2,7 @@
 
 #[cfg(feature = "data_validation")]
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+#[cfg(feature = "data_validation")]
 use std::hint::black_box;
 
 #[cfg(feature = "data_validation")]

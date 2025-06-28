@@ -250,10 +250,28 @@ impl Div for Dual {
 
     fn div(self, other: Self) -> Self {
         let denom = other.value * other.value;
-        Self {
-            value: self.value / other.value,
-            derivative: (self.derivative * other.value - self.value * other.derivative) / denom,
-        }
+        
+        // Protect against division by zero
+        let value = if other.value == 0.0 {
+            if self.value == 0.0 { f64::NAN } // 0/0 is undefined
+            else if self.value > 0.0 { f64::INFINITY }
+            else { f64::NEG_INFINITY }
+        } else {
+            self.value / other.value
+        };
+        
+        let derivative = if denom == 0.0 {
+            // Handle derivative at division by zero
+            if other.value == 0.0 && self.derivative == 0.0 && other.derivative == 0.0 {
+                f64::NAN
+            } else {
+                f64::INFINITY
+            }
+        } else {
+            (self.derivative * other.value - self.value * other.derivative) / denom
+        };
+        
+        Self { value, derivative }
     }
 }
 
@@ -261,9 +279,19 @@ impl Div<f64> for Dual {
     type Output = Self;
 
     fn div(self, scalar: f64) -> Self {
-        Self {
-            value: self.value / scalar,
-            derivative: self.derivative / scalar,
+        if scalar == 0.0 {
+            // Division by zero
+            Self {
+                value: if self.value == 0.0 { f64::NAN }
+                       else if self.value > 0.0 { f64::INFINITY }
+                       else { f64::NEG_INFINITY },
+                derivative: if self.derivative == 0.0 { f64::NAN } else { f64::INFINITY },
+            }
+        } else {
+            Self {
+                value: self.value / scalar,
+                derivative: self.derivative / scalar,
+            }
         }
     }
 }

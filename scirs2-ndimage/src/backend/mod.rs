@@ -10,6 +10,8 @@ pub mod kernels;
 #[cfg(feature = "cuda")]
 pub mod cuda;
 
+pub use kernels::{GpuBuffer, GpuKernelExecutor, KernelInfo};
+
 use ndarray::{Array, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
@@ -199,7 +201,7 @@ impl BackendExecutor {
 
 /// GPU context trait for different GPU backends
 #[cfg(feature = "gpu")]
-trait GpuContext: Send + Sync {
+pub trait GpuContext: Send + Sync {
     fn name(&self) -> &str;
     fn device_count(&self) -> usize;
     fn current_device(&self) -> usize;

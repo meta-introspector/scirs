@@ -313,10 +313,22 @@ pub mod error;
 pub mod error_messages;
 pub mod error_context;
 pub mod error_suggestions;
+pub mod error_handling_v2;
 pub use error::{StatsError, StatsResult};
 pub use error_suggestions::{
     SuggestionEngine, Suggestion, ErrorFormatter, diagnose_error, 
     DiagnosisReport, ErrorType, Severity
+};
+pub use error_handling_v2::{
+    ErrorCode, EnhancedError, ErrorContext as ErrorContextV2, 
+    ErrorBuilder, RecoverySuggestion, PerformanceImpact
+};
+
+// API improvements for v1.0.0
+pub mod api_improvements;
+pub use api_improvements::{
+    CorrelationResult, CorrelationMethod, OptimizationHint,
+    StatsConfig, CorrelationExt, StatsBuilder, TestResult
 };
 
 // Module substructure following SciPy's organization
@@ -334,14 +346,20 @@ pub mod traits; // Trait definitions for distributions and statistical objects
 // Core functions for descriptive statistics
 mod descriptive;
 mod descriptive_simd;
+mod simd_optimized_v2;
 mod parallel_stats;
 mod parallel_stats_enhanced;
+mod parallel_enhanced_v2;
 mod memory_efficient;
 mod memory_profiling;
+mod memory_optimized_v2;
 mod quantile_simd;
 mod dispersion_simd;
 pub use descriptive::*;
 pub use descriptive_simd::{mean_simd, variance_simd, std_simd, descriptive_stats_simd};
+pub use simd_optimized_v2::{
+    mean_simd_optimized, variance_simd_optimized, stats_simd_single_pass, SimdConfig
+};
 pub use quantile_simd::{
     quantile_simd, quantiles_simd, median_simd, percentile_simd, quickselect_simd
 };
@@ -357,6 +375,10 @@ pub use parallel_stats_enhanced::{
     AdaptiveThreshold, ParallelHistogram, kde_parallel, ParallelMovingStats,
     pairwise_distances_parallel, ParallelCrossValidation
 };
+pub use parallel_enhanced_v2::{
+    ParallelConfig, mean_parallel_enhanced, variance_parallel_enhanced,
+    corrcoef_parallel_enhanced, bootstrap_parallel_enhanced
+};
 pub use memory_efficient::{
     streaming_mean, welford_variance, normalize_inplace, quantile_quickselect,
     covariance_chunked, StreamingHistogram
@@ -365,6 +387,10 @@ pub use memory_profiling::{
     MemoryProfile, MemoryAdaptiveAlgorithm, AlgorithmChoice, 
     RingBufferStats, LazyStatComputation, MemoryTracker,
     zero_copy, memory_mapped, cache_friendly
+};
+pub use memory_optimized_v2::{
+    MemoryConfig, MemoryPool, mean_zero_copy, variance_cache_aware,
+    LazyStats, StreamingCovariance
 };
 
 // Statistical tests module

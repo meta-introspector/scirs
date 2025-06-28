@@ -456,6 +456,7 @@ harness = false
 [[bench]]
 name = "pattern_recognition_bench"
 harness = false
+required-features = ["memory_efficient"]
 
 [[bench]]
 name = "numpy_scipy_comparison_bench"

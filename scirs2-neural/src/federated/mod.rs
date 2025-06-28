@@ -9,6 +9,7 @@ pub mod aggregation;
 pub mod privacy;
 pub mod communication;
 pub mod strategies;
+pub mod fednova;
 
 pub use client::{FederatedClient, ClientConfig};
 pub use server::{FederatedServer, ServerConfig};
@@ -16,6 +17,7 @@ pub use aggregation::{AggregationStrategy, FedAvg, FedProx, FedYogi};
 pub use privacy::{DifferentialPrivacy, SecureAggregation};
 pub use communication::{CommunicationProtocol, Message};
 pub use strategies::{ClientSelection, SamplingStrategy};
+pub use fednova::{FedNova, FedNovaClient, FedNovaCoordinator, FedNovaUpdate};
 
 use crate::error::Result;
 use crate::models::sequential::Sequential;

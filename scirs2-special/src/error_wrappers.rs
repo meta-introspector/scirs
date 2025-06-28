@@ -3,10 +3,11 @@
 //! This module provides consistent error-handling wrappers for all special functions,
 //! ensuring proper validation, error context, and recovery strategies.
 
-use crate::error::{SpecialError, SpecialResult};
+use crate::error::SpecialResult;
 use crate::error_context::{ErrorContext, ErrorContextExt, RecoveryStrategy};
+use crate::special_error;
 use crate::validation;
-use ndarray::{Array1, ArrayBase, ArrayView1, Dimension};
+use ndarray::{Array1, ArrayBase, ArrayView1};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
 
@@ -119,7 +120,7 @@ where
     }
 
     /// Try to recover from an error
-    fn try_recover(&self, x: T) -> Option<T> {
+    fn try_recover(&self, _x: T) -> Option<T> {
         match self.config.default_recovery {
             RecoveryStrategy::ReturnDefault => Some(T::zero()),
             RecoveryStrategy::ClampToRange => {

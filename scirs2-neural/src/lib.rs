@@ -59,6 +59,8 @@ pub mod prelude;
 pub mod quantization;
 /// Reinforcement learning module
 pub mod reinforcement;
+/// Continual and multi-task learning module
+pub mod continual;
 pub mod serialization;
 /// Serving and deployment module
 pub mod serving;

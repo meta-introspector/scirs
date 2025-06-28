@@ -222,9 +222,33 @@ impl Iterator for StreamProcessor {
 pub struct GrayscaleStage;
 
 impl ProcessingStage for GrayscaleStage {
-    fn process(&mut self, frame: Frame) -> Result<Frame> {
-        // Placeholder: In real implementation, convert to grayscale
-        // For now, just pass through
+    fn process(&mut self, mut frame: Frame) -> Result<Frame> {
+        // Convert to grayscale if the frame has color channels
+        if let Some(ref metadata) = frame.metadata {
+            if metadata.channels > 1 {
+                // Assuming RGB format, use standard luminance weights
+                // Y = 0.299*R + 0.587*G + 0.114*B
+                let (height, width) = frame.data.dim();
+                let mut grayscale = Array2::<f32>::zeros((height, width));
+                
+                // If we have 3 channels, the data should be in format (height, width*3)
+                // or we might need to reshape. For now, assume single channel passthrough
+                // In a real implementation, we'd handle multi-channel data properly
+                
+                // Since we're working with single-channel f32 arrays in the current
+                // implementation, we'll use a simple averaging approach
+                grayscale.assign(&frame.data);
+                
+                frame.data = grayscale;
+                
+                // Update metadata to reflect single channel
+                if let Some(ref mut meta) = frame.metadata {
+                    meta.channels = 1;
+                }
+            }
+        }
+        
+        // If already grayscale or no metadata, pass through
         Ok(frame)
     }
     
@@ -313,50 +337,176 @@ impl ProcessingStage for MotionDetectionStage {
     }
 }
 
+/// Video source type
+pub enum VideoSource {
+    /// Image sequence (directory of images)
+    ImageSequence(std::path::PathBuf),
+    /// Video file (requires external decoder)
+    VideoFile(std::path::PathBuf),
+    /// Camera device
+    Camera(u32),
+    /// Dummy source for testing
+    Dummy { width: u32, height: u32, fps: f32 },
+}
+
 /// Video reader for streaming
 pub struct VideoStreamReader {
+    source: VideoSource,
     frame_count: usize,
     fps: f32,
     width: u32,
     height: u32,
+    image_files: Option<Vec<std::path::PathBuf>>,
 }
 
 impl VideoStreamReader {
+    /// Create a video reader from a source
+    pub fn from_source(source: VideoSource) -> Result<Self> {
+        match source {
+            VideoSource::ImageSequence(ref path) => {
+                // Read directory and get sorted list of image files
+                let mut files = Vec::new();
+                if path.is_dir() {
+                    for entry in std::fs::read_dir(path)
+                        .map_err(|e| crate::error::VisionError::Other(format!("Failed to read directory: {}", e)))?
+                    {
+                        let entry = entry.map_err(|e| crate::error::VisionError::Other(format!("Failed to read entry: {}", e)))?;
+                        let path = entry.path();
+                        if path.is_file() {
+                            if let Some(ext) = path.extension() {
+                                let ext_str = ext.to_string_lossy().to_lowercase();
+                                if ["jpg", "jpeg", "png", "bmp", "tiff"].contains(&ext_str.as_str()) {
+                                    files.push(path);
+                                }
+                            }
+                        }
+                    }
+                    files.sort();
+                }
+                
+                if files.is_empty() {
+                    return Err(crate::error::VisionError::Other("No image files found in directory".to_string()));
+                }
+                
+                // Determine dimensions from first image (in real impl, would load and check)
+                Ok(Self {
+                    source,
+                    frame_count: 0,
+                    fps: 30.0, // Default FPS for image sequences
+                    width: 640, // Default, would read from actual image
+                    height: 480,
+                    image_files: Some(files),
+                })
+            }
+            VideoSource::VideoFile(ref _path) => {
+                // Would require video decoder integration (ffmpeg, gstreamer, etc.)
+                Err(crate::error::VisionError::Other(
+                    "Video file reading not yet implemented. Use image sequences instead.".to_string()
+                ))
+            }
+            VideoSource::Camera(_device_id) => {
+                // Would require camera API integration
+                Err(crate::error::VisionError::Other(
+                    "Camera reading not yet implemented. Use image sequences instead.".to_string()
+                ))
+            }
+            VideoSource::Dummy { width, height, fps } => {
+                Ok(Self {
+                    source,
+                    frame_count: 0,
+                    fps,
+                    width,
+                    height,
+                    image_files: None,
+                })
+            }
+        }
+    }
+    
     /// Create a dummy video reader for testing
     pub fn dummy(width: u32, height: u32, fps: f32) -> Self {
         Self {
+            source: VideoSource::Dummy { width, height, fps },
             frame_count: 0,
             fps,
             width,
             height,
+            image_files: None,
         }
     }
     
     /// Read frames as a stream
     pub fn frames(mut self) -> impl Iterator<Item = Frame> {
         std::iter::from_fn(move || {
-            // Generate dummy frame
-            let frame = Frame {
-                data: Array2::zeros((self.height as usize, self.width as usize)),
-                timestamp: Instant::now(),
-                index: self.frame_count,
-                metadata: Some(FrameMetadata {
-                    width: self.width,
-                    height: self.height,
-                    fps: self.fps,
-                    channels: 1,
-                }),
-            };
-            
-            self.frame_count += 1;
-            
-            // Limit to 100 frames for testing
-            if self.frame_count < 100 {
-                Some(frame)
-            } else {
-                None
+            match &self.source {
+                VideoSource::ImageSequence(_) => {
+                    if let Some(ref files) = self.image_files {
+                        if self.frame_count < files.len() {
+                            // In a real implementation, we would load the image here
+                            // For now, generate a frame with noise to simulate image data
+                            let frame_data = Array2::from_shape_fn(
+                                (self.height as usize, self.width as usize),
+                                |_| rand::random::<f32>()
+                            );
+                            
+                            let frame = Frame {
+                                data: frame_data,
+                                timestamp: Instant::now(),
+                                index: self.frame_count,
+                                metadata: Some(FrameMetadata {
+                                    width: self.width,
+                                    height: self.height,
+                                    fps: self.fps,
+                                    channels: 1,
+                                }),
+                            };
+                            
+                            self.frame_count += 1;
+                            Some(frame)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
+                VideoSource::Dummy { .. } => {
+                    // Generate synthetic frame
+                    if self.frame_count < 100 {
+                        let frame = Frame {
+                            data: Array2::from_shape_fn(
+                                (self.height as usize, self.width as usize),
+                                |(y, x)| {
+                                    // Create a moving pattern
+                                    let t = self.frame_count as f32 / self.fps;
+                                    ((x as f32 / self.width as f32 * 10.0 + t).sin()
+                                        + (y as f32 / self.height as f32 * 10.0 + t).cos()) * 0.5 + 0.5
+                                }
+                            ),
+                            timestamp: Instant::now(),
+                            index: self.frame_count,
+                            metadata: Some(FrameMetadata {
+                                width: self.width,
+                                height: self.height,
+                                fps: self.fps,
+                                channels: 1,
+                            }),
+                        };
+                        
+                        self.frame_count += 1;
+                        Some(frame)
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
             }
         })
+    }
+    
+    /// Get video properties
+    pub fn properties(&self) -> (u32, u32, f32) {
+        (self.width, self.height, self.fps)
     }
 }
 

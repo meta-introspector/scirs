@@ -140,8 +140,29 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
         // Solve linear system
         let solution = self.solve_linear_system(stiffness.view(), rhs.view())?;
         
+        // Generate grid information from nodes
+        let mut x_coords = Array1::<f64>::zeros(n_nodes);
+        let mut y_coords = Array1::<f64>::zeros(n_nodes);
+        
+        for i in 0..n_nodes {
+            x_coords[i] = self.nodes[[i, 0]].to_f64().unwrap();
+            y_coords[i] = self.nodes[[i, 1]].to_f64().unwrap();
+        }
+        
+        // Get unique sorted coordinates for structured grid
+        let mut unique_x: Vec<f64> = x_coords.to_vec();
+        unique_x.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        unique_x.dedup();
+        
+        let mut unique_y: Vec<f64> = y_coords.to_vec();
+        unique_y.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        unique_y.dedup();
+        
         Ok(PDESolution {
-            grids: vec![], // TODO: Add grid information
+            grids: vec![
+                Array1::from_vec(unique_x),
+                Array1::from_vec(unique_y),
+            ],
             values: vec![Array2::from_shape_vec((solution.len(), 1), solution.to_vec()).map_err(|_| IntegrateError::ComputationError("Shape error".to_string()))?],
             error_estimate: None,
             info: PDESolverInfo {

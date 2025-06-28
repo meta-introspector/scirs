@@ -7,7 +7,6 @@ fn main() {
     #[cfg(not(feature = "gpu"))]
     {
         println!("GPU feature not enabled. Run with --features=gpu");
-        return;
     }
 
     #[cfg(feature = "gpu")]

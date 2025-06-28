@@ -545,6 +545,403 @@ where
     }
 }
 
+/// SIMD-optimized guided filter for edge-preserving smoothing
+///
+/// The guided filter uses a guidance image to perform edge-aware filtering,
+/// making it effective for applications like flash/no-flash denoising and HDR compression.
+pub fn simd_guided_filter<T>(
+    input: ArrayView2<T>,
+    guide: ArrayView2<T>,
+    radius: usize,
+    epsilon: T,
+) -> NdimageResult<Array<T, Ix2>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
+{
+    let (height, width) = input.dim();
+    if guide.dim() != (height, width) {
+        return Err(crate::error::NdimageError::ShapeError(
+            "Input and guide must have the same shape".into(),
+        ));
+    }
+    
+    // Compute mean values using box filter
+    let mean_i = simd_box_filter(&guide, radius)?;
+    let mean_p = simd_box_filter(&input, radius)?;
+    
+    // Compute correlation and variance
+    let corr_ip = simd_box_filter_product(&guide, &input, radius)?;
+    let corr_ii = simd_box_filter_product(&guide, &guide, radius)?;
+    
+    // Compute variance of I: var_I = corr_II - mean_I * mean_I
+    let var_i = &corr_ii - &(&mean_i * &mean_i);
+    
+    // Compute covariance: cov_Ip = corr_Ip - mean_I * mean_p
+    let cov_ip = &corr_ip - &(&mean_i * &mean_p);
+    
+    // Compute coefficients a and b
+    let a = &cov_ip / &(&var_i + epsilon);
+    let b = &mean_p - &(&a * &mean_i);
+    
+    // Compute mean of a and b
+    let mean_a = simd_box_filter(&a.view(), radius)?;
+    let mean_b = simd_box_filter(&b.view(), radius)?;
+    
+    // Output: q = mean_a * I + mean_b
+    Ok(&(&mean_a * &guide) + &mean_b)
+}
+
+/// SIMD-optimized box filter (mean filter)
+fn simd_box_filter<T>(
+    input: &ArrayView2<T>,
+    radius: usize,
+) -> NdimageResult<Array<T, Ix2>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
+{
+    let (height, width) = input.dim();
+    let mut output = Array::zeros((height, width));
+    let window_size = 2 * radius + 1;
+    let norm = T::from_usize(window_size * window_size).unwrap();
+    
+    // Process rows in parallel
+    output
+        .axis_chunks_iter_mut(Axis(0), 32)
+        .into_par_iter()
+        .enumerate()
+        .for_each(|(chunk_idx, mut chunk)| {
+            let y_start = chunk_idx * 32;
+            
+            for (local_y, mut row) in chunk.axis_iter_mut(Axis(0)).enumerate() {
+                let y = y_start + local_y;
+                simd_box_filter_row(input, &mut row, y, radius, norm);
+            }
+        });
+    
+    Ok(output)
+}
+
+/// Process a row with box filter using SIMD
+fn simd_box_filter_row<T>(
+    input: &ArrayView2<T>,
+    output_row: &mut ArrayViewMut1<T>,
+    y: usize,
+    radius: usize,
+    norm: T,
+) where
+    T: Float + FromPrimitive + SimdUnifiedOps,
+{
+    let (height, width) = input.dim();
+    let simd_width = T::simd_width();
+    
+    // Use sliding window approach for efficiency
+    for x in 0..width {
+        let x_min = x.saturating_sub(radius);
+        let x_max = (x + radius + 1).min(width);
+        let y_min = y.saturating_sub(radius);
+        let y_max = (y + radius + 1).min(height);
+        
+        let mut sum = T::zero();
+        
+        // Sum values in the window
+        for wy in y_min..y_max {
+            let row_slice = input.slice(s![wy, x_min..x_max]);
+            
+            // Process SIMD chunks
+            let chunks = row_slice.len() / simd_width;
+            for i in 0..chunks {
+                let start = i * simd_width;
+                let end = start + simd_width;
+                let chunk_sum = T::simd_sum(&row_slice.as_slice().unwrap()[start..end]);
+                sum = sum + chunk_sum;
+            }
+            
+            // Process remaining elements
+            for i in (chunks * simd_width)..row_slice.len() {
+                sum = sum + row_slice[i];
+            }
+        }
+        
+        output_row[x] = sum / norm;
+    }
+}
+
+/// SIMD-optimized box filter for product of two images
+fn simd_box_filter_product<T>(
+    input1: &ArrayView2<T>,
+    input2: &ArrayView2<T>,
+    radius: usize,
+) -> NdimageResult<Array<T, Ix2>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
+{
+    let (height, width) = input1.dim();
+    let mut output = Array::zeros((height, width));
+    let window_size = 2 * radius + 1;
+    let norm = T::from_usize(window_size * window_size).unwrap();
+    
+    // Process rows in parallel
+    output
+        .axis_chunks_iter_mut(Axis(0), 32)
+        .into_par_iter()
+        .enumerate()
+        .for_each(|(chunk_idx, mut chunk)| {
+            let y_start = chunk_idx * 32;
+            
+            for (local_y, mut row) in chunk.axis_iter_mut(Axis(0)).enumerate() {
+                let y = y_start + local_y;
+                simd_box_filter_product_row(input1, input2, &mut row, y, radius, norm);
+            }
+        });
+    
+    Ok(output)
+}
+
+/// Process a row with box filter product using SIMD
+fn simd_box_filter_product_row<T>(
+    input1: &ArrayView2<T>,
+    input2: &ArrayView2<T>,
+    output_row: &mut ArrayViewMut1<T>,
+    y: usize,
+    radius: usize,
+    norm: T,
+) where
+    T: Float + FromPrimitive + SimdUnifiedOps,
+{
+    let (height, width) = input1.dim();
+    let simd_width = T::simd_width();
+    
+    for x in 0..width {
+        let x_min = x.saturating_sub(radius);
+        let x_max = (x + radius + 1).min(width);
+        let y_min = y.saturating_sub(radius);
+        let y_max = (y + radius + 1).min(height);
+        
+        let mut sum = T::zero();
+        
+        // Sum products in the window
+        for wy in y_min..y_max {
+            let row1 = input1.slice(s![wy, x_min..x_max]);
+            let row2 = input2.slice(s![wy, x_min..x_max]);
+            
+            // Process SIMD chunks
+            let chunks = row1.len() / simd_width;
+            for i in 0..chunks {
+                let start = i * simd_width;
+                let end = start + simd_width;
+                let slice1 = &row1.as_slice().unwrap()[start..end];
+                let slice2 = &row2.as_slice().unwrap()[start..end];
+                
+                let products = T::simd_mul(slice1, slice2);
+                let chunk_sum = T::simd_sum(&products);
+                sum = sum + chunk_sum;
+            }
+            
+            // Process remaining elements
+            for i in (chunks * simd_width)..row1.len() {
+                sum = sum + row1[i] * row2[i];
+            }
+        }
+        
+        output_row[x] = sum / norm;
+    }
+}
+
+/// SIMD-optimized joint bilateral filter
+///
+/// Similar to bilateral filter but uses a guidance image for edge detection
+pub fn simd_joint_bilateral_filter<T>(
+    input: ArrayView2<T>,
+    guide: ArrayView2<T>,
+    spatial_sigma: T,
+    range_sigma: T,
+    window_size: Option<usize>,
+) -> NdimageResult<Array<T, Ix2>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
+{
+    let (height, width) = input.dim();
+    if guide.dim() != (height, width) {
+        return Err(crate::error::NdimageError::ShapeError(
+            "Input and guide must have the same shape".into(),
+        ));
+    }
+    
+    let window_size = window_size.unwrap_or_else(|| {
+        let radius = (spatial_sigma * T::from_f64(3.0).unwrap()).to_usize().unwrap();
+        2 * radius + 1
+    });
+    let half_window = window_size / 2;
+    
+    let mut output = Array::zeros((height, width));
+    
+    // Pre-compute spatial weights
+    let spatial_weights = compute_spatial_weights(window_size, spatial_sigma);
+    
+    // Process image in parallel chunks
+    output
+        .axis_chunks_iter_mut(Axis(0), 32)
+        .into_par_iter()
+        .enumerate()
+        .for_each(|(chunk_idx, mut chunk)| {
+            let y_start = chunk_idx * 32;
+            
+            for (local_y, mut row) in chunk.axis_iter_mut(Axis(0)).enumerate() {
+                let y = y_start + local_y;
+                simd_joint_bilateral_row(
+                    &input,
+                    &guide,
+                    &mut row,
+                    y,
+                    half_window,
+                    &spatial_weights,
+                    range_sigma,
+                );
+            }
+        });
+    
+    Ok(output)
+}
+
+/// Process a row with joint bilateral filter using SIMD
+fn simd_joint_bilateral_row<T>(
+    input: &ArrayView2<T>,
+    guide: &ArrayView2<T>,
+    output_row: &mut ArrayViewMut1<T>,
+    y: usize,
+    half_window: usize,
+    spatial_weights: &Array<T, Ix2>,
+    range_sigma: T,
+) where
+    T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
+{
+    let (height, width) = input.dim();
+    let range_factor = T::from_f64(-0.5).unwrap() / (range_sigma * range_sigma);
+    let simd_width = T::simd_width();
+    
+    for x in 0..width {
+        let guide_center = guide[(y, x)];
+        let mut sum_weight = T::zero();
+        let mut sum_value = T::zero();
+        
+        for dy in 0..2 * half_window + 1 {
+            let ny = (y as isize + dy as isize - half_window as isize)
+                .clamp(0, height as isize - 1) as usize;
+            
+            for dx in 0..2 * half_window + 1 {
+                let nx = (x as isize + dx as isize - half_window as isize)
+                    .clamp(0, width as isize - 1) as usize;
+                
+                // Use guide image for range weight
+                let guide_neighbor = guide[(ny, nx)];
+                let range_diff = guide_neighbor - guide_center;
+                let range_weight = (range_diff * range_diff * range_factor).exp();
+                let spatial_weight = spatial_weights[(dy, dx)];
+                
+                let weight = spatial_weight * range_weight;
+                sum_weight = sum_weight + weight;
+                sum_value = sum_value + weight * input[(ny, nx)];
+            }
+        }
+        
+        output_row[x] = sum_value / sum_weight;
+    }
+}
+
+/// SIMD-optimized adaptive median filter
+///
+/// This filter adapts the window size based on local statistics to better preserve edges
+pub fn simd_adaptive_median_filter<T>(
+    input: ArrayView2<T>,
+    max_window_size: usize,
+) -> NdimageResult<Array<T, Ix2>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps + PartialOrd,
+{
+    let (height, width) = input.dim();
+    let mut output = Array::zeros((height, width));
+    
+    // Process in parallel
+    output
+        .axis_chunks_iter_mut(Axis(0), 32)
+        .into_par_iter()
+        .enumerate()
+        .for_each(|(chunk_idx, mut chunk)| {
+            let y_start = chunk_idx * 32;
+            
+            for (local_y, mut row) in chunk.axis_iter_mut(Axis(0)).enumerate() {
+                let y = y_start + local_y;
+                for x in 0..width {
+                    row[x] = adaptive_median_at_point(input, y, x, max_window_size);
+                }
+            }
+        });
+    
+    Ok(output)
+}
+
+/// Compute adaptive median at a single point
+fn adaptive_median_at_point<T>(
+    input: ArrayView2<T>,
+    y: usize,
+    x: usize,
+    max_window_size: usize,
+) -> T
+where
+    T: Float + FromPrimitive + PartialOrd + Clone,
+{
+    let (height, width) = input.dim();
+    let mut window_size = 3;
+    
+    while window_size <= max_window_size {
+        let half_window = window_size / 2;
+        
+        // Collect values in window
+        let mut values = Vec::with_capacity(window_size * window_size);
+        
+        for dy in 0..window_size {
+            let ny = (y as isize + dy as isize - half_window as isize)
+                .clamp(0, height as isize - 1) as usize;
+            
+            for dx in 0..window_size {
+                let nx = (x as isize + dx as isize - half_window as isize)
+                    .clamp(0, width as isize - 1) as usize;
+                
+                values.push(input[(ny, nx)]);
+            }
+        }
+        
+        // Sort values
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        
+        let median = values[values.len() / 2];
+        let min = values[0];
+        let max = values[values.len() - 1];
+        let pixel_value = input[(y, x)];
+        
+        // Stage A
+        let a1 = median - min;
+        let a2 = median - max;
+        
+        if a1 > T::zero() && a2 < T::zero() {
+            // Stage B
+            let b1 = pixel_value - min;
+            let b2 = pixel_value - max;
+            
+            if b1 > T::zero() && b2 < T::zero() {
+                return pixel_value;
+            } else {
+                return median;
+            }
+        }
+        
+        window_size += 2;
+    }
+    
+    // If we reach max window size, return median of largest window
+    input[(y, x)]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -572,5 +969,56 @@ mod tests {
         
         let result = simd_anisotropic_diffusion(input.view(), 5, 2.0, 0.1, 1).unwrap();
         assert_eq!(result.shape(), input.shape());
+    }
+    
+    #[test]
+    fn test_guided_filter() {
+        let input = array![
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
+            [7.0, 8.0, 9.0]
+        ];
+        let guide = input.clone();
+        
+        let result = simd_guided_filter(input.view(), guide.view(), 1, 0.1).unwrap();
+        assert_eq!(result.shape(), input.shape());
+    }
+    
+    #[test]
+    fn test_joint_bilateral_filter() {
+        let input = array![
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
+            [7.0, 8.0, 9.0]
+        ];
+        let guide = array![
+            [1.0, 1.0, 1.0],
+            [2.0, 2.0, 2.0],
+            [3.0, 3.0, 3.0]
+        ];
+        
+        let result = simd_joint_bilateral_filter(
+            input.view(),
+            guide.view(),
+            1.0,
+            2.0,
+            Some(3)
+        ).unwrap();
+        assert_eq!(result.shape(), input.shape());
+    }
+    
+    #[test]
+    fn test_adaptive_median_filter() {
+        let input = array![
+            [1.0, 2.0, 3.0, 4.0],
+            [5.0, 100.0, 7.0, 8.0],  // 100.0 is an outlier
+            [9.0, 10.0, 11.0, 12.0],
+            [13.0, 14.0, 15.0, 16.0]
+        ];
+        
+        let result = simd_adaptive_median_filter(input.view(), 5).unwrap();
+        assert_eq!(result.shape(), input.shape());
+        // The outlier should be replaced by a value closer to its neighbors
+        assert!(result[(1, 1)] < 20.0);
     }
 }

@@ -16,6 +16,13 @@ use crate::error::{GraphError, Result};
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in BFS order
+///
+/// # Time Complexity
+/// O(V + E) where V is the number of vertices and E is the number of edges.
+/// Each vertex and edge is visited at most once.
+///
+/// # Space Complexity
+/// O(V) for the visited set and queue.
 pub fn breadth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, start: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
@@ -66,6 +73,13 @@ where
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in BFS order
+///
+/// # Time Complexity
+/// O(V + E) where V is the number of vertices and E is the number of edges.
+/// Each vertex and edge is visited at most once.
+///
+/// # Space Complexity
+/// O(V) for the visited set and queue.
 pub fn breadth_first_search_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     start: &N,
@@ -122,6 +136,14 @@ where
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in DFS order
+///
+/// # Time Complexity
+/// O(V + E) where V is the number of vertices and E is the number of edges.
+/// Each vertex and edge is visited at most once.
+///
+/// # Space Complexity
+/// O(V) for the visited set and stack. In the worst case, the stack
+/// can contain all vertices (e.g., in a linear graph).
 pub fn depth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, start: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,

@@ -231,9 +231,10 @@ impl PCA {
         let n_random = n_components + n_oversamples;
         
         // Initialize RNG
-        let mut rng: StdRng = match self.random_state {
-            Some(seed) => SeedableRng::seed_from_u64(seed),
-            None => SeedableRng::from_entropy(),
+        use rand::rng;
+        let mut rng = match self.random_state {
+            Some(seed) => StdRng::seed_from_u64(seed),
+            None => StdRng::seed_from_u64(rand::rng().random()),
         };
         
         // Generate random matrix

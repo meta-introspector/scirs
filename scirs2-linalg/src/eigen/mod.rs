@@ -162,12 +162,18 @@ where
 
         let trace = a11 + a22;
         let det = a11 * a22 - a12 * a21;
-        let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+        let four = F::from(4.0).ok_or_else(|| LinalgError::ComputationError(
+            "Failed to convert 4.0 to target type".to_string()
+        ))?;
+        let discriminant = trace * trace - four * det;
 
         if discriminant >= F::zero() {
             let sqrt_disc = discriminant.sqrt();
-            let lambda1 = (trace + sqrt_disc) / F::from(2.0).unwrap();
-            let lambda2 = (trace - sqrt_disc) / F::from(2.0).unwrap();
+            let two = F::from(2.0).ok_or_else(|| LinalgError::ComputationError(
+                "Failed to convert 2.0 to target type".to_string()
+            ))?;
+            let lambda1 = (trace + sqrt_disc) / two;
+            let lambda2 = (trace - sqrt_disc) / two;
 
             // Compute eigenvectors
             let mut eigenvectors = Array2::zeros((2, 2));
@@ -335,7 +341,10 @@ where
         }
 
         if min_sv == F::zero() || min_sv == F::infinity() {
-            F::from(1e12).unwrap() // Matrix is singular or nearly singular
+            F::from(1e12).unwrap_or_else(|| {
+                // Fallback for types that can't represent 1e12
+                F::max_value() / F::from(1000.0).unwrap_or(F::one())
+            }) // Matrix is singular or nearly singular
         } else {
             max_sv / min_sv
         }
@@ -346,7 +355,7 @@ where
             crate::norm::matrix_norm(a, "1", None),
         ) {
             // Use norm-based heuristic: cond(A) ≈ ||A||_2 * ||A||_1 / n
-            let n_f = F::from(n).unwrap();
+            let n_f = F::from(n).unwrap_or_else(|| F::one());
             (norm_2 * norm_1) / n_f
         } else {
             // Final fallback to diagonal-based estimate
@@ -364,7 +373,10 @@ where
             }
 
             if min_diag == F::zero() || min_diag == F::infinity() {
-                F::from(1e12).unwrap()
+                F::from(1e12).unwrap_or_else(|| {
+                    // Fallback for types that can't represent 1e12
+                    F::max_value() / F::from(1000.0).unwrap_or(F::one())
+                })
             } else {
                 max_diag / min_diag
             }
@@ -400,15 +412,32 @@ where
     F: Float + NumAssign,
 {
     // Base tolerance
-    let base_tol = F::epsilon() * F::from(100.0).unwrap();
+    let hundred = F::from(100.0).unwrap_or_else(|| {
+        // Build 100 from ones if conversion fails
+        let ten = F::one() + F::one() + F::one() + F::one() + F::one() 
+                 + F::one() + F::one() + F::one() + F::one() + F::one();
+        ten * ten
+    });
+    let base_tol = F::epsilon() * hundred;
 
     // Adjust based on condition number
-    if condition_number > F::from(1e12).unwrap() {
-        base_tol * F::from(1000.0).unwrap()
-    } else if condition_number > F::from(1e8).unwrap() {
-        base_tol * F::from(100.0).unwrap()
-    } else if condition_number > F::from(1e4).unwrap() {
-        base_tol * F::from(10.0).unwrap()
+    let threshold_1e12 = F::from(1e12).unwrap_or_else(|| F::max_value() / F::from(1000.0).unwrap_or(F::one()));
+    let threshold_1e8 = F::from(1e8).unwrap_or_else(|| F::max_value() / F::from(10000.0).unwrap_or(F::one()));
+    let threshold_1e4 = F::from(1e4).unwrap_or_else(|| F::from(10000.0).unwrap_or(F::one()));
+    
+    if condition_number > threshold_1e12 {
+        base_tol * F::from(1000.0).unwrap_or_else(|| {
+            let ten = F::one() + F::one() + F::one() + F::one() + F::one()
+                     + F::one() + F::one() + F::one() + F::one() + F::one();
+            ten * ten * ten
+        })
+    } else if condition_number > threshold_1e8 {
+        base_tol * hundred
+    } else if condition_number > threshold_1e4 {
+        base_tol * F::from(10.0).unwrap_or_else(|| {
+            F::one() + F::one() + F::one() + F::one() + F::one()
+            + F::one() + F::one() + F::one() + F::one() + F::one()
+        })
     } else {
         base_tol
     }

@@ -231,9 +231,6 @@ where
             y.clone()
         };
 
-        // Create a function evaluations counter as a Cell to allow mutation
-        let func_evals_cell = std::cell::Cell::new(0usize);
-
         // Create the nonlinear system for BDF
         let bdf_system = |y_next: &Array1<F>| {
             // Compute BDF residual:
@@ -241,8 +238,7 @@ where
 
             // Evaluate function at the current iterate
             let f_eval = f(next_t, y_next.view());
-            func_evals_cell.set(func_evals_cell.get() + 1);
-
+            
             // Initialize residual with c_0 * y_{n+1} term
             let mut residual = y_next.clone() * coeffs[0];
 
@@ -259,9 +255,6 @@ where
 
             residual
         };
-
-        // Update func_evals after the closure is done
-        let prev_func_evals = func_evals;
 
         // Set up Newton solver parameters based on Jacobian strategy
         let update_freq = match jacobian_strategy {
@@ -288,8 +281,8 @@ where
 
         match newton_result {
             Ok(result) => {
-                // Update counters including Cell-based func_evals
-                func_evals = prev_func_evals + func_evals_cell.get() + result.func_evals;
+                // Update counters
+                func_evals += result.func_evals;
                 n_jac += result.jac_evals;
                 n_lu += result.linear_solves;
                 newton_iters += F::from(result.iterations).unwrap();

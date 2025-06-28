@@ -89,7 +89,6 @@ This is the final alpha release of the SciRS2 clustering module. The module prov
   - [ ] Custom distance metric development framework
 
 ### Known Limitations
-- Tree representation utilities (Leader algorithm) are not yet implemented
 - GPU acceleration is planned but not available in current version
 - Some advanced visualization features require external plotting libraries
 - Large-scale distributed clustering requires additional infrastructure

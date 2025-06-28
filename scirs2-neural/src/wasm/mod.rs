@@ -29,7 +29,7 @@ pub use bindings::{
 // From memory module
 pub use memory::{
     CacheStorage, CacheStrategy, CachingConfig, LoadingStrategy, MemoryAlignment, MemoryBreakdown,
-    MemoryGrowthStrategy, MemoryManager, MemoryRequirements, ParallelConfig, PreloadingConfig,
+    MemoryGrowthStrategy, MemoryManager, WasmMemoryRequirements, ParallelConfig, PreloadingConfig,
     ProgressiveLoadingConfig, VersioningStrategy, WasmMemoryConfig, WasmMemoryExport,
     WasmMemoryImport,
 };

@@ -124,6 +124,7 @@ pub mod mixed_precision;
 mod norm;
 pub mod optim;
 pub mod parallel;
+pub mod parallel_dispatch;
 pub mod perf_opt;
 pub mod preconditioners;
 pub mod projection;

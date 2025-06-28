@@ -253,15 +253,6 @@ pub fn local_sensitivity_indices<F: IntegrateFloat>(
     Ok(indices)
 }
 
-/// Morris screening method for global sensitivity
-pub struct MorrisScreening<F: IntegrateFloat> {
-    /// Number of trajectories
-    n_trajectories: usize,
-    /// Parameter bounds
-    param_bounds: Vec<(F, F)>,
-    /// Grid levels
-    grid_levels: usize,
-}
 
 /// Sobol indices for global sensitivity analysis
 pub struct SobolIndices<F: IntegrateFloat> {
@@ -283,112 +274,6 @@ pub struct SobolAnalysis<F: IntegrateFloat> {
     seed: Option<u64>,
 }
 
-impl<F: IntegrateFloat> MorrisScreening<F> {
-    /// Create a new Morris screening analysis
-    pub fn new(n_trajectories: usize, param_bounds: Vec<(F, F)>) -> Self {
-        MorrisScreening {
-            n_trajectories,
-            param_bounds,
-            grid_levels: 4,
-        }
-    }
-
-    /// Set number of grid levels
-    pub fn with_grid_levels(mut self, levels: usize) -> Self {
-        self.grid_levels = levels;
-        self
-    }
-
-    /// Compute elementary effects
-    pub fn compute_effects<Func>(
-        &self,
-        model: Func,
-        param_names: Vec<String>,
-    ) -> IntegrateResult<HashMap<String, (F, F)>>
-    where
-        Func: Fn(ArrayView1<F>) -> IntegrateResult<F>,
-    {
-        let n_params = self.param_bounds.len();
-        if param_names.len() != n_params {
-            return Err(IntegrateError::ValueError(
-                "Number of parameter names must match bounds".to_string()
-            ));
-        }
-
-        let mut effects = HashMap::new();
-        for name in &param_names {
-            effects.insert(name.clone(), (F::zero(), F::zero()));
-        }
-
-        // Generate trajectories and compute elementary effects
-        for _ in 0..self.n_trajectories {
-            let trajectory = self.generate_trajectory(n_params);
-            
-            for i in 0..n_params {
-                let p1 = trajectory[i].view();
-                let p2 = trajectory[i + 1].view();
-                
-                let y1 = model(p1)?;
-                let y2 = model(p2)?;
-                
-                // Find which parameter changed
-                let mut changed_param = None;
-                for j in 0..n_params {
-                    if (p1[j] - p2[j]).abs() > F::epsilon() {
-                        changed_param = Some(j);
-                        break;
-                    }
-                }
-                
-                if let Some(j) = changed_param {
-                    let delta = p2[j] - p1[j];
-                    let ee = (y2 - y1) / delta;
-                    
-                    let name = &param_names[j];
-                    let (sum, sum_sq) = effects.get_mut(name).unwrap();
-                    *sum += ee;
-                    *sum_sq += ee * ee;
-                }
-            }
-        }
-
-        // Compute mean and standard deviation
-        let n_traj = F::from(self.n_trajectories).unwrap();
-        let mut results = HashMap::new();
-        
-        for (name, (sum, sum_sq)) in effects {
-            let mu = sum / n_traj;
-            let sigma = ((sum_sq / n_traj) - mu * mu).sqrt();
-            results.insert(name, (mu.abs(), sigma));
-        }
-
-        Ok(results)
-    }
-
-    /// Generate a Morris trajectory
-    fn generate_trajectory(&self, n_params: usize) -> Vec<Array1<F>> {
-        // Simplified trajectory generation
-        let mut trajectory = Vec::new();
-        let mut current = Array1::zeros(n_params);
-        
-        // Random starting point
-        for i in 0..n_params {
-            let (low, high) = self.param_bounds[i];
-            current[i] = low + (high - low) * F::from(0.5).unwrap();
-        }
-        trajectory.push(current.clone());
-        
-        // Change one parameter at a time
-        for i in 0..n_params {
-            let (low, high) = self.param_bounds[i];
-            let delta = (high - low) / F::from(self.grid_levels - 1).unwrap();
-            current[i] += delta;
-            trajectory.push(current.clone());
-        }
-        
-        trajectory
-    }
-}
 
 impl<F: IntegrateFloat> SobolAnalysis<F> {
     /// Create a new Sobol analysis
@@ -486,14 +371,12 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
     where
         Func: Fn(ArrayView1<F>) -> IntegrateResult<F> + Sync + Send,
     {
-        use scirs2_core::parallel_ops::*;
-        
-        let results: IntegrateResult<Vec<_>> = samples
-            .par_iter()
-            .map(|sample| model(sample.view()))
-            .collect();
-        
-        results
+        // Evaluate model at each sample point
+        let mut results = Vec::with_capacity(samples.len());
+        for sample in samples {
+            results.push(model(sample.view())?);
+        }
+        Ok(results)
     }
 
     /// Create mixed sample matrix for computing indices
@@ -567,7 +450,7 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
 }
 
 /// Extended Fourier Amplitude Sensitivity Test (eFAST)
-pub struct eFAST<F: IntegrateFloat> {
+pub struct EFAST<F: IntegrateFloat> {
     /// Number of samples
     n_samples: usize,
     /// Parameter bounds
@@ -576,10 +459,10 @@ pub struct eFAST<F: IntegrateFloat> {
     interference_factor: usize,
 }
 
-impl<F: IntegrateFloat> eFAST<F> {
+impl<F: IntegrateFloat> EFAST<F> {
     /// Create a new eFAST analysis
     pub fn new(n_samples: usize, param_bounds: Vec<(F, F)>) -> Self {
-        eFAST {
+        EFAST {
             n_samples,
             param_bounds,
             interference_factor: 4,
@@ -714,7 +597,7 @@ pub fn select_important_parameters<F: IntegrateFloat>(
     let mut important = Vec::new();
     
     // Compute total sensitivity
-    let total: F = rankings.iter().map(|(_, s)| *s).sum();
+    let total: F = rankings.iter().map(|(_, s)| *s).fold(F::zero(), |acc, x| acc + x);
     
     if total > F::epsilon() {
         let mut cumulative = F::zero();
@@ -729,6 +612,8 @@ pub fn select_important_parameters<F: IntegrateFloat>(
             }
         }
     }
+    
+    important
 }
 
 /// Global sensitivity analysis using Sobol indices
@@ -754,14 +639,14 @@ impl<F: IntegrateFloat> SobolSensitivity<F> {
     /// Generate Sobol sample matrices
     pub fn generate_samples(&self) -> (Array2<F>, Array2<F>) {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         // Generate base sample matrix A
         let mut a_matrix = Array2::zeros((self.n_samples, self.n_params));
         for i in 0..self.n_samples {
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
-                let u: f64 = rng.gen();
+                let u: f64 = rng.random();
                 a_matrix[[i, j]] = lower + (upper - lower) * F::from(u).unwrap();
             }
         }
@@ -771,7 +656,7 @@ impl<F: IntegrateFloat> SobolSensitivity<F> {
         for i in 0..self.n_samples {
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
-                let u: f64 = rng.gen();
+                let u: f64 = rng.random();
                 b_matrix[[i, j]] = lower + (upper - lower) * F::from(u).unwrap();
             }
         }
@@ -827,8 +712,8 @@ impl<F: IntegrateFloat> SobolSensitivity<F> {
                 let idx_b = sol_b.t.iter().position(|&t_sol| (t_sol - *t).abs() < F::epsilon()).unwrap_or(0);
                 
                 for k in 0..n_states {
-                    y_a[[i, j * n_states + k]] = sol_a.y[[idx_a, k]];
-                    y_b[[i, j * n_states + k]] = sol_b.y[[idx_b, k]];
+                    y_a[[i, j * n_states + k]] = sol_a.y[idx_a][k];
+                    y_b[[i, j * n_states + k]] = sol_b.y[idx_b][k];
                 }
             }
         }
@@ -860,7 +745,7 @@ impl<F: IntegrateFloat> SobolSensitivity<F> {
                 for (j, t) in t_eval.iter().enumerate() {
                     let idx = sol_c.t.iter().position(|&t_sol| (t_sol - *t).abs() < F::epsilon()).unwrap_or(0);
                     for k in 0..n_states {
-                        y_c_i[[sample, j * n_states + k]] = sol_c.y[[idx, k]];
+                        y_c_i[[sample, j * n_states + k]] = sol_c.y[idx][k];
                     }
                 }
             }
@@ -904,6 +789,8 @@ pub struct MorrisScreening<F: IntegrateFloat> {
     delta: F,
     /// Parameter bounds
     param_bounds: Vec<(F, F)>,
+    /// Grid levels
+    grid_levels: usize,
 }
 
 impl<F: IntegrateFloat> MorrisScreening<F> {
@@ -914,14 +801,32 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
             n_trajectories,
             delta,
             param_bounds,
+            grid_levels: 4,
         }
+    }
+
+    /// Create a new Morris screening analysis (legacy compatibility)
+    pub fn new_simple(n_trajectories: usize, param_bounds: Vec<(F, F)>) -> Self {
+        MorrisScreening {
+            n_params: param_bounds.len(),
+            n_trajectories,
+            delta: F::from(0.1).unwrap(),
+            param_bounds,
+            grid_levels: 4,
+        }
+    }
+
+    /// Set number of grid levels
+    pub fn with_grid_levels(mut self, levels: usize) -> Self {
+        self.grid_levels = levels;
+        self
     }
 
     /// Generate Morris trajectories
     pub fn generate_trajectories(&self) -> Vec<Array2<F>> {
         use rand::seq::SliceRandom;
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let mut trajectories = Vec::new();
         
@@ -931,7 +836,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
             // Generate base point
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
-                let u: f64 = rng.gen();
+                let u: f64 = rng.random();
                 trajectory[[0, j]] = lower + (upper - lower) * F::from(u).unwrap();
             }
             
@@ -948,7 +853,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
                 // Change one parameter
                 let (lower, upper) = self.param_bounds[param_idx];
                 let range = upper - lower;
-                let direction = if rng.gen::<bool>() { F::one() } else { -F::one() };
+                let direction = if rng.random::<bool>() { F::one() } else { -F::one() };
                 trajectory[[i + 1, param_idx]] += direction * self.delta * range;
                 
                 // Ensure within bounds
@@ -963,7 +868,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
         trajectories
     }
 
-    /// Compute elementary effects
+    /// Compute elementary effects from pre-generated trajectories
     pub fn compute_effects<Func>(
         &self,
         model: Func,
@@ -1000,133 +905,108 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
             let n = F::from(effects.len()).unwrap();
             
             // Mean of absolute effects (mu*)
-            let sum_abs: F = effects.iter().map(|&e| e.abs()).sum();
+            let sum_abs: F = effects.iter().map(|&e| e.abs()).fold(F::zero(), |acc, x| acc + x);
             mu[j] = sum_abs / n;
             
             // Standard deviation
-            let mean: F = effects.iter().sum::<F>() / n;
+            let mean: F = effects.iter().fold(F::zero(), |acc, &x| acc + x) / n;
             let variance: F = effects.iter()
                 .map(|&e| (e - mean) * (e - mean))
-                .sum::<F>() / n;
+                .fold(F::zero(), |acc, x| acc + x) / n;
             sigma[j] = variance.sqrt();
         }
         
         Ok((mu, sigma))
     }
-}
 
-/// Extended Fourier Amplitude Sensitivity Test (eFAST)
-pub struct EFAST<F: IntegrateFloat> {
-    /// Number of parameters
-    n_params: usize,
-    /// Number of samples
-    n_samples: usize,
-    /// Interference factor
-    m: usize,
-    /// Parameter bounds
-    param_bounds: Vec<(F, F)>,
-}
-
-impl<F: IntegrateFloat> EFAST<F> {
-    /// Create a new eFAST analyzer
-    pub fn new(param_bounds: Vec<(F, F)>, n_samples: usize, m: usize) -> Self {
-        EFAST {
-            n_params: param_bounds.len(),
-            n_samples,
-            m,
-            param_bounds,
-        }
-    }
-
-    /// Generate eFAST sample points
-    pub fn generate_samples(&self, param_idx: usize) -> Array2<F> {
-        let mut samples = Array2::zeros((self.n_samples, self.n_params));
-        let omega_i = self.m;
-        
-        for i in 0..self.n_samples {
-            let s = F::from(i).unwrap() / F::from(self.n_samples - 1).unwrap();
-            let s_scaled = s * F::from(2.0 * std::f64::consts::PI).unwrap();
-            
-            for j in 0..self.n_params {
-                let (lower, upper) = self.param_bounds[j];
-                let omega = if j == param_idx { omega_i } else { 1 };
-                
-                // Transform using search curve
-                let phi = F::from(omega).unwrap() * s_scaled;
-                let g = (phi.sin() / F::from(2.0).unwrap() + F::from(0.5).unwrap())
-                    .max(F::zero())
-                    .min(F::one());
-                
-                samples[[i, j]] = lower + (upper - lower) * g;
-            }
-        }
-        
-        samples
-    }
-
-    /// Compute sensitivity indices using Fourier analysis
-    pub fn compute_indices<Func>(
+    /// Compute elementary effects with parameter names (legacy compatibility)
+    pub fn compute_effects_named<Func>(
         &self,
         model: Func,
-    ) -> IntegrateResult<(Array1<F>, Array1<F>)>
+        param_names: Vec<String>,
+    ) -> IntegrateResult<HashMap<String, (F, F)>>
     where
         Func: Fn(ArrayView1<F>) -> IntegrateResult<F>,
     {
-        let mut first_order = Array1::zeros(self.n_params);
-        let mut total_order = Array1::zeros(self.n_params);
-        
-        for param_idx in 0..self.n_params {
-            let samples = self.generate_samples(param_idx);
-            let mut outputs = Array1::zeros(self.n_samples);
+        let n_params = self.param_bounds.len();
+        if param_names.len() != n_params {
+            return Err(IntegrateError::ValueError(
+                "Number of parameter names must match bounds".to_string()
+            ));
+        }
+
+        let mut effects = HashMap::new();
+        for name in &param_names {
+            effects.insert(name.clone(), (F::zero(), F::zero()));
+        }
+
+        // Generate trajectories and compute elementary effects
+        for _ in 0..self.n_trajectories {
+            let trajectory = self.generate_trajectory_legacy(n_params);
             
-            // Evaluate model at sample points
-            for i in 0..self.n_samples {
-                outputs[i] = model(samples.row(i))?;
-            }
-            
-            // Compute Fourier coefficients
-            let frequencies = self.compute_fourier_coefficients(&outputs);
-            
-            // Compute sensitivity indices
-            let total_variance = frequencies.iter().map(|&f| f * f).sum::<F>();
-            
-            // First-order index from fundamental frequency
-            let fundamental_variance = frequencies[self.m] * frequencies[self.m];
-            first_order[param_idx] = fundamental_variance / total_variance;
-            
-            // Total index from all harmonics
-            let mut harmonic_variance = F::zero();
-            for k in 1..frequencies.len() {
-                if k % self.m == 0 {
-                    harmonic_variance += frequencies[k] * frequencies[k];
+            for i in 0..n_params {
+                let p1 = trajectory[i].view();
+                let p2 = trajectory[i + 1].view();
+                
+                let y1 = model(p1)?;
+                let y2 = model(p2)?;
+                
+                // Find which parameter changed
+                let mut changed_param = None;
+                for j in 0..n_params {
+                    if (p1[j] - p2[j]).abs() > F::epsilon() {
+                        changed_param = Some(j);
+                        break;
+                    }
+                }
+                
+                if let Some(j) = changed_param {
+                    let delta = p2[j] - p1[j];
+                    let ee = (y2 - y1) / delta;
+                    
+                    let name = &param_names[j];
+                    let (sum, sum_sq) = effects.get_mut(name).unwrap();
+                    *sum += ee;
+                    *sum_sq += ee * ee;
                 }
             }
-            total_order[param_idx] = harmonic_variance / total_variance;
         }
+
+        // Compute mean and standard deviation
+        let n_traj = F::from(self.n_trajectories).unwrap();
+        let mut results = HashMap::new();
         
-        Ok((first_order, total_order))
+        for (name, (sum, sum_sq)) in effects {
+            let mu = sum / n_traj;
+            let sigma = ((sum_sq / n_traj) - mu * mu).sqrt();
+            results.insert(name, (mu.abs(), sigma));
+        }
+
+        Ok(results)
     }
 
-    /// Compute Fourier coefficients using FFT
-    fn compute_fourier_coefficients(&self, outputs: &Array1<F>) -> Array1<F> {
-        // Simplified DFT implementation (in practice, use FFT)
-        let n = outputs.len();
-        let mut coefficients = Array1::zeros(n / 2);
+    /// Generate a Morris trajectory (legacy compatibility)
+    fn generate_trajectory_legacy(&self, n_params: usize) -> Vec<Array1<F>> {
+        // Simplified trajectory generation
+        let mut trajectory = Vec::new();
+        let mut current = Array1::zeros(n_params);
         
-        for k in 0..n / 2 {
-            let mut real = F::zero();
-            let mut imag = F::zero();
-            
-            for j in 0..n {
-                let angle = F::from(-2.0 * std::f64::consts::PI * (k * j) as f64 / n as f64).unwrap();
-                real += outputs[j] * angle.cos();
-                imag += outputs[j] * angle.sin();
-            }
-            
-            coefficients[k] = (real * real + imag * imag).sqrt() / F::from(n).unwrap();
+        // Random starting point
+        for i in 0..n_params {
+            let (low, high) = self.param_bounds[i];
+            current[i] = low + (high - low) * F::from(0.5).unwrap();
+        }
+        trajectory.push(current.clone());
+        
+        // Change one parameter at a time
+        for i in 0..n_params {
+            let (low, high) = self.param_bounds[i];
+            let delta = (high - low) / F::from(self.grid_levels - 1).unwrap();
+            current[i] += delta;
+            trajectory.push(current.clone());
         }
         
-        coefficients
+        trajectory
     }
 }
 

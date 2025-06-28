@@ -12,7 +12,7 @@ pub mod device_manager;
 pub use fpga::{FPGADevice, FPGAKernel, FPGAConfig};
 pub use accelerator::{Accelerator, AcceleratorType, AcceleratorCapabilities};
 pub use kernel_compiler::{KernelCompiler, CompilationTarget, OptimizationLevel};
-pub use memory_mapping::{MemoryMapper, MemoryLayout, BufferAllocation};
+pub use memory_mapping::{MemoryMapper, MemoryLayout, BufferAllocation, MemoryRequirements};
 pub use device_manager::{DeviceManager, DeviceInfo, DeviceSelector};
 
 use crate::error::Result;

@@ -268,15 +268,15 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
         }
     }
 
-    /// Set a value
-    pub fn set(&mut self, row: usize, col: usize, value: F) {
+    /// Set a value without error checking
+    pub fn set_unchecked(&mut self, row: usize, col: usize, value: F) {
         if let Some(&idx) = self.index_map.get(&(row, col)) {
             self.values[idx] = value;
         }
     }
 
-    /// Get a value
-    pub fn get(&self, row: usize, col: usize) -> F {
+    /// Get a value with default zero
+    pub fn get_or_zero(&self, row: usize, col: usize) -> F {
         if let Some(&idx) = self.index_map.get(&(row, col)) {
             self.values[idx]
         } else {
@@ -284,8 +284,8 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
         }
     }
 
-    /// Convert to dense matrix
-    pub fn to_dense(&self) -> Array2<F> {
+    /// Convert to dense matrix (alternative implementation)
+    pub fn to_dense_alt(&self) -> Array2<F> {
         let mut dense = Array2::zeros((self.pattern.n_rows, self.pattern.n_cols));
         for (idx, &(row, col)) in self.pattern.entries.iter().enumerate() {
             dense[[row, col]] = self.values[idx];

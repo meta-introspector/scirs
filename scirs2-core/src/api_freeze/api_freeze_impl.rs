@@ -4,9 +4,19 @@
 //! These APIs are guaranteed to remain stable throughout the 1.x version series.
 
 use crate::api_versioning::{global_registry_mut, Version};
+use std::sync::Once;
+
+static INIT: Once = Once::new();
 
 /// Initialize the API registry with all frozen APIs for 1.0
 pub fn initialize_api_freeze() {
+    INIT.call_once(|| {
+        initialize_api_freeze_impl();
+    });
+}
+
+/// Internal implementation of API freeze initialization
+fn initialize_api_freeze_impl() {
     let mut registry = global_registry_mut();
     let v1_0_0 = Version::new(1, 0, 0);
     
@@ -164,6 +174,106 @@ pub fn initialize_api_freeze() {
         .register_api("Gauge", "metrics", v1_0_0)
         .register_api("Histogram", "metrics", v1_0_0)
         .register_api("Timer", "metrics", v1_0_0);
+    
+    // Safe Operations
+    registry
+        .register_api("safe_add", "safe_ops", v1_0_0)
+        .register_api("safe_sub", "safe_ops", v1_0_0)
+        .register_api("safe_mul", "safe_ops", v1_0_0)
+        .register_api("safe_div", "safe_ops", v1_0_0)
+        .register_api("safe_pow", "safe_ops", v1_0_0)
+        .register_api("safe_sqrt", "safe_ops", v1_0_0)
+        .register_api("safe_log", "safe_ops", v1_0_0)
+        .register_api("safe_exp", "safe_ops", v1_0_0);
+    
+    // Random number generation (conditional)
+    #[cfg(feature = "random")]
+    {
+        registry
+            .register_api("RandomGenerator", "random", v1_0_0)
+            .register_api("SeedableRng", "random", v1_0_0)
+            .register_api("random_array", "random", v1_0_0)
+            .register_api("random_normal", "random", v1_0_0)
+            .register_api("random_uniform", "random", v1_0_0)
+            .register_api("set_random_seed", "random", v1_0_0);
+    }
+    
+    // Profiling (conditional)
+    #[cfg(feature = "profiling")]
+    {
+        registry
+            .register_api("Profiler", "profiling", v1_0_0)
+            .register_api("ProfileScope", "profiling", v1_0_0)
+            .register_api("profile", "profiling", v1_0_0)
+            .register_api("start_profiling", "profiling", v1_0_0)
+            .register_api("stop_profiling", "profiling", v1_0_0)
+            .register_api("get_profile_report", "profiling", v1_0_0);
+    }
+    
+    // Testing utilities (conditional)
+    #[cfg(feature = "testing")]
+    {
+        registry
+            .register_api("TestHarness", "testing", v1_0_0)
+            .register_api("PropertyTest", "testing", v1_0_0)
+            .register_api("FuzzTest", "testing", v1_0_0)
+            .register_api("StressTest", "testing", v1_0_0)
+            .register_api("assert_array_almost_eq", "testing", v1_0_0)
+            .register_api("assert_array_eq", "testing", v1_0_0);
+    }
+    
+    // Universal functions (conditional)
+    #[cfg(feature = "ufuncs")]
+    {
+        registry
+            .register_api("Ufunc", "ufuncs", v1_0_0)
+            .register_api("ufunc_add", "ufuncs", v1_0_0)
+            .register_api("ufunc_multiply", "ufuncs", v1_0_0)
+            .register_api("ufunc_sin", "ufuncs", v1_0_0)
+            .register_api("ufunc_cos", "ufuncs", v1_0_0)
+            .register_api("ufunc_exp", "ufuncs", v1_0_0)
+            .register_api("ufunc_log", "ufuncs", v1_0_0);
+    }
+    
+    // NDArray extensions
+    registry
+        .register_api("arange", "ndarray_ext", v1_0_0)
+        .register_api("linspace", "ndarray_ext", v1_0_0)
+        .register_api("meshgrid", "ndarray_ext", v1_0_0)
+        .register_api("concatenate", "ndarray_ext", v1_0_0)
+        .register_api("stack", "ndarray_ext", v1_0_0)
+        .register_api("split", "ndarray_ext", v1_0_0)
+        .register_api("broadcast_to", "ndarray_ext", v1_0_0);
+    
+    // Performance optimization (conditional)
+    #[cfg(feature = "memory_efficient")]
+    {
+        registry
+            .register_api("PerformanceOptimizer", "performance_optimization", v1_0_0)
+            .register_api("optimize_memory_access", "performance_optimization", v1_0_0)
+            .register_api("detect_access_pattern", "performance_optimization", v1_0_0)
+            .register_api("AdaptiveOptimization", "performance_optimization", v1_0_0);
+    }
+    
+    // Benchmarking (conditional)
+    #[cfg(feature = "benchmarking")]
+    {
+        registry
+            .register_api("Benchmark", "benchmarking", v1_0_0)
+            .register_api("BenchmarkRunner", "benchmarking", v1_0_0)
+            .register_api("bench_function", "benchmarking", v1_0_0)
+            .register_api("compare_benchmarks", "benchmarking", v1_0_0);
+    }
+    
+    // Observability (conditional)
+    #[cfg(feature = "observability")]
+    {
+        registry
+            .register_api("AuditLog", "observability", v1_0_0)
+            .register_api("TracingContext", "observability", v1_0_0)
+            .register_api("log_event", "observability", v1_0_0)
+            .register_api("trace_operation", "observability", v1_0_0);
+    }
 }
 
 /// Check if an API is part of the frozen 1.0 API surface
@@ -184,6 +294,7 @@ pub fn generate_frozen_api_report() -> String {
     let mut report = String::from("# Frozen APIs for scirs2-core 1.0\n\n");
     
     let apis = registry.apis_in_version(&v1_0_0);
+    let total_apis = apis.len();
     let mut apis_by_module: std::collections::HashMap<&str, Vec<&str>> = std::collections::HashMap::new();
     
     for api in apis {
@@ -205,7 +316,7 @@ pub fn generate_frozen_api_report() -> String {
         report.push('\n');
     }
     
-    report.push_str(&format!("\nTotal frozen APIs: {}\n", apis.len()));
+    report.push_str(&format!("\nTotal frozen APIs: {}\n", total_apis));
     
     report
 }

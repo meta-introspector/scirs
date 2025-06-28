@@ -89,6 +89,13 @@ impl<N: Node, E: EdgeWeight + std::ops::Add<Output = E> + Copy + PartialOrd> Par
 /// * `Ok(None)` - If no path exists
 /// * `Err(GraphError)` - If the source or target node is not in the graph
 ///
+/// # Time Complexity
+/// O((V + E) log V) where V is the number of vertices and E is the number of edges.
+/// Using a binary heap (min-heap) priority queue implementation.
+///
+/// # Space Complexity
+/// O(V) for the distance array and predecessor tracking.
+///
 /// # Deprecation Notice
 /// This function will be updated in v1.0 to return a standardized `PathResult` type
 /// that provides more detailed information about the path and search process.
@@ -314,6 +321,18 @@ where
 ///
 /// # Returns
 /// * `Result<Array2<f64>>` - A matrix of shortest distances
+///
+/// # Time Complexity
+/// O(V³) where V is the number of vertices. This algorithm computes shortest paths
+/// between all pairs of vertices using dynamic programming.
+///
+/// # Space Complexity
+/// O(V²) for the distance matrix.
+///
+/// # Note
+/// This algorithm can detect negative cycles if the diagonal contains negative values
+/// after completion. It works correctly with negative edge weights but not with
+/// negative cycles.
 pub fn floyd_warshall<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
 where
     N: Node,
@@ -415,6 +434,20 @@ where
 ///
 /// # Returns
 /// * `Result<AStarResult>` - The shortest path and its cost
+///
+/// # Time Complexity
+/// O(b^d) where b is the branching factor and d is the depth of the solution.
+/// In the worst case with an inadmissible heuristic: O(V²).
+/// With a perfect heuristic: O(V).
+/// Typical case with good heuristic: O(V log V).
+///
+/// # Space Complexity
+/// O(V) for the open set, closed set, and path reconstruction.
+///
+/// # Note
+/// The heuristic function must be admissible (never overestimate the actual cost)
+/// and consistent (satisfy the triangle inequality) to guarantee finding the
+/// optimal path.
 pub fn astar_search<N, E, Ix, H>(
     graph: &Graph<N, E, Ix>,
     start: &N,

@@ -28,6 +28,8 @@ approx = { workspace = true }
 # rayon = { workspace = true }  # Now use scirs2-core parallel abstractions
 rand = { workspace = true }
 num_cpus = "1.16"
+regex = { workspace = true }
+ahash = "0.8"
 
 # Future dependency for PandRS with appropriate abstractions
 # pandrs_wrapper = { path = "../wrappers/pandrs_wrapper", optional = true }

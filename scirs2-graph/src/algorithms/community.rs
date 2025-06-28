@@ -105,6 +105,14 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
 ///
 /// # Returns
 /// * A community structure with node assignments and modularity score
+///
+/// # Time Complexity
+/// O(m * log n) where m is the number of edges and n is the number of nodes
+/// in typical cases. Can be O(m * n) in worst case with many iterations.
+/// The algorithm usually converges quickly in practice.
+///
+/// # Space Complexity
+/// O(n) for storing community assignments and node degrees.
 pub fn louvain_communities<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityStructure<N>
 where
     N: Node,
@@ -285,6 +293,13 @@ where
 ///
 /// Each node adopts the label that most of its neighbors have, with ties broken randomly.
 /// Returns a mapping from nodes to community labels.
+///
+/// # Time Complexity
+/// O(k * m) where k is the number of iterations (typically small) and m is
+/// the number of edges. The algorithm often converges in 5-10 iterations.
+///
+/// # Space Complexity
+/// O(n) for storing labels and temporary data structures.
 pub fn label_propagation<N, E, Ix>(graph: &Graph<N, E, Ix>, max_iter: usize) -> HashMap<N, usize>
 where
     N: Node + Clone + Hash + Eq,
@@ -375,6 +390,13 @@ where
 ///
 /// # Returns
 /// * The modularity score (typically between -1 and 1, higher is better)
+///
+/// # Time Complexity
+/// O(m + n) where m is the number of edges and n is the number of nodes.
+/// This is the optimized implementation that avoids the O(n²) naive approach.
+///
+/// # Space Complexity
+/// O(n) for storing degree information and community assignments.
 pub fn modularity<N, E, Ix>(graph: &Graph<N, E, Ix>, communities: &HashMap<N, usize>) -> f64
 where
     N: Node,

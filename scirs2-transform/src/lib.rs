@@ -61,6 +61,15 @@ pub mod out_of_core;
 /// Streaming transformations for continuous data
 pub mod streaming;
 
+/// Text processing transformers
+pub mod text;
+
+/// Image processing transformers
+pub mod image;
+
+/// Graph embedding transformers
+pub mod graph;
+
 // Re-export important types and functions
 pub use encoding::{BinaryEncoder, OneHotEncoder, OrdinalEncoder, TargetEncoder};
 pub use error::{Result, TransformError};
@@ -93,3 +102,8 @@ pub use out_of_core::{OutOfCoreConfig, OutOfCoreTransformer, ChunkedArrayReader,
                       OutOfCoreNormalizer, csv_chunks};
 pub use streaming::{StreamingTransformer, StreamingStandardScaler, StreamingMinMaxScaler, 
                     StreamingQuantileTracker, WindowedStreamingTransformer};
+pub use text::{CountVectorizer, TfidfVectorizer, HashingVectorizer, StreamingCountVectorizer};
+pub use image::{PatchExtractor, HOGDescriptor, BlockNorm, ImageNormalizer, ImageNormMethod, 
+                rgb_to_grayscale, resize_images};
+pub use graph::{SpectralEmbedding, LaplacianType, DeepWalk, Node2Vec, GraphAutoencoder, 
+                ActivationType, edge_list_to_adjacency, adjacency_to_edge_list};

@@ -1,7 +1,8 @@
 //! Device management for hardware accelerators
 
 use crate::error::Result;
-use crate::hardware::{Accelerator, AcceleratorType, AcceleratorFactory};
+use crate::hardware::{Accelerator, AcceleratorType};
+use crate::hardware::accelerator::AcceleratorFactory;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 

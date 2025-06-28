@@ -514,7 +514,8 @@ pub fn digamma<
 /// ```
 pub fn digamma_safe<F>(x: F) -> SpecialResult<F>
 where
-    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign
+        + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign,
 {
     // Validate input
     validation::check_finite(x, "x")?;

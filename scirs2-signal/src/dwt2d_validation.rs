@@ -611,7 +611,7 @@ pub fn generate_test_images() -> Vec<(&'static str, Array2<f64>)> {
 /// Run comprehensive validation suite
 pub fn run_comprehensive_validation(wavelet: Wavelet) -> SignalResult<()> {
     println!("Running comprehensive 2D DWT validation for {:?}", wavelet);
-    println!("=" .repeat(60));
+    println!("{}", "=".repeat(60));
     
     let test_images = generate_test_images();
     let tolerance = 1e-10;

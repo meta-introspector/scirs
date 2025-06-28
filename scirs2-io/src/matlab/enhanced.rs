@@ -10,7 +10,7 @@
 
 use crate::error::{IoError, Result};
 use crate::matlab::{read_mat, write_mat, MatType};
-use ndarray::ArrayD;
+use ndarray::{ArrayD, IxDyn};
 use std::collections::HashMap;
 use std::path::Path;
 

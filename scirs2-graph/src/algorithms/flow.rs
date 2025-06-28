@@ -11,6 +11,15 @@ use std::hash::Hash;
 ///
 /// Returns the minimum cut value and a partition of nodes.
 /// This is a randomized algorithm, so multiple runs may give different results.
+///
+/// # Time Complexity
+/// - For small graphs (n <= 10): O(2^n) - exhaustive search of all partitions
+/// - For larger graphs: O(n^2) per iteration with O(log n) iterations expected
+///   for high probability of finding the minimum cut
+/// - Full Karger's algorithm: O(n^2 log n) expected time
+///
+/// # Space Complexity
+/// O(n) for storing the partition and temporary data structures.
 pub fn minimum_cut<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<(f64, Vec<bool>)>
 where
     N: Node + Clone + Hash + Eq,
@@ -122,8 +131,7 @@ where
 /// Dinic's algorithm for maximum flow
 ///
 /// Implements Dinic's algorithm for finding maximum flow in a directed graph.
-/// This algorithm has time complexity O(V²E) which is better than Ford-Fulkerson
-/// for dense graphs.
+/// This algorithm builds level graphs using BFS and finds blocking flows using DFS.
 ///
 /// # Arguments
 /// * `graph` - The directed graph representing the flow network
@@ -132,6 +140,18 @@ where
 ///
 /// # Returns
 /// * The maximum flow value from source to sink
+///
+/// # Time Complexity
+/// - General case: O(V²E) where V is vertices and E is edges
+/// - Unit capacity networks: O(min(V^(2/3), E^(1/2)) * E)
+/// - Networks with integer capacities bounded by U: O(VE log U)
+///
+/// # Space Complexity
+/// O(V + E) for the residual graph representation and level graph
+///
+/// # Performance Note
+/// Dinic's algorithm is more efficient than Ford-Fulkerson for dense graphs
+/// and performs particularly well on networks with unit capacities.
 pub fn dinic_max_flow<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq,

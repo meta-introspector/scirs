@@ -766,7 +766,7 @@ impl ExponentialMap for SLn {
     fn log(&self) -> Self::Algebra {
         // Matrix logarithm - simplified implementation
         let n = self.n;
-        let i = Array2::eye(n);
+        let i = Array2::<f64>::eye(n);
         let a = &self.matrix - &i;
         
         // Series expansion for log(I + A)
@@ -1177,7 +1177,7 @@ fn matrix_exponential(a: &Array2<f64>) -> Array2<f64> {
 /// Helper function for matrix logarithm
 fn matrix_logarithm(a: &Array2<f64>) -> Array2<f64> {
     let n = a.nrows();
-    let i = Array2::eye(n);
+    let i = Array2::<f64>::eye(n);
     let x = a - &i;
     
     let mut result = Array2::zeros((n, n));

@@ -1,8 +1,23 @@
 //! Kernel compilation and optimization for hardware accelerators
 
 use crate::error::Result;
-use crate::hardware::{AcceleratorType, KernelSource, OptimizationLevel};
+use crate::hardware::AcceleratorType;
 use std::collections::HashMap;
+
+/// Optimization level for kernel compilation
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OptimizationLevel {
+    /// No optimization
+    O0,
+    /// Basic optimization
+    O1,
+    /// Standard optimization
+    O2,
+    /// Aggressive optimization
+    O3,
+    /// Size optimization
+    Os,
+}
 
 /// Kernel compiler for different hardware targets
 pub struct KernelCompiler {

@@ -9,6 +9,9 @@ use std::sync::mpsc;
 use std::thread;
 #[cfg(feature = "async")]
 use tokio::runtime::Runtime;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::Instant;
+use crossbeam_channel::{bounded, Sender, Receiver};
 
 /// Trait for pipeline executors
 pub trait PipelineExecutor<I, O> {
@@ -182,52 +185,27 @@ impl DistributedExecutor {
 
 impl<I, O> PipelineExecutor<Vec<I>, Vec<O>> for DistributedExecutor
 where
-    I: 'static + Send + Sync,
+    I: 'static + Send + Sync + Clone,
     O: 'static + Send + Sync,
 {
     fn execute(&self, pipeline: &Pipeline<Vec<I>, Vec<O>>, input: Vec<I>) -> Result<Vec<O>> {
+        use scirs2_core::parallel_ops::*;
+        
+        // For now, we'll use a simpler approach that processes chunks in parallel
+        // but executes the pipeline sequentially on each chunk
         let chunk_size = (input.len() + self.num_workers - 1) / self.num_workers;
-        let chunks: Vec<Vec<I>> = input
-            .chunks(chunk_size)
-            .map(|chunk| chunk.to_vec())
+        
+        // Process chunks in parallel using scirs2-core's parallel operations
+        let results: Result<Vec<Vec<O>>> = input
+            .par_chunks(chunk_size)
+            .map(|chunk| {
+                // Execute pipeline on this chunk
+                pipeline.execute(chunk.to_vec())
+            })
             .collect();
         
-        let (tx, rx) = mpsc::channel();
-        let mut handles = Vec::new();
-        
-        // Spawn workers
-        for (i, chunk) in chunks.into_iter().enumerate() {
-            let tx = tx.clone();
-            let pipeline_clone = Pipeline::<Vec<I>, Vec<O>>::new(); // Note: would need proper cloning
-            
-            let handle = thread::spawn(move || {
-                let result = pipeline_clone.execute(chunk);
-                tx.send((i, result)).unwrap();
-            });
-            
-            handles.push(handle);
-        }
-        
-        // Collect results
-        let mut results = vec![None; self.num_workers];
-        for _ in 0..self.num_workers {
-            let (index, result) = rx.recv().unwrap();
-            results[index] = Some(result?);
-        }
-        
-        // Combine results
-        let combined: Vec<O> = results
-            .into_iter()
-            .filter_map(|r| r)
-            .flatten()
-            .collect();
-        
-        // Wait for all threads
-        for handle in handles {
-            handle.join().unwrap();
-        }
-        
-        Ok(combined)
+        // Flatten results
+        results.map(|chunks| chunks.into_iter().flatten().collect())
     }
     
     fn name(&self) -> &str {
@@ -339,5 +317,330 @@ mod tests {
         let executor = StreamingExecutor::new(2);
         let result = executor.execute(&pipeline, vec![1, 2, 3, 4]).unwrap();
         assert_eq!(result, vec![2, 4, 6, 8]);
+    }
+}
+
+/// Enhanced streaming executor with backpressure control
+pub struct BackpressureStreamingExecutor {
+    chunk_size: usize,
+    max_pending_chunks: usize,
+    timeout: Duration,
+}
+
+impl BackpressureStreamingExecutor {
+    pub fn new(chunk_size: usize, max_pending_chunks: usize) -> Self {
+        Self {
+            chunk_size,
+            max_pending_chunks,
+            timeout: Duration::from_secs(30),
+        }
+    }
+    
+    pub fn with_timeout(mut self, timeout: Duration) -> Self {
+        self.timeout = timeout;
+        self
+    }
+}
+
+impl<I, O> PipelineExecutor<Vec<I>, Vec<O>> for BackpressureStreamingExecutor
+where
+    I: 'static + Send + Sync + Clone,
+    O: 'static + Send + Sync,
+{
+    fn execute(&self, pipeline: &Pipeline<Vec<I>, Vec<O>>, input: Vec<I>) -> Result<Vec<O>> {
+        let (input_tx, input_rx) = bounded::<Vec<I>>(self.max_pending_chunks);
+        let (output_tx, output_rx) = bounded::<Result<Vec<O>>>(self.max_pending_chunks);
+        
+        // Producer thread
+        let chunk_size = self.chunk_size;
+        let producer = thread::spawn(move || {
+            for chunk in input.chunks(chunk_size) {
+                if input_tx.send(chunk.to_vec()).is_err() {
+                    break;
+                }
+            }
+        });
+        
+        // Worker thread
+        let worker = thread::spawn(move || {
+            while let Ok(chunk) = input_rx.recv() {
+                let result = pipeline.execute(chunk);
+                if output_tx.send(result).is_err() {
+                    break;
+                }
+            }
+        });
+        
+        // Collect results with timeout
+        let mut results = Vec::new();
+        let start = Instant::now();
+        
+        while let Ok(result) = output_rx.recv_timeout(self.timeout) {
+            results.extend(result?);
+            
+            if start.elapsed() > self.timeout {
+                return Err(IoError::Other("Pipeline execution timeout".to_string()));
+            }
+        }
+        
+        // Wait for threads to complete
+        let _ = producer.join();
+        let _ = worker.join();
+        
+        Ok(results)
+    }
+    
+    fn name(&self) -> &str {
+        "backpressure_streaming"
+    }
+}
+
+/// Monitoring executor that collects detailed metrics
+pub struct MonitoringExecutor<E> {
+    inner: E,
+    metrics_collector: Arc<Mutex<PipelineMetrics>>,
+}
+
+#[derive(Debug)]
+pub struct PipelineMetrics {
+    pub total_items: AtomicUsize,
+    pub successful_items: AtomicUsize,
+    pub failed_items: AtomicUsize,
+    pub stage_metrics: HashMap<String, StageMetrics>,
+    pub start_time: Option<Instant>,
+    pub end_time: Option<Instant>,
+}
+
+impl Default for PipelineMetrics {
+    fn default() -> Self {
+        Self {
+            total_items: AtomicUsize::new(0),
+            successful_items: AtomicUsize::new(0),
+            failed_items: AtomicUsize::new(0),
+            stage_metrics: HashMap::new(),
+            start_time: None,
+            end_time: None,
+        }
+    }
+}
+
+impl Clone for PipelineMetrics {
+    fn clone(&self) -> Self {
+        Self {
+            total_items: AtomicUsize::new(self.total_items.load(Ordering::SeqCst)),
+            successful_items: AtomicUsize::new(self.successful_items.load(Ordering::SeqCst)),
+            failed_items: AtomicUsize::new(self.failed_items.load(Ordering::SeqCst)),
+            stage_metrics: self.stage_metrics.clone(),
+            start_time: self.start_time,
+            end_time: self.end_time,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct StageMetrics {
+    pub execution_count: usize,
+    pub total_duration: Duration,
+    pub min_duration: Option<Duration>,
+    pub max_duration: Option<Duration>,
+    pub errors: Vec<String>,
+}
+
+impl<E, I, O> MonitoringExecutor<E>
+where
+    E: PipelineExecutor<I, O>,
+{
+    pub fn new(inner: E) -> Self {
+        Self {
+            inner,
+            metrics_collector: Arc::new(Mutex::new(PipelineMetrics::default())),
+        }
+    }
+    
+    pub fn get_metrics(&self) -> PipelineMetrics {
+        self.metrics_collector.lock().unwrap().clone()
+    }
+}
+
+impl<E, I, O> PipelineExecutor<I, O> for MonitoringExecutor<E>
+where
+    E: PipelineExecutor<I, O>,
+    I: 'static + Send + Sync,
+    O: 'static + Send + Sync,
+{
+    fn execute(&self, pipeline: &Pipeline<I, O>, input: I) -> Result<O> {
+        {
+            let mut metrics = self.metrics_collector.lock().unwrap();
+            metrics.start_time = Some(Instant::now());
+            metrics.total_items.fetch_add(1, Ordering::SeqCst);
+        }
+        
+        let result = self.inner.execute(pipeline, input);
+        
+        {
+            let mut metrics = self.metrics_collector.lock().unwrap();
+            metrics.end_time = Some(Instant::now());
+            
+            match &result {
+                Ok(_) => {
+                    metrics.successful_items.fetch_add(1, Ordering::SeqCst);
+                }
+                Err(_) => {
+                    metrics.failed_items.fetch_add(1, Ordering::SeqCst);
+                }
+            }
+        }
+        
+        result
+    }
+    
+    fn name(&self) -> &str {
+        "monitoring"
+    }
+}
+
+/// Retry executor for fault tolerance
+pub struct RetryExecutor<E> {
+    inner: E,
+    max_retries: usize,
+    retry_delay: Duration,
+    exponential_backoff: bool,
+}
+
+impl<E, I, O> RetryExecutor<E>
+where
+    E: PipelineExecutor<I, O>,
+{
+    pub fn new(inner: E, max_retries: usize) -> Self {
+        Self {
+            inner,
+            max_retries,
+            retry_delay: Duration::from_secs(1),
+            exponential_backoff: true,
+        }
+    }
+    
+    pub fn with_delay(mut self, delay: Duration) -> Self {
+        self.retry_delay = delay;
+        self
+    }
+    
+    pub fn with_exponential_backoff(mut self, enabled: bool) -> Self {
+        self.exponential_backoff = enabled;
+        self
+    }
+}
+
+impl<E, I, O> PipelineExecutor<I, O> for RetryExecutor<E>
+where
+    E: PipelineExecutor<I, O>,
+    I: 'static + Send + Sync + Clone,
+    O: 'static + Send + Sync,
+{
+    fn execute(&self, pipeline: &Pipeline<I, O>, input: I) -> Result<O> {
+        let mut last_error = None;
+        let mut delay = self.retry_delay;
+        
+        for attempt in 0..=self.max_retries {
+            if attempt > 0 {
+                thread::sleep(delay);
+                if self.exponential_backoff {
+                    delay *= 2;
+                }
+            }
+            
+            match self.inner.execute(pipeline, input.clone()) {
+                Ok(result) => return Ok(result),
+                Err(e) => {
+                    last_error = Some(e);
+                }
+            }
+        }
+        
+        Err(last_error.unwrap_or_else(|| IoError::Other("Retry failed".to_string())))
+    }
+    
+    fn name(&self) -> &str {
+        "retry"
+    }
+}
+
+/// Event-driven executor that triggers on specific conditions
+pub struct EventDrivenExecutor {
+    event_receiver: Receiver<Event>,
+}
+
+#[derive(Debug, Clone)]
+pub enum Event {
+    DataAvailable(String),
+    ScheduledTime(Instant),
+    ExternalTrigger(String),
+    FileCreated(PathBuf),
+}
+
+impl EventDrivenExecutor {
+    pub fn new(event_receiver: Receiver<Event>) -> Self {
+        Self { event_receiver }
+    }
+}
+
+impl<I, O> PipelineExecutor<I, O> for EventDrivenExecutor
+where
+    I: 'static + Send + Sync,
+    O: 'static + Send + Sync,
+{
+    fn execute(&self, pipeline: &Pipeline<I, O>, input: I) -> Result<O> {
+        // Wait for event
+        match self.event_receiver.recv() {
+            Ok(event) => {
+                match event {
+                    Event::DataAvailable(_) | Event::ExternalTrigger(_) | Event::FileCreated(_) => {
+                        // Execute pipeline when event is received
+                        pipeline.execute(input)
+                    }
+                    Event::ScheduledTime(scheduled) => {
+                        // Wait until scheduled time
+                        let now = Instant::now();
+                        if scheduled > now {
+                            thread::sleep(scheduled - now);
+                        }
+                        pipeline.execute(input)
+                    }
+                }
+            }
+            Err(_) => Err(IoError::Other("Event channel closed".to_string())),
+        }
+    }
+    
+    fn name(&self) -> &str {
+        "event_driven"
+    }
+}
+
+/// Parallel stage executor for executing pipeline stages in parallel
+pub struct ParallelStageExecutor {
+    max_parallelism: usize,
+}
+
+impl ParallelStageExecutor {
+    pub fn new(max_parallelism: usize) -> Self {
+        Self { max_parallelism }
+    }
+}
+
+impl<I, O> PipelineExecutor<I, O> for ParallelStageExecutor
+where
+    I: 'static + Send + Sync,
+    O: 'static + Send + Sync,
+{
+    fn execute(&self, pipeline: &Pipeline<I, O>, input: I) -> Result<O> {
+        // For now, delegate to regular execution
+        // In a full implementation, this would analyze stage dependencies
+        // and execute independent stages in parallel
+        pipeline.execute(input)
+    }
+    
+    fn name(&self) -> &str {
+        "parallel_stage"
     }
 }

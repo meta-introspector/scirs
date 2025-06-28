@@ -12,8 +12,6 @@ use std::f64::consts::PI;
 use std::fmt::{Debug, Display};
 use std::ops::{AddAssign, SubAssign, MulAssign};
 
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
 
 // Normal distribution functions
 
@@ -513,7 +511,7 @@ where
     {
         if x.len() > 1000 {
             // Use parallel processing for large arrays
-            use rayon::prelude::*;
+            use scirs2_core::parallel_ops::*;
             let vec: Vec<T> = x.as_slice()
                 .unwrap()
                 .par_iter()

@@ -1,8166 +1,8792 @@
 # Unwrap() Usage Report
 
-Total unwrap() calls and unsafe operations found: 3632
+Total unwrap() calls and unsafe operations found: 3905
 
 ## Summary by Type
 
-- Replace with ? operator or .ok_or(): 2092 occurrences
-- Division without zero check - use safe_divide(): 937 occurrences
-- Mathematical operation .sqrt() without validation: 332 occurrences
-- Use .get().ok_or(Error::IndexOutOfBounds)?: 124 occurrences
-- Use .get() with proper bounds checking: 94 occurrences
-- Mathematical operation .ln() without validation: 32 occurrences
-- Handle array creation errors properly: 16 occurrences
-- Mathematical operation .powf( without validation: 5 occurrences
+- Division without zero check - use safe_divide(): 2292 occurrences
+- Replace with ? operator or .ok_or(): 1186 occurrences
+- Mathematical operation .sqrt() without validation: 252 occurrences
+- Mathematical operation .ln() without validation: 86 occurrences
+- Mathematical operation .powf( without validation: 48 occurrences
+- Handle array creation errors properly: 21 occurrences
+- Use .get() with proper bounds checking: 11 occurrences
+- Use .get().ok_or(Error::IndexOutOfBounds)?: 9 occurrences
 
 ## Detailed Findings
 
 
-### benches/attention_bench.rs
-
-11 issues found:
-
-- Line 31: `let scale = 1.0 / f32::sqrt(d_model as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 40: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 49: `let scale = 1.0 / f32::sqrt(d_model as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 51: `causal_attention(&query.view(), &key.view(), &value.view(), scale).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 59: `let scale = 1.0 / f32::sqrt(d_model as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 69: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 77: `let scale = 1.0 / f32::sqrt(d_model as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 79: `linear_attention(&query.view(), &key.view(), &value.view(), scale).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 88: `let head_dim = d_model / num_heads;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 99: `scale: Some(1.0 / f32::sqrt(head_dim as f32)),`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 115: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### benches/comprehensive_decomposition_bench.rs
-
-36 issues found:
-
-- Line 65: `b.iter(|| lu(black_box(&m.view()), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 75: `lu(black_box(&m.view()), None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 88: `solve(black_box(&m.view()), black_box(&r.view()), None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 114: `|b, m| b.iter(|| qr(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 119: `b.iter(|| qr(black_box(&m.view()), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 124: `b.iter(|| qr(black_box(&m.view()), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 131: `|b, m| b.iter(|| qr(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 138: `|b, m| b.iter(|| rank_revealing_qr(black_box(&m.view()), 1e-12).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 163: `|b, m| b.iter(|| svd(black_box(&m.view()), false, None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 170: `|b, m| b.iter(|| svd(black_box(&m.view()), true, None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 175: `b.iter(|| svd(black_box(&m.view()), true, None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 180: `b.iter(|| svd(black_box(&m.view()), true, None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 187: `|b, m| b.iter(|| svd(black_box(&m.view()), true, None).unwrap().1),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 208: `|b, m| b.iter(|| cholesky(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 218: `let l = cholesky(black_box(&m.view()), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 219: `solve_triangular(&l.view(), black_box(&r.view()), false, false).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 259: `|b, m| b.iter(|| eigvals(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 266: `|b, m| b.iter(|| eig(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 273: `|b, m| b.iter(|| eigvalsh(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 280: `|b, m| b.iter(|| eigh(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 291: `smallest_k_eigh(black_box(&m.view()), 10, size, 1e-10).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 314: `b.iter(|| schur(black_box(&m.view())).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 321: `schur(black_box(&m.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 329: `schur(black_box(&m.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 351: `let (u, p) = advanced_polar_decomposition(black_box(&m.view()), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 360: `let (u, p) = advanced_polar_decomposition(black_box(&m.view()), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 369: `let (u, _) = advanced_polar_decomposition(black_box(&m.view()), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 410: `eigvals_gen(black_box(&a.view()), black_box(&matrix_b.view()), None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 422: `eig_gen(black_box(&a.view()), black_box(&matrix_b.view()), None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 445: `|b, m| b.iter(|| complex_lu(black_box(&m.view())).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 452: `|b, m| b.iter(|| complex_qr(black_box(&m.view())).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 460: `|b, m| b.iter(|| complex_svd(black_box(&m.view()), true).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 468: `|b, m| b.iter(|| complex_eig(black_box(&m.view())).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 536: `lu(&m_copy.view(), None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 543: `|b, m| b.iter(|| lu(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 563: `|b, m| b.iter(|| cholesky(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### benches/linalg_bench.rs
-
-6 issues found:
-
-- Line 196: `let toeplitz = ToeplitzMatrix::new(r.view(), r.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 197: `solve_toeplitz(r.view(), r.view(), black_box(rhs.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 208: `let circulant = CirculantMatrix::new(r.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 209: `solve_circulant(r.view(), black_box(rhs.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 391: `let target_dim = size / 4;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 401: `gaussian_random_matrix(black_box(*d), black_box(m.ncols())).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### benches/matrix_functions_bench.rs
-
-42 issues found:
-
-- Line 41: `matrix[[i, j]] = 0.1 / ((j - i) as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 52: `let t = i as f64 / (n - 1) as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 64: `let (q, _) = qr(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 87: `|b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 94: `|b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 101: `|b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 108: `|b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 118: `matrix_functions::expm(black_box(&m.view()), None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 130: `matrix_functions::expm(black_box(&m.view()), None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 154: `b.iter(|| logm(black_box(&m.view())).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 161: `|b, m| b.iter(|| logm(black_box(&m.view())).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 168: `matrix_functions::logm(black_box(&m.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 179: `matrix_functions::logm(black_box(&m.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 207: `matrix_power(black_box(&m.view()), *p as f64).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 223: `matrix_power(black_box(&m.view()), *p as f64).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 226: `matrix_power(black_box(&m.view()), *p).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 254: `matrix_power(black_box(&m.view()), *p).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 276: `b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 283: `|b, m| b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 293: `sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 305: `sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 317: `sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 341: `matrix_functions::signm(black_box(&m.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 349: `|b, m| b.iter(|| signm(black_box(&m.view())).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 356: `matrix_functions::signm(black_box(&m.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 364: `matrix_functions::signm(black_box(&m.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 384: `b.iter(|| matrix_functions::cosm(black_box(&m.view())).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 389: `b.iter(|| sinm(black_box(&m.view())).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 394: `b.iter(|| tanm(black_box(&m.view())).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 399: `b.iter(|| matrix_functions::coshm(black_box(&m.view())).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 404: `b.iter(|| sinhm(black_box(&m.view())).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 409: `b.iter(|| tanhm(black_box(&m.view())).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 432: `matrix_functions::asinm(black_box(&m.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 440: `matrix_functions::acosm(black_box(&m.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 451: `matrix_functions::atanm(black_box(&m.view())).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 506: `matrix_functions::expm(black_box(&m.view()), None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 515: `matrix_functions::expm(black_box(&m.view()), None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 534: `sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 561: `matrix_functions::expm(black_box(&m.view()), None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 572: `|b, (m, iter)| b.iter(|| sqrtm(black_box(&m.view()), black_box(*iter), 1e-12).un...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 595: `|b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 601: `|b, m| b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### benches/perf_opt_bench.rs
-
-6 issues found:
-
-- Line 37: `black_box(blocked_matmul(&a.view(), &b.view(), &config_blocked).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 45: `black_box(blocked_matmul(&a.view(), &b.view(), &config_adaptive).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 72: `inplace_add(&mut a_copy.view_mut(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 117: `let _result = black_box(optimized_transpose(&a.view()).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 142: `black_box(blocked_matmul(&a.view(), &b.view(), &config_serial).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 155: `black_box(blocked_matmul(&a.view(), &b.view(), &config_parallel).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### benches/quantization_bench.rs
-
-7 issues found:
-
-- Line 13: `Array2::from_shape_fn((rows, cols), |(i, j)| ((i * cols + j) % 100) as f32 / 100...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 17: `Array1::from_iter((0..size).map(|i| (i % 100) as f32 / 100.0))`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 128: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 146: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 195: `b.iter(|| black_box(calibrate_matrix(&matrix.view(), 8, &minmax_config_clone).un...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 200: `black_box(calibrate_matrix(&matrix.view(), 8, &percentile_config_clone).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 205: `b.iter(|| black_box(calibrate_matrix(&matrix.view(), 8, &ema_config_clone).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### benches/quantized_solvers_bench.rs
-
-25 issues found:
-
-- Line 71: `bench.iter(|| black_box(conjugate_gradient(&standard_op, &b, 100, 1e-6).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 95: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 103: `black_box(conjugate_gradient(&quantized_linear_op, &b, 100, 1e-6).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 128: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 135: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 161: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 168: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 191: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 196: `let precond = quantized_jacobi_preconditioner(&quantized_op).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 208: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 239: `bench.iter(|| black_box(gmres(&standard_op, &b, 100, 1e-6, Some(20)).unwrap()))`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 263: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 269: `black_box(gmres(&quantized_linear_op, &b, 100, 1e-6, Some(20)).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 294: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 298: `quantized_gmres(&quantized_op, &b, 100, 1e-6, Some(20), false).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 324: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 328: `quantized_gmres(&quantized_op, &b, 100, 1e-6, Some(20), true).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 374: `bench.iter(|| black_box(conjugate_gradient(&standard_op, &b, 100, 1e-6).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 398: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 404: `quantized_conjugate_gradient(&quantized_op, &b, 100, 1e-6, false).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 430: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 435: `let precond = quantized_jacobi_preconditioner(&quantized_op).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 447: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 481: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 487: `quantized_conjugate_gradient(&quantized_op, &b, 50, 1e-5, false).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### benches/scipy_compat_benchmarks.rs
-
-51 issues found:
-
-- Line 50: `b.iter(|| compat::det(&m.view(), false, true).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 54: `b.iter(|| det(&m.view(), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 59: `b.iter(|| compat::inv(&m.view(), false, true).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 63: `b.iter(|| inv(&m.view(), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 83: `|b, m| b.iter(|| compat::norm(&m.view(), Some("fro"), None, false, true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 89: `|b, m| b.iter(|| matrix_norm(&m.view(), "frobenius", None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 94: `b.iter(|| compat::norm(&m.view(), Some("1"), None, false, true).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 98: `b.iter(|| matrix_norm(&m.view(), "1", None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 105: `|b, m| b.iter(|| compat::norm(&m.view(), Some("inf"), None, false, true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 109: `b.iter(|| matrix_norm(&m.view(), "inf", None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 129: `|b, v| b.iter(|| compat::vector_norm(&v.view(), Some(2.0), true).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 135: `|b, v| b.iter(|| vector_norm(&v.view(), 2).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 142: `|b, v| b.iter(|| compat::vector_norm(&v.view(), Some(1.0), true).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 148: `|b, v| b.iter(|| vector_norm(&v.view(), 1).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 155: `|b, v| b.iter(|| compat::vector_norm(&v.view(), Some(f64::INFINITY), true).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 161: `|b, v| b.iter(|| vector_norm(&v.view(), 0).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 182: `b.iter(|| compat::lu(&m.view(), false, false, true, false).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 186: `b.iter(|| lu(&m.view(), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 191: `b.iter(|| compat::qr(&m.view(), false, None, "full", false, true).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 195: `b.iter(|| qr(&m.view(), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 201: `b.iter(|| compat::svd(&m.view(), true, true, false, true, "gesdd").unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 205: `b.iter(|| svd(&m.view(), false, None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 213: `|b, m| b.iter(|| compat::cholesky(&m.view(), true, false, true).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 219: `|b, m| b.iter(|| cholesky(&m.view(), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 256: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 264: `|b, m| b.iter(|| eigen::eigvalsh(&m.view(), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 287: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 293: `b.iter(|| eigen::eigh(&m.view(), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 329: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 337: `|b, (m, r)| b.iter(|| solve(&m.view(), &r.view(), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 350: `compat::lstsq(&m.view(), &r.view(), None, false, false, true, None).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 358: `|b, (m, r)| b.iter(|| lstsq(&m.view(), &r.view(), None).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 380: `b.iter(|| compat::expm(&m.view(), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 384: `b.iter(|| expm(&m.view(), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 389: `b.iter(|| compat::sqrtm(&m.view(), Some(true)).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 393: `b.iter(|| sqrtm(&m.view(), 100, 1e-12).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 400: `b.iter(|| compat::logm(&m.view()).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 404: `b.iter(|| logm(&m.view()).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 423: `b.iter(|| compat::cond(&m.view(), Some("2")).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 427: `b.iter(|| cond(&m.view(), None, None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 432: `b.iter(|| compat::matrix_rank(&m.view(), None, false, true).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 436: `b.iter(|| matrix_rank(&m.view(), None, None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 442: `b.iter(|| compat::pinv(&m.view(), None, false, true).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 462: `b.iter(|| compat::rq(&m.view(), false, None, "full", true).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 467: `b.iter(|| compat::polar(&m.view(), "right").unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 471: `b.iter(|| compat::polar(&m.view(), "left").unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 495: `|b, blocks| b.iter(|| compat::block_diag(&blocks).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 522: `compat::det(&m.view(), false, true).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 545: `b.iter(|| compat::det(&m.view(), false, true).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 550: `b.iter(|| compat::norm(&m.view(), Some("fro"), None, false, true).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 556: `b.iter(|| compat::lu(&m.view(), false, false, true, false).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### benches/simd_bench.rs
-
-8 issues found:
-
-- Line 53: `Array1::from_iter((0..size).map(|i| (i % 100) as f32 / 100.0))`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 57: `Array2::from_shape_fn((rows, cols), |(i, j)| ((i * cols + j) % 100) as f32 / 100...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 79: `simd_matvec_f32(&black_box(matrix.view()), &black_box(vector.view())).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 94: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 123: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 135: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 162: `black_box(simd_dot_f32(&black_box(vec_a.view()), &black_box(vec_b.view())).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 170: `.unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/advanced_features_showcase.rs
-
-3 issues found:
-
-- Line 76: `let speedup = serial_time.as_secs_f64() / parallel_time.as_secs_f64();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 175: `let blockwise_norm = norm_accumulator.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 316: `let sparsity = 1.0 - (non_zeros as f64) / (size * size) as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/attention_example.rs
-
-12 issues found:
-
-- Line 15: `let scale = 1.0 / (d_model as f32).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 15: `let scale = 1.0 / (d_model as f32).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 26: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 33: `let causal_output = causal_attention(&query.view(), &key.view(), &value.view(), ...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 49: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 72: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 79: `let linear_output = linear_attention(&query.view(), &key.view(), &value.view(), ...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 88: `let head_dim = d_model / num_heads;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 102: `scale: Some(1.0 / (head_dim as f32).sqrt()),`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 102: `scale: Some(1.0 / (head_dim as f32).sqrt()),`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 116: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 124: `let rope_output = rotary_embedding(&query.view(), freq_base).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/autograd_linalg_example.rs
-
-4 issues found:
-
-- Line 165: `println!("dL/dX shape: {:?}", results[0].as_ref().unwrap().shape());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 166: `println!("dL/dW shape: {:?}", results[1].as_ref().unwrap().shape());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 167: `println!("dL/db shape: {:?}", results[2].as_ref().unwrap().shape());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 171: `let eye_val = eye_3.eval(ctx).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/batch_attention_example.rs
-
-8 issues found:
-
-- Line 15: `let scale = 1.0 / (d_model as f32).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 15: `let scale = 1.0 / (d_model as f32).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 33: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 54: `let head_dim = d_model / num_heads;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 71: `scale: Some(1.0 / (head_dim as f32).sqrt()),`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 71: `scale: Some(1.0 / (head_dim as f32).sqrt()),`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 86: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 122: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/broadcast_example.rs
-
-6 issues found:
-
-- Line 30: `let c = broadcast_matmul_3d(&a, &b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 41: `let y = broadcast_matvec(&a_dyn, &x).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 44: `println!("First batch result: {:?}", &y.as_slice().unwrap()[0..2]);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 45: `println!("Second batch result: {:?}", &y.as_slice().unwrap()[2..4]);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 56: `let c = broadcast_matmul(&a, &b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 72: `let c = broadcast_matmul_3d(&a, &b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/calibration_benchmark.rs
-
-19 issues found:
-
-- Line 73: `let uniform = Uniform::new(-1.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 88: `let normal = Normal::new(0.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 103: `let lognormal = LogNormal::new(0.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 118: `let normal1 = Normal::new(-2.0, 0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 119: `let normal2 = Normal::new(2.0, 0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 143: `let region_size = size / 4;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 179: `let cauchy = Cauchy::new(0.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 224: `let params = calibrate_matrix(&data.view(), BITS, &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 233: `let mse = diff.mapv(|x| x * x).sum() / data.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 238: `let avg_time = elapsed.as_millis() as f32 / NUM_ITERATIONS as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 239: `let avg_mse = total_mse / NUM_ITERATIONS as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 243: `let size_reduction = (1.0 - (BITS as f32 / fp32_size as f32)) * 100.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 282: `let params = calibrate_matrix(&data.view(), bits, &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 290: `let mse = diff.mapv(|x| x * x).sum() / data.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 294: `let rel_error = diff_abs.sum() / data.mapv(|x| x.abs()).sum() * 100.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 298: `let size_reduction = (1.0 - (bits as f32 / fp32_size as f32)) * 100.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 349: `let mse = diff.mapv(|x| x * x).sum() / data.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 353: `let rel_error = diff_abs.sum() / data.mapv(|x| x.abs()).sum() * 100.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 357: `let size_reduction = (1.0 - (bits as f32 / fp32_size as f32)) * 100.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/comprehensive_core_linalg.rs
-
-1 issues found:
-
-- Line 314: `let y = Array1::from_shape_fn(size, |i| (i as f64 + 1.0).sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### examples/dynamic_quantization_example.rs
+### benches/wavelet_bench.rs
 
 17 issues found:
 
-- Line 47: `let normal = Normal::new(mean, std_dev).unwrap();`
+- Line 11: `let t = (0..size).map(|i| i as f64 / fs).collect::<Vec<f64>>();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 13: `chirp(&t, 0.0, 1.0, 100.0, "linear", 0.5).unwrap()`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 90: `let static_params = calibrate_matrix(&data_sequence[0].view(), bits, &static_con...`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 100: `calibrate_matrix(&data_sequence[0].view(), bits, &dynamic_config).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 110: `let static_mse = (data - &static_dequantized).mapv(|x| x * x).sum() / data.len()...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 115: `dynamic_params = calibrate_matrix(&data.view(), bits, &dynamic_config).unwrap();`
+- Line 40: `|b, _| b.iter(|| black_box(dwt_decompose(&signal, *wavelet, None).unwrap())),`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 120: `let dynamic_mse = (data - &dynamic_dequantized).mapv(|x| x * x).sum() / data.len...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 124: `((static_mse - dynamic_mse) / static_mse) * 100.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 139: `let avg_static_mse = total_static_mse / data_sequence.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 140: `let avg_dynamic_mse = total_dynamic_mse / data_sequence.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 141: `let overall_improvement = ((avg_static_mse - avg_dynamic_mse) / avg_static_mse) ...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 177: `calibrate_matrix(&data_sequence[0].view(), bits, configs.last().unwrap()).unwrap...`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 188: `params_list[j] = calibrate_matrix(&data.view(), bits, &configs[j]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 193: `let mse = (data - &dequantized).mapv(|x| x * x).sum() / data.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 235: `let mut params = calibrate_matrix(&initial_data.view(), bits, &dynamic_config).u...`
+- Line 45: `let (approx, detail) = dwt_decompose(&signal, *wavelet, None).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 265: `let error = (&data - &dequantized).mapv(|x| x.abs()).mean().unwrap();`
+- Line 51: `|b, _| b.iter(|| black_box(dwt_reconstruct(&approx, &detail, *wavelet).unwrap())...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 279: `params = calibrate_matrix(&data.view(), bits, &dynamic_config).unwrap();`
+- Line 93: `b.iter(|| black_box(wavedec(&signal, *wavelet, Some(level), None).unwrap()))`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 298: `let normal = Normal::new(drift, amplitude).unwrap();`
+- Line 98: `let coeffs = wavedec(&signal, *wavelet, Some(level), None).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/extended_precision_example.rs
-
-6 issues found:
-
-- Line 23: `hilbert[[i, j]] = 1.0 / ((i + j + 1) as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 85: `let a_f32 = Array2::from_shape_fn((3, 3), |(i, j)| 1.0 / ((i + j + 1) as f32));`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 149: `hilbert_det[[i, j]] = 1.0 / ((i + j + 1) as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 209: `println!("Improvement factor: {:.2}x", error_std / error_ext);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 300: `sym_matrix[[i, j]] = 1.0 / ((i + j + 1) as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 401: `max_residual_std / max_residual_ext`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/fft_spectral_analysis_example.rs
-
-27 issues found:
-
-- Line 39: `Complex64::new((2.0 * PI * 3.0 * i as f64 / n_power2 as f64).sin(), 0.0)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 60: `Complex64::new((2.0 * PI * 2.0 * i as f64 / n_arbitrary as f64).cos(), 0.0)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 75: `(2.0 * PI * 5.0 * i as f64 / n_real as f64).sin()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 76: `+ 0.5 * (2.0 * PI * 10.0 * i as f64 / n_real as f64).cos()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 86: `100 - (rfft_result.len() * 100 / n_real)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 97: `reconstruction_error = (reconstruction_error / n_real as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 97: `reconstruction_error = (reconstruction_error / n_real as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 111: `let x = 2.0 * PI * (i as f64) / (rows as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 112: `let y = 2.0 * PI * (j as f64) / (cols as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 126: `error_2d = (error_2d / (rows * cols) as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 126: `error_2d = (error_2d / (rows * cols) as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 147: `error_3d = (error_3d / (depth * height * width) as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 147: `error_3d = (error_3d / (depth * height * width) as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 196: `let leakage_ratio = 1.0 - main_lobe_energy / total_energy;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 226: `dct_error = (dct_error / dct_signal.len() as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 226: `dct_error = (dct_error / dct_signal.len() as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 231: `sorted_coeffs.sort_by(|a, b| b.abs().partial_cmp(&a.abs()).unwrap());`
+- Line 104: `|b, _| b.iter(|| black_box(waverec(&coeffs, *wavelet).unwrap())),`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 236: `100.0 * top_8_energy / total_energy`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 273: `.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+- Line 146: `b.iter(|| black_box(swt_decompose(&signal, *wavelet, level, None).unwrap()))`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 274: `.unwrap();`
+- Line 151: `let (approx, detail) = swt_decompose(&signal, *wavelet, level, None).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 288: `let t = i as f64 / fs;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 313: `peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+- Line 159: `black_box(swt_reconstruct(&approx, &detail, *wavelet, level).unwrap())`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 333: `n_samples / (segment_length / 2) - 1,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 347: `welch_peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+- Line 170: `|b, _| b.iter(|| black_box(swt(&signal, *wavelet, level, None).unwrap())),`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 390: `Complex64::new((2.0 * PI * i as f64 / size as f64).sin(), 0.0)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 399: `let theoretical_speedup = naive_operations as f64 / fft_operations as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 404: `fft_time.as_nanos() as f64 / 1000.0,`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/generic_example.rs
-
-9 issues found:
-
-- Line 27: `let c = gemm(&a.view(), &b.view()).unwrap();`
+- Line 174: `let (details, approx) = swt(&signal, *wavelet, level, None).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 31: `let det = gdet(&a.view()).unwrap();`
+- Line 180: `|b, _| b.iter(|| black_box(iswt(&details, &approx, *wavelet).unwrap())),`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 35: `let a_inv = ginv(&a.view()).unwrap();`
+- Line 223: `b.iter(|| black_box(wp_decompose(&signal, *wavelet, level, None).unwrap()))`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 39: `let svd = gsvd(&a.view(), false).unwrap();`
+- Line 228: `let tree = wp_decompose(&signal, *wavelet, level, None).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 43: `let qr = gqr(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 47: `let eigen = geig(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 52: `let x = gsolve(&a.view(), &b_vec.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 63: `let c = gemm(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 67: `let det = gdet(&a.view()).unwrap();`
+- Line 240: `|b, _| b.iter(|| black_box(reconstruct_from_nodes(&tree, &nodes).unwrap())),`
   - **Fix**: Replace with ? operator or .ok_or()
 
-### examples/hierarchical_matrix_example.rs
-
-11 issues found:
-
-- Line 28: `let dist = ((i as f64 - j as f64).powi(2) + 1.0).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 29: `1.0 / (1.0 + dist)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 58: `/ memory_info.original_size as f64)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 91: `dense_time.as_nanos() as f64 / h_time.as_nanos() as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 140: `hss_dense_time.as_nanos() as f64 / hss_time.as_nanos() as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 153: `let r1 = (i as f64 / block_size as f64) * (j as f64 / block_size as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 154: `let r2 = ((i + j) as f64 / (2.0 * block_size as f64)).sin() * 0.5;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 155: `let r3 = ((i as f64 - j as f64).abs() / block_size as f64).exp() * 0.1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 165: `let compression = (block_size * block_size) as f64 / (u.len() + v.len()) as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 175: `let rmse = (error / (block_size * block_size) as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 175: `let rmse = (error / (block_size * block_size) as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### examples/kfac_neural_optimization_example.rs
-
-6 issues found:
-
-- Line 51: `let scale = (2.0 / (fan_in + fan_out) as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 51: `let scale = (2.0 / (fan_in + fan_out) as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 107: `Some((previous_loss - current_loss) / previous_loss)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 187: `let scale = (2.0 / (fan_in + fan_out) as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 187: `let scale = (2.0 / (fan_in + fan_out) as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 220: `let kfac_improvement = sgd_losses.last().unwrap_or(&1.0) / kfac_losses.last().un...`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/matrix_dynamics_example.rs
-
-18 issues found:
-
-- Line 47: `initial_vector.as_slice().unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 63: `exp_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 67: `evolved_vector.as_slice().unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 96: `lyapunov_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 105: `let residual_norm = residual.iter().map(|&x| x * x).sum::<f64>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 137: `riccati_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 143: `let input_cost_inv = 1.0 / input_cost[[0, 0]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 188: `ode_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 200: `let mid_point = n_points / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 245: `let sqrt_half = (0.5_f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 252: `println!("   |ψ(0)⟩ = {:?}", initial_state.as_slice().unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 255: `let evolution_times = [0.0, PI / 2.0, PI, 3.0 * PI / 2.0, 2.0 * PI];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 274: `t / PI,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 279: `quantum_time.as_nanos() as f64 / 1_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 322: `println!("   Eigenvalues: {:?}", eigenvalues.as_slice().unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 371: `let test_vector = Array2::from_shape_fn((n, 1), |(i, _)| (i as f64 + 1.0) / n as...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 386: `elapsed.as_nanos() as f64 / 1_000_000.0,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 387: `memory_estimate as f64 / 1024.0`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/matrix_transformations_example.rs
-
-2 issues found:
-
-- Line 19: `let angle_data = array![std::f64::consts::PI / 4.0].into_dyn();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 136: `example::run().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/matrixfree_example.rs
-
-10 issues found:
-
-- Line 25: `let y = spd_op.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 39: `let solution = matrix_free_conjugate_gradient(&spd_op, &b, 10, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 46: `let ax = spd_op.apply(&solution.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 66: `let solution2 = matrix_free_gmres(&nonsym_op, &b2, 10, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 73: `let ax2 = nonsym_op.apply(&solution2.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 82: `let precond = jacobi_preconditioner(&spd_op).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 86: `matrix_free_preconditioned_conjugate_gradient(&spd_op, &precond, &b, 10, 1e-10)....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 93: `let ax3 = spd_op.apply(&solution3.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 120: `let y5 = block_op.apply(&x5.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 135: `sum.sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### examples/neural_network_quantization_example.rs
+### examples/adaptive_filter_example.rs
 
 20 issues found:
 
-- Line 59: `let std_dev1 = (2.0 / 32.0).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 59: `let std_dev1 = (2.0 / 32.0).sqrt();`
+- Line 25: `let mut lms = LmsFilter::new(4, 0.01, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 51: `let (_outputs, errors, _mse) = lms.adapt_batch(&inputs, &desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 63: `.sqrt();`
   - **Fix**: Mathematical operation .sqrt() without validation
-- Line 63: `weights1[[i, j]] = Normal::new(0.0, std_dev1).unwrap().sample(&mut rng);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 69: `let std_dev2 = (2.0 / 64.0).sqrt();`
+- Line 67: `let final_mse: f64 = errors.iter().rev().take(50).map(|&e| e * e).sum::<f64>() /...`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 69: `let std_dev2 = (2.0 / 64.0).sqrt();`
+- Line 97: `let mut nlms = NlmsFilter::new(8, 0.5, 1e-6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 106: `let (noise_est, _error, _mse) = nlms.adapt(noise_signal[i], noisy_signal[i]).unw...`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 133: `let mut lms_comp = LmsFilter::new(3, 0.05, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 134: `let mut rls_comp = RlsFilter::new(3, 0.99, 100.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 155: `let (_out_lms, err_lms, _) = lms_comp.adapt(input, desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 156: `let (_out_rls, err_rls, _) = rls_comp.adapt(input, desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 174: `.sqrt();`
   - **Fix**: Mathematical operation .sqrt() without validation
-- Line 73: `weights2[[i, j]] = Normal::new(0.0, std_dev2).unwrap().sample(&mut rng);`
+- Line 182: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 204: `let mut echo_canceler = LmsFilter::new(8, 0.01, 0.0).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 79: `biases2[[i, 0]] = 0.01 * Normal::new(0.0, 1.0).unwrap().sample(&mut rng);`
+- Line 247: `.unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 104: `input[[i, j]] = Normal::new(0.0, 1.0).unwrap().sample(&mut rng);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 161: `calibrate_matrix(&layer.weights.view(), bits, &weights_config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 167: `let bias_params = calibrate_matrix(&layer.biases.view(), bits, &bias_config).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 208: `let act_params = calibrate_matrix(&input.view(), 8, &activation_config).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 236: `let hidden_params = calibrate_matrix(&hidden_activated.view(), 8, &hidden_config...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 265: `let mse = (full_precision - quantized).mapv(|x| x * x).sum() / full_precision.le...`
+- Line 255: `echo_signal.iter().map(|&x| x * x).sum::<f64>() / echo_signal.len() as f64;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 274: `/ full_precision.mapv(|x| x.abs()).sum()`
+- Line 262: `/ 50.0;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 311: `(top1_matches as f32 / batch_size as f32) * 100.0`
+- Line 263: `let echo_cancellation_db = 10.0 * (echo_power / residual_power).log10();`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 352: `calibrate_matrix(&layer.weights.view(), w_bits, &weights_config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 357: `let bias_params = calibrate_matrix(&layer.biases.view(), 8, &bias_config).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 381: `let act_params = calibrate_matrix(&input.view(), a_bits0, &activation_config).un...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 408: `calibrate_matrix(&hidden_activated.view(), a_bits1, &hidden_config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 446: `let memory_reduction = (1.0 - (mixed_weight_size as f32 / fp32_weight_size as f3...`
+- Line 297: `let signal_power: f64 = signal.iter().map(|&x| x * x).sum::<f64>() / signal.len(...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 298: `let noise_power: f64 = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len() a...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 301: `10.0 * (signal_power / noise_power).log10()`
   - **Fix**: Division without zero check - use safe_divide()
 
-### examples/out_of_core_example.rs
+### examples/advanced_filter_example.rs
 
 27 issues found:
 
-- Line 18: `println!("Using temporary file: {}", file_path.to_str().unwrap());`
+- Line 25: `let (b_butter, a_butter) = butter(4, 0.3, "lowpass").unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 48: `file_path.to_str().unwrap(),`
+- Line 30: `let (b_butter_hp, a_butter_hp) = butter(3, 0.4, "highpass").unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 50: `.unwrap()`
+- Line 39: `let (b_cheb1, a_cheb1) = cheby1(4, 0.5, 0.3, "lowpass").unwrap(); // 0.5 dB ripp...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 60: `let y = chunked.apply(&x.view()).unwrap();`
+- Line 48: `let (b_cheb2, a_cheb2) = cheby2(4, 40.0, 0.3, "lowpass").unwrap(); // 40 dB stop...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 71: `(y[i] - expected[i]).abs() / expected[i].abs()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 93: `file_path.to_str().unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 95: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 111: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 118: `let residual_norm = (r.dot(&r)).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 119: `let b_norm = (b.dot(&b)).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 120: `let relative_residual = residual_norm / b_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 151: `file_path_8bit.to_str().unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 153: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 165: `file_path_4bit.to_str().unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 167: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 184: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 189: `let residual_norm_8bit = (r_8bit.dot(&r_8bit)).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 190: `let b_norm = (b.dot(&b)).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 191: `let relative_residual_8bit = residual_norm_8bit / b_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 199: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 204: `let residual_norm_4bit = (r_4bit.dot(&r_4bit)).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 205: `let relative_residual_4bit = residual_norm_4bit / b_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 210: `.map(|m| m.len() as f64 / 1024.0 / 1024.0)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 213: `.map(|m| m.len() as f64 / 1024.0 / 1024.0)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 221: `(1.0 - file_size_4bit / file_size_8bit) * 100.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 229: `(elapsed_8bit.as_secs_f64() / elapsed_4bit.as_secs_f64() - 1.0) * 100.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 237: `relative_residual_4bit / relative_residual_8bit`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/per_channel_quantization_example.rs
-
-2 issues found:
-
-- Line 102: `println!("  Improvement: {:.2}x\n", std_total_err / perchan_total_err);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 187: `std_asym_total_err / perchan_asym_total_err`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/perf_opt_example.rs
-
-6 issues found:
-
-- Line 71: `time_standard.as_secs_f64() / time_blocked.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 104: `time_standard.as_secs_f64() / time_inplace.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 108: `memory_standard as f64 / (1024.0 * 1024.0)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 131: `time_standard.as_secs_f64() / time_inplace.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 159: `time_standard.as_secs_f64() / time_optimized.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 225: `time_serial.as_secs_f64() / time_parallel.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/preconditioners_example.rs
-
-23 issues found:
-
-- Line 56: `println!("   Test vector: {:?}", x_test.as_slice().unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 59: `preconditioned_result.as_slice().unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 86: `unpreconditioned_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 90: `preconditioned_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 93: `let speedup = unpreconditioned_time.as_nanos() as f64 / preconditioned_time.as_n...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 136: `ilu_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 141: `let residual_norm_ilu = (residual_ilu.iter().map(|&x| x * x).sum::<f64>()).sqrt(...`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 143: `println!("   Solution: {:?}", solution_ilu.as_slice().unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 184: `ic_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 188: `let residual_norm_ic = (residual_ic.iter().map(|&x| x * x).sum::<f64>()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 197: `let block_i = i / 3;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 198: `let block_j = j / 3;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 203: `} else if (i as i32 - j as i32).abs() == 1 && i / 3 == j / 3 {`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 239: `bj_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 243: `let residual_norm_bj = (residual_bj.iter().map(|&x| x * x).sum::<f64>()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 284: `poly_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 288: `let residual_norm_poly = (residual_poly.iter().map(|&x| x * x).sum::<f64>()).sqr...`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 354: `adaptive_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 358: `let residual_norm_adaptive = (residual_adaptive.iter().map(|&x| x * x).sum::<f64...`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 422: `setup_time.as_nanos() as f64 / 1_000_000.0,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 423: `apply_time.as_nanos() as f64 / 1_000.0,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 424: `analysis.memory_usage_bytes as f64 / 1024.0,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 512: `zero_elements as f64 / total_elements as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/quantization_calibration_example.rs
-
-16 issues found:
-
-- Line 47: `let uniform = Uniform::new(-1.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 62: `let normal = Normal::new(0.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 77: `let normal1 = Normal::new(-2.0, 0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 78: `let normal2 = Normal::new(2.0, 0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 153: `let params = calibrate_matrix(&data.view(), bits, &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 160: `let mse = (data - &dequantized).mapv(|x| x * x).sum() / data.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 184: `let params_std = calibrate_matrix(&data.view(), bits, &config_std).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 188: `let mse_std = (data - &dequantized_std).mapv(|x| x * x).sum() / data.len() as f3...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 201: `let params_pc = calibrate_matrix(&data.view(), bits, &config_pc).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 213: `let mse_pc = (data - &dequantized_pc).mapv(|x| x * x).sum() / data.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 216: `println!("  Improvement: {:.2}x", mse_std / mse_pc);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 232: `let col_mse_std = (&col_data - &col_std).mapv(|x| x * x).sum() / col_data.len() ...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 234: `let col_mse_pc = (&col_data - &col_pc).mapv(|x| x * x).sum() / col_data.len() as...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 260: `let params = calibrate_matrix(&data.view(), bit, &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 267: `let mse = (data - &dequantized).mapv(|x| x * x).sum() / data.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 271: `(data - &dequantized).mapv(|x| x.abs()).sum() / data.mapv(|x| x.abs()).sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/quantization_example.rs
-
-24 issues found:
-
-- Line 23: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 82: `Array2::from_shape_vec((2, 4), vec![1.0_f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])...`
-  - **Fix**: Handle array creation errors properly
-- Line 138: `Array2::from_shape_vec((3, 3), vec![1.2, 2.5, 3.7, 4.2, 5.0, 6.1, 7.3, 8.4, 9.5]...`
-  - **Fix**: Handle array creation errors properly
-- Line 140: `let b = Array2::from_shape_vec((3, 2), vec![0.5, 1.5, 2.5, 3.5, 4.5, 5.5]).unwra...`
-  - **Fix**: Handle array creation errors properly
-- Line 142: `let x = Array1::from_shape_vec(3, vec![0.1, 0.2, 0.3]).unwrap();`
-  - **Fix**: Handle array creation errors properly
-- Line 240: `let c_q = quantized_matmul(&a_q_symmetric, &a_params_symmetric, &b_q, &b_params)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 247: `let rel_error = (&c - &c_q).mapv(|x| x.abs()).sum() / c.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 261: `let y_q = quantized_matvec(&a_q_symmetric, &a_params_symmetric, &x_q, &x_params)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 268: `let rel_error = (&y - &y_q).mapv(|x| x.abs()).sum() / y.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 281: `let dot_q = quantized_dot(&x_q, &x_params, &x_q, &x_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 288: `let rel_error = (dot - dot_q).abs() / dot;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 308: `let mse = (&a - &a_fake_q).mapv(|x| x * x).sum() / a.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 364: `let mse = (&a - &a_fake_q).mapv(|x| x * x).sum() / a.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 390: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 412: `100.0 * (orig - dequant).abs() / orig.abs()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 441: `100.0 * (orig - dequant).abs() / orig.abs()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 458: `let a_for_f16 = Array2::from_shape_vec((2, 3), vec![1.1, 2.2, 3.3, 4.4, 5.5, 6.6...`
-  - **Fix**: Handle array creation errors properly
-- Line 459: `let b_for_f16 = Array2::from_shape_vec((3, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6...`
-  - **Fix**: Handle array creation errors properly
-- Line 471: `let c_f16 = quantized_matmul(&a_f16, &a_f16_params, &b_f16, &b_f16_params).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 476: `let rel_error_f16 = (&c_full - &c_f16).mapv(|x| x.abs()).sum() / c_full.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 505: `100.0 * int8_size as f32 / original_size as f32`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 510: `100.0 * int4_size as f32 / original_size as f32`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 515: `100.0 * f16_size as f32 / original_size as f32`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 520: `100.0 * bf16_size as f32 / original_size as f32`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/quantization_ml_example.rs
-
-19 issues found:
-
-- Line 40: `let normal = Normal::new(0.0, 0.1).unwrap(); // Small standard deviation typical...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 60: `let val = Normal::new(0.0, 1.0).unwrap().sample(&mut rng);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 117: `let weights_params = calibrate_matrix(&weights.view(), bits, &config_weights).un...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 123: `(weights - &dequantized_weights).mapv(|x| x * x).sum() / weights.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 127: `calibrate_matrix(&activations.view(), bits, &config_activations).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 137: `/ activations.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 158: `/ reference_result.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 164: `/ reference_result.mapv(|x| x.abs()).sum()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 203: `let weights_params = calibrate_matrix(&weights.view(), bits, &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 213: `let activations_params = calibrate_matrix(&activations.view(), bits, &config_act...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 238: `/ reference_result.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 244: `/ reference_result.mapv(|x| x.abs()).sum()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 249: `let memory_savings = (1.0 - (bits as f32 / fp32_size as f32)) * 100.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 297: `calibrate_matrix(&weights.view(), weight_bits, &weights_config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 303: `calibrate_matrix(&activations.view(), act_bits, &activations_config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 315: `/ reference_result.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 319: `/ reference_result.mapv(|x| x.abs()).sum()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 325: `let weight_savings = 1.0 - (weight_bits as f32 / fp32_size as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 326: `let act_savings = 1.0 - (act_bits as f32 / fp32_size as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/quantized_solvers_example.rs
-
-20 issues found:
-
-- Line 58: `let x_standard = conjugate_gradient(&standard_op, &b, 10, 1e-6).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 64: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 69: `let x_quantized = quantized_conjugate_gradient(&quantized_op, &b, 10, 1e-6, fals...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 75: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 81: `quantized_conjugate_gradient(&quantized_op_4bit, &b, 10, 1e-6, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 115: `let x_standard = gmres(&standard_op, &b, 10, 1e-6, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 121: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 124: `let x_quantized = quantized_gmres(&quantized_op, &b, 10, 1e-6, None, false).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 130: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 133: `let x_quantized_4bit = quantized_gmres(&quantized_op_4bit, &b, 10, 1e-6, None, f...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 165: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 170: `let precond = quantized_jacobi_preconditioner(&quantized_op).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 174: `quantized_conjugate_gradient(&quantized_op, &b, 10, 1e-6, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 183: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 220: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 225: `let x_banded = quantized_conjugate_gradient(&banded_op, &b, 20, 1e-6, false).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 257: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 262: `let x_standard = quantized_conjugate_gradient(&quantized_op, &b, 50, 1e-5, false...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 266: `let x_adaptive = quantized_conjugate_gradient(&quantized_op, &b, 50, 1e-5, true)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 279: `v.dot(v).sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### examples/random_matrices_example.rs
-
-2 issues found:
-
-- Line 230: `let actual_density = nnz as f64 / total as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 233: `"\nNon-zero elements: {} / {} (density: {:.3})",`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/scalable_algorithms_example.rs
-
-22 issues found:
-
-- Line 55: `let freq1 = 2.0 * std::f64::consts::PI * (i as f64) / 100.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 56: `let freq2 = 2.0 * std::f64::consts::PI * (j as f64) / 10.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 57: `freq1.sin() + 0.5 * freq2.cos() + 0.1 * (i + j) as f64 / 1000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 64: `m_tall as f64 / n_tall as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 75: `tsqr_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 117: `let signal = (j as f64 / 50.0).sin() * (i as f64 + 1.0);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 118: `signal + 0.01 * (i * j) as f64 / 10000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 125: `m_short as f64 / n_short as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 134: `lq_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 199: `result.memory_estimate as f64 / 1024.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 237: `let matrix_a = Array2::from_shape_fn(a_size, |(i, j)| ((i + j + 1) as f64).sin()...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 238: `let matrix_b = Array2::from_shape_fn(b_size, |(i, j)| ((i * j + 1) as f64).cos()...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 258: `blocked_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 262: `standard_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 285: `Array2::from_shape_fn((300, rank_true), |(i, j)| ((i + j + 1) as f64).sin() / 10...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 290: `Array2::from_shape_fn((rank_true, 200), |(i, j)| ((i * j + 1) as f64).cos() / 10...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 314: `randomized_time.as_nanos() as f64 / 1_000_000.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 337: `approximation_error = approximation_error.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 339: `let matrix_norm = low_rank_matrix.iter().map(|&x| x * x).sum::<f64>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 340: `let relative_error = approximation_error / matrix_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 363: `Array2::from_shape_fn((m, n), |(i, j)| (i + j + 1) as f64 / (m + n) as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 389: `elapsed.as_nanos() as f64 / 1_000_000.0,`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/scipy_compat_example.rs
-
-3 issues found:
-
-- Line 32: `println!("Q =\n{}", q.unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 38: `println!("U =\n{}", u.unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 40: `println!("Vt =\n{}", vt.unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/scipy_compat_showcase.rs
-
-13 issues found:
-
-- Line 245: `let det_result = compat::det(&a.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 249: `let norm_result = compat::norm(&a.view(), Some("fro"), None, false, true).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 253: `let rank = compat::matrix_rank(&a.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 262: `let (p, l, u) = compat::lu(&a.view(), false, false, true, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 268: `let (q_opt, r) = compat::qr(&a.view(), false, None, "full", false, true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 273: `let (u_opt, s, vt_opt) = compat::svd(&a.view(), true, true, false, true, "gesdd"...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 284: `let exp_result = compat::expm(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 288: `let sqrt_result = compat::sqrtm(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 292: `let pinv_result = compat::pinv(&a.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 301: `let norm_2 = compat::vector_norm(&v.view(), Some(2.0), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 305: `let norm_1 = compat::vector_norm(&v.view(), Some(1.0), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 309: `let norm_inf = compat::vector_norm(&v.view(), Some(f64::INFINITY), true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 319: `let block_diag = compat::block_diag(&blocks).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/scipy_migration_guide.rs
-
-4 issues found:
-
-- Line 211: `let residual_norm = residual.iter().map(|&r| r * r).sum::<f64>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 245: `let residual_norm_lstsq = residual_lstsq.iter().map(|&r| r * r).sum::<f64>().sqr...`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 283: `let error = diff.iter().map(|&x| x * x).sum::<f64>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 420: `println!("            Ok(result) => {{ /* use result */ }}");`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/simd_quantization_example.rs
-
-9 issues found:
-
-- Line 39: `let c_q_simd = simd_quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 47: `let rel_error = max_error / c_ref.fold(0.0_f32, |acc, &x| acc.max(x.abs()));`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 52: `ref_time.as_secs_f64() / simd_time.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 67: `let r_q_simd = simd_quantized_matvec(&a_q, &a_params, &v.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 75: `let rel_error = max_error / r_ref.fold(0.0_f32, |acc, &x| acc.max(x.abs()));`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 80: `ref_time.as_secs_f64() / simd_time.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 165: `let c_q = simd_quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 172: `let rel_error = abs_error / max_abs_val;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 175: `let speedup = ref_time.as_secs_f64() / q_time.as_secs_f64();`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/sparse_dense_example.rs
-
-19 issues found:
-
-- Line 36: `let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 45: `(sparse_a.nnz() as f64 / (sparse_a.rows * sparse_a.cols) as f64) * 100.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 50: `let result_ab = sparse_dense_matmul(&sparse_a, &dense_b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 58: `let error_ab = (&result_ab - &expected_ab).mapv(|x: f64| x.abs()).sum() / expect...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 63: `let result_ac = sparse_dense_matvec(&sparse_a, &vec_c.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 71: `let error_ac = (&result_ac - &expected_ac).mapv(|x: f64| x.abs()).sum() / expect...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 82: `let result_ad_add = sparse_dense_add(&sparse_a, &dense_d.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 93: `/ expected_ad_add.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 98: `let result_ad_mul = sparse_dense_elementwise_mul(&sparse_a, &dense_d.view()).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 110: `/ expected_ad_mul.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 115: `let sparse_a_t = sparse_transpose(&sparse_a).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 127: `/ expected_a_t.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 143: `100.0 / (k as f64)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 154: `dense_large[[i, j]] = (i * j) as f64 / (n * m) as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 163: `(nnz as f64 / (n * m) as f64) * 100.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 167: `let sparse_large = sparse_from_ndarray(&dense_large.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 178: `let _ = sparse_dense_matvec(&sparse_large, &dense_vec.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 194: `dense_time.as_secs_f64() / sparse_time.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 199: `sparse_time.as_secs_f64() / dense_time.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/sparse_eigen_solver.rs
-
-7 issues found:
-
-- Line 29: `let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 5, 1000, 1e-8).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 44: `let residual = (&av - &lambda_v).mapv(|x| x * x).sum().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 51: `let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 5, 1000, 1e-8).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 66: `let residual = (&av - &lambda_v).mapv(|x| x * x).sum().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 73: `let (all_eigenvalues, _) = eigh(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 78: `sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 84: `sorted_eigenvalues.sort_by(|a, b| a.partial_cmp(b).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/structured_matrices_example.rs
-
-21 issues found:
-
-- Line 18: `let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 21: `let dense_toeplitz = toeplitz.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 27: `let y = toeplitz.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 35: `let toeplitz_sym = ToeplitzMatrix::new_symmetric(first_row_sym.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 38: `println!("{}", toeplitz_sym.to_dense().unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 45: `let circulant = CirculantMatrix::new(first_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 48: `let dense_circulant = circulant.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 53: `let y = circulant.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 66: `let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 69: `let dense_hankel = hankel.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 75: `let y = hankel.matvec(&x_hankel.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 83: `let hankel_seq = HankelMatrix::from_sequence(sequence.view(), 3, 3).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 86: `println!("{}", hankel_seq.to_dense().unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 95: `let y_op = toeplitz_op.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 102: `let direct_y = toeplitz.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 119: `let x = solve_toeplitz(c.view(), r.view(), b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 128: `let toeplitz = ToeplitzMatrix::new(c.view(), r.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 129: `let tx = toeplitz.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 143: `let x = solve_circulant(c.view(), b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 151: `let circulant = CirculantMatrix::new(c.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 152: `let cx = circulant.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/tensor_contraction_example.rs
-
-8 issues found:
-
-- Line 18: `let c = contract(&a.view(), &b.view(), &[1], &[0]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 38: `let batch_c = batch_matmul(&batch_a.view(), &batch_b.view(), 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 51: `let d = einsum("ij,jk->ik", &[&a.view().into_dyn(), &b.view().into_dyn()]).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 62: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 70: `let trace = einsum("ii->", &[&matrix.view().into_dyn()]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 84: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 100: `let (core, factors) = hosvd(&tensor.view(), &[2, 2, 2]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 125: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### examples/tensor_train_example.rs
-
-9 issues found:
-
-- Line 22: `let tt = tensor_train_decomposition(&tensor.view(), None, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 31: `let reconstructed = tt.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 61: `let tt_truncated = tensor_train_decomposition(&tensor4d.view(), Some(2), None).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 70: `let reconstructed4d = tt_truncated.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 84: `let value = tt.get(&indices).unwrap();`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 97: `let rounded_tt = tt.round(eps).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 103: `let reconstructed = rounded_tt.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 123: `(diff_sum / orig_sum).sqrt()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 123: `(diff_sum / orig_sum).sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### examples/tensor_train_high_dimensional_example.rs
-
-11 issues found:
-
-- Line 98: `dense_tensor.len() * 8 / 1024`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 116: `(1.0 - tt_result.storage_size() as f64 / dense_tensor.len() as f64) * 100.0`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 127: `(sample / 4) % 4,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 128: `(sample / 16) % 4,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 129: `(sample / 64) % 4,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 142: `total_error / num_samples as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 156: `let compression = full_size as f64 / estimated_tt_size as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 162: `full_size as f64 * 8.0 / 1e9`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 167: `estimated_tt_size as f64 * 8.0 / 1e6`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 174: `full_size as f64 * 8.0 / 1e12`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 265: `high_rank_tensor.storage_size() as f64 / rounded.storage_size() as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### examples/tutorial_advanced.rs
-
-2 issues found:
-
-- Line 152: `let scale = 1.0 / (d_k as f32).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 152: `let scale = 1.0 / (d_k as f32).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### src/attention/mod.rs
-
-33 issues found:
-
-- Line 603: `Some(s) => F::from(s).unwrap_or_else(|| F::from(1.0 / (head_dim as f64).sqrt())....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 604: `None => F::from(1.0 / (head_dim as f64).sqrt()).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 844: `let scale_factor = (m_prev - m_new).exp() / l_block[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1120: `let pos_diff = F::from((i as isize - j as isize).abs() as f64).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1212: `let half_dim = d_model / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1216: `let freq = F::one() / (freq_base.powf(F::from(2.0 * i as f64 / d_model as f64).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1231: `let theta = F::from(pos as f64).unwrap() * freqs[i];`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1342: `result[[b, i, j]] = sum / z[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1522: `let heads_per_kv = num_heads / num_kv_heads;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1523: `let head_dim = d_model / num_heads;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1583: `let kv_head_idx = h / heads_per_kv;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1677: `let pos_i = F::from(i as f64 + 1.0).unwrap(); // 1-indexed position`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1680: `let dim_factor = F::from(j as f64 / d_model as f64).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1681: `let scale_factor = F::one() / pos_i.powf(dim_factor);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1681: `let scale_factor = F::one() / pos_i.powf(dim_factor);`
-  - **Fix**: Mathematical operation .powf( without validation
-- Line 1687: `let pos_i = F::from(i as f64 + 1.0).unwrap(); // 1-indexed position`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1690: `let dim_factor = F::from(j as f64 / d_model as f64).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1691: `let scale_factor = F::one() / pos_i.powf(dim_factor);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1691: `let scale_factor = F::one() / pos_i.powf(dim_factor);`
-  - **Fix**: Mathematical operation .powf( without validation
-- Line 1715: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1718: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1721: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1724: `let scale = 1.0 / (2.0_f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1724: `let scale = 1.0 / (2.0_f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1726: `let result = attention(&query.view(), &key.view(), &value.view(), None, scale).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1733: `let expected_first_pos = [(5.0 + 7.0) / 2.0, (6.0 + 8.0) / 2.0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1734: `let expected_second_pos = [(5.0 + 7.0) / 2.0, (6.0 + 8.0) / 2.0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1748: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1751: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1754: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1756: `let scale = 1.0 / (2.0_f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1756: `let scale = 1.0 / (2.0_f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1758: `let result = causal_attention(&query.view(), &key.view(), &value.view(), scale)....`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/autograd/batch.rs
-
-13 issues found:
-
-- Line 98: `let grad_3d = grad.clone().into_shape((batch_size, n, p)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 99: `let b_3d = b_data.clone().into_shape((batch_size, m, p)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 131: `let grad_3d = grad.clone().into_shape((batch_size, n, p)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 132: `let a_3d = a_data.clone().into_shape((batch_size, n, m)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 262: `let grad_2d = grad.clone().into_shape((batch_size, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 263: `let x_2d = x_data.clone().into_shape((batch_size, m)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 291: `let grad_2d = grad.clone().into_shape((batch_size, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 292: `let a_3d = a_data.clone().into_shape((batch_size, n, m)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 398: `let inv_det = F::one() / det_val;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 401: `result_data[[batch_idx, 0, 0]] = F::one() / matrix[[0, 0]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 422: `let grad_3d = grad.clone().into_shape((batch_size, n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 423: `let inv_3d = inv_data.clone().into_shape((batch_size, n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 545: `let grad_2d = grad.clone().into_shape((batch_size, 1)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/autograd/factorizations.rs
-
-19 issues found:
-
-- Line 54: `let mut u = a.data.clone().into_shape((n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 80: `l[[1, 0]] = u[[1, 0]] / u[[0, 0]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 106: `let grad_u_2d = grad_u.clone().into_shape((n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 171: `let mut r = a.data.clone().into_shape((m, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 176: `let alpha = -x[0_usize].signum() * x.mapv(|v| v * v).sum().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 179: `let u_norm = u.mapv(|v| v * v).sum().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 182: `u.mapv_inplace(|v| v / u_norm);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 192: `r[[i, j]] = r[[i, j]] - F::from(2.0).unwrap() * u[i] * dot_product;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 200: `q[[i, j]] = identity - F::from(2.0).unwrap() * u[i] * u[j];`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 226: `let grad_r_2d = grad_r.clone().into_shape((m, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 227: `let q_2d = q_data_clone.clone().into_shape((m, m)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 331: `l[[0, 0]] = a.data[[0, 0]].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 333: `l[[0, 0]] = a.data[[0, 0]].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 334: `l[[1, 0]] = a.data[[1, 0]] / l[[0, 0]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 335: `l[[1, 1]] = (a.data[[1, 1]] - l[[1, 0]] * l[[1, 0]]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 352: `let grad_l_2d = grad_l.clone().into_shape((n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 353: `let l_2d = l_data_clone.clone().into_shape((n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 367: `grad_a[[j, j]] = (grad_l_2d[[j, j]] - sum) / (F::from(2.0).unwrap() * l_2d[[j, j...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 374: `grad_a[[i, j]] = (grad_l_2d[[i, j]] - sum) / l_2d[[j, j]];`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/autograd/matrix_calculus.rs
-
-22 issues found:
-
-- Line 178: `let result = x.mapv(|elem| elem / norm_val);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 290: `let result = (term1 + term2) * F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 360: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 362: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 402: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 404: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 409: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 411: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 416: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 418: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 423: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 425: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 459: `- F::from(2.0).unwrap() * field[[i, j, comp]]`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 461: `/ spacing_sq;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 463: `- F::from(2.0).unwrap() * field[[i, j, comp]]`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 465: `/ spacing_sq;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 499: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 504: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 637: `let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 656: `grad[[i, j]] = (f_plus - f_minus) / (F::from(2.0).unwrap() * eps);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 680: `let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 703: `(f_plus[[p_idx, q_idx]] - f_x[[p_idx, q_idx]]) / eps;`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/autograd/mod.rs
-
-2 issues found:
-
-- Line 95: `ag::ndarray::Array2::from_shape_vec((n, n), eye_data).unwrap(),`
-  - **Fix**: Handle array creation errors properly
-- Line 114: `ag::ndarray::Array2::from_shape_vec((n, n), eye_data).unwrap(),`
-  - **Fix**: Handle array creation errors properly
-
-### src/autograd/special.rs
-
-48 issues found:
-
-- Line 85: `let discriminant = trace * trace - F::from(4.0).unwrap() * det;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 93: `let sqrt_disc = discriminant.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 94: `s_squared[0] = (trace + sqrt_disc) / F::from(2.0).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 96: `s_squared[1] = (trace - sqrt_disc) / F::from(2.0).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 130: `let norm = norm_sq.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 134: `v[[i, j]] = v[[i, j]] / norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 143: `s[i] = s_squared[i].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 156: `u[[i, j]] = sum / s[j];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 167: `let default_rcond = F::from(1e-15).unwrap().sqrt();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 176: `s_inv[i] = F::one() / s[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 210: `let grad_2d = grad.clone().into_shape((n, m)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 211: `let pinv_2d = pinv_data.clone().into_shape((n, m)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 294: `result[[0, 0]] = a.data[[0, 0]].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 308: `let discriminant = trace * trace - F::from(4.0).unwrap() * det;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 316: `let sqrt_disc = discriminant.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 317: `let lambda1 = (trace + sqrt_disc) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 318: `let lambda2 = (trace - sqrt_disc) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 349: `let norm1 = (v[[0, 0]] * v[[0, 0]] + v[[1, 0]] * v[[1, 0]]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 350: `let norm2 = (v[[0, 1]] * v[[0, 1]] + v[[1, 1]] * v[[1, 1]]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 353: `v[[0, 0]] = v[[0, 0]] / norm1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 354: `v[[1, 0]] = v[[1, 0]] / norm1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 358: `v[[0, 1]] = v[[0, 1]] / norm2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 359: `v[[1, 1]] = v[[1, 1]] / norm2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 371: `let inv_det_v = F::one() / det_v;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 380: `d_sqrt[[0, 0]] = lambda1.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 381: `d_sqrt[[1, 1]] = lambda2.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 416: `let grad_2d = grad.clone().into_shape((n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 417: `let sqrtm_2d = sqrtm_data.clone().into_shape((n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 422: `inv[[0, 0]] = F::one() / sqrtm_2d[[0, 0]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 433: `let inv_det = F::one() / det;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 450: `q[[i, j]] = sum / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 540: `result[[0, 0]] = a.data[[0, 0]].ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 554: `let discriminant = trace * trace - F::from(4.0).unwrap() * det;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 562: `let sqrt_disc = discriminant.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 563: `let lambda1 = (trace + sqrt_disc) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 564: `let lambda2 = (trace - sqrt_disc) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 596: `let norm1 = (v[[0, 0]] * v[[0, 0]] + v[[1, 0]] * v[[1, 0]]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 597: `let norm2 = (v[[0, 1]] * v[[0, 1]] + v[[1, 1]] * v[[1, 1]]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 600: `v[[0, 0]] = v[[0, 0]] / norm1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 601: `v[[1, 0]] = v[[1, 0]] / norm1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 605: `v[[0, 1]] = v[[0, 1]] / norm2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 606: `v[[1, 1]] = v[[1, 1]] / norm2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 618: `let inv_det_v = F::one() / det_v;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 627: `d_log[[0, 0]] = lambda1.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 628: `d_log[[1, 1]] = lambda2.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 663: `let grad_2d = grad.clone().into_shape((n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 668: `inv[[0, 0]] = F::one() / a_data[[0, 0]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 679: `let inv_det = F::one() / det;`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/autograd/tensor_algebra.rs
-
-8 issues found:
-
-- Line 113: `let grad_2d = grad.clone().into_shape((m, p)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 114: `let b_2d = b_data.clone().into_shape((n, p)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 141: `let grad_2d = grad.clone().into_shape((m, p)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 142: `let a_2d = a_data.clone().into_shape((m, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 308: `let grad_2d = grad.clone().into_shape((m, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 334: `let grad_2d = grad.clone().into_shape((m, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 450: `let grad_1d = grad.clone().into_shape(m).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 472: `let grad_1d = grad.clone().into_shape(m).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/autograd/transformations.rs
-
-16 issues found:
-
-- Line 64: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 65: `let a_data_2d = a.data.clone().into_shape((a_shape[0], a_shape[1])).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 92: `result[[0, 0]] = F::one() / result[[0, 0]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 106: `let inv_det = F::one() / det;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 126: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 127: `let x_data_1d = x.data.clone().into_shape(a_shape[0]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 146: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 147: `let a_t_x_data_1d = a_t_x.data.clone().into_shape(a_shape[1]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 162: `let a_data_2d = a.data.clone().into_shape((a_shape[0], a_shape[1])).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 163: `let temp_data_1d = temp.data.clone().into_shape(a_shape[1]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 273: `let grad_2d = grad.clone().into_shape((2, 2)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 345: `let grad_2d = grad.clone().into_shape((n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 406: `let norm = norm_squared.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 407: `let unit_normal = normal.data.mapv(|x| x / norm);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 415: `result_data[[i, j]] - F::from(2.0).unwrap() * unit_normal[i] * unit_normal[j];`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 500: `let grad_2d = grad.clone().into_shape((n, n)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/basic.rs
-
-17 issues found:
-
-- Line 142: `.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 144: `Some((norm_a / det_val.abs()).to_f64().unwrap_or(1e16))`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 156: `let inv_det = F::one() / det_val;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 356: `let d = det(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 360: `let d = det(&b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 367: `let d = det(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 371: `let d = det(&b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 378: `let a_inv = inv(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 385: `let b_inv = inv(&b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 396: `let a_inv = inv(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 418: `let b_inv = inv(&b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 420: `assert_relative_eq!(b_inv[[1, 1]], 1.0 / 3.0, epsilon = 1e-10);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 434: `let a_0 = matrix_power(&a.view(), 0, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 441: `let a_1 = matrix_power(&a.view(), 1, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 457: `let d = det(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 468: `let d = det(&b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 478: `let d = det(&c.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/batch/attention.rs
-
-28 issues found:
-
-- Line 227: `F::from(1.0 / (head_dim as f64).sqrt())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 227: `F::from(1.0 / (head_dim as f64).sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 228: `.unwrap_or_else(|| F::one() / F::from(head_dim).unwrap_or(F::one()).sqrt())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 228: `.unwrap_or_else(|| F::one() / F::from(head_dim).unwrap_or(F::one()).sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 232: `F::from(1.0 / (head_dim as f64).sqrt())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 232: `F::from(1.0 / (head_dim as f64).sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 233: `.unwrap_or_else(|| F::one() / F::from(head_dim).unwrap_or(F::one()).sqrt())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 233: `.unwrap_or_else(|| F::one() / F::from(head_dim).unwrap_or(F::one()).sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 541: `let scale_factor = (m_prev - m_new).exp() / l_block[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 605: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 608: `let key = Array::from_shape_vec((2, 2), vec![1.0, 1.0, 1.0, 1.0]).unwrap();`
-  - **Fix**: Handle array creation errors properly
-- Line 611: `let value = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();`
-  - **Fix**: Handle array creation errors properly
-- Line 614: `let scale = 1.0 / (2.0f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 614: `let scale = 1.0 / (2.0f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 624: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 648: `let head_dim = d_model / num_heads;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 667: `scale: Some(1.0 / (head_dim as f32).sqrt()),`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 667: `scale: Some(1.0 / (head_dim as f32).sqrt()),`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 682: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 717: `1.0 / (d_model as f64).sqrt(),`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 717: `1.0 / (d_model as f64).sqrt(),`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 720: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 750: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 761: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 772: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 775: `let scale = 1.0 / (2.0f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 775: `let scale = 1.0 / (2.0f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 788: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/batch/mod.rs
-
-13 issues found:
-
-- Line 351: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 357: `let result = batch_matmul(&batch_a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 385: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 391: `let result = batch_matvec(&batch_a.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 415: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 421: `let result = batch_add(&batch_a.view(), &v.view(), 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 449: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 455: `let result = batch_add(&batch_a.view(), &v.view(), 0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 483: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 508: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 530: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 552: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 574: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/blas.rs
-
-1 issues found:
-
-- Line 76: `result.sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### src/blas_accelerated.rs
-
-9 issues found:
-
-- Line 363: `let factor = aug[[j, i]] / aug[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 379: `x[i] = sum / aug[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 501: `let result = dot(&x.view(), &y.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 508: `let result = norm(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 517: `let result = gemv(1.0, &a.view(), &x.view(), 0.0, &y.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 527: `let result = gemm(1.0, &a.view(), &b.view(), 0.0, &c.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 538: `let result = matmul(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 549: `let x = solve(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 562: `let a_inv = inv(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/broadcast.rs
-
-7 issues found:
-
-- Line 223: `let n_batch = output.len() / (a_rows * b_cols);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 353: `let n_batch = output.len() / a_rows;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 448: `let shape = a.broadcast_shape(&b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 458: `let c = broadcast_matmul_3d(&a, &b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 479: `let c = broadcast_matmul(&a, &b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 500: `let y = broadcast_matvec(&a, &x).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 527: `let c = broadcast_matmul_3d(&a, &b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/circulant_toeplitz.rs
-
-36 issues found:
-
-- Line 135: `Ok(self.eigenvalues.as_ref().unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 146: `let angle = -2.0 * std::f64::consts::PI * (k * j) as f64 / n as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 236: `x_fft[i] = b_fft[i] / eigenvals[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 330: `Ok(max_abs / min_abs)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 530: `x[0] = b[0] / self.first_row[0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 546: `y[0] = b[0] / self.first_column[0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 554: `let mut alpha = -self.first_column[1] / self.first_column[0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 563: `beta = (b[k] - beta) / self.first_column[0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 577: `gamma = -gamma / self.first_column[0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 658: `let circ = CirculantMatrix::new(first_row.clone()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 667: `let circ = CirculantMatrix::new(first_row).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 683: `let mut circ = CirculantMatrix::new(first_row).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 686: `let x = circ.solve(&b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 689: `let result = circ.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 699: `let mut circ = CirculantMatrix::new(first_row.clone()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 718: `let result = circ.matvec(&v.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 722: `let eigenvals = circ.compute_eigenvalues().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 742: `let toep = ToeplitzMatrix::new(first_row, first_col).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 751: `let toep = ToeplitzMatrix::symmetric(diag.clone()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 762: `let toep = ToeplitzMatrix::new(first_row, first_col).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 778: `let toep = ToeplitzMatrix::symmetric(diag).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 781: `let x = toep.solve(&b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 784: `let result = toep.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 795: `let toep = ToeplitzMatrix::symmetric(diag).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 798: `let x = toep.solve_levinson(&b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 801: `let result = toep.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 812: `let toep = ToeplitzMatrix::new(first_row, first_col).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 815: `let result = toep.matvec(&v.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 827: `let mut circ = CirculantMatrix::new(first_row).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 829: `let cond = circ.condition_number().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 843: `let mut circ = CirculantMatrix::new(first_row).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 846: `let x = circ.solve(&b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 847: `let result = circ.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 858: `let toep = ToeplitzMatrix::symmetric(diag).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 862: `let x_fft = toep.solve(&b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 863: `let x_levinson = toep.solve_levinson(&b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/compat.rs
-
-8 issues found:
-
-- Line 540: `matrix_functions::sqrtm(a, 100, F::from(1e-12).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 630: `Ok(F::from(count).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 636: `.map(|&x| x.abs().powf(F::from(p).unwrap()))`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 638: `Ok(sum.powf(F::one() / F::from(p).unwrap()))`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 678: `max_singular_value * F::from(1e-15).unwrap() * F::from(a.dim().0.max(a.dim().1))...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 684: `F::one() / val`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 825: `max_sv * F::from(1e-15).unwrap() * F::from(a.dim().0.max(a.dim().1)).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1017: `"sqrt" => matrix_functions::sqrtm(a, 100, F::from(1e-12).unwrap()),`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/complex/decompositions.rs
-
-42 issues found:
-
-- Line 100: `lu[[i, k]] = lu[[i, k]] / lu[[k, k]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 172: `let norm = norm_sq.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 177: `q[[i, j]] = q_j[i] / Complex::<F>::new(norm, F::zero());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 244: `indices.sort_by(|&i, &j| eigenvalues[j].re.partial_cmp(&eigenvalues[i].re).unwra...`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 252: `s[new_idx] = eigenvalues[old_idx].re.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 273: `u[[i, j]] = sum / Complex::<F>::new(s[j], F::zero());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 299: `let tolerance = F::from(1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 316: `let norm = norm_sq.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 319: `first_elem / Complex::<F>::new(first_elem.norm(), F::zero())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 335: `Complex::<F>::new(F::from(2.0).unwrap() / v_norm_sq, F::zero()) * sum;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 349: `Complex::<F>::new(F::from(2.0).unwrap() / v_norm_sq, F::zero()) * sum;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 387: `trace * trace - Complex::<F>::new(F::from(4.0).unwrap(), F::zero()) * det;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 388: `let sqrt_disc = discriminant.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 391: `(trace + sqrt_disc) / Complex::<F>::new(F::from(2.0).unwrap(), F::zero());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 393: `(trace - sqrt_disc) / Complex::<F>::new(F::from(2.0).unwrap(), F::zero());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 410: `h = crate::complex::complex_matmul(&qr.r.view(), &qr.q.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 417: `q_total = crate::complex::complex_matmul(&q_total.view(), &qr.q.view()).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 444: `let tolerance = F::from(1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 475: `let norm = norm_sq.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 478: `first_elem / Complex::<F>::new(first_elem.norm(), F::zero())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 501: `let factor = Complex::<F>::new(F::from(2.0).unwrap() / v_norm_sq, F::zero());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 577: `let d = (diagonal[n - 2] - diagonal[n - 1]) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 581: `/ (d + sign * (d.powi(2) + subdiagonal[n - 2].powi(2)).sqrt());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 581: `/ (d + sign * (d.powi(2) + subdiagonal[n - 2].powi(2)).sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 589: `let r = (g * g + s * s).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 591: `let c = g / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 592: `let sn = s / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 604: `diagonal[k] = c * c * d1 + F::from(2.0).unwrap() * c * sn * e + sn * sn * d2;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 605: `diagonal[k + 1] = sn * sn * d1 - F::from(2.0).unwrap() * c * sn * e + c * c * d2...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 653: `let tolerance = F::from(1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 685: `l[[i, j]] = Complex::<F>::new(diag.sqrt(), F::zero());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 692: `l[[i, j]] = (a[[i, j]] - sum) / l[[j, j]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 735: `let lu_result = complex_lu(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 764: `let qr_result = complex_qr(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 776: `let should_be_i = crate::complex::complex_matmul(&qh.view(), &qr_result.q.view()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 798: `let qr = crate::complex::complex_matmul(&qr_result.q.view(), &qr_result.r.view()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 834: `let l = complex_cholesky(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 838: `let llh = crate::complex::complex_matmul(&l.view(), &lh.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 856: `let svd = complex_svd(&a.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 867: `let svd_full = complex_svd(&a.view(), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 882: `let svd_rect = complex_svd(&b.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 901: `let svd_wide = complex_svd(&c.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/complex/decompositions_backup.rs
-
-38 issues found:
-
-- Line 100: `lu[[i, k]] = lu[[i, k]] / lu[[k, k]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 139: `let norm = norm_sq.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 143: `q[[i, j]] = r[[i, j]] / Complex::<f64>::new(norm, F::zero());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 210: `eigenvalues[j].re.partial_cmp(&eigenvalues[i].re).unwrap()`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 218: `s[new_idx] = eigenvalues[old_idx].re.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 238: `u[[i, j]] = sum / Complex::<f64>::new(s[j], F::zero());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 263: `let tolerance = F::from(1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 280: `let norm = norm_sq.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 283: `first_elem / Complex::<f64>::new(first_elem.norm(), F::zero())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 298: `let factor = Complex::<f64>::new(F::from(2.0).unwrap() / v_norm_sq, F::zero()) *...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 311: `let factor = Complex::<f64>::new(F::from(2.0).unwrap() / v_norm_sq, F::zero()) *...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 348: `let discriminant = trace * trace - Complex::<f64>::new(F::from(4.0).unwrap(), F:...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 349: `let sqrt_disc = discriminant.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 351: `let eig1 = (trace + sqrt_disc) / Complex::<f64>::new(F::from(2.0).unwrap(), F::z...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 352: `let eig2 = (trace - sqrt_disc) / Complex::<f64>::new(F::from(2.0).unwrap(), F::z...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 365: `h = crate::complex::complex_matmul(&qr.r.view(), &qr.q.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 372: `q_total = crate::complex::complex_matmul(&q_total.view(), &qr.q.view()).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 399: `let tolerance = F::from(1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 430: `let norm = norm_sq.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 433: `first_elem / Complex::<f64>::new(first_elem.norm(), F::zero())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 456: `let factor = Complex::<f64>::new(F::from(2.0).unwrap() / v_norm_sq, F::zero());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 531: `let d = (diagonal[n - 2] - diagonal[n - 1]) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 533: `let shift = diagonal[n - 1] - subdiagonal[n - 2].powi(2) / (d + sign * (d.powi(2...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 533: `let shift = diagonal[n - 1] - subdiagonal[n - 2].powi(2) / (d + sign * (d.powi(2...`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 541: `let r = (g * g + s * s).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 543: `let c = g / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 544: `let sn = s / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 556: `diagonal[k] = c * c * d1 + F::from(2.0).unwrap() * c * sn * e + sn * sn * d2;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 557: `diagonal[k + 1] = sn * sn * d1 - F::from(2.0).unwrap() * c * sn * e + c * c * d2...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 603: `let tolerance = F::from(1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 635: `l[[i, j]] = Complex::<f64>::new(diag.sqrt(), F::zero());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 642: `l[[i, j]] = (a[[i, j]] - sum) / l[[j, j]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 679: `let lu_result = complex_lu(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 708: `let qr_result = complex_qr(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 712: `let should_be_i = crate::complex::complex_matmul(&qh.view(), &qr_result.q.view()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 726: `let qr = crate::complex::complex_matmul(&qr_result.q.view(), &qr_result.r.view()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 744: `let l = complex_cholesky(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 748: `let llh = crate::complex::complex_matmul(&l.view(), &lh.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/complex/enhanced_ops.rs
-
-29 issues found:
-
-- Line 144: `let factor = lu[[i, k]] / lu[[k, k]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 243: `y[0] = Complex::new(F::from(3.0).unwrap(), F::zero());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 244: `y[1] = Complex::new(F::from(9.0).unwrap(), F::from(-3.0).unwrap());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 310: `let five = F::from(5.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 311: `let six = F::from(6.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 320: `F::from(-18.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 321: `F::from(-8.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 516: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 518: `v[i] = v[i] / Complex::new(norm, F::zero());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 544: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 546: `v[i] = v[i] / Complex::new(norm, F::zero());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 624: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 632: `q[[i, k]] = r[[i, k]] / Complex::new(norm, F::zero());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 697: `(a[[i, j]] + ah[[i, j]]) * Complex::new(F::from(0.5).unwrap(), F::zero());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 752: `(a[[i, j]] - ah[[i, j]]) * Complex::new(F::from(0.5).unwrap(), F::zero());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 801: `Ok(sum.sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 878: `(x[[i, j]] + x_inv_h[[i, j]]) * Complex::new(F::from(0.5).unwrap(), F::zero());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 889: `diff_norm = diff_norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 919: `factorial = factorial * F::from(p - j).unwrap() / F::from((p + q - j) * (j + 1))...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1120: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1123: `q_iter[[i, k]] = r[[i, k]] / Complex::new(norm, F::zero());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1173: `let tr = trace(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1185: `let d = det(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1200: `let y = matvec(&a.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1216: `let ip = inner_product(&x.view(), &y.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1239: `assert!(is_hermitian(&h.view(), 1e-10).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1240: `assert!(!is_hermitian(&nh.view(), 1e-10).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1257: `assert!(is_unitary(&u.view(), 1e-10).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1258: `assert!(!is_unitary(&nu.view(), 1e-10).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/complex/mod.rs
-
-2 issues found:
-
-- Line 104: `sum.sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 163: `augmented[[i, j]] = augmented[[i, j]] / pivot;`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/convolution/mod.rs
-
-26 issues found:
-
-- Line 72: `let output_h = ((height + 2 * padding_h - dilation_h * (kernel_h - 1) - 1) / str...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 73: `let output_w = ((width + 2 * padding_w - dilation_w * (kernel_w - 1) - 1) / stri...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 208: `let output_h = ((height + 2 * padding_h - dilation_h * (kernel_h - 1) - 1) / str...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 209: `let output_w = ((width + 2 * padding_w - dilation_w * (kernel_w - 1) - 1) / stri...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 286: `output[[batch_idx, channel_idx, h, w]] /= F::from(count).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 348: `let output_h = ((height + 2 * padding_h - pool_h) / stride_h) + 1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 349: `let output_w = ((width + 2 * padding_w - pool_w) / stride_w) + 1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 495: `let input_h = index / width;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 556: `let output_h = ((height + 2 * padding_h - kernel_h) / stride_h) + 1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 557: `let output_w = ((width + 2 * padding_w - kernel_w) / stride_w) + 1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 721: `let output_h = ((height + 2 * padding_h - dilation_h * (kernel_h - 1) - 1) / str...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 722: `let output_w = ((width + 2 * padding_w - dilation_w * (kernel_w - 1) - 1) / stri...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1223: `let cols = im2col(&input.view(), (2, 2), (1, 1), (0, 0), (1, 1)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1251: `let cols = im2col(&input.view(), (3, 3), (1, 1), (1, 1), (1, 1)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1277: `let cols = im2col(&input.view(), (2, 2), (1, 1), (0, 0), (1, 1)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1280: `let output = col2im(&cols.view(), (1, 1, 3, 3), (2, 2), (1, 1), (0, 0), (1, 1))....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1308: `let (output, indices) = max_pool2d(&input.view(), (2, 2), (2, 2), (0, 0)).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1337: `let (_output, indices) = max_pool2d(&input.view(), (2, 2), (2, 2), (0, 0)).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1344: `max_pool2d_backward(&grad_output.view(), &indices.view(), (1, 1, 4, 4)).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1382: `conv2d_im2col(&input.view(), &kernel.view(), None, (1, 1), (0, 0), (1, 1)).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1423: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1449: `conv2d_im2col(&input.view(), &kernel.view(), None, (1, 1), (0, 0), (1, 1)).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1463: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1496: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1524: `let grad_bias = conv2d_backward_bias(&grad_output.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1555: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/decomposition.rs
-
-16 issues found:
-
-- Line 562: `*norm = col.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 611: `let x_norm = x.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 618: `let v_norm = v.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 639: `a_copy[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * dot_product;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 654: `q_sub[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * v[j - k];`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 670: `col_norms[j] = col_norms[j].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 693: `let x_norm = x.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 701: `let v_norm = v.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 720: `a_copy[[i, j]] -= F::from(2.0).unwrap() * v[j - k] * dot_product;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 735: `p_sub[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * v[j - k];`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 760: `let l = cholesky(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 781: `let (p, l, u) = lu(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 796: `let (q, r) = qr(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 819: `let (z, t) = schur(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 846: `let (q, _a_decomp, b_decomp, z) = qz(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 879: `let (q, r, p) = complete_orthogonal_decomposition(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/decomposition_advanced.rs
-
-10 issues found:
-
-- Line 88: `A::from(std::f64::consts::PI / 4.0).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 90: `((apq + aqp) / (app - aqq)).atan() * A::from(0.5).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 137: `indices.sort_by(|&i, &j| s[j].partial_cmp(&s[i]).unwrap());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 261: `s_pinv[i] = A::one() / s_inv[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 269: `let u_new = (&u + &ut_inv) * A::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 351: `let (u, s, vt) = jacobi_svd(&a.view(), 100, 1e-14).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 389: `let (u, p_opt) = polar_decomposition(&a.view(), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 390: `let p = p_opt.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 413: `let (u, p) = polar_decomposition_newton(&a.view(), 10, 1e-12).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 437: `let (q, _r, p, rank) = qr_with_column_pivoting(&a.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/diagnostics.rs
-
-21 issues found:
-
-- Line 133: `let zero_threshold = F::epsilon() * F::from(1000.0).unwrap(); // More generous z...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 150: `diagnostics.frobenius_norm = frobenius_sum.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 152: `F::from(near_zero_count).unwrap() / F::from(total_elements).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 190: `if cond > F::from(1e12).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 194: `} else if cond > F::from(1e6).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 206: `if det_val.abs() < F::from(1e-8).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 222: `if diagnostics.max_abs_value / diagnostics.min_abs_value > F::from(1e15).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 230: `if diagnostics.sparsity_ratio > F::from(0.5).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 243: `} else if max_diag / min_diag > F::from(1e12).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 268: `} else if det_val.abs() < F::from(1e-10).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 288: `if (a[[i, j]] - a[[j, i]]).abs() > F::epsilon() * F::from(100.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 320: `let condition_est = norm_a * norm_a / det_a.abs();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 321: `if condition_est > F::from(1e12).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 345: `Ok((max_diag / min_diag) * norm_a)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 432: `let threshold = F::epsilon() * F::from(100.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 475: `if cond > F::from(1e14).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 483: `} else if cond > F::from(1e10).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 495: `let scale_ratio = diagnostics.max_abs_value / diagnostics.min_abs_value;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 509: `if diagnostics.sparsity_ratio > F::from(0.7).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 550: `if a[[i, i]].abs() < F::epsilon() * F::from(1000.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 559: `if det_val.abs() < F::epsilon() * F::from(1000.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/distributed/communication.rs
-
-14 issues found:
-
-- Line 280: `let rows_per_node = rows / self.size;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 334: `self.message_buffer.lock().unwrap().clear();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 349: `self.stats.lock().unwrap().clone()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 355: `let mut counter = self.sequence_counter.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 379: `let mut buffer = self.message_buffer.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 386: `let mut buffer = self.message_buffer.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 440: `let mut stats = self.stats.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 447: `let mut stats = self.stats.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 475: `self.bytes_sent as f64 / self.total_send_time.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 484: `self.bytes_received as f64 / self.total_recv_time.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 494: `let avg_time = (self.total_send_time + self.total_recv_time).as_secs_f64() / tot...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 539: `let comm = DistributedCommunicator::new(&config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 543: `let serialized = comm.serialize_matrix(&matrix.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 544: `let deserialized: Array2<f64> = comm.deserialize_matrix(&serialized).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/distributed/computation.rs
-
-14 issues found:
-
-- Line 91: `let mut load_balancer = self.load_balancer.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 105: `let mut load_balancer = self.load_balancer.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 196: `self.metrics.lock().unwrap().clone()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 201: `let mut metrics = self.metrics.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 223: `if communication_cost < computation_cost / 10 {`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 272: `let mut metrics = self.metrics.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 279: `let mut metrics = self.metrics.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 323: `self.total_computation_time / self.operation_count as u32`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 332: `self.operation_count as f64 / self.total_computation_time.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 341: `self.operation_count as f64 / self.peak_memory_usage as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 389: `let mut queue = self.operation_queue.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 420: `let mut queue = self.operation_queue.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 489: `let engine = DistributedComputationEngine::new(config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 531: `let next = scheduler.next_operation().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/distributed/coordination.rs
-
-16 issues found:
-
-- Line 84: `let mut state = self.sync_state.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 112: `let mut state = self.sync_state.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 137: `let state = self.sync_state.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 151: `let mut state = self.sync_state.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 167: `state = self.sync_state.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 248: `let mut state = self.state.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 278: `let mut state = self.state.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 343: `let mut arrived = self.arrived_nodes.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 358: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 371: `let mut arrived = self.arrived_nodes.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 448: `Some((node - 1) / 2)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 527: `self.total_sync_time / (self.barrier_count + self.checkpoint_count) as u32`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 537: `self.active_nodes as f64 / total_nodes as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 553: `let coordinator = DistributedCoordinator::new(&config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 562: `let mut lock = DistributedLock::new("test_lock".to_string(), 0, 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 588: `let reduction = ReductionCoordination::new(ReductionOperation::Sum, 0, 4).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/distributed/decomposition.rs
-
-7 issues found:
-
-- Line 429: `let tolerance = T::from(1e-12).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 493: `max_singular_value * T::from(1e-12).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 518: `Ok(max_sv / min_sv)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 531: `let dist_matrix = DistributedMatrix::from_local(matrix, config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 550: `let dist_matrix = DistributedMatrix::from_local(matrix, config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 565: `let mut dist_matrix = DistributedMatrix::from_local(matrix, config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 580: `let dist_matrix = DistributedMatrix::from_local(matrix, config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/distributed/distribution.rs
-
-22 issues found:
-
-- Line 91: `let rows_per_node = global_rows / num_nodes;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 150: `let cols_per_node = global_cols / num_nodes;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 213: `let grid_rows = (global_rows + block_rows - 1) / block_rows;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 214: `let grid_cols = (global_cols + block_cols - 1) / block_cols;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 217: `let proc_grid_rows = (num_nodes as f64).sqrt() as usize;`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 218: `let proc_grid_cols = (num_nodes + proc_grid_rows - 1) / proc_grid_rows;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 220: `let proc_row = node_rank / proc_grid_cols;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 376: `let history = self.performance_history.get_mut(&node_rank).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 382: `let avg_performance = history.iter().sum::<f64>() / history.len() as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 396: `let work_fraction = capability / total_capability;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 411: `let avg_workload = workloads.iter().sum::<f64>() / workloads.len() as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 415: `let imbalance_ratio = (max_workload - min_workload) / avg_workload;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 454: `let avg_workload = workloads.iter().sum::<f64>() / workloads.len() as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 463: `.sum::<f64>() / workloads.len() as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 465: `let coefficient_of_variation = variance.sqrt() / avg_workload;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 465: `let coefficient_of_variation = variance.sqrt() / avg_workload;`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 468: `1.0 / (1.0 + coefficient_of_variation)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 571: `let distribution = DataDistribution::row_wise((100, 50), 4, 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 584: `let distribution = DataDistribution::column_wise((100, 50), 4, 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 599: `let mut balancer = LoadBalancer::new(&config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 617: `let distribution = DataDistribution::row_wise((10, 8), 2, 0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 619: `let partition = MatrixPartitioner::partition(&matrix.view(), &distribution).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/distributed/matrix.rs
-
-6 issues found:
-
-- Line 443: `let elements_per_node = global_length / num_nodes;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 613: `let dist_matrix = DistributedMatrix::from_local(matrix.clone(), config).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 627: `let dist_vector = DistributedVector::from_local(vector, config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 650: `let dist1 = DistributedMatrix::from_local(matrix1, config.clone()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 651: `let dist2 = DistributedMatrix::from_local(matrix2, config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 654: `let result = dist1.add(&dist2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/distributed/mod.rs
-
-2 issues found:
-
-- Line 268: `self.comm_time_ms as f64 / self.compute_time_ms as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 276: `self.bytes_transferred as f64 / self.comm_time_ms as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/distributed/solvers.rs
-
-32 issues found:
-
-- Line 39: `distributed_conjugate_gradient(a, b, 1000, T::from(1e-6).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 79: `let alpha = rsold / p_ap;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 91: `if rsnew.sqrt() < tolerance {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 96: `let beta = rsnew / rsold;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 103: `println!("CG iteration {}: residual norm = {:e}", iteration, rsnew.sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 138: `let beta = (r.dot(&r)?).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 146: `v.push(scale_vector(&r, T::one() / beta)?);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 173: `h[[j + 1, j]] = (w.dot(&w)?).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 180: `v.push(scale_vector(&w, T::one() / h[[j + 1, j]])?);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 190: `let r_norm = (h[[j, j]] * h[[j, j]] + h[[j + 1, j]] * h[[j + 1, j]]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 191: `c[j] = h[[j, j]] / r_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 192: `s[j] = h[[j + 1, j]] / r_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 212: `y[i] = (g[i] - sum) / h[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 233: `y[i] = (g[i] - sum) / h[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 295: `let beta = (rho_new / rho) * (alpha / omega);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 305: `alpha = rho_new / r_hat.dot(&v)?;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 311: `let s_norm = (s.dot(&s)?).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 319: `omega = t.dot(&s)? / t.dot(&t)?;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 329: `let r_norm = (r.dot(&r)?).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 414: `let alpha = rzold / p.dot(&ap)?;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 425: `let r_norm = (r.dot(&r)?).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 434: `let beta = rznew / rzold;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 496: `.map(|(&xi, &di)| xi / di)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 512: `let dist_vector = DistributedVector::from_local(vector, config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 514: `let scaled = scale_vector(&dist_vector, 2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 524: `let dist_matrix = DistributedMatrix::from_local(matrix, config.clone()).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 526: `let preconditioner = JacobiPreconditioner::new(&dist_matrix).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 529: `let dist_x = DistributedVector::from_local(x, config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 531: `let result = preconditioner.apply(&dist_x).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 540: `let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 2.0]).unwrap();`
-  - **Fix**: Handle array creation errors properly
-- Line 544: `let dist_matrix = DistributedMatrix::from_local(matrix, config.clone()).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 545: `let dist_vector = DistributedVector::from_local(vector, config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/eigen/generalized.rs
-
-17 issues found:
-
-- Line 108: `let eigenvalue = Complex::new(a_val / b_val, F::zero());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 128: `eigenvalues[i] = Complex::new(alpha / beta, F::zero());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 241: `let avg = (transformed_a[[i, j]] + transformed_a[[j, i]]) / F::from(2.0).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 262: `let norm = x.dot(&bx).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 264: `let normalized_x = x.mapv(|val| val / norm);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 354: `if (b[[i, j]] - expected).abs() > F::epsilon() * F::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 396: `let (w_gen, _v_gen) = eig_gen(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 397: `let (w_std, _v_std) = eig(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 401: `w_gen_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 404: `w_std_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 420: `let (w, _v) = eig_gen(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 424: `eigenvals.sort_by(|a, b| a.partial_cmp(b).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 445: `let (w, v) = eigh_gen(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 486: `let w_full = eig_gen(&a.view(), &b.view(), None).unwrap().0;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 487: `let w_vals_only = eigvals_gen(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 501: `let w_full = eigh_gen(&a.view(), &b.view(), None).unwrap().0;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 502: `let w_vals_only = eigvalsh_gen(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/eigen/mod.rs
-
-43 issues found:
-
-- Line 165: `let discriminant = trace * trace - F::from(4.0).unwrap() * det;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 168: `let sqrt_disc = discriminant.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 169: `let lambda1 = (trace + sqrt_disc) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 170: `let lambda2 = (trace - sqrt_disc) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 179: `let norm1 = (v1_1 * v1_1 + v1_2 * v1_2).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 180: `eigenvectors[[0, 0]] = v1_1 / norm1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 181: `eigenvectors[[1, 0]] = v1_2 / norm1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 191: `let norm2 = (v2_1 * v2_1 + v2_2 * v2_2).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 192: `eigenvectors[[0, 1]] = v2_1 / norm2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 193: `eigenvectors[[1, 1]] = v2_2 / norm2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 236: `let residual_norm = residual.dot(&residual).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 246: `eigenvalues[i] = vt_av / vt_v;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 261: `let norm = vi_new.dot(&vi_new).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 269: `let norm = vi.dot(&vi).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 272: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 338: `F::from(1e12).unwrap() // Matrix is singular or nearly singular`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 340: `max_sv / min_sv`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 349: `let n_f = F::from(n).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 350: `(norm_2 * norm_1) / n_f`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 367: `F::from(1e12).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 369: `max_diag / min_diag`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 403: `let base_tol = F::epsilon() * F::from(100.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 406: `if condition_number > F::from(1e12).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 407: `base_tol * F::from(1000.0).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 408: `} else if condition_number > F::from(1e8).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 409: `base_tol * F::from(100.0).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 410: `} else if condition_number > F::from(1e4).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 411: `base_tol * F::from(10.0).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 429: `let (w1, v1) = eig(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 430: `let (w2, v2) = standard::eig(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 437: `let (w1, v1) = eigh(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 438: `let (w2, v2) = standard::eigh(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 444: `let w1 = eigvals(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 445: `let w2 = standard::eigvals(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 450: `let w1 = eigvalsh(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 451: `let (w2, _) = eigh(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 464: `let (w1, v1) = eig_gen(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 465: `let (w2, v2) = generalized::eig_gen(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 470: `let (w1, v1) = eigh_gen(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 471: `let (w2, v2) = generalized::eigh_gen(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 485: `let (w, v) = result.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 521: `let _ = standard::eig(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 525: `let _ = generalized::eig_gen(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/eigen/standard.rs
-
-29 issues found:
-
-- Line 172: `b.mapv_inplace(|x| x / norm_b);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 197: `b[i] = b_new[i] / norm_b_new;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 302: `let discriminant = trace * trace - F::from(4.0).unwrap() * det;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 310: `let sqrt_discriminant = discriminant.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 311: `let lambda1 = (trace + sqrt_discriminant) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 312: `let lambda2 = (trace - sqrt_discriminant) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 344: `eigenvector.mapv_inplace(|x| x / norm);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 356: `let real_part = trace / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 357: `let imag_part = (-discriminant).sqrt() / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 385: `let norm = norm_sq.re.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 413: `let discriminant = trace * trace - F::from(4.0).unwrap() * det;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 414: `let sqrt_discriminant = discriminant.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 417: `let lambda1 = (trace + sqrt_discriminant) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 418: `let lambda2 = (trace - sqrt_discriminant) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 455: `.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 482: `.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 505: `let tol = F::from(1e-12).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 534: `indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 562: `let tol = F::from(1e-12).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 595: `indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 619: `let tol = F::epsilon() * F::from(100.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 694: `let (eigenvalues, eigenvectors) = eig(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 706: `let (eigenvalues, _eigenvectors) = eig(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 713: `let (eigenvalues, _) = eigh(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 726: `let (eigenvalues, eigenvectors) = eigh(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 745: `.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 748: `.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 764: `let (eigenvalue, eigenvector) = power_iteration(&a.view(), 100, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 770: `let norm = (eigenvector[0] * eigenvector[0] + eigenvector[1] * eigenvector[1]).s...`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### src/eigen/tridiagonal.rs
-
-10 issues found:
-
-- Line 56: `let r = (a * a + b * b).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 60: `(a / r, -b / r)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 65: `let tol = F::epsilon().sqrt() * eigenvalues.iter()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 98: `let mut g = (eigenvalues[l] - shift) / (F::from(2.0).unwrap() * e[l]);`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 99: `let mut r = (F::one() + g * g).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 104: `g = eigenvalues[l] - shift + e[l] / (g + r);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 124: `r = (eigenvalues[i] - g) * s + F::from(2.0).unwrap() * c * b;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 146: `sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 220: `if i != j && temp[[i, j]].abs() > F::epsilon() * F::from(100.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 242: `indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());`
-  - **Fix**: Use .get() with proper bounds checking
-
-### src/eigen_specialized.rs
-
-23 issues found:
-
-- Line 225: `let mut g = (d[l + 1] - d[l]) / (F::from(2.0).unwrap() * e[l]);`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 226: `let mut r = (g * g + F::one()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 230: `g = d[m] - d[l] + e[l] / (g + r);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 241: `r = (f * f + g * g).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 250: `s = f / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 251: `c = g / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 253: `r = (d[i] - g) * s + F::from(2.0).unwrap() * c * b;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 392: `let theta = F::from(-2.0 * std::f64::consts::PI).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 393: `* F::from(k).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 394: `* F::from(j).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 395: `/ F::from(n).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 440: `if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(1000.0).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 491: `let tol = tol.unwrap_or(F::epsilon() * F::from(1000.0).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 502: `q_matrix[[i, 0]] = F::from(rng.random_range(-1.0..=1.0)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 510: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 547: `beta[j] = beta[j].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 552: `q_matrix[[i, j + 1]] = w[i] / beta[j];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 664: `let x_norm = x.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 670: `let v_norm = v.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 713: `tridiagonal_eigen(&diagonal.view(), &sub_diagonal.view(), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 730: `tridiagonal_eigen(&diagonal.view(), &sub_diagonal.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 740: `let eigenvals = circulant_eigenvalues(&first_col.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 755: `partial_eigen(&matrix.view(), 2, "largest", None, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/eigen_specialized/banded.rs
-
-4 issues found:
-
-- Line 52: `if diff > F::epsilon() * F::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 101: `let r = (x * x + y * y).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 102: `let c = x / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 103: `let s = -y / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/eigen_specialized/sparse.rs
-
-10 issues found:
-
-- Line 271: `b.mapv_inplace(|x| x / norm_b);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 293: `b_new.mapv_inplace(|x| x / norm_b_new);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 343: `y[i] = (b_perm[i] - sum) / l[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 353: `x[i] = (y[i] - sum) / u[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 368: `let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 2, 100, 1e-10).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 406: `let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 2, 100, 1e-10).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 447: `power_iteration_with_convergence(&a.view(), 100, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 453: `let norm = vector_norm(&eigenvector.view(), 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 458: `let expected_val = 1.0 / 2.0_f64.sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 458: `let expected_val = 1.0 / 2.0_f64.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### src/eigen_specialized/symmetric.rs
-
-6 issues found:
-
-- Line 41: `if diff > F::epsilon() * F::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 84: `if diff > F::epsilon() * F::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 128: `alpha = alpha.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 156: `let vnorm = v.iter().map(|&x| x * x).sum::<F>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 184: `- F::from(2.0).unwrap() * (v[j] * w[k] + w[j] * v[k])`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 185: `+ F::from(4.0).unwrap() * z * v[j] * v[k];`
-  - **Fix**: Use .get() with proper bounds checking
-
-### src/eigen_specialized/tridiagonal.rs
-
-10 issues found:
-
-- Line 57: `let r = (a * a + b * b).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 61: `(a / r, -b / r)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 66: `let tol = F::epsilon().sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 101: `let mut g = (eigenvalues[l] - shift) / (F::from(2.0).unwrap() * e[l]);`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 102: `let mut r = (F::one() + g * g).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 107: `g = eigenvalues[l] - shift + e[l] / (g + r);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 127: `r = (eigenvalues[i] - g) * s + F::from(2.0).unwrap() * c * b;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 149: `sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 223: `if i != j && temp[[i, j]].abs() > F::epsilon() * F::from(100.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 245: `indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());`
-  - **Fix**: Use .get() with proper bounds checking
-
-### src/error.rs
-
-1 issues found:
-
-- Line 175: `if residual / tolerance < 10.0 {`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/extended_precision/eigen.rs
-
-39 issues found:
-
-- Line 106: `let tol = tol.unwrap_or(A::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 120: `let eigenvalues_high = qr_algorithm(a_high, max_iter, I::from(tol.promote()).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 275: `if (a[[i, j]] - a[[j, i]]).abs() > A::epsilon() * A::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 284: `let tol = tol.unwrap_or(A::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 299: `qr_algorithm_symmetric(a_high, max_iter, I::from(tol.promote()).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 386: `if (a[[i, j]] - a[[j, i]]).abs() > A::epsilon() * A::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 395: `let tol = tol.unwrap_or(A::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 410: `qr_algorithm_symmetric_with_vectors(a_tri, q, max_iter, I::from(tol.promote()).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 447: `a[[i, k]] = a[[i, k]] / scale;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 452: `let g = if f >= I::zero() { -h.sqrt() } else { h.sqrt() };`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 462: `f = f / h;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 474: `f = f / h;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 516: `let g = if f >= I::zero() { -h.sqrt() } else { h.sqrt() };`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 588: `v[i] = a_copy[[i + k + 1, k]] / scale;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 597: `let g = if f >= I::zero() { -h.sqrt() } else { h.sqrt() };`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 694: `let r_norm = (alpha * alpha + beta * beta).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 696: `let c = alpha / r_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 697: `let s = -beta / r_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 797: `let g = (d[l + 1] - d[l]) / (I::from(2.0).unwrap() * e[l]);`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 798: `let mut r = (g * g + I::one()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 799: `let mut g = d[m] - d[l] + e[l] / (g + if g >= I::zero() { r } else { -r });`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 811: `c = g / f;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 812: `r = (c * c + I::one()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 816: `s = I::one() / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 819: `s = f / g;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 820: `r = (s * s + I::one()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 824: `c = I::one() / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 829: `r = (d[i] - g) * s + I::from(2.0).unwrap() * c * b;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 939: `I::from(2.0).unwrap() * e[i] / h`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 942: `let r = (t * t + I::one()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 943: `let c = I::one() / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 961: `d[i] = c2 * temp_i + s2 * temp_ip1 - I::from(2.0).unwrap() * cs * e[i];`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 962: `d[i + 1] = s2 * temp_i + c2 * temp_ip1 + I::from(2.0).unwrap() * cs * e[i];`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1003: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1030: `let eigenvalues = extended_eigvalsh::<_, f64>(&a.view(), Some(1000), Some(1e-10)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1048: `let (eigenvalues, eigenvectors) = extended_eigh::<_, f64>(&a.view(), None, None)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1052: `sorted_indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwr...`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1111: `let (eigenvalues, eigenvectors) = extended_eigh::<_, f64>(&a.view(), None, None)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1133: `eigenvalues_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/extended_precision/factorizations.rs
-
-24 issues found:
-
-- Line 115: `a_high[[i, k]] = a_high[[i, k]] / a_high[[k, k]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 267: `let norm_x = x.iter().map(|&val| val * val).sum::<I>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 277: `let norm_v = v.iter().map(|&val| val * val).sum::<I>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 282: `v[i] = v[i] / norm_v;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 293: `a_high[[i + k, j]] -= I::from(2.0).unwrap() * dot_product * v[i];`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 305: `q_high[[i + k, j]] -= I::from(2.0).unwrap() * dot_product * v[i];`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 407: `if (a[[i, j]] - a[[j, i]]).abs() > A::epsilon() * A::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 440: `l_high[[j, j]] = d.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 449: `l_high[[i, j]] = s / l_high[[j, j]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 531: `let tol = tol.unwrap_or(A::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 587: `if i != j && ata[[i, j]].abs() > I::from(tol.promote()).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 605: `s_high[i] = ata[[i, i]].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 610: `indices.sort_by(|&i, &j| s_high[j].partial_cmp(&s_high[i]).unwrap());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 629: `u[[i, j]] += a_high[[i, l]] * sorted_v_high[[l, j]] / sorted_s_high[j];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 647: `vh[[j, i]] += a_high[[l, i]] * sorted_v_high[[l, j]] / sorted_s_high[j];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 690: `let norm = v.iter().map(|&x| x * x).sum::<I>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 693: `u_full[[i, j]] = v[i] / norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 716: `let norm = v.iter().map(|&x| x * x).sum::<I>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 719: `vh_full[[i, j]] = v[j] / norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 779: `let norm_x = x.iter().map(|&val| val * val).sum::<I>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 789: `let norm_v = v.iter().map(|&val| val * val).sum::<I>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 794: `v[i] = v[i] / norm_v;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 805: `r[[i + k, j]] -= I::from(2.0).unwrap() * dot_product * v[i];`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 817: `q[[j, i + k]] -= I::from(2.0).unwrap() * dot_product * v[i];`
-  - **Fix**: Use .get() with proper bounds checking
-
-### src/extended_precision/mod.rs
-
-11 issues found:
-
-- Line 366: `let factor = a_high[[i, k]] / a_high[[k, k]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 386: `x_high[i] = (b_high[i] - sum) / a_high[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 408: `let y = extended_matvec::<_, f64>(&a.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 420: `let c = extended_matmul::<_, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 437: `let det = extended_det::<_, f64>(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 442: `let det = extended_det::<_, f64>(&c.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 447: `let det = extended_det::<_, f64>(&d.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 458: `hilbert[[i, j]] = 1.0 / ((i + j + 1) as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 463: `let std_det = crate::basic::det(&hilbert.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 466: `let ext_det = extended_det::<_, f64>(&hilbert.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 486: `let x = extended_solve::<_, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/fft.rs
-
-77 issues found:
-
-- Line 165: `let two_pi = F::from(2.0).unwrap() * F::PI();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 168: `let angle = -two_pi * F::from(k).unwrap() / F::from(size).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 281: `let half_length = length / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 282: `let step = size / length;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 306: `let scale = Complex64::new(1.0 / size as f64, 0.0);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 343: `PI / n as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 345: `-PI / n as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 383: `let scale = Complex64::new(1.0 / n as f64, 0.0);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 454: `let output_size = n / 2 + 1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 483: `let expected_input_size = output_size / 2 + 1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 502: `for i in 1..output_size / 2 {`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 671: `let factor = 0.5 * (1.0 - (2.0 * PI * i as f64 / (n - 1) as f64).cos());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 677: `let factor = 0.54 - 0.46 * (2.0 * PI * i as f64 / (n - 1) as f64).cos();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 683: `let x = 2.0 * PI * i as f64 / (n - 1) as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 692: `let x = 2.0 * i as f64 / (n - 1) as f64 - 1.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 693: `let factor = modified_bessel_i0(beta * (1.0 - x * x).sqrt()) / i0_beta;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 693: `let factor = modified_bessel_i0(beta * (1.0 - x * x).sqrt()) / i0_beta;`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 698: `let taper_len = ((alpha * n as f64) / 2.0) as usize;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 701: `0.5 * (1.0 + (PI * i as f64 / taper_len as f64 - PI).cos())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 703: `0.5 * (1.0 + (PI * (n - 1 - i) as f64 / taper_len as f64 - PI).cos())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 711: `let center = (n - 1) as f64 / 2.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 713: `let x = (i as f64 - center) / sigma;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 730: `term *= (x / 2.0) * (x / 2.0) / (k * k);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 756: `let angle = PI * k as f64 * (2.0 * i as f64 + 1.0) / (2.0 * n as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 761: `(1.0 / n as f64).sqrt()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 761: `(1.0 / n as f64).sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 763: `(2.0 / n as f64).sqrt()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 763: `(2.0 / n as f64).sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 781: `sum += input[0] * (1.0 / n as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 781: `sum += input[0] * (1.0 / n as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 785: `let angle = PI * k as f64 * (2.0 * i as f64 + 1.0) / (2.0 * n as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 786: `sum += input[k] * (2.0 / n as f64).sqrt() * angle.cos();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 786: `sum += input[k] * (2.0 / n as f64).sqrt() * angle.cos();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 803: `let angle = PI * (k + 1) as f64 * (i + 1) as f64 / (n + 1) as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 807: `result[k] = sum * (2.0 / (n + 1) as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 807: `result[k] = sum * (2.0 / (n + 1) as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 903: `let normalization = 1.0 / (fft_size as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 955: `(n - nperseg) / step + 1`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 967: `let output_size = fft_size / 2 + 1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1057: `let scale = 1.0 / n as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1153: `let scale = 1.0 / n as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1172: `let output_size = if real_fft { n / 2 + 1 } else { n };`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1175: `let df = sample_rate / n as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1183: `freqs[i] = if i <= n / 2 {`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1202: `let plan = FFTPlan::<f64>::new(8, FFTAlgorithm::CooleyTukey, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1217: `let result = fft_1d(&input.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1234: `let fft_result = fft_1d(&input.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1235: `let ifft_result = fft_1d(&fft_result.view(), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1246: `let result = rfft_1d(&input.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1256: `let fft_result = rfft_1d(&input.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1257: `let reconstructed = irfft_1d(&fft_result.view(), 4).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1268: `let result = fft_2d(&input.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1271: `let reconstructed = fft_2d(&result.view(), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1286: `let rect = apply_window(&signal.view(), WindowFunction::Rectangular).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1292: `let hann = apply_window(&signal.view(), WindowFunction::Hann).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1302: `let dct_result = dct_1d(&input.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1303: `let idct_result = idct_1d(&dct_result.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1313: `let dst_result = dst_1d(&input.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1323: `let result = fft_convolve(&signal1.view(), &signal2.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1332: `let signal = Array1::from_shape_fn(16, |i| (2.0 * PI * i as f64 / 16.0).sin());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1333: `let psd = periodogram_psd(&signal.view(), WindowFunction::Rectangular, None).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1341: `let signal = Array1::from_shape_fn(64, |i| (2.0 * PI * i as f64 / 8.0).sin());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1342: `let psd = welch_psd(&signal.view(), 16, 0.5, WindowFunction::Hann).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1368: `let result = bluestein_fft(&input.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1369: `let reconstructed = bluestein_fft(&result.view(), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1383: `let result = fft_3d(&input.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1386: `let reconstructed = fft_3d(&result.view(), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1409: `let windowed = apply_window(&signal.view(), WindowFunction::Kaiser(2.0)).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1420: `let windowed = apply_window(&signal.view(), WindowFunction::Tukey(0.5)).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1430: `let result = hadamard_transform(&input.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1439: `let reconstructed = hadamard_transform(&result.view(), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1448: `let result = walsh_hadamard_transform(&input.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1454: `let reconstructed = walsh_hadamard_transform(&result.view(), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1463: `let result = fast_walsh_transform(&input.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1469: `let reconstructed = fast_walsh_transform(&result.view(), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1479: `let transformed = hadamard_transform(&input.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1480: `let twice_transformed = hadamard_transform(&transformed.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/generic.rs
-
-11 issues found:
-
-- Line 297: `let c = gemm(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 308: `let y = gemv(&a.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 316: `let det = gdet(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 323: `let a_inv = ginv(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 331: `let norm = gnorm(&a.view(), "fro").unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 332: `let expected = (1.0 + 4.0 + 9.0 + 16.0_f32).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 339: `let svd = gsvd(&a.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 354: `let qr = gqr(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 377: `let eigen = geig(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 382: `eigenvalues_real.sort_by(|a, b| a.partial_cmp(b).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 396: `let x = gsolve(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/gradient/mod.rs
-
-26 issues found:
-
-- Line 62: `let n = F::from(predictions.len()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 63: `let two = F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 67: `let scale = two / n;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 144: `let eps = F::from(1e-15).unwrap(); // Small epsilon to prevent division by zero`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 153: `-t / (p + eps)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 158: `(one - t) / (one - p + eps)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 230: `if (row_sum - F::one()).abs() > F::from(1e-5).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 241: `if (row_sum - F::one()).abs() > F::from(1e-6).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 251: `if (val - F::one()).abs() < F::from(1e-6).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 260: `} else if val > F::from(1e-6).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 277: `let batch_size_f = F::from(batch_size).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 346: `let two_epsilon = F::from(2.0).unwrap() * epsilon;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 365: `jacobian[[i, j]] = (f_forward[i] - f_backward[i]) / two_epsilon;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 422: `let two = F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 445: `let h_ii = (f_plus - two * f_x + f_minus) / epsilon_squared;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 478: `let four = F::from(4.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 480: `/ (four * epsilon_squared);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 503: `let gradient = mse_gradient(&predictions.view(), &targets.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 509: `assert_relative_eq!(gradient[0], 1.0 / 3.0, epsilon = 1e-10);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 510: `assert_relative_eq!(gradient[1], 1.0 / 3.0, epsilon = 1e-10);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 520: `let gradient = binary_crossentropy_gradient(&predictions.view(), &targets.view()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 538: `softmax_crossentropy_gradient(&softmax_output.view(), &targets.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 567: `let jac = jacobian(&f, &x, epsilon).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 594: `let hess = hessian(&f, &x, epsilon).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 613: `let hess = hessian(&f, &x, epsilon).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 655: `let hess = hessian(&f, &x, epsilon).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/hierarchical.rs
-
-25 issues found:
-
-- Line 233: `let target_rank = (max_rank.min(min_dim / 2)).max(1);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 241: `if sigma / max_singular_value > tolerance {`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 255: `u_scaled[[i, j]] = u[[i, j]] * s[j].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 261: `v_scaled[[i, j]] = vt[[j, i]] * s[j].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 281: `let mid = (row_cluster.start + row_cluster.end) / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 288: `*row_cluster.left.clone().unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 289: `*row_cluster.right.clone().unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 294: `let mid = (col_cluster.start + col_cluster.end) / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 301: `*col_cluster.left.clone().unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 302: `*col_cluster.right.clone().unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 413: `(self.size * self.size) as f64 / (total_dense_elements + total_lowrank_elements)...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 535: `let mid = (start + end) / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 559: `u_gen[[i, j]] = u1[[i, j]] * s1[j].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 565: `v_gen[[i, j]] = vt1[[j, i]] * s1[j].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 662: `let mid = (start + end) / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 711: `if sigma / max_sv > tolerance {`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 756: `let left = tree.left.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 757: `let right = tree.right.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 793: `let h_matrix = HMatrix::from_dense(&matrix.view(), 1e-6, 2, 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 798: `let y_h = h_matrix.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 808: `1.0 / (1.0 + (i as f64 - j as f64).abs())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 811: `let h_matrix = HMatrix::from_dense(&matrix.view(), 1e-4, 16, 16).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 830: `let hss_matrix = HSSMatrix::from_dense(&matrix.view(), 1e-6).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 835: `let y_hss = hss_matrix.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 852: `let h_matrix = HMatrix::from_dense(&square_matrix.view(), 1e-6, 2, 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/iterative_solvers.rs
-
-41 issues found:
-
-- Line 68: `if (a[[i, j]] - a[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 103: `if rsold.sqrt() < tol * b_norm {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 124: `let alpha = rsold / pap;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 142: `let current_residual = rsnew.sqrt() / b_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 142: `let current_residual = rsnew.sqrt() / b_norm;`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 151: `let beta = rsnew / rsold;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 254: `x_new[i] = (b[i] - sum) / a[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 263: `let relative_residual = diff_norm / b_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 380: `x[i] = (b[i] - sum1 - sum2) / a[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 389: `let relative_residual = diff_norm / b_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 461: `if omega <= F::zero() || omega >= F::from(2.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 508: `let gauss_seidel_update = (b[i] - sum1 - sum2) / a[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 652: `let quarter = F::from(0.25).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 653: `let half = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 677: `p[[i_fine + 1, i]] = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 678: `p[[i_fine + 1, i + 1]] = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 947: `let beta = (rho / rho_prev) * (alpha / omega);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 968: `alpha = rho / r_hat_dot_v;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1004: `omega = t_dot_s / t_dot_t;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1094: `if (a[[i, j]] - a[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1133: `v[0][i] = r[i] / beta[1];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1191: `let delta = (gamma[0] * gamma[0] + beta[2] * beta[2]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1196: `c[0] = gamma[0] / delta;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1197: `s[0] = -beta[2] / delta;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1289: `x_new[i] = (b[i] - sum) / a[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1359: `let x = conjugate_gradient(&a.view(), &b.view(), 10, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1370: `let x = conjugate_gradient(&a.view(), &b.view(), 10, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1381: `let x = jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1392: `let x = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1403: `let x = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None)....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1430: `let x_cg = conjugate_gradient(&a.view(), &b.view(), 100, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1431: `let x_jacobi = jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1432: `let x_gs = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1434: `successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1473: `let x_mg = geometric_multigrid(&a.view(), &b.view(), 2, 5, 2, 2, 1e-6, None).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1480: `let residual_norm = residual.iter().map(|&x| x * x).sum::<f64>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1494: `let x = minres(&a.view(), &b.view(), 100, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1526: `let x_indef = minres(&a_indef.view(), &b_indef.view(), 100, 1e-6, None).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1556: `let x_large = minres(&a_large.view(), &b_large.view(), 100, 1e-10, None).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1573: `let x = bicgstab(&a.view(), &b.view(), 100, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1597: `let x_large = bicgstab(&a_large.view(), &b_large.view(), 100, 1e-10, None).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/kronecker/mod.rs
-
-51 issues found:
-
-- Line 281: `let p_rows = total_rows / m_rows;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 282: `let q_cols = total_cols / n_cols;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 321: `a[[i, j]] = sum / count;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 326: `let a_norm = a.iter().map(|&x| x * x).sum::<F>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 355: `a[[i, j]] *= scaling_factor.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 361: `b[[k, l]] /= scaling_factor.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 430: `let damping_factor = damping.unwrap_or_else(|| F::from(1e-4).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 452: `a_cov[[i, j]] = sum / F::from(batch_size).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 472: `s_cov[[i, j]] = sum / F::from(batch_size).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 637: `let decay = decay_factor.unwrap_or_else(|| F::from(0.95).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 638: `let damping = base_damping.unwrap_or_else(|| F::from(1e-4).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 644: `min_damping: damping / F::from(10.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 645: `max_damping: damping * F::from(100.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 706: `let mut corrected_input = self.input_cov_avg.as_ref().unwrap().clone();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 707: `let mut corrected_output = self.output_cov_avg.as_ref().unwrap().clone();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 761: `if ratio > F::from(0.75).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 764: `(self.adaptive_damping / F::from(3.0).unwrap()).max(self.min_damping);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 765: `} else if ratio > F::from(0.25).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 768: `(self.adaptive_damping / F::from(2.0).unwrap()).max(self.min_damping);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 773: `(self.adaptive_damping / F::from(1.5).unwrap()).max(self.min_damping);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 778: `(self.adaptive_damping * F::from(2.0).unwrap()).min(self.max_damping);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 917: `y[i] = (b[i] - sum) / l[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 927: `x[i] = (y[i] - sum) / l[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 942: `regularized[[i, i]] += self.damping * F::from(10.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 951: `inv[[i, i]] = F::one() / (regularized[[i, i]] + self.damping);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1003: `extended_grads[[i, j]] = sum / F::from(batch_size).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1012: `extended_grads[[input_dim, j]] = sum / F::from(batch_size).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1050: `original_elements as f64 / (total_elements + total_inverse_elements) as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1125: `let scale_factor = clip_threshold / grad_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1176: `y[i] = (b[i] - sum) / l[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1186: `x[i] = (y[i] - sum) / l[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1200: `let diag_val = matrix[[i, i]] + damping * F::from(100.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1201: `inv[[i, i]] = F::one() / diag_val;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1219: `let c = kron(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1253: `let y = kron_matvec(&a.view(), &b.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1256: `let ab = kron(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1275: `let y = kron_matmul(&a.view(), &b.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1278: `let ab = kron(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1297: `let ab = kron(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1300: `let (a_hat, b_hat) = kron_factorize(&ab.view(), 2, 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1303: `let ab_hat = kron(&a_hat.view(), &b_hat.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1327: `kfac_factorization(&input_acts.view(), &output_grads.view(), Some(0.01)).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1364: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1390: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1399: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1452: `fisher.update_fisher(&activations, &gradients).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1459: `let preconditioned = fisher.precondition_gradients(&grad_matrices).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1494: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1521: `let inv = stable_matrix_inverse(&matrix.view(), damping).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1550: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1579: `fisher.update_fisher(&activations, &gradients).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/lapack.rs
-
-25 issues found:
-
-- Line 110: `Some((F::one() / max_val).to_f64().unwrap_or(1e16))`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 138: `lu[[i, k]] = lu[[i, k]] / lu[[k, k]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 207: `let x_norm = x.iter().map(|&xi| xi * xi).sum::<F>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 214: `let v_norm = v.iter().map(|&vi| vi * vi).sum::<F>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 230: `r[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * dot_product;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 242: `q[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * dot_product;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 350: `s[new_idx] = eigenvalues[old_idx].abs().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 366: `if s[i] > F::from(1e-14).unwrap() {`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 369: `let norm = av_col.dot(&av_col).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 370: `if norm > F::from(1e-14).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 371: `u.column_mut(i).assign(&(&av_col / norm));`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 395: `if s[i] > F::from(1e-14).unwrap() {`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 397: `let norm = atv_col.dot(&atv_col).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 398: `if norm > F::from(1e-14).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 399: `v.column_mut(i).assign(&(&atv_col / norm));`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 430: `sort_indices.sort_by(|&i, &j| s[j].partial_cmp(&s[i]).unwrap());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 482: `let norm = col_i.dot(&col_i).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 484: `if norm > F::from(1e-14).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 534: `let norm = new_vec.dot(&new_vec).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 535: `if norm > F::from(1e-14).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 671: `l[[i, j]] = val.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 673: `l[[i, j]] = (a[[i, j]] - sum) / l[[j, j]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 690: `let result = lu_factor(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 739: `let l = cholesky(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 759: `let result = qr_factor(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/lapack_accelerated.rs
-
-29 issues found:
-
-- Line 130: `l[[i, k]] = u[[i, k]] / u[[k, k]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 236: `r_jj = r_jj.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 247: `q[[i, j]] = a_j[i] / r_jj;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 344: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 365: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 372: `v[j] = new_v[j] / norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 388: `sigma = sigma.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 396: `u[[j, i]] = u_i[j] / sigma;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 509: `let disc = (trace * trace - F::from(4.0).unwrap() * det).sqrt();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 510: `let lambda1 = (trace + disc) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 511: `let lambda2 = (trace - disc) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 534: `let norm1 = (v1[0] * v1[0] + v1[1] * v1[1]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 553: `let norm2 = (v2[0] * v2[0] + v2[1] * v2[1]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 628: `if Float::abs(a[[i, j]] - a[[j, i]]) > F::epsilon() * F::from(100.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 659: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 689: `lambda = numerator / denominator;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 692: `if (lambda - prev_lambda).abs() < F::epsilon() * F::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 702: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 709: `v[i] = av[i] / norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 735: `norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 812: `if Float::abs(a[[i, j]] - a[[j, i]]) > F::epsilon() * F::from(100.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 846: `l[[j, j]] = diag_val.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 859: `l[[i, j]] = (a[[i, j]] - sum) / l[[j, j]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 876: `let (p, l, u) = lu(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 896: `let (q, r) = qr(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 927: `let (u, s, vt) = svd(&a.view(), false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 952: `let (eigenvalues, eigenvectors) = eig(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 976: `let (eigenvalues, eigenvectors) = eigh(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1001: `let l = cholesky(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/large_scale.rs
-
-23 issues found:
-
-- Line 64: `let normal = Normal::new(0.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 67: `let scale = A::from(1.0 / (sketch_size as f64).sqrt()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 71: `s[[i, j]] = A::from(normal.sample(&mut rng)).unwrap() * scale;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 144: `let normal = Normal::new(0.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 152: `v[i] = A::from(normal.sample(&mut rng)).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 158: `v.mapv_inplace(|x| x / vnorm);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 170: `v.mapv_inplace(|x| x / vnorm);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 177: `let norm = norm_sq.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 191: `let scale = A::from(total_entries / sample_size as f64).unwrap_or(A::one());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 205: `Ok((sum_sq * scale).sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 459: `let normal = Normal::new(0.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 464: `q[[i, j]] = A::from(normal.sample(&mut rng)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 477: `for iter in 0..max_iterations.min(total_size / block_size) {`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 565: `indices.sort_by(|&i, &j| eigvals[j].partial_cmp(&eigvals[i]).unwrap());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 613: `let x = randomized_least_squares(&a.view(), &b.view(), 2, 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 625: `let spec_norm = randomized_norm(&a.view(), "2", 20, 3).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 629: `let fro_norm = randomized_norm(&a.view(), "fro", 100, 0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 643: `let (u, s, vt) = crate::decomposition::svd(&initial.view(), false, None).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 651: `incremental_svd(&u.view(), &s.view(), &vt.view(), &new_cols.view(), 6).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 668: `let x = block_krylov_solve(&a.view(), &b.view(), 1, 10, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 682: `let x = ca_gmres(&a.view(), &b.view(), 2, 100, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 686: `let res_norm = residual.dot(&residual).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 707: `let (eigvals, eigvecs) = randomized_block_lanczos(&a.view(), k, 2, 2, 10).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/lowrank.rs
-
-17 issues found:
-
-- Line 249: `let mean = data.column(j).sum() / F::from(n_samples).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 256: `let scale = F::from(n_samples - 1).unwrap().sqrt();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 257: `centered_data.mapv_inplace(|x| x / scale);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 277: `explained_variance.mapv(|x| x / total_variance)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 313: `let tolerance = tolerance.unwrap_or_else(|| F::from(1e-6).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 350: `w[[i, j]] = F::from(rng.random::<f64>()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 356: `h[[i, j]] = F::from(rng.random::<f64>()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 360: `let mut prev_error = F::from(f64::INFINITY).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 373: `h[[i, j]] = h[[i, j]] * numerator / denominator;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 386: `w[[i, j]] = w[[i, j]] * numerator / denominator;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 515: `col_leverage_scores.mapv_inplace(|x| x / total_leverage);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 525: `let r_f = F::from(r).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 578: `row_leverage_scores.mapv_inplace(|x| x / total_row_leverage);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 586: `let r_f = F::from(r).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 639: `s_inv[i] = F::one() / s_w[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 703: `let (components, explained_var, explained_var_ratio) = pca(&data.view(), 1, None...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 719: `let (w, h) = nmf(&a.view(), 2, Some(50), Some(1e-4), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/matrix_calculus/enhanced.rs
-
-38 issues found:
-
-- Line 72: `let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 89: `jvp[i] = (f_x_plus[i] - f_x[i]) / eps;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 158: `let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 176: `vjp[j] += v[i] * (f_x_plus[i] - f_x[i]) / eps;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 244: `if (x[0] - F::from(3.0).unwrap()).abs() < F::epsilon()`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 245: `&& (x[1] - F::from(2.0).unwrap()).abs() < F::epsilon()`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 251: `result[0] = F::from(2.0).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 252: `result[1] = F::from(4.0).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 312: `let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 328: `grad[[i, j]] = (f_x_plus - f_x) / eps;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 393: `let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 412: `jac[[k, i, j]] = (f_x_plus[k] - f_x[k]) / eps;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 482: `&& (y[0] - F::from(1.1).unwrap()).abs() < F::epsilon()`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 483: `&& (y[1] - F::from(1.2).unwrap()).abs() < F::epsilon()`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 486: `return Ok(F::from(2.0).unwrap()); // f(1,1) = 1^2 + 2*1^2 = 3`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 488: `return Ok(F::from(2.6).unwrap()); // First-order approx`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 490: `return Ok(F::from(2.65).unwrap()); // Second-order approx`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 500: `let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 540: `hessian[[i, j]] = (grad_plus[j] - grad[j]) / eps;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 551: `quadratic_term = quadratic_term * F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 613: `&& (domain[[0, 0]] + F::from(3.0).unwrap()).abs() < F::epsilon()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 614: `&& (domain[[0, 1]] - F::from(3.0).unwrap()).abs() < F::epsilon()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 615: `&& (domain[[1, 0]] + F::from(5.0).unwrap()).abs() < F::epsilon()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 616: `&& (domain[[1, 1]] - F::from(1.0).unwrap()).abs() < F::epsilon()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 622: `min_point[0] = F::from(1.0).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 623: `min_point[1] = F::from(-2.0).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 656: `let t = F::from(j as f64 / (grid_points - 1) as f64).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 691: `let grad_mag = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 717: `let jvp = jacobian_vector_product(f, &x.view(), &v.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 734: `let vjp = vector_jacobian_product(f, &x.view(), &v.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 748: `let hvp = hessian_vector_product(f, &x.view(), &v.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 764: `let grad = matrix_gradient(f, &x.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 783: `let jac = matrix_jacobian(f, &x.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 807: `let approx0 = taylor_approximation(f, &x.view(), &y.view(), 0, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 811: `let approx1 = taylor_approximation(f, &x.view(), &y.view(), 1, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 816: `let approx2 = taylor_approximation(f, &x.view(), &y.view(), 2, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 821: `let actual = f(&y.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 838: `find_critical_points(f, &domain.view(), grid_points, threshold).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/matrix_calculus/matrix_derivatives.rs
-
-29 issues found:
-
-- Line 259: `factorial *= F::from(k).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 284: `result = result + inner_sum * (F::one() / factorial);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 349: `if (x[[i, j]] - x[[j, i]]).abs() > F::epsilon() * F::from(100.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 359: `let eps = F::epsilon().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 371: `derivatives[i] = (eig_x_pert[i] - eig_x[i]) / eps;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 424: `Ok(x.to_owned() / norm_val)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 586: `let d_det = det_derivative(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 599: `let d_trace = trace_derivative::<f64>(None, (3, 3)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 613: `let d_trace_a = trace_derivative(Some(&a.view()), (2, 2)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 626: `let d_norm = norm_derivative(&x.view(), "fro").unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 630: `assert_abs_diff_eq!(d_norm[[0, 0]], 3.0 / 5.0, epsilon = 1e-10);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 631: `assert_abs_diff_eq!(d_norm[[0, 1]], 4.0 / 5.0, epsilon = 1e-10);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 642: `let d_ab = matmul_derivative(&a.view(), &b.view(), Some(&va.view()), None).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 681: `(field[[0, 0, k + 1]] - field[[0, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 685: `(field[[0, 1, k + 1]] - field[[0, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 689: `(field[[1, 0, k + 1]] - field[[1, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 693: `(field[[1, 1, k + 1]] - field[[1, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 732: `(field[[0, 1, k + 1]] - field[[0, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 736: `(field[[0, 0, k + 1]] - field[[0, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 740: `(field[[1, 1, k + 1]] - field[[1, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 744: `(field[[1, 0, k + 1]] - field[[1, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 784: `- F::from(2.0).unwrap() * field[[i, j, k]]`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 786: `/ h_sq;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 828: `/ (F::from(2.0).unwrap() * spacing);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 833: `gradient[[i, j, 0]] = (field[[i, j, 1]] - field[[i, j, 0]]) / spacing;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 835: `(field[[i, j, n_points - 1]] - field[[i, j, n_points - 2]]) / spacing;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 862: `let div = matrix_divergence(&field, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 880: `let laplacian = matrix_laplacian(&field, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 898: `let gradient = matrix_gradient(&field, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/matrix_calculus/mod.rs
-
-8 issues found:
-
-- Line 92: `let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 106: `jac[[i, j]] = (f_x_plus[i] - f_x[i]) / eps;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 137: `let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 150: `grad[i] = (f_x_plus - f_x) / eps;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 179: `let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 210: `let h_ij = (f_pp - f_pm - f_mp + f_mm) / (F::from(4.0).unwrap() * eps * eps);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 251: `let v_norm = v.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 259: `let unit_v = Array1::from_iter(v.iter().map(|&val| val / v_norm));`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/matrix_calculus/optimization.rs
-
-19 issues found:
-
-- Line 33: `gradient_tolerance: F::from(1e-6).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 34: `initial_step_size: F::from(1.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 35: `backtrack_factor: F::from(0.5).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 112: `let grad_norm = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 139: `f_val - f_new >= F::from(1e-4).unwrap() * step_size * grad_norm * grad_norm;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 154: `let grad_norm = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 222: `let grad_norm = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 249: `config.initial_step_size * F::from(0.1).unwrap() / f_change`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 263: `let grad_norm = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 381: `.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 404: `let grad_norm = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 436: `let eps = F::epsilon().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 447: `grad[[i, j]] = (f_pert - f_x) / eps;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 507: `.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 511: `*elem = *elem / norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 561: `let sym = (x + &x.t()) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 565: `let reg = F::from(1e-6).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 602: `let result = matrix_gradient_descent(&objective, &x0.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 636: `let result = projected_gradient_descent(&objective, project, &x0.view(), &config...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/matrix_dynamics.rs
-
-47 issues found:
-
-- Line 234: `if a00.abs() < F::from(1e-14).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 235: `&& a11.abs() < F::from(1e-14).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 236: `&& (a01 + a10).abs() < F::from(1e-14).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 277: `let tolerance = F::from(1e-15).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 286: `scaled_a = &scaled_a / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 292: `term = term.dot(&scaled_a) / F::from(k).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 329: `if beta < F::from(config.atol).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 334: `let mut v = b_col.to_owned() / beta;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 356: `if j_krylov < m - 1 && norm_w > F::from(config.atol).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 358: `v = w / norm_w;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 521: `if residual_norm < F::from(config.rtol).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 526: `let step = (&ax_plus_xa + c) * F::from(-config.dt_initial).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 721: `let mut dt = F::from(config.dt_initial).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 731: `let dt_min = F::from(config.dt_min).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 732: `let dt_max = F::from(config.dt_max).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 733: `let safety = F::from(config.safety_factor).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 734: `let rtol = F::from(config.rtol).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 735: `let atol = F::from(config.atol).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 751: `let x_temp = &x + &k1 * (dt / F::from(2.0).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 752: `let k2 = f(t + dt / F::from(2.0).unwrap(), &x_temp.view()).map_err(|_| {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 756: `let x_temp = &x + &k2 * (dt / F::from(2.0).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 757: `let k3 = f(t + dt / F::from(2.0).unwrap(), &x_temp.view()).map_err(|_| {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 767: `let factor = dt / F::from(6.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 769: `+ &k2.mapv(|x| x * F::from(2.0).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 770: `+ &k3.mapv(|x| x * F::from(2.0).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 776: `let k_embedded_sum = &k1.mapv(|x| x * F::from(2.0).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 777: `+ &k2.mapv(|x| x * F::from(3.0).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 778: `+ &k3.mapv(|x| x * F::from(3.0).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 779: `let embedded_factor = dt / F::from(8.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 791: `dt = (safety * dt * (tolerance / error).powf(F::from(0.2).unwrap())).max(dt_min)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 793: `} else if error < tolerance / F::from(10.0).unwrap() && dt < dt_max {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 795: `dt = (safety * dt * (tolerance / error).powf(F::from(0.25).unwrap())).min(dt_max...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 889: `if hamiltonian[[0, 1]].abs() < F::from(1e-10).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 890: `&& hamiltonian[[1, 0]].abs() < F::from(1e-10).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 908: `if (e1 - F::one()).abs() < F::from(1e-10).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 909: `&& (e2 + F::one()).abs() < F::from(1e-10).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 910: `&& (t - F::from(std::f64::consts::PI).unwrap()).abs() < F::from(1e-10).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 992: `let result = matrix_exp_action(&a.view(), &b.view(), t, &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1015: `let x = lyapunov_solve(&a.view(), &c.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1019: `let residual_norm = matrix_norm(&residual.view(), "fro", None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1032: `let x = riccati_solve(&a.view(), &b.view(), &q.view(), &r.view(), &config).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1037: `let expected = (2.0_f64).sqrt() - 1.0;`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1049: `let psi_t = quantum_evolution(&h.view(), &psi.view(), t, &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1060: `let (stable, _eigs, margin) = stability_analysis(&a_stable.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1066: `let (stable, _eigs, margin) = stability_analysis(&a_unstable.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1080: `let result = matrix_ode_solve(f, &x0.view(), [0.0, 1.0], &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1087: `let final_norm = matrix_norm(&final_state.view(), "fro", None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/matrix_equations.rs
-
-7 issues found:
-
-- Line 333: `Ok((x.clone() + x.t()) * A::from(0.5).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 388: `let tolerance = A::from(1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 420: `return Ok((x.clone() + x.t()) * A::from(0.5).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 505: `let x = solve_sylvester(&a.view(), &b.view(), &c.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 533: `let x = solve_stein(&a.view(), &q.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 555: `let x = solve_continuous_riccati(&a.view(), &b.view(), &q.view(), &r.view()).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 569: `.dot(&crate::inv(&r.view(), None).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/matrix_factorization.rs
-
-34 issues found:
-
-- Line 89: `check_positive(F::from(rank).unwrap(), "rank")?;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 112: `let epsilon = F::from(1e-5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 119: `w[[i, j]] = F::from(rand::random::<f64>()).unwrap() + epsilon;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 125: `h[[i, j]] = F::from(rand::random::<f64>()).unwrap() + epsilon;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 146: `h[[i, j]] = h[[i, j]] * numerator / denominator;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 164: `w[[i, j]] = w[[i, j]] * numerator / denominator;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 180: `error = error.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 275: `let norm = col.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 301: `let pivot_norm = pivot.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 310: `/ pivot_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 314: `a_copy[[row, j]] - dot_product * a_copy[[row, i]] / pivot_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 357: `*si = F::one() / *si;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 441: `s_inv_diag[[i, i]] = F::one() / s_k[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 607: `s_w_inv[[i, i]] = F::one() / s_w[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 626: `F::from(rand::random::<f64>() * 2.0 - 1.0).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 660: `s_inv[[i, i]] = F::one() / s_k[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 693: `let rand_val = F::from(rand::random::<f64>()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 710: `let rand_val = F::from(rand::random::<f64>()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 730: `let scale = F::one() / (F::from(c_samples).unwrap() * col_leverage[col]).sqrt();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 737: `let scale = F::one() / (F::from(r_samples).unwrap() * row_leverage[row]).sqrt();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 759: `c_s_inv[[i, i]] = F::one() / c_s[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 762: `r_s_inv[[i, i]] = F::one() / r_s[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 893: `if max_norm.sqrt() <= tol {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 924: `let x_norm = x.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 933: `let v_norm = v.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 955: `r[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * dot_product;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 976: `q[[i, j]] -= F::from(2.0).unwrap() * dot_product * v[j - k];`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1178: `let (w, h) = nmf(&a.view(), 2, 100, 1e-4).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1205: `error = error.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1208: `assert!(error / 9.0 < 1.0);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1244: `let (c, u, r) = cur_decomposition(&a.view(), 2, Some(2), Some(2), "uniform").unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1267: `let (q, r, p) = rank_revealing_qr(&a.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1311: `assert!(r[[2, 2]].abs() < 1e-6 || r[[2, 2]].abs() / r[[0, 0]].abs() < 1e-6);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1320: `let (u, t, v) = utv_decomposition(&a.view(), "urv", 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/matrix_functions.rs
-
-62 issues found:
-
-- Line 101: `F::from(1.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 102: `F::from(1.0 / 2.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 103: `F::from(1.0 / 6.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 104: `F::from(1.0 / 24.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 105: `F::from(1.0 / 120.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 106: `F::from(1.0 / 720.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 302: `result[[0, 0]] = val.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 333: `result[[i, i]] = a[[i, i]].ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 370: `result[[0, 0]] = a00.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 371: `result[[1, 1]] = a11.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 392: `if max_diff > F::from(0.5).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 416: `if max_scaled_diff <= F::from(0.2).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 421: `match sqrtm(&a_scaled.view(), 20, F::from(1e-12).unwrap()) {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 499: `let half = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 500: `let third = F::from(1.0 / 3.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 501: `let fourth = F::from(0.25).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 502: `let fifth = F::from(0.2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 503: `let sixth = F::from(1.0 / 6.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 515: `let scale_factor = F::from(2.0_f64.powi(scaling_k)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 582: `let half = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 583: `let third = F::from(1.0 / 3.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 584: `let fourth = F::from(0.25).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 585: `let fifth = F::from(0.2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 586: `let sixth = F::from(1.0 / 6.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 653: `result[[0, 0]] = val.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 669: `result[[0, 0]] = a00.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 670: `result[[1, 1]] = a11.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 712: `let half = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 837: `factorial *= F::from(2 * k - 1).unwrap() * F::from(2 * k).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 845: `result[[i, j]] += sign * a_power[[i, j]] / factorial;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 943: `factorial *= F::from(2 * k).unwrap() * F::from(2 * k + 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 951: `result[[i, j]] += sign * a_power[[i, j]] / factorial;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1063: `result[[0, 0]] = a[[0, 0]].powf(p);`
-  - **Fix**: Mathematical operation .powf( without validation
-- Line 1088: `let is_int_power = (p - F::from(p_int).unwrap()).abs() < F::epsilon() && p_int >...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1148: `let exp_a = expm(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1160: `let log_a = logm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1172: `let log_a = logm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1200: `let exp_a = expm(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1236: `let exp_a = expm(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1265: `let sqrt_a = sqrtm(&a.view(), 20, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1277: `let sqrt_a = sqrtm(&a.view(), 20, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1289: `let a_pow = matrix_power(&a.view(), 3.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1303: `let a_squared = matrix_power(&a.view(), 2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1314: `let cos_a = cosm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1326: `let cos_a = cosm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1339: `let sin_a = sinm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1351: `let sin_a = sinm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1364: `let tan_a = tanm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1376: `let tan_a = tanm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1390: `let sin_a = sinm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1391: `let cos_a = cosm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1459: `let half = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1514: `let half = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1621: `let tol = F::epsilon() * F::from(100.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1628: `let x_new = (&x + &x_inv) * F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1746: `let cosh_a = coshm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1758: `let sinh_a = sinhm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1770: `let tanh_a = tanhm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1783: `let sinh_a = sinhm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1784: `let cosh_a = coshm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1804: `let sign_a = signm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1816: `let sign_a = signm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/matrixfree/mod.rs
-
-30 issues found:
-
-- Line 333: `let result_block = block.apply(&x_block.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 427: `if rsold.sqrt() < tol * b_norm {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 437: `let alpha = rsold / pap;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 449: `if rsnew.sqrt() < tol * b_norm {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 454: `let beta = rsnew / rsold;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 533: `v[i] = r[i] / beta;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 577: `new_v[j] = w[j] / h[[i + 1, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 620: `y[j] = sum / h[[j, j]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 650: `let t = a / b;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 651: `let s = F::one() / (F::one() + t * t).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 651: `let s = F::one() / (F::one() + t * t).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 655: `let t = b / a;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 656: `let c = F::one() / (F::one() + t * t).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 656: `let c = F::one() / (F::one() + t * t).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 705: `diag[i] = F::one() / diag[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 806: `let alpha = rz_old / pap;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 826: `let beta = rz_new / rz_old;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 851: `let ax = a.apply(x).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 857: `let diff_norm = vector_norm(&diff.view(), 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 858: `let b_norm = vector_norm(b, 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 870: `let y = identity.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 885: `let y = diag_op.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 906: `let y = block_op.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 932: `let x = conjugate_gradient(&spd_op, &b, 10, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 954: `let x = gmres(&op, &b, 10, 1e-10, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 977: `let precond = jacobi_preconditioner(&op).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 981: `let y = precond.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 988: `assert_relative_eq!(y[1], 2.0 / 3.0, epsilon = 1e-10);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1006: `let diag = array![1.0 / 4.0, 1.0 / 3.0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1013: `let x = preconditioned_conjugate_gradient(&spd_op, &precond, &b, 10, 1e-10).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/mixed_precision/adaptive.rs
-
-17 issues found:
-
-- Line 124: `let factor = aug[[j, i]] / aug[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 141: `x_high[i] = (aug[[i, n]] - sum) / aug[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 218: `None => s_max / s_min,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 302: `let tol = tol.unwrap_or(NumCast::from(1e-8).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 453: `norm_x = norm_x.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 456: `if norm_x <= NumCast::from(1e-15).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 477: `let v_norm = v.iter().fold(H::zero(), |sum, &x| sum + x * x).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 478: `if v_norm > NumCast::from(1e-15).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 492: `r_h[[k + i, j]] -= H::from(2.0).unwrap() * v[i] * dot_product;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 504: `q_h[[i, k + j]] -= H::from(2.0).unwrap() * dot_product * v[j];`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 522: `col_norm = col_norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 524: `if col_norm > H::from(1e-15).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 599: `let x = mixed_precision_solve::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 612: `let cond = mixed_precision_cond::<f32, f32, f64>(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 617: `let cond_b = mixed_precision_cond::<f32, f32, f64>(&b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 625: `let (q, r) = mixed_precision_qr::<f32, f32, f64>(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 654: `let (u, s, vt) = mixed_precision_svd::<f32, f32, f64>(&a.view(), false).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/mixed_precision/f32_ops.rs
-
-6 issues found:
-
-- Line 298: `mixed_precision_matvec_f32::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 311: `mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view()).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 328: `mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view()).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 344: `let result = mixed_precision_dot_f32::<f32, f32, f32, f64>(&a.view(), &b.view())...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 356: `let result = mixed_precision_dot_f32::<f32, f32, f32, f64>(&a.view(), &b.view())...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 368: `let result = mixed_precision_dot_f32::<f32, f32, f32, f64>(&a.view(), &b.view())...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/mixed_precision/f64_ops.rs
-
-5 issues found:
-
-- Line 312: `mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 329: `mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 348: `mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 367: `mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 400: `mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/mixed_precision/mod.rs
-
-12 issues found:
-
-- Line 409: `let factor = a_high[[j, i]] / a_high[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 433: `let result = mixed_precision_matvec::<f32, f32, f32, f64>(&a.view(), &x.view())....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 445: `let result = mixed_precision_matmul::<f32, f32, f32, f64>(&a.view(), &b.view())....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 459: `let result = mixed_precision_dot::<f32, f32, f32, f64>(&a.view(), &b.view()).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 469: `let result = mixed_precision_inv::<f32, f32, f64>(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 491: `let det = mixed_precision_det::<f32, f32, f64>(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 497: `let det_id = mixed_precision_det::<f32, f32, f64>(&identity.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 502: `let det_sing = mixed_precision_det::<f32, f32, f64>(&singular.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 515: `mixed_precision_matmul::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 520: `mixed_precision_matvec::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 525: `mixed_precision_solve::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 529: `let (q, r) = mixed_precision_qr::<f32, f32, f64>(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/mixed_precision/simd.rs
-
-6 issues found:
-
-- Line 456: `simd_mixed_precision_matvec_f32_f64::<f32>(&mat.view(), &vec.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 458: `simd_mixed_precision_matvec_f32_f64::<f64>(&mat.view(), &vec.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 493: `let result_f32 = simd_mixed_precision_matmul_f32_f64::<f32>(&a.view(), &b.view()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 494: `let result_f64 = simd_mixed_precision_matmul_f32_f64::<f64>(&a.view(), &b.view()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 532: `let result_f32 = simd_mixed_precision_dot_f32_f64::<f32>(&a.view(), &b.view()).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 533: `let result_f64 = simd_mixed_precision_dot_f32_f64::<f64>(&a.view(), &b.view()).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/norm.rs
-
-13 issues found:
-
-- Line 57: `Ok(sum_sq.sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 141: `Ok(sum_sq.sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 215: `if val > F::epsilon() * F::from(100).unwrap() * sigma_max {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 224: `Ok(sigma_max / sigma_min)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 241: `if val > F::epsilon() * F::from(100).unwrap() * sigma_max {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 250: `Ok(sigma_max / sigma_min)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 320: `F::from(max_dim).unwrap() * eps * sigma_max`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 373: `let norm = matrix_norm(&a.view(), "fro", None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 381: `let norm = matrix_norm(&a.view(), "1", None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 389: `let norm = matrix_norm(&a.view(), "inf", None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 397: `let norm = vector_norm(&x.view(), 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 405: `let norm = vector_norm(&x.view(), 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 413: `let norm = vector_norm(&x.view(), usize::MAX).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/optim/mod.rs
-
-12 issues found:
-
-- Line 224: `return standard_matmul(a, b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 227: `let half_n = n / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 407: `let result = block_matmul(&a.view(), &b.view(), Some(1)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 421: `let result = block_matmul(&a.view(), &b.view(), Some(2)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 435: `let result = strassen_matmul(&a.view(), &b.view(), Some(1)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 449: `let result = strassen_matmul(&a.view(), &b.view(), Some(2)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 467: `let result = tiled_matmul(&a.view(), &b.view(), Some(1)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 481: `let result = tiled_matmul(&a.view(), &b.view(), Some(2)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 506: `let result_standard = standard_matmul(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 507: `let result_block = block_matmul(&a.view(), &b.view(), Some(4)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 508: `let result_strassen = strassen_matmul(&a.view(), &b.view(), Some(8)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 509: `let result_tiled = tiled_matmul(&a.view(), &b.view(), Some(4)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/parallel.rs
-
-50 issues found:
-
-- Line 357: `let mut results_guard = results.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 367: `handle.join().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 382: `let items_per_worker = total_items / self.num_workers;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 386: `std::cmp::max(1, items_per_worker / 4)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 389: `items_per_worker / 8`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 392: `std::cmp::min(self.chunk_size, items_per_worker / 16)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 456: `let mut global_results = results_vec.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 464: `handle.join().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 561: `let mut results_guard = results.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 567: `let mut stats = timing_stats.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 578: `handle.join().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 590: `let stats = self.timing_stats.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 592: `stats.total_time_ms as f64 / stats.total_items as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 600: `let stats = self.timing_stats.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 602: `(stats.max_time_ms - stats.min_time_ms) as f64 / stats.min_time_ms as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 655: `.map(|n| std::cmp::max(1, n.get() / 2))`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 661: `.map(|n| n.get() + n.get() / 2)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 774: `GLOBAL_POOL.as_ref().unwrap().clone()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 781: `let mut manager = pool.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 812: `let mut current = self.current_threads.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 813: `let mut cpu_util = self.cpu_utilization.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 834: `*self.current_threads.lock().unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 927: `let throughput = total_work / elapsed.as_secs_f64();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 955: `.max_by(|a, b| a.throughput.partial_cmp(&b.throughput).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1057: `let norm = v.iter().map(|&x| x * x).sum::<F>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1074: `let norm = new_v.iter().map(|&x| x * x).sum::<F>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1080: `let normalized_v = new_v / norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1137: `return Ok(x.iter().map(|&xi| xi * xi).sum::<F>().sqrt());`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1144: `Ok(sum_squares.sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1270: `-x.iter().map(|&xi| xi * xi).sum::<F>().sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1272: `x.iter().map(|&xi| xi * xi).sum::<F>().sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1297: `let factor = F::from(2.0).unwrap() * dot_product / v_norm_sq;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1313: `let factor = F::from(2.0).unwrap() * dot_product / v_norm_sq;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1369: `l[[i, i]] = aii.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1377: `l[[j, i]] = (matrix[[j, i]] - sum) / l[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1389: `l[[i, j]] = (matrix[[i, j]] - sum) / l[[j, j]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1453: `let multiplier = a[[i, k]] / pivot;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1535: `let alpha = rsold / vector_ops::parallel_dot(&p.view(), &ap.view(), config)?;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1542: `if rsnew.sqrt() < tolerance {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1546: `let beta = rsnew / rsold;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1650: `let mut v = vec![r / beta];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1671: `v.push(w_new / h[[j + 1, j]]);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1687: `y[i] = sum / h_sub[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1764: `let beta = (rho_new / rho) * (alpha / omega);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1773: `alpha = rho_new / vector_ops::parallel_dot(&r_hat.view(), &v.view(), config)?;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1788: `omega = vector_ops::parallel_dot(&t.view(), &s.view(), config)? /`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1870: `sum / diag[i]`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1919: `if omega <= F::zero() || omega >= F::from(2.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1951: `let x_gs = sum / matrix[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1973: `let x_gs = sum / matrix[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/perf_opt.rs
-
-14 issues found:
-
-- Line 519: `time_standard.as_secs_f64() / time_optimized.as_secs_f64()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 595: `.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 612: `let scale = F::one() / u1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 736: `.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 749: `let scale = F::one() / beta;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 764: `let tau = dot_product * F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 808: `let c = blocked_matmul(&a.view(), &b.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 819: `let a_t = optimized_transpose(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 836: `let y = parallel_matvec(&a.view(), &x.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 847: `inplace::add_assign(&mut a, &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 854: `inplace::scalar_mul_assign(&mut a, 2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 866: `inplace::transpose_square(&mut a).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 879: `let c = adaptive_matmul(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 901: `let c = blocked_matmul(&a.view(), &b.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/preconditioners.rs
-
-51 issues found:
-
-- Line 225: `inverse_diagonal[i] = F::one() / diag_elem;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 292: `if working_matrix[[i, k]].abs() > F::from(config.drop_tolerance).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 293: `l_factor[[i, k]] = working_matrix[[i, k]] / pivot;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 296: `if working_matrix[[k, j]].abs() > F::from(config.drop_tolerance).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 298: `> F::from(config.drop_tolerance).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 309: `if working_matrix[[k, j]].abs() > F::from(config.drop_tolerance).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 346: `z[i] = (y[i] - sum) / self.u_factor[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 407: `l_factor[[k, k]] = diag_elem.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 411: `if working_matrix[[i, k]].abs() > F::from(config.drop_tolerance).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 412: `l_factor[[i, k]] = working_matrix[[i, k]] / l_factor[[k, k]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 419: `if l_factor[[i, k]].abs() > F::from(config.drop_tolerance).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 420: `&& l_factor[[j, k]].abs() > F::from(config.drop_tolerance).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 440: `y[i] = (x[i] - sum) / self.l_factor[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 455: `z[i] = (y[i] - sum) / self.l_factor[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 544: `x[i] = (y[i] - sum) / u[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 621: `let scaling = F::one() / matrix_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 693: `if condition_estimate < F::from(10.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 723: `let norm_x = (x.iter().map(|&val| val * val).sum::<F>()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 729: `let norm_y = (y.iter().map(|&val| val * val).sum::<F>()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 730: `x = y / norm_y;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 737: `Ok(lambda_max * F::from(n as f64).unwrap() / lambda_max.max(F::epsilon()))`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 747: `let tolerance = F::from(1e-12).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 777: `let tolerance = F::from(1e-14).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 780: `zero_elements as f64 / total_elements as f64`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 910: `let alpha = rsold / p.dot(&ap);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 916: `let residual_norm = (r.iter().map(|&val| val * val).sum::<F>()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 925: `let beta = rsnew / rsold;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 959: `for outer_iter in 0..(max_iterations / restart + 1) {`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 962: `let r_norm = (r.iter().map(|&val| val * val).sum::<F>()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 974: `v[0] = preconditioner.apply(&r.view())? / r_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 992: `let w_norm = (w_prec.iter().map(|&val| val * val).sum::<F>()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 996: `v[j + 1] = w_prec / w_norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1009: `x = &x + &v[0] * (tolerance * F::from(0.1).unwrap());`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1082: `let preconditioner = DiagonalPreconditioner::new(&matrix.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1085: `let result = preconditioner.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1089: `assert_relative_eq!(result[1], 2.0 / 3.0, epsilon = 1e-10);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1097: `let preconditioner = IncompleteLUPreconditioner::new(&matrix.view(), &config).un...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1100: `let result = preconditioner.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1113: `IncompleteCholeskyPreconditioner::new(&matrix.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1116: `let result = preconditioner.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1133: `let preconditioner = BlockJacobiPreconditioner::new(&matrix.view(), &config).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1136: `let result = preconditioner.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1148: `let preconditioner = PolynomialPreconditioner::new(&matrix.view(), &config).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1151: `let result = preconditioner.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1163: `let preconditioner = AdaptivePreconditioner::new(&matrix.view(), &config).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1166: `let result = preconditioner.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1179: `let preconditioner = create_preconditioner(&matrix.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1189: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1193: `let residual_norm = (residual.iter().map(|&val| val * val).sum::<f64>()).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1202: `let preconditioner = create_preconditioner(&matrix.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1204: `let analysis = analyze_preconditioner(&matrix.view(), preconditioner.as_ref()).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/projection/mod.rs
-
-28 issues found:
-
-- Line 65: `let scale = F::from(1.0 / (n_components as f64).sqrt()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 75: `let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 75: `let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 77: `let value = F::from(z).unwrap() * scale;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 134: `let scale = F::from(1.0 / (density * n_components as f64).sqrt()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 138: `let prob_neg = density / 2.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 199: `let s = (n_features as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 200: `let prob_nonzero = 1.0 / s;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 201: `let prob_neg = prob_nonzero / 2.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 204: `let scale = F::from((s / n_components as f64).sqrt()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 213: `F::from(-1.0).unwrap() * scale`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 215: `F::from(1.0).unwrap() * scale`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 373: `let denominator = eps.powi(2) / 2.0 - eps.powi(3) / 3.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 374: `let min_dim = (4.0 * (n_samples as f64).ln() / denominator).ceil() as usize;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 374: `let min_dim = (4.0 * (n_samples as f64).ln() / denominator).ceil() as usize;`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 390: `let components = gaussian_random_matrix::<f64>(n_components, n_features).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 407: `let components = sparse_random_matrix::<f64>(n_components, n_features, density)....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 415: `let actual_density = non_zeros as f64 / total_elements as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 434: `let components = very_sparse_random_matrix::<f64>(n_components, n_features).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 442: `let expected_density = 1.0 / (n_features as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 442: `let expected_density = 1.0 / (n_features as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 443: `let actual_density = non_zeros as f64 / total_elements as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 464: `let components = gaussian_random_matrix::<f64>(n_components, n_features).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 467: `let x_projected = project(&x.view(), &components.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 487: `let (x_projected, components) = johnson_lindenstrauss_transform(&x.view(), eps)....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 493: `let min_dim = johnson_lindenstrauss_min_dim(n_samples, eps).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 497: `let expected_proj = project(&x.view(), &components.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 504: `assert!(johnson_lindenstrauss_min_dim(10000, 0.1).unwrap() >= 500);`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/quantization/calibration.rs
-
-79 issues found:
-
-- Line 393: `let min_val = *values.first().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 394: `let max_val = *values.last().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 398: `let min_val = values.iter().take(window_size).sum::<f32>() / window_size as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 399: `let max_val = values.iter().rev().take(window_size).sum::<f32>() / window_size a...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 563: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 566: `let scale = (col_max - col_min) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 567: `let zero_point = (-col_min / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 653: `(*values.first().unwrap(), *values.last().unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 656: `let min_val = values.iter().take(window_size).sum::<f32>() / window_size as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 657: `let max_val = values.iter().rev().take(window_size).sum::<f32>() / window_size a...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 664: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 667: `let scale = (col_max - col_min) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 668: `let zero_point = (-col_min / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 768: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 771: `let scale = (col_max - col_min) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 772: `let zero_point = (-col_min / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 843: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 846: `let scale = (opt_max - opt_min) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 847: `let zero_point = (-opt_min / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 909: `abs_max / ((1 << (bits - 1)) - 1) as f32`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 911: `(col_max - col_min) / ((1 << bits) - 1) as f32`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 917: `(-col_min / base_scale).round() as i32`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1033: `let min_val = *values.first().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1034: `let max_val = *values.last().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1038: `let min_val = values.iter().take(window_size).sum::<f32>() / window_size as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1039: `let max_val = values.iter().rev().take(window_size).sum::<f32>() / window_size a...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1225: `let bin_width = (max_val - min_val) / num_bins as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1229: `histogram[num_bins / 2] = matrix.len();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1236: `let bin_idx = ((val_f32 - min_val) / bin_width).floor() as usize;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1256: `let bin_width = (max_val - min_val) / num_bins as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1260: `histogram[num_bins / 2] = vector.len();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1267: `let bin_idx = ((val_f32 - min_val) / bin_width).floor() as usize;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1285: `let bin_width = (max_val - min_val) / num_bins as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1291: `.map(|&count| count as f32 / total_count)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1308: `let step = (best_abs_max / 20.0).max(1e-6);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1316: `let quantization_step = abs_max / (levels - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1343: `let min_step = (max_val - min_val) / 40.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1357: `let quantization_step = (trial_max - trial_min) / (levels - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1407: `(orig_val / quantization_step).round() * quantization_step`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1411: `let new_bin_idx = ((quantized_val - min_val) / bin_width).floor() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1423: `kl += p * (p / q).ln();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1423: `kl += p * (p / q).ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 1456: `let steps = ((orig_val - quant_min) / quantization_step).round();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1461: `let new_bin_idx = ((quantized_val - min_val) / bin_width).floor() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1473: `kl += p * (p / q).ln();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1473: `kl += p * (p / q).ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 1489: `let factor = 0.5 + 1.5 * (i as f32 / (num_trials - 1) as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1523: `let quantized = (x / scale)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1530: `let mse = (&matrix_f32 - &dequantized).mapv(|x| x * x).sum() / matrix.len() as f...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1550: `let factor = 0.5 + 1.5 * (i as f32 / (num_trials - 1) as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1584: `let quantized = (x / scale)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1591: `let mse = (&vector_f32 - &dequantized).mapv(|x| x * x).sum() / vector.len() as f...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1618: `let factor = 0.8 + 0.4 * (i as f32 / (num_scale_trials - 1) as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1668: `let quantized = ((x / scale) + zero_point as f32)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1675: `let mse = (&matrix_f32 - &dequantized).mapv(|x| x * x).sum() / matrix.len() as f...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1704: `let factor = 0.8 + 0.4 * (i as f32 / (num_scale_trials - 1) as f32);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1754: `let quantized = ((x / scale) + zero_point as f32)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1761: `let mse = (&vector_f32 - &dequantized).mapv(|x| x * x).sum() / vector.len() as f...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1783: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1787: `let scale = (max_val - min_val) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1788: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1829: `let params = calibrate_matrix_minmax(&matrix.view(), 8, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1834: `assert_relative_eq!(params.scale, 9.0 / 127.0, epsilon = 1e-6);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1838: `let params = calibrate_matrix_minmax(&matrix.view(), 8, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1843: `assert_relative_eq!(params.scale, (9.0 - 1.0) / 255.0, epsilon = 1e-6);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1846: `(-params.min_val / params.scale).round() as i32`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1859: `let params = calibrate_matrix_percentile(&matrix.view(), 8, 0.8, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1863: `let params = calibrate_matrix_percentile(&matrix.view(), 8, 1.0, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1872: `let params = calibrate_vector_minmax(&vector.view(), 8, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1877: `assert_relative_eq!(params.scale, 5.0 / 127.0, epsilon = 1e-6);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1881: `let params = calibrate_vector_minmax(&vector.view(), 8, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1886: `assert_relative_eq!(params.scale, (5.0 - 1.0) / 255.0, epsilon = 1e-6);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1889: `(-params.min_val / params.scale).round() as i32`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1903: `let params = calibrate_matrix_per_channel_minmax(&matrix.view(), 8, true).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1908: `let scales = params.channel_scales.as_ref().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1916: `assert_relative_eq!(scales[0], 0.3 / 127.0, epsilon = 1e-5);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1917: `assert_relative_eq!(scales[1], 30.0 / 127.0, epsilon = 1e-5);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1918: `assert_relative_eq!(scales[2], 300.0 / 127.0, epsilon = 1e-5);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1934: `let params = calibrate_matrix(&matrix.view(), 8, &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/quantization/calibration_ema.rs
-
-28 issues found:
-
-- Line 16: `F::from_f32(val).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 87: `let mse = (&matrix_f32 - &dequantized).mapv(|x| x * x).sum() / matrix_f32.len() ...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 155: `1.0 + (negative_errors / neg_count)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 160: `1.0 + (positive_errors / pos_count)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 255: `let scale_f32 = abs_max_f32 / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 260: `let scale_f32 = (max_val_f32 - min_val_f32) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 261: `let zero_point = (-min_val_f32 / scale_f32).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 280: `/ column_f32_view.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 300: `/ column_f32_view.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 350: `1.0 + (negative_errors / neg_count)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 355: `1.0 + (positive_errors / pos_count)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 379: `let scale_f32 = abs_max_f32 / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 384: `let scale_f32 = (max_val_f32 - min_val_f32) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 385: `let zero_point = (-min_val_f32 / scale_f32).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 470: `let scale_f32 = abs_max_f32 / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 475: `let scale_f32 = (max_val_f32 - min_val_f32) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 476: `let zero_point = (-min_val_f32 / scale_f32).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 495: `/ vector_f32.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 518: `/ vector_f32.len() as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 567: `1.0 + (negative_errors / neg_count)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 572: `1.0 + (positive_errors / pos_count)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 616: `let quantized = (val / scale).round().clamp(clamp_min, clamp_max);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 625: `let quantized = ((val / scale) + zero_point).round().clamp(0.0, clamp_max);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 656: `let quantized = (x / scale).round().clamp(clamp_min, clamp_max);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 666: `let quantized = ((x / scale) + zero_point).round().clamp(0.0, clamp_max);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 686: `let quantized = (val / scale).round().clamp(clamp_min, clamp_max);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 693: `params.channel_zero_points.as_ref().unwrap()[col_idx] as f32;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 697: `((val / scale) + zero_point).round().clamp(0.0, clamp_max);`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/quantization/fusion.rs
-
-11 issues found:
-
-- Line 99: `.map(|m| get_quantized_matrix_2d_i8(m).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 107: `let (_, cols) = matrices.last().unwrap().shape;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 156: `let last_mat = int8_matrices.last().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 214: `if matrices.last().unwrap().shape.1 != vector_len {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 217: `matrices.last().unwrap().shape.1,`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 259: `Ok(result_f32.mapv(|x| num_traits::FromPrimitive::from_f32(x).unwrap()))`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 262: `Ok(result_f32.mapv(|x| num_traits::FromPrimitive::from_f32(x).unwrap()))`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 287: `let result_f = result_1d_f32.mapv(|x| num_traits::FromPrimitive::from_f32(x).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 302: `.map(|m| get_quantized_matrix_2d_i8(m).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 414: `let result = fused_quantized_matmul_chain(&matrices, &params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 442: `let result = fused_quantized_matvec_sequence(&matrices, &params, &x.view(), fals...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/quantization/mod.rs
-
-103 issues found:
-
-- Line 345: `let byte_idx = idx / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 347: `let byte = arr.as_slice().unwrap()[byte_idx];`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 359: `let byte_idx = idx / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 361: `let byte = arr.as_slice().unwrap()[byte_idx];`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 454: `let byte_idx = idx / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 467: `let byte_idx = idx / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 549: `f16_data.as_slice_mut().unwrap()[i] = f16::from_f32(val_f32);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 572: `bf16_data.as_slice_mut().unwrap()[i] = bf16::from_f32(val_f32);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 607: `let scale = (max_val - min_val) / ((1 << effective_bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 614: `let scale = abs_max / ((1 << (effective_bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 619: `let scale = (max_val - min_val) / ((1 << effective_bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 620: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 626: `let ideal_scale = range / ((1 << effective_bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 628: `let scale = 2.0_f32.powf(exponent);`
-  - **Fix**: Mathematical operation .powf( without validation
-- Line 642: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 670: `let val_f32: f32 = matrix.as_slice().unwrap()[i].as_();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 672: `let q_val = ((val_f32 / scale).round() as i8).clamp(-8, 7);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 674: `let byte_idx = i / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 677: `packed_data.as_slice_mut().unwrap()[byte_idx] = q_val << 4;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 680: `packed_data.as_slice_mut().unwrap()[byte_idx] |= q_val & 0x0F;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 688: `let packed_reshaped = packed_data.into_shape_with_order(packed_shape).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 701: `let val_f32: f32 = matrix.as_slice().unwrap()[i].as_();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 703: `let ival = ((val_f32 - min_val) / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 706: `let byte_idx = i / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 709: `packed_data.as_slice_mut().unwrap()[byte_idx] = q_val << 4;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 712: `packed_data.as_slice_mut().unwrap()[byte_idx] |= q_val & 0x0F;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 720: `let packed_reshaped = packed_data.into_shape_with_order(packed_shape).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 733: `let q_val = ((val_f32 - min_val) / scale).round() as i8;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 734: `quantized.as_slice_mut().unwrap()[i] = q_val;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 742: `let q_val = (val_f32 / scale).round() as i8;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 743: `quantized.as_slice_mut().unwrap()[i] = q_val;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 751: `let q_val = ((val_f32 / scale) + zero_point as f32).round() as i8;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 752: `quantized.as_slice_mut().unwrap()[i] = q_val;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 760: `let q_val = ((val_f32 - min_val) / scale).round() as i8;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 761: `quantized.as_slice_mut().unwrap()[i] = q_val;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 856: `channel_scales[col] = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 864: `(channel_max_vals[col] - channel_min_vals[col]) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 866: `(-channel_min_vals[col] / channel_scales[col]).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 874: `let scale = channel_scales.iter().sum::<f32>() / num_channels as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 876: `(channel_zero_points.iter().sum::<i32>() as f32 / num_channels as f32).round() a...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 907: `(val_f32 / scale)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 914: `((val_f32 / scale) + zero_point as f32)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 951: `dequantized.as_slice_mut().unwrap()[i] = val.to_f32();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 957: `dequantized.as_slice_mut().unwrap()[i] = val.to_f32();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 968: `let row = i / shape.1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1034: `dequantized.as_slice_mut().unwrap()[i] = val;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1040: `dequantized.as_slice_mut().unwrap()[i] = val;`
+- Line 57: `let (b_ellip, a_ellip) = ellip(4, 0.5, 40.0, 0.3, "lowpass").unwrap(); // 0.5 dB...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 1046: `dequantized.as_slice_mut().unwrap()[i] = val;`
+- Line 66: `let (b_bessel, a_bessel) = bessel(4, 0.3, "lowpass").unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 1052: `dequantized.as_slice_mut().unwrap()[i] = val;`
+- Line 73: `let gd_butter = group_delay(&b_butter, &a_butter, &frequencies).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 1168: `let scale = (max_val - min_val) / ((1 << effective_bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1175: `let scale = abs_max / ((1 << (effective_bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1180: `let scale = (max_val - min_val) / ((1 << effective_bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1181: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1187: `let ideal_scale = range / ((1 << effective_bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1189: `let scale = 2.0_f32.powf(exponent);`
-  - **Fix**: Mathematical operation .powf( without validation
-- Line 1203: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1232: `let q_val = ((val_f32 / scale).round() as i8).clamp(-8, 7);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1234: `let byte_idx = i / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1257: `let ival = ((val_f32 - min_val) / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1260: `let byte_idx = i / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1282: `let q_val = ((val_f32 - min_val) / scale).round() as i8;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1291: `let q_val = (val_f32 / scale).round() as i8;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1300: `let q_val = ((val_f32 / scale) + zero_point as f32).round() as i8;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1309: `let q_val = ((val_f32 - min_val) / scale).round() as i8;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1775: `result.as_slice_mut().unwrap()[i] = F::from_f32(val).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1808: `result[i] = F::from_f32(val).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1931: `let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1937: `let rel_error = (&c - &c_q).mapv(|x| x.abs()).sum() / c.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1951: `let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1957: `let rel_error = (&c - &c_q).mapv(|x| x.abs()).sum() / c.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1972: `let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1978: `let rel_error = (&y - &y_q).mapv(|x| x.abs()).sum() / y.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1992: `let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1998: `let rel_error = (&y - &y_q).mapv(|x| x.abs()).sum() / y.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2013: `let dot_q = quantized_dot(&a_q, &a_params, &b_q, &b_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 2019: `let rel_error = (dot - dot_q).abs() / dot;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2033: `let dot_q = quantized_dot(&a_q, &a_params, &b_q, &b_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 2039: `let rel_error = (dot - dot_q).abs() / dot;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2129: `let matrix = Array2::from_shape_vec((rows, cols), data).unwrap();`
-  - **Fix**: Handle array creation errors properly
-- Line 2198: `let matrix = Array2::from_shape_vec((rows, cols), data).unwrap();`
-  - **Fix**: Handle array creation errors properly
-- Line 2238: `let channel_scales = params.channel_scales.as_ref().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 2245: `let zero_points = params.channel_zero_points.as_ref().unwrap();`
+- Line 74: `let gd_bessel = group_delay(&b_bessel, &a_bessel, &frequencies).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2262: `/ col_original`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2295: `let channel_scales = params.channel_scales.as_ref().unwrap();`
+- Line 91: `let (b_comb_fir, _a_comb_fir) = comb_filter(20, 0.0, 0.5).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2296: `let zero_points = params.channel_zero_points.as_ref().unwrap();`
+- Line 100: `let (_b_comb_iir, a_comb_iir) = comb_filter(15, -0.7, 1.0).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2320: `/ col_original`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2380: `.unwrap();`
+- Line 113: `let (b_notch, a_notch) = notch_filter(0.12, 30.0).unwrap(); // 60/(1000/2) = 0.1...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2384: `.unwrap();`
+- Line 119: `let (b_peak, a_peak) = peak_filter(0.2, 5.0, 6.0).unwrap(); // 6 dB boost at 0.2...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2391: `perchan_small_error < reg_small_error / 2.0,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2412: `let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();`
+- Line 129: `let (b_ap1, a_ap1) = allpass_filter(0.25, 0.9).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2415: `let rel_error = (&c_true - &c_q).mapv(|x| x.abs()).sum() / c_true.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2441: `let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).unwrap();`
+- Line 135: `let (b_ap2, a_ap2) = allpass_filter(0.3, 0.8).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2444: `let rel_error = (&y_true - &y_q).mapv(|x| x.abs()).sum() / y_true.sum();`
+- Line 146: `let t: Vec<f64> = (0..1000).map(|i| i as f64 / fs).collect();`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 2467: `let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();`
+- Line 159: `let filtered_butter = lfilter(&b_butter, &a_butter, &signal).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2471: `let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).unwrap();`
+- Line 160: `let filtered_cheb1 = lfilter(&b_cheb1, &a_cheb1, &signal).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2475: `let matmul_rel_error = (&c - &c_q).mapv(|x| x.abs()).sum() / c.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2476: `let matvec_rel_error = (&y - &y_q).mapv(|x| x.abs()).sum() / y.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2496: `let dot_q = quantized_dot(&a_q, &a_params, &b_q, &b_params).unwrap();`
+- Line 161: `let filtered_ellip = lfilter(&b_ellip, &a_ellip, &signal).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2502: `let rel_error = (dot - dot_q).abs() / dot;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2521: `let c_mixed = quantized_matmul(&a_f16, &a_f16_params, &b_bf16, &b_bf16_params).u...`
+- Line 162: `let filtered_bessel = lfilter(&b_bessel, &a_bessel, &signal).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2522: `let y_mixed = quantized_matvec(&a_f16, &a_f16_params, &x_i8, &x_i8_params).unwra...`
+- Line 163: `let filtered_notch = lfilter(&b_notch, &a_notch, &signal).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 2529: `let matmul_rel_error = (&c - &c_mixed).mapv(|x| x.abs()).sum() / c.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 2530: `let matvec_rel_error = (&y - &y_mixed).mapv(|x| x.abs()).sum() / y.sum();`
-  - **Fix**: Division without zero check - use safe_divide()
-
-### src/quantization/out_of_core.rs
-
-24 issues found:
-
-- Line 126: `let scale = global_max / ((1 << (bits - 1)) - 1) as f32;`
+- Line 178: `100.0 * rms_butter / rms_original`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 129: `let scale = (global_max - global_min) / ((1 << bits) - 1) as f32;`
+- Line 183: `100.0 * rms_cheb1 / rms_original`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 130: `let zero_point = (-global_min / scale).round() as i32;`
+- Line 188: `100.0 * rms_ellip / rms_original`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 499: `let b_norm = (b.dot(b)).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 500: `if b_norm < F::epsilon() || rsold.sqrt() < tol * b_norm {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 520: `let alpha = rsold / pap;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 532: `if rsnew.sqrt() < tol * b_norm {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 539: `let ratio = rsnew / previous_residual;`
+- Line 193: `100.0 * rms_bessel / rms_original`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 542: `if ratio > F::from(0.9).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 562: `if rsnew.sqrt() < tol * b_norm {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 571: `let beta = rsnew / rsold;`
+- Line 198: `100.0 * rms_notch / rms_original`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 741: `((val / params.scale).round()).clamp(min_val as f32, max_val as f32) as i8`
+- Line 233: `(sum_squares / signal.len() as f64).sqrt()`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 744: `((val / params.scale + params.zero_point as f32).round())`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 783: `file_path.to_str().unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 785: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 789: `let y = chunked.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 817: `file_path.to_str().unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 819: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 822: `let loaded = ChunkedQuantizedMatrix::from_file(file_path.to_str().unwrap()).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 826: `let y = loaded.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 854: `file_path.to_str().unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 856: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 866: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 871: `let residual_norm = (residual.dot(&residual)).sqrt();`
+- Line 233: `(sum_squares / signal.len() as f64).sqrt()`
   - **Fix**: Mathematical operation .sqrt() without validation
-
-### src/quantization/quantized_matrixfree.rs
-
-37 issues found:
-
-- Line 90: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 93: `let scale = (max_val - min_val) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 94: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 157: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 160: `let scale = (max_val - min_val) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 161: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 186: `(val / scale)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 191: `((val / scale) + zero_point as f32)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 326: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 329: `let scale = (max_val - min_val) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 330: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 339: `(val / scale)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 344: `((val / scale) + zero_point as f32)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 437: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 440: `let scale = (global_max_val - global_min_val) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 441: `let zero_point = (-global_min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 529: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 532: `let scale = (max_val - min_val) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 533: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 542: `(val / scale)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 547: `((val / scale) + zero_point as f32)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 677: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 680: `let scale = (max_val - min_val) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 681: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 690: `(val / scale)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 695: `((val / scale) + zero_point as f32)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 956: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 960: `let y = op.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 985: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 989: `let y = op.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1020: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1024: `let y = op.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1055: `let op = QuantizedMatrixFreeOp::banded(3, bands, 8, QuantizationMethod::Symmetri...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1059: `let y = op.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1081: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1099: `let y_quantized = quantized_op.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1100: `let y_linear = linear_op.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
 
-### src/quantization/simd.rs
+### examples/advanced_processing_example.rs
 
 15 issues found:
 
-- Line 47: `let vec_slice = vector.as_slice().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 80: `let row_slice = row.as_slice().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 120: `let row_slice = row.as_slice().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 173: `let row_slice = row.as_slice().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 356: `let byte_idx = k / 2;`
+- Line 35: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 389: `let byte_idx = k / 2;`
+- Line 58: `let window = hann(window_length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 69: `MemoryEfficientStft::new(&window, hop_size, fs, Some(stft_config), memory_config...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 77: `let spectrogram = mem_stft.spectrogram_chunked(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 98: `let hann_win = hann(length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 99: `let hamming_win = window::hamming(length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 100: `let blackman_win = window::blackman(length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 101: `let kaiser_win = kaiser(length, 8.0, true).unwrap(); // High beta for good sidel...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 113: `let comparison = compare_windows(&windows).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 143: `let designed_window = design_window_with_constraints(64, sidelobe_req, None).unw...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 144: `let analysis = analyze_window(&designed_window, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 165: `let x_fine: Vec<f64> = (0..=100).map(|i| i as f64 / 100.0).collect();`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 568: `let byte_idx = i / 2;`
+- Line 246: `let freq_step = spectrogram.shape()[0] / 50;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 595: `let byte_idx = i / 2;`
+- Line 300: `/ y_true.len() as f64;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 628: `let a_slice = a_data.as_slice().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 629: `let b_slice = b_data.as_slice().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 718: `let result = simd_quantized_matvec(&qmat, &qparams, &vec.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 741: `let result = simd_quantized_matmul(&qa, &qa_params, &qb, &qb_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 764: `let result = simd_quantized_dot(&qa, &qa_params, &qb, &qb_params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 784: `let result = simd_quantized_matvec(&qmat, &qparams, &vec.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 812: `let result = simd_quantized_matvec(&qmat, &qparams, &vec.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/quantization/solvers.rs
-
-39 issues found:
-
-- Line 92: `if rsold.sqrt() < tol * b_norm {`
+- Line 301: `mse.sqrt()`
   - **Fix**: Mathematical operation .sqrt() without validation
-- Line 125: `let alpha = rsold / pap;`
+
+### examples/bss_example.rs
+
+21 issues found:
+
+- Line 49: `sources[[2, i]] = phase / PI - 1.0;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 137: `if rsnew.sqrt() < tol * b_norm {`
+- Line 68: `let normal = Normal::new(0.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 82: `.sqrt();`
   - **Fix**: Mathematical operation .sqrt() without validation
-- Line 144: `let ratio = rsnew / previous_residual;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 147: `if ratio > F::from(0.9).unwrap() {`
+- Line 98: `let normal = Normal::new(0.0, noise_level).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 167: `if rsnew.sqrt() < tol * b_norm {`
+- Line 123: `let orig_mean = orig.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 124: `let rec_mean = rec.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 140: `correlations[[i, j]] = numerator / (orig_var.sqrt() * rec_var.sqrt());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 140: `correlations[[i, j]] = numerator / (orig_var.sqrt() * rec_var.sqrt());`
   - **Fix**: Mathematical operation .sqrt() without validation
-- Line 176: `let beta = rsnew / rsold;`
+- Line 175: `total_correlation / n_orig as f64`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 262: `v[i] = r[i] / beta;`
+- Line 191: `let min_len = signals.iter().map(|(_, data)| data.len()).min().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 330: `sources[[1, i]] = (-x * x / 2.0).exp() + (-((x - 3.0) * (x - 3.0)) / 1.0).exp() ...`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 316: `new_v[j] = w[j] / h[[i + 1, i]];`
+- Line 336: `sources[[2, i]] = (-x / 2.0).exp() + (-(x - 7.0) / 1.0).exp() * (x >= 7.0) as i3...`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 351: `let progress_ratio = residual / g[i].abs();`
+- Line 471: `let mean = component.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 472: `let var = component.mapv(|x| (x - mean).powi(2)).sum() / (n_samples as f64 - 1.0...`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 354: `if progress_ratio > F::from(0.8).unwrap() && reorth_step > 1 {`
+- Line 477: `variances.sort_by(|a, b| b.partial_cmp(a).unwrap());`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 355: `reorth_step = reorth_step.max(1) / 2;`
+- Line 489: `var / total_var * 100.0,`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 358: `else if progress_ratio < F::from(0.5).unwrap() && reorth_step < restart_iter {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 373: `y[j] = sum / h[[j, j]];`
+- Line 490: `cum_var / total_var * 100.0`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 413: `let t = a / b;`
+- Line 547: `if phase < PI / 4.0 || (phase > PI && phase < PI + PI / 4.0) {`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 414: `let s = F::one() / (F::one() + t * t).sqrt();`
+- Line 556: `sources[[2, i]] = (-x * x / 2.0).exp() * (2.0 * PI * x).cos();`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 414: `let s = F::one() / (F::one() + t * t).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 418: `let t = b / a;`
+- Line 626: `let sparsity_orig_pct = sparsity_original as f64 / (n_sources * n_samples) as f6...`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 419: `let c = F::one() / (F::one() + t * t).sqrt();`
+- Line 627: `let sparsity_rec_pct = sparsity_recovered as f64 / (n_sources * n_samples) as f6...`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 419: `let c = F::one() / (F::one() + t * t).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 481: `diag[i] = F::one() / diag[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 624: `let alpha = rz_old / pap;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 643: `let ratio = r_squared / previous_residual;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 646: `if ratio > F::from(0.9).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 678: `let beta = rz_new / rz_old;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 707: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 715: `let x = quantized_conjugate_gradient(&op, &b, 10, 1e-6, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 735: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 741: `let x = quantized_gmres(&op, &b, 10, 1e-6, None, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 761: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 766: `let precond = quantized_jacobi_preconditioner(&op).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 773: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 793: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 796: `let precond = quantized_jacobi_preconditioner(&op).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 800: `let y = precond.apply(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 806: `let expected = array![0.25f32, 2.0 / 3.0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 822: `.unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 830: `let x_adaptive = quantized_conjugate_gradient(&op, &b, 10, 1e-6, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 833: `let x_standard = quantized_conjugate_gradient(&op, &b, 10, 1e-6, false).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
 
-### src/quantization/stability.rs
-
-22 issues found:
-
-- Line 119: `let scale = abs_max / ((1 << (bits - 1)) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 122: `let scale = (max_val - min_val) / ((1 << bits) - 1) as f32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 123: `let zero_point = (-min_val / scale).round() as i32;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 133: `let quantized = (x / scale).round().clamp(clamp_min, clamp_max);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 140: `let quantized = ((x / scale) + zero_point as f32)`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 164: `let mse = sum_squared_error / num_elements;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 165: `let rmse = mse.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 166: `let mae = sum_abs_error / num_elements;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 169: `let signal_power = sum_squared_signal / num_elements;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 171: `signal_power / mse`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 180: `20.0 * (data_range / 2.0).log10() - 10.0 * mse.log10()`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 186: `let dynamic_range = (max_val / min_val.abs().max(1e-6)).abs().log2().ceil();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 219: `let is_asymmetric_data = min_val.abs() < max_val / 10.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 253: `let zero_ratio = count_near_zero_values(&matrix_f32, scale / 2.0) as f32 / num_e...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 362: `let is_asymmetric = min_val.abs() < max_val / 5.0;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 468: `max_range / min_range`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 501: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 525: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 537: `analyze_quantization_stability(&matrix.view(), 8, QuantizationMethod::Affine).un...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 554: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 570: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 586: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/random.rs
-
-25 issues found:
-
-- Line 102: `let val = low + F::from_f64(r).unwrap() * range;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 176: `let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 176: `let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 179: `let val = mean + F::from_f64(z0).unwrap() * std;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 231: `let (q, _) = qr(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 297: `diag_values[i] = min_eigenval + F::from_f64(r).unwrap() * range;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 354: `diag[i] = low + F::from_f64(r).unwrap() * range;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 426: `result[[i, j]] = low + F::from_f64(r).unwrap() * range;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 497: `result[[i, j]] = low + F::from_f64(r).unwrap() * range;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 554: `first_row[i] = low + F::from_f64(r).unwrap() * range;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 562: `first_col[i] = low + F::from_f64(r).unwrap() * range;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 633: `let min_eigenval = F::one() / condition_number;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 635: `let log_min = min_eigenval.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 636: `let log_max = F::one().ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 639: `let t = F::from_f64((i as f64) / ((n - 1) as f64)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 746: `let value = F::one() / F::from_f64((i + j + 1) as f64).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 856: `let k = (n / 2) + 1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 868: `corr[[i, j]] = result[[i, j]] / (result[[i, i]] * result[[j, j]]).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 868: `corr[[i, j]] = result[[i, j]] / (result[[i, i]] * result[[j, j]]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 969: `let scaling = F::from_f64(1.0).unwrap(); // All singular values are 1.0`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1365: `let computed_eigenvalues = eigvals(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1376: `real_computed.sort_by(|a, b| a.partial_cmp(b).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1379: `sorted_expected.sort_by(|a, b| a.partial_cmp(b).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1400: `let expected = 1.0 / (i + j + 1) as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1472: `let eigenvalues = eigvals(&c.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/random_matrices.rs
-
-23 issues found:
-
-- Line 109: `*elem = F::from(uniform.sample(rng)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 117: `*elem = F::from(normal.sample(rng)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 121: `let normal = Normal::new(0.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 123: `*elem = F::from(normal.sample(rng)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 146: `let avg = (matrix[[i, j]] + matrix[[j, i]]) / F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 182: `eigenvalues[i] = F::from(uniform.sample(rng)).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 230: `let denom = prod.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 267: `if F::from(uniform.sample(rng)).unwrap() < F::from(density).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 270: `F::from(Uniform::new(a, b).unwrap().sample(rng)).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 273: `F::from(Normal::new(mean, std_dev).unwrap().sample(rng)).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 276: `F::from(Normal::new(0.0, 1.0).unwrap().sample(rng)).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 304: `matrix[[i, i]] = F::from(uniform.sample(rng)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 312: `matrix[[i, i]] = F::from(normal.sample(rng)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 316: `let normal = Normal::new(0.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 318: `matrix[[i, i]] = F::from(normal.sample(rng)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 346: `F::from(Uniform::new(a, b).unwrap().sample(rng)).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 349: `F::from(Normal::new(mean, std_dev).unwrap().sample(rng)).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 352: `F::from(Normal::new(0.0, 1.0).unwrap().sample(rng)).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 404: `(matrix[[i, j]] + matrix[[j, i]].conj()) / Complex::from(F::from(2.0).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 431: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 444: `let q = random_matrix::<f64, _>(4, 4, MatrixType::Orthogonal, &mut rng).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 470: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 488: `let matrix = random_matrix::<f64, _>(4, 4, MatrixType::Correlation, &mut rng).un...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/random_new.rs
-
-63 issues found:
-
-- Line 112: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 123: `result[[i, j]] = F::from_f64(flat_array[idx]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 172: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 183: `result[[i, j]] = F::from_f64(flat_array[idx]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 296: `let (q, _) = qr(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 371: `let norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 373: `q[[i, 0]] = q[[i, 0]] / norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 400: `let norm = norm.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 402: `q[[i, j]] = q[[i, j]] / norm;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 466: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 472: `result[[i, i]] += F::from_f64(diag_values[i]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 546: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 552: `result[[i, i]] = result[[i, i]] + Complex::new(F::from_f64(diag_values[i]).unwra...`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 600: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 608: `result[[i, i]] = F::from_f64(diag_values[i]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 665: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 679: `result[[i, j]] = F::from_f64(band_values[idx]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 737: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 755: `let i = pos / cols;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 757: `result[[i, j]] = F::from_f64(values[idx]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 805: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 812: `.map(|i| F::from_f64(all_values[i]).unwrap())`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 817: `.map(|i| F::from_f64(all_values[n + i]).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 887: `let min_eigenval = F::one() / condition_number;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 889: `let log_min = min_eigenval.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 890: `let log_max = F::one().ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 893: `let t = F::from_f64((i as f64) / ((n - 1) as f64)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1000: `let value = F::one() / F::from_f64((i + j + 1) as f64).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1110: `let k = (n / 2) + 1;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1122: `corr[[i, j]] = result[[i, j]] / (result[[i, i]] * result[[j, j]]).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1122: `corr[[i, j]] = result[[i, j]] / (result[[i, i]] * result[[j, j]]).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1318: `let upper_size = n * (n + 1) / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1334: `let normal_dist = NormalDist::new(0.0, 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1338: `let val = F::from_f64(normal_dist.sample(&mut rng.rng)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1349: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1354: `upper[[i, i]] += F::from_f64(diag_values[i]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1401: `let normalized_coeffs: Vec<F> = coeffs.iter().map(|&c| c / leading_coeff).collec...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1482: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1487: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1499: `result[[i, i]] = F::from_f64(diag_values[i]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1504: `result[[i, i-1]] = F::from_f64(subdiag_values[i-1]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1509: `result[[i, i+1]] = F::from_f64(superdiag_values[i]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1582: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1587: `).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1598: `result[[i, i]] = F::from_f64(diag_values[i]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1603: `let val = F::from_f64(offdiag_values[i]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1659: `let limit = (6.0 / (fan_in + fan_out) as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1659: `let limit = (6.0 / (fan_in + fan_out) as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1661: `let dist = UniformDist::new(-limit, limit).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1668: `result[[i, j]] = F::from_f64(values[idx]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1677: `let std_dev = (2.0 / fan_in as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1677: `let std_dev = (2.0 / fan_in as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1679: `let dist = NormalDist::new(0.0, std_dev).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1686: `result[[i, j]] = F::from_f64(values[idx]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1695: `let std_dev = (1.0 / fan_in as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1695: `let std_dev = (1.0 / fan_in as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1697: `let dist = NormalDist::new(0.0, std_dev).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1704: `result[[i, j]] = F::from_f64(values[idx]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1732: `let std_dev = (1.0 / embedding_dim as f64).sqrt();`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1732: `let std_dev = (1.0 / embedding_dim as f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 1734: `let dist = NormalDist::new(0.0, std_dev).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1741: `result[[i, j]] = F::from_f64(values[idx]).unwrap();`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 1749: `uniform(rows, cols, F::from(-0.1).unwrap(), F::from(0.1).unwrap(), seed)`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/scalable.rs
-
-14 issues found:
-
-- Line 134: `let ratio = m as f64 / n as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 138: `} else if ratio < 1.0 / threshold {`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 226: `omega[[i, j]] = F::from(rand::random::<f64>() * 2.0 - 1.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 490: `2 * m * n * n + n * n * n / 3`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 495: `2 * m * m * n - 2 * m * m * m / 3`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 500: `2 * m * n * n - 2 * n * n * n / 3`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 581: `let (q, r) = tsqr(&matrix.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 607: `let (l, q) = lq_decomposition(&matrix.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 633: `let result = adaptive_decomposition(&tall_matrix.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 663: `matrix[[i, j]] = 3.0 * (i as f64 / m as f64) * (j as f64 / n as f64);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 664: `matrix[[i, j]] += 2.0 * ((i + 1) as f64 / m as f64) * ((n - j) as f64 / n as f64...`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 683: `let (u_approx, s_approx, vt_approx) = result.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 700: `error / ((m * n) as f64) < 0.1,`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 712: `let result_blocked = blocked_matmul(&a.view(), &b.view(), &config).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/simd_ops/elementwise.rs
-
-3 issues found:
-
-- Line 169: `let result = simd_matrix_add_f32(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 183: `let result = simd_matrix_scale_f32(&a.view(), scalar).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 197: `let result = simd_matrix_mul_elementwise_f32(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/simd_ops/gemm.rs
-
-6 issues found:
-
-- Line 333: `simd_gemm_f32(1.0, &a.view(), &b.view(), 0.0, &mut c, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 353: `simd_gemm_f64(1.0, &a.view(), &b.view(), 0.0, &mut c, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 373: `simd_gemm_f32(alpha, &a.view(), &b.view(), beta, &mut c, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 391: `let c = simd_matmul_optimized_f32(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 410: `simd_gemv_f32(alpha, &a.view(), &x.view(), beta, &mut y).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 439: `simd_gemm_f32(1.0, &a.view(), &b.view(), 0.0, &mut c, Some(block_sizes)).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/simd_ops/norms.rs
+### examples/complex_wavelets_example.rs
 
 5 issues found:
 
-- Line 34: `sum_sq.sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 59: `sum_sq.sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 260: `let expected = (9.0 + 16.0 + 144.0 + 25.0f32).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 273: `let expected = (9.0 + 16.0 + 0.0 + 144.0 + 25.0f32).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 355: `let expected = vector.iter().map(|&x| x * x).sum::<f32>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 17: `let t: Vec<f64> = (0..num_samples).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 31: `let factor = f64::powf(max_scale / min_scale, 1.0 / (num_scales - 1) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 163: `.map(|&scale_idx| center_freq * fs / (scales[scale_idx] * 2.0 * std::f64::consts...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 175: `.map(|&t_val| 5.0 + (100.0 - 5.0) * t_val / duration)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 187: `/ (freq.len() - 2 * skip) as f64`
+  - **Fix**: Division without zero check - use safe_divide()
 
-### src/simd_ops/transpose.rs
+### examples/constant_q_transform_example.rs
 
-4 issues found:
+28 issues found:
 
-- Line 141: `let result = simd_transpose_f32(&matrix.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 161: `let result = simd_transpose_f64(&matrix.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 176: `simd_transpose_inplace_f32(&mut matrix).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 200: `let result = simd_transpose_f32(&matrix.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/solve.rs
-
-12 issues found:
-
-- Line 176: `x[i] = sum / a[[i, i]];`
+- Line 72: `let rate = (880.0_f64 / 110.0).ln() / duration;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 196: `x[i] = sum / a[[i, i]];`
+- Line 72: `let rate = (880.0_f64 / 110.0).ln() / duration;`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 73: `let phase = 2.0 * PI * 110.0 * (rate * ti).exp() / rate;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 299: `let threshold = s[0] * F::from(a.nrows().max(a.ncols())).unwrap() * F::epsilon()...`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 316: `let s_inv = F::one() / s[i];`
+- Line 84: `let segment = (ti / 0.5).floor() as usize % 4;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 463: `let x = solve(&a.view(), &b.view(), None).unwrap();`
+- Line 130: `let cqt_result = constant_q_transform(signal, &config).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 470: `let x = solve(&a.view(), &b.view(), None).unwrap();`
+- Line 170: `let cqt_result = constant_q_transform(signal, &config).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 480: `let x = solve_triangular(&a.view(), &b.view(), true, false).unwrap();`
+- Line 187: `peaks.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 482: `assert_relative_eq!(x[1], 4.0 / 3.0);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 487: `let x = solve_triangular(&a.view(), &b.view(), true, true).unwrap();`
+- Line 204: `let chroma = chromagram(&cqt_result, None, None).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 497: `let x = solve_triangular(&a.view(), &b.view(), false, false).unwrap();`
+- Line 230: `let cqt_result = constant_q_transform(signal, &config).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 498: `assert_relative_eq!(x[0], 4.0 / 3.0);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 504: `let x = solve_triangular(&a.view(), &b.view(), false, true).unwrap();`
+- Line 240: `for &t in cqt_result.times.as_ref().unwrap().iter() {`
   - **Fix**: Replace with ? operator or .ok_or()
-
-### src/solvers/iterative.rs
-
-39 issues found:
-
-- Line 28: `tolerance: A::from(1e-10).unwrap(),`
+- Line 266: `cqt_result.times.as_ref().unwrap()[0],`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 111: `if r_norm_sq.sqrt() < options.tolerance {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 115: `residual_norm: r_norm_sq.sqrt(),`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 135: `let alpha = r_norm_sq / p_ap;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 150: `r_norm_sq_new.sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 159: `residual_norm: r_norm_sq_new.sqrt(),`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 165: `let beta = r_norm_sq_new / r_norm_sq;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 178: `residual_norm: r_norm_sq.sqrt(),`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 254: `let alpha = rz_old / p_ap;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 269: `r_norm_sq.sqrt()`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 277: `residual_norm: r_norm_sq.sqrt(),`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 289: `let beta = rz_new / rz_old;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 299: `let r_norm = r.dot(&r).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 359: `for _outer in 0..(options.max_iterations / restart).max(1) {`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 362: `let beta = r.dot(&r).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 376: `v[0] = &r / beta;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 395: `h[[j + 1, j]] = w_orth.dot(&w_orth).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 404: `v[j + 1] = &w_orth / h[[j + 1, j]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 421: `let residual_norm = r_final.dot(&r_final).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 442: `let residual_norm = r_final.dot(&r_final).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 499: `let r_norm_init = r.dot(&r).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 531: `let beta = (rho / rho_old) * (alpha / omega);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 539: `alpha = rho / r_hat.dot(&v);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 545: `let s_norm = s.dot(&s).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 559: `omega = t.dot(&s) / t.dot(&t);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 569: `let r_norm = r.dot(&r).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 593: `let residual_norm = r_final.dot(&r_final).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 627: `let r = (a * a + b * b).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 628: `let c = a / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 629: `let s = b / r;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 660: `y[i] = sum / h_copy[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 679: `let result = conjugate_gradient(&a.view(), &b.view(), None, &options).unwrap();`
+- Line 267: `cqt_result.times.as_ref().unwrap()[cqt_result.times.as_ref().unwrap().len() - 1]`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 686: `assert!(residual.dot(&residual).sqrt() < 1e-10);`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 696: `let result = gmres(&a.view(), &b.view(), None, &options).unwrap();`
+- Line 283: `let cqt_result = constant_q_transform(signal, &cqt_config).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 712: `let result = bicgstab(&a.view(), &b.view(), None, &options).unwrap();`
+- Line 299: `signal.as_slice().unwrap(),`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 718: `assert!(residual.dot(&residual).sqrt() < 1e-10);`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 729: `|r: &ArrayView1<f64>| -> Array1<f64> { array![r[0] / 4.0, r[1] / 3.0] };`
+- Line 306: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 310: `let psd_db: Vec<f64> = psd.iter().map(|&p| 10.0 * (p / max_psd).log10()).collect...`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 734: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 741: `assert!(residual.dot(&residual).sqrt() < 1e-10);`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### src/sparse_dense/mod.rs
-
-32 issues found:
-
-- Line 329: `col_sums.get_mut(&col).unwrap()[k] = col_sums[&col][k] + dense_row[i] * val;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 651: `let sparsity_ratio = sparse.nnz() as f64 / (sparse.nrows() * sparse.ncols()) as ...`
+- Line 329: `/ (cqt_result.frequencies.len() - 1) as f64;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 652: `let avg_nnz_per_row = sparse.nnz() as f64 / sparse.nrows() as f64;`
+- Line 334: `(cqt_result.frequencies[1] / cqt_result.frequencies[0])`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 701: `let b_norm = b.dot(b).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 719: `let alpha = rsold / pap;`
+- Line 370: `let cqt_result = constant_q_transform(signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 373: `let reconstructed = inverse_constant_q_transform(&cqt_result, Some(signal.len())...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 383: `let reconstruction_snr = 10.0 * (signal_power / total_error).log10();`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 728: `if rsnew.sqrt() < tolerance * b_norm {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 733: `let beta = rsnew / rsold;`
+- Line 413: `let cqt_result = constant_q_transform(signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 416: `let chroma = chromagram(&cqt_result, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 423: `for &t in cqt_result.times.as_ref().unwrap().iter() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 444: `cqt_result.times.as_ref().unwrap()[cqt_result.times.as_ref().unwrap().len() - 1]`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 461: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 476: `segment_chroma[pc] += chroma[[pc, frame]] / segment_frames.len() as f64;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 777: `let m_inv = diag.mapv(|x| T::one() / x);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 786: `let b_norm = b.dot(b).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 798: `let alpha = rzold / pap;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 804: `let r_norm = r.dot(&r).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 812: `let beta = rznew / rzold;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 838: `let sparsity_ratio = sparse.nnz() as f64 / total_elements as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 839: `let avg_nnz_per_row = sparse.nnz() as f64 / sparse.nrows() as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 901: `let tolerance = T::epsilon() * T::from(100.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 905: `} else if val_ij.abs() > T::epsilon() * T::from(100.0).unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1003: `T::epsilon() * T::from(1000.0).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1041: `let threshold = T::epsilon() * T::from(1000.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1049: `let sparsity_ratio = zero_count as f64 / total_elements as f64;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 1109: `let sparse = sparse_from_ndarray(&dense.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1130: `let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1133: `let result = sparse_dense_matmul(&sparse_a, &dense_b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1152: `let sparse_b = sparse_from_ndarray(&dense_b.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1155: `let result = dense_sparse_matmul(&dense_a.view(), &sparse_b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1174: `let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1177: `let result = sparse_dense_matvec(&sparse_a, &vec_b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1194: `let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1197: `let result = sparse_dense_add(&sparse_a, &dense_b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1216: `let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1219: `let result = sparse_dense_elementwise_mul(&sparse_a, &dense_b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1239: `let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1242: `let transposed = sparse_transpose(&sparse_a).unwrap();`
+- Line 487: `pc_values.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
   - **Fix**: Replace with ? operator or .ok_or()
 
-### src/sparse_dense/sparse_eigen.rs
-
-9 issues found:
-
-- Line 67: `v[[i, 0]] = T::from(rand::Rng::random_range(&mut rng, -0.5..0.5)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 210: `v[[i, 0]] = T::from(rand::Rng::random_range(&mut rng, -0.5..0.5)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 300: `let half_k = k / 2;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 445: `let shift = (min_val + max_val) / (T::one() + T::one());`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 451: `let k = std::cmp::min(std::cmp::max(10, n / 10), n - 1);`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 497: `let sparse = sparse_from_ndarray(&dense.view(), 1e-12).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 503: `let (eigenvals, _eigenvecs) = result.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 520: `let sparse = sparse_from_ndarray(&dense.view(), 1e-12).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 526: `let (eigenvals, eigenvecs) = result.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/special.rs
-
-9 issues found:
-
-- Line 163: `matrix_functions::sqrtm(a, 20, F::from(1e-10).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 242: `let half = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 283: `let result = block_diag(&[&a.view(), &b.view()]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 322: `let sqrt_a = sqrtm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 328: `let log_id = logm(&id.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 334: `let exp_zero = expm(&zero.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 345: `let sign_a = signm(&a.view(), 20, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 353: `let sign_b = signm(&b.view(), 20, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 361: `let sign_c = signm(&c.view(), 20, 1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/specialized/banded.rs
-
-42 issues found:
-
-- Line 257: `x[0] = b[0] / a;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 314: `let factor = augmented[[j, i]] / augmented[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 331: `x[i] = (augmented[[i, self.ncols]] - sum) / augmented[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 393: `d_prime[0] = b[0] / diag[0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 394: `c_prime[0] = upper[0] / diag[0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 397: `let m = lower[i - 1] / diag[i - 1];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 407: `d_prime[i] = (b[i] - lower[i - 1] * d_prime[i - 1]) / new_diag;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 408: `c_prime[i] = upper[i] / new_diag;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 416: `let m = lower[n - 2] / diag[n - 2];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 426: `d_prime[n - 1] = (b[n - 1] - lower[n - 2] * d_prime[n - 2]) / new_diag;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 623: `let band = BandedMatrix::new(data.view(), 1, 2, 5, 5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 632: `assert_relative_eq!(band.get(0, 0).unwrap(), 5.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 633: `assert_relative_eq!(band.get(0, 1).unwrap(), 10.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 634: `assert_relative_eq!(band.get(0, 2).unwrap(), 14.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 635: `assert_relative_eq!(band.get(1, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 636: `assert_relative_eq!(band.get(1, 1).unwrap(), 6.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 637: `assert_relative_eq!(band.get(1, 2).unwrap(), 11.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 638: `assert_relative_eq!(band.get(1, 3).unwrap(), 15.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 641: `assert_relative_eq!(band.get(0, 3).unwrap(), 0.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 642: `assert_relative_eq!(band.get(0, 4).unwrap(), 0.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 643: `assert_relative_eq!(band.get(3, 0).unwrap(), 0.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 658: `let band = BandedMatrix::from_matrix(&a.view(), 1, 2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 667: `assert_relative_eq!(band.get(0, 0).unwrap(), 5.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 668: `assert_relative_eq!(band.get(0, 1).unwrap(), 10.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 669: `assert_relative_eq!(band.get(0, 2).unwrap(), 14.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 670: `assert_relative_eq!(band.get(1, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 671: `assert_relative_eq!(band.get(1, 1).unwrap(), 6.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 672: `assert_relative_eq!(band.get(1, 2).unwrap(), 11.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 673: `assert_relative_eq!(band.get(1, 3).unwrap(), 15.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 676: `assert_relative_eq!(band.get(0, 3).unwrap(), 0.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 677: `assert_relative_eq!(band.get(0, 4).unwrap(), 0.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 678: `assert_relative_eq!(band.get(3, 0).unwrap(), 0.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 702: `let band = BandedMatrix::new(data.view(), 1, 1, 4, 4).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 711: `let y = band.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 749: `let band = BandedMatrix::new(data.view(), 1, 1, 4, 4).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 758: `let y = band.matvec_transpose(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 793: `let band = BandedMatrix::new(data.view(), 1, 1, 3, 3).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 795: `let dense = band.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 819: `let band = BandedMatrix::from_matrix(&a.view(), 1, 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 828: `let x = band.solve_tridiagonal(&b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 836: `let ax = band.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 844: `let x2 = band.solve(&b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/specialized/block_tridiagonal.rs
-
-17 issues found:
-
-- Line 509: `BlockTridiagonalMatrix::new(vec![a1, a2, a3], vec![b1, b2], vec![c1, c2]).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 527: `assert_eq!(matrix.get(0, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 528: `assert_eq!(matrix.get(0, 1).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 529: `assert_eq!(matrix.get(2, 2).unwrap(), 5.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 530: `assert_eq!(matrix.get(5, 5).unwrap(), 12.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 533: `assert_eq!(matrix.get(0, 2).unwrap(), 13.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 534: `assert_eq!(matrix.get(1, 3).unwrap(), 16.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 535: `assert_eq!(matrix.get(2, 4).unwrap(), 17.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 538: `assert_eq!(matrix.get(2, 0).unwrap(), 21.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 539: `assert_eq!(matrix.get(4, 2).unwrap(), 25.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 542: `assert_eq!(matrix.get(0, 4).unwrap(), 0.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 544: `assert_eq!(matrix.get(5, 2).unwrap(), 27.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 550: `let dense = matrix.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 574: `let y = matrix.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 577: `let dense = matrix.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 594: `let y = matrix.matvec_transpose(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 597: `let dense = matrix.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/specialized/symmetric.rs
-
-24 issues found:
-
-- Line 172: `l[[j, j]] = diag_val.sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 179: `l[[i, j]] = (self.data[[i, j]] - sum) / l[[j, j]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 216: `y[i] = (b[i] - sum) / l[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 227: `x[i] = (y[i] - sum) / l[[i, i]];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 326: `let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 332: `assert_relative_eq!(sym.get(0, 0).unwrap(), 1.0, epsilon = 1e-10);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 333: `assert_relative_eq!(sym.get(0, 1).unwrap(), 2.0, epsilon = 1e-10);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 334: `assert_relative_eq!(sym.get(1, 0).unwrap(), 2.0, epsilon = 1e-10);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 335: `assert_relative_eq!(sym.get(1, 1).unwrap(), 4.0, epsilon = 1e-10);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 336: `assert_relative_eq!(sym.get(1, 2).unwrap(), 5.0, epsilon = 1e-10);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 337: `assert_relative_eq!(sym.get(2, 1).unwrap(), 5.0, epsilon = 1e-10);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 338: `assert_relative_eq!(sym.get(2, 2).unwrap(), 6.0, epsilon = 1e-10);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 355: `let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 358: `let y = sym.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 378: `let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 381: `let y1 = sym.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 382: `let y2 = sym.matvec_transpose(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 396: `let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 398: `let dense = sym.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 414: `let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 416: `let l = sym.cholesky().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 444: `let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 450: `let x = sym.solve(&b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 453: `let ax = sym.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/specialized/tridiagonal.rs
-
-25 issues found:
-
-- Line 184: `x[0] = b[0] / self.diag[0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 193: `c_prime[0] = self.superdiag[0] / self.diag[0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 194: `d_prime[0] = b[0] / self.diag[0];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 206: `c_prime[i] = self.superdiag[i] / m;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 209: `d_prime[i] = (b[i] - self.subdiag[i - 1] * d_prime[i - 1]) / m;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 363: `let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view())....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 369: `assert_relative_eq!(tri.get(0, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 370: `assert_relative_eq!(tri.get(0, 1).unwrap(), 5.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 371: `assert_relative_eq!(tri.get(1, 0).unwrap(), 8.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 372: `assert_relative_eq!(tri.get(1, 1).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 373: `assert_relative_eq!(tri.get(1, 2).unwrap(), 6.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 374: `assert_relative_eq!(tri.get(2, 1).unwrap(), 9.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 377: `assert_relative_eq!(tri.get(0, 2).unwrap(), 0.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 378: `assert_relative_eq!(tri.get(0, 3).unwrap(), 0.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 379: `assert_relative_eq!(tri.get(2, 0).unwrap(), 0.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 391: `let tri = TridiagonalMatrix::from_matrix(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 417: `let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view())....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 420: `let y = tri.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 443: `let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view())....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 446: `let y = tri.matvec_transpose(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 469: `let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view())....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 471: `let dense = tri.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 491: `let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view())....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 497: `let x = tri.solve(&b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 500: `let ax = tri.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/stats/covariance.rs
+### examples/cwt_scalogram_example.rs
 
 6 issues found:
 
-- Line 46: `let mean = data.mean_axis(Axis(0)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 53: `let normalizer = F::from(n_samples - ddof).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 62: `let val = sum / normalizer;`
+- Line 16: `let fs = 1.0 / dt;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 95: `std_devs[i] = cov[[i, i]].sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 104: `corr[[i, j]] = cov[[i, j]] / (std_devs[i] * std_devs[j]);`
+- Line 32: `.map(|i| 2.0_f64.powf(i as f64 / 8.0))`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 161: `Ok(dist_sq.sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-
-### src/stats/distributions.rs
-
-56 issues found:
-
-- Line 102: `let min_dof = F::from(p).unwrap() - F::one();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 151: `let log_det_u = det(&params.row_cov.view(), None)?.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 152: `let log_det_v = det(&params.col_cov.view(), None)?.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 164: `let log_2pi = F::from(2.0 * PI).unwrap().ln();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 165: `let normalizer = -F::from(m * n).unwrap() * F::from(0.5).unwrap() * log_2pi`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 166: `- F::from(n).unwrap() * F::from(0.5).unwrap() * log_det_u`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 167: `- F::from(m).unwrap() * F::from(0.5).unwrap() * log_det_v;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 169: `Ok(normalizer - F::from(0.5).unwrap() * quad_form)`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 212: `let log_det_x = det(x, None)?.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 213: `let log_det_v = det(&params.scale.view(), None)?.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 221: `let log_2 = F::from(2.0).unwrap().ln();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 223: `let log_normalizer = params.dof * F::from(p).unwrap() * F::from(0.5).unwrap() * ...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 224: `+ F::from(0.25).unwrap() * F::from(p * (p - 1)).unwrap() * F::from(PI).unwrap()....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 226: `+ params.dof * F::from(0.5).unwrap() * log_det_v;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 229: `let main_term = (params.dof - F::from(p + 1).unwrap()) * F::from(0.5).unwrap() *...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 230: `- F::from(0.5).unwrap() * trace_term;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 319: `let chi_approx = z[[i, j]].abs() * (params.dof - F::from(i).unwrap()).sqrt();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 345: `let log_pi = F::from(PI).unwrap().ln();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 346: `let mut result = F::from(p * (p - 1)).unwrap() * F::from(0.25).unwrap() * log_pi...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 349: `let arg = x + (F::one() - F::from(j).unwrap()) * F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 352: `(arg - F::from(0.5).unwrap()) * arg.ln() - arg`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 353: `+ F::from(0.5).unwrap() * F::from(2.0 * PI).unwrap().ln()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 375: `let params = MatrixNormalParams::new(mean, row_cov, col_cov).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 386: `let params = WishartParams::new(scale, dof).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 398: `let params = MatrixNormalParams::new(mean, row_cov, col_cov).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 399: `let logpdf = matrix_normal_logpdf(&x.view(), &params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 411: `let params = MatrixNormalParams::new(mean, row_cov, col_cov).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 412: `let sample = sample_matrix_normal(&params, Some(42)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 447: `let p = F::from(scale.nrows()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 487: `let p = F::from(x.nrows()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 491: `let log_det_x = det(x, None)?.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 499: `let log_det_psi = det(&params.scale.view(), None)?.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 514: `let half = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 515: `let two = F::from(2.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 516: `let pi = F::from(PI).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 520: `- half * nu * p * two.ln()`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 521: `- F::from(0.25).unwrap() * p * (p - F::one()) * pi.ln();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 526: `for j in 0..p.to_usize().unwrap() {`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 527: `let arg = half * (nu - F::from(j).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 530: `let ln_2pi = F::from(2.0 * PI).unwrap().ln();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 531: `log_gamma_p += (arg - half) * arg.ln() - arg + half * ln_2pi;`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 630: `let log_det_u = det(&params.scale_u.view(), None)?.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 631: `let log_det_v = det(&params.scale_v.view(), None)?.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 634: `let half = F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 635: `let pi = F::from(PI).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 636: `let n_f = F::from(n).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 637: `let p_f = F::from(p).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 641: `let log_norm = -half * n_f * log_det_u - half * p_f * log_det_v - half * n_f * p...`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 645: `log_norm - half * (nu + n_f + p_f - F::one()) * (F::one() + quadratic_form / nu)...`
+- Line 32: `.map(|i| 2.0_f64.powf(i as f64 / 8.0))`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 43: `let central_freq = 0.85 / (2.0 * std::f64::consts::PI);`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 645: `log_norm - half * (nu + n_f + p_f - F::one()) * (F::one() + quadratic_form / nu)...`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 660: `let params = InverseWishartParams::new(scale, dof).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 675: `let params = MatrixTParams::new(location, scale_u, scale_v, dof).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 692: `let params = InverseWishartParams::new(scale, 5.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 694: `let logpdf = inverse_wishart_logpdf(&x.view(), &params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 704: `let params = MatrixTParams::new(location, scale_u, scale_v, 3.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 706: `let logpdf = matrix_t_logpdf(&x.view(), &params).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/stats/sampling.rs
-
-10 issues found:
-
-- Line 260: `let scale_factor = (dof / (dof + chi_approx[[0, 0]] * chi_approx[[0, 0]])).sqrt(...`
+- Line 63: `let time_step = n / 20;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 260: `let scale_factor = (dof / (dof + chi_approx[[0, 0]] * chi_approx[[0, 0]])).sqrt(...`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 433: `if log_alpha > uniform.ln() {`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 446: `let acceptance_rate = accepted as f64 / total_samples as f64;`
+- Line 64: `let freq_step = num_scales / 10;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 468: `let samples = sample_multivariate_normal(&mean.view(), &cov.view(), 100, Some(42...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 474: `let sample_mean = samples.mean_axis(ndarray::Axis(0)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 483: `let bootstrap_samples = bootstrap_sample(&data.view(), 10, Some(2), Some(42)).un...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 496: `let permuted_samples = permutation_sample(&data.view(), 5, Some(42)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 511: `let params = MatrixNormalParams::new(mean, row_cov, col_cov).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 512: `let samples = sample_matrix_normal_multiple(&params, 5, Some(42)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
 
-### src/stats/tests.rs
+### examples/deconvolution_example.rs
 
 40 issues found:
 
-- Line 112: `let reg_factor = F::from(1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 128: `let log_det_i = det_i.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 138: `let weight = F::from(sample_sizes[i] - 1).unwrap() / F::from(total_dof).unwrap()...`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 143: `let reg_factor = F::from(1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 158: `let log_det_pooled = det_pooled.ln();`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 161: `let mut m_statistic = F::from(total_dof).unwrap() * log_det_pooled;`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 164: `m_statistic -= F::from(sample_sizes[i] - 1).unwrap() * log_det_i;`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 179: `let df = (k - 1) * p * (p + 1) / 2;`
+- Line 35: `(-((xi - 3.0).powi(2) / 0.5)).exp() + 0.7 * (-((xi - 7.0).powi(2) / 0.3)).exp();`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 240: `.powf(F::one() / F::from(p).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 241: `let arithmetic_mean = eigenvals.sum() / F::from(p).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 243: `let w_statistic = (geometric_mean / arithmetic_mean).powf(F::from(p).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 246: `let n_f = F::from(n - 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 247: `let _f = F::from(p * (p + 1) / 2 - 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 249: `-(n_f - F::from(2 * p * p + p + 2).unwrap() / F::from(6 * p).unwrap()) * w_stati...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 251: `let df = p * (p + 1) / 2 - 1;`
+- Line 43: `psf[i] = (-(xi.powi(2) / (2.0 * psf_width.powi(2)))).exp();`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 302: `let mean = data.mean_axis(Axis(0)).unwrap();`
+- Line 52: `true_signal.as_slice().unwrap(),`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 306: `let reg_factor = F::from(1e-10).unwrap();`
+- Line 53: `psf.as_slice().unwrap(),`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 339: `let skewness_stat = skewness_sum / (F::from(n).unwrap().powi(2));`
+- Line 61: `let normal = Normal::new(0.0, noise_level).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 343: `let kurtosis_stat = kurtosis_sum / F::from(n).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 346: `let skewness_chi2 = F::from(n).unwrap() * skewness_stat / F::from(6.0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 347: `let kurtosis_z = (kurtosis_stat - F::from(p * (p + 2)).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 348: `/ (F::from(8 * p * (p + 2)).unwrap() / F::from(n).unwrap()).sqrt();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 351: `let skewness_df = p * (p + 1) * (p + 2) / 6;`
+- Line 101: `/ n as f64;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 356: `F::from(2.0).unwrap() * standard_normal_survival_function(kurtosis_z.abs());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 412: `let sample_mean = data.mean_axis(Axis(0)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 436: `let reg_factor = F::from(1e-10).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 444: `let t2_stat = F::from(n).unwrap() * diff.dot(&cov_inv).dot(&diff);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 448: `t2_stat * F::from(n - p).unwrap() / (F::from(n - 1).unwrap() * F::from(p).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 476: `sum_inv = sum_inv + F::one() / F::from(n_i - 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 480: `let inv_total = F::one() / F::from(total_dof).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 482: `let c1 = (F::from(2 * p * p + 3 * p - 1).unwrap() / F::from(6 * (p + 1) * (k - 1...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 500: `let z = (x - F::from(df).unwrap()) / F::from(2 * df).unwrap().sqrt();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 505: `let approx = (-x / F::from(2.0).unwrap()).exp();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 519: `let approx = F::one() / (F::one() + x);`
+- Line 108: `/ n as f64;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 529: `return F::from(0.5).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 533: `let approx = (-z * z / F::from(2.0).unwrap()).exp() / (z * F::from(2.0 * PI).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 534: `approx.min(F::from(0.5).unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 553: `let result = hotelling_t2_test(&data.view(), None, 0.05).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 597: `let (skewness_result, kurtosis_result) = mardia_normality_test(&data.view(), 0.0...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 627: `let result = box_m_test(&groups, 0.05).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/structured/circulant.rs
-
-24 issues found:
-
-- Line 196: `let circulant = CirculantMatrix::new(first_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 208: `assert_relative_eq!(circulant.get(0, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 209: `assert_relative_eq!(circulant.get(0, 1).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 210: `assert_relative_eq!(circulant.get(0, 2).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 211: `assert_relative_eq!(circulant.get(0, 3).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 213: `assert_relative_eq!(circulant.get(1, 0).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 214: `assert_relative_eq!(circulant.get(1, 1).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 215: `assert_relative_eq!(circulant.get(1, 2).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 216: `assert_relative_eq!(circulant.get(1, 3).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 218: `assert_relative_eq!(circulant.get(2, 0).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 219: `assert_relative_eq!(circulant.get(2, 1).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 220: `assert_relative_eq!(circulant.get(2, 2).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 221: `assert_relative_eq!(circulant.get(2, 3).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 223: `assert_relative_eq!(circulant.get(3, 0).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 224: `assert_relative_eq!(circulant.get(3, 1).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 225: `assert_relative_eq!(circulant.get(3, 2).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 226: `assert_relative_eq!(circulant.get(3, 3).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 234: `let circulant = CirculantMatrix::from_kernel(kernel.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 249: `let circulant = CirculantMatrix::new(first_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 258: `let y = circulant.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 273: `let circulant = CirculantMatrix::new(first_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 282: `let y = circulant.matvec_transpose(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 297: `let circulant = CirculantMatrix::new(first_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 299: `let dense = circulant.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/structured/hankel.rs
-
-41 issues found:
-
-- Line 176: `result[i] += self.get(i, j).unwrap() * x[j];`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 196: `result[j] += self.get(i, j).unwrap() * x[i];`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 215: `let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 226: `assert_relative_eq!(hankel.get(0, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 227: `assert_relative_eq!(hankel.get(0, 1).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 228: `assert_relative_eq!(hankel.get(0, 2).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 229: `assert_relative_eq!(hankel.get(1, 0).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 230: `assert_relative_eq!(hankel.get(1, 1).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 231: `assert_relative_eq!(hankel.get(1, 2).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 232: `assert_relative_eq!(hankel.get(2, 0).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 233: `assert_relative_eq!(hankel.get(2, 1).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 234: `assert_relative_eq!(hankel.get(2, 2).unwrap(), 5.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 241: `let hankel = HankelMatrix::from_sequence(sequence.view(), 3, 3).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 252: `assert_relative_eq!(hankel.get(0, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 253: `assert_relative_eq!(hankel.get(0, 1).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 254: `assert_relative_eq!(hankel.get(0, 2).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 255: `assert_relative_eq!(hankel.get(1, 0).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 256: `assert_relative_eq!(hankel.get(1, 1).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 257: `assert_relative_eq!(hankel.get(1, 2).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 258: `assert_relative_eq!(hankel.get(2, 0).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 259: `assert_relative_eq!(hankel.get(2, 1).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 260: `assert_relative_eq!(hankel.get(2, 2).unwrap(), 5.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 269: `let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 281: `assert_relative_eq!(hankel.get(0, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 282: `assert_relative_eq!(hankel.get(0, 1).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 283: `assert_relative_eq!(hankel.get(0, 2).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 285: `assert_relative_eq!(hankel.get(1, 0).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 286: `assert_relative_eq!(hankel.get(1, 1).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 287: `assert_relative_eq!(hankel.get(1, 2).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 289: `assert_relative_eq!(hankel.get(2, 0).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 290: `assert_relative_eq!(hankel.get(2, 1).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 291: `assert_relative_eq!(hankel.get(2, 2).unwrap(), 5.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 293: `assert_relative_eq!(hankel.get(3, 0).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 294: `assert_relative_eq!(hankel.get(3, 1).unwrap(), 5.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 295: `assert_relative_eq!(hankel.get(3, 2).unwrap(), 6.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 303: `let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 311: `let y = hankel.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 326: `let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 334: `let y = hankel.matvec_transpose(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 349: `let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 351: `let dense = hankel.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/structured/mod.rs
-
-2 issues found:
-
-- Line 107: `matrix.matvec(x).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 122: `matrix_clone.matvec(x).unwrap()`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/structured/toeplitz.rs
-
-36 issues found:
-
-- Line 277: `let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 283: `assert_relative_eq!(toeplitz.get(0, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 284: `assert_relative_eq!(toeplitz.get(0, 1).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 285: `assert_relative_eq!(toeplitz.get(0, 2).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 286: `assert_relative_eq!(toeplitz.get(1, 0).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 287: `assert_relative_eq!(toeplitz.get(1, 1).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 288: `assert_relative_eq!(toeplitz.get(1, 2).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 289: `assert_relative_eq!(toeplitz.get(2, 0).unwrap(), 5.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 290: `assert_relative_eq!(toeplitz.get(2, 1).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 291: `assert_relative_eq!(toeplitz.get(2, 2).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 298: `let toeplitz = ToeplitzMatrix::new_symmetric(first_row.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 304: `assert_relative_eq!(toeplitz.get(0, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 305: `assert_relative_eq!(toeplitz.get(0, 1).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 306: `assert_relative_eq!(toeplitz.get(0, 2).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 307: `assert_relative_eq!(toeplitz.get(1, 0).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 308: `assert_relative_eq!(toeplitz.get(1, 1).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 309: `assert_relative_eq!(toeplitz.get(1, 2).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 310: `assert_relative_eq!(toeplitz.get(2, 0).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 311: `assert_relative_eq!(toeplitz.get(2, 1).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 312: `assert_relative_eq!(toeplitz.get(2, 2).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 321: `let toeplitz = ToeplitzMatrix::from_parts(c, r.view(), l.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 327: `assert_relative_eq!(toeplitz.get(0, 0).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 328: `assert_relative_eq!(toeplitz.get(0, 1).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 329: `assert_relative_eq!(toeplitz.get(0, 2).unwrap(), 3.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 330: `assert_relative_eq!(toeplitz.get(1, 0).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 331: `assert_relative_eq!(toeplitz.get(1, 1).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 332: `assert_relative_eq!(toeplitz.get(1, 2).unwrap(), 2.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 333: `assert_relative_eq!(toeplitz.get(2, 0).unwrap(), 5.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 334: `assert_relative_eq!(toeplitz.get(2, 1).unwrap(), 4.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 335: `assert_relative_eq!(toeplitz.get(2, 2).unwrap(), 1.0);`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 343: `let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 351: `let y = toeplitz.matvec(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 366: `let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 374: `let y = toeplitz.matvec_transpose(&x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 389: `let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 391: `let dense = toeplitz.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/structured/utils.rs
-
-8 issues found:
-
-- Line 83: `let pad = (nb - 1) / 2;`
+- Line 115: `/ n as f64;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 273: `let result = convolution(a.view(), b.view(), "full").unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 288: `let result = convolution(a.view(), b.view(), "same").unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 303: `let result = convolution(a.view(), b.view(), "valid").unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 317: `let result = circular_convolution(a.view(), b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 343: `assert_eq!(result.unwrap().len(), 0);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 360: `let x = solve_toeplitz(c.view(), r.view(), b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 387: `let x = solve_circulant(c.view(), b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### src/tensor_contraction/cp.rs
-
-24 issues found:
-
-- Line 227: `Ok((diff_squared_sum / orig_squared_sum).sqrt())`
+- Line 151: `sparse_signal[n / 4] = 1.0;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 227: `Ok((diff_squared_sum / orig_squared_sum).sqrt())`
+- Line 152: `sparse_signal[n / 2] = 0.7;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 153: `sparse_signal[3 * n / 4] = 0.5;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 160: `0.8 * (-((xi - 3.0).powi(2) / 1.0)).exp() + (-((xi - 7.0).powi(2) / 0.5)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 168: `psf[i] = (-(xi.powi(2) / (2.0 * psf_width.powi(2)))).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 179: `true_signal.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 180: `psf.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 188: `let normal = Normal::new(0.0, noise_level).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 272: `true_signal[i] = (-((xi - 3.0).powi(2) / 0.5)).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 273: `+ 0.5 * (-((xi - 6.0).powi(2) / 0.3)).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 274: `+ 0.3 * (-((xi - 8.0).powi(2) / 0.1)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 285: `psf[i] = (-(xi.powi(2) / (2.0f64 * width.powi(2)))).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 295: `psf[n / 2 - blur_length / 2 + i] = 1.0 / blur_length as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 304: `let xi = x[i] - x[n / 2];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 319: `true_signal.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 320: `psf.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 328: `let normal = Normal::new(0.0, noise_level).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 392: `(-((xi - 3.0f64).powi(2) / 0.5)).exp() + 0.7 * (-((xi - 7.0f64).powi(2) / 0.3))....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 400: `true_psf[i] = (-(xi.powi(2) / (2.0f64 * true_psf_width.powi(2)))).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 406: `true_signal.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 407: `true_psf.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 415: `let normal = Normal::new(0.0, noise_level).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 486: `true_signal[i] = 2.0 * (-((xi - 2.0).powi(2) / 0.2)).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 487: `+ 1.5 * (-((xi - 5.0).powi(2) / 0.3)).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 488: `+ 1.0 * (-((xi - 8.0).powi(2) / 0.1)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 496: `psf[i] = (-(xi.powi(2) / (2.0f64 * psf_width.powi(2)))).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 502: `true_signal.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 503: `psf.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 511: `let normal = Normal::new(0.0, noise_level).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 551: `.min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 553: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 616: `/ estimate.len() as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/dmeyer_wavelet_example.rs
+
+6 issues found:
+
+- Line 12: `let signal = chirp(&t, 0.0, 1.0, 100.0, "linear", 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 54: `let coeffs = wavedec(&noisy_signal, wavelet, Some(3), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 95: `let denoised_signal = waverec(&denoised_coeffs, wavelet).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 103: `decomp_time.as_micros() as f64 / 1000.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 104: `recon_time.as_micros() as f64 / 1000.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 113: `/ signal.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/dpss_example.rs
+
+19 issues found:
+
+- Line 16: `let window = dpss(n, nw, None, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 28: `let concentration = center_energy / total_energy;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 41: `let windows = dpss_windows(n, nw, Some(num_tapers), true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 77: `let window = dpss(n, nw, None, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 84: `let freq = k as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 89: `let effective_bandwidth = weighted_freq_sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 104: `("Hann", get_window("hann", n, false).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 105: `("Hamming", get_window("hamming", n, false).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 106: `("DPSS (NW=2.5)", dpss(n, 2.5, None, true).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 107: `("DPSS (NW=4.0)", dpss(n, 4.0, None, true).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 118: `let center = n / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 131: `let exclude_range = main_lobe_width / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 151: `let window = dpss(n, 3.0, None, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 163: `let phase = -2.0 * PI * (k as f64) * (j as f64) / (nfft as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 168: `freq_response[k] = (real_sum * real_sum + imag_sum * imag_sum).sqrt();`
   - **Fix**: Mathematical operation .sqrt() without validation
-- Line 356: `factor[[i, j]] = A::from(((i + 1) * (j + 1)) % 10).unwrap() / A::from(10).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 399: `let rel_improvement = (prev_error - error) / prev_error;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 535: `result_rows = result.as_ref().unwrap().shape()[0];`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 593: `if s[i] > A::epsilon() * A::from(10.0).unwrap() {`
-  - **Fix**: Use .get() with proper bounds checking
-- Line 594: `s_inv[[i, i]] = A::one() / s[i];`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 627: `let norm = norm_sq.sqrt();`
+- Line 173: `let threshold_3db = max_response / 2.0_f64.sqrt(); // -3dB`
   - **Fix**: Mathematical operation .sqrt() without validation
-- Line 659: `let cp = cp_als(&tensor.view(), 2, 50, 1e-4, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 669: `assert_eq!(cp.weights.as_ref().unwrap().len(), 2);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 672: `let _reconstructed = cp.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 675: `let error = cp.reconstruction_error(&tensor.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 688: `let cp = cp_als(&tensor.view(), 2, 50, 1e-4, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 697: `let _reconstructed = cp.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 700: `let error = cp.reconstruction_error(&tensor.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 715: `let cp = cp_als(&tensor.view(), 4, 50, 1e-4, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 718: `let compressed = cp.compress(2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 728: `assert_eq!(compressed.weights.as_ref().unwrap().len(), 2);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 731: `let error_orig = cp.reconstruction_error(&tensor.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 732: `let error_comp = compressed.reconstruction_error(&tensor.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 761: `let cp = CanonicalPolyadic::new(factors, None, Some(vec![2, 3, 2])).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 764: `let reconstructed = cp.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 790: `let kr = khatri_rao_product(&factors, 0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 801: `let kr = khatri_rao_product(&factors, 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
+- Line 177: `for i in 1..nfft / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 189: `bandwidth_3db as f64 / nfft as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 195: `let freq_norm = i as f64 / nfft as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
 
-### src/tensor_contraction/mod.rs
+### examples/emd_example.rs
 
-18 issues found:
+1 issues found:
 
-- Line 229: `let mut result_tensor = result.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 233: `Ok(Arc::try_unwrap(result).unwrap().into_inner().unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 405: `let mut result_tensor = result.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 416: `Ok(Arc::try_unwrap(result).unwrap().into_inner().unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 599: `let mut result_tensor = result.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 605: `Ok(Arc::try_unwrap(result).unwrap().into_inner().unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 850: `let mut result_tensor = result.lock().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 854: `Ok(Arc::try_unwrap(result).unwrap().into_inner().unwrap())`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 941: `let unfolded = unfold(&tensor_dyn, *mode).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 944: `let (u, _, _) = svd_truncated(&unfolded, rank[*mode]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1100: `let result = contract(&a.view(), &b.view(), &[1], &[0]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1128: `let result = batch_matmul(&a.view(), &b.view(), 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1156: `let result = einsum("ij,jk->ik", &[&a_view, &b_view]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1178: `let result = einsum("i,i->", &[&a_view, &b_view]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1185: `assert_abs_diff_eq!(result.iter().next().unwrap(), &expected, epsilon = 1e-10);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1201: `let result = mode_n_product(&tensor.view(), &matrix.view(), 0).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1218: `let (core, factors) = hosvd(&tensor.view(), &[2, 2, 2]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1231: `reconstructed = mode_n_product(&reconstructed.view(), &factor.view(), mode).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
+- Line 25: `let time: Vec<f64> = (0..n_samples).map(|i| i as f64 / sample_rate).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
 
-### src/tensor_contraction/tensor_network.rs
+### examples/filter_banks_example.rs
 
-31 issues found:
+15 issues found:
 
-- Line 675: `.unwrap();`
+- Line 21: `let t: Vec<f64> = (0..n_samples).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 81: `reconstruction_error = (reconstruction_error / min_len as f64).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 81: `reconstruction_error = (reconstruction_error / min_len as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 149: `wavelet_error = (wavelet_error / wavelet_min_len as f64).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 149: `wavelet_error = (wavelet_error / wavelet_min_len as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 188: `cmfb_error = (cmfb_error / cmfb_min_len as f64).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 188: `cmfb_error = (cmfb_error / cmfb_min_len as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 219: `test_error = (test_error / test_min_len as f64).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 219: `test_error = (test_error / test_min_len as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 239: `println!("- Numerator (b): {:?}", b_unstable.as_slice().unwrap());`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 678: `let node = TensorNode::new(data, indices).unwrap();`
+- Line 240: `println!("- Denominator (a): {:?}", a_unstable.as_slice().unwrap());`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 690: `.unwrap();`
+- Line 253: `println!("- Stabilized numerator: {:?}", b_stable.as_slice().unwrap());`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 693: `let node = TensorNode::new(data, indices).unwrap();`
+- Line 256: `a_stable.as_slice().unwrap()`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 696: `let transposed = node.transpose(&["j".to_string(), "i".to_string()]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 715: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 717: `let node1 = TensorNode::new(data1, indices1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 723: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 725: `let node2 = TensorNode::new(data2, indices2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 728: `let result = node1.contract(&node2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 744: `let data1 = ArrayD::from_shape_vec(ndarray::IxDyn(&[2]), vec![1.0, 2.0]).unwrap(...`
-  - **Fix**: Handle array creation errors properly
-- Line 746: `let node1 = TensorNode::new(data1, indices1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 748: `let data2 = ArrayD::from_shape_vec(ndarray::IxDyn(&[3]), vec![3.0, 4.0, 5.0]).un...`
-  - **Fix**: Handle array creation errors properly
-- Line 750: `let node2 = TensorNode::new(data2, indices2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 753: `let result = node1.outer_product(&node2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 772: `ArrayD::from_shape_vec(ndarray::IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0]).unwrap...`
-  - **Fix**: Handle array creation errors properly
-- Line 774: `let node = TensorNode::new(data, indices).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 777: `let result = node.trace("i", "j").unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 792: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 794: `let node = TensorNode::new(data, indices).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 797: `let result = node.add_dummy_index("k", 1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 820: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 822: `let node = TensorNode::new(data, indices).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 825: `let result = node.remove_index("j").unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 841: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 843: `let node1 = TensorNode::new(data1, indices1).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 851: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 853: `let node2 = TensorNode::new(data2, indices2).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 859: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 861: `let node3 = TensorNode::new(data3, indices3).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 867: `let result = network.contract_all().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
+- Line 275: `let freq_resolution = fs / (2.0 * channels as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 276: `let time_resolution = channels as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
 
-### src/tensor_contraction/tensor_train.rs
+### examples/higher_order_spectra_example.rs
+
+14 issues found:
+
+- Line 27: `bispectrum(&signal_phase_coupled, nfft, Some("hann"), None, fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 37: `bispectrum(&signal_no_coupling, nfft, Some("hann"), None, fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 51: `bicoherence(&signal_phase_coupled, nfft, Some("hann"), None, fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 54: `bicoherence(&signal_no_coupling, nfft, Some("hann"), None, fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 74: `detect_phase_coupling(&signal_phase_coupled, nfft, Some("hann"), fs, Some(0.6))....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 89: `let tri_coupled = trispectrum(&signal_phase_coupled, nfft, Some("hann"), fs).unw...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 96: `let (biamp, (_, _)) = biamplitude(&signal_phase_coupled, nfft, Some("hann"), fs)...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 104: `cumulative_bispectrum(&signal_phase_coupled, nfft, Some("hann"), fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 112: `skewness_spectrum(&signal_phase_coupled, nfft, Some("hann"), fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 119: `let angles = [0.0, PI / 4.0, PI / 2.0, PI, 3.0 * PI / 2.0];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 124: `let (bicoh, (_, _)) = bicoherence(&signal, nfft, Some("hann"), None, fs).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 145: `let t = Array1::linspace(0.0, (n_samples as f64 - 1.0) / fs, n_samples);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 179: `let t = Array1::linspace(0.0, (n_samples as f64 - 1.0) / fs, n_samples);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 211: `let t = Array1::linspace(0.0, (n_samples as f64 - 1.0) / fs, n_samples);`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/image_feature_analysis.rs
+
+45 issues found:
+
+- Line 51: `image[[i, j]] = (i as f64 / size as f64 + j as f64 / size as f64) * 127.5;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 66: `if (i / 4 + j / 4) % 2 == 0 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 83: `let center_x = size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 84: `let center_y = size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 85: `let radius = size / 4;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 91: `let distance = ((dx * dx + dy * dy) as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 131: `if (i + 1) % (images.len() / 10) == 0 || i + 1 == images.len() {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 136: `(i + 1) as f64 / images.len() as f64 * 100.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 166: `let n_classes = *labels.iter().max().unwrap() + 1;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 193: `let mean = sum / values.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 196: `values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 197: `let stddev = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 226: `stddevs.iter().sum::<f64>() / stddevs.len() as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 233: `max_diff / avg_stddev`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 261: `for i in 0..size / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 262: `for j in 0..size / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 263: `image[[i, j]] = (i + j) as f64 / (size as f64) * 255.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 268: `for i in 0..size / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 269: `for j in size / 2..size {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 270: `if (i / 4 + j / 4) % 2 == 0 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 279: `let center_x = size / 4 * 3;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 280: `let center_y = size / 4 * 3;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 281: `let _radius = size / 6;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 283: `for i in size / 2..size {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 284: `for j in 0..size / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 287: `let distance = ((dx * dx + dy * dy) as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 289: `if (distance / 4.0).floor() % 2.0 == 0.0 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 298: `for i in size / 2..size {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 299: `for j in size / 2..size {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 378: `let center = (i + patch_size / 2, j + patch_size / 2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 415: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 476: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 507: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 533: `for i in 0..size / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 534: `for j in 0..size / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 543: `for i in 0..size / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 544: `for j in size / 2..size {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 553: `for i in size / 2..size {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 554: `for j in 0..size / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 563: `for i in size / 2..size {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 564: `for j in size / 2..size {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 585: `.map(|&count| format!("{:.1}%", count as f64 / total * 100.0))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 634: `let distance = ((dx * dx + dy * dy) as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 638: `let intensity = 180.0 - distance / radius as f64 * 100.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 683: `let distance = ((dx * dx + dy * dy) as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### examples/image_feature_extraction.rs
 
 13 issues found:
 
-- Line 682: `s.mapv(|x| x / s[0])`
+- Line 23: `let center_x = size / 2;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 742: `s.mapv(|x| x / s[0])`
+- Line 24: `let center_y = size / 2;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 802: `let tt = tensor_train_decomposition(&tensor.view(), None, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 822: `let reconstructed = tt.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 857: `let tt = tensor_train_decomposition(&tensor.view(), Some(2), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 865: `let reconstructed = tt.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 892: `let tt = tensor_train_decomposition(&tensor.view(), None, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 898: `let value = tt.get(&[i, j, k]).unwrap();`
-  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
-- Line 924: `let tt = tensor_train_decomposition(&tensor.view(), None, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 928: `let rounded_tt = tt.round(*epsilon).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 931: `let reconstructed = rounded_tt.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 935: `let norm = tensor.mapv(|x| x * x).sum().sqrt();`
+- Line 25: `let radius = size / 4;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 30: `let gradient = (i + j) as f64 / (2 * size) as f64 * 255.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 35: `let distance = ((dx * dx + dy * dy) as f64).sqrt();`
   - **Fix**: Mathematical operation .sqrt() without validation
-- Line 949: `let relative_error = max_error / norm;`
+- Line 65: `let r_gradient = i as f64 / size as f64 * 255.0;`
   - **Fix**: Division without zero check - use safe_divide()
-
-### src/tensor_contraction/tucker.rs
-
-18 issues found:
-
-- Line 200: `Ok((diff_squared_sum / orig_squared_sum).sqrt())`
+- Line 66: `let g_gradient = j as f64 / size as f64 * 255.0;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 200: `Ok((diff_squared_sum / orig_squared_sum).sqrt())`
+- Line 67: `let b_gradient = ((i as f64 / size as f64) * (j as f64 / size as f64)) * 255.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 72: `let distance = ((dx * dx + dy * dy) as f64).sqrt();`
   - **Fix**: Mathematical operation .sqrt() without validation
-- Line 257: `s.mapv(|v| v / s[[0, 0]])`
+- Line 108: `smooth_texture[[i, j]] = (i as f64 + j as f64) / (2.0 * size as f64) * 255.0;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 291: `s.mapv(|v| v / s[[0, 0]])`
+- Line 111: `if (i / 4 + j / 4) % 2 == 0 {`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 547: `let rel_improvement = (prev_error - error) / prev_error;`
-  - **Fix**: Division without zero check - use safe_divide()
-- Line 663: `let tucker = tucker_decomposition(&tensor.view(), &[2, 3, 2]).unwrap();`
+- Line 130: `let smooth_features = extract_image_features(&smooth_texture, &texture_options)....`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 673: `let reconstructed = tucker.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 699: `let tucker = tucker_decomposition(&tensor.view(), &[2, 2, 2]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 709: `let _reconstructed = tucker.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 712: `let error = tucker.reconstruction_error(&tensor.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 727: `let tucker = tucker_als(&tensor.view(), &[2, 2, 2], 10, 1e-4).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 737: `let _reconstructed = tucker.to_full().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 740: `let hosvd_tucker = tucker_decomposition(&tensor.view(), &[2, 2, 2]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 741: `let als_error = tucker.reconstruction_error(&tensor.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 742: `let hosvd_error = hosvd_tucker.reconstruction_error(&tensor.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 758: `let tucker = tucker_decomposition(&tensor.view(), &[2, 3, 2]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 761: `let compressed = tucker.compress(Some(vec![2, 2, 2]), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 770: `let compressed_eps = tucker.compress(None, Some(0.1)).unwrap();`
+- Line 131: `let rough_features = extract_image_features(&rough_texture, &texture_options).un...`
   - **Fix**: Replace with ? operator or .ok_or()
 
-### src/tensor_train.rs
+### examples/kalman_filter_example.rs
 
-35 issues found:
+27 issues found:
 
-- Line 166: `full_size as f64 / tt_size as f64`
+- Line 44: `let normal = Normal::new(0.0, noise_level).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 78: `let min_len = signals.iter().map(|(_, data)| data.len()).min().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 142: `/ n_samples as f64;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 274: `Ok(norm_squared.sqrt())`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 317: `if energy.sqrt() > abs_tolerance {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 428: `let frobenius_norm = tensor.iter().map(|&x| x * x).sum::<F>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 430: `let abs_tolerance = tolerance * frobenius_norm / F::from(d - 1).unwrap().sqrt();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 469: `if error_estimate.sqrt() > abs_tolerance {`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 513: `let remaining_size = expected_elements / r_prev;`
+- Line 149: `/ n_samples as f64;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 704: `let tt_tensor = TTTensor::new(vec![core1, core2]).unwrap();`
+- Line 156: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 199: `Array2::from_shape_vec((2, 2), vec![1.0, dt, -dt * (x[0]).cos(), 1.0 - 0.1 * dt]...`
+  - **Fix**: Handle array creation errors properly
+- Line 204: `Array2::from_shape_vec((1, 2), vec![2.0 * x[0], 0.0]).unwrap()`
+  - **Fix**: Handle array creation errors properly
+- Line 226: `let normal = Normal::new(0.0, noise_level).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 755: `let tt_tensor = TTTensor::new(vec![core1, core2]).unwrap();`
+- Line 259: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 266: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 328: `let normal = Normal::new(0.0, noise_level).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 759: `tt_tensor.get_element(&[0, 0]).unwrap(),`
+- Line 367: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 374: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 412: `let x = (i - 200) as f64 / 100.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 420: `let normal = Normal::new(0.0, noise_level).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 764: `tt_tensor.get_element(&[0, 1]).unwrap(),`
+- Line 450: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 457: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 464: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 471: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 509: `let noise_level = 0.1 + (i as f64 / n_samples as f64) * 0.5;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 510: `let normal = Normal::new(0.0, noise_level).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 769: `tt_tensor.get_element(&[1, 0]).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 774: `tt_tensor.get_element(&[1, 1]).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 785: `let tt_tensor = tt_decomposition(&tensor.view(), 1e-12, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 792: `let reconstructed = tt_tensor.get_element(&[i, j, k]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 803: `let tt_tensor = TTTensor::new(vec![core1]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 805: `let norm = tt_tensor.frobenius_norm().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 811: `let expected_norm = (1.0 + 4.0_f64).sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 815: `let dense = tt_tensor.to_dense().unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 816: `let dense_norm = dense.iter().map(|&x| x * x).sum::<f64>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 824: `let tt_a = TTTensor::new(vec![core1_a]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 827: `let tt_b = TTTensor::new(vec![core1_b]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 829: `let tt_sum = tt_add(&tt_a, &tt_b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 832: `assert_relative_eq!(tt_sum.get_element(&[0]).unwrap(), 3.0, epsilon = 1e-10); //...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 833: `assert_relative_eq!(tt_sum.get_element(&[1]).unwrap(), 5.0, epsilon = 1e-10);`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 841: `let tt_a = TTTensor::new(vec![core1_a]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 844: `let tt_b = TTTensor::new(vec![core1_b]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 846: `let tt_product = tt_hadamard(&tt_a, &tt_b).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 849: `assert_relative_eq!(tt_product.get_element(&[0]).unwrap(), 2.0, epsilon = 1e-10)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 850: `assert_relative_eq!(tt_product.get_element(&[1]).unwrap(), 6.0, epsilon = 1e-10)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 858: `let tt_tensor = tt_decomposition(&tensor.view(), 1e-12, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 861: `let rounded = tt_tensor.round(1e-1, Some(2)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 867: `let original = tt_tensor.get_element(&[i, j, k]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 868: `let rounded_val = rounded.get_element(&[i, j, k]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 879: `let tt_tensor = TTTensor::new(vec![core1]).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
+- Line 534: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 541: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 548: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 608: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 615: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 622: `/ n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
 
-### tests/basic_extended_precision_tests.rs
+### examples/lombscargle_example.rs
 
 3 issues found:
 
-- Line 14: `let c = extended_matmul::<_, f64>(&a.view(), &b.view()).unwrap();`
+- Line 69: `frequencies.first().unwrap(),`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 35: `let y = extended_matvec::<_, f64>(&a.view(), &x.view()).unwrap();`
+- Line 70: `frequencies.last().unwrap()`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 53: `let x = extended_solve::<_, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### tests/basic_extended_tests.rs
-
-3 issues found:
-
-- Line 14: `let c = extended_matmul::<_, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 35: `let y = extended_matvec::<_, f64>(&a.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 53: `let x = extended_solve::<_, f64>(&a.view(), &b.view()).unwrap();`
+- Line 138: `let max_idx = power.iter().position(|&p| p == max_power).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
 
-### tests/debug_3x3_eigentest.rs
+### examples/lti_interconnection_example.rs
 
-1 issues found:
+36 issues found:
 
-- Line 12: `let (eigenvalues, eigenvectors) = eigh(&a.view(), None).unwrap();`
+- Line 16: `let g1 = tf(vec![5.0], vec![1.0, 2.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 17: `println!("G1(s) = 5 / (s + 2)");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 20: `let g2 = tf(vec![1.0], vec![1.0, 5.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 21: `println!("G2(s) = 1 / (s + 5)");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 24: `let series_sys = series(&g1, &g2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 36: `let g1_par = tf(vec![3.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 37: `println!("G1(s) = 3 / (s + 1)");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 40: `let g2_par = tf(vec![2.0], vec![1.0, 4.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 41: `println!("G2(s) = 2 / (s + 4)");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 44: `let parallel_sys = parallel(&g1_par, &g2_par).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 55: `let plant = tf(vec![10.0], vec![1.0, 1.0, 0.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 56: `println!("Plant G(s) = 10 / (s(s + 1))");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 59: `let closed_loop = feedback(&plant, None, 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 60: `println!("Closed-loop T(s) = G(s) / (1 + G(s))");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 76: `let plant_pid = tf(vec![1.0], vec![1.0, 3.0, 2.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 77: `println!("Plant G(s) = 1 / ((s + 1)(s + 2))");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 81: `let controller = tf(vec![2.0, 10.0, 5.0], vec![1.0, 0.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 82: `println!("PID Controller C(s) = (2s^2 + 10s + 5) / s");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 85: `let forward_path = series(&controller, &plant_pid).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 89: `let pid_closed_loop = feedback(&forward_path, None, 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 99: `let sens = sensitivity(&plant, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 100: `let comp_sens = complementary_sensitivity(&plant, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 102: `println!("Sensitivity S(s) = 1 / (1 + G(s)):");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 106: `println!("Complementary Sensitivity T(s) = G(s) / (1 + G(s)):");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 111: `let sum_st = parallel(&sens, &comp_sens).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 129: `let open_loop_resp = plant.frequency_response(&[freq]).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 130: `let closed_loop_resp = closed_loop.frequency_response(&[freq]).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 147: `let (w, mag, phase) = bode(&closed_loop, Some(&bode_freqs)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 164: `let prefilter = tf(vec![1.0], vec![0.1, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 165: `println!("Prefilter F(s) = 1 / (0.1s + 1)");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 168: `let prop_controller = tf(vec![5.0], vec![1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 172: `let simple_plant = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 173: `println!("Plant G(s) = 1 / (s + 1)");`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 176: `let controller_plant = series(&prop_controller, &simple_plant).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 177: `let closed_inner = feedback(&controller_plant, None, 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 178: `let complete_system = series(&prefilter, &closed_inner).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
 
-### tests/debug_matrix_rank.rs
+### examples/median_filter_example.rs
 
-9 issues found:
+40 issues found:
 
-- Line 16: `let default_rank = matrix_rank(&matrix.view(), None, None).unwrap();`
+- Line 36: `let filtered_standard = median_filter_1d(&noisy_signal, 5, &standard_config).unw...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 19: `let tight_tol_rank = matrix_rank(&matrix.view(), Some(1e-14), None).unwrap();`
+- Line 37: `let filtered_adaptive = median_filter_1d(&noisy_signal, 5, &adaptive_config).unw...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 22: `let loose_tol_rank = matrix_rank(&matrix.view(), Some(1e-12), None).unwrap();`
+- Line 38: `let filtered_weighted = median_filter_1d(&noisy_signal, 5, &center_weighted_conf...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 26: `let (_, s, _) = svd(&matrix.view(), false, None).unwrap();`
+- Line 50: `100.0 * (mse_noisy - mse_standard) / mse_noisy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 55: `100.0 * (mse_noisy - mse_adaptive) / mse_noisy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 60: `100.0 * (mse_noisy - mse_weighted) / mse_noisy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 78: `let min_filter = rank_filter_1d(&noisy_signal, 5, 0.0, EdgeMode::Reflect).unwrap...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 54: `let rank2 = matrix_rank(&matrix2.view(), None, None).unwrap();`
+- Line 79: `let median_filter = rank_filter_1d(&noisy_signal, 5, 0.5, EdgeMode::Reflect).unw...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 57: `let (_, s2, _) = svd(&matrix2.view(), false, None).unwrap();`
+- Line 80: `let max_filter = rank_filter_1d(&noisy_signal, 5, 1.0, EdgeMode::Reflect).unwrap...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 82: `let rank3 = matrix_rank(&matrix3.view(), None, None).unwrap();`
+- Line 97: `let image_standard = median_filter_2d(&noisy_image, 3, &standard_config).unwrap(...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 85: `let (_, s3, _) = svd(&matrix3.view(), false, None).unwrap();`
+- Line 98: `let image_adaptive = median_filter_2d(&noisy_image, 3, &adaptive_config).unwrap(...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 101: `let strict_rank3 = matrix_rank(&matrix3.view(), Some(1e-12), None).unwrap();`
+- Line 99: `let image_weighted = median_filter_2d(&noisy_image, 3, &center_weighted_config)....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 100: `let image_hybrid = hybrid_median_filter_2d(&noisy_image, 5, &standard_config).un...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 113: `100.0 * (image_mse_noisy - image_mse_standard) / image_mse_noisy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 118: `100.0 * (image_mse_noisy - image_mse_adaptive) / image_mse_noisy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 123: `100.0 * (image_mse_noisy - image_mse_weighted) / image_mse_noisy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 128: `100.0 * (image_mse_noisy - image_mse_hybrid) / image_mse_noisy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 146: `median_filter_color(&noisy_color_image, 3, &standard_config, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 147: `let color_vector = median_filter_color(&noisy_color_image, 3, &standard_config, ...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 158: `100.0 * (color_mse_noisy - color_mse_channel) / color_mse_noisy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 163: `100.0 * (color_mse_noisy - color_mse_vector) / color_mse_noisy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 215: `let edge_reflect = median_filter_2d(&noisy_image, 3, &reflect_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 216: `let edge_nearest = median_filter_2d(&noisy_image, 3, &nearest_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 217: `let edge_constant = median_filter_2d(&noisy_image, 3, &constant_config).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 218: `let edge_wrap = median_filter_2d(&noisy_image, 3, &wrap_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 235: `let filtered = median_filter_2d(&noisy_image, size, &standard_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 261: `clean_signal[i] = 2.0 + (i - 300) as f64 / 100.0 * 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 264: `clean_signal[i] = 3.0 + (i - 350) as f64 / 50.0 * std::f64::consts::PI;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 265: `clean_signal[i] = 3.0 + (clean_signal[i].sin() + 1.0) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 304: `let x = j as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 305: `let y = i as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 324: `clean_image[[i, j]] = 0.3 * (x + y + 2.0) / 4.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 364: `let x = j as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 365: `let y = i as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 393: `clean_image[[i, j, 0]] = 0.3 * (x + 1.0) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 394: `clean_image[[i, j, 1]] = 0.3 * (y + 1.0) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 395: `clean_image[[i, j, 2]] = 0.3 * ((1.0 - x) + 1.0) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 454: `sum_squared_diff / signal1.len() as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 473: `sum_squared_diff / (height * width) as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 494: `sum_squared_diff / (height * width * channels) as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/memory_efficient_stft_example.rs
+
+7 issues found:
+
+- Line 55: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 163: `n as f64 * 8.0 / 1_000_000.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 169: `let t = i as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 232: `duration / processing_time.as_secs_f64()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 279: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 346: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 396: `sequential_time.as_secs_f64() / parallel_time.as_secs_f64()`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/meyer_wavelet_example.rs
+
+6 issues found:
+
+- Line 11: `let signal = chirp(&t, 0.0, 1.0, 100.0, "linear", 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 21: `let coeffs = wavedec(&noisy_signal, Wavelet::Meyer, Some(3), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 46: `let denoised_signal = waverec(&denoised_coeffs, Wavelet::Meyer).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 164: `let coeffs = wavedec(noisy_signal, wavelet, Some(3), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 173: `let denoised = waverec(&denoised_coeffs, wavelet).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 181: `/ signal.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/minimum_phase_example.rs
+
+7 issues found:
+
+- Line 25: `let min_phase_b = minimum_phase(&original_b, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 29: `let frequencies = vec![0.0, PI / 4.0, PI / 2.0, 3.0 * PI / 4.0, PI];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 56: `let still_min_b = minimum_phase(&already_min_b, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 77: `let ct_min_b = minimum_phase(&ct_b, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 85: `let b_min = minimum_phase(&b_non_min, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 92: `let gd_orig = group_delay(&b_non_min, &a, &freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 93: `let gd_min = group_delay(&b_min, &a, &freqs).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
 
-### tests/eigen_sparse_tests.rs
+### examples/nonlocal_means_example.rs
+
+19 issues found:
+
+- Line 26: `let denoised_signal = nlm_denoise_1d(&noisy_signal, &basic_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 59: `let denoised_standard = nlm_denoise_2d(&noisy_image, &standard_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 60: `let denoised_fast = nlm_denoise_2d(&noisy_image, &fast_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 61: `let denoised_block = nlm_block_matching_2d(&noisy_image, &standard_config, 16).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 98: `let denoised_multiscale = nlm_multiscale_2d(&noisy_image, &standard_config, 2).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 112: `let denoised_color = nlm_color_image(&noisy_color_image, &standard_config).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 159: `let denoised = nlm_denoise_2d(&noisy_image, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 171: `let denoised = nlm_denoise_2d(&noisy_image, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 206: `let x = (i as f64 - edge as f64) / smooth_width as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 240: `let x = j as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 241: `let y = i as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 268: `clean_image.mapv_inplace(|x| (x - min_val) / (max_val - min_val));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 298: `let x = j as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 299: `let y = i as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 302: `clean_image[[i, j, 0]] = 0.5 * (1.0 - (x * x + y * y).sqrt().min(1.0));`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 305: `clean_image[[i, j, 1]] = if ((j as f64 / 8.0).floor() as i32) % 2 == 0 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 375: `10.0 * (signal_power / noise_power).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 400: `10.0 * (signal_power / noise_power).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 427: `10.0 * (signal_power / noise_power).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/parametric_spectral_example.rs
+
+16 issues found:
+
+- Line 49: `let duration = n_samples as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 127: `let freqs = Array1::linspace(0.0, fs / 2.0, nfft / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 182: `let freqs = Array1::linspace(0.0, fs / 2.0, nfft / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 235: `periodogram(signal.as_slice().unwrap(), Some(fs), None, None, None, None).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 354: `let freqs = Array1::linspace(0.0, fs / 2.0, nfft / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 358: `estimate_ar(&signal, ar_order, ARMethod::Burg).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 367: `ar_spectrum(&ar_only_coeffs, ar_only_variance, &freqs, fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 372: `periodogram(signal.as_slice().unwrap(), Some(fs), None, None, None, None)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 373: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 374: `let pxx_db: Vec<f64> = pxx_periodogram[..(nfft / 2 + 1)]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 436: `let (ar_coeffs, _, variance) = estimate_ar(signal, opt_order, method).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 440: `let freqs = Array1::linspace(0.0, fs / 2.0, nfft / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 441: `let psd = ar_spectrum(&ar_coeffs, variance, &freqs, fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 446: `periodogram(signal.as_slice().unwrap(), Some(fs), None, None, None, None)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 447: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 448: `let pxx_db: Vec<f64> = pxx_periodogram[..(nfft / 2 + 1)]`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/phase_vocoder_example.rs
+
+6 issues found:
+
+- Line 150: `let t = i as f64 / sample_rate;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 151: `let duration = samples as f64 / sample_rate;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 154: `let _freq = start_freq + (end_freq - start_freq) * t / duration;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 158: `2.0 * PI * (start_freq * t + (end_freq - start_freq) * t * t / (2.0 * duration))...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 169: `(sum_squared / signal.len() as f64).sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 169: `(sum_squared / signal.len() as f64).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### examples/reassigned_spectrogram_example.rs
+
+21 issues found:
+
+- Line 57: `let duration = n_samples as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 68: `let rate = (f1 - f0) / duration;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 72: `let center = duration / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 75: `let gaussian = (-((ti - center) / width).powi(2)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 96: `let _win = window::hann(window_size, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 100: `signal.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 110: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 116: `let mut spectrogram = Array2::zeros((n_fft / 2 + 1, stft_complex.len()));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 138: `config.window = Array1::from(window::hann(256, true).unwrap());`
+  - **Fix**: Handle array creation errors properly
+- Line 145: `let result = reassigned_spectrogram(signal, config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 162: `config.window = Array1::from(window::hann(256, true).unwrap());`
+  - **Fix**: Handle array creation errors properly
+- Line 169: `let result = smoothed_reassigned_spectrogram(signal, config, 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 184: `let duration = n_samples as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 206: `let _win = window::hann(window_size, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 209: `signal.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 219: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 225: `let mut spectrogram = Array2::zeros((n_fft / 2 + 1, stft_complex.len()));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 234: `config.window = Array1::from(window::hann(window_size, true).unwrap());`
+  - **Fix**: Handle array creation errors properly
+- Line 240: `let reassigned_result = reassigned_spectrogram(&signal, config.clone()).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 241: `let smoothed_result = smoothed_reassigned_spectrogram(&signal, config, 3).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 306: `let time = i as f64 / 2048.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/remez_filter_example.rs
 
 8 issues found:
 
-- Line 16: `let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 2, 100, 1e-10).unwra...`
+- Line 20: `let h_lp = remez(numtaps, &bands, &desired, Some(&weights), None, None).unwrap()...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 45: `let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 2, 100, 1e-10).unwr...`
+- Line 32: `let h_fft = fft(&h_padded, None).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 74: `let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 2, 100, 1e-10).unwra...`
+- Line 33: `let _freqs: Vec<f64> = (0..nfft / 2).map(|i| i as f64 / nfft as f64).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 66: `let h_bp = remez(numtaps, &bands, &desired, Some(&weights), None, None).unwrap()...`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 104: `let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 2, 100, 1e-10).unwr...`
+- Line 69: `let center = numtaps / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 83: `let h_mb = remez(numtaps, &bands, &desired, None, None, None).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 128: `let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 0, 100, 1e-10).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 133: `let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 0, 100, 1e-10).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 149: `let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 4, 100, 1e-10).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 160: `let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 4, 100, 1e-10).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### tests/enhanced_op_tests.rs
-
-16 issues found:
-
-- Line 33: `let d = det(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 40: `let y = matvec(&a.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 54: `let ip = inner_product(&v1.view(), &v2.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 70: `assert!(is_hermitian(&h.view(), 1e-10).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 71: `assert!(!is_hermitian(&nh.view(), 1e-10).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 84: `assert!(is_unitary(&u.view(), 1e-10).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 85: `assert!(!is_unitary(&nu.view(), 1e-10).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 93: `let h_part = hermitian_part(&mixed.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 94: `assert!(is_hermitian(&h_part.view(), 1e-10).unwrap());`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 107: `let exp_zero = matrix_exp(&zero.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 145: `let exp_non_trivial = matrix_exp(&non_trivial.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 234: `let vjp = vector_jacobian_product(g, &x.view(), &v.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 241: `let hvp = hessian_vector_product(f, &x.view(), &v.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 256: `let grad = matrix_gradient(matrix_f, &matrix_x.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 269: `let approx2 = taylor_approximation(f, &taylor_x.view(), &taylor_y.view(), 2, Non...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 272: `let actual = f(&taylor_y.view()).unwrap();`
+- Line 89: `for i in 0..(numtaps / 2) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 103: `let h_diff = remez(numtaps, &bands, &desired, None, None, None).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()
 
-### tests/extended_precision_tests.rs
+### examples/signal_bspline_filtering.rs
 
-7 issues found:
+2 issues found:
 
-- Line 19: `let c = extended_matmul::<_, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 37: `let (p, l, u) = extended_lu::<_, f64>(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 59: `let (q, r) = extended_qr::<_, f64>(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 90: `let l = extended_cholesky::<_, f64>(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 108: `let eigvals = extended_eigvalsh::<_, f64>(&a.view(), None, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 123: `let x = extended_solve::<_, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 138: `let (u, s, vh) = extended_svd::<_, f64>(&a.view(), true, None, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
+- Line 78: `/ signal.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 107: `/ signal.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
 
-### tests/minimal_extended_precision_tests.rs
+### examples/signal_interpolation.rs
+
+28 issues found:
+
+- Line 39: `signal[i] = (x[i] * PI / 2.0).sin() + 0.5 * (x[i] * PI).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 66: `let min_len = signals.iter().map(|(_, data)| data.len()).min().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 124: `reference[i] = (x[i] * PI / 2.0).sin() + 0.5 * (x[i] * PI).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 169: `let linear_mse = linear_sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 170: `let spline_mse = spline_sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 171: `let spectral_mse = spectral_sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 286: `let mse = sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 321: `let nyquist = n_samples / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 329: `let normal = Normal::<f64>::new(0.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 345: `spectrum[n_samples / 2] = Complex64::new(normal.sample(&mut rng).abs() as f64, 0...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 356: `let scale = 1.0 / n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 424: `let linear_mse = linear_sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 425: `let spline_mse = spline_sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 426: `let sinc_mse = sinc_sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 427: `let spectral_mse = spectral_sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 463: `let x = (j as f64) / (n_cols as f64) * 3.0 - 1.5;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 464: `let y = (i as f64) / (n_rows as f64) * 3.0 - 1.5;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 466: `let r1 = (x * x + y * y).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 467: `let r2 = ((x + 1.0) * (x + 1.0) + y * y).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 468: `let r3 = ((x - 1.0) * (x - 1.0) + y * y).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 470: `image[[i, j]] = 3.0 * (1.0 - r1).powi(2) * (-r1 / 3.0).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 471: `- 10.0 * (r1 / 5.0 - r1.powi(3)) * (-r1 * r1).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 472: `- 1.0 / 3.0 * (-r2 * r2).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 473: `+ 1.0 / 5.0 * (-r3 * r3).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 549: `let linear_mse = linear_sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 550: `let spline_mse = spline_sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 551: `let nearest_mse = nearest_sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 653: `let mse = sse / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/signal_separation_example.rs
+
+4 issues found:
+
+- Line 20: `.map(|i| i as f64 / sample_rate)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 173: `reconstructed_energy / original_energy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 184: `let mean_square: f64 = signal.iter().map(|&x| x * x).sum::<f64>() / signal.len()...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 185: `mean_square.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### examples/sparse_recovery_example.rs
+
+28 issues found:
+
+- Line 79: `compressed_sensing_recover(&noisy_y, &phi, SparseRecoveryMethod::OMP, &config).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 84: `vector_norm(&diff.view(), 2).unwrap() / vector_norm(&original_signal.view(), 2)....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 88: `measure_sparsity(&original_signal, 1e-6).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 92: `measure_sparsity(&recovered_signal, 1e-6).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 115: `let t = i as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 137: `100.0 * missing_count as f64 / n as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 150: `recover_missing_samples(&observed_signal, SparseRecoveryMethod::OMP, &config).un...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 163: `let rmse = (error_sum / count as f64).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 163: `let rmse = (error_sum / count as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 189: `let t = i as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 201: `let signal_power = clean_signal.mapv(|v| v * v).sum() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 202: `let noise_power = (&clean_signal - &noisy_signal).mapv(|v| v * v).sum() / n as f...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 203: `let snr_before = 10.0 * (signal_power / noise_power).log10();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 223: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 226: `let noise_power_after = (&clean_signal - &denoised_signal).mapv(|v| v * v).sum()...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 227: `let snr_after = 10.0 * (signal_power / noise_power_after).log10();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 235: `let rmse_before = vector_norm(&diff_before.view(), 2).unwrap() / (n as f64).sqrt...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 236: `let rmse_after = vector_norm(&diff_after.view(), 2).unwrap() / (n as f64).sqrt()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 303: `let recovered_signal = compressed_sensing_recover(&noisy_y, &phi, method, &confi...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 309: `let recovery_error = vector_norm(&diff.view(), 2).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 310: `/ vector_norm(&original_signal.view(), 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 313: `let sparsity = measure_sparsity(&recovered_signal, 1e-6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 334: `let x = i as f64 / n_rows as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 335: `let y = j as f64 / n_cols as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 365: `100.0 * missing_count as f64 / (n_rows * n_cols) as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 383: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 398: `let rmse = (error_sum / count as f64).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 398: `let rmse = (error_sum / count as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### examples/spectral_descriptors.rs
 
 3 issues found:
 
-- Line 14: `let c = extended_matmul::<_, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 35: `let y = extended_matvec::<_, f64>(&a.view(), &x.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 53: `let x = extended_solve::<_, f64>(&a.view(), &b.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### tests/scipy_compat_api_stability.rs
-
-56 issues found:
-
-- Line 165: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 180: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 207: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 222: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 524: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 549: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 684: `let det_2x2: f64 = compat::det(&identity_2x2.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 685: `let det_3x3: f64 = compat::det(&identity_3x3.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 686: `let det_5x5: f64 = compat::det(&identity_5x5.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 694: `let known_det: f64 = compat::det(&known_det_matrix.view(), false, true).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 700: `let computed_inverse = compat::inv(&known_inv_matrix.view(), false, true).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 722: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 734: `compat::norm(&norm_test_matrix.view(), Some("fro"), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 738: `compat::norm(&norm_test_matrix.view(), Some("1"), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 742: `compat::norm(&norm_test_matrix.view(), Some("inf"), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 755: `let det = compat::det(&rotation.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 759: `let cond = compat::cond(&rotation.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 763: `let (q_opt, r) = compat::qr(&rotation.view(), false, None, "full", false, true)....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 766: `let reconstruction_error = (&rotation - &q).mapv(|x| x * x).sum().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 767: `let sign_flip_error = (&rotation + &q).mapv(|x| x * x).sum().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 797: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 818: `let det = compat::det(&symmetric.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 833: `let rank = compat::matrix_rank(&nearly_singular.view(), Some(1e-7), false, true)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 837: `let cond = compat::cond(&nearly_singular.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 844: `let det_small: f64 = compat::det(&small_matrix.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 875: `let det1: f64 = compat::det(&test_matrix.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 876: `let det2: f64 = compat::det(&test_matrix.view(), false, true).unwrap(); // Same ...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 881: `let norm_default: f64 = compat::norm(&test_matrix.view(), None, None, false, tru...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 883: `compat::norm(&test_matrix.view(), Some("fro"), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 889: `let vnorm_default: f64 = compat::vector_norm(&vector.view(), None, true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 890: `let vnorm_explicit: f64 = compat::vector_norm(&vector.view(), Some(2.0), true).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 915: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 931: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 936: `let pinv1 = compat::pinv(&test_matrix.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 937: `let pinv2 = compat::pinv(&test_matrix.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 951: `let _det: f64 = compat::det(&f64_matrix.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 952: `let _inv: Array2<f64> = compat::inv(&f64_matrix.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 953: `let _norm: f64 = compat::norm(&f64_matrix.view(), Some("fro"), None, false, true...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 954: `let _vnorm: f64 = compat::vector_norm(&f64_vector.view(), Some(2.0), true).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 958: `compat::lu(&f64_matrix.view(), false, false, true, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 960: `compat::qr(&f64_matrix.view(), false, None, "full", false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 974: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1011: `let det = compat::det(&base_matrix.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1012: `let cond = compat::cond(&base_matrix.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1013: `let rank = compat::matrix_rank(&base_matrix.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1014: `let norm = compat::norm(&base_matrix.view(), Some("fro"), None, false, true).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1022: `let (_, l, u) = compat::lu(&base_matrix.view(), false, false, true, false).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1023: `let (_, r) = compat::qr(&base_matrix.view(), false, None, "full", false, true).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1037: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1041: `compat::norm(&l.view(), Some("fro"), None, false, true).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1045: `compat::norm(&u.view(), Some("fro"), None, false, true).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1049: `compat::norm(&r.view(), Some("fro"), None, false, true).unwrap(),`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1065: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1067: `compat::norm(&solution.view(), Some("fro"), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1071: `let matrix_exp = compat::expm(&(base_matrix.clone() * 0.1).view(), None).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1073: `compat::norm(&matrix_exp.view(), Some("fro"), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### tests/scipy_compat_comprehensive_tests.rs
-
-99 issues found:
-
-- Line 52: `let det_result = compat::det(&identity_2x2.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 57: `let det_result = compat::det(&identity_3x3.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 62: `let det_result = compat::det(&upper_triangular.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 67: `let det_result = compat::det(&singular.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 72: `let det_result = compat::det(&well_conditioned.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 83: `let inv_result = compat::inv(&a_2x2.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 94: `let inv_result = compat::inv(&a_3x3.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 107: `let fro_norm = compat::norm(&test_matrix.view(), Some("fro"), None, false, true)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 108: `assert!(scalars_close(fro_norm, 30.0_f64.sqrt(), TEST_TOL));`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 111: `let norm_1 = compat::norm(&test_matrix.view(), Some("1"), None, false, true).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 115: `let norm_inf = compat::norm(&test_matrix.view(), Some("inf"), None, false, true)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 120: `let zero_norm = compat::norm(&zeros.view(), Some("fro"), None, false, true).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 124: `let ones_fro_norm = compat::norm(&ones.view(), Some("fro"), None, false, true).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 133: `let norm_2 = compat::vector_norm(&test_vector.view(), Some(2.0), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 134: `assert!(scalars_close(norm_2, (50.0_f64).sqrt(), TEST_TOL));`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 137: `let norm_1 = compat::vector_norm(&test_vector.view(), Some(1.0), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 141: `let norm_inf = compat::vector_norm(&test_vector.view(), Some(f64::INFINITY), tru...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 145: `let norm_0 = compat::vector_norm(&test_vector.view(), Some(0.0), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 149: `let norm_3 = compat::vector_norm(&test_vector.view(), Some(3.0), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 159: `let pinv_result = compat::pinv(&square_full_rank.view(), None, false, true).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 160: `let inv_result = compat::inv(&square_full_rank.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 165: `let pinv_tall = compat::pinv(&tall_matrix.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 174: `let pinv_wide = compat::pinv(&wide_matrix.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 183: `let pinv_rank_def = compat::pinv(&rank_deficient.view(), None, false, true).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 195: `let cond_result = compat::cond(&well_conditioned.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 200: `let cond_result = compat::cond(&moderate.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 206: `let cond_1 = compat::cond(&test_matrix.view(), Some("1")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 207: `let cond_inf = compat::cond(&test_matrix.view(), Some("inf")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 208: `let cond_fro = compat::cond(&test_matrix.view(), Some("fro")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 220: `let rank = compat::matrix_rank(&full_rank_2x2.view(), None, false, true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 224: `let rank = compat::matrix_rank(&full_rank_3x3.view(), None, false, true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 229: `let rank = compat::matrix_rank(&rank_1.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 234: `let rank = compat::matrix_rank(&zero_matrix.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 239: `let rank = compat::matrix_rank(&rect_full_rank.view(), None, false, true).unwrap...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 258: `let (p, l, u) = compat::lu(&matrix.view(), false, false, true, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 291: `let (q_opt, r) = compat::qr(&matrix.view(), false, None, "full", false, true).un...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 293: `let q = q_opt.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 323: `compat::svd(&matrix.view(), true, true, false, true, "gesdd").unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 325: `let u = u_opt.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 326: `let vt = vt_opt.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 369: `let l = compat::cholesky(&matrix.view(), true, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 383: `let u = compat::cholesky(&matrix.view(), false, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 400: `let (u_right, p_right) = compat::polar(&matrix.view(), "right").unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 412: `let (p_left, u_left) = compat::polar(&matrix.view(), "left").unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 428: `let (r, q) = compat::rq(&matrix.view(), false, None, "full", true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 454: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 472: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 491: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 512: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 549: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 575: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 587: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 629: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 656: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 690: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 715: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 725: `let det = compat::det(&pos_def.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 744: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 763: `let exp_zero = compat::expm(&zero_matrix.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 769: `let exp_diag = compat::expm(&diag_matrix.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 775: `let exp_nilpotent = compat::expm(&nilpotent.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 781: `let exp_antisym = compat::expm(&antisymmetric.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 788: `let det_exp = compat::det(&exp_antisym.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 798: `let log_identity = compat::logm(&identity.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 804: `let log_pos_def = compat::logm(&pos_def.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 807: `let exp_log = compat::expm(&log_pos_def.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 812: `let log_diag = compat::logm(&diag_matrix.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 813: `let expected = array![[2.0_f64.ln(), 0.0], [0.0, 3.0_f64.ln()]];`
-  - **Fix**: Mathematical operation .ln() without validation
-- Line 823: `let sqrt_identity = compat::sqrtm(&identity.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 828: `let sqrt_pos_def = compat::sqrtm(&pos_def.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 836: `let sqrt_diag = compat::sqrtm(&diag_matrix.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 842: `let sqrt_zero = compat::sqrtm(&zero_matrix.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 852: `let exp_via_funm = compat::funm(&test_matrix.view(), "exp", false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 853: `let exp_direct = compat::expm(&test_matrix.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 857: `let log_via_funm = compat::funm(&test_matrix.view(), "log", false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 858: `let log_direct = compat::logm(&test_matrix.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 862: `let sqrt_via_funm = compat::funm(&test_matrix.view(), "sqrt", false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 863: `let sqrt_direct = compat::sqrtm(&test_matrix.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 867: `let cos_via_funm = compat::funm(&test_matrix.view(), "cos", false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 868: `let cos_direct = compat::cosm(&test_matrix.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 871: `let sin_via_funm = compat::funm(&test_matrix.view(), "sin", false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 872: `let sin_direct = compat::sinm(&test_matrix.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 875: `let tan_via_funm = compat::funm(&test_matrix.view(), "tan", false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 876: `let tan_direct = compat::tanm(&test_matrix.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 897: `let block_diag = compat::block_diag(&blocks).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 917: `let mixed_diag = compat::block_diag(&mixed_blocks).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 922: `let single_diag = compat::block_diag(&single_block).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1048: `let det_a = compat::det(&a.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1051: `let cond_a = compat::cond(&a.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1054: `let rank_a = compat::matrix_rank(&a.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1059: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1066: `let (p, l, u) = compat::lu(&a.view(), false, false, true, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1067: `let (q_opt, r) = compat::qr(&a.view(), false, None, "full", false, true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1081: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1094: `let exp_a = compat::expm(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1095: `let log_exp_a = compat::logm(&exp_a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1100: `let pinv_a_rect = compat::pinv(&a_rect.view(), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1128: `let _det = compat::det(&matrix.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 1129: `let _norm = compat::norm(&matrix.view(), Some("fro"), None, false, true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### tests/scipy_compat_validation.rs
-
-76 issues found:
-
-- Line 36: `let det1 = compat::det(&a1.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 41: `let det2 = compat::det(&a2.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 46: `let det3 = compat::det(&a3.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 55: `let inv_a = compat::inv(&a.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 61: `let inv_magic = compat::inv(&magic.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 79: `let fro_norm = compat::norm(&test_matrix.view(), Some("fro"), None, false, true)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 82: `let norm_1 = compat::norm(&test_matrix.view(), Some("1"), None, false, true).unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 85: `let norm_inf = compat::norm(&test_matrix.view(), Some("inf"), None, false, true)...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 91: `let vec_norm_2 = compat::vector_norm(&test_vector.view(), Some(2.0), true).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 94: `let vec_norm_1 = compat::vector_norm(&test_vector.view(), Some(1.0), true).unwra...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 98: `compat::vector_norm(&test_vector.view(), Some(f64::INFINITY), true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 119: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 141: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 161: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 171: `let exp_zero = compat::expm(&zero_2x2.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 177: `let exp_diag = compat::expm(&diag_matrix.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 182: `let sqrt_identity = compat::sqrtm(&identity.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 187: `let sqrt_diag = compat::sqrtm(&diag_squares.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 197: `compat::qr(&simple_matrix.view(), false, None, "full", false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 212: `let (_, s, _) = compat::svd(&rank1.view(), true, true, false, true, "gesdd").unw...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 230: `let det_a = compat::det(&a.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 231: `let det_b = compat::det(&b.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 232: `let det_ab = compat::det(&a.dot(&b).view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 237: `let det_at = compat::det(&a.t().view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 243: `let det_ka = compat::det(&ka.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 250: `let inv_a = compat::inv(&a.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 253: `let inv_inv_a = compat::inv(&inv_a.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 257: `let inv_at = compat::inv(&a.t().view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 262: `let det_a = compat::det(&a.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 263: `let det_inv_a = compat::det(&inv_a.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 264: `assert!(close_f64(det_inv_a, 1.0 / det_a, VALIDATION_TOL));`
+- Line 26: `let t = i as f64 / fs;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 273: `let norm_a = compat::norm(&a.view(), Some("fro"), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 274: `let norm_b = compat::norm(&b.view(), Some("fro"), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 275: `let norm_sum = compat::norm(&(&a + &b).view(), Some("fro"), None, false, true).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 282: `let norm_ka = compat::norm(&ka.view(), Some("fro"), None, false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 287: `let norm_zero = compat::norm(&zero_matrix.view(), Some("fro"), None, false, true...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 308: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 316: `let det = compat::det(&a.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 328: `let error = diff.iter().map(|&x| x * x).sum::<f64>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 339: `let log_a = compat::logm(&a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 340: `let exp_log_a = compat::expm(&log_a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 345: `let exp_small_a = compat::expm(&small_a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 346: `let log_exp_small_a = compat::logm(&exp_small_a.view()).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 350: `let sqrt_a = compat::sqrtm(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 358: `let exp_sum = compat::expm(&(&diag_a + &diag_b).view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 359: `let exp_a = compat::expm(&diag_a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 360: `let exp_b = compat::expm(&diag_b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 371: `let (p, l, u) = compat::lu(&a.view(), false, false, true, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 377: `let (q_opt, r) = compat::qr(&a.view(), false, None, "full", false, true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 389: `let (u_opt, s, vt_opt) = compat::svd(&a.view(), true, true, false, true, "gesdd"...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 408: `let cond_identity = compat::cond(&identity.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 413: `let cond_random = compat::cond(&random_matrix.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 419: `let cond_scaled = compat::cond(&scaled_matrix.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 427: `let rank_identity = compat::matrix_rank(&identity_3.view(), None, false, true).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 434: `let rank_original = compat::matrix_rank(&test_matrix.view(), None, false, true)....`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 436: `let rank_transformed = compat::matrix_rank(&transformed.view(), None, false, tru...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 444: `let rank_outer = compat::matrix_rank(&outer_product.view(), None, false, true).u...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 471: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 473: `let residual_norm = residual.iter().map(|&r| r * r).sum::<f64>().sqrt();`
-  - **Fix**: Mathematical operation .sqrt() without validation
-- Line 478: `let cond_num = compat::cond(&well_conditioned.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 485: `let angle = PI / 4.0;`
+- Line 94: `let t = i as f64 / fs;`
   - **Fix**: Division without zero check - use safe_divide()
-- Line 489: `let det = compat::det(&rotation.view(), false, true).unwrap();`
+- Line 124: `let t = i as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/stft_example.rs
+
+4 issues found:
+
+- Line 24: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 35: `window_length as f64 * 1000.0 / fs`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 40: `hop_size as f64 * 1000.0 / fs`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 97: `let spec_mean = spectrogram.sum() / (spectrogram.shape()[0] * spectrogram.shape(...`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/streaming_stft_example.rs
+
+15 issues found:
+
+- Line 55: `let t = i as f64 / sample_rate;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 73: `sample_rate / config.frame_length as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 88: `let peak_frequency = peak_bin as f64 * sample_rate / config.frame_length as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 111: `stats.latency_samples as f64 / sample_rate,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 148: `let block_time = block_num as f64 * block_size as f64 / sample_rate;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 153: `let t = block_time + i as f64 / sample_rate;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 154: `let freq = start_freq + (end_freq - start_freq) * t / sweep_duration;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 186: `let peak_frequency = peak_bin as f64 * sample_rate / rt_config.frame_length as f...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 246: `.map(|j| (2.0 * PI * test_tone * j as f64 / sample_rate).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 262: `peak_bin as f64 * sample_rate / low_latency_config.frame_length as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 292: `let t = i as f64 / sample_rate;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 315: `let frequency_resolution = sample_rate / batch_config.frame_length as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 337: `peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap()); // Sort by magnitude`
   - **Fix**: Replace with ? operator or .ok_or()
-- Line 493: `let cond_num = compat::cond(&rotation.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 526: `.unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 554: `let (_, s, _) = compat::svd(&matrix.view(), true, true, false, true, "gesdd").un...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 565: `let norm_2 = compat::norm(&matrix.view(), Some("2"), None, false, true).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 569: `let fro_norm = compat::norm(&matrix.view(), Some("fro"), None, false, true).unwr...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 570: `let s_fro: f64 = s.iter().map(|&sigma| sigma * sigma).sum::<f64>().sqrt();`
+- Line 398: `let freq_resolution = sample_rate / config.frame_length as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 399: `let time_resolution = config.hop_length as f64 / sample_rate * 1000.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/swt2d_edge_detection.rs
+
+4 issues found:
+
+- Line 12: `let circle_center = (size as f64 / 2.0, size as f64 / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 27: `let distance = (x * x + y * y).sqrt();`
   - **Fix**: Mathematical operation .sqrt() without validation
-- Line 581: `let det_small = compat::det(&small_matrix.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 586: `let cond_wide = compat::cond(&wide_range.view(), Some("2")).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 592: `let det_nearly: f64 = compat::det(&nearly_singular.view(), false, true).unwrap()...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 596: `compat::matrix_rank(&nearly_singular.view(), Some(1e-12), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 632: `let _det = compat::det(&matrix.view(), false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 633: `let _norm = compat::norm(&matrix.view(), Some("fro"), None, false, true).unwrap(...`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 673: `let _lu = compat::lu(&matrix.view(), false, false, true, false).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 679: `let _qr = compat::qr(&matrix.view(), false, None, "full", false, true).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
+- Line 70: `let ratio = count_nonzero(&edges_clean, 0.1 * max_edge_value) as f64 / (size * s...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 101: `(decomp.detail_h[[i, j]].powi(2) + decomp.detail_v[[i, j]].powi(2)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
 
-### tests/scipy_validation.rs
-
-16 issues found:
-
-- Line 20: `let actual_det = det(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 29: `let actual_det = det(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 44: `let actual_inv = inv(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 54: `let (p, l, u) = lu(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 82: `let (q, r) = qr(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 108: `let (u, s, vt) = svd(&a.view(), false, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 140: `let l = cholesky(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 162: `let actual_frobenius = matrix_norm(&a.view(), "fro", None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 168: `let actual_1norm = matrix_norm(&a.view(), "1", None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 174: `let actual_infnorm = matrix_norm(&a.view(), "inf", None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 186: `let actual_x = solve(&a.view(), &b.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 196: `let det_result = det(&singular.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 203: `let identity_det = det(&identity.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 207: `let identity_inv = inv(&identity.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 217: `let det_result = det(&a.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 223: `let small_det = det(&small.view(), None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### tests/svd_implementation_tests.rs
-
-7 issues found:
-
-- Line 8: `let (u, s, vt) = svd(&a.view(), false, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 38: `let (u, s, vt) = svd(&a.view(), false, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 62: `let (u, s, vt) = svd(&a.view(), false, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 98: `let (u, s, vt) = svd(&a.view(), true, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 129: `let a_1x1 = a_view.view().into_shape_with_order((1, 1)).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 130: `let (u, s, vt) = svd(&a_1x1, false, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-- Line 148: `let (u, s, vt) = svd(&a.view(), false, None).unwrap();`
-  - **Fix**: Replace with ? operator or .ok_or()
-
-### tests/test_eigenvalue_precision.rs
+### examples/swt2d_example.rs
 
 1 issues found:
 
-- Line 8: `let (eigenvals, eigenvecs) = eigh(&symmetric_matrix.view(), None).unwrap();`
+- Line 152: `100.0 * (mse_noisy - mse_denoised) / mse_noisy`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/swt_example.rs
+
+5 issues found:
+
+- Line 11: `let t = (0..1000).map(|i| i as f64 / fs).collect::<Vec<f64>>();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 12: `let signal = chirp(&t, 0.0, 1.0, 100.0, "linear", 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 22: `let (details, approx) = swt(&noisy_signal, Wavelet::DB(4), 3, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 36: `let denoised_signal = iswt(&modified_details, &approx, Wavelet::DB(4)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 39: `let reconstructed_signal = iswt(&details, &approx, Wavelet::DB(4)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### examples/synchrosqueezed_example.rs
+
+12 issues found:
+
+- Line 47: `let rate_1 = (f1_1 - f0_1) / duration;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 57: `let k = ((f1_3 / f0_3) as f64).powf(1.0 / duration);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 57: `let k = ((f1_3 / f0_3) as f64).powf(1.0 / duration);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 63: `let _freq = f0_3 * k.powf(ti_adj);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 64: `let phase = 2.0 * PI * f0_3 * (k.powf(ti_adj) - 1.0) / k.ln();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 64: `let phase = 2.0 * PI * f0_3 * (k.powf(ti_adj) - 1.0) / k.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 64: `let phase = 2.0 * PI * f0_3 * (k.powf(ti_adj) - 1.0) / k.ln();`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 97: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 126: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 159: `let mid_idx = n_points / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 164: `first_section.iter().map(|&(_, f)| f).sum::<f64>() / first_section.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 166: `second_section.iter().map(|&(_, f)| f).sum::<f64>() / second_section.len() as f6...`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/sysid_example.rs
+
+5 issues found:
+
+- Line 22: `let t = Array1::linspace(0.0, (n - 1) as f64 / fs, n);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 29: `let t_slice = t.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 37: `let _dt = 1.0 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 96: `let mid_idx = freq_result.coherence.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 218: `let avg_error = estimation_errors.iter().sum::<f64>() / estimation_errors.len() ...`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/test_windows.rs
+
+17 issues found:
+
+- Line 10: `let hamming_win = hamming(n, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 15: `let hann_win = hann(n, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 20: `let bartlett_win = bartlett(n, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 35: `.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 36: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 46: `let _center_idx = (n - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 55: `let idx1 = n / 2 - 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 56: `let idx2 = n / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 58: `0.54 - 0.46 * (2.0 * std::f64::consts::PI * idx1 as f64 / (n - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 60: `0.54 - 0.46 * (2.0 * std::f64::consts::PI * idx2 as f64 / (n - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 72: `let idx1 = n / 2 - 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 73: `let idx2 = n / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 75: `0.5 * (1.0 - (2.0 * std::f64::consts::PI * idx1 as f64 / (n - 1) as f64).cos());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 77: `0.5 * (1.0 - (2.0 * std::f64::consts::PI * idx2 as f64 / (n - 1) as f64).cos());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 87: `let idx = n / 2 - 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 88: `let expected = 2.0 * idx as f64 / (n - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 96: `let idx = n / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/test_wvd.rs
+
+1 issues found:
+
+- Line 17: `let wvd = wigner_ville(&signal, config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### examples/total_variation_example.rs
+
+24 issues found:
+
+- Line 36: `let denoised_standard = tv_denoise_1d(&noisy_signal, weight, &standard_config).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 37: `let denoised_anisotropic = tv_denoise_1d(&noisy_signal, weight, &anisotropic_con...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 72: `let denoised_image = tv_denoise_2d(&noisy_image, image_weight, &standard_config)...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 74: `tv_denoise_2d(&noisy_image, image_weight, &anisotropic_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 105: `let bregman_1d = tv_bregman_1d(&noisy_signal, weight, 3, &standard_config).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 106: `let bregman_2d = tv_bregman_2d(&noisy_image, image_weight, 3, &standard_config)....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 134: `tv_denoise_color(&noisy_color_image, 0.2, &standard_config, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 136: `tv_denoise_color(&noisy_color_image, 0.2, &standard_config, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 194: `let inpainted_image = tv_inpaint(&corrupted_image, 0.1, &standard_config).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 225: `let denoised = tv_denoise_2d(&noisy_image, w, &standard_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 252: `clean_signal[i] = 0.5 + (i - 300) as f64 / 100.0 * 0.5;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 280: `let x = j as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 281: `let y = i as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 310: `clean_image.mapv_inplace(|x| (x - min_val) / (max_val - min_val));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 340: `let x = j as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 341: `let y = i as f64 / size as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 420: `let line_y = height / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 428: `let line_x = width / 3;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 436: `let rect_x = 3 * width / 4;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 437: `let rect_y = height / 4;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 495: `10.0 * (signal_power / noise_power).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 515: `10.0 * (signal_power / noise_power).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 537: `10.0 * (signal_power / noise_power).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 562: `10.0 * (1.0 / mse).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/wavelet2d_example.rs
+
+1 issues found:
+
+- Line 112: `original_nonzero as f64 / thresholded_nonzero as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/wavelet_image_processing.rs
+
+17 issues found:
+
+- Line 141: `let center_x = (width / 2) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 142: `let center_y = (height / 2) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 143: `let max_radius = (width.min(height) / 2) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 150: `let radius = (dx * dx + dy * dy).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 151: `let normalized_radius = radius / max_radius;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 169: `let h_edge = height / 3;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 172: `let v_edge = width * 2 / 3;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 202: `let val3 = ((x as f64 - width as f64 / 2.0).powi(2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 203: `+ (y as f64 - height as f64 / 2.0).powi(2))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 204: `.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 231: `let mean = sum / (image.len() as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 232: `let variance = sum_sq / (image.len() as f64) - mean * mean;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 233: `let std_dev = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 242: `100.0 * nonzero_count as f64 / image.len() as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 260: `sum_squared_error / n`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 276: `20.0 * (data_range / mse.sqrt()).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 276: `20.0 * (data_range / mse.sqrt()).log10()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### examples/wavelet_packet_2d.rs
+
+6 issues found:
+
+- Line 14: `let center_x = size as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 15: `let center_y = size as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 16: `let radius = size as f64 / 4.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 26: `let distance = (x * x + y * y).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 52: `let packet = full_decomp.get_packet(1, row, col).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 111: `100.0 * (1.0 - (total_count as f64 / (1 + 4 + 16 + full_nodes_at_level3) as f64)...`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/wavelet_visualization.rs
+
+12 issues found:
+
+- Line 33: `let base = if (i / 8 + j / 8) % 2 == 0 { 1.0 } else { 0.3 };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 37: `let ci = i as f64 - size as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 38: `let cj = j as f64 - size as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 39: `let distance = (ci * ci + cj * cj).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 42: `let gradient = 0.5 * (i as f64 / size as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 45: `image[[i, j]] = 0.8 + 0.2 * distance / circle_radius;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 79: `100.0 * energy.horizontal.unwrap() / energy.total,`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 80: `energy.horizontal.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 84: `100.0 * energy.vertical.unwrap() / energy.total,`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 85: `energy.vertical.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 89: `100.0 * energy.diagonal.unwrap() / energy.total,`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 90: `energy.diagonal.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### examples/wiener_filter_example.rs
+
+20 issues found:
+
+- Line 29: `let denoised_basic = wiener_filter(&noisy_signal, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 56: `let denoised_freq = wiener_filter_freq(&noisy_signal, &freq_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 57: `let denoised_time = wiener_filter_time(&noisy_signal, &time_config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 84: `let denoised_iter = iterative_wiener_filter(&noisy_signal, &iter_config).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 102: `let denoised_spec1 = spectral_subtraction(&noisy_signal, None, Some(1.0), Some(0...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 103: `let denoised_spec2 = spectral_subtraction(&noisy_signal, None, Some(2.0), Some(0...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 123: `let denoised_psd = psd_wiener_filter(&noisy_signal, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 144: `let nonstat_wiener = wiener_filter(&noisy_signal2, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 146: `kalman_wiener_filter(&noisy_signal2, process_var, measurement_var).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 175: `let denoised_image = wiener_filter_2d(&noisy_image, None, Some([5, 5])).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 200: `let t = Array1::linspace(0.0, (n_samples as f64 - 1.0) / sampling_rate, n_sample...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 204: `waveforms::chirp(t.as_slice().unwrap(), 10.0, 1.0, 100.0, "linear", 0.0).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 224: `let t = Array1::linspace(0.0, (n_samples as f64 - 1.0) / sampling_rate, n_sample...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 238: `let noise_level = 0.2 + 0.8 * (1.0 - (i as f64 / n_samples as f64 * 2.0 - 1.0).p...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 259: `let x = j as f64 / width as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 260: `let y = i as f64 / height as f64 * 2.0 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 263: `let distance = (x.powi(2) + y.powi(2)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 277: `clean_image.mapv_inplace(|x| (x - min_val) / (max_val - min_val));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 315: `10.0 * (signal_power / noise_power).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 338: `10.0 * (signal_power / noise_power).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/wigner_ville_example.rs
+
+11 issues found:
+
+- Line 59: `let duration = n_samples as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 70: `let rate = (f1 - f0) / duration;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 74: `let center = duration / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 77: `let gaussian = (-((ti - center) / width).powi(2)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 105: `let wvd = wigner_ville(signal, config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 149: `let spwvd = smoothed_pseudo_wigner_ville(signal, &time_win, &freq_win, config).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 168: `let duration = n_samples as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 188: `let wvd = wigner_ville(&signal, config.clone()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 197: `let spwvd = smoothed_pseudo_wigner_ville(&signal, &time_win, &freq_win, config)....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 210: `let duration = n_samples as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 228: `let xwvd_complex = cross_wigner_ville(&signal_sin, &signal_cos, config).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### examples/window_comparison.rs
+
+1 issues found:
+
+- Line 49: `let mean = sum / window.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### examples/wpt_example.rs
+
+5 issues found:
+
+- Line 12: `let t = (0..1024).map(|i| i as f64 / fs).collect::<Vec<f64>>();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 13: `let signal = chirp(&t, 0.0, 1.0, 100.0, "linear", 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 24: `let wpt = wp_decompose(&noisy_signal, Wavelet::DB(4), level, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 60: `let denoised_signal = reconstruct_from_nodes(&wpt, &nodes).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 108: `let best_basis_signal = reconstruct_from_nodes(&wpt, &selected_nodes).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### examples/z_domain_design_example.rs
+
+3 issues found:
+
+- Line 112: `h_num += coeff * z.powf(-(i as f64));`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 115: `h_den += coeff * z.powf(-(i as f64));`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 118: `let response = h_num / h_den;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/adaptive.rs
+
+68 issues found:
+
+- Line 313: `*p_elem = (*p_elem - kxp) / self.lambda;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 471: `let normalized_step = self.step_size / (input_power + self.epsilon);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 913: `.map(|c| c.re / self.block_size as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 962: `.map(|c| c.re / self.block_size as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1145: `let normalized_step = self.step_size / normalization;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1168: `self.update_count as f64 / self.sample_count as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1248: `let factor = aug_matrix[k][i] / aug_matrix[i][i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1275: `let lms = LmsFilter::new(4, 0.01, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1286: `let mut lms = LmsFilter::new(2, 0.1, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1289: `let (output, error, _mse) = lms.adapt(1.0, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1301: `let mut lms = LmsFilter::new(2, 0.05, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1306: `let (outputs, errors, _mse) = lms.adapt_batch(&inputs, &desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1319: `let mut lms = LmsFilter::new(3, 0.01, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1343: `let (_outputs, _errors, _mse) = lms.adapt_batch(&inputs, &desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1361: `let rls = RlsFilter::new(3, 0.99, 100.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1373: `let mut rls = RlsFilter::new(2, 0.99, 100.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1375: `let (output, error, _mse) = rls.adapt(1.0, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1384: `let nlms = NlmsFilter::new(4, 0.5, 1e-6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1395: `let mut nlms = NlmsFilter::new(2, 0.5, 1e-6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1397: `let (output, error, _mse) = nlms.adapt(1.0, 0.3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1430: `let mut lms = LmsFilter::new(2, 0.05, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1431: `let mut rls = RlsFilter::new(2, 0.99, 100.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1444: `let (_out_lms, err_lms, _) = lms.adapt(input, desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1445: `let (_out_rls, err_rls, _) = rls.adapt(input, desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1452: `let lms_final_error = lms_errors.iter().rev().take(10).sum::<f64>() / 10.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1453: `let rls_final_error = rls_errors.iter().rev().take(10).sum::<f64>() / 10.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1471: `let vs_lms = VsLmsFilter::new(4, 0.01, 0.05).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1484: `let mut vs_lms = VsLmsFilter::new(2, 0.1, 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1486: `let (output, error, _mse) = vs_lms.adapt(1.0, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1496: `vs_lms.adapt(1.0, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1505: `let apa = ApaFilter::new(4, 3, 0.1, 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1516: `let mut apa = ApaFilter::new(2, 2, 0.1, 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1519: `let (output, error, _mse) = apa.adapt(&input, 0.3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1532: `let fdlms = FdlmsFilter::new(8, 0.01, 0.999).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1542: `let mut fdlms = FdlmsFilter::new(4, 0.01, 0.999).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1546: `let (outputs, errors) = fdlms.adapt_block(&inputs, &desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1560: `let lmf = LmfFilter::new(4, 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1570: `let mut lmf = LmfFilter::new(2, 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1572: `let (output, error, _mse) = lmf.adapt(1.0, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1580: `lmf.adapt(1.0, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1584: `let (final_output, _, _) = lmf.adapt(1.0, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1590: `let sm_lms = SmLmsFilter::new(4, 0.1, 0.1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1601: `let mut sm_lms = SmLmsFilter::new(2, 0.1, 0.05).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1604: `let (output, error, _mse) = sm_lms.adapt(1.0, 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1613: `sm_lms.adapt(1.0, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1622: `let mut sm_lms = SmLmsFilter::new(3, 0.1, 0.1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1630: `sm_lms.adapt(input, target_error).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1645: `let mut lms = LmsFilter::new(3, 0.01, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1646: `let mut vs_lms = VsLmsFilter::new(3, 0.01, 0.05).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1647: `let mut nlms = NlmsFilter::new(3, 0.5, 1e-6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1648: `let mut lmf = LmfFilter::new(3, 0.001).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1667: `let (_, err_lms, _) = lms.adapt(input, desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1668: `let (_, err_vs_lms, _) = vs_lms.adapt(input, desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1669: `let (_, err_nlms, _) = nlms.adapt(input, desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1670: `let (_, err_lmf, _) = lmf.adapt(input, desired).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1681: `lms_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1683: `vs_lms_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1685: `nlms_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1687: `lmf_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1724: `let solution = solve_linear_system_small(&matrix, &rhs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1742: `let mut vs_lms = VsLmsFilter::new(3, 0.01, 0.05).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1743: `let mut apa = ApaFilter::new(3, 2, 0.1, 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1744: `let mut lmf = LmfFilter::new(3, 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1745: `let mut sm_lms = SmLmsFilter::new(3, 0.1, 0.1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1750: `vs_lms.adapt(input, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1751: `apa.adapt(&[input, input * 0.5, input * 0.2], 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1752: `lmf.adapt(input, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1753: `sm_lms.adapt(input, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/advanced_filter.rs
+
+29 issues found:
+
+- Line 313: `let weight = response.weights[i].sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 324: `.map(|(&mag, &weight)| mag * weight.sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 353: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 393: `let weight = response.weights[i].sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 442: `error = error.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 487: `let delta_p = (10.0_f64.powf(spec.passband_ripple / 20.0) - 1.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 487: `let delta_p = (10.0_f64.powf(spec.passband_ripple / 20.0) - 1.0)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 488: `/ (10.0_f64.powf(spec.passband_ripple / 20.0) + 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 488: `/ (10.0_f64.powf(spec.passband_ripple / 20.0) + 1.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 489: `let delta_s = 10.0_f64.powf(-spec.stopband_attenuation / 20.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 489: `let delta_s = 10.0_f64.powf(-spec.stopband_attenuation / 20.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 504: `let normalized_width = transition_width / spec.sample_rate;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 509: `((a - 13.0) / (14.6 * normalized_width)).ceil() as usize`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 511: `((a - 7.95) / (14.36 * normalized_width)).ceil() as usize`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 513: `(0.9222 / normalized_width).ceil() as usize`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 524: `let nyquist = spec.sample_rate / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 527: `let passband_norm: Vec<f64> = spec.passband_freqs.iter().map(|&f| f / nyquist).c...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 528: `let stopband_norm: Vec<f64> = spec.stopband_freqs.iter().map(|&f| f / nyquist).c...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 618: `let idx = (i * (grid_len - 1)) / (num_extremal - 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 647: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 649: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 736: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 778: `/ (freq_points[upper_idx] - freq_points[lower_idx]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 829: `let estimated_order = estimate_filter_order(&spec).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 847: `let (frequencies, desired, weights) = create_design_grid(&spec, &config).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 873: `let result = arbitrary_magnitude_design(&response, 16, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 893: `let result = least_squares_design(&response, 8).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 919: `let (frequencies, response) = compute_frequency_response(&coefficients, 64).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 939: `interpolate_response(&freq_points, &response_values, &new_freq_points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/bss/fastica.rs
+
+9 issues found:
+
+- Line 44: `let normal = Normal::new(0.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 61: `Box::new(|x: f64| x * (-x * x / 2.0).exp()),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 62: `Box::new(|x: f64| (-x * x / 2.0).exp() * (1.0 - x * x)),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 124: `new_wp[i] = sum_gx_x / (n_samples as f64) - g_prime_sum * wp[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 137: `let norm = (new_wp.dot(&new_wp)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 180: `let gradient = gx.dot(&signals.t()) / (n_samples as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 181: `- Array2::<f64>::eye(n_components) * w.mapv(|x: f64| g_prime(x)).mean().unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 200: `d_inv_sqrt[[i, i]] = 1.0 / eigvals[i].sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 200: `d_inv_sqrt[[i, i]] = 1.0 / eigvals[i].sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### src/bss/ica.rs
+
+1 issues found:
+
+- Line 47: `let means = signals.mean_axis(Axis(1)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/bss/infomax.rs
+
+13 issues found:
+
+- Line 41: `let normal = Normal::new(0.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 63: `let n_batches = n_samples / batch_size;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 81: `y_sigmoid[[i, j]] = 1.0 / (1.0 + (-y[[i, j]]).exp());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 88: `&block.dot(&y_sigmoid.dot(&x_batch.t())) * (learning_rate / batch_size as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 94: `let delta_w_avg = delta_w_sum / n_batches as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 101: `if delta_w_avg.mapv(|x: f64| x.abs()).mean().unwrap() < config.convergence_thres...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 142: `let normal = Normal::new(0.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 164: `let n_batches = n_samples / batch_size;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 188: `kurtosis = kurtosis / batch_size as f64 - 3.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 204: `1.0 - k.slice(s![i, ..]).mapv(|x: f64| x.powi(2)).mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 215: `let block = &eye - &k.dot(&y.t()) / batch_size as f64 + &k_prime;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 222: `let delta_w_avg = delta_w_sum / n_batches as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 229: `if delta_w_avg.mapv(|x: f64| x.abs()).mean().unwrap() < config.convergence_thres...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/bss/jade.rs
+
+2 issues found:
+
+- Line 111: `PI / 4.0 * (g21 >= 0.0) as i32 as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 113: `0.5 * (g21 / g22).atan()`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/bss/joint.rs
+
+9 issues found:
+
+- Line 44: `let means = dataset.mean_axis(Axis(1)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 54: `let cov = centered.dot(&centered.t()) / (n_samples as f64 - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 125: `s_inv[[i, i]] = 1.0 / s[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 157: `let means = signals.mean_axis(Axis(1)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 170: `let cov = centered.dot(&centered.t()) / (n_samples as f64 - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 174: `let max_lag = 10.min(n_samples / 4);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 187: `cov_lagged[[i, j]] = sum / (n_samples as f64 - lag as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 221: `let theta = 0.5 * (num / denom).atan();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 273: `s_inv[[i, i]] = 1.0 / s[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/bss/kernel.rs
+
+10 issues found:
+
+- Line 35: `let means = signals.mean_axis(Axis(1)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 57: `let normal = Normal::new(0.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 81: `gram[[i, j]] = (-diff * diff / (2.0 * kernel_width * kernel_width)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 86: `let row_means = gram.mean_axis(Axis(0)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 87: `let col_means = gram.mean_axis(Axis(1)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 88: `let total_mean = gram.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 171: `gradient[[c, d]] = grad_cd / (n_samples * n_samples) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 192: `d_inv_sqrt[[i, i]] = 1.0 / eigvals[i].sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 192: `d_inv_sqrt[[i, i]] = 1.0 / eigvals[i].sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 226: `s_inv[[i, i]] = 1.0 / s[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/bss/memd.rs
+
+5 issues found:
+
+- Line 52: `let norm: f64 = v.iter().map(|x| x * x).sum::<f64>().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 122: `let step = 1.0 / (idx2 - idx1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 150: `let diff = (&imf - &prev_imf).mapv(|x: f64| x.powi(2)).sum().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 151: `let norm = imf.mapv(|x: f64| x.powi(2)).sum().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 153: `if diff / norm < config.convergence_threshold {`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/bss/mod.rs
+
+21 issues found:
+
+- Line 105: `let cov = signals.dot(&signals.t()) / (n_samples as f64 - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 121: `d_inv_sqrt[[i, i]] = 1.0 / eigvals[i].sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 121: `d_inv_sqrt[[i, i]] = 1.0 / eigvals[i].sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 155: `let mean = component.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 156: `let var = component.mapv(|x: f64| (x - mean).powi(2)).sum() / (n_samples as f64 ...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 161: `variances.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 196: `let mean = signal.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 197: `let std_dev = (signal.mapv(|x: f64| (x - mean).powi(2)).sum() / n_samples as f64...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 197: `let std_dev = (signal.mapv(|x: f64| (x - mean).powi(2)).sum() / n_samples as f64...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 201: `normalized[[i, j]] = (signals[[i, j]] - mean) / std_dev;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 207: `let corr = normalized.dot(&normalized.t()) / (n_samples as f64 - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 245: `let x_bin_width = (x_max - x_min) / n_bins as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 246: `let y_bin_width = (y_max - y_min) / n_bins as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 255: `let x_bin = ((x[s] - x_min) / x_bin_width).floor() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 256: `let y_bin = ((y[s] - y_min) / y_bin_width).floor() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 279: `* (joint_hist[[xi, yi]] / (x_hist[xi] * y_hist[yi])).ln();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 279: `* (joint_hist[[xi, yi]] / (x_hist[xi] * y_hist[yi])).ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 305: `let means = signals.mean_axis(Axis(1)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 315: `let cov = centered.dot(&centered.t()) / (n_samples as f64 - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 332: `ratios.push(eigvals[i] / eigvals[i + 1]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 352: `Ok(n_signals / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/bss/nmf.rs
+
+4 issues found:
+
+- Line 64: `let norm = w.slice(s![.., j]).mapv(|x: f64| x.powi(2)).sum().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 81: `h[[i, j]] *= w_t_v[[i, j]] / w_t_w_h[[i, j]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 93: `w[[i, j]] *= v_h_t[[i, j]] / w_h_h_t[[i, j]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 100: `let norm = w.slice(s![.., j]).mapv(|x: f64| x.powi(2)).sum().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### src/bss/pca.rs
+
+4 issues found:
+
+- Line 26: `let means = signals.mean_axis(Axis(1)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 36: `let cov = centered.dot(&centered.t()) / (n_samples as f64 - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 50: `indices.sort_by(|&i, &j| eigvals[j].partial_cmp(&eigvals[i]).unwrap());`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 71: `if cum_var / total_var >= config.variance_threshold {`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/convolve.rs
+
+7 issues found:
+
+- Line 82: `let start_idx = (n_v - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 235: `let pad_rows = n_rows_v / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 236: `let pad_cols = n_cols_v / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 292: `let result = convolve(&a, &v, "full").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 306: `let result = convolve(&a, &v, "same").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 319: `let result = convolve(&a, &v, "valid").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 332: `let result = correlate(&a, &v, "full").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/convolve_parallel.rs
+
+4 issues found:
+
+- Line 128: `let n_chunks = (na + step - 1) / step;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 193: `let start = (nv - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 299: `"same" => (0, out_i as isize - (ker_rows / 2) as isize),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 308: `"same" => (0, out_j as isize - (ker_cols / 2) as isize),`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/cqt.rs
+
+37 issues found:
+
+- Line 179: `1.0 / (2.0f64.powf(1.0 / config.bins_per_octave as f64) - 1.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 179: `1.0 / (2.0f64.powf(1.0 / config.bins_per_octave as f64) - 1.0)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 184: `((config.f_max / config.f_min).log2() * config.bins_per_octave as f64).ceil() as...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 189: `frequencies[k] = config.f_min * 2.0f64.powf(k as f64 / config.bins_per_octave as...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 189: `frequencies[k] = config.f_min * 2.0f64.powf(k as f64 / config.bins_per_octave as...`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 240: `let n_bins = ((f_max / f_min).log2() * bins_per_octave as f64).ceil() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 245: `frequencies[k] = f_min * 2.0f64.powf(k as f64 / bins_per_octave as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 245: `frequencies[k] = f_min * 2.0f64.powf(k as f64 / bins_per_octave as f64);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 250: `let max_kernel_length = (window_scale * q * fs / f_min).ceil() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 267: `let kernel_length = (window_scale * q * fs / freq).ceil() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 279: `let center = (kernel_length - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 282: `let time = (n as f64 - center) / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 298: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 303: `padded_kernel[n] = kernel_values[n] / norm;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 381: `cqt[k] = sum / sparse_kernel.normalization;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 387: `let n_chunks = (n_signal as f64 / n_fft as f64).ceil() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 416: `cqt[k] += sum / sparse_kernel.normalization;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 440: `let n_frames = (n_signal as f64 / hop_size as f64).ceil() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 455: `times[frame] = (start + (end - start) / 2) as f64 / kernel.fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 534: `magnitude[[i, j]] = 20.0 * (magnitude[[i, j]] / (reference + eps)).log10();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 629: `let times = cqt.times.as_ref().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 635: `n_fft / 2`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 772: `let hann = create_window("hann", length).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 805: `let q = 1.0 / (2.0f64.powf(1.0 / bins_per_octave as f64) - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 805: `let q = 1.0 / (2.0f64.powf(1.0 / bins_per_octave as f64) - 1.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 809: `compute_cqt_kernel(f_min, f_max, bins_per_octave, q, fs, "hann", None, true).unw...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 812: `let expected_bins = ((f_max / f_min).log2() * bins_per_octave as f64).ceil() as ...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 852: `let cqt_result = constant_q_transform(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 875: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 878: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 894: `let phase = 2.0 * PI * (110.0 * ti + (880.0 - 110.0) * ti * ti / (2.0 * duration...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 912: `let cqt_result = constant_q_transform(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 916: `((config.f_max / config.f_min).log2() * config.bins_per_octave as f64).ceil() as...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 917: `let n_frames = (n_samples as f64 / 512.0).ceil() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 924: `assert_eq!(cqt_result.times.unwrap().len(), n_frames);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 952: `let cqt_result = constant_q_transform(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 955: `let chroma = chromagram(&cqt_result, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/czt.rs
+
+9 issues found:
+
+- Line 46: `let arg = -2.0 * std::f64::consts::PI / m as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 127: `let arg = -2.0 * std::f64::consts::PI / m_val as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 292: `let inv_n = 1.0 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 309: `let points = czt_points(4, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 320: `let angle = -2.0 * std::f64::consts::PI * i as f64 / 4.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 336: `let czt_result = czt(&signal, None, None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 355: `let czt_result2 = czt(&signal2, None, None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 368: `let arg = -std::f64::consts::PI / 16.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 371: `let czt_result = czt(&signal, Some(8), Some(w), None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/deconvolution.rs
+
+83 issues found:
+
+- Line 93: `(padded_signal, padded_psf, (pad_len - n) / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 101: `let start = (n - psf.len()) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 147: `result_complex[i] = signal_complex[i] * h_conj / denom;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 157: `let scale = 1.0 / (pad_len as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 225: `(padded_signal, padded_psf, (pad_len - n) / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 233: `let start = (n - psf.len()) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 288: `result_complex[i] = signal_complex[i] * h_conj / denom;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 298: `let scale = 1.0 / (pad_len as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 367: `(padded_signal, padded_psf, (pad_len - n) / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 375: `let start = (n - psf.len()) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 392: `let signal_mean = padded_signal.sum() / (pad_len as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 412: `estimate.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 413: `normalized_psf.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 421: `correction[i] = padded_signal[i] / pred_val;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 426: `correction.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 427: `flipped_psf.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 437: `/ prev_estimate.mapv(|x| x.abs()).sum();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 510: `(padded_signal, padded_psf, (pad_len - n) / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 518: `let start = (n - psf.len()) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 550: `.max_by(|a, b| a.1.abs().partial_cmp(&b.1.abs()).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 551: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 566: `(i as isize - peak_idx as isize + pad_len as isize / 2) as usize % pad_len;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 572: `let restoring_beam = create_gaussian_kernel((psf.len() / 2).max(3));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 574: `model.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 575: `restoring_beam.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 635: `(padded_signal, padded_psf, (pad_len - n) / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 643: `let start = (n - psf.len()) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 663: `model.fill(total_flux / (pad_len as f64));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 675: `model.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 676: `normalized_psf.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 684: `chi_squared += (diff * diff) / (noise_level * noise_level);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 702: `chi_grad += diff * normalized_psf[k] / (noise_level * noise_level);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 706: `let entropy_grad = -1.0 - model[i].ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 716: `model *= total_flux / model_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 722: `(&model - &prev_model).mapv(|x| x.abs()).sum() / prev_model.mapv(|x| x.abs()).su...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 777: `(padded_signal, (pad_len - n) / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 823: `let start = (pad_len - psf_size) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 842: `/ prev_signal.mapv(|x| x.abs()).sum();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 845: `/ prev_psf.mapv(|x| x.abs()).sum();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 914: `(padded_image, padded_psf, pad_h / 2, pad_w / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 920: `let start_h = (height - psf_h) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 921: `let start_w = (width - psf_w) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 971: `result_complex[i] = image_complex[i] * h_conj / denom;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 981: `let scale = 1.0 / (pad_height * pad_width) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1050: `(padded_image, padded_psf, pad_h / 2, pad_w / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1056: `let start_h = (height - psf_h) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1057: `let start_w = (width - psf_w) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1076: `let image_mean = padded_image.sum() / (pad_height * pad_width) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1102: `correction[[i, j]] = padded_image[[i, j]] / pred_val;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1117: `/ prev_estimate.mapv(|x| x.abs()).sum();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1181: `(padded_image, padded_psf, pad_h / 2, pad_w / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1187: `let start_h = (height - psf_h) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1188: `let start_w = (width - psf_w) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1243: `let grad_mag = (dx * dx + dy * dy).sqrt() + eps;`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1247: `/ ((estimate[[i, j]] - estimate[[i, j - 1]]).powi(2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1249: `.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1250: `- dx / grad_mag;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1253: `/ ((estimate[[i, j]] - estimate[[i, j - 1]]).powi(2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1255: `.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1256: `- dy / grad_mag;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1279: `/ prev_estimate.mapv(|x| x.abs()).sum();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1339: `(padded_image, pad_h / 2, pad_w / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1389: `let start_h = (pad_height - psf_size_h) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1390: `let start_w = (pad_width - psf_size_w) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1420: `/ prev_image.mapv(|x| x.abs()).sum();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1423: `/ prev_psf.mapv(|x| x.abs()).sum();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1445: `let half_size = size as isize / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1453: `kernel[i] = (-x * x / two_sigma_sq).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1467: `let half_h = height as isize / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1468: `let half_w = width as isize / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1480: `kernel[[i, j]] = (-x * x / two_sigma_w_sq - y * y / two_sigma_h_sq).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1502: `signal.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1503: `kernel.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1625: `let log_min = min_param.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 1626: `let log_max = max_param.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 1627: `let step = (log_max - log_min) / (num_values - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1639: `let start = (n - psf.len()) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1677: `let filter_elem = h_abs_sq / (h_abs_sq + param);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1683: `result_complex[i] = signal_complex[i] * h_conj / denom;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1693: `let scale = 1.0 / (n as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1702: `solution.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1703: `padded_psf.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1720: `let gcv = n as f64 * rss / (n as f64 - df).powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/denoise.rs
+
+12 issues found:
+
+- Line 126: `median / 0.6745`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 141: `ThresholdSelect::Universal => sigma * (2.0 * (n as f64).ln()).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 141: `ThresholdSelect::Universal => sigma * (2.0 * (n as f64).ln()).sqrt(),`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 145: `sigma * (2.0 * (n as f64).ln()).sqrt() * 0.75`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 145: `sigma * (2.0 * (n as f64).ln()).sqrt() * 0.75`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 204: `x - (threshold * threshold / x)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 232: `(values[n / 2 - 1] + values[n / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 234: `values[n / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 247: `(sorted_deviations[m / 2 - 1] + sorted_deviations[m / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 249: `sorted_deviations[m / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 293: `let time: Vec<f64> = (0..n).map(|i| i as f64 / 128.0).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 316: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/denoise_advanced.rs
+
+39 issues found:
+
+- Line 164: `let (denoised_shifted, _) = standard_denoise(&shifted, config, noise_level).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 180: `averaged[i] += result[i] / n_shifts as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 209: `accumulated[(i + shift) % n] += denoised_shifted[i] / n_shifts as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 235: `let shrinkage_factor = signal_var / (signal_var + noise_level * noise_level);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 236: `let threshold = noise_level * (1.0 - shrinkage_factor).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 269: `let n_blocks = (n_coeffs + block_size - 1) / block_size;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 272: `let base_threshold = noise_level * (2.0 * (signal.len() as f64).ln()).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 272: `let base_threshold = noise_level * (2.0 * (signal.len() as f64).ln()).sqrt();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 273: `let scale_factor = (level_idx + 1) as f64 / config.level as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 288: `block_energy = block_energy.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 293: `let shrinkage = (block_energy - threshold) / block_energy;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 322: `let base_threshold = noise_level * (2.0 * (signal.len() as f64).ln()).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 322: `let base_threshold = noise_level * (2.0 * (signal.len() as f64).ln()).sqrt();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 329: `let scale_factor = (level_idx + 1) as f64 / config.level as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 362: `sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 363: `let median = sorted[sorted.len() / 2];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 369: `deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 370: `let mad = deviations[deviations.len() / 2];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 373: `Ok(mad / 0.6745)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 380: `let mean = detail.iter().sum::<f64>() / detail.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 383: `.sum::<f64>() / detail.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 385: `Ok(variance.sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 391: `detail.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 393: `let q1_idx = detail.len() / 4;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 394: `let q3_idx = 3 * detail.len() / 4;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 398: `Ok(iqr / 1.349)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 407: `let mean = chunk.iter().sum::<f64>() / window as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 410: `.sum::<f64>() / window as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 415: `variances.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 416: `Ok(variances[0].sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 426: `.sum::<f64>() / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 448: `let signal_power = denoised.iter().map(|&x| x * x).sum::<f64>() / denoised.len()...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 449: `let noise_power = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len() as f64...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 452: `Some(10.0 * (signal_power / noise_power).log10())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 470: `let threshold = noise_level * (2.0 * (signal.len() as f64).ln()).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 470: `let threshold = noise_level * (2.0 * (signal.len() as f64).ln()).sqrt();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 497: `.map(|i| (2.0 * PI * i as f64 / n as f64 * 5.0).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 506: `let result = advanced_denoise(&noisy, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 524: `let result = advanced_denoise(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/denoise_enhanced.rs
+
+61 issues found:
+
+- Line 199: `let retention_rate = retained_coeffs / total_coeffs as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 270: `averaged[(i + shift) % n] += result.signal[i] / n_shifts as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 277: `let noise_sigma = all_noise_estimates.iter().sum::<f64>() / n_shifts as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 281: `.sum::<f64>() / n_shifts as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 299: `check_finite(&image.as_slice().unwrap(), "image")?;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 330: `all_d_thresholds[0] / (2.0 * (d_detail.len() as f64).ln()).sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 330: `all_d_thresholds[0] / (2.0 * (d_detail.len() as f64).ln()).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 330: `all_d_thresholds[0] / (2.0 * (d_detail.len() as f64).ln()).sqrt()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 358: `approximations.last().unwrap().clone()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 361: `let noise_sigma = all_d_thresholds[0] / (2.0_f64).powf(levels as f64 / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 361: `let noise_sigma = all_d_thresholds[0] / (2.0_f64).powf(levels as f64 / 2.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 363: `threshold_subband(approximations.last().unwrap(), noise_sigma, levels, config)?;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 408: `abs_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 411: `(abs_coeffs[abs_coeffs.len() / 2 - 1] + abs_coeffs[abs_coeffs.len() / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 413: `abs_coeffs[abs_coeffs.len() / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 442: `ThresholdRule::Universal => noise_sigma * (2.0 * n.ln()).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 442: `ThresholdRule::Universal => noise_sigma * (2.0 * n.ln()).sqrt(),`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 490: `(thresholded, retained as f64 / coeffs.len() as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 506: `(thresholded, retained as f64 / coeffs.len() as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 518: `thresholded[i] = coeff * (1.0 - threshold_sq / coeff_sq);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 523: `(thresholded, retained as f64 / coeffs.len() as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 537: `thresholded[i] = coeff.signum() * (a * abs_coeff - a * threshold) / (a - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 545: `(thresholded, retained as f64 / coeffs.len() as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 560: `let scale = (abs_coeff - threshold) / (upper_threshold - threshold);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 569: `(thresholded, retained as f64 / coeffs.len() as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 581: `thresholded[i] = coeff * (coeff_sq - threshold_sq).sqrt() / coeff.abs();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 581: `thresholded[i] = coeff * (coeff_sq - threshold_sq).sqrt() / coeff.abs();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 586: `(thresholded, retained as f64 / coeffs.len() as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 592: `let n_blocks = (n + block_size - 1) / block_size;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 605: `block_energy = block_energy.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 617: `let retention_rate = retained_blocks as f64 / n_blocks as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 624: `let max_threshold = noise_sigma * (2.0 * n.ln()).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 624: `let max_threshold = noise_sigma * (2.0 * n.ln()).sqrt();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 631: `let threshold = max_threshold * (i + 1) as f64 / n_candidates as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 666: `let variance = coeffs.iter().map(|&x| x * x).sum::<f64>() / coeffs.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 670: `noise_sigma * noise_sigma / signal_variance.sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 670: `noise_sigma * noise_sigma / signal_variance.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 679: `let log_n = n.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 684: `noise_sigma * (0.3936 + 0.1829 * log_n).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 697: `abs_coeffs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 703: `let p_value = 2.0 * (1.0 - normal_cdf(abs_val / noise_sigma));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 704: `let fdr_threshold = q * (k + 1) as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 719: `let max_threshold = noise_sigma * (2.0 * (n as f64).ln()).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 719: `let max_threshold = noise_sigma * (2.0 * (n as f64).ln()).sqrt();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 726: `let threshold = max_threshold * (i + 1) as f64 / n_candidates as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 739: `(thresholded[j - 1] + thresholded[j]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 768: `let subband_sigma = noise_sigma * 2.0_f64.powf(level as f64 / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 768: `let subband_sigma = noise_sigma * 2.0_f64.powf(level as f64 / 2.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 772: `ThresholdRule::Universal => subband_sigma * (2.0 * (flat.len() as f64).ln()).sqr...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 772: `ThresholdRule::Universal => subband_sigma * (2.0 * (flat.len() as f64).ln()).sqr...`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 775: `_ => subband_sigma * (2.0 * (flat.len() as f64).ln()).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 775: `_ => subband_sigma * (2.0 * (flat.len() as f64).ln()).sqrt(),`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 846: `let noise_estimate = (original - denoised).mapv(|x| x * x).sum() / original.len(...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 847: `let signal_power = original.mapv(|x| x * x).sum() / original.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 848: `let snr_improvement = 10.0 * (signal_power / noise_estimate.max(1e-10)).log10();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 852: `/ (2.0 * h_retention.len() as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 858: `/ (3.0 * h_retention.len() as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 869: `0.5 * (1.0 + erf(x / 2.0_f64.sqrt()))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 869: `0.5 * (1.0 + erf(x / 2.0_f64.sqrt()))`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 885: `let t = 1.0 / (1.0 + p * x);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 910: `let result = denoise_wavelet_1d(&noisy_signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/detrend.rs
+
+22 issues found:
+
+- Line 90: `let mean = x_f64.iter().sum::<f64>() / x_f64.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 99: `let mean_x = x_indices.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 100: `let mean_y = x_f64.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 115: `numerator / denominator`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 215: `let mean = col.sum() / col.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 220: `let mean = row.sum() / row.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 420: `let factor = a_copy[[j, i]] / a_copy[[i, i]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 436: `x[i] = (b_copy[i] - sum) / a_copy[[i, i]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 452: `let detrended = detrend(&signal, Some("constant")).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 455: `let mean = detrended.iter().sum::<f64>() / detrended.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 470: `let detrended = detrend(&signal, Some("linear")).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 482: `let detrended = detrend(&signal, Some("none")).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 501: `let detrended_cols = detrend_axis(&data, Some("linear"), 0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 511: `let mean_x = x.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 512: `let mean_y = col.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 524: `let slope = numerator / denominator;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 529: `let detrended_rows = detrend_axis(&data, Some("linear"), 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 539: `let mean_x = x.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 540: `let mean_y = row.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 552: `let slope = numerator / denominator;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 568: `let detrended = detrend_poly(&signal, 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 576: `let detrended_quadratic = detrend_poly(&signal, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/dwt/multiscale.rs
+
+1 issues found:
+
+- Line 73: `let max_level = (data_len as f64 / min_length as f64).log2().floor() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/dwt/transform.rs
+
+5 issues found:
+
+- Line 68: `let output_len = (input_len + filter_len - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 99: `let scale_factor = 2.0_f64.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 157: `let scale_factor = 1.0 / 2.0_f64.sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 157: `let scale_factor = 1.0 / 2.0_f64.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 184: `let filter_delay = (filter_len / 2) - 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/dwt/utils.rs
+
+4 issues found:
+
+- Line 75: `if (sum_lo - 2.0_f64.sqrt()).abs() > tolerance {`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 146: `let omega = pi * k as f64 / points as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 160: `num += (k as f64 / points as f64 / 2.0) * magnitude_squared;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 168: `num / den`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/dwt2d.rs
+
+11 issues found:
+
+- Line 1078: `x * (1.0 - (threshold * threshold) / (x * x))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1266: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1269: `let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1278: `let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::Haar, None).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1296: `let coeffs = wavedec2(&data, Wavelet::Haar, levels, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1302: `let reconstructed = waverec2(&coeffs, Wavelet::Haar, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1319: `let mut decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1392: `let expected_0 = -10.0 * (1.0 - (threshold * threshold) / (10.0 * 10.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1407: `let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1442: `let decomposition = dwt2d_decompose(&data, Wavelet::DB(2), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1451: `let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::DB(2), None).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/dwt2d_enhanced.rs
+
+12 issues found:
+
+- Line 95: `check_finite(&data.as_slice().unwrap(), "data")?;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 138: `let half_cols = (cols + 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 156: `let half_rows = (rows + 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 233: `let half_cols = (cols + 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 258: `let half_rows = (rows + 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 346: `let signal_view = ArrayView2::from_shape((1, len), signal_slice).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 347: `let lo_view = ArrayView2::from_shape((1, len), lo_slice).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 348: `let hi_view = ArrayView2::from_shape((1, len), hi_slice).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 376: `let pad_len = filter_len / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 521: `]).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 524: `let result = enhanced_dwt2d_decompose(&data, Wavelet::Haar, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 547: `let result = enhanced_dwt2d_decompose(&data, Wavelet::DB(4), &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/dwt2d_image.rs
+
+25 issues found:
+
+- Line 124: `let sigma = (energy.detail_h + energy.detail_v + energy.detail_d).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 125: `/ ((coeffs[0].detail_h.len() + coeffs[0].detail_v.len() + coeffs[0].detail_d.len...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 127: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 130: `let universal_threshold = sigma * (2.0 * n.ln()).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 130: `let universal_threshold = sigma * (2.0 * n.ln()).sqrt();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 135: `let level_factor = 1.0 / (2.0_f64.powi(i as i32));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 153: `let sigma = ((h_sigma + v_sigma + d_sigma) / 3.0).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 153: `let sigma = ((h_sigma + v_sigma + d_sigma) / 3.0).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 157: `/ (level.detail_h.len() + level.detail_v.len() + level.detail_d.len()) as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 161: `let sigma_x = signal_var.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 163: `sigma * sigma / sigma_x`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 344: `if level != coeffs.first().unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 377: `1.0 - (compressed_nonzeros as f32 / original_nonzeros as f32)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 420: `let mid = abs_coeffs.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 422: `(abs_coeffs[mid - 1] + abs_coeffs[mid]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 433: `let mean = abs_coeffs.iter().sum::<f64>() / abs_coeffs.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 435: `abs_coeffs.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / abs_coeffs.len() a...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 490: `x * (1.0 - t_sq / (x * x))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 562: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 572: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 582: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 606: `let edges = detect_edges(&image, Wavelet::Haar, 1, Some(0.5)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 636: `let (compressed_low, ratio_low) = compress_image(&image, Wavelet::DB(2), 2, 0.3)...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 637: `let (compressed_high, ratio_high) = compress_image(&image, Wavelet::DB(2), 2, 0....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 648: `let (no_compression, ratio_zero) = compress_image(&image, Wavelet::DB(2), 2, 0.0...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/dwt2d_validation.rs
+
+30 issues found:
+
+- Line 112: `check_finite(&test_image.as_slice().unwrap(), "test_image")?;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 203: `let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 204: `let rmse = (sum_sq_error / errors.len() as f64).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 204: `let rmse = (sum_sq_error / errors.len() as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 244: `let energy_ratio = output_energy / input_energy;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 248: `approx_percent: 100.0 * approx_energy / output_energy,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 249: `detail_h_percent: 100.0 * h_energy / output_energy,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 250: `detail_v_percent: 100.0 * v_energy / output_energy,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 251: `detail_d_percent: 100.0 * d_energy / output_energy,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 318: `let edge_artifacts = total_artifacts / n_modes;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 319: `let continuity_score = total_continuity / n_modes;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 323: `symmetry_scores.iter().sum::<f64>() / symmetry_scores.len() as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 348: `let standard_time = start.elapsed().as_micros() as f64 / (n_runs as f64 * 1000.0...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 356: `let enhanced_time = start.elapsed().as_micros() as f64 / (n_runs as f64 * 1000.0...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 358: `let speedup = standard_time / enhanced_time.max(0.001);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 401: `let var1 = window1.iter().map(|&x| (x - mu1).powi(2)).sum::<f64>() / (window_siz...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 402: `let var2 = window2.iter().map(|&x| (x - mu2).powi(2)).sum::<f64>() / (window_siz...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 421: `Ok(sum_ssim / n_windows as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 443: `Ok(total_artifacts / perimeter)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 457: `continuity_score += 1.0 / (1.0 + (left_diff - right_diff).abs());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 461: `Ok(continuity_score / n_measurements as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 503: `let preservation_score = 1.0 - (approx_symmetry / (h_symmetry + v_symmetry + 1e-...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 537: `let energy_ratio = total_energy / input_energy;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 546: `let expected_size = ((current_size.0 + 1) / 2, (current_size.1 + 1) / 2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 571: `gradient[[i, j]] = (i + j) as f64 / 128.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 580: `checkerboard[[i, j]] = if (i / 8 + j / 8) % 2 == 0 { 1.0 } else { 0.0 };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 593: `gaussian[[i, j]] = (-(dx*dx + dy*dy) / (2.0 * sigma * sigma)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 657: `let result = validate_dwt2d(&image, Wavelet::Haar, 1e-10).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 666: `let metrics = test_energy_conservation(&image, Wavelet::DB(4)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 677: `assert!(validate_multilevel_dwt2d(&image, Wavelet::Sym(8), 4, 1e-10).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/emd.rs
+
+42 issues found:
+
+- Line 139: `let energy = imf.iter().map(|&x| x * x).sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 150: `let residue_energy = residue.iter().map(|&x| x * x).sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 151: `let original_energy = signal_f64.iter().map(|&x| x * x).sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 153: `if residue_energy < 1e-10 || residue_energy / original_energy < 1e-2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 233: `mean_env[i] = (upper_env[i] + lower_env[i]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 279: `sum_squared_diff / sum_squared_prev`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 304: `.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 355: `.min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 471: `let slope = (second_val - first_val) / (second_idx - first_idx);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 487: `let slope = (last_val - penultimate_val) / (last_idx - penultimate_idx);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 558: `y_left + (i as f64 - x_left) * (y_right - y_left) / (x_right - x_left);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 588: `* ((values[i + 1] - values[i]) / h[i] - (values[i] - values[i - 1]) / h[i - 1]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 602: `mu[i] = h[i] / l[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 603: `z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 619: `b[i] = (values[i + 1] - values[i]) / h[i]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 620: `- h[i] * (c_values[i + 1] + 2.0 * c_values[i]) / 3.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 621: `d[i] = (c_values[i + 1] - c_values[i]) / (3.0 * h[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 806: `let energy = avg_imfs.slice(s![i, ..]).map(|&x| x * x).sum() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 864: `let time_points: Vec<f64> = (0..n).map(|i| i as f64 / sample_rate).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 870: `let log_min = min_freq.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 871: `let log_max = max_freq.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 872: `let log_step = (log_max - log_min) / (num_freqs - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 901: `inst_freq.push(first_diff * sample_rate / (2.0 * std::f64::consts::PI));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 915: `inst_freq.push(diff * sample_rate / (4.0 * std::f64::consts::PI));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 921: `inst_freq.push(last_diff * sample_rate / (2.0 * std::f64::consts::PI));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 931: `let log_freq = inst_freq[j].ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 932: `let idx = ((log_freq - log_min) / log_step).round() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 957: `.map(|i| (2.0 * PI * i as f64 / period as f64).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1013: `idx % period == period / 4`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1014: `|| idx % period == period / 4 - 1`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1015: `|| idx % period == period / 4 + 1,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1018: `period / 4`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1025: `idx % period == 3 * period / 4`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1026: `|| idx % period == 3 * period / 4 - 1`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1027: `|| idx % period == 3 * period / 4 + 1,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1030: `3 * period / 4`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1052: `let linear_env = interpolate_envelope(&indices, &values, n, "linear").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1063: `let cubic_env = interpolate_envelope(&indices, &values, n, "cubic").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1076: `.map(|i| (2.0 * PI * i as f64 / 20.0).sin() + 0.5 * (2.0 * PI * i as f64 / 5.0)....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1082: `let result = emd(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1097: `.map(|i| (2.0 * PI * i as f64 / 20.0).sin() + 0.5 * (2.0 * PI * i as f64 / 5.0)....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1106: `let result = eemd(&signal, &config, ensemble_size, noise_std).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/features/activity.rs
+
+6 issues found:
+
+- Line 43: `let sma = signal_f64.iter().map(|&x| x.abs()).sum::<f64>() / signal_f64.len() as...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 54: `energy_ratio * (1.0 - (*low / bands[bands.len() - 1].1).powi(2)),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 65: `let max_lag = (0.5 * fs).min((signal_f64.len() as f64) / 3.0) as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 89: `let mean = signal.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 98: `let variance = signal_centered.iter().map(|&x| x * x).sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 115: `sum / (variance * (n - lag) as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/features/batch.rs
+
+1 issues found:
+
+- Line 177: `feature_matrix[[0, i]] = *first_features.get(name).unwrap();`
+  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
+
+### src/features/entropy.rs
+
+19 issues found:
+
+- Line 48: `sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 52: `let bin_width = 2.0 * iqr / (n as f64).powf(1.0 / 3.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 52: `let bin_width = 2.0 * iqr / (n as f64).powf(1.0 / 3.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 53: `let num_bins = ((max - min) / bin_width).ceil() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 60: `let bin = ((value - min) / (max - min) * num_bins as f64).floor() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 70: `let probability = count as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 71: `entropy -= probability * probability.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 128: `total += (local_count / (n - m + 1) as f64).ln();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 128: `total += (local_count / (n - m + 1) as f64).ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 131: `total / (n - m + 1) as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 159: `-((count_m_plus_1 / count_m).ln())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 159: `-((count_m_plus_1 / count_m).ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 188: `match_count * 2.0 / ((n - m) as f64 * (n - m - 1) as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 216: `idx.sort_by(|&a, &b| pattern[a].partial_cmp(&pattern[b]).unwrap());`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 221: `.map(|&i| char::from_digit(i as u32, 10).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 233: `let probability = count as f64 / total_patterns;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 234: `entropy -= probability * probability.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 238: `entropy / factorial.ln()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 238: `entropy / factorial.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+
+### src/features/peaks.rs
+
+6 issues found:
+
+- Line 45: `maxima.len() as f64 / minima.len() as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 59: `features.insert("peak_density".to_string(), maxima.len() as f64 / n as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 68: `let mean_peak_distance = peak_distances.iter().sum::<f64>() / peak_distances.len...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 78: `/ peak_distances.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 80: `features.insert("peak_distance_std".to_string(), variance.sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 88: `features.insert("crest_factor".to_string(), max_abs / rms);`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/features/spectral.rs
+
+3 issues found:
+
+- Line 117: `features.insert("low_freq_energy_ratio".to_string(), low_band_energy / total);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 118: `features.insert("mid_freq_energy_ratio".to_string(), mid_band_energy / total);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 121: `high_band_energy / total,`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/features/statistical.rs
+
+25 issues found:
+
+- Line 14: `let mean = sum / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 19: `let variance = sum_squared_diff / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 20: `let std_dev = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 26: `sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 28: `(sorted[n / 2 - 1] + sorted[n / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 30: `sorted[n / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 37: `.min_by(|a, b| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 38: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 41: `.max_by(|a, b| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 42: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 67: `let power = energy / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 72: `let mad: f64 = signal.iter().map(|&x| (x - mean).abs()).sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 77: `features.insert("cv".to_string(), std_dev / mean.abs());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 94: `sum_cubed_diff / ((n - 1.0) * std_dev.powi(3))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 133: `let mean = signal.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 134: `let variance = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n as f6...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 136: `variance.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 149: `extract_statistical_features(&signal, &mut features).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 152: `assert_eq!(*features.get("mean").unwrap(), 3.0);`
+  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
+- Line 153: `assert_eq!(*features.get("median").unwrap(), 3.0);`
+  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
+- Line 154: `assert_eq!(*features.get("min").unwrap(), 1.0);`
+  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
+- Line 155: `assert_eq!(*features.get("max").unwrap(), 5.0);`
+  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
+- Line 156: `assert_eq!(*features.get("range").unwrap(), 4.0);`
+  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
+- Line 159: `assert!((features.get("variance").unwrap() - 2.0).abs() < 1e-10);`
+  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
+- Line 160: `assert!((features.get("std").unwrap() - 2.0_f64.sqrt()).abs() < 1e-10);`
+  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
+
+### src/features/trend.rs
+
+10 issues found:
+
+- Line 36: `let non_linearity = (r_squared_quad - r_squared) / (1.0 - r_squared);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 59: `let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 60: `let intercept = (sum_y - slope * sum_x) / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 63: `let mean_y = sum_y / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 72: `let r_squared = 1.0 - ss_residual / ss_total;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 113: `/ det;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 119: `/ det;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 125: `/ det;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 128: `let mean_y = sum_y / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 137: `let r_squared = 1.0 - ss_residual / ss_total;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/features/zero_crossing.rs
+
+4 issues found:
+
+- Line 26: `zero_crossings as f64 / n as f64,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 32: `let frequency_estimate = (zero_crossings as f64) * fs / (2.0 * n as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 37: `let mean = signal.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 50: `mean_crossings as f64 / n as f64,`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/filter/analysis.rs
+
+3 issues found:
+
+- Line 122: `.map(|i| i as f64 / (n_points - 1) as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 439: `Ok(peak_freq / bandwidth)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 465: `let t = (target_db - m1) / (m2 - m1);`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/filter/application.rs
+
+18 issues found:
+
+- Line 115: `let b_norm: Vec<f64> = b.iter().map(|&val| val / a0).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 116: `let a_norm: Vec<f64> = a.iter().map(|&val| val / a0).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 226: `let min_zero = 1.0 / zero.conj();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 240: `gain_adjustment *= -zero.re / min_zero.re;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 257: `let scale = b[0] / min_phase_b[0];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 319: `gd.push(-phase_diff / freq_diff);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 366: `let norm_factor = 1.0 / energy.sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 366: `let norm_factor = 1.0 / energy.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 444: `num_val / den_val`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 473: `roots.push(Complex64::new(-trimmed_coeffs[1] / trimmed_coeffs[0], 0.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 487: `let sqrt_disc = discriminant.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 488: `roots.push(Complex64::new((-b + sqrt_disc) / (2.0 * a), 0.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 489: `roots.push(Complex64::new((-b - sqrt_disc) / (2.0 * a), 0.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 491: `let sqrt_disc = (-discriminant).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 492: `roots.push(Complex64::new(-b / (2.0 * a), sqrt_disc / (2.0 * a)));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 493: `roots.push(Complex64::new(-b / (2.0 * a), -sqrt_disc / (2.0 * a)));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 506: `let angle = 2.0 * std::f64::consts::PI * k as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 520: `let correction = p_val / p_prime;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/filter/common.rs
+
+4 issues found:
+
+- Line 199: `(PI * digital_freq / 2.0).tan()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 206: `(2.0 + analog_pole) / (2.0 - analog_pole)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 213: `(2.0 + analog_zero) / (2.0 - analog_zero)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 223: `let angle = PI * (2.0 * k as f64 + order as f64 + 1.0) / (2.0 * order as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/filter/fir.rs
+
+20 issues found:
+
+- Line 53: `let mid = (numtaps - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 62: `wc / std::f64::consts::PI`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 64: `1.0 - wc / std::f64::consts::PI`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 68: `let sinc_val = (wc * std::f64::consts::PI * n).sin() / (std::f64::consts::PI * n...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 73: `if i == numtaps / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 191: `let r = (filter_order + 2) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 200: `let num_bands = bands.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 208: `band_start + (band_end - band_start) * (i as f64) / (band_points as f64 - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 212: `let t = (omega - band_start) / (band_end - band_start);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 229: `extremal_freqs.push(i * (omega_grid.len() - 1) / (r - 1));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 249: `a_matrix[i][r - 1] = if i % 2 == 0 { 1.0 } else { -1.0 } / weight_grid[ext_idx];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 299: `new_extremal.sort_by(|&a, &b| errors[b].partial_cmp(&errors[a]).unwrap());`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 314: `let n = i as f64 - (numtaps as f64 - 1.0) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 321: `let freq = j as f64 * std::f64::consts::PI / (numtaps as f64 - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 336: `let mid = numtaps / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 338: `let avg = (h[i] + h[numtaps - 1 - i]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 366: `*w = 0.54 - 0.46 * (2.0 * std::f64::consts::PI * n / (total - 1.0)).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 373: `*w = 0.5 * (1.0 - (2.0 * std::f64::consts::PI * n / (total - 1.0)).cos());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 380: `let arg = 2.0 * std::f64::consts::PI * n / (total - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 438: `let factor = aug[k][i] / aug[i][i];`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/filter/iir.rs
+
+50 issues found:
+
+- Line 80: `let hp_poles: Vec<_> = poles.iter().map(|p| warped_freq / p).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 165: `let center_freq = (wl * wh).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 176: `let discriminant = (bandwidth * pole / 2.0).powi(2) + center_freq.powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 177: `let sqrt_disc = discriminant.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 178: `let p1 = bandwidth * pole / 2.0 + sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 179: `let p2 = bandwidth * pole / 2.0 - sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 197: `let discriminant = (bandwidth / (2.0 * pole)).powi(2) + center_freq.powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 198: `let sqrt_disc = discriminant.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 199: `let p1 = bandwidth / (2.0 * pole) + sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 200: `let p2 = bandwidth / (2.0 * pole) - sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 283: `let epsilon = (10.0_f64.powf(ripple / 10.0) - 1.0).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 283: `let epsilon = (10.0_f64.powf(ripple / 10.0) - 1.0).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 283: `let epsilon = (10.0_f64.powf(ripple / 10.0) - 1.0).sqrt();`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 287: `let a = (1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0).sqrt()).ln() / order as...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 287: `let a = (1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0).sqrt()).ln() / order as...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 287: `let a = (1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0).sqrt()).ln() / order as...`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 290: `let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64)...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 309: `let hp_poles: Vec<_> = poles.iter().map(|p| warped_freq / p).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 383: `let epsilon = 1.0 / (10.0_f64.powf(attenuation / 10.0) - 1.0).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 383: `let epsilon = 1.0 / (10.0_f64.powf(attenuation / 10.0) - 1.0).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 383: `let epsilon = 1.0 / (10.0_f64.powf(attenuation / 10.0) - 1.0).sqrt();`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 390: `let a = (epsilon + (epsilon * epsilon + 1.0).sqrt()).ln() / order as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 390: `let a = (epsilon + (epsilon * epsilon + 1.0).sqrt()).ln() / order as f64;`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 390: `let a = (epsilon + (epsilon * epsilon + 1.0).sqrt()).ln() / order as f64;`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 394: `let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64)...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 402: `let inv_pole = 1.0 / pole;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 408: `let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64)...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 409: `let zero_imag = 1.0 / theta.cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 423: `let hp_poles: Vec<_> = poles.iter().map(|p| warped_freq / p).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 424: `let hp_zeros: Vec<_> = zeros.iter().map(|z| warped_freq / z).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 514: `let epsilon_p = (10.0_f64.powf(passband_ripple / 10.0) - 1.0).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 514: `let epsilon_p = (10.0_f64.powf(passband_ripple / 10.0) - 1.0).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 514: `let epsilon_p = (10.0_f64.powf(passband_ripple / 10.0) - 1.0).sqrt();`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 515: `let epsilon_s = (10.0_f64.powf(stopband_attenuation / 10.0) - 1.0).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 515: `let epsilon_s = (10.0_f64.powf(stopband_attenuation / 10.0) - 1.0).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 515: `let epsilon_s = (10.0_f64.powf(stopband_attenuation / 10.0) - 1.0).sqrt();`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 532: `let a = (1.0 / epsilon_p).asinh() / order as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 535: `let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64)...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 542: `let mod_factor = 1.0 + (epsilon_s / epsilon_p).ln() / (2.0 * order as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 542: `let mod_factor = 1.0 + (epsilon_s / epsilon_p).ln() / (2.0 * order as f64);`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 547: `if k < order / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 548: `let zero_freq = 1.5 + 0.5 * k as f64 / (order as f64 / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 550: `if order % 2 == 0 || k < order / 2 - 1 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 566: `let hp_poles: Vec<_> = poles.iter().map(|p| warped_freq / p).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 567: `let hp_zeros: Vec<_> = zeros.iter().map(|z| warped_freq / z).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 698: `let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64)...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 699: `let radius = 1.0 - 0.1 * (order as f64 - 8.0).min(5.0) / 10.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 720: `let hp_poles: Vec<_> = bessel_poles.iter().map(|p| warped_freq / p).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 841: `let b_normalized: Vec<f64> = b.iter().map(|&coeff| coeff / a0).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 842: `let a_normalized: Vec<f64> = a.iter().map(|&coeff| coeff / a0).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/filter/mod.rs
+
+13 issues found:
+
+- Line 122: `let (_b, a) = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 133: `let h = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 137: `for i in 0..h.len() / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 145: `let (b, a) = butter(4, 0.2, "lowpass").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 149: `let analysis = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 158: `let (b, a) = butter(2, 0.3, "lowpass").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 163: `let filtered = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 173: `let (b, a) = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 182: `let (_b, a) = butter(4, 0.2, "lowpass").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 186: `let stability = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 203: `let (_b, a) = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 212: `assert_eq!(filter_type.unwrap(), FilterType::Lowpass);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 216: `assert_eq!(filter_type.unwrap(), FilterType::Highpass);`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/filter/parallel.rs
+
+10 issues found:
+
+- Line 133: `((n / n_cores).max(filter_len * 4)).min(8192)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 140: `let n_chunks = (n + chunk - overlap - 1) / (chunk - overlap);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 200: `y[i] += b[j] * x[i - j] / a0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 205: `y[i] -= a[j] * y[i - j] / a0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 231: `let n_chunks = (na + chunk - overlap - 1) / (chunk - overlap);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 275: `let start = (nv - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 326: `let start = (nv - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 397: `"same" => ker_rows / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 404: `"same" => ker_cols / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 537: `data.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/filter/specialized.rs
+
+21 issues found:
+
+- Line 50: `let r = 1.0 - std::f64::consts::PI * notch_freq / quality_factor;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 175: `let zero = 1.0 / pole.conj();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 218: `let zero1 = 1.0 / pole1.conj();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 219: `let zero2 = 1.0 / pole2.conj();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 264: `let center = num_taps / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 273: `*item = 2.0 / (std::f64::consts::PI * n as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 284: `0.54 - 0.46 * (2.0 * std::f64::consts::PI * i as f64 / (num_taps - 1) as f64).co...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 327: `let center = num_taps / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 334: `*item = (-1.0_f64).powi(n + 1) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 341: `0.54 - 0.46 * (2.0 * std::f64::consts::PI * i as f64 / (num_taps - 1) as f64).co...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 381: `let normalized_h: Vec<f64> = h.iter().map(|&x| x / num_taps as f64).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 422: `let center = (num_taps - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 433: `*item = arg.sin() / arg;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 440: `0.54 - 0.46 * (2.0 * std::f64::consts::PI * i as f64 / (num_taps - 1) as f64).co...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 519: `let a_gain = 10.0_f64.powf(gain_db / 40.0); // Convert dB to linear`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 520: `let q = 1.0 / (2.0 * (bandwidth * std::f64::consts::LN_2 / 2.0).sinh());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 522: `let alpha = omega.sin() / (2.0 * q);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 529: `let a0 = 1.0 + alpha / a_gain;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 531: `let a2 = 1.0 - alpha / a_gain;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 534: `let b = vec![b0 / a0, b1 / a0, b2 / a0];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 535: `let a = vec![1.0, a1 / a0, a2 / a0];`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/filter/transform.rs
+
+50 issues found:
+
+- Line 53: `let fs_2 = sample_rate / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 59: `let digital_zero = (fs_2 + zero) / (fs_2 - zero);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 65: `let digital_pole = (fs_2 + pole) / (fs_2 - pole);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 187: `let b_normalized: Vec<f64> = b.iter().map(|&coeff| coeff / a0).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 188: `let a_normalized: Vec<f64> = a.iter().map(|&coeff| coeff / a0).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 235: `let gain = if b.is_empty() { 0.0 } else { b[0] / a[0] };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 314: `transformed_zeros.push(wc / zero);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 327: `let transformed_poles: Vec<_> = poles.iter().map(|&p| wc / p).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 370: `let wc = (wl * wh).sqrt(); // Center frequency`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 380: `let discriminant = (bw * zero / 2.0).powi(2) + wc.powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 382: `let sqrt_disc = discriminant.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 383: `let z1 = bw * zero / 2.0 + sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 384: `let z2 = bw * zero / 2.0 - sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 388: `let sqrt_disc = (-discriminant).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 389: `let z1 = Complex64::new((bw * zero / 2.0).re, sqrt_disc.re);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 390: `let z2 = Complex64::new((bw * zero / 2.0).re, -sqrt_disc.re);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 399: `let discriminant = (bw * pole / 2.0).powi(2) + wc.powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 401: `let sqrt_disc = discriminant.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 402: `let p1 = bw * pole / 2.0 + sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 403: `let p2 = bw * pole / 2.0 - sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 407: `let sqrt_disc = (-discriminant).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 408: `let p1 = Complex64::new((bw * pole / 2.0).re, sqrt_disc.re);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 409: `let p2 = Complex64::new((bw * pole / 2.0).re, -sqrt_disc.re);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 458: `let wc = (wl * wh).sqrt(); // Center frequency`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 468: `let discriminant = (bw / (2.0 * zero)).powi(2) + wc.powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 470: `let sqrt_disc = discriminant.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 471: `let z1 = bw / (2.0 * zero) + sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 472: `let z2 = bw / (2.0 * zero) - sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 476: `let sqrt_disc = (-discriminant).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 477: `let z1 = Complex64::new((bw / (2.0 * zero)).re, sqrt_disc.re);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 478: `let z2 = Complex64::new((bw / (2.0 * zero)).re, -sqrt_disc.re);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 487: `let discriminant = (bw / (2.0 * pole)).powi(2) + wc.powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 489: `let sqrt_disc = discriminant.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 490: `let p1 = bw / (2.0 * pole) + sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 491: `let p2 = bw / (2.0 * pole) - sqrt_disc;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 495: `let sqrt_disc = (-discriminant).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 496: `let p1 = Complex64::new((bw / (2.0 * pole)).re, sqrt_disc.re);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 497: `let p2 = Complex64::new((bw / (2.0 * pole)).re, -sqrt_disc.re);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 505: `for _ in 0..num_added_zeros / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 537: `let b_norm: Vec<f64> = b.iter().map(|&coeff| coeff / a0).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 538: `let a_norm: Vec<f64> = a.iter().map(|&coeff| coeff / a0).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 565: `roots.push(Complex64::new(-trimmed_coeffs[1] / trimmed_coeffs[0], 0.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 579: `let sqrt_disc = discriminant.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 580: `roots.push(Complex64::new((-b + sqrt_disc) / (2.0 * a), 0.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 581: `roots.push(Complex64::new((-b - sqrt_disc) / (2.0 * a), 0.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 583: `let sqrt_disc = (-discriminant).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 584: `roots.push(Complex64::new(-b / (2.0 * a), sqrt_disc / (2.0 * a)));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 585: `roots.push(Complex64::new(-b / (2.0 * a), -sqrt_disc / (2.0 * a)));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 598: `let angle = 2.0 * std::f64::consts::PI * k as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 610: `let correction = p_val / p_prime;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/filter_banks.rs
+
+48 issues found:
+
+- Line 209: `PI * (k as f64 + 0.5) * (n as f64 - filter_length as f64 / 2.0 + 0.5)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 210: `/ num_channels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 224: `let phase = 2.0 * PI * k as f64 * n as f64 / num_channels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 255: `PI * k as f64 * (2.0 * n as f64 + 1.0) / (2.0 * num_channels as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 262: `2.0 * analysis_filters[[k, n]] / num_channels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 277: `if k < num_channels / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 361: `input.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 362: `filter.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 397: `upsampled.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 398: `filter.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 523: `let passband_end = magnitude_responses.ncols() / (2 * self.num_channels);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 545: `let stopband_start = magnitude_responses.ncols() / self.num_channels;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 727: `input.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 728: `filter.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 763: `upsampled.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 764: `filter.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 823: `let arg = 2.0 * (n as f64) / (filter_length - 1) as f64 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 825: `let i0_arg = Self::modified_bessel_i0(beta * (1.0 - arg * arg).sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 826: `prototype[n] = i0_arg / i0_beta;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 833: `0.54 - 0.46 * (2.0 * PI * n as f64 / (filter_length - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 840: `0.5 * (1.0 - (2.0 * PI * n as f64 / (filter_length - 1) as f64).cos());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 846: `let arg = 2.0 * PI * n as f64 / (filter_length - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 868: `let t = x / 3.75;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 877: `let t = 3.75 / x.abs();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 886: `/ x.abs().sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 886: `/ x.abs().sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 955: `pole * (0.99 / pole.norm())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 988: `stabilized_a[i] *= 0.95 / stabilized_a[i].abs();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1014: `roots.push(Complex64::new(-coeffs[1] / coeffs[0], 0.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1025: `let sqrt_disc = discriminant.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1026: `roots.push(Complex64::new((-b + sqrt_disc) / (2.0 * a), 0.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1027: `roots.push(Complex64::new((-b - sqrt_disc) / (2.0 * a), 0.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1029: `let sqrt_disc = (-discriminant).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1030: `roots.push(Complex64::new(-b / (2.0 * a), sqrt_disc / (2.0 * a)));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1031: `roots.push(Complex64::new(-b / (2.0 * a), -sqrt_disc / (2.0 * a)));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1077: `let qmf = QmfBank::new(4, FilterBankType::Orthogonal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1085: `let qmf = QmfBank::new(2, FilterBankType::PerfectReconstruction).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1089: `let subbands = qmf.analysis(&input).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1093: `let reconstructed = qmf.synthesis(&subbands).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1102: `let wavelet_bank = WaveletFilterBank::new("db4", 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1106: `let coeffs = wavelet_bank.decompose(&input).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1110: `let reconstructed = wavelet_bank.reconstruct(&coeffs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1118: `let cmfb = CosineModulatedFilterBank::new(4, 2, FilterBankWindow::Hann).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1121: `let subbands = cmfb.analysis(&input).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1124: `let reconstructed = cmfb.synthesis(&subbands).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1130: `let qmf = QmfBank::new(2, FilterBankType::Orthogonal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1131: `let analysis = qmf.analyze_properties().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1144: `IirStabilizer::stabilize_filter(&b, &a, StabilizationMethod::RadialProjection).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/higher_order.rs
+
+32 issues found:
+
+- Line 218: `let i_idx = (f1 * nfft as f64 / fs).round() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 222: `let j_idx = (f2 * nfft as f64 / fs).round() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 226: `let sum_idx = (sum_freq * nfft as f64 / fs).round() as usize % nfft;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 236: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 240: `bicoherence[[i, j]] = bis_complex[[i, j]].norm() / norm_factor;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 272: `let _freq_step = config.fs / nfft as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 273: `let max_freq = config.fs / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 274: `let freq_bins = (nfft / 2) + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 305: `let n_bins = (nfft / 2) + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 347: `let n_bins = (nfft / 2) + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 385: `((n - overlap_samples) as f64 / step as f64).floor() as usize`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 395: `let n_bins = (nfft / 2) + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 427: `bispectrum_avg.mapv_inplace(|x| x / n_segments as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 485: `let _freq_step = config.fs / nfft as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 486: `let max_freq = config.fs / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 487: `let freq_bins = (nfft / 2) + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 497: `power_spectrum[i] = fft_result[i].norm_sqr() / nfft as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 515: `let mean = signal.sum() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 519: `let max_lag = size.min(n / 3);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 553: `triple_corr.mapv_inplace(|x| x / n as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 594: `let mut result = Array2::zeros((nfft / 2 + 1, nfft / 2 + 1));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 595: `for j in 0..(nfft / 2 + 1) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 611: `for i in 0..(nfft / 2 + 1) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 666: `let n_bins = (nfft / 2) + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 723: `let n_bins = (nfft / 2) + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 726: `let _freq_step = fs / nfft as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 727: `let max_freq = fs / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 776: `let max_bandwidth = n_bins / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 798: `cumulative[i] = sum / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 839: `let n_bins = (nfft / 2) + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 847: `skewness[i] = bis_complex[[i, i]].norm() / power_spectrum[i].powf(1.5);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 847: `skewness[i] = bis_complex[[i, i]].norm() / power_spectrum[i].powf(1.5);`
+  - **Fix**: Mathematical operation .powf( without validation
+
+### src/hilbert.rs
+
+32 issues found:
+
+- Line 113: `h.iter_mut().take(n / 2).skip(1).for_each(|val| {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 118: `h.iter_mut().skip(n / 2 + 1).for_each(|val| {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 158: `let scale = 1.0 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 215: `.map(|c| (c.re.powi(2) + c.im.powi(2)).sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 298: `unwrapped_phase.push(unwrapped_phase.last().unwrap() + diff);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 306: `inst_freq.push(fs * (unwrapped_phase[1] - unwrapped_phase[0]) / (2.0 * PI));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 310: `let freq = fs * (unwrapped_phase[i + 1] - unwrapped_phase[i - 1]) / (4.0 * PI);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 316: `inst_freq.push(fs * (unwrapped_phase[last_idx] - unwrapped_phase[last_idx - 1]) ...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 404: `unwrapped_phase.push(unwrapped_phase.last().unwrap() + diff);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 423: `let dt = 1.0 / sample_rate;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 430: `let analytic = hilbert(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 435: `let start_idx = n / 4;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 436: `let end_idx = 3 * n / 4;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 439: `let magnitude = (analytic[i].re.powi(2) + analytic[i].im.powi(2)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 469: `let dt = 1.0 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 482: `let envelope_result = envelope(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 507: `for (i, &ti) in t.iter().enumerate().skip(n / 10).take(8 * n / 10) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 523: `/ max_points.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 525: `/ min_points.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 539: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 542: `let duration = (n - 1) as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 548: `let _freq = f0 + (f1 - f0) * ti / duration;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 549: `let phase = 2.0 * PI * (f0 * ti + 0.5 * (f1 - f0) * ti.powi(2) / duration);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 555: `let inst_freq = instantaneous_frequency(&signal, fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 559: `let start_idx = n / 5;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 560: `let end_idx = 4 * n / 5;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 564: `let expected_freq = f0 + (f1 - f0) * ti / duration;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 580: `let dt = 1.0 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 587: `let phase = instantaneous_phase(&signal, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 593: `let start_idx = n / 5;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 594: `let end_idx = 4 * n / 5;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 597: `let phase_rate = (phase[i] - phase[i - 1]) / dt;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/hr_spectral.rs
+
+27 issues found:
+
+- Line 113: `eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 183: `eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 220: `.map(|&z| z.arg() / (2.0 * PI))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 229: `source_freqs.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 334: `.min_by(|a, b| a.1.norm().partial_cmp(&b.1.norm()).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 335: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 348: `.map(|z| z.arg() / (2.0 * PI))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 357: `source_freqs.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 392: `if order >= n / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 426: `let freq = root.arg() / (2.0 * PI);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 432: `source_freqs.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 463: `correlation[[i, j]] = sum / n_snapshots as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 495: `if eigenval / max_eigenvalue < config.eigenvalue_threshold {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 501: `Ok(eigenvalues.len() / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 538: `1.0 / projection_norm`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 572: `1.0 / quadratic_form.re`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 612: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 614: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 647: `autocorr[[i, j]] = Complex64::new(sum / (n - lag) as f64, 0.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 676: `let normalized_coeffs: Vec<Complex64> = coeffs.iter().map(|&c| c / max_coeff).co...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 685: `let first_idx = first_nonzero.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 694: `return Ok(vec![-effective_coeffs[1] / effective_coeffs[0]]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 716: `companion[[i, effective_n - 1]] = -effective_coeffs[effective_n - i] / leading_c...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 760: `let result = music(&data, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 782: `let result = minimum_variance(&data, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 802: `let result = pisarenko(&data, 2, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 836: `let autocorr = create_autocorrelation_matrix(&data, 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/image_features/color.rs
+
+27 issues found:
+
+- Line 34: `let r_mean = r_sum / n_pixels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 35: `let g_mean = g_sum / n_pixels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 36: `let b_mean = b_sum / n_pixels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 42: `r_mean / g_mean`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 50: `r_mean / b_mean`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 58: `g_mean / b_mean`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 77: `let r_std = (r_var_sum / n_pixels as f64).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 77: `let r_std = (r_var_sum / n_pixels as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 78: `let g_std = (g_var_sum / n_pixels as f64).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 78: `let g_std = (g_var_sum / n_pixels as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 79: `let b_std = (b_var_sum / n_pixels as f64).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 79: `let b_std = (b_var_sum / n_pixels as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 86: `features.insert("color_homogeneity".to_string(), min_std / max_std);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 106: `((image[[i, j, 0]].into() + image[[i, j, 1]].into()) / 2.0 - image[[i, j, 2]].in...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 109: `let rg_mean = rg_diff.iter().sum::<f64>() / n_pixels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 111: `(rg_diff.iter().map(|&x| (x - rg_mean).powi(2)).sum::<f64>() / n_pixels as f64)....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 111: `(rg_diff.iter().map(|&x| (x - rg_mean).powi(2)).sum::<f64>() / n_pixels as f64)....`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 113: `let yb_mean = yb_diff.iter().sum::<f64>() / n_pixels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 115: `(yb_diff.iter().map(|&x| (x - yb_mean).powi(2)).sum::<f64>() / n_pixels as f64)....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 115: `(yb_diff.iter().map(|&x| (x - yb_mean).powi(2)).sum::<f64>() / n_pixels as f64)....`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 118: `(rg_std.powi(2) + yb_std.powi(2)).sqrt() + 0.3 * (rg_mean.powi(2) + yb_mean.powi...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 140: `hue = 60.0 * ((g - b) / (max - min)) % 360.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 142: `hue = 60.0 * ((b - r) / (max - min) + 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 144: `hue = 60.0 * ((r - g) / (max - min) + 4.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 152: `let bin = (hue / 20.0).floor() as usize % 18;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 160: `.map(|&count| count as f64 / n_pixels as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 171: `.map(|&p| -p * p.ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+
+### src/image_features/edge.rs
+
+8 issues found:
+
+- Line 46: `let magnitude = (gx * gx + gy * gy).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 64: `let mean_gradient = edge_sum / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 68: `let edge_percentage = edge_count as f64 / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 76: `/ n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 77: `let std_dev = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 84: `let bin = (((dir + std::f64::consts::PI) / (2.0 * std::f64::consts::PI)) * 8.0)....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 93: `.map(|&count| count as f64 / n)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 105: `.map(|&p| -p * p.ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+
+### src/image_features/haralick.rs
+
+8 issues found:
+
+- Line 21: `glcm.mapv(|x| x / sum)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 63: `std_i = std_i.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 64: `std_j = std_j.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 72: `(i as f64 - mean_i) * (j as f64 - mean_j) * norm_glcm[[i, j]] / (std_i * std_j);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 91: `idm += norm_glcm[[i, j]] / (1.0 + (i as isize - j as isize).pow(2) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 115: `.map(|&p| -p * p.ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 123: `.map(|&p| -p * p.ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 152: `.map(|&p| -p * p.ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+
+### src/image_features/histogram.rs
+
+6 issues found:
+
+- Line 29: `let bin_width = (max_val - min_val) / bin_count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 32: `let bin = ((val - min_val) / bin_width)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 44: `.map(|&count| count as f64 / total)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 67: `let mode_value = min_val + (mode_bin as f64 + 0.5) * (max_val - min_val) / bin_c...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 74: `.map(|&p| -p * p.ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 87: `used_bins as f64 / bin_count as f64,`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/image_features/lbp.rs
+
+7 issues found:
+
+- Line 61: `let lbp_hist_norm: Vec<f64> = lbp_hist.iter().map(|&count| count as f64 / total)...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 99: `uniform_count as f64 / total,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 109: `entropy -= p * p.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 147: `features.insert("lbp_spots".to_string(), spots as f64 / total);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 148: `features.insert("lbp_flat".to_string(), flat as f64 / total);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 149: `features.insert("lbp_edges".to_string(), edges as f64 / total);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 150: `features.insert("lbp_corners".to_string(), corners as f64 / total);`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/image_features/moments.rs
+
+13 issues found:
+
+- Line 36: `let x_centroid = m10 / m00;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 37: `let y_centroid = m01 / m00;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 60: `let norm_factor = mu00.powf(1.0 + 1.0); // 1.0 + 1.0 is exponent for 2nd order m...`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 61: `let eta11 = mu11 / norm_factor;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 62: `let eta20 = mu20 / norm_factor;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 63: `let eta02 = mu02 / norm_factor;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 81: `let orientation = 0.5 * (2.0 * mu11 / (mu20 - mu02)).atan();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 86: `let major_axis = 2.0 * ((mu20 + mu02 + common.sqrt()) / mu00).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 86: `let major_axis = 2.0 * ((mu20 + mu02 + common.sqrt()) / mu00).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 87: `let minor_axis = 2.0 * ((mu20 + mu02 - common.sqrt()) / mu00).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 87: `let minor_axis = 2.0 * ((mu20 + mu02 - common.sqrt()) / mu00).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 90: `let eccentricity = (1.0 - (minor_axis / major_axis).powi(2)).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 90: `let eccentricity = (1.0 - (minor_axis / major_axis).powi(2)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### src/image_features/statistical.rs
+
+10 issues found:
+
+- Line 19: `let mean = sum / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 24: `let variance = sum_squared_diff / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 25: `let std_dev = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 33: `(sorted[sorted.len() / 2 - 1] + sorted[sorted.len() / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 35: `sorted[sorted.len() / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 43: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 47: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 62: `let rms = (energy / n).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 62: `let rms = (energy / n).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 68: `features.insert("intensity_cv".to_string(), std_dev / mean.abs());`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/image_features/texture.rs
+
+12 issues found:
+
+- Line 38: `/ 8.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 46: `/ 8.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 56: `gradient_mag[[i, j]] = (gx * gx + gy * gy).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 65: `let mean = flat_gradient.iter().sum::<f64>() / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 70: `/ n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 71: `let std_dev = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 78: `let coarseness = 1.0 / mean;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 85: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 89: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 90: `let contrast = (max_val - min_val) / (max_val + min_val + 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 94: `let energy = flat_gradient.iter().map(|&x| x * x).sum::<f64>() / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 98: `let directionality = variance / (mean * mean + 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/image_features/utils.rs
+
+3 issues found:
+
+- Line 14: `sum_cubed_diff / ((n - 1.0) * std_dev.powi(3))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 72: `row = ((image[[i, j]] - min_val) / (max_val - min_val) * (num_levels - 1) as f64...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 74: `col = ((image[[i, j + distance]] - min_val) / (max_val - min_val)`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/interpolate/advanced.rs
+
+17 issues found:
+
+- Line 79: `kernel_sigma * (-0.5 * (x1 - x2).powi(2) / (kernel_length * kernel_length)).exp(...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 531: `let h_norm = h / range;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 551: `nugget + (sill - nugget) * (1.0 - (-3.0 * h / range).exp())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 570: `nugget + (sill - nugget) * (1.0 - (-9.0 * h * h / (range * range)).exp())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 614: `move |r: f64| (1.0 + epsilon * r * r).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 625: `move |r: f64| 1.0 / (1.0 + epsilon * r * r).sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 625: `move |r: f64| 1.0 / (1.0 + epsilon * r * r).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 637: `r * r * r.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 653: `let result = gaussian_process_interpolate(&signal, 2.0, 1.0, 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 668: `let variogram = |h: f64| 1.0 - (-h / 2.0).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 670: `let result = kriging_interpolate(&signal, variogram, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 683: `let result = rbf_interpolate(&signal, rbf, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 695: `let result = minimum_energy_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 762: `let result1 = gaussian_process_interpolate(&signal, 1.0, 1.0, 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 763: `let result2 = kriging_interpolate(&signal, |_| 1.0, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 764: `let result3 = rbf_interpolate(&signal, |_| 1.0, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 765: `let result4 = minimum_energy_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/interpolate/basic.rs
+
+14 issues found:
+
+- Line 99: `result[i] = y1 + (y2 - y1) * (x - x1) / (x2 - x1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 193: `let result = linear_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 200: `let result = linear_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 209: `let result = linear_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 219: `let result = linear_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 229: `let result = linear_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 245: `let result = nearest_neighbor_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 252: `let result = nearest_neighbor_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 262: `let result = nearest_neighbor_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 272: `let result = nearest_neighbor_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 290: `let result = linear_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 293: `let result = nearest_neighbor_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 300: `let result = linear_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 303: `let result = nearest_neighbor_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/interpolate/core.rs
+
+6 issues found:
+
+- Line 115: `let variogram = |h: f64| -> f64 { 1.0 - (-h / 10.0).exp() };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 121: `let rbf = |r: f64| -> f64 { (-r * r / (2.0 * 10.0 * 10.0)).exp() };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 246: `((i as f64 - vi as f64).powi(2) + (j as f64 - vj as f64).powi(2)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 278: `let half_window = window_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 297: `result[i] = sum / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 482: `let result = nearest_neighbor_interpolate_2d(&image).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/interpolate/mod.rs
+
+10 issues found:
+
+- Line 366: `let result1 = linear(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 369: `let result2 = cubic_spline(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 372: `let (result3, _method) = auto(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 385: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 426: `let result1 = interpolate(&signal, InterpolationMethod::Linear, &config).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 427: `let result2 = linear_interpolate(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 428: `let result3 = cubic_spline_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 429: `let result4 = sinc_interpolate(&signal, 0.4).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 430: `let (result5, _) = auto_interpolate(&signal, &config, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 459: `let coeffs = polynomial_fit(&x, &y, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/interpolate/spectral.rs
+
+35 issues found:
+
+- Line 92: `x.sin() / x`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 97: `let x = PI * distance / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 101: `x.sin() / x`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 114: `result[missing_idx] = sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 216: `let scale = 1.0 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 233: `let diff = (&result - &prev_result).mapv(|x| x.powi(2)).sum().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 234: `let norm = result.mapv(|x| x.powi(2)).sum().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 236: `if diff / norm < config.convergence_threshold {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 313: `let fold_size = n_valid / k;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 348: `total_error += fold_error / (end - start) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 351: `let avg_error = total_error / k as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 455: `let ratio = input_length as f64 / target_length as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 459: `let kernel_half = kernel.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 488: `sum / weight_sum`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 500: `let half_length = config.kernel_length / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 503: `let x = (i as f64 - half_length as f64) / config.oversampling_factor as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 510: `pi_x.sin() / pi_x`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 524: `let idx = position.round() as i32 + kernel.len() as i32 / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 535: `let alpha = (length - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 536: `let x = (n as f64 - alpha) / alpha;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 539: `bessel_i0(beta * (1.0 - x * x).sqrt()) / bessel_i0(beta)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 539: `bessel_i0(beta * (1.0 - x * x).sqrt()) / bessel_i0(beta)`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 549: `let x_half_squared = (x / 2.0).powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 552: `term *= x_half_squared / (k as f64).powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 627: `product *= (x - x_known[j]) / denominator;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 764: `dd_table[i][j] = (dd_table[i + 1][j - 1] - dd_table[i][j - 1]) / denominator;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 797: `let result = sinc_interpolate(&signal, 0.4).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 820: `let result = spectral_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 836: `let (result, method) = auto_interpolate(&signal, &config, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 859: `let (result, _method) = auto_interpolate(&signal, &config, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 870: `let result1 = sinc_interpolate(&signal, 0.4).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 871: `let result2 = spectral_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 872: `let (result3, _) = auto_interpolate(&signal, &config, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 904: `let result = lagrange_interpolate(&x_known, &y_known, &x_target).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 918: `let coeffs = polynomial_fit(&x, &y, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/interpolate/spline.rs
+
+20 issues found:
+
+- Line 101: `rhs[i] = 3.0 * ((y[i + 1] - y[i]) / h_i1 - (y[i] - y[i - 1]) / h_i);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 162: `let t_norm = (t - x1) / h;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 169: `* ((1.0 - t_norm) * h * h * d1 / 6.0 + t_norm * h * h * d2 / 6.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 269: `let delta1 = (y[i] - y[i - 1]) / h1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 270: `let delta2 = (y[i + 1] - y[i]) / h2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 279: `slopes[i] = (w1 + w2) / (w1 / delta1 + w2 / delta2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 286: `let delta1 = (y[1] - y[0]) / h1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 287: `let delta2 = (y[n_valid - 1] - y[n_valid - 2]) / h2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 336: `let t_norm = (t - x1) / h;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 370: `let result = cubic_spline_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 378: `let result = cubic_spline_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 395: `let result = cubic_spline_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 415: `let result = cubic_hermite_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 423: `let result = cubic_hermite_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 438: `let result = cubic_hermite_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 460: `let result = cubic_spline_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 463: `let result = cubic_hermite_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 474: `let result = cubic_spline_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 477: `let result = cubic_hermite_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 487: `let result = cubic_spline_interpolate(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/kalman.rs
+
+30 issues found:
+
+- Line 213: `let innovation_mean = innovation_sum / (innovation_history.len() as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 222: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 226: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 242: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 246: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 454: `let gamma = (n_states as f64 + lambda).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 457: `let w_m = vec![lambda / (n_states as f64 + lambda)];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 458: `let mut w_m_i = vec![1.0 / (2.0 * (n_states as f64 + lambda)); 2 * n_states];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 462: `let w_c = vec![lambda / (n_states as f64 + lambda) + (1.0 - alpha * alpha + beta...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 463: `let mut w_c_i = vec![1.0 / (2.0 * (n_states as f64 + lambda)); 2 * n_states];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 490: `let diff_col = diff.clone().into_shape_with_order((diff.len(), 1)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 491: `let diff_row = diff.clone().into_shape_with_order((1, diff.len())).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 512: `let diff_col = diff.clone().into_shape_with_order((diff.len(), 1)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 513: `let diff_row = diff.clone().into_shape_with_order((1, diff.len())).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 526: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 530: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 728: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 732: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 737: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 741: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 764: `let std_dev = config.measurement_noise_scale.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 767: `noise[k] = rng.sample(rand_distr::Normal::new(0.0, std_dev).unwrap());`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 885: `let output = (&denoised + &column_denoised) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 982: `output = (&output + &column_output) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1147: `let window_mean = window.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1151: `/ window_size as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1157: `let measurement_var = local_variances[local_variances.len() / 2];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1165: `let diff_mean = diff.iter().sum::<f64>() / diff.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1169: `/ diff.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1172: `let adjusted_process_var = process_var.min(measurement_var) / 10.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/lombscargle.rs
+
+63 issues found:
+
+- Line 264: `dts.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 266: `(dts[dts.len() / 2 - 1] + dts[dts.len() / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 268: `dts[dts.len() / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 272: `let f_max = 0.5 * nyquist_factor / dt;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 276: `let f_min = 1.0 / t_range;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 284: `let n_samples = (t_range / dt).floor() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 290: `let mut freqs = Vec::with_capacity(n_freq / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 291: `for i in 0..=n_freq / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 292: `let f = f_min + (f_max - f_min) * (i as f64 / (n_freq / 2) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 300: `let n_freq = (20.0 * t_range / dt).floor() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 305: `let f = f_min + (f_max - f_min) * (i as f64 / (n_freq - 1) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 313: `let n_freq = (100.0 * (f_max / f_min).ln()).floor() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 313: `let n_freq = (100.0 * (f_max / f_min).ln()).floor() as usize;`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 319: `(f_min.ln()) + ((f_max / f_min).ln()) * (i as f64 / (n_freq - 1) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 319: `(f_min.ln()) + ((f_max / f_min).ln()) * (i as f64 / (n_freq - 1) as f64);`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 342: `let mean = y.sum() / n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 374: `let tau = 0.5 * (s2omega / c2omega).atan2(1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 405: `let n1 = c_tau * c_tau / c_tau2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 406: `let n2 = s_tau * s_tau / s_tau2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 409: `(n1 + n2) / (yy - y_dot_h * y_dot_h / h_dot_h)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 412: `(c_tau * c_tau / c_tau2 + s_tau * s_tau / s_tau2) / y2_sum`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 425: `let denominator = yy - y_dot_h * y_dot_h / h_dot_h;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 428: `let n1 = c_tau * c_tau / c_tau2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 429: `let n2 = s_tau * s_tau / s_tau2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 432: `1.0 - (denominator - (n1 + n2)) / denominator`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 434: `1.0 - (y2_sum - (c_tau * c_tau / c_tau2 + s_tau * s_tau / s_tau2)) / y2_sum`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 447: `let n1 = c_tau * c_tau / c_tau2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 448: `let n2 = s_tau * s_tau / s_tau2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 451: `(n1 + n2) / (yy - y_dot_h * y_dot_h / h_dot_h)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 453: `(c_tau * c_tau / c_tau2 + s_tau * s_tau / s_tau2) / y2_sum`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 456: `standard.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 468: `let n1 = c_tau * c_tau / c_tau2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 469: `let n2 = s_tau * s_tau / s_tau2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 472: `0.5 * n_samples as f64 * (n1 + n2) / (yy - y_dot_h * y_dot_h / h_dot_h)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 474: `0.5 * n_samples as f64 * (c_tau * c_tau / c_tau2 + s_tau * s_tau / s_tau2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 475: `/ y2_sum`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 528: `.map(|&p| -(n_samples as f64) * (1.0 - p).ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 531: `"psd" => power.iter().map(|&p| p * 2.0 / n_samples as f64).collect(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 546: `let threshold = -fap.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 551: `"model" => 1.0 - (-threshold / n_samples as f64).exp(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 552: `"log" => threshold.ln(),`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 553: `"psd" => threshold * n_samples as f64 / 2.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 618: `peak_indices.sort_by(|&a, &b| power[b].partial_cmp(&power[a]).unwrap());`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 693: `.map(|i| freq_min + (freq_max - freq_min) * (i as f64) / (n_freqs - 1) as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 707: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 713: `.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 715: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 731: `let freqs_fft = autofrequency(&t, 1.0, Some(AutoFreqMethod::Fft)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 735: `let freqs_linear = autofrequency(&t, 1.0, Some(AutoFreqMethod::Linear)).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 739: `let freqs_log = autofrequency(&t, 1.0, Some(AutoFreqMethod::Log)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 744: `let nyquist = 0.5 / dt;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 748: `assert!(count_below_nyquist_fft > freqs_fft.len() * 9 / 10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 752: `assert!(count_below_nyquist_linear > freqs_linear.len() * 9 / 10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 755: `assert!(count_below_nyquist_log > freqs_log.len() * 9 / 10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 771: `let sig_standard = significance_levels(&power, &fap_levels, "standard", n_sample...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 772: `let sig_model = significance_levels(&power, &fap_levels, "model", n_samples).unw...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 773: `let sig_log = significance_levels(&power, &fap_levels, "log", n_samples).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 774: `let sig_psd = significance_levels(&power, &fap_levels, "psd", n_samples).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 798: `let (peak_freqs, peak_powers) = find_peaks(&freq, &power, 0.5, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 809: `let (grouped_freqs, grouped_powers) = find_peaks(&freq, &power, 0.5, Some(0.15))...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 846: `.map(|i| freq_min + (freq_max - freq_min) * (i as f64) / (n_freqs - 1) as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 860: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 882: `peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/lombscargle_advanced_validation.rs
+
+28 issues found:
+
+- Line 273: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 276: `let f_nyquist = fs / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 285: `(freqs[nyquist_idx] - f_nyquist).abs() / f_nyquist`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 296: `let low_freq_precision = (freqs_low[low_idx] - f_low).abs() / f_low;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 413: `let true_freq = 0.1 / (2.0 * PI);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 414: `let accuracy = 1.0 - (detected_freq - true_freq).abs() / true_freq;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 419: `memory_samples.push(memory_usage as f64 / size as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 429: `performance_samples.last().unwrap() / performance_samples.first().unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 435: `1.0 / (memory_samples.iter().sum::<f64>() / memory_samples.len() as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 441: `accuracy_samples.iter().sum::<f64>() / accuracy_samples.len() as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 463: `(a - target).abs().partial_cmp(&(b - target).abs()).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 472: `.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 479: `let phase_true = PI / 4.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 502: `let amplitude_recovered = (2.0 * psd[peak_idx]).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 503: `let accuracy = 1.0 - (amplitude_recovered - amplitude_true).abs() / amplitude_tr...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 519: `let accuracy = 1.0 - (detected_freq - freq).abs() / freq;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 523: `Ok(accuracies.iter().sum::<f64>() / accuracies.len() as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 564: `sum_mag += (psd1[i] + psd2[i]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 568: `1.0 - sum_diff / sum_mag`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 581: `let f_max = f1.last().unwrap().min(f5.last().unwrap()).min(f10.last().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 588: `let f = f_min + (f_max - f_min) * i as f64 / (n_samples - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 596: `let mean_p = (p1_interp + p5_interp + p10_interp) / 3.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 602: `1.0 - max_diff / mean_p`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 609: `Ok(agreements.iter().sum::<f64>() / agreements.len() as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 616: `let alpha = (f - freqs[i-1]) / (freqs[i] - freqs[i-1]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 639: `let consistency = matched_peaks as f64 / peaks_no_window.len().max(1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 662: `let invariance = 1.0 - (detected_shift - shift).abs() / shift;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 730: `let base_score = (tests_passed as f64 / total_tests as f64) * 100.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/lombscargle_enhanced.rs
+
+31 issues found:
+
+- Line 179: `w[i] = 0.5 * (1.0 - (2.0 * PI * i as f64 / (n - 1) as f64).cos());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 186: `w[i] = 0.54 - 0.46 * (2.0 * PI * i as f64 / (n - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 193: `let x = 2.0 * PI * i as f64 / (n - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 219: `windowed[i] = values[i] * window[i] / window_sum.sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 219: `windowed[i] = values[i] * window[i] / window_sum.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 231: `let avg_dt = t_span / (n - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 232: `let nyquist = 0.5 / avg_dt;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 235: `let f_min = config.f_min.unwrap_or(1.0 / t_span);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 250: `frequencies.push(f_min + i as f64 * (f_max - f_min) / (n_freq - 1) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 267: `let mean_val: f64 = values.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 271: `let t_mean = times.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 287: `let tau = 0.5 * sum_sin.atan2(sum_cos) / omega;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 314: `let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n as f...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 318: `power[i] = 0.5 * ((c_tau * c_tau / c_tau2) + (s_tau * s_tau / s_tau2)) / varianc...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 337: `let mean_val: f64 = values.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 339: `let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n as f...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 363: `power[i] = 0.5 * ((a * a / c) + (b * b / d)) / variance;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 400: `indices.sort_by(|&i, &j| boot_times[i].partial_cmp(&boot_times[j]).unwrap());`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 417: `let lower_percentile = ((1.0 - confidence) / 2.0 * n_iterations as f64) as usize...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 418: `let upper_percentile = ((1.0 + confidence) / 2.0 * n_iterations as f64) as usize...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 425: `freq_powers.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 467: `1.0 - (1.0 - prob_single).powf(n_eff)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 476: `let prob_single = (-chi2 / 2.0).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 477: `1.0 - (1.0 - prob_single).powf(n_frequencies as f64)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 517: `let p_single = 1.0 - (1.0 - fap).powf(1.0 / n_frequencies as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 517: `let p_single = 1.0 - (1.0 - fap).powf(1.0 / n_frequencies as f64);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 518: `-(p_single.ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 522: `let p_single = 1.0 - (1.0 - fap).powf(1.0 / n_frequencies as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 522: `let p_single = 1.0 - (1.0 - fap).powf(1.0 / n_frequencies as f64);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 523: `let chi2 = -2.0 * p_single.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 524: `chi2 / (n_samples - 3) as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/lombscargle_enhanced_validation.rs
+
+26 issues found:
+
+- Line 264: `let mean_time_ms = times.iter().sum::<f64>() / iterations as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 267: `.sum::<f64>() / iterations as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 268: `let std_time_ms = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 318: `.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 319: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 323: `let freq_error = (peak_freq - f_true).abs() / f_true;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 327: `let avg_spacing = (t_irregular.last().unwrap() - t_irregular[0]) / (t_irregular....`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 328: `let resolution_factor = 1.0 / avg_spacing;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 333: `let leakage_factor = 1.0 - (peak_power / total_power);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 383: `.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 384: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 388: `let estimated_amplitude = (2.0 * peak_power).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 391: `let frequency_error = (peak_freq - f_true).abs() / f_true;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 392: `let amplitude_error = (estimated_amplitude - a_true).abs() / a_true;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 426: `let noise_power = signal_power / 10.0_f64.powf(snr_db / 10.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 426: `let noise_power = signal_power / 10.0_f64.powf(snr_db / 10.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 427: `let noise_std = noise_power.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 456: `let threshold = power.iter().sum::<f64>() / power.len() as f64 * 3.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 465: `let detection_prob = detections as f64 / n_trials as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 527: `let normalized_power: Vec<f64> = power.iter().map(|&p| p / max_power).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 537: `(f1 - ref_freq).abs().partial_cmp(&(f2 - ref_freq).abs()).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 539: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 551: `let mean_absolute_error = deviations.iter().sum::<f64>() / deviations.len() as f...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 588: `distance / reference_peaks.len() as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 650: `let result = run_enhanced_validation("standard", &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 661: `let result = run_enhanced_validation("standard", &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/lombscargle_simd.rs
+
+26 issues found:
+
+- Line 211: `sorted_times.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 267: `let windowed_view = ArrayView1::from_shape(n, &mut windowed).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 273: `windowed.iter_mut().for_each(|v| *v /= window_sum.sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 288: `dts.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 292: `(dts[(n - 1) / 2 - 1] + dts[(n - 1) / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 294: `dts[(n - 1) / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 297: `let nyquist = 0.5 / median_dt;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 300: `let f_min = config.f_min.unwrap_or(1.0 / t_span);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 315: `frequencies.push(f_min + i as f64 * (f_max - f_min) / (n_freq - 1) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 332: `let mean_val: f64 = values.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 335: `let centered_view = ArrayView1::from_shape(n, &mut values_centered).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 341: `let t_mean = times.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 344: `let shifted_view = ArrayView1::from_shape(n, &mut times_shifted).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 406: `0.5 * sin_sum.atan2(cos_sum) / omega`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 442: `let power = 0.5 * (c_tau * c_tau / c_tau2 + s_tau * s_tau / s_tau2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 471: `.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 477: `let mean_power: f64 = power.iter().sum::<f64>() / n_freq as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 482: `/ power.iter().filter(|&&p| (p - mean_power).abs() < mean_power).count() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 484: `let snr = max_power / noise_est.max(1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 487: `let half_max = max_power / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 511: `let leakage = 1.0 - max_power / window_power;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 566: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 584: `let alpha = (1.0 - confidence) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 593: `freq_powers.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 613: `1.0 - (1.0 - fap_single).powf(n_eff)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 630: `let result = simd_lombscargle(&times, &values, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/lombscargle_validation.rs
+
+14 issues found:
+
+- Line 52: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 89: `.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 90: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 94: `let freq_error = (peak_freq - f_signal).abs() / f_signal;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 146: `power_sorted.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 195: `let rel_error = (power[i] - power_dc[i]).abs() / power[i].max(1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 211: `errors.iter().sum::<f64>() / errors.len() as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 217: `let stability_score = 1.0 - (issues.len() as f64 / 10.0).min(1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 321: `let stability_score = stability_tests_passed as f64 / total_tests as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 391: `.map(|&t| NumCast::from(t).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 395: `.map(|&v| NumCast::from(v).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 440: `let rel_diff = (power1[i] - power2[j]).abs() / power1[i].max(1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 455: `let result = validate_analytical_cases("standard", 0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 462: `let result = validate_numerical_stability("standard").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/lti/analysis.rs
+
+26 issues found:
+
+- Line 52: `let log_step = f64::powf(w_max / w_min, 1.0 / (n - 1) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 77: `let phase_deg = val.arg() * 180.0 / std::f64::consts::PI;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 691: `tf2.num[0] / tf1.num[0]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 697: `tf2.den[0] / tf1.den[0]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 754: `let frobenius_norm = norm_sum.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 844: `let factor = working_matrix[row][col] / working_matrix[rank][col];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 884: `dot_product(&orthogonal_col, basis_vec) / dot_product(basis_vec, basis_vec);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 928: `if diff_norm.sqrt() < tolerance {`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 960: `if diff_norm.sqrt() < tolerance {`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1026: `vec.iter().map(|x| x * x).sum::<f64>().sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1038: `let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1042: `let (w, mag, phase) = bode(&tf, Some(&freqs)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1071: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1073: `let analysis = analyze_controllability(&ss).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1089: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1091: `let analysis = analyze_observability(&ss).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1107: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1109: `let analysis = analyze_control_observability(&ss).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1120: `let tf1 = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1121: `let tf2 = TransferFunction::new(vec![2.0], vec![2.0, 2.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1123: `assert!(systems_equivalent(&tf1, &tf2, 1e-6).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1126: `let tf3 = TransferFunction::new(vec![1.0], vec![1.0, 2.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1127: `assert!(!systems_equivalent(&tf1, &tf3, 1e-6).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1134: `assert_eq!(matrix_rank(&identity).unwrap(), 2);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1138: `assert_eq!(matrix_rank(&singular).unwrap(), 1);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1146: `let result = matrix_multiply(&a, &b).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/lti/design.rs
+
+22 issues found:
+
+- Line 607: `let coeff = remainder[0] / divisor_lead;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 692: `let tf_sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 703: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 708: `let ss_sys = ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 716: `let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 717: `let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 719: `let series_sys = series(&g1, &g2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 734: `let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 735: `let g2 = tf(vec![1.0], vec![1.0, 2.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 737: `let parallel_sys = parallel(&g1, &g2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 750: `let g = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 752: `let feedback_sys = feedback(&g, None, 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 766: `let g = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 767: `let h = tf(vec![2.0], vec![1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 769: `let feedback_sys = feedback(&g, Some(&h as &dyn LtiSystem), 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 783: `let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 785: `let sens = sensitivity(&g, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 800: `let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 802: `let comp_sens = complementary_sensitivity(&g, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 849: `let (quotient, remainder) = divide_polynomials(&dividend, &divisor).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 883: `let g_ct = tf(vec![1.0], vec![1.0, 1.0], Some(false)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 884: `let g_dt = tf(vec![1.0], vec![1.0, 1.0], Some(true)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/lti/mod.rs
+
+38 issues found:
+
+- Line 135: `let tf_sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 136: `let _zpk_sys = zpk(Vec::new(), vec![Complex64::new(-1.0, 0.0)], 1.0, None).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 137: `let ss_sys = ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 141: `let (w, mag, phase) = bode(&tf_sys, Some(&freqs)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 146: `let ctrl_analysis = analyze_controllability(&ss_sys).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 150: `let tf2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 151: `let series_sys = series(&tf_sys, &tf2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 152: `let parallel_sys = parallel(&tf_sys, &tf2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 153: `let feedback_sys = feedback(&tf_sys, None, 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 164: `let g1 = system::tf(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 165: `let g2 = system::tf(vec![2.0], vec![1.0, 2.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 167: `let series_connection = system::series(&g1, &g2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 168: `let parallel_connection = system::parallel(&g1, &g2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 177: `let tf_sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 180: `let zpk_sys = tf_sys.to_zpk().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 181: `let ss_sys = tf_sys.to_ss().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 198: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 201: `let ctrl_analysis = analyze_controllability(&ss_sys).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 202: `let obs_analysis = analyze_observability(&ss_sys).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 203: `let combined_analysis = analyze_control_observability(&ss_sys).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 220: `let (wc, wo) = compute_lyapunov_gramians(&ss_sys).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 225: `let kalman_decomp = complete_kalman_decomposition(&ss_sys).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 271: `let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap(); // 10/(s+1)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 273: `let s_func = sensitivity(&g, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 274: `let t_func = complementary_sensitivity(&g, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 288: `let sys1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 289: `let sys2 = tf(vec![2.0], vec![2.0, 2.0], None).unwrap(); // Same after normaliza...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 291: `assert!(systems_equivalent(&sys1, &sys2, 1e-6).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 294: `let sys3 = tf(vec![1.0], vec![1.0, 2.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 295: `assert!(!systems_equivalent(&sys1, &sys3, 1e-6).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 301: `let sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap(); // 1/(s+1)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 304: `let response = sys.frequency_response(&freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 313: `assert_relative_eq!(response[1].norm(), 1.0 / (2.0_f64.sqrt()), epsilon = 1e-6);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 313: `assert_relative_eq!(response[1].norm(), 1.0 / (2.0_f64.sqrt()), epsilon = 1e-6);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 319: `let _sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap(); // 1/(s+1)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 324: `let sys_dt = tf(vec![1.0], vec![1.0, 1.0], Some(true)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 325: `let impulse = sys_dt.impulse_response(&t).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 326: `let step = sys_dt.step_response(&t).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/lti/systems.rs
+
+28 issues found:
+
+- Line 201: `num_val / den_val`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 294: `*x_i += ss.b[i * ss.n_inputs + j] * (1.0 / dt);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 357: `self.num[0] / self.den[0]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 403: `step[0] = impulse[0] * dt / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 407: `step[i] = step[i - 1] + (impulse[i - 1] + impulse[i]) * dt / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 545: `num / den`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 730: `let n_states = (a.len() as f64).sqrt() as usize;`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 740: `let n_inputs = if n_states == 0 { 0 } else { b.len() / n_states };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 750: `let n_outputs = if n_states == 0 { 0 } else { c.len() / n_states };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 933: `let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 945: `let tf = TransferFunction::new(vec![2.0], vec![2.0, 2.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 954: `let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 968: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 985: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 986: `assert!(zpk_stable.is_stable().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 990: `ZerosPoleGain::new(Vec::new(), vec![Complex64::new(1.0, 0.0)], 1.0, None).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 991: `assert!(!zpk_unstable.is_stable().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 996: `let ss = StateSpace::new(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1013: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1015: `assert_eq!(ss.a(0, 0).unwrap(), -1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1016: `assert_eq!(ss.a(0, 1).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1017: `assert_eq!(ss.a(1, 0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1018: `assert_eq!(ss.a(1, 1).unwrap(), -2.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1020: `assert_eq!(ss.b(0, 0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1021: `assert_eq!(ss.b(1, 0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1023: `assert_eq!(ss.c(0, 0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1024: `assert_eq!(ss.c(0, 1).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1026: `assert_eq!(ss.d(0, 0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/lti_analysis_enhanced.rs
+
+20 issues found:
+
+- Line 193: `gram_eigenvalues[0] / gram_eigenvalues[gram_eigenvalues.len() - 1]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 242: `gram_eigenvalues[0] / gram_eigenvalues[gram_eigenvalues.len() - 1]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 398: `let q_vec = q.as_slice().unwrap().to_vec();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 613: `let s = lambda.ln() / dt;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 613: `let s = lambda.ln() / dt;`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 634: `let omega_n = (sigma * sigma + omega * omega).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 636: `-sigma / omega_n`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 642: `-1.0 / sigma`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 710: `let poles_set: std::collections::HashSet<_> = ss.a.eig().unwrap().0`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 769: `let target_mag = last_mag / 2.0_f64.sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 769: `let target_mag = last_mag / 2.0_f64.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 806: `let hankel_singular_values = eigenvalues.mapv(|lambda| lambda.norm().sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 896: `check_finite(&ss.a.as_slice().unwrap(), "A matrix")?;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 897: `check_finite(&ss.b.as_slice().unwrap(), "B matrix")?;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 898: `check_finite(&ss.c.as_slice().unwrap(), "C matrix")?;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 899: `check_finite(&ss.d.as_slice().unwrap(), "D matrix")?;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 912: `let u = u.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 946: `let vt = vt.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 988: `let result = analyze_controllability(&ss).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1003: `let result = analyze_stability(&ss).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/lti_response.rs
+
+6 issues found:
+
+- Line 264: `let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 270: `let response = impulse_response(&tf, &t).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 291: `let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 297: `let response = step_response(&tf, &t).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 323: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 330: `let y = lsim(&tf, &u, &t).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/measurements.rs
+
+31 issues found:
+
+- Line 53: `let mean_square = sum_of_squares / x_f64.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 54: `let rms = mean_square.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 155: `let peak_to_rms = peak / rms_val;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 236: `signal_f64.iter().map(|&x| x * x).sum::<f64>() / signal_f64.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 237: `let noise_power: f64 = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len() a...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 248: `let snr_db = 10.0 * (signal_power / noise_power).log10();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 304: `if f0 <= 0.0 || f0 >= fs / 2.0 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 329: `let fft_bin_size = fs / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 332: `let f0_bin = (f0 / fft_bin_size).round() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 337: `let phi = 2.0 * std::f64::consts::PI * (f0_bin as f64 * k as f64) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 349: `fundamental_power = (real * real + imag * imag) / (n * n) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 355: `let h_bin = (h as f64 * f0 / fft_bin_size).round() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 356: `if h_bin >= n / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 364: `let phi = 2.0 * std::f64::consts::PI * (h_bin as f64 * k as f64) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 376: `h_power = (real * real + imag * imag) / (n * n) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 391: `let thd = (harmonic_power_sum / fundamental_power).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 391: `let thd = (harmonic_power_sum / fundamental_power).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 406: `let rms_val = rms(&dc_signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 411: `.map(|i| (2.0 * PI * i as f64 / 100.0).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 413: `let rms_val = rms(&sine_wave).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 414: `assert_relative_eq!(rms_val, 1.0 / 2.0_f64.sqrt(), epsilon = 1e-2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 414: `assert_relative_eq!(rms_val, 1.0 / 2.0_f64.sqrt(), epsilon = 1e-2);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 421: `let pp_val = peak_to_peak(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 426: `.map(|i| (2.0 * PI * i as f64 / 100.0).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 428: `let pp_val = peak_to_peak(&sine_wave).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 436: `let cf_val = peak_to_rms(&dc_signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 441: `.map(|i| (2.0 * PI * i as f64 / 100.0).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 443: `let cf_val = peak_to_rms(&sine_wave).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 444: `assert_relative_eq!(cf_val, 2.0_f64.sqrt(), epsilon = 1e-2);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 451: `.map(|i| (2.0 * PI * i as f64 / 100.0).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 465: `let snr_db = snr(&clean, &noisy).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/median.rs
+
+14 issues found:
+
+- Line 124: `let half_kernel = kernel_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 215: `let median_idx = weighted_window.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 235: `let max_half_kernel = config.max_kernel_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 343: `let half_kernel = kernel_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 394: `let median_idx = flat_window.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 454: `let median_idx = weighted_window.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 475: `let max_half_kernel = config.max_kernel_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 517: `let median_idx = flat_window.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 632: `let half_kernel = kernel_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 742: `sum_squared.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 784: `let half_kernel = kernel_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 850: `let half_kernel = kernel_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 910: `let plus_median = plus_shape[plus_shape.len() / 2];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 911: `let cross_median = cross_shape[cross_shape.len() / 2];`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/multirate.rs
+
+63 issues found:
+
+- Line 147: `let phase = 2.0 * PI * k as f64 * (n as f64 - (L - 1) as f64 / 2.0) / M as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 180: `let phase = PI * k as f64 * (2.0 * n as f64 + 1.0) / (2.0 * M as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 208: `let center = (L - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 209: `let phase = PI * k as f64 * (n as f64 - center) / M as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 238: `let phase = 2.0 * PI * k as f64 * (n as f64 + 0.5) / M as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 244: `synthesis_filters[[k, n]] = (2.0 / M as f64) * analysis_filters[[k, n]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 271: `let phase = PI * (k as f64 + 0.5) * (n as f64 - (L - 1) as f64 / 2.0) / M as f64...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 274: `synthesis_filters[[k, n]] = (2.0 / M as f64) * analysis_filters[[k, n]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 284: `let cutoff = PI / num_channels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 287: `let center = (length - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 292: `cutoff / PI`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 294: `(cutoff * t).sin() / (PI * t)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 320: `let scaling_factor = 2.0 / num_channels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 330: `let cutoff = PI / num_channels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 333: `let center = (length - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 338: `cutoff / PI`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 340: `(cutoff * t).sin() / (PI * t)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 344: `let window_val = 0.54 - 0.46 * (2.0 * PI * n as f64 / (length - 1) as f64).cos()...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 366: `let overlap = length / num_channels;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 370: `let t = n as f64 - (length - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 371: `let normalized_t = t / overlap as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 389: `let arg = 2.0 * n as f64 / (length - 1) as f64 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 391: `let i0_arg = Self::modified_bessel_i0(beta * (1.0 - arg * arg).sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 392: `i0_arg / i0_beta`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 401: `let i0_arg = Self::modified_bessel_i0(alpha * (1.0 - t * t).sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 402: `i0_arg / i0_alpha`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 409: `let t = x / 3.75;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 418: `let t = 3.75 / x.abs();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 427: `/ x.abs().sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 427: `/ x.abs().sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 438: `let polyphase_length = L / M;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 683: `error = error.sqrt() / min_len as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 683: `error = error.sqrt() / min_len as f64;`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 772: `for i in 0..num_freqs / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 796: `let _passband_end = num_freqs / (2 * M);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 797: `let stopband_start = num_freqs / M;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 821: `let passband_end = num_freqs / (2 * M);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 914: `let nyquist_freq = PI / (upsampling_factor.max(downsampling_factor) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 932: `let center = (length - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 937: `cutoff / PI`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 939: `(cutoff * t).sin() / (PI * t)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 943: `let window_val = 0.42 - 0.5 * (2.0 * PI * n as f64 / (length - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 944: `+ 0.08 * (4.0 * PI * n as f64 / (length - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1028: `self.upsampling_factor as f64 / self.downsampling_factor as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1040: `PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1057: `PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1062: `let subbands = filter_bank.analysis(&input).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1066: `let reconstructed = filter_bank.synthesis(&subbands).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1081: `PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1085: `let (error, _is_perfect) = filter_bank.verify_perfect_reconstruction(&impulse).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1102: `PerfectReconstructionFilterBank::new(config, PrFilterDesign::Biorthogonal).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1105: `let subbands = filter_bank.analysis(&input).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1106: `let reconstructed = filter_bank.synthesis(&subbands).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1122: `PerfectReconstructionFilterBank::new(config, PrFilterDesign::LinearPhase).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1135: `let mut converter = MultirateConverter::new(3, 2, 32).unwrap(); // Smaller filte...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1138: `let output = converter.convert(&input).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1157: `PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1159: `let properties = filter_bank.analyze_properties().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1182: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1185: `let subbands = filter_bank.analysis(&input).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1186: `let reconstructed = filter_bank.synthesis(&subbands).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1202: `PerfectReconstructionFilterBank::new(config, PrFilterDesign::ModulatedDft).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1209: `let subbands = filter_bank.analysis(&input).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/multitaper/adaptive.rs
+
+10 issues found:
+
+- Line 122: `nfft_val / 2 + 1`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 149: `f.push(i as f64 * fs_val / nfft_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 156: `if i <= nfft_val / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 157: `f.push(i as f64 * fs_val / nfft_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 159: `f.push((i as f64 - nfft_val as f64) * fs_val / nfft_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 183: `s_initial[j] = weighted_sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 197: `denominator += numerator.powi(2) / (s_initial[j] + 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 198: `weights[[i, j]] = numerator / (s_initial[j] + 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 228: `1.0 / fs_val`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 249: `1.0 / (fs_val * weight_sum)`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/multitaper/dpss_enhanced.rs
+
+17 issues found:
+
+- Line 56: `let w = nw / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 67: `eigenvalues[j].abs().partial_cmp(&eigenvalues[i].abs()).unwrap()`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 106: `let term = (n as f64 - 1.0 - 2.0 * i as f64) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 113: `.map(|i| (i as f64 * (n - i) as f64) / 2.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 151: `let norm = eigvec.dot(eigvec).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 169: `let mid = n / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 219: `.map(|c| c.re / fft_size as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 229: `(lag as f64 * 2.0 * PI * w).sin() / (lag as f64 * 2.0 * PI * w)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 248: `let ratios = ratios.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 289: `let norm = tapers.row(i).dot(&tapers.row(i)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 317: `let ratios = ratios.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 341: `let (tapers, ratios) = dpss_enhanced(64, 4.0, 7, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 350: `let (tapers, _) = dpss_enhanced(128, 4.0, 7, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 363: `let (tapers, _) = dpss_enhanced(128, 4.0, 7, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 374: `let (_, ratios) = dpss_enhanced(64, 4.0, 7, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 375: `let ratios = ratios.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 390: `assert!(validate_dpss_implementation().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/multitaper/enhanced.rs
+
+32 issues found:
+
+- Line 209: `let tapered_view = ArrayView1::from_shape(n, &mut tapered).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 250: `let spectrum = simd_fft(&tapered, nfft).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 302: `let n_freqs = nfft / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 304: `.map(|i| i as f64 * fs / nfft as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 309: `if i <= nfft / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 310: `i as f64 * fs / nfft as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 312: `(i as f64 - nfft as f64) * fs / nfft as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 319: `let n_freqs = if onesided { nfft / 2 + 1 } else { nfft };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 324: `2.0 / (fs * weight_sum)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 326: `1.0 / (fs * weight_sum)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 349: `let n_freqs = if onesided { nfft / 2 + 1 } else { nfft };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 381: `psd[j] = weighted_sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 388: `let bias_factor = 1.0 / (1.0 + (psd[j] / spectra[[i, j]]).powi(2));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 396: `.map(|(old, new)| ((old - new) / old.max(1e-10)).abs())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 407: `.map(|i| i as f64 * fs / nfft as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 412: `if i <= nfft / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 413: `i as f64 * fs / nfft as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 415: `(i as f64 - nfft as f64) * fs / nfft as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 422: `let scaling = if onesided { 2.0 / fs } else { 1.0 / fs };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 446: `let lower_quantile = chi2.inverse_cdf(alpha / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 447: `let upper_quantile = chi2.inverse_cdf(1.0 - alpha / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 449: `let lower_factor = dof / upper_quantile;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 450: `let upper_factor = dof / lower_quantile;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 464: `let psd_estimate = weighted_sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 478: `2.0 * sum_lambda.powi(2) / sum_lambda_sq`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 545: `let n_windows = (n - window_size) / step + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 558: `.map(|i| (i * step + window_size / 2) as f64 / config.fs)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 563: `&& n_windows >= config.multitaper.parallel_threshold / window_size {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 574: `enhanced_pmtm(window, &mt_config).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 632: `.map(|i| (2.0 * std::f64::consts::PI * 10.0 * i as f64 / 100.0).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 636: `let result = enhanced_pmtm(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 645: `let result = simd_fft(&signal, 4).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/multitaper/ftest.rs
+
+6 issues found:
+
+- Line 97: `let f_stat = (numerator * dof2) / (denominator * dof1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 186: `let y_mean = sum_wy / sum_w;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 187: `let u_mean = sum_wu / sum_w;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 201: `beta = numerator / denominator;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 225: `let f_stat = (mss / dof1) / (rss / dof2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 334: `let avg_f = combined_f / valid_harmonics as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/multitaper/jackknife.rs
+
+26 issues found:
+
+- Line 60: `psd_full[j] = weighted_sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 80: `let estimate = weighted_sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 82: `estimate.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 100: `let t_critical = t_dist.inverse_cdf(1.0 - (1.0 - conf_level) / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 105: `psd_full[j].ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 122: `jack_var *= (k - 1) as f64 / k as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 125: `let se = jack_var.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 209: `let renorm_weight = adaptive_weights[[i, j]] / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 215: `jackknife_estimates[[i_out, j]] = weighted_sum.ln(); // Log transform`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 227: `let t_critical = t_dist.inverse_cdf(1.0 - (1.0 - conf_level) / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 230: `let full_log = psd_full[j].ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 244: `jack_var *= (k - 1) as f64 / k as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 246: `let se = jack_var.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 316: `coherence[j] = sxy.norm_sqr() / (sxx * syy);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 348: `jack_coh[[i_out, j]] = sxy.norm_sqr() / (sxx * syy);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 359: `let t_critical = t_dist.inverse_cdf(1.0 - (1.0 - conf_level) / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 367: `z_vals[i] = 0.5 * ((1.0 + coh.sqrt()) / (1.0 - coh.sqrt())).ln();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 367: `z_vals[i] = 0.5 * ((1.0 + coh.sqrt()) / (1.0 - coh.sqrt())).ln();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 367: `z_vals[i] = 0.5 * ((1.0 + coh.sqrt()) / (1.0 - coh.sqrt())).ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 371: `let z_mean: f64 = z_vals.iter().sum::<f64>() / k as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 374: `.sum::<f64>() * (k - 1) as f64 / k as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 375: `let z_se = z_var.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 381: `coherence_lower[j] = ((2.0 * z_lower).exp() - 1.0) / ((2.0 * z_lower).exp() + 1....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 382: `coherence_upper[j] = ((2.0 * z_upper).exp() - 1.0) / ((2.0 * z_upper).exp() + 1....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 398: `phase_var *= (k - 1) as f64 / k as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 399: `let phase_se = phase_var.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### src/multitaper/psd.rs
+
+21 issues found:
+
+- Line 149: `let n_freqs = nfft_val / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 152: `f.push(i as f64 * fs_val / nfft_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 159: `if i <= nfft_val / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 160: `f.push(i as f64 * fs_val / nfft_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 162: `f.push((i as f64 - nfft_val as f64) * fs_val / nfft_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 170: `nfft_val / 2 + 1`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 177: `let n_freqs = nfft_val / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 206: `let scaling = 1.0 / (fs_val * weight_sum);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 309: `let step_val = step.unwrap_or(window_size_val / 2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 317: `let n_segments = (n - window_size_val) / step_val + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 319: `nfft_val / 2 + 1`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 328: `let center = (i * step_val + window_size_val / 2) as f64 / fs_val;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 337: `f.push(i as f64 * fs_val / nfft_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 344: `if i <= nfft_val / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 345: `f.push(i as f64 * fs_val / nfft_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 347: `f.push((i as f64 - nfft_val as f64) * fs_val / nfft_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 421: `s_initial[m] = weighted_sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 435: `denominator += numerator.powi(2) / (s_initial[m] + 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 436: `weights[[j, m]] = numerator / (s_initial[m] + 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 466: `1.0 / fs_val`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 487: `1.0 / (fs_val * weight_sum)`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/multitaper/utils.rs
+
+15 issues found:
+
+- Line 158: `let mut x_spectra = Array2::zeros((k_val, nfft_val / 2 + 1));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 159: `let mut y_spectra = Array2::zeros((k_val, nfft_val / 2 + 1));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 160: `let mut cross_spectra = Array2::zeros((k_val, nfft_val / 2 + 1));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 177: `let n_freqs = nfft_val / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 188: `let n_freqs = nfft_val / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 191: `f.push(i as f64 * fs_val / nfft_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 202: `let n_freqs = nfft_val / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 218: `let denominator = (x_power * y_power).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 220: `coherence[j] = (cross_power / denominator).powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 409: `let mut even = Vec::with_capacity(n / 2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 410: `let mut odd = Vec::with_capacity(n / 2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 424: `for k in 0..n / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 427: `(-2.0 * PI * k as f64 / n as f64).cos(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 428: `(-2.0 * PI * k as f64 / n as f64).sin(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 432: `result[k + n / 2] = even_fft[k] - t;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/multitaper/validation.rs
+
+23 issues found:
+
+- Line 240: `let t: Vec<f64> = (0..test_signals.n).map(|i| i as f64 / test_signals.fs).collec...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 263: `let snr_linear = 10.0_f64.powf(test_signals.snr_db / 10.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 263: `let snr_linear = 10.0_f64.powf(test_signals.snr_db / 10.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 264: `let noise_std = 1.0 / snr_linear.sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 264: `let noise_std = 1.0 / snr_linear.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 274: `let peak_idx = (freq * test_signals.n as f64 / test_signals.fs) as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 279: `let mean_estimate = peak_values.iter().sum::<f64>() / peak_values.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 281: `let bias = (mean_estimate - true_power).abs() / true_power;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 285: `.sum::<f64>() / (peak_values.len() - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 410: `let simd_speedup = standard_time_ms / enhanced_serial_time;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 411: `let parallel_speedup = enhanced_serial_time / enhanced_time_ms;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 431: `let t: Vec<f64> = (0..test_signals.n).map(|i| i as f64 / test_signals.fs).collec...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 461: `let rel_error = (ref_val - enh_val).abs() / ref_val;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 467: `let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 491: `let half_power = peak_power / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 516: `(total_power - lobe_power) / total_power`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 522: `max_val / min_val`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 532: `let mean_x = x.iter().sum::<f64>() / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 533: `let mean_y = y.iter().sum::<f64>() / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 547: `cov / (var_x * var_y).sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 547: `cov / (var_x * var_y).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 575: `Ok(coverage_count as f64 / n_trials as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 595: `score -= spectral.variance.sqrt() * 50.0;`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### src/multitaper/windows.rs
+
+10 issues found:
+
+- Line 84: `((n_float - 1.0) / 2.0 - i_float).powi(2) * (2.0 * std::f64::consts::PI * w).pow...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 100: `idx.sort_by(|&i, &j| eigvals[i].partial_cmp(&eigvals[j]).unwrap());`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 119: `lambda[i] = (1.0 - sorted_eigvals[i]).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 123: `let norm = v.iter().map(|&x| x * x).sum::<f64>().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 242: `a[i - 1] = a[i - 1] + t * (r * r - (a[i - 1] - g).powi(2) / 4.0 - f * f) / r;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 243: `a[i] = g + t * (r * r - (a[i - 1] - g).powi(2) / 4.0 - f * f) / r;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 245: `c = r / ((a[i - 1] - g).powi(2) / 4.0 + f * f).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 245: `c = r / ((a[i - 1] - g).powi(2) / 4.0 + f * f).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 246: `s = f / ((a[i - 1] - g).powi(2) / 4.0 + f * f).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 246: `s = f / ((a[i - 1] - g).powi(2) / 4.0 + f * f).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### src/nlm.rs
+
+53 issues found:
+
+- Line 122: `let half_patch = config.patch_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 123: `let half_search = config.search_window / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 144: `let sigma_d = half_search as f64 / 3.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 148: `kernel[i] = (-d / (2.0 * sigma_d.powi(2))).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 216: `let weight = (-dist / h_adjusted).exp() * dist_weight;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 238: `denoised[i] = weighted_sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 286: `let half_patch = config.patch_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 287: `let half_search = config.search_window / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 314: `let sigma_g = config.patch_size as f64 / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 321: `patch_weights[[i, j]] = (-0.5 * (di + dj) / sigma_g.powi(2)).exp() / gauss_norm;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 391: `let spatial_dist = (di + dj).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 392: `let spatial_sigma = half_search as f64 / 3.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 393: `(-spatial_dist / (2.0 * spatial_sigma.powi(2))).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 399: `let weight = (-dist / h_adjusted).exp() * dist_weight;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 428: `denoised[[i, j]] = weighted_sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 472: `let half_patch = config.patch_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 473: `let half_search = config.search_window / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 527: `let spatial_dist = (di + dj).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 528: `let spatial_sigma = half_search as f64 / 3.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 529: `(-spatial_dist / (2.0 * spatial_sigma.powi(2))).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 535: `let weight = (-dist / h_adjusted).exp() * dist_weight;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 561: `block_weights.iter().map(|&w| w / total_weight).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 639: `scale_config.patch_size = cmp::max(3, config.patch_size / scale_factor);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 642: `config.search_window / scale_factor,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 653: `let scaled_height = height / scale_factor;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 654: `let scaled_width = width / scale_factor;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 669: `let scale_weight = 1.0 / (2.0_f64.powi(scale as i32));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 681: `.map(|s| 1.0 / (2.0_f64.powi(s as i32)))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 683: `result.mapv_inplace(|x| x / total_weight);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 709: `let half_patch = config.patch_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 710: `let half_search = config.search_window / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 730: `let avg_sigma = channel_sigma.iter().sum::<f64>() / channels as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 811: `let spatial_dist = (di + dj).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 812: `let spatial_sigma = half_search as f64 / 3.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 813: `(-spatial_dist / (2.0 * spatial_sigma.powi(2))).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 819: `let weight = (-total_dist / h_adjusted).exp() * dist_weight;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 845: `denoised[[i, j, c]] = weighted_sums[c] / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 950: `let half_size = size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 977: `let half_size = size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1028: `sum_diff_sq / n as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1062: `sum_diff_sq / sum_weights`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1076: `sum_diff_sq / n as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1100: `(diffs[diffs.len() / 2 - 1] + diffs[diffs.len() / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1102: `diffs[diffs.len() / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1107: `median / 0.6745 / std::f64::consts::SQRT_2`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1137: `(laplacian[laplacian.len() / 2 - 1] + laplacian[laplacian.len() / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1139: `laplacian[laplacian.len() / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1143: `median / 0.6745 / std::f64::consts::SQRT_2`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1164: `let h_scale = height as f64 / new_height as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1165: `let w_scale = width as f64 / new_width as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1188: `downsampled[[i, j]] = sum / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1214: `let h_scale = (height - 1) as f64 / (new_height - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1215: `let w_scale = (width - 1) as f64 / (new_width - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/parallel_spectral.rs
+
+62 issues found:
+
+- Line 172: `let n_freq_bins = window_size / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 176: `.map(|i| i as f64 * fs / window_size as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 217: `csd / n_time_frames as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 236: `csd / n_time_frames as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 381: `let mut planner = self.fft_planner.lock().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 388: `let n_freq_bins = nfft_actual / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 394: `psd[i] = if i == 0 || (i == nfft_actual / 2 && nfft_actual % 2 == 0) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 395: `magnitude_sq / normalization`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 397: `2.0 * magnitude_sq / normalization`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 403: `.map(|i| i as f64 * fs / nfft_actual as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 427: `.map(|i| i as f64 * fs / (2 * (n_freq_bins - 1)) as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 431: `.map(|i| i as f64 * hop_size as f64 / fs)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 451: `let n_frames = (n_samples - window_size) / hop_size + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 452: `let n_freq_bins = window_size / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 464: `let chunk_size = (n_frames / num_threads()).max(1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 594: `(pxy.norm_sqr()) / (pxx * pyy)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 618: `(pxy.norm_sqr()) / (pxx * pyy)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 627: `.map(|i| i as f64 * fs / (2 * (n_freq_bins - 1)) as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 642: `let beta = 2.0 * std::f64::consts::PI * nw * taper_idx as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 645: `let t = (i as f64 - n as f64 / 2.0) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 646: `let w = 2.0 * nw / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 652: `(w * std::f64::consts::PI * t).sin() / (std::f64::consts::PI * t)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 653: `} * (1.0 - 2.0 * taper_idx as f64 / k as f64).max(0.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 657: `let norm: f64 = taper.iter().map(|&x| x * x).sum::<f64>().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 677: `let n_freq_bins = n / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 718: `avg_psd[i] += value / tapers.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 783: `let n_segments = (n - window_size) / hop_size + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 798: `let n_freq_bins = window_size / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 828: `avg_psd[i] += if i == 0 || (i == window_size / 2 && window_size % 2 == 0) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 829: `magnitude_sq / normalization`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 831: `2.0 * magnitude_sq / normalization`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 844: `.map(|i| i as f64 * fs / window_size as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1108: `let mut cross_psd_sum = vec![Complex64::new(0.0, 0.0); window_size / 2 + 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1148: `.map(|i| i as f64 * fs / window_size as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1167: `phase_band.1 / (fs / 2.0),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1172: `amplitude_band.1 / (fs / 2.0),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1200: `let mean_vector_length = (sum_real * sum_real + sum_imag * sum_imag).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1201: `/ (amplitudes.iter().sum::<f64>() / n as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1221: `let n_frames = (n - window_size) / hop_size + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1222: `let n_freqs = window_size / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1264: `cross_spectrum.norm_sqr() / (auto1 * auto2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1276: `.map(|i| i as f64 * fs / window_size as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1280: `.map(|i| i as f64 * hop_size as f64 / fs)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1302: `let probabilities: Vec<f64> = psd.iter().map(|&p| p / total_power).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1309: `.map(|&p| p * p.ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 1317: `.map(|&p| p * p.ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 1323: `.map(|&p| p.powf(q))`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 1325: `(1.0 / (1.0 - q)) * sum_q.ln()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1325: `(1.0 / (1.0 - q)) * sum_q.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 1332: `.map(|&p| p.powf(q))`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 1334: `(1.0 - sum_q) / (q - 1.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1391: `.map(|i| (2.0 * PI * 50.0 * i as f64 / fs).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1394: `.map(|i| (2.0 * PI * 100.0 * i as f64 / fs).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1402: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1418: `let t = i as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1429: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1447: `.map(|i| (2.0 * PI * 50.0 * i as f64 / fs).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1460: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1470: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1482: `.map(|i| (2.0 * PI * 50.0 * i as f64 / fs).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1485: `.map(|i| (2.0 * PI * 100.0 * i as f64 / fs).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1490: `let results = parallel_welch(&signals, fs, 512, 0.5, Some("hann")).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/parametric.rs
+
+23 issues found:
+
+- Line 138: `autocorr[lag] = sum / (n - lag) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 190: `let k_reflection = (autocorr[k + 1] - err) / e;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 253: `let mut e = signal.iter().map(|&x| x * x).sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 271: `let k_m = -2.0 * num / den;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 580: `let norm_freqs = freqs.mapv(|f| f * 2.0 * PI / fs);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 596: `psd[i] = variance / h.norm_sqr();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 657: `r[k] = sum / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 674: `ma_coeffs[k] = (r[k] - sum) / v[0];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 736: `let norm_freqs = freqs.mapv(|f| f * 2.0 * PI / fs);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 759: `psd[i] = variance * b.norm_sqr() / a.norm_sqr();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 801: `if max_order >= signal.len() / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 815: `let variance = signal.iter().map(|&x| x * x).sum::<f64>() / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 819: `OrderSelection::AIC => criteria[order] = n * variance.ln() + 2.0,`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 820: `OrderSelection::BIC => criteria[order] = n * variance.ln() + (0 as f64).ln() * n...`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 821: `OrderSelection::FPE => criteria[order] = variance * (n + 1.0) / (n - 1.0),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 823: `criteria[order] = n * variance.ln() + 0.5 * (0 as f64).ln() * n`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 825: `OrderSelection::AICc => criteria[order] = n * variance.ln() + 2.0,`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 835: `criteria[order] = n * variance.ln() + 2.0 * order as f64;`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 838: `criteria[order] = n * variance.ln() + order as f64 * n.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 841: `criteria[order] = variance * (n + order as f64) / (n - order as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 844: `criteria[order] = n * variance.ln() + 0.5 * order as f64 * n.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 849: `n * variance.ln() + 2.0 * order as f64 * (n / (n - order as f64 - 1.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 849: `n * variance.ln() + 2.0 * order as f64 * (n / (n - order as f64 - 1.0));`
+  - **Fix**: Mathematical operation .ln() without validation
+
+### src/parametric_adaptive.rs
+
+11 issues found:
+
+- Line 208: `let k = px / denominator;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 216: `model.gain = (&model.gain - &outer_product.dot(&model.gain)) / lambda;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 245: `let k = px / s;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 280: `let normalized_step = step_size / (norm_sq + epsilon);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 363: `let f = i as f64 / (2.0 * n_freq as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 376: `let power = model.variance / h.norm_sqr();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 425: `peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 446: `let model = initialize_adaptive_ar(&config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 460: `let mut model = initialize_adaptive_ar(&config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 466: `let error = update_adaptive_ar(&mut model, sample, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 485: `let (freqs, psd) = adaptive_spectrum(&model, 128).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/parametric_arma.rs
+
+19 issues found:
+
+- Line 89: `let ar_order = ((n as f64).sqrt() as usize).max(p + q);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 148: `let variance = residuals.mapv(|r| r * r).sum() / (n - p - q) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 245: `let variance = innovations.mapv(|e| e * e).sum() / (n - p - q) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 262: `let variance = residuals.mapv(|r| r * r).sum() / (n - p - q) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 311: `ar_coeffs[i] -= step_size * grad / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 322: `ma_coeffs[i] -= step_size * grad / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 330: `let variance = residuals.mapv(|r| r * r).sum() / (n - p - q) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 351: `let log_likelihood = -0.5 * n as f64 * (2.0 * PI * model.variance).ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 352: `- 0.5 * residuals.mapv(|r| r * r).sum() / model.variance;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 413: `r[k] = sum / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 489: `let factor = aug[[k, i]] / aug[[i, i]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 529: `let w = 2.0 * PI * freq / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 546: `psd[i] = model.variance * ma_poly.norm_sqr() / ar_poly.norm_sqr();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 608: `extended_signal = extended_signal.clone().into_shape(n + h + 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 611: `extended_residuals = extended_residuals.clone().into_shape(n + h + 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 615: `forecast_errors[h] = model.variance.sqrt() * (1.0 + h as f64 / 10.0).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 615: `forecast_errors[h] = model.variance.sqrt() * (1.0 + h as f64 / 10.0).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 627: `let z = inverse_normal_cdf((1.0 + conf) / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 663: `x * num / den`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/parametric_enhanced.rs
+
+31 issues found:
+
+- Line 165: `let max_ar = config.max_ar_order.min((n / 4).max(1));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 166: `let max_ma = config.max_ma_order.min((n / 4).max(1));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 221: `if p + q < n / 3 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 239: `.min_by(|a, b| a.bic.partial_cmp(&b.bic).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 270: `if p + q < signal.len() / 3 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 331: `let bic = -2.0 * log_likelihood + (k as f64) * (n as f64).ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 332: `let fpe = variance * (n as f64 + k as f64) / (n as f64 - k as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 333: `let mdl = -log_likelihood + 0.5 * (k as f64) * (n as f64).ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 334: `let aicc = aic + 2.0 * k as f64 * (k as f64 + 1.0) / (n as f64 - k as f64 - 1.0)...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 365: `let log_likelihood = -0.5 * n as f64 * (2.0 * PI * variance).ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 366: `- 0.5 * sum_sq_residuals / variance;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 391: `let signal_segment = &signal.as_slice().unwrap()[t-p..t];`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 392: `let ar_segment = &ar.as_slice().unwrap()[1..=p];`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 408: `residuals.copy_from_slice(signal.as_slice().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 441: `let avg_aic: f64 = all_results.iter().map(|r| r.aic).sum::<f64>() / all_results....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 442: `let avg_bic: f64 = all_results.iter().map(|r| r.bic).sum::<f64>() / all_results....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 469: `.map(|i| i as f64 / (2.0 * (n_freq - 1) as f64))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 531: `psd[i] = variance / magnitude_sq;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 574: `psd[i] = variance * ma_magnitude_sq / ar_magnitude_sq;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 596: `let lower_quantile = chi2.inverse_cdf(alpha / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 597: `let upper_quantile = chi2.inverse_cdf(1.0 - alpha / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 599: `let lower_factor = dof / upper_quantile;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 600: `let upper_factor = dof / lower_quantile;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 617: `let residual_variance = residuals.iter().map(|&r| r * r).sum::<f64>() / residual...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 647: `lb_stat += (acf[k] * acf[k]) / (n - k) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 667: `let mean = signal.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 672: `let centered_view = ArrayView1::from_shape(n, &mut centered).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 677: `let variance = f64::simd_dot(&centered_view, &centered_view) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 691: `acf[lag] = sum / (n as f64 * variance);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 720: `let result = enhanced_parametric_estimation(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 738: `let result = enhanced_parametric_estimation(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/parametric_validation.rs
+
+42 issues found:
+
+- Line 255: `order_selection_accuracy: order_accuracy_sum / total_tests as f64,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 256: `coefficient_error: coefficient_errors.iter().sum::<f64>() / coefficient_errors.l...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 257: `prediction_error: prediction_errors.iter().sum::<f64>() / prediction_errors.len(...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 258: `spectral_accuracy: 1.0 - spectral_errors.iter().sum::<f64>() / spectral_errors.l...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 259: `model_stable: stability_count as f64 / total_tests as f64 > 0.95,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 302: `let var_error = (estimated.variance - true_var).abs() / true_var;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 308: `likelihood_improvements.push((ll - null_ll) / signal.len() as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 323: `ar_coefficient_accuracy: 1.0 - ar_errors.iter().sum::<f64>() / ar_errors.len() a...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 324: `ma_coefficient_accuracy: 1.0 - ma_errors.iter().sum::<f64>() / ma_errors.len() a...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 325: `variance_accuracy: 1.0 - variance_errors.iter().sum::<f64>() / variance_errors.l...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 327: `/ likelihood_improvements.len().max(1) as f64,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 328: `identifiable: identifiable_count as f64 / total_tests as f64 > 0.9,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 357: `arma_agreements.push((ar_agreement + ma_agreement) / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 375: `yw_burg_agreement: yw_burg_agreements.iter().sum::<f64>() / yw_burg_agreements.l...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 376: `arma_method_agreement: arma_agreements.iter().sum::<f64>() / arma_agreements.len...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 378: `/ spectral_consistencies.len() as f64,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 380: `/ parameter_consistencies.len() as f64,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 422: `let sensitivity = compute_coefficient_error(&ar_clean, &ar_noisy) * (10.0_f64.po...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 422: `let sensitivity = compute_coefficient_error(&ar_clean, &ar_noisy) * (10.0_f64.po...`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 442: `noise_sensitivity: noise_sensitivities.iter().sum::<f64>() / noise_sensitivities...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 444: `/ outlier_robustness_scores.len() as f64,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 475: `(t2 / t1) / (n2 / n1)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 487: `estimation_time_ms: times.iter().sum::<f64>() / times.len() as f64,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 567: `innovations[i] = rng.random_range(-1.0..1.0) * variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 592: `let signal_power = signal.iter().map(|&x| x * x).sum::<f64>() / signal.len() as ...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 593: `let noise_power = signal_power / 10.0_f64.powf(snr_db / 10.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 593: `let noise_power = signal_power / 10.0_f64.powf(snr_db / 10.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 594: `let noise_std = noise_power.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 614: `(error / n as f64).sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 614: `(error / n as f64).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 630: `(error / (n - order) as f64).sqrt() / variance.sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 630: `(error / (n - order) as f64).sqrt() / variance.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 639: `error += ((psd_true[i] - psd_est[i]) / psd_true[i]).powi(2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 642: `Ok((error / psd_true.len() as f64).sqrt())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 642: `Ok((error / psd_true.len() as f64).sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 650: `let mean = (psd1[i] + psd2[i]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 655: `1.0 - (sum_sq_diff / sum_sq_mean).sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 655: `1.0 - (sum_sq_diff / sum_sq_mean).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 679: `let aic = n * variance.ln() + 2.0 * order as f64;`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 692: `let variance = signal.iter().map(|&x| x * x).sum::<f64>() / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 693: `-0.5 * n * (2.0 * PI * variance).ln() - 0.5 * n`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 726: `let ratio = r[0] / r[order].abs().max(1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/peak.rs
+
+9 issues found:
+
+- Line 409: `left_ip = x1 + (x2 - x1) * (height - y1) / (y2 - y1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 425: `right_ip = x1 + (x2 - x1) * (height - y1) / (y2 - y1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 452: `let peaks = find_peaks(&signal, None, None, None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 456: `let peaks = find_peaks(&signal, Some(1.5), None, None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 466: `let peaks = find_peaks(&signal, None, Some(0.8), None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 486: `let peaks = find_peaks(&signal, None, None, Some(2), None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 509: `let peaks = find_peaks(&signal, None, None, None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 515: `let prominences = peak_prominences(&signal, &peaks).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 533: `let (widths, _left_ips, _right_ips) = peak_widths(&signal, &peaks, Some(0.5)).un...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/performance_optimized.rs
+
+21 issues found:
+
+- Line 85: `let n_full_chunks = out_size / simd_width;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 97: `"same" => (k - 1) / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 124: `"same" => (k - 1) / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 167: `let n_chunks = (n + chunk_size - overlap - 1) / (chunk_size - overlap);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 231: `let b_norm: Array1<f64> = b / a0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 232: `let a_norm: Array1<f64> = a / a0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 242: `let n_chunks = (n + chunk_size - overlap - 1) / (chunk_size - overlap);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 347: `let b_norm = b / a0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 348: `let a_norm = a / a0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 422: `let tile_size = (config.cache_line_size * 4) / std::mem::size_of::<f64>();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 426: `(0..((out_rows + tile_size - 1) / tile_size))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 432: `for tile_col in 0..((out_cols + tile_size - 1) / tile_size) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 452: `for row_tile in 0..((out_rows + tile_size - 1) / tile_size) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 456: `for col_tile in 0..((out_cols + tile_size - 1) / tile_size) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 531: `let approx_size = (n + 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 532: `let detail_size = (n + 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 656: `(-((i as f64 - kernel_size as f64 / 2.0).powi(2)) / 10.0).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 673: `1.0 - max_error / result_standard.iter().map(|&x| x.abs()).fold(0.0, f64::max);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 680: `speedup: standard_time / optimized_time,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 696: `let result = simd_convolve_1d(&signal, &kernel, "same").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 705: `let mut filter = StreamingFilter::new(b, a, 1024).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/phase_vocoder.rs
+
+24 issues found:
+
+- Line 121: `let synthesis_hop = (analysis_hop as f64 / config.time_stretch).round() as usize...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 158: `.map(|k| 2.0 * PI * k as f64 / config.window_size as f64 * analysis_hop as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 186: `let true_freq = bin_frequencies[k] + deviation / analysis_hop as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 248: `((num_frames as f64) * (synthesis_hop as f64) / (analysis_hop as f64)) as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 298: `let pitch_factor = 2.0_f64.powf(pitch_shift_semitones / 12.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 298: `let pitch_factor = 2.0_f64.powf(pitch_shift_semitones / 12.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 312: `time_stretch: 1.0 / pitch_factor,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 365: `let pos = i as f64 / factor;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 452: `formant_envelope[k] / formant_envelope[warped_bin]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 458: `new_frame[k] = Complex64::from_polar(magnitude * correction_factor.sqrt(), phase...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 534: `let idx = i.saturating_sub(smoothing_width / 2).saturating_add(j);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 542: `*smooth = sum / count;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 618: `*w = 0.5 * (1.0 - (2.0 * PI * n as f64 / (length - 1) as f64).cos());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 623: `*w = 0.54 - 0.46 * (2.0 * PI * n as f64 / (length - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 628: `*w = 0.42 - 0.5 * (2.0 * PI * n as f64 / (length - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 629: `+ 0.08 * (4.0 * PI * n as f64 / (length - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 676: `let scale = 1.0 / signal.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 696: `.map(|i| (2.0 * PI * freq * i as f64 / sample_rate as f64).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 708: `let result = phase_vocoder(&signal, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 722: `let hann = create_window("hann", n).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 728: `for i in 0..n / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 737: `assert_relative_eq!(hann[n / 2], 1.0, epsilon = 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 746: `let upsampled = resample(&signal, factor).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 767: `let downsampled = resample(&signal, factor).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/realtime.rs
+
+34 issues found:
+
+- Line 88: `self.data.len() / self.channels`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 150: `let mut buffer = self.buffer.lock().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 157: `*self.overrun_count.lock().unwrap() += 1;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 168: `let mut buffer = self.buffer.lock().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 186: `self.buffer.lock().unwrap().len()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 191: `*self.overrun_count.lock().unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 196: `self.buffer.lock().unwrap().clear();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 233: `let mut running = self.running.lock().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 262: `*self.running.lock().unwrap() = false;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 286: `self.stats.lock().unwrap().clone()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 291: `*self.stats.lock().unwrap() = RealtimeStats::default();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 305: `while *running.lock().unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 310: `let mut input_buf = input_buffer.lock().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 327: `let mut stats_guard = stats.lock().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 347: `let mut output_buf = output_buffer.lock().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 359: `let mut stats_guard = stats.lock().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 377: `let samples_per_ms = config.sample_rate / 1000.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 378: `let buffer_latency = (input_buffer.lock().unwrap().len()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 379: `+ output_buffer.lock().unwrap().len())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 381: `/ samples_per_ms;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 388: `let target_block_time = config.buffer_size as f64 / config.sample_rate * 1000.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 552: `*sample = self.sum / self.history.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 558: `self.window_size / 2`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 598: `self.lookahead_samples = (self.attack_time * config.sample_rate / 1000.0) as usi...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 614: `let attack_coeff = (-1.0 / (self.attack_time * self.sample_rate / 1000.0)).exp()...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 615: `let release_coeff = (-1.0 / (self.release_time * self.sample_rate / 1000.0)).exp...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 624: `self.threshold / sample_abs`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 680: `buffer.write(&input_data).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 683: `let read_count = buffer.read(&mut output_data).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 695: `buffer.write(&input_data).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 721: `processor.process_block(&mut block).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 731: `processor.process_block(&mut block).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 748: `let ch0 = block.channel_data(0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 749: `let ch1 = block.channel_data(1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/reassigned.rs
+
+23 issues found:
+
+- Line 57: `hop_size: window_size / 4,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 145: `let center = (win.len() - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 159: `fw[i] = (win[i + 1] - win[i - 1]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 186: `let hop_seconds = config.hop_size as f64 / config.fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 190: `let frequencies = Array1::linspace(0.0, config.fs / 2.0, n_freqs);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 217: `signal.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 259: `let omega = 2.0 * PI * i as f64 / (2.0 * (n_bins - 1) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 267: `let inst_phase_derivative = (stft_time[[i, j]] / stft_val).im;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 271: `let group_delay = (stft_freq[[i, j]] / stft_val).im;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 284: `freq_shifts[[i, j]] = freq_shifts[[i, j]] * fs / (2.0 * PI);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 314: `let f_reassigned = freq_shifts[[i, j]] / ((n_bins - 1) as f64) * (n_bins as f64)...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 377: `let half_width = width / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 410: `smoothed[[i, j]] = sum / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 488: `let avg_energy_a = a.iter().map(|(t, _)| *t).sum::<usize>() as f64 / a.len() as ...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 489: `let avg_energy_b = b.iter().map(|(t, _)| *t).sum::<usize>() as f64 / b.len() as ...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 518: `let duration = n as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 525: `window: Array1::from(window::hann(128, true).unwrap()),`
+  - **Fix**: Handle array creation errors properly
+- Line 533: `let result = reassigned_spectrogram(&signal, config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 568: `window: Array1::from(window::hann(64, true).unwrap()),`
+  - **Fix**: Handle array creation errors properly
+- Line 575: `let standard = reassigned_spectrogram(&signal, config.clone()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 576: `let smoothed = smoothed_reassigned_spectrogram(&signal, config, 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 601: `let freq_bin_45hz = (45.0 / (fs / 2.0) * standard.frequencies.len() as f64) as u...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 602: `let freq_bin_55hz = (55.0 / (fs / 2.0) * standard.frequencies.len() as f64) as u...`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/resample.rs
+
+22 issues found:
+
+- Line 91: `let up = up / gcd;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 92: `let down = down / gcd;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 95: `let n_out = ((x_f64.len() * up) as f64 / down as f64).ceil() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 105: `let t = i as f64 - (filter_length - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 109: `(std::f64::consts::PI * t).sin() / (std::f64::consts::PI * t)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 116: `* (2.0 * std::f64::consts::PI * i as f64 / (filter_length - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 120: `- (2.0 * std::f64::consts::PI * i as f64 / (filter_length - 1) as f64).cos())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 126: `let w = 2.0 * std::f64::consts::PI * i as f64 / (filter_length - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 133: `*h_val = sinc * window_val / up as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 138: `let output_time = i as f64 * down as f64 / up as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 146: `for j in 0..filter_length / up {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 323: `let (up, down) = rational_approximation(num as f64 / x.len() as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 371: `let error = ((num as f64 / denom as f64) - x).abs();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 382: `(best_num / d, best_denom / d)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 394: `let resampled = resample(&signal, 1, 1, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 406: `let upsampled = upsample(&signal, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 423: `let downsampled = downsample(&signal, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 426: `assert!(downsampled.len() >= signal.len() / 2 - 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 427: `assert!(downsampled.len() <= signal.len() / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 436: `let resampled = resample_poly(&signal, 150).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 440: `let resampled = resample_poly(&signal, 50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 448: `let approx = num as f64 / denom as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/robust.rs
+
+30 issues found:
+
+- Line 118: `let half_window = window_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 150: `window_values.push(*window_values.last().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 155: `window_values.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 159: `let trimmed_mean = trimmed_values.iter().sum::<f64>() / trimmed_values.len() as ...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 214: `let half_window = window_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 235: `window_values.push(*window_values.last().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 241: `sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 243: `let mid = sorted_values.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 244: `(sorted_values[mid - 1] + sorted_values[mid]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 246: `sorted_values[sorted_values.len() / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 252: `abs_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 255: `let mid = abs_deviations.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 256: `(abs_deviations[mid - 1] + abs_deviations[mid]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 258: `abs_deviations[abs_deviations.len() / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 322: `let half_window = window_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 342: `window_values.push(*window_values.last().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 346: `window_values.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 349: `let lower_idx = ((percentile / 100.0) * (window_values.len() - 1) as f64) as usi...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 351: `(((100.0 - percentile) / 100.0) * (window_values.len() - 1) as f64) as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 417: `let half_window = window_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 437: `window_values.push(*window_values.last().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 465: `weighted_sum / weight_sum`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 538: `let filtered = alpha_trimmed_filter(&signal, 3, 0.3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 550: `let (filtered, outliers) = hampel_filter(&signal, 3, 3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 560: `let filtered = winsorize_filter(&signal, 5, 20.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 570: `let filtered = huber_filter(&signal, 3, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 583: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 585: `let filtered = robust_filter_2d(&image, alpha_trimmed_filter, 3, 0.2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 596: `let result = alpha_trimmed_filter(&empty_signal, 3, 0.2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 601: `let result = alpha_trimmed_filter(&small_signal, 3, 0.2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/savgol.rs
+
+32 issues found:
+
+- Line 98: `let halflen = window_length / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 123: `wl * (wl * wl - 1.0) / 12.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 135: `/ (4.0 * norm_factor);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 142: `coeffs[i] = -x / (2.0 * norm_factor / 3.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 148: `coeffs[i] = 1.0 / (norm_factor / 3.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 217: `y[deriv_val] = fact / delta_val.powi(deriv_val as i32);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 279: `let mid = nrows / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 287: `let norm = (nrows_f64 * (nrows_f64 * nrows_f64 - 1.0)) / 12.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 289: `(3.0 * nrows_f64 * nrows_f64 - 7.0 - 30.0 * x * x) / (4.0 * norm);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 294: `let norm = (nrows_f64 * (nrows_f64 * nrows_f64 - 1.0)) / 12.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 295: `output[i] = (-x) / (2.0 * norm / 3.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 300: `let norm = (nrows_f64 * (nrows_f64 * nrows_f64 - 1.0)) / 12.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 301: `output[i] = 1.0 / (norm / 3.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 362: `let factor = aug[[j, i]] / aug[[i, i]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 377: `x[i] = (aug[[i, n]] - sum) / aug[[i, i]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 501: `values.push(result / config.delta.powi(config.deriv as i32));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 531: `let halflen = window_length / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 687: `let halflen = window_length / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 719: `let halflen = window_length / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 831: `let coeffs = savgol_coeffs(5, 2, None, None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 843: `let coeffs = savgol_coeffs(5, 2, Some(1), None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 855: `let t: Vec<f64> = (0..100).map(|i| i as f64 / 10.0).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 860: `*val += 0.1 * (i as f64 / 5.0).sin();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 864: `let smoothed = savgol_filter(&x, 11, 2, None, None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 875: `let half_win = window_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 893: `let mean = x.iter().sum::<f64>() / x.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 894: `let var = x.iter().map(|&v| (v - mean).powi(2)).sum::<f64>() / x.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 904: `let interp = savgol_filter(&x, 5, 2, None, None, Some("interp"), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 905: `let mirror = savgol_filter(&x, 5, 2, None, None, Some("mirror"), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 906: `let constant = savgol_filter(&x, 5, 2, None, None, Some("constant"), None).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 907: `let nearest = savgol_filter(&x, 5, 2, None, None, Some("nearest"), None).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 908: `let wrap = savgol_filter(&x, 5, 2, None, None, Some("wrap"), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/separation.rs
+
+6 issues found:
+
+- Line 227: `.map(|&x| x * config.separation_power.sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 232: `.map(|&x| x * (2.0 - config.separation_power).sqrt().max(0.1))`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 251: `.map(|i| i as f64 / sample_rate)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 269: `let bands = multiband_separation(&signal_array, &cutoffs, sample_rate, None).unw...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 300: `.map(|i| i as f64 / sample_rate)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 317: `harmonic_percussive_separation(&signal_array, sample_rate, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/simd_ops.rs
+
+7 issues found:
+
+- Line 21: `SIMD_CAPS.as_ref().unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 242: `(sum_squares / signal.len() as f32).sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 242: `(sum_squares / signal.len() as f32).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 365: `envelope[i] = s.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 381: `let start = (kernel_len - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 418: `simd_energy_f32(signal) / signal.len() as f32`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 535: `let start = (kernel_len - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/sparse.rs
+
+34 issues found:
+
+- Line 106: `min(m / 4, n.saturating_sub(1))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 236: `min(m / 3, n.saturating_sub(1))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 253: `col.mapv_inplace(|val| val / norm);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 347: `let step_size = 1.0 / (phi_norm * phi_norm);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 386: `let diff = x_diff_norm / x_norm.max(config.eps);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 419: `let step_size = 1.0 / (phi_norm * phi_norm);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 457: `t_next = (1.0 + f64::sqrt(1.0 + 4.0 * t * t)) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 460: `z = &x + ((t - 1.0) / t_next) * (&x - &x_prev);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 470: `let diff = x_diff_norm / x_norm.max(config.eps);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 502: `min(m / 4, n.saturating_sub(1))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 532: `proxy_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 588: `temp_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 607: `let diff = x_diff_norm / x_norm.max(config.eps);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 658: `min(m / 3, n.saturating_sub(1))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 702: `values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 718: `let diff = x_diff_norm / x_norm.max(config.eps);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 760: `min(m / 3, n.saturating_sub(1))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 782: `initial_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 822: `corr_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 865: `merged_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 973: `x_current.mapv(|val| -val * f64::exp(-0.5 * (val / sigma).powi(2)) / sigma.powi(...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1218: `result[i] = (complex_signal[i].re.powi(2) + complex_signal[i].im.powi(2)).sqrt()...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1239: `let scale = 1.0 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1289: `for i in (0..n_rows).step_by(patch_size / 2) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1290: `for j in (0..n_cols).step_by(patch_size / 2) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1351: `let normal = rand_distr::Normal::new(0.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1364: `let norm = col.mapv(|x| x * x).sum().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1366: `col.mapv_inplace(|x| x / norm);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1398: `let coherence = (inner_product / (norm_i * norm_j)).abs();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1454: `x.mapv_inplace(|val| val / x_norm);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1505: `Ok(1.0 - (l1_norm / l2_norm_val) / (n as f64).sqrt())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1505: `Ok(1.0 - (l1_norm / l2_norm_val) / (n as f64).sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1553: `let scale = 1.0 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1618: `let threshold = y.fold(0.0, |acc, &val| acc + val.abs()) / (n as f64) * config.l...`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/spectral.rs
+
+35 issues found:
+
+- Line 35: `* (1.0 - (2.0 * std::f64::consts::PI * i as f64 / (nperseg - 1) as f64).cos());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 44: `- 0.46 * (2.0 * std::f64::consts::PI * i as f64 / (nperseg - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 53: `- 0.5 * (2.0 * std::f64::consts::PI * i as f64 / (nperseg - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 54: `+ 0.08 * (4.0 * std::f64::consts::PI * i as f64 / (nperseg - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 81: `let mean = x.iter().sum::<f64>() / x.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 99: `let slope = (n as f64 * sum_xy - sum_x * sum_y) / (n as f64 * sum_xx - sum_x * s...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 100: `let intercept = (sum_y - slope * sum_x) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 192: `let scale = 1.0 / win_scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 207: `.map(|&c| c.norm_sqr() * scale / (fs_val * x_f64.len() as f64))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 211: `let freqs = scirs2_fft::helper::fftfreq(nfft_val, 1.0 / fs_val).map_err(|e| {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 288: `let noverlap_val = noverlap.unwrap_or(nperseg_val / 2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 319: `let scale = 1.0 / win_scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 324: `(x_f64.len() - noverlap_val) / step`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 336: `let freqs = scirs2_fft::helper::fftfreq(nfft_val, 1.0 / fs_val).map_err(|e| {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 383: `.map(|&c| c.norm_sqr() * scale / (fs_val * nperseg_val as f64))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 425: `let pad_len = nperseg / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 433: `let pad_len = nperseg / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 500: `let noverlap_val = noverlap.unwrap_or(nperseg_val / 2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 542: `(input_signal.len() - noverlap_val) / step`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 554: `let freqs = scirs2_fft::helper::fftfreq(nfft_val, 1.0 / fs_val).map_err(|e| {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 565: `let center = i * step + nperseg_val / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 566: `times.push(center as f64 / fs_val);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 686: `let scale = 1.0 / win_scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 693: `let psd = c.norm_sqr() * scale / (fs_val * nperseg_val as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 747: `let t: Vec<f64> = (0..1000).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 752: `let (freqs, psd) = periodogram(&x, Some(fs), None, None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 768: `assert!(freqs.len() >= (x.len() / 2));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 776: `let t: Vec<f64> = (0..2000).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 788: `welch(&x, Some(fs), None, Some(256), Some(128), None, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 808: `let t: Vec<f64> = (0..2000).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 826: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 869: `let t: Vec<f64> = (0..1000).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 884: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 896: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 908: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/spline.rs
+
+62 issues found:
+
+- Line 148: `result[i] = (xi.powi(3)) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 150: `result[i] = (-3.0 * xi.powi(3) + 12.0 * xi.powi(2) - 12.0 * xi + 4.0) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 152: `result[i] = (3.0 * xi.powi(3) - 24.0 * xi.powi(2) + 60.0 * xi - 44.0) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 154: `result[i] = (4.0 - xi).powi(3) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 162: `result[i] = xi.powi(4) / 24.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 167: `/ 24.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 172: `/ 24.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 177: `/ 24.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 179: `result[i] = (5.0 - xi).powi(4) / 24.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 187: `result[i] = xi.powi(5) / 120.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 193: `/ 120.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 199: `/ 120.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 205: `/ 120.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 211: `/ 120.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 213: `result[i] = (6.0 - xi).powi(5) / 120.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 250: `let num = vec![1.0 / 8.0, 3.0 / 4.0, 1.0 / 8.0];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 256: `let num = vec![1.0 / 6.0, 2.0 / 3.0, 1.0 / 6.0];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 257: `let den = vec![1.0, -2.0 / 3.0];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 263: `1.0 / 384.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 264: `19.0 / 96.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 265: `115.0 / 192.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 266: `19.0 / 96.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 267: `1.0 / 384.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 275: `1.0 / 120.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 276: `13.0 / 60.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 277: `11.0 / 20.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 278: `13.0 / 60.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 279: `1.0 / 120.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 325: `sum / (1.0 - z_n)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 336: `sum / (1.0 - z_i)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 710: `let c0 = (1.0 - t).powi(3) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 711: `let c1 = (3.0 * t3 - 6.0 * t2 + 4.0) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 712: `let c2 = (-3.0 * t3 + 3.0 * t2 + 3.0 * t + 1.0) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 713: `let c3 = t3 / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 721: `let c1 = (4.0 - 6.0 * t2 + 3.0 * t3) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 722: `let c2 = (1.0 + 3.0 * t + 3.0 * t2 - 3.0 * t3) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 723: `let c3 = t3 / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 728: `let c0 = (1.0 - t).powi(3) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 729: `let c1 = (4.0 - 6.0 * t2 + 3.0 * t3) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 730: `let c2 = (1.0 + 3.0 * t + 3.0 * t2 - 3.0 * t3) / 6.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 750: `.and_then(|sum| sum.checked_sub(order_int / 2))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 753: `let basis_x = (t + (j as f64) - (order_int as f64) / 2.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 754: `+ order_int as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 834: `let mean = signal_f64.iter().sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 843: `let gamma = 1.0 / (1.0 + lam * h.powi(2 * order.as_int() as i32));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 985: `let basis = bspline_basis(&x, SplineOrder::Cubic).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 997: `let filtered = bspline_filter(&signal, SplineOrder::Cubic).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1009: `let filtered_ramp = bspline_filter(&ramp, SplineOrder::Cubic).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1022: `let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1039: `let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1043: `let values = bspline_evaluate(&coeffs, &x, SplineOrder::Cubic).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1052: `let values_mid = bspline_evaluate(&coeffs, &x_mid, SplineOrder::Cubic).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1060: `let values_half = bspline_evaluate(&coeffs, &x_half, SplineOrder::Cubic).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1074: `let smoothed = bspline_smooth(&signal, SplineOrder::Cubic, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1083: `let no_smooth = bspline_smooth(&signal, SplineOrder::Cubic, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1089: `let high_smooth = bspline_smooth(&signal, SplineOrder::Cubic, 1e7).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1090: `let mean = signal.iter().sum::<f64>() / signal.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1102: `let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1107: `let deriv = bspline_derivative(&coeffs, &x1, SplineOrder::Cubic, 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1117: `let deriv2 = bspline_derivative(&coeffs, &x2, SplineOrder::Cubic, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1128: `let mean = x.iter().sum::<f64>() / x.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1129: `let var = x.iter().map(|&v| (v - mean).powi(2)).sum::<f64>() / x.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/sswt.rs
+
+13 issues found:
+
+- Line 196: `let phase_diff = (next.arg() - prev.arg()) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 208: `center_frequency / scale / 2.0 / PI + phase_diff_unwrapped / 2.0 / PI`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 210: `center_frequency / scale`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 226: `omega[[i, 0]] = center_frequency / scale / 2.0 / PI + phase_diff / 2.0 / PI;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 228: `omega[[i, 0]] = center_frequency / scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 242: `center_frequency / scale / 2.0 / PI + phase_diff / 2.0 / PI;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 244: `omega[[i, n_samples - 1]] = center_frequency / scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 292: `sst[[freq_idx, t]] += cwt_val / scale.sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 292: `sst[[freq_idx, t]] += cwt_val / scale.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 343: `let min_log = min_scale.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 344: `let max_log = max_scale.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 563: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 571: `assert_eq!(result.cwt.unwrap().shape()[0], 32); // Scales`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/stft.rs
+
+97 issues found:
+
+- Line 257: `let m_num_mid = m_num / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 365: `*w_i /= dd_i.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 446: `calc_dual_window_internal(self.win.as_slice().unwrap(), self.hop)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 455: `1.0 / self.fs`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 473: `1.0 / (self.mfft as f64 * self.t())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 482: `-((self.m_num - self.m_num_mid) as isize / self.hop as isize)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 495: `((n + self.m_num_mid) as isize - 1) / self.hop as isize + 1`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 549: `self.mfft / 2 + 1`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 574: `if i <= self.mfft / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 585: `let half = self.mfft / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 646: `let half = self.mfft / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 762: `ScalingMode::Magnitude => 1.0 / self.win.map(|x| x * x).sum().sqrt(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 762: `ScalingMode::Magnitude => 1.0 / self.win.map(|x| x * x).sum().sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 763: `ScalingMode::Psd => 1.0 / self.win.map(|x| x * x).sum(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 904: `for i in 1..(self.mfft / 2) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 909: `for i in 1..(self.mfft / 2 + 1) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 917: `Complex64::new(2.0_f64.sqrt(), 0.0)`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 923: `let nyquist_idx = if self.mfft % 2 == 0 { self.mfft / 2 } else { 0 };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 945: `let half = self.mfft / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 984: `for k in 1..(n / 2 + 1) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 987: `let angle = -2.0 * std::f64::consts::PI * (j * k) as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1004: `let angle = -2.0 * std::f64::consts::PI * (j * k) as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1021: `let angle = -2.0 * std::f64::consts::PI * (j * k) as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1029: `let half = n / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1046: `let phase_factor = phase_shift as f64 / self.mfft as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1084: `for k in 1..(n / 2 + 1).min(spectrum.len()) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1085: `let angle = 2.0 * std::f64::consts::PI * (i * k) as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1108: `let angle = 2.0 * std::f64::consts::PI * (i * k) as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1127: `let half = n / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1144: `let angle = 2.0 * std::f64::consts::PI * (i * k) as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1189: `((self.m_num - self.m_num_mid) as isize + self.hop as isize - 1) / self.hop as i...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1190: `self.m_num_mid as isize / self.hop as isize + 1,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1194: `(n as isize - self.m_num_mid as isize) / self.hop as isize,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1196: `/ (self.hop as isize)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1246: `let dual_win = Array1::from_vec(win.iter().zip(dd.iter()).map(|(&w, &d)| w / d)....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1321: `let numerator = (q_d.iter().map(|&x| x * x).sum::<f64>()).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1330: `let alpha = numerator / denominator;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1366: `let window = window::hann(256, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1377: `let stft = ShortTimeFft::new(&window, 64, 1000.0, Some(config)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1399: `let stft = ShortTimeFft::from_window("hamming", 1000.0, 256, 192, Some(config))....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1415: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1421: `let hann_window = window::hann(window_length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1431: `let stft = ShortTimeFft::new(&hann_window, hop_size, fs, Some(config)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1434: `let stft_result = stft.stft(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1440: `let freq_bin_100hz = (100.0 / stft.delta_f()).round() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1458: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1469: `let stft = ShortTimeFft::from_win_equals_dual(&window, hop_size, fs, Some(config...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1472: `let stft_result = stft.stft(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1475: `let reconstructed = stft.istft(&stft_result, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1497: `let avg_error = error_sum / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1512: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1523: `let hann_window = window::hann(window_length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1533: `let stft = ShortTimeFft::new(&hann_window, hop_size, fs, Some(config)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1536: `let spec_result = stft.spectrogram(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1542: `let freq_bin_100hz = (100.0 / stft.delta_f()).round() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1543: `let freq_bin_250hz = (250.0 / stft.delta_f()).round() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1623: `1_000_000 / (fft_size * 8)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1626: `1_000_000 / (fft_size * 16)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1675: `overlap / hop_size`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1737: `overlap / hop_size`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1771: `let frames_in_chunk = chunk_size / self.stft.hop + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1778: `memory_per_chunk as f64 / 1_000_000.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1787: `let signal_memory_mb = std::mem::size_of_val(signal) / 1_000_000;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1789: `if signal_memory_mb > self.config.max_memory_mb / 4 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1803: `let signal_memory_mb = std::mem::size_of_val(signal) / 1_000_000;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1805: `if signal_memory_mb > self.config.max_memory_mb / 4 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1858: `let skip_frames = if i == 0 { 0 } else { overlap / hop_size };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1889: `let frames_per_chunk = chunk_size / hop_size + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1893: `total_frames as f64 * self.stft.f_pts() as f64 * 8.0 / 1_000_000.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1895: `total_frames as f64 * self.stft.f_pts() as f64 * 16.0 / 1_000_000.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1899: `frames_per_chunk as f64 * self.stft.f_pts() as f64 * 8.0 / 1_000_000.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1901: `frames_per_chunk as f64 * self.stft.f_pts() as f64 * 16.0 / 1_000_000.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1912: `memory_reduction_factor: total_memory_mb / chunk_memory_mb,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1949: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1954: `let window = window::hann(window_length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1966: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1969: `let result = mem_stft.stft_chunked(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1986: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1991: `let window = window::hann(window_length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2003: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2005: `let spec_result = mem_stft.spectrogram_chunked(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2029: `let window = window::hann(window_length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2041: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2044: `let small_result = mem_stft.stft_auto(&small_signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2045: `let large_result = mem_stft.stft_auto(&large_signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2063: `let window = window::hann(window_length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2075: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2100: `let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 2105: `let window = window::hann(window_length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2117: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2120: `let parallel_result = mem_stft.stft_parallel_chunked(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2121: `let sequential_result = mem_stft.stft_chunked(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2146: `let t = i as f64 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 2154: `let window = window::hann(window_length, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2166: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2179: `let spec_result = mem_stft.spectrogram_auto(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 2186: `let expected_freq_bins = window_length / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/streaming_stft.rs
+
+25 issues found:
+
+- Line 167: `let pad_length = config.frame_length / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 310: `complex_spectrum.mapv(|c| c.norm().powf(self.config.power))`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 314: `magnitude_spectrum.mapv(|m| (m + self.config.log_epsilon).ln())`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 328: `self.config.frame_length / 2 + self.config.hop_length`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 336: `self.get_latency_samples() as f64 / sample_rate`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 357: `let pad_length = self.config.frame_length / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 401: `let frame_slice = windowed_frame.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 408: `let n_freq = self.config.frame_length / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 423: `spectrum.mapv(|c| Complex64::new(c.norm().powf(self.config.power), 0.0))`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 428: `.mapv(|c| Complex64::new((c.re + self.config.log_epsilon).ln(), 0.0)))`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 590: `let stft = StreamingStft::new(config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 605: `let mut stft = StreamingStft::new(config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 613: `.map(|i| (2.0 * PI * freq * i as f64 / fs).sin())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 619: `let result = stft.process_frame(&input_frame).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 622: `let spectrum = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 636: `let mut stft = StreamingStft::new(config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 639: `let magnitude_result = stft.process_magnitude_frame(&input).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 642: `let magnitude_spectrum = magnitude_result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 655: `let mut rt_stft = RealTimeStft::new(config, 128, 10).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 658: `let new_spectra = rt_stft.process_block(&input_block).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 673: `let stft = StreamingStft::new(config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 691: `let mut stft = StreamingStft::new(config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 694: `let results = stft.process_batch(&input_data, 64).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 709: `let mut stft = StreamingStft::new(config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 716: `let flushed_results = stft.flush().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/swt.rs
+
+12 issues found:
+
+- Line 110: `let offset = filter_len / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 133: `let scale_factor = 2.0_f64.sqrt().powi(level as i32);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 215: `let scale_factor = 1.0 / 2.0_f64.sqrt().powi(level as i32);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 215: `let scale_factor = 1.0 / 2.0_f64.sqrt().powi(level as i32);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 232: `let offset = filter_len / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 560: `let (approx, detail) = swt_decompose(&signal, Wavelet::Haar, 1, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 586: `let (approx, detail) = swt_decompose(&signal, Wavelet::Haar, 1, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 589: `let reconstructed = swt_reconstruct(&approx, &detail, Wavelet::Haar, 1).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 607: `let (approx2, detail2) = swt_decompose(&step_signal, Wavelet::Haar, 1, None).unw...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 623: `let reconstructed2 = swt_reconstruct(&approx2, &detail2, Wavelet::Haar, 1).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 633: `let (details, approx) = swt(&signal, Wavelet::Haar, 2, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 650: `let reconstructed = iswt(&details, &approx, Wavelet::Haar).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/swt2d.rs
+
+7 issues found:
+
+- Line 600: `let level_weight = (total_levels - level_idx) as f64 / total_weight as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 629: `let result = swt2d_decompose(&image, Wavelet::Haar, 1, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 652: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 655: `let decomposition = swt2d_decompose(&data, Wavelet::Haar, 1, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 658: `let reconstructed = swt2d_reconstruct(&decomposition, Wavelet::Haar, 1, None).un...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 701: `let decompositions = swt2d(&image, Wavelet::Haar, levels, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 715: `let reconstructed = iswt2d(&decompositions, Wavelet::Haar, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/sysid.rs
+
+43 issues found:
+
+- Line 535: `let nfft = config.nfft.unwrap_or(next_power_of_2(input.len() / 8));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 544: `input.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 560: `output.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 572: `freq_response[i] = pxy[i] / pxx[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 575: `let coherence_val = pxy[i].norm_sqr() / (pxx[i].abs() * pyy[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 612: `let window_norm = window_array.mapv(|w| w * w).sum().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 615: `let mut pxy_acc = Array1::<Complex64>::zeros(nfft / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 633: `nfft / 2`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 635: `(nfft - 1) / 2`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 652: `pxy_acc.mapv_inplace(|x| x / scale);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 655: `let freqs = Array1::linspace(0.0, fs / 2.0, nfft / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 681: `let mut freq_response = Array1::<Complex64>::zeros(nfft / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 682: `let mut coherence = Array1::<f64>::zeros(nfft / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 684: `for i in 0..=nfft / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 685: `let idx = if i == nfft / 2 { nfft / 2 } else { i };`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 687: `freq_response[i] = output_fft[idx] / input_fft[idx];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 693: `let freqs = Array1::linspace(0.0, fs / 2.0, nfft / 2 + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 722: `let nfft = config.nfft.unwrap_or(next_power_of_2(input.len() / 8));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 728: `output.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 738: `input.as_slice().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 753: `freq_response[i] = Complex64::new(pyy[i], 0.0) / pxy[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 755: `let coherence_val = pxy[i].norm_sqr() / (pxx[i] * pyy[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 867: `let fit_percentage = 100.0 * (1.0 - error_sum / signal_sum).max(0.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 873: `error_variance: error_sum / n_freq as f64,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 935: `if ar_order + ma_order >= signal.len() / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 943: `let log_likelihood = -0.5 * n * (2.0 * PI * noise_var).ln() - 0.5 * n;`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 947: `OrderSelection::BIC => -2.0 * log_likelihood + k as f64 * n.ln(),`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 949: `-2.0 * log_likelihood + 2.0 * k as f64 * n / (n - k as f64 - 1.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1009: `1.0 - ss_res / ss_tot`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1018: `let log_likelihood = -0.5 * n * (2.0 * PI * mse).ln() - 0.5 * n;`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 1020: `let bic = -2.0 * log_likelihood + model_order as f64 * n.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 1023: `let fpe = mse * (n + model_order as f64) / (n - model_order as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1151: `let gain = &p_phi / denominator;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1164: `self.covariance = (&self.covariance - &k_phi_t_p) / self.forgetting_factor;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1190: `let fit = 1.0 - ss_res / ss_tot;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1218: `lb_stat += autocorr * autocorr / (n - lag) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1225: `(-lb_stat / 2.0).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1287: `let angle = -2.0 * PI * (k * t) as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1338: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1356: `let result = identify_ar_model(&signal, 5, ARMethod::Burg, OrderSelection::AIC)....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1380: `let _ = rls.update(regression, *output).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1395: `let validation = validate_model(&predicted, &actual, 2, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1418: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/sysid_advanced.rs
+
+26 issues found:
+
+- Line 58: `let cost = new_residuals.mapv(|r| r * r).sum() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 176: `let cost = residuals.mapv(|r| r * r).sum() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 243: `(&new_d - &d).norm() + (&new_f - &f).norm()) / 4.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 249: `let cost = final_residuals.mapv(|r| r * r).sum() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 282: `let cost = final_residuals.mapv(|r| r * r).sum() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 323: `let cost = residuals.mapv(|r| r * r).sum() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 361: `let u_svd = u_svd.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 362: `let vt = vt.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 370: `let gamma = u1.dot(&s1.mapv(|x| x.sqrt()));`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 413: `let cost = residuals.mapv(|r| r * r).sum() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 489: `let variance = residuals.mapv(|r| r * r).sum() / n_samples as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 657: `let sensitivity = (&y_plus - y_sim) / h;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 661: `gradient[i] = 2.0 * error.dot(&sensitivity) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 675: `let sensitivity2 = (&y_plus2 - y_sim) / h;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 677: `hessian[[i, j]] = 2.0 * sensitivity.dot(&sensitivity2) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 996: `phi[[i, na + nb]] = 1.0 / (1.0 + (-scale * (x - offset)).exp());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1001: `let center = -2.0 + 4.0 * k as f64 / n_nonlinear as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1004: `phi[[i, na + nb + k]] = (-(x - center).powi(2) / (2.0 * width * width)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1072: `let sigma2 = residuals.mapv(|r| r * r).sum() / (n - k) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1076: `let std_errors = Array1::from_shape_fn(k, |i| covariance[[i, i]].sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1099: `r[k] = sum / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1110: `let u = u.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1111: `let vt = vt.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1118: `s_inv[[i, i]] = 1.0 / s[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1179: `).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1193: `).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/sysid_enhanced.rs
+
+27 issues found:
+
+- Line 316: `let gain = p_phi / denominator;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 324: `self.covariance = (&self.covariance - &outer.dot(&self.covariance)) / self.lambd...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 343: `let na = self.phi_buffer.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 363: `self.covariance.diag().map(|x| x.sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 377: `let input_mean = proc_input.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 378: `let output_mean = proc_output.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 418: `sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 419: `sorted[sorted.len() / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 442: `(config.max_order / 2, config.max_order / 2, 1)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 462: `let sigma2 = residuals.dot(&residuals) / (n - na - nb) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 463: `let covariance = phi_t_phi.inv().unwrap() * sigma2;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 464: `let std_errors = covariance.diag().map(|x| x.sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 479: `let cost = residuals.dot(&residuals) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 547: `let sigma2 = residuals.dot(&residuals) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 550: `let aic = n as f64 * sigma2.ln() + 2.0 * k as f64;`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 631: `let y_mean = output.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 637: `let fit_percentage = 100.0 * (1.0 - ss_res / ss_tot);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 642: `let sigma2 = ss_res / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 644: `let aic = n * sigma2.ln() + 2.0 * k;`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 645: `let bic = n * sigma2.ln() + k * n.ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 646: `let fpe = sigma2 * (n + k) / (n - k);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 712: `let max_lag = 20.min(residuals.len() / 4);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 715: `let r_mean = residuals.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 718: `.sum::<f64>() / residuals.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 725: `autocorrelation[lag] = sum / ((residuals.len() - lag) as f64 * r0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 766: `let error = sysid.update(input, output).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 792: `let result = enhanced_system_identification(&input, &output, &config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/tv.rs
+
+37 issues found:
+
+- Line 181: `p[i] = (p[i] + step * grad_div_p[i]) / (1.0 + step * grad_div_p[i].abs());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 194: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 194: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 225: `let step_size = 1.0 / l;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 245: `t = (1.0 + f64::sqrt(1.0 + 4.0 * t_prev * t_prev)) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 248: `let momentum = (t_prev - 1.0) / t;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 263: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 263: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 450: `/ (1.0 + step * grad_div_p1[[i, j]].abs());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 454: `/ (1.0 + step * grad_div_p2[[i, j]].abs());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 470: `let norm = f64::max(sum.sqrt(), 1.0);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 472: `p1[[i, j]] = new_p1 / norm;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 473: `p2[[i, j]] = new_p2 / norm;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 491: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 491: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 522: `let step_size = 1.0 / l;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 544: `t = (1.0 + f64::sqrt(1.0 + 4.0 * t_prev * t_prev)) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 547: `let momentum = (t_prev - 1.0) / t;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 566: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 566: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 640: `.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 645: `.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 650: `* (dx_forward / forward_norm + dy_forward / forward_norm`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 651: `- dx_backward / backward_norm`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 652: `- dy_backward / backward_norm);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 819: `/ (1.0 + step * grad[[i, j, pc]].abs());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 834: `p[[i, j, pc]] = (p[[i, j, pc]] + step * grad[[i, j, pc]]) / norm;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 855: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 855: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1014: `result[[i, j]] = sum / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1097: `/ (1.0 + step * grad1[[i, j]].abs());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1099: `/ (1.0 + step * grad2[[i, j]].abs());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1111: `let norm = f64::max(sum.sqrt(), 1.0);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1113: `p1[[i, j]] = new_p1 / norm;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1114: `p2[[i, j]] = new_p2 / norm;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1136: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1136: `let relative_change = (change / norm.max(1e-10)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### src/utilities/spectral.rs
+
+46 issues found:
+
+- Line 65: `let dt = 1.0 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 125: `let normalized = psd_f64.iter().map(|&p| p / sum).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 212: `let centroid = weighted_sum / sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 306: `let spread = (weighted_sum_sq_diff / sum).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 306: `let spread = (weighted_sum_sq_diff / sum).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 416: `let skewness = weighted_sum_cubed_diff / (sum * spread_val.powi(3));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 529: `let kurtosis = weighted_sum_fourth_power_diff / (sum * spread_val.powi(4)) - 3.0...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 593: `let arithmetic_mean = positive_psd.iter().sum::<f64>() / positive_psd.len() as f...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 602: `let log_sum: f64 = positive_psd.iter().map(|&p| p.ln()).sum();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 603: `let geometric_mean = (log_sum / positive_psd.len() as f64).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 606: `let flatness = geometric_mean / arithmetic_mean;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 696: `let flux = (diff.iter().map(|&d| d * d).sum::<f64>()).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 859: `let mean_val = psd_f64.iter().sum::<f64>() / psd_f64.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 868: `let crest = max_val / mean_val;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 952: `weighted_sum += (psd_f64[i] - psd_f64[0]) / freqs_f64[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 957: `let decrease = weighted_sum / amplitude_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1025: `let freq_mean = freqs_f64.iter().sum::<f64>() / freqs_f64.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1026: `let psd_mean = psd_f64.iter().sum::<f64>() / psd_f64.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1047: `let slope = covariance / variance;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1136: `let band_width = freq_range / n_bands as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1159: `band_psd.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1181: `let contrast = (peak / valley).log10();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1265: `let threshold_linear = peak_magnitude * 10.0_f64.powf(threshold_db / 10.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1265: `let threshold_linear = peak_magnitude * 10.0_f64.powf(threshold_db / 10.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 1275: `let t = (threshold_linear - psd_f64[i]) / (psd_f64[i + 1] - psd_f64[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1288: `crossings.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1365: `.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1477: `peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1521: `let esd = energy_spectral_density(&psd, fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1525: `assert_relative_eq!(esd[i], p / fs, epsilon = 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1534: `let norm_psd = normalized_psd(&psd).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1543: `assert_relative_eq!(norm_psd[i] / norm_psd[0], p / psd[0], epsilon = 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1554: `let centroid = spectral_centroid(&psd, &freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1563: `let centroid = spectral_centroid(&psd, &freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1575: `let spread = spectral_spread(&psd, &freqs, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1584: `let spread = spectral_spread(&psd, &freqs, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1595: `let flatness = spectral_flatness(&psd).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1603: `let flatness = spectral_flatness(&psd).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1615: `let flux_l1 = spectral_flux(&psd1, &psd2, "l1").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1616: `let flux_l2 = spectral_flux(&psd1, &psd2, "l2").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1617: `let flux_max = spectral_flux(&psd1, &psd2, "max").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1628: `let flux_l1 = spectral_flux(&psd1, &psd2, "l1").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1629: `let flux_l2 = spectral_flux(&psd1, &psd2, "l2").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1630: `let flux_max = spectral_flux(&psd1, &psd2, "max").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1644: `let rolloff = spectral_rolloff(&psd, &freqs, 0.95).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1653: `let rolloff = spectral_rolloff(&psd, &freqs, 0.95).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/utilities/tests.rs
+
+41 issues found:
+
+- Line 17: `let esd = energy_spectral_density(&psd, fs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 21: `assert_relative_eq!(esd[i], p / fs, epsilon = 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 30: `let norm_psd = normalized_psd(&psd).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 39: `assert_relative_eq!(norm_psd[i] / norm_psd[0], p / psd[0], epsilon = 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 50: `let centroid = spectral_centroid(&psd, &freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 59: `let centroid = spectral_centroid(&psd, &freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 71: `let spread = spectral_spread(&psd, &freqs, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 80: `let spread = spectral_spread(&psd, &freqs, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 92: `let skewness = spectral_skewness(&psd, &freqs, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 101: `let skewness = spectral_skewness(&psd, &freqs, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 117: `let skewness = spectral_skewness(&psd, &freqs, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 136: `let kurtosis = spectral_kurtosis(&psd, &freqs, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 145: `let kurtosis = spectral_kurtosis(&psd, &freqs, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 156: `let flatness = spectral_flatness(&psd).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 164: `let flatness = spectral_flatness(&psd).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 176: `let flux_l1 = spectral_flux(&psd1, &psd2, "l1").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 177: `let flux_l2 = spectral_flux(&psd1, &psd2, "l2").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 178: `let flux_max = spectral_flux(&psd1, &psd2, "max").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 189: `let flux_l1 = spectral_flux(&psd1, &psd2, "l1").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 190: `let flux_l2 = spectral_flux(&psd1, &psd2, "l2").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 191: `let flux_max = spectral_flux(&psd1, &psd2, "max").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 209: `let rolloff_95 = spectral_rolloff(&psd, &freqs, 0.95).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 210: `let rolloff_50 = spectral_rolloff(&psd, &freqs, 0.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 222: `let rolloff = spectral_rolloff(&psd, &freqs, 0.95).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 234: `let crest = spectral_crest(&psd).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 242: `let crest = spectral_crest(&psd).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 255: `let decrease = spectral_decrease(&psd, &freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 264: `let decrease = spectral_decrease(&psd, &freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 276: `let slope = spectral_slope(&psd, &freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 285: `let slope = spectral_slope(&psd, &freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 297: `let contrast = spectral_contrast(&psd, &freqs, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 311: `let contrast = spectral_contrast(&psd, &freqs, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 325: `let bandwidth_3db = spectral_bandwidth(&psd, &freqs, -3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 326: `let bandwidth_6db = spectral_bandwidth(&psd, &freqs, -6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 342: `let (dominant_freq, magnitude) = dominant_frequency(&psd, &freqs).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 355: `let peaks = dominant_frequencies(&psd, &freqs, 3, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 408: `let centroid = spectral_centroid(&psd.to_vec(), &freqs.to_vec()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 413: `Array2::from_shape_vec((1, 7), vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0]).unwrap()...`
+  - **Fix**: Handle array creation errors properly
+- Line 417: `let spread = spectral_spread(&psd_slice_vec, &freqs.to_vec(), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 421: `let crest = spectral_crest(&psd.to_vec()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 424: `let (dominant_freq, _) = dominant_frequency(&psd.to_vec(), &freqs.to_vec()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/utils.rs
+
+20 issues found:
+
+- Line 73: `let pad_before = pad_length / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 125: `let t = (i + 1) as f64 / (pad_before + 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 133: `let t = (i + 1) as f64 / (pad_after + 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 163: `let mean_val = x_f64.iter().sum::<f64>() / x_f64.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 285: `let scale = 1.0 / sum_of_squares.sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 285: `let scale = 1.0 / sum_of_squares.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 300: `let scale = 1.0 / peak;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 366: `let padded = zero_pad(&signal, 10, "constant", Some(0.0)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 378: `let padded = zero_pad(&signal, 8, "constant", Some(5.0)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 394: `let padded = zero_pad(&signal, 8, "edge", None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 404: `let padded = zero_pad(&signal, 8, "mean", None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 414: `let window = get_window("hamming", 10, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 420: `let middle_index = window.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 434: `let window = get_window("hann", 10, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 440: `let middle_index = window.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 455: `let normalized = normalize(&signal, "energy").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 462: `assert_relative_eq!(normalized[1] / normalized[0], 2.0, epsilon = 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 463: `assert_relative_eq!(normalized[2] / normalized[0], 3.0, epsilon = 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 464: `assert_relative_eq!(normalized[3] / normalized[0], 4.0, epsilon = 1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 471: `let normalized = normalize(&signal, "peak").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/waveforms.rs
+
+35 issues found:
+
+- Line 61: `let phi_rad = phi * PI / 180.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 82: `let beta = (f1 - f0) / t1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 87: `let beta = (f1 - f0) / (t1 * t1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 88: `2.0 * PI * (f0 * t + beta * t * t * t / 3.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 92: `let k = (f1 / f0).powf(1.0 / t1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 92: `let k = (f1 / f0).powf(1.0 / t1);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 97: `2.0 * PI * f0 * (k.powf(t) - 1.0) / (k - 1.0).ln()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 97: `2.0 * PI * f0 * (k.powf(t) - 1.0) / (k - 1.0).ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 97: `2.0 * PI * f0 * (k.powf(t) - 1.0) / (k - 1.0).ln()`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 102: `let c = f0 * t1 * ((f1 / f0) - 1.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 103: `2.0 * PI * c * (f0 * t / (f0 * t + c)).ln()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 103: `2.0 * PI * c * (f0 * t / (f0 * t + c)).ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 181: `2.0 * t_cycle / width - 1.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 184: `-2.0 * (t_cycle - width) / (1.0 - width) + 1.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 358: `let signal = chirp(&t, 1.0, 1.0, 10.0, "linear", 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 375: `let signal = sawtooth(&t, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 391: `let signal = square(&t, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 401: `let signal = square(&t, 0.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 417: `let signal = gausspulse(&t, 1.0, 0.5, None, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 727: `let k = (f2 / f1).ln() / length; // Exponential rate constant`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 742: `let phase = 2.0 * PI * f1 * ((k * time).exp() - 1.0) / k;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 786: `let t: Vec<f64> = (0..num_samples).map(|i| i as f64 / sample_rate).collect();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 791: `let rate = (f2 - f1) / duration;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 971: `let mls = mls_sequence(4, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 980: `let mls_custom = mls_sequence(5, Some(&[3, 5]), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 996: `let prbs = prbs_sequence(100, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1007: `let pink = pink_noise(1000, Some(42)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1018: `let brown = brown_noise(1000, Some(42)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1030: `let sweep = exponential_sweep(&t, 20.0, 20000.0, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1042: `let (t, sweep) = synchronized_sweep(44100.0, 1.0, 20.0, 20000.0, "linear").unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1049: `synchronized_sweep(44100.0, 1.0, 20.0, 20000.0, "logarithmic").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1055: `let ruler = golomb_ruler(4, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1067: `let seq = perfect_binary_sequence(7).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1081: `let pink1 = pink_noise(100, Some(123)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1082: `let pink2 = pink_noise(100, Some(123)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/wavelet_vis.rs
+
+26 issues found:
+
+- Line 354: `100.0 * energy_approx / total_energy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 360: `100.0 * energy_detail / total_energy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 429: `100.0 * energy_approx / total_energy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 435: `100.0 * energy_detail / total_energy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 494: `100.0 * energy_approx / total_energy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 500: `100.0 * energy_detail / total_energy`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 578: `coefficients.mapv(|x| min_val + range_size * (x - coeff_min) / coeff_range)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 592: `let scale = max_val / max_abs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 596: `let half_range = range_size / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 598: `coefficients.mapv(|x| mid_point + half_range * x / max_abs)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 614: `let log_val = (1.0 + x.abs() / max_abs).ln();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 614: `let log_val = (1.0 + x.abs() / max_abs).ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 616: `let scaled = min_val + range_size * log_val / (2.0_f64.ln());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 616: `let scaled = min_val + range_size * log_val / (2.0_f64.ln());`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 631: `let lower_idx = (n as f64 * lower / 100.0).floor() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 632: `let upper_idx = (n as f64 * upper / 100.0).ceil() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 655: `min_val + range_size * (clipped - lower_val) / val_range`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 747: `let percent = 100.0 * (total_count as f64) / (total_coeffs as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 955: `let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 985: `let decomps = wavedec2(&image, Wavelet::Haar, 1, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 988: `let arranged = arrange_multilevel_coefficients_2d(&decomps).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1010: `let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1019: `let h_energy = energy.horizontal.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1020: `let v_energy = energy.vertical.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1021: `let d_energy = energy.diagonal.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1032: `let decomp = swt2d_decompose(&image, Wavelet::Haar, 1, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/wavelets/complex_wavelets.rs
+
+35 issues found:
+
+- Line 44: `let mid_point = (points - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 48: `let t = (i as f64 - mid_point) / s;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 57: `let norm = (PI * s * s).sqrt().recip();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 117: `let mid_point = (points - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 121: `let norm = 1.0 / (PI * bandwidth * bandwidth * scale * scale).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 121: `let norm = 1.0 / (PI * bandwidth * bandwidth * scale * scale).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 124: `let correction = (-center_frequency * center_frequency / (2.0 * bandwidth * band...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 127: `let t = (i as f64 - mid_point) / scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 131: `Complex64::new(symmetry * t * t / 2.0, 0.0).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 140: `let gauss = (-t * t / (2.0 * bandwidth * bandwidth)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 201: `let norm = (2.0_f64.powf(m) * fact_2m_1 / (std::f64::consts::PI * fact_m)).sqrt(...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 201: `let norm = (2.0_f64.powf(m) * fact_2m_1 / (std::f64::consts::PI * fact_m)).sqrt(...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 201: `let norm = (2.0_f64.powf(m) * fact_2m_1 / (std::f64::consts::PI * fact_m)).sqrt(...`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 204: `let mid_point = (points - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 208: `let t = (i as f64 - mid_point) / scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 212: `let factor = Complex64::new(0.0, 1.0).powf(order as f64);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 213: `let denom = (1.0 - Complex64::new(0.0, t)).powf(order as f64 + 1.0);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 214: `norm * factor / denom`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 217: `let val = norm * 2.0_f64.powf(m - 1.0) * fact_2m_1 / (fact_m * (2.0 * m - 1.0));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 217: `let val = norm * 2.0_f64.powf(m - 1.0) * fact_2m_1 / (fact_m * (2.0 * m - 1.0));`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 270: `let mid_point = (points - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 276: `let gauss = (-t * t / 2.0).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 292: `let factor = Complex64::new(0.0, -1.0).powf(m as f64) / (factorial(m) as f64).sq...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 292: `let factor = Complex64::new(0.0, -1.0).powf(m as f64) / (factorial(m) as f64).sq...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 292: `let factor = Complex64::new(0.0, -1.0).powf(m as f64) / (factorial(m) as f64).sq...`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 300: `let t = (i as f64 - mid_point) / scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 306: `let normalization = (PI * scale * scale).sqrt().recip();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 367: `let norm = scale.sqrt().recip() * (2.0 * bandwidth).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 370: `let mid_point = (points - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 374: `let t = (i as f64 - mid_point) / scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 381: `(bandwidth * PI * t).sin() / (bandwidth * PI * t)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 461: `let mid_point = (points - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 466: `let norm = scale.sqrt().recip() * (bandwidth * (order as f64)).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 469: `let t = (i as f64 - mid_point) / scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 479: `let sinc_term = (omega / 2.0).sin() / (omega / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/wavelets/cwt.rs
+
+2 issues found:
+
+- Line 34: `let start = (nh - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 67: `let start = (nh - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/wavelets/dual_tree_complex.rs
+
+53 issues found:
+
+- Line 223: `.map(|(&a, &b)| (a + b) / 2.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 325: `(ya[[i, j]] + yb[[i, j]]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 374: `let mut ya_row_filtered = Array3::zeros((rows, cols / 2, 2));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 375: `let mut yb_row_filtered = Array3::zeros((rows, cols / 2, 2));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 386: `for j in 0..cols / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 395: `let mut ya_subbands = Array3::zeros((rows / 2, cols / 2, 4));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 396: `let mut yb_subbands = Array3::zeros((rows / 2, cols / 2, 4));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 398: `for j in 0..cols / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 408: `for i in 0..rows / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 474: `let real = (ya_subbands[[i, j, 1]] + ya_subbands[[i, j, 2]]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 475: `let imag = (yb_subbands[[i, j, 1]] + yb_subbands[[i, j, 2]]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 483: `let real = (ya_subbands[[i, j, 1]] - ya_subbands[[i, j, 2]]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 484: `let imag = (yb_subbands[[i, j, 1]] - yb_subbands[[i, j, 2]]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 510: `let real = (ya_subbands[[i, j, 2]] + ya_subbands[[i, j, 3]]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 511: `let imag = (yb_subbands[[i, j, 2]] + yb_subbands[[i, j, 3]]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 519: `let real = (ya_subbands[[i, j, 2]] - ya_subbands[[i, j, 3]]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 520: `let imag = (yb_subbands[[i, j, 2]] - yb_subbands[[i, j, 3]]) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 593: `let mut result = Vec::with_capacity(conv_len / 2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 650: `extended.extend_from_slice(signal.as_slice().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 669: `extended.extend_from_slice(signal.as_slice().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 715: `h0a.mapv_inplace(|x| x / h0a_sum);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 746: `h0b.mapv_inplace(|x| x / h0b_sum);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 781: `-1.0 / 8.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 782: `1.0 / 4.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 783: `3.0 / 4.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 784: `1.0 / 4.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 785: `-1.0 / 8.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 787: `let h1a = Array1::from_vec(vec![1.0 / 2.0, -1.0, 1.0 / 2.0]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 791: `-1.0 / 16.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 792: `1.0 / 8.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 793: `5.0 / 8.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 794: `5.0 / 8.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 795: `1.0 / 8.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 796: `-1.0 / 16.0,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 798: `let h1b = Array1::from_vec(vec![1.0 / 4.0, -1.0 / 2.0, 1.0 / 2.0, -1.0 / 4.0]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 841: `let processor = DtcwtProcessor::new(config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 846: `.map(|i| (2.0 * PI * i as f64 / 16.0).sin() + 0.5 * (2.0 * PI * i as f64 / 8.0)....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 850: `let dtcwt_result = processor.dtcwt_1d_forward(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 855: `let reconstructed = processor.dtcwt_1d_inverse(&dtcwt_result).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 863: `/ n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 874: `let processor = DtcwtProcessor::new(config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 879: `Array2::from_shape_fn((rows, cols), |(i, j)| ((i as f64 + j as f64) / 8.0).sin()...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 882: `let dtcwt_result = processor.dtcwt_2d_forward(&image).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 899: `let processor = DtcwtProcessor::new(config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 903: `let signal: Array1<f64> = (0..n).map(|i| (2.0 * PI * i as f64 / 8.0).sin()).coll...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 912: `let dtcwt1 = processor.dtcwt_1d_forward(&signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 913: `let dtcwt2 = processor.dtcwt_1d_forward(&shifted_signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 932: `/ (mag1.iter().map(|x| x * x).sum::<f64>().sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 932: `/ (mag1.iter().map(|x| x * x).sum::<f64>().sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 933: `* mag2.iter().map(|x| x * x).sum::<f64>().sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 946: `let filters = create_dtcwt_filters(FilterSet::Kingsbury).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 968: `let processor = DtcwtProcessor::new(config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 971: `let extended = processor.extend_signal(&signal, 6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/wavelets/real_wavelets.rs
+
+6 issues found:
+
+- Line 38: `let amplitude = 2.0 / (std::f64::consts::PI.powf(0.25) * (3.0 * a).sqrt());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 38: `let amplitude = 2.0 / (std::f64::consts::PI.powf(0.25) * (3.0 * a).sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 38: `let amplitude = 2.0 / (std::f64::consts::PI.powf(0.25) * (3.0 * a).sqrt());`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 42: `let mid_point = (points - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 48: `let mod_term = 1.0 - xsq / wsq;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 49: `let gauss = (-xsq / (2.0 * wsq)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/wavelets/scalogram.rs
+
+1 issues found:
+
+- Line 320: `.map(|&s| central_freq / (s * sampling_period))`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/wavelets/tests.rs
+
+7 issues found:
+
+- Line 11: `let wavelet = morlet(points, 6.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 17: `let mid_point = (points - 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 32: `let freqs = scale_to_frequency(&scales, central_freq, dt).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 44: `let expected_freq = central_freq / (scale * dt);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 53: `let signal: Vec<f64> = (0..n).map(|i| (2.0 * PI * i as f64 / 32.0).sin()).collec...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 62: `let coeffs = transform::cwt(&signal, wavelet_fn, &scales).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 69: `let magnitude = cwt_magnitude(&signal, wavelet_fn, &scales, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/wiener.rs
+
+28 issues found:
+
+- Line 174: `let wiener_gain = power / (power + snr_factor * noise_power + config.regularizat...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 222: `let half_window = config.window_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 270: `/ window.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 281: `max_var / (local_var + config.regularization)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 331: `let snr = signal_power / noise_power;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 387: `let half_h = win_size[0] / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 388: `let half_w = win_size[1] / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 408: `/ (window.len() as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 413: `max_var / (local_var + 1e-10)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 486: `.take(n / 2 + 1)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 487: `.map(|c| c.norm_sqr() / n as f64),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 504: `for i in 0..=n / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 520: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 526: `if i > 0 && i < n / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 584: `let half_n = n / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 587: `psd_est[i] = fft_result[i].norm_sqr() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 603: `Array1::from_elem(n / 2 + 1, noise_var)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 611: `for i in 0..=n / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 623: `s_power / (s_power + n_power)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 635: `if i > 0 && i < n / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 697: `let k_gain = p_pred / (p_pred + measurement_var);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 715: `(values[values.len() / 2 - 1] + values[values.len() / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 717: `values[values.len() / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 728: `(deviations[deviations.len() / 2 - 1] + deviations[deviations.len() / 2]) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 730: `deviations[deviations.len() / 2]`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 747: `let power = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / signal.len...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 781: `let half_window = window_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 790: `smoothed[i] = sum / count as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### src/window/kaiser.rs
+
+15 issues found:
+
+- Line 50: `let k = 2.0 * i as f64 / (n - 1) as f64 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 55: `i0(beta * term.sqrt()) / i0_beta`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 55: `i0(beta * term.sqrt()) / i0_beta`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 102: `let _len_half = n / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 113: `for j in 1..(n / 2) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 116: `let angle = 2.0 * PI * i as f64 * j as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 122: `if n / 2 < kaiser_win.len() {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 124: `sum += kaiser_win[n / 2] * angle.cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 128: `(sum / n as f64).sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 128: `(sum / n as f64).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 140: `let angle = 2.0 * PI * i as f64 * j as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 146: `(sum / n as f64).sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 146: `(sum / n as f64).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 163: `let window = kaiser(10, 5.0, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 179: `let window = kaiser_bessel_derived(10, 5.0, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/window/mod.rs
+
+100 issues found:
+
+- Line 140: `let w_val = 0.54 - 0.46 * (2.0 * PI * i as f64 / (n - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 177: `let w_val = 0.5 * (1.0 - (2.0 * PI * i as f64 / (n - 1) as f64).cos());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 215: `let w_val = 0.42 - 0.5 * (2.0 * PI * i as f64 / (n - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 216: `+ 0.08 * (4.0 * PI * i as f64 / (n - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 252: `let m2 = (n - 1) as f64 / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 254: `let w_val = 1.0 - ((i as f64 - m2) / m2).abs();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 288: `let m2 = (n as f64 - 1.0) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 290: `let w_val = 1.0 - ((i as f64 - m2) / (m2 + 1.0)).abs();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 334: `let w_val = a0 - a1 * (2.0 * PI * i as f64 / (n - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 335: `+ a2 * (4.0 * PI * i as f64 / (n - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 336: `- a3 * (6.0 * PI * i as f64 / (n - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 337: `+ a4 * (8.0 * PI * i as f64 / (n - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 406: `let x = 2.0 * i as f64 / (n - 1) as f64 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 451: `let x = 2.0 * i as f64 / n1 - 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 503: `let w_val = a0 - a1 * (2.0 * PI * i as f64 / (n - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 504: `+ a2 * (4.0 * PI * i as f64 / (n - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 505: `- a3 * (6.0 * PI * i as f64 / (n - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 548: `let w_val = a0 - a1 * (2.0 * PI * i as f64 / (n - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 549: `+ a2 * (4.0 * PI * i as f64 / (n - 1) as f64).cos()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 550: `- a3 * (6.0 * PI * i as f64 / (n - 1) as f64).cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 587: `let w_val = (PI * i as f64 / (n - 1) as f64).sin();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 622: `let center_val = center.unwrap_or(((n - 1) as f64) / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 626: `let w_val = (-((i as f64 - center_val).abs() / tau)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 675: `let width = (alpha * (n - 1) as f64 / 2.0).floor() as usize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 680: `0.5 * (1.0 + (PI * (-1.0 + 2.0 * i as f64 / (alpha * (n - 1) as f64))).cos())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 683: `+ (PI * (-2.0 / alpha + 1.0 + 2.0 * i as f64 / (alpha * (n - 1) as f64))).cos())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 723: `let fac = (i as f64) / (n - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 770: `if nw <= 0.0 || nw >= m as f64 / 2.0 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 786: `let omega = 2.0 * PI * nw / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 792: `let k = i as f64 - (n as f64 - 1.0) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 799: `*off_diag_val = k * (n as f64 - k) / 2.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 807: `sorted_indices.sort_by(|&a, &b| eigenvals[b].partial_cmp(&eigenvals[a]).unwrap()...`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 821: `let norm = window.iter().map(|&x| x * x).sum::<f64>().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 911: `let norm = v.iter().map(|&x| x * x).sum::<f64>().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 953: `let norm = new_v.iter().map(|&x| x * x).sum::<f64>().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 983: `let window = hamming(10, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1000: `let window = hann(10, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1017: `let window = blackman(10, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1028: `let window = bartlett(10, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1051: `let window = flattop(10, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1062: `let window = boxcar(10, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1073: `let window = bohman(10, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1088: `let window = triang(10, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1099: `let window = dpss(64, 2.5, None, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1103: `let norm = window.iter().map(|&x| x * x).sum::<f64>().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1119: `let windows = dpss_windows(32, 2.0, Some(3), true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1125: `let norm = window.iter().map(|&x| x * x).sum::<f64>().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1205: `i as f64 - (m - 1) as f64 / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1208: `i as f64 - m as f64 / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1211: `let x = n / a as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1218: `let sinc_x = (PI * x).sin() / (PI * x);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1219: `let x_a = x / a as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1223: `(PI * x_a).sin() / (PI * x_a)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1244: `let window = lanczos(10, 2, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1268: `let window = lanczos(8, 2, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1280: `let window_a2 = lanczos(20, 2, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1281: `let window_a3 = lanczos(20, 3, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1295: `let window1 = lanczos(1, 2, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1298: `let window2 = lanczos(2, 2, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1372: `let nenbw = n as f64 * power_gain / (coherent_gain * coherent_gain);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1388: `let bin_05_idx = fft_len / (2 * n);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1393: `let frac_idx = 0.5 * fft_len as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1467: `0.5842 * (sidelobe_db.abs() - 21.0).powf(0.4) + 0.07886 * (sidelobe_db.abs() - 2...`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 1494: `let mut magnitude = vec![0.0; n / 2 + 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1502: `let angle = -2.0 * PI * k as f64 * i as f64 / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1507: `*mag = (real * real + imag * imag).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1523: `for i in 1..freq_response.len().min(fft_len / window_len * 4) {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1553: `let bandwidth_bins = 2.0 * right_point * window_len as f64 / fft_len as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1564: `let window = hann(64, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1565: `let analysis = analyze_window(&window, Some(1024)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1577: `let hann_win = hann(32, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1578: `let hamming_win = hamming(32, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1585: `let comparison = compare_windows(&windows).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1592: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1597: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1605: `let window1 = design_window_with_constraints(64, -10.0, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1606: `let window2 = design_window_with_constraints(64, -25.0, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1607: `let window3 = design_window_with_constraints(64, -60.0, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1622: `let window = design_optimal_kaiser(64, -60.0, 0.1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1626: `let hann_win = super::hann(32, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1627: `let analysis = analyze_window_transition(&hann_win, 0.3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1635: `let hann_win = super::hann(32, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1636: `let hamming_win = super::hamming(32, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1642: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1691: `0.5842 * (atten - 21.0).powf(0.4) + 0.07886 * (atten - 21.0)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 1763: `.take(freq_response.len() / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1775: `.take(freq_response.len() / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1784: `let freq_bin_width = 1.0 / fft_size as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1786: `let transition_center = (upper_point + lower_point) as f64 * freq_bin_width / 2....`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1789: `let upper_db = 20.0 * (freq_response[upper_point] / peak_value).log10();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1790: `let lower_db = 20.0 * (freq_response[lower_point] / peak_value).log10();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1792: `(upper_db - lower_db) / transition_width`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1798: `let threshold_3db = peak_value / 2.0_f64.sqrt(); // -3dB`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1863: `(sidelobe_score + bandwidth_score) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1916: `let half_len = length / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1921: `(length - 1 - i) as f64 / (length - 1) as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1923: `i as f64 / (length - 1) as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1940: `.take(freq_response.len() / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1963: `let t = (x - x1) / (x2 - x1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1968: `control_points.last().unwrap().1`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/wpt.rs
+
+13 issues found:
+
+- Line 89: `Some(self.position / 2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 157: `left.parent_position().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 313: `let level = *nodes_by_level.keys().next().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 314: `let positions = nodes_by_level.get(&level).unwrap();`
+  - **Fix**: Use .get().ok_or(Error::IndexOutOfBounds)?
+- Line 575: `let (left, right) = root.decompose().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 602: `let parent = WaveletPacket::reconstruct(&left, &right).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 623: `let tree = wp_decompose(&signal, Wavelet::Haar, 2, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 638: `let root = tree.get_node(0, 0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 648: `let tree = wp_decompose(&signal, Wavelet::Haar, 1, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 655: `let reconstructed = reconstruct_from_nodes(&tree, &nodes).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 674: `let tree = wp_decompose(&signal, Wavelet::Haar, 1, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 680: `let approx_node = tree.get_node(1, 0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 685: `let approx_only = reconstruct_from_nodes(&tree, &nodes).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/wpt2d.rs
+
+16 issues found:
+
+- Line 492: `let out_rows = rows / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 493: `let out_cols = cols / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 555: `let out_len = n / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 566: `let ext_idx = idx as isize - (filter_len as isize / 2) + j as isize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 576: `((idx as isize - (filter_len as isize / 2) + j as isize) % n as isize) as usize`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 579: `let ext_idx = idx as isize - (filter_len as isize / 2) + j as isize;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 852: `let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 890: `let decomp = wpt2d_selective(&image, Wavelet::Haar, 3, ll_only_criterion, None)....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 921: `let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 924: `assert_eq!(decomp.get_packet(0, 0, 0).unwrap().path, "");`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 927: `assert_eq!(decomp.get_packet(1, 0, 0).unwrap().path, "LL");`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 928: `assert_eq!(decomp.get_packet(1, 0, 1).unwrap().path, "LH");`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 929: `assert_eq!(decomp.get_packet(1, 1, 0).unwrap().path, "HL");`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 930: `assert_eq!(decomp.get_packet(1, 1, 1).unwrap().path, "HH");`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 934: `assert_eq!(decomp.get_packet(2, 0, 0).unwrap().path, "LL-LL");`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 935: `assert_eq!(decomp.get_packet(2, 3, 3).unwrap().path, "HH-HH");`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/wpt_validation.rs
+
+16 issues found:
+
+- Line 57: `.map(|&x| NumCast::from(x).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 71: `let energy_ratio = tree_energy / input_energy;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 170: `let error_view = ArrayView1::from_shape(n, &mut errors).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 176: `let mean_error = errors.iter().map(|&e| e.abs()).sum::<f64>() / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 179: `let signal_power = compute_energy(original) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 180: `let noise_power = compute_energy(&errors) / n as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 182: `10.0 * (signal_power / noise_power).log10()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 200: `Ok(coeffs_energy / signal_energy)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 229: `let mean = reconstructed.iter().sum::<f64>() / reconstructed.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 239: `impulse[signal.len() / 2] = 1.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 277: `Ok(passed_tests as f64 / total_tests as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 366: `let diff = (node_energy - dwt_energy).abs() / node_energy.max(1e-10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 422: `let result = validate_wpt(&signal, Wavelet::Haar, 2, 1e-10).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 432: `let tree = wpt_decompose(&signal, Wavelet::DB(4), 3, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 433: `let ratio = validate_parseval_frame(&tree, &signal).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 441: `let score = test_numerical_stability(&signal, Wavelet::Haar, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### src/wvd.rs
+
+23 issues found:
+
+- Line 82: `Array1::from(hilbert::hilbert(signal.as_slice().unwrap())?)`
+  - **Fix**: Handle array creation errors properly
+- Line 138: `Array1::from(hilbert::hilbert(signal1.as_slice().unwrap())?)`
+  - **Fix**: Handle array creation errors properly
+- Line 144: `Array1::from(hilbert::hilbert(signal2.as_slice().unwrap())?)`
+  - **Fix**: Handle array creation errors properly
+- Line 204: `Array1::from(hilbert::hilbert(signal.as_slice().unwrap())?)`
+  - **Fix**: Handle array creation errors properly
+- Line 243: `let mut wvd = Array2::<Complex64>::zeros((n_fft / 2 + 1, n));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 251: `let half = w_len / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 267: `let offset = (n_fft - w.len()) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 274: `let offset = (w.len() - n_fft) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 288: `Some(w) => w.len() / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 331: `scirs2_fft::fft(acorr.as_slice().unwrap(), None).expect("FFT computation failed"...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 334: `let n_freqs = n_fft / 2 + 1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 354: `Array1::linspace(0.0, fs / 2.0, n_freqs)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 368: `let dt = 1.0 / fs;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 453: `/ a.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 466: `/ b.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 499: `let wvd = wigner_ville(&signal, config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 513: `let first_quarter = n / 4;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 514: `let last_quarter = 3 * n / 4;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 522: `/ first_quarter as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 529: `/ (n - last_quarter) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 553: `let xwvd = cross_wigner_ville(&signal1, &signal2, config).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 597: `let wvd = wigner_ville(&signal, config.clone()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 599: `smoothed_pseudo_wigner_ville(&signal, &time_window, &freq_window, config).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### tests/dwt_boundary_test.rs
+
+6 issues found:
+
+- Line 11: `let extended = extend_signal(&signal, 4, "symmetric").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 31: `let extended = extend_signal(&signal, 4, "periodic").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 51: `let extended = extend_signal(&signal, 4, "zero").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 71: `let extended = extend_signal(&signal, 4, "constant").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 91: `let extended = extend_signal(&signal, 4, "reflect").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 121: `let extended = extend_signal(&signal, 4, "symmetric").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### tests/dwt_daubechies_test.rs
+
+13 issues found:
+
+- Line 10: `let filters = wavelet.filters().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 33: `let (approx, detail) = dwt_decompose(&signal, wavelet, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 40: `let reconstructed = dwt_reconstruct(&approx, &detail, wavelet).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 55: `let coeffs = wavedec(&signal, wavelet, Some(3), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 61: `let reconstructed = waverec(&coeffs, wavelet).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 76: `let (approx, detail) = dwt_decompose(&signal, wavelet, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 77: `let reconstructed = dwt_reconstruct(&approx, &detail, wavelet).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 83: `let coeffs = wavedec(&signal, wavelet, Some(2), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 84: `let reconstructed_ml = waverec(&coeffs, wavelet).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 101: `let (approx, detail) = dwt_decompose(&signal, wavelet, Some(mode)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 102: `let reconstructed = dwt_reconstruct(&approx, &detail, wavelet).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 108: `let coeffs = wavedec(&signal, wavelet, Some(2), Some(mode)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 109: `let reconstructed_ml = waverec(&coeffs, wavelet).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### tests/dwt_haar_test.rs
+
+12 issues found:
+
+- Line 9: `let filters = wavelet.filters().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 30: `let (approx, detail) = dwt_decompose(&signal, Wavelet::Haar, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 49: `let (approx, detail) = dwt_decompose(&signal, Wavelet::Haar, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 52: `let reconstructed = dwt_reconstruct(&approx, &detail, Wavelet::Haar).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 67: `let coeffs = wavedec(&signal, Wavelet::Haar, Some(2), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 73: `let reconstructed = waverec(&coeffs, Wavelet::Haar).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 86: `dwt_decompose(&signal, Wavelet::Haar, Some("symmetric")).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 88: `dwt_decompose(&signal, Wavelet::Haar, Some("periodic")).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 90: `dwt_decompose(&signal, Wavelet::Haar, Some("zero")).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 101: `let recon_sym = dwt_reconstruct(&approx_sym, &detail_sym, Wavelet::Haar).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 102: `let recon_per = dwt_reconstruct(&approx_per, &detail_per, Wavelet::Haar).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 103: `let recon_zero = dwt_reconstruct(&approx_zero, &detail_zero, Wavelet::Haar).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### tests/dwt_test.rs
+
+4 issues found:
+
+- Line 10: `let (approx, detail) = dwt_decompose(&signal, Wavelet::Haar, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 21: `let reconstructed = dwt_reconstruct(&approx, &detail, Wavelet::Haar).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 35: `let coeffs = wavedec(&signal, Wavelet::Haar, Some(2), None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 46: `let reconstructed = waverec(&coeffs, Wavelet::Haar).unwrap();`
   - **Fix**: Replace with ? operator or .ok_or()

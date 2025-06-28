@@ -642,6 +642,436 @@ impl AutoTuner {
     }
 }
 
+/// Performance optimization advisor
+///
+/// Analyzes profiling data and provides specific optimization recommendations
+pub struct OptimizationAdvisor {
+    metrics: Vec<OperationMetrics>,
+    hardware_info: HardwareInfo,
+}
+
+#[derive(Debug, Clone)]
+pub struct HardwareInfo {
+    pub cpu_cores: usize,
+    pub simd_support: SimdSupport,
+    pub gpu_available: bool,
+    pub total_memory: usize,
+    pub cache_sizes: CacheSizes,
+}
+
+#[derive(Debug, Clone)]
+pub struct SimdSupport {
+    pub sse: bool,
+    pub avx: bool,
+    pub avx2: bool,
+    pub avx512: bool,
+    pub neon: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct CacheSizes {
+    pub l1: usize,
+    pub l2: usize,
+    pub l3: usize,
+}
+
+impl OptimizationAdvisor {
+    pub fn new() -> Self {
+        Self {
+            metrics: Vec::new(),
+            hardware_info: HardwareInfo::detect(),
+        }
+    }
+    
+    pub fn analyze(&mut self, metrics: &[OperationMetrics]) -> OptimizationReport {
+        self.metrics = metrics.to_vec();
+        
+        let mut recommendations = Vec::new();
+        
+        // Analyze memory access patterns
+        recommendations.extend(self.analyze_memory_patterns());
+        
+        // Analyze computation patterns
+        recommendations.extend(self.analyze_computation_patterns());
+        
+        // Analyze parallelization opportunities
+        recommendations.extend(self.analyze_parallelization());
+        
+        // Analyze GPU offloading opportunities
+        recommendations.extend(self.analyze_gpu_opportunities());
+        
+        OptimizationReport {
+            recommendations,
+            estimated_speedup: self.estimate_speedup(&recommendations),
+            implementation_difficulty: self.assess_difficulty(&recommendations),
+        }
+    }
+    
+    fn analyze_memory_patterns(&self) -> Vec<OptimizationRecommendation> {
+        let mut recommendations = Vec::new();
+        
+        // Group operations by type
+        let mut op_groups: HashMap<String, Vec<&OperationMetrics>> = HashMap::new();
+        for metric in &self.metrics {
+            op_groups.entry(metric.name.clone()).or_default().push(metric);
+        }
+        
+        // Check for cache-unfriendly access patterns
+        for (op_name, metrics) in op_groups {
+            let avg_array_size: usize = metrics
+                .iter()
+                .map(|m| m.array_shape.iter().product::<usize>())
+                .sum::<usize>() / metrics.len().max(1);
+            
+            let element_size = std::mem::size_of::<f64>(); // Assume f64
+            let working_set_size = avg_array_size * element_size;
+            
+            if working_set_size > self.hardware_info.cache_sizes.l3 {
+                recommendations.push(OptimizationRecommendation {
+                    operation: op_name.clone(),
+                    category: OptimizationCategory::Memory,
+                    description: "Working set exceeds L3 cache".to_string(),
+                    suggestion: "Consider tiling/blocking to improve cache locality".to_string(),
+                    estimated_improvement: 1.5,
+                });
+            }
+            
+            // Check for strided access patterns
+            if op_name.contains("transpose") || op_name.contains("permute") {
+                recommendations.push(OptimizationRecommendation {
+                    operation: op_name,
+                    category: OptimizationCategory::Memory,
+                    description: "Potentially cache-unfriendly access pattern".to_string(),
+                    suggestion: "Use blocked/tiled algorithms for better cache usage".to_string(),
+                    estimated_improvement: 1.3,
+                });
+            }
+        }
+        
+        recommendations
+    }
+    
+    fn analyze_computation_patterns(&self) -> Vec<OptimizationRecommendation> {
+        let mut recommendations = Vec::new();
+        
+        // Check for SIMD opportunities
+        for metric in &self.metrics {
+            let array_size: usize = metric.array_shape.iter().product();
+            
+            if array_size > 1000 && !metric.name.contains("simd") {
+                if self.hardware_info.simd_support.avx2 {
+                    recommendations.push(OptimizationRecommendation {
+                        operation: metric.name.clone(),
+                        category: OptimizationCategory::Vectorization,
+                        description: "Operation could benefit from SIMD vectorization".to_string(),
+                        suggestion: "Implement SIMD version using AVX2 intrinsics".to_string(),
+                        estimated_improvement: 2.0,
+                    });
+                }
+            }
+        }
+        
+        recommendations
+    }
+    
+    fn analyze_parallelization(&self) -> Vec<OptimizationRecommendation> {
+        let mut recommendations = Vec::new();
+        
+        for metric in &self.metrics {
+            let array_size: usize = metric.array_shape.iter().product();
+            
+            // Check if operation is large enough to benefit from parallelization
+            if array_size > 50_000 && metric.thread_count == 1 {
+                recommendations.push(OptimizationRecommendation {
+                    operation: metric.name.clone(),
+                    category: OptimizationCategory::Parallelization,
+                    description: "Large operation running on single thread".to_string(),
+                    suggestion: format!(
+                        "Parallelize across {} cores for better performance",
+                        self.hardware_info.cpu_cores
+                    ),
+                    estimated_improvement: (self.hardware_info.cpu_cores as f64).min(4.0),
+                });
+            }
+        }
+        
+        recommendations
+    }
+    
+    fn analyze_gpu_opportunities(&self) -> Vec<OptimizationRecommendation> {
+        let mut recommendations = Vec::new();
+        
+        if !self.hardware_info.gpu_available {
+            return recommendations;
+        }
+        
+        for metric in &self.metrics {
+            let array_size: usize = metric.array_shape.iter().product();
+            
+            // GPU is beneficial for large arrays and compute-intensive operations
+            if array_size > 1_000_000 && metric.backend == Backend::Cpu {
+                recommendations.push(OptimizationRecommendation {
+                    operation: metric.name.clone(),
+                    category: OptimizationCategory::GpuOffloading,
+                    description: "Large array operation suitable for GPU acceleration".to_string(),
+                    suggestion: "Offload to GPU for significant speedup".to_string(),
+                    estimated_improvement: 10.0,
+                });
+            }
+        }
+        
+        recommendations
+    }
+    
+    fn estimate_speedup(&self, recommendations: &[OptimizationRecommendation]) -> f64 {
+        // Estimate overall speedup (simplified model)
+        let mut total_improvement = 1.0;
+        
+        for rec in recommendations {
+            // Apply diminishing returns
+            total_improvement *= 1.0 + (rec.estimated_improvement - 1.0) * 0.7;
+        }
+        
+        total_improvement
+    }
+    
+    fn assess_difficulty(&self, recommendations: &[OptimizationRecommendation]) -> ImplementationDifficulty {
+        let max_difficulty = recommendations
+            .iter()
+            .map(|r| match r.category {
+                OptimizationCategory::Memory => 2,
+                OptimizationCategory::Vectorization => 3,
+                OptimizationCategory::Parallelization => 2,
+                OptimizationCategory::GpuOffloading => 4,
+                OptimizationCategory::Algorithm => 3,
+            })
+            .max()
+            .unwrap_or(1);
+        
+        match max_difficulty {
+            1 => ImplementationDifficulty::Easy,
+            2 => ImplementationDifficulty::Moderate,
+            3 => ImplementationDifficulty::Hard,
+            _ => ImplementationDifficulty::Expert,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct OptimizationReport {
+    pub recommendations: Vec<OptimizationRecommendation>,
+    pub estimated_speedup: f64,
+    pub implementation_difficulty: ImplementationDifficulty,
+}
+
+#[derive(Debug)]
+pub struct OptimizationRecommendation {
+    pub operation: String,
+    pub category: OptimizationCategory,
+    pub description: String,
+    pub suggestion: String,
+    pub estimated_improvement: f64,
+}
+
+#[derive(Debug)]
+pub enum OptimizationCategory {
+    Memory,
+    Vectorization,
+    Parallelization,
+    GpuOffloading,
+    Algorithm,
+}
+
+#[derive(Debug)]
+pub enum ImplementationDifficulty {
+    Easy,
+    Moderate,
+    Hard,
+    Expert,
+}
+
+impl HardwareInfo {
+    fn detect() -> Self {
+        Self {
+            cpu_cores: num_cpus::get(),
+            simd_support: SimdSupport::detect(),
+            gpu_available: cfg!(feature = "cuda") || cfg!(feature = "opencl"),
+            total_memory: 16_000_000_000, // 16GB default
+            cache_sizes: CacheSizes {
+                l1: 32_768,      // 32KB
+                l2: 262_144,     // 256KB
+                l3: 8_388_608,   // 8MB
+            },
+        }
+    }
+}
+
+impl SimdSupport {
+    fn detect() -> Self {
+        #[cfg(target_arch = "x86_64")]
+        {
+            Self {
+                sse: is_x86_feature_detected!("sse"),
+                avx: is_x86_feature_detected!("avx"),
+                avx2: is_x86_feature_detected!("avx2"),
+                avx512: false, // Conservative default
+                neon: false,
+            }
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            Self {
+                sse: false,
+                avx: false,
+                avx2: false,
+                avx512: false,
+                neon: true,
+            }
+        }
+        #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]{
+            Self {
+                sse: false,
+                avx: false,
+                avx2: false,
+                avx512: false,
+                neon: false,
+            }
+        }
+    }
+}
+
+impl OptimizationReport {
+    pub fn display(&self) {
+        println!("\n=== Optimization Report ===\n");
+        
+        println!("Estimated overall speedup: {:.1}x", self.estimated_speedup);
+        println!("Implementation difficulty: {:?}\n", self.implementation_difficulty);
+        
+        println!("Recommendations:");
+        for (i, rec) in self.recommendations.iter().enumerate() {
+            println!("\n{}. {} - {:?}", i + 1, rec.operation, rec.category);
+            println!("   Issue: {}", rec.description);
+            println!("   Suggestion: {}", rec.suggestion);
+            println!("   Potential improvement: {:.1}x", rec.estimated_improvement);
+        }
+    }
+}
+
+/// Memory profiler for tracking allocations
+pub struct MemoryProfiler {
+    allocations: Mutex<HashMap<String, AllocationInfo>>,
+    enabled: AtomicBool,
+}
+
+#[derive(Debug, Clone)]
+struct AllocationInfo {
+    total_allocated: usize,
+    current_allocated: usize,
+    peak_allocated: usize,
+    allocation_count: usize,
+}
+
+impl MemoryProfiler {
+    pub fn new() -> Self {
+        Self {
+            allocations: Mutex::new(HashMap::new()),
+            enabled: AtomicBool::new(false),
+        }
+    }
+    
+    pub fn enable(&self) {
+        self.enabled.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+    
+    pub fn disable(&self) {
+        self.enabled.store(false, std::sync::atomic::Ordering::Relaxed);
+    }
+    
+    pub fn track_allocation(&self, operation: &str, size: usize) {
+        if !self.enabled.load(std::sync::atomic::Ordering::Relaxed) {
+            return;
+        }
+        
+        let mut allocations = self.allocations.lock().unwrap();
+        let info = allocations.entry(operation.to_string()).or_insert(AllocationInfo {
+            total_allocated: 0,
+            current_allocated: 0,
+            peak_allocated: 0,
+            allocation_count: 0,
+        });
+        
+        info.total_allocated += size;
+        info.current_allocated += size;
+        info.peak_allocated = info.peak_allocated.max(info.current_allocated);
+        info.allocation_count += 1;
+    }
+    
+    pub fn track_deallocation(&self, operation: &str, size: usize) {
+        if !self.enabled.load(std::sync::atomic::Ordering::Relaxed) {
+            return;
+        }
+        
+        let mut allocations = self.allocations.lock().unwrap();
+        if let Some(info) = allocations.get_mut(operation) {
+            info.current_allocated = info.current_allocated.saturating_sub(size);
+        }
+    }
+    
+    pub fn report(&self) -> MemoryReport {
+        let allocations = self.allocations.lock().unwrap();
+        
+        let mut operations: Vec<_> = allocations
+            .iter()
+            .map(|(name, info)| (name.clone(), info.clone()))
+            .collect();
+        
+        operations.sort_by_key(|(_, info)| std::cmp::Reverse(info.peak_allocated));
+        
+        MemoryReport { operations }
+    }
+}
+
+#[derive(Debug)]
+pub struct MemoryReport {
+    operations: Vec<(String, AllocationInfo)>,
+}
+
+impl MemoryReport {
+    pub fn display(&self) {
+        println!("\n=== Memory Usage Report ===\n");
+        
+        for (name, info) in &self.operations {
+            println!("{}: ", name);
+            println!("  Total allocated: {} MB", info.total_allocated / (1024 * 1024));
+            println!("  Peak usage: {} MB", info.peak_allocated / (1024 * 1024));
+            println!("  Allocations: {}", info.allocation_count);
+            println!("  Avg allocation: {} KB", 
+                (info.total_allocated / info.allocation_count.max(1)) / 1024
+            );
+        }
+    }
+}
+
+/// Global memory profiler instance
+lazy_static::lazy_static! {
+    static ref MEMORY_PROFILER: Arc<MemoryProfiler> = Arc::new(MemoryProfiler::new());
+}
+
+pub fn enable_memory_profiling() {
+    MEMORY_PROFILER.enable();
+}
+
+pub fn disable_memory_profiling() {
+    MEMORY_PROFILER.disable();
+}
+
+pub fn get_memory_report() -> MemoryReport {
+    MEMORY_PROFILER.report()
+}
+
+use std::sync::atomic::{AtomicBool, AtomicUsize};
+use std::sync::Mutex;
+
 #[cfg(test)]
 mod tests {
     use super::*;

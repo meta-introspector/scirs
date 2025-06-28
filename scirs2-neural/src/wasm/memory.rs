@@ -535,7 +535,7 @@ impl MemoryManager {
     }
 
     /// Calculate total memory requirements
-    pub fn calculate_memory_requirements(&self, model_size: usize) -> MemoryRequirements {
+    pub fn calculate_memory_requirements(&self, model_size: usize) -> WasmMemoryRequirements {
         let base_memory = self.config.initial_size_bytes();
         let model_memory = model_size;
         let cache_overhead = if self.cache_config.enable {
@@ -550,7 +550,7 @@ impl MemoryManager {
             0
         };
 
-        MemoryRequirements {
+        WasmMemoryRequirements {
             base_memory,
             model_memory,
             cache_overhead,
@@ -590,7 +590,7 @@ impl MemoryManager {
 
 /// Memory requirements calculation result
 #[derive(Debug, Clone)]
-pub struct MemoryRequirements {
+pub struct WasmMemoryRequirements {
     /// Base WebAssembly memory
     pub base_memory: usize,
     /// Memory for model data
@@ -605,7 +605,7 @@ pub struct MemoryRequirements {
     pub total: usize,
 }
 
-impl MemoryRequirements {
+impl WasmMemoryRequirements {
     /// Get memory usage breakdown as percentages
     pub fn breakdown_percentages(&self) -> MemoryBreakdown {
         let total_f = self.total as f64;
@@ -798,10 +798,10 @@ mod tests {
 
     #[test]
     fn test_memory_requirements_formatting() {
-        assert_eq!(MemoryRequirements::format_size(0), "0 B");
-        assert_eq!(MemoryRequirements::format_size(1024), "1.0 KB");
-        assert_eq!(MemoryRequirements::format_size(1024 * 1024), "1.0 MB");
-        assert_eq!(MemoryRequirements::format_size(1536), "1.5 KB");
+        assert_eq!(WasmMemoryRequirements::format_size(0), "0 B");
+        assert_eq!(WasmMemoryRequirements::format_size(1024), "1.0 KB");
+        assert_eq!(WasmMemoryRequirements::format_size(1024 * 1024), "1.0 MB");
+        assert_eq!(WasmMemoryRequirements::format_size(1536), "1.5 KB");
     }
 
     #[test]

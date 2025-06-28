@@ -9,6 +9,9 @@ pub mod actor_critic;
 pub mod environments;
 pub mod replay_buffer;
 pub mod algorithms;
+pub mod trpo;
+pub mod curiosity;
+pub mod model_based;
 
 pub use policy::{Policy, PolicyNetwork, PolicyGradient};
 pub use value::{ValueNetwork, QNetwork, DQN, DoubleDQN};
@@ -16,6 +19,9 @@ pub use actor_critic::{ActorCritic, A2C, A3C, PPO, SAC};
 pub use environments::{Environment, Observation, Action, Reward};
 pub use replay_buffer::{ReplayBuffer, PrioritizedReplayBuffer};
 pub use algorithms::{RLAlgorithm, TrainingConfig};
+pub use trpo::{TRPO, TRPOConfig};
+pub use curiosity::{ICM, RND, NoveltyExploration, EpisodicCuriosity};
+pub use model_based::{DynamicsModel, MPC, Dyna, WorldModel};
 
 use crate::error::Result;
 use ndarray::prelude::*;

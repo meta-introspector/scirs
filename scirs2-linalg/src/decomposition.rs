@@ -635,8 +635,11 @@ where
                         .fold(F::zero(), |acc, (&vi, &ci)| acc + vi * ci);
 
                     // column = column - 2 * v * (v^T * column)
+                    let two = F::from(2.0).ok_or_else(|| LinalgError::InternalError(
+                        "Failed to convert 2.0 to target type".to_string()
+                    ))?;
                     for i in k..n_rows {
-                        a_copy[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * dot_product;
+                        a_copy[[i, j]] -= two * v[i - k] * dot_product;
                     }
                 }
 
@@ -649,9 +652,12 @@ where
                 }
 
                 // Apply the Householder reflection
+                let two = F::from(2.0).ok_or_else(|| LinalgError::InternalError(
+                    "Failed to convert 2.0 to target type".to_string()
+                ))?;
                 for i in k..n_rows {
                     for j in k..n_rows {
-                        q_sub[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * v[j - k];
+                        q_sub[[i, j]] -= two * v[i - k] * v[j - k];
                     }
                 }
 
@@ -716,8 +722,11 @@ where
                             .zip(row.iter())
                             .fold(F::zero(), |acc, (&vi, &ri)| acc + vi * ri);
 
+                        let two = F::from(2.0).ok_or_else(|| LinalgError::InternalError(
+                            "Failed to convert 2.0 to target type".to_string()
+                        ))?;
                         for j in k..n_cols {
-                            a_copy[[i, j]] -= F::from(2.0).unwrap() * v[j - k] * dot_product;
+                            a_copy[[i, j]] -= two * v[j - k] * dot_product;
                         }
                     }
 
@@ -732,7 +741,10 @@ where
                     // Apply the Householder reflection
                     for i in k..n_cols {
                         for j in k..n_cols {
-                            p_sub[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * v[j - k];
+                            let two = F::from(2.0).ok_or_else(|| LinalgError::InternalError(
+                                "Failed to convert 2.0 to target type".to_string()
+                            ))?;
+                            p_sub[[i, j]] -= two * v[i - k] * v[j - k];
                         }
                     }
 

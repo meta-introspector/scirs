@@ -8,7 +8,6 @@ use ndarray::{Array1, ArrayView1};
 use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
 use super::expression::{SymbolicExpression, Variable, simplify};
-use super::jacobian::generate_jacobian;
 use std::collections::HashMap;
 
 /// Represents a conservation law
@@ -335,7 +334,7 @@ fn expressions_equal<F: IntegrateFloat>(
     use SymbolicExpression::*;
     
     match (expr1, expr2) {
-        (Constant(a), Constant(b)) => (a - b).abs() < F::epsilon(),
+        (Constant(a), Constant(b)) => (*a - *b).abs() < F::epsilon(),
         (Var(a), Var(b)) => a == b,
         (Add(a1, b1), Add(a2, b2)) |
         (Sub(a1, b1), Sub(a2, b2)) |
@@ -540,6 +539,116 @@ pub fn example_pendulum_conservation<F: IntegrateFloat>() -> Vec<ConservationLaw
         energy,
         F::from(1e-10).unwrap()
     )]
+}
+
+/// Example: Create conservation laws for N-body gravitational system
+pub fn example_nbody_conservation<F: IntegrateFloat>(n: usize) -> Vec<ConservationLaw<F>> {
+    use SymbolicExpression::*;
+    
+    let mut laws = Vec::new();
+    
+    // State vector: [x1, y1, z1, vx1, vy1, vz1, x2, y2, z2, vx2, vy2, vz2, ...]
+    
+    // Total linear momentum conservation
+    let mut px = Constant(F::zero());
+    let mut py = Constant(F::zero());
+    let mut pz = Constant(F::zero());
+    
+    // Total angular momentum conservation
+    let mut lx = Constant(F::zero());
+    let mut ly = Constant(F::zero());
+    let mut lz = Constant(F::zero());
+    
+    for i in 0..n {
+        let base = i * 6;
+        let x = Var(Variable::indexed("y", base));
+        let y = Var(Variable::indexed("y", base + 1));
+        let z = Var(Variable::indexed("y", base + 2));
+        let vx = Var(Variable::indexed("y", base + 3));
+        let vy = Var(Variable::indexed("y", base + 4));
+        let vz = Var(Variable::indexed("y", base + 5));
+        
+        // Linear momentum (assuming unit masses)
+        px = Add(Box::new(px), Box::new(vx.clone()));
+        py = Add(Box::new(py), Box::new(vy.clone()));
+        pz = Add(Box::new(pz), Box::new(vz.clone()));
+        
+        // Angular momentum L = r × v
+        lx = Add(Box::new(lx), Box::new(Sub(
+            Box::new(Mul(Box::new(y.clone()), Box::new(vz.clone()))),
+            Box::new(Mul(Box::new(z.clone()), Box::new(vy.clone())))
+        )));
+        ly = Add(Box::new(ly), Box::new(Sub(
+            Box::new(Mul(Box::new(z.clone()), Box::new(vx.clone()))),
+            Box::new(Mul(Box::new(x.clone()), Box::new(vz)))
+        )));
+        lz = Add(Box::new(lz), Box::new(Sub(
+            Box::new(Mul(Box::new(x), Box::new(vy))),
+            Box::new(Mul(Box::new(y), Box::new(vx)))
+        )));
+    }
+    
+    laws.push(ConservationLaw::new("Linear Momentum X", px, F::from(1e-10).unwrap()));
+    laws.push(ConservationLaw::new("Linear Momentum Y", py, F::from(1e-10).unwrap()));
+    laws.push(ConservationLaw::new("Linear Momentum Z", pz, F::from(1e-10).unwrap()));
+    laws.push(ConservationLaw::new("Angular Momentum X", lx, F::from(1e-10).unwrap()));
+    laws.push(ConservationLaw::new("Angular Momentum Y", ly, F::from(1e-10).unwrap()));
+    laws.push(ConservationLaw::new("Angular Momentum Z", lz, F::from(1e-10).unwrap()));
+    
+    laws
+}
+
+/// Example: Create conservation laws for a coupled oscillator system
+pub fn example_coupled_oscillators<F: IntegrateFloat>(n: usize) -> Vec<ConservationLaw<F>> {
+    use SymbolicExpression::*;
+    
+    let mut laws = Vec::new();
+    
+    // State: [x1, v1, x2, v2, ..., xn, vn]
+    // Total energy = kinetic + potential
+    let mut energy = Constant(F::zero());
+    
+    // Kinetic energy
+    for i in 0..n {
+        let v = Var(Variable::indexed("y", 2*i + 1));
+        energy = Add(Box::new(energy), Box::new(Mul(
+            Box::new(Constant(F::from(0.5).unwrap())),
+            Box::new(Pow(Box::new(v), Box::new(Constant(F::from(2.0).unwrap()))))
+        )));
+    }
+    
+    // Potential energy (nearest neighbor coupling)
+    for i in 0..n {
+        let x = Var(Variable::indexed("y", 2*i));
+        
+        // On-site potential
+        energy = Add(Box::new(energy), Box::new(Mul(
+            Box::new(Constant(F::from(0.5).unwrap())),
+            Box::new(Pow(Box::new(x.clone()), Box::new(Constant(F::from(2.0).unwrap()))))
+        )));
+        
+        // Coupling potential
+        if i < n - 1 {
+            let x_next = Var(Variable::indexed("y", 2*(i+1)));
+            let diff = Sub(Box::new(x_next), Box::new(x));
+            energy = Add(Box::new(energy), Box::new(Mul(
+                Box::new(Constant(F::from(0.5).unwrap())),
+                Box::new(Pow(Box::new(diff), Box::new(Constant(F::from(2.0).unwrap()))))
+            )));
+        }
+    }
+    
+    laws.push(ConservationLaw::new("Total Energy", energy, F::from(1e-10).unwrap()));
+    
+    // For periodic boundary conditions, add momentum conservation
+    let mut total_momentum = Constant(F::zero());
+    for i in 0..n {
+        let v = Var(Variable::indexed("y", 2*i + 1));
+        total_momentum = Add(Box::new(total_momentum), Box::new(v));
+    }
+    laws.push(ConservationLaw::new("Total Momentum", total_momentum, F::from(1e-10).unwrap()));
+    
+    laws
 }
 
 #[cfg(test)]

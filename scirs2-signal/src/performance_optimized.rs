@@ -9,7 +9,7 @@
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
-use crate::filter::{filter_design, FilterType};
+use crate::filter::FilterType;
 use ndarray::{Array1, Array2, ArrayView1, ArrayViewMut1, Axis, Zip};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
@@ -147,7 +147,7 @@ pub fn memory_efficient_fft_convolve(
     kernel: &Array1<f64>,
     config: &OptimizationConfig,
 ) -> SignalResult<Array1<f64>> {
-    use crate::fft::{fft, ifft};
+    use scirs2_fft::{fft, ifft};
 
     let n = signal.len();
     let k = kernel.len();
@@ -242,10 +242,9 @@ pub fn optimized_filter(
     let n_chunks = (n + chunk_size - overlap - 1) / (chunk_size - overlap);
 
     // Process chunks in parallel
-    let chunk_results: Vec<Array1<f64>> = par_iter_with_setup(
-        0..n_chunks,
-        || {},
-        |_, &chunk_idx| {
+    let chunk_results: Vec<Array1<f64>> = (0..n_chunks)
+        .into_par_iter()
+        .map(|chunk_idx| {
             let start = chunk_idx * (chunk_size - overlap);
             let end = (start + chunk_size).min(n);
 
@@ -254,17 +253,16 @@ pub fn optimized_filter(
             let chunk_signal = signal.slice(s![chunk_start..end]).to_owned();
 
             // Apply filter to chunk
-            let filtered = filter_direct_simd(&chunk_signal, &b_norm, &a_norm)?;
-
-            // Return valid portion
-            let valid_start = if chunk_idx == 0 { 0 } else { overlap };
-            Ok(filtered.slice(s![valid_start..]).to_owned())
-        },
-        |results, chunk| {
-            results.push(chunk?);
-            Ok(())
-        },
-    )?;
+            match filter_direct_simd(&chunk_signal, &b_norm, &a_norm) {
+                Ok(filtered) => {
+                    // Return valid portion
+                    let valid_start = if chunk_idx == 0 { 0 } else { overlap };
+                    Ok(filtered.slice(s![valid_start..]).to_owned())
+                }
+                Err(e) => Err(e),
+            }
+        })
+        .collect::<SignalResult<Vec<_>>>()?;
 
     // Concatenate results
     let mut output = Array1::zeros(n);
@@ -425,10 +423,9 @@ pub fn optimized_convolve_2d(
 
     if config.use_parallel {
         // Parallel processing of tiles
-        par_iter_with_setup(
-            0..((out_rows + tile_size - 1) / tile_size),
-            || {},
-            |_, &tile_row| {
+        (0..((out_rows + tile_size - 1) / tile_size))
+            .into_par_iter()
+            .try_for_each(|tile_row| {
                 let row_start = tile_row * tile_size;
                 let row_end = (row_start + tile_size).min(out_rows);
 
@@ -448,10 +445,8 @@ pub fn optimized_convolve_2d(
                     );
                 }
 
-                Ok(())
-            },
-            |_, _| Ok(()),
-        )?;
+                Ok::<(), SignalError>(())
+            })?;
     } else {
         // Sequential processing
         for row_tile in 0..((out_rows + tile_size - 1) / tile_size) {

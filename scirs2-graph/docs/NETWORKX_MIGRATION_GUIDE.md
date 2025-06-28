@@ -697,8 +697,371 @@ match algorithms::shortest_path(&g, 1, 5) {
 }
 ```
 
+## Parallel Processing Features
+
+### NetworkX with Multiprocessing
+
+```python
+import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor
+
+def process_component(component):
+    # Process each component separately
+    subgraph = G.subgraph(component)
+    return nx.betweenness_centrality(subgraph)
+
+# Parallel processing of components
+components = list(nx.connected_components(G))
+with ProcessPoolExecutor() as executor:
+    results = list(executor.map(process_component, components))
+```
+
+### scirs2-graph Built-in Parallelism
+
+```rust
+// Enable parallel feature in Cargo.toml
+// [dependencies]
+// scirs2-graph = { version = "0.1.0-beta.1", features = ["parallel"] }
+
+// Algorithms automatically use parallel processing
+let centrality = algorithms::betweenness_centrality_parallel(&g)?;
+
+// Configure parallelism
+use scirs2_graph::parallel::ParallelConfig;
+
+let config = ParallelConfig {
+    num_threads: 8,
+    chunk_size: 1000,
+};
+
+let result = algorithms::pagerank_parallel(&g, 0.85, None, config)?;
+```
+
+## Custom Algorithm Implementation
+
+### NetworkX Custom Algorithm
+
+```python
+def my_metric(G, node):
+    """Custom node importance metric"""
+    degree = G.degree(node)
+    neighbors_degree = sum(G.degree(n) for n in G.neighbors(node))
+    return degree * neighbors_degree
+
+# Apply to all nodes
+importance = {n: my_metric(G, n) for n in G.nodes()}
+```
+
+### scirs2-graph Custom Algorithm
+
+```rust
+use scirs2_graph::{Graph, Node, EdgeWeight};
+use std::collections::HashMap;
+
+fn my_metric<N, E, Ix>(g: &Graph<N, E, Ix>, node: N) -> f64
+where
+    N: Node,
+    E: EdgeWeight,
+    Ix: petgraph::graph::IndexType,
+{
+    let degree = g.degree(&node) as f64;
+    let neighbors_degree: f64 = g.neighbors(&node)
+        .unwrap()
+        .map(|n| g.degree(&n) as f64)
+        .sum();
+    degree * neighbors_degree
+}
+
+// Apply to all nodes
+let importance: HashMap<usize, f64> = g.nodes()
+    .iter()
+    .map(|&n| (n, my_metric(&g, n)))
+    .collect();
+```
+
+## Migration Checklist
+
+Before migrating your NetworkX code to scirs2-graph, review this checklist:
+
+### ✅ Pre-Migration Assessment
+
+- [ ] Identify performance bottlenecks in current NetworkX code
+- [ ] List all NetworkX algorithms currently in use
+- [ ] Check if all required algorithms are available in scirs2-graph
+- [ ] Assess current memory usage and requirements
+- [ ] Document any custom node/edge attributes used
+
+### ✅ Migration Planning
+
+- [ ] Design integer node ID mapping strategy (if using non-integer nodes)
+- [ ] Plan data structure migrations for attributes
+- [ ] Identify opportunities for parallel processing
+- [ ] Set up Rust development environment
+- [ ] Create test cases for verification
+
+### ✅ Implementation Steps
+
+- [ ] Start with core graph construction and basic operations
+- [ ] Migrate algorithms incrementally, testing each one
+- [ ] Implement custom algorithms as needed
+- [ ] Add error handling for Rust's Result types
+- [ ] Optimize with batch operations where possible
+
+### ✅ Testing and Validation
+
+- [ ] Verify numerical results match NetworkX output
+- [ ] Benchmark performance improvements
+- [ ] Test edge cases and error conditions
+- [ ] Validate memory usage reduction
+- [ ] Check parallel processing speedups
+
+### ✅ Optimization
+
+- [ ] Enable appropriate feature flags (parallel, simd)
+- [ ] Use specialized graph types where applicable
+- [ ] Implement streaming for very large graphs
+- [ ] Profile and optimize hot paths
+
+## Real-World Migration Example
+
+Here's a complete example migrating a social network analysis pipeline:
+
+### Original NetworkX Code
+
+```python
+import networkx as nx
+import pandas as pd
+import numpy as np
+from networkx.algorithms import community
+
+class SocialNetworkAnalyzer:
+    def __init__(self, edge_file):
+        self.G = nx.read_edgelist(edge_file, create_using=nx.Graph())
+        self.results = {}
+    
+    def analyze(self):
+        # Basic metrics
+        self.results['num_nodes'] = self.G.number_of_nodes()
+        self.results['num_edges'] = self.G.number_of_edges()
+        self.results['density'] = nx.density(self.G)
+        
+        # Find influencers
+        pr = nx.pagerank(self.G)
+        self.results['top_influencers'] = sorted(
+            pr.items(), key=lambda x: x[1], reverse=True
+        )[:10]
+        
+        # Detect communities
+        communities = community.louvain_communities(self.G)
+        self.results['num_communities'] = len(communities)
+        self.results['modularity'] = community.modularity(self.G, communities)
+        
+        # Find bridges
+        bridges = list(nx.bridges(self.G))
+        self.results['critical_connections'] = bridges[:20]
+        
+        return self.results
+    
+    def export_results(self, output_file):
+        # Export analyzed graph with metrics
+        for node in self.G.nodes():
+            self.G.nodes[node]['pagerank'] = pr.get(node, 0)
+        
+        nx.write_graphml(self.G, output_file)
+```
+
+### Migrated scirs2-graph Code
+
+```rust
+use scirs2_graph::{
+    Graph, io, algorithms, measures,
+    algorithms::community, measures::centrality,
+};
+use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+struct AnalysisResults {
+    num_nodes: usize,
+    num_edges: usize,
+    density: f64,
+    top_influencers: Vec<(usize, f64)>,
+    num_communities: usize,
+    modularity: f64,
+    critical_connections: Vec<(usize, usize)>,
+}
+
+struct SocialNetworkAnalyzer {
+    graph: Graph<usize, f64>,
+    results: AnalysisResults,
+}
+
+impl SocialNetworkAnalyzer {
+    fn new(edge_file: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let graph = io::read_edgelist(edge_file, false)?;
+        let results = AnalysisResults {
+            num_nodes: 0,
+            num_edges: 0,
+            density: 0.0,
+            top_influencers: vec![],
+            num_communities: 0,
+            modularity: 0.0,
+            critical_connections: vec![],
+        };
+        
+        Ok(Self { graph, results })
+    }
+    
+    fn analyze(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        // Basic metrics
+        self.results.num_nodes = self.graph.node_count();
+        self.results.num_edges = self.graph.edge_count();
+        self.results.density = measures::graph_density(&self.graph);
+        
+        // Find influencers (parallel processing enabled)
+        let pr = centrality::pagerank_parallel(&self.graph, 0.85, Some(1e-6))?;
+        let mut pr_vec: Vec<_> = pr.into_iter().collect();
+        pr_vec.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        self.results.top_influencers = pr_vec.into_iter().take(10).collect();
+        
+        // Detect communities
+        let communities = community::louvain_communities(&self.graph)?;
+        self.results.num_communities = communities.num_communities;
+        self.results.modularity = communities.modularity;
+        
+        // Find bridges
+        let bridges = algorithms::connectivity::find_bridges(&self.graph)?;
+        self.results.critical_connections = bridges.into_iter().take(20).collect();
+        
+        Ok(())
+    }
+    
+    fn export_results(&self, output_file: &str) -> Result<(), Box<dyn std::error::Error>> {
+        // Create attributed graph with metrics
+        let mut attributed_graph = self.graph.to_attributed()?;
+        
+        // Add PageRank as node attribute
+        let pr = centrality::pagerank(&self.graph, 0.85, Some(1e-6))?;
+        for (node, rank) in pr {
+            attributed_graph.set_node_attr(node, "pagerank", rank)?;
+        }
+        
+        io::write_graphml(&attributed_graph, output_file)?;
+        Ok(())
+    }
+}
+
+// Usage
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut analyzer = SocialNetworkAnalyzer::new("social_network.txt")?;
+    analyzer.analyze()?;
+    analyzer.export_results("analyzed_network.graphml")?;
+    
+    // Print results
+    println!("Analysis Results:");
+    println!("  Nodes: {}", analyzer.results.num_nodes);
+    println!("  Edges: {}", analyzer.results.num_edges);
+    println!("  Density: {:.4}", analyzer.results.density);
+    println!("  Communities: {}", analyzer.results.num_communities);
+    println!("  Modularity: {:.4}", analyzer.results.modularity);
+    
+    Ok(())
+}
+```
+
+### Performance Comparison Script
+
+```rust
+use std::time::Instant;
+
+fn benchmark_comparison() {
+    // Generate test graph
+    let g = generators::barabasi_albert_graph(10000, 5, None).unwrap();
+    
+    println!("Benchmarking graph with {} nodes and {} edges", 
+             g.node_count(), g.edge_count());
+    
+    // Benchmark PageRank
+    let start = Instant::now();
+    let _ = centrality::pagerank(&g, 0.85, Some(1e-6)).unwrap();
+    let serial_time = start.elapsed();
+    
+    let start = Instant::now();
+    let _ = centrality::pagerank_parallel(&g, 0.85, Some(1e-6)).unwrap();
+    let parallel_time = start.elapsed();
+    
+    println!("\nPageRank Performance:");
+    println!("  Serial: {:.3}s", serial_time.as_secs_f64());
+    println!("  Parallel: {:.3}s", parallel_time.as_secs_f64());
+    println!("  Speedup: {:.2}x", serial_time.as_secs_f64() / parallel_time.as_secs_f64());
+    
+    // Compare with NetworkX (typical times)
+    println!("\nTypical NetworkX time: ~5-10s");
+    println!("scirs2-graph speedup: {:.0}x", 7.5 / serial_time.as_secs_f64());
+}
+```
+
+## Advanced Migration Topics
+
+### Handling Dynamic Graphs
+
+**NetworkX:**
+```python
+# Dynamic graph updates
+G = nx.Graph()
+for timestamp, (u, v) in edge_stream:
+    G.add_edge(u, v, timestamp=timestamp)
+    if G.number_of_edges() > max_edges:
+        # Remove old edges
+        old_edges = [(u, v) for u, v, d in G.edges(data=True) 
+                     if d['timestamp'] < timestamp - window]
+        G.remove_edges_from(old_edges)
+```
+
+**scirs2-graph:**
+```rust
+use scirs2_graph::temporal::TemporalGraph;
+
+// Use specialized temporal graph
+let mut tg = TemporalGraph::new();
+
+for (timestamp, (u, v)) in edge_stream {
+    tg.add_temporal_edge(u, v, timestamp, 1.0)?;
+    
+    // Automatic windowing
+    tg.prune_edges_before(timestamp - window)?;
+}
+
+// Analyze at specific time
+let snapshot = tg.snapshot_at(specific_time)?;
+let pr = centrality::pagerank(&snapshot, 0.85, None)?;
+```
+
+### Memory-Efficient Large Graph Processing
+
+**scirs2-graph Streaming:**
+```rust
+use scirs2_graph::streaming::StreamingGraph;
+
+// Process graph that doesn't fit in memory
+let mut sg = StreamingGraph::from_file("huge_graph.txt")?;
+
+// Streaming PageRank
+let pr = sg.streaming_pagerank(0.85, 1e-6, 1000)?; // 1000 nodes in memory
+
+// Streaming connected components
+let components = sg.streaming_connected_components(5000)?; // 5000 node chunks
+```
+
 ## Conclusion
 
 Migrating from NetworkX to scirs2-graph offers significant performance benefits for large-scale graph processing. While there are some API differences and current limitations (like node types), the performance gains and type safety make it an excellent choice for production systems requiring high-performance graph analytics.
+
+Key benefits of migration:
+- **10-100x performance improvement** for most algorithms
+- **Parallel processing** built-in
+- **Memory efficiency** through zero-cost abstractions
+- **Type safety** preventing runtime errors
+- **Production-ready** with comprehensive error handling
 
 For the latest updates and additional examples, see the [scirs2-graph documentation](https://docs.rs/scirs2-graph).

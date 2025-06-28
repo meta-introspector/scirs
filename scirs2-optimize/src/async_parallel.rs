@@ -481,7 +481,11 @@ impl AsyncDifferentialEvolution {
 
         let total_time = stats_guard.avg_evaluation_time * (stats_guard.total_completed - 1) as u32
             + result.evaluation_time;
-        stats_guard.avg_evaluation_time = total_time / stats_guard.total_completed as u32;
+        stats_guard.avg_evaluation_time = if stats_guard.total_completed > 0 {
+            total_time / stats_guard.total_completed as u32
+        } else {
+            0 // No evaluations completed yet
+        };
 
         if result.evaluation_time < stats_guard.min_evaluation_time {
             stats_guard.min_evaluation_time = result.evaluation_time;
@@ -500,7 +504,11 @@ impl AsyncDifferentialEvolution {
     ) -> bool {
         match self.config.slow_evaluation_strategy {
             SlowEvaluationStrategy::UsePartial { min_fraction } => {
-                let fraction = completed as f64 / self.population_size as f64;
+                let fraction = if self.population_size > 0 {
+                    completed as f64 / self.population_size as f64
+                } else {
+                    0.0 // Invalid population size
+                };
                 fraction >= min_fraction && completed >= self.config.min_evaluations
             }
             _ => false,
@@ -538,14 +546,28 @@ impl AsyncDifferentialEvolution {
             return false;
         }
 
-        let mean = finite_fitness.iter().sum::<f64>() / finite_fitness.len() as f64;
-        let variance = finite_fitness
-            .iter()
-            .map(|&f| (f - mean).powi(2))
-            .sum::<f64>()
-            / finite_fitness.len() as f64;
+        let mean = if !finite_fitness.is_empty() {
+            finite_fitness.iter().sum::<f64>() / finite_fitness.len() as f64
+        } else {
+            return false; // No finite fitness values to check
+        };
+        let variance = if !finite_fitness.is_empty() {
+            finite_fitness
+                .iter()
+                .map(|&f| (f - mean).powi(2))
+                .sum::<f64>()
+                / finite_fitness.len() as f64
+        } else {
+            0.0 // No variance with empty set
+        };
 
-        variance.sqrt() < self.tolerance
+        // Safe sqrt - variance should be non-negative by construction
+        let std_dev = if variance >= 0.0 {
+            variance.sqrt()
+        } else {
+            0.0 // Handle numerical errors that might produce small negative values
+        };
+        std_dev < self.tolerance
     }
 
     /// Generate next population using differential evolution
@@ -627,10 +649,11 @@ mod tests {
 
         let optimizer = AsyncDifferentialEvolution::new(2, Some(20), None)
             .with_bounds(bounds_lower, bounds_upper)
-            .unwrap()
+            .expect("Setting bounds should succeed for valid dimensions")
             .with_parameters(0.8, 0.7, 50, 1e-6);
 
-        let (result, stats) = optimizer.optimize(objective).await.unwrap();
+        let (result, stats) = optimizer.optimize(objective).await
+            .expect("Optimization should complete successfully");
 
         assert!(result.success);
         assert!(result.fun < 1e-3);
@@ -668,10 +691,11 @@ mod tests {
 
         let optimizer = AsyncDifferentialEvolution::new(2, Some(20), Some(config))
             .with_bounds(bounds_lower, bounds_upper)
-            .unwrap()
+            .expect("Setting bounds should succeed for valid dimensions")
             .with_parameters(0.8, 0.7, 30, 1e-4);
 
-        let (result, stats) = optimizer.optimize(objective).await.unwrap();
+        let (result, stats) = optimizer.optimize(objective).await
+            .expect("Optimization should complete successfully");
 
         assert!(result.success);
         assert!(result.fun < 1.0); // Should get reasonably close to minimum
@@ -714,10 +738,11 @@ mod tests {
 
         let optimizer = AsyncDifferentialEvolution::new(2, Some(10), Some(config))
             .with_bounds(bounds_lower, bounds_upper)
-            .unwrap()
+            .expect("Setting bounds should succeed for valid dimensions")
             .with_parameters(0.8, 0.7, 10, 1e-3);
 
-        let (result, stats) = optimizer.optimize(objective).await.unwrap();
+        let (result, stats) = optimizer.optimize(objective).await
+            .expect("Optimization should complete successfully");
 
         // Should still succeed despite timeouts
         assert!(result.success);

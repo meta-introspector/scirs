@@ -10,6 +10,7 @@ pub mod performance_estimation;
 pub mod architecture_encoding;
 pub mod controller;
 pub mod evaluator;
+pub mod enas;
 
 pub use search_space::{SearchSpace, SearchSpaceConfig};
 pub use search_algorithms::{
@@ -20,6 +21,7 @@ pub use performance_estimation::{PerformanceEstimator, EarlyStoppingEstimator, S
 pub use architecture_encoding::{ArchitectureEncoding, GraphEncoding, SequentialEncoding};
 pub use controller::{NASController, ControllerConfig};
 pub use evaluator::{ArchitectureEvaluator, EvaluationMetrics};
+pub use enas::{ENASController, SuperNetwork, ENASTrainer};
 
 use crate::error::Result;
 use crate::models::sequential::Sequential;

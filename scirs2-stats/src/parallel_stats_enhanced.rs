@@ -693,7 +693,7 @@ pub fn partial_corrcoef_parallel<F, D>(
     control_vars: &[usize],
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + Send + Sync + SimdUnifiedOps,
+    F: Float + NumCast + Send + Sync + SimdUnifiedOps + ndarray::ScalarOperand + std::iter::Sum + num_traits::NumAssign,
     D: Data<Elem = F> + Sync,
 {
     use scirs2_linalg::lstsq;

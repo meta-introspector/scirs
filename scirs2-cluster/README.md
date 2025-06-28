@@ -62,6 +62,7 @@ A comprehensive clustering module for the SciRS2 scientific computing library in
   * Affinity propagation
   * BIRCH (Balanced Iterative Reducing and Clustering using Hierarchies)
   * Gaussian Mixture Models (GMM)
+  * Leader algorithm (single-pass clustering with hierarchical tree support)
 
 * **Evaluation Metrics**
   * Silhouette coefficient

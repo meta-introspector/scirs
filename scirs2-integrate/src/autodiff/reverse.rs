@@ -581,7 +581,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
 
         // Use forward mode for efficient JVP computation
         let eps = F::from(1e-8).unwrap();
-        let x_perturbed = &x + &(v * eps);
+        let x_perturbed = &x + &(v.to_owned() * eps);
         
         let mut tape = Tape::new();
         let mut var_indices = Vec::new();

@@ -7,15 +7,18 @@ use crate::backend::{GpuBuffer, GpuContext, GpuKernelExecutor, KernelInfo};
 use crate::error::{NdimageError, NdimageResult};
 use ndarray::{Array, ArrayView, ArrayView2, Dimension};
 use num_traits::{Float, FromPrimitive, Zero};
-use std::ffi::{c_void, CString};
+use std::collections::HashMap;
+use std::ffi::{c_char, c_void, CStr, CString};
 use std::fmt::Debug;
 use std::ptr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 // CUDA FFI bindings
 #[link(name = "cuda")]
 #[link(name = "cudart")]
+#[link(name = "nvrtc")]
 extern "C" {
+    // CUDA Runtime API
     fn cudaMalloc(devPtr: *mut *mut c_void, size: usize) -> i32;
     fn cudaFree(devPtr: *mut c_void) -> i32;
     fn cudaMemcpy(dst: *mut c_void, src: *const c_void, count: usize, kind: i32) -> i32;
@@ -28,6 +31,37 @@ extern "C" {
     fn cudaStreamDestroy(stream: *mut c_void) -> i32;
     fn cudaStreamSynchronize(stream: *mut c_void) -> i32;
     fn cudaDeviceSynchronize() -> i32;
+    fn cudaGetLastError() -> i32;
+    fn cudaGetErrorString(error: i32) -> *const c_char;
+    
+    // CUDA Driver API for kernel launch
+    fn cuModuleLoadData(module: *mut *mut c_void, image: *const c_void) -> i32;
+    fn cuModuleGetFunction(hfunc: *mut *mut c_void, hmod: *mut c_void, name: *const c_char) -> i32;
+    fn cuLaunchKernel(
+        f: *mut c_void,
+        grid_dim_x: u32, grid_dim_y: u32, grid_dim_z: u32,
+        block_dim_x: u32, block_dim_y: u32, block_dim_z: u32,
+        shared_mem_bytes: u32,
+        stream: *mut c_void,
+        kernel_params: *mut *mut c_void,
+        extra: *mut *mut c_void,
+    ) -> i32;
+    
+    // NVRTC API for runtime compilation
+    fn nvrtcCreateProgram(
+        prog: *mut *mut c_void,
+        src: *const c_char,
+        name: *const c_char,
+        num_headers: i32,
+        headers: *const *const c_char,
+        include_names: *const *const c_char,
+    ) -> i32;
+    fn nvrtcDestroyProgram(prog: *mut *mut c_void) -> i32;
+    fn nvrtcCompileProgram(prog: *mut c_void, num_options: i32, options: *const *const c_char) -> i32;
+    fn nvrtcGetPTXSize(prog: *mut c_void, ptx_size: *mut usize) -> i32;
+    fn nvrtcGetPTX(prog: *mut c_void, ptx: *mut c_char) -> i32;
+    fn nvrtcGetProgramLogSize(prog: *mut c_void, log_size: *mut usize) -> i32;
+    fn nvrtcGetProgramLog(prog: *mut c_void, log: *mut c_char) -> i32;
 }
 
 // CUDA memory copy kinds
@@ -37,6 +71,21 @@ const CUDA_MEMCPY_DEVICE_TO_DEVICE: i32 = 3;
 
 // CUDA error codes
 const CUDA_SUCCESS: i32 = 0;
+const NVRTC_SUCCESS: i32 = 0;
+
+// Helper function to get CUDA error string
+fn cuda_error_string(error: i32) -> String {
+    unsafe {
+        let error_ptr = cudaGetErrorString(error);
+        if error_ptr.is_null() {
+            format!("Unknown CUDA error: {}", error)
+        } else {
+            CStr::from_ptr(error_ptr)
+                .to_string_lossy()
+                .into_owned()
+        }
+    }
+}
 
 /// CUDA-specific GPU buffer implementation
 pub struct CudaBuffer<T> {
@@ -84,6 +133,14 @@ impl<T> Drop for CudaBuffer<T> {
 }
 
 impl<T> GpuBuffer<T> for CudaBuffer<T> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+    
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+    
     fn size(&self) -> usize {
         self.size
     }
@@ -188,13 +245,126 @@ impl CudaContext {
     }
     
     pub fn compile_kernel(&self, source: &str, kernel_name: &str) -> NdimageResult<CudaKernel> {
-        // In a real implementation, this would use NVRTC to compile the kernel
-        // For now, we'll create a placeholder
-        Ok(CudaKernel {
-            name: kernel_name.to_string(),
-            module: ptr::null_mut(),
-            function: ptr::null_mut(),
-        })
+        // Check cache first
+        {
+            let cache = KERNEL_CACHE.lock().unwrap();
+            if let Some(kernel) = cache.get(kernel_name) {
+                return Ok(CudaKernel {
+                    name: kernel.name.clone(),
+                    module: kernel.module,
+                    function: kernel.function,
+                    ptx_code: kernel.ptx_code.clone(),
+                });
+            }
+        }
+        
+        // Convert OpenCL-style kernel to CUDA
+        let cuda_source = convert_opencl_to_cuda(source);
+        let c_source = CString::new(cuda_source).map_err(|_| {
+            NdimageError::ComputationError("Failed to create C string for kernel source".into())
+        })?;
+        let c_name = CString::new(kernel_name).map_err(|_| {
+            NdimageError::ComputationError("Failed to create C string for kernel name".into())
+        })?;
+        
+        unsafe {
+            // Create NVRTC program
+            let mut prog: *mut c_void = ptr::null_mut();
+            let result = nvrtcCreateProgram(
+                &mut prog,
+                c_source.as_ptr(),
+                c_name.as_ptr(),
+                0,
+                ptr::null(),
+                ptr::null(),
+            );
+            
+            if result != NVRTC_SUCCESS {
+                return Err(NdimageError::ComputationError(
+                    format!("Failed to create NVRTC program: {}", result),
+                ));
+            }
+            
+            // Compile program with appropriate options
+            let options = vec![
+                CString::new("--gpu-architecture=compute_70").unwrap(),
+                CString::new("--fmad=true").unwrap(),
+            ];
+            let option_ptrs: Vec<*const c_char> = options.iter().map(|s| s.as_ptr()).collect();
+            
+            let compile_result = nvrtcCompileProgram(
+                prog,
+                option_ptrs.len() as i32,
+                option_ptrs.as_ptr(),
+            );
+            
+            // Get compilation log
+            if compile_result != NVRTC_SUCCESS {
+                let mut log_size: usize = 0;
+                nvrtcGetProgramLogSize(prog, &mut log_size);
+                
+                if log_size > 0 {
+                    let mut log = vec![0u8; log_size];
+                    nvrtcGetProgramLog(prog, log.as_mut_ptr() as *mut c_char);
+                    let log_str = String::from_utf8_lossy(&log[..log_size - 1]);
+                    
+                    nvrtcDestroyProgram(&mut prog);
+                    return Err(NdimageError::ComputationError(
+                        format!("CUDA compilation failed:\n{}", log_str),
+                    ));
+                }
+            }
+            
+            // Get PTX code
+            let mut ptx_size: usize = 0;
+            nvrtcGetPTXSize(prog, &mut ptx_size);
+            
+            let mut ptx_code = vec![0u8; ptx_size];
+            nvrtcGetPTX(prog, ptx_code.as_mut_ptr() as *mut c_char);
+            
+            // Clean up NVRTC program
+            nvrtcDestroyProgram(&mut prog);
+            
+            // Load PTX module
+            let mut module: *mut c_void = ptr::null_mut();
+            let load_result = cuModuleLoadData(&mut module, ptx_code.as_ptr() as *const c_void);
+            
+            if load_result != CUDA_SUCCESS {
+                return Err(NdimageError::ComputationError(
+                    format!("Failed to load CUDA module: {}", cuda_error_string(load_result)),
+                ));
+            }
+            
+            // Get function from module
+            let mut function: *mut c_void = ptr::null_mut();
+            let func_result = cuModuleGetFunction(&mut function, module, c_name.as_ptr());
+            
+            if func_result != CUDA_SUCCESS {
+                return Err(NdimageError::ComputationError(
+                    format!("Failed to get CUDA function: {}", cuda_error_string(func_result)),
+                ));
+            }
+            
+            let kernel = CudaKernel {
+                name: kernel_name.to_string(),
+                module,
+                function,
+                ptx_code: ptx_code[..ptx_size - 1].to_vec(), // Remove null terminator
+            };
+            
+            // Cache the compiled kernel
+            {
+                let mut cache = KERNEL_CACHE.lock().unwrap();
+                cache.insert(kernel_name.to_string(), CudaKernel {
+                    name: kernel.name.clone(),
+                    module: kernel.module,
+                    function: kernel.function,
+                    ptx_code: kernel.ptx_code.clone(),
+                });
+            }
+            
+            Ok(kernel)
+        }
     }
 }
 
@@ -230,6 +400,12 @@ pub struct CudaKernel {
     name: String,
     module: *mut c_void,
     function: *mut c_void,
+    ptx_code: Vec<u8>,
+}
+
+/// Kernel cache to avoid recompilation
+lazy_static::lazy_static! {
+    static ref KERNEL_CACHE: Arc<Mutex<HashMap<String, CudaKernel>>> = Arc::new(Mutex::new(HashMap::new()));
 }
 
 /// CUDA kernel executor implementation
@@ -276,17 +452,71 @@ where
         work_size: &[usize],
         params: &[T],
     ) -> NdimageResult<()> {
-        // In a real implementation, this would:
-        // 1. Compile the kernel if not already compiled
-        // 2. Set kernel arguments
-        // 3. Calculate grid and block dimensions
-        // 4. Launch the kernel
-        // 5. Synchronize
+        // Compile kernel
+        let cuda_kernel = self.context.compile_kernel(&kernel.source, &kernel.entry_point)?;
         
-        // For now, return not implemented
-        Err(NdimageError::NotImplementedError(
-            "CUDA kernel execution not fully implemented".into(),
-        ))
+        // Calculate grid and block dimensions
+        let (grid_dim, block_dim) = calculate_launch_config(work_size, kernel.work_dimensions);
+        
+        // Prepare kernel arguments
+        let mut kernel_args: Vec<*mut c_void> = Vec::new();
+        
+        // Add input buffers
+        for input in inputs {
+            let cuda_buf = input.as_any().downcast_ref::<CudaBuffer<T>>()
+                .ok_or_else(|| NdimageError::InvalidInput("Expected CUDA buffer".into()))?;
+            kernel_args.push(&cuda_buf.device_ptr as *const _ as *mut c_void);
+        }
+        
+        // Add output buffers
+        for output in outputs {
+            let cuda_buf = output.as_any().downcast_ref::<CudaBuffer<T>>()
+                .ok_or_else(|| NdimageError::InvalidInput("Expected CUDA buffer".into()))?;
+            kernel_args.push(&cuda_buf.device_ptr as *const _ as *mut c_void);
+        }
+        
+        // Add scalar parameters
+        let mut param_storage: Vec<T> = params.to_vec();
+        for param in &mut param_storage {
+            kernel_args.push(param as *mut T as *mut c_void);
+        }
+        
+        // Launch kernel
+        unsafe {
+            let result = cuLaunchKernel(
+                cuda_kernel.function,
+                grid_dim.0, grid_dim.1, grid_dim.2,
+                block_dim.0, block_dim.1, block_dim.2,
+                0, // shared memory
+                self.stream,
+                kernel_args.as_mut_ptr(),
+                ptr::null_mut(),
+            );
+            
+            if result != CUDA_SUCCESS {
+                return Err(NdimageError::ComputationError(
+                    format!("CUDA kernel launch failed: {}", cuda_error_string(result)),
+                ));
+            }
+            
+            // Synchronize stream
+            let sync_result = cudaStreamSynchronize(self.stream);
+            if sync_result != CUDA_SUCCESS {
+                return Err(NdimageError::ComputationError(
+                    format!("CUDA stream sync failed: {}", cuda_error_string(sync_result)),
+                ));
+            }
+            
+            // Check for kernel errors
+            let error = cudaGetLastError();
+            if error != CUDA_SUCCESS {
+                return Err(NdimageError::ComputationError(
+                    format!("CUDA kernel execution error: {}", cuda_error_string(error)),
+                ));
+            }
+        }
+        
+        Ok(())
     }
 }
 
@@ -367,6 +597,51 @@ where
     T: 'static,
 {
     Ok(Box::new(CudaBuffer::<T>::new(size)?))
+}
+
+/// Convert OpenCL-style kernel to CUDA syntax
+fn convert_opencl_to_cuda(source: &str) -> String {
+    source
+        .replace("__kernel", "extern \"C\" __global__")
+        .replace("__global", "")
+        .replace("get_global_id(0)", "blockIdx.x * blockDim.x + threadIdx.x")
+        .replace("get_global_id(1)", "blockIdx.y * blockDim.y + threadIdx.y")
+        .replace("get_global_id(2)", "blockIdx.z * blockDim.z + threadIdx.z")
+        .replace("clamp(", "min(max(")
+}
+
+/// Calculate optimal grid and block dimensions for kernel launch
+fn calculate_launch_config(work_size: &[usize], dimensions: usize) -> ((u32, u32, u32), (u32, u32, u32)) {
+    let block_size = match dimensions {
+        1 => (256, 1, 1),
+        2 => (16, 16, 1),
+        3 => (8, 8, 4),
+        _ => (256, 1, 1),
+    };
+    
+    let grid_size = match dimensions {
+        1 => {
+            let blocks = (work_size[0] + block_size.0 as usize - 1) / block_size.0 as usize;
+            (blocks as u32, 1, 1)
+        }
+        2 => {
+            let blocks_x = (work_size[0] + block_size.0 as usize - 1) / block_size.0 as usize;
+            let blocks_y = (work_size[1] + block_size.1 as usize - 1) / block_size.1 as usize;
+            (blocks_x as u32, blocks_y as u32, 1)
+        }
+        3 => {
+            let blocks_x = (work_size[0] + block_size.0 as usize - 1) / block_size.0 as usize;
+            let blocks_y = (work_size[1] + block_size.1 as usize - 1) / block_size.1 as usize;
+            let blocks_z = (work_size[2] + block_size.2 as usize - 1) / block_size.2 as usize;
+            (blocks_x as u32, blocks_y as u32, blocks_z as u32)
+        }
+        _ => {
+            let blocks = (work_size[0] + block_size.0 as usize - 1) / block_size.0 as usize;
+            (blocks as u32, 1, 1)
+        }
+    };
+    
+    (grid_size, block_size)
 }
 
 #[cfg(test)]

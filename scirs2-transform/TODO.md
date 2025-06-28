@@ -65,10 +65,10 @@
 - [x] **Advanced Feature Selection**: Recursive Feature Elimination, mutual information
 
 ### Version 0.3.0 - Specialized Domains
-- [ ] **Text Processing**: CountVectorizer, TfidfVectorizer, HashingVectorizer
-- [ ] **Image Processing**: Patch extraction, HOG features, image normalization
-- [ ] **Graph Features**: Graph embedding transformations
-- [ ] **Streaming API**: Online learning transformers with partial_fit
+- [x] **Text Processing**: CountVectorizer, TfidfVectorizer, HashingVectorizer
+- [x] **Image Processing**: Patch extraction, HOG features, image normalization
+- [x] **Graph Features**: Graph embedding transformations
+- [x] **Streaming API**: Online learning transformers with partial_fit
 
 ### Version 1.0.0 - Production Optimization
 - [ ] **GPU Acceleration**: CUDA support for dimensionality reduction and matrix operations

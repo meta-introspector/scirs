@@ -3,6 +3,25 @@
 //! This module provides a web-based interactive dashboard for visualizing
 //! machine learning metrics in real-time, with export capabilities and
 //! customizable visualizations.
+//!
+//! # HTTP Server Support
+//!
+//! When the `dashboard_server` feature is enabled, this module provides
+//! a real HTTP server implementation using tokio. To use it:
+//!
+//! ```no_run
+//! # #[cfg(feature = "dashboard_server")]
+//! # {
+//! use scirs2_metrics::dashboard::{InteractiveDashboard, DashboardConfig};
+//! use scirs2_metrics::dashboard::server::start_http_server;
+//!
+//! let dashboard = InteractiveDashboard::default();
+//! dashboard.add_metric("accuracy", 0.95).unwrap();
+//! 
+//! // Start the HTTP server
+//! let server = start_http_server(dashboard).unwrap();
+//! # }
+//! ```
 
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2};
@@ -11,6 +30,10 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+// Include dashboard server implementation if tokio is available
+#[cfg(feature = "dashboard_server")]
+pub mod server;
 
 /// Configuration for the interactive dashboard
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -111,7 +134,7 @@ impl MetricDataPoint {
 }
 
 /// Dashboard data storage and management
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DashboardData {
     /// Stored metric data points
     data_points: Arc<Mutex<Vec<MetricDataPoint>>>,
@@ -227,7 +250,7 @@ impl DashboardData {
 }
 
 /// Interactive dashboard server
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InteractiveDashboard {
     /// Dashboard data
     data: DashboardData,
@@ -301,6 +324,7 @@ impl InteractiveDashboard {
 
         // In a real implementation, this would start an actual web server
         // For now, we return a mock server
+        // To use the actual HTTP server, call start_http_server() instead
         Ok(DashboardServer {
             address: self.config.address,
             is_running: true,

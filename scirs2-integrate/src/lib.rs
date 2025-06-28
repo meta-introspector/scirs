@@ -283,7 +283,7 @@ pub use geometric::{
     StructurePreservingIntegrator, StructurePreservingMethod, ConservationChecker, GeometricInvariant,
     EnergyPreservingMethod, MomentumPreservingMethod,
     SplittingIntegrator, EnergyMomentumIntegrator, ConstrainedIntegrator, MultiSymplecticIntegrator,
-    invariants::{EnergyInvariant, LinearMomentumInvariant, AngularMomentumInvariant2D},
+    EnergyInvariant, LinearMomentumInvariant, AngularMomentumInvariant2D,
 };
 // Implicit solvers will be exposed in a future update
 // pub use pde::implicit::{

@@ -207,6 +207,15 @@ fn garrote_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
         .collect()
 }
 
+/// Apply threshold to wavelet coefficients using specified method
+pub fn threshold_coefficients(coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
+    match method {
+        ThresholdMethod::Hard => hard_threshold(coeffs, threshold),
+        ThresholdMethod::Soft => soft_threshold(coeffs, threshold),
+        ThresholdMethod::Garrote => garrote_threshold(coeffs, threshold),
+    }
+}
+
 /// Compute the median absolute deviation of a vector
 fn median_abs_deviation(data: &[f64]) -> f64 {
     if data.is_empty() {

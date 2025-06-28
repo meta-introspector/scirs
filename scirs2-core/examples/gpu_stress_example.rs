@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(not(feature = "gpu"))]
     {
         println!("GPU feature not enabled. Run with --features=gpu");
-        return Ok(());
+        Ok(())
     }
 
     #[cfg(feature = "gpu")]

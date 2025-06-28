@@ -776,6 +776,369 @@ fn safe_graph_operation() -> Result<()> {
 }
 ```
 
+## Advanced Examples
+
+### Temporal Graph Analysis
+
+```rust
+use scirs2_graph::{TemporalGraph, TemporalEdge, temporal_motifs, temporal_paths};
+use chrono::{DateTime, Utc, Duration};
+
+// Create a temporal communication network
+let mut comm_network = TemporalGraph::<String, String>::new();
+
+// Add users
+let users = vec!["Alice", "Bob", "Charlie", "David", "Eve"];
+for user in &users {
+    comm_network.add_node(user.to_string());
+}
+
+// Add timestamped communications
+let base_time = Utc::now();
+let communications = vec![
+    ("Alice", "Bob", 0, "email"),
+    ("Bob", "Charlie", 5, "chat"),
+    ("Alice", "Charlie", 10, "email"),
+    ("Charlie", "David", 15, "call"),
+    ("Bob", "David", 20, "email"),
+    ("David", "Eve", 25, "chat"),
+    ("Alice", "Eve", 30, "email"),
+];
+
+for (src, dst, minutes_offset, comm_type) in communications {
+    let timestamp = base_time + Duration::minutes(minutes_offset);
+    comm_network.add_temporal_edge(
+        src.to_string(),
+        dst.to_string(),
+        timestamp,
+        comm_type.to_string()
+    )?;
+}
+
+// Find temporal paths (respecting time order)
+let temporal_paths = temporal_paths(
+    &comm_network,
+    &"Alice".to_string(),
+    &"Eve".to_string(),
+    Duration::hours(1) // Maximum time window
+)?;
+
+println!("Temporal paths from Alice to Eve:");
+for path in temporal_paths {
+    println!("  Path: {:?}", path.nodes);
+    println!("  Duration: {} minutes", path.duration.num_minutes());
+    println!("  Communications: {:?}", path.edge_data);
+}
+
+// Detect temporal motifs
+let motifs = temporal_motifs(&comm_network, 3, Duration::minutes(30))?;
+println!("\nTemporal 3-node motifs within 30-minute windows:");
+for (motif_type, instances) in motifs {
+    println!("  {}: {} instances", motif_type, instances.len());
+}
+
+// Analyze burstiness
+let burstiness = comm_network.burstiness_coefficient(&"Alice".to_string())?;
+println!("\nAlice's communication burstiness: {:.3}", burstiness);
+
+// Time-respecting centrality
+let temporal_betweenness = comm_network.temporal_betweenness_centrality(
+    base_time,
+    base_time + Duration::hours(1)
+)?;
+println!("\nTemporal betweenness centrality:");
+for (user, centrality) in temporal_betweenness {
+    println!("  {}: {:.4}", user, centrality);
+}
+```
+
+### Hypergraph Analysis
+
+```rust
+use scirs2_graph::{Hypergraph, HyperedgeWeight, hypergraph_clustering};
+
+// Create a hypergraph for document-term relationships
+let mut doc_terms = Hypergraph::<String>::new();
+
+// Add documents and terms as nodes
+let documents = vec!["doc1", "doc2", "doc3", "doc4"];
+let terms = vec!["machine", "learning", "graph", "neural", "network", "algorithm"];
+
+for doc in &documents {
+    doc_terms.add_node(doc.to_string(), "document");
+}
+for term in &terms {
+    doc_terms.add_node(term.to_string(), "term");
+}
+
+// Add hyperedges (documents containing multiple terms)
+doc_terms.add_hyperedge(
+    vec!["doc1", "machine", "learning", "algorithm"],
+    1.0
+)?;
+doc_terms.add_hyperedge(
+    vec!["doc2", "graph", "neural", "network"],
+    1.0
+)?;
+doc_terms.add_hyperedge(
+    vec!["doc3", "machine", "learning", "neural", "network"],
+    1.0
+)?;
+doc_terms.add_hyperedge(
+    vec!["doc4", "graph", "algorithm"],
+    1.0
+)?;
+
+// Compute hypergraph degree (number of hyperedges containing node)
+println!("Hypergraph degrees:");
+for node in doc_terms.nodes() {
+    let degree = doc_terms.degree(node)?;
+    println!("  {}: {}", node, degree);
+}
+
+// Find overlapping hyperedges
+let overlaps = doc_terms.hyperedge_overlaps(0.5)?; // 50% overlap threshold
+println!("\nOverlapping hyperedges:");
+for (edge1, edge2, overlap) in overlaps {
+    println!("  Edges {} and {} overlap by {:.1}%", 
+             edge1, edge2, overlap * 100.0);
+}
+
+// Hypergraph clustering
+let clusters = hypergraph_clustering(&doc_terms, 0.3)?;
+println!("\nHypergraph clusters:");
+for (idx, cluster) in clusters.iter().enumerate() {
+    println!("  Cluster {}: {:?}", idx, cluster);
+}
+
+// Project to bipartite graph
+let bipartite = doc_terms.to_bipartite_graph()?;
+println!("\nBipartite projection has {} nodes and {} edges",
+         bipartite.node_count(), bipartite.edge_count());
+```
+
+### Graph Comparison and Similarity
+
+```rust
+use scirs2_graph::{
+    Graph, graph_edit_distance, spectral_distance,
+    graph_kernel_similarity, GraphKernel
+};
+
+// Create two similar graphs for comparison
+let mut g1 = Graph::<String, f64>::new();
+let mut g2 = Graph::<String, f64>::new();
+
+// Graph 1: Original social network
+let people_g1 = vec!["Alice", "Bob", "Charlie", "David"];
+for person in &people_g1 {
+    g1.add_node(person.to_string());
+}
+g1.add_edge("Alice".into(), "Bob".into(), 1.0)?;
+g1.add_edge("Bob".into(), "Charlie".into(), 1.0)?;
+g1.add_edge("Charlie".into(), "David".into(), 1.0)?;
+g1.add_edge("Alice".into(), "Charlie".into(), 1.0)?;
+
+// Graph 2: Modified network (David -> Dave, added edge)
+let people_g2 = vec!["Alice", "Bob", "Charlie", "Dave"];
+for person in &people_g2 {
+    g2.add_node(person.to_string());
+}
+g2.add_edge("Alice".into(), "Bob".into(), 1.0)?;
+g2.add_edge("Bob".into(), "Charlie".into(), 1.0)?;
+g2.add_edge("Charlie".into(), "Dave".into(), 1.0)?;
+g2.add_edge("Alice".into(), "Charlie".into(), 1.0)?;
+g2.add_edge("Bob".into(), "Dave".into(), 1.0)?; // New edge
+
+// Graph edit distance
+let ged = graph_edit_distance(&g1, &g2, 1.0, 1.0, 1.0)?;
+println!("Graph edit distance: {}", ged);
+
+// Spectral distance
+let spectral_dist = spectral_distance(&g1, &g2)?;
+println!("Spectral distance: {:.4}", spectral_dist);
+
+// Graph kernel similarity
+let wl_kernel = GraphKernel::WeisfeilerLehman { iterations: 3 };
+let similarity = graph_kernel_similarity(&g1, &g2, wl_kernel)?;
+println!("WL kernel similarity: {:.4}", similarity);
+
+// Find common subgraphs
+let common_subgraphs = g1.common_subgraphs(&g2, 3)?; // Min size 3
+println!("\nCommon subgraphs (size >= 3):");
+for (idx, subgraph) in common_subgraphs.iter().enumerate() {
+    println!("  Subgraph {}: {} nodes, {} edges", 
+             idx, subgraph.node_count(), subgraph.edge_count());
+}
+```
+
+### Multi-layer Network Analysis
+
+```rust
+use scirs2_graph::{MultilayerGraph, Layer, interlayer_degree, layer_participation};
+
+// Create a multi-layer social network
+let mut social_layers = MultilayerGraph::<String, f64>::new();
+
+// Define layers
+social_layers.add_layer("facebook");
+social_layers.add_layer("twitter");
+social_layers.add_layer("linkedin");
+
+// Add people to layers
+let people = vec!["Alice", "Bob", "Charlie", "David", "Eve"];
+for person in &people {
+    social_layers.add_node_to_layer(person.clone(), "facebook");
+    social_layers.add_node_to_layer(person.clone(), "twitter");
+    if person != &"Eve" { // Eve not on LinkedIn
+        social_layers.add_node_to_layer(person.clone(), "linkedin");
+    }
+}
+
+// Add edges in different layers
+// Facebook connections (social)
+social_layers.add_edge_in_layer("Alice", "Bob", 1.0, "facebook")?;
+social_layers.add_edge_in_layer("Bob", "Charlie", 1.0, "facebook")?;
+social_layers.add_edge_in_layer("Charlie", "David", 1.0, "facebook")?;
+social_layers.add_edge_in_layer("David", "Eve", 1.0, "facebook")?;
+
+// Twitter connections (following)
+social_layers.add_edge_in_layer("Alice", "Charlie", 1.0, "twitter")?;
+social_layers.add_edge_in_layer("Bob", "David", 1.0, "twitter")?;
+social_layers.add_edge_in_layer("Eve", "Alice", 1.0, "twitter")?;
+
+// LinkedIn connections (professional)
+social_layers.add_edge_in_layer("Alice", "David", 1.0, "linkedin")?;
+social_layers.add_edge_in_layer("Bob", "Charlie", 1.0, "linkedin")?;
+
+// Add inter-layer connections (same person across platforms)
+for person in &people {
+    social_layers.add_interlayer_edge(
+        person, "facebook",
+        person, "twitter",
+        1.0
+    )?;
+    if person != &"Eve" {
+        social_layers.add_interlayer_edge(
+            person, "twitter",
+            person, "linkedin",
+            1.0
+        )?;
+    }
+}
+
+// Analyze multi-layer properties
+println!("Multi-layer network analysis:");
+
+// Interlayer degree (connections across layers)
+for person in &people {
+    let degree = interlayer_degree(&social_layers, person)?;
+    println!("  {} interlayer degree: {}", person, degree);
+}
+
+// Layer participation coefficient
+let participation = layer_participation(&social_layers)?;
+for (person, coeff) in participation {
+    println!("  {} participation coefficient: {:.3}", person, coeff);
+}
+
+// Multi-layer PageRank
+let ml_pagerank = social_layers.multilayer_pagerank(0.85, 0.15)?;
+println!("\nMulti-layer PageRank:");
+for ((person, layer), rank) in ml_pagerank.iter().take(5) {
+    println!("  {} ({}): {:.4}", person, layer, rank);
+}
+```
+
+### Advanced Path Finding
+
+```rust
+use scirs2_graph::{
+    Graph, constrained_shortest_path, 
+    resource_constrained_path, multi_objective_path
+};
+
+// Create a road network with multiple attributes
+let mut road_network = AttributedGraph::<&str, f64>::new();
+
+// Add cities
+let cities = vec!["NYC", "Boston", "Philly", "DC", "Baltimore"];
+for city in &cities {
+    road_network.add_node(*city);
+}
+
+// Add roads with distance, time, and toll costs
+let roads = vec![
+    ("NYC", "Boston", 215.0, 4.0, 15.0),      // distance, hours, toll
+    ("NYC", "Philly", 95.0, 2.0, 10.0),
+    ("Philly", "DC", 139.0, 2.5, 8.0),
+    ("Philly", "Baltimore", 101.0, 2.0, 6.0),
+    ("Baltimore", "DC", 40.0, 1.0, 4.0),
+    ("Boston", "NYC", 215.0, 4.5, 15.0),
+];
+
+for (src, dst, dist, time, toll) in roads {
+    let mut attrs = HashMap::new();
+    attrs.insert("time".into(), time.into());
+    attrs.insert("toll".into(), toll.into());
+    road_network.add_edge_with_attrs(
+        src.to_string(), 
+        dst.to_string(), 
+        dist,
+        attrs
+    )?;
+}
+
+// Find shortest path with constraints
+let constraints = PathConstraints {
+    max_time: Some(6.0),      // Max 6 hours
+    max_cost: Some(25.0),     // Max $25 in tolls
+    forbidden_nodes: vec![],   // No forbidden cities
+    required_nodes: vec!["Philly".to_string()], // Must pass through Philly
+};
+
+let constrained_path = constrained_shortest_path(
+    &road_network,
+    &"NYC",
+    &"DC",
+    constraints
+)?;
+
+match constrained_path {
+    Some(path) => {
+        println!("Constrained shortest path found:");
+        println!("  Route: {:?}", path.nodes);
+        println!("  Distance: {} miles", path.cost);
+        println!("  Time: {} hours", path.resources["time"]);
+        println!("  Tolls: ${}", path.resources["toll"]);
+    }
+    None => println!("No path satisfying all constraints"),
+}
+
+// Multi-objective optimization (Pareto optimal paths)
+let objectives = vec![
+    ObjectiveFunction::Minimize("distance"),
+    ObjectiveFunction::Minimize("time"),
+    ObjectiveFunction::Minimize("toll"),
+];
+
+let pareto_paths = multi_objective_path(
+    &road_network,
+    &"NYC",
+    &"DC",
+    objectives
+)?;
+
+println!("\nPareto optimal paths:");
+for (idx, path) in pareto_paths.iter().enumerate() {
+    println!("  Option {}: {:?}", idx + 1, path.nodes);
+    println!("    Distance: {} mi, Time: {} hr, Toll: ${}",
+             path.objectives["distance"],
+             path.objectives["time"],
+             path.objectives["toll"]);
+}
+```
+
 ## Summary
 
 These examples demonstrate the versatility of scirs2-graph for various graph processing tasks:
@@ -786,5 +1149,10 @@ These examples demonstrate the versatility of scirs2-graph for various graph pro
 - **Bioinformatics**: Protein networks, functional modules
 - **Operations Research**: Network flow, supply chain optimization
 - **Visualization**: Layout algorithms, data export
+- **Temporal Graphs**: Time-respecting paths, temporal motifs
+- **Hypergraphs**: Document analysis, overlapping communities
+- **Graph Comparison**: Edit distance, kernel methods
+- **Multi-layer Networks**: Cross-platform analysis
+- **Advanced Pathfinding**: Constrained and multi-objective optimization
 
 The library provides efficient implementations suitable for both research and production use, with comprehensive error handling and performance optimization features.

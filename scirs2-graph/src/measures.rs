@@ -45,6 +45,17 @@ pub enum CentralityType {
 ///
 /// # Returns
 /// * `Result<HashMap<N, f64>>` - A map from nodes to their centrality values
+///
+/// # Time Complexity
+/// - Degree: O(V + E)
+/// - Betweenness: O(V * E) for unweighted, O(V² + VE) for weighted
+/// - Closeness: O(V * (V + E)) using BFS for each node
+/// - Eigenvector: O(V + E) per iteration, typically converges in O(log V) iterations
+/// - Katz: O(V + E) per iteration, typically converges quickly
+/// - PageRank: O(V + E) per iteration, typically converges in ~50 iterations
+///
+/// # Space Complexity
+/// O(V) for storing centrality values plus algorithm-specific requirements
 pub fn centrality<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     centrality_type: CentralityType,
@@ -128,6 +139,12 @@ where
 }
 
 /// Calculates degree centrality for nodes in an undirected graph
+///
+/// # Time Complexity
+/// O(V + E) where V is vertices and E is edges
+///
+/// # Space Complexity
+/// O(V) for storing the centrality values
 fn degree_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node,
@@ -174,6 +191,13 @@ where
 }
 
 /// Calculates betweenness centrality for nodes in an undirected graph
+///
+/// # Time Complexity
+/// O(V * E) for unweighted graphs using Brandes' algorithm
+/// O(V² + VE) for weighted graphs
+///
+/// # Space Complexity
+/// O(V + E) for the algorithm's data structures
 fn betweenness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,

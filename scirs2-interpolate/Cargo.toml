@@ -24,6 +24,9 @@ ordered-float = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
 
+# Optional dependencies for features
+pyo3 = { workspace = true, optional = true }
+
 [dev-dependencies]
 approx = { workspace = true }
 criterion = { workspace = true }
@@ -47,3 +50,22 @@ simd = ["scirs2-core/simd"]
 
 # Enable parallel processing features
 parallel = ["scirs2-core/parallel"]
+
+# Enable scipy comparison benchmarks (requires Python with scipy/numpy)
+scipy-comparison = ["pyo3"]
+
+[[bench]]
+name = "basic_interpolation"
+harness = false
+
+[[bench]]
+name = "advanced_methods"
+harness = false
+
+[[bench]]
+name = "bspline_benchmarks"
+harness = false
+
+[[bench]]
+name = "scipy_comparison"
+harness = false

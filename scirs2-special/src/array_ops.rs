@@ -408,8 +408,6 @@ pub mod vectorized {
     #[cfg(feature = "lazy")]
     use super::lazy::*;
 
-    #[cfg(feature = "gpu")]
-    use super::gpu::*;
 
     /// Enhanced gamma function computation with backend selection
     pub fn gamma_array<D>(
@@ -430,15 +428,25 @@ pub mod vectorized {
                     return Ok(GammaResult::Lazy(lazy_array));
                 }
             }
-            #[cfg(feature = "gpu")]
+            #[cfg(all(feature = "gpu", feature = "futures"))]
             Backend::Gpu => {
                 if total_elements >= 1000 {
                     // GPU efficient for larger arrays
                     let input_owned = input.to_owned();
+                    // Since gamma_gpu is not async, we create a future wrapper
                     return Ok(GammaResult::Future(Box::pin(async move {
-                        gamma_gpu(&input_owned).await
+                        // Convert to appropriate array views
+                        let mut output = Array::zeros(input_owned.raw_dim());
+                        match crate::gpu_ops::gamma_gpu(&input_owned.view(), &mut output.view_mut()) {
+                            Ok(_) => Ok(output),
+                            Err(e) => Err(e)
+                        }
                     })));
                 }
+            }
+            #[cfg(all(feature = "gpu", not(feature = "futures")))]
+            Backend::Gpu => {
+                // Without futures, fall through to CPU implementation
             }
             Backend::Cpu => {
                 // Use CPU implementation

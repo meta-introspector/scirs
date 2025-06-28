@@ -24,6 +24,7 @@ cached = { workspace = true }
 tempfile = { workspace = true }
 lazy_static = { workspace = true }
 rayon = { workspace = true }
+num_cpus = { workspace = true }
 
 [features]
 default = []

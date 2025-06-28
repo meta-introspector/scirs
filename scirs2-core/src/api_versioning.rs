@@ -114,13 +114,19 @@ impl VersionRegistry {
         module: impl Into<String>,
         since: Version,
     ) -> &mut Self {
-        self.entries.push(ApiEntry {
-            name: name.into(),
-            module: module.into(),
-            since,
-            deprecated: None,
-            replacement: None,
-        });
+        let name_str = name.into();
+        let module_str = module.into();
+        
+        // Check if the API is already registered
+        if !self.entries.iter().any(|e| e.name == name_str && e.module == module_str) {
+            self.entries.push(ApiEntry {
+                name: name_str,
+                module: module_str,
+                since,
+                deprecated: None,
+                replacement: None,
+            });
+        }
         self
     }
 

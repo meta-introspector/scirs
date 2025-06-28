@@ -186,6 +186,7 @@ pub mod tensor;
 pub mod timeseries;
 pub mod utils;
 pub mod voronoi;
+pub mod stress_testing;
 
 // Re-exports for convenience
 pub use adaptive_gp::{

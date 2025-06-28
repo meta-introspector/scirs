@@ -5,8 +5,6 @@
 //! ranges and edge cases where numerical issues may arise.
 
 use crate::error::SpecialResult;
-use ndarray::{Array1, Array2};
-use num_complex::Complex64;
 use std::collections::HashMap;
 use std::f64;
 
@@ -81,7 +79,7 @@ pub trait StabilityAnalyzable {
 /// Analyze gamma function stability
 pub mod gamma_stability {
     use super::*;
-    use crate::{gamma, gammaln, digamma};
+    use crate::gamma;
 
     pub fn analyze_gamma_stability() -> StabilityAnalysis {
         let mut issues = Vec::new();
@@ -89,9 +87,9 @@ pub mod gamma_stability {
         
         // Test near zero
         for x in [1e-10, 1e-8, 1e-6, 1e-4, 1e-2] {
-            let g = gamma(x);
-            let expected = 1.0 / x; // Leading term
-            let rel_error = (g - expected).abs() / expected;
+            let g: f64 = gamma(x);
+            let expected: f64 = 1.0 / x; // Leading term
+            let rel_error = ((g - expected).abs() / expected) as f64;
             
             if rel_error > 0.1 {
                 issues.push(StabilityIssue::LossOfSignificance {
@@ -118,7 +116,7 @@ pub mod gamma_stability {
         
         // Test large positive values
         for x in [100.0, 150.0, 170.0, 171.0, 172.0] {
-            let g = gamma(x);
+            let g: f64 = gamma(x);
             
             if g.is_infinite() {
                 issues.push(StabilityIssue::Overflow {
@@ -130,12 +128,12 @@ pub mod gamma_stability {
         // Test condition number
         for x in [0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0] {
             let h = 1e-8;
-            let g = gamma(x);
-            let g_plus = gamma(x + h);
-            let g_minus = gamma(x - h);
+            let g: f64 = gamma(x);
+            let g_plus: f64 = gamma(x + h);
+            let g_minus: f64 = gamma(x - h);
             
             let derivative = (g_plus - g_minus) / (2.0 * h);
-            let condition = (x * derivative / g).abs();
+            let condition = ((x * derivative / g).abs()) as f64;
             
             condition_numbers.insert(format!("x={}", x), condition);
         }
@@ -190,24 +188,25 @@ pub mod gamma_stability {
 /// Analyze Bessel function stability
 pub mod bessel_stability {
     use super::*;
-    use crate::bessel::{j0, j1, jn, y0, y1, yn};
+    use crate::bessel::{j0, j1, jn};
 
     pub fn analyze_bessel_j_stability() -> StabilityAnalysis {
         let mut issues = Vec::new();
+        #[allow(unused_mut)]
         let mut condition_numbers = HashMap::new();
         
         // Test small arguments
         for x in [1e-10, 1e-8, 1e-6, 1e-4] {
-            let j0_val = j0(x);
-            let j1_val = j1(x);
+            let j0_val: f64 = j0(x);
+            let j1_val: f64 = j1(x);
             
             // J_0(x) ≈ 1 - x²/4 for small x
-            let j0_expected = 1.0 - x * x / 4.0;
-            let j0_error = (j0_val - j0_expected).abs() / j0_expected.abs();
+            let j0_expected: f64 = 1.0 - x * x / 4.0;
+            let j0_error = ((j0_val - j0_expected).abs() / j0_expected.abs()) as f64;
             
             // J_1(x) ≈ x/2 for small x
-            let j1_expected = x / 2.0;
-            let j1_error = (j1_val - j1_expected).abs() / j1_expected.abs();
+            let j1_expected: f64 = x / 2.0;
+            let j1_error = ((j1_val - j1_expected).abs() / j1_expected.abs()) as f64;
             
             if j0_error > 1e-6 || j1_error > 1e-6 {
                 issues.push(StabilityIssue::LossOfSignificance {
@@ -278,17 +277,17 @@ pub mod bessel_stability {
 /// Analyze error function stability
 pub mod erf_stability {
     use super::*;
-    use crate::{erf, erfc, erfinv, erfcinv};
+    use crate::{erf, erfc, erfinv};
 
     pub fn analyze_erf_stability() -> StabilityAnalysis {
         let mut issues = Vec::new();
         
         // Test erfc for large positive x
         for x in [5.0, 10.0, 20.0, 30.0, 40.0] {
-            let erfc_val = erfc(x);
+            let erfc_val: f64 = erfc(x);
             
             // erfc(x) ~ exp(-x²)/(x*sqrt(π)) for large x
-            let expected = (-x * x).exp() / (x * f64::consts::PI.sqrt());
+            let expected = ((-x * x).exp() / (x * f64::consts::PI.sqrt())) as f64;
             let rel_error = (erfc_val - expected).abs() / expected;
             
             if erfc_val == 0.0 {
@@ -305,7 +304,7 @@ pub mod erf_stability {
         
         // Test erfinv near ±1
         for p in [0.9999, 0.99999, 0.999999, -0.9999, -0.99999, -0.999999] {
-            let x = erfinv(p);
+            let x: f64 = erfinv(p);
             
             if x.is_infinite() || x.abs() > 10.0 {
                 issues.push(StabilityIssue::NumericalInstability {
@@ -317,12 +316,12 @@ pub mod erf_stability {
         
         // Test catastrophic cancellation in erf(x) - 1 for large x
         for x in [2.0, 3.0, 4.0, 5.0] {
-            let erf_val = erf(x);
+            let erf_val: f64 = erf(x);
             let diff = erf_val - 1.0;
             
             // This difference should equal -erfc(x)
-            let expected = -erfc(x);
-            let rel_error = (diff - expected).abs() / expected.abs();
+            let expected: f64 = -erfc(x);
+            let rel_error = ((diff - expected).abs() / expected.abs()) as f64;
             
             if rel_error > 1e-10 {
                 issues.push(StabilityIssue::CatastrophicCancellation {

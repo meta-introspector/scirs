@@ -345,8 +345,7 @@ mod tests {
         let mut rtree1: RTree<i32> = RTree::new(2, 2, 4).unwrap();
         let mut rtree2: RTree<char> = RTree::new(2, 2, 4).unwrap();
 
-        // Insert rectangles (not just points) into the first R-tree
-        // Using insert_rectangle to create proper rectangles with area
+        // Insert rectangles into the first R-tree
         let rectangles1 = vec![
             (array![0.0, 0.0], array![0.6, 0.6], 0),
             (array![0.4, 0.0], array![1.0, 0.6], 1),
@@ -354,10 +353,8 @@ mod tests {
             (array![0.4, 0.4], array![1.0, 1.0], 3),
         ];
 
-        for (min_corner, _max_corner, value) in rectangles1 {
-            // TODO: Currently only point insertion is supported
-            // For now, insert the min corner as a point
-            rtree1.insert(min_corner, value).unwrap();
+        for (min_corner, max_corner, value) in rectangles1 {
+            rtree1.insert_rectangle(min_corner, max_corner, value).unwrap();
         }
 
         // Insert rectangles into the second R-tree
@@ -368,10 +365,8 @@ mod tests {
             (array![0.8, 0.8], array![1.2, 1.2], 'D'),
         ];
 
-        for (min_corner, _max_corner, value) in rectangles2 {
-            // TODO: Currently only point insertion is supported
-            // For now, insert the min corner as a point
-            rtree2.insert(min_corner, value).unwrap();
+        for (min_corner, max_corner, value) in rectangles2 {
+            rtree2.insert_rectangle(min_corner, max_corner, value).unwrap();
         }
 
         // Perform a spatial join with an intersection predicate
@@ -385,14 +380,15 @@ mod tests {
             "Expected spatial join to find intersecting rectangles"
         );
 
-        // Rectangle A should intersect with rectangles 0, 1, 2, and 3
-        // Rectangle B should intersect with rectangles 1 and 3
-        // Rectangle C should intersect with rectangles 2 and 3
-        // Rectangle D should intersect with rectangle 3
-        // So we expect at least 8 intersections
-        assert!(
-            join_results.len() >= 8,
-            "Expected at least 8 intersections, found {}",
+        // With the given rectangles:
+        // Rectangle A [0.3,0.3]x[0.7,0.7] intersects with all 4 rectangles (0,1,2,3)
+        // Rectangle B [0.8,0.3]x[1.2,0.7] intersects with rectangles 1 and 3
+        // Rectangle C [0.3,0.8]x[0.7,1.2] intersects with rectangles 2 and 3
+        // Rectangle D [0.8,0.8]x[1.2,1.2] intersects with rectangle 3
+        // Total expected intersections: 4 + 2 + 2 + 1 = 9
+        assert_eq!(
+            join_results.len(), 9,
+            "Expected 9 intersections, found {}",
             join_results.len()
         );
 

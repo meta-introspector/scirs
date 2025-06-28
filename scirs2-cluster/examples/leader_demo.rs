@@ -2,9 +2,8 @@
 
 use ndarray::array;
 use scirs2_cluster::{
-    euclidean_distance, leader_clustering, leader_to_model, leader_tree_to_model, manhattan_distance,
-    save_leader, save_leader_tree, LeaderClustering, LeaderModel, LeaderTree, LeaderTreeModel,
-    SerializableModel,
+    euclidean_distance, leader_clustering, manhattan_distance,
+    LeaderClustering, LeaderTree, LeaderNode,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -128,42 +127,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Shuffled order - {} clusters", leaders_shuf.nrows());
     println!("(Results may differ due to order-dependent nature of Leader algorithm)");
 
-    // Example 7: Serialization and persistence
-    println!("\nExample 7: Serialization and persistence");
-    
-    // Save Leader algorithm results
-    let (leaders, labels) = leader_clustering(data.view(), 2.0, euclidean_distance)?;
-    save_leader("leader_model.json", leaders.clone(), 2.0, Some(labels.clone()))?;
-    println!("Leader model saved to 'leader_model.json'");
-    
-    // Load and use the model
-    let loaded_model = LeaderModel::load_from_file("leader_model.json")?;
-    println!("Loaded model with {} leaders", loaded_model.leaders.nrows());
-    
-    // Make predictions with loaded model
-    let test_data = array![[1.3, 1.3], [5.3, 5.3], [10.3, 1.3]];
-    let predictions = loaded_model.predict(test_data.view())?;
-    println!("Predictions: {:?}", predictions);
-    
-    // Save hierarchical Leader tree
-    let tree = LeaderTree::build_hierarchical(data.view(), &[5.0, 2.0])?;
-    save_leader_tree("leader_tree.json", &tree)?;
-    println!("Leader tree saved to 'leader_tree.json'");
-    
-    // Load the tree model
-    let loaded_tree = LeaderTreeModel::load_from_file("leader_tree.json")?;
-    println!("Loaded tree with {} root nodes and {} total nodes", 
-             loaded_tree.roots.len(), loaded_tree.node_count());
-    
-    // Clean up temporary files
-    std::fs::remove_file("leader_model.json").ok();
-    std::fs::remove_file("leader_tree.json").ok();
 
     Ok(())
 }
 
 fn print_tree_node<F: num_traits::Float + std::fmt::Display>(
-    node: &scirs2_cluster::LeaderNode<F>,
+    node: &LeaderNode<F>,
     depth: usize,
     index: usize,
 ) {

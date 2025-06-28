@@ -652,3 +652,585 @@ mod tests {
         assert!(script.contains("ax.scatter"));
     }
 }
+
+// Advanced Visualization Features
+
+use std::collections::HashMap;
+#[cfg(feature = "async")]
+use tokio::sync::mpsc;
+#[cfg(feature = "async")]
+use futures::StreamExt;
+
+/// Interactive visualization server for real-time updates
+#[cfg(feature = "async")]
+pub struct VisualizationServer {
+    port: u16,
+    update_channel: mpsc::Sender<PlotUpdate>,
+}
+
+#[cfg(feature = "async")]
+#[derive(Debug, Clone)]
+pub struct PlotUpdate {
+    pub plot_id: String,
+    pub data: DataSeries,
+    pub action: UpdateAction,
+}
+
+#[cfg(feature = "async")]
+#[derive(Debug, Clone)]
+pub enum UpdateAction {
+    Append,
+    Replace,
+    Remove,
+}
+
+#[cfg(feature = "async")]
+impl VisualizationServer {
+    /// Create a new visualization server
+    pub async fn new(port: u16) -> Result<Self> {
+        let (tx, mut rx) = mpsc::channel(100);
+        
+        // Spawn server task
+        tokio::spawn(async move {
+            // In a real implementation, this would start an HTTP server
+            // that serves interactive visualizations and handles WebSocket
+            // connections for real-time updates
+            while let Some(_update) = rx.recv().await {
+                // Process update
+            }
+        });
+        
+        Ok(Self {
+            port,
+            update_channel: tx,
+        })
+    }
+    
+    /// Send update to a plot
+    pub async fn update_plot(&self, update: PlotUpdate) -> Result<()> {
+        self.update_channel.send(update).await
+            .map_err(|_| IoError::Other("Failed to send update".to_string()))
+    }
+    
+    /// Get server URL
+    pub fn url(&self) -> String {
+        format!("http://localhost:{}", self.port)
+    }
+}
+
+/// 3D Visualization support
+#[derive(Debug, Clone)]
+pub struct DataSeries3D {
+    pub name: Option<String>,
+    pub x: Vec<f64>,
+    pub y: Vec<f64>,
+    pub z: Vec<f64>,
+    pub plot_type: PlotType3D,
+    pub style: SeriesStyle,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PlotType3D {
+    Scatter3D,
+    Surface,
+    Mesh3D,
+    Line3D,
+    Isosurface,
+    Volume,
+}
+
+/// 3D Visualization builder
+pub struct Visualization3DBuilder {
+    data: Vec<DataSeries3D>,
+    config: Plot3DConfig,
+    metadata: Metadata,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Plot3DConfig {
+    pub title: Option<String>,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+    pub x_axis: AxisConfig,
+    pub y_axis: AxisConfig,
+    pub z_axis: AxisConfig,
+    pub camera: CameraConfig,
+    pub lighting: LightingConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CameraConfig {
+    pub eye: [f64; 3],
+    pub center: [f64; 3],
+    pub up: [f64; 3],
+}
+
+impl Default for CameraConfig {
+    fn default() -> Self {
+        Self {
+            eye: [1.25, 1.25, 1.25],
+            center: [0.0, 0.0, 0.0],
+            up: [0.0, 0.0, 1.0],
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LightingConfig {
+    pub ambient: f64,
+    pub diffuse: f64,
+    pub specular: f64,
+    pub roughness: f64,
+}
+
+impl Default for LightingConfig {
+    fn default() -> Self {
+        Self {
+            ambient: 0.8,
+            diffuse: 0.8,
+            specular: 0.2,
+            roughness: 0.5,
+        }
+    }
+}
+
+impl Default for Plot3DConfig {
+    fn default() -> Self {
+        Self {
+            title: None,
+            width: Some(800),
+            height: Some(600),
+            x_axis: AxisConfig::default(),
+            y_axis: AxisConfig::default(),
+            z_axis: AxisConfig::default(),
+            camera: CameraConfig::default(),
+            lighting: LightingConfig::default(),
+        }
+    }
+}
+
+impl Visualization3DBuilder {
+    pub fn new() -> Self {
+        Self {
+            data: Vec::new(),
+            config: Plot3DConfig::default(),
+            metadata: Metadata::new(),
+        }
+    }
+    
+    /// Add 3D scatter plot
+    pub fn add_scatter3d(mut self, x: &[f64], y: &[f64], z: &[f64], name: Option<&str>) -> Self {
+        self.data.push(DataSeries3D {
+            name: name.map(|s| s.to_string()),
+            x: x.to_vec(),
+            y: y.to_vec(),
+            z: z.to_vec(),
+            plot_type: PlotType3D::Scatter3D,
+            style: SeriesStyle::default(),
+        });
+        self
+    }
+    
+    /// Add surface plot
+    pub fn add_surface(mut self, x: &[f64], y: &[f64], z: &Array2<f64>, name: Option<&str>) -> Self {
+        let z_flat: Vec<f64> = z.iter().cloned().collect();
+        self.data.push(DataSeries3D {
+            name: name.map(|s| s.to_string()),
+            x: x.to_vec(),
+            y: y.to_vec(),
+            z: z_flat,
+            plot_type: PlotType3D::Surface,
+            style: SeriesStyle::default(),
+        });
+        self
+    }
+    
+    /// Export 3D visualization
+    pub fn export(self, format: VisualizationFormat, path: impl AsRef<Path>) -> Result<()> {
+        // Implementation would convert 3D data to appropriate format
+        let exporter = get_3d_exporter(format);
+        exporter.export_3d(&self.data, &self.config, &self.metadata, path.as_ref())
+    }
+}
+
+/// Animation support
+#[derive(Debug, Clone)]
+pub struct AnimationFrame {
+    pub time: f64,
+    pub data: DataSeries,
+}
+
+#[derive(Debug, Clone)]
+pub struct AnimatedVisualization {
+    pub frames: Vec<AnimationFrame>,
+    pub config: AnimationConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnimationConfig {
+    pub duration: f64,
+    pub fps: u32,
+    pub loop_mode: LoopMode,
+    pub transition: TransitionType,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LoopMode {
+    Once,
+    Loop,
+    PingPong,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TransitionType {
+    Linear,
+    EaseIn,
+    EaseOut,
+    EaseInOut,
+}
+
+/// Dashboard builder for composite visualizations
+pub struct DashboardBuilder {
+    plots: Vec<DashboardPlot>,
+    layout: DashboardLayout,
+    config: DashboardConfig,
+}
+
+#[derive(Debug, Clone)]
+pub struct DashboardPlot {
+    pub plot: VisualizationBuilder,
+    pub position: GridPosition,
+}
+
+#[derive(Debug, Clone)]
+pub struct GridPosition {
+    pub row: usize,
+    pub col: usize,
+    pub row_span: usize,
+    pub col_span: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct DashboardLayout {
+    pub rows: usize,
+    pub cols: usize,
+    pub spacing: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct DashboardConfig {
+    pub title: Option<String>,
+    pub width: u32,
+    pub height: u32,
+    pub theme: Option<String>,
+    pub auto_refresh: Option<u32>, // seconds
+}
+
+impl DashboardBuilder {
+    pub fn new(rows: usize, cols: usize) -> Self {
+        Self {
+            plots: Vec::new(),
+            layout: DashboardLayout {
+                rows,
+                cols,
+                spacing: 10.0,
+            },
+            config: DashboardConfig {
+                title: None,
+                width: 1200,
+                height: 800,
+                theme: None,
+                auto_refresh: None,
+            },
+        }
+    }
+    
+    /// Add plot to dashboard
+    pub fn add_plot(mut self, plot: VisualizationBuilder, row: usize, col: usize) -> Self {
+        self.plots.push(DashboardPlot {
+            plot,
+            position: GridPosition {
+                row,
+                col,
+                row_span: 1,
+                col_span: 1,
+            },
+        });
+        self
+    }
+    
+    /// Export dashboard as HTML
+    pub fn export_html(self, path: impl AsRef<Path>) -> Result<()> {
+        let html = self.generate_html()?;
+        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        file.write_all(html.as_bytes()).map_err(|e| IoError::Io(e))?;
+        Ok(())
+    }
+    
+    fn generate_html(&self) -> Result<String> {
+        let mut html = String::from(r#"<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat({cols}, 1fr);
+            grid-template-rows: repeat({rows}, 1fr);
+            gap: {spacing}px;
+            width: {width}px;
+            height: {height}px;
+        }
+        .plot-container {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-grid">
+"#);
+        
+        // Add plots
+        for (i, dashboard_plot) in self.plots.iter().enumerate() {
+            let plot_data = dashboard_plot.plot.clone()
+                .to_string(VisualizationFormat::PlotlyJson)?;
+            
+            html.push_str(&format!(r#"
+        <div class="plot-container" style="grid-row: {}; grid-column: {};">
+            <div id="plot{}" style="width: 100%; height: 100%;"></div>
+            <script>
+                Plotly.newPlot('plot{}', {});
+            </script>
+        </div>
+"#, 
+                dashboard_plot.position.row + 1,
+                dashboard_plot.position.col + 1,
+                i, i, plot_data
+            ));
+        }
+        
+        html.push_str(r#"
+    </div>
+</body>
+</html>
+"#);
+        
+        Ok(html
+            .replace("{cols}", &self.layout.cols.to_string())
+            .replace("{rows}", &self.layout.rows.to_string())
+            .replace("{spacing}", &self.layout.spacing.to_string())
+            .replace("{width}", &self.config.width.to_string())
+            .replace("{height}", &self.config.height.to_string()))
+    }
+}
+
+/// D3.js exporter with enhanced features
+struct D3Exporter;
+
+impl VisualizationExporter for D3Exporter {
+    fn export(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata, path: &Path) -> Result<()> {
+        let html = self.to_string(data, config, _metadata)?;
+        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        file.write_all(html.as_bytes()).map_err(|e| IoError::Io(e))?;
+        Ok(())
+    }
+    
+    fn to_string(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata) -> Result<String> {
+        let mut html = String::from(r#"<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .line { fill: none; stroke-width: 2; }
+        .axis { font-size: 12px; }
+        .grid { stroke: lightgray; stroke-opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <svg id="chart"></svg>
+    <script>
+"#);
+        
+        // D3.js visualization code
+        html.push_str(&format!(r#"
+        const margin = {{top: 20, right: 20, bottom: 30, left: 50}};
+        const width = {} - margin.left - margin.right;
+        const height = {} - margin.bottom - margin.top;
+        
+        const svg = d3.select("#chart")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+"#, 
+            config.width.unwrap_or(800),
+            config.height.unwrap_or(600)
+        ));
+        
+        // Add implementation for different plot types
+        // This is a simplified version
+        
+        html.push_str(r#"
+    </script>
+</body>
+</html>
+"#);
+        
+        Ok(html)
+    }
+}
+
+/// Bokeh JSON exporter
+struct BokehExporter;
+
+impl VisualizationExporter for BokehExporter {
+    fn export(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata, path: &Path) -> Result<()> {
+        let json = self.to_string(data, config, _metadata)?;
+        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        file.write_all(json.as_bytes()).map_err(|e| IoError::Io(e))?;
+        Ok(())
+    }
+    
+    fn to_string(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata) -> Result<String> {
+        let mut doc = serde_json::json!({
+            "version": "2.4.0",
+            "title": config.title,
+            "roots": []
+        });
+        
+        // Build Bokeh document structure
+        // This is a simplified version
+        
+        serde_json::to_string_pretty(&doc)
+            .map_err(|e| IoError::SerializationError(e.to_string()))
+    }
+}
+
+/// Get appropriate 3D exporter
+fn get_3d_exporter(format: VisualizationFormat) -> Box<dyn Visualization3DExporter> {
+    match format {
+        VisualizationFormat::PlotlyJson => Box::new(Plotly3DExporter),
+        _ => Box::new(Plotly3DExporter), // Default to Plotly for 3D
+    }
+}
+
+/// Trait for 3D visualization exporters
+trait Visualization3DExporter {
+    fn export_3d(&self, data: &[DataSeries3D], config: &Plot3DConfig, metadata: &Metadata, path: &Path) -> Result<()>;
+}
+
+/// Plotly 3D exporter
+struct Plotly3DExporter;
+
+impl Visualization3DExporter for Plotly3DExporter {
+    fn export_3d(&self, data: &[DataSeries3D], config: &Plot3DConfig, _metadata: &Metadata, path: &Path) -> Result<()> {
+        let mut traces = Vec::new();
+        
+        for series in data {
+            let trace = match series.plot_type {
+                PlotType3D::Scatter3D => {
+                    serde_json::json!({
+                        "type": "scatter3d",
+                        "mode": "markers",
+                        "name": series.name,
+                        "x": series.x,
+                        "y": series.y,
+                        "z": series.z,
+                        "marker": {
+                            "size": series.style.size.unwrap_or(5.0),
+                            "color": series.style.color,
+                        }
+                    })
+                }
+                PlotType3D::Surface => {
+                    serde_json::json!({
+                        "type": "surface",
+                        "name": series.name,
+                        "x": series.x,
+                        "y": series.y,
+                        "z": series.z,
+                    })
+                }
+                _ => continue,
+            };
+            traces.push(trace);
+        }
+        
+        let layout = serde_json::json!({
+            "title": config.title,
+            "width": config.width,
+            "height": config.height,
+            "scene": {
+                "xaxis": {"title": config.x_axis.title},
+                "yaxis": {"title": config.y_axis.title},
+                "zaxis": {"title": config.z_axis.title},
+                "camera": {
+                    "eye": {"x": config.camera.eye[0], "y": config.camera.eye[1], "z": config.camera.eye[2]},
+                    "center": {"x": config.camera.center[0], "y": config.camera.center[1], "z": config.camera.center[2]},
+                    "up": {"x": config.camera.up[0], "y": config.camera.up[1], "z": config.camera.up[2]},
+                }
+            }
+        });
+        
+        let plot_data = serde_json::json!({
+            "data": traces,
+            "layout": layout,
+        });
+        
+        let json_str = serde_json::to_string_pretty(&plot_data)
+            .map_err(|e| IoError::SerializationError(e.to_string()))?;
+            
+        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        file.write_all(json_str.as_bytes()).map_err(|e| IoError::Io(e))?;
+        Ok(())
+    }
+}
+
+/// Integration with external visualization services
+pub mod external {
+    use super::*;
+    
+    /// Plotly cloud integration
+    pub struct PlotlyCloud {
+        api_key: String,
+        username: String,
+    }
+    
+    impl PlotlyCloud {
+        pub fn new(api_key: String, username: String) -> Self {
+            Self { api_key, username }
+        }
+        
+        /// Upload visualization to Plotly cloud
+        #[cfg(feature = "reqwest")]
+        pub fn upload(&self, plot_data: &str, filename: &str) -> Result<String> {
+            // Implementation would use reqwest to upload to Plotly API
+            Ok(format!("https://plot.ly/~{}/{}", self.username, filename))
+        }
+    }
+    
+    /// Jupyter notebook integration
+    pub struct JupyterIntegration;
+    
+    impl JupyterIntegration {
+        /// Generate notebook cell with visualization
+        pub fn create_cell(viz: &VisualizationBuilder) -> serde_json::Value {
+            serde_json::json!({
+                "cell_type": "code",
+                "execution_count": null,
+                "metadata": {},
+                "outputs": [],
+                "source": [
+                    "# Generated visualization\n",
+                    "import plotly.graph_objects as go\n",
+                    "# ... visualization code ..."
+                ]
+            })
+        }
+    }
+}

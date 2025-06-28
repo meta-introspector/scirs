@@ -363,12 +363,364 @@ where
     }
 }
 
+/// Map coordinates with SciPy-compatible interface
+///
+/// # Arguments
+/// * `input` - Input array
+/// * `coordinates` - The coordinates at which input is evaluated
+/// * `order` - The order of the spline interpolation (0-5)
+/// * `mode` - How to handle boundaries
+/// * `cval` - Value to use for constant mode
+/// * `prefilter` - Whether to apply spline prefilter
+pub fn map_coordinates<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    coordinates: &Array2<f64>,
+    order: Option<usize>,
+    mode: Option<&str>,
+    cval: Option<T>,
+    prefilter: Option<bool>,
+) -> NdimageResult<Array<T, ndarray::Ix1>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Constant);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::interpolation::map_coordinates(
+        input.view(),
+        coordinates.view(),
+        order.unwrap_or(3),
+        boundary_mode,
+        prefilter.unwrap_or(true),
+    )
+}
+
+/// Zoom array with SciPy-compatible interface
+///
+/// # Arguments
+/// * `input` - Input array
+/// * `zoom` - The zoom factor along each axis
+/// * `order` - The order of the spline interpolation
+/// * `mode` - How to handle boundaries
+/// * `cval` - Value to use for constant mode
+/// * `prefilter` - Whether to apply spline prefilter
+pub fn zoom<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    zoom_factors: impl Into<Vec<f64>>,
+    order: Option<usize>,
+    mode: Option<&str>,
+    cval: Option<T>,
+    prefilter: Option<bool>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    let zoom_factors = zoom_factors.into();
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Constant);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::interpolation::zoom(
+        input.view(),
+        &zoom_factors,
+        order.unwrap_or(3),
+        boundary_mode,
+        prefilter.unwrap_or(true),
+    )
+}
+
+/// Rotate array with SciPy-compatible interface
+///
+/// # Arguments
+/// * `input` - Input array
+/// * `angle` - The rotation angle in degrees
+/// * `axes` - The two axes that define the plane of rotation
+/// * `reshape` - Whether to reshape the output array
+/// * `order` - The order of the spline interpolation
+/// * `mode` - How to handle boundaries
+/// * `cval` - Value to use for constant mode
+pub fn rotate<T>(
+    input: &ArrayView2<T>,
+    angle: f64,
+    axes: Option<(usize, usize)>,
+    reshape: Option<bool>,
+    order: Option<usize>,
+    mode: Option<&str>,
+    cval: Option<T>,
+) -> NdimageResult<Array<T, ndarray::Ix2>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+{
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Constant);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::interpolation::rotate(
+        input.view(),
+        angle,
+        None, // center
+        reshape.unwrap_or(false),
+        order.unwrap_or(3),
+        boundary_mode,
+    )
+}
+
+/// Shift array with SciPy-compatible interface
+pub fn shift<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    shift: impl Into<Vec<f64>>,
+    order: Option<usize>,
+    mode: Option<&str>,
+    cval: Option<T>,
+    prefilter: Option<bool>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    let shift = shift.into();
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Constant);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::interpolation::shift(
+        input.view(),
+        &shift,
+        order.unwrap_or(3),
+        boundary_mode,
+        prefilter.unwrap_or(true),
+    )
+}
+
+/// Laplace filter with SciPy-compatible interface
+pub fn laplace<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    mode: Option<&str>,
+    cval: Option<T>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::filters::laplace_filter(input.view(), boundary_mode)
+}
+
+/// Prewitt filter with SciPy-compatible interface
+pub fn prewitt<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    axis: Option<usize>,
+    mode: Option<&str>,
+    cval: Option<T>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::filters::prewitt_filter(input.view(), axis, Some(boundary_mode))
+}
+
+/// Generic filter with SciPy-compatible interface
+///
+/// # Arguments
+/// * `input` - Input array
+/// * `function` - Function to apply to each neighborhood
+/// * `size` - Size of the filter footprint
+/// * `footprint` - Boolean array for the filter footprint
+/// * `mode` - How to handle boundaries
+/// * `cval` - Value to use for constant mode
+/// * `origin` - The origin parameter controls the placement of the filter
+pub fn generic_filter<T, D, F>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    function: F,
+    size: Option<Vec<usize>>,
+    footprint: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
+    mode: Option<&str>,
+    cval: Option<T>,
+    origin: Option<Vec<isize>>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+    F: Fn(&[T]) -> T + Clone + Send + Sync + 'static,
+{
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    if let Some(fp) = footprint {
+        crate::filters::generic_filter_footprint(
+            input.view(),
+            function,
+            fp.view(),
+            boundary_mode,
+            origin.unwrap_or_else(|| vec![0; input.ndim()]),
+        )
+    } else {
+        let size = size.unwrap_or_else(|| vec![3; input.ndim()]);
+        crate::filters::generic_filter(
+            input.view(),
+            function,
+            size,
+            boundary_mode,
+            origin.unwrap_or_else(|| vec![0; input.ndim()]),
+        )
+    }
+}
+
+/// Maximum filter with SciPy-compatible interface
+pub fn maximum_filter<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    size: Option<Vec<usize>>,
+    footprint: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
+    mode: Option<&str>,
+    cval: Option<T>,
+    origin: Option<Vec<isize>>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + PartialOrd + Send + Sync + 'static,
+    D: Dimension,
+{
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::neg_infinity())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    if let Some(fp) = footprint {
+        crate::filters::maximum_filter_footprint(
+            input.view(),
+            fp.view(),
+            boundary_mode,
+            origin.unwrap_or_else(|| vec![0; input.ndim()]),
+        )
+    } else {
+        let size = size.unwrap_or_else(|| vec![3; input.ndim()]);
+        crate::filters::maximum_filter(
+            input.view(),
+            size,
+            boundary_mode,
+            origin.unwrap_or_else(|| vec![0; input.ndim()]),
+        )
+    }
+}
+
+/// Minimum filter with SciPy-compatible interface
+pub fn minimum_filter<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    size: Option<Vec<usize>>,
+    footprint: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
+    mode: Option<&str>,
+    cval: Option<T>,
+    origin: Option<Vec<isize>>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + PartialOrd + Send + Sync + 'static,
+    D: Dimension,
+{
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::infinity())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    if let Some(fp) = footprint {
+        crate::filters::minimum_filter_footprint(
+            input.view(),
+            fp.view(),
+            boundary_mode,
+            origin.unwrap_or_else(|| vec![0; input.ndim()]),
+        )
+    } else {
+        let size = size.unwrap_or_else(|| vec![3; input.ndim()]);
+        crate::filters::minimum_filter(
+            input.view(),
+            size,
+            boundary_mode,
+            origin.unwrap_or_else(|| vec![0; input.ndim()]),
+        )
+    }
+}
+
+/// Percentile filter with SciPy-compatible interface
+pub fn percentile_filter<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    percentile: f64,
+    size: Option<Vec<usize>>,
+    footprint: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
+    mode: Option<&str>,
+    cval: Option<T>,
+    origin: Option<Vec<isize>>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + PartialOrd + Send + Sync + 'static,
+    D: Dimension,
+{
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    if footprint.is_some() {
+        return Err(NdimageError::NotImplementedError(
+            "Percentile filter with footprint not yet implemented".into(),
+        ));
+    }
+    
+    let size = size.unwrap_or_else(|| vec![3; input.ndim()]);
+    crate::filters::percentile_filter(
+        input.view(),
+        percentile,
+        size,
+        boundary_mode,
+        origin.unwrap_or_else(|| vec![0; input.ndim()]),
+    )
+}
+
+/// Find objects with SciPy-compatible interface
+pub fn find_objects<D>(
+    input: &ArrayBase<impl Data<Elem = i32>, D>,
+    max_label: Option<i32>,
+) -> Vec<Vec<(usize, usize)>>
+where
+    D: Dimension,
+{
+    crate::measurements::find_objects(input.view(), max_label)
+}
+
 /// Helper module for common operations
 pub mod ndimage {
     pub use super::{
         affine_transform, binary_dilation, binary_erosion, center_of_mass,
-        distance_transform_edt, gaussian_filter, grey_erosion, label,
-        median_filter, sobel, uniform_filter,
+        distance_transform_edt, find_objects, gaussian_filter, generic_filter,
+        grey_erosion, label, laplace, map_coordinates, maximum_filter,
+        median_filter, minimum_filter, percentile_filter, prewitt, rotate,
+        shift, sobel, uniform_filter, zoom,
     };
 }
 
@@ -397,6 +749,51 @@ mod tests {
     fn test_scipy_compat_binary_erosion() {
         let input = array![[true, false], [false, true]];
         let result = binary_erosion(&input, None, None, None, None).unwrap();
+        assert_eq!(result.shape(), input.shape());
+    }
+    
+    #[test]
+    fn test_scipy_compat_zoom() {
+        let input = array![[1.0, 2.0], [3.0, 4.0]];
+        let result = zoom(&input, vec![2.0, 2.0], None, None, None, None).unwrap();
+        assert_eq!(result.shape(), &[4, 4]);
+    }
+    
+    #[test]
+    fn test_scipy_compat_rotate() {
+        let input = array![[1.0, 2.0], [3.0, 4.0]];
+        let result = rotate(&input.view(), 45.0, None, None, None, None, None).unwrap();
+        assert_eq!(result.ndim(), 2);
+    }
+    
+    #[test]
+    fn test_scipy_compat_shift() {
+        let input = array![[1.0, 2.0], [3.0, 4.0]];
+        let result = shift(&input, vec![0.5, 0.5], None, None, None, None).unwrap();
+        assert_eq!(result.shape(), input.shape());
+    }
+    
+    #[test]
+    fn test_scipy_compat_laplace() {
+        let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+        let result = laplace(&input, None, None).unwrap();
+        assert_eq!(result.shape(), input.shape());
+    }
+    
+    #[test]
+    fn test_scipy_compat_maximum_filter() {
+        let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+        let result = maximum_filter(&input, Some(vec![3, 3]), None, None, None, None).unwrap();
+        assert_eq!(result.shape(), input.shape());
+    }
+    
+    #[test]
+    fn test_scipy_compat_generic_filter() {
+        let input = array![[1.0f64, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+        let mean_func = |values: &[f64]| -> f64 {
+            values.iter().sum::<f64>() / values.len() as f64
+        };
+        let result = generic_filter(&input, mean_func, Some(vec![3, 3]), None, None, None, None).unwrap();
         assert_eq!(result.shape(), input.shape());
     }
 }

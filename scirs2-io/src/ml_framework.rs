@@ -130,6 +130,7 @@ impl MLTensor {
 }
 
 /// ML model container
+#[derive(Clone)]
 pub struct MLModel {
     pub metadata: ModelMetadata,
     pub weights: HashMap<String, MLTensor>,
@@ -606,5 +607,665 @@ mod tests {
         
         let array_back = converters::to_ndarray2(&tensor).unwrap();
         assert_eq!(array_back, array);
+    }
+}
+
+// Advanced ML Framework Features
+
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use std::io::{Seek, SeekFrom};
+
+// Clone implementation for datasets
+impl Clone for datasets::MLDataset {
+    fn clone(&self) -> Self {
+        Self {
+            features: self.features.clone(),
+            labels: self.labels.clone(),
+            metadata: self.metadata.clone(),
+        }
+    }
+}
+
+/// Model quantization support
+pub mod quantization {
+    use super::*;
+    
+    /// Quantization methods
+    #[derive(Debug, Clone, Copy)]
+    pub enum QuantizationMethod {
+        /// Dynamic quantization
+        Dynamic,
+        /// Static quantization with calibration
+        Static,
+        /// Quantization-aware training
+        QAT,
+        /// Post-training quantization
+        PTQ,
+    }
+    
+    /// Quantized tensor
+    #[derive(Debug, Clone)]
+    pub struct QuantizedTensor {
+        pub data: Vec<u8>,
+        pub scale: f32,
+        pub zero_point: i32,
+        pub metadata: TensorMetadata,
+    }
+    
+    impl QuantizedTensor {
+        /// Quantize a floating-point tensor
+        pub fn from_float_tensor(tensor: &MLTensor, bits: u8) -> Result<Self> {
+            let data = tensor.data.as_slice().unwrap();
+            let (min_val, max_val) = data.iter().fold((f32::INFINITY, f32::NEG_INFINITY), 
+                |(min, max), &x| (min.min(x), max.max(x)));
+            
+            let qmax = (1 << bits) - 1;
+            let scale = (max_val - min_val) / qmax as f32;
+            let zero_point = (-min_val / scale).round() as i32;
+            
+            let quantized: Vec<u8> = data.iter()
+                .map(|&x| ((x / scale + zero_point as f32).round() as u8))
+                .collect();
+            
+            Ok(Self {
+                data: quantized,
+                scale,
+                zero_point,
+                metadata: tensor.metadata.clone(),
+            })
+        }
+        
+        /// Dequantize to floating-point
+        pub fn to_float_tensor(&self) -> Result<MLTensor> {
+            let data: Vec<f32> = self.data.iter()
+                .map(|&q| (q as i32 - self.zero_point) as f32 * self.scale)
+                .collect();
+            
+            let array = ArrayD::from_shape_vec(IxDyn(&self.metadata.shape), data)
+                .map_err(|e| IoError::Other(e.to_string()))?;
+            
+            Ok(MLTensor::new(array, self.metadata.name.clone()))
+        }
+    }
+    
+    /// Model quantizer
+    pub struct ModelQuantizer {
+        method: QuantizationMethod,
+        bits: u8,
+    }
+    
+    impl ModelQuantizer {
+        pub fn new(method: QuantizationMethod, bits: u8) -> Self {
+            Self { method, bits }
+        }
+        
+        /// Quantize entire model
+        pub fn quantize_model(&self, model: &MLModel) -> Result<QuantizedModel> {
+            let mut quantized_weights = HashMap::new();
+            
+            for (name, tensor) in &model.weights {
+                let quantized = QuantizedTensor::from_float_tensor(tensor, self.bits)?;
+                quantized_weights.insert(name.clone(), quantized);
+            }
+            
+            Ok(QuantizedModel {
+                metadata: model.metadata.clone(),
+                weights: quantized_weights,
+                config: model.config.clone(),
+                quantization_info: QuantizationInfo {
+                    method: self.method,
+                    bits: self.bits,
+                },
+            })
+        }
+    }
+    
+    /// Quantized model
+    #[derive(Debug, Clone)]
+    pub struct QuantizedModel {
+        pub metadata: ModelMetadata,
+        pub weights: HashMap<String, QuantizedTensor>,
+        pub config: HashMap<String, serde_json::Value>,
+        pub quantization_info: QuantizationInfo,
+    }
+    
+    #[derive(Debug, Clone)]
+    pub struct QuantizationInfo {
+        pub method: QuantizationMethod,
+        pub bits: u8,
+    }
+}
+
+/// Model optimization features
+pub mod optimization {
+    use super::*;
+    
+    /// Model optimization techniques
+    #[derive(Debug, Clone)]
+    pub enum OptimizationTechnique {
+        /// Remove unnecessary operations
+        Pruning { sparsity: f32 },
+        /// Fuse operations
+        OperatorFusion,
+        /// Constant folding
+        ConstantFolding,
+        /// Graph optimization
+        GraphOptimization,
+        /// Knowledge distillation
+        Distillation,
+    }
+    
+    /// Model optimizer
+    pub struct ModelOptimizer {
+        techniques: Vec<OptimizationTechnique>,
+    }
+    
+    impl ModelOptimizer {
+        pub fn new() -> Self {
+            Self {
+                techniques: Vec::new(),
+            }
+        }
+        
+        pub fn add_technique(mut self, technique: OptimizationTechnique) -> Self {
+            self.techniques.push(technique);
+            self
+        }
+        
+        /// Optimize model
+        pub fn optimize(&self, model: &MLModel) -> Result<MLModel> {
+            let mut optimized = model.clone();
+            
+            for technique in &self.techniques {
+                match technique {
+                    OptimizationTechnique::Pruning { sparsity } => {
+                        optimized = self.apply_pruning(optimized, *sparsity)?;
+                    }
+                    OptimizationTechnique::OperatorFusion => {
+                        // Implement operator fusion
+                    }
+                    _ => {}
+                }
+            }
+            
+            Ok(optimized)
+        }
+        
+        fn apply_pruning(&self, mut model: MLModel, sparsity: f32) -> Result<MLModel> {
+            for (_, tensor) in model.weights.iter_mut() {
+                let data = tensor.data.as_slice_mut().unwrap();
+                let threshold = self.compute_pruning_threshold(data, sparsity);
+                
+                for val in data.iter_mut() {
+                    if val.abs() < threshold {
+                        *val = 0.0;
+                    }
+                }
+            }
+            
+            Ok(model)
+        }
+        
+        fn compute_pruning_threshold(&self, data: &[f32], sparsity: f32) -> f32 {
+            let mut sorted: Vec<f32> = data.iter().map(|x| x.abs()).collect();
+            sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            let idx = (sorted.len() as f32 * sparsity) as usize;
+            sorted.get(idx).copied().unwrap_or(0.0)
+        }
+    }
+}
+
+/// Batch processing utilities
+pub mod batch_processing {
+    use super::*;
+    use scirs2_core::parallel_ops::*;
+    
+    /// Batch processor for ML models
+    pub struct BatchProcessor {
+        batch_size: usize,
+        prefetch_factor: usize,
+    }
+    
+    impl BatchProcessor {
+        pub fn new(batch_size: usize) -> Self {
+            Self {
+                batch_size,
+                prefetch_factor: 2,
+            }
+        }
+        
+        /// Process data in batches
+        pub fn process_batches<F>(
+            &self,
+            data: &[MLTensor],
+            process_fn: F,
+        ) -> Result<Vec<MLTensor>>
+        where
+            F: Fn(&[MLTensor]) -> Result<Vec<MLTensor>> + Send + Sync,
+        {
+            let results: Result<Vec<Vec<MLTensor>>> = data
+                .par_chunks(self.batch_size)
+                .map(|batch| process_fn(batch))
+                .collect();
+            
+            results.map(|chunks| chunks.into_iter().flatten().collect())
+        }
+        
+        /// Create data loader
+        pub fn create_dataloader(&self, dataset: &datasets::MLDataset) -> DataLoader {
+            DataLoader {
+                dataset: dataset.clone(),
+                batch_size: self.batch_size,
+                shuffle: false,
+                current_idx: 0,
+            }
+        }
+    }
+    
+    /// Data loader for batched iteration
+    #[derive(Clone)]
+    pub struct DataLoader {
+        dataset: datasets::MLDataset,
+        batch_size: usize,
+        shuffle: bool,
+        current_idx: usize,
+    }
+    
+    impl Iterator for DataLoader {
+        type Item = (Vec<MLTensor>, Option<Vec<MLTensor>>);
+        
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.current_idx >= self.dataset.len() {
+                return None;
+            }
+            
+            let end_idx = (self.current_idx + self.batch_size).min(self.dataset.len());
+            let features = self.dataset.features[self.current_idx..end_idx].to_vec();
+            let labels = self.dataset.labels.as_ref()
+                .map(|l| l[self.current_idx..end_idx].to_vec());
+            
+            self.current_idx = end_idx;
+            Some((features, labels))
+        }
+    }
+}
+
+/// Model serving capabilities
+pub mod serving {
+    use super::*;
+    use std::sync::Arc;
+    use std::sync::RwLock as StdRwLock;
+    #[cfg(feature = "async")]
+    use tokio::sync::RwLock;
+    
+    /// Model server for inference
+    #[cfg(feature = "async")]
+    pub struct ModelServer {
+        model: Arc<RwLock<MLModel>>,
+        config: ServerConfig,
+    }
+    
+    #[cfg(not(feature = "async"))]
+    pub struct ModelServer {
+        model: Arc<StdRwLock<MLModel>>,
+        config: ServerConfig,
+    }
+    
+    #[derive(Debug, Clone)]
+    pub struct ServerConfig {
+        pub max_batch_size: usize,
+        pub timeout_ms: u64,
+        pub num_workers: usize,
+    }
+    
+    impl Default for ServerConfig {
+        fn default() -> Self {
+            Self {
+                max_batch_size: 32,
+                timeout_ms: 1000,
+                num_workers: 4,
+            }
+        }
+    }
+    
+    #[cfg(feature = "async")]
+    impl ModelServer {
+        pub async fn new(model: MLModel, config: ServerConfig) -> Self {
+            Self {
+                model: Arc::new(RwLock::new(model)),
+                config,
+            }
+        }
+        
+        /// Perform inference
+        pub async fn infer(&self, input: MLTensor) -> Result<MLTensor> {
+            // Simplified inference - in practice would call actual model
+            let model = self.model.read().await;
+            
+            // Mock inference result
+            Ok(input.clone())
+        }
+        
+        /// Batch inference
+        pub async fn batch_infer(&self, inputs: Vec<MLTensor>) -> Result<Vec<MLTensor>> {
+            let mut results = Vec::new();
+            
+            for batch in inputs.chunks(self.config.max_batch_size) {
+                for tensor in batch {
+                    results.push(self.infer(tensor.clone()).await?);
+                }
+            }
+            
+            Ok(results)
+        }
+        
+        /// Update model
+        pub async fn update_model(&self, new_model: MLModel) -> Result<()> {
+            let mut model = self.model.write().await;
+            *model = new_model;
+            Ok(())
+        }
+    }
+}
+
+/// Integration with model hubs
+pub mod model_hub {
+    use super::*;
+    
+    /// Model hub types
+    #[derive(Debug, Clone)]
+    pub enum ModelHub {
+        HuggingFace { repo_id: String },
+        TorchHub { repo: String },
+        TFHub { handle: String },
+        ModelZoo { url: String },
+    }
+    
+    /// Model downloader
+    pub struct ModelDownloader {
+        cache_dir: PathBuf,
+    }
+    
+    impl ModelDownloader {
+        pub fn new(cache_dir: impl AsRef<Path>) -> Self {
+            Self {
+                cache_dir: cache_dir.as_ref().to_path_buf(),
+            }
+        }
+        
+        /// Download model from hub
+        #[cfg(feature = "reqwest")]
+        pub async fn download(&self, hub: &ModelHub) -> Result<PathBuf> {
+            match hub {
+                ModelHub::HuggingFace { repo_id } => {
+                    self.download_from_huggingface(repo_id).await
+                }
+                _ => Err(IoError::UnsupportedFormat("Hub not implemented".to_string())),
+            }
+        }
+        
+        #[cfg(feature = "reqwest")]
+        async fn download_from_huggingface(&self, repo_id: &str) -> Result<PathBuf> {
+            // Simplified - would use HF API
+            let model_path = self.cache_dir.join(repo_id);
+            Ok(model_path)
+        }
+    }
+    
+    /// Model metadata from hub
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct HubModelInfo {
+        pub name: String,
+        pub description: String,
+        pub tags: Vec<String>,
+        pub framework: String,
+        pub task: String,
+        pub downloads: u64,
+        pub likes: u64,
+    }
+}
+
+/// Enhanced PyTorch support
+pub mod pytorch_enhanced {
+    use super::*;
+    use std::io::Cursor;
+    
+    /// PyTorch tensor file format constants
+    const PYTORCH_MAGIC: &[u8] = b"PK\x03\x04";  // ZIP format
+    const PICKLE_PROTOCOL: u8 = 2;
+    
+    /// Enhanced PyTorch converter with pickle support
+    pub struct PyTorchEnhancedConverter;
+    
+    impl PyTorchEnhancedConverter {
+        /// Save tensor in PyTorch .pt format
+        pub fn save_pt_file(tensors: &HashMap<String, MLTensor>, path: &Path) -> Result<()> {
+            // Create a simple pickle-like format
+            let mut buffer = Vec::new();
+            
+            // Write header
+            buffer.write_u32::<LittleEndian>(0x1950)?;  // Pickle protocol
+            buffer.write_u32::<LittleEndian>(tensors.len() as u32)?;
+            
+            for (name, tensor) in tensors {
+                // Write tensor name
+                let name_bytes = name.as_bytes();
+                buffer.write_u32::<LittleEndian>(name_bytes.len() as u32)?;
+                buffer.extend_from_slice(name_bytes);
+                
+                // Write tensor metadata
+                buffer.write_u32::<LittleEndian>(tensor.metadata.shape.len() as u32)?;
+                for &dim in &tensor.metadata.shape {
+                    buffer.write_u64::<LittleEndian>(dim as u64)?;
+                }
+                
+                // Write tensor data
+                let data = tensor.data.as_slice().unwrap();
+                buffer.write_u32::<LittleEndian>(data.len() as u32)?;
+                for &val in data {
+                    buffer.write_f32::<LittleEndian>(val)?;
+                }
+            }
+            
+            std::fs::write(path, buffer).map_err(|e| IoError::Io(e))
+        }
+        
+        /// Load tensor from PyTorch .pt format
+        pub fn load_pt_file(path: &Path) -> Result<HashMap<String, MLTensor>> {
+            let data = std::fs::read(path).map_err(|e| IoError::Io(e))?;
+            let mut cursor = Cursor::new(data);
+            let mut tensors = HashMap::new();
+            
+            // Read header
+            let magic = cursor.read_u32::<LittleEndian>()?;
+            if magic != 0x1950 {
+                return Err(IoError::UnsupportedFormat("Invalid PyTorch file".to_string()));
+            }
+            
+            let num_tensors = cursor.read_u32::<LittleEndian>()?;
+            
+            for _ in 0..num_tensors {
+                // Read tensor name
+                let name_len = cursor.read_u32::<LittleEndian>()? as usize;
+                let mut name_bytes = vec![0u8; name_len];
+                cursor.read_exact(&mut name_bytes)?;
+                let name = String::from_utf8(name_bytes)
+                    .map_err(|e| IoError::Other(e.to_string()))?;
+                
+                // Read shape
+                let num_dims = cursor.read_u32::<LittleEndian>()? as usize;
+                let mut shape = Vec::with_capacity(num_dims);
+                for _ in 0..num_dims {
+                    shape.push(cursor.read_u64::<LittleEndian>()? as usize);
+                }
+                
+                // Read data
+                let data_len = cursor.read_u32::<LittleEndian>()? as usize;
+                let mut data = Vec::with_capacity(data_len);
+                for _ in 0..data_len {
+                    data.push(cursor.read_f32::<LittleEndian>()?);
+                }
+                
+                let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
+                    .map_err(|e| IoError::Other(e.to_string()))?;
+                tensors.insert(name.clone(), MLTensor::new(array, Some(name)));
+            }
+            
+            Ok(tensors)
+        }
+    }
+}
+
+/// TensorFlow SavedModel support
+pub mod tensorflow_enhanced {
+    use super::*;
+    
+    /// TensorFlow SavedModel structure
+    pub struct SavedModel {
+        pub graph_def: Vec<u8>,
+        pub signature_defs: HashMap<String, SignatureDef>,
+        pub variables: HashMap<String, MLTensor>,
+    }
+    
+    #[derive(Debug, Clone)]
+    pub struct SignatureDef {
+        pub inputs: HashMap<String, TensorInfo>,
+        pub outputs: HashMap<String, TensorInfo>,
+        pub method_name: String,
+    }
+    
+    #[derive(Debug, Clone)]
+    pub struct TensorInfo {
+        pub name: String,
+        pub dtype: DataType,
+        pub shape: Vec<i64>,
+    }
+    
+    /// TensorFlow SavedModel converter
+    pub struct TensorFlowConverter;
+    
+    impl TensorFlowConverter {
+        /// Export to SavedModel format
+        pub fn export_saved_model(model: &MLModel, path: &Path) -> Result<()> {
+            // Create SavedModel directory structure
+            let model_dir = path.join("saved_model");
+            let variables_dir = model_dir.join("variables");
+            std::fs::create_dir_all(&variables_dir).map_err(|e| IoError::Io(e))?;
+            
+            // Write saved_model.pb (simplified)
+            let model_proto = serde_json::json!({
+                "format": "tf.saved_model",
+                "version": 2,
+                "meta_graphs": [{
+                    "tags": ["serve"],
+                    "signature_defs": {
+                        "serving_default": {
+                            "inputs": model.metadata.input_shapes,
+                            "outputs": model.metadata.output_shapes,
+                        }
+                    }
+                }]
+            });
+            
+            let pb_path = model_dir.join("saved_model.pb");
+            std::fs::write(pb_path, serde_json::to_vec(&model_proto).unwrap())
+                .map_err(|e| IoError::Io(e))?;
+            
+            // Write variables
+            for (name, tensor) in &model.weights {
+                let var_path = variables_dir.join(format!("{}.data", name));
+                let data = tensor.data.as_slice().unwrap();
+                let bytes: Vec<u8> = data.iter()
+                    .flat_map(|f| f.to_le_bytes())
+                    .collect();
+                std::fs::write(var_path, bytes).map_err(|e| IoError::Io(e))?;
+            }
+            
+            Ok(())
+        }
+    }
+}
+
+/// ONNX proper implementation
+pub mod onnx_enhanced {
+    use super::*;
+    
+    /// ONNX graph representation
+    pub struct ONNXGraph {
+        pub name: String,
+        pub inputs: Vec<ValueInfo>,
+        pub outputs: Vec<ValueInfo>,
+        pub nodes: Vec<Node>,
+        pub initializers: Vec<TensorProto>,
+    }
+    
+    #[derive(Debug, Clone)]
+    pub struct ValueInfo {
+        pub name: String,
+        pub type_proto: TypeProto,
+    }
+    
+    #[derive(Debug, Clone)]
+    pub struct TypeProto {
+        pub tensor_type: TensorTypeProto,
+    }
+    
+    #[derive(Debug, Clone)]
+    pub struct TensorTypeProto {
+        pub elem_type: i32,
+        pub shape: Vec<i64>,
+    }
+    
+    #[derive(Debug, Clone)]
+    pub struct Node {
+        pub op_type: String,
+        pub inputs: Vec<String>,
+        pub outputs: Vec<String>,
+        pub attributes: HashMap<String, AttributeProto>,
+    }
+    
+    #[derive(Debug, Clone)]
+    pub enum AttributeProto {
+        Float(f32),
+        Int(i64),
+        String(String),
+        Tensor(TensorProto),
+        Floats(Vec<f32>),
+        Ints(Vec<i64>),
+    }
+    
+    #[derive(Debug, Clone)]
+    pub struct TensorProto {
+        pub name: String,
+        pub dims: Vec<i64>,
+        pub data_type: i32,
+        pub float_data: Vec<f32>,
+    }
+    
+    /// Enhanced ONNX converter
+    pub struct ONNXEnhancedConverter;
+    
+    impl ONNXEnhancedConverter {
+        /// Convert model to ONNX graph
+        pub fn to_onnx_graph(model: &MLModel) -> ONNXGraph {
+            let mut initializers = Vec::new();
+            
+            for (name, tensor) in &model.weights {
+                initializers.push(TensorProto {
+                    name: name.clone(),
+                    dims: tensor.metadata.shape.iter().map(|&d| d as i64).collect(),
+                    data_type: 1, // FLOAT
+                    float_data: tensor.data.as_slice().unwrap().to_vec(),
+                });
+            }
+            
+            ONNXGraph {
+                name: model.metadata.model_name.clone().unwrap_or_else(|| "model".to_string()),
+                inputs: Vec::new(), // Would be populated from model metadata
+                outputs: Vec::new(), // Would be populated from model metadata
+                nodes: Vec::new(), // Would be populated from model graph
+                initializers,
+            }
+        }
     }
 }

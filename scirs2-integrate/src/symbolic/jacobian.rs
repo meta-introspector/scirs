@@ -10,6 +10,19 @@ use crate::error::{IntegrateError, IntegrateResult};
 use super::expression::{SymbolicExpression, Variable, simplify};
 use std::collections::HashMap;
 
+// Helper functions for creating symbolic expressions
+fn var<F: IntegrateFloat>(name: &str) -> SymbolicExpression<F> {
+    SymbolicExpression::var(name)
+}
+
+fn indexed_var<F: IntegrateFloat>(name: &str, index: usize) -> SymbolicExpression<F> {
+    SymbolicExpression::indexed_var(name, index)
+}
+
+fn constant<F: IntegrateFloat>(value: F) -> SymbolicExpression<F> {
+    SymbolicExpression::constant(value)
+}
+
 /// Represents a symbolic Jacobian matrix
 pub struct SymbolicJacobian<F: IntegrateFloat> {
     /// The symbolic expressions for each element of the Jacobian
@@ -207,6 +220,68 @@ pub fn example_van_der_pol<F: IntegrateFloat>(mu: F) -> IntegrateResult<Symbolic
         .add_equation(expr1)
         .add_equation(expr2)
         .build_jacobian()
+}
+
+/// Example: Create a symbolic Jacobian for a stiff chemical reaction system
+pub fn example_stiff_chemical<F: IntegrateFloat>() -> IntegrateResult<SymbolicJacobian<F>> {
+    // Robertson's chemical reaction problem (stiff ODE)
+    // dy1/dt = -0.04*y1 + 1e4*y2*y3
+    // dy2/dt = 0.04*y1 - 1e4*y2*y3 - 3e7*y2^2
+    // dy3/dt = 3e7*y2^2
+    
+    let y1 = SymbolicExpression::indexed_var("y", 0);
+    let y2 = SymbolicExpression::indexed_var("y", 1);
+    let y3 = SymbolicExpression::indexed_var("y", 2);
+    
+    let k1 = SymbolicExpression::constant(F::from(0.04).unwrap());
+    let k2 = SymbolicExpression::constant(F::from(1e4).unwrap());
+    let k3 = SymbolicExpression::constant(F::from(3e7).unwrap());
+    
+    // Using operator overloading for cleaner syntax
+    let expr1 = -k1.clone() * y1.clone() + k2.clone() * y2.clone() * y3.clone();
+    let expr2 = k1 * y1 - k2 * y2.clone() * y3 - k3.clone() * y2.clone() * y2.clone();
+    let expr3 = k3 * y2.clone() * y2;
+    
+    SymbolicODEBuilder::new()
+        .with_state_vars(3)
+        .add_equation(expr1)
+        .add_equation(expr2)
+        .add_equation(expr3)
+        .build_jacobian()
+}
+
+/// Example: Create a symbolic Jacobian for a predator-prey system with seasonal effects
+pub fn example_seasonal_predator_prey<F: IntegrateFloat>() -> IntegrateResult<SymbolicJacobian<F>> {
+    use SymbolicExpression::*;
+    
+    // Lotka-Volterra with seasonal variation
+    // dx/dt = a*x*(1 + b*sin(2π*t)) - c*x*y
+    // dy/dt = -d*y + e*x*y
+    
+    let x = indexed_var("y", 0);
+    let y = indexed_var("y", 1);
+    let t = var("t");
+    
+    let a = constant(F::from(1.5).unwrap());
+    let b = constant(F::from(0.1).unwrap());
+    let c = constant(F::from(0.5).unwrap());
+    let d = constant(F::from(0.75).unwrap());
+    let e = constant(F::from(0.25).unwrap());
+    let two_pi = constant(F::from(std::f64::consts::TAU).unwrap());
+    
+    // Seasonal growth term: 1 + b*sin(2π*t)
+    let seasonal = constant(F::one()) + b * Sin(Box::new(two_pi * t));
+    
+    let expr1 = a * x.clone() * seasonal - c * x.clone() * y.clone();
+    let expr2 = -d * y.clone() + e * x * y;
+    
+    let builder = SymbolicODEBuilder::new()
+        .with_state_vars(2)
+        .with_time()
+        .add_equation(expr1)
+        .add_equation(expr2);
+    
+    builder.build_jacobian()
 }
 
 /// Integration with the ODE solver autodiff module
