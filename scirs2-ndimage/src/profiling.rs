@@ -1,11 +1,12 @@
 //! Performance profiling and optimization tools
 //!
-//! This module provides tools for profiling and optimizing ndimage operations,
-//! including timing measurements, memory usage tracking, and performance analysis.
+//! This module provides comprehensive tools for profiling and optimizing ndimage operations,
+//! including timing measurements, memory usage tracking, performance analysis, backend
+//! comparison, and automatic optimization recommendations.
 
 use ndarray::{Array, ArrayBase, ArrayView, Data, Dimension};
 use num_traits::{Float, FromPrimitive};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -65,46 +66,46 @@ impl Profiler {
             peak_memory: 0,
         }
     }
-    
+
     /// Enable profiling
     pub fn enable(&mut self) {
         self.enabled = true;
     }
-    
+
     /// Disable profiling
     pub fn disable(&mut self) {
         self.enabled = false;
     }
-    
+
     /// Enable memory tracking
     pub fn enable_memory_tracking(&mut self) {
         self.memory_tracking = true;
     }
-    
+
     /// Record a metric
     pub fn record(&mut self, metric: OperationMetrics) {
         if self.enabled {
             self.metrics.push(metric);
         }
     }
-    
+
     /// Clear all metrics
     pub fn clear(&mut self) {
         self.metrics.clear();
         self.current_memory = 0;
         self.peak_memory = 0;
     }
-    
+
     /// Get all metrics
     pub fn metrics(&self) -> &[OperationMetrics] {
         &self.metrics
     }
-    
+
     /// Generate a performance report
     pub fn report(&self) -> PerformanceReport {
         PerformanceReport::from_metrics(&self.metrics)
     }
-    
+
     /// Track memory allocation
     pub fn track_allocation(&mut self, bytes: usize) {
         if self.memory_tracking {
@@ -112,7 +113,7 @@ impl Profiler {
             self.peak_memory = self.peak_memory.max(self.current_memory);
         }
     }
-    
+
     /// Track memory deallocation
     pub fn track_deallocation(&mut self, bytes: usize) {
         if self.memory_tracking {
@@ -153,22 +154,22 @@ pub struct MemoryStats {
 impl PerformanceReport {
     fn from_metrics(metrics: &[OperationMetrics]) -> Self {
         let total_time = metrics.iter().map(|m| m.duration).sum();
-        
+
         // Group metrics by operation name
         let mut op_groups: HashMap<String, Vec<&OperationMetrics>> = HashMap::new();
         let mut backend_usage: HashMap<String, usize> = HashMap::new();
-        
+
         for metric in metrics {
             op_groups
                 .entry(metric.name.clone())
                 .or_default()
                 .push(metric);
-            
+
             *backend_usage
                 .entry(format!("{:?}", metric.backend))
                 .or_default() += 1;
         }
-        
+
         // Compute operation summaries
         let operation_breakdown: HashMap<String, OperationSummary> = op_groups
             .into_iter()
@@ -176,22 +177,23 @@ impl PerformanceReport {
                 let count = group.len();
                 let total: Duration = group.iter().map(|m| m.duration).sum();
                 let mean = total / count as u32;
-                
-                let times: Vec<f64> = group
+
+                let times: Vec<f64> = group.iter().map(|m| m.duration.as_secs_f64()).collect();
+
+                let min = times
                     .iter()
-                    .map(|m| m.duration.as_secs_f64())
-                    .collect();
-                
-                let min = times.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-                let max = times.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-                
+                    .min_by(|a, b| a.partial_cmp(b).unwrap())
+                    .unwrap();
+                let max = times
+                    .iter()
+                    .max_by(|a, b| a.partial_cmp(b).unwrap())
+                    .unwrap();
+
                 let mean_f64 = times.iter().sum::<f64>() / count as f64;
-                let variance = times
-                    .iter()
-                    .map(|t| (t - mean_f64).powi(2))
-                    .sum::<f64>() / count as f64;
+                let variance =
+                    times.iter().map(|t| (t - mean_f64).powi(2)).sum::<f64>() / count as f64;
                 let std_dev = variance.sqrt();
-                
+
                 (
                     name,
                     OperationSummary {
@@ -205,7 +207,7 @@ impl PerformanceReport {
                 )
             })
             .collect();
-        
+
         // Compute memory statistics
         let total_allocated: usize = metrics.iter().map(|m| m.memory_allocated).sum();
         let total_deallocated: usize = metrics.iter().map(|m| m.memory_deallocated).sum();
@@ -217,16 +219,17 @@ impl PerformanceReport {
             })
             .max()
             .unwrap_or(0);
-        
+
         let memory_stats = MemoryStats {
             peak_usage,
             total_allocated,
             total_deallocated,
         };
-        
+
         // Generate recommendations
-        let recommendations = generate_recommendations(&operation_breakdown, &backend_usage, metrics);
-        
+        let recommendations =
+            generate_recommendations(&operation_breakdown, &backend_usage, metrics);
+
         Self {
             total_time,
             operation_breakdown,
@@ -235,25 +238,30 @@ impl PerformanceReport {
             recommendations,
         }
     }
-    
+
     /// Display the report in a human-readable format
     pub fn display(&self) {
         println!("\n=== Performance Report ===\n");
-        
-        println!("Total execution time: {:.3}ms", self.total_time.as_secs_f64() * 1000.0);
+
+        println!(
+            "Total execution time: {:.3}ms",
+            self.total_time.as_secs_f64() * 1000.0
+        );
         println!();
-        
+
         println!("Operation Breakdown:");
         let mut ops: Vec<_> = self.operation_breakdown.iter().collect();
         ops.sort_by_key(|(_, summary)| std::cmp::Reverse(summary.total_time));
-        
+
         for (name, summary) in ops {
             println!("  {}: {} calls", name, summary.count);
-            println!("    Total: {:.3}ms ({:.1}%)", 
+            println!(
+                "    Total: {:.3}ms ({:.1}%)",
                 summary.total_time.as_secs_f64() * 1000.0,
                 (summary.total_time.as_secs_f64() / self.total_time.as_secs_f64()) * 100.0
             );
-            println!("    Mean: {:.3}ms, Min: {:.3}ms, Max: {:.3}ms, StdDev: {:.3}ms",
+            println!(
+                "    Mean: {:.3}ms, Min: {:.3}ms, Max: {:.3}ms, StdDev: {:.3}ms",
                 summary.mean_time.as_secs_f64() * 1000.0,
                 summary.min_time.as_secs_f64() * 1000.0,
                 summary.max_time.as_secs_f64() * 1000.0,
@@ -261,19 +269,28 @@ impl PerformanceReport {
             );
         }
         println!();
-        
+
         println!("Backend Usage:");
         for (backend, count) in &self.backend_usage {
             println!("  {}: {} operations", backend, count);
         }
         println!();
-        
+
         println!("Memory Statistics:");
-        println!("  Peak usage: {} MB", self.memory_stats.peak_usage / (1024 * 1024));
-        println!("  Total allocated: {} MB", self.memory_stats.total_allocated / (1024 * 1024));
-        println!("  Total deallocated: {} MB", self.memory_stats.total_deallocated / (1024 * 1024));
+        println!(
+            "  Peak usage: {} MB",
+            self.memory_stats.peak_usage / (1024 * 1024)
+        );
+        println!(
+            "  Total allocated: {} MB",
+            self.memory_stats.total_allocated / (1024 * 1024)
+        );
+        println!(
+            "  Total deallocated: {} MB",
+            self.memory_stats.total_deallocated / (1024 * 1024)
+        );
         println!();
-        
+
         if !self.recommendations.is_empty() {
             println!("Recommendations:");
             for rec in &self.recommendations {
@@ -290,18 +307,18 @@ fn generate_recommendations(
     metrics: &[OperationMetrics],
 ) -> Vec<String> {
     let mut recommendations = Vec::new();
-    
+
     // Check for operations that could benefit from GPU acceleration
     let cpu_only = backend_usage.get("Cpu").copied().unwrap_or(0);
     let total_ops = backend_usage.values().sum::<usize>();
-    
+
     if cpu_only == total_ops && total_ops > 10 {
         // Check if there are large arrays that could benefit from GPU
         let large_arrays = metrics
             .iter()
             .filter(|m| m.array_shape.iter().product::<usize>() > 1_000_000)
             .count();
-        
+
         if large_arrays > 0 {
             recommendations.push(format!(
                 "Consider enabling GPU acceleration - {} operations processed large arrays (>1M elements)",
@@ -309,7 +326,7 @@ fn generate_recommendations(
             ));
         }
     }
-    
+
     // Check for operations with high variance in execution time
     for (name, summary) in operation_breakdown {
         let cv = summary.std_dev / summary.mean_time.as_secs_f64(); // Coefficient of variation
@@ -320,17 +337,17 @@ fn generate_recommendations(
             ));
         }
     }
-    
+
     // Check for potential memory issues
     let total_time_ms = metrics.iter().map(|m| m.duration.as_millis()).sum::<u128>();
     let ops_per_ms = total_ops as f64 / total_time_ms as f64;
-    
+
     if ops_per_ms < 0.1 {
         recommendations.push(
-            "Low throughput detected - consider batch processing or parallelization".to_string()
+            "Low throughput detected - consider batch processing or parallelization".to_string(),
         );
     }
-    
+
     recommendations
 }
 
@@ -348,7 +365,7 @@ impl ProfilingScope {
         let profiler = PROFILER.lock().unwrap();
         let initial_memory = profiler.current_memory;
         drop(profiler);
-        
+
         Self {
             name: name.into(),
             start: Instant::now(),
@@ -363,10 +380,10 @@ impl Drop for ProfilingScope {
     fn drop(&mut self) {
         let duration = self.start.elapsed();
         let thread_count = rayon::current_num_threads();
-        
+
         let mut profiler = PROFILER.lock().unwrap();
         let memory_allocated = profiler.current_memory.saturating_sub(self.initial_memory);
-        
+
         let metric = OperationMetrics {
             name: self.name.clone(),
             duration,
@@ -377,7 +394,7 @@ impl Drop for ProfilingScope {
             thread_count,
             timestamp: self.start,
         };
-        
+
         profiler.record(metric);
     }
 }
@@ -446,47 +463,47 @@ impl<T> Benchmark<T> {
             results: Vec::new(),
         }
     }
-    
+
     pub fn iterations(mut self, iterations: usize) -> Self {
         self.iterations = iterations;
         self
     }
-    
+
     pub fn warmup_iterations(mut self, warmup: usize) -> Self {
         self.warmup_iterations = warmup;
         self
     }
-    
+
     pub fn run<F>(&mut self, variant: impl Into<String>, mut f: F) -> NdimageResult<()>
     where
         F: FnMut() -> NdimageResult<T>,
     {
         let variant = variant.into();
-        
+
         // Warmup
         for _ in 0..self.warmup_iterations {
             f()?;
         }
-        
+
         // Actual benchmark
         let mut times = Vec::with_capacity(self.iterations);
         let mut result = None;
-        
+
         for _ in 0..self.iterations {
             let start = Instant::now();
             result = Some(f()?);
             times.push(start.elapsed());
         }
-        
+
         self.results.push(BenchmarkResult {
             variant,
             times,
             result: result.unwrap(),
         });
-        
+
         Ok(())
     }
-    
+
     pub fn compare(&self) -> BenchmarkComparison {
         BenchmarkComparison::from_results(&self.name, &self.results)
     }
@@ -515,16 +532,16 @@ pub struct VariantStats {
 impl BenchmarkComparison {
     fn from_results<T>(name: &str, results: &[BenchmarkResult<T>]) -> Self {
         let mut variants = Vec::new();
-        
+
         for result in results {
             let mut times = result.times.clone();
             times.sort();
-            
+
             let mean = times.iter().sum::<Duration>() / times.len() as u32;
             let median = times[times.len() / 2];
             let min = times[0];
             let max = times[times.len() - 1];
-            
+
             let mean_nanos = mean.as_nanos() as f64;
             let variance = times
                 .iter()
@@ -532,9 +549,10 @@ impl BenchmarkComparison {
                     let diff = t.as_nanos() as f64 - mean_nanos;
                     diff * diff
                 })
-                .sum::<f64>() / times.len() as f64;
+                .sum::<f64>()
+                / times.len() as f64;
             let std_dev = Duration::from_nanos(variance.sqrt() as u64);
-            
+
             variants.push(VariantStats {
                 name: result.variant.clone(),
                 mean,
@@ -545,7 +563,7 @@ impl BenchmarkComparison {
                 speedup: 1.0, // Will be updated
             });
         }
-        
+
         // Find fastest variant
         let fastest_idx = variants
             .iter()
@@ -553,16 +571,16 @@ impl BenchmarkComparison {
             .min_by_key(|(_, v)| v.median)
             .map(|(i, _)| i)
             .unwrap_or(0);
-        
+
         let fastest = variants[fastest_idx].name.clone();
         let baseline = variants.first().map(|v| v.name.clone()).unwrap_or_default();
-        
+
         // Calculate speedups relative to baseline
         let baseline_time = variants[0].median.as_nanos() as f64;
         for variant in &mut variants {
             variant.speedup = baseline_time / variant.median.as_nanos() as f64;
         }
-        
+
         Self {
             name: name.to_string(),
             variants,
@@ -570,22 +588,24 @@ impl BenchmarkComparison {
             baseline,
         }
     }
-    
+
     pub fn display(&self) {
         println!("\n=== Benchmark: {} ===\n", self.name);
-        
+
         for variant in &self.variants {
             println!("{}: ", variant.name);
-            println!("  Mean: {:.3}ms ± {:.3}ms", 
+            println!(
+                "  Mean: {:.3}ms ± {:.3}ms",
                 variant.mean.as_secs_f64() * 1000.0,
                 variant.std_dev.as_secs_f64() * 1000.0
             );
             println!("  Median: {:.3}ms", variant.median.as_secs_f64() * 1000.0);
-            println!("  Min: {:.3}ms, Max: {:.3}ms", 
+            println!(
+                "  Min: {:.3}ms, Max: {:.3}ms",
                 variant.min.as_secs_f64() * 1000.0,
                 variant.max.as_secs_f64() * 1000.0
             );
-            
+
             if variant.name == self.baseline {
                 println!("  (baseline)");
             } else {
@@ -593,8 +613,9 @@ impl BenchmarkComparison {
             }
             println!();
         }
-        
-        println!("Fastest: {} ({:.2}x faster than baseline)",
+
+        println!(
+            "Fastest: {} ({:.2}x faster than baseline)",
             self.fastest,
             self.variants
                 .iter()
@@ -618,18 +639,18 @@ impl AutoTuner {
             test_data: Vec::new(),
         }
     }
-    
+
     pub fn add_variant<F>(&mut self, name: impl Into<String>, f: F)
     where
         F: Fn() -> NdimageResult<Duration> + 'static,
     {
         self.test_data.push((name.into(), Box::new(f)));
     }
-    
+
     pub fn find_optimal(&self) -> NdimageResult<String> {
         let mut best_time = Duration::MAX;
         let mut best_variant = String::new();
-        
+
         for (name, test_fn) in &self.test_data {
             let time = test_fn()?;
             if time < best_time {
@@ -637,7 +658,7 @@ impl AutoTuner {
                 best_variant = name.clone();
             }
         }
-        
+
         Ok(best_variant)
     }
 }
@@ -682,50 +703,54 @@ impl OptimizationAdvisor {
             hardware_info: HardwareInfo::detect(),
         }
     }
-    
+
     pub fn analyze(&mut self, metrics: &[OperationMetrics]) -> OptimizationReport {
         self.metrics = metrics.to_vec();
-        
+
         let mut recommendations = Vec::new();
-        
+
         // Analyze memory access patterns
         recommendations.extend(self.analyze_memory_patterns());
-        
+
         // Analyze computation patterns
         recommendations.extend(self.analyze_computation_patterns());
-        
+
         // Analyze parallelization opportunities
         recommendations.extend(self.analyze_parallelization());
-        
+
         // Analyze GPU offloading opportunities
         recommendations.extend(self.analyze_gpu_opportunities());
-        
+
         OptimizationReport {
             recommendations,
             estimated_speedup: self.estimate_speedup(&recommendations),
             implementation_difficulty: self.assess_difficulty(&recommendations),
         }
     }
-    
+
     fn analyze_memory_patterns(&self) -> Vec<OptimizationRecommendation> {
         let mut recommendations = Vec::new();
-        
+
         // Group operations by type
         let mut op_groups: HashMap<String, Vec<&OperationMetrics>> = HashMap::new();
         for metric in &self.metrics {
-            op_groups.entry(metric.name.clone()).or_default().push(metric);
+            op_groups
+                .entry(metric.name.clone())
+                .or_default()
+                .push(metric);
         }
-        
+
         // Check for cache-unfriendly access patterns
         for (op_name, metrics) in op_groups {
             let avg_array_size: usize = metrics
                 .iter()
                 .map(|m| m.array_shape.iter().product::<usize>())
-                .sum::<usize>() / metrics.len().max(1);
-            
+                .sum::<usize>()
+                / metrics.len().max(1);
+
             let element_size = std::mem::size_of::<f64>(); // Assume f64
             let working_set_size = avg_array_size * element_size;
-            
+
             if working_set_size > self.hardware_info.cache_sizes.l3 {
                 recommendations.push(OptimizationRecommendation {
                     operation: op_name.clone(),
@@ -735,7 +760,7 @@ impl OptimizationAdvisor {
                     estimated_improvement: 1.5,
                 });
             }
-            
+
             // Check for strided access patterns
             if op_name.contains("transpose") || op_name.contains("permute") {
                 recommendations.push(OptimizationRecommendation {
@@ -747,17 +772,17 @@ impl OptimizationAdvisor {
                 });
             }
         }
-        
+
         recommendations
     }
-    
+
     fn analyze_computation_patterns(&self) -> Vec<OptimizationRecommendation> {
         let mut recommendations = Vec::new();
-        
+
         // Check for SIMD opportunities
         for metric in &self.metrics {
             let array_size: usize = metric.array_shape.iter().product();
-            
+
             if array_size > 1000 && !metric.name.contains("simd") {
                 if self.hardware_info.simd_support.avx2 {
                     recommendations.push(OptimizationRecommendation {
@@ -770,16 +795,16 @@ impl OptimizationAdvisor {
                 }
             }
         }
-        
+
         recommendations
     }
-    
+
     fn analyze_parallelization(&self) -> Vec<OptimizationRecommendation> {
         let mut recommendations = Vec::new();
-        
+
         for metric in &self.metrics {
             let array_size: usize = metric.array_shape.iter().product();
-            
+
             // Check if operation is large enough to benefit from parallelization
             if array_size > 50_000 && metric.thread_count == 1 {
                 recommendations.push(OptimizationRecommendation {
@@ -794,20 +819,20 @@ impl OptimizationAdvisor {
                 });
             }
         }
-        
+
         recommendations
     }
-    
+
     fn analyze_gpu_opportunities(&self) -> Vec<OptimizationRecommendation> {
         let mut recommendations = Vec::new();
-        
+
         if !self.hardware_info.gpu_available {
             return recommendations;
         }
-        
+
         for metric in &self.metrics {
             let array_size: usize = metric.array_shape.iter().product();
-            
+
             // GPU is beneficial for large arrays and compute-intensive operations
             if array_size > 1_000_000 && metric.backend == Backend::Cpu {
                 recommendations.push(OptimizationRecommendation {
@@ -819,23 +844,26 @@ impl OptimizationAdvisor {
                 });
             }
         }
-        
+
         recommendations
     }
-    
+
     fn estimate_speedup(&self, recommendations: &[OptimizationRecommendation]) -> f64 {
         // Estimate overall speedup (simplified model)
         let mut total_improvement = 1.0;
-        
+
         for rec in recommendations {
             // Apply diminishing returns
             total_improvement *= 1.0 + (rec.estimated_improvement - 1.0) * 0.7;
         }
-        
+
         total_improvement
     }
-    
-    fn assess_difficulty(&self, recommendations: &[OptimizationRecommendation]) -> ImplementationDifficulty {
+
+    fn assess_difficulty(
+        &self,
+        recommendations: &[OptimizationRecommendation],
+    ) -> ImplementationDifficulty {
         let max_difficulty = recommendations
             .iter()
             .map(|r| match r.category {
@@ -847,7 +875,7 @@ impl OptimizationAdvisor {
             })
             .max()
             .unwrap_or(1);
-        
+
         match max_difficulty {
             1 => ImplementationDifficulty::Easy,
             2 => ImplementationDifficulty::Moderate,
@@ -898,9 +926,9 @@ impl HardwareInfo {
             gpu_available: cfg!(feature = "cuda") || cfg!(feature = "opencl"),
             total_memory: 16_000_000_000, // 16GB default
             cache_sizes: CacheSizes {
-                l1: 32_768,      // 32KB
-                l2: 262_144,     // 256KB
-                l3: 8_388_608,   // 8MB
+                l1: 32_768,    // 32KB
+                l2: 262_144,   // 256KB
+                l3: 8_388_608, // 8MB
             },
         }
     }
@@ -928,7 +956,8 @@ impl SimdSupport {
                 neon: true,
             }
         }
-        #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]{
+        #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+        {
             Self {
                 sse: false,
                 avx: false,
@@ -943,16 +972,22 @@ impl SimdSupport {
 impl OptimizationReport {
     pub fn display(&self) {
         println!("\n=== Optimization Report ===\n");
-        
+
         println!("Estimated overall speedup: {:.1}x", self.estimated_speedup);
-        println!("Implementation difficulty: {:?}\n", self.implementation_difficulty);
-        
+        println!(
+            "Implementation difficulty: {:?}\n",
+            self.implementation_difficulty
+        );
+
         println!("Recommendations:");
         for (i, rec) in self.recommendations.iter().enumerate() {
             println!("\n{}. {} - {:?}", i + 1, rec.operation, rec.category);
             println!("   Issue: {}", rec.description);
             println!("   Suggestion: {}", rec.suggestion);
-            println!("   Potential improvement: {:.1}x", rec.estimated_improvement);
+            println!(
+                "   Potential improvement: {:.1}x",
+                rec.estimated_improvement
+            );
         }
     }
 }
@@ -978,55 +1013,59 @@ impl MemoryProfiler {
             enabled: AtomicBool::new(false),
         }
     }
-    
+
     pub fn enable(&self) {
-        self.enabled.store(true, std::sync::atomic::Ordering::Relaxed);
+        self.enabled
+            .store(true, std::sync::atomic::Ordering::Relaxed);
     }
-    
+
     pub fn disable(&self) {
-        self.enabled.store(false, std::sync::atomic::Ordering::Relaxed);
+        self.enabled
+            .store(false, std::sync::atomic::Ordering::Relaxed);
     }
-    
+
     pub fn track_allocation(&self, operation: &str, size: usize) {
         if !self.enabled.load(std::sync::atomic::Ordering::Relaxed) {
             return;
         }
-        
+
         let mut allocations = self.allocations.lock().unwrap();
-        let info = allocations.entry(operation.to_string()).or_insert(AllocationInfo {
-            total_allocated: 0,
-            current_allocated: 0,
-            peak_allocated: 0,
-            allocation_count: 0,
-        });
-        
+        let info = allocations
+            .entry(operation.to_string())
+            .or_insert(AllocationInfo {
+                total_allocated: 0,
+                current_allocated: 0,
+                peak_allocated: 0,
+                allocation_count: 0,
+            });
+
         info.total_allocated += size;
         info.current_allocated += size;
         info.peak_allocated = info.peak_allocated.max(info.current_allocated);
         info.allocation_count += 1;
     }
-    
+
     pub fn track_deallocation(&self, operation: &str, size: usize) {
         if !self.enabled.load(std::sync::atomic::Ordering::Relaxed) {
             return;
         }
-        
+
         let mut allocations = self.allocations.lock().unwrap();
         if let Some(info) = allocations.get_mut(operation) {
             info.current_allocated = info.current_allocated.saturating_sub(size);
         }
     }
-    
+
     pub fn report(&self) -> MemoryReport {
         let allocations = self.allocations.lock().unwrap();
-        
+
         let mut operations: Vec<_> = allocations
             .iter()
             .map(|(name, info)| (name.clone(), info.clone()))
             .collect();
-        
+
         operations.sort_by_key(|(_, info)| std::cmp::Reverse(info.peak_allocated));
-        
+
         MemoryReport { operations }
     }
 }
@@ -1039,13 +1078,17 @@ pub struct MemoryReport {
 impl MemoryReport {
     pub fn display(&self) {
         println!("\n=== Memory Usage Report ===\n");
-        
+
         for (name, info) in &self.operations {
             println!("{}: ", name);
-            println!("  Total allocated: {} MB", info.total_allocated / (1024 * 1024));
+            println!(
+                "  Total allocated: {} MB",
+                info.total_allocated / (1024 * 1024)
+            );
             println!("  Peak usage: {} MB", info.peak_allocated / (1024 * 1024));
             println!("  Allocations: {}", info.allocation_count);
-            println!("  Avg allocation: {} KB", 
+            println!(
+                "  Avg allocation: {} KB",
                 (info.total_allocated / info.allocation_count.max(1)) / 1024
             );
         }
@@ -1076,36 +1119,40 @@ use std::sync::Mutex;
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[test]
     fn test_profiling_scope() {
         enable_profiling();
         clear_profiling_data();
-        
+
         {
             let _scope = ProfilingScope::new("test_op", &[100, 100], Backend::Cpu);
             std::thread::sleep(Duration::from_millis(10));
         }
-        
+
         let report = get_performance_report();
         assert_eq!(report.operation_breakdown.len(), 1);
         assert!(report.operation_breakdown.contains_key("test_op"));
     }
-    
+
     #[test]
     fn test_benchmark() {
         let mut bench = Benchmark::new("array_operations");
-        
-        bench.run("baseline", || {
-            let a = array![[1.0, 2.0], [3.0, 4.0]];
-            Ok(a.sum())
-        }).unwrap();
-        
-        bench.run("optimized", || {
-            let a = array![[1.0, 2.0], [3.0, 4.0]];
-            Ok(a.sum())
-        }).unwrap();
-        
+
+        bench
+            .run("baseline", || {
+                let a = array![[1.0, 2.0], [3.0, 4.0]];
+                Ok(a.sum())
+            })
+            .unwrap();
+
+        bench
+            .run("optimized", || {
+                let a = array![[1.0, 2.0], [3.0, 4.0]];
+                Ok(a.sum())
+            })
+            .unwrap();
+
         let comparison = bench.compare();
         assert_eq!(comparison.variants.len(), 2);
     }

@@ -58,13 +58,13 @@ fn rotation_examples() -> SpatialResult<()> {
     println!("\nApplying rotations to point [1, 0, 0]:");
     let point = array![1.0, 0.0, 0.0];
 
-    let rotated_quat = rot_quat.apply(&point.view());
+    let rotated_quat = rot_quat.apply(&point.view()).unwrap();
     println!(
         "  X-rotation: [{:.4}, {:.4}, {:.4}]",
         rotated_quat[0], rotated_quat[1], rotated_quat[2]
     );
 
-    let rotated_euler = rot_euler.apply(&point.view());
+    let rotated_euler = rot_euler.apply(&point.view()).unwrap();
     println!(
         "  Z-rotation: [{:.4}, {:.4}, {:.4}]",
         rotated_euler[0], rotated_euler[1], rotated_euler[2]
@@ -97,7 +97,7 @@ fn rotation_examples() -> SpatialResult<()> {
     // Compose rotations
     println!("\nComposing rotations:");
     let composed = rot_quat.compose(&rot_euler);
-    let composed_point = composed.apply(&point.view());
+    let composed_point = composed.apply(&point.view()).unwrap();
     println!("  X-rotation followed by Z-rotation applied to [1, 0, 0]:");
     println!(
         "  Result: [{:.4}, {:.4}, {:.4}]",
@@ -107,8 +107,8 @@ fn rotation_examples() -> SpatialResult<()> {
     // Inverse rotation
     println!("\nInverse rotation:");
     let rot_inv = rot_euler.inv();
-    let point_rotated = rot_euler.apply(&point.view());
-    let point_back = rot_inv.apply(&point_rotated.view());
+    let point_rotated = rot_euler.apply(&point.view()).unwrap();
+    let point_back = rot_inv.apply(&point_rotated.view()).unwrap();
     println!(
         "  Original point: [{:.4}, {:.4}, {:.4}]",
         point[0], point[1], point[2]
@@ -156,8 +156,8 @@ fn rigid_transform_examples() -> SpatialResult<()> {
     let point1 = array![1.0, 0.0, 0.0];
     let point2 = array![0.0, 0.0, 0.0];
 
-    let transformed1 = transform.apply(&point1.view());
-    let transformed2 = transform.apply(&point2.view());
+    let transformed1 = transform.apply(&point1.view()).unwrap();
+    let transformed2 = transform.apply(&point2.view()).unwrap();
 
     println!("\nApplying the transform to points:");
     println!(
@@ -170,10 +170,10 @@ fn rigid_transform_examples() -> SpatialResult<()> {
     );
 
     // Inverse transform
-    let inverse = transform.inv();
+    let inverse = transform.inv().unwrap();
     println!("\nApplying the inverse transform:");
 
-    let back1 = inverse.apply(&transformed1.view());
+    let back1 = inverse.apply(&transformed1.view()).unwrap();
     println!(
         "  [{:.4}, {:.4}, {:.4}] -> [{:.4}, {:.4}, {:.4}]",
         transformed1[0], transformed1[1], transformed1[2], back1[0], back1[1], back1[2]
@@ -188,13 +188,13 @@ fn rigid_transform_examples() -> SpatialResult<()> {
         &array![0.0, 0.0, 1.0].view(),
     )?;
 
-    let composed = transform.compose(&transform2);
+    let composed = transform.compose(&transform2).unwrap();
 
     println!("\nComposing transforms:");
     println!("  Transform 1: 90° rotation around Z + translation [1, 2, 3]");
     println!("  Transform 2: 90° rotation around X + translation [0, 0, 1]");
 
-    let composed_applied = composed.apply(&point1.view());
+    let composed_applied = composed.apply(&point1.view()).unwrap();
     println!(
         "  [1, 0, 0] -> [{:.4}, {:.4}, {:.4}]",
         composed_applied[0], composed_applied[1], composed_applied[2]
@@ -226,7 +226,7 @@ fn slerp_examples() -> SpatialResult<()> {
     let t_values = [0.0, 0.25, 0.5, 0.75, 1.0];
     for &t in &t_values {
         let rot_t = slerp.interpolate(t);
-        let rotated = rot_t.apply(&test_point.view());
+        let rotated = rot_t.apply(&test_point.view()).unwrap();
 
         println!(
             "  t = {:.2}: [{:.4}, {:.4}, {:.4}]",
@@ -285,7 +285,7 @@ fn rotation_spline_examples() -> SpatialResult<()> {
     let sample_times = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
     for &t in &sample_times {
         let rot_t = spline.interpolate(t);
-        let rotated = rot_t.apply(&test_point.view());
+        let rotated = rot_t.apply(&test_point.view()).unwrap();
 
         println!(
             "  t = {:.1}: [{:.4}, {:.4}, {:.4}]",
@@ -298,7 +298,7 @@ fn rotation_spline_examples() -> SpatialResult<()> {
     let (sample_times, sample_rotations) = spline.sample(7);
 
     for i in 0..7 {
-        let rotated = sample_rotations[i].apply(&test_point.view());
+        let rotated = sample_rotations[i].apply(&test_point.view()).unwrap();
         println!(
             "  t = {:.2}: [{:.4}, {:.4}, {:.4}]",
             sample_times[i], rotated[0], rotated[1], rotated[2]
@@ -314,7 +314,7 @@ fn rotation_spline_examples() -> SpatialResult<()> {
     println!("\nSampling the spline with cubic interpolation:");
     for &t in &sample_times {
         let rot_t = spline.interpolate(t);
-        let rotated = rot_t.apply(&test_point.view());
+        let rotated = rot_t.apply(&test_point.view()).unwrap();
 
         println!(
             "  t = {:.1}: [{:.4}, {:.4}, {:.4}]",
@@ -325,7 +325,7 @@ fn rotation_spline_examples() -> SpatialResult<()> {
     // Calculate angular velocities
     println!("\nCalculating angular velocities at sample times:");
     for &t in &sample_times {
-        let velocity = spline.angular_velocity(t);
+        let velocity = spline.angular_velocity(t).unwrap();
 
         println!(
             "  t = {:.1}: [{:.4}, {:.4}, {:.4}] rad/s",
@@ -376,8 +376,8 @@ fn rotation_spline_examples() -> SpatialResult<()> {
     let (anim_times, anim_rotations) = animation_spline.sample(9);
 
     for i in 0..9 {
-        let rotated = anim_rotations[i].apply(&test_point.view());
-        let velocity = animation_spline.angular_velocity(anim_times[i]);
+        let rotated = anim_rotations[i].apply(&test_point.view()).unwrap();
+        let velocity = animation_spline.angular_velocity(anim_times[i]).unwrap();
 
         println!(
             "  Frame {}: position [{:.4}, {:.4}, {:.4}], velocity magnitude: {:.4} rad/s",

@@ -543,11 +543,11 @@ mod tests {
         );
 
         // Get CUDA devices
-        let devices = get_cuda_devices().unwrap();
+        let devices = get_cuda_devices().expect("CUDA devices should be available for test");
         assert!(!devices.is_empty());
 
         // Create a CUDA context
-        let context = GpuContext::new(0).unwrap();
+        let context = FftGpuContext::new(0).expect("GPU context creation should succeed for test");
         assert_eq!(context.device_id, 0);
         assert!(context.initialized);
     }

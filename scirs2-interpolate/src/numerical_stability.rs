@@ -37,7 +37,7 @@
 //! ```
 
 use crate::error::{InterpolateError, InterpolateResult};
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
 use std::ops::{AddAssign, SubAssign};
@@ -121,9 +121,12 @@ where
 /// Get machine epsilon for floating point type
 pub fn machine_epsilon<F: Float + FromPrimitive>() -> F {
     match std::mem::size_of::<F>() {
-        4 => F::from_f64(f32::EPSILON as f64).unwrap(), // f32
-        8 => F::from_f64(f64::EPSILON).unwrap(),        // f64
-        _ => F::from_f64(2.22e-16).unwrap(),            // Default to f64 epsilon
+        4 => F::from_f64(f32::EPSILON as f64)
+            .unwrap_or_else(|| F::from(f32::EPSILON as f32).unwrap_or_else(|| F::from_f64(1.19e-7).unwrap_or(F::from(1.19e-7)))), // f32
+        8 => F::from_f64(f64::EPSILON)
+            .unwrap_or_else(|| F::from(f64::EPSILON).unwrap_or_else(|| F::from_f64(2.22e-16).unwrap_or(F::from(2.22e-16)))), // f64
+        _ => F::from_f64(2.22e-16)
+            .unwrap_or_else(|| F::from(2.22e-16)), // Default to f64 epsilon
     }
 }
 
@@ -186,7 +189,7 @@ where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     let n = matrix.nrows();
-    let tol = F::from_f64(1e-12).unwrap();
+    let tol = F::from_f64(1e-12).unwrap_or_else(|| machine_epsilon::<F>() * F::from(1e6).unwrap_or_else(|| F::from(1000000)));
 
     for i in 0..n {
         for j in 0..i {
@@ -237,7 +240,7 @@ where
         use ndarray_linalg::SVD;
 
         // Convert to f64 for SVD computation
-        let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap());
+        let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
 
         match matrix_f64.svd(false, false) {
             Ok((_, singular_values, _)) => {
@@ -251,8 +254,8 @@ where
                 let min_sv = singular_values[singular_values.len() - 1];
 
                 // Update diagnostics
-                diagnostics.max_singular_value = Some(F::from_f64(max_sv).unwrap());
-                diagnostics.min_singular_value = Some(F::from_f64(min_sv).unwrap());
+                diagnostics.max_singular_value = Some(F::from_f64(max_sv).unwrap_or_else(|| F::from(max_sv as f32).unwrap_or(F::zero())));
+                diagnostics.min_singular_value = Some(F::from_f64(min_sv).unwrap_or_else(|| F::from(min_sv as f32).unwrap_or(F::zero())));
 
                 // Estimate rank
                 let eps = f64::EPSILON * max_sv * (matrix.nrows() as f64).sqrt();
@@ -261,7 +264,7 @@ where
 
                 // Compute condition number
                 if min_sv > f64::EPSILON {
-                    Ok(F::from_f64(max_sv / min_sv).unwrap())
+                    Ok(F::from_f64(max_sv / min_sv).unwrap_or_else(|| F::infinity()))
                 } else {
                     Ok(F::infinity()) // Singular matrix
                 }
@@ -319,7 +322,7 @@ where
         Ok(max_gershgorin / min_gershgorin)
     } else {
         // Conservative estimate for potentially ill-conditioned matrices
-        Ok(F::from_f64(1e16).unwrap())
+        Ok(F::from_f64(1e16).unwrap_or_else(|| F::from(1e16 as f32).unwrap_or_else(|| F::infinity())))
     }
 }
 
@@ -328,11 +331,15 @@ fn classify_stability<F>(condition_number: F) -> StabilityLevel
 where
     F: Float + FromPrimitive,
 {
-    if condition_number < F::from_f64(1e12).unwrap() {
+    let threshold_1e12 = F::from_f64(1e12).unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000)));
+    let threshold_1e14 = F::from_f64(1e14).unwrap_or_else(|| F::from(1e14 as f32).unwrap_or_else(|| F::from(100000000000000)));
+    let threshold_1e16 = F::from_f64(1e16).unwrap_or_else(|| F::from(1e16 as f32).unwrap_or_else(|| F::from(10000000000000000)));
+    
+    if condition_number < threshold_1e12 {
         StabilityLevel::Excellent
-    } else if condition_number < F::from_f64(1e14).unwrap() {
+    } else if condition_number < threshold_1e14 {
         StabilityLevel::Good
-    } else if condition_number < F::from_f64(1e16).unwrap() {
+    } else if condition_number < threshold_1e16 {
         StabilityLevel::Marginal
     } else {
         StabilityLevel::Poor
@@ -353,14 +360,14 @@ where
     if let Some(min_sv) = diagnostics.min_singular_value {
         if min_sv < machine_eps {
             // Very small singular value, need stronger regularization
-            base_reg * F::from_f64(100.0).unwrap()
+            base_reg * F::from_f64(100.0).unwrap_or_else(|| F::from(100.0 as f32).unwrap_or_else(|| F::from(100)))
         } else {
             // Moderate regularization
-            base_reg * F::from_f64(10.0).unwrap()
+            base_reg * F::from_f64(10.0).unwrap_or_else(|| F::from(10.0 as f32).unwrap_or_else(|| F::from(10)))
         }
     } else {
         // Conservative regularization when no singular value information
-        base_reg * F::from_f64(1000.0).unwrap()
+        base_reg * F::from_f64(1000.0).unwrap_or_else(|| F::from(1000.0 as f32).unwrap_or_else(|| F::from(1000)))
     }
 }
 
@@ -376,7 +383,7 @@ where
         + std::fmt::LowerExp,
 {
     let eps = machine_epsilon::<F>();
-    let safe_threshold = eps * F::from_f64(1e6).unwrap();
+    let safe_threshold = eps * F::from_f64(1e6).unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000)));
 
     if denominator.abs() < safe_threshold {
         Err(InterpolateError::NumericalError(format!(
@@ -482,12 +489,12 @@ where
         use ndarray_linalg::Solve;
 
         // Convert to f64 for solve
-        let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap());
-        let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
+        let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
+        let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap_or(0.0));
 
         match matrix_f64.solve(&rhs_f64) {
             Ok(solution_f64) => {
-                let solution = solution_f64.mapv(|x| F::from_f64(x).unwrap());
+                let solution = solution_f64.mapv(|x| F::from_f64(x).unwrap_or_else(|| F::from(x as f32).unwrap_or(F::zero())));
                 Ok(solution)
             }
             Err(_) => Err(InterpolateError::ComputationError(
@@ -545,7 +552,7 @@ where
         }
 
         // Check for near-zero pivot
-        if a[[i, i]].abs() < machine_epsilon::<F>() * F::from_f64(1e6).unwrap() {
+        if a[[i, i]].abs() < machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000))) {
             return Err(InterpolateError::ComputationError(
                 "Matrix is singular or nearly singular".to_string(),
             ));
@@ -576,6 +583,358 @@ where
     Ok(x)
 }
 
+/// Advanced edge case analysis for interpolation data
+pub struct EdgeCaseAnalysis<F>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
+{
+    /// Whether the data points have near-linear dependencies
+    pub has_near_linear_dependencies: bool,
+    
+    /// Minimum distance between data points
+    pub min_point_distance: F,
+    
+    /// Maximum distance between data points  
+    pub max_point_distance: F,
+    
+    /// Ratio of max to min distance (conditioning indicator)
+    pub distance_ratio: F,
+    
+    /// Number of points that are too close together
+    pub clustered_points: usize,
+    
+    /// Whether data is suitable for interpolation without regularization
+    pub interpolation_feasible: bool,
+    
+    /// Recommended minimum regularization based on data characteristics
+    pub recommended_min_regularization: Option<F>,
+    
+    /// Analysis of boundary effects
+    pub boundary_analysis: BoundaryAnalysis<F>,
+}
+
+/// Analysis of boundary effects and extrapolation stability
+#[derive(Debug, Clone)]
+pub struct BoundaryAnalysis<F>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
+{
+    /// Whether boundary points are well-distributed
+    pub boundary_well_distributed: bool,
+    
+    /// Distance to nearest boundary for domain center
+    pub min_boundary_distance: F,
+    
+    /// Whether extrapolation beyond boundaries is likely to be stable
+    pub extrapolation_stable: bool,
+    
+    /// Convex hull volume (if computable)
+    pub convex_hull_volume: Option<F>,
+}
+
+/// Analyze interpolation data for potential edge cases and numerical issues
+pub fn analyze_interpolation_edge_cases<F>(
+    points: &ArrayView2<F>,
+    _values: &ArrayView1<F>,
+) -> InterpolateResult<EdgeCaseAnalysis<F>>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
+{
+    let n_points = points.nrows();
+    let _dim = points.ncols();
+    
+    if n_points == 0 {
+        return Err(InterpolateError::InvalidInput {
+            message: "Cannot analyze empty dataset".to_string(),
+        });
+    }
+    
+    // Analyze point distances
+    let (min_dist, max_dist, clustered_count) = analyze_point_distances(points)?;
+    let distance_ratio = if min_dist > F::zero() { max_dist / min_dist } else { F::infinity() };
+    
+    // Check for near-linear dependencies
+    let has_linear_deps = check_near_linear_dependencies(points)?;
+    
+    // Determine interpolation feasibility
+    let feasible = !has_linear_deps && min_dist > machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000)));
+    
+    // Recommend regularization based on data characteristics
+    let recommended_reg = if !feasible || distance_ratio > F::from_f64(1e12).unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000))) {
+        Some(suggest_data_based_regularization(min_dist, distance_ratio))
+    } else {
+        None
+    };
+    
+    // Analyze boundary effects
+    let boundary_analysis = analyze_boundary_effects(points)?;
+    
+    Ok(EdgeCaseAnalysis {
+        has_near_linear_dependencies: has_linear_deps,
+        min_point_distance: min_dist,
+        max_point_distance: max_dist,
+        distance_ratio,
+        clustered_points: clustered_count,
+        interpolation_feasible: feasible,
+        recommended_min_regularization: recommended_reg,
+        boundary_analysis,
+    })
+}
+
+/// Analyze distances between data points to detect clustering issues
+fn analyze_point_distances<F>(points: &ArrayView2<F>) -> InterpolateResult<(F, F, usize)>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
+{
+    let n_points = points.nrows();
+    let mut min_dist = F::infinity();
+    let mut max_dist = F::zero();
+    let mut clustered_count = 0;
+    
+    let cluster_threshold = machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000)));
+    
+    for i in 0..n_points {
+        for j in (i + 1)..n_points {
+            // Compute Euclidean distance
+            let mut dist_sq = F::zero();
+            for k in 0..points.ncols() {
+                let diff = points[[i, k]] - points[[j, k]];
+                dist_sq += diff * diff;
+            }
+            let dist = dist_sq.sqrt();
+            
+            if dist < min_dist {
+                min_dist = dist;
+            }
+            if dist > max_dist {
+                max_dist = dist;
+            }
+            
+            if dist < cluster_threshold {
+                clustered_count += 1;
+            }
+        }
+    }
+    
+    Ok((min_dist, max_dist, clustered_count))
+}
+
+/// Check for near-linear dependencies in data points
+fn check_near_linear_dependencies<F>(points: &ArrayView2<F>) -> InterpolateResult<bool>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
+{
+    let n_points = points.nrows();
+    let dim = points.ncols();
+    
+    // For fewer points than dimensions + 1, no dependencies are possible
+    if n_points <= dim {
+        return Ok(false);
+    }
+    
+    // Check rank of the point matrix (after centering)
+    let mut centered_points = points.to_owned();
+    
+    // Center the points
+    for j in 0..dim {
+        let mean = points.column(j).mean().unwrap_or(F::zero());
+        for i in 0..n_points {
+            centered_points[[i, j]] -= mean;
+        }
+    }
+    
+    // Try to assess rank using condition number
+    if dim <= 10 && n_points <= 100 {
+        // For small matrices, we can check more carefully
+        let gram_matrix = compute_gram_matrix(&centered_points.view());
+        let condition_report = assess_matrix_condition(&gram_matrix.view())?;
+        
+        // If condition number is very high, likely have linear dependencies
+        Ok(condition_report.condition_number > F::from_f64(1e14).unwrap_or_else(|| F::from(1e14 as f32).unwrap_or_else(|| F::from(100000000000000))))
+    } else {
+        // For larger matrices, use a simpler heuristic
+        Ok(false) // Conservative: assume no dependencies for large datasets
+    }
+}
+
+/// Compute Gram matrix A^T A for rank analysis
+fn compute_gram_matrix<F>(points: &ArrayView2<F>) -> Array2<F>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
+{
+    let n_points = points.nrows();
+    let dim = points.ncols();
+    let mut gram = Array2::zeros((dim, dim));
+    
+    for i in 0..dim {
+        for j in 0..dim {
+            let mut sum = F::zero();
+            for k in 0..n_points {
+                sum += points[[k, i]] * points[[k, j]];
+            }
+            gram[[i, j]] = sum;
+        }
+    }
+    
+    gram
+}
+
+/// Suggest regularization parameter based on data characteristics
+fn suggest_data_based_regularization<F>(min_distance: F, distance_ratio: F) -> F
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
+{
+    let machine_eps = machine_epsilon::<F>();
+    
+    // Base regularization on minimum distance
+    let distance_based = min_distance * machine_eps.sqrt();
+    
+    // Scale by distance ratio (more ill-conditioned data needs more regularization)
+    let ratio_factor = if distance_ratio > F::from_f64(1e12).unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000))) {
+        F::from_f64(1000.0).unwrap_or_else(|| F::from(1000.0 as f32).unwrap_or_else(|| F::from(1000)))
+    } else if distance_ratio > F::from_f64(1e8).unwrap_or_else(|| F::from(1e8 as f32).unwrap_or_else(|| F::from(100000000))) {
+        F::from_f64(100.0).unwrap_or_else(|| F::from(100.0 as f32).unwrap_or_else(|| F::from(100)))
+    } else {
+        F::from_f64(10.0).unwrap_or_else(|| F::from(10.0 as f32).unwrap_or_else(|| F::from(10)))
+    };
+    
+    distance_based * ratio_factor
+}
+
+/// Analyze boundary effects for interpolation stability  
+fn analyze_boundary_effects<F>(points: &ArrayView2<F>) -> InterpolateResult<BoundaryAnalysis<F>>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
+{
+    let dim = points.ncols();
+    let n_points = points.nrows();
+    
+    if n_points == 0 {
+        return Ok(BoundaryAnalysis {
+            boundary_well_distributed: false,
+            min_boundary_distance: F::zero(),
+            extrapolation_stable: false,
+            convex_hull_volume: None,
+        });
+    }
+    
+    // Find bounding box
+    let mut min_coords = vec![F::infinity(); dim];
+    let mut max_coords = vec![F::neg_infinity(); dim];
+    
+    for i in 0..n_points {
+        for j in 0..dim {
+            let coord = points[[i, j]];
+            if coord < min_coords[j] {
+                min_coords[j] = coord;
+            }
+            if coord > max_coords[j] {
+                max_coords[j] = coord;
+            }
+        }
+    }
+    
+    // Compute minimum distance to boundary
+    let mut min_boundary_dist = F::infinity();
+    for i in 0..n_points {
+        for j in 0..dim {
+            let coord = points[[i, j]];
+            let dist_to_min = coord - min_coords[j];
+            let dist_to_max = max_coords[j] - coord;
+            let boundary_dist = dist_to_min.min(dist_to_max);
+            if boundary_dist < min_boundary_dist {
+                min_boundary_dist = boundary_dist;
+            }
+        }
+    }
+    
+    // Simple heuristic for boundary distribution
+    let domain_sizes: Vec<F> = (0..dim)
+        .map(|j| max_coords[j] - min_coords[j])
+        .collect();
+    let avg_domain_size = domain_sizes.iter().fold(F::zero(), |a, &b| a + b) / F::from_usize(dim).unwrap_or_else(|| F::from(dim as f32).unwrap_or_else(|| F::from(dim)));
+    let well_distributed = min_boundary_dist > avg_domain_size / F::from_f64(10.0).unwrap_or_else(|| F::from(10.0 as f32).unwrap_or_else(|| F::from(10)));
+    
+    // Extrapolation stability heuristic
+    let extrapolation_stable = well_distributed && n_points >= 2 * dim + 1;
+    
+    Ok(BoundaryAnalysis {
+        boundary_well_distributed: well_distributed,
+        min_boundary_distance: min_boundary_dist,
+        extrapolation_stable,
+        convex_hull_volume: None, // Could implement convex hull volume calculation
+    })
+}
+
+/// Detect potential numerical issues early in interpolation setup
+pub fn early_numerical_warning_system<F>(
+    points: &ArrayView2<F>,
+    values: &ArrayView1<F>,
+    method_name: &str,
+) -> InterpolateResult<Vec<String>>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
+{
+    let mut warnings = Vec::new();
+    
+    // Analyze edge cases
+    let edge_analysis = analyze_interpolation_edge_cases(points, values)?;
+    
+    if edge_analysis.has_near_linear_dependencies {
+        warnings.push(format!(
+            "{}: Data points have near-linear dependencies, which may cause numerical instability",
+            method_name
+        ));
+    }
+    
+    if edge_analysis.clustered_points > 0 {
+        warnings.push(format!(
+            "{}: {} pairs of points are very close together (< machine epsilon * 1e6), consider removing duplicates",
+            method_name, edge_analysis.clustered_points
+        ));
+    }
+    
+    if edge_analysis.distance_ratio > F::from_f64(1e12).unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000))) {
+        warnings.push(format!(
+            "{}: Large variation in point distances (ratio: {:.2e}), consider data normalization",
+            method_name, edge_analysis.distance_ratio
+        ));
+    }
+    
+    if !edge_analysis.interpolation_feasible {
+        warnings.push(format!(
+            "{}: Interpolation may not be feasible without regularization due to data characteristics",
+            method_name
+        ));
+        
+        if let Some(reg) = edge_analysis.recommended_min_regularization {
+            warnings.push(format!(
+                "{}: Recommended minimum regularization parameter: {:.2e}",
+                method_name, reg
+            ));
+        }
+    }
+    
+    if !edge_analysis.boundary_analysis.extrapolation_stable {
+        warnings.push(format!(
+            "{}: Extrapolation beyond data boundaries may be unstable",
+            method_name
+        ));
+    }
+    
+    // Check for non-finite values
+    for (i, &val) in values.iter().enumerate() {
+        if !val.is_finite() {
+            warnings.push(format!(
+                "{}: Non-finite value found at index {}: {}",
+                method_name, i, val
+            ));
+        }
+    }
+    
+    Ok(warnings)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -595,7 +954,7 @@ mod tests {
     #[test]
     fn test_condition_assessment_identity() {
         let matrix = Array2::<f64>::eye(3);
-        let report = assess_matrix_condition(&matrix.view()).unwrap();
+        let report = assess_matrix_condition(&matrix.view()).expect("Failed to assess matrix condition");
 
         assert_relative_eq!(report.condition_number, 1.0, epsilon = 1e-10);
         assert!(report.is_well_conditioned);
@@ -618,8 +977,8 @@ mod tests {
 
     #[test]
     fn test_symmetry_check() {
-        let symmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 3.0]).unwrap();
-        let asymmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let symmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 3.0]).expect("Failed to create symmetric matrix");
+        let asymmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Failed to create asymmetric matrix");
 
         assert!(check_symmetry(&symmetric.view()));
         assert!(!check_symmetry(&asymmetric.view()));
@@ -648,7 +1007,7 @@ mod tests {
         matrix[[1, 1]] = 2.0;
         matrix[[2, 2]] = 3.0;
 
-        apply_tikhonov_regularization(&mut matrix, 0.1).unwrap();
+        apply_tikhonov_regularization(&mut matrix, 0.1).expect("Failed to apply Tikhonov regularization");
 
         assert_relative_eq!(matrix[[0, 0]], 1.1, epsilon = 1e-10);
         assert_relative_eq!(matrix[[1, 1]], 2.1, epsilon = 1e-10);
@@ -658,10 +1017,10 @@ mod tests {
     #[test]
     #[cfg(feature = "linalg")]
     fn test_solve_with_monitoring() {
-        let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 1.0]).unwrap();
+        let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 1.0]).expect("Failed to create matrix");
         let rhs = Array1::from_vec(vec![3.0, 2.0]);
 
-        let (solution, report) = solve_with_stability_monitoring(&matrix, &rhs).unwrap();
+        let (solution, report) = solve_with_stability_monitoring(&matrix, &rhs).expect("Failed to solve with stability monitoring");
 
         assert_relative_eq!(solution[0], 1.0, epsilon = 1e-10);
         assert_relative_eq!(solution[1], 1.0, epsilon = 1e-10);

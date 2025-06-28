@@ -369,42 +369,140 @@ where
     Ok(b)
 }
 
-// Refine the characteristic value for even Mathieu functions using continued fraction
+// Refine the characteristic value for even Mathieu functions using robust continued fraction
 fn refine_even_characteristic_value<F>(m: usize, q: F, a: F) -> F
 where
     F: Float + FromPrimitive + Debug,
 {
-    // This is a simplified version - a more robust method would be needed for production
-    let q2 = q * F::from(2.0).unwrap();
-    let m2 = F::from(m * m).unwrap();
-
-    // Simple refinement - would be replaced with proper continued fraction in real implementation
-    if m % 2 == 0 {
-        // Even m
-        a - q2 * q2 / (F::from(4.0).unwrap() * (a - m2 - q2))
-    } else {
-        // Odd m
-        a - q2 * q2 / (F::from(4.0).unwrap() * (a - m2 + q2))
+    // Enhanced continued fraction method for computing characteristic values
+    // Uses the three-term recurrence relation for better numerical stability
+    
+    let q2 = q * q;
+    let m_f = F::from(m).unwrap();
+    
+    // For even Mathieu functions, use the recurrence relation:
+    // (a_r - a)A_r + β_r A_{r+2} + β_{r-2} A_{r-2} = 0
+    // where a_r = (r + m/2)² and β_r = q²/4
+    
+    // Build the continued fraction using the three-term recurrence
+    let max_terms = 50;
+    let tolerance = F::from(1e-14).unwrap();
+    
+    // Initialize the continued fraction
+    let beta = q2 / F::from(4.0).unwrap();
+    let mut cf_value = F::zero();
+    
+    // Start from a large index and work backwards (Miller's algorithm)
+    let start_index = max_terms;
+    let mut ratio_prev = F::zero();
+    let mut ratio_curr = F::from(1e-30).unwrap(); // Small starting value
+    
+    // Backward recurrence to establish the ratios
+    for k in (0..start_index).rev() {
+        let r = m + 2 * k;
+        let r_f = F::from(r).unwrap();
+        let a_r = (r_f + m_f / F::from(2.0).unwrap()).powi(2);
+        
+        let ratio_next = beta / (a_r - a - beta * ratio_curr);
+        
+        // Check for convergence
+        if k < start_index - 5 && (ratio_curr - ratio_prev).abs() < tolerance {
+            cf_value = ratio_curr;
+            break;
+        }
+        
+        ratio_prev = ratio_curr;
+        ratio_curr = ratio_next;
+        
+        if !ratio_curr.is_finite() {
+            break;
+        }
     }
+    
+    // Apply the continued fraction correction
+    let correction = beta * cf_value;
+    
+    // For numerical stability, limit the correction size
+    let max_correction = a.abs() * F::from(0.1).unwrap();
+    let limited_correction = if correction.abs() > max_correction {
+        correction.signum() * max_correction
+    } else {
+        correction
+    };
+    
+    a - limited_correction
 }
 
-// Refine the characteristic value for odd Mathieu functions using continued fraction
+// Refine the characteristic value for odd Mathieu functions using robust continued fraction
 fn refine_odd_characteristic_value<F>(m: usize, q: F, b: F) -> F
 where
     F: Float + FromPrimitive + Debug,
 {
-    // This is a simplified version - a more robust method would be needed for production
-    let q2 = q * F::from(2.0).unwrap();
-    let m2 = F::from(m * m).unwrap();
-
-    // Simple refinement - would be replaced with proper continued fraction in real implementation
-    if m % 2 == 0 {
-        // Even m
-        b - q2 * q2 / (F::from(4.0).unwrap() * (b - m2 + q2))
-    } else {
-        // Odd m
-        b - q2 * q2 / (F::from(4.0).unwrap() * (b - m2 - q2))
+    // Enhanced continued fraction method for odd Mathieu functions
+    // Uses the three-term recurrence relation adapted for odd functions
+    
+    let q2 = q * q;
+    let m_f = F::from(m).unwrap();
+    
+    // For odd Mathieu functions, use similar recurrence but with different indexing:
+    // (b_r - b)B_r + β_r B_{r+2} + β_{r-2} B_{r-2} = 0
+    // where b_r depends on the parity of m
+    
+    // Build the continued fraction using the three-term recurrence
+    let max_terms = 50;
+    let tolerance = F::from(1e-14).unwrap();
+    
+    // Initialize the continued fraction
+    let beta = q2 / F::from(4.0).unwrap();
+    let mut cf_value = F::zero();
+    
+    // Start from a large index and work backwards (Miller's algorithm)
+    let start_index = max_terms;
+    let mut ratio_prev = F::zero();
+    let mut ratio_curr = F::from(1e-30).unwrap(); // Small starting value
+    
+    // Backward recurrence to establish the ratios
+    for k in (0..start_index).rev() {
+        let r = m + 2 * k;
+        let r_f = F::from(r).unwrap();
+        
+        // For odd functions, the diagonal elements have different structure
+        let b_r = if m % 2 == 1 {
+            // For odd m: b_r = (r + 1/2)²
+            (r_f + F::from(0.5).unwrap()).powi(2)
+        } else {
+            // For even m (but odd function): b_r = (r + 1)²
+            (r_f + F::one()).powi(2)
+        };
+        
+        let ratio_next = beta / (b_r - b - beta * ratio_curr);
+        
+        // Check for convergence
+        if k < start_index - 5 && (ratio_curr - ratio_prev).abs() < tolerance {
+            cf_value = ratio_curr;
+            break;
+        }
+        
+        ratio_prev = ratio_curr;
+        ratio_curr = ratio_next;
+        
+        if !ratio_curr.is_finite() {
+            break;
+        }
     }
+    
+    // Apply the continued fraction correction
+    let correction = beta * cf_value;
+    
+    // For numerical stability, limit the correction size
+    let max_correction = b.abs() * F::from(0.1).unwrap();
+    let limited_correction = if correction.abs() > max_correction {
+        correction.signum() * max_correction
+    } else {
+        correction
+    };
+    
+    b - limited_correction
 }
 
 // Compute even Fourier coefficients for Mathieu functions
@@ -435,38 +533,93 @@ where
         return Ok(coeffs);
     }
 
-    // Initialize the coefficients using a simple recurrence relation
-    // In a real implementation, this would use a more robust method
+    // Use robust backward recurrence (Miller's algorithm) for numerical stability
+    // This avoids the instability of forward recurrence for large indices
+    
+    // First, determine the dominant coefficient using backward recurrence
+    let extended_coeffs = num_coeffs + 20; // Extra terms for Miller's algorithm
+    let mut temp_coeffs = vec![F::zero(); extended_coeffs];
+    
+    // Start with a small value at the end
+    temp_coeffs[extended_coeffs - 1] = F::from(1e-30).unwrap();
+    temp_coeffs[extended_coeffs - 2] = F::from(1e-30).unwrap();
+    
+    // Backward recurrence using the three-term relation:
+    // (a_r - a)A_r + β A_{r+2} + β A_{r-2} = 0
+    // Rearranged: A_{r-2} = -[(a_r - a)A_r + β A_{r+2}] / β
+    
+    let beta = q * q / F::from(4.0).unwrap();
+    
     if m % 2 == 0 {
-        // Even m
-        coeffs[0] = F::one(); // Normalization
-
-        // Compute remaining coefficients
-        for i in 1..num_coeffs {
+        // Even m case
+        for i in (2..extended_coeffs).rev() {
             let k = F::from(2 * i).unwrap();
-            let denominator = a - k * k;
-
-            if denominator.abs() < F::from(1e-10).unwrap() {
-                // Avoid division by near-zero
-                coeffs[i] = F::zero();
+            let a_k = k * k;
+            let denominator = beta;
+            
+            if denominator.abs() > F::from(1e-15).unwrap() {
+                temp_coeffs[i - 2] = -((a_k - a) * temp_coeffs[i] + beta * temp_coeffs[i + 2]) / beta;
             } else {
-                coeffs[i] = q * coeffs[i - 1] / denominator;
+                temp_coeffs[i - 2] = F::zero();
+            }
+        }
+        
+        // Find the normalization from the central coefficient (usually the largest)
+        let norm_index = m / 2;
+        if norm_index < coeffs.len() && temp_coeffs[norm_index].abs() > F::from(1e-30).unwrap() {
+            let scale = F::one() / temp_coeffs[norm_index];
+            
+            // Copy and normalize the relevant coefficients
+            for i in 0..num_coeffs {
+                coeffs[i] = temp_coeffs[i] * scale;
+            }
+        } else {
+            // Fallback to forward recurrence if backward fails
+            coeffs[0] = F::one();
+            for i in 1..num_coeffs {
+                let k = F::from(2 * i).unwrap();
+                let denominator = a - k * k;
+                if denominator.abs() > F::from(1e-10).unwrap() {
+                    coeffs[i] = q * coeffs[i - 1] / denominator;
+                } else {
+                    coeffs[i] = F::zero();
+                }
             }
         }
     } else {
-        // Odd m
-        coeffs[0] = F::one(); // Normalization
-
-        // Compute remaining coefficients
-        for i in 1..num_coeffs {
+        // Odd m case  
+        for i in (2..extended_coeffs).rev() {
             let k = F::from(2 * i + 1).unwrap();
-            let denominator = a - k * k;
-
-            if denominator.abs() < F::from(1e-10).unwrap() {
-                // Avoid division by near-zero
-                coeffs[i] = F::zero();
+            let a_k = k * k;
+            let denominator = beta;
+            
+            if denominator.abs() > F::from(1e-15).unwrap() {
+                temp_coeffs[i - 2] = -((a_k - a) * temp_coeffs[i] + beta * temp_coeffs[i + 2]) / beta;
             } else {
-                coeffs[i] = q * coeffs[i - 1] / denominator;
+                temp_coeffs[i - 2] = F::zero();
+            }
+        }
+        
+        // Find appropriate normalization
+        let norm_index = (m - 1) / 2;
+        if norm_index < coeffs.len() && temp_coeffs[norm_index].abs() > F::from(1e-30).unwrap() {
+            let scale = F::one() / temp_coeffs[norm_index];
+            
+            // Copy and normalize the relevant coefficients
+            for i in 0..num_coeffs {
+                coeffs[i] = temp_coeffs[i] * scale;
+            }
+        } else {
+            // Fallback to forward recurrence if backward fails
+            coeffs[0] = F::one();
+            for i in 1..num_coeffs {
+                let k = F::from(2 * i + 1).unwrap();
+                let denominator = a - k * k;
+                if denominator.abs() > F::from(1e-10).unwrap() {
+                    coeffs[i] = q * coeffs[i - 1] / denominator;
+                } else {
+                    coeffs[i] = F::zero();
+                }
             }
         }
     }
@@ -515,37 +668,92 @@ where
         return Ok(coeffs);
     }
 
-    // Initialize the coefficients using a simple recurrence relation
+    // Use robust backward recurrence (Miller's algorithm) for numerical stability
+    // This provides better accuracy than forward recurrence for odd coefficients
+    
+    let extended_coeffs = num_coeffs + 20; // Extra terms for Miller's algorithm
+    let mut temp_coeffs = vec![F::zero(); extended_coeffs];
+    
+    // Start with small values at the end
+    temp_coeffs[extended_coeffs - 1] = F::from(1e-30).unwrap();
+    temp_coeffs[extended_coeffs - 2] = F::from(1e-30).unwrap();
+    
+    // Backward recurrence for odd Mathieu functions
+    // (b_r - b)B_r + β B_{r+2} + β B_{r-2} = 0
+    // Rearranged: B_{r-2} = -[(b_r - b)B_r + β B_{r+2}] / β
+    
+    let beta = q * q / F::from(4.0).unwrap();
+    
     if m % 2 == 1 {
-        // Odd m
-        coeffs[0] = F::one(); // Normalization
-
-        // Compute remaining coefficients
-        for i in 1..num_coeffs {
+        // Odd m case
+        for i in (2..extended_coeffs).rev() {
             let k = F::from(2 * i + 1).unwrap();
-            let denominator = b - k * k;
-
-            if denominator.abs() < F::from(1e-10).unwrap() {
-                // Avoid division by near-zero
-                coeffs[i] = F::zero();
+            let b_k = k * k;
+            let denominator = beta;
+            
+            if denominator.abs() > F::from(1e-15).unwrap() {
+                temp_coeffs[i - 2] = -((b_k - b) * temp_coeffs[i] + beta * temp_coeffs[i + 2]) / beta;
             } else {
-                coeffs[i] = q * coeffs[i - 1] / denominator;
+                temp_coeffs[i - 2] = F::zero();
+            }
+        }
+        
+        // Find the normalization index
+        let norm_index = (m - 1) / 2;
+        if norm_index < coeffs.len() && temp_coeffs[norm_index].abs() > F::from(1e-30).unwrap() {
+            let scale = F::one() / temp_coeffs[norm_index];
+            
+            // Copy and normalize the relevant coefficients
+            for i in 0..num_coeffs {
+                coeffs[i] = temp_coeffs[i] * scale;
+            }
+        } else {
+            // Fallback to forward recurrence if backward fails
+            coeffs[0] = F::one();
+            for i in 1..num_coeffs {
+                let k = F::from(2 * i + 1).unwrap();
+                let denominator = b - k * k;
+                if denominator.abs() > F::from(1e-10).unwrap() {
+                    coeffs[i] = q * coeffs[i - 1] / denominator;
+                } else {
+                    coeffs[i] = F::zero();
+                }
             }
         }
     } else {
-        // Even m
-        coeffs[0] = F::one(); // Normalization
-
-        // Compute remaining coefficients
-        for i in 1..num_coeffs {
+        // Even m case (but odd function)
+        for i in (2..extended_coeffs).rev() {
             let k = F::from(2 * i + 2).unwrap();
-            let denominator = b - k * k;
-
-            if denominator.abs() < F::from(1e-10).unwrap() {
-                // Avoid division by near-zero
-                coeffs[i] = F::zero();
+            let b_k = k * k;
+            let denominator = beta;
+            
+            if denominator.abs() > F::from(1e-15).unwrap() {
+                temp_coeffs[i - 2] = -((b_k - b) * temp_coeffs[i] + beta * temp_coeffs[i + 2]) / beta;
             } else {
-                coeffs[i] = q * coeffs[i - 1] / denominator;
+                temp_coeffs[i - 2] = F::zero();
+            }
+        }
+        
+        // Find appropriate normalization
+        let norm_index = (m - 2) / 2;
+        if norm_index < coeffs.len() && temp_coeffs[norm_index].abs() > F::from(1e-30).unwrap() {
+            let scale = F::one() / temp_coeffs[norm_index];
+            
+            // Copy and normalize the relevant coefficients
+            for i in 0..num_coeffs {
+                coeffs[i] = temp_coeffs[i] * scale;
+            }
+        } else {
+            // Fallback to forward recurrence if backward fails
+            coeffs[0] = F::one();
+            for i in 1..num_coeffs {
+                let k = F::from(2 * i + 2).unwrap();
+                let denominator = b - k * k;
+                if denominator.abs() > F::from(1e-10).unwrap() {
+                    coeffs[i] = q * coeffs[i - 1] / denominator;
+                } else {
+                    coeffs[i] = F::zero();
+                }
             }
         }
     }

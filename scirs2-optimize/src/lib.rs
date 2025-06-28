@@ -213,6 +213,13 @@ pub mod simd_ops;
 pub mod sparse_numdiff; // Refactored into a module with submodules
 pub mod stochastic;
 pub mod unconstrained;
+pub mod visualization;
+pub mod gpu;
+pub mod distributed;
+pub mod distributed_gpu;
+pub mod self_tuning;
+pub mod unified_pipeline;
+pub mod benchmarking;
 
 // Common optimization result structure
 pub mod result;
@@ -258,6 +265,38 @@ pub use stochastic::{
     StochasticMethod, StochasticOptions,
 };
 pub use unconstrained::{minimize, Bounds};
+pub use visualization::{
+    OptimizationTrajectory, OptimizationVisualizer, VisualizationConfig, OutputFormat, ColorScheme,
+    tracking::TrajectoryTracker,
+};
+pub use gpu::{
+    GpuOptimizationConfig, GpuOptimizationContext, GpuFunction, GpuPrecision,
+    acceleration::{AccelerationManager, AccelerationConfig, AccelerationStrategy, PerformanceStats},
+    algorithms::{GpuDifferentialEvolution, GpuParticleSwarm},
+};
+pub use distributed::{
+    DistributedConfig, DistributionStrategy, MPIInterface, DistributedOptimizationContext,
+    algorithms::{DistributedDifferentialEvolution, DistributedParticleSwarm},
+    DistributedStats, WorkAssignment,
+};
+pub use distributed_gpu::{
+    DistributedGpuOptimizer, DistributedGpuConfig, DistributedGpuResults, DistributedGpuStats,
+    GpuCommunicationStrategy, IterationStats,
+};
+pub use self_tuning::{
+    SelfTuningOptimizer, SelfTuningConfig, AdaptationStrategy, TunableParameter,
+    ParameterValue, PerformanceMetrics, AdaptationResult, ParameterChange,
+    presets,
+};
+pub use unified_pipeline::{
+    UnifiedOptimizer, UnifiedOptimizationConfig, UnifiedOptimizationResults,
+    presets as unified_presets,
+};
+pub use benchmarking::{
+    BenchmarkSystem, BenchmarkConfig, BenchmarkResults, BenchmarkRun, BenchmarkSummary,
+    TestProblem, ProblemCharacteristics, AlgorithmRanking, RuntimeStats,
+    test_functions, benchmark_suites,
+};
 
 // Prelude module for convenient imports
 pub mod prelude {
@@ -312,6 +351,38 @@ pub mod prelude {
     };
     pub use crate::sparse_numdiff::{sparse_hessian, sparse_jacobian, SparseFiniteDiffOptions};
     pub use crate::unconstrained::{minimize, Bounds, Method as UnconstrainedMethod, Options};
+    pub use crate::visualization::{
+        OptimizationTrajectory, OptimizationVisualizer, VisualizationConfig, OutputFormat, ColorScheme,
+        tracking::TrajectoryTracker,
+    };
+    pub use crate::gpu::{
+        GpuOptimizationConfig, GpuOptimizationContext, GpuFunction, GpuPrecision,
+        acceleration::{AccelerationManager, AccelerationConfig, AccelerationStrategy, PerformanceStats},
+        algorithms::{GpuDifferentialEvolution, GpuParticleSwarm},
+    };
+    pub use crate::distributed::{
+        DistributedConfig, DistributionStrategy, MPIInterface, DistributedOptimizationContext,
+        algorithms::{DistributedDifferentialEvolution, DistributedParticleSwarm},
+        DistributedStats, WorkAssignment,
+    };
+    pub use crate::distributed_gpu::{
+        DistributedGpuOptimizer, DistributedGpuConfig, DistributedGpuResults, DistributedGpuStats,
+        GpuCommunicationStrategy, IterationStats,
+    };
+    pub use crate::self_tuning::{
+        SelfTuningOptimizer, SelfTuningConfig, AdaptationStrategy, TunableParameter,
+        ParameterValue, PerformanceMetrics, AdaptationResult, ParameterChange,
+        presets,
+    };
+    pub use crate::unified_pipeline::{
+        UnifiedOptimizer, UnifiedOptimizationConfig, UnifiedOptimizationResults,
+        presets as unified_presets,
+    };
+    pub use crate::benchmarking::{
+        BenchmarkSystem, BenchmarkConfig, BenchmarkResults, BenchmarkRun, BenchmarkSummary,
+        TestProblem, ProblemCharacteristics, AlgorithmRanking, RuntimeStats,
+        test_functions, benchmark_suites,
+    };
 }
 
 #[cfg(test)]

@@ -290,9 +290,13 @@ pub fn sparse_cosine_similarity(v1: &SparseVector, v2: &SparseVector) -> Result<
 
 /// Memory usage statistics for sparse representation
 pub struct MemoryStats {
+    /// Memory used by sparse representation in bytes
     pub sparse_bytes: usize,
+    /// Memory that would be used by dense representation in bytes
     pub dense_bytes: usize,
+    /// Compression ratio (dense_bytes / sparse_bytes)
     pub compression_ratio: f64,
+    /// Sparsity ratio (number of zeros / total elements)
     pub sparsity: f64,
 }
 
@@ -397,12 +401,11 @@ mod tests {
     #[test]
     fn test_memory_efficiency_large() {
         // Create a large corpus with sparse content
-        let mut texts = Vec::new();
-        for i in 0..100 {
-            texts.push(format!("document {} contains word{}", i, i % 10).as_str());
-        }
+        let texts: Vec<String> = (0..100)
+            .map(|i| format!("document {} contains word{}", i, i % 10))
+            .collect();
         
-        let text_refs: Vec<&str> = texts.iter().map(|s| s.as_str()).collect();
+        let text_refs: Vec<&str> = texts.iter().map(|s| s.as_ref()).collect();
 
         let mut vectorizer = SparseCountVectorizer::new(false);
         let sparse_matrix = vectorizer.fit_transform(&text_refs).unwrap();

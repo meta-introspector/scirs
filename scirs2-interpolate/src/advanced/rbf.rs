@@ -428,7 +428,7 @@ impl<
     pub fn interpolate(&self, query_points: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check dimensions
         if query_points.shape()[1] != self.points.shape()[1] {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "query points must have the same dimension as sample points".to_string(),
             ));
         }
@@ -542,7 +542,7 @@ fn self_solve_linear_system<
 ) -> InterpolateResult<Array1<F>> {
     let n = a.shape()[0];
     if a.shape()[1] != n || b.len() != n {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "matrix dimensions are incompatible".to_string(),
         ));
     }

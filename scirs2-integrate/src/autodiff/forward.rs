@@ -205,6 +205,7 @@ impl<F: IntegrateFloat> ForwardODEJacobian<F> {
 pub struct VectorizedForwardAD<F: IntegrateFloat> {
     n_vars: usize,
     n_directions: usize,
+    #[allow(dead_code)]
     tolerance: F,
 }
 

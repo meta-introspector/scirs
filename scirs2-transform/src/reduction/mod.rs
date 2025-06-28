@@ -8,11 +8,13 @@ mod tsne;
 mod umap;
 mod isomap;
 mod lle;
+mod spectral_embedding;
 
 pub use crate::reduction::tsne::{trustworthiness, TSNE};
 pub use crate::reduction::umap::UMAP;
 pub use crate::reduction::isomap::Isomap;
 pub use crate::reduction::lle::LLE;
+pub use crate::reduction::spectral_embedding::{SpectralEmbedding, AffinityMethod};
 
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};

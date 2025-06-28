@@ -3,10 +3,9 @@
 //! EWC helps prevent catastrophic forgetting by adding a regularization term
 //! that penalizes changes to important parameters.
 
-use crate::error::{Result, NeuralError};
+use crate::error::Result;
 use crate::models::sequential::Sequential;
 use ndarray::prelude::*;
-use std::collections::HashMap;
 
 /// EWC configuration
 #[derive(Debug, Clone)]

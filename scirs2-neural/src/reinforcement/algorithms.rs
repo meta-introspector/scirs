@@ -5,7 +5,6 @@ use crate::reinforcement::{RLAgent, ExperienceBatch, LossInfo};
 use crate::reinforcement::environments::Environment;
 use crate::reinforcement::replay_buffer::{ReplayBuffer, PrioritizedReplayBuffer};
 use ndarray::prelude::*;
-use std::collections::HashMap;
 
 /// Training configuration for RL algorithms
 #[derive(Debug, Clone)]

@@ -11,7 +11,6 @@
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, Axis};
 use num_traits::{Float, FromPrimitive};
-use rand::prelude::*;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rand_distr::{Distribution, Normal, StandardNormal};
 use std::fmt::{Debug, Display};
@@ -90,7 +89,10 @@ impl<T: Float + FromPrimitive + Debug + Display + std::iter::Sum> BootstrapInter
         let m = x_new.len();
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(rand::rng()).unwrap(),
+            None => {
+                let mut thread_rng = rand::rng();
+                StdRng::from_rng(&mut thread_rng)
+            },
         };
         
         // Storage for bootstrap samples

@@ -875,9 +875,7 @@ impl HalfspaceIntersection {
         match self.dim {
             2 => self.compute_polygon_area(),
             3 => self.compute_polyhedron_volume(),
-            _ => Err(SpatialError::NotImplementedError(
-                "Volume computation only supports 2D and 3D".to_string(),
-            )),
+            _ => self.compute_high_dim_volume(),
         }
     }
 
@@ -969,6 +967,26 @@ impl HalfspaceIntersection {
         }
 
         Ok(total_volume)
+    }
+
+    /// Compute volume for high-dimensional halfspace intersection
+    fn compute_high_dim_volume(&self) -> SpatialResult<f64> {
+        use crate::convex_hull::ConvexHull;
+        
+        // For high-dimensional halfspace intersections, we can compute the volume
+        // by treating the vertices as a convex polytope and using convex hull algorithms
+        
+        if self.vertices.nrows() < self.dim + 1 {
+            // Not enough vertices to form a polytope
+            return Ok(0.0);
+        }
+        
+        // Create a convex hull from the vertices
+        // The vertices of the halfspace intersection already form a convex polytope
+        let hull = ConvexHull::new(&self.vertices.view())?;
+        
+        // Compute and return the volume of this convex polytope
+        hull.volume()
     }
 }
 

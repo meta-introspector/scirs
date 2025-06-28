@@ -3,10 +3,10 @@
 //! This module provides utilities for extracting features from time series data,
 //! including Fourier features, wavelet features, and lag features.
 
-use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix1, Ix2};
+use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
-use scirs2_fft::{fft, Complex};
-use std::f64::consts::PI;
+use num_complex::Complex;
+use scirs2_fft::fft;
 
 use crate::error::{Result, TransformError};
 
@@ -73,7 +73,7 @@ impl FourierFeatures {
         }
 
         // Compute FFT
-        fft(&mut complex_data);
+        fft(&mut complex_data, None);
 
         // Extract features (only positive frequencies due to symmetry)
         let n_freq = (n / 2).min(self.n_components);

@@ -142,9 +142,9 @@ impl<T: Vectorizer + Send + Sync> ParallelVectorizer<T> {
         }
 
         let result = Arc::try_unwrap(result)
-            .unwrap_or_else(|_| panic!("Failed to unwrap result Arc"))
+            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap result Arc".to_string()))?
             .into_inner()
-            .unwrap_or_else(|_| panic!("Failed to unwrap result Mutex"));
+            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap result Mutex".to_string()))?;
 
         Ok(result)
     }
@@ -200,7 +200,7 @@ impl ParallelTextProcessor {
         texts: &[&str],
         f: F,
         update_interval: usize,
-    ) -> (Vec<R>, Vec<usize>)
+    ) -> Result<(Vec<R>, Vec<usize>)>
     where
         F: Fn(&str) -> R + Send + Sync,
         R: Send,
@@ -225,11 +225,11 @@ impl ParallelTextProcessor {
             .collect();
 
         let progress = Arc::try_unwrap(progress)
-            .unwrap_or_else(|_| panic!("Failed to unwrap progress Arc"))
+            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap progress Arc".to_string()))?
             .into_inner()
-            .unwrap_or_else(|_| panic!("Failed to unwrap progress Mutex"));
+            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap progress Mutex".to_string()))?;
 
-        (results, progress)
+        Ok((results, progress))
     }
 
     /// Batch process texts with custom chunking
@@ -324,9 +324,9 @@ impl ParallelCorpusProcessor {
 
         // Return results
         let results = Arc::try_unwrap(results)
-            .unwrap_or_else(|_| panic!("Failed to unwrap results Arc"))
+            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap results Arc".to_string()))?
             .into_inner()
-            .unwrap_or_else(|_| panic!("Failed to unwrap results Mutex"));
+            .map_err(|_| crate::error::TextError::RuntimeError("Failed to unwrap results Mutex".to_string()))?;
 
         Ok(results)
     }
@@ -465,7 +465,7 @@ mod tests {
         let texts = create_test_texts();
 
         let (word_counts, progress) =
-            processor.process_with_progress(&texts, |text| text.split_whitespace().count(), 2);
+            processor.process_with_progress(&texts, |text| text.split_whitespace().count(), 2).unwrap();
 
         assert_eq!(word_counts, vec![5, 4, 6, 2, 6]);
         assert!(!progress.is_empty());

@@ -310,7 +310,13 @@ pub fn least_squares_design(
 
     // Weight the equations
     for i in 0..n_freqs {
-        let weight = response.weights[i].sqrt();
+        let weight = if response.weights[i] >= 0.0 {
+            response.weights[i].sqrt()
+        } else {
+            return Err(SignalError::ValueError(
+                format!("Negative weight at index {}", i)
+            ));
+        };
         for j in 0..n_coeffs {
             design_matrix[[i, j]] *= weight;
         }
@@ -321,7 +327,13 @@ pub fn least_squares_design(
         .magnitude
         .iter()
         .zip(response.weights.iter())
-        .map(|(&mag, &weight)| mag * weight.sqrt())
+        .map(|(&mag, &weight)| {
+            if weight >= 0.0 {
+                mag * weight.sqrt()
+            } else {
+                0.0 // Handle negative weights gracefully
+            }
+        })
         .collect();
 
     // Solve least squares problem: A * h = b
@@ -349,8 +361,13 @@ pub fn least_squares_design(
         .iter()
         .zip(weighted_desired.iter())
         .map(|(&est, &des)| (est - des).powi(2))
-        .sum::<f64>()
-        .sqrt();
+        .sum::<f64>();
+    
+    let error = if error >= 0.0 {
+        error.sqrt()
+    } else {
+        0.0 // Should not happen for sum of squares, but handle gracefully
+    };
 
     let freq_response = compute_frequency_response(&coefficients, 512)?;
 
@@ -390,7 +407,13 @@ pub fn constrained_least_squares_design(
 
     // Fill magnitude equations
     for (i, &freq) in response.frequencies.iter().enumerate() {
-        let weight = response.weights[i].sqrt();
+        let weight = if response.weights[i] >= 0.0 {
+            response.weights[i].sqrt()
+        } else {
+            return Err(SignalError::ValueError(
+                format!("Negative weight at index {}", i)
+            ));
+        };
         for j in 0..n_coeffs {
             let omega = PI * freq;
             if j == 0 {
@@ -439,7 +462,11 @@ pub fn constrained_least_squares_design(
         }
         error += response.weights[i] * (magnitude - response.magnitude[i]).powi(2);
     }
-    error = error.sqrt();
+    error = if error >= 0.0 {
+        error.sqrt()
+    } else {
+        0.0 // Should not happen for sum of squares, but handle gracefully
+    };
 
     let freq_response = compute_frequency_response(&coefficients, 512)?;
 

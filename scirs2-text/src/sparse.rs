@@ -228,14 +228,18 @@ impl SparseVector {
         
         // Merge-like algorithm for sorted indices
         while i < self.indices.len() && j < other.indices.len() {
-            if self.indices[i] == other.indices[j] {
-                result += self.values[i] * other.values[j];
-                i += 1;
-                j += 1;
-            } else if self.indices[i] < other.indices[j] {
-                i += 1;
-            } else {
-                j += 1;
+            match self.indices[i].cmp(&other.indices[j]) {
+                std::cmp::Ordering::Equal => {
+                    result += self.values[i] * other.values[j];
+                    i += 1;
+                    j += 1;
+                }
+                std::cmp::Ordering::Less => {
+                    i += 1;
+                }
+                std::cmp::Ordering::Greater => {
+                    j += 1;
+                }
             }
         }
         
@@ -566,6 +570,49 @@ impl CscMatrix {
         
         Ok(SparseVector::from_indices_values(indices, values, self.n_rows))
     }
+
+    /// Get the shape of the matrix
+    pub fn shape(&self) -> (usize, usize) {
+        (self.n_rows, self.n_cols)
+    }
+
+    /// Get the number of non-zero elements
+    pub fn nnz(&self) -> usize {
+        self.values.len()
+    }
+
+    /// Get memory usage in bytes
+    pub fn memory_usage(&self) -> usize {
+        self.values.len() * std::mem::size_of::<f64>() +
+        self.row_indices.len() * std::mem::size_of::<usize>() +
+        self.col_ptrs.len() * std::mem::size_of::<usize>()
+    }
+
+    /// Multiply by a dense vector (A^T * x)
+    pub fn dot(&self, vector: &Array1<f64>) -> Result<Array1<f64>> {
+        if vector.len() != self.n_rows {
+            return Err(TextError::InvalidInput(
+                format!("Vector dimension {} doesn't match matrix rows {}", 
+                       vector.len(), self.n_rows)
+            ));
+        }
+        
+        let mut result = Array1::zeros(self.n_cols);
+        
+        for col_idx in 0..self.n_cols {
+            let start = self.col_ptrs[col_idx];
+            let end = self.col_ptrs[col_idx + 1];
+            
+            let mut sum = 0.0;
+            for i in start..end {
+                let row_idx = self.row_indices[i];
+                sum += self.values[i] * vector[row_idx];
+            }
+            result[col_idx] = sum;
+        }
+        
+        Ok(result)
+    }
 }
 
 /// Block sparse matrix for better cache efficiency
@@ -637,6 +684,502 @@ impl BlockSparseMatrix {
     }
 }
 
+/// Hierarchical sparse matrix using two-level indexing for ultra-sparse data
+#[derive(Debug, Clone)]
+pub struct HierarchicalSparseMatrix {
+    /// Top-level blocks (coarse granularity)
+    top_level_blocks: HashMap<(usize, usize), CompressedBlock>,
+    /// Block size for top level
+    top_block_size: usize,
+    /// Sub-block size within each top-level block
+    sub_block_size: usize,
+    /// Matrix dimensions
+    n_rows: usize,
+    n_cols: usize,
+}
+
+/// Compressed block storing sparse data with RLE compression
+#[derive(Debug, Clone)]
+pub struct CompressedBlock {
+    /// Run-length encoded indices and values
+    rle_data: Vec<(usize, f64)>, // (run_length, value)
+    /// Original block dimensions
+    block_rows: usize,
+    block_cols: usize,
+}
+
+impl HierarchicalSparseMatrix {
+    /// Create new hierarchical sparse matrix
+    pub fn new(n_rows: usize, n_cols: usize, top_block_size: usize, sub_block_size: usize) -> Self {
+        Self {
+            top_level_blocks: HashMap::new(),
+            top_block_size,
+            sub_block_size,
+            n_rows,
+            n_cols,
+        }
+    }
+
+    /// Set value with hierarchical indexing
+    pub fn set(&mut self, row: usize, col: usize, value: f64) -> Result<()> {
+        if row >= self.n_rows || col >= self.n_cols {
+            return Err(TextError::InvalidInput(
+                format!("Index ({}, {}) out of bounds", row, col)
+            ));
+        }
+
+        let top_row = row / self.top_block_size;
+        let top_col = col / self.top_block_size;
+        
+        // For simplicity, store as COO within each block for now
+        // In a full implementation, this would use sub-blocks
+        let block = self.top_level_blocks
+            .entry((top_row, top_col))
+            .or_insert_with(|| CompressedBlock::new(self.top_block_size, self.top_block_size));
+        
+        // Store the linearized position and value
+        let local_row = row % self.top_block_size;
+        let local_col = col % self.top_block_size;
+        let linear_pos = local_row * self.top_block_size + local_col;
+        
+        block.set_value(linear_pos, value);
+        Ok(())
+    }
+
+    /// Get value with hierarchical lookup
+    pub fn get(&self, row: usize, col: usize) -> f64 {
+        if row >= self.n_rows || col >= self.n_cols {
+            return 0.0;
+        }
+
+        let top_row = row / self.top_block_size;
+        let top_col = col / self.top_block_size;
+        
+        if let Some(block) = self.top_level_blocks.get(&(top_row, top_col)) {
+            let local_row = row % self.top_block_size;
+            let local_col = col % self.top_block_size;
+            let linear_pos = local_row * self.top_block_size + local_col;
+            block.get_value(linear_pos)
+        } else {
+            0.0
+        }
+    }
+
+    /// Get memory usage
+    pub fn memory_usage(&self) -> usize {
+        self.top_level_blocks.values()
+            .map(|block| block.memory_usage())
+            .sum::<usize>() +
+            std::mem::size_of::<HashMap<(usize, usize), CompressedBlock>>()
+    }
+}
+
+impl CompressedBlock {
+    fn new(rows: usize, cols: usize) -> Self {
+        Self {
+            rle_data: Vec::new(),
+            block_rows: rows,
+            block_cols: cols,
+        }
+    }
+
+    fn set_value(&mut self, position: usize, value: f64) {
+        if value == 0.0 {
+            // Remove zero values to maintain sparsity
+            self.rle_data.retain(|(pos, _)| *pos != position);
+            return;
+        }
+
+        // Find if position already exists
+        if let Some(entry) = self.rle_data.iter_mut().find(|(pos, _)| *pos == position) {
+            entry.1 = value;
+        } else {
+            // Insert new entry and keep sorted by position
+            let insert_pos = self.rle_data.binary_search_by_key(&position, |&(pos, _)| pos)
+                .unwrap_or_else(|pos| pos);
+            self.rle_data.insert(insert_pos, (position, value));
+        }
+    }
+
+    fn get_value(&self, position: usize) -> f64 {
+        self.rle_data.iter()
+            .find(|(pos, _)| *pos == position)
+            .map(|(_, value)| *value)
+            .unwrap_or(0.0)
+    }
+
+    fn memory_usage(&self) -> usize {
+        self.rle_data.len() * std::mem::size_of::<(usize, f64)>()
+    }
+}
+
+/// Bit-packed sparse vector for boolean data with extreme compression
+#[derive(Debug, Clone)]
+pub struct BitPackedSparseVector {
+    /// Bit-packed indices (each bit represents presence/absence)
+    bit_data: Vec<u64>,
+    /// Total size of the vector
+    size: usize,
+}
+
+impl BitPackedSparseVector {
+    /// Create from a boolean sparse vector
+    pub fn from_bool_indices(indices: &[usize], size: usize) -> Self {
+        let num_words = (size + 63) / 64; // Round up to nearest 64
+        let mut bit_data = vec![0u64; num_words];
+
+        for &idx in indices {
+            if idx < size {
+                let word_idx = idx / 64;
+                let bit_idx = idx % 64;
+                bit_data[word_idx] |= 1u64 << bit_idx;
+            }
+        }
+
+        Self { bit_data, size }
+    }
+
+    /// Get all set indices
+    pub fn get_indices(&self) -> Vec<usize> {
+        let mut indices = Vec::new();
+        
+        for (word_idx, &word) in self.bit_data.iter().enumerate() {
+            if word != 0 {
+                for bit_idx in 0..64 {
+                    if word & (1u64 << bit_idx) != 0 {
+                        let global_idx = word_idx * 64 + bit_idx;
+                        if global_idx < self.size {
+                            indices.push(global_idx);
+                        }
+                    }
+                }
+            }
+        }
+
+        indices
+    }
+
+    /// Check if index is set
+    pub fn is_set(&self, idx: usize) -> bool {
+        if idx >= self.size {
+            return false;
+        }
+
+        let word_idx = idx / 64;
+        let bit_idx = idx % 64;
+        
+        if word_idx < self.bit_data.len() {
+            self.bit_data[word_idx] & (1u64 << bit_idx) != 0
+        } else {
+            false
+        }
+    }
+
+    /// Count number of set bits
+    pub fn count_ones(&self) -> usize {
+        self.bit_data.iter().map(|&word| word.count_ones() as usize).sum()
+    }
+
+    /// Memory usage in bytes
+    pub fn memory_usage(&self) -> usize {
+        self.bit_data.len() * std::mem::size_of::<u64>() + std::mem::size_of::<usize>()
+    }
+
+    /// Intersection with another bit-packed vector
+    pub fn intersection(&self, other: &BitPackedSparseVector) -> Result<BitPackedSparseVector> {
+        if self.size != other.size {
+            return Err(TextError::InvalidInput(
+                format!("Vector sizes don't match for intersection: {} vs {}", self.size, other.size)
+            ));
+        }
+
+        let mut result_data = Vec::with_capacity(self.bit_data.len());
+        for (&a, &b) in self.bit_data.iter().zip(other.bit_data.iter()) {
+            result_data.push(a & b);
+        }
+
+        Ok(BitPackedSparseVector {
+            bit_data: result_data,
+            size: self.size,
+        })
+    }
+
+    /// Union with another bit-packed vector
+    pub fn union(&self, other: &BitPackedSparseVector) -> Result<BitPackedSparseVector> {
+        if self.size != other.size {
+            return Err(TextError::InvalidInput(
+                format!("Vector sizes don't match for union: {} vs {}", self.size, other.size)
+            ));
+        }
+
+        let mut result_data = Vec::with_capacity(self.bit_data.len());
+        for (&a, &b) in self.bit_data.iter().zip(other.bit_data.iter()) {
+            result_data.push(a | b);
+        }
+
+        Ok(BitPackedSparseVector {
+            bit_data: result_data,
+            size: self.size,
+        })
+    }
+}
+
+/// Memory pool for efficient sparse matrix allocation
+pub struct SparseMemoryPool {
+    /// Pre-allocated f64 values
+    value_pool: Vec<Vec<f64>>,
+    /// Pre-allocated usize indices
+    index_pool: Vec<Vec<usize>>,
+    /// Block size for allocations
+    block_size: usize,
+}
+
+impl SparseMemoryPool {
+    /// Create new memory pool
+    pub fn new(block_size: usize) -> Self {
+        Self {
+            value_pool: Vec::new(),
+            index_pool: Vec::new(),
+            block_size,
+        }
+    }
+
+    /// Allocate a vector of f64 values
+    pub fn allocate_values(&mut self, size: usize) -> Vec<f64> {
+        if let Some(mut vec) = self.value_pool.pop() {
+            vec.clear();
+            vec.reserve(size);
+            vec
+        } else {
+            Vec::with_capacity(size.max(self.block_size))
+        }
+    }
+
+    /// Allocate a vector of indices
+    pub fn allocate_indices(&mut self, size: usize) -> Vec<usize> {
+        if let Some(mut vec) = self.index_pool.pop() {
+            vec.clear();
+            vec.reserve(size);
+            vec
+        } else {
+            Vec::with_capacity(size.max(self.block_size))
+        }
+    }
+
+    /// Return vectors to the pool
+    pub fn deallocate_values(&mut self, mut vec: Vec<f64>) {
+        if vec.capacity() >= self.block_size {
+            vec.clear();
+            self.value_pool.push(vec);
+        }
+    }
+
+    /// Return index vectors to the pool
+    pub fn deallocate_indices(&mut self, mut vec: Vec<usize>) {
+        if vec.capacity() >= self.block_size {
+            vec.clear();
+            self.index_pool.push(vec);
+        }
+    }
+}
+
+/// Adaptive sparse matrix that chooses optimal format based on sparsity pattern
+#[derive(Debug)]
+pub enum AdaptiveSparseMatrix {
+    Csr(CsrMatrix),
+    Csc(CscMatrix),
+    Coo(CooMatrix),
+    Block(BlockSparseMatrix),
+    Hierarchical(HierarchicalSparseMatrix),
+}
+
+impl AdaptiveSparseMatrix {
+    /// Create from COO and automatically select best format
+    pub fn from_coo_adaptive(coo: CooMatrix) -> Self {
+        let nnz = coo.nnz();
+        let (n_rows, n_cols) = (coo.n_rows, coo.n_cols);
+        let total_elements = n_rows * n_cols;
+        let sparsity = nnz as f64 / total_elements as f64;
+
+        // Choose format based on sparsity and size
+        if sparsity < 0.001 && total_elements > 10000 {
+            // Very sparse large matrix - use hierarchical
+            let mut hierarchical = HierarchicalSparseMatrix::new(n_rows, n_cols, 64, 8);
+            // Convert COO to hierarchical (simplified)
+            Self::Hierarchical(hierarchical)
+        } else if sparsity < 0.01 && nnz > 1000 {
+            // Sparse with some structure - use block format
+            let block_size = ((nnz as f64).sqrt() as usize).max(8).min(64);
+            Self::Block(BlockSparseMatrix::new(n_rows, n_cols, block_size))
+        } else if n_rows > n_cols * 2 {
+            // Tall matrix - CSC might be better for column operations
+            Self::Csc(CscMatrix::from_coo(&coo))
+        } else {
+            // Default to CSR for row operations
+            Self::Csr(coo.to_csr())
+        }
+    }
+
+    /// Get memory usage
+    pub fn memory_usage(&self) -> usize {
+        match self {
+            Self::Csr(m) => m.memory_usage(),
+            Self::Csc(m) => m.memory_usage(),
+            Self::Coo(m) => m.nnz() * (2 * std::mem::size_of::<usize>() + std::mem::size_of::<f64>()),
+            Self::Block(m) => m.memory_usage(),
+            Self::Hierarchical(m) => m.memory_usage(),
+        }
+    }
+}
+
+/// Streaming sparse matrix processor for out-of-core operations
+pub struct StreamingSparseProcessor {
+    chunk_size: usize,
+    memory_limit: usize,
+}
+
+impl StreamingSparseProcessor {
+    /// Create new streaming processor
+    pub fn new(chunk_size: usize, memory_limit: usize) -> Self {
+        Self {
+            chunk_size,
+            memory_limit,
+        }
+    }
+
+    /// Process large sparse matrix in chunks
+    pub fn process_chunks<F, R>(&self, matrix: &CsrMatrix, processor: F) -> Result<Vec<R>>
+    where
+        F: Fn(&CsrMatrix) -> Result<R>,
+    {
+        let mut results = Vec::new();
+        let (n_rows, n_cols) = matrix.shape();
+        let rows_per_chunk = (self.chunk_size).min(n_rows);
+
+        for chunk_start in (0..n_rows).step_by(rows_per_chunk) {
+            let chunk_end = (chunk_start + rows_per_chunk).min(n_rows);
+            
+            // Extract chunk (simplified - would implement efficient row slicing)
+            let chunk = self.extract_row_slice(matrix, chunk_start, chunk_end)?;
+            let result = processor(&chunk)?;
+            results.push(result);
+        }
+
+        Ok(results)
+    }
+
+    /// Extract a slice of rows from CSR matrix
+    fn extract_row_slice(&self, matrix: &CsrMatrix, start_row: usize, end_row: usize) -> Result<CsrMatrix> {
+        // Simplified implementation - would efficiently slice the CSR data
+        let mut values = Vec::new();
+        let mut col_indices = Vec::new();
+        let mut row_ptrs = vec![0];
+
+        for row in start_row..end_row {
+            if let Ok(sparse_row) = matrix.get_row(row) {
+                values.extend(sparse_row.values().iter());
+                col_indices.extend(sparse_row.indices().iter());
+                row_ptrs.push(values.len());
+            }
+        }
+
+        Ok(CsrMatrix {
+            values,
+            col_indices,
+            row_ptrs,
+            n_rows: end_row - start_row,
+            n_cols: matrix.shape().1,
+        })
+    }
+}
+
+/// Approximate sparse matrix using sketching for reduced memory
+#[derive(Debug, Clone)]
+pub struct ApproximateSparseMatrix {
+    /// Hash-based sketches of rows
+    row_sketches: Vec<Vec<(u32, f32)>>, // (hash, value) pairs
+    /// Sketch size
+    sketch_size: usize,
+    /// Original dimensions
+    n_rows: usize,
+    n_cols: usize,
+}
+
+impl ApproximateSparseMatrix {
+    /// Create approximate representation of a sparse matrix
+    pub fn from_csr(matrix: &CsrMatrix, sketch_size: usize) -> Self {
+        let (n_rows, n_cols) = matrix.shape();
+        let mut row_sketches = Vec::with_capacity(n_rows);
+
+        for row_idx in 0..n_rows {
+            if let Ok(row) = matrix.get_row(row_idx) {
+                let sketch = Self::create_row_sketch(&row, sketch_size);
+                row_sketches.push(sketch);
+            } else {
+                row_sketches.push(Vec::new());
+            }
+        }
+
+        Self {
+            row_sketches,
+            sketch_size,
+            n_rows,
+            n_cols,
+        }
+    }
+
+    /// Create a hash-based sketch of a sparse row
+    fn create_row_sketch(row: &SparseVector, sketch_size: usize) -> Vec<(u32, f32)> {
+        let mut sketch = vec![(0u32, 0.0f32); sketch_size];
+        
+        for (&idx, &val) in row.indices().iter().zip(row.values().iter()) {
+            // Simple hash function for demonstration
+            let hash = ((idx as u64 * 2654435761u64) % (sketch_size as u64)) as usize;
+            sketch[hash].0 = idx as u32;
+            sketch[hash].1 += val as f32;
+        }
+
+        // Keep only non-zero sketches
+        sketch.into_iter().filter(|(_, val)| *val != 0.0).collect()
+    }
+
+    /// Approximate dot product between two row sketches
+    pub fn approximate_row_similarity(&self, row1: usize, row2: usize) -> f32 {
+        if row1 >= self.n_rows || row2 >= self.n_rows {
+            return 0.0;
+        }
+
+        let sketch1 = &self.row_sketches[row1];
+        let sketch2 = &self.row_sketches[row2];
+
+        let mut similarity = 0.0f32;
+        let mut i = 0;
+        let mut j = 0;
+
+        // Merge-like algorithm on hash keys
+        while i < sketch1.len() && j < sketch2.len() {
+            match sketch1[i].0.cmp(&sketch2[j].0) {
+                std::cmp::Ordering::Equal => {
+                    similarity += sketch1[i].1 * sketch2[j].1;
+                    i += 1;
+                    j += 1;
+                }
+                std::cmp::Ordering::Less => i += 1,
+                std::cmp::Ordering::Greater => j += 1,
+            }
+        }
+
+        similarity
+    }
+
+    /// Memory usage
+    pub fn memory_usage(&self) -> usize {
+        self.row_sketches.iter()
+            .map(|sketch| sketch.len() * std::mem::size_of::<(u32, f32)>())
+            .sum::<usize>()
+    }
+}
+
 /// Quantized sparse vector for reduced memory usage
 #[derive(Debug, Clone)]
 pub struct QuantizedSparseVector {
@@ -679,7 +1222,7 @@ impl QuantizedSparseVector {
         let values: Vec<i8> = sparse.values.iter()
             .map(|&v| {
                 let scaled = ((v - min_val) / range * 255.0).round();
-                (scaled.max(0.0).min(255.0) as i16 - 128) as i8  // Center around 0
+                (scaled.clamp(0.0, 255.0) as i16 - 128) as i8  // Center around 0
             })
             .collect();
         
@@ -717,7 +1260,7 @@ impl QuantizedSparseVector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
+    use ndarray::{arr1, arr2};
 
     #[test]
     fn test_csr_from_dense() {

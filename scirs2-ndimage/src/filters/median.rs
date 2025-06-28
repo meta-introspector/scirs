@@ -167,12 +167,12 @@ where
     // For floating-point data, histogram-based approach is complex due to
     // continuous values. We'll fall back to the standard approach but with
     // optimizations for better cache usage.
-    // 
+    //
     // In a production implementation, this could be enhanced with:
     // 1. Quantization for floating-point values
     // 2. Approximate median using percentile bins
     // 3. Specialized handling for integer-like float values
-    
+
     // For now, use the optimized rank filter which already has good performance
     median_filter(input, size, mode)
 }
@@ -198,7 +198,7 @@ where
     // 2. Process chunks with appropriate overlap
     // 3. Merge results seamlessly
     // 4. Use parallel processing for independent chunks
-    
+
     // For now, use the standard implementation which already has
     // parallel processing for large arrays
     median_filter(input, size, mode)

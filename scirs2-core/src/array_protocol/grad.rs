@@ -17,7 +17,7 @@
 //! type that implements the `ArrayProtocol` trait.
 
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use ndarray::{Array, Dimension, IxDyn};
@@ -25,6 +25,90 @@ use ndarray::{Array, Dimension, IxDyn};
 use crate::array_protocol::operations::matmul;
 use crate::array_protocol::{ArrayProtocol, NdarrayWrapper};
 use crate::error::{CoreError, CoreResult, ErrorContext};
+
+/// Dictionary for storing parameter gradients
+#[derive(Clone)]
+pub struct GradientDict {
+    gradients: HashMap<String, Box<dyn ArrayProtocol>>,
+}
+
+impl std::fmt::Debug for GradientDict {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GradientDict")
+            .field(
+                "gradients",
+                &format!("{{keys: {:?}}}", self.gradients.keys().collect::<Vec<_>>()),
+            )
+            .finish()
+    }
+}
+
+impl GradientDict {
+    /// Create a new empty gradient dictionary
+    pub fn new() -> Self {
+        Self {
+            gradients: HashMap::new(),
+        }
+    }
+
+    /// Insert a gradient for a parameter
+    pub fn insert(&mut self, name: String, gradient: Box<dyn ArrayProtocol>) {
+        self.gradients.insert(name, gradient);
+    }
+
+    /// Get a gradient by parameter name
+    pub fn get(&self, name: &str) -> Option<&dyn ArrayProtocol> {
+        self.gradients.get(name).map(|b| b.as_ref())
+    }
+
+    /// Get a mutable reference to a gradient by parameter name
+    pub fn get_mut(&mut self, name: &str) -> Option<&mut Box<dyn ArrayProtocol>> {
+        self.gradients.get_mut(name)
+    }
+
+    /// Iterate over parameter names and gradients
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &Box<dyn ArrayProtocol>)> {
+        self.gradients.iter()
+    }
+
+    /// Merge another gradient dictionary into this one
+    pub fn merge(&mut self, other: GradientDict) {
+        for (name, gradient) in other.gradients {
+            self.gradients.insert(name, gradient);
+        }
+    }
+
+    /// Check if the dictionary is empty
+    pub fn is_empty(&self) -> bool {
+        self.gradients.is_empty()
+    }
+
+    /// Get the number of gradients
+    pub fn len(&self) -> usize {
+        self.gradients.len()
+    }
+
+    /// Clear all gradients
+    pub fn clear(&mut self) {
+        self.gradients.clear();
+    }
+
+    /// Get all parameter names
+    pub fn keys(&self) -> impl Iterator<Item = &String> {
+        self.gradients.keys()
+    }
+
+    /// Get all gradients
+    pub fn values(&self) -> impl Iterator<Item = &Box<dyn ArrayProtocol>> {
+        self.gradients.values()
+    }
+}
+
+impl Default for GradientDict {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 // Convert Box<dyn ArrayProtocol> to Rc<dyn ArrayProtocol> with proper trait object handling
 fn box_to_rc_array_protocol(boxed: Box<dyn ArrayProtocol>) -> Rc<dyn ArrayProtocol> {
@@ -867,6 +951,33 @@ impl Variable {
     pub fn name(&self) -> &str {
         &self.name
     }
+
+    /// Set the gradient of the variable
+    pub fn set_gradient(&mut self, gradient: Box<dyn ArrayProtocol>) -> CoreResult<()> {
+        // Convert Box to Rc
+        let gradient_rc = self.box_to_rc(gradient);
+
+        // Set gradient on the tensor node
+        self.tensor.node.borrow_mut().grad = Some(gradient_rc);
+        Ok(())
+    }
+
+    /// Helper to convert Box<dyn ArrayProtocol> to Rc<dyn ArrayProtocol>
+    fn box_to_rc(&self, boxed: Box<dyn ArrayProtocol>) -> Rc<dyn ArrayProtocol> {
+        // Extract data and create new Rc
+        if let Some(ndarray_wrapper) = boxed
+            .as_ref()
+            .as_any()
+            .downcast_ref::<NdarrayWrapper<f64, IxDyn>>()
+        {
+            let array_clone = ndarray_wrapper.as_array().clone();
+            Rc::new(NdarrayWrapper::new(array_clone))
+        } else {
+            // Fallback for other types
+            let fallback_array = Array::<f64, _>::zeros(IxDyn(&[1, 1]));
+            Rc::new(NdarrayWrapper::new(fallback_array))
+        }
+    }
 }
 
 /// Trait for optimizers that update variables.
@@ -882,6 +993,28 @@ pub trait Optimizer {
 
     /// Get all variables managed by the optimizer.
     fn variables(&self) -> &[Variable];
+
+    /// Accumulate gradients for momentum-based optimizers
+    fn accumulate_gradients(&mut self, gradients: &GradientDict) -> CoreResult<()> {
+        // Default implementation: update variable gradients
+        for (param_name, gradient) in gradients.iter() {
+            // Find the variable with matching name and update its gradient
+            for var in self.variables_mut() {
+                if var.name() == param_name {
+                    var.set_gradient(gradient.clone())?;
+                    break;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Get mutable reference to variables (for default implementation)
+    fn variables_mut(&mut self) -> &mut [Variable] {
+        // Default implementation returns empty slice
+        // Implementations should override this if they support accumulate_gradients
+        &mut []
+    }
 }
 
 /// Stochastic Gradient Descent optimizer.
@@ -967,6 +1100,10 @@ impl Optimizer for SGD {
 
     fn variables(&self) -> &[Variable] {
         &self.variables
+    }
+
+    fn variables_mut(&mut self) -> &mut [Variable] {
+        &mut self.variables
     }
 }
 
@@ -1095,6 +1232,10 @@ impl Optimizer for Adam {
 
     fn variables(&self) -> &[Variable] {
         &self.variables
+    }
+
+    fn variables_mut(&mut self) -> &mut [Variable] {
+        &mut self.variables
     }
 }
 

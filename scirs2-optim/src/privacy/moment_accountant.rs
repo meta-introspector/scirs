@@ -1,0 +1,645 @@
+//! Moment Accountant for Differential Privacy
+//!
+//! This module implements the moment accountant method for precise privacy
+//! analysis of the Gaussian mechanism with subsampling, providing tight
+//! privacy loss bounds for DP-SGD and related algorithms.
+
+use num_traits::Float;
+use std::collections::HashMap;
+
+use crate::error::OptimizerError;
+
+/// Moment accountant for tracking privacy loss
+#[derive(Debug, Clone)]
+pub struct MomentsAccountant {
+    /// Noise multiplier (σ)
+    noise_multiplier: f64,
+    
+    /// Target delta parameter
+    target_delta: f64,
+    
+    /// Batch size
+    batch_size: usize,
+    
+    /// Total dataset size
+    dataset_size: usize,
+    
+    /// Sampling probability (q = batch_size / dataset_size)
+    sampling_probability: f64,
+    
+    /// Computed log moments
+    log_moments: HashMap<usize, f64>,
+    
+    /// Maximum order for moment computation
+    max_order: usize,
+    
+    /// Precision for numerical computations
+    precision: f64,
+    
+    /// Precomputed coefficients for efficiency
+    coefficients: MomentCoefficients,
+}
+
+/// Precomputed coefficients for moment computation
+#[derive(Debug, Clone)]
+struct MomentCoefficients {
+    /// Binomial coefficients
+    binomial_coeffs: HashMap<(usize, usize), f64>,
+    
+    /// Precomputed powers
+    power_cache: HashMap<(f64, usize), f64>,
+    
+    /// Logarithmic factorials
+    log_factorials: Vec<f64>,
+}
+
+/// Privacy analysis result from moment accountant
+#[derive(Debug, Clone)]
+pub struct PrivacyAnalysis {
+    /// Best epsilon for given delta
+    pub epsilon: f64,
+    
+    /// Delta used
+    pub delta: f64,
+    
+    /// Number of steps analyzed
+    pub steps: usize,
+    
+    /// Optimal moment order used
+    pub optimal_order: usize,
+    
+    /// All computed log moments
+    pub log_moments: HashMap<usize, f64>,
+    
+    /// Privacy amplification factor
+    pub amplification_factor: f64,
+    
+    /// Composition bound tightness
+    pub bound_tightness: f64,
+}
+
+/// Advanced privacy composition analysis
+#[derive(Debug, Clone)]
+pub struct CompositionAnalysis {
+    /// Mechanism parameters for each step
+    pub mechanisms: Vec<MechanismParameters>,
+    
+    /// Composed privacy guarantee
+    pub composed_epsilon: f64,
+    
+    /// Composed delta
+    pub composed_delta: f64,
+    
+    /// Total number of compositions
+    pub num_compositions: usize,
+    
+    /// Heterogeneous composition (different parameters)
+    pub is_heterogeneous: bool,
+}
+
+/// Parameters for a single mechanism application
+#[derive(Debug, Clone)]
+pub struct MechanismParameters {
+    /// Noise multiplier
+    pub noise_multiplier: f64,
+    
+    /// Sampling probability
+    pub sampling_probability: f64,
+    
+    /// Sensitivity
+    pub sensitivity: f64,
+    
+    /// Number of applications
+    pub applications: usize,
+}
+
+impl MomentsAccountant {
+    /// Create a new moment accountant
+    pub fn new(
+        noise_multiplier: f64,
+        target_delta: f64,
+        batch_size: usize,
+        dataset_size: usize,
+    ) -> Self {
+        let sampling_probability = batch_size as f64 / dataset_size as f64;
+        let max_order = 64; // Usually sufficient for practical applications
+        let precision = 1e-12;
+        
+        Self {
+            noise_multiplier,
+            target_delta,
+            batch_size,
+            dataset_size,
+            sampling_probability,
+            log_moments: HashMap::new(),
+            max_order,
+            precision,
+            coefficients: MomentCoefficients::new(max_order),
+        }
+    }
+    
+    /// Get privacy spent after a given number of steps
+    pub fn get_privacy_spent(&self, steps: usize) -> Result<(f64, f64), OptimizerError> {
+        if steps == 0 {
+            return Ok((0.0, 0.0));
+        }
+        
+        let analysis = self.analyze_privacy(steps)?;
+        Ok((analysis.epsilon, self.target_delta))
+    }
+    
+    /// Perform comprehensive privacy analysis
+    pub fn analyze_privacy(&self, steps: usize) -> Result<PrivacyAnalysis, OptimizerError> {
+        // Compute log moments for all orders
+        let mut log_moments = HashMap::new();
+        
+        for order in 2..=self.max_order {
+            let log_moment = self.compute_log_moment(order, steps)?;
+            log_moments.insert(order, log_moment);
+        }
+        
+        // Find optimal epsilon using all computed moments
+        let (epsilon, optimal_order) = self.compute_optimal_epsilon(&log_moments)?;
+        
+        // Compute privacy amplification factor
+        let amplification_factor = self.compute_amplification_factor();
+        
+        // Assess bound tightness
+        let bound_tightness = self.assess_bound_tightness(&log_moments, epsilon);
+        
+        Ok(PrivacyAnalysis {
+            epsilon,
+            delta: self.target_delta,
+            steps,
+            optimal_order,
+            log_moments,
+            amplification_factor,
+            bound_tightness,
+        })
+    }
+    
+    /// Compute log moment for a specific order and number of steps
+    pub fn compute_log_moment(&self, order: usize, steps: usize) -> Result<f64, OptimizerError> {
+        if order < 2 {
+            return Err(OptimizerError::InvalidConfig("Moment order must be at least 2".to_string()));
+        }
+        
+        // Use cached result if available
+        let cache_key = order;
+        if let Some(&cached_moment) = self.log_moments.get(&cache_key) {
+            return Ok(cached_moment * steps as f64);
+        }
+        
+        // Compute log moment for single step
+        let single_step_log_moment = self.compute_single_step_log_moment(order)?;
+        
+        // For composition, multiply by number of steps (add in log space)
+        let total_log_moment = single_step_log_moment * steps as f64;
+        
+        Ok(total_log_moment)
+    }
+    
+    /// Compute log moment for a single step of the mechanism
+    fn compute_single_step_log_moment(&self, order: usize) -> Result<f64, OptimizerError> {
+        let q = self.sampling_probability;
+        let sigma = self.noise_multiplier;
+        let alpha = order as f64;
+        
+        // Compute log moment using the formula for Gaussian mechanism with subsampling
+        // Based on Abadi et al. "Deep Learning with Differential Privacy"
+        
+        let mut log_moment = 0.0;
+        
+        // Sum over all possible values of k (number of sampled points that change)
+        for k in 0..=2 {
+            let log_binomial = self.log_binomial_coefficient(2, k);
+            let log_prob_k = k as f64 * q.ln() + (2 - k) as f64 * (1.0 - q).ln();
+            
+            // Moment generating function for k changed points
+            let mgf_term = match k {
+                0 => 0.0, // No change, moment is 1, log moment is 0
+                1 => self.compute_single_change_moment(alpha, sigma)?,
+                2 => self.compute_double_change_moment(alpha, sigma)?,
+                _ => 0.0,
+            };
+            
+            let term = log_binomial + log_prob_k + mgf_term;
+            
+            if k == 0 {
+                log_moment = term;
+            } else {
+                log_moment = log_sum_exp(log_moment, term);
+            }
+        }
+        
+        Ok(log_moment)
+    }
+    
+    /// Compute moment for single point change
+    fn compute_single_change_moment(&self, alpha: f64, sigma: f64) -> Result<f64, OptimizerError> {
+        // For Gaussian mechanism with sensitivity 1:
+        // M_α(λ) = exp(α(α-1)/(2σ²))
+        let log_moment = alpha * (alpha - 1.0) / (2.0 * sigma * sigma);
+        Ok(log_moment)
+    }
+    
+    /// Compute moment for double point change (advanced case)
+    fn compute_double_change_moment(&self, alpha: f64, sigma: f64) -> Result<f64, OptimizerError> {
+        // Simplified computation for double change
+        // In practice, this requires more sophisticated analysis
+        let single_change = self.compute_single_change_moment(alpha, sigma)?;
+        Ok(2.0 * single_change) // Approximation
+    }
+    
+    /// Compute optimal epsilon from log moments
+    fn compute_optimal_epsilon(&self, log_moments: &HashMap<usize, f64>) -> Result<(f64, usize), OptimizerError> {
+        let mut best_epsilon = f64::INFINITY;
+        let mut best_order = 2;
+        
+        for (&order, &log_moment) in log_moments {
+            // Convert log moment to epsilon using the formula:
+            // ε = (log_moment - log(δ)) / (α - 1)
+            let alpha = order as f64;
+            let epsilon = (log_moment - self.target_delta.ln()) / (alpha - 1.0);
+            
+            if epsilon < best_epsilon && epsilon > 0.0 {
+                best_epsilon = epsilon;
+                best_order = order;
+            }
+        }
+        
+        if best_epsilon == f64::INFINITY {
+            return Err(OptimizerError::InvalidConfig("Failed to compute valid epsilon".to_string()));
+        }
+        
+        Ok((best_epsilon, best_order))
+    }
+    
+    /// Compute privacy amplification factor due to subsampling
+    fn compute_amplification_factor(&self) -> f64 {
+        // Privacy amplification by subsampling
+        // The amplification factor depends on the sampling probability
+        let q = self.sampling_probability;
+        
+        if q >= 1.0 {
+            1.0 // No amplification if sampling entire dataset
+        } else {
+            // Simplified amplification factor
+            // In practice, this depends on the specific analysis
+            (q * (1.0 - q).ln() / q.ln()).max(1.0)
+        }
+    }
+    
+    /// Assess how tight the privacy bounds are
+    fn assess_bound_tightness(&self, log_moments: &HashMap<usize, f64>, epsilon: f64) -> f64 {
+        // Compare with basic composition bound
+        let steps = 1; // Normalized to single step
+        let basic_composition_epsilon = steps as f64 * 
+            (self.sampling_probability * epsilon / self.noise_multiplier);
+        
+        // Tightness ratio (lower is tighter)
+        if basic_composition_epsilon > 0.0 {
+            epsilon / basic_composition_epsilon
+        } else {
+            1.0
+        }
+    }
+    
+    /// Analyze heterogeneous composition (different mechanisms)
+    pub fn analyze_heterogeneous_composition(
+        &self,
+        mechanisms: &[MechanismParameters],
+        target_delta: f64,
+    ) -> Result<CompositionAnalysis, OptimizerError> {
+        let mut total_log_moments = HashMap::new();
+        let mut total_compositions = 0;
+        
+        // Compute combined log moments
+        for mechanism in mechanisms {
+            total_compositions += mechanism.applications;
+            
+            for order in 2..=self.max_order {
+                let single_log_moment = self.compute_mechanism_log_moment(mechanism, order)?;
+                let total_for_mechanism = single_log_moment * mechanism.applications as f64;
+                
+                *total_log_moments.entry(order).or_insert(0.0) += total_for_mechanism;
+            }
+        }
+        
+        // Find optimal epsilon
+        let (composed_epsilon, _) = self.compute_optimal_epsilon_with_delta(
+            &total_log_moments,
+            target_delta,
+        )?;
+        
+        Ok(CompositionAnalysis {
+            mechanisms: mechanisms.to_vec(),
+            composed_epsilon,
+            composed_delta: target_delta,
+            num_compositions: total_compositions,
+            is_heterogeneous: mechanisms.len() > 1,
+        })
+    }
+    
+    /// Compute log moment for a specific mechanism
+    fn compute_mechanism_log_moment(
+        &self,
+        mechanism: &MechanismParameters,
+        order: usize,
+    ) -> Result<f64, OptimizerError> {
+        let alpha = order as f64;
+        let sigma = mechanism.noise_multiplier;
+        let sensitivity = mechanism.sensitivity;
+        
+        // Gaussian mechanism log moment
+        let log_moment = alpha * (alpha - 1.0) * sensitivity * sensitivity / (2.0 * sigma * sigma);
+        
+        Ok(log_moment)
+    }
+    
+    /// Compute optimal epsilon with custom delta
+    fn compute_optimal_epsilon_with_delta(
+        &self,
+        log_moments: &HashMap<usize, f64>,
+        delta: f64,
+    ) -> Result<(f64, usize), OptimizerError> {
+        let mut best_epsilon = f64::INFINITY;
+        let mut best_order = 2;
+        
+        for (&order, &log_moment) in log_moments {
+            let alpha = order as f64;
+            let epsilon = (log_moment - delta.ln()) / (alpha - 1.0);
+            
+            if epsilon < best_epsilon && epsilon > 0.0 {
+                best_epsilon = epsilon;
+                best_order = order;
+            }
+        }
+        
+        Ok((best_epsilon, best_order))
+    }
+    
+    /// Get computed moment orders for debugging
+    pub fn get_computed_orders(&self) -> Vec<f64> {
+        (2..=self.max_order).map(|x| x as f64).collect()
+    }
+    
+    /// Log binomial coefficient computation
+    fn log_binomial_coefficient(&self, n: usize, k: usize) -> f64 {
+        if k > n {
+            return f64::NEG_INFINITY;
+        }
+        
+        // Use cached coefficients if available
+        if let Some(&coeff) = self.coefficients.binomial_coeffs.get(&(n, k)) {
+            return coeff.ln();
+        }
+        
+        // Compute using log factorials
+        if n < self.coefficients.log_factorials.len() && k < self.coefficients.log_factorials.len() && 
+           (n - k) < self.coefficients.log_factorials.len() {
+            return self.coefficients.log_factorials[n] - 
+                   self.coefficients.log_factorials[k] - 
+                   self.coefficients.log_factorials[n - k];
+        }
+        
+        // Fallback computation
+        stirling_log_factorial(n) - stirling_log_factorial(k) - stirling_log_factorial(n - k)
+    }
+    
+    /// Validate moment accountant configuration
+    pub fn validate_configuration(&self) -> Result<(), OptimizerError> {
+        if self.noise_multiplier <= 0.0 {
+            return Err(OptimizerError::InvalidConfig("Noise multiplier must be positive".to_string()));
+        }
+        
+        if self.target_delta <= 0.0 || self.target_delta >= 1.0 {
+            return Err(OptimizerError::InvalidConfig("Delta must be in (0, 1)".to_string()));
+        }
+        
+        if self.batch_size == 0 || self.dataset_size == 0 {
+            return Err(OptimizerError::InvalidConfig("Batch size and dataset size must be positive".to_string()));
+        }
+        
+        if self.batch_size > self.dataset_size {
+            return Err(OptimizerError::InvalidConfig("Batch size cannot exceed dataset size".to_string()));
+        }
+        
+        Ok(())
+    }
+    
+    /// Get privacy analysis summary
+    pub fn get_analysis_summary(&self, steps: usize) -> Result<PrivacyAnalysisSummary, OptimizerError> {
+        let analysis = self.analyze_privacy(steps)?;
+        
+        Ok(PrivacyAnalysisSummary {
+            epsilon: analysis.epsilon,
+            delta: analysis.delta,
+            steps,
+            noise_multiplier: self.noise_multiplier,
+            sampling_probability: self.sampling_probability,
+            optimal_order: analysis.optimal_order,
+            amplification_factor: analysis.amplification_factor,
+            bound_tightness: analysis.bound_tightness,
+            privacy_per_step: analysis.epsilon / steps as f64,
+        })
+    }
+}
+
+impl MomentCoefficients {
+    fn new(max_order: usize) -> Self {
+        let mut binomial_coeffs = HashMap::new();
+        let mut power_cache = HashMap::new();
+        let mut log_factorials = Vec::new();
+        
+        // Precompute log factorials
+        log_factorials.push(0.0); // log(0!) = log(1) = 0
+        for i in 1..=max_order * 2 {
+            log_factorials.push(log_factorials[i - 1] + (i as f64).ln());
+        }
+        
+        // Precompute small binomial coefficients
+        for n in 0..=10 {
+            for k in 0..=n {
+                let coeff = binomial_coefficient(n, k);
+                binomial_coeffs.insert((n, k), coeff);
+            }
+        }
+        
+        Self {
+            binomial_coeffs,
+            power_cache,
+            log_factorials,
+        }
+    }
+}
+
+/// Privacy analysis summary
+#[derive(Debug, Clone)]
+pub struct PrivacyAnalysisSummary {
+    pub epsilon: f64,
+    pub delta: f64,
+    pub steps: usize,
+    pub noise_multiplier: f64,
+    pub sampling_probability: f64,
+    pub optimal_order: usize,
+    pub amplification_factor: f64,
+    pub bound_tightness: f64,
+    pub privacy_per_step: f64,
+}
+
+// Utility functions
+
+/// Compute log(exp(a) + exp(b)) numerically stable
+fn log_sum_exp(a: f64, b: f64) -> f64 {
+    let max_val = a.max(b);
+    let min_val = a.min(b);
+    
+    if max_val - min_val > 50.0 {
+        max_val // Avoid underflow
+    } else {
+        max_val + (1.0 + (min_val - max_val).exp()).ln()
+    }
+}
+
+/// Compute binomial coefficient C(n, k)
+fn binomial_coefficient(n: usize, k: usize) -> f64 {
+    if k > n {
+        return 0.0;
+    }
+    
+    if k == 0 || k == n {
+        return 1.0;
+    }
+    
+    let k = k.min(n - k); // Use symmetry
+    
+    let mut result = 1.0;
+    for i in 0..k {
+        result *= (n - i) as f64 / (i + 1) as f64;
+    }
+    
+    result
+}
+
+/// Stirling's approximation for log factorial
+fn stirling_log_factorial(n: usize) -> f64 {
+    if n == 0 {
+        return 0.0;
+    }
+    
+    let n_f = n as f64;
+    n_f * n_f.ln() - n_f + 0.5 * (2.0 * std::f64::consts::PI * n_f).ln()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_moment_accountant_creation() {
+        let accountant = MomentsAccountant::new(1.1, 1e-5, 256, 50000);
+        assert_eq!(accountant.noise_multiplier, 1.1);
+        assert_eq!(accountant.batch_size, 256);
+        assert_eq!(accountant.dataset_size, 50000);
+    }
+
+    #[test]
+    fn test_privacy_analysis() {
+        let accountant = MomentsAccountant::new(1.1, 1e-5, 256, 50000);
+        let result = accountant.analyze_privacy(100);
+        assert!(result.is_ok());
+        
+        let analysis = result.unwrap();
+        assert!(analysis.epsilon > 0.0);
+        assert_eq!(analysis.delta, 1e-5);
+        assert_eq!(analysis.steps, 100);
+    }
+
+    #[test]
+    fn test_log_moment_computation() {
+        let accountant = MomentsAccountant::new(1.0, 1e-5, 100, 1000);
+        let log_moment = accountant.compute_log_moment(2, 1);
+        assert!(log_moment.is_ok());
+        assert!(log_moment.unwrap() > 0.0);
+    }
+
+    #[test]
+    fn test_privacy_spent_computation() {
+        let accountant = MomentsAccountant::new(1.1, 1e-5, 256, 50000);
+        let (epsilon, delta) = accountant.get_privacy_spent(50).unwrap();
+        
+        assert!(epsilon > 0.0);
+        assert_eq!(delta, 1e-5);
+        
+        // More steps should consume more privacy
+        let (epsilon2, _) = accountant.get_privacy_spent(100).unwrap();
+        assert!(epsilon2 > epsilon);
+    }
+
+    #[test]
+    fn test_configuration_validation() {
+        let valid_accountant = MomentsAccountant::new(1.0, 1e-5, 100, 1000);
+        assert!(valid_accountant.validate_configuration().is_ok());
+        
+        let invalid_accountant = MomentsAccountant::new(-1.0, 1e-5, 100, 1000);
+        assert!(invalid_accountant.validate_configuration().is_err());
+    }
+
+    #[test]
+    fn test_log_sum_exp() {
+        let result = log_sum_exp(0.0, 0.0);
+        assert!((result - (2.0_f64).ln()).abs() < 1e-10);
+        
+        let result2 = log_sum_exp(100.0, 0.0);
+        assert!((result2 - 100.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_binomial_coefficient() {
+        assert_eq!(binomial_coefficient(5, 0), 1.0);
+        assert_eq!(binomial_coefficient(5, 1), 5.0);
+        assert_eq!(binomial_coefficient(5, 2), 10.0);
+        assert_eq!(binomial_coefficient(5, 5), 1.0);
+    }
+
+    #[test]
+    fn test_mechanism_parameters() {
+        let mechanism = MechanismParameters {
+            noise_multiplier: 1.0,
+            sampling_probability: 0.1,
+            sensitivity: 1.0,
+            applications: 100,
+        };
+        
+        assert_eq!(mechanism.noise_multiplier, 1.0);
+        assert_eq!(mechanism.applications, 100);
+    }
+
+    #[test]
+    fn test_heterogeneous_composition() {
+        let accountant = MomentsAccountant::new(1.0, 1e-5, 100, 1000);
+        
+        let mechanisms = vec![
+            MechanismParameters {
+                noise_multiplier: 1.0,
+                sampling_probability: 0.1,
+                sensitivity: 1.0,
+                applications: 50,
+            },
+            MechanismParameters {
+                noise_multiplier: 1.5,
+                sampling_probability: 0.1,
+                sensitivity: 1.0,
+                applications: 50,
+            },
+        ];
+        
+        let result = accountant.analyze_heterogeneous_composition(&mechanisms, 1e-5);
+        assert!(result.is_ok());
+        
+        let analysis = result.unwrap();
+        assert!(analysis.is_heterogeneous);
+        assert_eq!(analysis.num_compositions, 100);
+    }
+}

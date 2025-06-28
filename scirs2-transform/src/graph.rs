@@ -3,15 +3,12 @@
 //! This module provides utilities for transforming graph structures into
 //! numerical feature representations suitable for machine learning.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2, s};
-use num_traits::{Float, NumCast};
-use std::collections::{HashMap, HashSet, VecDeque};
+use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use rand::rngs::StdRng;
+use rand::Rng;
 
 use crate::error::{Result, TransformError};
-use scirs2_core::parallel_ops::*;
-use scirs2_linalg::{eigen, SVD};
+use scirs2_linalg::eigh;
 
 /// Node embeddings using spectral decomposition of graph Laplacian
 pub struct SpectralEmbedding {
@@ -113,7 +110,7 @@ impl SpectralEmbedding {
         let laplacian = self.compute_laplacian(adjacency)?;
         
         // Compute eigendecomposition
-        let (eigenvalues, eigenvectors) = eigen::symmetric_eigen(&laplacian)
+        let (eigenvalues, eigenvectors) = eigh(&laplacian.view(), None)
             .map_err(|e| TransformError::ComputationError(format!("Eigendecomposition failed: {}", e)))?;
         
         // Select the smallest n_components eigenvalues (excluding zero)
@@ -206,11 +203,7 @@ impl DeepWalk {
         let n_nodes = adjacency.shape()[0];
         let mut walks = Vec::with_capacity(n_nodes * self.n_walks);
         
-        let mut rng = if let Some(seed) = self.random_state {
-            StdRng::seed_from_u64(seed)
-        } else {
-            StdRng::from_entropy()
-        };
+        let mut rng = rand::rng();
         
         // Build neighbor lists for efficient sampling
         let mut neighbors: Vec<Vec<usize>> = vec![Vec::new(); n_nodes];
@@ -235,7 +228,7 @@ impl DeepWalk {
                     }
                     
                     // Randomly select next node
-                    let next_idx = rng.gen_range(0..node_neighbors.len());
+                    let next_idx = rng.random_range(0..node_neighbors.len());
                     current = node_neighbors[next_idx];
                     walk.push(current);
                 }
@@ -251,17 +244,13 @@ impl DeepWalk {
     
     /// Train embeddings using Skip-gram with negative sampling
     fn train_embeddings(&self, walks: &[Vec<usize>], n_nodes: usize) -> Array2<f64> {
-        let mut rng = if let Some(seed) = self.random_state {
-            StdRng::seed_from_u64(seed)
-        } else {
-            StdRng::from_entropy()
-        };
+        let mut rng = rand::rng();
         
         // Initialize embeddings randomly
         let mut embeddings = Array2::zeros((n_nodes, self.embedding_dim));
         for i in 0..n_nodes {
             for j in 0..self.embedding_dim {
-                embeddings[[i, j]] = rng.gen_range(-0.5..0.5) / self.embedding_dim as f64;
+                embeddings[[i, j]] = rng.random_range(-0.5..0.5) / self.embedding_dim as f64;
             }
         }
         
@@ -286,8 +275,8 @@ impl DeepWalk {
                         let context = walk[context_idx];
                         
                         // Positive sample
-                        let mut center_vec = embeddings.row(center).to_owned();
-                        let mut context_vec = context_embeddings.row(context).to_owned();
+                        let center_vec = embeddings.row(center).to_owned();
+                        let context_vec = context_embeddings.row(context).to_owned();
                         let dot_product = center_vec.dot(&context_vec);
                         let sigmoid = 1.0 / (1.0 + (-dot_product).exp());
                         
@@ -304,7 +293,7 @@ impl DeepWalk {
                         
                         // Negative samples
                         for _ in 0..self.negative_samples {
-                            let negative = rng.gen_range(0..n_nodes);
+                            let negative = rng.random_range(0..n_nodes);
                             if negative == context {
                                 continue;
                             }
@@ -381,7 +370,7 @@ impl Node2Vec {
         let mut rng = if let Some(seed) = self.base_model.random_state {
             StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_entropy()
+            StdRng::seed_from_u64(rand::random::<u64>())
         };
         
         // Build neighbor lists
@@ -404,7 +393,7 @@ impl Node2Vec {
                 }
                 
                 // First step: uniform random
-                let first_step = neighbors[start_node][rng.gen_range(0..neighbors[start_node].len())];
+                let first_step = neighbors[start_node][rng.random_range(0..neighbors[start_node].len())];
                 walk.push(first_step);
                 
                 // Subsequent steps: biased by p and q
@@ -440,7 +429,7 @@ impl Node2Vec {
                     }
                     
                     // Sample next node
-                    let rand_val: f64 = rng.gen();
+                    let rand_val: f64 = rng.random();
                     let mut cumsum = 0.0;
                     let mut next_node = current_neighbors[0];
                     
@@ -487,6 +476,7 @@ pub struct GraphAutoencoder {
     /// Number of epochs
     n_epochs: usize,
     /// Random state
+    #[allow(dead_code)]
     random_state: Option<u64>,
 }
 
@@ -565,11 +555,7 @@ impl GraphAutoencoder {
             ));
         }
         
-        let mut rng = if let Some(seed) = self.random_state {
-            StdRng::seed_from_u64(seed)
-        } else {
-            StdRng::from_entropy()
-        };
+        let mut rng = rand::rng();
         
         // Initialize weights
         let mut encoder_weights = Vec::new();
@@ -580,7 +566,7 @@ impl GraphAutoencoder {
             
             for j in 0..n_in {
                 for k in 0..n_out {
-                    w[[j, k]] = rng.gen_range(-scale..scale);
+                    w[[j, k]] = rng.random_range(-scale..scale);
                 }
             }
             encoder_weights.push(w);
@@ -595,7 +581,7 @@ impl GraphAutoencoder {
         // Training loop
         let features = adjacency.clone();
         
-        for epoch in 0..self.n_epochs {
+        for _epoch in 0..self.n_epochs {
             // Forward pass - encoding
             let mut activations = vec![features.clone()];
             let mut z = features.clone();
@@ -609,7 +595,7 @@ impl GraphAutoencoder {
             }
             
             // Get embeddings (bottleneck layer)
-            let embeddings = z.clone();
+            let _embeddings = z.clone();
             
             // Forward pass - decoding
             for (i, w) in decoder_weights.iter().enumerate() {
@@ -625,30 +611,32 @@ impl GraphAutoencoder {
             // Compute loss (binary cross-entropy)
             let loss = -adjacency * &reconstruction.mapv(|v| (v + 1e-8).ln())
                        - (1.0 - adjacency) * &reconstruction.mapv(|v| (1.0 - v + 1e-8).ln());
-            let avg_loss = loss.mean().unwrap();
+            let _avg_loss = loss.mean().unwrap();
             
             // Backward pass
             let mut delta = &reconstruction - adjacency;
             delta *= self.learning_rate;
             
             // Update decoder weights
+            let decoder_len = decoder_weights.len();
             for (i, w) in decoder_weights.iter_mut().rev().enumerate() {
                 let layer_idx = activations.len() - 2 - i;
                 let grad = activations[layer_idx].t().dot(&delta);
                 *w -= &grad;
                 
-                if i < decoder_weights.len() - 1 {
+                if i < decoder_len - 1 {
                     delta = delta.dot(&w.t());
                     delta *= &self.activate_derivative(&activations[layer_idx]);
                 }
             }
             
-            // Update encoder weights  
+            // Update encoder weights
+            let encoder_len = encoder_weights.len();
             for (i, w) in encoder_weights.iter_mut().enumerate() {
                 let grad = activations[i].t().dot(&delta);
                 *w -= &grad;
                 
-                if i < encoder_weights.len() - 1 {
+                if i < encoder_len - 1 {
                     delta = delta.dot(&w.t());
                     delta *= &self.activate_derivative(&activations[i]);
                 }

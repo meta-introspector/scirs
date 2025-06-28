@@ -9,6 +9,7 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
 use std::fmt::Debug;
+use std::sync::Arc;
 
 /// Parallel implementation of filtfilt (zero-phase filtering)
 ///
@@ -541,4 +542,113 @@ pub fn parallel_savgol_filter(
     )?;
     
     Ok(Array1::from(filtered))
+}
+
+/// Parallel batch filtering for multiple signals
+///
+/// Applies the same digital filter to multiple signals in parallel.
+/// Useful for processing multiple channels simultaneously.
+///
+/// # Arguments
+///
+/// * `b` - Numerator coefficients
+/// * `a` - Denominator coefficients
+/// * `signals` - Array of input signals (each row is a signal)
+/// * `chunk_size` - Chunk size for parallel processing
+///
+/// # Returns
+///
+/// * Array of filtered signals
+#[allow(clippy::too_many_arguments)]
+pub fn parallel_batch_filter(
+    b: &[f64],
+    a: &[f64],
+    signals: &Array2<f64>,
+    chunk_size: Option<usize>,
+) -> SignalResult<Array2<f64>> {
+    let (n_signals, signal_len) = signals.dim();
+    let mut results = Array2::zeros((n_signals, signal_len));
+    
+    // Process each signal in parallel
+    let signal_refs: Vec<_> = (0..n_signals)
+        .map(|i| signals.row(i))
+        .collect();
+    
+    let processed: Vec<Vec<f64>> = par_iter_with_setup(
+        signal_refs.iter().enumerate(),
+        || {},
+        |_, (i, signal)| {
+            // Apply filter to each signal
+            let filtered = parallel_filter_overlap_save(
+                b, a, 
+                &Array1::from_iter(signal.iter().cloned()), 
+                chunk_size
+            )?;
+            Ok(filtered.to_vec())
+        },
+        |results, processed_signal| {
+            results.push(processed_signal?);
+            Ok(())
+        },
+    ).map_err(|e| SignalError::ComputationError(format!("Batch filtering failed: {:?}", e)))?;
+    
+    // Copy results back
+    for (i, signal_result) in processed.into_iter().enumerate() {
+        for (j, &val) in signal_result.iter().enumerate() {
+            if j < signal_len {
+                results[[i, j]] = val;
+            }
+        }
+    }
+    
+    Ok(results)
+}
+
+/// Parallel multi-rate filtering with decimation
+///
+/// Applies filtering followed by downsampling in parallel chunks.
+/// Useful for efficiently reducing sample rate while filtering.
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+/// * `b` - Filter numerator coefficients
+/// * `a` - Filter denominator coefficients
+/// * `decimation_factor` - Downsampling factor
+/// * `chunk_size` - Chunk size for processing
+///
+/// # Returns
+///
+/// * Filtered and decimated signal
+#[allow(dead_code)]
+pub fn parallel_decimate_filter(
+    signal: &[f64],
+    b: &[f64],
+    a: &[f64],
+    decimation_factor: usize,
+    chunk_size: Option<usize>,
+) -> SignalResult<Vec<f64>> {
+    if decimation_factor == 0 {
+        return Err(SignalError::ValueError(
+            "Decimation factor must be greater than 0".to_string(),
+        ));
+    }
+    
+    // First apply the filter
+    let filtered = parallel_filtfilt(b, a, signal, chunk_size)?;
+    
+    // Then decimate
+    let decimated: Vec<f64> = filtered
+        .into_iter()
+        .enumerate()
+        .filter_map(|(i, val)| {
+            if i % decimation_factor == 0 {
+                Some(val)
+            } else {
+                None
+            }
+        })
+        .collect();
+    
+    Ok(decimated)
 }

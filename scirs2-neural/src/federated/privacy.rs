@@ -73,7 +73,7 @@ impl DifferentialPrivacy {
     /// Add noise based on mechanism
     fn add_noise(&self, gradients: &mut [Array2<f32>]) -> Result<()> {
         use rand_distr::{Normal, Distribution};
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         match self.mechanism {
             NoiseMethod::Gaussian => {
@@ -92,7 +92,7 @@ impl DifferentialPrivacy {
                 for grad in gradients.iter_mut() {
                     for elem in grad.iter_mut() {
                         // Manual Laplace distribution: sample from uniform and transform
-                        let u: f32 = rand::Rng::gen_range(&mut rng, -0.5..0.5);
+                        let u: f32 = rng.random_range(-0.5..0.5);
                         let laplace_sample = -b * u.signum() * (1.0 - 2.0 * u.abs()).ln();
                         *elem += laplace_sample;
                     }

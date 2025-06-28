@@ -6,7 +6,7 @@
 //! - Performance impact warnings
 //! - Recovery strategies
 
-use crate::error::{StatsError, StatsResult};
+use crate::error::StatsError;
 use std::fmt;
 
 /// Error codes for categorization and tracking

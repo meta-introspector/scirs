@@ -16,6 +16,7 @@ pub use simd_specialized::{
     simd_anisotropic_diffusion, simd_bilateral_filter, simd_non_local_means,
 };
 
+pub mod advanced;
 mod bilateral;
 mod boundary_handler;
 mod boundary_optimized;
@@ -36,6 +37,7 @@ mod tests;
 mod uniform;
 mod utils;
 mod vectorized;
+pub mod wavelets;
 
 // Convolve module exports
 pub use convolve::{
@@ -49,9 +51,7 @@ pub use convolve::{
 pub use edge::{gradient_magnitude, laplace, prewitt, roberts, scharr, sobel};
 
 // Optimized edge detection exports
-pub use edge_optimized::{
-    gradient_magnitude_optimized, laplace_2d_optimized, sobel_2d_optimized,
-};
+pub use edge_optimized::{gradient_magnitude_optimized, laplace_2d_optimized, sobel_2d_optimized};
 
 // Extrema module exports (new implementation)
 pub use extrema::{maximum_filter, minimum_filter};
@@ -102,6 +102,19 @@ pub use boundary_optimized::{
 pub use vectorized::{
     apply_filter_batch, convolve_batch, gaussian_filter_batch, median_filter_batch, sobel_batch,
     BatchConfig,
+};
+
+// Advanced filters exports
+pub use advanced::{
+    adaptive_wiener_filter, anisotropic_diffusion, bilateral_gradient_filter,
+    coherence_enhancing_diffusion, gabor_filter, gabor_filter_bank, log_gabor_filter,
+    non_local_means, shock_filter, steerable_filter, GaborParams,
+};
+
+// Wavelets module exports
+pub use wavelets::{
+    dwt_1d, dwt_2d, idwt_1d, idwt_2d, wavelet_decompose, wavelet_denoise, wavelet_reconstruct,
+    WaveletFamily, WaveletFilter,
 };
 
 /// Border handling modes for filters

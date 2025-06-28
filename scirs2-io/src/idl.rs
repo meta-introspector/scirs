@@ -480,9 +480,66 @@ impl IdlReader {
         Ok(IdlType::String(string))
     }
     
-    /// Read structure (stub implementation)
+    /// Read structure
     fn read_structure(&mut self) -> Result<IdlType> {
-        Err(IoError::Other("Structure reading not implemented yet".to_string()))
+        // Read structure header
+        let _flags = self.read_u32()?; // Structure flags
+        let struct_def_id = self.read_u32()?; // Structure definition ID
+        let nfields = self.read_u32()? as usize; // Number of fields
+        let _nbytes = self.read_u32()?; // Number of bytes in structure data
+        
+        // Read structure name
+        let struct_name = self.read_string()?;
+        
+        // Read field names
+        let mut field_names = Vec::with_capacity(nfields);
+        for _ in 0..nfields {
+            field_names.push(self.read_string()?);
+        }
+        
+        // Read field data descriptors
+        let mut field_types = Vec::with_capacity(nfields);
+        for _ in 0..nfields {
+            let type_code = self.read_u32()? as u8;
+            let _flags = self.read_u32()?;
+            field_types.push(type_code);
+        }
+        
+        // Read field data
+        let mut fields = HashMap::new();
+        for (i, field_name) in field_names.iter().enumerate() {
+            let type_code = field_types[i];
+            
+            // For structures, we recursively read the data based on type
+            let field_data = match type_code {
+                1 => self.read_byte_array()?,
+                2 => self.read_int_array()?,
+                3 => self.read_long_array()?,
+                4 => self.read_float_array()?,
+                5 => self.read_double_array()?,
+                6 => self.read_complex_array()?,
+                7 => self.read_string_data()?,
+                8 => self.read_structure()?, // Nested structure
+                9 => self.read_double_complex_array()?,
+                12 => self.read_uint_array()?,
+                13 => self.read_ulong_array()?,
+                14 => self.read_long64_array()?,
+                15 => self.read_ulong64_array()?,
+                _ => {
+                    // Unknown type, skip it by creating undefined
+                    IdlType::Undefined
+                }
+            };
+            
+            fields.insert(field_name.clone(), field_data);
+        }
+        
+        let structure = IdlStructure {
+            name: struct_name,
+            fields,
+        };
+        
+        Ok(IdlType::Structure(structure))
     }
     
     /// Read string

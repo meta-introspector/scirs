@@ -4,7 +4,7 @@
 
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use num_traits::{Float, FromPrimitive, Zero};
+use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 /// Boundary conditions for cubic splines
@@ -78,21 +78,37 @@ impl<F: Float + FromPrimitive + Debug> CubicSplineBuilder<F> {
     
     /// Build the spline
     pub fn build(self) -> InterpolateResult<CubicSpline<F>> {
-        let x = self.x.ok_or_else(|| InterpolateError::ValueError("x coordinates not set".to_string()))?;
-        let y = self.y.ok_or_else(|| InterpolateError::ValueError("y coordinates not set".to_string()))?;
+        let x = self.x.ok_or_else(|| InterpolateError::invalid_input("x coordinates not set".to_string()))?;
+        let y = self.y.ok_or_else(|| InterpolateError::invalid_input("y coordinates not set".to_string()))?;
         
         match self.boundary_condition {
             SplineBoundaryCondition::Natural => CubicSpline::new(&x.view(), &y.view()),
             SplineBoundaryCondition::NotAKnot => CubicSpline::new_not_a_knot(&x.view(), &y.view()),
             SplineBoundaryCondition::Clamped(left_deriv, right_deriv) => {
-                let left_f = F::from_f64(left_deriv).unwrap();
-                let right_f = F::from_f64(right_deriv).unwrap();
+                let left_f = F::from_f64(left_deriv).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        format!("Failed to convert left derivative {} to float type", left_deriv)
+                    )
+                })?;
+                let right_f = F::from_f64(right_deriv).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        format!("Failed to convert right derivative {} to float type", right_deriv)
+                    )
+                })?;
                 CubicSpline::new_clamped(&x.view(), &y.view(), left_f, right_f)
             }
             SplineBoundaryCondition::Periodic => CubicSpline::new_periodic(&x.view(), &y.view()),
             SplineBoundaryCondition::SecondDerivative(left_d2, right_d2) => {
-                let left_f = F::from_f64(left_d2).unwrap();
-                let right_f = F::from_f64(right_d2).unwrap();
+                let left_f = F::from_f64(left_d2).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        format!("Failed to convert left second derivative {} to float type", left_d2)
+                    )
+                })?;
+                let right_f = F::from_f64(right_d2).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        format!("Failed to convert right second derivative {} to float type", right_d2)
+                    )
+                })?;
                 CubicSpline::new_second_derivative(&x.view(), &y.view(), left_f, right_f)
             }
             SplineBoundaryCondition::ParabolicRunout => CubicSpline::new_parabolic_runout(&x.view(), &y.view()),
@@ -134,13 +150,13 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
     pub fn new(x: &ArrayView1<F>, y: &ArrayView1<F>) -> InterpolateResult<Self> {
         // Check inputs
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 3 points are required for cubic spline".to_string(),
             ));
         }
@@ -148,7 +164,7 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
         // Check that x is sorted
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x values must be sorted in ascending order".to_string(),
                 ));
             }
@@ -177,13 +193,13 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
     pub fn new_not_a_knot(x: &ArrayView1<F>, y: &ArrayView1<F>) -> InterpolateResult<Self> {
         // Check inputs
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 4 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 4 points are required for not-a-knot cubic spline".to_string(),
             ));
         }
@@ -191,7 +207,7 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
         // Check that x is sorted
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x values must be sorted in ascending order".to_string(),
                 ));
             }
@@ -222,13 +238,13 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
     pub fn new_clamped(x: &ArrayView1<F>, y: &ArrayView1<F>, left_deriv: F, right_deriv: F) -> InterpolateResult<Self> {
         // Check inputs
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 3 points are required for cubic spline".to_string(),
             ));
         }
@@ -236,7 +252,7 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
         // Check that x is sorted
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x values must be sorted in ascending order".to_string(),
                 ));
             }
@@ -265,13 +281,13 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
     pub fn new_periodic(x: &ArrayView1<F>, y: &ArrayView1<F>) -> InterpolateResult<Self> {
         // Check inputs
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 3 points are required for cubic spline".to_string(),
             ));
         }
@@ -279,16 +295,20 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
         // Check that x is sorted
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x values must be sorted in ascending order".to_string(),
                 ));
             }
         }
 
         // Check periodicity
-        let tol = F::from_f64(1e-10).unwrap();
+        let tol = F::from_f64(1e-10).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert tolerance 1e-10 to float type".to_string()
+            )
+        })?;
         if (y[0] - y[y.len() - 1]).abs() > tol {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "y values must be periodic (y[0] == y[n-1])".to_string(),
             ));
         }
@@ -318,13 +338,13 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
     pub fn new_second_derivative(x: &ArrayView1<F>, y: &ArrayView1<F>, left_d2: F, right_d2: F) -> InterpolateResult<Self> {
         // Check inputs
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 3 points are required for cubic spline".to_string(),
             ));
         }
@@ -332,7 +352,7 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
         // Check that x is sorted
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x values must be sorted in ascending order".to_string(),
                 ));
             }
@@ -361,13 +381,13 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
     pub fn new_parabolic_runout(x: &ArrayView1<F>, y: &ArrayView1<F>) -> InterpolateResult<Self> {
         // Check inputs
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 3 points are required for cubic spline".to_string(),
             ));
         }
@@ -375,7 +395,7 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
         // Check that x is sorted
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x values must be sorted in ascending order".to_string(),
                 ));
             }
@@ -403,7 +423,7 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
     pub fn evaluate(&self, x_new: F) -> InterpolateResult<F> {
         // Check if x_new is within the range
         if x_new < self.x[0] || x_new > self.x[self.x.len() - 1] {
-            return Err(InterpolateError::DomainError(
+            return Err(InterpolateError::OutOfBounds(
                 "x_new is outside the interpolation range".to_string(),
             ));
         }
@@ -487,7 +507,7 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
 
         // Check if x_new is within the range
         if x_new < self.x[0] || x_new > self.x[self.x.len() - 1] {
-            return Err(InterpolateError::DomainError(
+            return Err(InterpolateError::OutOfBounds(
                 "x_new is outside the interpolation range".to_string(),
             ));
         }
@@ -514,23 +534,220 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
         match order {
             1 => {
                 // First derivative: b + 2*c*dx + 3*d*dx^2
-                let two = F::from_f64(2.0).unwrap();
-                let three = F::from_f64(3.0).unwrap();
+                let two = F::from_f64(2.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 2.0 to float type".to_string()
+                    )
+                })?;
+                let three = F::from_f64(3.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 3.0 to float type".to_string()
+                    )
+                })?;
                 Ok(b + two * c * dx + three * d * dx * dx)
             }
             2 => {
                 // Second derivative: 2*c + 6*d*dx
-                let two = F::from_f64(2.0).unwrap();
-                let six = F::from_f64(6.0).unwrap();
+                let two = F::from_f64(2.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 2.0 to float type".to_string()
+                    )
+                })?;
+                let six = F::from_f64(6.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 6.0 to float type".to_string()
+                    )
+                })?;
                 Ok(two * c + six * d * dx)
             }
             3 => {
                 // Third derivative: 6*d
-                let six = F::from_f64(6.0).unwrap();
+                let six = F::from_f64(6.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 6.0 to float type".to_string()
+                    )
+                })?;
                 Ok(six * d)
             }
             _ => Ok(F::zero()),
         }
+    }
+    
+    /// Compute derivatives at multiple points
+    ///
+    /// # Arguments
+    ///
+    /// * `x_new` - Array of points to evaluate derivatives at
+    /// * `order` - Order of derivative (1, 2, or 3)
+    ///
+    /// # Returns
+    ///
+    /// Array of derivative values
+    pub fn derivative_array(&self, x_new: &ArrayView1<F>, order: usize) -> InterpolateResult<Array1<F>> {
+        let mut result = Array1::zeros(x_new.len());
+        
+        for (i, &x) in x_new.iter().enumerate() {
+            result[i] = self.derivative_n(x, order)?;
+        }
+        
+        Ok(result)
+    }
+    
+    /// Find the antiderivative (indefinite integral) spline
+    ///
+    /// Returns a new cubic spline representing the antiderivative.
+    /// The integration constant is chosen so that the antiderivative is 0 at x[0].
+    ///
+    /// # Returns
+    ///
+    /// A new CubicSpline representing the antiderivative
+    pub fn antiderivative(&self) -> InterpolateResult<CubicSpline<F>> {
+        let n = self.x.len();
+        let mut antideriv_y = Array1::zeros(n);
+        
+        // Set first value to 0 (integration constant)
+        antideriv_y[0] = F::zero();
+        
+        // Compute values at each knot by integrating from the first point
+        for i in 1..n {
+            let integral = self.integrate(self.x[0], self.x[i])?;
+            antideriv_y[i] = integral;
+        }
+        
+        // Create a new spline with these values
+        CubicSpline::new(&self.x.view(), &antideriv_y.view())
+    }
+    
+    /// Find roots of the spline (points where spline equals zero)
+    ///
+    /// Uses a combination of bracketing and Newton's method to find roots.
+    ///
+    /// # Arguments
+    ///
+    /// * `tolerance` - Convergence tolerance for root finding
+    /// * `max_iterations` - Maximum number of iterations per root
+    ///
+    /// # Returns
+    ///
+    /// Vector of root locations
+    pub fn find_roots(&self, tolerance: F, max_iterations: usize) -> InterpolateResult<Vec<F>> {
+        let mut roots = Vec::new();
+        let n_segments = self.coeffs.nrows();
+        
+        // Check for roots in each segment
+        for segment in 0..n_segments {
+            let x_left = self.x[segment];
+            let x_right = self.x[segment + 1];
+            
+            let y_left = self.evaluate(x_left)?;
+            let y_right = self.evaluate(x_right)?;
+            
+            // Check if there's a sign change (indicates a root)
+            if y_left * y_right < F::zero() {
+                // Use Newton's method with bisection fallback
+                if let Some(root) = self.find_root_in_segment(segment, x_left, x_right, tolerance, max_iterations)? {
+                    roots.push(root);
+                }
+            } else if y_left.abs() < tolerance {
+                // Check if left endpoint is a root
+                if roots.is_empty() || (root_far_enough(&roots, x_left, tolerance)) {
+                    roots.push(x_left);
+                }
+            }
+        }
+        
+        // Check the last point
+        let x_last = self.x[n_segments];
+        let y_last = self.evaluate(x_last)?;
+        if y_last.abs() < tolerance && root_far_enough(&roots, x_last, tolerance) {
+            roots.push(x_last);
+        }
+        
+        Ok(roots)
+    }
+    
+    /// Find extrema (local minima and maxima) of the spline
+    ///
+    /// # Arguments
+    ///
+    /// * `tolerance` - Convergence tolerance
+    /// * `max_iterations` - Maximum iterations per extremum
+    ///
+    /// # Returns
+    ///
+    /// Vector of (x, y, type) where type is "min" or "max"
+    pub fn find_extrema(&self, tolerance: F, max_iterations: usize) -> InterpolateResult<Vec<(F, F, &'static str)>> {
+        let mut extrema = Vec::new();
+        let n_segments = self.coeffs.nrows();
+        
+        // Find critical points by looking for roots of the first derivative
+        for segment in 0..n_segments {
+            let x_left = self.x[segment];
+            let x_right = self.x[segment + 1];
+            
+            let dy_left = self.derivative_n(x_left, 1)?;
+            let dy_right = self.derivative_n(x_right, 1)?;
+            
+            // Check for sign change in first derivative
+            if dy_left * dy_right < F::zero() {
+                if let Some(critical_x) = self.find_derivative_root_in_segment(segment, x_left, x_right, tolerance, max_iterations)? {
+                    let critical_y = self.evaluate(critical_x)?;
+                    let second_deriv = self.derivative_n(critical_x, 2)?;
+                    
+                    let extremum_type = if second_deriv > F::zero() {
+                        "min"
+                    } else if second_deriv < F::zero() {
+                        "max"
+                    } else {
+                        continue; // Inflection point, skip
+                    };
+                    
+                    extrema.push((critical_x, critical_y, extremum_type));
+                }
+            }
+        }
+        
+        Ok(extrema)
+    }
+    
+    /// Compute arc length of the spline from a to b
+    ///
+    /// Uses adaptive quadrature to compute the integral of sqrt(1 + (dy/dx)^2)
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - Start point
+    /// * `b` - End point
+    /// * `tolerance` - Integration tolerance
+    ///
+    /// # Returns
+    ///
+    /// Arc length from a to b
+    pub fn arc_length(&self, a: F, b: F, tolerance: F) -> InterpolateResult<F> {
+        if a == b {
+            return Ok(F::zero());
+        }
+        
+        // Handle reversed bounds
+        if a > b {
+            return self.arc_length(b, a, tolerance);
+        }
+        
+        // Check bounds
+        let x_min = self.x[0];
+        let x_max = self.x[self.x.len() - 1];
+        
+        if a < x_min || b > x_max {
+            return Err(InterpolateError::OutOfDomain {
+                point: format!("({}, {})", a, b),
+                min: x_min.to_string(),
+                max: x_max.to_string(),
+                context: "arc length computation".to_string(),
+            });
+        }
+        
+        // Use adaptive Simpson's rule to integrate sqrt(1 + (dy/dx)^2)
+        self.adaptive_arc_length_integration(a, b, tolerance)
     }
     
     /// Compute the integral of the spline from a to b
@@ -558,7 +775,7 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
         let x_max = self.x[self.x.len() - 1];
         
         if a < x_min || b > x_max {
-            return Err(InterpolateError::DomainError(
+            return Err(InterpolateError::OutOfBounds(
                 "Integration bounds outside interpolation range".to_string(),
             ));
         }
@@ -597,6 +814,282 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
         Ok(integral)
     }
     
+    /// Helper function to find a root in a specific segment using Newton's method with bisection fallback
+    fn find_root_in_segment(
+        &self, 
+        segment: usize, 
+        x_left: F, 
+        x_right: F, 
+        tolerance: F, 
+        max_iterations: usize
+    ) -> InterpolateResult<Option<F>> {
+        let two = F::from_f64(2.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 2.0 to float type".to_string()
+            )
+        })?;
+        let mut x = (x_left + x_right) / two; // Start at midpoint
+        
+        for _ in 0..max_iterations {
+            let y = self.evaluate_segment(segment, x)?;
+            if y.abs() < tolerance {
+                return Ok(Some(x));
+            }
+            
+            let dy = self.derivative_segment(segment, x, 1)?;
+            if dy.abs() < tolerance {
+                // Newton's method would fail, use bisection
+                return self.bisection_root_find(segment, x_left, x_right, tolerance, max_iterations);
+            }
+            
+            // Check for division by zero in Newton's method
+            if dy.abs() < F::from_f64(1e-14).unwrap_or_else(|| F::from(1e-14)) {
+                return self.bisection_root_find(segment, x_left, x_right, tolerance, max_iterations);
+            }
+            let x_new = x - y / dy;
+            
+            // If Newton step goes outside interval, use bisection
+            if x_new < x_left || x_new > x_right {
+                return self.bisection_root_find(segment, x_left, x_right, tolerance, max_iterations);
+            }
+            
+            if (x_new - x).abs() < tolerance {
+                return Ok(Some(x_new));
+            }
+            
+            x = x_new;
+        }
+        
+        Ok(None) // Convergence failed
+    }
+    
+    /// Helper function for bisection root finding
+    fn bisection_root_find(
+        &self,
+        segment: usize,
+        mut a: F,
+        mut b: F,
+        tolerance: F,
+        max_iterations: usize,
+    ) -> InterpolateResult<Option<F>> {
+        for _ in 0..max_iterations {
+            let two = F::from_f64(2.0).ok_or_else(|| {
+                InterpolateError::ComputationError(
+                    "Failed to convert constant 2.0 to float type".to_string()
+                )
+            })?;
+            let c = (a + b) / two;
+            let y_c = self.evaluate_segment(segment, c)?;
+            
+            if y_c.abs() < tolerance || (b - a).abs() < tolerance {
+                return Ok(Some(c));
+            }
+            
+            let y_a = self.evaluate_segment(segment, a)?;
+            if y_a * y_c < F::zero() {
+                b = c;
+            } else {
+                a = c;
+            }
+        }
+        
+        Ok(None)
+    }
+    
+    /// Helper function to find roots of the derivative in a segment
+    fn find_derivative_root_in_segment(
+        &self,
+        segment: usize,
+        x_left: F,
+        x_right: F,
+        tolerance: F,
+        max_iterations: usize,
+    ) -> InterpolateResult<Option<F>> {
+        let two = F::from_f64(2.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 2.0 to float type".to_string()
+            )
+        })?;
+        let mut x = (x_left + x_right) / two;
+        
+        for _ in 0..max_iterations {
+            let dy = self.derivative_segment(segment, x, 1)?;
+            if dy.abs() < tolerance {
+                return Ok(Some(x));
+            }
+            
+            let d2y = self.derivative_segment(segment, x, 2)?;
+            if d2y.abs() < tolerance {
+                // Use bisection fallback
+                return self.bisection_derivative_root_find(segment, x_left, x_right, tolerance, max_iterations);
+            }
+            
+            // Check for division by zero
+            if d2y.abs() < F::from_f64(1e-14).unwrap_or_else(|| F::from(1e-14)) {
+                return self.bisection_derivative_root_find(segment, x_left, x_right, tolerance, max_iterations);
+            }
+            let x_new = x - dy / d2y;
+            
+            if x_new < x_left || x_new > x_right {
+                return self.bisection_derivative_root_find(segment, x_left, x_right, tolerance, max_iterations);
+            }
+            
+            if (x_new - x).abs() < tolerance {
+                return Ok(Some(x_new));
+            }
+            
+            x = x_new;
+        }
+        
+        Ok(None)
+    }
+    
+    /// Helper function for bisection derivative root finding
+    fn bisection_derivative_root_find(
+        &self,
+        segment: usize,
+        mut a: F,
+        mut b: F,
+        tolerance: F,
+        max_iterations: usize,
+    ) -> InterpolateResult<Option<F>> {
+        for _ in 0..max_iterations {
+            let two = F::from_f64(2.0).ok_or_else(|| {
+                InterpolateError::ComputationError(
+                    "Failed to convert constant 2.0 to float type".to_string()
+                )
+            })?;
+            let c = (a + b) / two;
+            let dy_c = self.derivative_segment(segment, c, 1)?;
+            
+            if dy_c.abs() < tolerance || (b - a).abs() < tolerance {
+                return Ok(Some(c));
+            }
+            
+            let dy_a = self.derivative_segment(segment, a, 1)?;
+            if dy_a * dy_c < F::zero() {
+                b = c;
+            } else {
+                a = c;
+            }
+        }
+        
+        Ok(None)
+    }
+    
+    /// Evaluate spline in a specific segment
+    fn evaluate_segment(&self, segment: usize, x: F) -> InterpolateResult<F> {
+        let x0 = self.x[segment];
+        let dx = x - x0;
+        
+        let a = self.coeffs[[segment, 0]];
+        let b = self.coeffs[[segment, 1]];
+        let c = self.coeffs[[segment, 2]];
+        let d = self.coeffs[[segment, 3]];
+        
+        Ok(a + b * dx + c * dx * dx + d * dx * dx * dx)
+    }
+    
+    /// Evaluate derivative in a specific segment
+    fn derivative_segment(&self, segment: usize, x: F, order: usize) -> InterpolateResult<F> {
+        let x0 = self.x[segment];
+        let dx = x - x0;
+        
+        let b = self.coeffs[[segment, 1]];
+        let c = self.coeffs[[segment, 2]];
+        let d = self.coeffs[[segment, 3]];
+        
+        match order {
+            1 => {
+                let two = F::from_f64(2.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 2.0 to float type".to_string()
+                    )
+                })?;
+                let three = F::from_f64(3.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 3.0 to float type".to_string()
+                    )
+                })?;
+                Ok(b + two * c * dx + three * d * dx * dx)
+            }
+            2 => {
+                let two = F::from_f64(2.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 2.0 to float type".to_string()
+                    )
+                })?;
+                let six = F::from_f64(6.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 6.0 to float type".to_string()
+                    )
+                })?;
+                Ok(two * c + six * d * dx)
+            }
+            3 => {
+                let six = F::from_f64(6.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 6.0 to float type".to_string()
+                    )
+                })?;
+                Ok(six * d)
+            }
+            _ => Ok(F::zero()),
+        }
+    }
+    
+    /// Adaptive arc length integration using Simpson's rule
+    fn adaptive_arc_length_integration(&self, a: F, b: F, tolerance: F) -> InterpolateResult<F> {
+        // Simple implementation using composite Simpson's rule
+        let n = 100; // Number of subdivisions
+        let n_f = F::from_usize(n).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert number of subdivisions to float type".to_string()
+            )
+        })?;
+        let h = (b - a) / n_f;
+        let mut sum = F::zero();
+        
+        let two = F::from_f64(2.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 2.0 to float type".to_string()
+            )
+        })?;
+        let four = F::from_f64(4.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 4.0 to float type".to_string()
+            )
+        })?;
+        let six = F::from_f64(6.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 6.0 to float type".to_string()
+            )
+        })?;
+        
+        for i in 0..=n {
+            let i_f = F::from_usize(i).ok_or_else(|| {
+                InterpolateError::ComputationError(
+                    "Failed to convert loop index to float type".to_string()
+                )
+            })?;
+            let x = a + i_f * h;
+            let dy_dx = self.derivative_n(x, 1)?;
+            let integrand = (F::one() + dy_dx * dy_dx).sqrt();
+            
+            let coefficient = if i == 0 || i == n {
+                F::one()
+            } else if i % 2 == 1 {
+                four
+            } else {
+                two
+            };
+            
+            sum += coefficient * integrand;
+        }
+        
+        Ok(sum * h / six)
+    }
+    
     /// Compute the integral of a single spline segment
     fn integrate_segment(&self, idx: usize, x_start: F, x_end: F) -> InterpolateResult<F> {
         let a = self.coeffs[[idx, 0]];
@@ -612,9 +1105,29 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
         let dx_start = x_start - x_i;
         let dx_end = x_end - x_i;
         
-        let two = F::from_f64(2.0).unwrap();
-        let three = F::from_f64(3.0).unwrap();
-        let four = F::from_f64(4.0).unwrap();
+        let two = F::from_f64(2.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 2.0 to float type".to_string()
+            )
+        })?;
+        let three = F::from_f64(3.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 3.0 to float type".to_string()
+            )
+        })?;
+        let four = F::from_f64(4.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 4.0 to float type".to_string()
+            )
+        })?;
+        
+        // Check for potential division issues - these constants should never be zero,
+        // but we protect against it for numerical safety
+        if two.is_zero() || three.is_zero() || four.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Division by zero in polynomial integration".to_string()
+            ));
+        }
         
         let integral_end = a * dx_end 
             + b * dx_end * dx_end / two
@@ -627,30 +1140,6 @@ impl<F: Float + FromPrimitive + Debug> CubicSpline<F> {
             + d * dx_start * dx_start * dx_start * dx_start / four;
         
         Ok(integral_end - integral_start)
-    }
-    
-    /// Compute the antiderivative (indefinite integral) as a new spline
-    ///
-    /// The returned spline represents the antiderivative of the original spline,
-    /// with the constant of integration set to zero at the first knot.
-    ///
-    /// # Returns
-    ///
-    /// A new CubicSpline representing the antiderivative
-    pub fn antiderivative(&self) -> InterpolateResult<Self> {
-        let n = self.x.len();
-        let mut y_integral = Array1::<F>::zeros(n);
-        
-        // Set the constant of integration to zero at the first point
-        y_integral[0] = F::zero();
-        
-        // Compute the integral values at each knot
-        for i in 1..n {
-            y_integral[i] = y_integral[i-1] + self.integrate(self.x[i-1], self.x[i])?;
-        }
-        
-        // Create a new spline from the integral values
-        CubicSpline::new(&self.x.view(), &y_integral.view())
     }
     
     /// Evaluate multiple derivatives at once
@@ -709,13 +1198,30 @@ fn compute_natural_cubic_spline<F: Float + FromPrimitive + Debug>(
         let h_i = x[i + 1] - x[i];
 
         a[i] = h_i_minus_1;
-        b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);
+        let two = F::from_f64(2.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 2.0 to float type".to_string()
+            )
+        })?;
+        b[i] = two * (h_i_minus_1 + h_i);
         c[i] = h_i;
 
         let dy_i_minus_1 = y[i] - y[i - 1];
         let dy_i = y[i + 1] - y[i];
 
-        d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
+        // Check for division by zero in slope calculations
+        if h_i.is_zero() || h_i_minus_1.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in spline computation".to_string()
+            ));
+        }
+        
+        let six = F::from_f64(6.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 6.0 to float type".to_string()
+            )
+        })?;
+        d[i] = six * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
     }
 
     // Solve the tridiagonal system using the Thomas algorithm
@@ -723,14 +1229,30 @@ fn compute_natural_cubic_spline<F: Float + FromPrimitive + Debug>(
 
     // Forward sweep
     for i in 1..n {
+        // Check for division by zero
+        if b[i - 1].is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero diagonal element in Thomas algorithm forward sweep".to_string()
+            ));
+        }
         let m = a[i] / b[i - 1];
         b[i] = b[i] - m * c[i - 1];
         d[i] = d[i] - m * d[i - 1];
     }
 
     // Back substitution
+    if b[n - 1].is_zero() {
+        return Err(InterpolateError::ComputationError(
+            "Zero diagonal element in Thomas algorithm back substitution".to_string()
+        ));
+    }
     sigma[n - 1] = d[n - 1] / b[n - 1];
     for i in (0..n - 1).rev() {
+        if b[i].is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero diagonal element in Thomas algorithm back substitution".to_string()
+            ));
+        }
         sigma[i] = (d[i] - c[i] * sigma[i + 1]) / b[i];
     }
 
@@ -738,19 +1260,36 @@ fn compute_natural_cubic_spline<F: Float + FromPrimitive + Debug>(
     for i in 0..n_segments {
         let h_i = x[i + 1] - x[i];
 
+        // Check for division by zero in coefficient calculation
+        if h_i.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in spline coefficient calculation".to_string()
+            ));
+        }
+        
+        let two = F::from_f64(2.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 2.0 to float type".to_string()
+            )
+        })?;
+        let six = F::from_f64(6.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 6.0 to float type".to_string()
+            )
+        })?;
+
         // a is just the y value at the left endpoint
         coeffs[[i, 0]] = y[i];
 
         // b is the first derivative at the left endpoint
         coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i
-            - h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])
-                / F::from_f64(6.0).unwrap();
+            - h_i * (two * sigma[i] + sigma[i + 1]) / six;
 
         // c is half the second derivative at the left endpoint
-        coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();
+        coeffs[[i, 2]] = sigma[i] / two;
 
         // d is the rate of change of the second derivative / 6
-        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);
+        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (six * h_i);
     }
 
     Ok(coeffs)
@@ -782,6 +1321,13 @@ fn compute_not_a_knot_cubic_spline<F: Float + FromPrimitive + Debug>(
     let h0 = x[1] - x[0];
     let h1 = x[2] - x[1];
 
+    // Check for zero intervals
+    if h0.is_zero() || h1.is_zero() || (h0 + h1).is_zero() {
+        return Err(InterpolateError::ComputationError(
+            "Zero interval length in not-a-knot spline boundary conditions".to_string()
+        ));
+    }
+
     b[0] = h1;
     c[0] = h0 + h1;
     d[0] = ((h0 + h1) * h1 * (y[1] - y[0]) / h0 + h0 * h0 * (y[2] - y[1]) / h1) / (h0 + h1);
@@ -789,6 +1335,13 @@ fn compute_not_a_knot_cubic_spline<F: Float + FromPrimitive + Debug>(
     // Not-a-knot condition at last interior point
     let hn_2 = x[n - 2] - x[n - 3];
     let hn_1 = x[n - 1] - x[n - 2];
+
+    // Check for zero intervals
+    if hn_1.is_zero() || hn_2.is_zero() || (hn_1 + hn_2).is_zero() {
+        return Err(InterpolateError::ComputationError(
+            "Zero interval length in not-a-knot spline boundary conditions".to_string()
+        ));
+    }
 
     a[n - 1] = hn_1 + hn_2;
     b[n - 1] = hn_2;
@@ -801,14 +1354,31 @@ fn compute_not_a_knot_cubic_spline<F: Float + FromPrimitive + Debug>(
         let h_i_minus_1 = x[i] - x[i - 1];
         let h_i = x[i + 1] - x[i];
 
+        // Check for zero intervals
+        if h_i.is_zero() || h_i_minus_1.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in not-a-knot spline computation".to_string()
+            ));
+        }
+
         a[i] = h_i_minus_1;
-        b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);
+        let two = F::from_f64(2.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 2.0 to float type".to_string()
+            )
+        })?;
+        b[i] = two * (h_i_minus_1 + h_i);
         c[i] = h_i;
 
         let dy_i_minus_1 = y[i] - y[i - 1];
         let dy_i = y[i + 1] - y[i];
 
-        d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
+        let six = F::from_f64(6.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 6.0 to float type".to_string()
+            )
+        })?;
+        d[i] = six * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
     }
 
     // Solve the tridiagonal system using the Thomas algorithm
@@ -816,9 +1386,25 @@ fn compute_not_a_knot_cubic_spline<F: Float + FromPrimitive + Debug>(
 
     // Forward sweep
     let mut c_prime = Array1::<F>::zeros(n);
+    
+    // Check for division by zero in first step
+    if b[0].is_zero() {
+        return Err(InterpolateError::ComputationError(
+            "Zero diagonal element in not-a-knot Thomas algorithm".to_string()
+        ));
+    }
     c_prime[0] = c[0] / b[0];
+    
     for i in 1..n {
         let m = b[i] - a[i] * c_prime[i - 1];
+        
+        // Check for division by zero
+        if m.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero diagonal element in not-a-knot Thomas algorithm".to_string()
+            ));
+        }
+        
         if i < n - 1 {
             c_prime[i] = c[i] / m;
         }
@@ -835,19 +1421,36 @@ fn compute_not_a_knot_cubic_spline<F: Float + FromPrimitive + Debug>(
     for i in 0..n_segments {
         let h_i = x[i + 1] - x[i];
 
+        // Check for division by zero in coefficient calculation
+        if h_i.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in not-a-knot spline coefficient calculation".to_string()
+            ));
+        }
+        
+        let two = F::from_f64(2.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 2.0 to float type".to_string()
+            )
+        })?;
+        let six = F::from_f64(6.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 6.0 to float type".to_string()
+            )
+        })?;
+
         // a is just the y value at the left endpoint
         coeffs[[i, 0]] = y[i];
 
         // b is the first derivative at the left endpoint
         coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i
-            - h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])
-                / F::from_f64(6.0).unwrap();
+            - h_i * (two * sigma[i] + sigma[i + 1]) / six;
 
         // c is half the second derivative at the left endpoint
-        coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();
+        coeffs[[i, 2]] = sigma[i] / two;
 
         // d is the rate of change of the second derivative / 6
-        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);
+        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (six * h_i);
     }
 
     Ok(coeffs)
@@ -876,28 +1479,62 @@ fn compute_clamped_cubic_spline<F: Float + FromPrimitive + Debug>(
 
     // Clamped boundary conditions
     let h0 = x[1] - x[0];
-    b[0] = F::from_f64(2.0).unwrap() * h0;
+    
+    // Check for zero interval
+    if h0.is_zero() {
+        return Err(InterpolateError::ComputationError(
+            "Zero interval length in clamped spline boundary conditions".to_string()
+        ));
+    }
+    
+    let two = F::from_f64(2.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 2.0 to float type".to_string()
+        )
+    })?;
+    let six = F::from_f64(6.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 6.0 to float type".to_string()
+        )
+    })?;
+    
+    b[0] = two * h0;
     c[0] = h0;
-    d[0] = F::from_f64(6.0).unwrap() * ((y[1] - y[0]) / h0 - left_deriv);
+    d[0] = six * ((y[1] - y[0]) / h0 - left_deriv);
 
     let hn_1 = x[n - 1] - x[n - 2];
+    
+    // Check for zero interval
+    if hn_1.is_zero() {
+        return Err(InterpolateError::ComputationError(
+            "Zero interval length in clamped spline boundary conditions".to_string()
+        ));
+    }
+    
     a[n - 1] = hn_1;
-    b[n - 1] = F::from_f64(2.0).unwrap() * hn_1;
-    d[n - 1] = F::from_f64(6.0).unwrap() * (right_deriv - (y[n - 1] - y[n - 2]) / hn_1);
+    b[n - 1] = two * hn_1;
+    d[n - 1] = six * (right_deriv - (y[n - 1] - y[n - 2]) / hn_1);
 
     // Fill in the tridiagonal system for interior points
     for i in 1..n - 1 {
         let h_i_minus_1 = x[i] - x[i - 1];
         let h_i = x[i + 1] - x[i];
+        
+        // Check for zero intervals
+        if h_i.is_zero() || h_i_minus_1.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in clamped spline computation".to_string()
+            ));
+        }
 
         a[i] = h_i_minus_1;
-        b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);
+        b[i] = two * (h_i_minus_1 + h_i);
         c[i] = h_i;
 
         let dy_i_minus_1 = y[i] - y[i - 1];
         let dy_i = y[i + 1] - y[i];
 
-        d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
+        d[i] = six * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
     }
 
     // Solve the tridiagonal system
@@ -919,13 +1556,19 @@ fn compute_clamped_cubic_spline<F: Float + FromPrimitive + Debug>(
     // Calculate the polynomial coefficients
     for i in 0..n_segments {
         let h_i = x[i + 1] - x[i];
+        
+        // Check for zero interval in coefficient calculation
+        if h_i.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in clamped spline coefficient calculation".to_string()
+            ));
+        }
 
         coeffs[[i, 0]] = y[i];
         coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i
-            - h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])
-                / F::from_f64(6.0).unwrap();
-        coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();
-        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);
+            - h_i * (two * sigma[i] + sigma[i + 1]) / six;
+        coeffs[[i, 2]] = sigma[i] / two;
+        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (six * h_i);
     }
 
     Ok(coeffs)
@@ -940,6 +1583,18 @@ fn compute_periodic_cubic_spline<F: Float + FromPrimitive + Debug>(
 ) -> InterpolateResult<Array2<F>> {
     let n = x.len();
     let n_segments = n - 1;
+
+    // Define constants
+    let two = F::from_f64(2.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 2.0 to float type".to_string()
+        )
+    })?;
+    let six = F::from_f64(6.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 6.0 to float type".to_string()
+        )
+    })?;
 
     // Create array to hold the coefficients
     let mut coeffs = Array2::<F>::zeros((n_segments, 4));
@@ -961,8 +1616,15 @@ fn compute_periodic_cubic_spline<F: Float + FromPrimitive + Debug>(
         };
         let h_i = x[i + 1] - x[i];
 
+        // Check for zero intervals
+        if h_i.is_zero() || h_i_minus_1.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in periodic spline computation".to_string()
+            ));
+        }
+        
         a[i] = h_i_minus_1;
-        b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);
+        b[i] = two * (h_i_minus_1 + h_i);
         c[i] = h_i;
 
         let dy_i_minus_1 = if i == 0 {
@@ -972,7 +1634,7 @@ fn compute_periodic_cubic_spline<F: Float + FromPrimitive + Debug>(
         };
         let dy_i = y[i + 1] - y[i];
 
-        d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
+        d[i] = six * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
     }
 
     // For periodic boundary conditions, we need to solve a cyclic tridiagonal system
@@ -1003,13 +1665,19 @@ fn compute_periodic_cubic_spline<F: Float + FromPrimitive + Debug>(
     // Calculate the polynomial coefficients
     for i in 0..n_segments {
         let h_i = x[i + 1] - x[i];
+        
+        // Check for zero interval in coefficient calculation
+        if h_i.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in periodic spline coefficient calculation".to_string()
+            ));
+        }
 
         coeffs[[i, 0]] = y[i];
         coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i
-            - h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])
-                / F::from_f64(6.0).unwrap();
-        coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();
-        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);
+            - h_i * (two * sigma[i] + sigma[i + 1]) / six;
+        coeffs[[i, 2]] = sigma[i] / two;
+        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (six * h_i);
     }
 
     Ok(coeffs)
@@ -1024,6 +1692,18 @@ fn compute_second_derivative_cubic_spline<F: Float + FromPrimitive + Debug>(
 ) -> InterpolateResult<Array2<F>> {
     let n = x.len();
     let n_segments = n - 1;
+
+    // Define constants
+    let two = F::from_f64(2.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 2.0 to float type".to_string()
+        )
+    })?;
+    let six = F::from_f64(6.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 6.0 to float type".to_string()
+        )
+    })?;
 
     // Create array to hold the coefficients
     let mut coeffs = Array2::<F>::zeros((n_segments, 4));
@@ -1045,14 +1725,32 @@ fn compute_second_derivative_cubic_spline<F: Float + FromPrimitive + Debug>(
         let h_i_minus_1 = x[i] - x[i - 1];
         let h_i = x[i + 1] - x[i];
 
+        // Check for zero intervals
+        if h_i.is_zero() || h_i_minus_1.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in second derivative spline computation".to_string()
+            ));
+        }
+        
+        let two = F::from_f64(2.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 2.0 to float type".to_string()
+            )
+        })?;
+        let six = F::from_f64(6.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 6.0 to float type".to_string()
+            )
+        })?;
+
         a[i] = h_i_minus_1;
-        b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);
+        b[i] = two * (h_i_minus_1 + h_i);
         c[i] = h_i;
 
         let dy_i_minus_1 = y[i] - y[i - 1];
         let dy_i = y[i + 1] - y[i];
 
-        d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
+        d[i] = six * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
     }
 
     // Solve the tridiagonal system
@@ -1074,13 +1772,19 @@ fn compute_second_derivative_cubic_spline<F: Float + FromPrimitive + Debug>(
     // Calculate the polynomial coefficients
     for i in 0..n_segments {
         let h_i = x[i + 1] - x[i];
+        
+        // Check for zero interval in coefficient calculation
+        if h_i.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in second derivative spline coefficient calculation".to_string()
+            ));
+        }
 
         coeffs[[i, 0]] = y[i];
         coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i
-            - h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])
-                / F::from_f64(6.0).unwrap();
-        coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();
-        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);
+            - h_i * (two * sigma[i] + sigma[i + 1]) / six;
+        coeffs[[i, 2]] = sigma[i] / two;
+        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (six * h_i);
     }
 
     Ok(coeffs)
@@ -1109,13 +1813,24 @@ fn compute_parabolic_runout_cubic_spline<F: Float + FromPrimitive + Debug>(
 
     // Parabolic runout conditions
     // At the first point: 2*sigma[0] + sigma[1] = 0
-    b[0] = F::from_f64(2.0).unwrap();
+    let two = F::from_f64(2.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 2.0 to float type".to_string()
+        )
+    })?;
+    let six = F::from_f64(6.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 6.0 to float type".to_string()
+        )
+    })?;
+    
+    b[0] = two;
     c[0] = F::one();
     d[0] = F::zero();
 
     // At the last point: sigma[n-2] + 2*sigma[n-1] = 0
     a[n - 1] = F::one();
-    b[n - 1] = F::from_f64(2.0).unwrap();
+    b[n - 1] = two;
     d[n - 1] = F::zero();
 
     // Fill in the tridiagonal system for interior points
@@ -1123,14 +1838,21 @@ fn compute_parabolic_runout_cubic_spline<F: Float + FromPrimitive + Debug>(
         let h_i_minus_1 = x[i] - x[i - 1];
         let h_i = x[i + 1] - x[i];
 
+        // Check for zero intervals
+        if h_i.is_zero() || h_i_minus_1.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in parabolic runout spline computation".to_string()
+            ));
+        }
+
         a[i] = h_i_minus_1;
-        b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);
+        b[i] = two * (h_i_minus_1 + h_i);
         c[i] = h_i;
 
         let dy_i_minus_1 = y[i] - y[i - 1];
         let dy_i = y[i + 1] - y[i];
 
-        d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
+        d[i] = six * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);
     }
 
     // Solve the tridiagonal system
@@ -1152,13 +1874,19 @@ fn compute_parabolic_runout_cubic_spline<F: Float + FromPrimitive + Debug>(
     // Calculate the polynomial coefficients
     for i in 0..n_segments {
         let h_i = x[i + 1] - x[i];
+        
+        // Check for zero interval in coefficient calculation
+        if h_i.is_zero() {
+            return Err(InterpolateError::ComputationError(
+                "Zero interval length in parabolic runout spline coefficient calculation".to_string()
+            ));
+        }
 
         coeffs[[i, 0]] = y[i];
         coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i
-            - h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])
-                / F::from_f64(6.0).unwrap();
-        coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();
-        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);
+            - h_i * (two * sigma[i] + sigma[i + 1]) / six;
+        coeffs[[i, 2]] = sigma[i] / two;
+        coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (six * h_i);
     }
 
     Ok(coeffs)
@@ -1181,9 +1909,9 @@ fn integrate_segment<F: Float + FromPrimitive>(coeffs: &Array1<F>, x0: F, a: F, 
 
     // Integrate the polynomial:
     // ∫(a + b*x + c*x^2 + d*x^3) dx = a*x + b*x^2/2 + c*x^3/3 + d*x^4/4
-    let two = F::from_f64(2.0).unwrap();
-    let three = F::from_f64(3.0).unwrap();
-    let four = F::from_f64(4.0).unwrap();
+    let two = F::from_f64(2.0).unwrap_or_else(|| F::from(2).unwrap_or(F::zero()));
+    let three = F::from_f64(3.0).unwrap_or_else(|| F::from(3).unwrap_or(F::zero()));
+    let four = F::from_f64(4.0).unwrap_or_else(|| F::from(4).unwrap_or(F::zero()));
 
     // Evaluate at the bounds
     let int_a = coef_a * a_shifted
@@ -1198,6 +1926,16 @@ fn integrate_segment<F: Float + FromPrimitive>(coeffs: &Array1<F>, x0: F, a: F, 
 
     // Return the difference
     int_b - int_a
+}
+
+/// Check if a root is far enough from existing roots
+fn root_far_enough<F: Float>(roots: &[F], candidate: F, tolerance: F) -> bool {
+    for &existing_root in roots {
+        if (candidate - existing_root).abs() < tolerance {
+            return false;
+        }
+    }
+    true
 }
 
 /// Create a cubic spline interpolation object
@@ -1250,13 +1988,13 @@ pub fn make_interp_spline<F: Float + FromPrimitive + Debug>(
         "clamped" => {
             if let Some(params) = bc_params {
                 if params.len() != 2 {
-                    return Err(InterpolateError::ValueError(
+                    return Err(InterpolateError::invalid_input(
                         "clamped boundary conditions require 2 parameters: [first_deriv_start, first_deriv_end]".to_string(),
                     ));
                 }
                 CubicSpline::new_clamped(x, y, params[0], params[1])
             } else {
-                Err(InterpolateError::ValueError(
+                Err(InterpolateError::invalid_input(
                     "clamped boundary conditions require bc_params: [first_deriv_start, first_deriv_end]".to_string(),
                 ))
             }
@@ -1264,7 +2002,7 @@ pub fn make_interp_spline<F: Float + FromPrimitive + Debug>(
         "periodic" => {
             CubicSpline::new_periodic(x, y)
         },
-        _ => Err(InterpolateError::ValueError(format!(
+        _ => Err(InterpolateError::invalid_input(format!(
             "Unknown boundary condition type: {}. Use 'natural', 'not-a-knot', 'clamped', or 'periodic'",
             bc_type
         ))),

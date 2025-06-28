@@ -54,13 +54,13 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
     pub fn new(x: &ArrayView1<F>, y: &ArrayView1<F>) -> InterpolateResult<Self> {
         // Check inputs
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 5 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 5 points are required for Akima spline".to_string(),
             ));
         }
@@ -68,7 +68,7 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
         // Check that x is strictly increasing
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x array must be strictly increasing".to_string(),
                 ));
             }
@@ -147,7 +147,7 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
     pub fn evaluate(&self, x_new: F) -> InterpolateResult<F> {
         // Check if x_new is within the interpolation range
         if x_new < self.x[0] || x_new > self.x[self.x.len() - 1] {
-            return Err(InterpolateError::DomainError(
+            return Err(InterpolateError::OutOfBounds(
                 "x_new is outside the interpolation range".to_string(),
             ));
         }
@@ -206,7 +206,7 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
     pub fn derivative(&self, x_new: F) -> InterpolateResult<F> {
         // Check if x_new is within the interpolation range
         if x_new < self.x[0] || x_new > self.x[self.x.len() - 1] {
-            return Err(InterpolateError::DomainError(
+            return Err(InterpolateError::OutOfBounds(
                 "x_new is outside the interpolation range".to_string(),
             ));
         }

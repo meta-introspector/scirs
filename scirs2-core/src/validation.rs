@@ -921,6 +921,9 @@ mod tests {
 // Production-level validation with comprehensive security and performance features
 pub mod production;
 
+/// Cross-platform validation utilities for consistent behavior across operating systems and architectures
+pub mod cross_platform;
+
 /// Comprehensive data validation system with schema validation and constraint enforcement
 #[cfg(feature = "data_validation")]
 pub mod data;

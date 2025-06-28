@@ -52,7 +52,7 @@
 //! println!("{}", format_memory_report());
 //! ```
 
-use ndarray::{ArrayBase, Data, Dimension, Ix2, ViewRepr, IxDyn};
+use ndarray::{ArrayBase, Data, Dimension, Ix2, IxDyn, ViewRepr};
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -94,7 +94,7 @@ where
     where
         F: FnMut(&ArrayBase<ViewRepr<&A>, IxDyn>, IxDyn),
     {
-        use ndarray::{Slice, IntoDimension};
+        use ndarray::{IntoDimension, Slice};
 
         // Get array shape and chunk shape as slices
         let array_shape = self.array.shape();
@@ -127,7 +127,7 @@ where
             // Get the chunk view and call the function
             // First convert the array to dynamic dimension, then slice
             let dyn_array = self.array.view().into_dyn();
-            
+
             // Create dynamic slice info
             use ndarray::{SliceInfo, SliceInfoElem};
             let slice_elems: Vec<SliceInfoElem> = slices
@@ -138,12 +138,12 @@ where
                     step: s.step,
                 })
                 .collect();
-            
+
             let slice_info = unsafe {
                 SliceInfo::<Vec<SliceInfoElem>, IxDyn, IxDyn>::new(slice_elems)
                     .expect("Failed to create slice info")
             };
-            
+
             let view = dyn_array.slice(slice_info);
             f(&view, position);
 

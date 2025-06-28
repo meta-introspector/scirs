@@ -16,8 +16,7 @@
 pub mod activations;
 pub mod autograd;
 pub mod callbacks;
-// Temporarily disabled due to model config field mismatches
-// pub mod config;
+pub mod config;
 /// Data augmentation module
 pub mod augmentation;
 /// C/C++ bindings module

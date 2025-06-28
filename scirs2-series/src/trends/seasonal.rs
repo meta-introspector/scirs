@@ -344,11 +344,12 @@ where
         if robust && iter < num_iterations - 1 {
             // Compute robust weights for next iteration
             let abs_residuals: Vec<F> = residual.iter().map(|&r| r.abs()).collect();
-            let _weights = calculate_robust_weights(&abs_residuals, F::from_f64(6.0).unwrap())?;
+            let weights = calculate_robust_weights(&abs_residuals, F::from_f64(6.0).unwrap())?;
 
-            // Apply weights to the original time series (for next iteration)
-            // This is a simplified approach - full robustness requires weighted loess
-            // TODO: Implement weighted loess smoothing
+            // Apply weights to the trend estimation for next iteration
+            // This implements weighted loess smoothing for full robustness
+            let deseasonalized = Array1::from_shape_fn(n, |i| ts[i] - seasonal[i]);
+            trend = loess_smooth_weighted(&deseasonalized, n_l, &weights)?;
         }
     }
 
@@ -811,6 +812,81 @@ where
             // Predict at the current point
             smoothed[i] = fit[0] + fit[1] * F::from_usize(i).unwrap();
         }
+    }
+
+    Ok(smoothed)
+}
+
+/// Applies LOESS smoothing with additional external weights
+fn loess_smooth_weighted<F>(
+    ts: &Array1<F>,
+    window_size: usize,
+    external_weights: &[F],
+) -> Result<Array1<F>>
+where
+    F: Float + FromPrimitive + Debug,
+{
+    let n = ts.len();
+
+    if n != external_weights.len() {
+        return Err(TimeSeriesError::InvalidInput(
+            "Time series and weights must have same length".to_string(),
+        ));
+    }
+
+    if n < window_size {
+        return Err(TimeSeriesError::InsufficientData {
+            message: format!(
+                "Time series too short for weighted LOESS smoothing with window size {}",
+                window_size
+            ),
+            required: window_size,
+            actual: n,
+        });
+    }
+
+    let mut smoothed = Array1::<F>::zeros(n);
+    let half_window = window_size / 2;
+
+    // For each point, fit a local polynomial with external weights
+    for i in 0..n {
+        let start = i.saturating_sub(half_window);
+        let end = if i + half_window < n {
+            i + half_window
+        } else {
+            n - 1
+        };
+
+        let window_length = end - start + 1;
+
+        // Prepare local data
+        let mut x = Vec::with_capacity(window_length);
+        let mut y = Vec::with_capacity(window_length);
+        let mut weights = Vec::with_capacity(window_length);
+
+        for idx in start..=end {
+            x.push(F::from_usize(idx).unwrap());
+            y.push(ts[idx]);
+
+            // Combine tricube weight with external weight
+            let d = (F::from_usize(idx).unwrap() - F::from_usize(i).unwrap()).abs()
+                / F::from_usize(half_window).unwrap();
+
+            let tricube_weight = if d < F::one() {
+                let t = F::one() - d * d * d;
+                t * t * t
+            } else {
+                F::zero()
+            };
+
+            weights.push(tricube_weight * external_weights[idx]);
+        }
+
+        // Weighted polynomial fit
+        let fit = weighted_polynomial_fit(&x, &y, &weights, 1)?;
+
+        // Predict at the current point
+        smoothed[i] = fit[0] + fit[1] * F::from_usize(i).unwrap();
     }
 
     Ok(smoothed)

@@ -76,6 +76,12 @@ pub struct PipelineMetrics {
     pub dropped_frames: usize,
 }
 
+impl Default for StreamPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StreamPipeline {
     /// Create a new streaming pipeline
     pub fn new() -> Self {
@@ -217,7 +223,6 @@ impl Iterator for StreamProcessor {
 }
 
 /// Example processing stages
-
 /// Grayscale conversion stage
 pub struct GrayscaleStage;
 
@@ -263,6 +268,7 @@ pub struct BlurStage {
 }
 
 impl BlurStage {
+    /// Create a new Gaussian blur processing stage
     pub fn new(sigma: f32) -> Self {
         Self { sigma }
     }
@@ -287,6 +293,7 @@ pub struct EdgeDetectionStage {
 }
 
 impl EdgeDetectionStage {
+    /// Create a new edge detection processing stage
     pub fn new(threshold: f32) -> Self {
         Self { threshold }
     }
@@ -312,6 +319,7 @@ pub struct MotionDetectionStage {
 }
 
 impl MotionDetectionStage {
+    /// Create a new motion detection processing stage
     pub fn new(threshold: f32) -> Self {
         Self {
             previous_frame: None,
@@ -346,7 +354,14 @@ pub enum VideoSource {
     /// Camera device
     Camera(u32),
     /// Dummy source for testing
-    Dummy { width: u32, height: u32, fps: f32 },
+    Dummy { 
+        /// Frame width in pixels
+        width: u32, 
+        /// Frame height in pixels
+        height: u32, 
+        /// Frames per second
+        fps: f32 
+    },
 }
 
 /// Video reader for streaming
@@ -516,6 +531,7 @@ pub struct BatchProcessor {
 }
 
 impl BatchProcessor {
+    /// Create a new batch processor with specified batch size
     pub fn new(batch_size: usize) -> Self {
         Self { batch_size }
     }
@@ -544,7 +560,14 @@ pub struct PerformanceMonitor {
     window_size: usize,
 }
 
+impl Default for PerformanceMonitor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PerformanceMonitor {
+    /// Create a new performance monitor
     pub fn new() -> Self {
         Self {
             start_time: Instant::now(),
@@ -596,7 +619,7 @@ mod tests {
             .add_stage(BlurStage::new(1.0))
             .add_stage(EdgeDetectionStage::new(0.1));
         
-        assert_eq!(pipeline.stages.len(), 0); // Stages are moved during processing
+        assert_eq!(pipeline.stages.len(), 3); // 3 stages added to pipeline
     }
     
     #[test]

@@ -369,8 +369,42 @@ pub fn read_harwell_boeing<P: AsRef<Path>>(path: P) -> Result<HBSparseMatrix<f64
         Some(vals)
     };
 
-    // TODO: Read right-hand side vectors if present
-    let rhs = None;
+    // Read right-hand side vectors if present
+    let rhs = if header.rhscrd > 0 {
+        // Check if we need to read RHS type information
+        if !header.rhsfmt.is_empty() {
+            let mut rhs_data = Vec::new();
+            read_real_data(&mut reader, header.rhscrd, &mut rhs_data)?;
+            
+            // For simplicity, assume single RHS vector
+            // In full implementation, would parse rhstyp, nrhs, nrhsix from line 5
+            let nrhs = 1; // Number of RHS vectors (should be parsed from header)
+            
+            if rhs_data.len() >= header.nrow * nrhs {
+                // Reshape into matrix: each column is an RHS vector
+                let mut rhs_matrix = Array2::zeros((header.nrow, nrhs));
+                for i in 0..header.nrow {
+                    for j in 0..nrhs {
+                        let idx = j * header.nrow + i; // Column-major ordering
+                        if idx < rhs_data.len() {
+                            rhs_matrix[[i, j]] = rhs_data[idx];
+                        }
+                    }
+                }
+                Some(rhs_matrix)
+            } else {
+                return Err(IoError::FormatError(format!(
+                    "Insufficient RHS data: expected at least {}, got {}",
+                    header.nrow * nrhs,
+                    rhs_data.len()
+                )));
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    };
 
     Ok(HBSparseMatrix {
         header,
@@ -432,7 +466,22 @@ pub fn write_harwell_boeing<P: AsRef<Path>>(path: P, matrix: &HBSparseMatrix<f64
         write_real_data(&mut writer, values, 16)?;
     }
 
-    // TODO: Write right-hand side vectors if present
+    // Write right-hand side vectors if present
+    if let Some(ref rhs_matrix) = matrix.rhs {
+        if matrix.header.rhscrd > 0 && !matrix.header.rhsfmt.is_empty() {
+            // Convert RHS matrix to column-major vector format
+            let mut rhs_data = Vec::new();
+            
+            for j in 0..rhs_matrix.ncols() {
+                for i in 0..rhs_matrix.nrows() {
+                    rhs_data.push(rhs_matrix[[i, j]]);
+                }
+            }
+            
+            // Write RHS data using specified format
+            write_real_data(&mut writer, &rhs_data, 20)?; // 20-character field width
+        }
+    }
 
     writer
         .flush()
@@ -486,8 +535,45 @@ pub fn ccs_to_hb(
     key: String,
     mxtype: HBMatrixType,
 ) -> HBSparseMatrix<f64> {
+    ccs_to_hb_with_rhs(colptr, rowind, values, shape, title, key, mxtype, None)
+}
+
+/// Create a Harwell-Boeing matrix from CCS format with optional RHS vectors
+///
+/// # Arguments
+///
+/// * `colptr` - Column pointers
+/// * `rowind` - Row indices
+/// * `values` - Values
+/// * `shape` - Matrix shape (rows, cols)
+/// * `title` - Matrix title
+/// * `key` - Matrix key
+/// * `mxtype` - Matrix type
+/// * `rhs` - Optional right-hand side vectors
+///
+/// # Returns
+///
+/// * `HBSparseMatrix<f64>` - The Harwell-Boeing matrix
+pub fn ccs_to_hb_with_rhs(
+    colptr: &Array1<usize>,
+    rowind: &Array1<usize>,
+    values: &Array1<f64>,
+    shape: (usize, usize),
+    title: String,
+    key: String,
+    mxtype: HBMatrixType,
+    rhs: Option<Array2<f64>>,
+) -> HBSparseMatrix<f64> {
     let (nrow, ncol) = shape;
     let nnzero = rowind.len();
+
+    // Calculate RHS card count if RHS vectors are present
+    let rhscrd = if let Some(ref rhs_matrix) = rhs {
+        let total_rhs_elements = rhs_matrix.nrows() * rhs_matrix.ncols();
+        (total_rhs_elements + 3) / 4 // 4 reals per line
+    } else {
+        0
+    };
 
     // Calculate header card counts (rough estimates)
     let ptrcrd = ((ncol + 1) + 7) / 8; // 8 integers per line
@@ -497,7 +583,8 @@ pub fn ccs_to_hb(
     } else {
         (nnzero + 3) / 4 // 4 reals per line
     };
-    let totcrd = 4 + ptrcrd + indcrd + valcrd; // 4 header lines + data
+    let header_lines = if rhscrd > 0 { 5 } else { 4 }; // Include line 5 for RHS info if needed
+    let totcrd = header_lines + ptrcrd + indcrd + valcrd + rhscrd;
 
     let header = HBHeader {
         title,
@@ -506,7 +593,7 @@ pub fn ccs_to_hb(
         ptrcrd,
         indcrd,
         valcrd,
-        rhscrd: 0,
+        rhscrd,
         mxtype,
         nrow,
         ncol,
@@ -519,7 +606,11 @@ pub fn ccs_to_hb(
         } else {
             "(4E20.12)".to_string()
         },
-        rhsfmt: String::new(),
+        rhsfmt: if rhscrd > 0 {
+            "(4E20.12)".to_string()
+        } else {
+            String::new()
+        },
     };
 
     HBSparseMatrix {
@@ -531,7 +622,7 @@ pub fn ccs_to_hb(
         } else {
             Some(values.to_vec())
         },
-        rhs: None,
+        rhs,
     }
 }
 

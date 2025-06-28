@@ -88,6 +88,7 @@ pub use stemming::{
     LancasterStemmer, LemmatizerConfig, PorterStemmer, PosTag, RuleLemmatizer,
     RuleLemmatizerBuilder, SimpleLemmatizer, SnowballStemmer, Stemmer,
 };
+pub use simd_ops::{SimdStringOps, SimdTextAnalyzer, SimdEditDistance};
 pub use streaming::{
     MemoryMappedCorpus, StreamingTextProcessor, StreamingVectorizer, ChunkedCorpusReader,
     ProgressTracker,

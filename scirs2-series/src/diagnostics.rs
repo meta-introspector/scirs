@@ -126,7 +126,7 @@ pub fn residual_diagnostics<S, F>(
 ) -> Result<ResidualDiagnostics<F>>
 where
     S: Data<Elem = F>,
-    F: Float + FromPrimitive + Debug + Display + ScalarOperand, // TODO: Add scirs2-core linear algebra trait when available
+    F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     scirs2_core::validation::check_array_finite(residuals, "residuals")?;
 
@@ -218,7 +218,7 @@ pub fn ljung_box_test<S, F>(
 ) -> Result<LjungBoxTest<F>>
 where
     S: Data<Elem = F>,
-    F: Float + FromPrimitive + Debug + Display + ScalarOperand, // TODO: Add scirs2-core linear algebra trait when available
+    F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     scirs2_core::validation::check_array_finite(residuals, "residuals")?;
 
@@ -284,7 +284,7 @@ where
 pub fn arch_test<S, F>(residuals: &ArrayBase<S, Ix1>, lags: usize, alpha: F) -> Result<ArchTest<F>>
 where
     S: Data<Elem = F>,
-    F: Float + FromPrimitive + Debug + Display + ScalarOperand, // TODO: Add scirs2-core linear algebra trait when available
+    F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     scirs2_core::validation::check_array_finite(residuals, "residuals")?;
 

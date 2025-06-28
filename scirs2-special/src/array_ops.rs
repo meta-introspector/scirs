@@ -11,6 +11,12 @@ use ndarray::{Array, ArrayView1, Dimension};
 #[cfg(feature = "futures")]
 use futures::future::BoxFuture;
 
+// #[cfg(feature = "arrayfire")]
+// use arrayfire;
+
+// #[cfg(feature = "arrayfire")]
+// use log;
+
 // #[cfg(feature = "lazy")]
 // use std::collections::HashMap;
 
@@ -26,8 +32,8 @@ pub enum Backend {
     /// Lazy evaluation (requires lazy feature)
     #[cfg(feature = "lazy")]
     Lazy,
-    // ArrayFire backend (placeholder for future implementation)
-    // #[cfg(feature = "array-api")]
+    // /// ArrayFire backend for GPU acceleration (disabled - placeholder)
+    // #[cfg(feature = "arrayfire")]
     // ArrayFire,
 }
 
@@ -435,11 +441,23 @@ pub mod vectorized {
                     let input_owned = input.to_owned();
                     // Since gamma_gpu is not async, we create a future wrapper
                     return Ok(GammaResult::Future(Box::pin(async move {
-                        // Convert to appropriate array views
-                        let mut output = Array::zeros(input_owned.raw_dim());
-                        match crate::gpu_ops::gamma_gpu(&input_owned.view(), &mut output.view_mut()) {
-                            Ok(_) => Ok(output),
-                            Err(e) => Err(e)
+                        // Convert to appropriate array views for 1D operations
+                        if input_owned.ndim() == 1 {
+                            let input_1d = input_owned.into_dimensionality::<ndarray::Ix1>()
+                                .map_err(|e| SpecialError::ComputationError(format!("Dimension error: {}", e)))?;
+                            let mut output = Array::zeros(input_1d.len());
+                            match crate::gpu_ops::gamma_gpu(&input_1d.view(), &mut output.view_mut()) {
+                                Ok(_) => {
+                                    // Convert back to original dimensions
+                                    let result = output.into_dimensionality::<D>()
+                                        .map_err(|e| SpecialError::ComputationError(format!("Dimension error: {}", e)))?;
+                                    Ok(result)
+                                },
+                                Err(e) => Err(SpecialError::ComputationError(format!("GPU error: {}", e)))
+                            }
+                        } else {
+                            // For multi-dimensional arrays, fall back to CPU implementation
+                            Ok(input_owned.mapv(crate::gamma::gamma))
                         }
                     })));
                 }
@@ -450,10 +468,11 @@ pub mod vectorized {
             }
             Backend::Cpu => {
                 // Use CPU implementation
-            } // #[cfg(feature = "array-api")]
-              // Backend::ArrayFire => {
-              //     return arrayfire_gamma(input, config);
-              // }
+            }
+            // #[cfg(feature = "arrayfire")]
+            // Backend::ArrayFire => {
+            //     return arrayfire_gamma(input, config);
+            // }
         }
 
         // Default CPU implementation with optional parallelization
@@ -631,18 +650,134 @@ pub mod vectorized {
         }
     }
 
-    // ArrayFire backend implementation (placeholder)
-    // #[cfg(feature = "array-api")]
+    // ArrayFire backend implementation for gamma function (disabled - placeholder)
+    // #[cfg(feature = "arrayfire")]
     // fn arrayfire_gamma<D>(
     //     input: &Array<f64, D>,
-    //     _config: &ArrayConfig,
+    //     config: &ArrayConfig,
     // ) -> SpecialResult<GammaResult<D>>
     // where
     //     D: Dimension,
     // {
-    //     // TODO: Implement ArrayFire backend
-    //     // For now, fallback to CPU
-    //     Ok(GammaResult::Immediate(input.mapv(crate::gamma::gamma)))
+    //     use arrayfire as af;
+    //     
+    //     // Initialize ArrayFire if not already done
+    //     af::set_backend(af::Backend::DEFAULT);
+    //     af::set_device(0);
+    //     
+    //     // Convert ndarray to ArrayFire array
+    //     let input_vec: Vec<f64> = input.iter().cloned().collect();
+    //     let dims = input.shape();
+    //     
+    //     // Create ArrayFire array
+    //     let af_input = match dims.len() {
+    //         1 => af::Array::new(&input_vec, af::Dim4::new(&[dims[0] as u64, 1, 1, 1])),
+    //         2 => af::Array::new(&input_vec, af::Dim4::new(&[dims[0] as u64, dims[1] as u64, 1, 1])),
+    //         3 => af::Array::new(&input_vec, af::Dim4::new(&[dims[0] as u64, dims[1] as u64, dims[2] as u64, 1])),
+    //         4 => af::Array::new(&input_vec, af::Dim4::new(&[dims[0] as u64, dims[1] as u64, dims[2] as u64, dims[3] as u64])),
+    //         _ => {
+    //             // For higher dimensions, flatten and reshape later
+    //             af::Array::new(&input_vec, af::Dim4::new(&[input_vec.len() as u64, 1, 1, 1]))
+    //         }
+    //     };
+    //     
+    //     // Compute gamma function using ArrayFire
+    //     let af_result = arrayfire_gamma_kernel(&af_input)?;
+    //     
+    //     // Convert result back to ndarray
+    //     let mut result_vec = vec![0.0; input.len()];
+    //     af_result.host(&mut result_vec);
+    //     
+    //     let result = Array::from_vec(result_vec)
+    //         .to_shape(input.dim())
+    //         .map_err(|e| SpecialError::ComputationError(format!("Shape conversion error: {}", e)))?
+    //         .into_owned();
+    //     
+    //     Ok(GammaResult::Immediate(result))
+    // }
+    
+    // ArrayFire kernel for gamma function computation (disabled - placeholder)
+    // #[cfg(feature = "arrayfire")]
+    // fn arrayfire_gamma_kernel(input: &arrayfire::Array<f64>) -> SpecialResult<arrayfire::Array<f64>> {
+    //     use arrayfire as af;
+    //     
+    //     // Check for negative values (gamma undefined for negative integers)
+    //     let negative_mask = af::lt(input, &0.0, false);
+    //     let has_negatives = af::any_true_all(&negative_mask).0;
+    //     
+    //     if has_negatives {
+    //         log::warn!("Gamma function called with negative values, may produce NaN");
+    //     }
+    //     
+    //     // Compute gamma using ArrayFire's built-in function if available,
+    //     // otherwise implement Lanczos approximation
+    //     let result = if af::get_backend() == af::Backend::CUDA || af::get_backend() == af::Backend::OPENCL {
+    //         // Use GPU-accelerated computation
+    //         arrayfire_gamma_lanczos(input)?
+    //     } else {
+    //         // Fallback to CPU
+    //         arrayfire_gamma_lanczos(input)?
+    //     };
+    //     
+    //     Ok(result)
+    // }
+    
+    // Lanczos approximation for gamma function in ArrayFire (disabled - placeholder)
+    // #[cfg(feature = "arrayfire")]
+    // fn arrayfire_gamma_lanczos(x: &arrayfire::Array<f64>) -> SpecialResult<arrayfire::Array<f64>> {
+    //     use arrayfire as af;
+    //     
+    //     // Lanczos coefficients
+    //     let g = 7.0;
+    //     let coeffs = vec![
+    //         0.99999999999980993,
+    //         676.5203681218851,
+    //         -1259.1392167224028,
+    //         771.32342877765313,
+    //         -176.61502916214059,
+    //         12.507343278686905,
+    //         -0.13857109526572012,
+    //         9.9843695780195716e-6,
+    //         1.5056327351493116e-7,
+    //     ];
+    //     
+    //     // Handle reflection formula for x < 0.5
+    //     let half = af::constant(0.5, x.dims());
+    //     let use_reflection = af::lt(x, &half, false);
+    //     
+    //     // For reflection formula: Γ(z) = π / (sin(πz) × Γ(1-z))
+    //     let pi = af::constant(std::f64::consts::PI, x.dims());
+    //     let one = af::constant(1.0, x.dims());
+    //     let reflected_x = af::sub(&one, x, false);
+    //     
+    //     // Compute main Lanczos approximation
+    //     let z = af::sub(x, &one, false);
+    //     let mut acc = af::constant(coeffs[0], x.dims());
+    //     
+    //     for (i, &coeff) in coeffs.iter().enumerate().skip(1) {
+    //         let k = af::constant(i as f64, x.dims());
+    //         let denominator = af::add(&z, &k, false);
+    //         let term = af::div(&af::constant(coeff, x.dims()), &denominator, false);
+    //         acc = af::add(&acc, &term, false);
+    //     }
+    //     
+    //     let t = af::add(&z, &af::constant(g + 0.5, x.dims()), false);
+    //     let sqrt_2pi = af::constant((2.0 * std::f64::consts::PI).sqrt(), x.dims());
+    //     
+    //     let z_plus_half = af::add(&z, &af::constant(0.5, x.dims()), false);
+    //     let t_pow = af::pow(&t, &z_plus_half, false);
+    //     let exp_neg_t = af::exp(&af::mul(&t, &af::constant(-1.0, x.dims()), false));
+    //     
+    //     let gamma_main = af::mul(&af::mul(&sqrt_2pi, &acc, false), &af::mul(&t_pow, &exp_neg_t, false), false);
+    //     
+    //     // Apply reflection formula where needed
+    //     let sin_pi_x = af::sin(&af::mul(&pi, x, false));
+    //     let gamma_reflected = af::div(&pi, &af::mul(&sin_pi_x, &gamma_main, false), false);
+    //     
+    //     // Select appropriate result based on x value
+    //     let result = af::select(&use_reflection, &gamma_reflected, &gamma_main);
+    //     
+    //     Ok(result)
     // }
 
     /// Chunked processing for large arrays

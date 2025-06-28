@@ -161,10 +161,10 @@ impl Pipeline {
     }
     
     /// Gets a mutable reference to a step by name
-    pub fn get_step_mut(&mut self, name: &str) -> Option<&mut dyn Transformer> {
+    pub fn get_step_mut(&mut self, name: &str) -> Option<&mut Box<dyn Transformer>> {
         self.steps.iter_mut()
             .find(|(n, _)| n == name)
-            .map(|(_, t)| t.as_mut())
+            .map(|(_, t)| t)
     }
 }
 

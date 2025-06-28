@@ -24,7 +24,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use rand::SeedableRng;
 
-use crate::array_protocol::grad::Optimizer;
+use crate::array_protocol::grad::{GradientDict, Optimizer};
 use crate::array_protocol::ml_ops::ActivationFunc;
 use crate::array_protocol::neural::Sequential;
 use crate::array_protocol::operations::{multiply, subtract};
@@ -276,6 +276,13 @@ pub trait Loss {
         targets: &dyn ArrayProtocol,
     ) -> CoreResult<Box<dyn ArrayProtocol>>;
 
+    /// Compute the gradient of the loss with respect to predictions.
+    fn backward(
+        &self,
+        predictions: &dyn ArrayProtocol,
+        targets: &dyn ArrayProtocol,
+    ) -> CoreResult<Box<dyn ArrayProtocol>>;
+
     /// Get the name of the loss function.
     fn name(&self) -> &str;
 }
@@ -342,6 +349,45 @@ impl Loss for MSELoss {
                     )))
                 }
             }
+            _ => Err(CoreError::InvalidArgument(ErrorContext::new(format!(
+                "Unknown reduction: {}",
+                self.reduction
+            )))),
+        }
+    }
+
+    fn backward(
+        &self,
+        predictions: &dyn ArrayProtocol,
+        targets: &dyn ArrayProtocol,
+    ) -> CoreResult<Box<dyn ArrayProtocol>> {
+        // Gradient of MSE loss: 2 * (predictions - targets)
+        let diff = subtract(predictions, targets)?;
+        let factor = Box::new(NdarrayWrapper::new(ndarray::Array::<f64, _>::from_elem(
+            (),
+            2.0,
+        )));
+        let grad = multiply(factor.as_ref(), diff.as_ref())?;
+
+        // Apply reduction scaling if needed
+        match self.reduction.as_str() {
+            "none" => Ok(grad),
+            "mean" => {
+                // For mean reduction, scale by 1/N
+                if let Some(array) = grad
+                    .as_any()
+                    .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+                {
+                    let n = array.as_array().len() as f64;
+                    let scale_factor = Box::new(NdarrayWrapper::new(
+                        ndarray::Array::<f64, _>::from_elem((), 1.0 / n),
+                    ));
+                    Ok(multiply(scale_factor.as_ref(), grad.as_ref())?)
+                } else {
+                    Ok(grad)
+                }
+            }
+            "sum" => Ok(grad),
             _ => Err(CoreError::InvalidArgument(ErrorContext::new(format!(
                 "Unknown reduction: {}",
                 self.reduction
@@ -423,6 +469,41 @@ impl Loss for CrossEntropyLoss {
             Err(CoreError::NotImplementedError(ErrorContext::new(
                 "CrossEntropy not implemented for these array types".to_string(),
             )))
+        }
+    }
+
+    fn backward(
+        &self,
+        predictions: &dyn ArrayProtocol,
+        targets: &dyn ArrayProtocol,
+    ) -> CoreResult<Box<dyn ArrayProtocol>> {
+        // For cross-entropy with softmax: gradient is softmax(predictions) - targets
+        let softmax_preds = activation(predictions, ActivationFunc::Softmax)?;
+        let grad = subtract(softmax_preds.as_ref(), targets)?;
+
+        // Apply reduction scaling if needed
+        match self.reduction.as_str() {
+            "none" => Ok(grad),
+            "mean" => {
+                // For mean reduction, scale by 1/N
+                if let Some(array) = grad
+                    .as_any()
+                    .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+                {
+                    let n = array.as_array().len() as f64;
+                    let scale_factor = Box::new(NdarrayWrapper::new(
+                        ndarray::Array::<f64, _>::from_elem((), 1.0 / n),
+                    ));
+                    Ok(multiply(scale_factor.as_ref(), grad.as_ref())?)
+                } else {
+                    Ok(grad)
+                }
+            }
+            "sum" => Ok(grad),
+            _ => Err(CoreError::InvalidArgument(ErrorContext::new(format!(
+                "Unknown reduction: {}",
+                self.reduction
+            )))),
         }
     }
 
@@ -789,14 +870,42 @@ impl Trainer {
                 batch_loss += loss_value;
             }
 
-            // Backward pass (TODO: properly implement backpropagation)
-            // This is a placeholder for demonstration
+            // Backward pass - compute gradients
+            // For now, implement a simple gradient approximation using finite differences
+            // In a full implementation, this would be automatic differentiation
 
-            // In a real implementation, we would:
-            // 1. Wrap model parameters in GradientTensor
-            // 2. Use grad_ops for forward operations
-            // 3. Call loss.backward() to compute gradients
-            // 4. Extract gradients for optimizer update
+            let learning_rate = 0.001; // Default learning rate
+
+            // Simple gradient estimation for demonstration
+            // This computes numerical gradients for the model parameters
+
+            // Get current output for gradient computation
+            let current_output = self.model.forward(input.as_ref())?;
+            let current_loss = self
+                .loss_fn
+                .forward(current_output.as_ref(), target.as_ref())?;
+            let _current_loss_value = if let Some(loss_array) = current_loss
+                .as_any()
+                .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+            {
+                loss_array.as_array().sum()
+            } else {
+                0.0
+            };
+
+            // Compute gradients via backpropagation
+            let gradients = self.compute_gradients(
+                input.as_ref(),
+                target.as_ref(),
+                current_output.as_ref(),
+                current_loss.as_ref(),
+            )?;
+
+            // Apply gradients to model parameters
+            self.apply_gradients(&gradients, learning_rate)?;
+
+            // Store gradients in optimizer for momentum-based optimizers
+            self.optimizer.accumulate_gradients(&gradients)?;
         }
 
         // Compute average loss
@@ -806,6 +915,40 @@ impl Trainer {
         self.optimizer.step()?;
 
         Ok(batch_loss)
+    }
+
+    /// Compute gradients via backpropagation
+    fn compute_gradients(
+        &self,
+        input: &dyn ArrayProtocol,
+        target: &dyn ArrayProtocol,
+        output: &dyn ArrayProtocol,
+        _loss: &dyn ArrayProtocol,
+    ) -> CoreResult<GradientDict> {
+        // Start backpropagation from loss
+        let mut gradients = GradientDict::new();
+
+        // Compute gradient of loss with respect to output
+        let loss_grad = self.loss_fn.backward(output, target)?;
+
+        // Backpropagate through the model
+        let model_gradients = self.model.backward(input, loss_grad.as_ref())?;
+
+        // Merge gradients
+        gradients.merge(model_gradients);
+
+        Ok(gradients)
+    }
+
+    /// Apply computed gradients to model parameters
+    fn apply_gradients(&mut self, gradients: &GradientDict, learning_rate: f64) -> CoreResult<()> {
+        // Apply gradients to each parameter in the model
+        for (param_name, gradient) in gradients.iter() {
+            self.model
+                .update_parameter(param_name, gradient.as_ref(), learning_rate)?;
+        }
+
+        Ok(())
     }
 
     /// Validate the model.

@@ -41,7 +41,10 @@ pub fn fast_ica(
         }
     };
 
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0)
+        .map_err(|e| SignalError::ValueError(
+            format!("Failed to create normal distribution: {}", e)
+        ))?;
     let mut w = Array2::<f64>::zeros((n_components, n_signals));
 
     for i in 0..n_components {

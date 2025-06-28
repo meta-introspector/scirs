@@ -65,15 +65,15 @@ pub mod factory_pattern {
     impl<T: InterpolationFloat> InterpolationConfig for StandardConfig<T> {
         fn validate(&self) -> InterpolateResult<()> {
             if self.max_iterations == 0 {
-                return Err(InterpolateError::InvalidInput(
-                    "max_iterations must be greater than 0".to_string()
+                return Err(InterpolateError::invalid_input(
+                    "max_iterations must be greater than 0"
                 ));
             }
             
             if let Some(s) = self.smoothing {
                 if s <= T::zero() {
-                    return Err(InterpolateError::InvalidInput(
-                        "smoothing parameter must be positive".to_string()
+                    return Err(InterpolateError::invalid_input(
+                        "smoothing parameter must be positive"
                     ));
                 }
             }
@@ -82,7 +82,7 @@ pub mod factory_pattern {
         }
         
         fn default() -> Self {
-            Self::default()
+            <Self as std::default::Default>::default()
         }
     }
 }
@@ -148,7 +148,7 @@ pub mod builder_pattern {
             values: &ArrayView1<T>,
         ) -> InterpolateResult<I>
         where
-            I: From<(ArrayView2<T>, ArrayView1<T>, factory_pattern::StandardConfig<T>)>,
+            for<'a> I: From<(ArrayView2<'a, T>, ArrayView1<'a, T>, factory_pattern::StandardConfig<T>)>,
         {
             validation::validate_data_consistency(points, values)?;
             self.config.validate()?;
@@ -180,7 +180,7 @@ pub mod evaluation_pattern {
         T: InterpolationFloat,
         I: Interpolator<T>,
     {
-        let options = options.unwrap_or_default();
+        let _options = options.unwrap_or_default();
         
         // Validate query dimension
         // validation::validate_query_dimension(interpolator.data_dim(), query_points)?;
@@ -196,34 +196,190 @@ pub mod evaluation_pattern {
     }
 }
 
-/// Standard error messages
+/// Standard error handling
 ///
-/// Consistent error messages across the library
-pub mod error_messages {
-    /// Generate standard dimension mismatch error
-    pub fn dimension_mismatch(expected: usize, actual: usize, context: &str) -> String {
-        format!(
-            "Dimension mismatch in {}: expected {}, got {}",
-            context, expected, actual
-        )
+/// Consistent error creation and messages across the library
+pub mod error_handling {
+    use crate::InterpolateError;
+    
+    /// Create standard dimension mismatch error using structured error type
+    pub fn dimension_mismatch(expected: usize, actual: usize, context: &str) -> InterpolateError {
+        InterpolateError::dimension_mismatch(expected, actual, context)
     }
     
-    /// Generate standard empty data error
-    pub fn empty_data(context: &str) -> String {
-        format!("Empty input data provided to {}", context)
+    /// Create standard empty data error using structured error type
+    pub fn empty_data(context: &str) -> InterpolateError {
+        InterpolateError::empty_data(context)
     }
     
-    /// Generate standard invalid parameter error
-    pub fn invalid_parameter(param: &str, reason: &str) -> String {
-        format!("Invalid parameter '{}': {}", param, reason)
+    /// Create standard invalid parameter error using structured error type
+    pub fn invalid_parameter<T: std::fmt::Display>(
+        param: &str, 
+        expected: &str, 
+        actual: T,
+        context: &str
+    ) -> InterpolateError {
+        InterpolateError::invalid_parameter(param, expected, actual, context)
     }
     
-    /// Generate standard convergence failure error
-    pub fn convergence_failure(method: &str, iterations: usize) -> String {
-        format!(
-            "{} failed to converge after {} iterations",
-            method, iterations
-        )
+    /// Create standard convergence failure error using structured error type
+    pub fn convergence_failure(method: &str, iterations: usize) -> InterpolateError {
+        InterpolateError::convergence_failure(method, iterations)
+    }
+    
+    /// Create standard numerical instability error
+    pub fn numerical_instability(context: &str, details: &str) -> InterpolateError {
+        InterpolateError::numerical_instability(context, details)
+    }
+    
+    /// Create standard insufficient points error
+    pub fn insufficient_points(required: usize, provided: usize, method: &str) -> InterpolateError {
+        InterpolateError::insufficient_points(required, provided, method)
+    }
+}
+
+/// Standard input validation
+///
+/// Comprehensive validation utilities for consistent input checking
+pub mod input_validation {
+    use crate::{InterpolateError, InterpolateResult, traits::InterpolationFloat};
+    use ndarray::{ArrayView1, ArrayView2};
+    
+    /// Validate that data points are finite and well-formed
+    pub fn validate_finite_data<T: InterpolationFloat>(
+        points: &ArrayView2<T>,
+        values: &ArrayView1<T>,
+        context: &str,
+    ) -> InterpolateResult<()> {
+        // Check for NaN or infinite values in points
+        for (i, point_slice) in points.outer_iter().enumerate() {
+            for (j, &val) in point_slice.iter().enumerate() {
+                if !val.is_finite() {
+                    return Err(InterpolateError::InvalidInput {
+                        message: format!(
+                            "Non-finite value found in {} points at position ({}, {}): {}",
+                            context, i, j, val
+                        ),
+                    });
+                }
+            }
+        }
+        
+        // Check for NaN or infinite values in function values
+        for (i, &val) in values.iter().enumerate() {
+            if !val.is_finite() {
+                return Err(InterpolateError::InvalidInput {
+                    message: format!(
+                        "Non-finite value found in {} values at position {}: {}",
+                        context, i, val
+                    ),
+                });
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Validate that data has sufficient points for the method
+    pub fn validate_sufficient_points<T: InterpolationFloat>(
+        points: &ArrayView2<T>,
+        _values: &ArrayView1<T>,
+        minimum_required: usize,
+        method_name: &str,
+    ) -> InterpolateResult<()> {
+        let n_points = points.nrows();
+        if n_points < minimum_required {
+            return Err(InterpolateError::insufficient_points(
+                minimum_required, 
+                n_points, 
+                method_name
+            ));
+        }
+        Ok(())
+    }
+    
+    /// Validate query points have correct dimensions and are finite
+    pub fn validate_query_points<T: InterpolationFloat>(
+        query_points: &ArrayView2<T>,
+        expected_dim: usize,
+        context: &str,
+    ) -> InterpolateResult<()> {
+        if query_points.ncols() != expected_dim {
+            return Err(InterpolateError::dimension_mismatch(
+                expected_dim,
+                query_points.ncols(),
+                &format!("{} query points", context)
+            ));
+        }
+        
+        // Check for finite values
+        for (i, point_slice) in query_points.outer_iter().enumerate() {
+            for (j, &val) in point_slice.iter().enumerate() {
+                if !val.is_finite() {
+                    return Err(InterpolateError::InvalidInput {
+                        message: format!(
+                            "Non-finite value found in {} query points at position ({}, {}): {}",
+                            context, i, j, val
+                        ),
+                    });
+                }
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Validate parameter is positive
+    pub fn validate_positive<T: InterpolationFloat>(
+        value: T,
+        param_name: &str,
+        context: &str,
+    ) -> InterpolateResult<()> {
+        if value <= T::zero() {
+            return Err(InterpolateError::invalid_parameter(
+                param_name,
+                "positive value",
+                value,
+                context,
+            ));
+        }
+        Ok(())
+    }
+    
+    /// Validate parameter is non-negative
+    pub fn validate_non_negative<T: InterpolationFloat>(
+        value: T,
+        param_name: &str,
+        context: &str,
+    ) -> InterpolateResult<()> {
+        if value < T::zero() {
+            return Err(InterpolateError::invalid_parameter(
+                param_name,
+                "non-negative value",
+                value,
+                context,
+            ));
+        }
+        Ok(())
+    }
+    
+    /// Validate parameter is within a specific range
+    pub fn validate_range<T: InterpolationFloat>(
+        value: T,
+        min: T,
+        max: T,
+        param_name: &str,
+        context: &str,
+    ) -> InterpolateResult<()> {
+        if value < min || value > max {
+            return Err(InterpolateError::invalid_parameter(
+                param_name,
+                &format!("value between {} and {}", min, max),
+                value,
+                context,
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -242,12 +398,13 @@ pub mod migration_examples {
     // ) -> InterpolateResult<RBFInterpolator<F>>
     
     // New standardized API:
+    #[derive(Debug, Clone)]
     pub struct RBFConfig<T: InterpolationFloat> {
         pub kernel: RBFKernel,
         pub epsilon: T,
     }
     
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub enum RBFKernel {
         Gaussian,
         Multiquadric,
@@ -267,15 +424,15 @@ pub mod migration_examples {
     impl<T: InterpolationFloat> InterpolationConfig for RBFConfig<T> {
         fn validate(&self) -> InterpolateResult<()> {
             if self.epsilon <= T::zero() {
-                return Err(InterpolateError::InvalidInput(
-                    "epsilon must be positive".to_string()
+                return Err(InterpolateError::invalid_input(
+                    "epsilon must be positive"
                 ));
             }
             Ok(())
         }
         
         fn default() -> Self {
-            Self::default()
+            <Self as std::default::Default>::default()
         }
     }
     
@@ -286,7 +443,7 @@ pub mod migration_examples {
         config: Option<RBFConfig<T>>,
     ) -> InterpolateResult<I>
     where
-        I: From<(ArrayView2<T>, ArrayView1<T>, RBFConfig<T>)>,
+        for<'a> I: From<(ArrayView2<'a, T>, ArrayView1<'a, T>, RBFConfig<T>)>,
     {
         validation::validate_data_consistency(points, values)?;
         

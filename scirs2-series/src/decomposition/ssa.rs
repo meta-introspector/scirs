@@ -2,7 +2,7 @@
 
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, FromPrimitive, NumCast};
-use scirs2_linalg::decomposition::svd;
+use scirs2_linalg::svd;
 use std::fmt::Debug;
 
 use super::common::DecompositionResult;
@@ -111,21 +111,14 @@ where
 
     // Step 2: SVD on trajectory matrix using scirs2-linalg
     let trajectory_matrix_f64 = trajectory_matrix.mapv(|x| x.to_f64().unwrap());
-    let (u_f64, s_f64, vt_f64) = svd(&trajectory_matrix_f64.view(), true, true).map_err(|e| {
+    let (u_f64, s_f64, vt_f64) = svd(&trajectory_matrix_f64.view(), true, None).map_err(|e| {
         TimeSeriesError::DecompositionError(format!("SVD computation failed: {}", e))
     })?;
 
-    let u = u_f64.ok_or_else(|| {
-        TimeSeriesError::DecompositionError("SVD failed to compute U matrix".to_string())
-    })?;
-    let vt = vt_f64.ok_or_else(|| {
-        TimeSeriesError::DecompositionError("SVD failed to compute V^T matrix".to_string())
-    })?;
-
     // Convert back to the original float type
-    let u = u.mapv(|x| F::from_f64(x).unwrap());
+    let u = u_f64.mapv(|x| F::from_f64(x).unwrap());
     let s = s_f64.mapv(|x| F::from_f64(x).unwrap());
-    let vt = vt.mapv(|x| F::from_f64(x).unwrap());
+    let vt = vt_f64.mapv(|x| F::from_f64(x).unwrap());
 
     // Step 3: Grouping components
     let mut trend_components = Vec::new();

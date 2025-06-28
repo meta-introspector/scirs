@@ -3,14 +3,13 @@
 //! This module provides utilities for converting text data into numerical features
 //! suitable for machine learning algorithms.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
+use ndarray::{Array1, Array2};
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use ahash::AHasher;
 use regex::Regex;
 
 use crate::error::{Result, TransformError};
-use crate::streaming::StreamingTransformer;
 
 /// Count vectorizer for converting text documents to term frequency vectors
 pub struct CountVectorizer {
@@ -283,9 +282,9 @@ impl TfidfVectorizer {
             
             // Calculate IDF
             if self.smooth_idf {
-                self.idf = df.mapv(|d| ((n_samples + 1.0) / (d + 1.0)).ln() + 1.0);
+                self.idf = df.mapv(|d: f64| ((n_samples + 1.0) / (d + 1.0)).ln() + 1.0);
             } else {
-                self.idf = df.mapv(|d| (n_samples / d).ln() + 1.0);
+                self.idf = df.mapv(|d: f64| (n_samples / d).ln() + 1.0);
             }
         }
         
@@ -436,8 +435,8 @@ impl HashingVectorizer {
             if let Some(ref norm_type) = self.norm {
                 let row = result.row(i).to_owned();
                 let norm_value = match norm_type.as_str() {
-                    "l1" => row.iter().map(|&v| v.abs()).sum::<f64>(),
-                    "l2" => row.dot(&row).sqrt(),
+                    "l1" => row.iter().map(|v: &f64| v.abs()).sum::<f64>(),
+                    "l2" => (row.dot(&row) as f64).sqrt(),
                     _ => continue,
                 };
                 

@@ -206,10 +206,7 @@ impl SoftCosineSimilarity {
         let mut norm2 = 0.0;
 
         for word1 in &all_words {
-            let weight1 = tf1.get(word1).copied().unwrap_or(0.0);
-            
             for word2 in &all_words {
-                let weight2 = tf2.get(word2).copied().unwrap_or(0.0);
                 let similarity = self.get_similarity(word1, word2);
                 
                 // Calculate numerator (cross-product between text1 and text2)
@@ -287,6 +284,12 @@ impl SoftCosineSimilarity {
 /// Weighted Jaccard similarity with custom term weights
 pub struct WeightedJaccard {
     weights: HashMap<String, f64>,
+}
+
+impl Default for WeightedJaccard {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl WeightedJaccard {
@@ -379,27 +382,373 @@ impl LcsSimilarity {
     }
 }
 
+/// Semantic edit distance for measuring text similarity with semantic operations
+pub struct SemanticEditDistance {
+    embeddings: HashMap<String, Array1<f64>>,
+    synonym_threshold: f64,
+}
+
+impl SemanticEditDistance {
+    /// Create new semantic edit distance calculator
+    pub fn new(embeddings: HashMap<String, Array1<f64>>, synonym_threshold: f64) -> Self {
+        Self {
+            embeddings,
+            synonym_threshold,
+        }
+    }
+
+    /// Calculate semantic edit distance between two texts
+    pub fn distance(&self, text1: &str, text2: &str, tokenizer: &dyn Tokenizer) -> Result<f64> {
+        let tokens1 = tokenizer.tokenize(text1)?;
+        let tokens2 = tokenizer.tokenize(text2)?;
+
+        let m = tokens1.len();
+        let n = tokens2.len();
+        let mut dp = Array2::zeros((m + 1, n + 1));
+
+        // Initialize base cases
+        for i in 0..=m {
+            dp[[i, 0]] = i as f64;
+        }
+        for j in 0..=n {
+            dp[[0, j]] = j as f64;
+        }
+
+        // Fill DP table with semantic costs
+        for i in 1..=m {
+            for j in 1..=n {
+                let substitution_cost = if tokens1[i - 1] == tokens2[j - 1] {
+                    0.0
+                } else {
+                    self.semantic_substitution_cost(&tokens1[i - 1], &tokens2[j - 1])
+                };
+
+                dp[[i, j]] = (dp[[i - 1, j]] + 1.0) // deletion
+                    .min(dp[[i, j - 1]] + 1.0) // insertion
+                    .min(dp[[i - 1, j - 1]] + substitution_cost); // substitution
+            }
+        }
+
+        Ok(dp[[m, n]])
+    }
+
+    /// Calculate semantic substitution cost between two words
+    fn semantic_substitution_cost(&self, word1: &str, word2: &str) -> f64 {
+        if let (Some(embed1), Some(embed2)) = (self.embeddings.get(word1), self.embeddings.get(word2)) {
+            let similarity = Self::cosine_similarity(embed1.view(), embed2.view());
+            if similarity >= self.synonym_threshold {
+                0.5 // Reduced cost for similar words
+            } else {
+                1.0 - similarity // Cost inversely related to similarity
+            }
+        } else {
+            1.0 // Full substitution cost for unknown words
+        }
+    }
+
+    /// Calculate cosine similarity between vectors
+    fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
+        let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
+        
+        if norm1 > 0.0 && norm2 > 0.0 {
+            dot / (norm1 * norm2)
+        } else {
+            0.0
+        }
+    }
+
+    /// Convert distance to normalized similarity (0-1)
+    pub fn similarity(&self, text1: &str, text2: &str, tokenizer: &dyn Tokenizer) -> Result<f64> {
+        let distance = self.distance(text1, text2, tokenizer)?;
+        let tokens1 = tokenizer.tokenize(text1)?;
+        let tokens2 = tokenizer.tokenize(text2)?;
+        let max_length = cmp::max(tokens1.len(), tokens2.len()) as f64;
+        
+        if max_length == 0.0 {
+            Ok(1.0)
+        } else {
+            Ok(1.0 - (distance / max_length))
+        }
+    }
+}
+
+/// Sentence embedding-based similarity for document-level comparisons
+pub struct SentenceEmbeddingSimilarity {
+    embeddings: HashMap<String, Array1<f64>>,
+    pooling_strategy: PoolingStrategy,
+}
+
+#[derive(Debug, Clone)]
+pub enum PoolingStrategy {
+    /// Average all word embeddings
+    Mean,
+    /// Maximum across all dimensions
+    Max,
+    /// Weighted average using IDF weights
+    WeightedMean(HashMap<String, f64>),
+}
+
+impl SentenceEmbeddingSimilarity {
+    /// Create new sentence embedding similarity calculator
+    pub fn new(embeddings: HashMap<String, Array1<f64>>, pooling_strategy: PoolingStrategy) -> Self {
+        Self {
+            embeddings,
+            pooling_strategy,
+        }
+    }
+
+    /// Calculate similarity between two texts using sentence embeddings
+    pub fn similarity(&self, text1: &str, text2: &str, tokenizer: &dyn Tokenizer) -> Result<f64> {
+        let embed1 = self.get_sentence_embedding(text1, tokenizer)?;
+        let embed2 = self.get_sentence_embedding(text2, tokenizer)?;
+        
+        Ok(Self::cosine_similarity(embed1.view(), embed2.view()))
+    }
+
+    /// Generate sentence embedding from text
+    fn get_sentence_embedding(&self, text: &str, tokenizer: &dyn Tokenizer) -> Result<Array1<f64>> {
+        let tokens = tokenizer.tokenize(text)?;
+        
+        // Filter tokens that have embeddings
+        let valid_embeddings: Vec<&Array1<f64>> = tokens.iter()
+            .filter_map(|token| self.embeddings.get(token))
+            .collect();
+
+        if valid_embeddings.is_empty() {
+            return Err(TextError::InvalidInput(
+                "No valid embeddings found for tokens".into()
+            ));
+        }
+
+        let embed_dim = valid_embeddings[0].len();
+        
+        match &self.pooling_strategy {
+            PoolingStrategy::Mean => {
+                let mut result = Array1::zeros(embed_dim);
+                for embedding in &valid_embeddings {
+                    result = result + embedding;
+                }
+                Ok(result / valid_embeddings.len() as f64)
+            }
+            PoolingStrategy::Max => {
+                let mut result = Array1::from_elem(embed_dim, f64::NEG_INFINITY);
+                for embedding in &valid_embeddings {
+                    for (i, &val) in embedding.iter().enumerate() {
+                        if val > result[i] {
+                            result[i] = val;
+                        }
+                    }
+                }
+                Ok(result)
+            }
+            PoolingStrategy::WeightedMean(weights) => {
+                let mut result = Array1::zeros(embed_dim);
+                let mut total_weight = 0.0;
+                
+                for (token, embedding) in tokens.iter().zip(&valid_embeddings) {
+                    let weight = weights.get(token).copied().unwrap_or(1.0);
+                    result = result + embedding * weight;
+                    total_weight += weight;
+                }
+                
+                if total_weight > 0.0 {
+                    Ok(result / total_weight)
+                } else {
+                    Ok(result / valid_embeddings.len() as f64)
+                }
+            }
+        }
+    }
+
+    /// Calculate cosine similarity between vectors
+    fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
+        let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
+        
+        if norm1 > 0.0 && norm2 > 0.0 {
+            dot / (norm1 * norm2)
+        } else {
+            0.0
+        }
+    }
+}
+
+/// N-gram based semantic similarity with skip-grams and weighted matching
+pub struct NGramSemanticSimilarity {
+    n: usize,
+    skip_distance: usize,
+    embeddings: HashMap<String, Array1<f64>>,
+    ngram_weights: HashMap<usize, f64>,
+}
+
+impl NGramSemanticSimilarity {
+    /// Create new N-gram semantic similarity calculator
+    pub fn new(n: usize, skip_distance: usize, embeddings: HashMap<String, Array1<f64>>) -> Self {
+        let mut ngram_weights = HashMap::new();
+        // Higher order n-grams get higher weights
+        for i in 1..=n {
+            ngram_weights.insert(i, i as f64);
+        }
+        
+        Self {
+            n,
+            skip_distance,
+            embeddings,
+            ngram_weights,
+        }
+    }
+
+    /// Calculate similarity using semantic n-grams
+    pub fn similarity(&self, text1: &str, text2: &str, tokenizer: &dyn Tokenizer) -> Result<f64> {
+        let tokens1 = tokenizer.tokenize(text1)?;
+        let tokens2 = tokenizer.tokenize(text2)?;
+
+        let mut total_similarity = 0.0;
+        let mut total_weight = 0.0;
+
+        // Calculate similarity for each n-gram size
+        for ngram_size in 1..=self.n {
+            let ngrams1 = self.extract_ngrams(&tokens1, ngram_size);
+            let ngrams2 = self.extract_ngrams(&tokens2, ngram_size);
+
+            let similarity = self.calculate_ngram_similarity(&ngrams1, &ngrams2);
+            let weight = self.ngram_weights.get(&ngram_size).copied().unwrap_or(1.0);
+            
+            total_similarity += similarity * weight;
+            total_weight += weight;
+        }
+
+        Ok(if total_weight > 0.0 {
+            total_similarity / total_weight
+        } else {
+            0.0
+        })
+    }
+
+    /// Extract n-grams with skip-grams
+    fn extract_ngrams(&self, tokens: &[String], n: usize) -> Vec<Vec<String>> {
+        let mut ngrams = Vec::new();
+        
+        if tokens.len() < n {
+            return ngrams;
+        }
+
+        // Standard n-grams
+        for i in 0..=tokens.len() - n {
+            ngrams.push(tokens[i..i + n].to_vec());
+        }
+
+        // Skip-grams (if skip_distance > 0)
+        if self.skip_distance > 0 && n > 1 {
+            for i in 0..tokens.len() {
+                for skip in 1..=self.skip_distance {
+                    if i + skip + n - 1 < tokens.len() {
+                        let mut skipgram = vec![tokens[i].clone()];
+                        for j in 1..n {
+                            skipgram.push(tokens[i + skip + j - 1].clone());
+                        }
+                        ngrams.push(skipgram);
+                    }
+                }
+            }
+        }
+
+        ngrams
+    }
+
+    /// Calculate similarity between two sets of n-grams
+    fn calculate_ngram_similarity(&self, ngrams1: &[Vec<String>], ngrams2: &[Vec<String>]) -> f64 {
+        if ngrams1.is_empty() || ngrams2.is_empty() {
+            return 0.0;
+        }
+
+        let mut total_similarity = 0.0;
+        let mut count = 0;
+
+        for ngram1 in ngrams1 {
+            let mut max_similarity = 0.0;
+            for ngram2 in ngrams2 {
+                let similarity = self.ngram_semantic_similarity(ngram1, ngram2);
+                max_similarity = max_similarity.max(similarity);
+            }
+            total_similarity += max_similarity;
+            count += 1;
+        }
+
+        total_similarity / count as f64
+    }
+
+    /// Calculate semantic similarity between two n-grams
+    fn ngram_semantic_similarity(&self, ngram1: &[String], ngram2: &[String]) -> f64 {
+        if ngram1.len() != ngram2.len() {
+            return 0.0;
+        }
+
+        let mut total_similarity = 0.0;
+        for (word1, word2) in ngram1.iter().zip(ngram2.iter()) {
+            if word1 == word2 {
+                total_similarity += 1.0;
+            } else if let (Some(embed1), Some(embed2)) = (self.embeddings.get(word1), self.embeddings.get(word2)) {
+                total_similarity += Self::cosine_similarity(embed1.view(), embed2.view()).max(0.0);
+            }
+        }
+
+        total_similarity / ngram1.len() as f64
+    }
+
+    /// Calculate cosine similarity between vectors
+    fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
+        let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
+        
+        if norm1 > 0.0 && norm2 > 0.0 {
+            dot / (norm1 * norm2)
+        } else {
+            0.0
+        }
+    }
+}
+
 /// Semantic similarity ensemble that combines multiple metrics
 pub struct SemanticSimilarityEnsemble {
     wmd: Option<WordMoversDistance>,
     soft_cosine: Option<SoftCosineSimilarity>,
     weighted_jaccard: Option<WeightedJaccard>,
+    semantic_edit: Option<SemanticEditDistance>,
+    sentence_embedding: Option<SentenceEmbeddingSimilarity>,
+    ngram_semantic: Option<NGramSemanticSimilarity>,
     weights: HashMap<String, f64>,
+}
+
+impl Default for SemanticSimilarityEnsemble {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SemanticSimilarityEnsemble {
     /// Create a new ensemble
     pub fn new() -> Self {
         let mut weights = HashMap::new();
-        weights.insert("wmd".to_string(), 0.3);
-        weights.insert("soft_cosine".to_string(), 0.4);
-        weights.insert("weighted_jaccard".to_string(), 0.2);
-        weights.insert("lcs".to_string(), 0.1);
+        weights.insert("wmd".to_string(), 0.15);
+        weights.insert("soft_cosine".to_string(), 0.20);
+        weights.insert("weighted_jaccard".to_string(), 0.15);
+        weights.insert("lcs".to_string(), 0.10);
+        weights.insert("semantic_edit".to_string(), 0.15);
+        weights.insert("sentence_embedding".to_string(), 0.15);
+        weights.insert("ngram_semantic".to_string(), 0.10);
 
         Self {
             wmd: None,
             soft_cosine: None,
             weighted_jaccard: None,
+            semantic_edit: None,
+            sentence_embedding: None,
+            ngram_semantic: None,
             weights,
         }
     }
@@ -419,6 +768,24 @@ impl SemanticSimilarityEnsemble {
     /// Set Weighted Jaccard component
     pub fn with_weighted_jaccard(mut self, weighted_jaccard: WeightedJaccard) -> Self {
         self.weighted_jaccard = Some(weighted_jaccard);
+        self
+    }
+
+    /// Set Semantic Edit Distance component
+    pub fn with_semantic_edit(mut self, semantic_edit: SemanticEditDistance) -> Self {
+        self.semantic_edit = Some(semantic_edit);
+        self
+    }
+
+    /// Set Sentence Embedding Similarity component
+    pub fn with_sentence_embedding(mut self, sentence_embedding: SentenceEmbeddingSimilarity) -> Self {
+        self.sentence_embedding = Some(sentence_embedding);
+        self
+    }
+
+    /// Set N-gram Semantic Similarity component
+    pub fn with_ngram_semantic(mut self, ngram_semantic: NGramSemanticSimilarity) -> Self {
+        self.ngram_semantic = Some(ngram_semantic);
         self
     }
 
@@ -470,6 +837,30 @@ impl SemanticSimilarityEnsemble {
             total_weight += self.weights.get("lcs").copied().unwrap_or(0.0);
         }
 
+        // Calculate semantic edit distance similarity
+        if let Some(ref semantic_edit) = self.semantic_edit {
+            if let Ok(similarity) = semantic_edit.similarity(text1, text2, tokenizer) {
+                scores.insert("semantic_edit".to_string(), similarity);
+                total_weight += self.weights.get("semantic_edit").copied().unwrap_or(0.0);
+            }
+        }
+
+        // Calculate sentence embedding similarity
+        if let Some(ref sentence_embedding) = self.sentence_embedding {
+            if let Ok(similarity) = sentence_embedding.similarity(text1, text2, tokenizer) {
+                scores.insert("sentence_embedding".to_string(), similarity);
+                total_weight += self.weights.get("sentence_embedding").copied().unwrap_or(0.0);
+            }
+        }
+
+        // Calculate n-gram semantic similarity
+        if let Some(ref ngram_semantic) = self.ngram_semantic {
+            if let Ok(similarity) = ngram_semantic.similarity(text1, text2, tokenizer) {
+                scores.insert("ngram_semantic".to_string(), similarity);
+                total_weight += self.weights.get("ngram_semantic").copied().unwrap_or(0.0);
+            }
+        }
+
         if scores.is_empty() {
             return Err(TextError::InvalidInput(
                 "No similarity metrics could be calculated".into()
@@ -488,6 +879,7 @@ impl SemanticSimilarityEnsemble {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tokenize::WordTokenizer;
 
     #[test]
     fn test_lcs_similarity() {
@@ -550,5 +942,148 @@ mod tests {
 
     fn arr1(data: &[f64]) -> Array1<f64> {
         Array1::from_vec(data.to_vec())
+    }
+
+    #[test]
+    fn test_semantic_edit_distance() {
+        let mut embeddings = HashMap::new();
+        embeddings.insert("cat".to_string(), arr1(&[1.0, 0.0]));
+        embeddings.insert("kitten".to_string(), arr1(&[0.9, 0.1]));
+        embeddings.insert("dog".to_string(), arr1(&[0.0, 1.0]));
+        embeddings.insert("puppy".to_string(), arr1(&[0.1, 0.9]));
+
+        let semantic_edit = SemanticEditDistance::new(embeddings, 0.8);
+        let tokenizer = WordTokenizer::default();
+
+        // Similar words should have lower distance
+        let sim1 = semantic_edit.similarity("cat", "kitten", &tokenizer).unwrap();
+        let sim2 = semantic_edit.similarity("cat", "dog", &tokenizer).unwrap();
+        
+        assert!(sim1 > sim2); // Cat and kitten are more similar than cat and dog
+    }
+
+    #[test]
+    fn test_sentence_embedding_similarity() {
+        let mut embeddings = HashMap::new();
+        embeddings.insert("the".to_string(), arr1(&[0.1, 0.1, 0.1]));
+        embeddings.insert("quick".to_string(), arr1(&[1.0, 0.0, 0.0]));
+        embeddings.insert("brown".to_string(), arr1(&[0.0, 1.0, 0.0]));
+        embeddings.insert("fox".to_string(), arr1(&[0.0, 0.0, 1.0]));
+        embeddings.insert("fast".to_string(), arr1(&[0.9, 0.1, 0.0]));
+
+        let sentence_sim = SentenceEmbeddingSimilarity::new(embeddings, PoolingStrategy::Mean);
+        let tokenizer = WordTokenizer::default();
+
+        let sim = sentence_sim.similarity(
+            "the quick brown fox",
+            "the fast brown fox",
+            &tokenizer
+        ).unwrap();
+
+        assert!(sim > 0.7); // Should be high due to similar embeddings for quick/fast
+    }
+
+    #[test]
+    fn test_sentence_embedding_pooling_strategies() {
+        let mut embeddings = HashMap::new();
+        embeddings.insert("high".to_string(), arr1(&[1.0, 0.0]));
+        embeddings.insert("low".to_string(), arr1(&[0.0, 1.0]));
+
+        // Test Mean pooling
+        let mean_sim = SentenceEmbeddingSimilarity::new(embeddings.clone(), PoolingStrategy::Mean);
+        let tokenizer = WordTokenizer::default();
+        
+        // Test Max pooling
+        let max_sim = SentenceEmbeddingSimilarity::new(embeddings.clone(), PoolingStrategy::Max);
+        
+        // Test Weighted Mean pooling
+        let mut weights = HashMap::new();
+        weights.insert("high".to_string(), 2.0);
+        weights.insert("low".to_string(), 1.0);
+        let weighted_sim = SentenceEmbeddingSimilarity::new(
+            embeddings, 
+            PoolingStrategy::WeightedMean(weights)
+        );
+
+        let text1 = "high low";
+        let text2 = "high high";
+
+        let mean_result = mean_sim.similarity(text1, text2, &tokenizer).unwrap();
+        let max_result = max_sim.similarity(text1, text2, &tokenizer).unwrap();
+        let weighted_result = weighted_sim.similarity(text1, text2, &tokenizer).unwrap();
+
+        // All should be valid similarities
+        assert!(mean_result >= 0.0 && mean_result <= 1.0);
+        assert!(max_result >= 0.0 && max_result <= 1.0);
+        assert!(weighted_result >= 0.0 && weighted_result <= 1.0);
+    }
+
+    #[test]
+    fn test_ngram_semantic_similarity() {
+        let mut embeddings = HashMap::new();
+        embeddings.insert("machine".to_string(), arr1(&[1.0, 0.0, 0.0]));
+        embeddings.insert("learning".to_string(), arr1(&[0.0, 1.0, 0.0]));
+        embeddings.insert("artificial".to_string(), arr1(&[0.9, 0.1, 0.0]));
+        embeddings.insert("intelligence".to_string(), arr1(&[0.1, 0.9, 0.0]));
+        embeddings.insert("computer".to_string(), arr1(&[0.8, 0.0, 0.2]));
+        embeddings.insert("science".to_string(), arr1(&[0.0, 0.8, 0.2]));
+
+        let ngram_sim = NGramSemanticSimilarity::new(2, 1, embeddings);
+        let tokenizer = WordTokenizer::default();
+
+        let sim = ngram_sim.similarity(
+            "machine learning",
+            "artificial intelligence",
+            &tokenizer
+        ).unwrap();
+
+        assert!(sim > 0.0); // Should have some similarity due to related concepts
+    }
+
+    #[test]
+    fn test_enhanced_ensemble() {
+        let mut embeddings = HashMap::new();
+        embeddings.insert("cat".to_string(), arr1(&[1.0, 0.0]));
+        embeddings.insert("kitten".to_string(), arr1(&[0.9, 0.1]));
+        embeddings.insert("dog".to_string(), arr1(&[0.0, 1.0]));
+
+        let semantic_edit = SemanticEditDistance::new(embeddings.clone(), 0.8);
+        let sentence_embedding = SentenceEmbeddingSimilarity::new(
+            embeddings.clone(), 
+            PoolingStrategy::Mean
+        );
+        let ngram_semantic = NGramSemanticSimilarity::new(1, 0, embeddings);
+
+        let ensemble = SemanticSimilarityEnsemble::new()
+            .with_semantic_edit(semantic_edit)
+            .with_sentence_embedding(sentence_embedding)
+            .with_ngram_semantic(ngram_semantic);
+
+        let tokenizer = WordTokenizer::default();
+        
+        let sim = ensemble.similarity("cat", "kitten", &tokenizer).unwrap();
+        assert!(sim > 0.0 && sim <= 1.0);
+    }
+
+    #[test]
+    fn test_ngram_skip_grams() {
+        let mut embeddings = HashMap::new();
+        embeddings.insert("the".to_string(), arr1(&[0.1, 0.1]));
+        embeddings.insert("quick".to_string(), arr1(&[1.0, 0.0]));
+        embeddings.insert("brown".to_string(), arr1(&[0.0, 1.0]));
+        embeddings.insert("fox".to_string(), arr1(&[0.5, 0.5]));
+
+        // Test with skip-grams enabled
+        let ngram_sim = NGramSemanticSimilarity::new(2, 1, embeddings);
+        let tokenizer = WordTokenizer::default();
+
+        let sim = ngram_sim.similarity(
+            "the quick brown fox",
+            "the brown quick fox", // Different order but same words
+            &tokenizer
+        ).unwrap();
+
+        // Should still have some similarity due to skip-grams
+        assert!(sim > 0.3);
     }
 }

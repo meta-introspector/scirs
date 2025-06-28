@@ -521,7 +521,7 @@ where
         for &col in group {
             for &row in &pattern.col_indices[col] {
                 let deriv = (f_pert[row] - f0[row]) / eps;
-                jacobian.set(row, col, deriv);
+                let _ = jacobian.set(row, col, deriv);
             }
         }
     }

@@ -1,9 +1,7 @@
 //! FPGA-specific hardware acceleration support
 
 use crate::error::Result;
-use crate::hardware::{Accelerator, AcceleratorType, AcceleratorCapabilities, MemoryRequirements};
 use ndarray::prelude::*;
-use std::sync::Arc;
 use std::collections::HashMap;
 
 /// FPGA device configuration

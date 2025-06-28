@@ -129,15 +129,14 @@ pub mod perf_opt;
 pub mod preconditioners;
 pub mod projection;
 /// Quantization-aware linear algebra operations
-// pub mod quantization; // Temporarily disabled due to wide dependency issues
-// Temporarily disabled due to wide dependency issues
-// pub use self::quantization::calibration::{
-//     calibrate_matrix, calibrate_vector, get_activation_calibration_config,
-//     get_weight_calibration_config, CalibrationConfig, CalibrationMethod,
-// };
+// Re-enabled quantization module
+pub use self::quantization::calibration::{
+    calibrate_matrix, calibrate_vector, get_activation_calibration_config,
+    get_weight_calibration_config, CalibrationConfig, CalibrationMethod,
+};
 pub mod random;
 pub mod random_matrices;
-// Temporarily disabled due to validation trait dependency issues
+// Temporarily disabled due to validation trait dependency issues and API incompatibilities
 // pub mod random_new;
 pub mod circulant_toeplitz;
 mod diagnostics;
@@ -156,6 +155,13 @@ pub mod structured;
 pub mod tensor_contraction;
 pub mod tensor_train;
 mod validation;
+// Distributed computing support (temporarily disabled - needs extensive API fixes)
+// pub mod distributed;
+
+// GPU acceleration foundations
+#[cfg(any(feature = "cuda", feature = "opencl", feature = "rocm", feature = "metal"))]
+pub mod gpu;
+
 // Automatic differentiation support
 #[cfg(feature = "autograd")]
 pub mod autograd;
@@ -474,6 +480,13 @@ pub mod prelude {
     #[cfg(feature = "tensor_contraction")]
     pub use super::tensor_contraction::{batch_matmul, contract, einsum, hosvd};
     pub use super::tensor_train::{tt_add, tt_decomposition, tt_hadamard, TTTensor};
+    
+    // Distributed computing (temporarily disabled)
+    // pub use super::distributed::{
+    //     initialize_distributed, finalize_distributed, DistributedConfig, DistributedContext,
+    //     DistributedMatrix, DistributedVector, DistributedLinalgOps, DistributedStats,
+    //     CompressionConfig, CompressionAlgorithm, CommunicationBackend, DistributionStrategy,
+    // };
 
     // Automatic differentiation support
     #[cfg(feature = "autograd")]

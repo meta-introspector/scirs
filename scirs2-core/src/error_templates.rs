@@ -14,11 +14,7 @@ pub fn dimension_mismatch(operation: &str, expected: impl Display, actual: impl 
 }
 
 /// Generate an error message for shape mismatch in array operations
-pub fn shape_mismatch(
-    operation: &str,
-    shape1: &[usize],
-    shape2: &[usize],
-) -> String {
+pub fn shape_mismatch(operation: &str, shape1: &[usize], shape2: &[usize]) -> String {
     format!(
         "{}: incompatible shapes ({:?} vs {:?})",
         operation, shape1, shape2
@@ -26,11 +22,7 @@ pub fn shape_mismatch(
 }
 
 /// Generate an error message for invalid parameter values
-pub fn invalid_parameter(
-    param_name: &str,
-    constraint: &str,
-    actual_value: impl Display,
-) -> String {
+pub fn invalid_parameter(param_name: &str, constraint: &str, actual_value: impl Display) -> String {
     format!(
         "Parameter '{}': {} (got: {})",
         param_name, constraint, actual_value
@@ -52,15 +44,14 @@ pub fn empty_input(operation: &str) -> String {
 
 /// Generate an error message for numerical computation errors
 pub fn numerical_error(operation: &str, issue: &str) -> String {
-    format!("{}: {} - check input values for numerical issues", operation, issue)
+    format!(
+        "{}: {} - check input values for numerical issues",
+        operation, issue
+    )
 }
 
 /// Generate an error message for convergence failures
-pub fn convergence_failed(
-    algorithm: &str,
-    iterations: usize,
-    tolerance: impl Display,
-) -> String {
+pub fn convergence_failed(algorithm: &str, iterations: usize, tolerance: impl Display) -> String {
     format!(
         "{}: failed to converge after {} iterations (tolerance: {})",
         algorithm, iterations, tolerance
@@ -73,23 +64,13 @@ pub fn not_implemented(feature: &str) -> String {
 }
 
 /// Generate an error message for invalid array dimensions
-pub fn invalid_dimensions(
-    operation: &str,
-    requirement: &str,
-    actual_dims: &[usize],
-) -> String {
-    format!(
-        "{}: {} (got: {:?})",
-        operation, requirement, actual_dims
-    )
+pub fn invalid_dimensions(operation: &str, requirement: &str, actual_dims: &[usize]) -> String {
+    format!("{}: {} (got: {:?})", operation, requirement, actual_dims)
 }
 
 /// Generate an error message for domain errors
 pub fn domain_error(value_desc: &str, constraint: &str, value: impl Display) -> String {
-    format!(
-        "{} must be {} (got: {})",
-        value_desc, constraint, value
-    )
+    format!("{} must be {} (got: {})", value_desc, constraint, value)
 }
 
 /// Generate an error message for allocation failures
@@ -107,10 +88,7 @@ pub fn io_error(operation: &str, path: &str, details: &str) -> String {
 
 /// Generate an error message for parse errors
 pub fn parse_error(type_name: &str, input: &str, reason: &str) -> String {
-    format!(
-        "Failed to parse '{}' as {}: {}",
-        input, type_name, reason
-    )
+    format!("Failed to parse '{}' as {}: {}", input, type_name, reason)
 }
 
 /// Generate an error message for invalid state
@@ -189,10 +167,7 @@ mod tests {
     #[test]
     fn test_invalid_parameter() {
         let msg = invalid_parameter("alpha", constraints::positive(), -0.5);
-        assert_eq!(
-            msg,
-            "Parameter 'alpha': must be positive (> 0) (got: -0.5)"
-        );
+        assert_eq!(msg, "Parameter 'alpha': must be positive (> 0) (got: -0.5)");
     }
 
     #[test]

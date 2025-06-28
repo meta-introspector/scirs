@@ -91,7 +91,10 @@ where
         + Zero
         + Copy,
 {
-    /// Create a new fast B-spline evaluator
+    /// Create a new fast B-spline evaluator from a reference
+    ///
+    /// Note: This method clones the spline for internal storage. 
+    /// For better performance, consider using `from_owned` or `from_arc` instead.
     ///
     /// # Arguments
     ///
@@ -104,7 +107,29 @@ where
         let knot_diffs = Self::precompute_knot_differences(spline);
 
         Self {
-            spline: Arc::new(spline.clone()), // TODO: Optimize to avoid this clone in future API
+            spline: Arc::new(spline.clone()),
+            knot_diffs,
+            cache: None,
+            chunk_size: 64, // Default chunk size for vectorized operations
+        }
+    }
+
+    /// Create a new fast B-spline evaluator by taking ownership (zero-copy)
+    ///
+    /// This is the most efficient constructor as it avoids any cloning.
+    ///
+    /// # Arguments
+    ///
+    /// * `spline` - The B-spline to take ownership of
+    ///
+    /// # Returns
+    ///
+    /// A new fast evaluator optimized for the given spline
+    pub fn from_owned(spline: BSpline<T>) -> Self {
+        let knot_diffs = Self::precompute_knot_differences(&spline);
+
+        Self {
+            spline: Arc::new(spline),
             knot_diffs,
             cache: None,
             chunk_size: 64, // Default chunk size for vectorized operations
@@ -372,7 +397,7 @@ where
                 Ok(t_min + x_norm * period)
             }
             ExtrapolateMode::Nan => Ok(T::nan()),
-            ExtrapolateMode::Error => Err(InterpolateError::DomainError(format!(
+            ExtrapolateMode::Error => Err(InterpolateError::OutOfBounds(format!(
                 "point {} is outside the domain [{}, {}]",
                 x, t_min, t_max
             ))),
@@ -438,6 +463,7 @@ where
 /// Create a fast B-spline evaluator for the given spline
 ///
 /// This is a convenience function for creating fast evaluators.
+/// Note: This clones the spline. For better performance, use `make_fast_bspline_evaluator_owned`.
 ///
 /// # Arguments
 ///
@@ -465,6 +491,38 @@ where
         + Copy,
 {
     FastBSplineEvaluator::new(spline)
+}
+
+/// Create a fast B-spline evaluator by taking ownership (zero-copy)
+///
+/// This is a zero-copy convenience function that avoids cloning the spline.
+///
+/// # Arguments
+///
+/// * `spline` - The B-spline to take ownership of
+///
+/// # Returns
+///
+/// A new fast evaluator
+pub fn make_fast_bspline_evaluator_owned<T>(spline: BSpline<T>) -> FastBSplineEvaluator<T>
+where
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + AddAssign
+        + SubAssign
+        + MulAssign
+        + DivAssign
+        + RemAssign
+        + Zero
+        + Copy,
+{
+    FastBSplineEvaluator::from_owned(spline)
 }
 
 /// Create a fast B-spline evaluator with caching enabled
@@ -585,7 +643,7 @@ where
     /// The value of the tensor product spline at the given coordinates
     pub fn evaluate(&self, coords: &[T]) -> InterpolateResult<T> {
         if coords.len() != self.evaluators.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "coordinate dimension must match number of splines".to_string(),
             ));
         }

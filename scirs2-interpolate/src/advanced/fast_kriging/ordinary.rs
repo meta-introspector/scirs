@@ -379,6 +379,199 @@ where
             computation_time_ms: None,
         })
     }
+
+    /// Predict values at new points using Hierarchical Off-Diagonal Low-Rank approximation
+    pub fn predict_hodlr(
+        &self,
+        query_points: &ArrayView2<F>,
+    ) -> InterpolateResult<FastPredictionResult<F>> {
+        let n_query = query_points.shape()[0];
+        let mut values = Array1::zeros(n_query);
+        let mut variances = Array1::zeros(n_query);
+
+        // HODLR approximates the covariance matrix hierarchically
+        // For this implementation, we'll use a simplified approach
+        // that combines local kriging with global low-rank approximation
+
+        let max_leaf_size = match self.approx_method {
+            FastKrigingMethod::HODLR(leaf_size) => leaf_size,
+            _ => 32, // Default leaf size
+        };
+
+        // Divide the data into hierarchical blocks
+        let n_points = self.points.nrows();
+        let n_blocks = (n_points + max_leaf_size - 1) / max_leaf_size;
+
+        for i in 0..n_query {
+            let query_point = query_points.slice(ndarray::s![i, ..]);
+
+            // Find the most relevant blocks for this query point
+            let mut block_contributions = Vec::new();
+            let mut total_weight = F::zero();
+
+            for block_idx in 0..n_blocks {
+                let start_idx = block_idx * max_leaf_size;
+                let end_idx = std::cmp::min(start_idx + max_leaf_size, n_points);
+
+                if start_idx >= end_idx {
+                    continue;
+                }
+
+                // Compute distance to block centroid
+                let mut centroid = vec![F::zero(); query_point.len()];
+                for j in start_idx..end_idx {
+                    for d in 0..query_point.len() {
+                        centroid[d] += self.points[[j, d]];
+                    }
+                }
+                for d in 0..query_point.len() {
+                    centroid[d] /= F::from_usize(end_idx - start_idx).unwrap();
+                }
+
+                // Compute distance to centroid
+                let mut dist_sq = F::zero();
+                for d in 0..query_point.len() {
+                    let diff = query_point[d] - centroid[d];
+                    dist_sq += diff * diff;
+                }
+                let dist = dist_sq.sqrt();
+
+                // Weight based on inverse distance
+                let weight = if dist < F::from_f64(1e-10).unwrap() {
+                    F::from_f64(1e10).unwrap() // Very close to centroid
+                } else {
+                    F::one() / (F::one() + dist)
+                };
+
+                // Compute block contribution
+                if weight > F::from_f64(1e-6).unwrap() {
+                    // Use local kriging within this block
+                    let block_points = self.points.slice(ndarray::s![start_idx..end_idx, ..]);
+                    let block_values = self.values.slice(ndarray::s![start_idx..end_idx]);
+
+                    let local_prediction = self.predict_block_local(
+                        &query_point,
+                        &block_points.to_owned(),
+                        &block_values.to_owned(),
+                    )?;
+
+                    block_contributions.push((local_prediction, weight));
+                    total_weight += weight;
+                }
+            }
+
+            // Combine block contributions with weighted average
+            let mut prediction = F::zero();
+            let mut variance = F::zero();
+
+            if total_weight > F::zero() {
+                for (local_pred, weight) in block_contributions {
+                    let normalized_weight = weight / total_weight;
+                    prediction += local_pred.0 * normalized_weight;
+                    variance += local_pred.1 * normalized_weight * normalized_weight;
+                }
+            } else {
+                // Fallback to global mean
+                prediction = self.values.mean().unwrap_or(F::zero());
+                variance = self.anisotropic_cov.sigma_sq;
+            }
+
+            values[i] = prediction;
+            variances[i] = variance;
+        }
+
+        Ok(FastPredictionResult {
+            value: values,
+            variance: variances,
+            method: self.approx_method,
+            computation_time_ms: None,
+        })
+    }
+
+    /// Helper function for local block prediction in HODLR
+    fn predict_block_local(
+        &self,
+        query_point: &ArrayView1<F>,
+        block_points: &Array2<F>,
+        block_values: &Array1<F>,
+    ) -> InterpolateResult<(F, F)> {
+        let n_block = block_points.nrows();
+
+        if n_block == 0 {
+            return Ok((F::zero(), self.anisotropic_cov.sigma_sq));
+        }
+
+        if n_block == 1 {
+            // Single point - return its value
+            return Ok((block_values[0], self.anisotropic_cov.sigma_sq));
+        }
+
+        // Build local covariance matrix
+        let mut cov_matrix = Array2::zeros((n_block, n_block));
+        for j in 0..n_block {
+            for k in 0..n_block {
+                if j == k {
+                    cov_matrix[[j, k]] = self.anisotropic_cov.sigma_sq + self.anisotropic_cov.nugget;
+                } else {
+                    let dist = compute_anisotropic_distance(
+                        &block_points.slice(ndarray::s![j, ..]),
+                        &block_points.slice(ndarray::s![k, ..]),
+                        &self.anisotropic_cov,
+                    )?;
+                    cov_matrix[[j, k]] = compute_covariance(dist, &self.anisotropic_cov);
+                }
+            }
+        }
+
+        // Compute cross-covariances with query point
+        let mut k_star = Array1::zeros(n_block);
+        for j in 0..n_block {
+            let dist = compute_anisotropic_distance(
+                query_point,
+                &block_points.slice(ndarray::s![j, ..]),
+                &self.anisotropic_cov,
+            )?;
+            k_star[j] = compute_covariance(dist, &self.anisotropic_cov);
+        }
+
+        // Solve for weights
+        #[cfg(feature = "linalg")]
+        {
+            use ndarray_linalg::Solve;
+
+            let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().unwrap());
+            let block_values_f64 = block_values.mapv(|x| x.to_f64().unwrap());
+
+            match cov_matrix_f64.solve(&block_values_f64) {
+                Ok(weights_f64) => {
+                    let weights = weights_f64.mapv(|x| F::from_f64(x).unwrap());
+                    let prediction = k_star.dot(&weights);
+
+                    // Compute variance
+                    let k_star_f64 = k_star.mapv(|x| x.to_f64().unwrap());
+                    let cov_inv_k_star = match cov_matrix_f64.solve(&k_star_f64) {
+                        Ok(result) => result.mapv(|x| F::from_f64(x).unwrap()),
+                        Err(_) => Array1::zeros(n_block),
+                    };
+                    let variance = self.anisotropic_cov.sigma_sq - k_star.dot(&cov_inv_k_star);
+
+                    Ok((prediction, variance.max(F::zero())))
+                }
+                Err(_) => {
+                    // Fallback to mean
+                    let mean_val = block_values.mean().unwrap_or(F::zero());
+                    Ok((mean_val, self.anisotropic_cov.sigma_sq))
+                }
+            }
+        }
+
+        #[cfg(not(feature = "linalg"))]
+        {
+            // Fallback without linalg
+            let mean_val = block_values.mean().unwrap_or(F::zero());
+            Ok((mean_val, self.anisotropic_cov.sigma_sq))
+        }
+    }
 }
 
 /// Builder extension methods for ordinary kriging

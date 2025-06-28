@@ -12,10 +12,10 @@ use std::sync::{Arc, Mutex, RwLock};
 
 thread_local! {
     /// Thread-local nesting level
-    static NESTING_LEVEL: RefCell<usize> = RefCell::new(0);
+    static NESTING_LEVEL: RefCell<usize> = const { RefCell::new(0) };
 
     /// Thread-local parent context
-    static PARENT_CONTEXT: RefCell<Option<Arc<NestedContext>>> = RefCell::new(None);
+    static PARENT_CONTEXT: RefCell<Option<Arc<NestedContext>>> = const { RefCell::new(None) };
 }
 
 /// Global resource manager for nested parallelism
@@ -195,6 +195,12 @@ pub struct ResourceManager {
     active_contexts: RwLock<Vec<usize>>,
 }
 
+impl Default for ResourceManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ResourceManager {
     /// Create a new resource manager
     pub fn new() -> Self {
@@ -282,7 +288,7 @@ pub struct NestedScope<'a> {
     _phantom: std::marker::PhantomData<&'a ()>,
 }
 
-impl<'a> NestedScope<'a> {
+impl NestedScope<'_> {
     /// Execute a function in parallel within this scope
     pub fn execute<F, R>(&self, f: F) -> CoreResult<R>
     where
@@ -325,7 +331,7 @@ impl<'a> NestedScope<'a> {
     }
 }
 
-impl<'a> Drop for NestedScope<'a> {
+impl Drop for NestedScope<'_> {
     fn drop(&mut self) {
         // Release acquired threads
         if self.acquired_threads > 0 {
@@ -527,13 +533,12 @@ mod tests {
                             assert_eq!(current_nesting_level(), 2);
                             Ok(())
                         })
+                        .unwrap()
                     })
                 })
                 .unwrap()
             })
         })
-        .unwrap()
-        .unwrap()
         .unwrap();
     }
 

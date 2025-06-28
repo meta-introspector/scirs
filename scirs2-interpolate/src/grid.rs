@@ -53,7 +53,7 @@ where
     F: Float + FromPrimitive + Debug,
 {
     if bounds.len() != shape.len() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "bounds and shape must have the same length".to_string(),
         ));
     }
@@ -66,13 +66,13 @@ where
         let n_points = shape[i];
 
         if min >= max {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "min bound must be less than max bound".to_string(),
             ));
         }
 
         if n_points < 2 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "grid shape must have at least 2 points in each dimension".to_string(),
             ));
         }

@@ -271,7 +271,8 @@ impl PrioritizedReplayBuffer {
     
     /// Sample indices based on probabilities
     fn sample_indices(&self, probs: &[f32], batch_size: usize) -> Result<Vec<usize>> {
-        use rand_distr::{Distribution, WeightedIndex};
+        use rand::prelude::*;
+        use rand_distr::weighted::WeightedIndex;
         let mut rng = rand::thread_rng();
         
         let dist = WeightedIndex::new(probs)

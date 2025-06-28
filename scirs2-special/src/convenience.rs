@@ -663,7 +663,7 @@ pub mod bioinformatics {
     /// # Arguments
     /// * `p` - Proportion of differing sites
     pub fn jukes_cantor_distance(p: f64) -> SpecialResult<f64> {
-        if p < 0.0 || p >= 0.75 {
+        if !(0.0..0.75).contains(&p) {
             return Err(crate::SpecialError::ValueError(
                 "Proportion must be in [0, 0.75)".to_string(),
             ));
@@ -850,7 +850,7 @@ pub mod geophysics {
         let mut pressure = Array1::zeros(altitude.len());
         
         for (i, &h) in altitude.iter().enumerate() {
-            if h < -500.0 || h > 11000.0 {
+            if !(-500.0..=11000.0).contains(&h) {
                 return Err(crate::SpecialError::ValueError(
                     "Altitude out of troposphere range".to_string(),
                 ));

@@ -231,10 +231,17 @@ impl PCA {
         let n_random = n_components + n_oversamples;
         
         // Initialize RNG
-        use rand::rng;
         let mut rng = match self.random_state {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::seed_from_u64(rand::rng().random()),
+            None => {
+                // Use a simple fallback seed based on current time or a fixed seed
+                use std::time::{SystemTime, UNIX_EPOCH};
+                let seed = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs();
+                StdRng::seed_from_u64(seed)
+            }
         };
         
         // Generate random matrix
@@ -248,7 +255,7 @@ impl PCA {
         
         for _ in 0..n_iter {
             // QR decomposition
-            let (_q_mat, r) = q.qr()
+            let (_q_mat, _r) = q.qr()
                 .map_err(|e| StatsError::ComputationError(format!("QR decomposition failed: {}", e)))?;
             q = _q_mat;
             

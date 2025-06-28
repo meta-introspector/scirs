@@ -5,7 +5,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::{mean, var, quantile, QuantileInterpolation};
-use ndarray::{Array1, ArrayBase, Data, Ix1, Ix2, s};
+use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1, Ix2, s};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::{par_chunks, parallel_map, ParallelIterator, num_threads};
 
@@ -183,7 +183,7 @@ pub fn row_statistics_parallel<F, D, S>(
 where
     F: Float + NumCast + Send + Sync,
     D: Data<Elem = F> + Sync,
-    S: Fn(&ArrayBase<D, Ix1>) -> StatsResult<F> + Send + Sync,
+    S: Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync,
 {
     let nrows = data.nrows();
     
@@ -191,7 +191,7 @@ where
         // Sequential processing for small number of rows
         let mut results = Vec::with_capacity(nrows);
         for i in 0..nrows {
-            results.push(stat_fn(&data.slice(s![i, ..]))?);
+            results.push(stat_fn(&data.slice(s![i, ..]).view())?);
         }
         return Ok(Array1::from_vec(results));
     }
@@ -199,7 +199,7 @@ where
     // Process rows in parallel
     let row_indices: Vec<usize> = (0..nrows).collect();
     let results: Result<Vec<F>, StatsError> = parallel_map(&row_indices, |&i| {
-        stat_fn(&data.slice(s![i, ..]))
+        stat_fn(&data.slice(s![i, ..]).view())
     })
     .into_iter()
     .collect();

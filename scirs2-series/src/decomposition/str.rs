@@ -1,7 +1,6 @@
 //! Seasonal-Trend decomposition using Regression (STR)
 
 use ndarray::{s, Array1, Array2, ScalarOperand};
-// use ndarray_linalg::{Inverse, Solve};  // TODO: Replace with scirs2-core linear algebra when available
 use num_traits::{Float, FromPrimitive, NumCast};
 use std::fmt::Debug;
 
@@ -114,7 +113,6 @@ where
     F: Float
         + FromPrimitive
         + Debug
-        // + ndarray_linalg::Lapack  // TODO: Replace with scirs2-core linear algebra trait when available
         + ScalarOperand
         + NumCast
         + std::iter::Sum,
@@ -261,15 +259,15 @@ where
     let coefficients = match options.regularization_type {
         RegularizationType::Ridge => {
             // Ridge regression: solve (X^T X + λI) β = X^T y
-            // TODO: Replace with scirs2-core matrix solve when available
-            simple_matrix_solve(&system_matrix, &xty)?
+            solve_regularized_system(&system_matrix, &xty)?
         }
-        RegularizationType::Lasso | RegularizationType::ElasticNet => {
-            // For LASSO and ElasticNet, we would need iterative algorithms (e.g., coordinate descent)
-            // For now, fall back to Ridge regression
-            // TODO: Implement proper LASSO/ElasticNet solvers
-            // TODO: Replace with scirs2-core matrix solve when available
-            simple_matrix_solve(&system_matrix, &xty)?
+        RegularizationType::Lasso => {
+            // LASSO regression using coordinate descent
+            solve_lasso(&design_matrix, ts, options.seasonal_lambda, 1000, F::from(1e-6).unwrap())?
+        }
+        RegularizationType::ElasticNet => {
+            // Elastic Net regression using coordinate descent  
+            solve_elastic_net(&design_matrix, ts, options.seasonal_lambda, options.trend_lambda, 1000, F::from(1e-6).unwrap())?
         }
     };
 
@@ -338,36 +336,104 @@ type ConfidenceIntervalsResult<F> = Result<(
 /// Compute confidence intervals for STR components
 fn compute_confidence_intervals<F>(
     design_matrix: &Array2<F>,
-    _system_matrix: &Array2<F>,
+    system_matrix: &Array2<F>,
     residual: &Array1<F>,
-    _trend_basis: &Array2<F>,
-    _seasonal_bases: &[Array2<F>],
-    _confidence_level: f64,
+    trend_basis: &Array2<F>,
+    seasonal_bases: &[Array2<F>],
+    confidence_level: f64,
 ) -> ConfidenceIntervalsResult<F>
 where
     F: Float
         + FromPrimitive
         + Debug
-        // + ndarray_linalg::Lapack  // TODO: Replace with scirs2-core linear algebra trait when available
         + ScalarOperand
         + NumCast
         + std::iter::Sum,
 {
     let n = residual.len();
+    let p = design_matrix.ncols();
+
+    if n <= p {
+        return Ok((None, None));
+    }
 
     // Estimate residual variance
-    let _residual_variance =
-        residual.mapv(|x| x * x).sum() / F::from_usize(n - design_matrix.ncols()).unwrap();
+    let residual_variance =
+        residual.mapv(|x| x * x).sum() / F::from_usize(n - p).unwrap();
 
     // Compute covariance matrix: σ² (X^T X + λR)^(-1)
-    // TODO: Replace with scirs2-core matrix inversion when available
-    // For now, skip confidence interval calculation
-    Ok((None, None)) // Temporary - proper matrix inversion needed
+    let covariance_matrix = match matrix_inverse(system_matrix) {
+        Ok(inv) => inv.mapv(|x| x * residual_variance),
+        Err(_) => return Ok((None, None)), // Skip CI if matrix is singular
+    };
+
+    // Get t-distribution critical value (approximation for large samples)
+    let alpha = 1.0 - confidence_level;
+    let df = n - p;
+    let t_critical = if df > 30 {
+        // Normal approximation for large df
+        match alpha {
+            a if a <= 0.01 => F::from(2.576).unwrap(), // 99% CI
+            a if a <= 0.05 => F::from(1.96).unwrap(),  // 95% CI
+            _ => F::from(1.645).unwrap(),               // 90% CI
+        }
+    } else {
+        // Simple t-distribution approximation
+        let base = F::from(2.0).unwrap();
+        base + F::from(df as f64).unwrap().recip()
+    };
+
+    // Compute standard errors for trend component
+    let trend_se = compute_component_standard_errors(trend_basis, &covariance_matrix)?;
+    let trend_margin = trend_se.mapv(|se| se * t_critical);
+    let trend_fitted = trend_basis.dot(&covariance_matrix.diag().slice(s![0..trend_basis.ncols()]));
+    let trend_lower = &trend_fitted - &trend_margin;
+    let trend_upper = &trend_fitted + &trend_margin;
+
+    // Compute standard errors for seasonal components
+    let mut seasonal_cis = Vec::new();
+    let mut col_offset = trend_basis.ncols();
+
+    for seasonal_basis in seasonal_bases {
+        let seasonal_cols = seasonal_basis.ncols();
+        let seasonal_cov = covariance_matrix
+            .slice(s![col_offset..col_offset + seasonal_cols, col_offset..col_offset + seasonal_cols]);
+        
+        let seasonal_se = compute_component_standard_errors(seasonal_basis, &seasonal_cov.to_owned())?;
+        let seasonal_margin = seasonal_se.mapv(|se| se * t_critical);
+        let seasonal_fitted = seasonal_basis.dot(&seasonal_cov.diag());
+        let seasonal_lower = &seasonal_fitted - &seasonal_margin;
+        let seasonal_upper = &seasonal_fitted + &seasonal_margin;
+        
+        seasonal_cis.push((seasonal_lower, seasonal_upper));
+        col_offset += seasonal_cols;
+    }
+
+    Ok((Some((trend_lower, trend_upper)), Some(seasonal_cis)))
 }
 
-/// Simple matrix solve using Gaussian elimination
-/// TODO: Remove this when scirs2-core provides linear algebra functionality
-fn simple_matrix_solve<F>(a: &Array2<F>, b: &Array1<F>) -> Result<Array1<F>>
+/// Compute standard errors for a component given its basis and covariance matrix
+fn compute_component_standard_errors<F>(
+    basis: &Array2<F>,
+    covariance: &Array2<F>,
+) -> Result<Array1<F>>
+where
+    F: Float + FromPrimitive + Debug + ScalarOperand + NumCast + std::iter::Sum,
+{
+    let n = basis.nrows();
+    let mut standard_errors = Array1::zeros(n);
+
+    for i in 0..n {
+        let basis_row = basis.row(i);
+        let variance = basis_row.dot(&covariance.dot(&basis_row));
+        standard_errors[i] = variance.sqrt();
+    }
+
+    Ok(standard_errors)
+}
+
+/// Matrix solve using Gaussian elimination with partial pivoting  
+fn solve_regularized_system<F>(a: &Array2<F>, b: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + ScalarOperand,
 {
@@ -432,6 +498,219 @@ where
     }
 
     Ok(x)
+}
+
+/// LASSO regression using coordinate descent algorithm
+fn solve_lasso<F>(
+    x: &Array2<F>,
+    y: &Array1<F>,
+    lambda: f64,
+    max_iter: usize,
+    tol: F,
+) -> Result<Array1<F>>
+where
+    F: Float + FromPrimitive + ScalarOperand + NumCast + std::iter::Sum,
+{
+    let (n, p) = (x.nrows(), x.ncols());
+    let mut beta = Array1::zeros(p);
+    let lambda_f = F::from(lambda).unwrap();
+    
+    // Precompute X^T X diagonal (for efficiency)
+    let mut xtx_diag = Array1::zeros(p);
+    for j in 0..p {
+        xtx_diag[j] = x.column(j).dot(&x.column(j));
+    }
+    
+    for _iter in 0..max_iter {
+        let beta_old = beta.clone();
+        
+        for j in 0..p {
+            // Compute partial residual
+            let mut r = y.clone();
+            for k in 0..p {
+                if k != j {
+                    let x_k = x.column(k);
+                    for i in 0..n {
+                        r[i] = r[i] - beta[k] * x_k[i];
+                    }
+                }
+            }
+            
+            // Compute coordinate update
+            let x_j = x.column(j);
+            let xty_j = x_j.dot(&r);
+            
+            // Soft thresholding
+            let z = xty_j;
+            beta[j] = if z > lambda_f {
+                (z - lambda_f) / xtx_diag[j]
+            } else if z < -lambda_f {
+                (z + lambda_f) / xtx_diag[j]
+            } else {
+                F::zero()
+            };
+        }
+        
+        // Check convergence
+        let mut diff = F::zero();
+        for j in 0..p {
+            diff = diff + (beta[j] - beta_old[j]).abs();
+        }
+        
+        if diff < tol {
+            break;
+        }
+    }
+    
+    Ok(beta)
+}
+
+/// Elastic Net regression using coordinate descent algorithm
+fn solve_elastic_net<F>(
+    x: &Array2<F>,
+    y: &Array1<F>,
+    l1_lambda: f64,
+    l2_lambda: f64,
+    max_iter: usize,
+    tol: F,
+) -> Result<Array1<F>>
+where
+    F: Float + FromPrimitive + ScalarOperand + NumCast + std::iter::Sum,
+{
+    let (n, p) = (x.nrows(), x.ncols());
+    let mut beta = Array1::zeros(p);
+    let l1_lambda_f = F::from(l1_lambda).unwrap();
+    let l2_lambda_f = F::from(l2_lambda).unwrap();
+    
+    // Precompute X^T X diagonal + L2 penalty
+    let mut xtx_diag = Array1::zeros(p);
+    for j in 0..p {
+        xtx_diag[j] = x.column(j).dot(&x.column(j)) + l2_lambda_f;
+    }
+    
+    for _iter in 0..max_iter {
+        let beta_old = beta.clone();
+        
+        for j in 0..p {
+            // Compute partial residual
+            let mut r = y.clone();
+            for k in 0..p {
+                if k != j {
+                    let x_k = x.column(k);
+                    for i in 0..n {
+                        r[i] = r[i] - beta[k] * x_k[i];
+                    }
+                }
+            }
+            
+            // Compute coordinate update
+            let x_j = x.column(j);
+            let xty_j = x_j.dot(&r);
+            
+            // Soft thresholding with L2 penalty
+            let z = xty_j;
+            beta[j] = if z > l1_lambda_f {
+                (z - l1_lambda_f) / xtx_diag[j]
+            } else if z < -l1_lambda_f {
+                (z + l1_lambda_f) / xtx_diag[j]
+            } else {
+                F::zero()
+            };
+        }
+        
+        // Check convergence
+        let mut diff = F::zero();
+        for j in 0..p {
+            diff = diff + (beta[j] - beta_old[j]).abs();
+        }
+        
+        if diff < tol {
+            break;
+        }
+    }
+    
+    Ok(beta)
+}
+
+/// Matrix inversion using Gauss-Jordan elimination
+fn matrix_inverse<F>(a: &Array2<F>) -> Result<Array2<F>>
+where
+    F: Float + FromPrimitive + ScalarOperand,
+{
+    let n = a.shape()[0];
+    if n != a.shape()[1] {
+        return Err(TimeSeriesError::DecompositionError(
+            "Matrix must be square for inversion".to_string(),
+        ));
+    }
+
+    // Create augmented matrix [A | I]
+    let mut aug = Array2::zeros((n, 2 * n));
+    
+    // Fill left side with A
+    for i in 0..n {
+        for j in 0..n {
+            aug[[i, j]] = a[[i, j]];
+        }
+    }
+    
+    // Fill right side with identity matrix
+    for i in 0..n {
+        aug[[i, n + i]] = F::one();
+    }
+    
+    // Forward elimination
+    for i in 0..n {
+        // Find pivot
+        let mut max_row = i;
+        for k in (i + 1)..n {
+            if aug[[k, i]].abs() > aug[[max_row, i]].abs() {
+                max_row = k;
+            }
+        }
+        
+        // Swap rows
+        if max_row != i {
+            for j in 0..(2 * n) {
+                let temp = aug[[i, j]];
+                aug[[i, j]] = aug[[max_row, j]];
+                aug[[max_row, j]] = temp;
+            }
+        }
+        
+        // Check for singular matrix
+        if aug[[i, i]].abs() < F::from(1e-12).unwrap() {
+            return Err(TimeSeriesError::DecompositionError(
+                "Matrix is singular and cannot be inverted".to_string(),
+            ));
+        }
+        
+        // Scale pivot row
+        let pivot = aug[[i, i]];
+        for j in 0..(2 * n) {
+            aug[[i, j]] = aug[[i, j]] / pivot;
+        }
+        
+        // Eliminate column
+        for k in 0..n {
+            if k != i {
+                let factor = aug[[k, i]];
+                for j in 0..(2 * n) {
+                    aug[[k, j]] = aug[[k, j]] - factor * aug[[i, j]];
+                }
+            }
+        }
+    }
+    
+    // Extract inverse from right side
+    let mut inv = Array2::zeros((n, n));
+    for i in 0..n {
+        for j in 0..n {
+            inv[[i, j]] = aug[[i, n + j]];
+        }
+    }
+    
+    Ok(inv)
 }
 
 #[cfg(test)]

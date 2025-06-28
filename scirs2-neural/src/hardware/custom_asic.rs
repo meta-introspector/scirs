@@ -1,0 +1,853 @@
+//! Custom ASIC Support
+//!
+//! This module provides support for custom Application-Specific Integrated Circuits (ASICs)
+//! designed for neural network acceleration, including neural processing units (NPUs),
+//! tensor processing units (TPUs), and other domain-specific accelerators.
+
+use crate::error::Result;
+use crate::hardware::{Accelerator, AcceleratorType, AcceleratorCapabilities};
+use crate::hardware::accelerator::DeviceBuffer;
+use crate::hardware::accelerator::{Kernel, MemoryInfo, ComputeStream, ProfilingInfo};
+use ndarray::prelude::*;
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
+
+/// Custom ASIC configuration
+#[derive(Debug, Clone)]
+pub struct ASICConfig {
+    /// ASIC vendor
+    pub vendor: String,
+    /// ASIC model
+    pub model: String,
+    /// Architecture version
+    pub architecture_version: String,
+    /// Number of processing elements
+    pub processing_elements: u32,
+    /// Memory hierarchy configuration
+    pub memory_hierarchy: MemoryHierarchy,
+    /// Supported data types
+    pub supported_datatypes: Vec<DataType>,
+    /// Native operations
+    pub native_operations: Vec<NativeOperation>,
+    /// Power characteristics
+    pub power_profile: PowerProfile,
+    /// Interconnect topology
+    pub interconnect: InterconnectTopology,
+}
+
+/// Memory hierarchy for custom ASIC
+#[derive(Debug, Clone)]
+pub struct MemoryHierarchy {
+    /// On-chip SRAM levels
+    pub sram_levels: Vec<MemoryLevel>,
+    /// External memory configuration
+    pub external_memory: ExternalMemoryConfig,
+    /// Cache configuration
+    pub cache_config: CacheConfig,
+}
+
+/// Memory level in the hierarchy
+#[derive(Debug, Clone)]
+pub struct MemoryLevel {
+    /// Level name (L1, L2, etc.)
+    pub name: String,
+    /// Size in bytes
+    pub size: usize,
+    /// Access latency in cycles
+    pub latency_cycles: u32,
+    /// Bandwidth in GB/s
+    pub bandwidth: f32,
+    /// Whether it's shared between PEs
+    pub shared: bool,
+}
+
+/// External memory configuration
+#[derive(Debug, Clone)]
+pub struct ExternalMemoryConfig {
+    /// Memory type (HBM, GDDR, DDR)
+    pub memory_type: String,
+    /// Total capacity in bytes
+    pub capacity: usize,
+    /// Bandwidth in GB/s
+    pub bandwidth: f32,
+    /// Access latency in nanoseconds
+    pub latency_ns: f32,
+}
+
+/// Cache configuration
+#[derive(Debug, Clone)]
+pub struct CacheConfig {
+    /// Instruction cache size
+    pub icache_size: usize,
+    /// Data cache size
+    pub dcache_size: usize,
+    /// Cache line size
+    pub line_size: usize,
+    /// Associativity
+    pub associativity: u32,
+}
+
+/// Supported data types
+#[derive(Debug, Clone, PartialEq)]
+pub enum DataType {
+    /// 32-bit floating point
+    Float32,
+    /// 16-bit floating point
+    Float16,
+    /// BFloat16
+    BFloat16,
+    /// 8-bit integer
+    Int8,
+    /// 4-bit integer
+    Int4,
+    /// Binary (1-bit)
+    Binary,
+    /// Custom fixed-point
+    FixedPoint { integer_bits: u8, fractional_bits: u8 },
+    /// Posit arithmetic
+    Posit { nbits: u8, es: u8 },
+}
+
+/// Native operations supported by the ASIC
+#[derive(Debug, Clone, PartialEq)]
+pub enum NativeOperation {
+    /// Matrix multiplication
+    MatMul { 
+        tile_sizes: Vec<(usize, usize)>,
+        datatypes: Vec<DataType>,
+    },
+    /// Convolution
+    Convolution {
+        kernel_sizes: Vec<usize>,
+        strides: Vec<usize>,
+        datatypes: Vec<DataType>,
+    },
+    /// Activation functions
+    Activation {
+        functions: Vec<ActivationFunction>,
+        datatypes: Vec<DataType>,
+    },
+    /// Reduction operations
+    Reduction {
+        operations: Vec<ReductionType>,
+        datatypes: Vec<DataType>,
+    },
+    /// Elementwise operations
+    ElementWise {
+        operations: Vec<ElementWiseOperation>,
+        datatypes: Vec<DataType>,
+    },
+    /// Custom operation
+    Custom {
+        name: String,
+        instruction_encoding: Vec<u8>,
+        latency_cycles: u32,
+    },
+}
+
+/// Activation functions
+#[derive(Debug, Clone, PartialEq)]
+pub enum ActivationFunction {
+    ReLU,
+    Sigmoid,
+    Tanh,
+    GELU,
+    Swish,
+    Custom(String),
+}
+
+/// Reduction types
+#[derive(Debug, Clone, PartialEq)]
+pub enum ReductionType {
+    Sum,
+    Mean,
+    Max,
+    Min,
+    ArgMax,
+    ArgMin,
+}
+
+/// Element-wise operations
+#[derive(Debug, Clone, PartialEq)]
+pub enum ElementWiseOperation {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Comparison,
+    Bitwise,
+}
+
+/// Power profile for the ASIC
+#[derive(Debug, Clone)]
+pub struct PowerProfile {
+    /// Idle power in Watts
+    pub idle_power: f32,
+    /// Peak power in Watts
+    pub peak_power: f32,
+    /// Dynamic power per operation in nJ
+    pub dynamic_power_per_op: f32,
+    /// Power efficiency in TOPS/W
+    pub efficiency_tops_per_watt: f32,
+}
+
+/// Interconnect topology
+#[derive(Debug, Clone)]
+pub struct InterconnectTopology {
+    /// Topology type
+    pub topology_type: TopologyType,
+    /// Network-on-Chip configuration
+    pub noc_config: Option<NoCConfig>,
+    /// Bus configuration
+    pub bus_config: Option<BusConfig>,
+}
+
+/// Topology types
+#[derive(Debug, Clone, PartialEq)]
+pub enum TopologyType {
+    Mesh2D { width: u32, height: u32 },
+    Torus2D { width: u32, height: u32 },
+    Ring,
+    Crossbar,
+    Tree,
+    Custom(String),
+}
+
+/// Network-on-Chip configuration
+#[derive(Debug, Clone)]
+pub struct NoCConfig {
+    /// Router latency in cycles
+    pub router_latency: u32,
+    /// Link bandwidth in bits per cycle
+    pub link_bandwidth: u32,
+    /// Buffer depth
+    pub buffer_depth: u32,
+    /// Flow control type
+    pub flow_control: FlowControlType,
+}
+
+/// Flow control types
+#[derive(Debug, Clone, PartialEq)]
+pub enum FlowControlType {
+    CreditBased,
+    Wormhole,
+    StoreAndForward,
+}
+
+/// Bus configuration
+#[derive(Debug, Clone)]
+pub struct BusConfig {
+    /// Bus width in bits
+    pub width: u32,
+    /// Clock frequency in MHz
+    pub frequency: u32,
+    /// Arbitration scheme
+    pub arbitration: ArbitrationType,
+}
+
+/// Arbitration types
+#[derive(Debug, Clone, PartialEq)]
+pub enum ArbitrationType {
+    RoundRobin,
+    Priority,
+    TDMA,
+    Weighted,
+}
+
+/// Custom ASIC device implementation
+pub struct CustomASIC {
+    config: ASICConfig,
+    capabilities: AcceleratorCapabilities,
+    memory_manager: Arc<Mutex<ASICMemoryManager>>,
+    instruction_cache: Arc<Mutex<InstructionCache>>,
+    performance_counters: Arc<Mutex<PerformanceCounters>>,
+    runtime_state: Arc<Mutex<RuntimeState>>,
+}
+
+impl CustomASIC {
+    /// Create a new custom ASIC device
+    pub fn new(config: ASICConfig) -> Result<Self> {
+        let capabilities = Self::build_capabilities(&config);
+        let memory_manager = ASICMemoryManager::new(&config.memory_hierarchy);
+        let instruction_cache = InstructionCache::new(config.memory_hierarchy.cache_config.icache_size);
+        let performance_counters = PerformanceCounters::new();
+        let runtime_state = RuntimeState::new();
+        
+        Ok(Self {
+            config,
+            capabilities,
+            memory_manager: Arc::new(Mutex::new(memory_manager)),
+            instruction_cache: Arc::new(Mutex::new(instruction_cache)),
+            performance_counters: Arc::new(Mutex::new(performance_counters)),
+            runtime_state: Arc::new(Mutex::new(runtime_state)),
+        })
+    }
+    
+    /// Build accelerator capabilities from ASIC config
+    fn build_capabilities(config: &ASICConfig) -> AcceleratorCapabilities {
+        // Calculate peak performance estimates
+        let peak_ops_per_cycle = config.processing_elements as f32 * 2.0; // Estimate
+        let clock_freq_ghz = 1.0; // Assume 1 GHz for simplicity
+        let peak_tflops_fp32 = peak_ops_per_cycle * clock_freq_ghz;
+        
+        // Estimate memory bandwidth
+        let total_bandwidth = config.memory_hierarchy.external_memory.bandwidth +
+            config.memory_hierarchy.sram_levels.iter()
+                .map(|level| level.bandwidth)
+                .sum::<f32>();
+        
+        AcceleratorCapabilities {
+            name: format!("{} {}", config.vendor, config.model),
+            compute_capability: (1, 0), // Custom versioning
+            total_memory: config.memory_hierarchy.external_memory.capacity,
+            memory_bandwidth: total_bandwidth,
+            compute_units: config.processing_elements,
+            peak_tflops_fp32,
+            peak_tflops_fp16: peak_tflops_fp32 * 2.0,
+            peak_tflops_int8: peak_tflops_fp32 * 4.0,
+            features: crate::hardware::accelerator::AcceleratorFeatures {
+                mixed_precision: config.supported_datatypes.len() > 1,
+                tensor_cores: config.native_operations.iter().any(|op| matches!(op, NativeOperation::MatMul { .. })),
+                sparse_ops: false, // Would need to check config
+                unified_memory: true,
+                multi_device: false,
+                graph_optimization: true,
+                dynamic_shapes: true,
+                custom_kernels: true,
+            },
+        }
+    }
+    
+    /// Compile a high-level operation to ASIC instruction sequence
+    pub fn compile_operation(&self, operation: &ASICOperation) -> Result<ASICProgram> {
+        let mut program = ASICProgram::new();
+        
+        match operation {
+            ASICOperation::MatMul { m, n, k, datatype } => {
+                // Find optimal tiling strategy
+                let tile_config = self.find_optimal_tiling(*m, *n, *k)?;
+                
+                // Generate instruction sequence
+                for tile in &tile_config.tiles {
+                    // Load data instructions
+                    program.add_instruction(ASICInstruction::LoadMatrix {
+                        src_addr: tile.a_addr,
+                        dst_pe: tile.pe_id,
+                        rows: tile.rows,
+                        cols: tile.cols,
+                    });
+                    
+                    program.add_instruction(ASICInstruction::LoadMatrix {
+                        src_addr: tile.b_addr,
+                        dst_pe: tile.pe_id,
+                        rows: tile.rows,
+                        cols: tile.cols,
+                    });
+                    
+                    // Compute instruction
+                    program.add_instruction(ASICInstruction::MatMul {
+                        pe_id: tile.pe_id,
+                        accumulate: tile.accumulate,
+                    });
+                    
+                    // Store result
+                    program.add_instruction(ASICInstruction::StoreMatrix {
+                        src_pe: tile.pe_id,
+                        dst_addr: tile.c_addr,
+                        rows: tile.rows,
+                        cols: tile.cols,
+                    });
+                }
+                
+                // Add synchronization
+                program.add_instruction(ASICInstruction::Synchronize);
+            }
+            
+            ASICOperation::Convolution { .. } => {
+                // Convolution compilation would go here
+                return Err(crate::error::NeuralError::NotImplemented(
+                    "Convolution compilation not yet implemented".to_string()
+                ));
+            }
+            
+            ASICOperation::Custom { name, .. } => {
+                return Err(crate::error::NeuralError::NotImplemented(
+                    format!("Custom operation {} not implemented", name)
+                ));
+            }
+        }
+        
+        Ok(program)
+    }
+    
+    /// Execute an ASIC program
+    pub fn execute_program(&self, program: &ASICProgram) -> Result<()> {
+        let mut counters = self.performance_counters.lock().unwrap();
+        let start_time = std::time::Instant::now();
+        
+        for instruction in &program.instructions {
+            self.execute_instruction(instruction)?;
+            counters.instructions_executed += 1;
+        }
+        
+        counters.execution_time += start_time.elapsed();
+        Ok(())
+    }
+    
+    /// Execute a single instruction
+    fn execute_instruction(&self, instruction: &ASICInstruction) -> Result<()> {
+        match instruction {
+            ASICInstruction::LoadMatrix { .. } => {
+                // Simulate memory load
+                std::thread::sleep(std::time::Duration::from_nanos(100));
+            }
+            
+            ASICInstruction::StoreMatrix { .. } => {
+                // Simulate memory store
+                std::thread::sleep(std::time::Duration::from_nanos(100));
+            }
+            
+            ASICInstruction::MatMul { .. } => {
+                // Simulate matrix multiplication
+                std::thread::sleep(std::time::Duration::from_nanos(200));
+            }
+            
+            ASICInstruction::Synchronize => {
+                // Synchronize all processing elements
+                std::thread::sleep(std::time::Duration::from_nanos(50));
+            }
+            
+            ASICInstruction::Custom { .. } => {
+                // Custom instruction execution
+                std::thread::sleep(std::time::Duration::from_nanos(100));
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Find optimal tiling strategy for matrix multiplication
+    fn find_optimal_tiling(&self, m: usize, n: usize, k: usize) -> Result<TilingConfig> {
+        // Simple tiling strategy based on available PEs and memory
+        let num_pes = self.config.processing_elements as usize;
+        let tile_size = 64; // Default tile size
+        
+        let mut tiles = Vec::new();
+        let mut pe_id = 0;
+        
+        for i in (0..m).step_by(tile_size) {
+            for j in (0..n).step_by(tile_size) {
+                let tile_rows = tile_size.min(m - i);
+                let tile_cols = tile_size.min(n - j);
+                
+                tiles.push(MatMulTile {
+                    pe_id: pe_id % num_pes,
+                    rows: tile_rows,
+                    cols: tile_cols,
+                    a_addr: i * k * 4, // Assuming float32
+                    b_addr: j * k * 4,
+                    c_addr: i * n * 4 + j * 4,
+                    accumulate: false,
+                });
+                
+                pe_id += 1;
+            }
+        }
+        
+        Ok(TilingConfig { tiles })
+    }
+    
+    /// Get performance statistics
+    pub fn get_performance_stats(&self) -> PerformanceStats {
+        let counters = self.performance_counters.lock().unwrap();
+        
+        PerformanceStats {
+            instructions_executed: counters.instructions_executed,
+            total_execution_time: counters.execution_time,
+            average_ipc: if counters.execution_time.as_nanos() > 0 {
+                (counters.instructions_executed as f64) / counters.execution_time.as_secs_f64()
+            } else {
+                0.0
+            },
+            memory_accesses: counters.memory_accesses,
+            cache_hits: counters.cache_hits,
+            cache_misses: counters.cache_misses,
+            power_consumption: self.estimate_power_consumption(),
+        }
+    }
+    
+    /// Estimate current power consumption
+    fn estimate_power_consumption(&self) -> f32 {
+        let counters = self.performance_counters.lock().unwrap();
+        let base_power = self.config.power_profile.idle_power;
+        
+        // Simple power model based on instruction execution rate
+        let dynamic_power = if counters.execution_time.as_secs_f64() > 0.0 {
+            let ipc = (counters.instructions_executed as f64) / counters.execution_time.as_secs_f64();
+            ipc as f32 * self.config.power_profile.dynamic_power_per_op
+        } else {
+            0.0
+        };
+        
+        base_power + dynamic_power
+    }
+}
+
+/// High-level ASIC operations
+#[derive(Debug, Clone)]
+pub enum ASICOperation {
+    MatMul { m: usize, n: usize, k: usize, datatype: DataType },
+    Convolution { 
+        input_shape: (usize, usize, usize, usize),
+        kernel_shape: (usize, usize, usize, usize),
+        stride: (usize, usize),
+        padding: (usize, usize),
+        datatype: DataType,
+    },
+    Custom { name: String, parameters: HashMap<String, f32> },
+}
+
+/// ASIC instruction set
+#[derive(Debug, Clone)]
+pub enum ASICInstruction {
+    LoadMatrix { src_addr: usize, dst_pe: usize, rows: usize, cols: usize },
+    StoreMatrix { src_pe: usize, dst_addr: usize, rows: usize, cols: usize },
+    MatMul { pe_id: usize, accumulate: bool },
+    Synchronize,
+    Custom { opcode: u32, operands: Vec<u32> },
+}
+
+/// ASIC program (sequence of instructions)
+#[derive(Debug, Clone)]
+pub struct ASICProgram {
+    instructions: Vec<ASICInstruction>,
+    metadata: ProgramMetadata,
+}
+
+impl ASICProgram {
+    fn new() -> Self {
+        Self {
+            instructions: Vec::new(),
+            metadata: ProgramMetadata::default(),
+        }
+    }
+    
+    fn add_instruction(&mut self, instruction: ASICInstruction) {
+        self.instructions.push(instruction);
+    }
+}
+
+/// Program metadata
+#[derive(Debug, Clone, Default)]
+pub struct ProgramMetadata {
+    pub estimated_cycles: u64,
+    pub memory_footprint: usize,
+    pub pe_utilization: f32,
+}
+
+/// Tiling configuration for matrix operations
+#[derive(Debug)]
+struct TilingConfig {
+    tiles: Vec<MatMulTile>,
+}
+
+/// Matrix multiplication tile
+#[derive(Debug)]
+struct MatMulTile {
+    pe_id: usize,
+    rows: usize,
+    cols: usize,
+    a_addr: usize,
+    b_addr: usize,
+    c_addr: usize,
+    accumulate: bool,
+}
+
+/// ASIC memory manager
+struct ASICMemoryManager {
+    hierarchy: MemoryHierarchy,
+    allocations: HashMap<usize, MemoryAllocation>,
+    next_addr: usize,
+}
+
+impl ASICMemoryManager {
+    fn new(hierarchy: &MemoryHierarchy) -> Self {
+        Self {
+            hierarchy: hierarchy.clone(),
+            allocations: HashMap::new(),
+            next_addr: 0,
+        }
+    }
+}
+
+/// Memory allocation information
+#[derive(Debug)]
+struct MemoryAllocation {
+    addr: usize,
+    size: usize,
+    level: String,
+}
+
+/// Instruction cache
+struct InstructionCache {
+    size: usize,
+    cache: HashMap<usize, Vec<ASICInstruction>>,
+}
+
+impl InstructionCache {
+    fn new(size: usize) -> Self {
+        Self {
+            size,
+            cache: HashMap::new(),
+        }
+    }
+}
+
+/// Performance counters
+#[derive(Default)]
+struct PerformanceCounters {
+    instructions_executed: u64,
+    execution_time: std::time::Duration,
+    memory_accesses: u64,
+    cache_hits: u64,
+    cache_misses: u64,
+}
+
+impl PerformanceCounters {
+    fn new() -> Self {
+        Self::default()
+    }
+}
+
+/// Runtime state
+struct RuntimeState {
+    active_programs: Vec<ASICProgram>,
+    pe_states: Vec<PEState>,
+}
+
+impl RuntimeState {
+    fn new() -> Self {
+        Self {
+            active_programs: Vec::new(),
+            pe_states: Vec::new(),
+        }
+    }
+}
+
+/// Processing element state
+#[derive(Debug)]
+struct PEState {
+    pe_id: usize,
+    busy: bool,
+    current_instruction: Option<ASICInstruction>,
+}
+
+/// Performance statistics
+#[derive(Debug, Clone)]
+pub struct PerformanceStats {
+    pub instructions_executed: u64,
+    pub total_execution_time: std::time::Duration,
+    pub average_ipc: f64,
+    pub memory_accesses: u64,
+    pub cache_hits: u64,
+    pub cache_misses: u64,
+    pub power_consumption: f32,
+}
+
+// Implement Accelerator trait for CustomASIC
+impl Accelerator for CustomASIC {
+    fn accelerator_type(&self) -> AcceleratorType {
+        AcceleratorType::ASIC
+    }
+    
+    fn capabilities(&self) -> &AcceleratorCapabilities {
+        &self.capabilities
+    }
+    
+    fn initialize(&mut self) -> Result<()> {
+        // Initialize the ASIC hardware
+        Ok(())
+    }
+    
+    fn is_available(&self) -> bool {
+        true
+    }
+    
+    fn allocate(&self, size: usize) -> Result<DeviceBuffer> {
+        // Simplified allocation
+        let ptr = Box::into_raw(Box::new(vec![0u8; size])) as *mut u8;
+        Ok(DeviceBuffer::new(ptr, size, 0))
+    }
+    
+    fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
+        let size = data.len() * std::mem::size_of::<f32>();
+        let buffer = self.allocate(size)?;
+        
+        // Copy data (simplified)
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                data.as_ptr() as *const u8,
+                buffer.ptr,
+                size,
+            );
+        }
+        
+        Ok(buffer)
+    }
+    
+    fn download(&self, buffer: &DeviceBuffer) -> Result<Array2<f32>> {
+        let elements = buffer.size / std::mem::size_of::<f32>();
+        let shape = (elements, 1); // Simplified
+        
+        let mut data = Array2::zeros(shape);
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                buffer.ptr as *const f32,
+                data.as_mut_ptr(),
+                elements,
+            );
+        }
+        
+        Ok(data)
+    }
+    
+    fn execute_kernel(&self, kernel: &dyn Kernel, _inputs: &[&DeviceBuffer], _outputs: &mut [&mut DeviceBuffer]) -> Result<()> {
+        println!("Executing kernel: {} on Custom ASIC", kernel.name());
+        Ok(())
+    }
+    
+    fn synchronize(&self) -> Result<()> {
+        Ok(())
+    }
+    
+    fn memory_usage(&self) -> Result<MemoryInfo> {
+        Ok(MemoryInfo {
+            total: self.capabilities.total_memory,
+            used: 0,
+            available: self.capabilities.total_memory,
+            reserved: 0,
+        })
+    }
+    
+    fn create_stream(&self) -> Result<ComputeStream> {
+        Ok(ComputeStream {
+            handle: std::ptr::null_mut(),
+            id: 0,
+            device_id: 0,
+        })
+    }
+    
+    fn profile_kernel(&self, kernel: &dyn Kernel) -> Result<ProfilingInfo> {
+        Ok(ProfilingInfo {
+            kernel_name: kernel.name().to_string(),
+            execution_time_us: 100.0,
+            memory_transfer_us: 10.0,
+            occupancy: 0.85,
+            memory_throughput: self.capabilities.memory_bandwidth,
+            compute_throughput: self.capabilities.peak_tflops_fp32 * 1000.0,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    fn create_test_asic_config() -> ASICConfig {
+        ASICConfig {
+            vendor: "TestCorp".to_string(),
+            model: "NN-1000".to_string(),
+            architecture_version: "v1.0".to_string(),
+            processing_elements: 256,
+            memory_hierarchy: MemoryHierarchy {
+                sram_levels: vec![
+                    MemoryLevel {
+                        name: "L1".to_string(),
+                        size: 64 * 1024,
+                        latency_cycles: 1,
+                        bandwidth: 1000.0,
+                        shared: false,
+                    },
+                ],
+                external_memory: ExternalMemoryConfig {
+                    memory_type: "HBM2".to_string(),
+                    capacity: 32 * 1024 * 1024 * 1024,
+                    bandwidth: 900.0,
+                    latency_ns: 120.0,
+                },
+                cache_config: CacheConfig {
+                    icache_size: 32 * 1024,
+                    dcache_size: 64 * 1024,
+                    line_size: 64,
+                    associativity: 4,
+                },
+            },
+            supported_datatypes: vec![DataType::Float32, DataType::Int8],
+            native_operations: vec![
+                NativeOperation::MatMul {
+                    tile_sizes: vec![(16, 16), (32, 32)],
+                    datatypes: vec![DataType::Float32],
+                },
+            ],
+            power_profile: PowerProfile {
+                idle_power: 50.0,
+                peak_power: 300.0,
+                dynamic_power_per_op: 0.1,
+                efficiency_tops_per_watt: 100.0,
+            },
+            interconnect: InterconnectTopology {
+                topology_type: TopologyType::Mesh2D { width: 16, height: 16 },
+                noc_config: None,
+                bus_config: None,
+            },
+        }
+    }
+    
+    #[test]
+    fn test_custom_asic_creation() {
+        let config = create_test_asic_config();
+        let asic = CustomASIC::new(config).unwrap();
+        
+        assert_eq!(asic.accelerator_type(), AcceleratorType::ASIC);
+        assert!(asic.is_available());
+    }
+    
+    #[test]
+    fn test_asic_operation_compilation() {
+        let config = create_test_asic_config();
+        let asic = CustomASIC::new(config).unwrap();
+        
+        let operation = ASICOperation::MatMul {
+            m: 128,
+            n: 128,
+            k: 128,
+            datatype: DataType::Float32,
+        };
+        
+        let program = asic.compile_operation(&operation).unwrap();
+        assert!(!program.instructions.is_empty());
+    }
+    
+    #[test]
+    fn test_datatype_support() {
+        let dt1 = DataType::FixedPoint { integer_bits: 8, fractional_bits: 8 };
+        let dt2 = DataType::Posit { nbits: 16, es: 1 };
+        
+        // Test custom datatypes
+        match dt1 {
+            DataType::FixedPoint { integer_bits, fractional_bits } => {
+                assert_eq!(integer_bits, 8);
+                assert_eq!(fractional_bits, 8);
+            }
+            _ => panic!("Unexpected datatype"),
+        }
+        
+        match dt2 {
+            DataType::Posit { nbits, es } => {
+                assert_eq!(nbits, 16);
+                assert_eq!(es, 1);
+            }
+            _ => panic!("Unexpected datatype"),
+        }
+    }
+}

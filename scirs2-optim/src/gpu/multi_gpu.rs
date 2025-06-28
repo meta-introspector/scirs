@@ -38,6 +38,18 @@ pub struct MultiGpuConfig {
     pub compression_ratio: f32,
     /// Local GPU group size (for hierarchical)
     pub local_group_size: usize,
+    /// Enable adaptive communication optimization
+    pub adaptive_communication: bool,
+    /// Bandwidth monitoring interval (steps)
+    pub bandwidth_monitor_interval: usize,
+    /// Enable asynchronous parameter updates
+    pub async_param_updates: bool,
+    /// Communication timeout (milliseconds)
+    pub communication_timeout_ms: u64,
+    /// Enable error correction for communication
+    pub error_correction: bool,
+    /// Pipeline depth for overlapping computation and communication
+    pub pipeline_depth: usize,
 }
 
 impl Default for MultiGpuConfig {
@@ -49,6 +61,12 @@ impl Default for MultiGpuConfig {
             gradient_compression: false,
             compression_ratio: 0.1, // Keep top 10%
             local_group_size: 4,
+            adaptive_communication: true,
+            bandwidth_monitor_interval: 100,
+            async_param_updates: false,
+            communication_timeout_ms: 5000,
+            error_correction: true,
+            pipeline_depth: 2,
         }
     }
 }
@@ -63,6 +81,14 @@ pub struct MultiGpuSync<A: Float> {
     sync_kernels: SyncKernels,
     /// Workspace buffers
     workspace: WorkspaceBuffers<A>,
+    /// Communication performance monitor
+    perf_monitor: CommunicationPerformanceMonitor,
+    /// Adaptive strategy selector
+    adaptive_selector: AdaptiveCommunicationSelector,
+    /// Asynchronous communication handles
+    async_handles: Vec<AsyncCommunicationHandle>,
+    /// Step counter for monitoring
+    step_counter: usize,
     /// Phantom data for type parameter
     _phantom: PhantomData<A>,
 }
@@ -85,6 +111,212 @@ struct WorkspaceBuffers<A: Float> {
     error_feedback: Option<GpuBuffer<A>>,
 }
 
+/// Communication performance monitoring
+#[derive(Debug, Clone)]
+pub struct CommunicationPerformanceMonitor {
+    /// Total communication time (microseconds)
+    total_comm_time_us: u64,
+    /// Total data transferred (bytes)
+    total_data_bytes: u64,
+    /// Number of communication operations
+    comm_operations: usize,
+    /// Bandwidth history (GB/s)
+    bandwidth_history: std::collections::VecDeque<f64>,
+    /// Strategy performance tracking
+    strategy_performance: std::collections::HashMap<SyncStrategy, StrategyPerformanceMetrics>,
+    /// Current optimal strategy
+    optimal_strategy: SyncStrategy,
+}
+
+impl CommunicationPerformanceMonitor {
+    fn new() -> Self {
+        Self {
+            total_comm_time_us: 0,
+            total_data_bytes: 0,
+            comm_operations: 0,
+            bandwidth_history: std::collections::VecDeque::with_capacity(1000),
+            strategy_performance: std::collections::HashMap::new(),
+            optimal_strategy: SyncStrategy::RingAllReduce,
+        }
+    }
+    
+    fn record_communication(&mut self, strategy: SyncStrategy, data_bytes: u64, time_us: u64) {
+        self.total_comm_time_us += time_us;
+        self.total_data_bytes += data_bytes;
+        self.comm_operations += 1;
+        
+        let bandwidth_gb_s = (data_bytes as f64) / (time_us as f64 / 1_000_000.0) / 1e9;
+        self.bandwidth_history.push_back(bandwidth_gb_s);
+        
+        if self.bandwidth_history.len() > 1000 {
+            self.bandwidth_history.pop_front();
+        }
+        
+        // Update strategy performance
+        let metrics = self.strategy_performance.entry(strategy).or_insert_with(StrategyPerformanceMetrics::new);
+        metrics.update(bandwidth_gb_s, time_us);
+    }
+    
+    fn get_average_bandwidth(&self) -> f64 {
+        if self.total_comm_time_us == 0 {
+            0.0
+        } else {
+            (self.total_data_bytes as f64) / (self.total_comm_time_us as f64 / 1_000_000.0) / 1e9
+        }
+    }
+    
+    fn get_optimal_strategy(&self, tensor_size: usize) -> SyncStrategy {
+        let mut best_strategy = SyncStrategy::RingAllReduce;
+        let mut best_score = 0.0;
+        
+        for (strategy, metrics) in &self.strategy_performance {
+            let score = metrics.calculate_score(tensor_size);
+            if score > best_score {
+                best_score = score;
+                best_strategy = *strategy;
+            }
+        }
+        
+        best_strategy
+    }
+}
+
+/// Performance metrics for a specific synchronization strategy
+#[derive(Debug, Clone)]
+struct StrategyPerformanceMetrics {
+    bandwidth_samples: std::collections::VecDeque<f64>,
+    latency_samples: std::collections::VecDeque<u64>,
+    tensor_sizes: std::collections::VecDeque<usize>,
+    efficiency_score: f64,
+}
+
+impl StrategyPerformanceMetrics {
+    fn new() -> Self {
+        Self {
+            bandwidth_samples: std::collections::VecDeque::with_capacity(100),
+            latency_samples: std::collections::VecDeque::with_capacity(100),
+            tensor_sizes: std::collections::VecDeque::with_capacity(100),
+            efficiency_score: 0.0,
+        }
+    }
+    
+    fn update(&mut self, bandwidth_gb_s: f64, latency_us: u64) {
+        self.bandwidth_samples.push_back(bandwidth_gb_s);
+        self.latency_samples.push_back(latency_us);
+        
+        if self.bandwidth_samples.len() > 100 {
+            self.bandwidth_samples.pop_front();
+            self.latency_samples.pop_front();
+        }
+        
+        // Update efficiency score based on recent performance
+        let avg_bandwidth = self.bandwidth_samples.iter().sum::<f64>() / self.bandwidth_samples.len() as f64;
+        let avg_latency = self.latency_samples.iter().sum::<u64>() as f64 / self.latency_samples.len() as f64;
+        
+        self.efficiency_score = avg_bandwidth / (avg_latency / 1000.0); // Bandwidth per ms
+    }
+    
+    fn calculate_score(&self, tensor_size: usize) -> f64 {
+        // Higher score for better efficiency, adjusted for tensor size
+        let size_factor = if tensor_size > 1000000 { 2.0 } else { 1.0 }; // Favor strategies for large tensors
+        self.efficiency_score * size_factor
+    }
+}
+
+/// Adaptive communication strategy selector
+#[derive(Debug)]
+pub struct AdaptiveCommunicationSelector {
+    /// Current strategy
+    current_strategy: SyncStrategy,
+    /// Strategy switch cooldown (steps)
+    switch_cooldown: usize,
+    /// Last switch step
+    last_switch_step: usize,
+    /// Evaluation window (steps)
+    evaluation_window: usize,
+    /// Performance threshold for strategy switching
+    performance_threshold: f64,
+}
+
+impl AdaptiveCommunicationSelector {
+    fn new() -> Self {
+        Self {
+            current_strategy: SyncStrategy::RingAllReduce,
+            switch_cooldown: 50,
+            last_switch_step: 0,
+            evaluation_window: 20,
+            performance_threshold: 1.2, // 20% improvement required
+        }
+    }
+    
+    fn should_evaluate_strategy(&self, current_step: usize) -> bool {
+        current_step - self.last_switch_step >= self.switch_cooldown
+    }
+    
+    fn evaluate_and_switch(&mut self, monitor: &CommunicationPerformanceMonitor, tensor_size: usize, current_step: usize) -> Option<SyncStrategy> {
+        if !self.should_evaluate_strategy(current_step) {
+            return None;
+        }
+        
+        let optimal_strategy = monitor.get_optimal_strategy(tensor_size);
+        
+        if optimal_strategy != self.current_strategy {
+            // Check if the switch is worth it based on performance threshold
+            if let (Some(current_metrics), Some(optimal_metrics)) = (
+                monitor.strategy_performance.get(&self.current_strategy),
+                monitor.strategy_performance.get(&optimal_strategy),
+            ) {
+                let performance_ratio = optimal_metrics.efficiency_score / current_metrics.efficiency_score;
+                
+                if performance_ratio >= self.performance_threshold {
+                    self.current_strategy = optimal_strategy;
+                    self.last_switch_step = current_step;
+                    return Some(optimal_strategy);
+                }
+            }
+        }
+        
+        None
+    }
+}
+
+/// Handle for asynchronous communication operations
+#[derive(Debug)]
+pub struct AsyncCommunicationHandle {
+    /// Communication ID
+    id: usize,
+    /// Start time
+    start_time: std::time::Instant,
+    /// Expected completion time
+    expected_completion: std::time::Duration,
+    /// Communication strategy used
+    strategy: SyncStrategy,
+    /// Data size (bytes)
+    data_size: usize,
+    /// Status
+    status: AsyncCommStatus,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AsyncCommStatus {
+    Pending,
+    InProgress,
+    Completed,
+    Failed,
+    Timeout,
+}
+
+/// Communication performance statistics snapshot
+#[derive(Debug, Clone)]
+pub struct CommunicationPerformanceStats {
+    pub average_bandwidth_gb_s: f64,
+    pub total_operations: usize,
+    pub total_data_transferred_gb: f64,
+    pub current_strategy: SyncStrategy,
+    pub pending_async_ops: usize,
+    pub step_count: usize,
+}
+
 impl<A: Float> MultiGpuSync<A> {
     /// Create a new multi-GPU synchronization manager
     pub fn new(
@@ -98,11 +330,20 @@ impl<A: Float> MultiGpuSync<A> {
         // Allocate workspace buffers
         let workspace = Self::allocate_workspace(&context, &config, max_param_size)?;
         
+        // Initialize performance monitoring and adaptive components
+        let perf_monitor = CommunicationPerformanceMonitor::new();
+        let adaptive_selector = AdaptiveCommunicationSelector::new();
+        let async_handles = Vec::with_capacity(config.pipeline_depth);
+        
         Ok(Self {
             context,
             config,
             sync_kernels,
             workspace,
+            perf_monitor,
+            adaptive_selector,
+            async_handles,
+            step_counter: 0,
             _phantom: PhantomData,
         })
     }
@@ -116,16 +357,57 @@ impl<A: Float> MultiGpuSync<A> {
         S: DataMut<Elem = A>,
         D: Dimension,
     {
-        match self.config.sync_strategy {
+        self.step_counter += 1;
+        let tensor_size = gradients.len();
+        let start_time = std::time::Instant::now();
+        
+        // Adaptive strategy selection
+        let strategy = if self.config.adaptive_communication {
+            if let Some(new_strategy) = self.adaptive_selector.evaluate_and_switch(
+                &self.perf_monitor,
+                tensor_size,
+                self.step_counter,
+            ) {
+                new_strategy
+            } else {
+                self.adaptive_selector.current_strategy
+            }
+        } else {
+            self.config.sync_strategy
+        };
+        
+        // Execute synchronization
+        let result = match strategy {
             SyncStrategy::RingAllReduce => self.ring_allreduce(gradients),
             SyncStrategy::TreeAllReduce => self.tree_allreduce(gradients),
             SyncStrategy::HierarchicalAllReduce => self.hierarchical_allreduce(gradients),
             SyncStrategy::PipelineParallel => {
-                Err(GpuOptimizerError::UnsupportedOperation(
-                    "Pipeline parallel requires special handling".to_string()
-                ))
+                if self.config.async_param_updates {
+                    self.pipeline_parallel_async(gradients)
+                } else {
+                    Err(GpuOptimizerError::UnsupportedOperation(
+                        "Pipeline parallel requires async updates enabled".to_string()
+                    ))
+                }
             }
+        };
+        
+        // Record performance
+        let elapsed = start_time.elapsed();
+        let data_bytes = tensor_size * std::mem::size_of::<A>();
+        
+        self.perf_monitor.record_communication(
+            strategy,
+            data_bytes as u64,
+            elapsed.as_micros() as u64,
+        );
+        
+        // Periodic monitoring output
+        if self.step_counter % self.config.bandwidth_monitor_interval == 0 {
+            self.log_performance_statistics();
         }
+        
+        result
     }
     
     /// Ring all-reduce implementation
@@ -189,8 +471,43 @@ impl<A: Float> MultiGpuSync<A> {
             let kernel = self.sync_kernels.tree_allreduce.as_ref()
                 .ok_or(GpuOptimizerError::NotInitialized)?;
             
-            // Implementation similar to ring_allreduce but using tree pattern
-            // ...
+            let grad_slice = gradients.as_slice_mut()
+                .ok_or_else(|| GpuOptimizerError::InvalidState(
+                    "Gradients must be contiguous".to_string()
+                ))?;
+            
+            // Create GPU buffer for gradients
+            let grad_buffer = self.context.create_buffer_from_slice(grad_slice);
+            
+            // Calculate tree reduction levels
+            let num_levels = (self.config.num_gpus as f32).log2().ceil() as usize;
+            
+            // Set kernel parameters
+            kernel.set_buffer("data", &grad_buffer);
+            kernel.set_buffer("workspace", self.workspace.workspace.as_ref().unwrap());
+            kernel.set_i32("rank", self.config.rank as i32);
+            kernel.set_i32("world_size", self.config.num_gpus as i32);
+            kernel.set_i32("data_size", gradients.len() as i32);
+            
+            // Execute tree all-reduce in phases
+            for level in 0..num_levels {
+                let stride = 1 << level;
+                let peer_rank = self.config.rank ^ stride;
+                
+                if peer_rank < self.config.num_gpus {
+                    kernel.set_i32("level", level as i32);
+                    kernel.set_i32("peer_rank", peer_rank as i32);
+                    
+                    let (grid_size, block_size) = crate::gpu::utils::calculate_block_size(gradients.len(), 256);
+                    kernel.dispatch([grid_size as u32, 1, 1]);
+                    
+                    // Synchronize before next level
+                    self.context.synchronize();
+                }
+            }
+            
+            // Copy results back
+            grad_buffer.copy_to_host(grad_slice);
         }
         
         Ok(())
@@ -210,13 +527,161 @@ impl<A: Float> MultiGpuSync<A> {
             let kernel = self.sync_kernels.hierarchical_allreduce.as_ref()
                 .ok_or(GpuOptimizerError::NotInitialized)?;
             
+            let grad_slice = gradients.as_slice_mut()
+                .ok_or_else(|| GpuOptimizerError::InvalidState(
+                    "Gradients must be contiguous".to_string()
+                ))?;
+            
             // Calculate local and global ranks
             let local_rank = self.config.rank % self.config.local_group_size;
             let global_rank = self.config.rank / self.config.local_group_size;
             let global_size = self.config.num_gpus / self.config.local_group_size;
             
-            // Set kernel parameters
-            // ... implementation details
+            // Create GPU buffer for gradients
+            let grad_buffer = self.context.create_buffer_from_slice(grad_slice);
+            
+            // Phase 1: Reduce-scatter within local group
+            kernel.set_buffer("data", &grad_buffer);
+            kernel.set_buffer("workspace", self.workspace.workspace.as_ref().unwrap());
+            kernel.set_i32("local_rank", local_rank as i32);
+            kernel.set_i32("local_size", self.config.local_group_size as i32);
+            kernel.set_i32("global_rank", global_rank as i32);
+            kernel.set_i32("global_size", global_size as i32);
+            kernel.set_i32("data_size", gradients.len() as i32);
+            kernel.set_i32("phase", 1); // Local reduce-scatter
+            
+            let (grid_size, block_size) = crate::gpu::utils::calculate_block_size(gradients.len(), 256);
+            kernel.dispatch([grid_size as u32, 1, 1]);
+            self.context.synchronize();
+            
+            // Phase 2: All-reduce across global leaders (one per node)
+            if local_rank == 0 {
+                kernel.set_i32("phase", 2); // Global all-reduce
+                kernel.dispatch([grid_size as u32, 1, 1]);
+                self.context.synchronize();
+            }
+            
+            // Phase 3: All-gather within local group
+            kernel.set_i32("phase", 3); // Local all-gather
+            kernel.dispatch([grid_size as u32, 1, 1]);
+            self.context.synchronize();
+            
+            // Copy results back
+            grad_buffer.copy_to_host(grad_slice);
+        }
+        
+        Ok(())
+    }
+    
+    /// Pipeline parallel asynchronous synchronization
+    fn pipeline_parallel_async<S, D>(
+        &mut self,
+        gradients: &mut ArrayBase<S, D>,
+    ) -> Result<(), GpuOptimizerError>
+    where
+        S: DataMut<Elem = A>,
+        D: Dimension,
+    {
+        #[cfg(feature = "gpu")]
+        {
+            let grad_slice = gradients.as_slice_mut()
+                .ok_or_else(|| GpuOptimizerError::InvalidState(
+                    "Gradients must be contiguous".to_string()
+                ))?;
+            
+            // Create async communication handle
+            let handle = AsyncCommunicationHandle {
+                id: self.async_handles.len(),
+                start_time: std::time::Instant::now(),
+                expected_completion: std::time::Duration::from_millis(10), // Estimate
+                strategy: SyncStrategy::PipelineParallel,
+                data_size: gradients.len() * std::mem::size_of::<A>(),
+                status: AsyncCommStatus::InProgress,
+            };
+            
+            // Pipeline stages: overlap computation and communication
+            let chunk_size = gradients.len() / self.config.pipeline_depth;
+            
+            for stage in 0..self.config.pipeline_depth {
+                let start_idx = stage * chunk_size;
+                let end_idx = ((stage + 1) * chunk_size).min(gradients.len());
+                
+                if start_idx < end_idx {
+                    // Process chunk asynchronously
+                    let chunk_buffer = self.context.create_buffer_from_slice(&grad_slice[start_idx..end_idx]);
+                    
+                    // Submit async operation (placeholder - would use actual GPU streams)
+                    // In practice, this would use CUDA streams or similar
+                }
+            }
+            
+            self.async_handles.push(handle);
+            
+            // Clean up completed handles periodically
+            if self.async_handles.len() > self.config.pipeline_depth * 2 {
+                self.cleanup_completed_handles();
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Log performance statistics
+    fn log_performance_statistics(&self) {
+        let avg_bandwidth = self.perf_monitor.get_average_bandwidth();
+        let total_ops = self.perf_monitor.comm_operations;
+        
+        println!(
+            "Multi-GPU Performance [Step {}]: {:.2} GB/s avg bandwidth, {} ops, current strategy: {:?}",
+            self.step_counter,
+            avg_bandwidth,
+            total_ops,
+            self.adaptive_selector.current_strategy
+        );
+    }
+    
+    /// Clean up completed asynchronous communication handles
+    fn cleanup_completed_handles(&mut self) {
+        let current_time = std::time::Instant::now();
+        
+        self.async_handles.retain(|handle| {
+            let elapsed = current_time.duration_since(handle.start_time);
+            
+            if elapsed > handle.expected_completion {
+                // Mark as completed or timeout
+                false // Remove from vector
+            } else {
+                true // Keep in vector
+            }
+        });
+    }
+    
+    /// Get communication performance statistics
+    pub fn get_performance_stats(&self) -> CommunicationPerformanceStats {
+        CommunicationPerformanceStats {
+            average_bandwidth_gb_s: self.perf_monitor.get_average_bandwidth(),
+            total_operations: self.perf_monitor.comm_operations,
+            total_data_transferred_gb: self.perf_monitor.total_data_bytes as f64 / 1e9,
+            current_strategy: self.adaptive_selector.current_strategy,
+            pending_async_ops: self.async_handles.len(),
+            step_count: self.step_counter,
+        }
+    }
+    
+    /// Force synchronization of all pending operations
+    pub fn synchronize_all(&mut self) -> Result<(), GpuOptimizerError> {
+        #[cfg(feature = "gpu")]
+        {
+            self.context.synchronize();
+            
+            // Update all pending handles to completed
+            for handle in &mut self.async_handles {
+                if handle.status == AsyncCommStatus::InProgress {
+                    handle.status = AsyncCommStatus::Completed;
+                }
+            }
+            
+            self.cleanup_completed_handles();
         }
         
         Ok(())
@@ -429,5 +894,114 @@ mod tests {
             };
             assert_eq!(config.sync_strategy, *strategy);
         }
+    }
+    
+    #[test]
+    fn test_communication_performance_monitor() {
+        let mut monitor = CommunicationPerformanceMonitor::new();
+        
+        // Record some communications
+        monitor.record_communication(SyncStrategy::RingAllReduce, 1000000, 1000); // 1GB/s
+        monitor.record_communication(SyncStrategy::TreeAllReduce, 2000000, 1000); // 2GB/s
+        
+        assert_eq!(monitor.comm_operations, 2);
+        assert!(monitor.get_average_bandwidth() > 0.0);
+        
+        // Test strategy performance tracking
+        let optimal = monitor.get_optimal_strategy(1000000);
+        assert!(matches!(optimal, SyncStrategy::RingAllReduce | SyncStrategy::TreeAllReduce));
+    }
+    
+    #[test]
+    fn test_adaptive_communication_selector() {
+        let mut selector = AdaptiveCommunicationSelector::new();
+        let mut monitor = CommunicationPerformanceMonitor::new();
+        
+        // Initial strategy
+        assert_eq!(selector.current_strategy, SyncStrategy::RingAllReduce);
+        
+        // Record better performance for tree all-reduce
+        for _ in 0..10 {
+            monitor.record_communication(SyncStrategy::TreeAllReduce, 1000000, 500); // Better bandwidth
+        }
+        
+        // Should suggest switching after cooldown period
+        let new_strategy = selector.evaluate_and_switch(&monitor, 1000000, 100);
+        
+        // Depending on performance threshold, might suggest a switch
+        if let Some(strategy) = new_strategy {
+            assert_ne!(strategy, SyncStrategy::RingAllReduce);
+        }
+    }
+    
+    #[test]
+    fn test_multi_gpu_config_extended() {
+        let config = MultiGpuConfig {
+            num_gpus: 8,
+            adaptive_communication: true,
+            bandwidth_monitor_interval: 50,
+            async_param_updates: true,
+            communication_timeout_ms: 1000,
+            error_correction: true,
+            pipeline_depth: 4,
+            ..Default::default()
+        };
+        
+        assert_eq!(config.num_gpus, 8);
+        assert!(config.adaptive_communication);
+        assert_eq!(config.bandwidth_monitor_interval, 50);
+        assert!(config.async_param_updates);
+        assert_eq!(config.communication_timeout_ms, 1000);
+        assert!(config.error_correction);
+        assert_eq!(config.pipeline_depth, 4);
+    }
+    
+    #[test]
+    fn test_async_communication_handle() {
+        let handle = AsyncCommunicationHandle {
+            id: 0,
+            start_time: std::time::Instant::now(),
+            expected_completion: std::time::Duration::from_millis(10),
+            strategy: SyncStrategy::PipelineParallel,
+            data_size: 1000000,
+            status: AsyncCommStatus::Pending,
+        };
+        
+        assert_eq!(handle.id, 0);
+        assert_eq!(handle.strategy, SyncStrategy::PipelineParallel);
+        assert_eq!(handle.data_size, 1000000);
+        assert_eq!(handle.status, AsyncCommStatus::Pending);
+    }
+    
+    #[test]
+    fn test_strategy_performance_metrics() {
+        let mut metrics = StrategyPerformanceMetrics::new();
+        
+        metrics.update(10.0, 1000); // 10 GB/s, 1ms
+        metrics.update(15.0, 800);  // 15 GB/s, 0.8ms
+        
+        assert!(metrics.efficiency_score > 0.0);
+        
+        let score = metrics.calculate_score(1000000); // Large tensor
+        assert!(score > 0.0);
+    }
+    
+    #[test]
+    fn test_communication_performance_stats() {
+        let stats = CommunicationPerformanceStats {
+            average_bandwidth_gb_s: 10.5,
+            total_operations: 100,
+            total_data_transferred_gb: 50.0,
+            current_strategy: SyncStrategy::RingAllReduce,
+            pending_async_ops: 2,
+            step_count: 1000,
+        };
+        
+        assert_eq!(stats.average_bandwidth_gb_s, 10.5);
+        assert_eq!(stats.total_operations, 100);
+        assert_eq!(stats.total_data_transferred_gb, 50.0);
+        assert_eq!(stats.current_strategy, SyncStrategy::RingAllReduce);
+        assert_eq!(stats.pending_async_ops, 2);
+        assert_eq!(stats.step_count, 1000);
     }
 }

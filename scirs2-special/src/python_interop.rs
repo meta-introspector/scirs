@@ -24,6 +24,12 @@ pub struct FunctionMapping {
     pub notes: Vec<String>,
 }
 
+impl Default for MigrationGuide {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MigrationGuide {
     /// Create a comprehensive migration guide
     pub fn new() -> Self {
@@ -265,7 +271,7 @@ impl MigrationGuide {
                     }
                 }
 
-                report.push_str("\n");
+                report.push('\n');
             } else {
                 report.push_str(&format!("## {}\n", func));
                 report.push_str(
@@ -367,7 +373,7 @@ pub mod codegen {
         }
         
         if !imports.is_empty() {
-            rust_code.push_str("\n");
+            rust_code.push('\n');
         }
 
         // Generate code transformation hints

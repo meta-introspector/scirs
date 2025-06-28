@@ -1,19 +1,20 @@
 #![recursion_limit = "512"]
 #![allow(dead_code)]
 
-//! # ``SciRS2`` Core (Alpha 6 Enhanced)
+//! # ``SciRS2`` Core (Beta 1)
 //!
 //! Core utilities and common functionality for the ``SciRS2`` library.
 //!
 //! This crate provides shared utilities, error types, and common traits
 //! used across the ``SciRS2`` ecosystem of crates.
 //!
-//! ## Alpha 6 Enhanced Features
+//! ## Beta 1 Features
 //!
+//! - **Stable APIs**: Core functionality with API stability guarantees for production use
 //! - **Advanced Error Diagnostics**: ML-inspired error pattern recognition and domain-specific recovery strategies
 //! - **Performance Optimizations**: Enhanced SIMD operations, adaptive chunking, and intelligent load balancing
-//! - **API Consistency**: Standardized function signatures and comprehensive documentation
-//! - **Integration Patterns**: Guidelines for combining multiple advanced features
+//! - **GPU Acceleration**: CUDA, Metal MPS, and other backend support for accelerated computing
+//! - **Memory Management**: Efficient memory-mapped arrays and adaptive chunking for large datasets
 //!
 //! ## Overview
 //!
@@ -73,8 +74,8 @@
 //! * `all`: Enable all features except backend-specific ones
 
 // Re-export modules
-pub mod api_versioning;
 pub mod api_freeze;
+pub mod api_versioning;
 #[cfg(feature = "array")]
 pub mod array;
 pub mod array_protocol;
@@ -115,6 +116,8 @@ pub mod simd_ops;
 #[cfg(feature = "testing")]
 pub mod testing;
 // Universal Functions (ufuncs) module
+pub mod error_templates;
+pub mod safe_ops;
 #[cfg(feature = "types")]
 pub mod types;
 #[cfg(feature = "ufuncs")]
@@ -122,8 +125,6 @@ pub mod ufuncs;
 pub mod units;
 pub mod utils;
 pub mod validation;
-pub mod safe_ops;
-pub mod error_templates;
 
 // Production-level features for enterprise deployments
 pub mod observability;
@@ -289,7 +290,7 @@ pub const fn version() -> &'static str {
 pub fn __init() {
     use std::sync::Once;
     static INIT: Once = Once::new();
-    
+
     INIT.call_once(|| {
         // Initialize API freeze registry
         crate::api_freeze::initialize_api_freeze();

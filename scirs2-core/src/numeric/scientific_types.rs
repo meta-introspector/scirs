@@ -3,8 +3,8 @@
 //! This module provides strongly-typed numeric values for various scientific domains,
 //! ensuring dimensional consistency and providing domain-specific operations.
 
-use crate::numeric::{RealNumber, ScientificNumber};
 use crate::error::CoreError;
+use crate::numeric::{RealNumber, ScientificNumber};
 use crate::safe_ops::safe_divide;
 use num_traits::Float;
 use std::fmt;
@@ -52,11 +52,11 @@ impl<T: ScientificNumber + Float, U: Unit> Quantity<T, U> {
     }
 
     /// Safely divide this quantity by a scalar value
-    /// 
+    ///
     /// # Errors
     /// Returns an error if the divisor is zero or near-zero
-    pub fn safe_div(self, divisor: T) -> Result<Self, CoreError> 
-    where 
+    pub fn safe_div(self, divisor: T) -> Result<Self, CoreError>
+    where
         T: fmt::Display + fmt::Debug,
     {
         let result = safe_divide(self.value, divisor)?;
@@ -112,7 +112,7 @@ impl<T: ScientificNumber + Float, U: Unit> Div<T> for Quantity<T, U> {
     type Output = Self;
 
     /// Divide the quantity by a scalar
-    /// 
+    ///
     /// # Note
     /// This follows standard floating-point behavior:
     /// - Division by zero produces ±Infinity

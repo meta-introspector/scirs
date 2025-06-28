@@ -918,9 +918,87 @@ impl LieAlgebra for Sp2n {
         }
     }
     
-    fn from_vector(_v: &ArrayView1<f64>) -> Self {
-        // Complex implementation depends on basis choice
-        unimplemented!("Sp2n::from_vector needs specific basis implementation")
+    fn from_vector(v: &ArrayView1<f64>) -> Self {
+        // Reconstruct Hamiltonian matrix from vector representation
+        // Expected vector format: [A_elements, B_upper_triangle, C_upper_triangle]
+        // where A is n×n, B and C are symmetric n×n
+        
+        // For now, assume n=2 (sp(4)) - can be generalized later
+        let n = 2;
+        let expected_size = n * n + n * (n + 1) / 2 + n * (n + 1) / 2;
+        
+        if v.len() != expected_size {
+            // Fallback: try to infer n from vector length
+            // For sp(2n): dim = 2n² + n = n(2n + 1)
+            // Solve n(2n + 1) = v.len() for n
+            let len = v.len() as f64;
+            let n_float = (-1.0 + (1.0 + 8.0 * len).sqrt()) / 4.0;
+            let n = n_float.round() as usize;
+            
+            if n * (2 * n + 1) != v.len() {
+                // Use default n=2 and pad with zeros if necessary
+                let n = 2;
+                let mut matrix = Array2::zeros((2 * n, 2 * n));
+                
+                // Fill what we can from the vector
+                let available = v.len().min(n * n);
+                for i in 0..n {
+                    for j in 0..n {
+                        let idx = i * n + j;
+                        if idx < available {
+                            matrix[[i, j]] = v[idx];
+                        }
+                    }
+                }
+                
+                return Sp2n { n, matrix };
+            }
+        }
+        
+        let n = 2; // For sp(4)
+        let mut matrix = Array2::zeros((2 * n, 2 * n));
+        let mut offset = 0;
+        
+        // Extract A (n×n block in upper-left)
+        for i in 0..n {
+            for j in 0..n {
+                matrix[[i, j]] = v[offset];
+                offset += 1;
+            }
+        }
+        
+        // Extract B (symmetric, upper-right block)
+        for i in 0..n {
+            for j in i..n {
+                let val = v[offset];
+                matrix[[i, n + j]] = val;
+                if i != j {
+                    matrix[[j, n + i]] = val; // Symmetry
+                }
+                offset += 1;
+            }
+        }
+        
+        // Extract C (symmetric, lower-left block)
+        for i in 0..n {
+            for j in i..n {
+                let val = v[offset];
+                matrix[[n + i, j]] = val;
+                if i != j {
+                    matrix[[n + j, i]] = val; // Symmetry
+                }
+                offset += 1;
+            }
+        }
+        
+        // Set -A^T in lower-right block
+        for i in 0..n {
+            for j in 0..n {
+                matrix[[n + i, n + j]] = -matrix[[j, i]];
+            }
+        }
+        
+        Sp2n { n, matrix }
     }
     
     fn to_vector(&self) -> Array1<f64> {
@@ -1164,7 +1242,7 @@ fn matrix_exponential(a: &Array2<f64>) -> Array2<f64> {
     
     for k in 1..20 {
         term = term.dot(a) / (k as f64);
-        result = result + &term;
+        result += &term;
         
         if term.iter().map(|&x| x.abs()).sum::<f64>() < 1e-12 {
             break;

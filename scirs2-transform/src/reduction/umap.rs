@@ -3,12 +3,11 @@
 //! UMAP is a non-linear dimensionality reduction technique that can be used for 
 //! visualization similarly to t-SNE, but also for general non-linear dimension reduction.
 
-use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
+use ndarray::{Array2, ArrayBase, Data, Ix2, ArrayView2};
 use num_traits::{Float, NumCast};
-use rand::Rng;
-use rayon::prelude::*;
-use scirs2_linalg::norm::euclidean_norm;
+use rand::{Rng, SeedableRng};
 use std::collections::BinaryHeap;
+use scirs2_core::validation::{check_positive, check_shape};
 
 use crate::error::{Result, TransformError};
 
@@ -23,8 +22,10 @@ pub struct UMAP {
     /// Number of components (dimensions) in the low dimensional space
     n_components: usize,
     /// Controls how UMAP balances local versus global structure
+    #[allow(dead_code)]
     min_dist: f64,
     /// Controls how tightly UMAP is allowed to pack points together
+    #[allow(dead_code)]
     spread: f64,
     /// Learning rate for optimization
     learning_rate: f64,
@@ -32,6 +33,10 @@ pub struct UMAP {
     n_epochs: usize,
     /// Random seed for reproducibility
     random_state: Option<u64>,
+    /// Training data for out-of-sample extension
+    training_data: Option<Array2<f64>>,
+    /// Training k-NN graph for out-of-sample extension
+    training_graph: Option<Array2<f64>>,
     /// Metric to use for distance computation
     metric: String,
     /// The low dimensional embedding
@@ -71,6 +76,8 @@ impl UMAP {
             random_state: None,
             metric: "euclidean".to_string(),
             embedding: None,
+            training_data: None,
+            training_graph: None,
             a,
             b,
         }
@@ -89,7 +96,7 @@ impl UMAP {
     }
 
     /// Find a and b parameters to approximate the fuzzy set membership function
-    fn find_ab_params(spread: f64, min_dist: f64) -> (f64, f64) {
+    fn find_ab_params(_spread: f64, min_dist: f64) -> (f64, f64) {
         // Binary search to find good values of a and b
         let mut a = 1.0;
         let mut b = 1.0;
@@ -229,9 +236,10 @@ impl UMAP {
 
     /// Initialize the low dimensional embedding
     fn initialize_embedding(&self, n_samples: usize) -> Array2<f64> {
-        let mut rng = match self.random_state {
-            Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-            None => rand::rngs::StdRng::from_entropy(),
+        let mut rng = if let Some(seed) = self.random_state {
+            rand::rngs::StdRng::seed_from_u64(seed)
+        } else {
+            rand::rngs::StdRng::from_entropy()
         };
         
         // Initialize with small random values
@@ -253,9 +261,10 @@ impl UMAP {
         n_epochs: usize,
     ) {
         let n_samples = embedding.shape()[0];
-        let mut rng = match self.random_state {
-            Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-            None => rand::rngs::StdRng::from_entropy(),
+        let mut rng = if let Some(seed) = self.random_state {
+            rand::rngs::StdRng::seed_from_u64(seed + 1)
+        } else {
+            rand::rngs::StdRng::from_entropy()
         };
         
         // Create edge list from graph
@@ -340,7 +349,13 @@ impl UMAP {
         S: Data,
         S::Elem: Float + NumCast + Send + Sync,
     {
-        let n_samples = x.shape()[0];
+        let (n_samples, n_features) = x.dim();
+        
+        // Validate inputs
+        check_positive(self.n_neighbors, "n_neighbors")?;
+        check_positive(self.n_components, "n_components")?;
+        check_positive(self.n_epochs, "n_epochs")?;
+        check_shape(x, (Some(n_samples), Some(n_features)), "x")?;
         
         if n_samples < self.n_neighbors {
             return Err(TransformError::InvalidInput(format!(
@@ -348,6 +363,12 @@ impl UMAP {
                 self.n_neighbors, n_samples
             )));
         }
+        
+        // Store training data for out-of-sample extension
+        let training_data = Array2::from_shape_fn((n_samples, n_features), |(i, j)| {
+            num_traits::cast::<S::Elem, f64>(x[[i, j]]).unwrap_or(0.0)
+        });
+        self.training_data = Some(training_data);
         
         // Step 1: Compute pairwise distances
         let distances = self.compute_distances(x);
@@ -357,6 +378,7 @@ impl UMAP {
         
         // Step 3: Compute fuzzy simplicial set
         let graph = self.compute_graph(&knn_indices, &knn_distances);
+        self.training_graph = Some(graph.clone());
         
         // Step 4: Initialize low dimensional embedding
         let mut embedding = self.initialize_embedding(n_samples);
@@ -382,14 +404,32 @@ impl UMAP {
         S::Elem: Float + NumCast,
     {
         if self.embedding.is_none() {
-            return Err(TransformError::TransformationError(
+            return Err(TransformError::NotFitted(
                 "UMAP model has not been fitted".to_string(),
             ));
         }
         
-        // For now, return the fitted embedding
-        // TODO: Implement proper transform for new data
-        Ok(self.embedding.as_ref().unwrap().clone())
+        let training_data = self.training_data.as_ref().ok_or_else(|| {
+            TransformError::NotFitted("Training data not available".to_string())
+        })?;
+        
+        let (n_new_samples, n_features) = x.dim();
+        let (_, n_training_features) = training_data.dim();
+        
+        if n_features != n_training_features {
+            return Err(TransformError::InvalidInput(format!(
+                "Input features {} must match training features {}",
+                n_features, n_training_features
+            )));
+        }
+        
+        // If transforming the same data as training, return stored embedding
+        if self.is_same_data(x, training_data) {
+            return Ok(self.embedding.as_ref().unwrap().clone());
+        }
+        
+        // Implement out-of-sample extension using weighted average of nearest neighbors
+        self.transform_new_data(x)
     }
 
     /// Fits the UMAP model to the input data and returns the embedding
@@ -411,6 +451,86 @@ impl UMAP {
     /// Returns the low dimensional embedding
     pub fn embedding(&self) -> Option<&Array2<f64>> {
         self.embedding.as_ref()
+    }
+    
+    /// Check if the input data is the same as training data
+    fn is_same_data<S>(&self, x: &ArrayBase<S, Ix2>, training_data: &Array2<f64>) -> bool
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        if x.dim() != training_data.dim() {
+            return false;
+        }
+        
+        let (n_samples, n_features) = x.dim();
+        for i in 0..n_samples {
+            for j in 0..n_features {
+                let x_val = num_traits::cast::<S::Elem, f64>(x[[i, j]]).unwrap_or(0.0);
+                if (x_val - training_data[[i, j]]).abs() > 1e-10 {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+    
+    /// Transform new data using out-of-sample extension
+    fn transform_new_data<S>(&self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        let training_data = self.training_data.as_ref().unwrap();
+        let training_embedding = self.embedding.as_ref().unwrap();
+        
+        let (n_new_samples, _) = x.dim();
+        let (n_training_samples, _) = training_data.dim();
+        
+        // For each new sample, find k nearest neighbors in training data
+        let mut new_embedding = Array2::zeros((n_new_samples, self.n_components));
+        
+        for i in 0..n_new_samples {
+            // Compute distances to all training samples
+            let mut distances = Vec::new();
+            for j in 0..n_training_samples {
+                let mut dist_sq = 0.0;
+                for k in 0..x.ncols() {
+                    let x_val = num_traits::cast::<S::Elem, f64>(x[[i, k]]).unwrap_or(0.0);
+                    let train_val = training_data[[j, k]];
+                    let diff = x_val - train_val;
+                    dist_sq += diff * diff;
+                }
+                distances.push((dist_sq.sqrt(), j));
+            }
+            
+            // Sort and take k nearest neighbors
+            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            let k = self.n_neighbors.min(n_training_samples);
+            
+            // Compute weights based on distances (inverse distance weighting)
+            let mut total_weight = 0.0;
+            let mut weighted_coords = vec![0.0; self.n_components];
+            
+            for idx in 0..k {
+                let (dist, train_idx) = distances[idx];
+                let weight = if dist > 1e-10 { 1.0 / (dist + 1e-10) } else { 1e10 };
+                total_weight += weight;
+                
+                for dim in 0..self.n_components {
+                    weighted_coords[dim] += weight * training_embedding[[train_idx, dim]];
+                }
+            }
+            
+            // Normalize weights and set coordinates
+            if total_weight > 0.0 {
+                for dim in 0..self.n_components {
+                    new_embedding[[i, dim]] = weighted_coords[dim] / total_weight;
+                }
+            }
+        }
+        
+        Ok(new_embedding)
     }
 }
 

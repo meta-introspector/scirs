@@ -12,6 +12,9 @@ pub mod algorithms;
 pub mod trpo;
 pub mod curiosity;
 pub mod model_based;
+pub mod advanced_algorithms;
+pub mod advanced_environments;
+pub mod policy_optimization;
 
 pub use policy::{Policy, PolicyNetwork, PolicyGradient};
 pub use value::{ValueNetwork, QNetwork, DQN, DoubleDQN};
@@ -22,6 +25,9 @@ pub use algorithms::{RLAlgorithm, TrainingConfig};
 pub use trpo::{TRPO, TRPOConfig};
 pub use curiosity::{ICM, RND, NoveltyExploration, EpisodicCuriosity};
 pub use model_based::{DynamicsModel, MPC, Dyna, WorldModel};
+pub use advanced_algorithms::{TD3, TD3Config, RainbowDQN, RainbowConfig, IMPALA, IMPALAConfig};
+pub use advanced_environments::{MultiAgentEnvironment, MultiAgentGridWorld, PursuitEvasion, MultiAgentWrapper};
+pub use policy_optimization::{NaturalPolicyGradient, NPGConfig, CuriosityDrivenAgent, CuriosityConfig, MAMLAgent, MAMLConfig};
 
 use crate::error::Result;
 use ndarray::prelude::*;
@@ -226,7 +232,7 @@ impl<E: Environment> RLTrainer<E> {
     }
     
     /// Evaluate the agent
-    pub fn evaluate(&self, num_episodes: usize) -> Result<EvaluationStats> {
+    pub fn evaluate(&mut self, num_episodes: usize) -> Result<EvaluationStats> {
         let mut episode_rewards = Vec::new();
         let mut episode_lengths = Vec::new();
         

@@ -144,13 +144,13 @@ where
     F: Float + FromPrimitive + Debug + Display + Zero + Copy + 'static,
 {
     if queries.ncols() != centers.ncols() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "Query and center dimensions must match".to_string(),
         ));
     }
 
     if centers.nrows() != coefficients.len() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "Number of centers must match number of coefficients".to_string(),
         ));
     }
@@ -360,7 +360,7 @@ where
     F: Float + FromPrimitive + Debug + Display + Zero + Copy + 'static,
 {
     if points_a.ncols() != points_b.ncols() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "Point sets must have the same dimensionality".to_string(),
         ));
     }

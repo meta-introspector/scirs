@@ -399,11 +399,11 @@ where
     ) -> InterpolateResult<Self> {
         // Check inputs
         if k == 0 && c.is_empty() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 1 coefficient is required for degree 0 spline".to_string(),
             ));
         } else if c.len() < k + 1 {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "at least {} coefficients are required for degree {} spline",
                 k + 1,
                 k
@@ -414,7 +414,7 @@ where
         let expected_knots = n + k + 1;
 
         if t.len() != expected_knots {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "for degree {k} spline with {n} coefficients, expected {expected_knots} knots, got {}",
                 t.len()
             )));
@@ -423,7 +423,7 @@ where
         // Check that knots are non-decreasing
         for i in 1..t.len() {
             if t[i] < t[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "knot vector must be non-decreasing".to_string(),
                 ));
             }
@@ -923,23 +923,37 @@ where
         self.fast_recursive_eval(interval, x_eval)
     }
 
-    /// Fast span finding using optimized search algorithm
+    /// Fast span finding using optimized binary search algorithm
     ///
-    /// Currently uses the same logic as the standard method to ensure correctness.
-    /// TODO: Implement binary search optimization while maintaining exact compatibility.
+    /// Finds the knot span containing x using binary search for O(log n) complexity.
+    /// Maintains exact compatibility with the standard method.
     fn find_span_fast(&self, x: T) -> usize {
         let degree = self.k;
+        let n = self.t.len() - degree - 1;
 
-        // Use the same algorithm as the standard method to ensure exact compatibility
-        let mut interval = degree;
-        for i in degree..self.t.len() - degree - 1 {
-            if x < self.t[i + 1] {
-                interval = i;
-                break;
-            }
+        // Handle edge cases
+        if x >= self.t[n] {
+            return n - 1;
+        }
+        if x <= self.t[degree] {
+            return degree;
         }
 
-        interval
+        // Binary search for the knot span
+        let mut low = degree;
+        let mut high = n;
+        let mut mid = (low + high) / 2;
+
+        while x < self.t[mid] || x >= self.t[mid + 1] {
+            if x < self.t[mid] {
+                high = mid;
+            } else {
+                low = mid;
+            }
+            mid = (low + high) / 2;
+        }
+
+        mid
     }
 
     /// Core fast recursive evaluation algorithm
@@ -1134,7 +1148,7 @@ where
         extrapolate: ExtrapolateMode,
     ) -> InterpolateResult<BSpline<T>> {
         if i + k >= t.len() - 1 {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "index i={} and degree k={} must satisfy i+k < len(t)-1={}",
                 i,
                 k,
@@ -1188,13 +1202,13 @@ where
         + std::ops::RemAssign,
 {
     if x.len() != y.len() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "x and y arrays must have the same length".to_string(),
         ));
     }
 
     if x.len() < k + 1 {
-        return Err(InterpolateError::ValueError(format!(
+        return Err(InterpolateError::invalid_input(format!(
             "at least {} points are required for degree {} spline",
             k + 1,
             k
@@ -1204,7 +1218,7 @@ where
     // Check that x is sorted
     for i in 1..x.len() {
         if x[i] <= x[i - 1] {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x values must be sorted in ascending order".to_string(),
             ));
         }
@@ -1296,7 +1310,7 @@ where
     // Check that x is sorted
     for i in 1..n {
         if x[i] <= x[i - 1] {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x values must be sorted in ascending order".to_string(),
             ));
         }
@@ -1359,7 +1373,7 @@ where
             }
         }
         _ => {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "unknown knot style: {}. Use one of 'uniform', 'average', or 'clamped'",
                 knot_style
             )));
@@ -1408,14 +1422,14 @@ where
         + std::ops::RemAssign,
 {
     if x.len() != y.len() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "x and y arrays must have the same length".to_string(),
         ));
     }
 
     // Check that t satisfies the constraints
     if t.len() < 2 * (k + 1) {
-        return Err(InterpolateError::ValueError(format!(
+        return Err(InterpolateError::invalid_input(format!(
             "need at least 2(k+1) = {} knots for degree {} spline",
             2 * (k + 1),
             k
@@ -1440,7 +1454,7 @@ where
     // Apply weights if provided
     let (weighted_b, weighted_y) = if let Some(weights) = w {
         if weights.len() != x.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "weights array must have the same length as x and y".to_string(),
             ));
         }
@@ -1494,13 +1508,13 @@ where
         + Copy,
 {
     if a.nrows() != a.ncols() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "matrix must be square for direct solve".to_string(),
         ));
     }
 
     if a.nrows() != b.len() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "matrix and vector dimensions must match".to_string(),
         ));
     }
@@ -1587,7 +1601,7 @@ where
 
         // Check for singular matrix
         if max_val < T::from_f64(1e-14).unwrap() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "matrix is singular or nearly singular".to_string(),
             ));
         }
@@ -1650,7 +1664,7 @@ where
         + Copy,
 {
     if a.nrows() != b.len() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "matrix and vector dimensions must match".to_string(),
         ));
     }

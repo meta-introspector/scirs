@@ -124,37 +124,37 @@ impl<F: Float + FromPrimitive + Debug> KrigingInterpolator<F> {
     ) -> InterpolateResult<Self> {
         // Check inputs
         if points.shape()[0] != values.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "number of points must match number of values".to_string(),
             ));
         }
 
         if points.shape()[0] < 2 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 2 points are required for Kriging interpolation".to_string(),
             ));
         }
 
         if sigma_sq <= F::zero() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "sigma_sq must be positive".to_string(),
             ));
         }
 
         if length_scale <= F::zero() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "length_scale must be positive".to_string(),
             ));
         }
 
         if nugget < F::zero() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "nugget must be non-negative".to_string(),
             ));
         }
 
         if cov_fn == CovarianceFunction::RationalQuadratic && alpha <= F::zero() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "alpha must be positive for rational quadratic covariance".to_string(),
             ));
         }
@@ -313,7 +313,7 @@ impl<F: Float + FromPrimitive + Debug> KrigingInterpolator<F> {
     pub fn predict(&self, query_points: &ArrayView2<F>) -> InterpolateResult<PredictionResult<F>> {
         // Check dimensions
         if query_points.shape()[1] != self.points.shape()[1] {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "query points must have the same dimension as sample points".to_string(),
             ));
         }

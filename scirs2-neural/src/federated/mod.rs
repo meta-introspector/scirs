@@ -10,14 +10,18 @@ pub mod privacy;
 pub mod communication;
 pub mod strategies;
 pub mod fednova;
+pub mod advanced_algorithms;
+pub mod personalized;
 
 pub use client::{FederatedClient, ClientConfig};
 pub use server::{FederatedServer, ServerConfig};
-pub use aggregation::{AggregationStrategy, FedAvg, FedProx, FedYogi};
+pub use aggregation::{AggregationStrategy, FedAvg, FedProx, FedYogi, TrimmedMean, Krum, Median};
 pub use privacy::{DifferentialPrivacy, SecureAggregation};
-pub use communication::{CommunicationProtocol, Message};
+pub use communication::{CommunicationProtocol, Message, CompressionMethod, CompressedMessage, MessageCompressor};
 pub use strategies::{ClientSelection, SamplingStrategy};
 pub use fednova::{FedNova, FedNovaClient, FedNovaCoordinator, FedNovaUpdate};
+pub use advanced_algorithms::{SCAFFOLD, FedAvgM, FedAdam, FedAdagrad, FedLAG, AggregatorFactory};
+pub use personalized::{PersonalizedFL, PersonalizationStrategy, PersonalizedAggregation, PersonalizationStats};
 
 use crate::error::Result;
 use crate::models::sequential::Sequential;
@@ -192,7 +196,7 @@ impl FederatedLearning {
     /// Select clients for a round
     fn select_clients(&self) -> Result<Vec<usize>> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         match self.config.client_selection.as_str() {
             "random" => {

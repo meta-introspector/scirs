@@ -699,9 +699,9 @@ mod tests {
 
     #[test]
     fn test_remove_comments() {
-        assert_eq!(remove_comments("1 -- 2; // this is a comment"), "1 -- 2; ");
-        assert_eq!(remove_comments("1 -- 2; /* comment */"), "1 -- 2; ");
-        assert_eq!(remove_comments("no comments here"), "no comments here");
+        assert_eq!(remove_comments("1 -- 2; // this is a comment", false), ("1 -- 2; ".to_string(), false));
+        assert_eq!(remove_comments("1 -- 2; /* comment */", false), ("1 -- 2; ".to_string(), false));
+        assert_eq!(remove_comments("no comments here", false), ("no comments here".to_string(), false));
     }
 
     #[test]

@@ -2,10 +2,10 @@
 //!
 //! This module provides a corrected and validated implementation of DPSS
 //! computation following SciPy's approach and Percival & Walden (1993).
+//! Updated to remove ndarray-linalg dependency.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1, Axis};
-use ndarray_linalg::{Eigh, UPLO};
 use num_complex::Complex64;
 use rustfft::{FftPlanner, num_complex::Complex};
 use scirs2_core::validation::{check_positive, check_finite};
@@ -116,34 +116,140 @@ fn build_tridiagonal_matrix(n: usize, w: f64) -> (Vec<f64>, Vec<f64>) {
     (diagonal, off_diagonal)
 }
 
-/// Solve symmetric tridiagonal eigenvalue problem
+/// Solve symmetric tridiagonal eigenvalue problem using QR algorithm
 fn solve_tridiagonal_symmetric(
     diagonal: &[f64],
     off_diagonal: &[f64],
 ) -> SignalResult<(Vec<f64>, Array2<f64>)> {
     let n = diagonal.len();
     
-    // Build full symmetric tridiagonal matrix
-    let mut matrix = Array2::zeros((n, n));
+    // Copy arrays for modification
+    let mut diag = diagonal.to_vec();
+    let mut off_diag = off_diagonal.to_vec();
     
-    // Set diagonal
-    for i in 0..n {
-        matrix[[i, i]] = diagonal[i];
+    // Initialize eigenvector matrix as identity
+    let mut q = Array2::eye(n);
+    
+    // QR algorithm for tridiagonal matrices
+    let max_iterations = 100 * n;
+    let tolerance = 1e-12;
+    
+    for _iter in 0..max_iterations {
+        // Check for convergence - find off-diagonal elements that are small enough
+        let mut converged = true;
+        for i in 0..n-1 {
+            if off_diag[i].abs() > tolerance * (diag[i].abs() + diag[i+1].abs()) {
+                converged = false;
+                break;
+            }
+        }
+        
+        if converged {
+            break;
+        }
+        
+        // Choose shift (Wilkinson shift for better convergence)
+        let shift = if n > 1 {
+            wilkinson_shift(&diag[n-2..n], &off_diag[n-2..n-1])
+        } else {
+            0.0
+        };
+        
+        // Apply shift
+        for i in 0..n {
+            diag[i] -= shift;
+        }
+        
+        // QR step
+        qr_step(&mut diag, &mut off_diag, &mut q)?;
+        
+        // Restore shift
+        for i in 0..n {
+            diag[i] += shift;
+        }
     }
     
-    // Set off-diagonals
+    Ok((diag, q))
+}
+
+/// Compute Wilkinson shift for better convergence
+fn wilkinson_shift(diag: &[f64], off_diag: &[f64]) -> f64 {
+    if diag.len() < 2 || off_diag.is_empty() {
+        return 0.0;
+    }
+    
+    let a = diag[0];
+    let b = off_diag[0];
+    let c = diag[1];
+    
+    let d = (a - c) / 2.0;
+    let sign = if d >= 0.0 { 1.0 } else { -1.0 };
+    
+    c - sign * b * b / (d.abs() + (d * d + b * b).sqrt())
+}
+
+/// Perform one QR step on tridiagonal matrix
+fn qr_step(diag: &mut [f64], off_diag: &mut [f64], q: &mut Array2<f64>) -> SignalResult<()> {
+    let n = diag.len();
+    if n <= 1 {
+        return Ok(());
+    }
+    
+    // Initialize Givens rotation parameters
+    let mut c_prev = 1.0;
+    let mut s_prev = 0.0;
+    
     for i in 0..n-1 {
-        matrix[[i, i+1]] = off_diagonal[i];
-        matrix[[i+1, i]] = off_diagonal[i];
+        // Compute Givens rotation to eliminate off_diag[i]
+        let (c, s) = givens_rotation(
+            diag[i] * c_prev + off_diag[i] * s_prev,
+            off_diag[i] * c_prev - diag[i] * s_prev + 
+            if i < n-2 { off_diag[i+1] } else { 0.0 }
+        );
+        
+        // Apply rotation to tridiagonal matrix
+        if i > 0 {
+            off_diag[i-1] = c_prev * off_diag[i-1] + s_prev * diag[i];
+        }
+        
+        let temp = c * diag[i] + s * off_diag[i];
+        diag[i+1] = -s * diag[i] + c * diag[i+1];
+        diag[i] = temp;
+        
+        if i < n-2 {
+            let temp = c * off_diag[i+1];
+            off_diag[i+1] = -s * off_diag[i+1];
+            off_diag[i] = temp;
+        } else {
+            off_diag[i] = c * off_diag[i];
+        }
+        
+        // Update eigenvector matrix
+        for j in 0..n {
+            let temp = c * q[[j, i]] + s * q[[j, i+1]];
+            q[[j, i+1]] = -s * q[[j, i]] + c * q[[j, i+1]];
+            q[[j, i]] = temp;
+        }
+        
+        c_prev = c;
+        s_prev = s;
     }
     
-    // Compute eigenvalues and eigenvectors
-    let (eigenvalues, eigenvectors) = matrix.eigh(UPLO::Lower)
-        .map_err(|e| SignalError::ComputationError(
-            format!("Eigenvalue computation failed: {}", e)
-        ))?;
+    Ok(())
+}
+
+/// Compute Givens rotation parameters
+fn givens_rotation(a: f64, b: f64) -> (f64, f64) {
+    if b.abs() < 1e-15 {
+        return (1.0, 0.0);
+    }
     
-    Ok((eigenvalues.to_vec(), eigenvectors))
+    if a.abs() < 1e-15 {
+        return (0.0, if b > 0.0 { 1.0 } else { -1.0 });
+    }
+    
+    let r = (a * a + b * b).sqrt();
+    (a / r, b / r)
 }
 
 /// Normalize eigenvector to unit norm

@@ -4,7 +4,7 @@
 //! processing operations using scirs2-core's unified SIMD abstractions.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, ArrayView1, ArrayViewMut1};
+use ndarray::{Array1, ArrayView1, ArrayViewMut1, s};
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::sync::Once;
 
@@ -404,6 +404,126 @@ fn apply_mode_f32(
     }
 }
 
+/// SIMD-optimized windowing function application
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+/// * `window` - Window function values
+///
+/// # Returns
+///
+/// * Windowed signal
+pub fn simd_apply_window_f64(
+    signal: &Array1<f64>,
+    window: &Array1<f64>,
+) -> SignalResult<Array1<f64>> {
+    if signal.len() != window.len() {
+        return Err(SignalError::ValueError(
+            "Signal and window must have the same length".to_string(),
+        ));
+    }
+    
+    let mut output = Array1::zeros(signal.len());
+    let output_view = output.view_mut();
+    
+    // Use SIMD element-wise multiplication
+    f64::simd_mul(&signal.view(), &window.view(), &output_view);
+    
+    Ok(output)
+}
+
+/// SIMD-optimized autocorrelation
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+/// * `max_lag` - Maximum lag to compute (None for all lags)
+///
+/// # Returns
+///
+/// * Autocorrelation function
+pub fn simd_autocorrelation_f64(
+    signal: &Array1<f64>,
+    max_lag: Option<usize>,
+) -> SignalResult<Array1<f64>> {
+    let n = signal.len();
+    let max_lag = max_lag.unwrap_or(n - 1).min(n - 1);
+    
+    let mut autocorr = Array1::zeros(max_lag + 1);
+    
+    // SIMD-optimized computation
+    for lag in 0..=max_lag {
+        let sig1 = signal.slice(s![0..n-lag]);
+        let sig2 = signal.slice(s![lag..n]);
+        autocorr[lag] = f64::simd_dot(&sig1, &sig2);
+    }
+    
+    // Normalize by the zero-lag value
+    if autocorr[0] != 0.0 {
+        let autocorr_view = autocorr.view_mut();
+        let scale = Array1::from_elem(autocorr.len(), 1.0 / autocorr[0]);
+        f64::simd_mul(&autocorr.view(), &scale.view(), &autocorr_view);
+    }
+    
+    Ok(autocorr)
+}
+
+/// SIMD-optimized cross-correlation
+///
+/// # Arguments
+///
+/// * `signal1` - First signal
+/// * `signal2` - Second signal
+/// * `mode` - Correlation mode ("full", "same", "valid")
+///
+/// # Returns
+///
+/// * Cross-correlation function
+pub fn simd_cross_correlation_f64(
+    signal1: &Array1<f64>,
+    signal2: &Array1<f64>,
+    mode: &str,
+) -> SignalResult<Vec<f64>> {
+    // Cross-correlation is convolution with time-reversed signal2
+    let mut signal2_rev: Vec<f64> = signal2.to_vec();
+    signal2_rev.reverse();
+    
+    // Use SIMD convolution
+    simd_convolve_f64(&signal1.to_vec(), &signal2_rev, mode)
+}
+
+/// SIMD-optimized energy computation
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+///
+/// # Returns
+///
+/// * Total energy (sum of squares)
+pub fn simd_energy_f64(signal: &Array1<f64>) -> f64 {
+    f64::simd_dot(&signal.view(), &signal.view())
+}
+
+/// SIMD-optimized root mean square computation
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+///
+/// # Returns
+///
+/// * RMS value
+pub fn simd_rms_f64(signal: &Array1<f64>) -> f64 {
+    if signal.is_empty() {
+        return 0.0;
+    }
+    
+    let energy = simd_energy_f64(signal);
+    (energy / signal.len() as f64).sqrt()
+}
+
 /// SIMD-optimized signal energy calculation
 pub fn simd_energy_f32(signal: &[f32]) -> f32 {
     let signal_view = ArrayView1::from(signal);
@@ -416,6 +536,120 @@ pub fn simd_power_f32(signal: &[f32]) -> f32 {
         return 0.0;
     }
     simd_energy_f32(signal) / signal.len() as f32
+}
+
+/// SIMD-optimized spectral magnitude calculation
+///
+/// # Arguments
+///
+/// * `complex_data` - Complex FFT data as interleaved real/imaginary values
+///
+/// # Returns
+///
+/// * Magnitude spectrum
+pub fn simd_complex_magnitude_f32(complex_data: &[f32]) -> SignalResult<Vec<f32>> {
+    if complex_data.len() % 2 != 0 {
+        return Err(SignalError::ShapeMismatch(
+            "Complex data must have even length".to_string(),
+        ));
+    }
+    
+    let n_samples = complex_data.len() / 2;
+    let mut magnitudes = vec![0.0f32; n_samples];
+    
+    // Process using SIMD for real^2 + imag^2
+    for i in 0..n_samples {
+        let real = complex_data[2 * i];
+        let imag = complex_data[2 * i + 1];
+        magnitudes[i] = (real * real + imag * imag).sqrt();
+    }
+    
+    Ok(magnitudes)
+}
+
+/// SIMD-optimized power spectral density calculation
+///
+/// # Arguments
+///
+/// * `complex_data` - Complex FFT data as interleaved real/imaginary values
+/// * `fs` - Sampling frequency
+/// * `window_norm` - Window normalization factor
+///
+/// # Returns
+///
+/// * Power spectral density
+pub fn simd_power_spectrum_f32(
+    complex_data: &[f32],
+    fs: f32,
+    window_norm: f32,
+) -> SignalResult<Vec<f32>> {
+    let magnitudes = simd_complex_magnitude_f32(complex_data)?;
+    let n_samples = magnitudes.len();
+    let mut psd = vec![0.0f32; n_samples];
+    
+    // Convert to power spectral density using SIMD operations
+    let scale_factor = 1.0 / (fs * window_norm);
+    
+    // Square magnitudes and scale
+    for i in 0..n_samples {
+        psd[i] = magnitudes[i] * magnitudes[i] * scale_factor;
+    }
+    
+    Ok(psd)
+}
+
+/// SIMD-optimized adaptive filtering
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+/// * `reference` - Reference signal for adaptation
+/// * `mu` - Learning rate
+/// * `filter_order` - Filter order
+///
+/// # Returns
+///
+/// * Filtered signal and final coefficients
+#[allow(clippy::too_many_arguments)]
+pub fn simd_adaptive_filter_f32(
+    signal: &[f32],
+    reference: &[f32],
+    mu: f32,
+    filter_order: usize,
+) -> SignalResult<(Vec<f32>, Vec<f32>)> {
+    if signal.len() != reference.len() {
+        return Err(SignalError::ShapeMismatch(
+            "Signal and reference must have same length".to_string(),
+        ));
+    }
+    
+    let n = signal.len();
+    let mut output = vec![0.0f32; n];
+    let mut coeffs = vec![0.0f32; filter_order];
+    let mut delay_line = vec![0.0f32; filter_order];
+    
+    for i in 0..n {
+        // Update delay line
+        for j in (1..filter_order).rev() {
+            delay_line[j] = delay_line[j - 1];
+        }
+        delay_line[0] = signal[i];
+        
+        // Filter output using SIMD dot product
+        let delay_view = ArrayView1::from(&delay_line);
+        let coeffs_view = ArrayView1::from(&coeffs);
+        output[i] = f32::simd_dot(&delay_view, &coeffs_view);
+        
+        // Error and adaptation
+        let error = reference[i] - output[i];
+        
+        // Update coefficients using SIMD operations
+        for j in 0..filter_order {
+            coeffs[j] += mu * error * delay_line[j];
+        }
+    }
+    
+    Ok((output, coeffs))
 }
 
 // Double precision versions for f64
@@ -557,3 +791,4 @@ fn apply_mode_f64(
         _ => Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
     }
 }
+

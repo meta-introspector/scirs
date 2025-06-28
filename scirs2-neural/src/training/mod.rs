@@ -106,9 +106,15 @@
 
 pub mod gradient_accumulation;
 pub mod mixed_precision;
+pub mod gradient_checkpointing;
+pub mod quantization_aware;
+pub mod sparse_training;
 
 pub use gradient_accumulation::*;
 pub use mixed_precision::*;
+pub use gradient_checkpointing::*;
+pub use quantization_aware::*;
+pub use sparse_training::*;
 
 use crate::callbacks::CallbackManager;
 use crate::data::{DataLoader, Dataset};

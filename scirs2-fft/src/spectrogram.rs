@@ -551,7 +551,7 @@ mod tests {
             Some(true),
             None,
         )
-        .unwrap();
+        .expect("STFT computation should succeed for test data");
 
         // Check dimensions
         let expected_num_freqs = nperseg / 2 + 1;
@@ -582,14 +582,14 @@ mod tests {
             Some(true),
             None,
         )
-        .unwrap();
+        .expect("STFT computation should succeed for frequency test");
 
         // Find the frequency bin closest to our signal frequency
         let freq_idx = f
             .iter()
             .enumerate()
-            .min_by(|(_, &a), (_, &b)| (a - freq).abs().partial_cmp(&(b - freq).abs()).unwrap())
-            .unwrap()
+            .min_by(|(_, &a), (_, &b)| (a - freq).abs().partial_cmp(&(b - freq).abs()).expect("Frequency comparison should succeed"))
+            .expect("Should find minimum frequency difference")
             .0;
 
         // Check that the power at this frequency is higher than at other frequencies
@@ -629,7 +629,7 @@ mod tests {
             Some("density"),
             Some("psd"),
         )
-        .unwrap();
+        .expect("Spectrogram computation should succeed for test data");
 
         // Verify basic properties
         assert!(!f.is_empty());
@@ -663,7 +663,7 @@ mod tests {
                 Some("density"),
                 Some(mode),
             )
-            .unwrap();
+            .expect("Spectrogram mode computation should succeed");
 
             // Check dimensions
             assert!(!f.is_empty());
@@ -691,7 +691,7 @@ mod tests {
 
         // Compute normalized spectrogram
         let (f, t, sxx) =
-            spectrogram_normalized(&signal, Some(fs), Some(128), Some(64), Some(80.0)).unwrap();
+            spectrogram_normalized(&signal, Some(fs), Some(128), Some(64), Some(80.0)).expect("Normalized spectrogram should succeed");
 
         // Check dimensions
         assert!(!f.is_empty());

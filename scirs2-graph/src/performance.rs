@@ -355,42 +355,269 @@ impl<T> LazyGraphMetric<T> {
     }
 }
 
-/// Performance monitoring utilities
+/// Advanced memory profiling metrics
+#[derive(Debug, Clone)]
+pub struct MemoryMetrics {
+    /// Current memory usage in bytes
+    pub current_bytes: usize,
+    /// Peak memory usage during operation
+    pub peak_bytes: usize,
+    /// Average memory usage
+    pub average_bytes: usize,
+    /// Number of allocations
+    pub allocation_count: usize,
+    /// Number of deallocations
+    pub deallocation_count: usize,
+    /// Memory growth rate (bytes per second)
+    pub growth_rate: f64,
+    /// Potential memory leaks (allocations - deallocations)
+    pub potential_leaks: isize,
+}
+
+impl Default for MemoryMetrics {
+    fn default() -> Self {
+        MemoryMetrics {
+            current_bytes: 0,
+            peak_bytes: 0,
+            average_bytes: 0,
+            allocation_count: 0,
+            deallocation_count: 0,
+            growth_rate: 0.0,
+            potential_leaks: 0,
+        }
+    }
+}
+
+/// Real-time memory profiler for graph operations
+pub struct RealTimeMemoryProfiler {
+    /// Memory samples over time
+    samples: Vec<(std::time::Instant, usize)>,
+    /// Start time
+    start_time: std::time::Instant,
+    /// Allocation tracking
+    allocations: AtomicUsize,
+    /// Deallocation tracking
+    deallocations: AtomicUsize,
+    /// Sampling interval in milliseconds
+    sample_interval_ms: u64,
+}
+
+impl RealTimeMemoryProfiler {
+    /// Create a new real-time profiler
+    pub fn new(sample_interval_ms: u64) -> Self {
+        RealTimeMemoryProfiler {
+            samples: Vec::new(),
+            start_time: std::time::Instant::now(),
+            allocations: AtomicUsize::new(0),
+            deallocations: AtomicUsize::new(0),
+            sample_interval_ms,
+        }
+    }
+
+    /// Record a memory measurement
+    pub fn sample_memory(&mut self, current_memory: usize) {
+        self.samples.push((std::time::Instant::now(), current_memory));
+    }
+
+    /// Record an allocation
+    pub fn record_allocation(&self, _size: usize) {
+        self.allocations.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Record a deallocation
+    pub fn record_deallocation(&self, _size: usize) {
+        self.deallocations.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Generate comprehensive memory metrics
+    pub fn generate_metrics(&self) -> MemoryMetrics {
+        if self.samples.is_empty() {
+            return MemoryMetrics::default();
+        }
+
+        let current_bytes = self.samples.last().map(|(_, mem)| *mem).unwrap_or(0);
+        let peak_bytes = self.samples.iter().map(|(_, mem)| *mem).max().unwrap_or(0);
+        let average_bytes = if !self.samples.is_empty() {
+            self.samples.iter().map(|(_, mem)| *mem).sum::<usize>() / self.samples.len()
+        } else {
+            0
+        };
+
+        let allocation_count = self.allocations.load(Ordering::Relaxed);
+        let deallocation_count = self.deallocations.load(Ordering::Relaxed);
+        let potential_leaks = allocation_count as isize - deallocation_count as isize;
+
+        // Calculate growth rate
+        let growth_rate = if self.samples.len() >= 2 {
+            let first = &self.samples[0];
+            let last = &self.samples[self.samples.len() - 1];
+            let time_diff = last.0.duration_since(first.0).as_secs_f64();
+            let memory_diff = last.1 as f64 - first.1 as f64;
+            if time_diff > 0.0 { memory_diff / time_diff } else { 0.0 }
+        } else {
+            0.0
+        };
+
+        MemoryMetrics {
+            current_bytes,
+            peak_bytes,
+            average_bytes,
+            allocation_count,
+            deallocation_count,
+            growth_rate,
+            potential_leaks,
+        }
+    }
+
+    /// Check for potential memory issues
+    pub fn analyze_memory_health(&self) -> Vec<String> {
+        let metrics = self.generate_metrics();
+        let mut warnings = Vec::new();
+
+        // Check for rapid memory growth
+        if metrics.growth_rate > 1_000_000.0 { // 1MB/second
+            warnings.push(format!("High memory growth rate: {:.2} bytes/second", metrics.growth_rate));
+        }
+
+        // Check for potential leaks
+        if metrics.potential_leaks > 1000 {
+            warnings.push(format!("Potential memory leak detected: {} unmatched allocations", metrics.potential_leaks));
+        }
+
+        // Check for excessive peak memory
+        if metrics.peak_bytes > 1_000_000_000 { // 1GB
+            warnings.push(format!("High peak memory usage: {:.2} MB", metrics.peak_bytes as f64 / 1_000_000.0));
+        }
+
+        warnings
+    }
+
+    /// Export memory timeline for visualization
+    pub fn export_timeline(&self) -> Vec<(f64, usize)> {
+        self.samples.iter().map(|(time, memory)| {
+            let elapsed = time.duration_since(self.start_time).as_secs_f64();
+            (elapsed, *memory)
+        }).collect()
+    }
+}
+
+/// Performance monitoring utilities with enhanced memory profiling
 pub struct PerformanceMonitor {
     /// Start time of current operation
     start_time: std::time::Instant,
     /// Operation name
     operation_name: String,
-    /// Memory usage tracking
-    peak_memory: usize,
+    /// Real-time memory profiler
+    memory_profiler: RealTimeMemoryProfiler,
+    /// Memory sampling thread handle
+    sampling_active: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl PerformanceMonitor {
-    /// Start monitoring a new operation
+    /// Start monitoring a new operation with memory profiling
     pub fn start(operation_name: String) -> Self {
-        PerformanceMonitor {
+        Self::start_with_config(operation_name, 100) // Sample every 100ms by default
+    }
+
+    /// Start monitoring with custom sampling interval
+    pub fn start_with_config(operation_name: String, sample_interval_ms: u64) -> Self {
+        let monitor = PerformanceMonitor {
             start_time: std::time::Instant::now(),
             operation_name,
-            peak_memory: 0,
-        }
+            memory_profiler: RealTimeMemoryProfiler::new(sample_interval_ms),
+            sampling_active: Arc::new(std::sync::atomic::AtomicBool::new(true)),
+        };
+
+        monitor
     }
 
-    /// Update peak memory usage
+    /// Manually record current memory usage
+    pub fn record_memory(&mut self, current_memory: usize) {
+        self.memory_profiler.sample_memory(current_memory);
+    }
+
+    /// Record an allocation event
+    pub fn record_allocation(&self, size: usize) {
+        self.memory_profiler.record_allocation(size);
+    }
+
+    /// Record a deallocation event
+    pub fn record_deallocation(&self, size: usize) {
+        self.memory_profiler.record_deallocation(size);
+    }
+
+    /// Get current memory metrics
+    pub fn get_memory_metrics(&self) -> MemoryMetrics {
+        self.memory_profiler.generate_metrics()
+    }
+
+    /// Check for memory health issues
+    pub fn check_memory_health(&self) -> Vec<String> {
+        self.memory_profiler.analyze_memory_health()
+    }
+
+    /// Get memory timeline for analysis
+    pub fn get_memory_timeline(&self) -> Vec<(f64, usize)> {
+        self.memory_profiler.export_timeline()
+    }
+
+    /// Update peak memory usage (legacy method)
     pub fn update_memory(&mut self, current_memory: usize) {
-        if current_memory > self.peak_memory {
-            self.peak_memory = current_memory;
-        }
+        self.record_memory(current_memory);
     }
 
-    /// Finish monitoring and return performance metrics
-    pub fn finish(self) -> (std::time::Duration, usize) {
+    /// Finish monitoring and return comprehensive performance metrics
+    pub fn finish(self) -> PerformanceReport {
+        self.sampling_active.store(false, Ordering::Relaxed);
+        
         let duration = self.start_time.elapsed();
+        let memory_metrics = self.memory_profiler.generate_metrics();
+        let memory_warnings = self.memory_profiler.analyze_memory_health();
+        let timeline = self.memory_profiler.export_timeline();
+
+        let report = PerformanceReport {
+            operation_name: self.operation_name.clone(),
+            duration,
+            memory_metrics,
+            memory_warnings: memory_warnings.clone(),
+            timeline,
+        };
+
         println!(
-            "Operation '{}' completed in {:?}, peak memory: {} bytes",
-            self.operation_name, duration, self.peak_memory
+            "Operation '{}' completed in {:?}",
+            self.operation_name, duration
         );
-        (duration, self.peak_memory)
+        println!(
+            "Memory: peak={:.2}MB, avg={:.2}MB, current={:.2}MB",
+            report.memory_metrics.peak_bytes as f64 / 1_000_000.0,
+            report.memory_metrics.average_bytes as f64 / 1_000_000.0,
+            report.memory_metrics.current_bytes as f64 / 1_000_000.0
+        );
+
+        if !memory_warnings.is_empty() {
+            println!("Memory warnings:");
+            for warning in &memory_warnings {
+                println!("  - {}", warning);
+            }
+        }
+
+        report
     }
+}
+
+/// Comprehensive performance report
+#[derive(Debug)]
+pub struct PerformanceReport {
+    /// Operation name
+    pub operation_name: String,
+    /// Total execution duration
+    pub duration: std::time::Duration,
+    /// Memory metrics
+    pub memory_metrics: MemoryMetrics,
+    /// Memory health warnings
+    pub memory_warnings: Vec<String>,
+    /// Memory usage timeline
+    pub timeline: Vec<(f64, usize)>,
 }
 
 /// Optimized graph algorithms trait for large graphs
@@ -503,10 +730,110 @@ mod tests {
 
     #[test]
     fn test_performance_monitor() {
-        let monitor = PerformanceMonitor::start("test_operation".to_string());
+        let mut monitor = PerformanceMonitor::start("test_operation".to_string());
+        
+        // Simulate memory usage
+        monitor.record_memory(1024);
+        monitor.record_memory(2048);
+        monitor.record_memory(1536);
+        
+        // Simulate allocations
+        monitor.record_allocation(1024);
+        monitor.record_allocation(512);
+        monitor.record_deallocation(256);
+        
         std::thread::sleep(std::time::Duration::from_millis(10));
-        let (duration, _) = monitor.finish();
-        assert!(duration.as_millis() >= 10);
+        let report = monitor.finish();
+        
+        assert!(report.duration.as_millis() >= 10);
+        assert_eq!(report.memory_metrics.peak_bytes, 2048);
+        assert_eq!(report.memory_metrics.current_bytes, 1536);
+        assert_eq!(report.memory_metrics.allocation_count, 2);
+        assert_eq!(report.memory_metrics.deallocation_count, 1);
+        assert_eq!(report.memory_metrics.potential_leaks, 1);
+    }
+
+    #[test]
+    fn test_real_time_memory_profiler() {
+        let mut profiler = RealTimeMemoryProfiler::new(50);
+        
+        // Record memory samples
+        profiler.sample_memory(1000);
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        profiler.sample_memory(2000);
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        profiler.sample_memory(1500);
+        
+        // Record allocations/deallocations
+        profiler.record_allocation(1000);
+        profiler.record_allocation(500);
+        profiler.record_deallocation(200);
+        
+        let metrics = profiler.generate_metrics();
+        assert_eq!(metrics.current_bytes, 1500);
+        assert_eq!(metrics.peak_bytes, 2000);
+        assert!(metrics.average_bytes > 0);
+        assert_eq!(metrics.allocation_count, 2);
+        assert_eq!(metrics.deallocation_count, 1);
+        assert_eq!(metrics.potential_leaks, 1);
+        
+        // Test timeline export
+        let timeline = profiler.export_timeline();
+        assert_eq!(timeline.len(), 3);
+        assert_eq!(timeline[0].1, 1000);
+        assert_eq!(timeline[1].1, 2000);
+        assert_eq!(timeline[2].1, 1500);
+    }
+
+    #[test]
+    fn test_memory_health_analysis() {
+        let mut profiler = RealTimeMemoryProfiler::new(100);
+        
+        // Simulate high memory growth
+        profiler.sample_memory(100_000_000);
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        profiler.sample_memory(200_000_000);
+        
+        // Simulate many unmatched allocations
+        for _ in 0..1500 {
+            profiler.record_allocation(1024);
+        }
+        
+        let warnings = profiler.analyze_memory_health();
+        assert!(!warnings.is_empty());
+        
+        // Should warn about high growth rate and potential leaks
+        let has_growth_warning = warnings.iter().any(|w| w.contains("growth rate"));
+        let has_leak_warning = warnings.iter().any(|w| w.contains("leak"));
+        
+        assert!(has_growth_warning);
+        assert!(has_leak_warning);
+    }
+
+    #[test]
+    fn test_memory_metrics_calculation() {
+        let mut profiler = RealTimeMemoryProfiler::new(100);
+        
+        // Create a clear growth pattern
+        profiler.sample_memory(1000);
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        profiler.sample_memory(2000);
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        profiler.sample_memory(3000);
+        
+        let metrics = profiler.generate_metrics();
+        
+        // Should have positive growth rate
+        assert!(metrics.growth_rate > 0.0);
+        
+        // Average should be around 2000
+        assert!(metrics.average_bytes >= 1500 && metrics.average_bytes <= 2500);
+        
+        // Peak should be 3000
+        assert_eq!(metrics.peak_bytes, 3000);
+        
+        // Current should be 3000
+        assert_eq!(metrics.current_bytes, 3000);
     }
 
     #[cfg(target_arch = "x86_64")]

@@ -246,13 +246,21 @@ pub fn condensed_index_to_coords(n: usize, idx: usize) -> (usize, usize) {
 }
 
 /// Converts (i, j) coordinates to a condensed distance matrix index
-pub fn coords_to_condensed_index(n: usize, i: usize, j: usize) -> usize {
+pub fn coords_to_condensed_index(n: usize, i: usize, j: usize) -> Result<usize> {
     if i == j {
-        panic!("Cannot compute diagonal index in condensed matrix");
+        return Err(ClusteringError::InvalidInput(
+            "Cannot compute diagonal index in condensed matrix".into(),
+        ));
+    }
+
+    if i >= n || j >= n {
+        return Err(ClusteringError::InvalidInput(
+            format!("Indices ({}, {}) out of bounds for matrix size {}", i, j, n),
+        ));
     }
 
     let (i_min, j_min) = if i < j { (i, j) } else { (j, i) };
-    (n * i_min) - ((i_min * (i_min + 1)) / 2) + (j_min - i_min - 1)
+    Ok((n * i_min) - ((i_min * (i_min + 1)) / 2) + (j_min - i_min - 1))
 }
 
 /// Performs hierarchical clustering using the specified linkage method
@@ -392,7 +400,7 @@ pub fn parallel_linkage<
 ///
 /// For Distance and Inconsistent criteria, consider using `fcluster_generic` which accepts
 /// float thresholds directly.
-pub fn fcluster<F: Float + FromPrimitive + PartialOrd>(
+pub fn fcluster<F: Float + FromPrimitive + PartialOrd + Debug>(
     z: &Array2<F>,
     t: usize,
     criterion: Option<ClusterCriterion>,
@@ -464,7 +472,7 @@ pub fn fcluster<F: Float + FromPrimitive + PartialOrd>(
 /// // Cut at inconsistency threshold 0.8
 /// let labels2 = fcluster_generic(&linkage_matrix, 0.8, ClusterCriterion::Inconsistent).unwrap();
 /// ```
-pub fn fcluster_generic<F: Float + FromPrimitive + PartialOrd>(
+pub fn fcluster_generic<F: Float + FromPrimitive + PartialOrd + Debug>(
     z: &Array2<F>,
     t: F,
     criterion: ClusterCriterion,

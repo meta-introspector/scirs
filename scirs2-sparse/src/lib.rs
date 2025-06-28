@@ -154,6 +154,20 @@ pub use linalg::{
     sparse_direct_solve,
     sparse_lstsq,
     spsolve,
+    // Eigenvalue functions
+    power_iteration,
+    lanczos,
+    eigs,
+    eigsh,
+    // SVD functions
+    svds,
+    svd_truncated,
+    // Decomposition functions
+    lu_decomposition,
+    qr_decomposition,
+    cholesky_decomposition,
+    incomplete_lu,
+    incomplete_cholesky,
     // Interfaces
     AsLinearOperator,
     // Types from iterative
@@ -163,6 +177,21 @@ pub use linalg::{
     CGOptions,
     CGSOptions,
     CGSResult,
+    // Eigenvalue types
+    PowerIterationOptions,
+    LanczosOptions,
+    EigenResult,
+    EigenvalueMethod,
+    ArpackOptions,
+    // SVD types
+    SVDOptions,
+    SVDResult,
+    // Decomposition types
+    LUResult,
+    QRResult,
+    CholeskyResult,
+    ILUOptions,
+    ICOptions,
     // Operator types
     DiagonalOperator,
     GMRESOptions,
@@ -195,6 +224,30 @@ pub use index_dtype::{can_cast_safely, get_index_dtype, safely_cast_index_arrays
 pub mod sym_ops;
 pub use sym_ops::{
     sym_coo_matvec, sym_csr_matvec, sym_csr_quadratic_form, sym_csr_rank1_update, sym_csr_trace,
+};
+
+// Compressed sparse graph algorithms
+pub mod csgraph;
+pub use csgraph::{
+    // Graph algorithms
+    shortest_path, connected_components, traverse_graph, minimum_spanning_tree,
+    // Graph utilities
+    validate_graph, to_adjacency_list, num_vertices, num_edges,
+    // Shortest path algorithms
+    single_source_shortest_path, all_pairs_shortest_path, dijkstra_single_source, 
+    bellman_ford_single_source, floyd_warshall, reconstruct_path,
+    // Connected components
+    undirected_connected_components, weakly_connected_components, 
+    strongly_connected_components, is_connected, largest_component,
+    // Traversal algorithms
+    breadth_first_search, depth_first_search, bfs_distances, has_path, 
+    reachable_vertices, topological_sort,
+    // Laplacian matrices
+    laplacian, compute_laplacian_matrix, degree_matrix, is_laplacian,
+    // Minimum spanning trees
+    kruskal_mst, prim_mst, is_spanning_tree, spanning_tree_weight,
+    // Enums and types
+    ShortestPathMethod, TraversalOrder, LaplacianType, MSTAlgorithm,
 };
 
 // Re-export warnings from scipy for compatibility

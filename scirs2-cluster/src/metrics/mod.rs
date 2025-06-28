@@ -714,6 +714,1060 @@ where
     Ok(h_xy)
 }
 
+/// Information-theoretic clustering metrics
+pub mod information_theory {
+    use super::*;
+    use std::collections::HashMap;
+
+    /// Jensen-Shannon divergence between two clusterings.
+    ///
+    /// The Jensen-Shannon divergence is a symmetric measure based on the Kullback-Leibler divergence.
+    /// It's useful for comparing the probability distributions of two clusterings.
+    ///
+    /// # Arguments
+    ///
+    /// * `labels_true` - Ground truth cluster labels
+    /// * `labels_pred` - Predicted cluster labels
+    ///
+    /// # Returns
+    ///
+    /// The Jensen-Shannon divergence score (0 = identical, 1 = completely different)
+    pub fn jensen_shannon_divergence<F>(
+        labels_true: ArrayView1<i32>,
+        labels_pred: ArrayView1<i32>,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        if labels_true.len() != labels_pred.len() {
+            return Err(ClusteringError::InvalidInput(
+                "Labels arrays must have the same length".to_string(),
+            ));
+        }
+
+        let n = labels_true.len();
+        if n == 0 {
+            return Ok(F::zero());
+        }
+
+        // Convert labels to probability distributions
+        let p = label_distribution::<F>(labels_true)?;
+        let q = label_distribution::<F>(labels_pred)?;
+
+        // Compute average distribution
+        let mut m = HashMap::new();
+        for (label, &prob) in &p {
+            *m.entry(*label).or_insert(F::zero()) += prob / F::from(2.0).unwrap();
+        }
+        for (label, &prob) in &q {
+            *m.entry(*label).or_insert(F::zero()) += prob / F::from(2.0).unwrap();
+        }
+
+        // Compute KL divergences
+        let kl_pm = kl_divergence(&p, &m)?;
+        let kl_qm = kl_divergence(&q, &m)?;
+
+        // Jensen-Shannon divergence
+        let js = (kl_pm + kl_qm) / F::from(2.0).unwrap();
+        Ok(js.sqrt()) // Return the Jensen-Shannon distance
+    }
+
+    /// Variation of Information (VI) between two clusterings.
+    ///
+    /// The Variation of Information is a symmetric measure that equals the sum of
+    /// conditional entropies H(X|Y) + H(Y|X).
+    ///
+    /// # Arguments
+    ///
+    /// * `labels_true` - Ground truth cluster labels
+    /// * `labels_pred` - Predicted cluster labels
+    ///
+    /// # Returns
+    ///
+    /// The Variation of Information score (lower is better)
+    pub fn variation_of_information<F>(
+        labels_true: ArrayView1<i32>,
+        labels_pred: ArrayView1<i32>,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        if labels_true.len() != labels_pred.len() {
+            return Err(ClusteringError::InvalidInput(
+                "Labels arrays must have the same length".to_string(),
+            ));
+        }
+
+        let h_true_given_pred = conditional_entropy::<F>(labels_true, labels_pred)?;
+        let h_pred_given_true = conditional_entropy::<F>(labels_pred, labels_true)?;
+
+        Ok(h_true_given_pred + h_pred_given_true)
+    }
+
+    /// Information-theoretic cluster quality measure.
+    ///
+    /// This measure combines intra-cluster and inter-cluster information
+    /// to evaluate clustering quality without ground truth.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data (n_samples x n_features)
+    /// * `labels` - Cluster labels
+    ///
+    /// # Returns
+    ///
+    /// The information-theoretic quality score (higher is better)
+    pub fn information_cluster_quality<F>(
+        data: ArrayView2<F>,
+        labels: ArrayView1<i32>,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + 'static,
+    {
+        if data.shape()[0] != labels.shape()[0] {
+            return Err(ClusteringError::InvalidInput(
+                "Data and labels must have the same number of samples".to_string(),
+            ));
+        }
+
+        let n_samples = data.shape()[0];
+        let n_features = data.shape()[1];
+
+        // Find unique cluster labels
+        let mut unique_labels = Vec::new();
+        for &label in labels.iter() {
+            if label >= 0 && !unique_labels.contains(&label) {
+                unique_labels.push(label);
+            }
+        }
+
+        let n_clusters = unique_labels.len();
+        if n_clusters < 2 {
+            return Ok(F::zero());
+        }
+
+        // Compute cluster entropies (within-cluster information)
+        let mut total_within_cluster_entropy = F::zero();
+        let mut valid_samples = 0;
+
+        for &cluster_label in &unique_labels {
+            let cluster_data: Vec<_> = data
+                .rows()
+                .into_iter()
+                .zip(labels.iter())
+                .filter_map(|(row, &label)| if label == cluster_label { Some(row) } else { None })
+                .collect();
+
+            if cluster_data.len() > 1 {
+                let cluster_entropy = compute_data_entropy(&cluster_data)?;
+                let cluster_size = cluster_data.len();
+                total_within_cluster_entropy += F::from(cluster_size).unwrap() * cluster_entropy;
+                valid_samples += cluster_size;
+            }
+        }
+
+        if valid_samples > 0 {
+            total_within_cluster_entropy /= F::from(valid_samples).unwrap();
+        }
+
+        // Compute overall data entropy
+        let all_data: Vec<_> = data.rows().into_iter().collect();
+        let overall_entropy = compute_data_entropy(&all_data)?;
+
+        // Information gain (reduction in entropy due to clustering)
+        let information_gain = overall_entropy - total_within_cluster_entropy;
+
+        Ok(information_gain)
+    }
+
+    /// Compute entropy of a dataset based on feature variance.
+    fn compute_data_entropy<F>(data: &[ndarray::ArrayView1<F>]) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        if data.is_empty() {
+            return Ok(F::zero());
+        }
+
+        let n_samples = data.len();
+        let n_features = data[0].len();
+        
+        let mut entropy = F::zero();
+
+        // For each feature, compute entropy based on value distribution
+        for feature_idx in 0..n_features {
+            let mut values: Vec<F> = data.iter().map(|row| row[feature_idx]).collect();
+            values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+            // Discretize continuous values into bins for entropy calculation
+            let n_bins = (n_samples as f64).sqrt().ceil() as usize;
+            let min_val = values[0];
+            let max_val = values[n_samples - 1];
+            
+            if max_val == min_val {
+                continue; // No entropy for constant features
+            }
+
+            let bin_width = (max_val - min_val) / F::from(n_bins).unwrap();
+            let mut bin_counts = vec![0; n_bins];
+
+            for &value in &values {
+                let bin_idx = if value == max_val {
+                    n_bins - 1
+                } else {
+                    ((value - min_val) / bin_width).to_usize().unwrap_or(0).min(n_bins - 1)
+                };
+                bin_counts[bin_idx] += 1;
+            }
+
+            // Compute entropy for this feature
+            let mut feature_entropy = F::zero();
+            for &count in &bin_counts {
+                if count > 0 {
+                    let p = F::from(count).unwrap() / F::from(n_samples).unwrap();
+                    feature_entropy -= p * p.ln();
+                }
+            }
+
+            entropy += feature_entropy;
+        }
+
+        Ok(entropy / F::from(n_features).unwrap())
+    }
+
+    /// Convert label array to probability distribution.
+    fn label_distribution<F>(labels: ArrayView1<i32>) -> Result<HashMap<i32, F>>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        let mut counts = HashMap::new();
+        let mut total = 0;
+
+        for &label in labels.iter() {
+            if label >= 0 {
+                *counts.entry(label).or_insert(0) += 1;
+                total += 1;
+            }
+        }
+
+        if total == 0 {
+            return Ok(HashMap::new());
+        }
+
+        let mut distribution = HashMap::new();
+        for (label, count) in counts {
+            distribution.insert(label, F::from(count).unwrap() / F::from(total).unwrap());
+        }
+
+        Ok(distribution)
+    }
+
+    /// Compute Kullback-Leibler divergence between two probability distributions.
+    fn kl_divergence<F>(p: &HashMap<i32, F>, q: &HashMap<i32, F>) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        let mut kl = F::zero();
+
+        for (label, &p_val) in p {
+            if p_val > F::zero() {
+                let q_val = q.get(label).cloned().unwrap_or(F::from(1e-10).unwrap()); // Smoothing
+                if q_val > F::zero() {
+                    kl += p_val * (p_val / q_val).ln();
+                }
+            }
+        }
+
+        Ok(kl)
+    }
+}
+
+/// Stability-based clustering validation methods
+pub mod stability {
+    use super::*;
+    use crate::vq::{kmeans2, MinitMethod};
+
+    /// Cluster stability analysis using bootstrap resampling.
+    ///
+    /// This function evaluates clustering stability by performing clustering
+    /// on multiple bootstrap samples and measuring the consistency of results.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data (n_samples x n_features)
+    /// * `n_clusters` - Number of clusters
+    /// * `n_bootstrap` - Number of bootstrap iterations
+    /// * `subsample_ratio` - Fraction of data to use in each bootstrap sample
+    ///
+    /// # Returns
+    ///
+    /// Stability score (0 = unstable, 1 = perfectly stable)
+    pub fn cluster_stability_bootstrap<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        n_bootstrap: usize,
+        subsample_ratio: f64,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        use rand::seq::SliceRandom;
+        use rand::thread_rng;
+
+        if subsample_ratio <= 0.0 || subsample_ratio > 1.0 {
+            return Err(ClusteringError::InvalidInput(
+                "Subsample ratio must be between 0 and 1".to_string(),
+            ));
+        }
+
+        let n_samples = data.shape()[0];
+        let subsample_size = (n_samples as f64 * subsample_ratio) as usize;
+        
+        if subsample_size < n_clusters {
+            return Err(ClusteringError::InvalidInput(
+                "Subsample size must be at least as large as number of clusters".to_string(),
+            ));
+        }
+
+        let mut rng = thread_rng();
+        let mut all_labels = Vec::new();
+        let mut sample_indices_list = Vec::new();
+
+        // Perform bootstrap clustering
+        for _iter in 0..n_bootstrap {
+            // Create bootstrap sample
+            let mut indices: Vec<usize> = (0..n_samples).collect();
+            indices.shuffle(&mut rng);
+            indices.truncate(subsample_size);
+            indices.sort();
+
+            // Extract bootstrap sample
+            let bootstrap_data = data.select(ndarray::Axis(0), &indices);
+
+            // Perform clustering (using k-means as default)
+            let max_iter = 100;
+            let thresh = F::from(1e-6).unwrap();
+            
+            match kmeans2(bootstrap_data.view(), n_clusters, Some(max_iter), Some(thresh), Some(MinitMethod::PlusPlus), None, Some(true), None) {
+                Ok((_, labels)) => {
+                    all_labels.push(labels);
+                    sample_indices_list.push(indices);
+                }
+                Err(_) => continue, // Skip failed clusterings
+            }
+        }
+
+        if all_labels.len() < 2 {
+            return Err(ClusteringError::ComputationError(
+                "Too few successful clustering iterations".to_string(),
+            ));
+        }
+
+        // Compute pairwise stability scores
+        let mut stability_scores = Vec::new();
+
+        for i in 0..all_labels.len() {
+            for j in (i + 1)..all_labels.len() {
+                // Find common samples between bootstrap iterations
+                let common_indices = find_common_indices(&sample_indices_list[i], &sample_indices_list[j]);
+                
+                if common_indices.len() < n_clusters {
+                    continue;
+                }
+
+                // Extract labels for common samples
+                let labels_i = extract_common_labels(&all_labels[i], &sample_indices_list[i], &common_indices);
+                let labels_j = extract_common_labels(&all_labels[j], &sample_indices_list[j], &common_indices);
+
+                // Compute agreement (using ARI)
+                if let Ok(ari) = adjusted_rand_index::<F>(
+                    ndarray::Array1::from_vec(labels_i).view(),
+                    ndarray::Array1::from_vec(labels_j).view(),
+                ) {
+                    stability_scores.push(ari);
+                }
+            }
+        }
+
+        if stability_scores.is_empty() {
+            return Ok(F::zero());
+        }
+
+        // Return mean stability score
+        let mean_stability = stability_scores.iter().fold(F::zero(), |acc, &x| acc + x) 
+            / F::from(stability_scores.len()).unwrap();
+
+        Ok(mean_stability.max(F::zero()).min(F::one()))
+    }
+
+    /// Find indices that appear in both bootstrap samples.
+    fn find_common_indices(indices_a: &[usize], indices_b: &[usize]) -> Vec<usize> {
+        let mut common = Vec::new();
+        let mut i = 0;
+        let mut j = 0;
+
+        while i < indices_a.len() && j < indices_b.len() {
+            if indices_a[i] == indices_b[j] {
+                common.push(indices_a[i]);
+                i += 1;
+                j += 1;
+            } else if indices_a[i] < indices_b[j] {
+                i += 1;
+            } else {
+                j += 1;
+            }
+        }
+
+        common
+    }
+
+    /// Extract labels for common sample indices.
+    fn extract_common_labels(
+        labels: &Array1<usize>,
+        sample_indices: &[usize],
+        common_indices: &[usize],
+    ) -> Vec<i32> {
+        let mut common_labels = Vec::new();
+        
+        for &common_idx in common_indices {
+            if let Some(pos) = sample_indices.iter().position(|&x| x == common_idx) {
+                if pos < labels.len() {
+                    common_labels.push(labels[pos] as i32);
+                }
+            }
+        }
+
+        common_labels
+    }
+
+    /// Stability-based selection of optimal number of clusters.
+    ///
+    /// This function tests multiple values of k and returns the one with
+    /// the highest stability score.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data
+    /// * `k_range` - Range of k values to test
+    /// * `n_bootstrap` - Number of bootstrap iterations per k
+    /// * `subsample_ratio` - Bootstrap subsample ratio
+    ///
+    /// # Returns
+    ///
+    /// Tuple of (optimal_k, stability_scores_for_each_k)
+    pub fn optimal_clusters_stability<F>(
+        data: ArrayView2<F>,
+        k_range: std::ops::Range<usize>,
+        n_bootstrap: usize,
+        subsample_ratio: f64,
+    ) -> Result<(usize, Vec<F>)>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        let mut stability_scores = Vec::new();
+        let mut best_k = k_range.start;
+        let mut best_score = F::neg_infinity();
+
+        for k in k_range.clone() {
+            if k >= data.shape()[0] {
+                break; // Can't have more clusters than samples
+            }
+
+            match cluster_stability_bootstrap(data, k, n_bootstrap, subsample_ratio) {
+                Ok(score) => {
+                    stability_scores.push(score);
+                    if score > best_score {
+                        best_score = score;
+                        best_k = k;
+                    }
+                }
+                Err(_) => {
+                    stability_scores.push(F::zero());
+                }
+            }
+        }
+
+        Ok((best_k, stability_scores))
+    }
+}
+
+/// Advanced clustering evaluation metrics
+pub mod advanced {
+    use super::*;
+
+    /// Dunn index for cluster validation.
+    ///
+    /// The Dunn index is the ratio of the smallest distance between observations not
+    /// in the same cluster to the largest intra-cluster distance. Higher values indicate
+    /// better clustering.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data (n_samples x n_features)
+    /// * `labels` - Cluster labels
+    ///
+    /// # Returns
+    ///
+    /// The Dunn index (higher is better)
+    pub fn dunn_index<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + 'static,
+    {
+        if data.shape()[0] != labels.shape()[0] {
+            return Err(ClusteringError::InvalidInput(
+                "Data and labels must have the same number of samples".to_string(),
+            ));
+        }
+
+        let n_samples = data.shape()[0];
+        if n_samples < 2 {
+            return Ok(F::zero());
+        }
+
+        // Find unique cluster labels
+        let mut unique_labels = Vec::new();
+        for &label in labels.iter() {
+            if label >= 0 && !unique_labels.contains(&label) {
+                unique_labels.push(label);
+            }
+        }
+
+        if unique_labels.len() < 2 {
+            return Ok(F::zero());
+        }
+
+        // Compute minimum inter-cluster distance
+        let mut min_inter_cluster = F::infinity();
+        
+        for i in 0..n_samples {
+            for j in (i + 1)..n_samples {
+                if labels[i] >= 0 && labels[j] >= 0 && labels[i] != labels[j] {
+                    let distance = euclidean_distance(data.row(i), data.row(j));
+                    if distance < min_inter_cluster {
+                        min_inter_cluster = distance;
+                    }
+                }
+            }
+        }
+
+        // Compute maximum intra-cluster distance
+        let mut max_intra_cluster = F::zero();
+        
+        for &cluster_label in &unique_labels {
+            let cluster_indices: Vec<usize> = labels
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &label)| if label == cluster_label { Some(i) } else { None })
+                .collect();
+
+            for i in 0..cluster_indices.len() {
+                for j in (i + 1)..cluster_indices.len() {
+                    let distance = euclidean_distance(
+                        data.row(cluster_indices[i]),
+                        data.row(cluster_indices[j]),
+                    );
+                    if distance > max_intra_cluster {
+                        max_intra_cluster = distance;
+                    }
+                }
+            }
+        }
+
+        if max_intra_cluster == F::zero() {
+            return Ok(F::infinity());
+        }
+
+        Ok(min_inter_cluster / max_intra_cluster)
+    }
+
+    /// Compute Euclidean distance between two points.
+    fn euclidean_distance<F>(point1: ndarray::ArrayView1<F>, point2: ndarray::ArrayView1<F>) -> F
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        let diff = &point1 - &point2;
+        diff.dot(&diff).sqrt()
+    }
+
+    /// Bayesian Information Criterion (BIC) for model selection.
+    ///
+    /// Estimates the BIC for a clustering result, useful for determining
+    /// the optimal number of clusters.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data
+    /// * `labels` - Cluster labels
+    ///
+    /// # Returns
+    ///
+    /// The BIC score (lower is better)
+    pub fn bic_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + 'static,
+    {
+        if data.shape()[0] != labels.shape()[0] {
+            return Err(ClusteringError::InvalidInput(
+                "Data and labels must have the same number of samples".to_string(),
+            ));
+        }
+
+        let n_samples = data.shape()[0] as f64;
+        let n_features = data.shape()[1] as f64;
+
+        // Find unique cluster labels
+        let mut unique_labels = Vec::new();
+        for &label in labels.iter() {
+            if label >= 0 && !unique_labels.contains(&label) {
+                unique_labels.push(label);
+            }
+        }
+
+        let n_clusters = unique_labels.len() as f64;
+        if n_clusters < 1.0 {
+            return Ok(F::infinity());
+        }
+
+        // Compute log-likelihood (simplified Gaussian assumption)
+        let mut log_likelihood = 0.0;
+        let mut total_variance = 0.0;
+
+        for &cluster_label in &unique_labels {
+            let cluster_data: Vec<_> = data
+                .rows()
+                .into_iter()
+                .zip(labels.iter())
+                .filter_map(|(row, &label)| if label == cluster_label { Some(row) } else { None })
+                .collect();
+
+            if cluster_data.len() > 1 {
+                // Compute cluster variance
+                let n_cluster = cluster_data.len() as f64;
+                let mean = compute_cluster_mean(&cluster_data);
+                
+                let mut cluster_variance = 0.0;
+                for row in &cluster_data {
+                    let diff = row.to_owned() - &mean;
+                    cluster_variance += diff.dot(&diff).to_f64().unwrap();
+                }
+                cluster_variance /= n_cluster;
+                
+                if cluster_variance > 0.0 {
+                    log_likelihood -= n_cluster * (cluster_variance.ln() + n_features * (2.0 * std::f64::consts::PI).ln()) / 2.0;
+                    total_variance += cluster_variance;
+                }
+            }
+        }
+
+        // Number of parameters: cluster centers + covariance parameters
+        let n_params = n_clusters * n_features + n_clusters;
+
+        // BIC = -2 * log_likelihood + k * ln(n)
+        let bic = -2.0 * log_likelihood + n_params * n_samples.ln();
+
+        Ok(F::from(bic).unwrap())
+    }
+
+    /// Compute mean of cluster data points.
+    fn compute_cluster_mean<F>(cluster_data: &[ndarray::ArrayView1<F>]) -> ndarray::Array1<F>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        if cluster_data.is_empty() {
+            return ndarray::Array1::zeros(0);
+        }
+
+        let n_features = cluster_data[0].len();
+        let mut mean = ndarray::Array1::zeros(n_features);
+        
+        for row in cluster_data {
+            mean = mean + row;
+        }
+        
+        mean / F::from(cluster_data.len()).unwrap()
+    }
+}
+
+/// Ensemble validation methods for clustering evaluation
+pub mod ensemble {
+    use super::*;
+    use crate::vq::{kmeans2, MinitMethod, euclidean_distance};
+    use rand::Rng;
+    use std::collections::HashMap;
+
+    /// Consensus clustering score using multiple clustering algorithms.
+    ///
+    /// This function evaluates clustering quality by running multiple clustering
+    /// algorithms and measuring their agreement. Higher consensus indicates
+    /// more stable clustering structure.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data (n_samples x n_features)
+    /// * `n_clusters` - Number of clusters
+    /// * `n_algorithms` - Number of different initializations to try
+    ///
+    /// # Returns
+    ///
+    /// Consensus score (0 = no agreement, 1 = perfect agreement)
+    pub fn consensus_clustering_score<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        n_algorithms: usize,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        if n_algorithms < 2 {
+            return Err(ClusteringError::InvalidInput(
+                "Need at least 2 algorithms for consensus".to_string(),
+            ));
+        }
+
+        let mut all_labels = Vec::new();
+
+        // Run clustering with different random initializations
+        for seed in 0..n_algorithms {
+            // Use different random seeds for initialization
+            let max_iter = 100;
+            let thresh = F::from(1e-6).unwrap();
+            
+            match kmeans2(data, n_clusters, Some(max_iter), Some(thresh), Some(MinitMethod::PlusPlus), None, Some(true), Some(seed as u64)) {
+                Ok((_, labels)) => {
+                    // Convert to i32 for consistency with other functions
+                    let labels_i32: Vec<i32> = labels.iter().map(|&x| x as i32).collect();
+                    all_labels.push(Array1::from_vec(labels_i32));
+                }
+                Err(_) => {
+                    // If clustering fails, try with different parameters
+                    continue;
+                }
+            }
+        }
+
+        if all_labels.len() < 2 {
+            return Err(ClusteringError::ComputationError(
+                "Not enough successful clustering runs".to_string(),
+            ));
+        }
+
+        // Compute pairwise agreement using Adjusted Rand Index
+        let mut agreements = Vec::new();
+        for i in 0..all_labels.len() {
+            for j in (i + 1)..all_labels.len() {
+                if let Ok(ari) = adjusted_rand_index::<F>(
+                    all_labels[i].view(),
+                    all_labels[j].view(),
+                ) {
+                    agreements.push(ari);
+                }
+            }
+        }
+
+        if agreements.is_empty() {
+            return Ok(F::zero());
+        }
+
+        // Return mean agreement
+        let mean_agreement = agreements.iter().fold(F::zero(), |acc, &x| acc + x) 
+            / F::from(agreements.len()).unwrap();
+
+        Ok(mean_agreement.max(F::zero()).min(F::one()))
+    }
+
+    /// Multi-criterion validation combining multiple metrics.
+    ///
+    /// This function combines multiple internal validation metrics to provide
+    /// a comprehensive assessment of clustering quality.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data
+    /// * `labels` - Cluster labels
+    ///
+    /// # Returns
+    ///
+    /// Composite score combining multiple metrics
+    pub fn multi_criterion_validation<F>(
+        data: ArrayView2<F>,
+        labels: ArrayView1<i32>,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + 'static,
+    {
+        // Compute individual metrics
+        let silhouette = silhouette_score(data, labels)?;
+        let davies_bouldin = davies_bouldin_score(data, labels)?;
+        let calinski_harabasz = calinski_harabasz_score(data, labels)?;
+
+        // Normalize Davies-Bouldin score (lower is better -> higher is better)
+        let db_normalized = F::one() / (F::one() + davies_bouldin);
+
+        // Normalize Calinski-Harabasz score to [0, 1] range
+        let ch_normalized = calinski_harabasz / (F::one() + calinski_harabasz);
+
+        // Combine metrics with equal weights
+        let composite_score = (silhouette + db_normalized + ch_normalized) / F::from(3.0).unwrap();
+
+        Ok(composite_score)
+    }
+
+    /// Cross-validation score for clustering stability.
+    ///
+    /// This function evaluates clustering stability using k-fold cross-validation,
+    /// training on k-1 folds and evaluating on the remaining fold.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data
+    /// * `n_clusters` - Number of clusters
+    /// * `k_folds` - Number of cross-validation folds
+    ///
+    /// # Returns
+    ///
+    /// Cross-validation stability score
+    pub fn cross_validation_score<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        k_folds: usize,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        if k_folds < 2 {
+            return Err(ClusteringError::InvalidInput(
+                "Need at least 2 folds for cross-validation".to_string(),
+            ));
+        }
+
+        let n_samples = data.shape()[0];
+        if n_samples < k_folds {
+            return Err(ClusteringError::InvalidInput(
+                "Number of samples must be at least equal to number of folds".to_string(),
+            ));
+        }
+
+        let fold_size = n_samples / k_folds;
+        let mut cv_scores = Vec::new();
+
+        for fold in 0..k_folds {
+            let start_idx = fold * fold_size;
+            let end_idx = if fold == k_folds - 1 {
+                n_samples
+            } else {
+                (fold + 1) * fold_size
+            };
+
+            // Create training data (exclude current fold)
+            let mut train_indices = Vec::new();
+            for i in 0..n_samples {
+                if i < start_idx || i >= end_idx {
+                    train_indices.push(i);
+                }
+            }
+
+            if train_indices.len() < n_clusters {
+                continue;
+            }
+
+            // Extract training data
+            let train_data = data.select(ndarray::Axis(0), &train_indices);
+
+            // Perform clustering on training data
+            let max_iter = 100;
+            let thresh = F::from(1e-6).unwrap();
+            
+            match kmeans2(train_data.view(), n_clusters, Some(max_iter), Some(thresh), Some(MinitMethod::PlusPlus), None, Some(true), None) {
+                Ok((centers, _)) => {
+                    // Predict labels for test fold
+                    let mut test_labels = Vec::new();
+                    for i in start_idx..end_idx {
+                        let mut min_dist = F::infinity();
+                        let mut closest_cluster = 0;
+                        
+                        for (cluster_idx, center_row) in centers.rows().into_iter().enumerate() {
+                            let dist = euclidean_distance(data.row(i), center_row);
+                            if dist < min_dist {
+                                min_dist = dist;
+                                closest_cluster = cluster_idx;
+                            }
+                        }
+                        test_labels.push(closest_cluster as i32);
+                    }
+
+                    // Extract test data
+                    let test_indices: Vec<usize> = (start_idx..end_idx).collect();
+                    let test_data = data.select(ndarray::Axis(0), &test_indices);
+                    let test_labels_array = Array1::from_vec(test_labels);
+
+                    // Compute silhouette score for test fold
+                    if let Ok(score) = silhouette_score(test_data.view(), test_labels_array.view()) {
+                        cv_scores.push(score);
+                    }
+                }
+                Err(_) => continue,
+            }
+        }
+
+        if cv_scores.is_empty() {
+            return Ok(F::zero());
+        }
+
+        // Return mean cross-validation score
+        let mean_score = cv_scores.iter().fold(F::zero(), |acc, &x| acc + x) 
+            / F::from(cv_scores.len()).unwrap();
+
+        Ok(mean_score)
+    }
+
+    /// Robust validation using multiple evaluation criteria.
+    ///
+    /// This function provides a robust assessment by combining stability analysis,
+    /// internal validation metrics, and consensus measurements.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data
+    /// * `n_clusters` - Number of clusters
+    /// * `n_bootstrap` - Number of bootstrap iterations
+    /// * `n_consensus` - Number of consensus clustering runs
+    ///
+    /// # Returns
+    ///
+    /// Robust validation score
+    pub fn robust_validation<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        n_bootstrap: usize,
+        n_consensus: usize,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        // Perform standard clustering
+        let max_iter = 100;
+        let thresh = F::from(1e-6).unwrap();
+        
+        let (_, labels) = kmeans2(data, n_clusters, Some(max_iter), Some(thresh), Some(MinitMethod::PlusPlus), None, Some(true), None)?;
+        let labels_i32: Vec<i32> = labels.iter().map(|&x| x as i32).collect();
+        let labels_array = Array1::from_vec(labels_i32);
+
+        // 1. Internal validation metrics
+        let multi_criterion = multi_criterion_validation(data, labels_array.view())?;
+
+        // 2. Stability analysis
+        let stability = super::stability::cluster_stability_bootstrap(
+            data, n_clusters, n_bootstrap, 0.8
+        ).unwrap_or(F::zero());
+
+        // 3. Consensus clustering
+        let consensus = consensus_clustering_score(data, n_clusters, n_consensus)
+            .unwrap_or(F::zero());
+
+        // 4. Cross-validation score
+        let cv_score = cross_validation_score(data, n_clusters, 5)
+            .unwrap_or(F::zero());
+
+        // Combine all scores with weights
+        let weights = [F::from(0.3).unwrap(), F::from(0.3).unwrap(), F::from(0.2).unwrap(), F::from(0.2).unwrap()];
+        let scores = [multi_criterion, stability, consensus, cv_score];
+
+        let robust_score = weights.iter().zip(scores.iter())
+            .map(|(&w, &s)| w * s)
+            .fold(F::zero(), |acc, x| acc + x);
+
+        Ok(robust_score)
+    }
+
+    /// Confidence interval estimation for clustering metrics using bootstrap.
+    ///
+    /// This function estimates confidence intervals for clustering quality metrics
+    /// using bootstrap resampling.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data
+    /// * `labels` - Cluster labels
+    /// * `confidence_level` - Confidence level (e.g., 0.95 for 95% CI)
+    /// * `n_bootstrap` - Number of bootstrap samples
+    ///
+    /// # Returns
+    ///
+    /// Tuple of (lower_bound, mean_score, upper_bound)
+    pub fn bootstrap_confidence_interval<F>(
+        data: ArrayView2<F>,
+        labels: ArrayView1<i32>,
+        confidence_level: f64,
+        n_bootstrap: usize,
+    ) -> Result<(F, F, F)>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        use rand::seq::SliceRandom;
+        use rand::thread_rng;
+
+        if confidence_level <= 0.0 || confidence_level >= 1.0 {
+            return Err(ClusteringError::InvalidInput(
+                "Confidence level must be between 0 and 1".to_string(),
+            ));
+        }
+
+        let n_samples = data.shape()[0];
+        let mut rng = thread_rng();
+        let mut bootstrap_scores = Vec::new();
+
+        // Perform bootstrap resampling
+        for _iter in 0..n_bootstrap {
+            // Create bootstrap sample
+            let mut indices: Vec<usize> = (0..n_samples).collect();
+            indices.shuffle(&mut rng);
+            
+            // Sample with replacement
+            let bootstrap_indices: Vec<usize> = (0..n_samples)
+                .map(|_| indices[rng.gen_range(0..n_samples)])
+                .collect();
+
+            // Extract bootstrap sample
+            let bootstrap_data = data.select(ndarray::Axis(0), &bootstrap_indices);
+            let bootstrap_labels: Vec<i32> = bootstrap_indices.iter()
+                .map(|&i| labels[i])
+                .collect();
+            let bootstrap_labels_array = Array1::from_vec(bootstrap_labels);
+
+            // Compute metric (using silhouette score as example)
+            if let Ok(score) = silhouette_score(bootstrap_data.view(), bootstrap_labels_array.view()) {
+                bootstrap_scores.push(score);
+            }
+        }
+
+        if bootstrap_scores.is_empty() {
+            return Err(ClusteringError::ComputationError(
+                "No successful bootstrap iterations".to_string(),
+            ));
+        }
+
+        // Sort scores for percentile calculation
+        bootstrap_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        // Calculate confidence interval
+        let alpha = 1.0 - confidence_level;
+        let lower_percentile = alpha / 2.0;
+        let upper_percentile = 1.0 - alpha / 2.0;
+
+        let lower_idx = (bootstrap_scores.len() as f64 * lower_percentile) as usize;
+        let upper_idx = (bootstrap_scores.len() as f64 * upper_percentile) as usize;
+
+        let lower_bound = bootstrap_scores[lower_idx.min(bootstrap_scores.len() - 1)];
+        let upper_bound = bootstrap_scores[upper_idx.min(bootstrap_scores.len() - 1)];
+
+        // Calculate mean score
+        let mean_score = bootstrap_scores.iter().fold(F::zero(), |acc, &x| acc + x) 
+            / F::from(bootstrap_scores.len()).unwrap();
+
+        Ok((lower_bound, mean_score, upper_bound))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

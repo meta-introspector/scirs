@@ -7,8 +7,8 @@
 
 #[cfg(feature = "dashboard_server")]
 use scirs2_metrics::dashboard::{server::start_http_server, DashboardConfig, InteractiveDashboard};
-use std::thread;
-use std::time::Duration;
+#[cfg(feature = "dashboard_server")]
+use std::{thread, time::Duration};
 
 #[cfg(feature = "dashboard_server")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

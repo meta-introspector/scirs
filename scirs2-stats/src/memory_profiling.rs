@@ -31,6 +31,7 @@ pub struct MemoryAdaptiveAlgorithm {
     /// Preferred chunk size for streaming operations
     preferred_chunk_size: usize,
     /// Whether to use in-place algorithms when possible
+    #[allow(dead_code)]
     prefer_inplace: bool,
 }
 
@@ -285,6 +286,7 @@ enum StatOperation {
     Mean,
     Variance(usize), // ddof
     Quantile(f64),
+    #[allow(dead_code)]
     StandardScaling,
 }
 
@@ -326,7 +328,7 @@ impl<F: Float + NumCast + std::iter::Sum> LazyStatComputation<F> {
         
         // Compute shared values
         let mean = if need_mean {
-            Some(data.iter().sum::<F>() / F::from(data.len()).unwrap())
+            Some(data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap())
         } else {
             None
         };
@@ -473,7 +475,7 @@ pub mod cache_friendly {
                     
                     // Add to result
                     let mut result_tile = result.slice_mut(s![i..i_end, j..j_end]);
-                    result_tile.zip_mut_with(&tile_result, |r, &t| *r += t);
+                    result_tile.zip_mut_with(&tile_result, |r, &t| *r = *r + t);
                 }
             }
         }

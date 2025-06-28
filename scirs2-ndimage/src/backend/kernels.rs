@@ -305,7 +305,7 @@ where
     {
         return crate::backend::cuda::allocate_gpu_buffer(data);
     }
-    
+
     #[cfg(not(feature = "cuda"))]
     {
         Err(NdimageError::NotImplementedError(
@@ -322,7 +322,7 @@ where
     {
         return crate::backend::cuda::allocate_gpu_buffer_empty(size);
     }
-    
+
     #[cfg(not(feature = "cuda"))]
     {
         Err(NdimageError::NotImplementedError(

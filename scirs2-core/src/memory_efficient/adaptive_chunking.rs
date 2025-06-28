@@ -209,9 +209,7 @@ pub trait AdaptiveChunking<A: Clone + Copy + 'static + Send + Sync> {
         A: Send + Sync;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> AdaptiveChunking<A>
-    for MemoryMappedArray<A>
-{
+impl<A: Clone + Copy + 'static + Send + Sync> AdaptiveChunking<A> for MemoryMappedArray<A> {
     fn adaptive_chunking(
         &self,
         params: AdaptiveChunkingParams,
@@ -343,7 +341,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> AdaptiveChunking<A>
     }
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
     /// Optimize chunking based on array dimensionality.
     fn optimize_for_dimensionality(
         &self,

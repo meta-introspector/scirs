@@ -26,6 +26,10 @@ pub enum StatsError {
     #[error("Not implemented: {0}")]
     NotImplementedError(String),
 
+    /// Convergence error (algorithm failed to converge)
+    #[error("Convergence error: {0}")]
+    ConvergenceError(String),
+
     /// Core error (propagated from scirs2-core)
     #[error("{0}")]
     CoreError(#[from] CoreError),
@@ -127,6 +131,10 @@ Suggestion: Try adjusting convergence parameters or using different initial valu
                     format!("{}
 Suggestion: Check input data for numerical issues or extreme values", msg)
                 }
+            }
+            StatsError::ConvergenceError(msg) => {
+                format!("{}
+Suggestion: Try adjusting convergence parameters, using different initial values, or increasing the maximum number of iterations", msg)
             }
             StatsError::CoreError(err) => {
                 format!("{}

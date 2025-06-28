@@ -5,8 +5,17 @@
 //! while avoiding catastrophic forgetting.
 
 pub mod elastic_weight_consolidation;
+pub mod advanced_continual_learning;
+pub mod shared_backbone;
 
 pub use elastic_weight_consolidation::{EWC, EWCConfig};
+pub use advanced_continual_learning::{
+    ProgressiveNeuralNetwork, ProgressiveConfig, TaskColumn, LateralConnection,
+    PackNet, PackNetConfig, TaskMask, LearningWithoutForgetting, LwFConfig
+};
+pub use shared_backbone::{
+    SharedBackbone, TaskSpecificHead, TaskType, MultiTaskArchitecture
+};
 
 use crate::error::Result;
 use crate::models::sequential::Sequential;
@@ -311,8 +320,22 @@ impl ContinualLearner {
         data: &ArrayView2<f32>,
         labels: &ArrayView1<usize>,
     ) -> Result<f32> {
-        // Simplified loss computation
-        Ok(0.5) // Placeholder
+        // Forward pass through the model
+        let predictions = self.base_model.forward(data)?;
+        
+        // Compute cross-entropy loss
+        let mut total_loss = 0.0;
+        let batch_size = data.shape()[0];
+        
+        for i in 0..batch_size {
+            let true_label = labels[i];
+            if true_label < predictions.shape()[1] {
+                let pred_value = predictions[[i, true_label]].max(1e-7);
+                total_loss -= pred_value.ln();
+            }
+        }
+        
+        Ok(total_loss / batch_size as f32)
     }
     
     /// Compute EWC regularization loss

@@ -12,6 +12,7 @@ use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuContext, GpuError};
 pub mod adam_gpu;
 pub mod adamw_gpu;
 pub mod adagrad_gpu;
+pub mod cuda_kernels;
 pub mod lamb_gpu;
 pub mod memory_pool;
 pub mod mixed_precision;
@@ -19,6 +20,7 @@ pub mod multi_gpu;
 pub mod rmsprop_gpu;
 pub mod rocm_backend;
 pub mod sgd_gpu;
+pub mod tensor_core_optimization;
 
 /// Trait for GPU-accelerated optimizers
 pub trait GpuOptimizer<A: Float, D: Dimension> {
@@ -201,6 +203,356 @@ impl<A: Float> GpuOptimizerMemory<A> {
     }
 }
 
+/// GPU performance monitoring
+#[derive(Debug, Clone)]
+pub struct GpuPerformanceMetrics {
+    /// Total GPU kernel launches
+    pub kernel_launches: usize,
+    
+    /// Total GPU memory allocations
+    pub memory_allocations: usize,
+    
+    /// Peak GPU memory usage (bytes)
+    pub peak_memory_usage: usize,
+    
+    /// Current GPU memory usage (bytes)
+    pub current_memory_usage: usize,
+    
+    /// Total GPU computation time (microseconds)
+    pub total_gpu_time_us: u64,
+    
+    /// Average kernel execution time (microseconds)
+    pub avg_kernel_time_us: f64,
+    
+    /// Memory transfer time CPU->GPU (microseconds)
+    pub cpu_to_gpu_transfer_time_us: u64,
+    
+    /// Memory transfer time GPU->CPU (microseconds)
+    pub gpu_to_cpu_transfer_time_us: u64,
+    
+    /// GPU utilization percentage
+    pub gpu_utilization: f32,
+    
+    /// Memory bandwidth utilization (GB/s)
+    pub memory_bandwidth_utilization: f32,
+    
+    /// Number of synchronization events
+    pub synchronization_events: usize,
+}
+
+impl Default for GpuPerformanceMetrics {
+    fn default() -> Self {
+        Self {
+            kernel_launches: 0,
+            memory_allocations: 0,
+            peak_memory_usage: 0,
+            current_memory_usage: 0,
+            total_gpu_time_us: 0,
+            avg_kernel_time_us: 0.0,
+            cpu_to_gpu_transfer_time_us: 0,
+            gpu_to_cpu_transfer_time_us: 0,
+            gpu_utilization: 0.0,
+            memory_bandwidth_utilization: 0.0,
+            synchronization_events: 0,
+        }
+    }
+}
+
+impl GpuPerformanceMetrics {
+    /// Record a kernel launch
+    pub fn record_kernel_launch(&mut self, execution_time_us: u64) {
+        self.kernel_launches += 1;
+        self.total_gpu_time_us += execution_time_us;
+        
+        // Update average kernel time
+        self.avg_kernel_time_us = self.total_gpu_time_us as f64 / self.kernel_launches as f64;
+    }
+    
+    /// Record memory allocation
+    pub fn record_memory_allocation(&mut self, bytes: usize) {
+        self.memory_allocations += 1;
+        self.current_memory_usage += bytes;
+        
+        if self.current_memory_usage > self.peak_memory_usage {
+            self.peak_memory_usage = self.current_memory_usage;
+        }
+    }
+    
+    /// Record memory deallocation
+    pub fn record_memory_deallocation(&mut self, bytes: usize) {
+        self.current_memory_usage = self.current_memory_usage.saturating_sub(bytes);
+    }
+    
+    /// Record memory transfer time
+    pub fn record_transfer_time(&mut self, cpu_to_gpu: bool, time_us: u64) {
+        if cpu_to_gpu {
+            self.cpu_to_gpu_transfer_time_us += time_us;
+        } else {
+            self.gpu_to_cpu_transfer_time_us += time_us;
+        }
+    }
+    
+    /// Record synchronization event
+    pub fn record_synchronization(&mut self) {
+        self.synchronization_events += 1;
+    }
+    
+    /// Get total operation time
+    pub fn total_time_us(&self) -> u64 {
+        self.total_gpu_time_us + self.cpu_to_gpu_transfer_time_us + self.gpu_to_cpu_transfer_time_us
+    }
+    
+    /// Get operations per second
+    pub fn operations_per_second(&self) -> f64 {
+        if self.total_time_us() == 0 {
+            0.0
+        } else {
+            (self.kernel_launches as f64) / (self.total_time_us() as f64 / 1_000_000.0)
+        }
+    }
+    
+    /// Get memory efficiency (operations per MB)
+    pub fn memory_efficiency(&self) -> f64 {
+        if self.peak_memory_usage == 0 {
+            0.0
+        } else {
+            (self.kernel_launches as f64) / (self.peak_memory_usage as f64 / (1024.0 * 1024.0))
+        }
+    }
+}
+
+/// GPU device information
+#[derive(Debug, Clone)]
+pub struct GpuDeviceInfo {
+    /// Device name
+    pub name: String,
+    
+    /// Total GPU memory (bytes)
+    pub total_memory: usize,
+    
+    /// Available GPU memory (bytes)
+    pub available_memory: usize,
+    
+    /// Compute capability (major, minor)
+    pub compute_capability: (u32, u32),
+    
+    /// Number of streaming multiprocessors
+    pub multiprocessor_count: u32,
+    
+    /// Maximum threads per block
+    pub max_threads_per_block: u32,
+    
+    /// Maximum shared memory per block
+    pub max_shared_memory_per_block: usize,
+    
+    /// Memory bandwidth (GB/s)
+    pub memory_bandwidth_gb_s: f32,
+    
+    /// Base clock frequency (MHz)
+    pub base_clock_mhz: u32,
+    
+    /// Memory clock frequency (MHz)
+    pub memory_clock_mhz: u32,
+    
+    /// Supports tensor cores
+    pub supports_tensor_cores: bool,
+    
+    /// Supports mixed precision
+    pub supports_mixed_precision: bool,
+}
+
+/// Advanced GPU optimizer with performance monitoring
+pub struct AdvancedGpuOptimizer<A: Float, D: Dimension> {
+    /// GPU memory manager
+    memory: GpuOptimizerMemory<A>,
+    
+    /// Performance metrics
+    performance_metrics: GpuPerformanceMetrics,
+    
+    /// Device information
+    device_info: Option<GpuDeviceInfo>,
+    
+    /// Automatic memory management
+    auto_memory_management: bool,
+    
+    /// Memory usage threshold for cleanup (percentage)
+    memory_cleanup_threshold: f32,
+    
+    /// Kernel cache for reusing compiled kernels
+    kernel_cache: std::collections::HashMap<String, Arc<dyn std::any::Any + Send + Sync>>,
+    
+    /// Error recovery strategies
+    error_recovery_enabled: bool,
+    
+    /// Maximum retry attempts for failed operations
+    max_retry_attempts: usize,
+}
+
+impl<A: Float, D: Dimension> AdvancedGpuOptimizer<A, D> {
+    /// Create new advanced GPU optimizer
+    pub fn new(config: GpuOptimizerConfig) -> Result<Self, GpuOptimizerError> {
+        let memory = GpuOptimizerMemory::new(0, config)?;
+        
+        Ok(Self {
+            memory,
+            performance_metrics: GpuPerformanceMetrics::default(),
+            device_info: None,
+            auto_memory_management: true,
+            memory_cleanup_threshold: 0.8,
+            kernel_cache: std::collections::HashMap::new(),
+            error_recovery_enabled: true,
+            max_retry_attempts: 3,
+        })
+    }
+    
+    /// Initialize device information
+    pub fn initialize_device_info(&mut self) -> Result<(), GpuOptimizerError> {
+        #[cfg(feature = "gpu")]
+        {
+            let context = self.memory.context();
+            
+            self.device_info = Some(GpuDeviceInfo {
+                name: context.device_name()?,
+                total_memory: context.total_memory()?,
+                available_memory: context.available_memory()?,
+                compute_capability: context.compute_capability()?,
+                multiprocessor_count: context.multiprocessor_count()?,
+                max_threads_per_block: context.max_threads_per_block()?,
+                max_shared_memory_per_block: context.max_shared_memory_per_block()?,
+                memory_bandwidth_gb_s: context.memory_bandwidth_gb_s()?,
+                base_clock_mhz: context.base_clock_mhz()?,
+                memory_clock_mhz: context.memory_clock_mhz()?,
+                supports_tensor_cores: context.supports_tensor_cores()?,
+                supports_mixed_precision: context.supports_mixed_precision()?,
+            });
+        }
+        
+        Ok(())
+    }
+    
+    /// Enable/disable automatic memory management
+    pub fn set_auto_memory_management(&mut self, enabled: bool) {
+        self.auto_memory_management = enabled;
+    }
+    
+    /// Set memory cleanup threshold
+    pub fn set_memory_cleanup_threshold(&mut self, threshold: f32) {
+        self.memory_cleanup_threshold = threshold.max(0.0).min(1.0);
+    }
+    
+    /// Perform memory cleanup if needed
+    pub fn maybe_cleanup_memory(&mut self) -> Result<(), GpuOptimizerError> {
+        if !self.auto_memory_management {
+            return Ok(());
+        }
+        
+        if let Some(ref device_info) = self.device_info {
+            let usage_ratio = self.performance_metrics.current_memory_usage as f32 / device_info.total_memory as f32;
+            
+            if usage_ratio > self.memory_cleanup_threshold {
+                self.cleanup_memory()?;
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Force memory cleanup
+    pub fn cleanup_memory(&mut self) -> Result<(), GpuOptimizerError> {
+        // Clear kernel cache
+        self.kernel_cache.clear();
+        
+        // Force garbage collection on GPU
+        #[cfg(feature = "gpu")]
+        {
+            self.memory.context().synchronize()?;
+            self.memory.context().garbage_collect()?;
+        }
+        
+        Ok(())
+    }
+    
+    /// Get performance metrics
+    pub fn performance_metrics(&self) -> &GpuPerformanceMetrics {
+        &self.performance_metrics
+    }
+    
+    /// Get device information
+    pub fn device_info(&self) -> Option<&GpuDeviceInfo> {
+        self.device_info.as_ref()
+    }
+    
+    /// Execute operation with error recovery
+    pub fn execute_with_recovery<F, R>(&mut self, operation: F) -> Result<R, GpuOptimizerError>
+    where
+        F: Fn() -> Result<R, GpuOptimizerError>,
+    {
+        if !self.error_recovery_enabled {
+            return operation();
+        }
+        
+        let mut attempts = 0;
+        loop {
+            match operation() {
+                Ok(result) => return Ok(result),
+                Err(error) => {
+                    attempts += 1;
+                    
+                    if attempts >= self.max_retry_attempts {
+                        return Err(error);
+                    }
+                    
+                    // Try to recover from common errors
+                    match &error {
+                        GpuOptimizerError::GpuError(_) => {
+                            // Reset GPU context and retry
+                            #[cfg(feature = "gpu")]
+                            {
+                                if let Err(_) = self.memory.context().reset() {
+                                    return Err(error);
+                                }
+                            }
+                        }
+                        _ => return Err(error),
+                    }
+                }
+            }
+        }
+    }
+    
+    /// Generate performance report
+    pub fn generate_performance_report(&self) -> String {
+        let metrics = &self.performance_metrics;
+        
+        format!(
+            "GPU Performance Report\n\
+             =====================\n\
+             Kernel Launches: {}\n\
+             Total GPU Time: {:.2} ms\n\
+             Average Kernel Time: {:.2} μs\n\
+             Memory Allocations: {}\n\
+             Peak Memory Usage: {:.2} MB\n\
+             Current Memory Usage: {:.2} MB\n\
+             CPU->GPU Transfer Time: {:.2} ms\n\
+             GPU->CPU Transfer Time: {:.2} ms\n\
+             Operations per Second: {:.2}\n\
+             Memory Efficiency: {:.2} ops/MB\n\
+             Synchronization Events: {}\n",
+            metrics.kernel_launches,
+            metrics.total_gpu_time_us as f64 / 1000.0,
+            metrics.avg_kernel_time_us,
+            metrics.memory_allocations,
+            metrics.peak_memory_usage as f64 / (1024.0 * 1024.0),
+            metrics.current_memory_usage as f64 / (1024.0 * 1024.0),
+            metrics.cpu_to_gpu_transfer_time_us as f64 / 1000.0,
+            metrics.gpu_to_cpu_transfer_time_us as f64 / 1000.0,
+            metrics.operations_per_second(),
+            metrics.memory_efficiency(),
+            metrics.synchronization_events,
+        )
+    }
+}
+
 /// Helper functions for GPU operations
 pub mod utils {
     use super::*;
@@ -237,6 +589,119 @@ pub mod utils {
         let block_size = 256.min(max_threads);
         let grid_size = (n + block_size - 1) / block_size;
         (grid_size, block_size)
+    }
+    
+    /// Calculate optimal block size for 2D operations
+    pub fn calculate_block_size_2d(width: usize, height: usize, max_threads: usize) -> ((usize, usize), (usize, usize)) {
+        let total_threads = width * height;
+        let block_dim_x = 16.min((max_threads as f64).sqrt() as usize);
+        let block_dim_y = (max_threads / block_dim_x).min(16);
+        
+        let grid_dim_x = (width + block_dim_x - 1) / block_dim_x;
+        let grid_dim_y = (height + block_dim_y - 1) / block_dim_y;
+        
+        ((grid_dim_x, grid_dim_y), (block_dim_x, block_dim_y))
+    }
+    
+    /// Estimate memory bandwidth utilization
+    pub fn estimate_memory_bandwidth_utilization(
+        bytes_transferred: usize,
+        time_us: u64,
+        peak_bandwidth_gb_s: f32,
+    ) -> f32 {
+        if time_us == 0 {
+            return 0.0;
+        }
+        
+        let actual_bandwidth_gb_s = (bytes_transferred as f64) / (time_us as f64 / 1_000_000.0) / (1024.0 * 1024.0 * 1024.0);
+        (actual_bandwidth_gb_s as f32 / peak_bandwidth_gb_s).min(1.0)
+    }
+    
+    /// Calculate occupancy for GPU kernels
+    pub fn calculate_occupancy(
+        threads_per_block: usize,
+        shared_memory_per_block: usize,
+        registers_per_thread: usize,
+        max_threads_per_sm: usize,
+        max_blocks_per_sm: usize,
+        max_shared_memory_per_sm: usize,
+        max_registers_per_sm: usize,
+    ) -> f32 {
+        if threads_per_block == 0 {
+            return 0.0;
+        }
+        
+        // Limit by threads per SM
+        let blocks_by_threads = max_threads_per_sm / threads_per_block;
+        
+        // Limit by shared memory per SM
+        let blocks_by_shared_memory = if shared_memory_per_block > 0 {
+            max_shared_memory_per_sm / shared_memory_per_block
+        } else {
+            max_blocks_per_sm
+        };
+        
+        // Limit by registers per SM
+        let blocks_by_registers = if registers_per_thread > 0 {
+            max_registers_per_sm / (registers_per_thread * threads_per_block)
+        } else {
+            max_blocks_per_sm
+        };
+        
+        let active_blocks = blocks_by_threads
+            .min(blocks_by_shared_memory)
+            .min(blocks_by_registers)
+            .min(max_blocks_per_sm);
+        
+        let active_threads = active_blocks * threads_per_block;
+        active_threads as f32 / max_threads_per_sm as f32
+    }
+    
+    /// Choose optimal data type for mixed precision
+    pub fn choose_optimal_dtype(
+        supports_fp16: bool,
+        supports_bf16: bool,
+        supports_tf32: bool,
+        prefer_accuracy: bool,
+    ) -> String {
+        if prefer_accuracy {
+            if supports_tf32 {
+                "tf32".to_string()
+            } else {
+                "fp32".to_string()
+            }
+        } else {
+            if supports_bf16 {
+                "bf16".to_string()
+            } else if supports_fp16 {
+                "fp16".to_string()
+            } else if supports_tf32 {
+                "tf32".to_string()
+            } else {
+                "fp32".to_string()
+            }
+        }
+    }
+    
+    /// Benchmark GPU operation
+    pub fn benchmark_operation<F>(operation: F, iterations: usize) -> Result<f64, GpuOptimizerError>
+    where
+        F: Fn() -> Result<(), GpuOptimizerError>,
+    {
+        let start = std::time::Instant::now();
+        
+        for _ in 0..iterations {
+            operation()?;
+        }
+        
+        // Synchronize to ensure all operations complete
+        #[cfg(feature = "gpu")]
+        {
+            // GPU synchronization would go here
+        }
+        
+        let elapsed = start.elapsed();
+        Ok(elapsed.as_secs_f64() / iterations as f64)
     }
 }
 

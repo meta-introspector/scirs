@@ -11,17 +11,29 @@ pub mod architecture_encoding;
 pub mod controller;
 pub mod evaluator;
 pub mod enas;
+pub mod multi_objective;
+pub mod progressive_search;
+pub mod hardware_aware;
 
 pub use search_space::{SearchSpace, SearchSpaceConfig};
 pub use search_algorithms::{
     SearchAlgorithm, RandomSearch, EvolutionarySearch, ReinforcementSearch,
     DifferentiableSearch, BayesianOptimization
 };
-pub use performance_estimation::{PerformanceEstimator, EarlyStoppingEstimator, SuperNetEstimator};
+pub use performance_estimation::{
+    PerformanceEstimator, EarlyStoppingEstimator, SuperNetEstimator, 
+    ZeroCostEstimator, MultiFidelityEstimator, LearningCurveEstimator
+};
 pub use architecture_encoding::{ArchitectureEncoding, GraphEncoding, SequentialEncoding};
 pub use controller::{NASController, ControllerConfig};
 pub use evaluator::{ArchitectureEvaluator, EvaluationMetrics};
 pub use enas::{ENASController, SuperNetwork, ENASTrainer};
+pub use multi_objective::{
+    MultiObjectiveOptimizer, MultiObjectiveConfig, MultiObjectiveAlgorithm,
+    MultiObjectiveSolution, Objective
+};
+pub use progressive_search::{ProgressiveSearch, ProgressiveConfig};
+pub use hardware_aware::{HardwareAwareSearch, HardwareConstraints, LatencyPredictor};
 
 use crate::error::Result;
 use crate::models::sequential::Sequential;
@@ -76,6 +88,12 @@ pub struct NeuralArchitectureSearch {
     evaluator: ArchitectureEvaluator,
     best_architecture: Option<Arc<dyn ArchitectureEncoding>>,
     search_history: Vec<SearchResult>,
+    /// Multi-objective optimizer for handling multiple objectives
+    multi_objective_optimizer: Option<MultiObjectiveOptimizer>,
+    /// Progressive search for adaptive search space
+    progressive_search: Option<ProgressiveSearch>,
+    /// Hardware-aware constraints
+    hardware_constraints: Option<HardwareConstraints>,
 }
 
 /// Result of a single architecture evaluation

@@ -12,9 +12,21 @@ pub enum OptimError {
     OptimizationError(String),
     /// Dimension mismatch error
     DimensionMismatch(String),
+    /// Privacy budget exhausted
+    PrivacyBudgetExhausted {
+        consumed_epsilon: f64,
+        target_epsilon: f64,
+    },
+    /// Invalid privacy configuration
+    InvalidPrivacyConfig(String),
+    /// Privacy accounting error
+    PrivacyAccountingError(String),
     /// Other error
     Other(String),
 }
+
+/// Alias for backward compatibility
+pub type OptimizerError = OptimError;
 
 impl fmt::Display for OptimError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -22,6 +34,12 @@ impl fmt::Display for OptimError {
             OptimError::InvalidConfig(msg) => write!(f, "Invalid configuration: {}", msg),
             OptimError::OptimizationError(msg) => write!(f, "Optimization error: {}", msg),
             OptimError::DimensionMismatch(msg) => write!(f, "Dimension mismatch: {}", msg),
+            OptimError::PrivacyBudgetExhausted { consumed_epsilon, target_epsilon } => {
+                write!(f, "Privacy budget exhausted: consumed ε={:.4}, target ε={:.4}", 
+                       consumed_epsilon, target_epsilon)
+            },
+            OptimError::InvalidPrivacyConfig(msg) => write!(f, "Invalid privacy configuration: {}", msg),
+            OptimError::PrivacyAccountingError(msg) => write!(f, "Privacy accounting error: {}", msg),
             OptimError::Other(msg) => write!(f, "Error: {}", msg),
         }
     }

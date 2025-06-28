@@ -68,11 +68,19 @@ pub struct HttpClient {
 impl HttpClient {
     /// Create a new HTTP client with the given configuration
     pub fn new(config: NetworkConfig) -> Self {
-        Self {
+        let mut client = Self {
             config,
             #[cfg(feature = "reqwest")]
             client: None,
+        };
+        
+        // Auto-initialize if reqwest feature is enabled
+        #[cfg(feature = "reqwest")]
+        {
+            let _ = client.init();
         }
+        
+        client
     }
 
     /// Initialize the HTTP client (creates underlying reqwest client)

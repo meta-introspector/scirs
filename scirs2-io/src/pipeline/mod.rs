@@ -547,12 +547,12 @@ impl DataLineage {
         dot.push_str("  rankdir=LR;\n");
         dot.push_str(&format!("  source [label=\"{}\" shape=box];\n", self.source));
         
-        let mut prev = "source";
+        let mut prev = "source".to_string();
         for (i, transform) in self.transformations.iter().enumerate() {
             let node_id = format!("t{}", i);
             dot.push_str(&format!("  {} [label=\"{}\"];\n", node_id, transform.stage_name));
             dot.push_str(&format!("  {} -> {};\n", prev, node_id));
-            prev = &node_id;
+            prev = node_id;
         }
         
         dot.push_str("}\n");
@@ -565,7 +565,7 @@ pub struct PipelineOptimizer;
 
 impl PipelineOptimizer {
     /// Analyze pipeline and suggest optimizations
-    pub fn analyze<I, O>(pipeline: &Pipeline<I, O>) -> OptimizationReport {
+    pub fn analyze<I, O>(_pipeline: &Pipeline<I, O>) -> OptimizationReport {
         OptimizationReport {
             suggestions: vec![
                 OptimizationSuggestion {

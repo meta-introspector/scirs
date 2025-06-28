@@ -10,6 +10,7 @@ use ndarray::{Array2, ArrayD, Axis, IxDyn};
 use num_complex::Complex64;
 use num_traits::NumCast;
 use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
+use scirs2_core::safe_ops::{safe_divide, safe_sqrt};
 use std::fmt::Debug;
 
 // We're using the serial implementation even with parallel feature enabled,
@@ -49,22 +50,39 @@ pub fn parse_norm_mode(norm: Option<&str>, is_inverse: bool) -> NormMode {
 }
 
 /// Apply normalization to FFT results based on the specified mode
-fn apply_normalization(data: &mut [Complex64], n: usize, mode: NormMode) {
+fn apply_normalization(data: &mut [Complex64], n: usize, mode: NormMode) -> FFTResult<()> {
     match mode {
         NormMode::None => {} // No normalization
         NormMode::Backward => {
-            let scale = 1.0 / (n as f64);
+            let n_f64 = n as f64;
+            let scale = safe_divide(1.0, n_f64)
+                .map_err(|_| FFTError::ValueError(
+                    "Division by zero in backward normalization: FFT size is zero".to_string()
+                ))?;
             data.iter_mut().for_each(|c| *c *= scale);
         }
         NormMode::Ortho => {
-            let scale = 1.0 / (n as f64).sqrt();
+            let n_f64 = n as f64;
+            let sqrt_n = safe_sqrt(n_f64)
+                .map_err(|_| FFTError::ComputationError(
+                    "Invalid square root in orthogonal normalization".to_string()
+                ))?;
+            let scale = safe_divide(1.0, sqrt_n)
+                .map_err(|_| FFTError::ValueError(
+                    "Division by zero in orthogonal normalization".to_string()
+                ))?;
             data.iter_mut().for_each(|c| *c *= scale);
         }
         NormMode::Forward => {
-            let scale = 1.0 / (n as f64);
+            let n_f64 = n as f64;
+            let scale = safe_divide(1.0, n_f64)
+                .map_err(|_| FFTError::ValueError(
+                    "Division by zero in forward normalization: FFT size is zero".to_string()
+                ))?;
             data.iter_mut().for_each(|c| *c *= scale);
         }
     }
+    Ok(())
 }
 
 /// Convert a single value to Complex64
@@ -252,7 +270,7 @@ where
         .collect();
 
     // Apply 1/N normalization (standard for IFFT)
-    apply_normalization(&mut result, fft_size, NormMode::Backward);
+    apply_normalization(&mut result, fft_size, NormMode::Backward)?;
 
     // Truncate if necessary to match the original input length
     if n.is_none() && fft_size > input_len {

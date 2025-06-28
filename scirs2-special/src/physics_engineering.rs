@@ -233,7 +233,7 @@ pub mod acoustics {
                 "Temperature below absolute zero".to_string(),
             ));
         }
-        if humidity < 0.0 || humidity > 1.0 {
+        if !(0.0..=1.0).contains(&humidity) {
             return Err(SpecialError::DomainError(
                 "Humidity must be between 0 and 1".to_string(),
             ));
@@ -825,7 +825,7 @@ pub mod transmission_lines {
     /// # Arguments
     /// * `reflection_coeff` - Magnitude of reflection coefficient
     pub fn vswr(reflection_coeff: f64) -> SpecialResult<f64> {
-        if reflection_coeff < 0.0 || reflection_coeff > 1.0 {
+        if !(0.0..=1.0).contains(&reflection_coeff) {
             return Err(SpecialError::DomainError(
                 "Reflection coefficient magnitude must be between 0 and 1".to_string(),
             ));

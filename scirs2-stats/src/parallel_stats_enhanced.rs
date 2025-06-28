@@ -8,9 +8,8 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::descriptive_simd::{mean_simd, variance_simd};
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2, s};
+use ndarray::{Array1, Array2, ArrayBase, ArrayView2, Data, Ix1, Ix2, s};
 use num_traits::{Float, NumCast};
-use rand::{SeedableRng, rngs::StdRng};
 use scirs2_core::parallel_ops::{
     par_chunks, parallel_map, ParallelIterator, 
     num_threads
@@ -527,13 +526,13 @@ impl<F: Float + NumCast + Send + Sync> ParallelCrossValidation<F> {
         &self,
         x: &ArrayBase<D, Ix2>,
         y: &Array1<F>,
-        mut model: M,
+        model: M,
         scorer: S,
     ) -> StatsResult<Array1<F>>
     where
         D: Data<Elem = F> + Sync,
-        M: Fn(&ArrayBase<D, Ix2>, &Array1<F>) -> StatsResult<()> + Send + Sync + Clone,
-        S: Fn(&ArrayBase<D, Ix2>, &Array1<F>) -> StatsResult<F> + Send + Sync,
+        M: Fn(&ArrayView2<F>, &Array1<F>) -> StatsResult<()> + Send + Sync + Clone,
+        S: Fn(&ArrayView2<F>, &Array1<F>) -> StatsResult<F> + Send + Sync,
     {
         let n_samples = x.nrows();
         if n_samples != y.len() {
@@ -577,7 +576,7 @@ impl<F: Float + NumCast + Send + Sync> ParallelCrossValidation<F> {
             let y_test = y.select(ndarray::Axis(0), test_indices);
 
             // Train model on fold
-            let mut fold_model = model.clone();
+            let fold_model = model.clone();
             fold_model(&x_train.view(), &y_train)?;
 
             // Score on test set
@@ -594,6 +593,7 @@ impl<F: Float + NumCast + Send + Sync> ParallelCrossValidation<F> {
 ///
 /// Efficiently computes correlation matrix for multiple variables using parallel processing
 /// and SIMD operations where available.
+#[allow(dead_code)]
 pub fn corrcoef_parallel<F, D>(
     data: &ArrayBase<D, Ix2>,
     rowvar: bool,
@@ -612,7 +612,7 @@ where
 
     if n_obs < 2 {
         return Err(StatsError::InvalidArgument(
-            "Need at least 2 observations to compute correlation"
+            "Need at least 2 observations to compute correlation".to_string()
         ));
     }
 
@@ -688,6 +688,7 @@ where
 ///
 /// Computes partial correlations between multiple variables, controlling for other variables,
 /// using parallel processing for efficiency.
+#[allow(dead_code)]
 pub fn partial_corrcoef_parallel<F, D>(
     data: &ArrayBase<D, Ix2>,
     control_vars: &[usize],
@@ -747,17 +748,20 @@ where
             let var_i = data.slice(s![.., i]);
             let var_j = data.slice(s![.., j]);
             
-            // Regress out control variables
-            let residuals_i = lstsq(&control_matrix.view(), &var_i.view())
-                .map_err(|e| StatsError::ComputationError(format!("Regression failed: {}", e)))?
-                .residuals;
-            let residuals_j = lstsq(&control_matrix.view(), &var_j.view())
-                .map_err(|e| StatsError::ComputationError(format!("Regression failed: {}", e)))?
-                .residuals;
+            // Regress out control variables and compute residuals
+            let solution_i = lstsq(&control_matrix.view(), &var_i.view(), None)
+                .map_err(|e| StatsError::ComputationError(format!("Regression failed: {}", e)))?;
+            let predicted_i = control_matrix.dot(&solution_i.x);
+            let residuals_i = &var_i - &predicted_i;
+            
+            let solution_j = lstsq(&control_matrix.view(), &var_j.view(), None)
+                .map_err(|e| StatsError::ComputationError(format!("Regression failed: {}", e)))?;
+            let predicted_j = control_matrix.dot(&solution_j.x);
+            let residuals_j = &var_j - &predicted_j;
             
             // Compute correlation of residuals
             use crate::correlation_simd::pearson_r_simd;
-            let partial_r = pearson_r_simd(&residuals_i.view(), &residuals_j.view())?;
+            let partial_r = pearson_r_simd(&residuals_i, &residuals_j)?;
             
             partial_corr[(i, j)] = partial_r;
             partial_corr[(j, i)] = partial_r;
@@ -768,17 +772,20 @@ where
             let var_i = data.slice(s![.., i]);
             let var_j = data.slice(s![.., j]);
             
-            // Regress out control variables
-            let residuals_i = lstsq(&control_matrix.view(), &var_i.view())
-                .map_err(|e| StatsError::ComputationError(format!("Regression failed: {}", e)))?
-                .residuals;
-            let residuals_j = lstsq(&control_matrix.view(), &var_j.view())
-                .map_err(|e| StatsError::ComputationError(format!("Regression failed: {}", e)))?
-                .residuals;
+            // Regress out control variables and compute residuals
+            let solution_i = lstsq(&control_matrix.view(), &var_i.view(), None)
+                .map_err(|e| StatsError::ComputationError(format!("Regression failed: {}", e)))?;
+            let predicted_i = control_matrix.dot(&solution_i.x);
+            let residuals_i = &var_i - &predicted_i;
+            
+            let solution_j = lstsq(&control_matrix.view(), &var_j.view(), None)
+                .map_err(|e| StatsError::ComputationError(format!("Regression failed: {}", e)))?;
+            let predicted_j = control_matrix.dot(&solution_j.x);
+            let residuals_j = &var_j - &predicted_j;
             
             // Compute correlation of residuals
             use crate::correlation_simd::pearson_r_simd;
-            let partial_r = pearson_r_simd(&residuals_i.view(), &residuals_j.view())?;
+            let partial_r = pearson_r_simd(&residuals_i, &residuals_j)?;
             
             Ok(((i, j), partial_r))
         })
@@ -798,6 +805,7 @@ where
 /// Parallel autocorrelation computation
 ///
 /// Computes autocorrelation function (ACF) for time series data using parallel processing.
+#[allow(dead_code)]
 pub fn autocorrelation_parallel<F, D>(
     data: &ArrayBase<D, Ix1>,
     max_lag: usize,
@@ -809,7 +817,7 @@ where
     let n = data.len();
     if max_lag >= n {
         return Err(StatsError::InvalidArgument(
-            "max_lag must be less than data length"
+            "max_lag must be less than data length".to_string()
         ));
     }
     
@@ -825,7 +833,7 @@ where
     
     if variance <= F::epsilon() {
         return Err(StatsError::InvalidArgument(
-            "Cannot compute autocorrelation for constant series"
+            "Cannot compute autocorrelation for constant series".to_string()
         ));
     }
     

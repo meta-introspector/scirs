@@ -52,8 +52,30 @@
 pub mod affinity;
 pub mod birch;
 pub mod density;
+/// Ensemble clustering methods for improved robustness.
+///
+/// This module provides ensemble clustering techniques that combine multiple
+/// clustering algorithms or multiple runs of the same algorithm to achieve
+/// more robust and stable clustering results.
+pub mod ensemble;
 pub mod error;
 pub mod gmm;
+/// GPU acceleration module for clustering algorithms.
+///
+/// This module provides GPU acceleration interfaces and implementations for clustering
+/// algorithms. It supports multiple GPU backends including CUDA, OpenCL, ROCm, and others.
+/// When GPU acceleration is not available or disabled, algorithms automatically fall back
+/// to optimized CPU implementations.
+///
+/// # Features
+///
+/// * **Multiple GPU Backends**: Support for CUDA, OpenCL, ROCm, Intel OneAPI, and Metal
+/// * **Automatic Fallback**: Seamless fallback to CPU when GPU is not available
+/// * **Memory Management**: Efficient GPU memory allocation and pooling
+/// * **Performance Monitoring**: Built-in benchmarking and performance statistics
+/// * **Device Selection**: Automatic or manual GPU device selection strategies
+#[cfg(feature = "gpu")]
+pub mod gpu;
 pub mod hierarchy;
 pub mod input_validation;
 pub mod leader;
@@ -75,16 +97,30 @@ pub mod sparse;
 pub mod spectral;
 pub mod stability;
 pub mod streaming;
+/// Automatic hyperparameter tuning for clustering algorithms.
+///
+/// This module provides comprehensive hyperparameter optimization capabilities
+/// for all clustering algorithms in the scirs2-cluster crate. It supports
+/// grid search, random search, Bayesian optimization, and adaptive strategies.
+pub mod tuning;
 pub mod vq;
 
 // Re-exports
 pub use affinity::{affinity_propagation, AffinityPropagationOptions};
-pub use birch::{birch, Birch, BirchOptions};
+pub use birch::{birch, Birch, BirchOptions, BirchStatistics};
 pub use density::hdbscan::{
     dbscan_clustering, hdbscan, ClusterSelectionMethod, HDBSCANOptions, HDBSCANResult, StoreCenter,
 };
 pub use density::optics::{extract_dbscan_clustering, extract_xi_clusters, OPTICSResult};
 pub use density::*;
+pub use ensemble::{
+    EnsembleClusterer, EnsembleConfig, EnsembleResult, SamplingStrategy, ConsensusMethod,
+    DiversityStrategy, ClusteringAlgorithm, ClusteringResult, ConsensusStatistics,
+    DiversityMetrics, NoiseType, ParameterRange,
+};
+pub use ensemble::convenience::{
+    ensemble_clustering, bootstrap_ensemble, multi_algorithm_ensemble,
+};
 pub use gmm::{gaussian_mixture, CovarianceType, GMMInit, GMMOptions, GaussianMixture};
 pub use hierarchy::*;
 pub use input_validation::{
@@ -102,6 +138,27 @@ pub use metrics::{
     homogeneity_completeness_v_measure, normalized_mutual_info, silhouette_samples,
     silhouette_score,
 };
+
+// Re-export ensemble validation methods
+pub use metrics::ensemble::{
+    bootstrap_confidence_interval, consensus_clustering_score, cross_validation_score,
+    multi_criterion_validation, robust_validation,
+};
+
+// Re-export information-theoretic methods
+pub use metrics::information_theory::{
+    information_cluster_quality, jensen_shannon_divergence, variation_of_information,
+};
+
+// Re-export stability-based methods
+pub use metrics::stability::{
+    cluster_stability_bootstrap, optimal_clusters_stability,
+};
+
+// Re-export advanced metrics
+pub use metrics::advanced::{
+    bic_score, dunn_index,
+};
 pub use neighbor_search::{
     create_neighbor_searcher, BallTree, BruteForceSearch, KDTree, NeighborResult,
     NeighborSearchAlgorithm, NeighborSearchConfig, NeighborSearcher,
@@ -113,7 +170,7 @@ pub use serialization::{
     save_birch, save_gmm, save_hierarchy, save_kmeans, save_leader, save_leader_tree, save_spectral_clustering,
     spectral_clustering_to_model, AffinityPropagationModel, BirchModel, DBSCANModel, GMMModel,
     HierarchicalModel, KMeansModel, LeaderModel, LeaderNodeModel, LeaderTreeModel, MeanShiftModel,
-    SerializableModel, SpectralClusteringModel,
+    SerializableModel, SpectralClusteringModel, AdvancedExport, ExportFormat, ModelMetadata, compatibility,
 };
 pub use sparse::{
     sparse_epsilon_graph, sparse_knn_graph, SparseDistanceMatrix, SparseHierarchicalClustering,
@@ -127,7 +184,27 @@ pub use stability::{
 pub use streaming::{
     ChunkedDistanceMatrix, ProgressiveHierarchical, StreamingConfig, StreamingKMeans,
 };
+pub use tuning::{
+    AutoTuner, TuningConfig, TuningResult, SearchStrategy, EvaluationMetric,
+    HyperParameter, SearchSpace, StandardSearchSpaces, EvaluationResult,
+    CrossValidationConfig, CVStrategy, EarlyStoppingConfig, ParallelConfig,
+    ResourceConstraints, ConvergenceInfo, ExplorationStats,
+};
 pub use vq::*;
+
+// GPU acceleration re-exports (when GPU feature is enabled)
+#[cfg(feature = "gpu")]
+pub use gpu::{
+    GpuBackend, GpuConfig, GpuContext, GpuDevice, GpuKMeans, GpuKMeansConfig,
+    GpuDistanceMatrix, DistanceMetric as GpuDistanceMetric, GpuStats,
+    MemoryStrategy, DeviceSelection, GpuMemoryManager, MemoryStats,
+};
+
+#[cfg(feature = "gpu")]
+/// GPU acceleration benchmark utilities
+pub mod gpu_benchmark {
+    pub use crate::gpu::benchmark::*;
+}
 
 #[cfg(test)]
 mod tests;

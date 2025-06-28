@@ -194,10 +194,8 @@ where
             )
         })?;
 
-        // Convert back to the original dimension type
-        let chunk = chunk_dynamic
-            .to_owned()
-            .into_dimensionality::<D>()
+        // Convert back to the original dimension type with proper validation
+        let chunk = Self::safe_dimensionality_conversion(chunk_dynamic.to_owned(), "chunk")
             .map_err(|e| {
                 CoreError::DimensionError(
                     ErrorContext::new(format!("Failed to convert chunk dimension: {}", e))
@@ -206,6 +204,102 @@ where
             })?;
 
         Ok(chunk)
+    }
+
+    /// Safely convert an array to the target dimension type with detailed error reporting.
+    fn safe_dimensionality_conversion(
+        array: Array<A, ndarray::IxDyn>,
+        context: &str,
+    ) -> Result<Array<A, D>, CoreError> {
+        let source_shape = array.shape().to_vec();
+        let source_ndim = source_shape.len();
+        let target_ndim = D::NDIM;
+
+        // Try direct conversion first
+        let array_clone = array.clone();
+        match array.into_dimensionality::<D>() {
+            Ok(converted) => Ok(converted),
+            Err(_shape_error) => {
+                // Conversion failed, try to provide helpful error message and fallback strategies
+                let error_msg = match (source_ndim, target_ndim) {
+                    (s, Some(t)) if s == t => {
+                        format!(
+                            "Dimension conversion failed for {} array despite matching dimensions ({} -> {}). \
+                             Source shape: {:?}, target dimension type: {}",
+                            context, s, t, source_shape, std::any::type_name::<D>()
+                        )
+                    }
+                    (s, Some(t)) if s > t => {
+                        format!(
+                            "Cannot convert {} array: too many dimensions ({} -> {}). \
+                             Source shape: {:?}. Consider using a higher-dimensional target type or \
+                             applying additional slicing to reduce dimensions.",
+                            context, s, t, source_shape
+                        )
+                    }
+                    (s, Some(t)) if s < t => {
+                        // Try to add singleton dimensions for lower-dimensional arrays
+                        return Self::try_expand_dimensions(array_clone, context, s, t);
+                    }
+                    (s, None) => {
+                        format!(
+                            "Cannot convert {} array to dynamic dimension type. \
+                             Source shape: {:?}, source dimensions: {}",
+                            context, source_shape, s
+                        )
+                    }
+                    _ => {
+                        format!(
+                            "Unexpected dimension conversion failure for {} array. \
+                             Source shape: {:?}",
+                            context, source_shape
+                        )
+                    }
+                };
+
+                Err(CoreError::DimensionError(
+                    ErrorContext::new(error_msg)
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                ))
+            }
+        }
+    }
+
+    /// Try to expand dimensions by adding singleton dimensions.
+    fn try_expand_dimensions(
+        array: Array<A, ndarray::IxDyn>,
+        context: &str,
+        source_dims: usize,
+        target_dims: usize,
+    ) -> Result<Array<A, D>, CoreError> {
+        // For cases where we have fewer dimensions than needed, try adding singleton dimensions
+        if target_dims == 2 && source_dims == 1 {
+            // Try to reshape 1D array to 2D by adding a singleton dimension
+            let len = array.len();
+
+            // Try (len, 1) first
+            if let Ok(reshaped) = array.clone().into_shape_with_order((len, 1)) {
+                if let Ok(converted) = reshaped.into_dimensionality::<D>() {
+                    return Ok(converted);
+                }
+            }
+
+            // Try (1, len) orientation  
+            if let Ok(reshaped) = array.into_shape_with_order((1, len)) {
+                if let Ok(converted) = reshaped.into_dimensionality::<D>() {
+                    return Ok(converted);
+                }
+            }
+        }
+
+        Err(CoreError::DimensionError(
+            ErrorContext::new(format!(
+                "Cannot expand {} array from {} to {} dimensions. \
+                 Automatic dimension expansion failed.",
+                context, source_dims, target_dims
+            ))
+            .with_location(ErrorLocation::new(file!(), line!())),
+        ))
     }
 
     /// Get the chunk size based on the chunking strategy
@@ -236,12 +330,35 @@ where
     }
 
     /// Apply a function to each chunk of the array
-    pub fn map<F, B, R>(&self, _f: F) -> Result<R, CoreError>
+    pub fn map<F, B, R>(&self, mut f: F) -> Result<R, CoreError>
     where
         F: FnMut(Array<A, D>) -> B,
         R: FromIterator<B>,
     {
-        panic!("OutOfCoreArray::map is not yet implemented");
+        // Get the total number of chunks
+        let num_chunks = self.num_chunks();
+
+        if num_chunks == 0 {
+            return Err(CoreError::ValueError(
+                ErrorContext::new("Cannot map over an empty array".to_string())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ));
+        }
+
+        // Process each chunk sequentially
+        let mut results = Vec::with_capacity(num_chunks);
+
+        for chunk_idx in 0..num_chunks {
+            // Load the current chunk
+            let chunk = self.load_chunk(chunk_idx)?;
+
+            // Apply the function to the chunk and collect the result
+            let result = f(chunk);
+            results.push(result);
+        }
+
+        // Convert the results into the requested collection type
+        Ok(R::from_iter(results))
     }
 
     /// Apply a function to each chunk of the array in parallel

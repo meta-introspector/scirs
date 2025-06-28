@@ -251,18 +251,18 @@ impl Debug for PRMPlanner {
 
 impl PRMPlanner {
     /// Create a new PRM planner with the given configuration and bounds
-    pub fn new(config: PRMConfig, lower_bounds: Array1<f64>, upper_bounds: Array1<f64>) -> Self {
+    pub fn new(config: PRMConfig, lower_bounds: Array1<f64>, upper_bounds: Array1<f64>) -> SpatialResult<Self> {
         let dimension = lower_bounds.len();
 
         if lower_bounds.len() != upper_bounds.len() {
-            panic!("Lower and upper bounds must have the same dimension");
+            return Err(SpatialError::DimensionError("Lower and upper bounds must have the same dimension".to_string()));
         }
 
         // Use the provided seed or generate a random one
         let seed = config.seed.unwrap_or_else(rand::random);
         let rng = StdRng::seed_from_u64(seed);
 
-        PRMPlanner {
+        Ok(PRMPlanner {
             config,
             bounds: (lower_bounds, upper_bounds),
             dimension,
@@ -271,7 +271,7 @@ impl PRMPlanner {
             rng,
             collision_checker: None,
             roadmap_built: false,
-        }
+        })
     }
 
     /// Set the collision checker function
@@ -652,7 +652,8 @@ impl PRMPlanner {
             false // Not in collision
         });
 
-        let mut planner = Self::new(config, lower_bounds, upper_bounds);
+        let mut planner = Self::new(config, lower_bounds, upper_bounds)
+            .expect("Lower and upper bounds should have same dimension (2)");
         planner.set_collision_checker(collision_checker);
 
         planner

@@ -11,9 +11,10 @@ use crate::dwt2d_enhanced::{
     wavedec2_enhanced, MultilevelDwt2d
 };
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, Array3, ArrayView2};
+use ndarray::{Array2, Array3, ArrayView2, s};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_shape};
+use rand::prelude::*;
 use std::f64;
 
 /// 2D DWT validation result

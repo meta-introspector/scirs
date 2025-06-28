@@ -1,11 +1,22 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2, Array3};
 use scirs2_ndimage::filters::{
-    bilateral_filter, filter_functions, gaussian_filter, generic_filter, maximum_filter,
-    median_filter, minimum_filter, uniform_filter, BorderMode,
+    bilateral_filter,
+    filter_functions,
+    gaussian_filter,
+    generic_filter,
+    gradient_magnitude,
+    gradient_magnitude_optimized,
+    laplace,
+    laplace_2d_optimized,
+    maximum_filter,
+    median_filter,
+    minimum_filter,
     // Edge detection filters
-    sobel, laplace, gradient_magnitude,
-    sobel_2d_optimized, laplace_2d_optimized, gradient_magnitude_optimized,
+    sobel,
+    sobel_2d_optimized,
+    uniform_filter,
+    BorderMode,
 };
 use std::time::Duration;
 
@@ -248,11 +259,7 @@ fn bench_edge_detection(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("sobel_standard", format!("{}x{}", size, size)),
             &input,
-            |b, input| {
-                b.iter(|| {
-                    sobel(black_box(input), 0, Some(BorderMode::Reflect)).unwrap()
-                })
-            },
+            |b, input| b.iter(|| sobel(black_box(input), 0, Some(BorderMode::Reflect)).unwrap()),
         );
 
         // Benchmark optimized Sobel
@@ -261,7 +268,8 @@ fn bench_edge_detection(c: &mut Criterion) {
             &input,
             |b, input| {
                 b.iter(|| {
-                    sobel_2d_optimized(black_box(&input.view()), 0, Some(BorderMode::Reflect)).unwrap()
+                    sobel_2d_optimized(black_box(&input.view()), 0, Some(BorderMode::Reflect))
+                        .unwrap()
                 })
             },
         );
@@ -271,9 +279,7 @@ fn bench_edge_detection(c: &mut Criterion) {
             BenchmarkId::new("laplace_standard", format!("{}x{}", size, size)),
             &input,
             |b, input| {
-                b.iter(|| {
-                    laplace(black_box(input), false, Some(BorderMode::Reflect)).unwrap()
-                })
+                b.iter(|| laplace(black_box(input), false, Some(BorderMode::Reflect)).unwrap())
             },
         );
 
@@ -283,7 +289,8 @@ fn bench_edge_detection(c: &mut Criterion) {
             &input,
             |b, input| {
                 b.iter(|| {
-                    laplace_2d_optimized(black_box(&input.view()), false, Some(BorderMode::Reflect)).unwrap()
+                    laplace_2d_optimized(black_box(&input.view()), false, Some(BorderMode::Reflect))
+                        .unwrap()
                 })
             },
         );
@@ -295,11 +302,7 @@ fn bench_edge_detection(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("gradient_magnitude_standard", format!("{}x{}", size, size)),
             &(&grad_x, &grad_y),
-            |b, (gx, gy)| {
-                b.iter(|| {
-                    gradient_magnitude(black_box(gx), black_box(gy)).unwrap()
-                })
-            },
+            |b, (gx, gy)| b.iter(|| gradient_magnitude(black_box(gx), black_box(gy)).unwrap()),
         );
 
         group.bench_with_input(
@@ -307,7 +310,8 @@ fn bench_edge_detection(c: &mut Criterion) {
             &(&grad_x, &grad_y),
             |b, (gx, gy)| {
                 b.iter(|| {
-                    gradient_magnitude_optimized(black_box(&gx.view()), black_box(&gy.view())).unwrap()
+                    gradient_magnitude_optimized(black_box(&gx.view()), black_box(&gy.view()))
+                        .unwrap()
                 })
             },
         );

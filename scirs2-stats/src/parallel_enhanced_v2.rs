@@ -7,10 +7,10 @@
 //! - Task-based parallelism
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2, Axis};
+use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::{
-    par_chunks, parallel_map, ParallelIterator, num_threads
+    par_chunks, ParallelIterator, num_threads, IntoParallelIterator
 };
 use std::sync::Arc;
 
@@ -68,7 +68,9 @@ impl ParallelConfig {
         if let Some(size) = self.chunk_size {
             size
         } else {
-            adaptive_chunk_size(n, self.max_threads)
+            // Simple adaptive chunk size: divide data among available threads
+            let threads = self.max_threads.unwrap_or(num_threads());
+            (n / threads).max(1000)
         }
     }
 }
@@ -98,7 +100,7 @@ where
     }
     
     // Parallel computation with better handling
-    let sum = if let Ok(slice) = x.as_slice() {
+    let sum = if let Some(slice) = x.as_slice() {
         // Contiguous array - use slice-based parallelism
         parallel_sum_slice(slice, &config)
     } else {
@@ -166,7 +168,7 @@ where
         .collect();
     
     // Combine chunk statistics
-    let (total_mean, total_m2, _) = combine_welford_stats(&chunk_stats);
+    let (_total_mean, total_m2, _) = combine_welford_stats(&chunk_stats);
     
     Ok(total_m2 / F::from(n - ddof).unwrap())
 }
@@ -254,7 +256,7 @@ where
         return Err(StatsError::invalid_argument("Cannot bootstrap empty data"));
     }
     
-    let config = config.unwrap_or_default();
+    let _config = config.unwrap_or_default();
     let data_arc = Arc::new(data.to_owned());
     let n = data.len();
     
@@ -273,7 +275,7 @@ where
             
             // Generate bootstrap sample
             for i in 0..n {
-                let idx = rng.gen_range(0..n);
+                let idx = rng.random_range(0..n);
                 sample[i] = data_arc[idx];
             }
             

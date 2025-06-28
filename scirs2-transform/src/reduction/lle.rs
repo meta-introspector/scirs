@@ -7,6 +7,7 @@
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_linalg::{eigh, solve};
+use scirs2_core::validation::{check_positive, check_shape};
 use std::collections::BinaryHeap;
 
 use crate::error::{Result, TransformError};
@@ -154,7 +155,7 @@ impl LLE {
 
             // Solve C * w = 1 for weights
             let ones = Array1::ones(k);
-            let w = match solve(&c.view(), &ones.view()) {
+            let w = match solve(&c.view(), &ones.view(), None) {
                 Ok(solution) => solution,
                 Err(_) => {
                     // If solving fails, use uniform weights
@@ -204,7 +205,7 @@ impl LLE {
         }
 
         // Find the eigenvectors corresponding to the smallest eigenvalues
-        let (eigenvalues, eigenvectors) = match eigh(&m.view()) {
+        let (eigenvalues, eigenvectors) = match eigh(&m.view(), None) {
             Ok(result) => result,
             Err(e) => return Err(TransformError::LinalgError(e)),
         };
@@ -238,7 +239,12 @@ impl LLE {
         S: Data,
         S::Elem: Float + NumCast,
     {
-        let n_samples = x.shape()[0];
+        let (n_samples, n_features) = x.dim();
+        
+        // Validate inputs
+        check_positive(self.n_neighbors, "n_neighbors")?;
+        check_positive(self.n_components, "n_components")?;
+        check_shape(x, (Some(n_samples), Some(n_features)), "x")?;
         
         if n_samples <= self.n_neighbors {
             return Err(TransformError::InvalidInput(format!(
@@ -286,41 +292,24 @@ impl LLE {
         S::Elem: Float + NumCast,
     {
         if self.embedding.is_none() {
-            return Err(TransformError::TransformationError(
+            return Err(TransformError::NotFitted(
                 "LLE model has not been fitted".to_string(),
             ));
         }
 
-        // For simplicity, return the fitted embedding for training data
-        // TODO: Implement proper out-of-sample extension
-        if let Some(ref training_data) = self.training_data {
-            let x_f64 = x.mapv(|v| num_traits::cast::<S::Elem, f64>(v).unwrap_or(0.0));
+        let training_data = self.training_data.as_ref().ok_or_else(|| {
+            TransformError::NotFitted("Training data not available".to_string())
+        })?;
+        
+        let x_f64 = x.mapv(|v| num_traits::cast::<S::Elem, f64>(v).unwrap_or(0.0));
 
-            // Check if this is the training data
-            if x_f64.shape() == training_data.shape() {
-                let mut is_same = true;
-                for i in 0..x_f64.shape()[0] {
-                    for j in 0..x_f64.shape()[1] {
-                        if (x_f64[[i, j]] - training_data[[i, j]]).abs() > 1e-10 {
-                            is_same = false;
-                            break;
-                        }
-                    }
-                    if !is_same {
-                        break;
-                    }
-                }
-
-                if is_same {
-                    return Ok(self.embedding.as_ref().unwrap().clone());
-                }
-            }
+        // Check if this is the training data
+        if self.is_same_data(&x_f64, training_data) {
+            return Ok(self.embedding.as_ref().unwrap().clone());
         }
 
-        // For new data, we'd need to implement out-of-sample extension
-        Err(TransformError::TransformationError(
-            "Out-of-sample extension not yet implemented".to_string(),
-        ))
+        // Implement out-of-sample extension
+        self.transform_new_data(&x_f64)
     }
 
     /// Fits the LLE model and transforms the data
@@ -347,6 +336,160 @@ impl LLE {
     /// Returns the reconstruction weights
     pub fn reconstruction_weights(&self) -> Option<&Array2<f64>> {
         self.weights.as_ref()
+    }
+    
+    /// Check if the input data is the same as training data
+    fn is_same_data(&self, x: &Array2<f64>, training_data: &Array2<f64>) -> bool {
+        if x.dim() != training_data.dim() {
+            return false;
+        }
+        
+        let (n_samples, n_features) = x.dim();
+        for i in 0..n_samples {
+            for j in 0..n_features {
+                if (x[[i, j]] - training_data[[i, j]]).abs() > 1e-10 {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+    
+    /// Transform new data using out-of-sample extension
+    fn transform_new_data(&self, x_new: &Array2<f64>) -> Result<Array2<f64>> {
+        let training_data = self.training_data.as_ref().unwrap();
+        let training_embedding = self.embedding.as_ref().unwrap();
+        
+        let (n_new, n_features) = x_new.dim();
+        let (n_training, _) = training_data.dim();
+        
+        if n_features != training_data.ncols() {
+            return Err(TransformError::InvalidInput(format!(
+                "Input features {} must match training features {}",
+                n_features, training_data.ncols()
+            )));
+        }
+        
+        let mut new_embedding = Array2::zeros((n_new, self.n_components));
+        
+        // For each new point, find its reconstruction weights w.r.t. training data
+        // and use these weights to compute its embedding coordinates
+        for i in 0..n_new {
+            let new_coords = self.compute_new_point_embedding(
+                &x_new.row(i),
+                training_data,
+                training_embedding,
+            )?;
+            
+            for j in 0..self.n_components {
+                new_embedding[[i, j]] = new_coords[j];
+            }
+        }
+        
+        Ok(new_embedding)
+    }
+    
+    /// Compute embedding coordinates for a single new point
+    fn compute_new_point_embedding(
+        &self,
+        x_new: &ndarray::ArrayView1<f64>,
+        training_data: &Array2<f64>,
+        training_embedding: &Array2<f64>,
+    ) -> Result<Array1<f64>> {
+        let n_training = training_data.nrows();
+        let n_features = training_data.ncols();
+        
+        // Step 1: Find k nearest neighbors in training data
+        let mut distances: Vec<(f64, usize)> = Vec::new();
+        for j in 0..n_training {
+            let mut dist_sq = 0.0;
+            for k in 0..n_features {
+                let diff = x_new[k] - training_data[[j, k]];
+                dist_sq += diff * diff;
+            }
+            distances.push((dist_sq.sqrt(), j));
+        }
+        
+        // Sort by distance and take k nearest
+        distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        let k = self.n_neighbors.min(n_training);
+        let neighbor_indices: Vec<usize> = distances.into_iter()
+            .take(k)
+            .map(|(_, idx)| idx)
+            .collect();
+        
+        // Step 2: Compute reconstruction weights
+        let weights = self.compute_reconstruction_weights_for_point(
+            x_new,
+            training_data,
+            &neighbor_indices,
+        )?;
+        
+        // Step 3: Compute embedding as weighted combination of neighbor embeddings
+        let mut new_coords = Array1::zeros(self.n_components);
+        for (i, &neighbor_idx) in neighbor_indices.iter().enumerate() {
+            for dim in 0..self.n_components {
+                new_coords[dim] += weights[i] * training_embedding[[neighbor_idx, dim]];
+            }
+        }
+        
+        Ok(new_coords)
+    }
+    
+    /// Compute reconstruction weights for a single point given its neighbors
+    fn compute_reconstruction_weights_for_point(
+        &self,
+        x_point: &ndarray::ArrayView1<f64>,
+        training_data: &Array2<f64>,
+        neighbor_indices: &[usize],
+    ) -> Result<Array1<f64>> {
+        let k = neighbor_indices.len();
+        let n_features = training_data.ncols();
+        
+        // Build local covariance matrix C
+        let mut c = Array2::zeros((k, k));
+        
+        for i in 0..k {
+            let neighbor_i = neighbor_indices[i];
+            for j in 0..k {
+                let neighbor_j = neighbor_indices[j];
+                
+                let mut dot = 0.0;
+                for m in 0..n_features {
+                    let diff_i = x_point[m] - training_data[[neighbor_i, m]];
+                    let diff_j = x_point[m] - training_data[[neighbor_j, m]];
+                    dot += diff_i * diff_j;
+                }
+                c[[i, j]] = dot;
+            }
+        }
+        
+        // Add regularization to diagonal
+        let trace = (0..k).map(|i| c[[i, i]]).sum::<f64>();
+        let reg_value = self.reg * trace / k as f64;
+        for i in 0..k {
+            c[[i, i]] += reg_value;
+        }
+        
+        // Solve C * w = 1 for weights
+        let ones = Array1::ones(k);
+        let w = match solve(&c.view(), &ones.view(), None) {
+            Ok(solution) => solution,
+            Err(_) => {
+                // If solving fails, use uniform weights
+                Array1::from_elem(k, 1.0 / k as f64)
+            }
+        };
+        
+        // Normalize weights to sum to 1
+        let w_sum = w.sum();
+        let w_normalized = if w_sum.abs() > 1e-10 {
+            w / w_sum
+        } else {
+            Array1::from_elem(k, 1.0 / k as f64)
+        };
+        
+        Ok(w_normalized)
     }
 }
 

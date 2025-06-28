@@ -153,7 +153,12 @@ impl<F: IntegrateFloat> LsodaState<F> {
 
             // Optionally reduce step size when switching to non-stiff method
             if self.rejected_steps > 2 {
-                self.h *= F::from_f64(0.5).unwrap();
+                let half = F::from_f64(0.5).ok_or_else(|| {
+                    IntegrateError::ComputationError(
+                        "Failed to convert constant 0.5 to float type".to_string()
+                    )
+                }).unwrap_or_else(|_| F::from(0.5).unwrap()); // Fallback to safe conversion
+                self.h *= half;
             }
         }
 
@@ -186,7 +191,11 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
             min_steps_before_switch: 5,
             stiffness_threshold: 3,
             non_stiffness_threshold: 5,
-            step_size_ratio_threshold: F::from_f64(0.1).unwrap(),
+            step_size_ratio_threshold: F::from_f64(0.1).ok_or_else(|| {
+                IntegrateError::ComputationError(
+                    "Failed to convert constant 0.1 to float type".to_string()
+                )
+            }).unwrap_or_else(|_| F::from(0.1).unwrap()), // Fallback to safe conversion
         }
     }
 
@@ -256,13 +265,16 @@ where
     let h0 = opts.h0.unwrap_or_else(|| {
         // Simple heuristic for initial step size
         let span = t_end - t_start;
-        span / F::from_usize(100).unwrap() * F::from_f64(0.1).unwrap() // 0.1% of interval
+        let hundred = F::from_usize(100).unwrap_or_else(|| F::from(100).unwrap());
+        let tenth = F::from_f64(0.1).unwrap_or_else(|| F::from(0.1).unwrap());
+        span / hundred * tenth // 0.1% of interval
     });
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
         let span = t_end - t_start;
-        span * F::from_f64(1e-10).unwrap() // Minimal step size
+        let epsilon = F::from_f64(1e-10).unwrap_or_else(|| F::from(1e-10).unwrap());
+        span * epsilon // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
@@ -350,7 +362,8 @@ where
                             state.switch_method(LsodaMethodType::Bdf);
 
                             // Reduce step size
-                            state.h *= F::from_f64(0.5).unwrap();
+                            let half = F::from_f64(0.5).unwrap_or_else(|| F::from(0.5).unwrap());
+                            state.h *= half;
                             if state.h < min_step {
                                 return Err(IntegrateError::ConvergenceError(
                                     "Step size too small after method switch".to_string(),
@@ -368,7 +381,8 @@ where
                             state.switch_method(LsodaMethodType::Adams);
 
                             // Reduce step size for stability
-                            state.h *= F::from_f64(0.5).unwrap();
+                            let half = F::from_f64(0.5).unwrap_or_else(|| F::from(0.5).unwrap());
+                            state.h *= half;
                             if state.h < min_step {
                                 return Err(IntegrateError::ConvergenceError(
                                     "Step size too small after method switch".to_string(),

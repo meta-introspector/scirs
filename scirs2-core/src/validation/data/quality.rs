@@ -7,7 +7,7 @@ use std::fmt;
 
 // Core dependencies for array/matrix validation
 use ndarray::{ArrayBase, Data, Dimension, ScalarOperand};
-use num_traits::{Float, FromPrimitive};
+use num_traits::{Float, FromPrimitive, ToPrimitive};
 
 use super::config::{ErrorSeverity, QualityIssueType};
 use crate::error::CoreError;

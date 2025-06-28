@@ -723,8 +723,46 @@ impl MatV73Sparse {
         let col_path = format!("{}/jc", name);  // column pointers
         let data_path = format!("{}/data", name);  // non-zero values
         
-        // Convert to MATLAB's CSC format
-        let (row_indices, col_ptrs, values) = data.to_csc();
+        // Convert to MATLAB's CSC format - use existing methods
+        let csc = if let Some(ref csc_data) = sparse.csc {
+            csc_data.clone()
+        } else {
+            // Convert COO to CSC
+            let mut row_indices = Vec::new();
+            let mut col_ptrs = vec![0];
+            let mut values = Vec::new();
+            
+            // Sort by column, then by row
+            let mut entries: Vec<_> = sparse.coo.row_indices.iter()
+                .zip(&sparse.coo.col_indices)
+                .zip(&sparse.coo.values)
+                .map(|((r, c), v)| (*c, *r, v.clone()))
+                .collect();
+            entries.sort_by_key(|(c, r, _)| (*c, *r));
+            
+            let mut current_col = 0;
+            for (col, row, val) in entries {
+                while current_col < col {
+                    col_ptrs.push(values.len());
+                    current_col += 1;
+                }
+                row_indices.push(row);
+                values.push(val);
+            }
+            while col_ptrs.len() <= sparse.shape.1 {
+                col_ptrs.push(values.len());
+            }
+            
+            crate::serialize::SparseMatrixCSC {
+                nrows: sparse.shape.0,
+                ncols: sparse.shape.1,
+                col_ptrs,
+                row_indices,
+                values,
+            }
+        };
+        
+        let (row_indices, col_ptrs, values) = (csc.row_indices, csc.col_ptrs, csc.values);
         
         // Write components
         let row_array = ArrayD::from_shape_vec(vec![row_indices.len()], row_indices)
@@ -766,16 +804,32 @@ impl MatV73Sparse {
         let col_ptrs: ArrayD<i32> = file.read_dataset(&format!("{}/jc", name))?;
         let values: ArrayD<f64> = file.read_dataset(&format!("{}/data", name))?;
         
-        // Convert from CSC format
+        // Convert from CSC format to COO triplets
         let row_vec: Vec<usize> = row_indices.iter().map(|&x| x as usize).collect();
         let col_vec: Vec<usize> = col_ptrs.iter().map(|&x| x as usize).collect();
         let val_vec: Vec<f64> = values.iter().cloned().collect();
         
-        crate::sparse::SparseMatrix::from_csc(
-            row_vec,
-            col_vec,
-            val_vec,
-            vec![nrows, ncols],
+        // Convert CSC to COO format for SparseMatrix construction
+        let mut coo_rows = Vec::new();
+        let mut coo_cols = Vec::new();
+        let mut coo_values = Vec::new();
+        
+        for col in 0..ncols {
+            let start = col_vec[col];
+            let end = col_vec[col + 1];
+            for idx in start..end {
+                coo_rows.push(row_vec[idx]);
+                coo_cols.push(col);
+                coo_values.push(val_vec[idx]);
+            }
+        }
+        
+        crate::sparse::SparseMatrix::from_triplets(
+            nrows,
+            ncols,
+            coo_rows,
+            coo_cols,
+            coo_values,
         )
     }
 }

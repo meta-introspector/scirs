@@ -152,7 +152,7 @@ where
         config: CacheOptimizedConfig,
     ) -> InterpolateResult<Self> {
         if points.nrows() != values.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "Number of points must match number of values".to_string(),
             ));
         }
@@ -480,7 +480,7 @@ where
         config: CacheOptimizedConfig,
     ) -> InterpolateResult<Self> {
         if knots.len() < coefficients.len() + degree + 1 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "Invalid knot vector length for given coefficients and degree".to_string(),
             ));
         }

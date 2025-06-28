@@ -4,21 +4,14 @@
 //! proper error handling, and performance under extreme conditions.
 
 use crate::{
-    error::{InterpolationError, Result},
-    linear_interpolate, cubic_interpolate, pchip_interpolate,
+    advanced::rbf::{RBFKernel, RBFInterpolator},
+    error::{InterpolateError, InterpolateResult},
+    linear_interpolate,
     spline::CubicSpline,
-    bspline::BSpline,
-    advanced::{
-        rbf::{RBFInterpolator, RBFKernel},
-        kriging::{KrigingInterpolator, CovarianceFunction},
-        thinplate::ThinPlateSpline,
-    },
-    interp1d::monotonic::{MonotonicInterpolator, MonotonicMethod},
-    local::mls::{MovingLeastSquares, WeightFunction, PolynomialBasis},
 };
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::numeric::{F64_EPSILON, F64_MAX, F64_MIN_POSITIVE};
-use std::f64::{INFINITY, NEG_INFINITY, NAN};
+use ndarray::{Array1, Array2, ArrayView2};
+use std::f64::{EPSILON as F64_EPSILON, MAX as F64_MAX, MIN_POSITIVE as F64_MIN_POSITIVE};
+use std::f64::INFINITY;
 
 /// Configuration for stress testing
 #[derive(Debug, Clone)]
@@ -157,7 +150,7 @@ pub mod extreme_data {
     pub fn large_values_1d(n: usize) -> (Array1<f64>, Array1<f64>) {
         let scale = F64_MAX.sqrt();
         let x = Array1::linspace(0.0, 1.0, n) * scale;
-        let y = x.mapv(|xi| (xi / scale).sin() * scale / 2.0);
+        let y = x.mapv(|xi: f64| (xi / scale).sin() * scale / 2.0);
         (x, y)
     }
     
@@ -185,7 +178,7 @@ pub mod extreme_data {
     
     /// Generate nearly collinear points
     pub fn near_collinear_1d(n: usize) -> (Array1<f64>, Array1<f64>) {
-        let mut x = Array1::linspace(0.0, 1.0, n);
+        let x = Array1::linspace(0.0, 1.0, n);
         let mut y = x.clone() * 2.0 + 1.0;
         
         // Add tiny perturbations
@@ -283,7 +276,7 @@ pub mod stress_tests {
             
             match linear_interpolate(&x.view(), &y.view(), &queries.view()) {
                 Ok(result) => {
-                    if result.iter().all(|&v| v.is_finite()) {
+                    if result.iter().all(|&v: &f64| v.is_finite()) {
                         results.add_pass("large_values");
                     } else {
                         results.add_fail("large_values", "Non-finite results");
@@ -324,7 +317,7 @@ pub mod stress_tests {
             
             match linear_interpolate(&x.view(), &y.view(), &queries.view()) {
                 Ok(result) => {
-                    if result.iter().all(|&v| v.is_finite()) {
+                    if result.iter().all(|&v: &f64| v.is_finite()) {
                         results.add_pass("large_ranges");
                     } else {
                         results.add_fail("large_ranges", "Non-finite results");
@@ -337,12 +330,12 @@ pub mod stress_tests {
         // Test extreme extrapolation
         if config.test_extreme_extrapolation {
             let x = Array1::linspace(0.0, 1.0, 10);
-            let y = x.mapv(|xi| xi.sin());
+            let y = x.mapv(|xi: f64| xi.sin());
             let queries = Array1::from_vec(vec![-100.0, -10.0, 10.0, 100.0]);
             
             match linear_interpolate(&x.view(), &y.view(), &queries.view()) {
                 Ok(result) => {
-                    if result.iter().all(|&v| v.is_finite()) {
+                    if result.iter().all(|&v: &f64| v.is_finite()) {
                         results.add_pass("extreme_extrapolation");
                     } else {
                         results.add_fail("extreme_extrapolation", "Non-finite results");
@@ -356,7 +349,7 @@ pub mod stress_tests {
         if config.max_dataset_size > 0 {
             let n = config.max_dataset_size.min(1_000_000);
             let x = Array1::linspace(0.0, 100.0, n);
-            let y = x.mapv(|xi| xi.sin());
+            let y = x.mapv(|xi: f64| xi.sin());
             let queries = Array1::linspace(0.0, 100.0, 10000);
             
             let start = Instant::now();
@@ -388,7 +381,7 @@ pub mod stress_tests {
                     
                     for &q in queries.iter() {
                         let result = spline.evaluate(q);
-                        if !result.is_finite() {
+                        if !result.unwrap_or(f64::NAN).is_finite() {
                             all_finite = false;
                             break;
                         }
@@ -419,7 +412,7 @@ pub mod stress_tests {
             let n = 50;
             let x = Array1::linspace(0.0, 1.0, n);
             let scale = 1e100;
-            let y = x.mapv(|xi| xi.sin() * scale);
+            let y = x.mapv(|xi: f64| xi.sin() * scale);
             
             match CubicSpline::new(&x.view(), &y.view()) {
                 Ok(spline) => {
@@ -430,7 +423,7 @@ pub mod stress_tests {
                         let val = spline.evaluate(t);
                         let deriv = spline.derivative(t);
                         
-                        if !val.is_finite() || deriv.abs() > scale * 100.0 {
+                        if !val.unwrap_or(f64::NAN).is_finite() || deriv.unwrap_or(f64::NAN).abs() > scale * 100.0 {
                             stable = false;
                             break;
                         }
@@ -469,7 +462,7 @@ pub mod stress_tests {
                         let queries = extreme_data::extreme_2d(10, "random").0;
                         match interpolator.interpolate(&queries.view()) {
                             Ok(result) => {
-                                if result.iter().all(|&v| v.is_finite()) {
+                                if result.iter().all(|&v: &f64| v.is_finite()) {
                                     results.add_pass(&format!("ill_conditioned_{}", kernel_name));
                                 } else {
                                     results.add_fail(&format!("ill_conditioned_{}", kernel_name), "Non-finite results");
@@ -532,11 +525,11 @@ pub mod stability {
         }
         
         let mut min_dist = f64::MAX;
-        let mut max_dist = 0.0;
+        let mut max_dist: f64 = 0.0;
         
         for i in 0..n {
             for j in i+1..n {
-                let dist = points.slice(ndarray::s![i, ..])
+                let dist: f64 = points.slice(ndarray::s![i, ..])
                     .iter()
                     .zip(points.slice(ndarray::s![j, ..]).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
@@ -556,21 +549,21 @@ pub mod stability {
     }
     
     /// Test for numerical overflow/underflow
-    pub fn test_numerical_limits(value: f64) -> Result<()> {
+    pub fn test_numerical_limits(value: f64) -> InterpolateResult<()> {
         if !value.is_finite() {
-            return Err(InterpolationError::NumericalInstability(
+            return Err(InterpolateError::invalid_input(
                 "Non-finite value encountered".to_string()
             ));
         }
         
         if value.abs() > F64_MAX / 100.0 {
-            return Err(InterpolationError::NumericalInstability(
+            return Err(InterpolateError::invalid_input(
                 "Value approaching overflow".to_string()
             ));
         }
         
         if value != 0.0 && value.abs() < F64_MIN_POSITIVE * 100.0 {
-            return Err(InterpolationError::NumericalInstability(
+            return Err(InterpolateError::invalid_input(
                 "Value approaching underflow".to_string()
             ));
         }

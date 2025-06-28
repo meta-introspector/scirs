@@ -1198,6 +1198,275 @@ pub fn simd_add_auto(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
     }
 }
 
+/// Enhanced SIMD sum function for f64 arrays with optimized vectorization
+#[cfg(feature = "simd")]
+pub fn simd_sum_f64_enhanced(input: &ArrayView1<f64>) -> f64 {
+    let n = input.len();
+    if n == 0 {
+        return 0.0;
+    }
+
+    let input_slice = input.as_slice().unwrap();
+    let mut sum = 0.0f64;
+
+    // Process 4 elements at a time with SIMD
+    let mut i = 0;
+    let chunk_size = 4;
+    let mut accumulators = f64x4::splat(0.0);
+
+    while i + chunk_size <= n {
+        let chunk = [
+            input_slice[i],
+            input_slice[i + 1],
+            input_slice[i + 2],
+            input_slice[i + 3],
+        ];
+        let vec = f64x4::new(chunk);
+        accumulators += vec;
+        i += chunk_size;
+    }
+
+    // Sum the SIMD accumulator
+    let acc_array: [f64; 4] = accumulators.into();
+    sum += acc_array.iter().sum::<f64>();
+
+    // Process remaining elements
+    sum += input_slice.iter().skip(i).take(n - i).sum::<f64>();
+
+    sum
+}
+
+/// SIMD-optimized fused multiply-add for f64 arrays: a * b + c
+#[cfg(feature = "simd")]
+pub fn simd_fused_multiply_add_f64(
+    a: &ArrayView1<f64>,
+    b: &ArrayView1<f64>,
+    c: &ArrayView1<f64>,
+) -> Array1<f64> {
+    let n = a.len();
+    assert_eq!(n, b.len());
+    assert_eq!(n, c.len());
+
+    let mut result = Array1::zeros(n);
+
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+    let c_slice = c.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    let mut i = 0;
+
+    // Process 4 elements at a time with SIMD
+    while i + 4 <= n {
+        let a_chunk = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
+        let b_chunk = [b_slice[i], b_slice[i + 1], b_slice[i + 2], b_slice[i + 3]];
+        let c_chunk = [c_slice[i], c_slice[i + 1], c_slice[i + 2], c_slice[i + 3]];
+
+        let a_vec = f64x4::new(a_chunk);
+        let b_vec = f64x4::new(b_chunk);
+        let c_vec = f64x4::new(c_chunk);
+
+        // Fused multiply-add: a * b + c
+        let result_vec = a_vec * b_vec + c_vec;
+
+        let result_arr: [f64; 4] = result_vec.into();
+        result_slice[i..i + 4].copy_from_slice(&result_arr);
+
+        i += 4;
+    }
+
+    // Process remaining elements
+    for j in i..n {
+        result[j] = a[j] * b[j] + c[j];
+    }
+
+    result
+}
+
+/// SIMD-optimized subtraction for f32 arrays
+#[cfg(feature = "simd")]
+pub fn simd_sub_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    let n = a.len();
+    assert_eq!(n, b.len());
+
+    let mut result = Array1::zeros(n);
+
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    let mut i = 0;
+
+    // Process 8 elements at a time with SIMD
+    while i + 8 <= n {
+        let a_chunk = [
+            a_slice[i],
+            a_slice[i + 1],
+            a_slice[i + 2],
+            a_slice[i + 3],
+            a_slice[i + 4],
+            a_slice[i + 5],
+            a_slice[i + 6],
+            a_slice[i + 7],
+        ];
+        let b_chunk = [
+            b_slice[i],
+            b_slice[i + 1],
+            b_slice[i + 2],
+            b_slice[i + 3],
+            b_slice[i + 4],
+            b_slice[i + 5],
+            b_slice[i + 6],
+            b_slice[i + 7],
+        ];
+
+        let a_vec = f32x8::new(a_chunk);
+        let b_vec = f32x8::new(b_chunk);
+        let result_vec = a_vec - b_vec;
+
+        let result_arr: [f32; 8] = result_vec.into();
+        result_slice[i..i + 8].copy_from_slice(&result_arr);
+
+        i += 8;
+    }
+
+    // Process remaining elements
+    for j in i..n {
+        result[j] = a[j] - b[j];
+    }
+
+    result
+}
+
+/// SIMD-optimized subtraction for f64 arrays
+#[cfg(feature = "simd")]
+pub fn simd_sub_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
+    let n = a.len();
+    assert_eq!(n, b.len());
+
+    let mut result = Array1::zeros(n);
+
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    let mut i = 0;
+
+    // Process 4 elements at a time with SIMD
+    while i + 4 <= n {
+        let a_chunk = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
+        let b_chunk = [b_slice[i], b_slice[i + 1], b_slice[i + 2], b_slice[i + 3]];
+
+        let a_vec = f64x4::new(a_chunk);
+        let b_vec = f64x4::new(b_chunk);
+        let result_vec = a_vec - b_vec;
+
+        let result_arr: [f64; 4] = result_vec.into();
+        result_slice[i..i + 4].copy_from_slice(&result_arr);
+
+        i += 4;
+    }
+
+    // Process remaining elements
+    for j in i..n {
+        result[j] = a[j] - b[j];
+    }
+
+    result
+}
+
+/// SIMD-optimized division for f32 arrays
+#[cfg(feature = "simd")]
+pub fn simd_div_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    let n = a.len();
+    assert_eq!(n, b.len());
+
+    let mut result = Array1::zeros(n);
+
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    let mut i = 0;
+
+    // Process 8 elements at a time with SIMD
+    while i + 8 <= n {
+        let a_chunk = [
+            a_slice[i],
+            a_slice[i + 1],
+            a_slice[i + 2],
+            a_slice[i + 3],
+            a_slice[i + 4],
+            a_slice[i + 5],
+            a_slice[i + 6],
+            a_slice[i + 7],
+        ];
+        let b_chunk = [
+            b_slice[i],
+            b_slice[i + 1],
+            b_slice[i + 2],
+            b_slice[i + 3],
+            b_slice[i + 4],
+            b_slice[i + 5],
+            b_slice[i + 6],
+            b_slice[i + 7],
+        ];
+
+        let a_vec = f32x8::new(a_chunk);
+        let b_vec = f32x8::new(b_chunk);
+        let result_vec = a_vec / b_vec;
+
+        let result_arr: [f32; 8] = result_vec.into();
+        result_slice[i..i + 8].copy_from_slice(&result_arr);
+
+        i += 8;
+    }
+
+    // Process remaining elements
+    for j in i..n {
+        result[j] = a[j] / b[j];
+    }
+
+    result
+}
+
+/// SIMD-optimized division for f64 arrays
+#[cfg(feature = "simd")]
+pub fn simd_div_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
+    let n = a.len();
+    assert_eq!(n, b.len());
+
+    let mut result = Array1::zeros(n);
+
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    let mut i = 0;
+
+    // Process 4 elements at a time with SIMD
+    while i + 4 <= n {
+        let a_chunk = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
+        let b_chunk = [b_slice[i], b_slice[i + 1], b_slice[i + 2], b_slice[i + 3]];
+
+        let a_vec = f64x4::new(a_chunk);
+        let b_vec = f64x4::new(b_chunk);
+        let result_vec = a_vec / b_vec;
+
+        let result_arr: [f64; 4] = result_vec.into();
+        result_slice[i..i + 4].copy_from_slice(&result_arr);
+
+        i += 4;
+    }
+
+    // Process remaining elements
+    for j in i..n {
+        result[j] = a[j] / b[j];
+    }
+
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

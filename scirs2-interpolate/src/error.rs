@@ -39,23 +39,11 @@ pub enum InterpolateError {
     #[error("Computation error: {0}")]
     ComputationError(String),
 
-    /// Domain error (input outside valid domain) - legacy
-    #[error("Domain error: {0}")]
-    DomainError(String),
-
-    /// Value error (invalid value) - legacy  
-    #[error("Value error: {0}")]
-    ValueError(String),
-
     /// Shape error (ndarray shape mismatch)
     #[error("Shape error: {0}")]
     ShapeError(String),
 
     /// Not implemented error
-    #[error("Not implemented: {0}")]
-    NotImplementedError(String),
-
-    /// Feature not implemented (alias for NotImplementedError)
     #[error("Not implemented: {0}")]
     NotImplemented(String),
 
@@ -184,5 +172,42 @@ impl InterpolateError {
             actual: actual.into(),
             object: object.into(),
         }
+    }
+    
+    /// Create a standard dimension mismatch error
+    pub fn dimension_mismatch(expected: usize, actual: usize, context: &str) -> Self {
+        Self::DimensionMismatch(format!(
+            "Dimension mismatch in {}: expected {}, got {}",
+            context, expected, actual
+        ))
+    }
+    
+    /// Create a standard empty data error
+    pub fn empty_data(context: &str) -> Self {
+        Self::InsufficientData(format!("Empty input data provided to {}", context))
+    }
+    
+    /// Create a standard convergence failure error
+    pub fn convergence_failure(method: &str, iterations: usize) -> Self {
+        Self::ComputationError(format!(
+            "{} failed to converge after {} iterations",
+            method, iterations
+        ))
+    }
+    
+    /// Create a numerical stability error
+    pub fn numerical_instability(context: &str, details: &str) -> Self {
+        Self::NumericalError(format!(
+            "Numerical instability in {}: {}",
+            context, details
+        ))
+    }
+    
+    /// Create an insufficient data points error
+    pub fn insufficient_points(required: usize, provided: usize, method: &str) -> Self {
+        Self::InsufficientData(format!(
+            "{} requires at least {} points, but only {} provided",
+            method, required, provided
+        ))
     }
 }

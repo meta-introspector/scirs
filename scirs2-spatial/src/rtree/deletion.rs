@@ -225,11 +225,19 @@ impl<T: Clone> RTree<T> {
             // Get mutable references to the nodes
             let child_node = match &mut child_entry {
                 Entry::NonLeaf { child, .. } => child,
-                _ => unreachable!()
+                _ => {
+                    return Err(crate::error::SpatialError::ComputationError(
+                        "Expected a non-leaf entry for child node".into(),
+                    ))
+                }
             };
             let sibling_node = match &mut sibling_entry {
                 Entry::NonLeaf { child, .. } => child,
-                _ => unreachable!()
+                _ => {
+                    return Err(crate::error::SpatialError::ComputationError(
+                        "Expected a non-leaf entry for sibling node".into(),
+                    ))
+                }
             };
             
             // Calculate how many entries to move
@@ -275,11 +283,19 @@ impl<T: Clone> RTree<T> {
             // Get the nodes
             let child_node = match &mut child_entry {
                 Entry::NonLeaf { child, .. } => child,
-                _ => unreachable!()
+                _ => {
+                    return Err(crate::error::SpatialError::ComputationError(
+                        "Expected a non-leaf entry for child node".into(),
+                    ))
+                }
             };
             let sibling_node = match sibling_entry {
                 Entry::NonLeaf { child, .. } => child,
-                _ => unreachable!()
+                _ => {
+                    return Err(crate::error::SpatialError::ComputationError(
+                        "Expected a non-leaf entry for sibling node".into(),
+                    ))
+                }
             };
             
             // Move all entries from sibling to child

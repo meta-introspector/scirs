@@ -90,12 +90,7 @@ impl SimdUnifiedOps for f32 {
 
     #[cfg(feature = "simd")]
     fn simd_sub(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
-        let n = a.len();
-        let mut result = Array1::zeros(n);
-        for i in 0..n {
-            result[i] = a[i] - b[i];
-        }
-        result
+        crate::simd::simd_sub_f32(a, b)
     }
 
     #[cfg(not(feature = "simd"))]
@@ -113,6 +108,12 @@ impl SimdUnifiedOps for f32 {
         a * b
     }
 
+    #[cfg(feature = "simd")]
+    fn simd_div(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        crate::simd::simd_div_f32(a, b)
+    }
+
+    #[cfg(not(feature = "simd"))]
     fn simd_div(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         a / b
     }
@@ -296,6 +297,12 @@ impl SimdUnifiedOps for f64 {
         a + b
     }
 
+    #[cfg(feature = "simd")]
+    fn simd_sub(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        crate::simd::simd_sub_f64(a, b)
+    }
+
+    #[cfg(not(feature = "simd"))]
     fn simd_sub(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         a - b
     }
@@ -310,6 +317,12 @@ impl SimdUnifiedOps for f64 {
         a * b
     }
 
+    #[cfg(feature = "simd")]
+    fn simd_div(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        crate::simd::simd_div_f64(a, b)
+    }
+
+    #[cfg(not(feature = "simd"))]
     fn simd_div(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         a / b
     }
@@ -418,6 +431,12 @@ impl SimdUnifiedOps for f64 {
         a.mapv(|x| x * scalar)
     }
 
+    #[cfg(feature = "simd")]
+    fn simd_sum(a: &ArrayView1<Self>) -> Self {
+        crate::simd::simd_sum_f64_enhanced(a)
+    }
+
+    #[cfg(not(feature = "simd"))]
     fn simd_sum(a: &ArrayView1<Self>) -> Self {
         a.sum()
     }
@@ -438,6 +457,12 @@ impl SimdUnifiedOps for f64 {
         a.fold(f64::INFINITY, |acc, &x| acc.min(x))
     }
 
+    #[cfg(feature = "simd")]
+    fn simd_fma(a: &ArrayView1<Self>, b: &ArrayView1<Self>, c: &ArrayView1<Self>) -> Array1<Self> {
+        crate::simd::simd_fused_multiply_add_f64(a, b, c)
+    }
+
+    #[cfg(not(feature = "simd"))]
     fn simd_fma(a: &ArrayView1<Self>, b: &ArrayView1<Self>, c: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
         for i in 0..a.len() {

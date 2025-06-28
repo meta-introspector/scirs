@@ -1,0 +1,318 @@
+//! GPU device information and capabilities detection
+
+use super::{GpuDeviceInfo, GpuDeviceType};
+use crate::error::LinalgResult;
+
+/// Device capability flags for different GPU features
+#[derive(Debug, Clone, Copy)]
+pub struct DeviceCapabilities {
+    /// Supports double precision (fp64) operations
+    pub supports_fp64: bool,
+    /// Supports half precision (fp16) operations
+    pub supports_fp16: bool,
+    /// Supports unified memory
+    pub supports_unified_memory: bool,
+    /// Supports peer-to-peer memory access
+    pub supports_p2p: bool,
+    /// Maximum threads per block/work group
+    pub max_threads_per_block: usize,
+    /// Maximum shared memory per block
+    pub max_shared_memory: usize,
+    /// Warp/wavefront size
+    pub warp_size: usize,
+}
+
+/// Performance characteristics of a GPU device
+#[derive(Debug, Clone)]
+pub struct DevicePerformance {
+    /// Memory bandwidth in GB/s
+    pub memory_bandwidth: f64,
+    /// Peak compute performance in GFLOPS (single precision)
+    pub peak_gflops_fp32: f64,
+    /// Peak compute performance in GFLOPS (double precision)
+    pub peak_gflops_fp64: f64,
+    /// Memory latency in nanoseconds
+    pub memory_latency_ns: f64,
+    /// Cache size in bytes
+    pub cache_size: usize,
+}
+
+/// Extended device information with capabilities and performance data
+#[derive(Debug, Clone)]
+pub struct ExtendedDeviceInfo {
+    /// Basic device information
+    pub basic_info: GpuDeviceInfo,
+    /// Device capabilities
+    pub capabilities: DeviceCapabilities,
+    /// Performance characteristics
+    pub performance: DevicePerformance,
+}
+
+impl ExtendedDeviceInfo {
+    /// Create extended device info from basic info
+    pub fn from_basic(basic_info: GpuDeviceInfo) -> Self {
+        // Estimate capabilities and performance based on device type
+        let (capabilities, performance) = match basic_info.device_type {
+            GpuDeviceType::Cuda => estimate_cuda_specs(&basic_info),
+            GpuDeviceType::OpenCl => estimate_opencl_specs(&basic_info),
+            GpuDeviceType::Rocm => estimate_rocm_specs(&basic_info),
+            GpuDeviceType::Vulkan => estimate_vulkan_specs(&basic_info),
+            GpuDeviceType::Metal => estimate_metal_specs(&basic_info),
+        };
+        
+        Self {
+            basic_info,
+            capabilities,
+            performance,
+        }
+    }
+    
+    /// Check if this device is suitable for a given workload size
+    pub fn is_suitable_for_workload(&self, elements: usize, requires_fp64: bool) -> bool {
+        // Check memory requirements (assume 8 bytes per element for safety)
+        let memory_required = elements * 8;
+        let memory_available = self.basic_info.total_memory;
+        
+        if memory_required > memory_available / 2 {
+            return false; // Need at least 50% memory available
+        }
+        
+        // Check precision requirements
+        if requires_fp64 && !self.capabilities.supports_fp64 {
+            return false;
+        }
+        
+        true
+    }
+    
+    /// Estimate performance for matrix multiplication
+    pub fn estimate_matmul_performance(&self, m: usize, n: usize, k: usize) -> f64 {
+        let ops = 2.0 * m as f64 * n as f64 * k as f64; // FMA operations
+        let peak_ops_per_sec = self.performance.peak_gflops_fp32 * 1e9;
+        
+        // Simple estimate assuming 50% of peak performance
+        ops / (peak_ops_per_sec * 0.5)
+    }
+    
+    /// Get recommended block size for this device
+    pub fn recommended_block_size(&self) -> (usize, usize) {
+        match self.basic_info.device_type {
+            GpuDeviceType::Cuda => (32, 32), // Common CUDA block size
+            GpuDeviceType::OpenCl => (16, 16), // Conservative OpenCL size
+            GpuDeviceType::Rocm => (32, 32), // Similar to CUDA
+            GpuDeviceType::Vulkan => (32, 32),
+            GpuDeviceType::Metal => (16, 16),
+        }
+    }
+}
+
+fn estimate_cuda_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
+    let capabilities = DeviceCapabilities {
+        supports_fp64: info.supports_fp64,
+        supports_fp16: info.supports_fp16,
+        supports_unified_memory: true, // Most modern CUDA devices
+        supports_p2p: true,
+        max_threads_per_block: 1024,
+        max_shared_memory: 48 * 1024, // 48KB typical
+        warp_size: 32,
+    };
+    
+    // Rough estimates based on compute units and clock frequency
+    let estimated_cores = info.compute_units * 64; // Estimate cores per SM
+    let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
+    
+    let performance = DevicePerformance {
+        memory_bandwidth: (info.total_memory as f64 / 1e9) * 10.0, // Rough estimate
+        peak_gflops_fp32: peak_gflops,
+        peak_gflops_fp64: peak_gflops * 0.5, // Typical ratio
+        memory_latency_ns: 400.0,
+        cache_size: 256 * 1024, // L2 cache estimate
+    };
+    
+    (capabilities, performance)
+}
+
+fn estimate_opencl_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
+    let capabilities = DeviceCapabilities {
+        supports_fp64: info.supports_fp64,
+        supports_fp16: info.supports_fp16,
+        supports_unified_memory: false, // Conservative assumption
+        supports_p2p: false,
+        max_threads_per_block: info.max_work_group_size,
+        max_shared_memory: 32 * 1024, // Conservative estimate
+        warp_size: 64, // AMD wavefront size or conservative estimate
+    };
+    
+    let estimated_cores = info.compute_units * 64;
+    let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
+    
+    let performance = DevicePerformance {
+        memory_bandwidth: (info.total_memory as f64 / 1e9) * 8.0,
+        peak_gflops_fp32: peak_gflops,
+        peak_gflops_fp64: peak_gflops * 0.25, // More conservative
+        memory_latency_ns: 500.0,
+        cache_size: 128 * 1024,
+    };
+    
+    (capabilities, performance)
+}
+
+fn estimate_rocm_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
+    let capabilities = DeviceCapabilities {
+        supports_fp64: info.supports_fp64,
+        supports_fp16: info.supports_fp16,
+        supports_unified_memory: true, // Modern AMD GPUs
+        supports_p2p: true,
+        max_threads_per_block: 1024,
+        max_shared_memory: 64 * 1024, // LDS on AMD
+        warp_size: 64, // AMD wavefront size
+    };
+    
+    let estimated_cores = info.compute_units * 64;
+    let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
+    
+    let performance = DevicePerformance {
+        memory_bandwidth: (info.total_memory as f64 / 1e9) * 12.0, // AMD typically good bandwidth
+        peak_gflops_fp32: peak_gflops,
+        peak_gflops_fp64: peak_gflops * 0.5,
+        memory_latency_ns: 350.0,
+        cache_size: 512 * 1024,
+    };
+    
+    (capabilities, performance)
+}
+
+fn estimate_vulkan_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
+    // Similar to OpenCL but more conservative
+    let capabilities = DeviceCapabilities {
+        supports_fp64: info.supports_fp64,
+        supports_fp16: info.supports_fp16,
+        supports_unified_memory: false,
+        supports_p2p: false,
+        max_threads_per_block: info.max_work_group_size,
+        max_shared_memory: 32 * 1024,
+        warp_size: 32, // Conservative estimate
+    };
+    
+    let estimated_cores = info.compute_units * 32;
+    let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
+    
+    let performance = DevicePerformance {
+        memory_bandwidth: (info.total_memory as f64 / 1e9) * 6.0,
+        peak_gflops_fp32: peak_gflops,
+        peak_gflops_fp64: peak_gflops * 0.25,
+        memory_latency_ns: 600.0,
+        cache_size: 64 * 1024,
+    };
+    
+    (capabilities, performance)
+}
+
+fn estimate_metal_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
+    let capabilities = DeviceCapabilities {
+        supports_fp64: info.supports_fp64,
+        supports_fp16: true, // Apple GPUs generally support fp16
+        supports_unified_memory: true, // Apple's unified memory architecture
+        supports_p2p: false,
+        max_threads_per_block: 1024,
+        max_shared_memory: 32 * 1024,
+        warp_size: 32, // SIMD group size on Apple GPUs
+    };
+    
+    let estimated_cores = info.compute_units * 32; // Conservative estimate
+    let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
+    
+    let performance = DevicePerformance {
+        memory_bandwidth: (info.total_memory as f64 / 1e9) * 15.0, // Apple's unified memory is fast
+        peak_gflops_fp32: peak_gflops,
+        peak_gflops_fp64: peak_gflops * 0.5,
+        memory_latency_ns: 200.0, // Unified memory has lower latency
+        cache_size: 128 * 1024,
+    };
+    
+    (capabilities, performance)
+}
+
+/// Benchmark a device to get actual performance characteristics
+pub fn benchmark_device_performance(
+    device_info: &GpuDeviceInfo,
+) -> LinalgResult<DevicePerformance> {
+    // This would run actual benchmarks on the device
+    // For now, return estimates
+    let extended_info = ExtendedDeviceInfo::from_basic(device_info.clone());
+    Ok(extended_info.performance)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extended_device_info_creation() {
+        let basic_info = GpuDeviceInfo {
+            device_type: GpuDeviceType::Cuda,
+            name: "Test GPU".to_string(),
+            total_memory: 8 * 1024 * 1024 * 1024, // 8GB
+            compute_units: 80,
+            clock_frequency: 1500,
+            supports_fp64: true,
+            supports_fp16: true,
+            max_work_group_size: 1024,
+            vendor: "NVIDIA".to_string(),
+        };
+        
+        let extended_info = ExtendedDeviceInfo::from_basic(basic_info);
+        
+        assert_eq!(extended_info.basic_info.device_type, GpuDeviceType::Cuda);
+        assert_eq!(extended_info.capabilities.warp_size, 32);
+        assert!(extended_info.performance.peak_gflops_fp32 > 0.0);
+    }
+
+    #[test]
+    fn test_workload_suitability() {
+        let basic_info = GpuDeviceInfo {
+            device_type: GpuDeviceType::Cuda,
+            name: "Test GPU".to_string(),
+            total_memory: 1024 * 1024 * 1024, // 1GB
+            compute_units: 10,
+            clock_frequency: 1000,
+            supports_fp64: false,
+            supports_fp16: true,
+            max_work_group_size: 1024,
+            vendor: "Test".to_string(),
+        };
+        
+        let extended_info = ExtendedDeviceInfo::from_basic(basic_info);
+        
+        // Small workload, no fp64 required - should be suitable
+        assert!(extended_info.is_suitable_for_workload(1000, false));
+        
+        // Large workload - should not be suitable (memory)
+        assert!(!extended_info.is_suitable_for_workload(100_000_000, false));
+        
+        // Requires fp64 but device doesn't support it
+        assert!(!extended_info.is_suitable_for_workload(1000, true));
+    }
+
+    #[test]
+    fn test_performance_estimation() {
+        let basic_info = GpuDeviceInfo {
+            device_type: GpuDeviceType::Cuda,
+            name: "Test GPU".to_string(),
+            total_memory: 8 * 1024 * 1024 * 1024,
+            compute_units: 80,
+            clock_frequency: 1500,
+            supports_fp64: true,
+            supports_fp16: true,
+            max_work_group_size: 1024,
+            vendor: "Test".to_string(),
+        };
+        
+        let extended_info = ExtendedDeviceInfo::from_basic(basic_info);
+        
+        // Estimate time for 1000x1000x1000 matrix multiplication
+        let time_estimate = extended_info.estimate_matmul_performance(1000, 1000, 1000);
+        assert!(time_estimate > 0.0);
+        assert!(time_estimate < 1.0); // Should be less than 1 second
+    }
+}

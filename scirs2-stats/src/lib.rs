@@ -45,6 +45,7 @@
 //! * Masked array statistics
 //! * Quasi-Monte Carlo
 //! * Statistical sampling
+//! * Survival analysis (Kaplan-Meier, Cox proportional hazards, log-rank test)
 //!
 //! ## Examples
 //!
@@ -314,6 +315,10 @@ pub mod error_messages;
 pub mod error_context;
 pub mod error_suggestions;
 pub mod error_handling_v2;
+pub mod error_standardization;
+pub mod error_diagnostics;
+pub mod unified_error_handling;
+pub mod performance_optimization;
 pub use error::{StatsError, StatsResult};
 pub use error_suggestions::{
     SuggestionEngine, Suggestion, ErrorFormatter, diagnose_error, 
@@ -323,6 +328,22 @@ pub use error_handling_v2::{
     ErrorCode, EnhancedError, ErrorContext as ErrorContextV2, 
     ErrorBuilder, RecoverySuggestion, PerformanceImpact
 };
+pub use error_standardization::{
+    ErrorMessages, ErrorValidator, RecoverySuggestions, StandardizedErrorReporter,
+    PerformanceImpact as StandardizedPerformanceImpact
+};
+pub use error_diagnostics::{
+    ErrorMonitor, ErrorPattern, ErrorOccurrence, ErrorStatistics, HealthReport, 
+    CriticalIssue, Recommendation, ErrorTrend, TrendDirection, ChainStatistics,
+    global_monitor, record_global_error, get_global_statistics, generate_global_health_report
+};
+pub use unified_error_handling::{
+    UnifiedErrorHandler, global_error_handler, create_standardized_error
+};
+pub use performance_optimization::{
+    PerformanceConfig, PerformanceMetrics, OptimizedLinearDiscriminantAnalysis,
+    OptimizedCanonicalCorrelationAnalysis, PerformanceBenchmark
+};
 
 // API improvements for v1.0.0
 pub mod api_improvements;
@@ -331,7 +352,17 @@ pub use api_improvements::{
     StatsConfig, CorrelationExt, StatsBuilder, TestResult
 };
 
+// Advanced integration workflows
+pub use advanced_integration::{
+    BayesianAnalysisWorkflow, BayesianAnalysisResult, BayesianModelMetrics,
+    DimensionalityAnalysisWorkflow, DimensionalityAnalysisResult, 
+    DimensionalityRecommendations, DimensionalityMetrics,
+    QMCWorkflow, QMCResult, QMCSequenceType, QMCQualityMetrics,
+    SurvivalAnalysisWorkflow, SurvivalAnalysisResult, SurvivalSummaryStats
+};
+
 // Module substructure following SciPy's organization
+pub mod advanced_integration; // High-level workflows integrating multiple advanced methods
 pub mod bayesian; // Bayesian statistics
 pub mod contingency; // Contingency table functions
 #[path = "distributions/mod_without_circular.rs"]
@@ -341,24 +372,37 @@ pub mod mstats; // Masked array statistics
 pub mod multivariate; // Multivariate analysis (PCA, etc.)
 pub mod qmc; // Quasi-Monte Carlo
 pub mod sampling; // Sampling utilities
+pub mod survival; // Survival analysis
 pub mod traits; // Trait definitions for distributions and statistical objects
 
 // Core functions for descriptive statistics
 mod descriptive;
 mod descriptive_simd;
 mod simd_optimized_v2;
+mod simd_enhanced_v3;
+mod simd_enhanced_advanced;
 mod parallel_stats;
 mod parallel_stats_enhanced;
 mod parallel_enhanced_v2;
+mod parallel_advanced_v3;
 mod memory_efficient;
 mod memory_profiling;
 mod memory_optimized_v2;
+mod memory_profiler_v3;
 mod quantile_simd;
 mod dispersion_simd;
 pub use descriptive::*;
 pub use descriptive_simd::{mean_simd, variance_simd, std_simd, descriptive_stats_simd};
 pub use simd_optimized_v2::{
     mean_simd_optimized, variance_simd_optimized, stats_simd_single_pass, SimdConfig
+};
+pub use simd_enhanced_v3::{
+    distance_matrix_simd, euclidean_distance_simd, manhattan_distance_simd, cosine_distance_simd,
+    MovingWindowSIMD, histogram_simd, detect_outliers_zscore_simd
+};
+pub use simd_enhanced_advanced::{
+    ttest_ind_simd, corrcoef_matrix_simd, robust_statistics_simd, 
+    bootstrap_mean_simd, linear_regression_simd
 };
 pub use quantile_simd::{
     quantile_simd, quantiles_simd, median_simd, percentile_simd, quickselect_simd
@@ -379,6 +423,10 @@ pub use parallel_enhanced_v2::{
     ParallelConfig, mean_parallel_enhanced, variance_parallel_enhanced,
     corrcoef_parallel_enhanced, bootstrap_parallel_enhanced
 };
+pub use parallel_advanced_v3::{
+    AdvancedParallelConfig, ParallelBatchProcessor, ParallelCrossValidator,
+    ParallelMonteCarlo, ParallelMatrixOps
+};
 pub use memory_efficient::{
     streaming_mean, welford_variance, normalize_inplace, quantile_quickselect,
     covariance_chunked, StreamingHistogram
@@ -391,6 +439,10 @@ pub use memory_profiling::{
 pub use memory_optimized_v2::{
     MemoryConfig, MemoryPool, mean_zero_copy, variance_cache_aware,
     LazyStats, StreamingCovariance
+};
+pub use memory_profiler_v3::{
+    MemoryProfiler, MemoryReport, AllocationStats, StatisticsCache, CacheStats,
+    AdaptiveMemoryManager, AlgorithmChoice as MemoryAlgorithmChoice, ProfiledStatistics
 };
 
 // Statistical tests module

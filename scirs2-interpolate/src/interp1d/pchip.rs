@@ -73,13 +73,13 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
     pub fn new(x: &ArrayView1<F>, y: &ArrayView1<F>, extrapolate: bool) -> InterpolateResult<Self> {
         // Check inputs
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 2 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 2 points are required for interpolation".to_string(),
             ));
         }
@@ -87,7 +87,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
         // Check that x is sorted
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x values must be sorted in ascending order".to_string(),
                 ));
             }
@@ -126,7 +126,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
         // Check if we're extrapolating
         let is_extrapolating = x_new < self.x[0] || x_new > self.x[self.x.len() - 1];
         if is_extrapolating && !self.extrapolate {
-            return Err(InterpolateError::DomainError(
+            return Err(InterpolateError::OutOfBounds(
                 "x_new is outside the interpolation range".to_string(),
             ));
         }

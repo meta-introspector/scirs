@@ -104,13 +104,13 @@ impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
     ) -> InterpolateResult<Self> {
         // Check inputs
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 2 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 2 points are required for interpolation".to_string(),
             ));
         }
@@ -118,7 +118,7 @@ impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
         // Check that x is sorted
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x values must be sorted in ascending order".to_string(),
                 ));
             }
@@ -126,7 +126,7 @@ impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
 
         // For cubic interpolation, need at least 4 points
         if method == InterpolationMethod::Cubic && x.len() < 4 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 4 points are required for cubic interpolation".to_string(),
             ));
         }
@@ -155,7 +155,7 @@ impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
         if is_extrapolating {
             match self.extrapolate {
                 ExtrapolateMode::Error => {
-                    return Err(InterpolateError::DomainError(
+                    return Err(InterpolateError::OutOfBounds(
                         "x_new is outside the interpolation range".to_string(),
                     ));
                 }

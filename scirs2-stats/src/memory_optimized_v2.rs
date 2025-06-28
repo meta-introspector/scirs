@@ -7,7 +7,7 @@
 //! - Cache-aware algorithms
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{ArrayBase, ArrayView1, ArrayViewMut1, Data, DataMut, Ix1, Ix2, s};
+use ndarray::{ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -142,7 +142,7 @@ where
     let mut sum_sq_dev = F::zero();
     let mut c = F::zero();  // Kahan compensation
     
-    for chunk in x.chunks(cache_elements) {
+    for chunk in x.exact_chunks(cache_elements) {
         for &val in chunk.iter() {
             let dev = val - mean;
             let sq_dev = dev * dev;

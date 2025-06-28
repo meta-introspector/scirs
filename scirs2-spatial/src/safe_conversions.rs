@@ -6,6 +6,7 @@ use num_traits::Float;
 /// Safely convert a numeric literal to type T
 ///
 /// This function replaces the pattern `T::from(value).unwrap()` with proper error handling
+#[allow(dead_code)]
 pub fn safe_from<T: Float>(value: f64, context: &str) -> SpatialResult<T> {
     T::from(value).ok_or_else(|| {
         SpatialError::ComputationError(format!(

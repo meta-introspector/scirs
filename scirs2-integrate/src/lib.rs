@@ -1,4 +1,14 @@
 #![recursion_limit = "1024"]
+#![allow(clippy::new_without_default)]
+#![allow(clippy::field_reassign_with_default)]
+#![allow(clippy::needless_range_loop)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::type_complexity)]
+#![allow(clippy::absurd_extreme_comparisons)]
+#![allow(clippy::get_first)]
+#![allow(clippy::manual_clamp)]
+#![allow(clippy::implicit_saturating_add)]
+#![allow(dead_code)]
 
 //! Numerical integration module
 //!
@@ -94,7 +104,7 @@
 //! ).unwrap();
 //!
 //! // Final value should be close to e^(-1) ≈ 0.368
-//! let final_y = result.y.last().unwrap()[0];
+//! let final_y = result.y.last().expect("Solution should have at least one point")[0];
 //! assert!((final_y - 0.368).abs() < 1e-2);
 //! ```
 //!
@@ -170,6 +180,12 @@ pub mod specialized;
 
 // Geometric integration methods
 pub mod geometric;
+
+// Advanced analysis tools for dynamical systems
+pub mod analysis;
+
+// Visualization utilities
+pub mod visualization;
 
 // ODE module is now fully implemented in ode/
 
@@ -264,8 +280,10 @@ pub use autodiff::{
 // Export specialized domain-specific solvers
 pub use specialized::{
     SchrodingerSolver, QuantumState, QuantumPotential, HarmonicOscillator, ParticleInBox,
-    HydrogenAtom, SchrodingerMethod, NavierStokesSolver, FluidState, FluidBoundaryCondition,
-    NavierStokesParams, StochasticPDESolver, FinancialOption, VolatilityModel, OptionType,
+    HydrogenAtom, SchrodingerMethod, QuantumAnnealer, VariationalQuantumEigensolver, 
+    MultiBodyQuantumSolver, NavierStokesSolver, FluidState, FluidBoundaryCondition,
+    NavierStokesParams, LESolver, RANSSolver, FluidState3D, RANSState, SGSModel, RANSModel,
+    StochasticPDESolver, FinancialOption, VolatilityModel, OptionType,
     OptionStyle, FinanceMethod, JumpProcess, Greeks,
 };
 // Export geometric integration methods
@@ -284,6 +302,16 @@ pub use geometric::{
     EnergyPreservingMethod, MomentumPreservingMethod,
     SplittingIntegrator, EnergyMomentumIntegrator, ConstrainedIntegrator, MultiSymplecticIntegrator,
     EnergyInvariant, LinearMomentumInvariant, AngularMomentumInvariant2D,
+};
+// Export analysis tools
+pub use analysis::{
+    BifurcationAnalyzer, BifurcationPoint, BifurcationType, StabilityAnalyzer, StabilityResult,
+    FixedPoint, PeriodicOrbit, StabilityType, BasinAnalysis,
+};
+// Export visualization utilities
+pub use visualization::{
+    VisualizationEngine, PhaseSpacePlot, BifurcationDiagram, VectorFieldPlot, HeatMapPlot,
+    SurfacePlot, PlotMetadata, OutputFormat, ColorScheme, PlotStatistics,
 };
 // Implicit solvers will be exposed in a future update
 // pub use pde::implicit::{

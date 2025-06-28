@@ -110,7 +110,7 @@ where
     /// * `ku` - Number of super-diagonals to extract
     pub fn from_dense(dense: &ArrayView2<T>, kl: usize, ku: usize) -> InterpolateResult<Self> {
         if dense.nrows() != dense.ncols() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "matrix must be square".to_string(),
             ));
         }
@@ -189,14 +189,14 @@ where
     /// * `value` - Value to set
     pub fn set(&mut self, i: usize, j: usize, value: T) -> InterpolateResult<()> {
         if i >= self.size || j >= self.size {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "indices out of bounds".to_string(),
             ));
         }
 
         let diag_offset = j as isize - i as isize;
         if diag_offset < -(self.kl as isize) || diag_offset > (self.ku as isize) {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "element outside band structure".to_string(),
             ));
         }
@@ -255,7 +255,7 @@ where
     /// Result vector y = A * x
     pub fn multiply_vector(&self, x: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         if x.len() != self.size {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "vector dimension must match matrix size".to_string(),
             ));
         }
@@ -379,7 +379,7 @@ where
     /// Optimized sparse matrix-vector product.
     pub fn multiply_vector(&self, x: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         if x.len() != self.ncols {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "vector dimension must match matrix columns".to_string(),
             ));
         }
@@ -509,7 +509,7 @@ where
         + Copy,
 {
     if rhs.len() != band_matrix.size() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "RHS vector size must match matrix size".to_string(),
         ));
     }
@@ -550,12 +550,12 @@ where
 {
     let n = matrix.nrows();
     if matrix.ncols() != n {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "matrix must be square".to_string(),
         ));
     }
     if rhs.len() != n {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "RHS vector size must match matrix size".to_string(),
         ));
     }
@@ -584,7 +584,7 @@ where
 
         // Check for singular matrix
         if max_val < T::from_f64(1e-14).unwrap() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "matrix is singular or nearly singular".to_string(),
             ));
         }
@@ -649,7 +649,7 @@ where
 {
     let n = sparse_matrix.nrows;
     if rhs.len() != n {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "RHS vector size must match matrix size".to_string(),
         ));
     }
@@ -678,7 +678,7 @@ where
             }
 
             if diagonal.abs() < T::from_f64(1e-14).unwrap() {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "matrix has zero diagonal element".to_string(),
                 ));
             }
@@ -702,7 +702,7 @@ where
         x.assign(&x_new);
     }
 
-    Err(InterpolateError::ValueError(
+    Err(InterpolateError::invalid_input(
         "iterative solver failed to converge".to_string(),
     ))
 }
@@ -738,7 +738,7 @@ where
     let n = matrix.ncols();
 
     if rhs.len() != m {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "RHS vector size must match matrix rows".to_string(),
         ));
     }
@@ -817,7 +817,7 @@ where
 
     let (m, n) = matrix.dim();
     if vector.len() != n {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "vector size must match matrix columns".to_string(),
         ));
     }
@@ -870,7 +870,7 @@ where
 {
     let (m, n) = matrix.dim();
     if vector.len() != n {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "vector size must match matrix columns".to_string(),
         ));
     }

@@ -63,15 +63,20 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
     }
 
     /// Create a new categorical hyperparameter
-    pub fn categorical<S: Into<String>>(name: S, value: F, values: Vec<F>) -> Self {
+    pub fn categorical<S: Into<String>>(name: S, value: F, values: Vec<F>) -> Result<Self> {
         if values.is_empty() {
-            panic!("Categorical values cannot be empty");
+            return Err(MetricsError::InvalidArgument(
+                "Categorical values cannot be empty".to_string(),
+            ));
         }
         if !values.contains(&value) {
-            panic!("Current value must be one of the categorical values");
+            return Err(MetricsError::InvalidArgument(format!(
+                "Current value {} must be one of the categorical values",
+                value
+            )));
         }
 
-        Self {
+        Ok(Self {
             name: name.into(),
             value,
             min_value: F::zero(),
@@ -79,7 +84,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
             step: Some(F::one()),
             is_categorical: true,
             categorical_values: Some(values),
-        }
+        })
     }
 
     /// Get the name
@@ -135,6 +140,72 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
         } else {
             rand_val
         }
+    }
+
+    /// Validate that the current parameter configuration is valid
+    pub fn validate(&self) -> Result<()> {
+        if self.is_categorical {
+            if let Some(values) = &self.categorical_values {
+                if values.is_empty() {
+                    return Err(MetricsError::InvalidArgument(
+                        "Categorical values cannot be empty".to_string(),
+                    ));
+                }
+                if !values.contains(&self.value) {
+                    return Err(MetricsError::InvalidArgument(format!(
+                        "Current value {} is not in categorical values for parameter {}",
+                        self.value, self.name
+                    )));
+                }
+            } else {
+                return Err(MetricsError::InvalidArgument(format!(
+                    "Categorical parameter {} missing values",
+                    self.name
+                )));
+            }
+        } else {
+            if self.min_value > self.max_value {
+                return Err(MetricsError::InvalidArgument(format!(
+                    "Min value {} cannot be greater than max value {} for parameter {}",
+                    self.min_value, self.max_value, self.name
+                )));
+            }
+            if self.value < self.min_value || self.value > self.max_value {
+                return Err(MetricsError::InvalidArgument(format!(
+                    "Current value {} is out of range [{}, {}] for parameter {}",
+                    self.value, self.min_value, self.max_value, self.name
+                )));
+            }
+            if let Some(step) = self.step {
+                if step <= F::zero() {
+                    return Err(MetricsError::InvalidArgument(format!(
+                        "Step size must be positive for parameter {}",
+                        self.name
+                    )));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Get the valid range for this parameter
+    pub fn get_range(&self) -> (F, F) {
+        (self.min_value, self.max_value)
+    }
+
+    /// Get the step size (if discrete)
+    pub fn get_step(&self) -> Option<F> {
+        self.step
+    }
+
+    /// Check if parameter is categorical
+    pub fn is_categorical(&self) -> bool {
+        self.is_categorical
+    }
+
+    /// Get categorical values (if categorical)
+    pub fn get_categorical_values(&self) -> Option<&Vec<F>> {
+        self.categorical_values.as_ref()
     }
 }
 
@@ -231,8 +302,36 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
         metric_name: S,
         maximize: bool,
         max_evals: usize,
-    ) -> Self {
-        Self {
+    ) -> Result<Self> {
+        if params.is_empty() {
+            return Err(MetricsError::InvalidArgument(
+                "Cannot create tuner with empty parameter list".to_string(),
+            ));
+        }
+
+        if max_evals == 0 {
+            return Err(MetricsError::InvalidArgument(
+                "Maximum evaluations must be greater than 0".to_string(),
+            ));
+        }
+
+        // Validate all parameters
+        for param in &params {
+            param.validate()?;
+        }
+
+        // Check for duplicate parameter names
+        let mut names = std::collections::HashSet::new();
+        for param in &params {
+            if !names.insert(param.name()) {
+                return Err(MetricsError::InvalidArgument(format!(
+                    "Duplicate parameter name: {}",
+                    param.name()
+                )));
+            }
+        }
+
+        Ok(Self {
             params,
             metric_name: metric_name.into(),
             mode: if maximize {
@@ -245,7 +344,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
             best_params: HashMap::new(),
             history: Vec::new(),
             _phantom: PhantomData,
-        }
+        })
     }
 
     /// Get the current hyperparameter values

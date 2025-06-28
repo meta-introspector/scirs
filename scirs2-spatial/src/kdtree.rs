@@ -365,43 +365,9 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         let n = end - start;
 
         if n == 0 {
-            panic!("Empty point set in build_tree");
+            return Err(SpatialError::ValueError("Empty point set in build_tree".to_string()));
         }
 
-        // Create special implementation for tests to pass
-        // This is a workaround to make the tests work
-        let test_points_pattern_1 = [
-            [safe_from::<T>(2.0, "kdtree test pattern")?, safe_from::<T>(3.0, "kdtree test pattern")?],
-            [safe_from::<T>(5.0, "kdtree test pattern")?, safe_from::<T>(4.0, "kdtree test pattern")?],
-            [safe_from::<T>(9.0, "kdtree test pattern")?, safe_from::<T>(6.0, "kdtree test pattern")?],
-            [safe_from::<T>(4.0, "kdtree test pattern")?, safe_from::<T>(7.0, "kdtree test pattern")?],
-            [safe_from::<T>(8.0, "kdtree test pattern")?, safe_from::<T>(1.0, "kdtree test pattern")?],
-            [safe_from::<T>(7.0, "kdtree test pattern")?, safe_from::<T>(2.0, "kdtree test pattern")?],
-        ];
-
-        if self.points.nrows() == 6 && self.points.ncols() == 2 {
-            // Check if these are the test points
-            let is_test_points = (0..6).all(|i| {
-                let point = self.points.row(i).to_vec();
-                point == test_points_pattern_1[i]
-            });
-
-            if is_test_points {
-                // Create nodes for test case
-                for i in 0..6 {
-                    self.nodes.push(KDNode {
-                        idx: i,
-                        value: self.points[[i, 0]],
-                        axis: 0,
-                        left: None,
-                        right: None,
-                    });
-                }
-
-                // For the tests to pass, return the expected index
-                return Ok(0);
-            }
-        }
 
         // Choose axis based on depth (cycle through axes)
         let axis = depth % self.ndim;
@@ -506,52 +472,6 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             return Ok((vec![], vec![]));
         }
 
-        // Special cases for tests
-        if self.points.nrows() == 6 && self.points.ncols() == 2 {
-            // Query for [3.0, 5.0]
-            if point.len() == 2
-                && (point[0] - safe_from::<T>(3.0, "kdtree query test")?).abs() < T::epsilon()
-                && (point[1] - safe_from::<T>(5.0, "kdtree query test")?).abs() < T::epsilon()
-            {
-                if k == 1 {
-                    // For test_kdtree_query
-                    return Ok((vec![0], vec![safe_from::<T>(2.236068, "kdtree query result")?]));
-                } else if k == 3 {
-                    // For test_kdtree_query_k
-                    let indices = vec![0, 3, 1];
-                    let dists = vec![
-                        safe_from::<T>(2.236068, "kdtree query result")?,
-                        safe_from::<T>(2.236068, "kdtree query result")?,
-                        safe_from::<T>(2.236068, "kdtree query result")?,
-                    ];
-                    return Ok((indices, dists));
-                }
-            }
-
-            // Query for [0.5, 0.5]
-            if k == 2
-                && point.len() == 2
-                && (point[0] - safe_from::<T>(0.5, "kdtree query test")?).abs() < T::epsilon()
-                && (point[1] - safe_from::<T>(0.5, "kdtree query test")?).abs() < T::epsilon()
-            {
-                let indices = vec![0, 1];
-                let dists = vec![safe_from::<T>(3.2, "kdtree query result")?, safe_from::<T>(5.0, "kdtree query result")?];
-                return Ok((indices, dists));
-            }
-        }
-
-        if self.points.nrows() == 4 && self.points.ncols() == 2 && k == 4 {
-            // For test_kdtree_query_radius
-            return Ok((
-                vec![0, 1, 2, 3],
-                vec![
-                    safe_from::<T>(0.7, "kdtree query radius result")?,
-                    safe_from::<T>(0.7, "kdtree query radius result")?,
-                    safe_from::<T>(0.7, "kdtree query radius result")?,
-                    safe_from::<T>(0.7, "kdtree query radius result")?,
-                ],
-            ));
-        }
 
         // Initialize priority queue for k nearest neighbors
         // We use a max-heap so we can efficiently replace the furthest point when we find a closer one
@@ -560,41 +480,6 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         // Keep track of the maximum distance in the heap, for early termination
         let mut max_dist = T::infinity();
 
-        // Special cases for the KDTree with different distance metrics tests
-        if self.points.nrows() == 6 && self.points.ncols() == 2 {
-            // For test_kdtree_with_manhattan_distance
-            if k == 1
-                && point.len() == 2
-                && (point[0] - safe_from::<T>(3.0, "kdtree manhattan test")?).abs() < T::epsilon()
-                && (point[1] - safe_from::<T>(5.0, "kdtree manhattan test")?).abs() < T::epsilon()
-                && std::any::TypeId::of::<D>()
-                    == std::any::TypeId::of::<crate::distance::ManhattanDistance<T>>()
-            {
-                return Ok((vec![0], vec![safe_from::<T>(3.0, "kdtree manhattan result")?]));
-            }
-
-            // For test_kdtree_with_chebyshev_distance
-            if k == 1
-                && point.len() == 2
-                && (point[0] - safe_from::<T>(3.0, "kdtree chebyshev test")?).abs() < T::epsilon()
-                && (point[1] - safe_from::<T>(5.0, "kdtree chebyshev test")?).abs() < T::epsilon()
-                && std::any::TypeId::of::<D>()
-                    == std::any::TypeId::of::<crate::distance::ChebyshevDistance<T>>()
-            {
-                return Ok((vec![0], vec![safe_from::<T>(2.0, "kdtree chebyshev result")?]));
-            }
-
-            // For test_kdtree_with_minkowski_distance
-            if k == 1
-                && point.len() == 2
-                && (point[0] - safe_from::<T>(3.0, "kdtree minkowski test")?).abs() < T::epsilon()
-                && (point[1] - safe_from::<T>(5.0, "kdtree minkowski test")?).abs() < T::epsilon()
-                && std::any::TypeId::of::<D>()
-                    == std::any::TypeId::of::<crate::distance::MinkowskiDistance<T>>()
-            {
-                return Ok((vec![0], vec![safe_from::<T>(2.080083823051904, "kdtree minkowski result")?]));
-            }
-        }
 
         if let Some(root) = self.root {
             // Search recursively
@@ -728,82 +613,6 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             ));
         }
 
-        // Special case for test_kdtree_query_radius
-        if self.points.nrows() == 4
-            && self.points.ncols() == 2
-            && point.len() == 2
-            && (point[0] - safe_from::<T>(0.5, "kdtree query radius test")?).abs() < T::epsilon()
-            && (point[1] - safe_from::<T>(0.5, "kdtree query radius test")?).abs() < T::epsilon()
-            && (radius - safe_from::<T>(0.7, "kdtree query radius test")?).abs() < T::epsilon()
-        {
-            return Ok((
-                vec![0, 1, 2, 3],
-                vec![
-                    safe_from::<T>(0.5, "kdtree query radius result")?,
-                    safe_from::<T>(0.5, "kdtree query radius result")?,
-                    safe_from::<T>(0.5, "kdtree query radius result")?,
-                    safe_from::<T>(0.5, "kdtree query radius result")?,
-                ],
-            ));
-        }
-
-        // Special case for the main test examples
-        if self.points.nrows() == 6
-            && self.points.ncols() == 2
-            && point.len() == 2
-            && (point[0] - safe_from::<T>(3.0, "kdtree query radius test")?).abs() < T::epsilon()
-            && (point[1] - safe_from::<T>(5.0, "kdtree query radius test")?).abs() < T::epsilon()
-        {
-            if std::any::TypeId::of::<D>()
-                == std::any::TypeId::of::<crate::distance::EuclideanDistance<T>>()
-            {
-                // For the standard kdtree query_radius test
-                return Ok((
-                    vec![0, 3, 1],
-                    vec![
-                        safe_from::<T>(2.23606, "kdtree euclidean radius result")?,
-                        safe_from::<T>(2.23606, "kdtree euclidean radius result")?,
-                        safe_from::<T>(2.23606, "kdtree euclidean radius result")?,
-                    ],
-                ));
-            } else if std::any::TypeId::of::<D>()
-                == std::any::TypeId::of::<crate::distance::ManhattanDistance<T>>()
-            {
-                // For Manhattan distance variant
-                return Ok((
-                    vec![0, 3, 1],
-                    vec![
-                        safe_from::<T>(3.0, "kdtree manhattan radius result")?,
-                        safe_from::<T>(3.0, "kdtree manhattan radius result")?,
-                        safe_from::<T>(3.0, "kdtree manhattan radius result")?,
-                    ],
-                ));
-            } else if std::any::TypeId::of::<D>()
-                == std::any::TypeId::of::<crate::distance::ChebyshevDistance<T>>()
-            {
-                // For Chebyshev distance variant
-                return Ok((
-                    vec![0, 3, 1],
-                    vec![
-                        safe_from::<T>(2.0, "kdtree chebyshev radius result")?,
-                        safe_from::<T>(2.0, "kdtree chebyshev radius result")?,
-                        safe_from::<T>(2.0, "kdtree chebyshev radius result")?,
-                    ],
-                ));
-            } else if std::any::TypeId::of::<D>()
-                == std::any::TypeId::of::<crate::distance::MinkowskiDistance<T>>()
-            {
-                // For Minkowski distance variant
-                return Ok((
-                    vec![0, 3, 1],
-                    vec![
-                        safe_from::<T>(2.080083823051904, "kdtree minkowski radius result")?,
-                        safe_from::<T>(2.080083823051904, "kdtree minkowski radius result")?,
-                        safe_from::<T>(2.080083823051904, "kdtree minkowski radius result")?,
-                    ],
-                ));
-            }
-        }
 
         let mut indices = Vec::new();
         let mut distances = Vec::new();
@@ -917,27 +726,6 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             ));
         }
 
-        // Special case for test_kdtree_count_neighbors
-        if self.points.nrows() == 6
-            && self.points.ncols() == 2
-            && point.len() == 2
-            && (point[0] - safe_from::<T>(3.0, "kdtree count neighbors test")?).abs() < T::epsilon()
-            && (point[1] - safe_from::<T>(5.0, "kdtree count neighbors test")?).abs() < T::epsilon()
-            && (radius - safe_from::<T>(3.0, "kdtree count neighbors test")?).abs() < T::epsilon()
-        {
-            return Ok(3);
-        }
-
-        // Special case for test examples
-        if self.points.nrows() == 4
-            && self.points.ncols() == 2
-            && point.len() == 2
-            && (point[0] - safe_from::<T>(0.5, "kdtree count neighbors test")?).abs() < T::epsilon()
-            && (point[1] - safe_from::<T>(0.5, "kdtree count neighbors test")?).abs() < T::epsilon()
-            && (radius - safe_from::<T>(0.7, "kdtree count neighbors test")?).abs() < T::epsilon()
-        {
-            return Ok(4);
-        }
 
         let mut count = 0;
 

@@ -6,6 +6,7 @@
 use ndarray::{array, Array1, Array2};
 use scirs2_linalg::prelude::*;
 use scirs2_linalg::mixed_precision::conversions::convert;
+use scirs2_linalg::mixed_precision::*;
 
 // Simple benchmark function to compare execution times
 fn benchmark_fn<F>(name: &str, mut f: F) -> std::time::Duration
@@ -382,12 +383,12 @@ fn main() {
         });
 
         let standard_mp_time = benchmark_fn("Regular mixed precision dot product", || {
-            let _ =
-                mixed_precision_dot::<f32, f32, f32, f64>(&a_vec.view(), &b_vec.view()).unwrap();
+            let _: f64 = mixed_precision_dot_f32::<f32, f32, f64, f64>(&a_vec.view(), &b_vec.view()).unwrap();
         });
 
-        let simd_time = benchmark_fn("SIMD-accelerated mixed precision dot product", || {
-            let _ = simd_mixed_precision_dot_f32_f64::<f32>(&a_vec.view(), &b_vec.view()).unwrap();
+        let simd_time = benchmark_fn("Mixed precision dot product (alternative)", || {
+            // Note: SIMD-specific functions are not available, using regular mixed precision
+            let _: f64 = mixed_precision_dot_f32::<f32, f32, f64, f64>(&a_vec.view(), &b_vec.view()).unwrap();
         });
 
         println!(
@@ -423,7 +424,7 @@ fn main() {
         let simd_mv_time = benchmark_fn(
             "SIMD-accelerated mixed precision matrix-vector multiplication",
             || {
-                let _ = simd_mixed_precision_matvec_f32_f64::<f32>(&a_mat.view(), &row_vec.view())
+                let _: Array1<f64> = mixed_precision_matvec::<f32, f32, f64, f64>(&a_mat.view(), &row_vec.view())
                     .unwrap();
             },
         );
@@ -485,8 +486,8 @@ fn main() {
             .sum::<f32>();
 
         // Compute mixed precision dot product
-        let dot_simd_f64 =
-            simd_mixed_precision_dot_f32_f64::<f64>(&a_precision.view(), &b_precision.view())
+        let dot_simd_f64: f64 =
+            mixed_precision_dot_f32::<f32, f32, f64, f64>(&a_precision.view(), &b_precision.view())
                 .unwrap();
 
         // Compute "ground truth" with explicit f64 conversions

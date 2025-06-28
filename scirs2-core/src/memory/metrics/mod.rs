@@ -67,7 +67,7 @@ pub use reporter::ChartFormat;
 pub use gpu::{setup_gpu_memory_tracking, TrackedGpuBuffer, TrackedGpuContext};
 
 use crate::memory::{BufferPool, ChunkProcessor, ChunkProcessor2D};
-use ndarray::{ArrayBase, Data, Dimension, ViewRepr, IxDyn};
+use ndarray::{ArrayBase, Data, Dimension, IxDyn, ViewRepr};
 use once_cell::sync::Lazy;
 use std::marker::PhantomData;
 use std::mem;

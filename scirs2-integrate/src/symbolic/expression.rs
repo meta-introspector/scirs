@@ -417,18 +417,15 @@ pub fn match_pattern<F: IntegrateFloat>(
             }
             
             // Match sin^2(x) + cos^2(x) = 1
-            match (a.as_ref(), b.as_ref()) {
-                (Pow(sin_base, sin_exp), Pow(cos_base, cos_exp)) => {
-                    if let (Sin(sin_arg), Cos(cos_arg), Constant(n1), Constant(n2)) = 
-                        (sin_base.as_ref(), cos_base.as_ref(), sin_exp.as_ref(), cos_exp.as_ref()) {
-                        if match_expressions(sin_arg, cos_arg) 
-                            && (*n1 - F::from(2.0).unwrap()).abs() < F::epsilon()
-                            && (*n2 - F::from(2.0).unwrap()).abs() < F::epsilon() {
-                            return Some(PythagoreanIdentity(sin_arg.clone()));
-                        }
+            if let (Pow(sin_base, sin_exp), Pow(cos_base, cos_exp)) = (a.as_ref(), b.as_ref()) {
+                if let (Sin(sin_arg), Cos(cos_arg), Constant(n1), Constant(n2)) = 
+                    (sin_base.as_ref(), cos_base.as_ref(), sin_exp.as_ref(), cos_exp.as_ref()) {
+                    if match_expressions(sin_arg, cos_arg) 
+                        && (*n1 - F::from(2.0).unwrap()).abs() < F::epsilon()
+                        && (*n2 - F::from(2.0).unwrap()).abs() < F::epsilon() {
+                        return Some(PythagoreanIdentity(sin_arg.clone()));
                     }
                 }
-                _ => {}
             }
             None
         }

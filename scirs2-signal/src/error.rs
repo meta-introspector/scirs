@@ -36,6 +36,35 @@ pub enum SignalError {
     /// Runtime error
     #[error("Runtime error: {0}")]
     RuntimeError(String),
+
+    /// Shape mismatch error
+    #[error("Shape mismatch: {0}")]
+    ShapeMismatch(String),
+
+    /// Not implemented error
+    #[error("Not implemented: {0}")]
+    NotImplemented(String),
+}
+
+// Conversion from scirs2_core errors
+impl From<scirs2_core::CoreError> for SignalError {
+    fn from(err: scirs2_core::CoreError) -> Self {
+        SignalError::ComputationError(format!("Core error: {}", err))
+    }
+}
+
+// Conversion from FFT errors
+impl From<scirs2_fft::FFTError> for SignalError {
+    fn from(err: scirs2_fft::FFTError) -> Self {
+        SignalError::ComputationError(format!("FFT error: {}", err))
+    }
+}
+
+// Conversion from ndarray shape errors
+impl From<ndarray::ShapeError> for SignalError {
+    fn from(err: ndarray::ShapeError) -> Self {
+        SignalError::ShapeMismatch(format!("Shape error: {}", err))
+    }
 }
 
 // Conversion from scirs2_linalg errors

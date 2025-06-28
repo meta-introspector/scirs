@@ -6,6 +6,7 @@
 //! - Stress testing for memory and performance limits
 //! - Large-scale dataset testing
 //! - Security audit utilities
+//! - Integration testing with dependent modules
 //!
 //! ## Features
 //!
@@ -14,8 +15,10 @@
 //! - **Stress testing**: Memory pressure and performance limit testing
 //! - **Large-scale testing**: Multi-GB dataset handling and processing
 //! - **Security auditing**: Input validation and bounds checking verification
+//! - **Integration testing**: Cross-module compatibility and communication validation
 
 pub mod fuzzing;
+pub mod integration;
 pub mod large_scale;
 pub mod property_based;
 pub mod security;

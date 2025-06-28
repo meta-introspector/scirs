@@ -287,7 +287,7 @@ pub mod erf_stability {
             let erfc_val: f64 = erfc(x);
             
             // erfc(x) ~ exp(-x²)/(x*sqrt(π)) for large x
-            let expected = ((-x * x).exp() / (x * f64::consts::PI.sqrt())) as f64;
+            let expected = (-x * x).exp() / (x * f64::consts::PI.sqrt());
             let rel_error = (erfc_val - expected).abs() / expected;
             
             if erfc_val == 0.0 {

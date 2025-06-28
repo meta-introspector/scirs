@@ -167,10 +167,10 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
     let mut kernel_1d = vec![0.0f32; kernel_size];
     let mut sum = 0.0f32;
     
-    for i in 0..kernel_size {
+    for (i, kernel_val) in kernel_1d.iter_mut().enumerate() {
         let x = i as f32 - kernel_half as f32;
         let value = (-x * x / (2.0 * sigma * sigma)).exp();
-        kernel_1d[i] = value;
+        *kernel_val = value;
         sum += value;
     }
     
@@ -178,7 +178,6 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
     for val in &mut kernel_1d {
         *val /= sum;
     }
-    
     let kernel_arr = ndarray::arr1(&kernel_1d);
     
     let (height, width) = image.dim();
@@ -345,13 +344,18 @@ pub fn check_simd_support() -> PlatformCapabilities {
 
 /// Get performance statistics for SIMD operations
 pub struct SimdPerformanceStats {
+    /// Whether SIMD operations are available on this platform
     pub simd_available: bool,
+    /// Expected performance speedup for convolution operations
     pub expected_speedup_convolution: f32,
+    /// Expected performance speedup for gradient computations
     pub expected_speedup_gradients: f32,
+    /// Expected performance speedup for normalization operations
     pub expected_speedup_normalization: f32,
 }
 
 impl SimdPerformanceStats {
+    /// Estimate SIMD performance characteristics for the current platform
     pub fn estimate() -> Self {
         let caps = PlatformCapabilities::detect();
         

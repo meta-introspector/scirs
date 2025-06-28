@@ -95,13 +95,13 @@ where
     pub fn new(x: &ArrayView2<T>, y: &ArrayView1<T>, smoothing: T) -> InterpolateResult<Self> {
         // Validate inputs
         if x.nrows() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "number of points must match number of values".to_string(),
             ));
         }
 
         if smoothing < T::zero() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "smoothing parameter must be non-negative".to_string(),
             ));
         }
@@ -112,7 +112,7 @@ where
 
         // Need at least n_dims + 1 points for a unique solution (polynomial terms)
         if n_points < n_dims + 1 {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "need at least {} points for {} dimensions",
                 n_dims + 1,
                 n_dims

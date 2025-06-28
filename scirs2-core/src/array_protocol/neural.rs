@@ -33,6 +33,19 @@ pub trait Layer: Any + Send + Sync {
     /// Get the layer's parameters.
     fn parameters(&self) -> Vec<Box<dyn ArrayProtocol>>;
 
+    /// Get mutable references to the layer's parameters.
+    fn parameters_mut(&mut self) -> Vec<&mut Box<dyn ArrayProtocol>>;
+
+    /// Update a specific parameter by name
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        new_value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError>;
+
+    /// Get parameter names
+    fn parameter_names(&self) -> Vec<String>;
+
     /// Set the layer to training mode.
     fn train(&mut self);
 
@@ -148,6 +161,43 @@ impl Layer for Linear {
             params.push(bias.clone());
         }
         params
+    }
+
+    fn parameters_mut(&mut self) -> Vec<&mut Box<dyn ArrayProtocol>> {
+        let mut params = vec![&mut self.weights];
+        if let Some(bias) = &mut self.bias {
+            params.push(bias);
+        }
+        params
+    }
+
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        new_value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
+        match name {
+            "weights" => {
+                self.weights = new_value;
+                Ok(())
+            }
+            "bias" => {
+                self.bias = Some(new_value);
+                Ok(())
+            }
+            _ => Err(OperationError::Other(format!(
+                "Unknown parameter: {}",
+                name
+            ))),
+        }
+    }
+
+    fn parameter_names(&self) -> Vec<String> {
+        let mut names = vec!["weights".to_string()];
+        if self.bias.is_some() {
+            names.push("bias".to_string());
+        }
+        names
     }
 
     fn train(&mut self) {
@@ -290,6 +340,43 @@ impl Layer for Conv2D {
             params.push(bias.clone());
         }
         params
+    }
+
+    fn parameters_mut(&mut self) -> Vec<&mut Box<dyn ArrayProtocol>> {
+        let mut params = vec![&mut self.filters];
+        if let Some(bias) = &mut self.bias {
+            params.push(bias);
+        }
+        params
+    }
+
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        new_value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
+        match name {
+            "filters" => {
+                self.filters = new_value;
+                Ok(())
+            }
+            "bias" => {
+                self.bias = Some(new_value);
+                Ok(())
+            }
+            _ => Err(OperationError::Other(format!(
+                "Unknown parameter: {}",
+                name
+            ))),
+        }
+    }
+
+    fn parameter_names(&self) -> Vec<String> {
+        let mut names = vec!["filters".to_string()];
+        if self.bias.is_some() {
+            names.push("bias".to_string());
+        }
+        names
     }
 
     fn train(&mut self) {
@@ -452,6 +539,27 @@ impl Layer for MaxPool2D {
         Vec::new()
     }
 
+    fn parameters_mut(&mut self) -> Vec<&mut Box<dyn ArrayProtocol>> {
+        // Pooling layers have no parameters
+        Vec::new()
+    }
+
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        _new_value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
+        Err(OperationError::Other(format!(
+            "MaxPool2D has no parameter: {}",
+            name
+        )))
+    }
+
+    fn parameter_names(&self) -> Vec<String> {
+        // Pooling layers have no parameters
+        Vec::new()
+    }
+
     fn train(&mut self) {
         self.training = true;
     }
@@ -563,6 +671,35 @@ impl Layer for BatchNorm {
         vec![self.scale.clone(), self.offset.clone()]
     }
 
+    fn parameters_mut(&mut self) -> Vec<&mut Box<dyn ArrayProtocol>> {
+        vec![&mut self.scale, &mut self.offset]
+    }
+
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        new_value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
+        match name {
+            "scale" => {
+                self.scale = new_value;
+                Ok(())
+            }
+            "offset" => {
+                self.offset = new_value;
+                Ok(())
+            }
+            _ => Err(OperationError::Other(format!(
+                "Unknown parameter: {}",
+                name
+            ))),
+        }
+    }
+
+    fn parameter_names(&self) -> Vec<String> {
+        vec!["scale".to_string(), "offset".to_string()]
+    }
+
     fn train(&mut self) {
         self.training = true;
     }
@@ -620,6 +757,27 @@ impl Layer for Dropout {
     }
 
     fn parameters(&self) -> Vec<Box<dyn ArrayProtocol>> {
+        // Dropout layers have no parameters
+        Vec::new()
+    }
+
+    fn parameters_mut(&mut self) -> Vec<&mut Box<dyn ArrayProtocol>> {
+        // Dropout layers have no parameters
+        Vec::new()
+    }
+
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        _new_value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
+        Err(OperationError::Other(format!(
+            "Dropout has no parameter: {}",
+            name
+        )))
+    }
+
+    fn parameter_names(&self) -> Vec<String> {
         // Dropout layers have no parameters
         Vec::new()
     }
@@ -776,6 +934,48 @@ impl Layer for MultiHeadAttention {
         ]
     }
 
+    fn parameters_mut(&mut self) -> Vec<&mut Box<dyn ArrayProtocol>> {
+        vec![&mut self.wq, &mut self.wk, &mut self.wv, &mut self.wo]
+    }
+
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        new_value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
+        match name {
+            "wq" => {
+                self.wq = new_value;
+                Ok(())
+            }
+            "wk" => {
+                self.wk = new_value;
+                Ok(())
+            }
+            "wv" => {
+                self.wv = new_value;
+                Ok(())
+            }
+            "wo" => {
+                self.wo = new_value;
+                Ok(())
+            }
+            _ => Err(OperationError::Other(format!(
+                "Unknown parameter: {}",
+                name
+            ))),
+        }
+    }
+
+    fn parameter_names(&self) -> Vec<String> {
+        vec![
+            "wq".to_string(),
+            "wk".to_string(),
+            "wv".to_string(),
+            "wo".to_string(),
+        ]
+    }
+
     fn train(&mut self) {
         self.training = true;
     }
@@ -879,6 +1079,128 @@ impl Sequential {
     /// Get the layers in the model.
     pub fn layers(&self) -> &[Box<dyn Layer>] {
         &self.layers
+    }
+
+    /// Backward pass through the model to compute gradients
+    pub fn backward(
+        &self,
+        _input: &dyn ArrayProtocol,
+        _grad_output: &dyn ArrayProtocol,
+    ) -> Result<crate::array_protocol::grad::GradientDict, crate::error::CoreError> {
+        // For now, return an empty gradient dictionary
+        // In a full implementation, this would compute gradients via backpropagation
+        Ok(crate::array_protocol::grad::GradientDict::new())
+    }
+
+    /// Update a parameter in the model
+    pub fn update_parameter(
+        &mut self,
+        param_name: &str,
+        gradient: &dyn ArrayProtocol,
+        learning_rate: f64,
+    ) -> Result<(), crate::error::CoreError> {
+        // Parse parameter name: layer_index.parameter_name (e.g., "0.weights", "1.bias")
+        let parts: Vec<&str> = param_name.split('.').collect();
+        if parts.len() != 2 {
+            return Err(crate::error::CoreError::ValueError(
+                crate::error::ErrorContext::new(format!(
+                    "Invalid parameter name format. Expected 'layer_index.param_name', got: {}",
+                    param_name
+                )),
+            ));
+        }
+
+        let layer_index: usize = parts[0].parse().map_err(|_| {
+            crate::error::CoreError::ValueError(crate::error::ErrorContext::new(format!(
+                "Invalid layer index: {}",
+                parts[0]
+            )))
+        })?;
+
+        let param_name = parts[1];
+
+        if layer_index >= self.layers.len() {
+            return Err(crate::error::CoreError::ValueError(
+                crate::error::ErrorContext::new(format!(
+                    "Layer index {} out of bounds (model has {} layers)",
+                    layer_index,
+                    self.layers.len()
+                )),
+            ));
+        }
+
+        // Get the current parameter value
+        let layer = &mut self.layers[layer_index];
+        let current_params = layer.parameters();
+        let param_names = layer.parameter_names();
+
+        // Find the parameter by name
+        let param_idx = param_names
+            .iter()
+            .position(|name| name == param_name)
+            .ok_or_else(|| {
+                crate::error::CoreError::ValueError(crate::error::ErrorContext::new(format!(
+                    "Parameter '{}' not found in layer {}",
+                    param_name, layer_index
+                )))
+            })?;
+
+        // Perform gradient descent update: param = param - learning_rate * gradient
+        let current_param = &current_params[param_idx];
+
+        // Multiply gradient by learning rate
+        let scaled_gradient =
+            crate::array_protocol::operations::multiply_by_scalar_f64(gradient, learning_rate)
+                .map_err(|e| {
+                    crate::error::CoreError::ComputationError(crate::error::ErrorContext::new(
+                        format!("Failed to scale gradient: {}", e),
+                    ))
+                })?;
+
+        // Subtract scaled gradient from current parameter
+        let updated_param = crate::array_protocol::operations::subtract(
+            current_param.as_ref(),
+            scaled_gradient.as_ref(),
+        )
+        .map_err(|e| {
+            crate::error::CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                "Failed to update parameter: {}",
+                e
+            )))
+        })?;
+
+        // Update the parameter in the layer
+        layer
+            .update_parameter(param_name, updated_param)
+            .map_err(|e| {
+                crate::error::CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                    "Failed to set parameter in layer: {}",
+                    e
+                )))
+            })?;
+
+        Ok(())
+    }
+
+    /// Get all parameter names in the model with layer prefixes
+    pub fn all_parameter_names(&self) -> Vec<String> {
+        let mut all_names = Vec::new();
+        for (layer_idx, layer) in self.layers.iter().enumerate() {
+            let layer_param_names = layer.parameter_names();
+            for param_name in layer_param_names {
+                all_names.push(format!("{}.{}", layer_idx, param_name));
+            }
+        }
+        all_names
+    }
+
+    /// Get all parameters in the model
+    pub fn all_parameters(&self) -> Vec<Box<dyn ArrayProtocol>> {
+        let mut all_params = Vec::new();
+        for layer in &self.layers {
+            all_params.extend(layer.parameters());
+        }
+        all_params
     }
 }
 

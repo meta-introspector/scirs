@@ -202,6 +202,61 @@ where
     }))
 }
 
+/// Finds the shortest path between source and target nodes using Dijkstra's algorithm (modern API)
+///
+/// This function provides the same functionality as `shortest_path` but with a clearer name
+/// that explicitly indicates the algorithm being used. This is the recommended function to use
+/// going forward.
+///
+/// # Arguments
+/// * `graph` - The graph to search in
+/// * `source` - The source node
+/// * `target` - The target node
+///
+/// # Returns
+/// * `Ok(Some(Path))` - If a path exists
+/// * `Ok(None)` - If no path exists
+/// * `Err(GraphError)` - If the source or target node is not in the graph
+///
+/// # Time Complexity
+/// O((V + E) log V) where V is the number of vertices and E is the number of edges.
+///
+/// # Space Complexity
+/// O(V) for the distance array and predecessor tracking.
+///
+/// # Example
+/// ```rust
+/// use scirs2_graph::{Graph, dijkstra_path};
+/// 
+/// let mut graph = Graph::new();
+/// graph.add_node("A".to_string());
+/// graph.add_node("B".to_string());
+/// graph.add_edge("A".to_string(), "B".to_string(), 1.0).unwrap();
+/// 
+/// let path = dijkstra_path(&graph, &"A".to_string(), &"B".to_string()).unwrap();
+/// assert!(path.is_some());
+/// ```
+pub fn dijkstra_path<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    source: &N,
+    target: &N,
+) -> Result<Option<Path<N, E>>>
+where
+    N: Node + std::fmt::Debug,
+    E: EdgeWeight
+        + num_traits::Zero
+        + num_traits::One
+        + std::ops::Add<Output = E>
+        + PartialOrd
+        + std::marker::Copy
+        + std::fmt::Debug
+        + std::default::Default,
+    Ix: petgraph::graph::IndexType,
+{
+    #[allow(deprecated)]
+    shortest_path(graph, source, target)
+}
+
 /// Finds the shortest path in a directed graph
 ///
 /// # Deprecation Notice

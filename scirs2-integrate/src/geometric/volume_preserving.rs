@@ -10,6 +10,9 @@ use scirs2_core::constants::PI;
 #[allow(unused_imports)]
 use std::f64::consts::SQRT_2;
 
+// Type alias for complex function type
+type InvariantFn = Box<dyn Fn(&ArrayView1<f64>) -> f64>;
+
 /// Trait for divergence-free vector fields
 pub trait DivergenceFreeFlow {
     /// Dimension of the phase space
@@ -559,9 +562,11 @@ impl VariationalIntegrator {
 /// Discrete gradient method for preserving multiple invariants
 pub struct DiscreteGradientIntegrator {
     /// Time step
+    #[allow(dead_code)]
     dt: f64,
     /// Invariant functions
-    invariants: Vec<Box<dyn Fn(&ArrayView1<f64>) -> f64>>,
+    #[allow(dead_code)]
+    invariants: Vec<InvariantFn>,
 }
 
 impl DiscreteGradientIntegrator {

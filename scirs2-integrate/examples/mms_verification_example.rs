@@ -126,7 +126,7 @@ fn pde_verification_example() -> Result<(), Box<dyn std::error::Error>> {
         // Set up manufactured source term
         for (i, &xi) in x.iter().enumerate() {
             for (j, &yj) in y.iter().enumerate() {
-                f_rhs[[i, j]] = problem.source_term(xi, yj);
+                f_rhs[[i, j]] = problem.source_term(&[xi, yj]);
             }
         }
 

@@ -317,11 +317,7 @@ where
     
     if sin_x_half.abs() < T::epsilon() {
         // Use limit as x -> 0
-        if n % 2 == 0 {
-            T::from_i32(n).unwrap()
-        } else {
-            T::from_i32(n).unwrap()
-        }
+        T::from_i32(n).unwrap()
     } else {
         (n_f * x_half).sin() / (n_f * sin_x_half)
     }
@@ -418,6 +414,10 @@ where
 ///
 /// # Returns
 /// Owen's T function value
+///
+/// # Algorithm
+/// Uses a combination of series expansion for small |h|, asymptotic expansion
+/// for large |h|, and numerical integration for intermediate values.
 pub fn owens_t<T>(h: T, a: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug,
@@ -425,22 +425,149 @@ where
     check_finite(h, "h")?;
     check_finite(a, "a")?;
     
-    // This is a simplified implementation
-    // A full implementation would use specialized algorithms
+    let zero = T::zero();
+    let one = T::one();
+    let two = T::from_f64(2.0).unwrap();
+    let pi = T::from_f64(std::f64::consts::PI).unwrap();
     
+    // Handle special cases
     if a.is_zero() {
-        return Ok(T::zero());
+        return Ok(zero);
     }
     
     if h.is_zero() {
-        let pi = T::from_f64(std::f64::consts::PI).unwrap();
-        return Ok(a.atan() / (T::from_f64(2.0).unwrap() * pi));
+        return Ok(a.atan() / (two * pi));
     }
     
-    // For now, return a placeholder
-    Err(SpecialError::NotImplementedError(
-        "owens_t: full implementation not yet available".to_string()
-    ))
+    let abs_h = h.abs();
+    let abs_a = a.abs();
+    
+    // Use symmetry properties to reduce to first quadrant
+    let sign = if (h >= zero && a >= zero) || (h < zero && a < zero) { one } else { -one };
+    
+    let result = if abs_h < T::from_f64(0.1).unwrap() {
+        // For small |h|, use series expansion
+        owens_t_series(abs_h, abs_a)?
+    } else if abs_h > T::from_f64(10.0).unwrap() {
+        // For large |h|, use asymptotic expansion
+        owens_t_asymptotic(abs_h, abs_a)?
+    } else {
+        // For intermediate values, use numerical integration
+        owens_t_numerical(abs_h, abs_a)?
+    };
+    
+    Ok(sign * result)
+}
+
+/// Owen's T function using series expansion for small h
+fn owens_t_series<T>(h: T, a: T) -> SpecialResult<T>
+where
+    T: Float + FromPrimitive,
+{
+    let zero = T::zero();
+    let one = T::one();
+    let two = T::from_f64(2.0).unwrap();
+    let pi = T::from_f64(std::f64::consts::PI).unwrap();
+    
+    let h2 = h * h;
+    let a2 = a * a;
+    let atan_a = a.atan();
+    
+    // Series: T(h,a) = (1/2π) * atan(a) - (h/2π) * ∑ (-1)^n * h^(2n) * I_n(a)
+    // where I_n(a) = ∫₀ᵃ x^(2n) / (1+x²) dx
+    
+    let mut sum = zero;
+    let mut h_power = one;
+    
+    for n in 0..20 {
+        let integral = if n == 0 {
+            atan_a
+        } else {
+            // I_n(a) can be computed recursively
+            
+            if n == 1 {
+                (a2.ln_1p()) / two
+            } else {
+                // For higher n, use recursive relation or approximation
+                a.powi(2 * n as i32 - 1) / T::from_usize(2 * n - 1).unwrap()
+            }
+        };
+        
+        let term = if n % 2 == 0 { h_power * integral } else { -h_power * integral };
+        sum = sum + term;
+        
+        // Check for convergence
+        if term.abs() < T::from_f64(1e-15).unwrap() {
+            break;
+        }
+        
+        h_power = h_power * h2;
+    }
+    
+    Ok(atan_a / (two * pi) - h * sum / (two * pi))
+}
+
+/// Owen's T function using asymptotic expansion for large h
+fn owens_t_asymptotic<T>(h: T, a: T) -> SpecialResult<T>
+where
+    T: Float + FromPrimitive,
+{
+    let one = T::one();
+    let two = T::from_f64(2.0).unwrap();
+    let pi = T::from_f64(std::f64::consts::PI).unwrap();
+    
+    let h2 = h * h;
+    let a2 = a * a;
+    let exp_factor = (-h2 * (one + a2) / two).exp();
+    
+    // Asymptotic expansion for large h
+    // T(h,a) ≈ (1/2π) * exp(-h²(1+a²)/2) * (a/(h²(1+a²))) * [1 + O(1/h²)]
+    
+    let denominator = h2 * (one + a2);
+    let result = exp_factor * a / (two * pi * denominator);
+    
+    // Add first correction term
+    let correction = one - (T::from_f64(3.0).unwrap() * a2) / (one + a2).powi(2);
+    let corrected_result = result * correction;
+    
+    Ok(corrected_result)
+}
+
+/// Owen's T function using numerical integration
+fn owens_t_numerical<T>(h: T, a: T) -> SpecialResult<T>
+where
+    T: Float + FromPrimitive,
+{
+    let zero = T::zero();
+    let one = T::one();
+    let two = T::from_f64(2.0).unwrap();
+    let pi = T::from_f64(std::f64::consts::PI).unwrap();
+    
+    let h2 = h * h;
+    
+    // Use Simpson's rule for numerical integration
+    let n = 1000; // Number of intervals
+    let dx = a / T::from_usize(n).unwrap();
+    
+    let mut sum = zero;
+    
+    for i in 0..=n {
+        let x = T::from_usize(i).unwrap() * dx;
+        let integrand = (-h2 * (one + x * x) / two).exp() / (one + x * x);
+        
+        let weight = if i == 0 || i == n {
+            one
+        } else if i % 2 == 1 {
+            T::from_f64(4.0).unwrap()
+        } else {
+            two
+        };
+        
+        sum = sum + weight * integrand;
+    }
+    
+    let result = sum * dx / (T::from_f64(3.0).unwrap() * two * pi);
+    Ok(result)
 }
 
 /// Apply utility function to arrays

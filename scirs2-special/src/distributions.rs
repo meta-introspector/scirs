@@ -445,8 +445,8 @@ fn gamma_incomplete_lower<T: Float + FromPrimitive + Debug + AddAssign>(a: T, x:
         
         while term.abs() > T::from_f64(1e-12).unwrap() * sum.abs() {
             term = term * x / (a + n);
-            sum = sum + term;
-            n = n + T::one();
+            sum += term;
+            n += T::one();
         }
         
         Ok(x.powf(a) * (-x).exp() * sum)
@@ -473,7 +473,7 @@ fn gamma_incomplete_upper<T: Float + FromPrimitive + Debug + AddAssign>(a: T, x:
         
         for i in 1..100 {
             let an = -T::from_usize(i).unwrap() * (T::from_usize(i).unwrap() - a);
-            b = b + T::from_f64(2.0).unwrap();
+            b += T::from_f64(2.0).unwrap();
             d = an * d + b;
             if d.abs() < T::from_f64(1e-30).unwrap() {
                 d = T::from_f64(1e-30).unwrap();

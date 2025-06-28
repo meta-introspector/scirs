@@ -163,7 +163,7 @@ impl MemoryMapper {
     }
     
     /// Optimize memory layout for multiple allocations
-    pub fn optimize_layout(&self, requirements: &[MemoryRequirements]) -> Result<OptimizedLayout> {
+    pub fn optimize_layout(&self, requirements: &[MemoryMapRequirements]) -> Result<OptimizedLayout> {
         let mut total_size = 0;
         let mut max_alignment = 64;
         let mut layouts = Vec::new();
@@ -456,7 +456,7 @@ impl MemoryMigration {
         transform: F,
     ) -> Result<DeviceBuffer>
     where
-        F: FnOnce(Array2<f32>) -> Array2<f32>,
+        F: FnOnce(ndarray::Array2<f32>) -> ndarray::Array2<f32>,
     {
         // Download from source
         let data = src_device.download(buffer)?;

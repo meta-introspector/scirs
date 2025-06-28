@@ -4,7 +4,7 @@
 
 pub mod compact;
 
-pub use compact::{BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph};
+pub use compact::{BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph, MemmapGraph};
 
 use crate::{DiGraph, Graph};
 use std::collections::HashMap;
@@ -71,7 +71,7 @@ impl MemoryProfiler {
     }
 
     /// Calculate memory statistics for a directed graph
-    pub fn profile_digraph(graph: &DiGraph) -> MemoryStats {
+    pub fn profile_digraph<N, E>(graph: &DiGraph<N, E>) -> MemoryStats {
         let node_count = graph.node_count();
         let edge_count = graph.edge_count();
 
@@ -227,7 +227,7 @@ impl OptimizedGraphBuilder {
     }
 
     /// Build the optimized graph
-    pub fn build(self) -> Result<Graph, String> {
+    pub fn build<N: crate::base::Node, E: crate::base::EdgeWeight>(self) -> Result<Graph<N, E>, String> {
         let mut graph = Graph::new();
 
         // Pre-allocate with estimated sizes
@@ -330,7 +330,7 @@ mod tests {
 
     #[test]
     fn test_memory_profiling() {
-        let graph = generators::complete_graph(100);
+        let graph = generators::complete_graph(100).unwrap();
         let stats = MemoryProfiler::profile_graph(&graph);
 
         assert!(stats.total_bytes > 0);

@@ -169,19 +169,19 @@ where
     ) -> InterpolateResult<Self> {
         // Input validation
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 2 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 2 data points are required".to_string(),
             ));
         }
 
         if n_knots < degree + 1 {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "number of knots must be at least degree + 1 ({})",
                 degree + 1
             )));
@@ -232,13 +232,13 @@ where
     {
         // Input validation
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 2 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 2 data points are required".to_string(),
             ));
         }
@@ -246,7 +246,7 @@ where
         // Check the knot vector
         let min_knots = 2 * degree + 2;
         if knots.len() < min_knots {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "knot vector must have at least 2*(degree+1) = {} elements",
                 min_knots
             )));
@@ -598,13 +598,13 @@ where
 {
     // Input validation
     if x.len() != y.len() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "x and y arrays must have the same length".to_string(),
         ));
     }
 
     if x.len() < 2 {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "at least 2 data points are required".to_string(),
         ));
     }
@@ -612,7 +612,7 @@ where
     // Check the knot vector
     let min_knots = 2 * degree + 2;
     if knots.len() < min_knots {
-        return Err(InterpolateError::ValueError(format!(
+        return Err(InterpolateError::invalid_input(format!(
             "knot vector must have at least 2*(degree+1) = {} elements",
             min_knots
         )));
@@ -621,7 +621,7 @@ where
     // Check the penalty matrix
     let n_basis = knots.len() - degree - 1;
     if penalty_matrix.shape()[0] != n_basis || penalty_matrix.shape()[1] != n_basis {
-        return Err(InterpolateError::ValueError(format!(
+        return Err(InterpolateError::invalid_input(format!(
             "penalty matrix must be of size {}x{} (number of basis functions)",
             n_basis, n_basis
         )));
@@ -710,7 +710,7 @@ where
         + 'static,
 {
     if lambda_values.is_empty() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "lambda_values array cannot be empty".to_string(),
         ));
     }

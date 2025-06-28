@@ -3,10 +3,9 @@
 //! This module provides utilities for processing datasets that are too large
 //! to fit in memory, using chunked processing and memory-mapped files.
 
-use ndarray::{Array1, Array2, ArrayBase, ArrayView2, Axis, Data, Ix2};
-use num_traits::{Float, NumCast};
+use ndarray::{Array1, Array2};
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Read, Write, Seek, SeekFrom};
+use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::Path;
 
 use crate::error::{Result, TransformError};
@@ -65,7 +64,7 @@ impl ChunkedArrayReader {
     /// Create a new chunked array reader
     pub fn new<P: AsRef<Path>>(path: P, shape: (usize, usize), chunk_size: usize) -> Result<Self> {
         let file = File::open(path).map_err(|e| {
-            TransformError::IOError(format!("Failed to open file: {}", e))
+            TransformError::TransformationError(format!("Failed to open file: {}", e))
         })?;
         
         Ok(ChunkedArrayReader {
@@ -91,7 +90,7 @@ impl ChunkedArrayReader {
             for j in 0..self.shape.1 {
                 let mut bytes = vec![0u8; self.dtype_size];
                 self.file.read_exact(&mut bytes).map_err(|e| {
-                    TransformError::IOError(format!("Failed to read data: {}", e))
+                    TransformError::TransformationError(format!("Failed to read data: {}", e))
                 })?;
                 
                 chunk[[i, j]] = f64::from_le_bytes(bytes.try_into().unwrap());
@@ -138,7 +137,7 @@ impl ChunkedArrayWriter {
     pub fn new<P: AsRef<Path>>(path: P, shape: (usize, usize)) -> Result<Self> {
         let path_str = path.as_ref().to_string_lossy().to_string();
         let file = File::create(&path).map_err(|e| {
-            TransformError::IOError(format!("Failed to create file: {}", e))
+            TransformError::TransformationError(format!("Failed to create file: {}", e))
         })?;
         
         Ok(ChunkedArrayWriter {
@@ -168,7 +167,7 @@ impl ChunkedArrayWriter {
             for j in 0..chunk.shape()[1] {
                 let bytes = chunk[[i, j]].to_le_bytes();
                 self.file.write_all(&bytes).map_err(|e| {
-                    TransformError::IOError(format!("Failed to write data: {}", e))
+                    TransformError::TransformationError(format!("Failed to write data: {}", e))
                 })?;
             }
         }
@@ -180,7 +179,7 @@ impl ChunkedArrayWriter {
     /// Finalize the writer and flush data
     pub fn finalize(mut self) -> Result<String> {
         self.file.flush().map_err(|e| {
-            TransformError::IOError(format!("Failed to flush data: {}", e))
+            TransformError::TransformationError(format!("Failed to flush data: {}", e))
         })?;
         
         if self.rows_written != self.shape.0 {
@@ -196,6 +195,7 @@ impl ChunkedArrayWriter {
 /// Out-of-core normalizer implementation
 pub struct OutOfCoreNormalizer {
     method: NormalizationMethod,
+    #[allow(dead_code)]
     axis: usize,
     // Statistics computed during fit
     stats: Option<NormalizationStats>,
@@ -207,7 +207,9 @@ struct NormalizationStats {
     max: Array1<f64>,
     mean: Array1<f64>,
     std: Array1<f64>,
+    #[allow(dead_code)]
     median: Array1<f64>,
+    #[allow(dead_code)]
     iqr: Array1<f64>,
     count: usize,
 }
@@ -252,7 +254,7 @@ impl OutOfCoreNormalizer {
         // Compute mean and std
         let mean = sum / count as f64;
         let variance = sum_sq / count as f64 - &mean * &mean;
-        let std = variance.mapv(|v| v.sqrt());
+        let std = variance.mapv(|v: f64| v.sqrt());
         
         self.stats = Some(NormalizationStats {
             min,
@@ -330,7 +332,7 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
         // Transform each chunk
         for chunk_result in chunks {
             let chunk = chunk_result?;
-            let mut transformed = Array2::zeros(chunk.shape());
+            let mut transformed = Array2::zeros((chunk.nrows(), chunk.ncols()));
             
             match self.method {
                 NormalizationMethod::MinMax => {
@@ -393,7 +395,7 @@ pub fn csv_chunks<P: AsRef<Path>>(
     has_header: bool,
 ) -> Result<impl Iterator<Item = Result<Array2<f64>>>> {
     let file = File::open(path).map_err(|e| {
-        TransformError::IOError(format!("Failed to open CSV file: {}", e))
+        TransformError::TransformationError(format!("Failed to open CSV file: {}", e))
     })?;
     
     Ok(CsvChunkIterator::new(BufReader::new(file), chunk_size, has_header))
@@ -430,9 +432,7 @@ impl Iterator for CsvChunkIterator {
         for line_result in (&mut self.reader).lines().take(self.chunk_size) {
             let line = match line_result {
                 Ok(l) => l,
-                Err(e) => return Some(Err(TransformError::IOError(
-                    format!("Failed to read line: {}", e)
-                ))),
+                Err(e) => return Some(Err(TransformError::IoError(e))),
             };
             
             // Skip header if needed

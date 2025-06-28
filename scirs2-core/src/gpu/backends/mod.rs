@@ -21,7 +21,7 @@ pub mod metal_mps;
 
 // Re-export backend implementations
 #[cfg(feature = "cuda")]
-pub use cuda::{CudaContext, get_optimizer_kernels};
+pub use cuda::{get_optimizer_kernels, CudaContext};
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
 pub use metal::{MetalBufferOptions, MetalContext, MetalStorageMode};

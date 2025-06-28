@@ -417,9 +417,38 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             let chunk_size = self.metadata.chunk_shape.iter().product::<usize>();
             let offset = Self::metadata_size() + chunk_id * chunk_size * self.metadata.element_size;
             
-            if self.metadata.compression.is_some() {
+            if let Some(compression) = self.metadata.compression {
                 // Handle compressed chunks
-                todo!("Compressed chunk reading not yet implemented")
+                let compressed_size = self.metadata.chunk_sizes[chunk_id];
+                let compressed_offset = self.metadata.chunk_offsets[chunk_id];
+                
+                if compressed_size == 0 {
+                    // Chunk hasn't been written yet, return zeros
+                    let chunk_size = self.metadata.chunk_shape.iter().product::<usize>();
+                    return Ok(vec![T::zero(); chunk_size]);
+                }
+                
+                let compressed_data = &mmap[compressed_offset as usize..(compressed_offset as usize + compressed_size)];
+                let decompressed_data = decompress_data(compressed_data, compression)
+                    .map_err(|e| IoError::ParseError(format!("Failed to decompress chunk: {}", e)))?;
+                
+                // Convert bytes back to T values
+                let chunk_size = self.metadata.chunk_shape.iter().product::<usize>();
+                let mut data = Vec::with_capacity(chunk_size);
+                
+                for i in 0..chunk_size {
+                    let start = i * self.metadata.element_size;
+                    let end = start + self.metadata.element_size;
+                    if end <= decompressed_data.len() {
+                        let value = T::from_le_bytes(&decompressed_data[start..end]);
+                        data.push(value);
+                    } else {
+                        // Partial chunk at boundary
+                        break;
+                    }
+                }
+                
+                Ok(data)
             } else {
                 // Direct memory-mapped access
                 let bytes = &mmap[offset..offset + chunk_size * self.metadata.element_size];
@@ -439,6 +468,60 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         }
     }
 
+    /// Write chunk data to disk
+    fn write_chunk_to_disk(&self, chunk_id: usize, data: &[T]) -> Result<()> {
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(&self.file_path)
+            .map_err(|e| IoError::FileError(format!("Failed to open file for writing: {}", e)))?;
+
+        // Convert data to bytes
+        let mut chunk_bytes = Vec::new();
+        for value in data {
+            value.write_le(&mut chunk_bytes)?;
+        }
+
+        if let Some(compression) = self.metadata.compression {
+            // Compress the data
+            let compressed_data = compress_data(&chunk_bytes, compression)
+                .map_err(|e| IoError::FileError(format!("Failed to compress chunk: {}", e)))?;
+
+            // For compressed data, we need to update the metadata
+            // This is a simplified implementation - in reality, we'd need to handle
+            // dynamic file size changes and update chunk offsets
+            let offset = if self.metadata.chunk_offsets[chunk_id] == 0 {
+                // New chunk, append to end of file
+                file.seek(SeekFrom::End(0))
+                    .map_err(|e| IoError::FileError(format!("Failed to seek to end: {}", e)))?
+            } else {
+                // Existing chunk, use existing offset
+                self.metadata.chunk_offsets[chunk_id]
+            };
+
+            file.seek(SeekFrom::Start(offset))
+                .map_err(|e| IoError::FileError(format!("Failed to seek: {}", e)))?;
+            
+            file.write_all(&compressed_data)
+                .map_err(|e| IoError::FileError(format!("Failed to write compressed data: {}", e)))?;
+        } else {
+            // Uncompressed data
+            let chunk_size = self.metadata.chunk_shape.iter().product::<usize>();
+            let offset = Self::metadata_size() + chunk_id * chunk_size * self.metadata.element_size;
+            
+            file.seek(SeekFrom::Start(offset as u64))
+                .map_err(|e| IoError::FileError(format!("Failed to seek: {}", e)))?;
+            
+            file.write_all(&chunk_bytes)
+                .map_err(|e| IoError::FileError(format!("Failed to write data: {}", e)))?;
+        }
+
+        file.sync_all()
+            .map_err(|e| IoError::FileError(format!("Failed to sync file: {}", e)))?;
+
+        Ok(())
+    }
+
     /// Update cache with new chunk
     fn update_cache(&self, cache: &mut ChunkCache<T>, chunk_id: usize, data: Vec<T>) {
         let chunk_size_bytes = data.len() * std::mem::size_of::<T>();
@@ -453,7 +536,9 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
                     
                     // Write back if dirty and write-through enabled
                     if evicted.dirty && self.config.write_through {
-                        // TODO: Write back to disk
+                        if let Err(e) = self.write_chunk_to_disk(evict_id, &evicted.data) {
+                            eprintln!("Warning: Failed to write back dirty chunk {}: {}", evict_id, e);
+                        }
                     }
                 }
             }
@@ -553,14 +638,168 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             .collect();
         
         // Iterate over overlapping chunks
-        // This is simplified - in reality would need to handle multi-dimensional iteration
-        for chunk_id in 0..self.metadata.num_chunks {
-            let chunk_data = self.get_chunk(chunk_id)?;
-            // Copy relevant portion to result
-            // TODO: Implement proper copying logic
-        }
+        self.copy_chunks_to_window(start, &start_chunks, &end_chunks, &mut result)?;
         
         Ok(result)
+    }
+
+    /// Copy chunks to window result array
+    fn copy_chunks_to_window(
+        &self,
+        window_start: &[usize],
+        start_chunks: &[usize],
+        end_chunks: &[usize],
+        result: &mut Array<T, IxDyn>,
+    ) -> Result<()> {
+        // Iterate through all chunks that overlap with the window
+        let mut chunk_coords = start_chunks.to_vec();
+        
+        loop {
+            // Calculate linear chunk ID from coordinates
+            let chunk_id = self.coords_to_chunk_id(&chunk_coords);
+            
+            // Get chunk data
+            let chunk_data = self.get_chunk(chunk_id)?;
+            let chunk_shape = self.get_chunk_shape(chunk_id);
+            
+            // Calculate overlap region
+            let chunk_start: Vec<_> = chunk_coords.iter()
+                .zip(&self.metadata.chunk_shape)
+                .map(|(&coord, &size)| coord * size)
+                .collect();
+            
+            // Calculate intersection of chunk with window
+            let overlap_start: Vec<_> = chunk_start.iter()
+                .zip(window_start)
+                .map(|(&chunk_s, &win_s)| chunk_s.max(win_s))
+                .collect();
+            
+            let overlap_end: Vec<_> = chunk_start.iter()
+                .zip(&chunk_shape.slice())
+                .zip(window_start)
+                .zip(result.shape())
+                .map(|(((chunk_s, chunk_sz), win_s), win_sz)| {
+                    (chunk_s + chunk_sz).min(win_s + win_sz)
+                })
+                .collect();
+            
+            // Copy data if there's overlap
+            if overlap_start.iter().zip(&overlap_end).all(|(s, e)| s < e) {
+                // Calculate source indices in chunk
+                let chunk_src_start: Vec<_> = overlap_start.iter()
+                    .zip(&chunk_start)
+                    .map(|(overlap, chunk)| overlap - chunk)
+                    .collect();
+                
+                let chunk_src_end: Vec<_> = overlap_end.iter()
+                    .zip(&chunk_start)
+                    .map(|(overlap, chunk)| overlap - chunk)
+                    .collect();
+                
+                // Calculate destination indices in result
+                let result_dst_start: Vec<_> = overlap_start.iter()
+                    .zip(window_start)
+                    .map(|(overlap, win)| overlap - win)
+                    .collect();
+                
+                let result_dst_end: Vec<_> = overlap_end.iter()
+                    .zip(window_start)
+                    .map(|(overlap, win)| overlap - win)
+                    .collect();
+                
+                // Perform the copy for each element in the overlap region
+                self.copy_chunk_region(
+                    &chunk_data,
+                    &chunk_shape.slice(),
+                    &chunk_src_start,
+                    &chunk_src_end,
+                    result,
+                    &result_dst_start,
+                    &result_dst_end,
+                )?;
+            }
+            
+            // Move to next chunk
+            if !self.increment_chunk_coords(&mut chunk_coords, start_chunks, end_chunks) {
+                break;
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// Convert chunk coordinates to linear chunk ID
+    fn coords_to_chunk_id(&self, coords: &[usize]) -> usize {
+        let chunks_per_dim: Vec<_> = self.metadata.shape.iter()
+            .zip(&self.metadata.chunk_shape)
+            .map(|(&dim, &chunk)| (dim + chunk - 1) / chunk)
+            .collect();
+        
+        let mut chunk_id = 0;
+        let mut multiplier = 1;
+        
+        for (i, (&coord, &chunks_in_dim)) in coords.iter().zip(&chunks_per_dim).enumerate().rev() {
+            chunk_id += coord * multiplier;
+            multiplier *= chunks_in_dim;
+        }
+        
+        chunk_id
+    }
+
+    /// Copy a region from chunk data to result array
+    fn copy_chunk_region(
+        &self,
+        chunk_data: &[T],
+        chunk_shape: &[usize],
+        src_start: &[usize],
+        src_end: &[usize],
+        result: &mut Array<T, IxDyn>,
+        dst_start: &[usize],
+        dst_end: &[usize],
+    ) -> Result<()> {
+        // For simplicity, handle only 1D and 2D cases
+        match chunk_shape.len() {
+            1 => {
+                let src_len = src_end[0] - src_start[0];
+                for i in 0..src_len {
+                    let src_idx = src_start[0] + i;
+                    let dst_idx = dst_start[0] + i;
+                    result[[dst_idx]] = chunk_data[src_idx].clone();
+                }
+            }
+            2 => {
+                for i in 0..(src_end[0] - src_start[0]) {
+                    for j in 0..(src_end[1] - src_start[1]) {
+                        let src_idx = (src_start[0] + i) * chunk_shape[1] + (src_start[1] + j);
+                        let dst_idx = [dst_start[0] + i, dst_start[1] + j];
+                        result[&dst_idx[..]] = chunk_data[src_idx].clone();
+                    }
+                }
+            }
+            _ => {
+                // For higher dimensions, use recursive approach or flatten
+                return Err(IoError::ParseError("High dimensional copying not yet implemented".to_string()));
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// Increment chunk coordinates within bounds
+    fn increment_chunk_coords(
+        &self,
+        coords: &mut [usize],
+        start_chunks: &[usize],
+        end_chunks: &[usize],
+    ) -> bool {
+        for i in (0..coords.len()).rev() {
+            coords[i] += 1;
+            if coords[i] <= end_chunks[i] {
+                return true;
+            }
+            coords[i] = start_chunks[i];
+        }
+        false
     }
 
     /// Write data to a window
@@ -576,12 +815,136 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             }
         }
         
-        // TODO: Implement actual writing logic
-        // This would involve:
-        // 1. Determining which chunks are affected
-        // 2. Reading those chunks
-        // 3. Updating the relevant portions
-        // 4. Writing back (or marking as dirty in cache)
+        // Implement actual writing logic
+        // 1. Determine which chunks are affected
+        let start_chunks: Vec<_> = start.iter()
+            .zip(&self.metadata.chunk_shape)
+            .map(|(&s, &chunk)| s / chunk)
+            .collect();
+        
+        let end_chunks: Vec<_> = start.iter()
+            .zip(data.shape())
+            .zip(&self.metadata.chunk_shape)
+            .map(|((&s, &sz), &chunk)| (s + sz - 1) / chunk)
+            .collect();
+        
+        // 2. Iterate through affected chunks
+        let mut chunk_coords = start_chunks.clone();
+        
+        loop {
+            let chunk_id = self.coords_to_chunk_id(&chunk_coords);
+            
+            // 3. Read the chunk (or get from cache)
+            let mut chunk_data = self.get_chunk(chunk_id)?;
+            let chunk_shape = self.get_chunk_shape(chunk_id);
+            
+            // Calculate chunk start position in global coordinates
+            let chunk_start: Vec<_> = chunk_coords.iter()
+                .zip(&self.metadata.chunk_shape)
+                .map(|(&coord, &size)| coord * size)
+                .collect();
+            
+            // Calculate overlap region
+            let overlap_start: Vec<_> = chunk_start.iter()
+                .zip(start)
+                .map(|(&chunk_s, &win_s)| chunk_s.max(win_s))
+                .collect();
+            
+            let overlap_end: Vec<_> = chunk_start.iter()
+                .zip(&chunk_shape.slice())
+                .zip(start)
+                .zip(data.shape())
+                .map(|(((chunk_s, chunk_sz), win_s), win_sz)| {
+                    (chunk_s + chunk_sz).min(win_s + win_sz)
+                })
+                .collect();
+            
+            // 4. Update the relevant portions
+            if overlap_start.iter().zip(&overlap_end).all(|(s, e)| s < e) {
+                self.write_to_chunk_region(
+                    &mut chunk_data,
+                    &chunk_shape.slice(),
+                    &chunk_start,
+                    &overlap_start,
+                    &overlap_end,
+                    data,
+                    start,
+                )?;
+                
+                // 5. Mark chunk as dirty in cache or write back immediately
+                {
+                    let mut cache = self.cache.write().unwrap();
+                    if let Some(cached_chunk) = cache.chunks.get_mut(&chunk_id) {
+                        cached_chunk.data = chunk_data;
+                        cached_chunk.dirty = true;
+                    } else {
+                        // Add to cache as dirty
+                        let chunk_size_bytes = chunk_data.len() * std::mem::size_of::<T>();
+                        cache.chunks.insert(chunk_id, CachedChunk {
+                            data: chunk_data,
+                            dirty: true,
+                            access_count: 1,
+                        });
+                        cache.current_size_bytes += chunk_size_bytes;
+                        cache.lru_queue.push_back(chunk_id);
+                    }
+                }
+            }
+            
+            // Move to next chunk
+            if !self.increment_chunk_coords(&mut chunk_coords, &start_chunks, &end_chunks) {
+                break;
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Write data to a specific region within a chunk
+    fn write_to_chunk_region(
+        &self,
+        chunk_data: &mut [T],
+        chunk_shape: &[usize],
+        chunk_start: &[usize],
+        overlap_start: &[usize],
+        overlap_end: &[usize],
+        source_data: &ArrayView<T, IxDyn>,
+        source_start: &[usize],
+    ) -> Result<()> {
+        // Calculate indices for copying
+        let chunk_local_start: Vec<_> = overlap_start.iter()
+            .zip(chunk_start)
+            .map(|(overlap, chunk)| overlap - chunk)
+            .collect();
+        
+        let source_local_start: Vec<_> = overlap_start.iter()
+            .zip(source_start)
+            .map(|(overlap, source)| overlap - source)
+            .collect();
+        
+        // For simplicity, handle only 1D and 2D cases
+        match chunk_shape.len() {
+            1 => {
+                let len = overlap_end[0] - overlap_start[0];
+                for i in 0..len {
+                    let chunk_idx = chunk_local_start[0] + i;
+                    let source_idx = [source_local_start[0] + i];
+                    chunk_data[chunk_idx] = source_data[&source_idx[..]].clone();
+                }
+            }
+            2 => {
+                for i in 0..(overlap_end[0] - overlap_start[0]) {
+                    for j in 0..(overlap_end[1] - overlap_start[1]) {
+                        let chunk_idx = (chunk_local_start[0] + i) * chunk_shape[1] + (chunk_local_start[1] + j);
+                        let source_idx = [source_local_start[0] + i, source_local_start[1] + j];
+                        chunk_data[chunk_idx] = source_data[&source_idx[..]].clone();
+                    }
+                }
+            }
+            _ => {
+                return Err(IoError::ParseError("High dimensional writing not yet implemented".to_string()));
+            }
+        }
         
         Ok(())
     }
@@ -592,7 +955,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         
         for (&chunk_id, chunk) in &cache.chunks {
             if chunk.dirty {
-                // TODO: Write chunk to disk
+                self.write_chunk_to_disk(chunk_id, &chunk.data)?;
             }
         }
         
@@ -665,8 +1028,40 @@ impl<T: ScientificNumber + Ord + Clone> OutOfCoreSorter<T> {
             .collect::<std::io::Result<_>>()
             .map_err(|e| IoError::ParseError(format!("Failed to open chunk file: {}", e)))?;
         
-        // Simple 2-way merge for now
-        // TODO: Implement proper k-way merge with heap
+        // K-way merge using a binary heap
+        use std::collections::BinaryHeap;
+        use std::cmp::Reverse;
+        
+        // Create readers with buffering
+        let mut buffered_readers: Vec<_> = readers.into_iter()
+            .map(|file| BufReader::new(file))
+            .collect();
+        
+        // Priority queue for k-way merge (min-heap using Reverse)
+        let mut heap: BinaryHeap<Reverse<(T, usize)>> = BinaryHeap::new();
+        
+        // Initialize heap with first element from each reader
+        for (reader_id, reader) in buffered_readers.iter_mut().enumerate() {
+            if let Ok(value) = T::read_le(reader) {
+                heap.push(Reverse((value, reader_id)));
+            }
+        }
+        
+        // Perform k-way merge
+        while let Some(Reverse((value, reader_id))) = heap.pop() {
+            // Write current minimum value
+            value.write_le(output)?;
+            
+            // Read next value from the same reader
+            if let Ok(next_value) = T::read_le(&mut buffered_readers[reader_id]) {
+                heap.push(Reverse((next_value, reader_id)));
+            }
+        }
+        
+        // Clean up temporary files
+        for chunk_file in &self.chunk_files {
+            let _ = std::fs::remove_file(chunk_file);
+        }
         
         Ok(())
     }

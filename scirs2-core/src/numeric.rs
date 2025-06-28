@@ -673,9 +673,8 @@ impl<T: RealNumber> AngleConversion for T {
             // This should never fail for valid RealNumber types
             panic!("Failed to convert PI constant to target type")
         });
-        let one_eighty = T::from_f64(180.0).unwrap_or_else(|| {
-            panic!("Failed to convert 180.0 to target type")
-        });
+        let one_eighty =
+            T::from_f64(180.0).unwrap_or_else(|| panic!("Failed to convert 180.0 to target type"));
         self * pi / one_eighty
     }
 
@@ -684,9 +683,8 @@ impl<T: RealNumber> AngleConversion for T {
             // This should never fail for valid RealNumber types
             panic!("Failed to convert PI constant to target type")
         });
-        let one_eighty = T::from_f64(180.0).unwrap_or_else(|| {
-            panic!("Failed to convert 180.0 to target type")
-        });
+        let one_eighty =
+            T::from_f64(180.0).unwrap_or_else(|| panic!("Failed to convert 180.0 to target type"));
         self * one_eighty / pi
     }
 }

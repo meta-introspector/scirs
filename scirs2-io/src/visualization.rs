@@ -324,7 +324,7 @@ impl VisualizationExporter for PlotlyExporter {
                 }
                 PlotType::Heatmap => {
                     let cols = series.x.as_ref().unwrap()[0] as usize;
-                    let rows = series.y[0] as usize;
+                    let _rows = series.y[0] as usize;
                     let z_data: Vec<Vec<f64>> = series.z.as_ref().unwrap()
                         .chunks(cols)
                         .map(|chunk| chunk.to_vec())
@@ -1057,17 +1057,16 @@ impl VisualizationExporter for D3Exporter {
 "#);
         
         // D3.js visualization code
-        html.push_str(&format!(r#"
-        const margin = {{top: 20, right: 20, bottom: 30, left: 50}};
-        const width = {} - margin.left - margin.right;
-        const height = {} - margin.bottom - margin.top;
-        
-        const svg = d3.select("#chart")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-"#, 
+        html.push_str(&format!(
+            "        const margin = {{top: 20, right: 20, bottom: 30, left: 50}};\n\
+            const width = {} - margin.left - margin.right;\n\
+            const height = {} - margin.top - margin.bottom;\n\
+            \n\
+            const svg = d3.select(\"#chart\")\n\
+                .attr(\"width\", width + margin.left + margin.right)\n\
+                .attr(\"height\", height + margin.top + margin.bottom)\n\
+                .append(\"g\")\n\
+                .attr(\"transform\", \"translate(\" + margin.left + \",\" + margin.top + \")\");\n",
             config.width.unwrap_or(800),
             config.height.unwrap_or(600)
         ));
@@ -1096,8 +1095,8 @@ impl VisualizationExporter for BokehExporter {
         Ok(())
     }
     
-    fn to_string(&self, data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata) -> Result<String> {
-        let mut doc = serde_json::json!({
+    fn to_string(&self, _data: &[DataSeries], config: &PlotConfig, _metadata: &Metadata) -> Result<String> {
+        let doc = serde_json::json!({
             "version": "2.4.0",
             "title": config.title,
             "roots": []

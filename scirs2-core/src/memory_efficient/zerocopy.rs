@@ -7,7 +7,7 @@
 
 use super::chunked::ChunkingStrategy;
 use super::memmap::{AccessMode, MemoryMappedArray};
-use crate::error::{CoreError, CoreResult, ErrorContext};
+use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 use ndarray;
 use num_traits::Zero;
 use std::ops::{Add, Div, Mul, Sub};
@@ -268,13 +268,25 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
                 let end = (start + chunk_size).min(self.size);
 
                 // Get the data for this chunk
-                let chunk = &array.as_slice().unwrap()[start..end];
+                let slice = array.as_slice().ok_or_else(|| {
+                    CoreError::ValidationError(
+                        ErrorContext::new("Array is not contiguous in memory".to_string())
+                            .with_location(ErrorLocation::new(file!(), line!()))
+                    )
+                })?;
+                let chunk = &slice[start..end];
 
                 // Apply the mapping function to each element in the chunk
                 let mapped_chunk: Vec<A> = chunk.iter().map(|&x| f(x)).collect();
 
                 // Copy the mapped chunk to the output at the same position
-                let out_slice = &mut out_array.as_slice_mut().unwrap()[start..end];
+                let out_slice_full = out_array.as_slice_mut().ok_or_else(|| {
+                    CoreError::ValidationError(
+                        ErrorContext::new("Output array is not contiguous in memory".to_string())
+                            .with_location(ErrorLocation::new(file!(), line!()))
+                    )
+                })?;
+                let out_slice = &mut out_slice_full[start..end];
 
                 // Copy the mapped chunk to the output
                 out_slice.copy_from_slice(&mapped_chunk);
@@ -296,7 +308,13 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
                 // Get the data for this chunk
                 let array = self.as_array::<ndarray::IxDyn>()?;
-                let chunk = &array.as_slice().unwrap()[start..end];
+                let slice = array.as_slice().ok_or_else(|| {
+                    CoreError::ValidationError(
+                        ErrorContext::new("Array is not contiguous in memory".to_string())
+                            .with_location(ErrorLocation::new(file!(), line!()))
+                    )
+                })?;
+                let chunk = &slice[start..end];
 
                 // Apply the mapping function to each element in the chunk
                 let mapped_chunk: Vec<A> = chunk.iter().map(|&x| f(x)).collect();
@@ -304,7 +322,13 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
                 // Copy the mapped chunk to the output at the same position
                 // Get a mutable view of the output array
                 let mut out_array = output.as_array_mut::<ndarray::IxDyn>()?;
-                let out_slice = &mut out_array.as_slice_mut().unwrap()[start..end];
+                let out_slice_full = out_array.as_slice_mut().ok_or_else(|| {
+                    CoreError::ValidationError(
+                        ErrorContext::new("Output array is not contiguous in memory".to_string())
+                            .with_location(ErrorLocation::new(file!(), line!()))
+                    )
+                })?;
+                let out_slice = &mut out_slice_full[start..end];
 
                 // Copy the mapped chunk to the output
                 out_slice.copy_from_slice(&mapped_chunk);
@@ -334,7 +358,13 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
             // Load the array
             let array = self.as_array::<ndarray::IxDyn>()?;
-            let chunk = &array.as_slice().unwrap()[start..end];
+            let slice = array.as_slice().ok_or_else(|| {
+                CoreError::ValidationError(
+                    ErrorContext::new("Array is not contiguous in memory".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!()))
+                )
+            })?;
+            let chunk = &slice[start..end];
 
             // Reduce the chunk
             let chunk_result = chunk.iter().fold(init, |acc, &x| f(acc, x));
@@ -410,8 +440,20 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let self_array = self.as_array::<ndarray::IxDyn>()?;
             let other_array = other.as_array::<ndarray::IxDyn>()?;
 
-            let self_chunk = &self_array.as_slice().unwrap()[start..end];
-            let other_chunk = &other_array.as_slice().unwrap()[start..end];
+            let self_slice = self_array.as_slice().ok_or_else(|| {
+                CoreError::ValidationError(
+                    ErrorContext::new("Self array is not contiguous in memory".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!()))
+                )
+            })?;
+            let other_slice = other_array.as_slice().ok_or_else(|| {
+                CoreError::ValidationError(
+                    ErrorContext::new("Other array is not contiguous in memory".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!()))
+                )
+            })?;
+            let self_chunk = &self_slice[start..end];
+            let other_chunk = &other_slice[start..end];
 
             // Apply the binary operation
             let mut result_chunk = Vec::with_capacity(len);
@@ -421,7 +463,13 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
             // Write the result to the output array
             let mut out_array = output.as_array_mut::<ndarray::IxDyn>()?;
-            let out_slice = &mut out_array.as_slice_mut().unwrap()[start..end];
+            let out_slice_full = out_array.as_slice_mut().ok_or_else(|| {
+                CoreError::ValidationError(
+                    ErrorContext::new("Output array is not contiguous in memory".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!()))
+                )
+            })?;
+            let out_slice = &mut out_slice_full[start..end];
             out_slice.copy_from_slice(&result_chunk);
         }
 
@@ -445,7 +493,13 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
             // Load the array
             let array = self.as_array::<ndarray::IxDyn>()?;
-            let slice = &array.as_slice().unwrap()[start..end];
+            let array_slice = array.as_slice().ok_or_else(|| {
+                CoreError::ValidationError(
+                    ErrorContext::new("Array is not contiguous in memory".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!()))
+                )
+            })?;
+            let slice = &array_slice[start..end];
 
             // Filter the chunk
             let filtered_chunk = slice
@@ -475,7 +529,13 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
         // Read the first element to initialize
         let first_element = {
             let array = self.as_array::<ndarray::IxDyn>()?;
-            array.as_slice().unwrap()[0]
+            let slice = array.as_slice().ok_or_else(|| {
+                CoreError::ValidationError(
+                    ErrorContext::new("Array is not contiguous in memory".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!()))
+                )
+            })?;
+            slice[0]
         };
 
         // Reduce the array to find the maximum
@@ -496,7 +556,13 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
         // Read the first element to initialize
         let first_element = {
             let array = self.as_array::<ndarray::IxDyn>()?;
-            array.as_slice().unwrap()[0]
+            let slice = array.as_slice().ok_or_else(|| {
+                CoreError::ValidationError(
+                    ErrorContext::new("Array is not contiguous in memory".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!()))
+                )
+            })?;
+            slice[0]
         };
 
         // Reduce the array to find the minimum

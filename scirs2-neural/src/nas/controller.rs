@@ -1,7 +1,7 @@
 //! NAS controller for building and managing architectures
 
 use crate::error::Result;
-use crate::layers::{Layer, LayerConfig};
+use crate::layers::Layer;
 use crate::models::sequential::Sequential;
 use crate::nas::{
     architecture_encoding::ArchitectureEncoding,
@@ -228,7 +228,6 @@ impl NASController {
             },
             LayerType::Flatten => {
                 // Create a reshape layer that flattens
-                use crate::layers::Layer;
                 struct FlattenLayer;
                 
                 impl crate::layers::Layer<f32> for FlattenLayer {

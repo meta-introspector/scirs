@@ -4,7 +4,6 @@ use crate::error::Result;
 use crate::federated::ClientUpdate;
 use crate::models::sequential::Sequential;
 use ndarray::prelude::*;
-use std::collections::HashMap;
 
 /// Configuration for a federated client
 #[derive(Debug, Clone)]
@@ -142,7 +141,7 @@ impl FederatedClient {
         // Shuffle indices
         let mut indices: Vec<usize> = (0..num_samples).collect();
         use rand::prelude::*;
-        indices.shuffle(&mut rand::thread_rng());
+        indices.shuffle(&mut rand::rng());
         
         for batch_idx in 0..num_batches {
             let start = batch_idx * self.config.batch_size;
@@ -286,7 +285,7 @@ impl FederatedClient {
             let noise_scale = clip_threshold * (2.0 * (1.0 / accountant.delta).ln()).sqrt() 
                              / accountant.max_epsilon;
             let noise_dist = Normal::new(0.0, noise_scale).unwrap();
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             
             for update in &mut updates {
                 for elem in update.iter_mut() {

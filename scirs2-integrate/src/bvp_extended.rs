@@ -496,7 +496,7 @@ fn apply_initial_boundary_values<F: IntegrateFloat>(
     boundary_conditions: &ExtendedBoundaryConditions<F>,
     y_solution: &mut Array2<F>,
     n_points: usize,
-    n_dim: usize,
+    _n_dim: usize,
 ) {
     // Apply Dirichlet conditions at boundaries if available
     for (dim, bc) in boundary_conditions.left.iter().enumerate() {
@@ -613,7 +613,7 @@ fn apply_interior_residuals<F: IntegrateFloat>(
         let mesh_idx = mesh.iter()
             .position(|&x| (x - interior_x).abs() < F::from_f64(1e-10).unwrap())
             .ok_or_else(|| IntegrateError::ValueError(
-                format!("Interior point not found in mesh")
+                "Interior point not found in mesh".to_string()
             ))?;
             
         let y_at_point = y_solution.row(mesh_idx);
@@ -788,7 +788,7 @@ fn gaussian_elimination<F: IntegrateFloat>(
         for j in i+1..n {
             x[i] = x[i] - a[[i, j]] * x[j];
         }
-        x[i] = x[i] / a[[i, i]];
+        x[i] /= a[[i, i]];
     }
     
     Ok(x)
@@ -797,7 +797,7 @@ fn gaussian_elimination<F: IntegrateFloat>(
 /// Transpose solution from row-major to column-major format
 fn transpose_solution<F: IntegrateFloat>(y_solution: Array2<F>) -> Vec<Array1<F>> {
     let n_points = y_solution.nrows();
-    let n_dim = y_solution.ncols();
+    let _n_dim = y_solution.ncols();
     
     let mut result = Vec::with_capacity(n_points);
     for i in 0..n_points {

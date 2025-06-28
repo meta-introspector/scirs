@@ -21,5 +21,54 @@ pub use filters::{Wavelet, WaveletFilters};
 pub use multiscale::{wavedec, waverec};
 pub use transform::{dwt_decompose, dwt_reconstruct};
 
+// Export types
+pub use self::DecompositionResult;
+
 // Re-export boundary extension for advanced users
 pub use boundary::extend_signal;
+
+use ndarray::Array1;
+
+/// Result of multi-level wavelet decomposition
+#[derive(Debug, Clone)]
+pub struct DecompositionResult {
+    /// Approximation coefficients at the coarsest level
+    pub approx: Array1<f64>,
+    /// Detail coefficients at each level (from coarsest to finest)
+    pub details: Vec<Array1<f64>>,
+}
+
+impl DecompositionResult {
+    /// Create from wavedec result
+    pub fn from_wavedec(coeffs: Vec<Vec<f64>>) -> Self {
+        if coeffs.len() < 2 {
+            panic!("wavedec result must have at least 2 arrays");
+        }
+        
+        // Last element is approximation
+        let approx = Array1::from_vec(coeffs[coeffs.len() - 1].clone());
+        
+        // All others are details (reverse order to go from coarsest to finest)
+        let mut details = Vec::with_capacity(coeffs.len() - 1);
+        for i in (0..coeffs.len() - 1).rev() {
+            details.push(Array1::from_vec(coeffs[i].clone()));
+        }
+        
+        Self { approx, details }
+    }
+    
+    /// Convert back to wavedec format for reconstruction
+    pub fn to_wavedec(&self) -> Vec<Vec<f64>> {
+        let mut result = Vec::with_capacity(self.details.len() + 1);
+        
+        // Add details in reverse order (finest to coarsest)
+        for detail in self.details.iter().rev() {
+            result.push(detail.to_vec());
+        }
+        
+        // Add approximation last
+        result.push(self.approx.to_vec());
+        
+        result
+    }
+}

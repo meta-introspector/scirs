@@ -113,7 +113,56 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
 ///
 /// # Space Complexity
 /// O(n) for storing community assignments and node degrees.
+/// Detects communities in a graph using the Louvain method (modern API)
+///
+/// This function returns the standardized `CommunityResult` type that provides
+/// multiple ways to access the community structure.
+///
+/// # Arguments
+/// * `graph` - The undirected graph to analyze
+///
+/// # Returns
+/// * A `CommunityResult` with comprehensive community information
+///
+/// # Example
+/// ```rust
+/// use scirs2_graph::{Graph, louvain_communities_result};
+/// 
+/// let mut graph = Graph::new();
+/// // ... add nodes and edges ...
+/// let result = louvain_communities_result(&graph);
+/// 
+/// println!("Found {} communities", result.num_communities);
+/// for (i, community) in result.communities.iter().enumerate() {
+///     println!("Community {}: {} members", i, community.len());
+/// }
+/// ```
+pub fn louvain_communities_result<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityResult<N>
+where
+    N: Node + Clone + Hash + Eq,
+    E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
+    Ix: petgraph::graph::IndexType,
+{
+    let structure = louvain_communities_legacy(graph);
+    CommunityResult::from_community_structure(structure)
+}
+
+/// Detects communities in a graph using the Louvain method (legacy API)
+///
+/// **Note**: This function is deprecated in favor of `louvain_communities_result`.
+/// It will be removed in version 2.0.
+#[deprecated(since = "0.1.0-beta.1", note = "Use `louvain_communities_result` instead")]
 pub fn louvain_communities<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityStructure<N>
+where
+    N: Node,
+    E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
+    Ix: petgraph::graph::IndexType,
+{
+    louvain_communities_legacy(graph)
+}
+
+/// Internal implementation of Louvain method
+fn louvain_communities_legacy<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityStructure<N>
 where
     N: Node,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
@@ -289,7 +338,10 @@ where
     modularity / (2.0 * m)
 }
 
-/// Label propagation algorithm for community detection
+/// Label propagation algorithm for community detection (legacy API)
+///
+/// **Note**: This function is deprecated in favor of `label_propagation_result`.
+/// It will be removed in version 2.0.
 ///
 /// Each node adopts the label that most of its neighbors have, with ties broken randomly.
 /// Returns a mapping from nodes to community labels.
@@ -300,6 +352,7 @@ where
 ///
 /// # Space Complexity
 /// O(n) for storing labels and temporary data structures.
+#[deprecated(since = "0.1.0-beta.2", note = "Use `label_propagation_result` instead")]
 pub fn label_propagation<N, E, Ix>(graph: &Graph<N, E, Ix>, max_iter: usize) -> HashMap<N, usize>
 where
     N: Node + Clone + Hash + Eq,
@@ -377,6 +430,42 @@ where
         .enumerate()
         .map(|(i, node)| (node, labels[i]))
         .collect()
+}
+
+/// Label propagation algorithm with standardized CommunityResult return type
+///
+/// This function provides the same functionality as `label_propagation` but returns
+/// a standardized `CommunityResult` type that provides multiple ways to access
+/// the community structure.
+///
+/// # Arguments
+/// * `graph` - The graph to analyze  
+/// * `max_iter` - Maximum number of iterations (default: 100)
+///
+/// # Returns
+/// * A `CommunityResult` with comprehensive community information
+///
+/// # Example
+/// ```rust
+/// use scirs2_graph::{Graph, label_propagation_result};
+/// 
+/// let mut graph = Graph::new();
+/// // ... add nodes and edges ...
+/// let result = label_propagation_result(&graph, 100);
+/// 
+/// println!("Found {} communities", result.num_communities);
+/// for (i, community) in result.communities.iter().enumerate() {
+///     println!("Community {}: {} members", i, community.len());
+/// }
+/// ```
+pub fn label_propagation_result<N, E, Ix>(graph: &Graph<N, E, Ix>, max_iter: usize) -> CommunityResult<N>
+where
+    N: Node + Clone + Hash + Eq,
+    E: EdgeWeight,
+    Ix: IndexType,
+{
+    let node_communities = label_propagation(graph, max_iter);
+    CommunityResult::from_node_map(node_communities)
 }
 
 /// Computes the modularity of a given community partition

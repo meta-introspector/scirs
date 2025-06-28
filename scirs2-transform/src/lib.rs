@@ -70,6 +70,21 @@ pub mod image;
 /// Graph embedding transformers
 pub mod graph;
 
+/// GPU-accelerated transformations
+#[cfg(feature = "gpu")]
+pub mod gpu;
+
+/// Distributed processing for multi-node transformations
+#[cfg(feature = "distributed")]
+pub mod distributed;
+
+/// Automated feature engineering with meta-learning
+pub mod auto_feature_engineering;
+
+/// Production monitoring with drift detection
+#[cfg(feature = "monitoring")]
+pub mod monitoring;
+
 // Re-export important types and functions
 pub use encoding::{BinaryEncoder, OneHotEncoder, OrdinalEncoder, TargetEncoder};
 pub use error::{Result, TransformError};
@@ -82,7 +97,7 @@ pub use impute::{
     WeightingScheme,
 };
 pub use normalize::{normalize_array, normalize_vector, NormalizationMethod, Normalizer};
-pub use reduction::{trustworthiness, TruncatedSVD, LDA, PCA, TSNE, UMAP, Isomap, LLE};
+pub use reduction::{trustworthiness, TruncatedSVD, LDA, PCA, TSNE, UMAP, Isomap, LLE, SpectralEmbedding, AffinityMethod};
 pub use decomposition::{NMF, DictionaryLearning};
 pub use scaling::{MaxAbsScaler, QuantileTransformer};
 pub use selection::{VarianceThreshold, RecursiveFeatureElimination, MutualInfoSelector};
@@ -107,3 +122,21 @@ pub use image::{PatchExtractor, HOGDescriptor, BlockNorm, ImageNormalizer, Image
                 rgb_to_grayscale, resize_images};
 pub use graph::{SpectralEmbedding, LaplacianType, DeepWalk, Node2Vec, GraphAutoencoder, 
                 ActivationType, edge_list_to_adjacency, adjacency_to_edge_list};
+
+// GPU acceleration exports
+#[cfg(feature = "gpu")]
+pub use gpu::{GpuPCA, GpuMatrixOps, GpuTSNE};
+
+// Distributed processing exports
+#[cfg(feature = "distributed")]
+pub use distributed::{DistributedConfig, DistributedCoordinator, DistributedPCA, NodeInfo, 
+                      PartitioningStrategy};
+
+// Automated feature engineering exports
+pub use auto_feature_engineering::{AutoFeatureEngineer, DatasetMetaFeatures, TransformationType, 
+                                   TransformationConfig};
+
+// Production monitoring exports
+#[cfg(feature = "monitoring")]
+pub use monitoring::{TransformationMonitor, DriftMethod, DriftDetectionResult, PerformanceMetrics, 
+                     AlertConfig, AlertType};

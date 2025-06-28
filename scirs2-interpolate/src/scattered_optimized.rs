@@ -289,7 +289,7 @@ where
         config: ScatteredConfig,
     ) -> InterpolateResult<Self> {
         if points.nrows() != values.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "Number of points must match number of values".to_string(),
             ));
         }

@@ -3,8 +3,18 @@
 //! This module provides integrators that preserve various geometric structures
 //! such as energy, momentum, symplectic structure, and other invariants.
 
-use ndarray::{Array1, ArrayView1};
+use ndarray::{Array1, Array2, ArrayView1};
 use crate::error::IntegrateResult as Result;
+
+// Type aliases for complex function types
+type HamiltonianFn = Box<dyn Fn(&ArrayView1<f64>, &ArrayView1<f64>) -> f64>;
+type ConstraintFn = Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>;
+type ConstraintJacobianFn = Box<dyn Fn(&ArrayView1<f64>) -> Array2<f64>>;
+type GradientFn = dyn Fn(&ArrayView1<f64>) -> Array1<f64>;
+type ForceFn = Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>;
+type KineticFn = Box<dyn Fn(&ArrayView1<f64>) -> f64>;
+type PotentialFn = Box<dyn Fn(&ArrayView1<f64>) -> f64>;
+type StiffnessFn = Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>;
 
 /// Trait for geometric invariants
 pub trait GeometricInvariant {
@@ -82,7 +92,7 @@ impl StructurePreservingIntegrator {
 /// Energy-preserving integrator for Hamiltonian systems
 pub struct EnergyPreservingMethod {
     /// Hamiltonian function
-    hamiltonian: Box<dyn Fn(&ArrayView1<f64>, &ArrayView1<f64>) -> f64>,
+    hamiltonian: HamiltonianFn,
     /// Dimension
     dim: usize,
 }
@@ -90,7 +100,7 @@ pub struct EnergyPreservingMethod {
 impl EnergyPreservingMethod {
     /// Create a new energy-preserving integrator
     pub fn new(
-        hamiltonian: Box<dyn Fn(&ArrayView1<f64>, &ArrayView1<f64>) -> f64>,
+        hamiltonian: HamiltonianFn,
         dim: usize,
     ) -> Self {
         Self { hamiltonian, dim }
@@ -204,9 +214,10 @@ impl EnergyPreservingMethod {
 /// Momentum-preserving integrator
 pub struct MomentumPreservingMethod {
     /// System dimension
+    #[allow(dead_code)]
     dim: usize,
     /// Force function
-    force: Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>,
+    force: ForceFn,
     /// Mass matrix (diagonal)
     mass: Array1<f64>,
 }
@@ -215,7 +226,7 @@ impl MomentumPreservingMethod {
     /// Create a new momentum-preserving integrator
     pub fn new(
         dim: usize,
-        force: Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>,
+        force: ForceFn,
         mass: Array1<f64>,
     ) -> Self {
         Self { dim, force, mass }
@@ -333,10 +344,11 @@ impl ConservationChecker {
 /// Splitting method for separable Hamiltonians
 pub struct SplittingIntegrator {
     /// Kinetic energy part T(p)
-    kinetic: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
+    kinetic: KineticFn,
     /// Potential energy part V(q)
-    potential: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
+    potential: PotentialFn,
     /// System dimension
+    #[allow(dead_code)]
     dim: usize,
     /// Splitting coefficients
     coefficients: Vec<(f64, f64)>,
@@ -345,8 +357,8 @@ pub struct SplittingIntegrator {
 impl SplittingIntegrator {
     /// Create a new splitting integrator with Strang splitting
     pub fn strang(
-        kinetic: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
-        potential: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
+        kinetic: KineticFn,
+        potential: PotentialFn,
         dim: usize,
     ) -> Self {
         let coefficients = vec![(0.5, 1.0), (0.5, 0.0)];
@@ -360,8 +372,8 @@ impl SplittingIntegrator {
     
     /// Create with Yoshida 4th order coefficients
     pub fn yoshida4(
-        kinetic: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
-        potential: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
+        kinetic: KineticFn,
+        potential: PotentialFn,
         dim: usize,
     ) -> Self {
         let x1 = 1.0 / (2.0 - 2.0_f64.powf(1.0/3.0));
@@ -449,8 +461,9 @@ pub struct EnergyMomentumIntegrator {
     /// Mass matrix
     mass: Array1<f64>,
     /// Stiffness function
-    stiffness: Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>,
+    stiffness: StiffnessFn,
     /// System dimension
+    #[allow(dead_code)]
     dim: usize,
 }
 
@@ -458,7 +471,7 @@ impl EnergyMomentumIntegrator {
     /// Create a new energy-momentum integrator
     pub fn new(
         mass: Array1<f64>,
-        stiffness: Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>,
+        stiffness: StiffnessFn,
     ) -> Self {
         let dim = mass.len();
         Self {
@@ -504,12 +517,14 @@ impl EnergyMomentumIntegrator {
 /// Störmer-Verlet method for constrained systems
 pub struct ConstrainedIntegrator {
     /// Constraint function g(q) = 0
-    constraints: Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>,
+    constraints: ConstraintFn,
     /// Constraint Jacobian
-    constraint_jacobian: Box<dyn Fn(&ArrayView1<f64>) -> ndarray::Array2<f64>>,
+    constraint_jacobian: ConstraintJacobianFn,
     /// System dimension
+    #[allow(dead_code)]
     dim: usize,
     /// Number of constraints
+    #[allow(dead_code)]
     n_constraints: usize,
     /// Tolerance for constraint satisfaction
     tol: f64,
@@ -518,8 +533,8 @@ pub struct ConstrainedIntegrator {
 impl ConstrainedIntegrator {
     /// Create a new constrained integrator
     pub fn new(
-        constraints: Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>,
-        constraint_jacobian: Box<dyn Fn(&ArrayView1<f64>) -> ndarray::Array2<f64>>,
+        constraints: ConstraintFn,
+        constraint_jacobian: ConstraintJacobianFn,
         dim: usize,
         n_constraints: usize,
     ) -> Self {
@@ -546,7 +561,7 @@ impl ConstrainedIntegrator {
         
         // SHAKE iteration for position constraints
         let mut q_new = q_tilde.clone();
-        let mut lambda = Array1::zeros(self.n_constraints);
+        let mut lambda;
         
         for _ in 0..100 {
             let g = (self.constraints)(&q_new.view());
@@ -554,45 +569,45 @@ impl ConstrainedIntegrator {
                 break;
             }
             
-            let G = (self.constraint_jacobian)(&q_new.view());
+            let g_matrix = (self.constraint_jacobian)(&q_new.view());
             
             // Solve for Lagrange multipliers
             // G * G^T * λ = -g
-            let GGt = G.dot(&G.t());
-            lambda = self.solve_linear_system(&GGt, &(-&g))?;
+            let ggt = g_matrix.dot(&g_matrix.t());
+            lambda = self.solve_linear_system(&ggt, &(-&g))?;
             
             // Update position
-            let correction = G.t().dot(&lambda);
+            let correction = g_matrix.t().dot(&lambda);
             q_new = &q_new + &correction * dt * dt;
         }
         
         // RATTLE for velocity constraints
-        let G_new = (self.constraint_jacobian)(&q_new.view());
-        let Gv = G_new.dot(&p_tilde);
+        let g_new = (self.constraint_jacobian)(&q_new.view());
+        let gv = g_new.dot(&p_tilde);
         
         // Solve G * G^T * μ = -G * v
-        let GGt = G_new.dot(&G_new.t());
-        let mu = self.solve_linear_system(&GGt, &(-&Gv))?;
+        let ggt = g_new.dot(&g_new.t());
+        let mu = self.solve_linear_system(&ggt, &(-&gv))?;
         
-        let p_correction = G_new.t().dot(&mu);
+        let p_correction = g_new.t().dot(&mu);
         let p_new = &p_tilde + &p_correction;
         
         Ok((q_new, p_new))
     }
     
     /// Simple linear system solver (for small systems)
-    fn solve_linear_system(&self, A: &ndarray::Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+    fn solve_linear_system(&self, a: &ndarray::Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
         // LU decomposition would be more robust
         let n = b.len();
         let mut x = Array1::zeros(n);
         
         // Simplified Gaussian elimination
-        let mut A_copy = A.clone();
+        let mut a_copy = a.clone();
         let mut b_copy = b.clone();
         
         for i in 0..n {
             // Pivot
-            let pivot = A_copy[[i, i]];
+            let pivot = a_copy[[i, i]];
             if pivot.abs() < 1e-14 {
                 return Err(crate::error::IntegrateError::ComputationError(
                     "Singular constraint matrix".to_string()
@@ -601,9 +616,9 @@ impl ConstrainedIntegrator {
             
             // Eliminate
             for j in (i+1)..n {
-                let factor = A_copy[[j, i]] / pivot;
+                let factor = a_copy[[j, i]] / pivot;
                 for k in i..n {
-                    A_copy[[j, k]] -= factor * A_copy[[i, k]];
+                    a_copy[[j, k]] -= factor * a_copy[[i, k]];
                 }
                 b_copy[j] -= factor * b_copy[i];
             }
@@ -613,9 +628,9 @@ impl ConstrainedIntegrator {
         for i in (0..n).rev() {
             let mut sum = b_copy[i];
             for j in (i+1)..n {
-                sum -= A_copy[[i, j]] * x[j];
+                sum -= a_copy[[i, j]] * x[j];
             }
-            x[i] = sum / A_copy[[i, i]];
+            x[i] = sum / a_copy[[i, i]];
         }
         
         Ok(x)
@@ -625,12 +640,14 @@ impl ConstrainedIntegrator {
 /// Multi-symplectic integrator for PDEs
 pub struct MultiSymplecticIntegrator {
     /// Spatial dimension
+    #[allow(dead_code)]
     spatial_dim: usize,
     /// Number of fields
+    #[allow(dead_code)]
     n_fields: usize,
     /// Symplectic structure matrices
-    K: ndarray::Array2<f64>,
-    L: ndarray::Array2<f64>,
+    k: ndarray::Array2<f64>,
+    l: ndarray::Array2<f64>,
 }
 
 impl MultiSymplecticIntegrator {
@@ -638,14 +655,14 @@ impl MultiSymplecticIntegrator {
     pub fn new(
         spatial_dim: usize,
         n_fields: usize,
-        K: ndarray::Array2<f64>,
-        L: ndarray::Array2<f64>,
+        k: ndarray::Array2<f64>,
+        l: ndarray::Array2<f64>,
     ) -> Self {
         Self {
             spatial_dim,
             n_fields,
-            K,
-            L,
+            k,
+            l,
         }
     }
     
@@ -653,7 +670,7 @@ impl MultiSymplecticIntegrator {
     pub fn preissman_step(
         &self,
         z: &ndarray::Array2<f64>,
-        S: &dyn Fn(&ArrayView1<f64>) -> Array1<f64>,
+        s: &GradientFn,
         dt: f64,
         dx: f64,
     ) -> Result<ndarray::Array2<f64>> {
@@ -663,17 +680,17 @@ impl MultiSymplecticIntegrator {
         // Iterate through spatial grid
         for i in 1..nx {
             // Box average
-            let z_avg = (&z.row(i-1) + &z.row(i) + &z_new.row(i-1) + &z_new.row(i)) / 4.0;
+            let z_avg = (&z.row(i-1) + &z.row(i) + z_new.row(i-1) + z_new.row(i)) / 4.0;
             
             // Compute gradient of S
-            let grad_S = S(&z_avg.view());
+            let grad_s = s(&z_avg.view());
             
             // Multi-symplectic conservation law
             // K(z_t) + L(z_x) = ∇S(z)
-            let z_t = (&z_new.row(i) - &z.row(i) + &z_new.row(i-1) - &z.row(i-1)) / (2.0 * dt);
-            let z_x = (&z_new.row(i) + &z.row(i) - &z_new.row(i-1) - &z.row(i-1)) / (2.0 * dx);
+            let z_t = (&z_new.row(i) - &z.row(i) + z_new.row(i-1) - z.row(i-1)) / (2.0 * dt);
+            let z_x = (&z_new.row(i) + &z.row(i) - z_new.row(i-1) - z.row(i-1)) / (2.0 * dx);
             
-            let residual = self.K.dot(&z_t) + self.L.dot(&z_x) - grad_S;
+            let residual = self.k.dot(&z_t) + self.l.dot(&z_x) - grad_s;
             
             // Newton iteration (simplified)
             let current_row = z_new.row(i).to_owned();
@@ -691,11 +708,11 @@ pub mod invariants {
     
     /// Energy invariant for Hamiltonian systems
     pub struct EnergyInvariant {
-        hamiltonian: Box<dyn Fn(&ArrayView1<f64>, &ArrayView1<f64>) -> f64>,
+        hamiltonian: HamiltonianFn,
     }
     
     impl EnergyInvariant {
-        pub fn new(hamiltonian: Box<dyn Fn(&ArrayView1<f64>, &ArrayView1<f64>) -> f64>) -> Self {
+        pub fn new(hamiltonian: HamiltonianFn) -> Self {
             Self { hamiltonian }
         }
     }

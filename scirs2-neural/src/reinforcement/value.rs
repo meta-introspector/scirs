@@ -4,7 +4,6 @@ use crate::error::Result;
 use crate::layers::{Dense, Layer};
 use crate::activations::Activation;
 use ndarray::prelude::*;
-use std::collections::HashMap;
 
 /// Value function network
 pub struct ValueNetwork {

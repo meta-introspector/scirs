@@ -3,13 +3,11 @@
 //! TRPO is an advanced policy gradient method that ensures monotonic improvement
 //! by constraining the policy update step size using KL divergence.
 
-use crate::error::{Result, NeuralError};
+use crate::error::Result;
 use crate::reinforcement::policy::{Policy, PolicyNetwork};
 use crate::reinforcement::value::ValueNetwork;
-use crate::layers::Layer;
 use ndarray::prelude::*;
 // Note: Would use ndarray_linalg for matrix operations in production
-use std::sync::Arc;
 
 /// TRPO configuration
 #[derive(Debug, Clone)]

@@ -3,9 +3,11 @@
 //! This module provides functionality for interpolating multidimensional data.
 
 use crate::error::{InterpolateError, InterpolateResult};
+use crate::advanced::rbf::{RBFInterpolator, RBFKernel};
 use ndarray::{Array, Array1, Array2, ArrayView1, ArrayView2, IxDyn};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
+use std::ops::AddAssign;
 
 /// Available grid types for N-dimensional interpolation
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -115,7 +117,7 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
     ) -> InterpolateResult<Self> {
         // Check that points dimensions match values dimensions
         if points.len() != values.ndim() {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "Points dimensions ({}) do not match values dimensions ({})",
                 points.len(),
                 values.ndim()
@@ -125,7 +127,7 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
         // Check that each dimension has at least 2 points
         for (i, p) in points.iter().enumerate() {
             if p.len() < 2 {
-                return Err(InterpolateError::ValueError(format!(
+                return Err(InterpolateError::invalid_input(format!(
                     "Dimension {} has less than 2 points",
                     i
                 )));
@@ -134,7 +136,7 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
             // Check that points are sorted
             for j in 1..p.len() {
                 if p[j] <= p[j - 1] {
-                    return Err(InterpolateError::ValueError(format!(
+                    return Err(InterpolateError::invalid_input(format!(
                         "Points in dimension {} are not strictly increasing",
                         i
                     )));
@@ -143,7 +145,7 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
 
             // Check that values dimension matches points dimension
             if p.len() != values.shape()[i] {
-                return Err(InterpolateError::ValueError(format!(
+                return Err(InterpolateError::invalid_input(format!(
                     "Values dimension {} size {} does not match points dimension size {}",
                     i,
                     values.shape()[i],
@@ -213,7 +215,7 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
     pub fn __call__(&self, xi: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check that xi dimensions match grid dimensions
         if xi.shape()[1] != self.points.len() {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "Dimensions of interpolation points ({}) do not match grid dimensions ({})",
                 xi.shape()[1],
                 self.points.len()
@@ -252,7 +254,7 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
             if x < dim_points[0] || x > dim_points[dim_points.len() - 1] {
                 match self.extrapolate {
                     ExtrapolateMode::Error => {
-                        return Err(InterpolateError::DomainError(format!(
+                        return Err(InterpolateError::OutOfBounds(format!(
                             "Point outside domain in dimension {}: {} not in [{}, {}]",
                             dim,
                             x,
@@ -365,9 +367,16 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
                 // For linear, we need to compute a weighted average of the surrounding cell vertices
                 self.linear_interpolate(&indices, &weights)
             }
-            InterpolationMethod::Spline => Err(InterpolateError::NotImplementedError(
-                "Spline interpolation not yet implemented for N-dimensions".to_string(),
-            )),
+            InterpolationMethod::Spline => {
+                // For now, implement 2D spline interpolation only
+                if self.points.len() == 2 {
+                    self.spline_interpolate_2d(point)
+                } else {
+                    Err(InterpolateError::NotImplemented(
+                        format!("Spline interpolation only supports 2D grids, got {}D", self.points.len()),
+                    ))
+                }
+            },
         }
     }
 
@@ -451,6 +460,58 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
         }
 
         Ok(result)
+    }
+
+    /// Perform 2D spline interpolation
+    ///
+    /// # Arguments
+    ///
+    /// * `point` - Coordinates of the point to interpolate at
+    ///
+    /// # Returns
+    ///
+    /// Interpolated value at the point
+    fn spline_interpolate_2d(&self, point: &ArrayView1<F>) -> InterpolateResult<F> {
+        use crate::interp2d::{Interp2d, Interp2dKind};
+        
+        if self.points.len() != 2 {
+            return Err(InterpolateError::invalid_input(
+                "spline_interpolate_2d requires exactly 2 dimensions"
+            ));
+        }
+        
+        // Convert the N-D grid to 2D format
+        let x = &self.points[0];
+        let y = &self.points[1];
+        
+        // The values should be in a 2D array format
+        let shape = self.values.shape();
+        if shape.len() != 2 {
+            return Err(InterpolateError::invalid_input(
+                "spline_interpolate_2d requires 2D value array"
+            ));
+        }
+        
+        // Create 2D array from N-D array
+        let z = self.values.clone().into_dimensionality::<ndarray::Ix2>()
+            .map_err(|_| InterpolateError::invalid_input("Failed to convert to 2D array"))?;
+        
+        // Create 2D interpolator
+        let interp = Interp2d::new(
+            &x.view(),
+            &y.view(), 
+            &z.view(),
+            Interp2dKind::Cubic
+        )?;
+        
+        // Evaluate at the point
+        if point.len() != 2 {
+            return Err(InterpolateError::invalid_input(
+                "Point must have 2 coordinates for 2D spline interpolation"
+            ));
+        }
+        
+        interp.evaluate(point[0], point[1])
     }
 }
 
@@ -572,7 +633,7 @@ impl<F: Float + FromPrimitive + Debug + Display> ScatteredInterpolator<F> {
     ) -> InterpolateResult<Self> {
         // Check that points and values have compatible dimensions
         if points.shape()[0] != values.len() {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "Number of points ({}) does not match number of values ({})",
                 points.shape()[0],
                 values.len()
@@ -619,7 +680,7 @@ impl<F: Float + FromPrimitive + Debug + Display> ScatteredInterpolator<F> {
     pub fn __call__(&self, xi: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check that xi dimensions match input dimensions
         if xi.shape()[1] != self.points.shape()[1] {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "Dimensions of interpolation points ({}) do not match input dimensions ({})",
                 xi.shape()[1],
                 self.points.shape()[1]
@@ -650,9 +711,7 @@ impl<F: Float + FromPrimitive + Debug + Display> ScatteredInterpolator<F> {
         match self.method {
             ScatteredInterpolationMethod::Nearest => self.nearest_interpolate(point),
             ScatteredInterpolationMethod::IDW => self.idw_interpolate(point),
-            ScatteredInterpolationMethod::RBF => Err(InterpolateError::NotImplementedError(
-                "RBF interpolation not yet fully implemented".to_string(),
-            )),
+            ScatteredInterpolationMethod::RBF => self.rbf_interpolate(point),
         }
     }
 
@@ -746,6 +805,32 @@ impl<F: Float + FromPrimitive + Debug + Display> ScatteredInterpolator<F> {
             sum_sq = sum_sq + diff * diff;
         }
         sum_sq.sqrt()
+    }
+
+    /// Perform RBF interpolation at a point
+    ///
+    /// # Arguments
+    ///
+    /// * `point` - Coordinates of the point to interpolate at
+    ///
+    /// # Returns
+    ///
+    /// Interpolated value at the point
+    fn rbf_interpolate(&self, point: &ArrayView1<F>) -> InterpolateResult<F>
+    where
+        F: Float + FromPrimitive + Debug + Display + AddAssign + std::ops::SubAssign + std::fmt::LowerExp + Send + Sync + 'static,
+    {
+        // Create RBF interpolator
+        let epsilon = F::from_f64(1.0).unwrap(); // Default shape parameter
+        let rbf = RBFInterpolator::new(
+            &self.points.view(),
+            &self.values.view(),
+            RBFKernel::Gaussian,
+            epsilon,
+        )?;
+
+        // Evaluate at the query point
+        rbf.evaluate(point)
     }
 }
 

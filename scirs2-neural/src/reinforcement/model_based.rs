@@ -6,10 +6,9 @@
 use crate::error::{Result, NeuralError};
 use crate::layers::{Dense, Layer};
 use crate::activations::Activation;
-use crate::reinforcement::environments::{Environment, Observation, Action, Reward};
+use crate::reinforcement::environments::Environment;
 use ndarray::prelude::*;
 use ndarray::concatenate;
-use std::collections::HashMap;
 
 /// Dynamics model for predicting environment transitions
 pub struct DynamicsModel {

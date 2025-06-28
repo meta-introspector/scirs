@@ -747,14 +747,14 @@ impl Rotation {
     /// let rotated = rot.apply(&vec.view());
     /// // Should be approximately [0, 1, 0]
     /// ```
-    pub fn apply(&self, vec: &ArrayView1<f64>) -> Array1<f64> {
+    pub fn apply(&self, vec: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
         if vec.len() != 3 {
-            panic!("Vector must have 3 elements");
+            return Err(SpatialError::DimensionError("Vector must have 3 elements".to_string()));
         }
 
         // Convert to matrix and apply
         let matrix = self.as_matrix();
-        matrix.dot(vec)
+        Ok(matrix.dot(vec))
     }
 
     /// Apply the rotation to multiple vectors
@@ -781,13 +781,13 @@ impl Rotation {
     /// // First row should be approximately [0, 1, 0]
     /// // Second row should be approximately [-1, 0, 0]
     /// ```
-    pub fn apply_multiple(&self, vecs: &ArrayView2<f64>) -> Array2<f64> {
+    pub fn apply_multiple(&self, vecs: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
         if vecs.ncols() != 3 {
-            panic!("Each vector must have 3 elements");
+            return Err(SpatialError::DimensionError("Each vector must have 3 elements".to_string()));
         }
 
         let matrix = self.as_matrix();
-        vecs.dot(&matrix.t())
+        Ok(vecs.dot(&matrix.t()))
     }
 
     /// Combine this rotation with another (apply the other rotation after this one)

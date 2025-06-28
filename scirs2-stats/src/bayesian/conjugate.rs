@@ -43,22 +43,45 @@ impl BetaBinomial {
     }
 
     /// Compute the posterior mean
-    pub fn posterior_mean(&self) -> f64 {
-        self.alpha / (self.alpha + self.beta)
+    pub fn posterior_mean(&self) -> Result<f64> {
+        let total = self.alpha + self.beta;
+        if total.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot compute posterior mean: alpha + beta too close to zero"
+            ));
+        }
+        Ok(self.alpha / total)
     }
 
     /// Compute the posterior variance
-    pub fn posterior_variance(&self) -> f64 {
+    pub fn posterior_variance(&self) -> Result<f64> {
         let total = self.alpha + self.beta;
-        (self.alpha * self.beta) / (total * total * (total + 1.0))
+        if total.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot compute posterior variance: alpha + beta too close to zero"
+            ));
+        }
+        let denominator = total * total * (total + 1.0);
+        if denominator.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot compute posterior variance: denominator too close to zero"
+            ));
+        }
+        Ok((self.alpha * self.beta) / denominator)
     }
 
     /// Compute the posterior mode (MAP estimate)
-    pub fn posterior_mode(&self) -> Option<f64> {
+    pub fn posterior_mode(&self) -> Result<Option<f64>> {
         if self.alpha > 1.0 && self.beta > 1.0 {
-            Some((self.alpha - 1.0) / (self.alpha + self.beta - 2.0))
+            let denominator = self.alpha + self.beta - 2.0;
+            if denominator.abs() < f64::EPSILON {
+                return Err(StatsError::domain(
+                    "Cannot compute posterior mode: alpha + beta - 2 too close to zero"
+                ));
+            }
+            Ok(Some((self.alpha - 1.0) / denominator))
         } else {
-            None
+            Ok(None)
         }
     }
 
@@ -115,21 +138,36 @@ impl GammaPoisson {
     }
 
     /// Compute the posterior mean
-    pub fn posterior_mean(&self) -> f64 {
-        self.alpha / self.beta
+    pub fn posterior_mean(&self) -> Result<f64> {
+        if self.beta.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot compute posterior mean: beta too close to zero"
+            ));
+        }
+        Ok(self.alpha / self.beta)
     }
 
     /// Compute the posterior variance
-    pub fn posterior_variance(&self) -> f64 {
-        self.alpha / (self.beta * self.beta)
+    pub fn posterior_variance(&self) -> Result<f64> {
+        if self.beta.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot compute posterior variance: beta too close to zero"
+            ));
+        }
+        Ok(self.alpha / (self.beta * self.beta))
     }
 
     /// Compute the posterior mode (MAP estimate)
-    pub fn posterior_mode(&self) -> Option<f64> {
+    pub fn posterior_mode(&self) -> Result<Option<f64>> {
         if self.alpha >= 1.0 {
-            Some((self.alpha - 1.0) / self.beta)
+            if self.beta.abs() < f64::EPSILON {
+                return Err(StatsError::domain(
+                    "Cannot compute posterior mode: beta too close to zero"
+                ));
+            }
+            Ok(Some((self.alpha - 1.0) / self.beta))
         } else {
-            None
+            Ok(None)
         }
     }
 
@@ -185,9 +223,26 @@ impl NormalKnownVariance {
         let n = data.len() as f64;
         let data_mean = data.mean().unwrap_or(0.0);
         
+        if self.prior_variance.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot update: prior_variance too close to zero"
+            ));
+        }
+        if self.data_variance.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot update: data_variance too close to zero"
+            ));
+        }
+        
         let precision_prior = 1.0 / self.prior_variance;
         let precision_data = n / self.data_variance;
         let precision_posterior = precision_prior + precision_data;
+        
+        if precision_posterior.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot update: precision_posterior too close to zero"
+            ));
+        }
         
         let posterior_variance = 1.0 / precision_posterior;
         let posterior_mean = (precision_prior * self.prior_mean + precision_data * data_mean) / precision_posterior;
@@ -215,6 +270,11 @@ impl NormalKnownVariance {
         
         // Use normal distribution quantiles
         use crate::distributions::normal::Normal;
+        if self.prior_variance < 0.0 {
+            return Err(StatsError::domain(
+                "Cannot compute credible interval: prior_variance must be non-negative"
+            ));
+        }
         let dist = Normal::new(self.prior_mean, self.prior_variance.sqrt())?;
         
         let alpha_level = (1.0 - confidence) / 2.0;
@@ -277,27 +337,44 @@ impl DirichletMultinomial {
     }
 
     /// Compute the posterior mean
-    pub fn posterior_mean(&self) -> Array1<f64> {
+    pub fn posterior_mean(&self) -> Result<Array1<f64>> {
         let sum = self.alpha.sum();
-        &self.alpha / sum
+        if sum.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot compute posterior mean: sum of alpha parameters too close to zero"
+            ));
+        }
+        Ok(&self.alpha / sum)
     }
 
     /// Compute the posterior mode (MAP estimate)
-    pub fn posterior_mode(&self) -> Option<Array1<f64>> {
+    pub fn posterior_mode(&self) -> Result<Option<Array1<f64>>> {
         let k = self.alpha.len() as f64;
         if self.alpha.iter().all(|&a| a > 1.0) {
             let sum = self.alpha.sum();
-            Some((&self.alpha - 1.0) / (sum - k))
+            let denominator = sum - k;
+            if denominator.abs() < f64::EPSILON {
+                return Err(StatsError::domain(
+                    "Cannot compute posterior mode: sum - k too close to zero"
+                ));
+            }
+            Ok(Some((&self.alpha - 1.0) / denominator))
         } else {
-            None
+            Ok(None)
         }
     }
 
     /// Compute the marginal variance for each component
-    pub fn posterior_variance(&self) -> Array1<f64> {
+    pub fn posterior_variance(&self) -> Result<Array1<f64>> {
         let sum = self.alpha.sum();
-        let mean = self.posterior_mean();
-        mean.mapv(|p| p * (1.0 - p) / (sum + 1.0))
+        let denominator = sum + 1.0;
+        if denominator.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot compute posterior variance: sum + 1 too close to zero"
+            ));
+        }
+        let mean = self.posterior_mean()?;
+        Ok(mean.mapv(|p| p * (1.0 - p) / denominator))
     }
 }
 
@@ -338,6 +415,11 @@ impl NormalInverseGamma {
         
         // Update parameters
         let lambda_n = self.lambda + n;
+        if lambda_n.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot update: lambda_n too close to zero"
+            ));
+        }
         let mu_n = (self.lambda * self.mu0 + n * data_mean) / lambda_n;
         let alpha_n = self.alpha + n / 2.0;
         let beta_n = self.beta + 0.5 * ss + 0.5 * self.lambda * n * (data_mean - self.mu0).powi(2) / lambda_n;
@@ -356,12 +438,24 @@ impl NormalInverseGamma {
     }
 
     /// Compute the posterior mean of σ²
-    pub fn posterior_mean_variance(&self) -> f64 {
-        self.beta / (self.alpha - 1.0)
+    pub fn posterior_mean_variance(&self) -> Result<f64> {
+        let denominator = self.alpha - 1.0;
+        if denominator.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot compute posterior mean variance: alpha - 1 too close to zero"
+            ));
+        }
+        Ok(self.beta / denominator)
     }
 
     /// Compute the marginal posterior variance of μ
-    pub fn posterior_variance_mu(&self) -> f64 {
-        self.beta / (self.lambda * (self.alpha - 1.0))
+    pub fn posterior_variance_mu(&self) -> Result<f64> {
+        let denominator = self.lambda * (self.alpha - 1.0);
+        if denominator.abs() < f64::EPSILON {
+            return Err(StatsError::domain(
+                "Cannot compute posterior variance mu: lambda * (alpha - 1) too close to zero"
+            ));
+        }
+        Ok(self.beta / denominator)
     }
 }

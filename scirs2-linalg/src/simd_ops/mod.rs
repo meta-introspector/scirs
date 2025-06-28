@@ -6,6 +6,7 @@
 
 pub mod elementwise;
 pub mod gemm;
+pub mod hardware_specific;
 pub mod norms;
 pub mod transpose;
 
@@ -26,6 +27,10 @@ pub use norms::{
 };
 #[cfg(feature = "simd")]
 pub use transpose::{simd_transpose_f32, simd_transpose_f64};
+#[cfg(feature = "simd")]
+pub use hardware_specific::{
+    HardwareCapabilities, hardware_optimized_dot, hardware_optimized_matvec,
+};
 
 use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};

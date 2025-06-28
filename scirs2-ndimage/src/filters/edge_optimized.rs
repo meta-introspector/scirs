@@ -43,9 +43,10 @@ where
     let (height, width) = input.dim();
 
     if axis > 1 {
-        return Err(NdimageError::InvalidInput(
-            format!("Invalid axis {} for 2D array", axis)
-        ));
+        return Err(NdimageError::InvalidInput(format!(
+            "Invalid axis {} for 2D array",
+            axis
+        )));
     }
 
     // Create output array
@@ -94,25 +95,25 @@ fn sobel_sequential<T>(
                 let top = get_pixel_value(input, i as isize - 1, j as isize - 1, mode) * k1
                     + get_pixel_value(input, i as isize - 1, j as isize, mode) * k2
                     + get_pixel_value(input, i as isize - 1, j as isize + 1, mode) * k3;
-                
+
                 let bottom = get_pixel_value(input, i as isize + 1, j as isize - 1, mode) * k1
                     + get_pixel_value(input, i as isize + 1, j as isize, mode) * k2
                     + get_pixel_value(input, i as isize + 1, j as isize + 1, mode) * k3;
-                
+
                 top - bottom
             } else {
                 // X-derivative: [-1 0 1; -2 0 2; -1 0 1]
                 let left = get_pixel_value(input, i as isize - 1, j as isize - 1, mode) * k1
                     + get_pixel_value(input, i as isize, j as isize - 1, mode) * k2
                     + get_pixel_value(input, i as isize + 1, j as isize - 1, mode) * k3;
-                
+
                 let right = get_pixel_value(input, i as isize - 1, j as isize + 1, mode) * k1
                     + get_pixel_value(input, i as isize, j as isize + 1, mode) * k2
                     + get_pixel_value(input, i as isize + 1, j as isize + 1, mode) * k3;
-                
+
                 right - left
             };
-            
+
             output[[i, j]] = val;
         }
     }
@@ -134,54 +135,82 @@ fn sobel_parallel<T>(
     let input_ptr = input as *const ArrayView2<T>;
     let mode_clone = mode.clone();
 
-    output.axis_iter_mut(Axis(0))
+    output
+        .axis_iter_mut(Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
             let input_ref = unsafe { &*input_ptr };
-            
+
             for j in 0..width {
                 let val = if axis == 0 {
                     // Y-derivative
-                    let top = get_pixel_value(input_ref, i as isize - 1, j as isize - 1, &mode_clone) * k1
-                        + get_pixel_value(input_ref, i as isize - 1, j as isize, &mode_clone) * k2
-                        + get_pixel_value(input_ref, i as isize - 1, j as isize + 1, &mode_clone) * k3;
-                    
-                    let bottom = get_pixel_value(input_ref, i as isize + 1, j as isize - 1, &mode_clone) * k1
-                        + get_pixel_value(input_ref, i as isize + 1, j as isize, &mode_clone) * k2
-                        + get_pixel_value(input_ref, i as isize + 1, j as isize + 1, &mode_clone) * k3;
-                    
+                    let top =
+                        get_pixel_value(input_ref, i as isize - 1, j as isize - 1, &mode_clone)
+                            * k1
+                            + get_pixel_value(input_ref, i as isize - 1, j as isize, &mode_clone)
+                                * k2
+                            + get_pixel_value(
+                                input_ref,
+                                i as isize - 1,
+                                j as isize + 1,
+                                &mode_clone,
+                            ) * k3;
+
+                    let bottom =
+                        get_pixel_value(input_ref, i as isize + 1, j as isize - 1, &mode_clone)
+                            * k1
+                            + get_pixel_value(input_ref, i as isize + 1, j as isize, &mode_clone)
+                                * k2
+                            + get_pixel_value(
+                                input_ref,
+                                i as isize + 1,
+                                j as isize + 1,
+                                &mode_clone,
+                            ) * k3;
+
                     top - bottom
                 } else {
                     // X-derivative
-                    let left = get_pixel_value(input_ref, i as isize - 1, j as isize - 1, &mode_clone) * k1
-                        + get_pixel_value(input_ref, i as isize, j as isize - 1, &mode_clone) * k2
-                        + get_pixel_value(input_ref, i as isize + 1, j as isize - 1, &mode_clone) * k3;
-                    
-                    let right = get_pixel_value(input_ref, i as isize - 1, j as isize + 1, &mode_clone) * k1
-                        + get_pixel_value(input_ref, i as isize, j as isize + 1, &mode_clone) * k2
-                        + get_pixel_value(input_ref, i as isize + 1, j as isize + 1, &mode_clone) * k3;
-                    
+                    let left =
+                        get_pixel_value(input_ref, i as isize - 1, j as isize - 1, &mode_clone)
+                            * k1
+                            + get_pixel_value(input_ref, i as isize, j as isize - 1, &mode_clone)
+                                * k2
+                            + get_pixel_value(
+                                input_ref,
+                                i as isize + 1,
+                                j as isize - 1,
+                                &mode_clone,
+                            ) * k3;
+
+                    let right =
+                        get_pixel_value(input_ref, i as isize - 1, j as isize + 1, &mode_clone)
+                            * k1
+                            + get_pixel_value(input_ref, i as isize, j as isize + 1, &mode_clone)
+                                * k2
+                            + get_pixel_value(
+                                input_ref,
+                                i as isize + 1,
+                                j as isize + 1,
+                                &mode_clone,
+                            ) * k3;
+
                     right - left
                 };
-                
+
                 row[j] = val;
             }
         });
 }
 
 /// Get pixel value with border handling
-fn get_pixel_value<T>(
-    input: &ArrayView2<T>,
-    i: isize,
-    j: isize,
-    mode: &BorderMode,
-) -> T
+fn get_pixel_value<T>(input: &ArrayView2<T>, i: isize, j: isize, mode: &BorderMode) -> T
 where
     T: Float + FromPrimitive + Debug,
 {
     let (height, width) = input.dim();
-    
+
     let (ni, nj) = match mode {
         BorderMode::Constant(cval) => {
             if i < 0 || i >= height as isize || j < 0 || j >= width as isize {
@@ -202,7 +231,7 @@ where
             } else {
                 i as usize
             };
-            
+
             let nj = if j < 0 {
                 (-j - 1) as usize
             } else if j >= width as isize {
@@ -210,7 +239,7 @@ where
             } else {
                 j as usize
             };
-            
+
             (ni.min(height - 1), nj.min(width - 1))
         }
         BorderMode::Reflect => {
@@ -221,7 +250,7 @@ where
             } else {
                 i as usize
             };
-            
+
             let nj = if j < 0 {
                 (-j) as usize
             } else if j >= width as isize {
@@ -229,7 +258,7 @@ where
             } else {
                 j as usize
             };
-            
+
             (ni.min(height - 1), nj.min(width - 1))
         }
         BorderMode::Wrap => {
@@ -238,7 +267,7 @@ where
             (ni, nj)
         }
     };
-    
+
     input[[ni, nj]]
 }
 
@@ -297,7 +326,7 @@ fn laplace_sequential<T>(
     for i in 0..height {
         for j in 0..width {
             let center = input[[i, j]];
-            
+
             if use_diagonal {
                 // 8-connected Laplacian: all neighbors = -1, center = 8
                 let mut sum = T::zero();
@@ -306,7 +335,8 @@ fn laplace_sequential<T>(
                         if di == 0 && dj == 0 {
                             sum = sum + center * T::from(8).unwrap();
                         } else {
-                            sum = sum - get_pixel_value(input, i as isize + di, j as isize + dj, mode);
+                            sum = sum
+                                - get_pixel_value(input, i as isize + di, j as isize + dj, mode);
                         }
                     }
                 }
@@ -337,15 +367,16 @@ fn laplace_parallel<T>(
     let input_ptr = input as *const ArrayView2<T>;
     let mode_clone = mode.clone();
 
-    output.axis_iter_mut(Axis(0))
+    output
+        .axis_iter_mut(Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
             let input_ref = unsafe { &*input_ptr };
-            
+
             for j in 0..width {
                 let center = input_ref[[i, j]];
-                
+
                 if use_diagonal {
                     // 8-connected Laplacian
                     let mut sum = T::zero();
@@ -354,7 +385,13 @@ fn laplace_parallel<T>(
                             if di == 0 && dj == 0 {
                                 sum = sum + center * T::from(8).unwrap();
                             } else {
-                                sum = sum - get_pixel_value(input_ref, i as isize + di, j as isize + dj, &mode_clone);
+                                sum = sum
+                                    - get_pixel_value(
+                                        input_ref,
+                                        i as isize + di,
+                                        j as isize + dj,
+                                        &mode_clone,
+                                    );
                             }
                         }
                     }
@@ -392,7 +429,7 @@ where
 {
     if grad_x.dim() != grad_y.dim() {
         return Err(NdimageError::ShapeError(
-            "Gradient arrays must have the same shape".into()
+            "Gradient arrays must have the same shape".into(),
         ));
     }
 
@@ -436,7 +473,7 @@ mod tests {
 
         // Test x-gradient
         let grad_x = sobel_2d_optimized(&input.view(), 1, None).unwrap();
-        
+
         // Edges should be detected at the boundaries of the square
         assert!(grad_x[[1, 0]].abs() > 0.0);
         assert!(grad_x[[1, 3]].abs() > 0.0);
@@ -444,32 +481,22 @@ mod tests {
 
     #[test]
     fn test_laplace_optimized() {
-        let input = array![
-            [0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0]
-        ];
+        let input = array![[0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]];
 
         // Test 4-connected Laplacian
         let result = laplace_2d_optimized(&input.view(), false, None).unwrap();
-        
+
         // Center should have high response
         assert!(result[[1, 1]].abs() > 0.0);
     }
 
     #[test]
     fn test_gradient_magnitude() {
-        let grad_x = array![
-            [1.0, 0.0],
-            [0.0, 1.0]
-        ];
-        let grad_y = array![
-            [0.0, 1.0],
-            [1.0, 0.0]
-        ];
+        let grad_x = array![[1.0, 0.0], [0.0, 1.0]];
+        let grad_y = array![[0.0, 1.0], [1.0, 0.0]];
 
         let magnitude = gradient_magnitude_optimized(&grad_x.view(), &grad_y.view()).unwrap();
-        
+
         // All values should be sqrt(2)
         let expected = 2.0_f64.sqrt();
         assert!((magnitude[[0, 0]] - expected).abs() < 1e-6);

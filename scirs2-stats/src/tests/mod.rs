@@ -617,6 +617,7 @@ fn calculate_shapiro_p_value<F: Float + NumCast>(w: F, n: usize) -> F {
 }
 
 /// Calculate the p-value for the Mann-Whitney U test
+#[allow(dead_code)]
 fn calculate_mann_whitney_p_value<F: Float + NumCast>(u: F, n1: usize, n2: usize) -> F {
     // For large samples (n1, n2 > 20), we can approximate the distribution with a normal distribution
 

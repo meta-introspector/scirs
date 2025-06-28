@@ -264,7 +264,7 @@ pub fn example_driven_pendulum<F: IntegrateFloat>(
 /// Example: Convert a beam equation (4th order) to first-order system
 pub fn example_euler_bernoulli_beam<F: IntegrateFloat>(
     ei: F,    // flexural rigidity
-    rho_a: F, // mass per unit length
+    _rho_a: F, // mass per unit length
     f: F,     // distributed load
 ) -> IntegrateResult<FirstOrderSystem<F>> {
     // Euler-Bernoulli beam equation: EI*w'''' + ρA*∂²w/∂t² = f(x,t)

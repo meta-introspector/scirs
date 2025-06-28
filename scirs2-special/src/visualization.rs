@@ -422,13 +422,497 @@ pub mod interactive {
     }
     
     /// Create an interactive plot that can be embedded in a web page
-    pub fn create_interactive_plot<F>(f: F, config: InteractivePlotConfig) -> String
+    pub fn create_interactive_plot<F>(
+        f: F, 
+        config: InteractivePlotConfig,
+        x_range: (f64, f64),
+        function_name: &str,
+    ) -> String
     where
         F: Fn(f64) -> f64,
     {
-        // This would generate HTML/JS code for an interactive plot
-        // using a library like Plotly.js or D3.js
-        format!("<div>Interactive plot placeholder</div>")
+        // Generate data points for the function
+        let n_points = 1000;
+        let step = (x_range.1 - x_range.0) / n_points as f64;
+        let mut data_points = Vec::new();
+        
+        for i in 0..=n_points {
+            let x = x_range.0 + i as f64 * step;
+            let y = f(x);
+            if y.is_finite() {
+                data_points.push(format!("[{}, {}]", x, y));
+            }
+        }
+        
+        // Extract x and y values separately for cleaner code
+        let mut x_values = Vec::new();
+        let mut y_values = Vec::new();
+        
+        for i in 0..=n_points {
+            let x = x_range.0 + i as f64 * step;
+            let y = f(x);
+            if y.is_finite() {
+                x_values.push(x);
+                y_values.push(y);
+            }
+        }
+        
+        let x_json = format!("[{}]", x_values.iter().map(|x| format!("{}", x)).collect::<Vec<_>>().join(", "));
+        let y_json = format!("[{}]", y_values.iter().map(|y| format!("{}", y)).collect::<Vec<_>>().join(", "));
+        
+        // Generate comprehensive HTML with Plotly.js
+        format!(r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Plot - {}</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {{ 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f5f5f5; 
+        }}
+        .container {{ 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }}
+        h1 {{ 
+            color: #333; 
+            text-align: center; 
+            margin-bottom: 30px; 
+        }}
+        .controls {{ 
+            display: flex; 
+            gap: 15px; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap; 
+            align-items: center; 
+        }}
+        .control-group {{ 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px; 
+        }}
+        label {{ 
+            font-weight: 600; 
+            color: #555; 
+            font-size: 14px; 
+        }}
+        input, select, button {{ 
+            padding: 8px 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            font-size: 14px; 
+        }}
+        button {{ 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            transition: background-color 0.2s; 
+        }}
+        button:hover {{ 
+            background-color: #0056b3; 
+        }}
+        #plot {{ 
+            width: 100%; 
+            height: 600px; 
+        }}
+        .info-panel {{ 
+            margin-top: 20px; 
+            padding: 15px; 
+            background-color: #f8f9fa; 
+            border-radius: 6px; 
+            border-left: 4px solid #007bff; 
+        }}
+        .tooltip-info {{ 
+            margin-top: 10px; 
+            font-size: 14px; 
+            color: #666; 
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive Visualization: {}</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="xMin">X Min:</label>
+                <input type="number" id="xMin" value="{}" step="0.1">
+            </div>
+            <div class="control-group">
+                <label for="xMax">X Max:</label>
+                <input type="number" id="xMax" value="{}" step="0.1">
+            </div>
+            <div class="control-group">
+                <label for="points">Points:</label>
+                <select id="points">
+                    <option value="500">500</option>
+                    <option value="1000" selected>1000</option>
+                    <option value="2000">2000</option>
+                    <option value="5000">5000</option>
+                </select>
+            </div>
+            <button onclick="updatePlot()">Update Plot</button>
+            <button onclick="resetZoom()">Reset Zoom</button>
+            <button onclick="exportData()">Export CSV</button>
+            {}
+        </div>
+        
+        <div id="plot"></div>
+        
+        <div class="info-panel">
+            <h3>Interactive Features:</h3>
+            <ul>
+                <li><strong>Zoom:</strong> Click and drag to zoom into a region</li>
+                <li><strong>Pan:</strong> Hold shift and drag to pan around</li>
+                <li><strong>Hover:</strong> Move mouse over the curve to see coordinates</li>
+                <li><strong>Double-click:</strong> Reset zoom to fit all data</li>
+            </ul>
+            <div class="tooltip-info" id="tooltip-info">
+                Hover over the plot to see coordinate information here.
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentData = {};
+        
+        function initializePlot() {{
+            const data = [{{
+                x: {},
+                y: {},
+                type: 'scatter',
+                mode: 'lines',
+                name: '{}',
+                line: {{
+                    color: '#1f77b4',
+                    width: 2
+                }},
+                hovertemplate: '<b>x:</b> %{{x:.6f}}<br><b>f(x):</b> %{{y:.6f}}<extra></extra>'
+            }}];
+            
+            const layout = {{
+                title: {{
+                    text: '{} Function',
+                    font: {{ size: 20 }}
+                }},
+                xaxis: {{
+                    title: 'x',
+                    showgrid: true,
+                    zeroline: true,
+                    showspikes: true,
+                    spikethickness: 1,
+                    spikecolor: '#999',
+                    spikemode: 'across'
+                }},
+                yaxis: {{
+                    title: 'f(x)',
+                    showgrid: true,
+                    zeroline: true,
+                    showspikes: true,
+                    spikethickness: 1,
+                    spikecolor: '#999',
+                    spikemode: 'across'
+                }},
+                hovermode: 'closest',
+                showlegend: true,
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white'
+            }};
+            
+            const plotConfig = {{
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToAdd: [
+                    'pan2d',
+                    'zoomin2d',
+                    'zoomout2d',
+                    'autoScale2d',
+                    'hoverClosestCartesian',
+                    'hoverCompareCartesian'
+                ],
+                toImageButtonOptions: {{
+                    format: 'png',
+                    filename: '{}_plot',
+                    height: 600,
+                    width: 800,
+                    scale: 1
+                }}
+            }};
+            
+            Plotly.newPlot('plot', data, layout, plotConfig);
+            
+            // Add hover event listener for tooltip info
+            document.getElementById('plot').on('plotly_hover', function(data) {{
+                const point = data.points[0];
+                document.getElementById('tooltip-info').innerHTML = 
+                    `<strong>Coordinates:</strong> x = ${{point.x.toFixed(6)}}, f(x) = ${{point.y.toFixed(6)}}`;
+            }});
+            
+            currentData = {{ x: {}, y: {} }};
+        }}
+        
+        function updatePlot() {{
+            const xMin = parseFloat(document.getElementById('xMin').value);
+            const xMax = parseFloat(document.getElementById('xMax').value);
+            const nPoints = parseInt(document.getElementById('points').value);
+            
+            // Generate new data points (placeholder - in real implementation, would call function)
+            const step = (xMax - xMin) / nPoints;
+            const x = [];
+            const y = [];
+            
+            for (let i = 0; i <= nPoints; i++) {{
+                const xVal = xMin + i * step;
+                x.push(xVal);
+                // Placeholder calculation - replace with actual function evaluation
+                y.push(Math.sin(xVal)); // This would be replaced with the actual function
+            }}
+            
+            Plotly.restyle('plot', {{'x': [x], 'y': [y]}});
+            currentData = {{ x: x, y: y }};
+        }}
+        
+        function resetZoom() {{
+            Plotly.relayout('plot', {{
+                'xaxis.autorange': true,
+                'yaxis.autorange': true
+            }});
+        }}
+        
+        function exportData() {{
+            let csv = 'x,f(x)\\n';
+            for (let i = 0; i < currentData.x.length; i++) {{
+                csv += `${{currentData.x[i]}},${{currentData.y[i]}}\\n`;
+            }}
+            
+            const blob = new Blob([csv], {{ type: 'text/csv' }});
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = '{}_data.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }}
+        
+        // Initialize the plot when the page loads
+        window.onload = initializePlot;
+    </script>
+</body>
+</html>
+        "#, 
+        function_name,
+        function_name,
+        x_range.0,
+        x_range.1,
+        if config.enable_tooltips { r#"<button onclick="toggleTooltips()">Toggle Info</button>"# } else { "" },
+        x_json,
+        y_json,
+        function_name,
+        function_name,
+        function_name,
+        x_json,
+        y_json,
+        function_name)
+    }
+    
+    /// Create interactive plots for common special functions
+    pub fn create_gamma_plot() -> String {
+        use crate::gamma::gamma;
+        let config = InteractivePlotConfig {
+            enable_zoom: true,
+            enable_pan: true,
+            enable_tooltips: true,
+            enable_export: true,
+        };
+        create_interactive_plot(gamma, config, (0.1, 5.0), "Gamma")
+    }
+    
+    pub fn create_bessel_j0_plot() -> String {
+        use crate::bessel::j0;
+        let config = InteractivePlotConfig {
+            enable_zoom: true,
+            enable_pan: true,
+            enable_tooltips: true,
+            enable_export: true,
+        };
+        create_interactive_plot(j0, config, (-10.0, 10.0), "Bessel J0")
+    }
+    
+    pub fn create_erf_plot() -> String {
+        use crate::erf::erf;
+        let config = InteractivePlotConfig {
+            enable_zoom: true,
+            enable_pan: true,
+            enable_tooltips: true,
+            enable_export: true,
+        };
+        create_interactive_plot(erf, config, (-3.0, 3.0), "Error Function")
+    }
+    
+    /// Create a comparison plot with multiple special functions
+    pub fn create_comparison_plot() -> String {
+        // This would create a plot comparing multiple functions
+        let template = r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Special Functions Comparison</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f8f9fa; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        #plot { width: 100%; height: 700px; }
+        .controls { margin-bottom: 20px; text-align: center; }
+        button { margin: 5px; padding: 10px 20px; border: none; border-radius: 4px; background-color: #007bff; color: white; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Special Functions Comparison</h1>
+        <div class="controls">
+            <button onclick="showGamma()">Gamma Function</button>
+            <button onclick="showBessel()">Bessel J0</button>
+            <button onclick="showErf()">Error Function</button>
+            <button onclick="showAll()">Show All</button>
+        </div>
+        <div id="plot"></div>
+    </div>
+    
+    <script>
+        function generateData(func, range, nPoints, name) {
+            const step = (range[1] - range[0]) / nPoints;
+            const x = [];
+            const y = [];
+            
+            for (let i = 0; i <= nPoints; i++) {
+                const xVal = range[0] + i * step;
+                x.push(xVal);
+                y.push(func(xVal));
+            }
+            
+            return {
+                x: x,
+                y: y,
+                type: 'scatter',
+                mode: 'lines',
+                name: name,
+                line: { width: 2 }
+            };
+        }
+        
+        function gamma(x) {
+            // Simplified gamma function approximation for demo
+            if (x < 0) return NaN;
+            if (x === 0) return Infinity;
+            if (x === 1 || x === 2) return 1;
+            
+            // Stirling's approximation for simplicity
+            if (x > 1) {
+                return Math.sqrt(2 * Math.PI / x) * Math.pow(x / Math.E, x);
+            }
+            return gamma(x + 1) / x;
+        }
+        
+        function besselJ0(x) {
+            // Simplified Bessel J0 approximation
+            const ax = Math.abs(x);
+            if (ax < 8) {
+                const y = x * x;
+                return ((-0.0000000000000000015 * y + 0.000000000000000176) * y +
+                       (-0.0000000000000156) * y + 0.0000000000164) * y +
+                       (-0.00000000106) * y + 0.000000421) * y +
+                       (-0.0000103) * y + 0.00015625) * y +
+                       (-0.015625) * y + 1;
+            } else {
+                const z = 8 / ax;
+                const y = z * z;
+                const xx = ax - 0.785398164;
+                return Math.sqrt(0.636619772 / ax) *
+                       (Math.cos(xx) * (1 + y * (-0.0703125 + y * 0.1121520996)) +
+                        z * Math.sin(xx) * (-0.0390625 + y * 0.0444479255));
+            }
+        }
+        
+        function erf(x) {
+            // Simplified error function approximation
+            const a1 =  0.254829592;
+            const a2 = -0.284496736;
+            const a3 =  1.421413741;
+            const a4 = -1.453152027;
+            const a5 =  1.061405429;
+            const p  =  0.3275911;
+            
+            const sign = x >= 0 ? 1 : -1;
+            x = Math.abs(x);
+            
+            const t = 1.0 / (1.0 + p * x);
+            const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+            
+            return sign * y;
+        }
+        
+        function showGamma() {
+            const data = [generateData(gamma, [0.1, 5], 1000, 'Gamma(x)')];
+            Plotly.newPlot('plot', data, {
+                title: 'Gamma Function',
+                xaxis: { title: 'x' },
+                yaxis: { title: 'Γ(x)' }
+            });
+        }
+        
+        function showBessel() {
+            const data = [generateData(besselJ0, [-15, 15], 1000, 'J₀(x)')];
+            Plotly.newPlot('plot', data, {
+                title: 'Bessel Function of the First Kind (J₀)',
+                xaxis: { title: 'x' },
+                yaxis: { title: 'J₀(x)' }
+            });
+        }
+        
+        function showErf() {
+            const data = [generateData(erf, [-3, 3], 1000, 'erf(x)')];
+            Plotly.newPlot('plot', data, {
+                title: 'Error Function',
+                xaxis: { title: 'x' },
+                yaxis: { title: 'erf(x)' }
+            });
+        }
+        
+        function showAll() {
+            const data = [
+                generateData(x => gamma(x) / 10, [0.1, 3], 500, 'Γ(x)/10'),
+                generateData(besselJ0, [-10, 10], 500, 'J₀(x)'),
+                generateData(erf, [-3, 3], 500, 'erf(x)')
+            ];
+            Plotly.newPlot('plot', data, {
+                title: 'Special Functions Comparison',
+                xaxis: { title: 'x' },
+                yaxis: { title: 'f(x)' }
+            });
+        }
+        
+        // Initialize with gamma function
+        window.onload = showGamma;
+    </script>
+</body>
+</html>
+        "#;
+        
+        template.to_string()
     }
 }
 

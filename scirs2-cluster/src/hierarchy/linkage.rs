@@ -138,25 +138,25 @@ fn find_closest_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
                     &clusters[cluster_j],
                     distances,
                     n_samples,
-                ),
+                )?,
                 LinkageMethod::Complete => complete_linkage(
                     &clusters[cluster_i],
                     &clusters[cluster_j],
                     distances,
                     n_samples,
-                ),
+                )?,
                 LinkageMethod::Average => average_linkage(
                     &clusters[cluster_i],
                     &clusters[cluster_j],
                     distances,
                     n_samples,
-                ),
+                )?,
                 LinkageMethod::Ward => ward_linkage(
                     &clusters[cluster_i],
                     &clusters[cluster_j],
                     distances,
                     n_samples,
-                ),
+                )?,
                 LinkageMethod::Centroid => {
                     centroid_linkage(cluster_i, cluster_j, centroids.unwrap())
                 }
@@ -166,7 +166,7 @@ fn find_closest_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
                     &clusters[cluster_j],
                     distances,
                     n_samples,
-                ),
+                )?,
             };
 
             // Update minimum distance
@@ -193,14 +193,14 @@ pub(crate) fn single_linkage<F: Float + PartialOrd>(
     cluster2: &Cluster,
     distances: &Array1<F>,
     n_samples: usize,
-) -> F {
+) -> Result<F> {
     let mut min_dist = F::infinity();
 
     for &i in &cluster1.members {
         for &j in &cluster2.members {
             // Get the distance between observations i and j from the condensed matrix
             let (min_idx, max_idx) = if i < j { (i, j) } else { (j, i) };
-            let idx = coords_to_condensed_index(n_samples, min_idx, max_idx);
+            let idx = coords_to_condensed_index(n_samples, min_idx, max_idx)?;
             let dist = distances[idx];
 
             if dist < min_dist {
@@ -209,7 +209,7 @@ pub(crate) fn single_linkage<F: Float + PartialOrd>(
         }
     }
 
-    min_dist
+    Ok(min_dist)
 }
 
 /// Complete linkage: maximum distance between any two points in the clusters
@@ -218,14 +218,14 @@ pub(crate) fn complete_linkage<F: Float + PartialOrd>(
     cluster2: &Cluster,
     distances: &Array1<F>,
     n_samples: usize,
-) -> F {
+) -> Result<F> {
     let mut max_dist = F::neg_infinity();
 
     for &i in &cluster1.members {
         for &j in &cluster2.members {
             // Get the distance between observations i and j from the condensed matrix
             let (min_idx, max_idx) = if i < j { (i, j) } else { (j, i) };
-            let idx = coords_to_condensed_index(n_samples, min_idx, max_idx);
+            let idx = coords_to_condensed_index(n_samples, min_idx, max_idx)?;
             let dist = distances[idx];
 
             if dist > max_dist {
@@ -234,7 +234,7 @@ pub(crate) fn complete_linkage<F: Float + PartialOrd>(
         }
     }
 
-    max_dist
+    Ok(max_dist)
 }
 
 /// Average linkage: average distance between all pairs of points in the clusters
@@ -243,7 +243,7 @@ pub(crate) fn average_linkage<F: Float + FromPrimitive>(
     cluster2: &Cluster,
     distances: &Array1<F>,
     n_samples: usize,
-) -> F {
+) -> Result<F> {
     let mut sum_dist = F::zero();
     let mut count = 0;
 
@@ -251,13 +251,13 @@ pub(crate) fn average_linkage<F: Float + FromPrimitive>(
         for &j in &cluster2.members {
             // Get the distance between observations i and j from the condensed matrix
             let (min_idx, max_idx) = if i < j { (i, j) } else { (j, i) };
-            let idx = coords_to_condensed_index(n_samples, min_idx, max_idx);
+            let idx = coords_to_condensed_index(n_samples, min_idx, max_idx)?;
             sum_dist = sum_dist + distances[idx];
             count += 1;
         }
     }
 
-    sum_dist / F::from_usize(count).unwrap()
+    Ok(sum_dist / F::from_usize(count).unwrap())
 }
 
 /// Ward's linkage: minimizes the increase in variance when merging clusters
@@ -266,7 +266,7 @@ pub(crate) fn ward_linkage<F: Float + FromPrimitive>(
     cluster2: &Cluster,
     distances: &Array1<F>,
     n_samples: usize,
-) -> F {
+) -> Result<F> {
     // For Ward's method, we need to calculate the increase in variance
     // This is proportional to the distance between centroids weighted by the size of clusters
 
@@ -281,7 +281,7 @@ pub(crate) fn ward_linkage<F: Float + FromPrimitive>(
     for &i in &cluster1.members {
         for &j in &cluster2.members {
             let (min_idx, max_idx) = if i < j { (i, j) } else { (j, i) };
-            let idx = coords_to_condensed_index(n_samples, min_idx, max_idx);
+            let idx = coords_to_condensed_index(n_samples, min_idx, max_idx)?;
             let dist = distances[idx];
             sum_dist = sum_dist + dist * dist;
         }
@@ -291,7 +291,7 @@ pub(crate) fn ward_linkage<F: Float + FromPrimitive>(
 
     // Ward's formula: sqrt[(n_i * n_j) / (n_i + n_j)] * d(i,j)
     let factor = (size1 * size2) / (size1 + size2);
-    (factor * avg_dist_sq).sqrt()
+    Ok((factor * avg_dist_sq).sqrt())
 }
 
 /// Centroid linkage: distance between cluster centroids
@@ -321,7 +321,7 @@ pub(crate) fn weighted_linkage<F: Float + FromPrimitive>(
     cluster2: &Cluster,
     distances: &Array1<F>,
     n_samples: usize,
-) -> F {
+) -> Result<F> {
     // Weighted average gives equal weights to each cluster regardless of size
     average_linkage(cluster1, cluster2, distances, n_samples)
 }

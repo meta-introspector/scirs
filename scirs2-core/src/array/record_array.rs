@@ -368,7 +368,8 @@ impl RecordArray {
             .records
             .iter()
             .map(|record| {
-                record.get_field(field_name)
+                record
+                    .get_field(field_name)
                     .expect("Field should exist based on validation")
                     .clone()
             })

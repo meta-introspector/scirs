@@ -9,7 +9,7 @@
 use crate::error::StatsResult;
 use ndarray::{ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
-use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities, AutoOptimizer};
+use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities};
 
 /// SIMD configuration for optimal performance
 #[derive(Debug, Clone, Copy)]
@@ -137,7 +137,7 @@ where
     
     // Main SIMD loop
     let chunks = x.len() / simd_width;
-    let remainder = x.len() % simd_width;
+    let _remainder = x.len() % simd_width;
     
     for chunk_idx in 0..chunks {
         let start = chunk_idx * simd_width;
@@ -218,14 +218,14 @@ where
 /// Helper function for chunked SIMD sum
 fn chunked_simd_sum<F, D>(
     x: &ArrayBase<D, Ix1>,
-    config: &SimdConfig,
+    _config: &SimdConfig,
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
     D: Data<Elem = F>,
 {
     let capabilities = PlatformCapabilities::detect();
-    let simd_width = if capabilities.simd_available { 8 } else { 1 };
+    let _simd_width = if capabilities.simd_available { 8 } else { 1 };
     
     // Process in chunks for better cache efficiency
     const CHUNK_SIZE: usize = 1024;
@@ -251,7 +251,7 @@ where
 fn chunked_simd_sum_squared_deviations<F, D>(
     x: &ArrayBase<D, Ix1>,
     mean: F,
-    config: &SimdConfig,
+    _config: &SimdConfig,
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,

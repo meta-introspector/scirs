@@ -1,0 +1,4677 @@
+# Unwrap() Usage Report
+
+Total unwrap() calls and unsafe operations found: 2138
+
+## Summary by Type
+
+- Replace with ? operator or .ok_or(): 1443 occurrences
+- Division without zero check - use safe_divide(): 421 occurrences
+- Use .get() with proper bounds checking: 109 occurrences
+- Mathematical operation .sqrt() without validation: 104 occurrences
+- Handle array creation errors properly: 37 occurrences
+- Mathematical operation .powf( without validation: 15 occurrences
+- Mathematical operation .ln() without validation: 9 occurrences
+
+## Detailed Findings
+
+
+### adaptive_gp.rs
+
+54 issues found:
+
+- Line 99: `noise_variance: T::from(0.01).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 160: `optimization_tolerance: T::from(1e-6).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 165: `jitter: T::from(1e-6).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 423: `let selected_model = self.selected_model.as_ref().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 424: `let alpha = self.alpha.as_ref().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 505: `let n = T::from(self.x_train.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 506: `let bic = T::from(2.0).unwrap() * T::from(num_params).unwrap() * n.ln()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 507: `- T::from(2.0).unwrap() * log_marginal_likelihood;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 528: `let initial_length_scale = x_range / T::from(10.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 532: `let y_mean = self.y_train.sum() / T::from(self.y_train.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 534: `/ T::from(self.y_train.len() - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 535: `hyperparams.output_variance = y_var.max(T::from(0.01).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 543: `.insert("period".to_string(), x_range / T::from(2.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 549: `.insert("degree".to_string(), T::from(2.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 589: `log_det += cholesky[(i, i)].ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 591: `log_det = T::from(2.0).unwrap() * log_det;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 600: `let n = T::from(self.x_train.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 601: `let log_2pi = T::from(2.0 * std::f64::consts::PI).unwrap().ln();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 603: `let log_marginal_likelihood = -T::from(0.5).unwrap() * (data_fit + log_det + n *...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 616: `let _step_size = T::from(0.1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 624: `hyperparams.output_variance = original_output_var * T::from(multiplier).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 638: `hyperparams.length_scales[i] = original_length_scale * T::from(multiplier).unwra...`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 655: `hyperparams.noise_variance = original_noise_var * T::from(multiplier).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 703: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 705: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 709: `best_model.log_marginal_likelihood.to_f64().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 791: `let scaled_dist = distance / length_scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 792: `output_var * (-T::from(0.5).unwrap() * scaled_dist * scaled_dist).exp()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 795: `let scaled_dist = distance / length_scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 799: `let scaled_dist = (T::from(3.0).unwrap().sqrt()) * distance / length_scale;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 803: `let scaled_dist = (T::from(5.0).unwrap().sqrt()) * distance / length_scale;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 805: `* (T::one() + scaled_dist + scaled_dist * scaled_dist / T::from(3.0).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 810: `let default_degree = T::from(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 815: `output_var * (T::one() + x1 * x2 / length_scale).powf(*degree)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 815: `output_var * (T::one() + x1 * x2 / length_scale).powf(*degree)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 823: `let pi = T::from(std::f64::consts::PI).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 824: `let sin_arg = pi * distance / *period;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 825: `let scaled_sin = T::from(2.0).unwrap() * sin_arg.sin() / length_scale;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 826: `output_var * (-T::from(0.5).unwrap() * scaled_sin * scaled_sin).exp()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 835: `/ (T::from(2.0).unwrap() * *alpha * length_scale * length_scale);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 836: `output_var * (T::one() + scaled_dist_sq).powf(-*alpha)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 925: `chol[(j, j)] = diag_val.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 932: `chol[(i, j)] = (matrix[(i, j)] - sum) / chol[(j, j)];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 955: `y[i] = (rhs[i] - sum) / cholesky[(i, i)];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 965: `x[i] = (y[i] - sum) / cholesky[(i, i)];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1048: `gp.fit(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1051: `let predictions = gp.predict(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1068: `gp.fit(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1071: `let (mean, variance) = gp.predict_with_uncertainty(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1088: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1094: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1100: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1115: `gp.fit(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1119: `let selected = gp.get_selected_kernel().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### adaptive_learning.rs
+
+56 issues found:
+
+- Line 95: `exploration_weight: T::from(0.1).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 96: `min_sample_distance: T::from(0.01).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 97: `convergence_threshold: T::from(1e-6).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 98: `uncertainty_weight: T::from(0.4).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 99: `error_weight: T::from(0.4).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 100: `gradient_weight: T::from(0.2).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 314: `combined_x.extend_from_slice(current_x.as_slice().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 315: `combined_y.extend_from_slice(current_y.as_slice().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 318: `combined_x.extend_from_slice(new_x.as_slice().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 319: `combined_y.extend_from_slice(new_y.as_slice().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 323: `data_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 338: `T::from(0.01).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 375: `improvement < self.config.convergence_threshold.to_f64().unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 389: `self.domain_min.to_f64().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 390: `self.domain_max.to_f64().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 398: `let x_t = T::from(x_val).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 404: `utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 414: `confidence: T::from(0.8).unwrap(), // Moderate confidence in uncertainty estimat...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 461: `(error_locations[i].0 + error_locations[i + 1].0) / T::from(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 463: `(error_locations[i].1 + error_locations[i + 1].1) / T::from(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 472: `error_locations.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 482: `confidence: T::from(0.9).unwrap(), // High confidence in error-based sampling`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 498: `utility: T::from(0.1).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 500: `confidence: T::from(0.3).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 519: `self.domain_min.to_f64().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 520: `self.domain_max.to_f64().unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 528: `let x_t = T::from(x_val).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 541: `gradient_utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 551: `confidence: T::from(0.7).unwrap(), // Moderate confidence in gradient estimates`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 601: `combined_utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 611: `confidence: T::from(0.6).unwrap(), // Lower confidence for complex heuristic`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 630: `(num_points as f64 * (1.0 - self.config.exploration_weight.to_f64().unwrap())) a...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 644: `utility: T::from(0.5).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 646: `confidence: T::from(0.4).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 693: `all_candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 703: `confidence: T::from(0.75).unwrap(), // Good confidence in combined approach`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 730: `let uncertainty = T::one() / (T::one() + min_distance);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 767: `let normalized = (self.rng_state as f64) / ((1u64 << 32) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 770: `self.domain_min + range * T::from(normalized).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 789: `best_location = x_data[i] + gap / T::from(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 797: `best_location = self.domain_min + left_gap / T::from(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 802: `best_location = x_data[x_data.len() - 1] + right_gap / T::from(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 848: `T::from(0.01).unwrap(),                                   // Error threshold`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 869: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 882: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 884: `let candidates = learner.suggest_samples(5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 903: `make_active_learner(&x.view(), &y.view(), SamplingStrategy::ErrorBased, 20).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 905: `let candidates = learner.suggest_samples(3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 921: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 927: `let success = learner.update_model(&new_x.view(), &new_y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 940: `make_active_learner(&x.view(), &y.view(), SamplingStrategy::Combined, 30).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 942: `let candidates = learner.suggest_samples(5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 968: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 970: `let candidates = learner.suggest_samples(4).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 988: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 991: `let candidates = learner.suggest_samples(5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### adaptive_singularity.rs
+
+43 issues found:
+
+- Line 122: `derivative_threshold: T::from(10.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 123: `curvature_threshold: T::from(20.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 124: `discontinuity_threshold: T::from(5.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 125: `outlier_threshold: T::from(3.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 126: `analysis_window: T::from(0.1).unwrap(), // 10% of data`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 127: `min_separation: T::from(0.01).unwrap(), // 1% of domain`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 293: `let jump_size = (left_diff.abs() + right_diff.abs()) / T::from(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 298: `|| (jump_size > T::from(0.1).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 299: `&& magnitude_diff > jump_size * T::from(0.5).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 303: `let start_idx = if i >= window_size / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 304: `i - window_size / 2`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 308: `let end_idx = std::cmp::min(i + window_size / 2, n - 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 314: `&& jump_size / local_var >= self.config.discontinuity_threshold`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 320: `severity: jump_size / local_var,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 348: `first_derivs[0] = (y[1] - y[0]) / (x[1] - x[0]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 354: `first_derivs[i] = (y[i + 1] - y[i - 1]) / (h1 + h2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 357: `second_derivs[i] = (y[i + 1] / h2 - y[i] * (T::one() / h1 + T::one() / h2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 358: `+ y[i - 1] / h1)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 359: `* T::from(2.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 360: `/ (h1 + h2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 364: `first_derivs[n - 1] = (y[n - 1] - y[n - 2]) / (x[n - 1] - x[n - 2]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 372: `let severity = deriv_magnitude / self.config.derivative_threshold;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 404: `let mean = y.sum() / T::from(n).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 405: `let variance = y.mapv(|val| (val - mean) * (val - mean)).sum() / T::from(n - 1)....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 406: `let std_dev = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 414: `let z_score = (y_val - mean).abs() / std_dev;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 443: `let window_size = std::cmp::max(6, n / 10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 446: `for i in window_size / 2..n - window_size / 2 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 447: `let start = i - window_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 448: `let end = i + window_size / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 469: `T::from(zero_crossings).unwrap() / T::from(window_size - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 470: `if oscillation_rate > T::from(0.3).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 503: `let local_trend = (y[i + 2] - y[i]) / (x[i + 2] - x[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 504: `let boundary_diff = (y[i + 1] - y[i]) / (x[i + 1] - x[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 521: `let local_trend = (y[i] - y[i - 2]) / (x[i] - x[i - 2]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 522: `let boundary_diff = (y[i] - y[i - 1]) / (x[i] - x[i - 1]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 556: `sum_diff / T::from(count).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 573: `singularities.sort_by(|a, b| a.location.partial_cmp(&b.location).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 583: `let last = consolidated.last().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 598: `*consolidated.last_mut().unwrap() = singularity;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 704: `let singularities = detector.detect(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 721: `let singularities = detector.detect(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 740: `let singularities = detector.detect(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/akima.rs
+
+30 issues found:
+
+- Line 83: `let m_i = (y[i + 1] - y[i]) / (x[i + 1] - x[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 89: `slopes[0] = F::from_f64(3.0).unwrap() * slopes[2] - F::from_f64(2.0).unwrap() * ...`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 90: `slopes[1] = F::from_f64(2.0).unwrap() * slopes[2] - slopes[3];`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 91: `slopes[n + 1] = F::from_f64(2.0).unwrap() * slopes[n] - slopes[n - 1];`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 93: `F::from_f64(3.0).unwrap() * slopes[n] - F::from_f64(2.0).unwrap() * slopes[n - 1...`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 103: `derivatives[i] = (slopes[i + 1] + slopes[i + 2]) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 106: `derivatives[i] = (w1 * slopes[i + 1] + w2 * slopes[i + 2]) / (w1 + w2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 118: `let c = (F::from_f64(3.0).unwrap() * dy / dx`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 119: `- F::from_f64(2.0).unwrap() * derivatives[i]`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 121: `/ dx;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 122: `let d = (derivatives[i] + derivatives[i + 1] - F::from_f64(2.0).unwrap() * dy / ...`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 123: `/ (dx * dx);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 232: `+ F::from_f64(2.0).unwrap() * c * dx`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 233: `+ F::from_f64(3.0).unwrap() * d * dx * dx);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 243: `b + F::from_f64(2.0).unwrap() * c * dx + F::from_f64(3.0).unwrap() * d * dx * dx...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 293: `let spline = AkimaSpline::new(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 296: `assert_abs_diff_eq!(spline.evaluate(0.0).unwrap(), 0.0, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 297: `assert_abs_diff_eq!(spline.evaluate(1.0).unwrap(), 1.0, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 298: `assert_abs_diff_eq!(spline.evaluate(2.0).unwrap(), 4.0, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 299: `assert_abs_diff_eq!(spline.evaluate(3.0).unwrap(), 20.0, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 300: `assert_abs_diff_eq!(spline.evaluate(4.0).unwrap(), 16.0, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 301: `assert_abs_diff_eq!(spline.evaluate(5.0).unwrap(), 25.0, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 305: `let y_2_5 = spline.evaluate(2.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 306: `let y_3_5 = spline.evaluate(3.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 325: `let spline = AkimaSpline::new(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 329: `let d_1 = spline.derivative(1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 330: `let d_2 = spline.derivative(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 331: `let d_3 = spline.derivative(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 344: `let spline = make_akima_spline(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 345: `assert_abs_diff_eq!(spline.evaluate(2.5).unwrap(), 6.25, epsilon = 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/barycentric.rs
+
+52 issues found:
+
+- Line 95: `if diff.abs() < F::from_f64(1e-14).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 97: `w = F::from_f64(1e14).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 100: `w = w / diff;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 120: `let eps = F::from_f64(1e-14).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 144: `let weight = local_weights[i] / diff;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 155: `Ok(numerator / denominator)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 168: `if diff.abs() < F::from_f64(1e-14).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 170: `w = F::from_f64(1e14).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 173: `w = w / diff;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 302: `let n_points = points.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 337: `let _n_points = self.points.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 349: `F::from_f64(0.5).unwrap() * ((x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1)).abs(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 354: `F::from_f64(1.0 / 3.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 355: `F::from_f64(1.0 / 3.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 356: `F::from_f64(1.0 / 3.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 361: `let area1 = F::from_f64(0.5).unwrap() * ((x2 - x) * (y3 - y) - (x3 - x) * (y2 - ...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 362: `let area2 = F::from_f64(0.5).unwrap() * ((x3 - x) * (y1 - y) - (x1 - x) * (y3 - ...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 363: `let area3 = F::from_f64(0.5).unwrap() * ((x1 - x) * (y2 - y) - (x2 - x) * (y1 - ...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 366: `let w1 = area1 / area;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 367: `let w2 = area2 / area;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 368: `let w3 = area3 / area;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 380: `let eps = F::from_f64(1e-10).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 434: `let n_points = points.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 496: `let interp = BarycentricInterpolator::new(&x.view(), &y.view(), 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 500: `assert_abs_diff_eq!(interp.evaluate(x[i]).unwrap(), y[i], epsilon = 1e-10);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 504: `assert_abs_diff_eq!(interp.evaluate(0.5).unwrap(), 2.0, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 505: `assert_abs_diff_eq!(interp.evaluate(1.5).unwrap(), 4.0, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 506: `assert_abs_diff_eq!(interp.evaluate(2.5).unwrap(), 6.0, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 507: `assert_abs_diff_eq!(interp.evaluate(3.5).unwrap(), 8.0, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 517: `let interp = BarycentricInterpolator::new(&x.view(), &y.view(), 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 521: `assert_abs_diff_eq!(interp.evaluate(x[i]).unwrap(), y[i], epsilon = 1e-10);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 526: `assert!((interp.evaluate(0.5).unwrap() - 0.25).abs() < 5.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 528: `assert!((interp.evaluate(1.5).unwrap() - 2.25).abs() < 5.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 529: `assert!((interp.evaluate(2.5).unwrap() - 6.25).abs() < 5.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 530: `assert!((interp.evaluate(3.5).unwrap() - 12.25).abs() < 15.0); // Increased tole...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 539: `let interp = BarycentricInterpolator::new(&x.view(), &y.view(), 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 543: `let y_new = interp.evaluate_array(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 570: `BarycentricTriangulation::new(&points.view(), &values.view(), triangles).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 574: `assert!((interp.interpolate(0.0, 0.0).unwrap() - 0.0).abs() < 5.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 575: `assert!((interp.interpolate(1.0, 0.0).unwrap() - 1.0).abs() < 5.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 576: `assert!((interp.interpolate(1.0, 1.0).unwrap() - 2.0).abs() < 5.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 577: `assert!((interp.interpolate(0.0, 1.0).unwrap() - 1.0).abs() < 5.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 581: `assert!((interp.interpolate(0.5, 0.5).unwrap() - 1.0).abs() < 5.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 585: `assert!((interp.interpolate(0.5, 0.0).unwrap() - 0.5).abs() < 5.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 589: `assert!((interp.interpolate(1.0, 0.5).unwrap() - 1.5).abs() < 5.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 602: `let interp = make_barycentric_interpolator(&x.view(), &y.view(), 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 606: `assert!((interp.evaluate(x[i]).unwrap() - y[i]).abs() < 1e-10);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 610: `assert!((interp.evaluate(1.5).unwrap() - 3.375).abs() < 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 611: `assert!((interp.evaluate(2.5).unwrap() - 15.625).abs() < 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 612: `assert!((interp.evaluate(3.5).unwrap() - 42.875).abs() < 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 615: `assert!((interp.evaluate(0.5).unwrap() - 0.125).abs() < 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 616: `assert!((interp.evaluate(4.5).unwrap() - 91.125).abs() < 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/enhanced_kriging.rs
+
+3 issues found:
+
+- Line 320: `sigma_sq: F::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 322: `nugget: F::from_f64(1e-10).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 323: `extra_params: F::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/enhanced_krigingtest.rs
+
+3 issues found:
+
+- Line 168: `sigma_sq: F::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 170: `nugget: F::from_f64(1e-10).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 171: `extra_params: F::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/enhanced_rbf.rs
+
+70 issues found:
+
+- Line 188: `epsilon: F::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 191: `lambda: F::from_f64(1e-10).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 333: `total_dist / F::from_usize(pair_count).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 386: `let min_scale = epsilon * F::from_f64(0.1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 387: `let max_scale = epsilon * F::from_f64(10.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 388: `let ratio = (max_scale / min_scale)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 389: `.powf(F::one() / F::from_usize(n_scales - 1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 522: `let a_matrix_f64 = a_matrix.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 523: `let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 528: `Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 533: `Ok(result) => result.x.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 593: `(-(r * r) / eps_sum).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 594: `* (F::from_f64(2.0).unwrap() * (epsilon1 * epsilon2).sqrt()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 595: `/ eps_sum.sqrt())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 595: `/ eps_sum.sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 599: `let avg_eps = (epsilon1 + epsilon2) * F::from_f64(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 659: `let a_matrix_f64 = a_matrix.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 660: `let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 665: `Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 670: `Ok(result) => result.x.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 688: `let diff = (x1 - x2) / scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 691: `sum_sq.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 702: `(-r * r / (epsilon * epsilon)).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 713: `RBFKernel::Gaussian => (-r2 / eps2).exp(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 714: `RBFKernel::Multiquadric => (r2 + eps2).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 715: `RBFKernel::InverseMultiquadric => F::one() / (r2 + eps2).sqrt(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 715: `RBFKernel::InverseMultiquadric => F::one() / (r2 + eps2).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 720: `r2 * r.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 733: `(-r / epsilon).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 737: `let sqrt3 = F::from_f64(3.0).unwrap().sqrt();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 738: `let arg = sqrt3 * r / epsilon;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 743: `let sqrt5 = F::from_f64(5.0).unwrap().sqrt();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 744: `let arg = sqrt5 * r / epsilon;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 746: `let term2 = arg * arg / F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 754: `let q = F::one() - r / epsilon;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 756: `let term = F::one() + F::from_f64(4.0).unwrap() * r / epsilon;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 762: `(-r * r / (epsilon * epsilon)).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 768: `let k_float = F::from_usize(k).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 775: `r.powf(k_float) * r.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 775: `r.powf(k_float) * r.ln()`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 777: `r.powf(k_float)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 786: `let alpha = F::from_f64(alpha).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 787: `(F::one() - r / epsilon).powf(alpha)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 787: `(F::one() - r / epsilon).powf(alpha)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 840: `let n_scales = self.scale_parameters.as_ref().unwrap().len();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 848: `let epsilon = self.scale_parameters.as_ref().unwrap()[scale_idx];`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 932: `let mean_sq_error = sum_sq_error / F::from_usize(self.values.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 933: `let mean_abs_error = sum_abs_error / F::from_usize(self.values.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 952: `let correction = F::from_f64(n_points as f64 / (n_points as f64 - 1.0)).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1125: `.with_lambda(F::from_f64(1e-12).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1166: `.with_lambda(F::from_f64(1e-8).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1231: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1240: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1246: `let interpolated = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1312: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1323: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1329: `let interpolated = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1337: `/ values.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1363: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1373: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1377: `Array2::from_shape_vec((3, 2), vec![2.0, 1.0, 1.0, 2.0, 3.0, 0.0]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 1384: `let interpolated = result_orig.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1404: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1410: `let auto_rbf = make_auto_rbf(&points.view(), &values.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1413: `let accurate_rbf = make_accurate_rbf(&points.view(), &values.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1416: `let fast_rbf = make_fast_rbf(&points.view(), &values.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1419: `let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 1421: `let result_auto = auto_rbf.interpolate(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1422: `let result_accurate = accurate_rbf.interpolate(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1423: `let result_fast = fast_rbf.interpolate(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/fast_kriging/acceleration.rs
+
+5 issues found:
+
+- Line 254: `.approximation_method(FastKrigingMethod::Tapering(taper_range.to_f64().unwrap())...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 483: `FastKrigingMethod::FixedRank(std::cmp::min(50, n_points / 10)),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 492: `let n_query = std::cmp::min(100, n_points / 10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 496: `let stride = n_points / n_query;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 525: `let predict_time = start.elapsed().as_secs_f64() * 1000.0 / n_query as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### advanced/fast_kriging/covariance.rs
+
+13 issues found:
+
+- Line 35: `distances.push((i, dist_sq.sqrt()));`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 90: `let diff = (p1[i] - p2[i]) / anisotropic_cov.length_scales[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 94: `Ok(sum_sq.sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 123: `let sqrt3_r = F::from_f64(3.0).unwrap().sqrt() * r;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 128: `let sqrt5_r = F::from_f64(5.0).unwrap().sqrt() * r;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 130: `F::one() + sqrt5_r + F::from_f64(5.0).unwrap() * r * r / F::from_f64(3.0).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 136: `let r_sq_div_2a = r * r / (F::from_f64(2.0).unwrap() * alpha);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 137: `anisotropic_cov.sigma_sq * (F::one() + r_sq_div_2a).powf(-alpha)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 166: `let step = n_points / max_sample;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 198: `let sample_cov_f64 = sample_cov.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 203: `|u| u.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 205: `let s = s_val.mapv(|x| F::from_f64(x).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 208: `|vt| vt.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/fast_kriging/mod.rs
+
+27 issues found:
+
+- Line 78: `self.variance.mapv(|v| v.sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 96: `}).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 408: `F::from_f64(range).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 512: `sigma_sq: F::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 513: `nugget: F::from_f64(1e-6).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 517: `radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 601: `points[[i, d]] = (i as f64) / (n_points as f64) + (d as f64) * 0.1;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 629: `assert!((std_devs[0] - 0.1_f64.sqrt()).abs() < 1e-10);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 643: `let intervals = result.confidence_intervals(0.95).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 749: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 760: `).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 762: `let result = kriging.predict(&query_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 788: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 793: `).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 795: `let result = kriging.predict(&query_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 816: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 821: `).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 823: `let result = kriging.predict(&query_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 847: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 852: `).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 854: `let result = kriging.predict(&query_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 873: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 891: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 896: `let result = kriging.predict(&empty_query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 903: `let points = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 912: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 914: `let query_points = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+
+### advanced/fast_kriging/ordinary.rs
+
+18 issues found:
+
+- Line 140: `let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 141: `let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 143: `Ok(w) => w.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 291: `FastKrigingMethod::Tapering(range) => F::from_f64(range).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 365: `variance -= *value * *value / self.anisotropic_cov.sigma_sq;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 403: `let n_blocks = (n_points + max_leaf_size - 1) / max_leaf_size;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 428: `centroid[d] /= F::from_usize(end_idx - start_idx).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 437: `let dist = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 440: `let weight = if dist < F::from_f64(1e-10).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 441: `F::from_f64(1e10).unwrap() // Very close to centroid`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 443: `F::one() / (F::one() + dist)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 447: `if weight > F::from_f64(1e-6).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 469: `let normalized_weight = weight / total_weight;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 542: `let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 543: `let block_values_f64 = block_values.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 547: `let weights = weights_f64.mapv(|x| F::from_f64(x).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 551: `let k_star_f64 = k_star.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 553: `Ok(result) => result.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/fast_kriging/universal.rs
+
+22 issues found:
+
+- Line 65: `let n_quad_terms = n_dims * (n_dims + 1) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 130: `let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 131: `let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 133: `Ok(coeffs) => Ok(coeffs.mapv(|x| F::from_f64(x).unwrap())),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 283: `let aug_matrix_f64 = aug_matrix.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 284: `let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 286: `Ok(sol) => sol.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 289: `let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 290: `let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 292: `Ok(w) => w.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 430: `variances[i] = self.anisotropic_cov.sigma_sq * F::from_f64(0.1).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 499: `let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 500: `let block_values_f64 = block_values.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 502: `Ok(w) => w.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 508: `/ (self.anisotropic_cov.sigma_sq + self.anisotropic_cov.nugget);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 521: `/ (self.anisotropic_cov.sigma_sq + self.anisotropic_cov.nugget);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 571: `dist <= max_extent * F::from_f64(0.5).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 585: `std::cmp::min(far_indices.len(), std::cmp::max(5, far_indices.len() / 10));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 590: `far_indices.len() / n_samples`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 604: `* F::from_f64(far_indices.len() as f64 / sample_indices.len() as f64).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 611: `let near_weight = F::from_f64(near_indices.len() as f64 / total_points as f64).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 612: `let far_weight = F::from_f64(far_indices.len() as f64 / total_points as f64).unw...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/fast_kriging/variogram.rs
+
+34 issues found:
+
+- Line 131: `let dist = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 142: `let bin_width = max_dist / F::from_usize(n_bins).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 156: `bins[i].distance = F::from_usize(i).unwrap() * bin_width + bin_width / F::from(2...`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 168: `let dist = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 172: `let semivariogram_value = value_diff * value_diff / F::from(2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 175: `let bin_idx = (dist / bin_width).to_usize().unwrap_or(n_bins-1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 186: `bin.semivariance = bin.semivariance / F::from_usize(bin.count).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 282: `let mut nugget = F::from_f64(0.001).unwrap() * max_semivariance;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 284: `let mut range = max_distance / F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 292: `let h = bins[i].distance.to_f64().unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 293: `let gamma = bins[i].semivariance.to_f64().unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 300: `let range_val = range.to_f64().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 302: `1.5 * (h / range_val) - 0.5 * (h / range_val).powi(3)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 308: `let range_val = range.to_f64().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 309: `1.0 - (-3.0 * h / range_val).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 312: `let range_val = range.to_f64().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 313: `1.0 - (-3.0 * (h / range_val).powi(2)).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 316: `let range_val = range.to_f64().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 322: `1.0 - (-3.0 * h / range_val).powf(nu).exp()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 322: `1.0 - (-3.0 * h / range_val).powf(nu).exp()`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 326: `let range_val = range.to_f64().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 327: `(h / range_val).powf(exponent)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 327: `(h / range_val).powf(exponent)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 340: `nugget = F::from_f64(solution[0]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 341: `sill = F::from_f64(solution[1]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 342: `range = F::from_f64(solution[2]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 346: `nugget = F::from_f64(0.001).unwrap() * max_semivariance;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 354: `range = max_distance / F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 381: `.min_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 382: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 386: `F::from_f64(0.05).unwrap() * max_semivariance`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 391: `nugget = F::from_f64(0.05).unwrap() * max_semivariance;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 398: `let range = max_distance / F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 430: `VariogramModel::Power(_) => (CovarianceFunction::RationalQuadratic, F::from_f64(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/fast_kriging_reexports.rs
+
+3 issues found:
+
+- Line 328: `sigma_sq: F::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 329: `nugget: F::from_f64(1e-6).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 333: `radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/kriging.rs
+
+24 issues found:
+
+- Line 221: `if dist > F::from_f64(1e-10).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 222: `w = w * (F::one() / dist);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 232: `weights[i] = weights[i] / sum_weights;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 265: `sum_sq.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 270: `let scaled_dist = r / length_scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 283: `let sqrt3_r_l = F::from_f64(3.0).unwrap().sqrt() * scaled_dist;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 288: `let sqrt5_r_l = F::from_f64(5.0).unwrap().sqrt() * scaled_dist;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 291: `+ F::from_f64(5.0).unwrap() * scaled_dist * scaled_dist`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 292: `/ F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 298: `scaled_dist * scaled_dist / (F::from_f64(2.0).unwrap() * alpha);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 299: `sigma_sq * (F::one() + r_sq_div_2al_sq).powf(-alpha)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 364: `let _avg_dist = avg_dist / F::from_usize(n_points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 370: `let variance = self.sigma_sq * (F::one() - (-min_dist / self.length_scale).exp()...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 495: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 510: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 514: `let result_se = interp_se.predict(&points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 527: `let points = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwra...`
+  - **Fix**: Handle array creation errors properly
+- Line 539: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 542: `let test_points = Array2::from_shape_vec((3, 1), vec![0.5, 1.5, 3.5]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 545: `let result = interp.predict(&test_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 643: `Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unw...`
+  - **Fix**: Handle array creation errors properly
+- Line 658: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 661: `let test_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 662: `let result = interp.predict(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/rbf.rs
+
+38 issues found:
+
+- Line 265: `let i = idx / n_points;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 324: `let regularization = F::from_f64(1e-6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 333: `condition_number: F::from_f64(1e16).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 358: `sum_sq.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 367: `RBFKernel::Gaussian => (-r2 / eps2).exp(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 368: `RBFKernel::Multiquadric => (r2 + eps2).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 369: `RBFKernel::InverseMultiquadric => F::one() / (r2 + eps2).sqrt(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 369: `RBFKernel::InverseMultiquadric => F::one() / (r2 + eps2).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 375: `r2 * r.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 645: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 652: `RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 656: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 660: `let result_gaussian = interp_gaussian.interpolate(&points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 661: `let result_multiquadric = interp_multiquadric.interpolate(&points.view()).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 670: `let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 671: `let result_gaussian = interp_gaussian.interpolate(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 672: `let result_multiquadric = interp_multiquadric.interpolate(&test_point.view()).un...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 719: `2.0f64.sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 724: `1.0 / 2.0f64.sqrt(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 724: `1.0 / 2.0f64.sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 756: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 764: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 767: `let test_point = Array2::from_shape_vec((1, 3), vec![0.5, 0.5, 0.5]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 768: `let result = interp.interpolate(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 785: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 792: `RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 801: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 804: `let test_point = Array2::from_shape_vec((1, 2), vec![0.3, 0.7]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 805: `let result_serial = interp_serial.interpolate(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 806: `let result_parallel = interp_parallel.interpolate(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 819: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 820: `let result_auto = interp_auto.interpolate(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 833: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 848: `RBFInterpolator::new(&points.view(), &values.view(), *kernel, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 852: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 855: `let test_point = Array2::from_shape_vec((1, 2), vec![0.6, 0.4]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 856: `let result_serial = interp_serial.interpolate(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 857: `let result_parallel = interp_parallel.interpolate(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### advanced/thinplate.rs
+
+15 issues found:
+
+- Line 152: `k[(i, j)] = tps_kernel(dist_sq.sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 201: `let a_f64 = a.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 202: `let b_f64 = b.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 204: `Ok(solution) => solution.mapv(|x| T::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 209: `Ok(result) => result.x.mapv(|x| T::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 271: `let kernel_value = tps_kernel(dist_sq.sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 335: `r_sq * r_sq.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 371: `Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0]).unw...`
+  - **Fix**: Handle array creation errors properly
+- Line 378: `let tps = tps.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 383: `let interpolated = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 404: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 415: `let tps_exact = tps_exact.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 416: `let tps_smooth = tps_smooth.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 419: `let _result_exact = tps_exact.evaluate(&points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 420: `let result_smooth = tps_smooth.evaluate(&points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### api_standards.rs
+
+1 issues found:
+
+- Line 418: `epsilon: T::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### bezier.rs
+
+44 issues found:
+
+- Line 165: `let n = F::from_usize(self.degree).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 459: `let degree_u = F::from_usize(self.nu - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 491: `let degree_v = F::from_usize(self.nv - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 554: `binomial = binomial * F::from_usize(n - j).unwrap() / F::from_usize(j + 1).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 616: `assert_relative_eq!(bernstein(0.0, 0, 1).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 617: `assert_relative_eq!(bernstein(0.0, 1, 1).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 618: `assert_relative_eq!(bernstein(1.0, 0, 1).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 619: `assert_relative_eq!(bernstein(1.0, 1, 1).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 620: `assert_relative_eq!(bernstein(0.5, 0, 1).unwrap(), 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 621: `assert_relative_eq!(bernstein(0.5, 1, 1).unwrap(), 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 624: `assert_relative_eq!(bernstein(0.5, 0, 2).unwrap(), 0.25);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 625: `assert_relative_eq!(bernstein(0.5, 1, 2).unwrap(), 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 626: `assert_relative_eq!(bernstein(0.5, 2, 2).unwrap(), 0.25);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 632: `let result = compute_bernstein_all(0.5, 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 638: `let result = compute_bernstein_all(0.5, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 652: `let curve = BezierCurve::new(&control_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 655: `let p0 = curve.evaluate(0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 656: `let p1 = curve.evaluate(1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 657: `let p_mid = curve.evaluate(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 668: `let curve = BezierCurve::new(&control_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 670: `let p_mid = curve.evaluate(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 679: `let curve = BezierCurve::new(&control_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 681: `let deriv = curve.derivative().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 696: `let curve = BezierCurve::new(&control_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 698: `let (left, right) = curve.split(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 705: `let left_start = left.evaluate(0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 706: `let left_end = left.evaluate(1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 707: `let right_start = right.evaluate(0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 708: `let right_end = right.evaluate(1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 721: `let mid = curve.evaluate(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 737: `let surface = BezierSurface::new(&control_points.view(), 2, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 740: `let p00 = surface.evaluate(0.0, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 741: `let p01 = surface.evaluate(0.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 742: `let p10 = surface.evaluate(1.0, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 743: `let p11 = surface.evaluate(1.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 762: `let p_mid = surface.evaluate(0.5, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 782: `let surface = BezierSurface::new(&control_points.view(), 3, 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 785: `let deriv_u = surface.derivative_u().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 786: `let deriv_v = surface.derivative_v().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 793: `let du = deriv_u.evaluate(0.5, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 794: `let dv = deriv_v.evaluate(0.5, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 801: `let du_magnitude = (du[0] * du[0] + du[1] * du[1] + du[2] * du[2]).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 802: `let dv_magnitude = (dv[0] * dv[0] + dv[1] * dv[1] + dv[2] * dv[2]).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 808: `let center = surface.evaluate(0.5, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### bivariate/bspline_eval.rs
+
+34 issues found:
+
+- Line 36: `let mut mid = (low + high) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 44: `mid = (low + high) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 84: `let temp = basis[r] / (right[r + 1] + left[j - r]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 138: `let temp = ndu[[r, j - 1]] / ndu[[j, r]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 168: `a[[s2, 0]] = a[[s1, 0]] / ndu[[(pk + 1) as usize, rk as usize]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 177: `/ ndu[[(pk + 1) as usize, (rk + j as isize) as usize]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 182: `a[[s2, m]] = -a[[s1, m - 1]] / ndu[[(pk + 1) as usize, r]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 194: `let mut fac = F::from_usize(k).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 199: `fac = fac * F::from_usize(k - j).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 371: `let half_width_x = (xb - xa) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 372: `let half_width_y = (yb - ya) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 373: `let mid_x = (xa + xb) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 374: `let mid_y = (ya + yb) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 392: `sum * half_width_x * half_width_y * F::from_f64(4.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 411: `weights.push(F::from_f64(2.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 414: `let p = F::from_f64(1.0 / 3.0_f64.sqrt()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 421: `let p = F::from_f64((3.0 / 5.0_f64).sqrt()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 425: `weights.push(F::from_f64(5.0 / 9.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 426: `weights.push(F::from_f64(8.0 / 9.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 427: `weights.push(F::from_f64(5.0 / 9.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 430: `let p1 = F::from_f64((3.0 - 2.0 * 6.0_f64.sqrt()) / 7.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 430: `let p1 = F::from_f64((3.0 - 2.0 * 6.0_f64.sqrt()) / 7.0)`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 431: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 432: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 433: `let p2 = F::from_f64((3.0 + 2.0 * 6.0_f64.sqrt()) / 7.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 433: `let p2 = F::from_f64((3.0 + 2.0 * 6.0_f64.sqrt()) / 7.0)`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 434: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 435: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 440: `weights.push(F::from_f64((18.0 - 6.0_f64.sqrt()) / 36.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 441: `weights.push(F::from_f64((18.0 + 6.0_f64.sqrt()) / 36.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 442: `weights.push(F::from_f64((18.0 + 6.0_f64.sqrt()) / 36.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 443: `weights.push(F::from_f64((18.0 - 6.0_f64.sqrt()) / 36.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 450: `let dx = F::from_f64(2.0 / (n as f64)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 451: `let mut x = F::from_f64(-1.0).unwrap() + dx / F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### bivariate/mod.rs
+
+16 issues found:
+
+- Line 313: `(x - knots[i]) / (knots[i + 1] - knots[i])`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 509: `let dx = (x_max - x_min) / F::from_usize(n_interior_x + 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 511: `tx.push(x_min + F::from_usize(i).unwrap() * dx);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 526: `let dy = (y_max - y_min) / F::from_usize(n_interior_y + 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 528: `ty.push(y_min + F::from_usize(i).unwrap() * dy);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 592: `c[i] = c[i] / weight_sum[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 605: `let smoothing_factor = s / (F::one() + s);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 609: `let local_avg = neighbors_sum / F::from_f64(4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 836: `c[i * n_y + j] = values[(i, j)] / weights[(i, j)];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 850: `let smoothing_factor = s / (F::one() + s);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 854: `let local_avg = neighbors_sum / F::from_f64(4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 936: `RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 1, 1, None).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 943: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 956: `let result = spline.evaluate(&xi.view(), &yi.view(), false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 970: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 979: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### boundarymode.rs
+
+19 issues found:
+
+- Line 232: `let periods = (offset / domain_width).ceil();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 349: `let periods = (offset / domain_width).floor();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 636: `let result = boundary.map_point(-5.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 643: `let result = boundary.map_point(15.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 655: `let result = boundary.map_point(-5.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 662: `let result = boundary.map_point(15.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 674: `let result = boundary.map_point(-5.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 681: `let result = boundary.map_point(15.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 688: `let result = boundary.map_point(25.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 700: `let result = boundary.map_point(-5.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 707: `let result = boundary.map_point(15.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 714: `let result = boundary.map_point(-15.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 726: `let result = boundary.map_point(-5.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 738: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 759: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 772: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 788: `let result = boundary.map_point(5.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 805: `let result = boundary.map_point(-5.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 812: `let result = boundary.map_point(15.0, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### bspline.rs
+
+49 issues found:
+
+- Line 73: `self.allocations_avoided as f64 / self.evaluation_count as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 79: `self.peak_memory_bytes as f64 / (1024.0 * 1024.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 464: `let mut x_norm = (x - t_min) / period;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 525: `let mut x_norm = (x - t_min) / period;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 656: `new_c[i] = T::from_f64(k as f64).unwrap() * (self.c[i + 1] - self.c[i]) / dt;`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 699: `integral += self.c[i] * dt / T::from_f64((self.k + 1) as f64).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 792: `let alpha = (x - left) / (right - left);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 868: `let alpha = (x - left) / (right - left);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 903: `let mut x_norm = (x - t_min) / period;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 945: `let mut mid = (low + high) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 953: `mid = (low + high) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1010: `let alpha = (x - left) / (right - left);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1047: `let mut x_norm = (x - t_min) / period;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1125: `let alpha = (x - left) / (right - left);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1246: `t[i + k] = x[i + (k - 1) / 2];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1326: `let step = (x_max - x_min) / T::from_usize(n - k).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1333: `t[i] = x_min + T::from_usize(i - k).unwrap() * step;`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1354: `t[i + k] = avg / T::from_usize(k).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1466: `let sqrt_w = weights[i].sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1527: `if bandwidth > 0 && bandwidth < n / 4 {`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1543: `let tolerance = T::from_f64(1e-14).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1603: `if max_val < T::from_f64(1e-14).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1620: `let factor = aug[[i, k]] / aug[[k, k]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1635: `x[i] = sum / aug[[i, i]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1675: `Some(T::from_f64(1e-12).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1701: `let basis = basis.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1709: `let val = val.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1737: `let spline = spline.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1759: `let spline = spline.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1774: `let uniform_knots = generate_knots(&x.view(), k, "uniform").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1777: `let clamped_knots = generate_knots(&x.view(), k, "clamped").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1800: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1806: `let standard_result = spline.evaluate(x).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1807: `let fast_result = spline.evaluate_fast_recursive(x).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1834: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1839: `let batch_results = spline.evaluate_batch_fast(&test_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1840: `let individual_results = spline.evaluate_array(&test_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1867: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1906: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1913: `let standard_result = spline.evaluate(x).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1914: `let workspace_result = spline.evaluate_with_workspace(x, &workspace).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1915: `let fast_result = spline.evaluate_fast_recursive(x).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1938: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1941: `assert_eq!(spline.evaluate_fast_recursive(0.5).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1942: `assert_eq!(spline.evaluate_fast_recursive(1.5).unwrap(), 2.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1943: `assert_eq!(spline.evaluate_fast_recursive(3.5).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1960: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1966: `let standard_result = spline.evaluate(x).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1967: `let fast_result = spline.evaluate_fast_recursive(x).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### cache.rs
+
+25 issues found:
+
+- Line 146: `self.hits as f64 / (self.hits + self.misses) as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 154: `1.0 - (self.memory_usage_bytes as f64 / self.peak_memory_bytes as f64)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 158: `(hit_ratio + memory_factor) / 2.0`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 163: `self.memory_usage_bytes as f64 / (1024.0 * 1024.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 168: `self.peak_memory_bytes as f64 / (1024.0 * 1024.0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 229: `let quantized = (self.value / self.tolerance).round() * self.tolerance;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 301: `x as f64 / 0x7fffffff as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 310: `-(frequency / (1.0 + recency + memory_factor / 1000.0))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 348: `let tolerance = F::from_f64(self.config.tolerance).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 391: `let tolerance = F::from_f64(self.config.tolerance).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 727: `let mut mid = (low + high) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 735: `mid = (low + high) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 758: `left = (x - knots[i]) / (knots[i + degree] - knots[i]) * basis_left;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 764: `right = (knots[i + degree + 1] - x) / (knots[i + degree + 1] - knots[i + 1])`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 911: `points.len() / 100`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 921: `let quantized = (val_f64 / self.config.tolerance).round() * self.config.toleranc...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1039: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1045: `let cached_result = cached_spline.evaluate_cached(x).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1046: `let standard_result = cached_spline.evaluate_standard(x).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1068: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1071: `let _ = cached_spline.evaluate_cached(1.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1076: `let _ = cached_spline.evaluate_cached(1.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1091: `let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0])....`
+  - **Fix**: Handle array creation errors properly
+- Line 1100: `distances[[i, j]] = diff.iter().map(|&x| x * x).sum::<f64>().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1120: `let different_points = Array2::from_shape_vec((2, 2), vec![2.0, 2.0, 3.0, 3.0])....`
+  - **Fix**: Handle array creation errors properly
+
+### cache_aware.rs
+
+13 issues found:
+
+- Line 259: `sum_sq.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 291: `let arg = -(distance * distance) / (self.epsilon * self.epsilon);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 294: `RBFKernel::Multiquadric => (distance * distance + self.epsilon * self.epsilon).s...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 296: `F::one() / (distance * distance + self.epsilon * self.epsilon).sqrt()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 296: `F::one() / (distance * distance + self.epsilon * self.epsilon).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 304: `distance * distance * distance.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 356: `let factor = augmented[[i, k]] / augmented[[k, k]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 372: `solution[i] = (augmented[[i, n]] - sum) / augmented[[i, i]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 396: `let coefficients = self.coefficients.as_ref().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 438: `sum_sq.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 553: `let mut mid = (low + high) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 561: `mid = (low + high) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 580: `(x - self.knots[span + 1 + r - j]) / denom`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### constrained/builder.rs
+
+1 issues found:
+
+- Line 232: `T::from_f64(0.1).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### constrained/solver.rs
+
+15 issues found:
+
+- Line 44: `let weight = T::from_f64(1e6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 227: `let step_size = -worst_violation / constraint_norm_squared;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 256: `if val < -T::from_f64(1e-6).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 316: `let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 317: `let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 319: `Ok(solution) => return Ok(solution.mapv(|x| T::from_f64(x).unwrap())),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 338: `let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 339: `let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 341: `Ok(solution) => solution.mapv(|x| T::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 398: `let step_size = -worst_violation / constraint_norm_squared;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 519: `let two = T::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 608: `let t = i as f64 / (n_eval - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 610: `constraint_x_min + T::from_f64(t).unwrap() * (constraint_x_max - constraint_x_mi...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 619: `let x_val = (eval_points[i] + eval_points[i + 1]) / T::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 633: `let x_val = (eval_points[i] + eval_points[i + 1]) / T::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+
+### extrapolation.rs
+
+40 issues found:
+
+- Line 136: `period: T::from(2.0 * std::f64::consts::PI).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 394: `let half = T::from(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 418: `self.lower_second_derivative.unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 424: `self.upper_second_derivative.unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 435: `let c = second_deriv / T::from(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 439: `let d = T::from(0.0).unwrap(); // Simplified version sets this to zero`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 464: `let periods = (offset / period).ceil();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 470: `let periods = (offset / period).floor();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 500: `let reflections = (offset / domain_width).floor();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 504: `if reflections.to_u64().unwrap() % 2 == 0 {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 515: `let reflections = (offset / domain_width).floor();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 519: `if reflections.to_u64().unwrap() % 2 == 0 {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 560: `let scale = self.lower_derivative / rate;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 574: `let scale = self.upper_derivative / rate;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 606: `let abs_pow = (-dx).powf(exponent.abs());`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 607: `if exponent.abs().to_u64().unwrap() % 2 == 0 {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 613: `dx.powf(exponent)`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 618: `/ (exponent * (self.lower_bound - T::epsilon()).powf(exponent - T::one()));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 618: `/ (exponent * (self.lower_bound - T::epsilon()).powf(exponent - T::one()));`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 634: `let power_term = dx.powf(exponent);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 638: `/ (exponent * (self.upper_bound + T::epsilon()).powf(exponent - T::one()));`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 638: `/ (exponent * (self.upper_bound + T::epsilon()).powf(exponent - T::one()));`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 683: `let weight = (-dx / T::from(2.0).unwrap()).exp();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 704: `let omega = T::from(2.0 * std::f64::consts::PI).unwrap() / self.parameters.perio...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 712: `let _a = a_omega / omega;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 715: `let phi = T::from(std::f64::consts::PI / 4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 720: `let a_adjusted = deriv / (omega * cos_phi);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 754: `ExtrapolationDirection::Lower => T::from(0.1).unwrap(),  // Mild growth`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 755: `ExtrapolationDirection::Upper => T::from(-0.1).unwrap(), // Mild decay`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 769: `Ok(numerator / denominator)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 995: `let result = extrapolator.extrapolate(-5.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 999: `let result = extrapolator.extrapolate(15.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1022: `let result = extrapolator.extrapolate(-5.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1026: `let result = extrapolator.extrapolate(15.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1109: `let result = extrapolator.extrapolate(-1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1113: `let result = extrapolator.extrapolate(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1141: `let result = extrapolator.extrapolate(-1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1149: `let result = extrapolator.extrapolate(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1155: `let result_near_lower = extrapolator.extrapolate(lower_bound - 1e-6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1158: `let result_near_upper = extrapolator.extrapolate(upper_bound + 1e-6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### fast_bspline.rs
+
+14 issues found:
+
+- Line 347: `let alpha = (x - left) / (right - left);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 376: `(x - left) / (right - left)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 395: `let mut x_norm = (x - t_min) / period;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 695: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 713: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 721: `let standard_result = spline.evaluate(x).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 722: `let fast_result = fast_eval.evaluate_fast(x).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 739: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 745: `let fast_results = fast_eval.evaluate_array_fast(&x_vals.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 746: `let standard_results = spline.evaluate_array(&x_vals.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 763: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 784: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 807: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 814: `let result = fast_eval.evaluate_fast(1.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### geospatial.rs
+
+25 issues found:
+
+- Line 114: `earth_radius_km: T::from_f64(6371.0).unwrap(), // Mean Earth radius`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 431: `.mapv(|lat| lat * T::from_f64(std::f64::consts::PI / 180.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 433: `.mapv(|lon| lon * T::from_f64(std::f64::consts::PI / 180.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 458: `let earth_radius = self.config.earth_radius_km * T::from_f64(1000.0).unwrap(); /...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 459: `let deg_to_rad = T::from_f64(std::f64::consts::PI / 180.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 465: `* (lat_rad + T::from_f64(std::f64::consts::PI / 4.0).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 467: `.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 479: `let deg_to_rad = T::from_f64(std::f64::consts::PI / 180.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 483: `let mean_lat = latitudes.sum() / T::from_usize(latitudes.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 508: `let mean_val = _values.sum() / T::from_usize(n).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 513: `/ T::from_usize(n - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 516: `self.spatial_stats.effective_dof = Some(T::from_usize(n).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 541: `T::from_f64(1.0).unwrap(),  // sigma_sq`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 542: `T::from_f64(1.0).unwrap(),  // length_scale`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 543: `T::from_f64(0.01).unwrap(), // nugget`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 544: `T::from_f64(1.0).unwrap(),  // alpha`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 569: `T::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 590: `let tps = ThinPlateSpline::new(&coords_2d.view(), values, T::from_f64(0.0).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 607: `let deg_to_rad = T::from_f64(std::f64::consts::PI / 180.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 616: `let a = (dlat / T::from_f64(2.0).unwrap()).sin().powi(2)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 617: `+ lat1_rad.cos() * lat2_rad.cos() * (dlon / T::from_f64(2.0).unwrap()).sin().pow...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 618: `let c = T::from_f64(2.0).unwrap() * a.sqrt().asin();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 920: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 926: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 959: `let (x_coords, y_coords) = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### gpu_accelerated.rs
+
+9 issues found:
+
+- Line 465: `(x_i - self.x_data[j]) / (self.x_data[j + 1] - self.x_data[j]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 484: `let r = distance / self.kernel_width;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 488: `GpuRBFKernel::Multiquadric => (T::one() + r * r).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 489: `GpuRBFKernel::InverseMultiquadric => T::one() / (T::one() + r * r).sqrt(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 489: `GpuRBFKernel::InverseMultiquadric => T::one() / (T::one() + r * r).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 494: `r * r * r.ln()`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 709: `interpolator.fit(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 715: `let y_eval = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 743: `let interpolator = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### grid.rs
+
+4 issues found:
+
+- Line 85: `let step = (max - min) / F::from_usize(n_points - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 87: `coords[j] = min + F::from_usize(j).unwrap() * step;`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 234: `let grid_1d = create_regular_grid(&[(0.0, 1.0)], &[5]).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 242: `let grid_2d = create_regular_grid(&[(0.0, 1.0), (-1.0, 1.0)], &[3, 5]).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### griddata.rs
+
+27 issues found:
+
+- Line 426: `F::from_f64(1.0).unwrap(), // epsilon`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 438: `let query_2d = query_point.to_shape((1, query_point.len())).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 623: `let dist = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 693: `let t = (query_x - x1) / (x2 - x1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 840: `if denom.abs() < F::from_f64(1e-10).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 844: `let w1 = ((p2[1] - p3[1]) * (query[0] - p3[0]) + (p3[0] - p2[0]) * (query[1] - p...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 845: `let w2 = ((p3[1] - p1[1]) * (query[0] - p3[0]) + (p1[0] - p3[0]) * (query[1] - p...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 885: `if dist_sq < F::from_f64(1e-12).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 890: `let weight = F::one() / dist_sq.sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 890: `let weight = F::one() / dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 896: `Ok(sum_weighted_values / sum_weights)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 930: `if dist_sq < F::from_f64(1e-12).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 936: `let weight = F::one() / dist_sq.sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 936: `let weight = F::one() / dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 942: `Ok(sum_weighted_values / sum_weights)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1011: `let default_fill = fill_value.unwrap_or_else(|| F::from_f64(f64::NAN).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1053: `let k = (n_points / 3).max(3).min(10);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1142: `let eps = F::from_f64(1e-12).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1164: `let weight = F::one() / (dist_sq * dist_sq.sqrt() + eps);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1164: `let weight = F::one() / (dist_sq * dist_sq.sqrt() + eps);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1171: `Ok(sum_weighted_values / sum_weights)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1218: `let eps = F::from_f64(1e-14).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1225: `let inv_det = F::one() / det;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1300: `let dist = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1313: `total_dist / F::from_usize(count).unwrap_or(F::one())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1380: `let t = F::from_usize(idx).unwrap() / F::from_usize(resolution[dim] - 1).unwrap(...`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1383: `(min_val + max_val) / (F::one() + F::one())`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### hermite.rs
+
+28 issues found:
+
+- Line 134: `if (y[0] - y[last_y_idx]).abs() > T::from(1e-6).unwrap() {`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 253: `derivs[i] = (h1 * (y[i + 1] - y[i]) / h2 + h2 * (y[i] - y[i - 1]) / h1) / (h1 + ...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 258: `derivs[0] = (y[1] - y[0]) / (x[1] - x[0]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 259: `derivs[n - 1] = (y[n - 1] - y[n - 2]) / (x[n - 1] - x[n - 2]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 305: `(T::from(3.0).unwrap() * (y_ip1 - y_i) / h - T::from(2.0).unwrap() * m_i - m_ip1...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 306: `/ h;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 309: `coeffs[[i, 3]] = (T::from(2.0).unwrap() * (y_i - y_ip1) / h + m_i + m_ip1) / (h ...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 479: `1 => Ok(b + dx * (T::from(2.0).unwrap() * c + T::from(3.0).unwrap() * dx * d)),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 480: `2 => Ok(T::from(2.0).unwrap() * c + T::from(6.0).unwrap() * dx * d),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 481: `3 => Ok(T::from(6.0).unwrap() * d),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 586: `+ c1 * x * x / T::from(2.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 587: `+ c2 * x * x * x / T::from(3.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 588: `+ c3 * x * x * x * x / T::from(4.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 712: `let spline = make_hermite_spline(&x.view(), &y.view(), ExtrapolateMode::Error).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 734: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 738: `let eval = spline.evaluate_single(x[i]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 746: `let y_interp = spline.evaluate(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 761: `make_natural_hermite_spline(&x.view(), &y.view(), ExtrapolateMode::Error).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 783: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 787: `let deriv1 = spline.derivative(1, &x_test.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 797: `let deriv2 = spline.derivative(2, &x_test.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 813: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 822: `let eval = spline.evaluate_single(x[i]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 827: `let x_test = Array::from_vec(vec![std::f64::consts::PI / 2.0, std::f64::consts::...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 828: `let y_test = spline.evaluate(&x_test.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 852: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 858: `let eval = spline.evaluate_single(x[i]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 866: `let y_interp = spline.evaluate(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### high_dimensional.rs
+
+31 issues found:
+
+- Line 398: `let mean = points.mean_axis(Axis(0)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 402: `let n_points = F::from_usize(points.nrows()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 403: `let _cov = centered.t().dot(&centered) / (n_points - F::one());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 414: `F::from_f64(0.1).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 449: `transformation[[i, j]] = val / F::from_f64((n_dims as f64).sqrt()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 636: `let query_slice = query.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 643: `let radius = F::from_f64(*bandwidth).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 648: `let search_radius = F::from_f64(*radius).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 656: `let query_slice = query.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 663: `let radius = F::from_f64(*bandwidth).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 668: `let search_radius = F::from_f64(*radius).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 702: `.filter(|(_, dist)| *dist <= F::from_f64(*bandwidth).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 709: `.filter(|(_, dist)| *dist <= F::from_f64(*radius).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 722: `.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 747: `F::one() / dist.powf(F::from_f64(*weight_power).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 760: `Ok(weighted_sum / weight_sum)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 766: `let count = F::from_usize(neighbors.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 772: `Ok(sum / count)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 804: `Ok(sum / weight_sum)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1155: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1166: `let interpolator = make_knn_interpolator(&points.view(), &values.view(), 2).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1170: `let result = interpolator.interpolate(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1187: `let interpolator = make_pca_interpolator(&points.view(), &values.view(), 2, 3).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1193: `let result = interpolator.interpolate(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1204: `make_local_rbf_interpolator(&points.view(), &values.view(), 1.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1207: `let result = interpolator.interpolate(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1217: `let interpolator = make_knn_interpolator(&points.view(), &values.view(), 3).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1220: `let results = interpolator.interpolate_multi(&queries.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1240: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1248: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1265: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### interp1d/basic_interp.rs
+
+35 issues found:
+
+- Line 70: `Ok(y0 + (x_new - x0) * (y1 - y0) / (x1 - x0))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 115: `(x_new - x1) / (x2 - x1)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 126: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 127: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 128: `let four = F::from_f64(4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 129: `let five = F::from_f64(5.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 130: `let half = F::from_f64(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 287: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 290: `assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 291: `assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 292: `assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 293: `assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 296: `assert_relative_eq!(interp.evaluate(0.4).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 297: `assert_relative_eq!(interp.evaluate(0.6).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 298: `assert_relative_eq!(interp.evaluate(1.4).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 299: `assert_relative_eq!(interp.evaluate(1.6).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 313: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 316: `assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 317: `assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 318: `assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 319: `assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 322: `assert_relative_eq!(interp.evaluate(0.5).unwrap(), 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 323: `assert_relative_eq!(interp.evaluate(1.5).unwrap(), 2.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 324: `assert_relative_eq!(interp.evaluate(2.5).unwrap(), 6.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 338: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 341: `assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 342: `assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 343: `assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 344: `assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 349: `assert_relative_eq!(interp.evaluate(0.5).unwrap(), 0.25, epsilon = 0.1);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 350: `assert_relative_eq!(interp.evaluate(1.5).unwrap(), 2.25, epsilon = 0.1);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 351: `assert_relative_eq!(interp.evaluate(2.5).unwrap(), 6.25, epsilon = 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 361: `let y_nearest = nearest_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 370: `let y_linear = linear_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 376: `let y_cubic = cubic_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### interp1d/mod.rs
+
+53 issues found:
+
+- Line 179: `let slope = (y1 - y0) / (x1 - x0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 190: `let slope = (y1 - y0) / (x1 - x0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 307: `Ok(y0 + (x_new - x0) * (y1 - y0) / (x1 - x0))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 351: `(x_new - x1) / (x2 - x1)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 362: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 363: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 364: `let four = F::from_f64(4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 365: `let five = F::from_f64(5.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 366: `let half = F::from_f64(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 398: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 401: `assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 402: `assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 403: `assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 404: `assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 407: `assert_relative_eq!(interp.evaluate(0.4).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 408: `assert_relative_eq!(interp.evaluate(0.6).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 409: `assert_relative_eq!(interp.evaluate(1.4).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 410: `assert_relative_eq!(interp.evaluate(1.6).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 424: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 427: `assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 428: `assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 429: `assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 430: `assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 433: `assert_relative_eq!(interp.evaluate(0.5).unwrap(), 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 434: `assert_relative_eq!(interp.evaluate(1.5).unwrap(), 2.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 435: `assert_relative_eq!(interp.evaluate(2.5).unwrap(), 6.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 449: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 452: `assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 453: `assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 454: `assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 455: `assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 460: `assert_relative_eq!(interp.evaluate(0.5).unwrap(), 0.25, epsilon = 0.1);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 461: `assert_relative_eq!(interp.evaluate(1.5).unwrap(), 2.25, epsilon = 0.1);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 462: `assert_relative_eq!(interp.evaluate(2.5).unwrap(), 6.25, epsilon = 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 476: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 479: `assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 480: `assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 481: `assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 482: `assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 486: `let y_05 = interp.evaluate(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 487: `let y_15 = interp.evaluate(1.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 488: `let y_25 = interp.evaluate(2.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 507: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 519: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 521: `assert_relative_eq!(interp_nearest.evaluate(-1.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 522: `assert_relative_eq!(interp_nearest.evaluate(4.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 531: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 535: `assert_relative_eq!(interp_extrapolate.evaluate(-1.0).unwrap(), -1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 539: `assert_relative_eq!(interp_extrapolate.evaluate(4.0).unwrap(), 14.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 549: `let y_nearest = nearest_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 558: `let y_linear = linear_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 564: `let y_cubic = cubic_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 572: `let y_pchip = pchip_interpolate(&x.view(), &y.view(), &x_new.view(), false).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### interp1d/monotonic.rs
+
+82 issues found:
+
+- Line 199: `let t = (x_new - x1) / h;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 237: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 238: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 244: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 250: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 251: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 267: `let slope = (y[1] - y[0]) / (x[1] - x[0]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 276: `slopes[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 286: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 287: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 322: `let whmean_inv = (w1 / prev_slope + w2 / curr_slope) / (w1 + w2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 323: `derivatives[i] = F::one() / whmean_inv;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 336: `let mut d = ((two * h0 + h1) * m0 - h0 * m1) / (h0 + h1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 358: `let mut d = ((two * h0 + h1) * m0 - h0 * m1) / (h0 + h1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 400: `slopes[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 404: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 462: `let slope = (y[1] - y[0]) / (x[1] - x[0]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 471: `slopes[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 484: `let a = (h2 * p1 + h1 * p2) / (h1 + h2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 501: `F::min(a.abs(), min_slope * F::from_f64(2.0).unwrap()) * a.signum();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 541: `let slope = (y[1] - y[0]) / (x[1] - x[0]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 547: `let slope1 = (y[1] - y[0]) / (x[1] - x[0]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 548: `let slope2 = (y[2] - y[1]) / (x[2] - x[1]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 552: `derivatives[1] = (slope1 + slope2) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 566: `slopes[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 571: `let epsilon = F::from_f64(1e-10).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 578: `F::from_f64(2.0).unwrap() * slopes[0] - slopes[1]`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 585: `F::from_f64(2.0).unwrap() * slopes[n - 2] - slopes[n - 3]`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 596: `derivatives[i] = (s2 + s3) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 599: `derivatives[i] = (w1 * s3 + w2 * s2) / (w1 + w2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 608: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 623: `derivatives[0] = (F::from_f64(2.0).unwrap() * s1 * s2) / (s1 + s2);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 625: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 638: `derivatives[n - 1] = (F::from_f64(2.0).unwrap() * s1 * s2) / (s1 + s2);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 640: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 814: `let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).un...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 817: `assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 818: `assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 819: `assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 820: `assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 837: `let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).un...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 840: `let y_0_25 = interp.evaluate(0.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 841: `let y_0_50 = interp.evaluate(0.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 842: `let y_0_75 = interp.evaluate(0.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 846: `let y_1_25 = interp.evaluate(1.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 847: `let y_1_50 = interp.evaluate(1.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 848: `let y_1_75 = interp.evaluate(1.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 852: `let y_2_25 = interp.evaluate(2.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 853: `let y_2_50 = interp.evaluate(2.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 854: `let y_2_75 = interp.evaluate(2.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 858: `let y_3_25 = interp.evaluate(3.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 859: `let y_3_50 = interp.evaluate(3.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 860: `let y_3_75 = interp.evaluate(3.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 864: `let y_4_25 = interp.evaluate(4.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 865: `let y_4_50 = interp.evaluate(4.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 866: `let y_4_75 = interp.evaluate(4.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 884: `let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).un...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 888: `let y_0_5 = interp.evaluate(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 892: `let y_1_5 = interp.evaluate(1.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 896: `let y_2_25 = interp.evaluate(2.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 897: `let y_2_50 = interp.evaluate(2.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 898: `let y_2_75 = interp.evaluate(2.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 914: `let y_3_5 = interp.evaluate(3.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 931: `let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).un...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 934: `assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 935: `assert_relative_eq!(interp.evaluate(0.5).unwrap(), 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 936: `assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 949: `let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).un...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 952: `let y_0_25 = interp.evaluate(0.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 953: `let y_0_50 = interp.evaluate(0.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 954: `let y_0_75 = interp.evaluate(0.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 957: `let y_1_25 = interp.evaluate(1.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 958: `let y_1_50 = interp.evaluate(1.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 959: `let y_1_75 = interp.evaluate(1.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 977: `MonotonicInterpolator::new(&x.view(), &y.view(), *method, true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 978: `let _y_minus_1 = interp_extrap.evaluate(-1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 979: `let _y_plus_4 = interp_extrap.evaluate(4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 983: `MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 996: `let y_hyman = hyman_interpolate(&x.view(), &y.view(), &x_new.view(), false).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 997: `let y_steffen = steffen_interpolate(&x.view(), &y.view(), &x_new.view(), false)....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 999: `modified_akima_interpolate(&x.view(), &y.view(), &x_new.view(), false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1007: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### interp1d/pchip.rs
+
+37 issues found:
+
+- Line 171: `let t = (x_new - x1) / h;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 209: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 210: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 216: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 223: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 224: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 248: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 249: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 251: `let d = ((two * h0 + h1) * m0 - h0 * m1) / (h0 + h1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 284: `let slope = (y[1] - y[0]) / (x[1] - x[0]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 293: `slopes[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 303: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 338: `let whmean_inv = (w1 / prev_slope + w2 / curr_slope) / (w1 + w2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 339: `derivatives[i] = F::one() / whmean_inv;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 401: `let interp = PchipInterpolator::new(&x.view(), &y.view(), false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 404: `assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 405: `assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 406: `assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 407: `assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 410: `let y_interp_0_5 = interp.evaluate(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 411: `let y_interp_1_5 = interp.evaluate(1.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 412: `let y_interp_2_5 = interp.evaluate(2.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 426: `let interp = PchipInterpolator::new(&x.view(), &y.view(), false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 429: `let y_0_25 = interp.evaluate(0.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 430: `let y_0_50 = interp.evaluate(0.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 431: `let y_0_75 = interp.evaluate(0.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 435: `let y_1_25 = interp.evaluate(1.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 436: `let y_1_50 = interp.evaluate(1.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 437: `let y_1_75 = interp.evaluate(1.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 441: `let y_4_25 = interp.evaluate(4.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 442: `let y_4_50 = interp.evaluate(4.50).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 443: `let y_4_75 = interp.evaluate(4.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 453: `let interp_extrap = PchipInterpolator::new(&x.view(), &y.view(), true).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 454: `let _y_minus_1 = interp_extrap.evaluate(-1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 455: `let _y_plus_4 = interp_extrap.evaluate(4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 458: `let interp_no_extrap = PchipInterpolator::new(&x.view(), &y.view(), false).unwra...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 469: `let y_interp = pchip_interpolate(&x.view(), &y.view(), &x_new.view(), false).unw...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### interp2d.rs
+
+3 issues found:
+
+- Line 258: `let t = (y_new - y0) / (y1 - y0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 296: `let slice: &[F] = arr.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 297: `match slice.binary_search_by(|x| x.partial_cmp(&value).unwrap()) {`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### interpnd.rs
+
+37 issues found:
+
+- Line 288: `weights.push(F::from_f64(1.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 342: `F::from_f64(0.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 344: `(x - x0) / (x1 - x0)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 349: `.max(F::from_f64(0.0).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 350: `.min(F::from_f64(1.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 409: `let one = F::from_f64(1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 420: `let mut result = F::from_f64(0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 429: `let mut vertex_weight = F::from_f64(1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 442: `F::from_f64(1.0).unwrap() - weights[dim]`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 588: `power: F::from_f64(2.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 591: `epsilon: F::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 699: `_ => F::from_f64(2.0).unwrap(), // Default to 2.0 if wrong params`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 702: `let mut sum_weights = F::from_f64(0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 703: `let mut sum_weighted_values = F::from_f64(0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 716: `let weight = F::from_f64(1.0).unwrap() / dist.powf(power);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 729: `Ok(sum_weighted_values / sum_weights)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 743: `let mut sum_sq = F::from_f64(0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 748: `sum_sq.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 879: `let mut idx = vec![F::from_f64(0.0).unwrap(); grid.len()];`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 931: `*out_values.get_mut(out_idx_vec.as_slice()).unwrap() = values[flat_idx];`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 966: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 969: `let grid_point = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 970: `let result = interp.__call__(&grid_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 974: `let non_grid_point = Array2::from_shape_vec((1, 2), vec![1.5, 2.5]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 975: `let result = interp.__call__(&non_grid_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 990: `let multiple_points = Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 2.0, 2.0]).u...`
+  - **Fix**: Handle array creation errors properly
+- Line 991: `let result = interp.__call__(&multiple_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1002: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1004: `let point = Array2::from_shape_vec((1, 2), vec![1.6, 1.7]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 1005: `let result = interp_nearest.__call__(&point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1017: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1030: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1033: `let test_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.0]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 1034: `let result = interp.__call__(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1046: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1048: `let test_point = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 1049: `let result = interp_nearest.__call__(&test_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### local/mls.rs
+
+30 issues found:
+
+- Line 168: `epsilon: F::from_f64(1e-10).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 287: `let dist = d_squared.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 320: `PolynomialBasis::Quadratic => ((n_dims + 1) * (n_dims + 2)) / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 347: `let r = d / self.bandwidth;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 355: `let factor = F::from_f64(4.0).unwrap() * r + F::one();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 361: `WeightFunction::InverseDistance => F::one() / (self.epsilon + r * r),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 363: `if r < F::from_f64(1.0 / 3.0).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 366: `F::from_f64(2.0 / 3.0).unwrap() - F::from_f64(9.0).unwrap() * r2`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 367: `+ F::from_f64(19.0).unwrap() * r3`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 369: `let t = F::from_f64(2.0).unwrap() - F::from_f64(3.0).unwrap() * r;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 370: `F::from_f64(1.0 / 3.0).unwrap() * t.powi(3)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 383: `weights.mapv_inplace(|w| w / sum);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 386: `weights.fill(F::from_f64(1.0 / n as f64).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 405: `PolynomialBasis::Quadratic => ((n_dims + 1) * (n_dims + 2)) / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 449: `PolynomialBasis::Quadratic => ((n_dims + 1) * (n_dims + 2)) / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 496: `let sqrt_w = weights[i].sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 515: `let btb_f64 = btb.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 516: `let bty_f64 = bty.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 518: `Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 532: `fallback_coeffs[0] = mean / sum_weights;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 558: `result[0] = mean / sum_weights;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 612: `Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unw...`
+  - **Fix**: Handle array creation errors properly
+- Line 624: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 628: `let val = mls.evaluate(&center.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 637: `Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unw...`
+  - **Fix**: Handle array creation errors properly
+- Line 649: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 662: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 665: `let results = mls.evaluate_multi(&test_points.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 680: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 699: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### local/polynomial.rs
+
+54 issues found:
+
+- Line 69: `bandwidth: F::from_f64(0.2).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 75: `epsilon: F::from_f64(1e-10).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 235: `let mean = values.sum() / F::from_usize(values.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 237: `let variance = sum_squared_dev / F::from_usize(values.len() - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 238: `let response_sd = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 342: `let dist = d_squared.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 376: `PolynomialBasis::Quadratic => ((n_dims + 1) * (n_dims + 2)) / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 403: `let r = d / self.config.bandwidth;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 411: `let factor = F::from_f64(4.0).unwrap() * r + F::one();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 417: `WeightFunction::InverseDistance => F::one() / (self.config.epsilon + r * r),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 419: `if r < F::from_f64(1.0 / 3.0).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 422: `F::from_f64(2.0 / 3.0).unwrap() - F::from_f64(9.0).unwrap() * r2`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 423: `+ F::from_f64(19.0).unwrap() * r3`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 425: `let t = F::from_f64(2.0).unwrap() - F::from_f64(3.0).unwrap() * r;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 426: `F::from_f64(1.0 / 3.0).unwrap() * t.powi(3)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 439: `weights.mapv_inplace(|w| w / sum);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 442: `weights.fill(F::from_f64(1.0 / n as f64).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 486: `PolynomialBasis::Quadratic => ((n_dims + 1) * (n_dims + 2)) / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 544: `let sqrt_w = weights[i].sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 564: `let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 565: `let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 567: `Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 579: `mean = mean / sum_weights;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 606: `mean = mean / sum_weights;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 626: `let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 628: `Ok(inv) => inv.mapv(|x| F::from_f64(x).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 636: `effective_df: F::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 651: `effective_df: F::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 676: `/ weights.sum();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 685: `F::one() - (ssr / sst)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 707: `let n_effective = F::from_usize(n_points).unwrap() - effective_df;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 709: `ssr / n_effective`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 722: `residuals[i] / (F::one() - leverage[i])`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 734: `(xtx_inv_row1[0] * sum_squared_weighted_residuals).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 737: `(xtx_inv_row1[0] * mse).sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 744: `let half_alpha = alpha / F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 748: `let z_critical = if half_alpha <= F::from_f64(0.001).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 749: `F::from_f64(3.09).unwrap() // ~99.9% CI`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 750: `} else if half_alpha <= F::from_f64(0.005).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 751: `F::from_f64(2.81).unwrap() // ~99% CI`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 752: `} else if half_alpha <= F::from_f64(0.01).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 753: `F::from_f64(2.58).unwrap() // ~98% CI`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 754: `} else if half_alpha <= F::from_f64(0.025).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 755: `F::from_f64(1.96).unwrap() // ~95% CI`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 756: `} else if half_alpha <= F::from_f64(0.05).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 757: `F::from_f64(1.645).unwrap() // ~90% CI`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 759: `F::from_f64(1.28).unwrap() // ~80% CI`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 841: `let mse = total_squared_error / F::from_usize(n_points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 909: `epsilon: F::from_f64(1e-10).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 932: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 936: `let result = loess.fit_at_point(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 953: `let loess = LocalPolynomialRegression::with_config(x.clone(), y.clone(), config)...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 957: `let result = loess.fit_at_point(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 963: `let (lower, upper) = result.confidence_interval.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### multiscale.rs
+
+18 issues found:
+
+- Line 223: `let new_knot = (self.x[idx] + self.x[idx + 1]) / T::from(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 240: `new_knots_vec.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 298: `err.abs() / y.abs()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 606: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 638: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 643: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 674: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 681: `let y_approx = spline.evaluate(&x.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 716: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 720: `let deriv1 = spline.derivative(1, &x_test.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 748: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 762: `let y_coarse = spline.evaluate(&x.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 770: `let y_fine = spline.evaluate(&x.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 778: `/ y.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 785: `/ y.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 811: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 824: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 837: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### neural_enhanced.rs
+
+38 issues found:
+
+- Line 120: `learning_rate: T::from(0.001).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 122: `regularization: T::from(0.0001).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 123: `dropout_rate: T::from(0.1).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 125: `validation_split: T::from(0.2).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 437: `(&base_predictions + &denormalized_neural) / T::from(2.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 470: `let uncertainty = predictions.mapv(|pred| pred.abs() * T::from(0.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 498: `self.x_mean = self.x_train.sum() / T::from(self.x_train.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 499: `self.y_mean = self.y_train.sum() / T::from(self.y_train.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 505: `/ T::from(self.x_train.len() - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 510: `/ T::from(self.y_train.len() - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 512: `self.x_std = x_variance.sqrt().max(T::epsilon());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 513: `self.y_std = y_variance.sqrt().max(T::epsilon());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 520: `Ok(x.mapv(|val| (val - self.x_mean) / self.x_std))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 571: `let scale = T::from(2.0).unwrap() / T::from(in_size + out_size).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 572: `let std_dev = scale.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 610: `T::from(normalized).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 644: `ActivationType::Sigmoid => x.mapv(|val| T::one() / (T::one() + (-val).exp())),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 646: `ActivationType::Swish => x.mapv(|val| val / (T::one() + (-val).exp())),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 648: `let sqrt_2_pi = T::from(2.0 / std::f64::consts::PI).unwrap().sqrt();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 649: `val * T::from(0.5).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 651: `+ (sqrt_2_pi * (val + T::from(0.044715).unwrap() * val * val * val)).tanh())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 657: `T::from(0.01).unwrap() * val`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 667: `let normalized_y = self.y_train.mapv(|y| (y - self.y_mean) / self.y_std);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 721: `.push(loss.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 726: `self.training_stats.best_validation_loss = best_loss.to_f64().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 749: `/ T::from(predictions.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 852: `interpolator.fit(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 855: `let predictions = interpolator.predict(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 883: `interpolator.fit(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 887: `let predictions = interpolator.predict(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 901: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 907: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 913: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 926: `interpolator.normalize_data().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 933: `let normalized_x = interpolator.normalize_input(&x.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 934: `let x_mean_norm = normalized_x.sum() / normalized_x.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 947: `interpolator.fit(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 950: `let uncertainty = interpolator.predict_uncertainty(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### numerical_stability.rs
+
+51 issues found:
+
+- Line 124: `4 => F::from_f64(f32::EPSILON as f64).unwrap(), // f32`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 125: `8 => F::from_f64(f64::EPSILON).unwrap(),        // f64`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 126: `_ => F::from_f64(2.22e-16).unwrap(),            // Default to f64 epsilon`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 189: `let tol = F::from_f64(1e-12).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 240: `let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 254: `diagnostics.max_singular_value = Some(F::from_f64(max_sv).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 255: `diagnostics.min_singular_value = Some(F::from_f64(min_sv).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 258: `let eps = f64::EPSILON * max_sv * (matrix.nrows() as f64).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 264: `Ok(F::from_f64(max_sv / min_sv).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 319: `Ok(max_gershgorin / min_gershgorin)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 322: `Ok(F::from_f64(1e16).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 331: `if condition_number < F::from_f64(1e12).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 333: `} else if condition_number < F::from_f64(1e14).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 335: `} else if condition_number < F::from_f64(1e16).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 350: `let base_reg = machine_eps * condition_number.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 356: `base_reg * F::from_f64(100.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 359: `base_reg * F::from_f64(10.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 363: `base_reg * F::from_f64(1000.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 379: `let safe_threshold = eps * F::from_f64(1e6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 383: `"Division by near-zero value: {} / {} (threshold: {:.2e})",`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 387: `Ok(numerator / denominator)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 485: `let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 486: `let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 490: `let solution = solution_f64.mapv(|x| F::from_f64(x).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 548: `if a[[i, i]].abs() < machine_epsilon::<F>() * F::from_f64(1e6).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 556: `let factor = a[[k, i]] / a[[i, i]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 573: `x[i] = (b[i] - sum) / a[[i, i]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 647: `let distance_ratio = if min_dist > F::zero() { max_dist / min_dist } else { F::i...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 653: `let feasible = !has_linear_deps && min_dist > machine_epsilon::<F>() * F::from_f...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 656: `let recommended_reg = if !feasible || distance_ratio > F::from_f64(1e12).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 687: `let cluster_threshold = machine_epsilon::<F>() * F::from_f64(1e6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 697: `let dist = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 746: `Ok(condition_report.condition_number > F::from_f64(1e14).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 783: `let distance_based = min_distance * machine_eps.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 786: `let ratio_factor = if distance_ratio > F::from_f64(1e12).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 787: `F::from_f64(1000.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 788: `} else if distance_ratio > F::from_f64(1e8).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 789: `F::from_f64(100.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 791: `F::from_f64(10.0).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 848: `let avg_domain_size = domain_sizes.iter().fold(F::zero(), |a, &b| a + b) / F::fr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 849: `let well_distributed = min_boundary_dist > avg_domain_size / F::from_f64(10.0).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 890: `if edge_analysis.distance_ratio > F::from_f64(1e12).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 950: `let report = assess_matrix_condition(&matrix.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 963: `let report = assess_matrix_condition(&matrix.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 973: `let symmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 3.0]).unwrap(...`
+  - **Fix**: Handle array creation errors properly
+- Line 974: `let asymmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap...`
+  - **Fix**: Handle array creation errors properly
+- Line 985: `assert_eq!(check_safe_division(6.0, 2.0).unwrap(), 3.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 993: `assert_relative_eq!(safe_reciprocal(4.0).unwrap(), 0.25, epsilon = 1e-10);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1003: `apply_tikhonov_regularization(&mut matrix, 0.1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1013: `let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 1.0]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 1016: `let (solution, report) = solve_with_stability_monitoring(&matrix, &rhs).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### nurbs.rs
+
+52 issues found:
+
+- Line 235: `result[j] = numerator[j] / denominator;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 316: `c_derivs[0][j] = a_derivs[0][j] / w_derivs[0];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 325: `let binom_coeff = T::from(Self::binomial_coefficient(k, i)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 333: `c_derivs[k][j] = temp[j] / w_derivs[0];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 371: `let h = (b - a) / T::from(n_intervals).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 384: `let t = a + T::from(i).unwrap() * h;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 386: `result = result + &(T::from(4.0).unwrap() * &f_t);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 393: `let t = a + T::from(i).unwrap() * h;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 395: `result = result + &(T::from(2.0).unwrap() * &f_t);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 400: `result = (h / T::from(3.0).unwrap()) * result;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 469: `let alpha = (u - knots[l + i]) / (knots[i + k + 1] - knots[l + i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 588: `result = result * (n - i) / (i + 1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 923: `result[k] = numerator[k] / (denominator);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1042: `result[k] = (numerator[k] - (point[k] * sum_weights_deriv)) / (sum_weights);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1105: `result[k] = (numerator[k] - (point[k] * sum_weights_deriv)) / (sum_weights);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1254: `let end = end_angle.unwrap_or_else(|| T::from(2.0 * std::f64::consts::PI).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1265: `let full_circle = T::from(2.0 * std::f64::consts::PI).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1271: `let ratio = angle_span / full_circle;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1272: `let min_segments = (ratio * T::from(4.0).unwrap()).ceil();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1289: `let angle_inc = angle_span / T::from(num_segments).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1292: `let w = T::from(1.0 / 2.0_f64.sqrt()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1296: `let theta1 = start + T::from(i).unwrap() * angle_inc;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1307: `let mid_angle = (theta1 + theta2) / T::from(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1308: `control_points[[idx_mid, 0]] = center[0] + radius / w * mid_angle.cos();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1309: `control_points[[idx_mid, 1]] = center[1] + radius / w * mid_angle.sin();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1334: `knots[degree + i] = T::from(i).unwrap() / T::from(num_segments).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1407: `let w = T::from(1.0 / 2.0_f64.sqrt()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1412: `let lat_factor = T::from(-1.0 + 2.0 * (i as f64) / (n_u - 1) as f64).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1413: `let lat = lat_factor * T::from(std::f64::consts::PI / 2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1421: `let lon = T::from(2.0 * std::f64::consts::PI * (j as f64) / (n_v as f64)).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1466: `knots_u[degree_u + i] = T::from(i as f64 / (n_u - degree_u) as f64).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1511: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1534: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1537: `let p0 = nurbs.evaluate(0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1538: `let p1 = nurbs.evaluate(1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1539: `let p_mid = nurbs.evaluate(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1570: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1574: `let p_mid = nurbs.evaluate(0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1607: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1644: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1647: `let p00 = nurbs.evaluate(0.0, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1648: `let p01 = nurbs.evaluate(0.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1649: `let p10 = nurbs.evaluate(1.0, 0.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1650: `let p11 = nurbs.evaluate(1.0, 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1671: `let p_mid = nurbs.evaluate(0.5, 0.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1684: `let circle = make_nurbs_circle(&center.view(), radius, None, None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1687: `let p0 = circle.evaluate(0.0).unwrap(); // (1, 0)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1688: `let p90 = circle.evaluate(0.25).unwrap(); // (0, 1) - 90 degrees`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1689: `let p180 = circle.evaluate(0.5).unwrap(); // (-1, 0) - 180 degrees`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1690: `let p270 = circle.evaluate(0.75).unwrap(); // (0, -1) - 270 degrees`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1720: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1723: `let deriv = nurbs.derivative(0.5, 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### optimization.rs
+
+27 issues found:
+
+- Line 102: `tolerance: T::from(1e-6).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 308: `training_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 326: `/ T::from(fold_scores.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 331: `/ T::from(fold_scores.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 332: `let std_score = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 450: `params.insert("degree".to_string(), T::from(degree).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 499: `let fold_size = n / k;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 559: `let n = T::from(y_true.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 568: `/ n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 577: `/ n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 586: `/ n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 587: `Ok(mse.sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 590: `let y_mean = y_true.sum() / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 604: `Ok(T::one() - ss_res / ss_tot)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 620: `mape += ((yt - yp) / yt).abs();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 625: `Ok(mape / T::from(count).unwrap() * T::from(100.0).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 872: `results.sort_by(|a, b| a.1.mean_score.partial_cmp(&b.1.mean_score).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1029: `let folds = cv.generate_folds(9).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1049: `let folds = cv.generate_folds(5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1065: `let mse = cv.compute_metric(&y_true.view(), &y_pred.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1066: `let expected_mse = (0.1 * 0.1 + 0.1 * 0.1 + 0.1 * 0.1 + 0.1 * 0.1) / 4.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1077: `let r2 = cv.compute_metric(&y_true.view(), &y_pred.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1092: `let opt_result = result.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1168: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1171: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1174: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1178: `assert!((rmse - mse.sqrt()).abs() < 1e-10);`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### parallel/loess.rs
+
+24 issues found:
+
+- Line 255: `/ F::from_usize(values_ref.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 264: `/ F::from_usize(values_ref.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 282: `weights[j] = apply_weight(dist / bandwidth, weight_fn);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 305: `weighted_sum / weight_sum`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 308: `/ F::from_usize(n_local).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 346: `let factor = F::from_f64(4.0).unwrap() * r + F::one();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 352: `WeightFunction::InverseDistance => F::one() / (F::from_f64(1e-10).unwrap() + r *...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 354: `if r < F::from_f64(1.0 / 3.0).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 357: `F::from_f64(2.0 / 3.0).unwrap() - F::from_f64(9.0).unwrap() * r2`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 358: `+ F::from_f64(19.0).unwrap() * r3`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 360: `let t = F::from_f64(2.0).unwrap() - F::from_f64(3.0).unwrap() * r;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 361: `F::from_f64(1.0 / 3.0).unwrap() * t.powi(3)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 399: `PolynomialBasis::Quadratic => ((n_dims + 1) * (n_dims + 2)) / 2,`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 439: `let sqrt_w = weights[i].sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 456: `let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 457: `let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 463: `.mapv(|x| F::from_f64(x).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 535: `epsilon: F::from_f64(1e-10).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 562: `LocalPolynomialRegression::new(points.clone(), y.clone(), 0.3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 566: `ParallelLocalPolynomialRegression::new(points.clone(), y.clone(), 0.3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 575: `let result = sequential_loess.fit_at_point(&test_points.row(i)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 583: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 620: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 638: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### parallel/mls.rs
+
+21 issues found:
+
+- Line 264: `let weight = apply_weight(*dist / bandwidth, weight_fn);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 272: `weighted_sum / weight_sum`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 310: `let factor = F::from_f64(4.0).unwrap() * r + F::one();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 316: `WeightFunction::InverseDistance => F::one() / (F::from_f64(1e-10).unwrap() + r *...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 318: `if r < F::from_f64(1.0 / 3.0).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 321: `F::from_f64(2.0 / 3.0).unwrap() - F::from_f64(9.0).unwrap() * r2`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 322: `+ F::from_f64(19.0).unwrap() * r3`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 324: `let t = F::from_f64(2.0).unwrap() - F::from_f64(3.0).unwrap() * r;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 325: `F::from_f64(1.0 / 3.0).unwrap() * t.powi(3)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 374: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 387: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 397: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 401: `Array2::from_shape_vec((3, 2), vec![0.25, 0.25, 0.75, 0.75, 0.5, 0.0]).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 404: `let sequential_results = sequential_mls.evaluate_multi(&test_points.view()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 410: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 430: `let x = i as f64 / n_points as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 431: `let y = (i % 10) as f64 / 10.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 442: `let points = Array2::from_shape_vec((n_points, 2), points_vec).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 453: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 463: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 477: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### parallel/mod.rs
+
+4 issues found:
+
+- Line 112: `std::cmp::max(1, total_size / (n_cpus * min_chunks_per_cpu))`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 200: `let base_chunk_size = std::cmp::max(1, total_size / (n_cpus * desired_chunks_per...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 203: `let adjusted_size = (base_chunk_size as f64 * cost_factor.sqrt()).ceil() as usiz...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 230: `let chunk_size = total_size / n_parts;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### penalized.rs
+
+30 issues found:
+
+- Line 373: `let two = T::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 396: `let three = T::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 445: `let a_f64 = a.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 446: `let b_f64 = b.mapv(|x| x.to_f64().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 456: `.map(|solution| solution.mapv(|x| T::from_f64(x).unwrap()))`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 470: `let u = u_opt.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 471: `let vt = vt_opt.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 475: `let threshold = T::from_f64(1e-10).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 480: `if s_val > threshold.to_f64().unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 481: `s_inv[[i, i]] = 1.0 / s_val;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 490: `Ok(solution.mapv(|x| T::from_f64(x).unwrap()))`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 762: `cv_errors[i] = loo_errors.sum() / T::from_usize(x.len()).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 815: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 818: `let y_pred = pspline.evaluate_array(&x.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 847: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 858: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 869: `let d2_small = pspline_small.derivative(point, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 870: `let d2_large = pspline_large.derivative(point, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 888: `let knots = generate_knots(&x.view(), 3, "uniform").unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 908: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 911: `let y_pred = pspline.evaluate_array(&x.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 943: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 960: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 963: `let _y_pred = pspline.evaluate_array(&x.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 983: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 993: `let d1 = pspline.derivative(test_point, 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1001: `let d2 = pspline.derivative(test_point, 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1009: `let d3 = pspline.derivative(test_point, 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1034: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1045: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### physics_informed.rs
+
+39 issues found:
+
+- Line 118: `penalty_weight: T::from(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 119: `constraint_tolerance: T::from(1e-6).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 122: `regularization: T::from(1e-8).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 372: `let perturbation_scale = T::from(0.001).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 374: `let perturbation = perturbation_scale * T::from((i % 3) as f64 - 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 503: `let avg_value = (values[i] + values[i + 1]) / T::from(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 508: `if current_mass.abs() < T::from(1e-12).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 511: `let uniform_value = target_mass / domain_width;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 514: `let scaling_factor = target_mass / current_mass;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 516: `let max_scaling = T::from(100.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 517: `let min_scaling = T::from(0.01).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 523: `let uniform_value = target_mass / domain_width;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 547: `(values[i] * values[i] + values[i + 1] * values[i + 1]) / T::from(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 552: `if current_energy.abs() < T::from(1e-12).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 555: `let uniform_magnitude = (target_energy / domain_width).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 555: `let uniform_magnitude = (target_energy / domain_width).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 558: `let energy_scaling = (target_energy / current_energy).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 558: `let energy_scaling = (target_energy / current_energy).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 560: `let max_scaling = T::from(10.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 561: `let min_scaling = T::from(0.1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 567: `let uniform_magnitude = (target_energy / domain_width).sqrt();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 567: `let uniform_magnitude = (target_energy / domain_width).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 612: `let min_positive = T::from(1e-6).unwrap(); // Larger minimum positive value`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 655: `let smoothing_factor = max_variation / current_variation;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 788: `let avg_value = (values[i] + values[i + 1]) / T::from(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 953: `make_mass_conserving_interpolator(&x.view(), &y.view(), total_mass).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 956: `let result = interpolator.evaluate_with_iteration(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 961: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 964: `let relative_error = (calculated_mass - total_mass).abs() / total_mass;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 989: `PhysicsInformedInterpolator::new(&x.view(), &y.view(), constraints).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 992: `let result = interpolator.evaluate_with_iteration(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1006: `make_monotonic_physics_interpolator(&x.view(), &y.view(), true, false).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1009: `let result = interpolator.evaluate_with_iteration(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1038: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1041: `let result = interpolator.evaluate(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1069: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1073: `let result = interpolator.evaluate(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1100: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1105: `let result = interpolator.evaluate_with_iteration(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### scattered_optimized.rs
+
+9 issues found:
+
+- Line 387: `(bounding_box.max[i] - bounding_box.min[i]) / F::from_usize(resolution).unwrap()`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 399: `bounding_box.min[i] + cell_size[i] * F::from_usize(cell_coords[i]).unwrap()`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 515: `let chunk_size = self.config.chunk_size.min(n_queries / 4).max(1);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 616: `let dist = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 620: `F::one() / (dist + F::from_f64(1e-10).unwrap()) // Add small epsilon`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 628: `Ok(weighted_sum / weight_sum)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 640: `.unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 656: `F::one() / (distance + F::from_f64(1e-10).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 664: `Ok(weighted_sum / weight_sum)`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### simd_bspline.rs
+
+6 issues found:
+
+- Line 159: `let temp = basis[r] / right;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 253: `let spline = SimdCubicBSpline::new(knots, coefficients).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 255: `let result = spline.eval(0.25).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 258: `let result = spline.eval(0.75).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 273: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 277: `let results = evaluator.eval_batch(&points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### simd_optimized.rs
+
+26 issues found:
+
+- Line 257: `RBFKernel::Gaussian => (-dist_sq / (epsilon * epsilon)).exp(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 258: `RBFKernel::Multiquadric => (dist_sq + epsilon * epsilon).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 259: `RBFKernel::InverseMultiquadric => 1.0 / (dist_sq + epsilon * epsilon).sqrt(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 259: `RBFKernel::InverseMultiquadric => 1.0 / (dist_sq + epsilon * epsilon).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 260: `RBFKernel::Linear => dist_sq.sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 262: `let r = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 303: `let dist = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 308: `let exp_arg = -dist_sq / (epsilon * epsilon);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 311: `RBFKernel::Multiquadric => (dist_sq + epsilon * epsilon).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 312: `RBFKernel::InverseMultiquadric => F::one() / (dist_sq + epsilon * epsilon).sqrt(...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 312: `RBFKernel::InverseMultiquadric => F::one() / (dist_sq + epsilon * epsilon).sqrt(...`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 333: `RBFKernel::Gaussian => (-r_sq / eps_sq).exp(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 334: `RBFKernel::Multiquadric => (r_sq + eps_sq).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 335: `RBFKernel::InverseMultiquadric => 1.0 / (r_sq + eps_sq).sqrt(),`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 335: `RBFKernel::InverseMultiquadric => 1.0 / (r_sq + eps_sq).sqrt(),`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 409: `distances[[i, j]] = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 442: `distances[[i, j]] = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 570: `(x - left_knot) / denom`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 627: `let mut mid = (low + high) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 635: `mid = (low + high) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 683: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 699: `let distances = simd_distance_matrix(&points_a.view(), &points_b.view()).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 724: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 734: `let kernel_val = (-dist_sq / (epsilon * epsilon)).exp();`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 764: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 788: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### smoothing.rs
+
+21 issues found:
+
+- Line 188: `let tolerance_f = F::from_f64(tolerance).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 204: `let t = F::from_f64(i as f64 / (initial_interior + 1) as f64).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 263: `let mid_idx = knots.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 265: `(knots[mid_idx - 1] + knots[mid_idx]) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 302: `let t = F::from_f64(i as f64 / (num_knots - 1) as f64).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 333: `let step_size = (x[x.len() - 1] - x[0]) / F::from_f64(100.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 339: `let delta = step_size * F::from_f64(direction).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 407: `let error_threshold_f = F::from_f64(error_threshold).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 419: `let t = F::from_f64(j as f64 / n_samples as f64).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 526: `let n = F::from_usize(x.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 534: `Ok((sum_squared_error / n).sqrt())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 534: `Ok((sum_squared_error / n).sqrt())`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 548: `let x_mid = (x[i] + x[i + 1]) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 549: `let y_mid = (y[i] + y[i + 1]) / F::from_f64(2.0).unwrap(); // Linear interpolati...`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 786: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 790: `let y_pred = spline.evaluate(x[i]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 795: `let y_mid = spline.evaluate(0.55).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 812: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 819: `let y_pred = spline.evaluate(x[i]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 888: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 891: `let derivative_at_half = spline.derivative(0.5, 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### sparse_grid.rs
+
+25 issues found:
+
+- Line 166: `tolerance: F::from_f64(1e-6).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 422: `vec![min_bound + range / F::from_f64(2.0).unwrap()]`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 429: `let t = F::from_usize(i).unwrap() / F::from_usize(n_points - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 444: `let discretized = (coord * F::from_f64(1000.0).unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 565: `(self.bounds[dim].1 - self.bounds[dim].0) / F::from_f64(32.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 566: `new_coords[dim] += F::from_f64(direction).unwrap() * step;`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 646: `let level_spacing = F::from_f64(2.0_f64.powi(-(self.max_level as i32))).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 651: `weight *= F::one() - dist / h;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 654: `let broad_h = h * F::from_f64(4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 656: `weight *= F::from_f64(0.25).unwrap() * (F::one() - dist / broad_h);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 770: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 773: `let result = interpolator.interpolate(&[0.5]).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 787: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 790: `let result = interpolator.interpolate(&[0.5, 0.5]).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 808: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 811: `let result = interpolator.interpolate(&[0.5, 0.5]).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 814: `let result_corner = interpolator.interpolate(&[0.0, 0.0]).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 828: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 832: `let result = interpolator.interpolate(&query).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 854: `let interpolator = make_sparse_grid_from_data(bounds, &points, &values).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 858: `let result = interpolator.interpolate(point).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 871: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 880: `let results = interpolator.interpolate_multi(&queries).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 899: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 910: `make_sparse_grid_interpolator(bounds, 2, |x: &[f64]| x[0] + x[1]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+
+### spatial/balltree.rs
+
+26 issues found:
+
+- Line 165: `let est_nodes = (2 * n_points / leaf_size).max(16);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 270: `self.search_nearest(self.root.unwrap(), query, &mut best_dist, &mut best_idx);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 320: `self.search_k_nearest(self.root.unwrap(), query, k, &mut heap);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 380: `self.search_radius(self.root.unwrap(), query, radius, &mut results);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 422: `let left_idx = node.left.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 423: `let right_idx = node.right.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 491: `let left_idx = node.left.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 492: `let right_idx = node.right.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 735: `self.root.unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 849: `let left_idx = node.left.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 850: `let right_idx = node.right.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 952: `nodes_to_visit.push_back((self.root.unwrap(), F::zero()));`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1048: `let n = F::from_usize(n_points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1050: `*val = *val / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1190: `left_indices.push(right_indices.pop().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1192: `right_indices.push(left_indices.pop().unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1209: `sum_sq.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1228: `let balltree = BallTree::new(points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1247: `let balltree = BallTree::new(points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1252: `let (idx, dist) = balltree.nearest_neighbor(&point).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1259: `let (idx, _) = balltree.nearest_neighbor(&query).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1263: `let (idx, _) = balltree.nearest_neighbor(&query).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1278: `let balltree = BallTree::new(points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1284: `let neighbors = balltree.k_nearest_neighbors(&query, 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1302: `let balltree = BallTree::new(points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1308: `let results = balltree.points_within_radius(&query, radius).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### spatial/enhanced_search.rs
+
+55 issues found:
+
+- Line 366: `let cache_key = QueryKey::from_coords(query.as_slice().unwrap(), k, None);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 402: `let cache_key = QueryKey::from_coords(query.as_slice().unwrap(), k, None);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 434: `let cache_key = QueryKey::from_coords(query.as_slice().unwrap(), 0, Some(radius)...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 470: `let cache_key = QueryKey::from_coords(query.as_slice().unwrap(), 0, Some(radius)...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 571: `.map(|std::cmp::Reverse((OrderedFloat(dist), idx))| (idx, dist.sqrt()))`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 602: `.map(|std::cmp::Reverse((OrderedFloat(dist), idx))| (idx, dist.sqrt()))`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 623: `neighbors.push((idx, distance_squared.sqrt()));`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 657: `self.stats.cache_hits as f64 / self.stats.total_queries as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 666: `self.stats.total_query_time_us as f64 / self.stats.total_queries as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 738: `let median_idx = indices.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 836: `let distance = distance_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 845: `} else if neighbor.distance < best.peek().unwrap().distance {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 913: `let distance = distance_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1014: `*item = *item / n;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1025: `radius = radius.max(dist_sq.sqrt());`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1068: `let split_idx = indices.len() / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1126: `let center_dist = center_dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1144: `let distance = distance_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1153: `} else if neighbor.distance < best.peek().unwrap().distance {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1204: `let center_dist = center_dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1220: `let distance = distance_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1370: `EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1373: `let neighbors = searcher.k_nearest_neighbors(&query.view(), 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1386: `EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1389: `let neighbors = searcher.radius_neighbors(&query.view(), 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1401: `EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1406: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1422: `EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1427: `let _neighbors1 = searcher.k_nearest_neighbors(&query.view(), 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1431: `let _neighbors2 = searcher.k_nearest_neighbors(&query.view(), 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1460: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1464: `let neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1497: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1501: `let neighbors = searcher.radius_neighbors(&query.view(), 1.5).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1522: `EnhancedNearestNeighborSearcher::new(points, IndexType::KdTree, config).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1525: `let neighbors = searcher.k_nearest_neighbors(&query.view(), 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1529: `assert!((neighbors[0].1 - 5.0_f64.sqrt()).abs() < 1e-10); // sqrt(1^2 + 2^2)`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 1548: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1551: `let neighbors = searcher.k_nearest_neighbors(&query.view(), 2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1581: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1585: `let neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1612: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1616: `let neighbors = searcher.radius_neighbors(&query.view(), 2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1638: `EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1642: `let neighbors = searcher.radius_neighbors(&query.view(), 1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1665: `EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1668: `let neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1680: `EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1683: `let neighbors = searcher.k_nearest_neighbors(&query.view(), 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1710: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1714: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1721: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1724: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1758: `EnhancedNearestNeighborSearcher::new(points, IndexType::KdTree, config).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1761: `let _neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### spatial/kdtree.rs
+
+18 issues found:
+
+- Line 168: `let est_nodes = (2 * n_points / leaf_size).max(16);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 212: `let median_idx = n_points / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 249: `let median_idx = n / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 289: `self.search_nearest(self.root.unwrap(), query, &mut best_dist, &mut best_idx);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 342: `self.search_k_nearest(self.root.unwrap(), query, k, &mut heap);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 402: `self.search_radius(self.root.unwrap(), query, radius, &mut results);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 659: `sum_sq.sqrt()`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 773: `self.root.unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 944: `let pivot_idx = len / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 979: `let kdtree = KdTree::new(points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 992: `let kdtree = KdTree::new(points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 997: `let (idx, dist) = kdtree.nearest_neighbor(&point).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1004: `let (idx, _) = kdtree.nearest_neighbor(&query).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1008: `let (idx, _) = kdtree.nearest_neighbor(&query).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1017: `let kdtree = KdTree::new(points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1023: `let neighbors = kdtree.k_nearest_neighbors(&query, 3).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1035: `let kdtree = KdTree::new(points).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1041: `let results = kdtree.points_within_radius(&query, radius).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### spatial/optimized_search.rs
+
+6 issues found:
+
+- Line 111: `let point_slice = point.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 126: `let point_slice = point.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 220: `let query_slice = query.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 241: `let query_slice = query.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 295: `let query_slice = query.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 316: `let query_slice = query.as_slice().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### spline.rs
+
+144 issues found:
+
+- Line 88: `let left_f = F::from_f64(left_deriv).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 89: `let right_f = F::from_f64(right_deriv).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 94: `let left_f = F::from_f64(left_d2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 95: `let right_f = F::from_f64(right_d2).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 289: `let tol = F::from_f64(1e-10).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 517: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 518: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 523: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 524: `let six = F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 529: `let six = F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 786: `let mut x = (x_left + x_right) / F::from_f64(2.0).unwrap(); // Start at midpoint`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 800: `let x_new = x - y / dy;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 827: `let c = (a + b) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 854: `let mut x = (x_left + x_right) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 868: `let x_new = x - dy / d2y;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 894: `let c = (a + b) / F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 936: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 937: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 941: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 942: `let six = F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 946: `let six = F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 957: `let h = (b - a) / F::from_usize(n).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 960: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 961: `let four = F::from_f64(4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 962: `let six = F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 965: `let x = a + F::from_usize(i).unwrap() * h;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 967: `let integrand = (F::one() + dy_dx * dy_dx).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 980: `Ok(sum * h / six)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 998: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 999: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1000: `let four = F::from_f64(4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1003: `+ b * dx_end * dx_end / two`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1004: `+ c * dx_end * dx_end * dx_end / three`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1005: `+ d * dx_end * dx_end * dx_end * dx_end / four;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1008: `+ b * dx_start * dx_start / two`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1009: `+ c * dx_start * dx_start * dx_start / three`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1010: `+ d * dx_start * dx_start * dx_start * dx_start / four;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1095: `b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1101: `d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1109: `let m = a[i] / b[i - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1115: `sigma[n - 1] = d[n - 1] / b[n - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1117: `sigma[i] = (d[i] - c[i] * sigma[i + 1]) / b[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1128: `coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1129: `- h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1130: `/ F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1133: `coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1136: `coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1170: `d[0] = ((h0 + h1) * h1 * (y[1] - y[0]) / h0 + h0 * h0 * (y[2] - y[1]) / h1) / (h...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1178: `d[n - 1] = ((hn_1 + hn_2) * hn_2 * (y[n - 1] - y[n - 2]) / hn_1`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1179: `+ hn_1 * hn_1 * (y[n - 2] - y[n - 3]) / hn_2)`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1180: `/ (hn_1 + hn_2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1188: `b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1194: `d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1202: `c_prime[0] = c[0] / b[0];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1206: `c_prime[i] = c[i] / m;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1208: `d[i] = (d[i] - a[i] * d[i - 1]) / m;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1225: `coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1226: `- h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1227: `/ F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1230: `coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1233: `coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1262: `b[0] = F::from_f64(2.0).unwrap() * h0;`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1264: `d[0] = F::from_f64(6.0).unwrap() * ((y[1] - y[0]) / h0 - left_deriv);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1268: `b[n - 1] = F::from_f64(2.0).unwrap() * hn_1;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1269: `d[n - 1] = F::from_f64(6.0).unwrap() * (right_deriv - (y[n - 1] - y[n - 2]) / hn...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1277: `b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1283: `d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1291: `let m = a[i] / b[i - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1297: `sigma[n - 1] = d[n - 1] / b[n - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1299: `sigma[i] = (d[i] - c[i] * sigma[i + 1]) / b[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1307: `coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1308: `- h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1309: `/ F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1310: `coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1311: `coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1348: `b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1358: `d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1374: `let m = a[i] / b_mod[i - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1380: `sigma[n - 2] = d_mod[n - 2] / b_mod[n - 2];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1382: `sigma[i] = (d_mod[i] - c[i] * sigma[i + 1]) / b_mod[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1391: `coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1392: `- h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1393: `/ F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1394: `coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1395: `coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1432: `b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1438: `d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1446: `let m = a[i] / b[i - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1452: `sigma[n - 1] = d[n - 1] / b[n - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1454: `sigma[i] = (d[i] - c[i] * sigma[i + 1]) / b[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1462: `coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1463: `- h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1464: `/ F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1465: `coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1466: `coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1495: `b[0] = F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1501: `b[n - 1] = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1510: `b[i] = F::from_f64(2.0).unwrap() * (h_i_minus_1 + h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1516: `d[i] = F::from_f64(6.0).unwrap() * (dy_i / h_i - dy_i_minus_1 / h_i_minus_1);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1524: `let m = a[i] / b[i - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1530: `sigma[n - 1] = d[n - 1] / b[n - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1532: `sigma[i] = (d[i] - c[i] * sigma[i + 1]) / b[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1540: `coeffs[[i, 1]] = (y[i + 1] - y[i]) / h_i`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1541: `- h_i * (F::from_f64(2.0).unwrap() * sigma[i] + sigma[i + 1])`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1542: `/ F::from_f64(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1543: `coeffs[[i, 2]] = sigma[i] / F::from_f64(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1544: `coeffs[[i, 3]] = (sigma[i + 1] - sigma[i]) / (F::from_f64(6.0).unwrap() * h_i);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 1567: `let two = F::from_f64(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1568: `let three = F::from_f64(3.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1569: `let four = F::from_f64(4.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1573: `+ coef_b * a_shifted * a_shifted / two`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1574: `+ coef_c * a_shifted * a_shifted * a_shifted / three`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1575: `+ coef_d * a_shifted * a_shifted * a_shifted * a_shifted / four;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1578: `+ coef_b * b_shifted * b_shifted / two`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1579: `+ coef_c * b_shifted * b_shifted * b_shifted / three`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1580: `+ coef_d * b_shifted * b_shifted * b_shifted * b_shifted / four;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1679: `let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1682: `assert_relative_eq!(spline.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1683: `assert_relative_eq!(spline.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1684: `assert_relative_eq!(spline.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1685: `assert_relative_eq!(spline.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1690: `assert_relative_eq!(spline.evaluate(0.5).unwrap(), 0.25, epsilon = 0.25);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1691: `assert_relative_eq!(spline.evaluate(1.5).unwrap(), 2.25, epsilon = 0.25);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1692: `assert_relative_eq!(spline.evaluate(2.5).unwrap(), 6.25, epsilon = 0.25);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1705: `let spline = CubicSpline::new_not_a_knot(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1708: `assert_relative_eq!(spline.evaluate(0.0).unwrap(), 0.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1709: `assert_relative_eq!(spline.evaluate(1.0).unwrap(), 1.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1710: `assert_relative_eq!(spline.evaluate(2.0).unwrap(), 4.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1711: `assert_relative_eq!(spline.evaluate(3.0).unwrap(), 9.0);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1716: `assert_relative_eq!(spline.evaluate(0.5).unwrap(), 0.25, epsilon = 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1717: `assert_relative_eq!(spline.evaluate(1.5).unwrap(), 2.25, epsilon = 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1718: `assert_relative_eq!(spline.evaluate(2.5).unwrap(), 6.25, epsilon = 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1727: `let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1731: `assert_relative_eq!(spline.derivative(1.0).unwrap(), 2.0, epsilon = 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1732: `assert_relative_eq!(spline.derivative(2.0).unwrap(), 4.0, epsilon = 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1733: `assert_relative_eq!(spline.derivative(0.5).unwrap(), 1.0, epsilon = 0.5);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1734: `assert_relative_eq!(spline.derivative(1.5).unwrap(), 3.0, epsilon = 0.2);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1735: `assert_relative_eq!(spline.derivative(2.5).unwrap(), 5.0, epsilon = 0.2);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1744: `let spline_natural = make_interp_spline(&x.view(), &y.view(), "natural", None).u...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1745: `assert_relative_eq!(spline_natural.evaluate(1.5).unwrap(), 2.25, epsilon = 0.1);`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1749: `make_interp_spline(&x.view(), &y.view(), "not-a-knot", None).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1751: `spline_not_a_knot.evaluate(1.5).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1766: `let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1769: `let y_new = spline.evaluate_array(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### statistical.rs
+
+37 issues found:
+
+- Line 122: `let alpha = T::from(1.0 - self.config.confidence_level).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 123: `let lower_percentile = alpha / T::from(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 124: `let upper_percentile = T::one() - alpha / T::from(2.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 134: `sorted_col.sort_by(|a, b| a.partial_cmp(b).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 137: `let median_idx = self.config.n_samples / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 141: `let lower_idx = (lower_percentile * T::from(self.config.n_samples).unwrap()).to_...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 142: `let upper_idx = (upper_percentile * T::from(self.config.n_samples).unwrap()).to_...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 147: `let mean = column.mean().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 150: `.sum::<T>() / T::from(self.config.n_samples - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 151: `std_error[j] = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 180: `noise_variance: T::from(0.01).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 226: `let dist = (self.x_obs[i] - self.x_obs[j]) / length_scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 227: `k_xx[[i, j]] = self.config.prior_variance * (-dist * dist / T::from(2.0).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 236: `let dist = (self.x_obs[i] - x_new[j]) / length_scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 237: `k_x_new[[i, j]] = self.config.prior_variance * (-dist * dist / T::from(2.0).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 256: `mean[j] = weighted_sum / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 276: `let std_dev = self.config.prior_variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 277: `if let Ok(normal) = Normal::new(mean[j].to_f64().unwrap(), std_dev.to_f64().unwr...`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 278: `samples[[i, j]] = T::from(normal.sample(&mut rng)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 340: `let dist = (x[i] - x_target).abs() / self.bandwidth;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 357: `.min_by_key(|(_, &xi)| ((xi - x_target).abs().to_f64().unwrap() * 1e6) as i64)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 359: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 363: `weighted_values.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 400: `tolerance: T::from(1e-6).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 445: `(sum_wxx * sum_wy - sum_wx * sum_wxy) / det`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 447: `sum_wy / sum_w`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 460: `let scaled_residual = residual / self.tuning_constant;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 465: `T::one() / scaled_residual.abs()`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 523: `let dist = (x[i] - x_target).abs() / self.correlation_length;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 530: `weighted_sum / weight_sum`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 536: `let std_dev = (self.field_variance * (T::one() - weight_sum / T::from(n).unwrap(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 538: `let noise: T = T::from(normal_sample).unwrap() * std_dev;`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 556: `let mean = realizations.mean_axis(Axis(0)).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 557: `let variance = realizations.var_axis(Axis(0), T::from(1.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 589: `let alpha = (x_new - x_owned[i]) / (x_owned[i + 1] - x_owned[i]);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 611: `QuantileInterpolator::new(T::from(0.5).unwrap(), bandwidth)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 616: `RobustInterpolator::new(T::from(1.345).unwrap()) // Huber's recommended value`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### stress_testing.rs
+
+21 issues found:
+
+- Line 116: `self.passed_tests.len() as f64 / total as f64`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 158: `let scale = F64_MAX.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 160: `let y = x.mapv(|xi: f64| (xi / scale).sin() * scale / 2.0);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 166: `let scale = F64_MIN_POSITIVE.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 178: `let exp = -10.0 + 20.0 * (i as f64 / (n - 1) as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 179: `x[i] = 10.0_f64.powf(exp);`
+  - **Fix**: Mathematical operation .powf( without validation
+- Line 180: `y[i] = x[i].ln();`
+  - **Fix**: Mathematical operation .ln() without validation
+- Line 204: `let unique_points = n / 3;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 207: `x[i] = idx as f64 / (unique_points - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 208: `y[i] = x[i].sin() + 0.1 * (i as f64 / n as f64);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 221: `let scale = F64_MAX.sqrt().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 223: `points[[i, 0]] = (i as f64 / (n - 1) as f64) * scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 224: `points[[i, 1]] = ((i * 7) % n) as f64 / (n - 1) as f64 * scale;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 225: `values[i] = (points[[i, 0]] / scale).sin() * (points[[i, 1]] / scale).cos() * sc...`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 231: `let points_per_cluster = n / n_clusters;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 234: `let center_x = cluster as f64 / (n_clusters - 1) as f64 * 10.0;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 250: `let t = i as f64 / (n - 1) as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 306: `.map(|(&r, &e)| ((r - e) / e).abs())`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 544: `.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 552: `max_dist / min_dist`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 566: `if value.abs() > F64_MAX / 100.0 {`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### structured_matrix.rs
+
+14 issues found:
+
+- Line 420: `let mid = (left + right) / 2;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 586: `if max_val < T::from_f64(1e-14).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 603: `let factor = aug[[i, k]] / aug[[k, k]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 618: `x[i] = sum / aug[[i, i]];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 680: `if diagonal.abs() < T::from_f64(1e-14).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 686: `x_new[i] = (rhs[i] - sum) / diagonal;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 695: `diff_norm = diff_norm.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 950: `let y = band_matrix.multiply_vector(&x.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 976: `let y = sparse.multiply_vector(&x.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1001: `let solution = solve_band_system(&matrix, &rhs.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1004: `let verification = matrix.multiply_vector(&solution.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1018: `let solution = solve_sparse_system(&sparse, &rhs.view(), 1e-10, 100).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1041: `let solution = solve_structured_least_squares(&matrix.view(), &rhs.view(), None)...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 1057: `let residual_norm: f64 = residual.iter().map(|&x| x * x).sum::<f64>().sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+
+### tension.rs
+
+43 issues found:
+
+- Line 142: `coeffs[[i, 1]] = dy / dx;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 169: `coeffs[[i, 3]] = (dy / dx - coeffs[[i, 1]]) / (cosh_p_dx - T::one());`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 190: `delta[i] = (y[i + 1] - y[i]) / h[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 206: `b[i] = T::from(2.0).unwrap() * (h[i - 1] + h[i]);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 208: `d[i] = T::from(6.0).unwrap() * (delta[i] - delta[i - 1]);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 216: `let m = a[i] / b[i - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 222: `second_derivs[n - 1] = d[n - 1] / b[n - 1];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 224: `second_derivs[i] = (d[i] - c[i] * second_derivs[i + 1]) / b[i];`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 235: `coeffs[[i, 1]] = (y[i + 1] - y[i]) / dx`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 236: `- dx * (T::from(2.0).unwrap() * second_derivs[i] + second_derivs[i + 1])`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 237: `/ T::from(6.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 240: `coeffs[[i, 2]] = second_derivs[i] / T::from(2.0).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 244: `(second_derivs[i + 1] - second_derivs[i]) / (T::from(6.0).unwrap() * dx);`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 423: `1 => Ok(b + dx * (T::from(2.0).unwrap() * c + T::from(3.0).unwrap() * dx * d)),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 424: `2 => Ok(T::from(2.0).unwrap() * c + T::from(6.0).unwrap() * dx * d),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 425: `3 => Ok(T::from(6.0).unwrap() * d),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 489: `make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 501: `make_tension_spline(&x.view(), &y.view(), 0.1, ExtrapolateMode::Error).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 503: `make_tension_spline(&x.view(), &y.view(), 5.0, ExtrapolateMode::Error).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 505: `make_tension_spline(&x.view(), &y.view(), 50.0, ExtrapolateMode::Error).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 509: `let eval_low = spline_low.evaluate_single(x[i]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 510: `let eval_med = spline_med.evaluate_single(x[i]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 511: `let eval_high = spline_high.evaluate_single(x[i]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 523: `let y_low = spline_low.evaluate(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 524: `let y_med = spline_med.evaluate(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 525: `let y_high = spline_high.evaluate(&x_new.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 533: `/ y_low.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 540: `/ y_med.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 547: `/ y_high.len() as f64;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 561: `make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 565: `let deriv1 = spline.derivative(1, &x_test.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 571: `let deriv2 = spline.derivative(2, &x_test.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 588: `make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 593: `make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Extrapolate).unw...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 594: `let val = spline_extrap.evaluate_single(-1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 600: `make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Extrapolate).unw...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 601: `let val = spline_nearest.evaluate_single(-1.0).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 613: `make_tension_spline(&x.view(), &y.view(), 0.0, ExtrapolateMode::Error).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 615: `make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 617: `make_tension_spline(&x.view(), &y.view(), 10.0, ExtrapolateMode::Error).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 622: `let y_0 = spline_0.evaluate(&x_mid.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 623: `let y_1 = spline_1.evaluate(&x_mid.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 624: `let y_10 = spline_10.evaluate(&x_mid.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### timeseries.rs
+
+16 issues found:
+
+- Line 133: `temporal_smoothing: T::from_f64(0.1).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 136: `outlier_threshold: Some(T::from_f64(3.0).unwrap()),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 444: `let window_size = (n / 10).clamp(3, 20);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 448: `let start = i.saturating_sub(window_size / 2);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 449: `let end = (i + window_size / 2 + 1).min(n);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 452: `let mean = window.sum() / T::from_usize(window.len()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 455: `/ T::from_usize(window.len() - 1).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 456: `let std_dev = variance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 520: `T::from_f64(1.0).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 546: `T::from_f64(0.5).unwrap(),`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 778: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 781: `let result = interpolator.interpolate(&query_times.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 793: `let result = forward_fill(&timestamps.view(), &values.view(), &query_times.view(...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 805: `backward_fill(&timestamps.view(), &values.view(), &query_times.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 847: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 850: `let result = interpolator.interpolate(&query_times.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### traits.rs
+
+1 issues found:
+
+- Line 34: `Self::from_f64(1e-12).unwrap_or_else(|| Self::epsilon() * Self::from_f64(100.0)....`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### utils.rs
+
+6 issues found:
+
+- Line 389: `let derivative = differentiate(2.0, 0.001, f).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 393: `let derivative = differentiate(3.0, 0.001, f).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 403: `let integral = integrate(0.0, 1.0, 100, f).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 404: `assert!((integral - 1.0 / 3.0).abs() < 1e-5);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 407: `let integral = integrate(0.0, 2.0, 100, f).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 408: `assert!((integral - 8.0 / 3.0).abs() < 1e-5);`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### voronoi/extrapolation.rs
+
+3 issues found:
+
+- Line 50: `idw_power: F::from(2.0).unwrap(), // Default to inverse squared distance`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 190: `let weight = F::one() / dist_sq.powf(params.idw_power / F::from(2.0).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 197: `Ok(weighted_sum / weight_sum)`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### voronoi/gradient.rs
+
+9 issues found:
+
+- Line 104: `gradient = gradient / weight_sum;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 128: `distance = distance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 142: `let dir_deriv = value_diff / distance;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 145: `gradient[d] + *weight * dir_deriv * coordinate_diff / distance;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 153: `gradient = gradient / total_weight;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 208: `let h = F::from(1e-6).unwrap(); // Step size`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 243: `gradient[d] = (forward_value - backward_value) / (h + h);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 247: `gradient[d] = (forward_value - center_value) / h;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 251: `gradient[d] = (center_value - backward_value) / h;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### voronoi/natural.rs
+
+4 issues found:
+
+- Line 180: `interpolated_value = interpolated_value / total_weight;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 206: `distance = distance.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 215: `let weight = F::one() / distance;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 222: `interpolated_value = interpolated_value / total_weight;`
+  - **Fix**: Division without zero check - use safe_divide()
+
+### voronoi/parallel.rs
+
+2 issues found:
+
+- Line 124: `let mut results = results.lock().unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 135: `Ok(Arc::try_unwrap(results).unwrap().into_inner().unwrap())`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### voronoi/tests.rs
+
+71 issues found:
+
+- Line 42: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 66: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 76: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 83: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 90: `let sibson_result = sibson.interpolate(&point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 91: `let laplace_result = laplace.interpolate(&point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 105: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 110: `let sibson = make_sibson_interpolator(points.clone(), values.clone()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 111: `let laplace = make_laplace_interpolator(points.clone(), values.clone()).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 121: `let sibson_result = sibson.interpolate(&mid_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 122: `let laplace_result = laplace.interpolate(&mid_point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 135: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 140: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 151: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 154: `let results = interpolator.interpolate_multi(&queries.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 186: `let points = Array2::from_shape_vec((25, 2), points_vec).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 190: `let sibson = make_sibson_interpolator(points.clone(), values.clone()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 191: `let laplace = make_laplace_interpolator(points.clone(), values.clone()).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 203: `let sibson_result = sibson.interpolate(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 204: `let laplace_result = laplace.interpolate(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 223: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 230: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 237: `let sibson_result = sibson.interpolate(&point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 238: `let laplace_result = laplace.interpolate(&point.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 252: `let sibson = make_sibson_interpolator(points.clone(), values.clone()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 253: `let laplace = make_laplace_interpolator(points.clone(), values.clone()).unwrap()...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 269: `let sibson_result = sibson.interpolate(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 270: `let laplace_result = laplace.interpolate(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 291: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 296: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 318: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 323: `let mut interpolator = make_sibson_interpolator(points.clone(), values.clone())....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 332: `let result = interpolator.interpolate(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 345: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 350: `let sequential = make_sibson_interpolator(points.clone(), values.clone()).unwrap...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 358: `make_parallel_sibson_interpolator(points.clone(), values.clone(), Some(config))....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 369: `let queries = Array2::from_shape_vec((25, 2), query_points).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 372: `let sequential_results = sequential.interpolate_multi(&queries.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 373: `let parallel_results = parallel.interpolate_multi(&queries.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 393: `make_parallel_sibson_interpolator(points.clone(), values.clone(), Some(config))....`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 410: `let queries = Array2::from_shape_vec((27, 3), query_points).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 413: `let results = parallel.interpolate_multi(&queries.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 433: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 444: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 456: `let result = parallel.interpolate(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 481: `let points = Array2::from_shape_vec((25, 2), points_vec).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 485: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 494: `let gradient = interpolator.gradient(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 523: `let points = Array2::from_shape_vec((25, 2), points_vec).unwrap();`
+  - **Fix**: Handle array creation errors properly
+- Line 527: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 536: `let gradient = interpolator.gradient(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 552: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 558: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 566: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 584: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 593: `let gradient = interpolator.gradient(&query.view()).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 607: `Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unw...`
+  - **Fix**: Handle array creation errors properly
+- Line 613: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 625: `let result = interpolator.extrapolate(&query.view(), &params).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 638: `Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unw...`
+  - **Fix**: Handle array creation errors properly
+- Line 644: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 653: `let result = interpolator.extrapolate(&query.view(), &params).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 670: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 676: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 685: `let result = interpolator.extrapolate(&query.view(), &params).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 695: `Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unw...`
+  - **Fix**: Handle array creation errors properly
+- Line 701: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 714: `let result = interpolator.extrapolate(&query.view(), &params).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 725: `Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unw...`
+  - **Fix**: Handle array creation errors properly
+- Line 731: `let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwr...`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 748: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+
+### voronoi/voronoi_cell.rs
+
+35 issues found:
+
+- Line 83: `area = area.abs() / (F::from(2).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 111: `centroid = centroid / F::from(n).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 139: `volume = volume + dot / F::from(6).unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 192: `let s = input_list.last().unwrap().clone();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 239: `area = area.abs() / (F::from(2).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 378: `let ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 465: `let padding = (max_coords[j] - min_coords[j]) * F::from(0.1).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 571: `let mid_x = (site_i[0] + site_j[0]) / F::from(2).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 572: `let mid_y = (site_i[1] + site_j[1]) / F::from(2).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 613: `let t = (dx * p_n_l[1] - dy * p_n_l[0]) / det;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 655: `if dot_product.abs() < F::from(1e-10).unwrap() && !neighbors.contains(j)`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 677: `angle_a.partial_cmp(&angle_b).unwrap()`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 715: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 757: `let dist = (dx * dx + dy * dy + dz * dz).sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 760: `if dist < F::from(5.0).unwrap() {`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 767: `let proj = dx * F::from(dir[0]).unwrap()`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 768: `+ dy * F::from(dir[1]).unwrap()`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 769: `+ dz * F::from(dir[2]).unwrap();`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 785: `site_i[0] - min_dist[0] / F::from(2).unwrap(), // min_x`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 786: `site_i[1] - min_dist[2] / F::from(2).unwrap(), // min_y`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 787: `site_i[2] - min_dist[4] / F::from(2).unwrap(), // min_z`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 788: `site_i[0] + min_dist[1] / F::from(2).unwrap(), // max_x`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 789: `site_i[1] + min_dist[3] / F::from(2).unwrap(), // max_y`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 790: `site_i[2] + min_dist[5] / F::from(2).unwrap(), // max_z`
+  - **Fix**: Use .get() with proper bounds checking
+- Line 831: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 879: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 892: `weights.insert(i, area / query_area);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 923: `.unwrap();`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 935: `weights.insert(i, volume / query_volume);`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 952: `let dist = dist_sq.sqrt();`
+  - **Fix**: Mathematical operation .sqrt() without validation
+- Line 958: `distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());`
+  - **Fix**: Replace with ? operator or .ok_or()
+- Line 974: `let weight = F::one() / dist;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 981: `*weight = *weight / total_weight;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1020: `let ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;`
+  - **Fix**: Division without zero check - use safe_divide()
+- Line 1021: `let ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;`
+  - **Fix**: Division without zero check - use safe_divide()

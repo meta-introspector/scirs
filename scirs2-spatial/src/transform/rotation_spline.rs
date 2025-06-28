@@ -624,12 +624,12 @@ impl RotationSpline {
     /// let velocity = spline.angular_velocity(0.5);
     /// // Should be approximately [0, 0, PI]
     /// ```
-    pub fn angular_velocity(&self, t: f64) -> Array1<f64> {
+    pub fn angular_velocity(&self, t: f64) -> SpatialResult<Array1<f64>> {
         let n = self.times.len();
 
         // Handle boundary cases
         if t <= self.times[0] || t >= self.times[n - 1] {
-            return Array1::zeros(3);
+            return Ok(Array1::zeros(3));
         }
 
         // Find the segment containing t
@@ -644,13 +644,13 @@ impl RotationSpline {
         // Calculate angular velocity based on interpolation type
         match self.interpolation_type.as_str() {
             "slerp" => self.angular_velocity_slerp(t, idx),
-            "cubic" => self.angular_velocity_cubic(t, idx),
+            "cubic" => Ok(self.angular_velocity_cubic(t, idx)),
             _ => self.angular_velocity_slerp(t, idx), // Default to slerp
         }
     }
 
     /// Calculate angular velocity using Slerp interpolation
-    fn angular_velocity_slerp(&self, t: f64, idx: usize) -> Array1<f64> {
+    fn angular_velocity_slerp(&self, t: f64, idx: usize) -> SpatialResult<Array1<f64>> {
         let t0 = self.times[idx];
         let t1 = self.times[idx + 1];
         let dt = t1 - t0;

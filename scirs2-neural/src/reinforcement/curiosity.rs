@@ -3,7 +3,7 @@
 //! This module implements intrinsic curiosity modules (ICM) and other
 //! curiosity-based exploration strategies to improve exploration in RL.
 
-use crate::error::{Result, NeuralError};
+use crate::error::Result;
 use crate::layers::{Dense, Layer};
 use crate::activations::Activation;
 use ndarray::prelude::*;

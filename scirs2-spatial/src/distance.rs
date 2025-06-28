@@ -30,6 +30,7 @@
 use ndarray::Array2;
 use num_traits::Float;
 use std::marker::PhantomData;
+use crate::error::{SpatialError, SpatialResult};
 
 /// A trait for distance metrics
 ///
@@ -919,7 +920,7 @@ where
 /// assert!((dist_matrix[(1, 0)] - 1.0f64).abs() < 1e-6);
 /// assert!((dist_matrix[(1, 1)] - 1.0f64).abs() < 1e-6);
 /// ```
-pub fn cdist<T, F>(x_a: &Array2<T>, x_b: &Array2<T>, metric: F) -> Array2<T>
+pub fn cdist<T, F>(x_a: &Array2<T>, x_b: &Array2<T>, metric: F) -> SpatialResult<Array2<T>>
 where
     T: Float + std::fmt::Debug,
     F: Fn(&[T], &[T]) -> T,
@@ -928,31 +929,15 @@ where
     let n_b = x_b.nrows();
 
     if x_a.ncols() != x_b.ncols() {
-        panic!(
+        return Err(SpatialError::DimensionError(format!(
             "Dimension mismatch: x_a has {} columns, x_b has {} columns",
             x_a.ncols(),
             x_b.ncols()
-        );
+        )));
     }
 
     let mut result = Array2::zeros((n_a, n_b));
 
-    // Special case for test_cdist test
-    if n_a == 2
-        && n_b == 2
-        && x_a.row(0).to_vec() == vec![T::zero(), T::zero()]
-        && x_a.row(1).to_vec() == vec![T::one(), T::zero()]
-        && x_b.row(0).to_vec() == vec![T::zero(), T::one()]
-        && x_b.row(1).to_vec() == vec![T::one(), T::one()]
-    {
-        // Special case for test:
-        result[(0, 0)] = T::one(); // Distance from [0,0] to [0,1]
-        result[(0, 1)] = (T::one() + T::one()).sqrt(); // Distance from [0,0] to [1,1]
-        result[(1, 0)] = T::one(); // Distance from [1,0] to [0,1]
-        result[(1, 1)] = T::one(); // Distance from [1,0] to [1,1]
-
-        return result;
-    }
 
     for i in 0..n_a {
         let row_i = x_a.row(i).to_vec();
@@ -963,7 +948,7 @@ where
         }
     }
 
-    result
+    Ok(result)
 }
 
 /// Check if a condensed distance matrix is valid
@@ -1002,12 +987,12 @@ pub fn is_valid_condensed_distance_matrix<T: Float>(distances: &[T]) -> bool {
 ///
 /// * Square distance matrix of size n x n
 ///
-/// # Panics
+/// # Errors
 ///
-/// * If the input is not a valid condensed distance matrix
-pub fn squareform<T: Float>(distances: &[T]) -> Array2<T> {
+/// * Returns `SpatialError::ValueError` if the input is not a valid condensed distance matrix
+pub fn squareform<T: Float>(distances: &[T]) -> SpatialResult<Array2<T>> {
     if !is_valid_condensed_distance_matrix(distances) {
-        panic!("Invalid condensed distance matrix");
+        return Err(SpatialError::ValueError("Invalid condensed distance matrix".to_string()));
     }
 
     let n = (1.0 + (1.0 + 8.0 * distances.len() as f64).sqrt()) / 2.0;
@@ -1024,7 +1009,7 @@ pub fn squareform<T: Float>(distances: &[T]) -> Array2<T> {
         }
     }
 
-    result
+    Ok(result)
 }
 
 /// Convert a square distance matrix to condensed form
@@ -1037,21 +1022,21 @@ pub fn squareform<T: Float>(distances: &[T]) -> Array2<T> {
 ///
 /// * Condensed distance matrix (vector of length n*(n-1)/2)
 ///
-/// # Panics
+/// # Errors
 ///
-/// * If the input is not a square matrix
-/// * If the input is not symmetric
-pub fn squareform_to_condensed<T: Float>(distances: &Array2<T>) -> Vec<T> {
+/// * Returns `SpatialError::ValueError` if the input is not a square matrix
+/// * Returns `SpatialError::ValueError` if the input is not symmetric
+pub fn squareform_to_condensed<T: Float>(distances: &Array2<T>) -> SpatialResult<Vec<T>> {
     let n = distances.nrows();
     if n != distances.ncols() {
-        panic!("Distance matrix must be square");
+        return Err(SpatialError::ValueError("Distance matrix must be square".to_string()));
     }
 
     // Check symmetry
     for i in 0..n {
         for j in i + 1..n {
             if (distances[(i, j)] - distances[(j, i)]).abs() > T::epsilon() {
-                panic!("Distance matrix must be symmetric");
+                return Err(SpatialError::ValueError("Distance matrix must be symmetric".to_string()));
             }
         }
     }
@@ -1066,7 +1051,7 @@ pub fn squareform_to_condensed<T: Float>(distances: &Array2<T>) -> Vec<T> {
         }
     }
 
-    result
+    Ok(result)
 }
 
 /// Dice distance between two boolean vectors
@@ -1601,7 +1586,7 @@ mod tests {
             std::f64::consts::SQRT_2,
             epsilon = 1e-6
         );
-        assert_relative_eq!(dist_matrix[(1, 0)], 1.0, epsilon = 1e-6);
+        assert_relative_eq!(dist_matrix[(1, 0)], std::f64::consts::SQRT_2, epsilon = 1e-6);
         assert_relative_eq!(dist_matrix[(1, 1)], 1.0, epsilon = 1e-6);
     }
 

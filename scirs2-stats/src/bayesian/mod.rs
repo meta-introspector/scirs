@@ -4,10 +4,17 @@
 //! - Conjugate priors
 //! - Bayesian linear regression
 //! - Hierarchical models
+//! - Variational inference
 
 mod conjugate;
+mod regression;
+mod hierarchical;
+mod variational;
 
 pub use conjugate::*;
+pub use regression::*;
+pub use hierarchical::*;
+pub use variational::*;
 
 #[allow(unused_imports)]
 use crate::error::StatsResult as Result;

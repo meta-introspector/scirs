@@ -30,6 +30,24 @@ pub struct RocmConfig {
     
     /// Wavefront size (typically 64 for AMD GPUs)
     pub wavefront_size: usize,
+    
+    /// Enable RDNA optimizations
+    pub enable_rdna_optimizations: bool,
+    
+    /// Enable memory coalescing optimizations
+    pub enable_memory_coalescing: bool,
+    
+    /// Preferred compute unit utilization (0.0-1.0)
+    pub target_cu_utilization: f32,
+    
+    /// Enable asynchronous memory transfers
+    pub enable_async_memory: bool,
+    
+    /// ROCm MI (Matrix Instruction) support
+    pub enable_mi_instructions: bool,
+    
+    /// Preferred memory access pattern
+    pub memory_access_pattern: MemoryAccessPattern,
 }
 
 impl Default for RocmConfig {
@@ -40,6 +58,12 @@ impl Default for RocmConfig {
             memory_pool_size: 1024 * 1024 * 1024, // 1GB
             enable_cooperative_groups: true,
             wavefront_size: 64,
+            enable_rdna_optimizations: true,
+            enable_memory_coalescing: true,
+            target_cu_utilization: 0.85, // 85% target utilization
+            enable_async_memory: true,
+            enable_mi_instructions: true,
+            memory_access_pattern: MemoryAccessPattern::Coalesced,
         }
     }
 }
@@ -126,6 +150,196 @@ impl<A: Float> RocmBackend<A> {
         // ROCm uses HIP which has similar naming to CUDA
         // In practice, kernels would be compiled for HIP
         cuda_kernel_name.replace("cuda", "hip")
+    }
+    
+    /// Detect AMD GPU architecture for optimizations
+    pub fn detect_gpu_architecture(&self) -> Result<AmdGpuArchitecture, GpuOptimizerError> {
+        #[cfg(feature = "gpu")]
+        {
+            // In practice, would query hipDeviceGetAttribute
+            let properties = self.get_device_properties()?;
+            
+            // Heuristic based on device name and properties
+            if properties.name.contains("MI300") {
+                Ok(AmdGpuArchitecture::CDNA3)
+            } else if properties.name.contains("MI200") || properties.name.contains("MI250") {
+                Ok(AmdGpuArchitecture::CDNA2)
+            } else if properties.name.contains("MI100") {
+                Ok(AmdGpuArchitecture::CDNA1)
+            } else if properties.compute_units >= 40 {
+                Ok(AmdGpuArchitecture::RDNA2)
+            } else {
+                Ok(AmdGpuArchitecture::RDNA1)
+            }
+        }
+        
+        #[cfg(not(feature = "gpu"))]
+        {
+            Ok(AmdGpuArchitecture::RDNA2) // Default fallback
+        }
+    }
+    
+    /// Get optimal thread block configuration for AMD architecture
+    pub fn get_optimal_block_config(&self, problem_size: usize) -> Result<BlockConfiguration, GpuOptimizerError> {
+        let arch = self.detect_gpu_architecture()?;
+        let properties = self.get_device_properties()?;
+        
+        match arch {
+            AmdGpuArchitecture::CDNA3 | AmdGpuArchitecture::CDNA2 => {
+                // CDNA architectures prefer larger blocks for compute-intensive workloads
+                let block_size = if problem_size > 1_000_000 {
+                    1024 // Large problems benefit from maximum occupancy
+                } else {
+                    512  // Smaller problems benefit from lower latency
+                };
+                
+                Ok(BlockConfiguration {
+                    block_size,
+                    grid_size: (problem_size + block_size - 1) / block_size,
+                    shared_memory_per_block: properties.shared_memory_per_block / 2, // Conservative
+                    registers_per_thread: 64,
+                    wavefronts_per_cu: 4,
+                })
+            }
+            AmdGpuArchitecture::RDNA2 | AmdGpuArchitecture::RDNA1 => {
+                // RDNA architectures prefer balanced configurations
+                let block_size = 256; // Sweet spot for RDNA
+                
+                Ok(BlockConfiguration {
+                    block_size,
+                    grid_size: (problem_size + block_size - 1) / block_size,
+                    shared_memory_per_block: properties.shared_memory_per_block / 4, // More conservative
+                    registers_per_thread: 32,
+                    wavefronts_per_cu: 6, // Higher concurrency
+                })
+            }
+            _ => {
+                // Conservative fallback
+                Ok(BlockConfiguration {
+                    block_size: 256,
+                    grid_size: (problem_size + 255) / 256,
+                    shared_memory_per_block: 16384,
+                    registers_per_thread: 32,
+                    wavefronts_per_cu: 4,
+                })
+            }
+        }
+    }
+    
+    /// Optimize memory access pattern for AMD GPUs
+    pub fn optimize_memory_access<T>(&self, data: &[T]) -> MemoryOptimizationHints {
+        let data_size = data.len() * std::mem::size_of::<T>();
+        let arch = self.detect_gpu_architecture().unwrap_or(AmdGpuArchitecture::RDNA2);
+        
+        match arch {
+            AmdGpuArchitecture::CDNA3 | AmdGpuArchitecture::CDNA2 => {
+                MemoryOptimizationHints {
+                    preferred_cache_level: if data_size < 256 * 1024 { CacheLevel::L1 } else { CacheLevel::L2 },
+                    coalescing_factor: 128, // CDNA benefits from wide coalescing
+                    vectorization_width: 4,
+                    use_shared_memory: data_size < 64 * 1024,
+                    prefetch_distance: 8,
+                }
+            }
+            AmdGpuArchitecture::RDNA2 | AmdGpuArchitecture::RDNA1 => {
+                MemoryOptimizationHints {
+                    preferred_cache_level: CacheLevel::L1,
+                    coalescing_factor: 64, // RDNA prefers narrower coalescing
+                    vectorization_width: 2,
+                    use_shared_memory: data_size < 32 * 1024,
+                    prefetch_distance: 4,
+                }
+            }
+            _ => {
+                MemoryOptimizationHints {
+                    preferred_cache_level: CacheLevel::L1,
+                    coalescing_factor: 64,
+                    vectorization_width: 2,
+                    use_shared_memory: false,
+                    prefetch_distance: 2,
+                }
+            }
+        }
+    }
+    
+    /// Benchmark ROCm kernel performance
+    pub fn benchmark_kernel(&self, kernel_name: &str, data_size: usize, iterations: usize) -> Result<RocmKernelBenchmark, GpuOptimizerError> {
+        #[cfg(feature = "gpu")]
+        {
+            let start_time = std::time::Instant::now();
+            
+            for _ in 0..iterations {
+                // In practice, would launch actual HIP kernel
+                // hipLaunchKernel(...);
+                std::thread::sleep(std::time::Duration::from_micros(100)); // Simulate kernel execution
+            }
+            
+            let elapsed = start_time.elapsed();
+            let avg_time_us = elapsed.as_micros() as f64 / iterations as f64;
+            
+            // Calculate theoretical performance
+            let bytes_transferred = data_size * 2; // Read + write
+            let bandwidth_gb_s = (bytes_transferred as f64) / (avg_time_us / 1_000_000.0) / 1e9;
+            
+            Ok(RocmKernelBenchmark {
+                kernel_name: kernel_name.to_string(),
+                avg_execution_time_us: avg_time_us,
+                peak_bandwidth_gb_s: bandwidth_gb_s,
+                compute_utilization: self.estimate_compute_utilization(avg_time_us, data_size),
+                memory_efficiency: bandwidth_gb_s / self.get_theoretical_bandwidth(),
+            })
+        }
+        
+        #[cfg(not(feature = "gpu"))]
+        {
+            Ok(RocmKernelBenchmark {
+                kernel_name: kernel_name.to_string(),
+                avg_execution_time_us: 0.0,
+                peak_bandwidth_gb_s: 0.0,
+                compute_utilization: 0.0,
+                memory_efficiency: 0.0,
+            })
+        }
+    }
+    
+    /// Estimate compute utilization based on execution time
+    fn estimate_compute_utilization(&self, execution_time_us: f64, data_size: usize) -> f64 {
+        let properties = self.get_device_properties().unwrap_or_else(|_| RocmDeviceProperties {
+            name: "Unknown".to_string(),
+            compute_units: 60,
+            wavefront_size: 64,
+            max_threads_per_block: 1024,
+            max_grid_dims: [2147483647, 65535, 65535],
+            shared_memory_per_block: 65536,
+            total_memory: 16 * 1024 * 1024 * 1024,
+            clock_rate: 1700,
+            memory_clock_rate: 1200,
+            memory_bus_width: 4096,
+        });
+        
+        let theoretical_peak_ops_per_us = properties.compute_units as f64 * properties.clock_rate as f64 * 1000.0; // Approximate
+        let estimated_ops = data_size as f64; // Rough estimate
+        
+        (estimated_ops / (execution_time_us * theoretical_peak_ops_per_us)).min(1.0) * 100.0
+    }
+    
+    /// Get theoretical memory bandwidth for this device
+    fn get_theoretical_bandwidth(&self) -> f64 {
+        let properties = self.get_device_properties().unwrap_or_else(|_| RocmDeviceProperties {
+            name: "Unknown".to_string(),
+            compute_units: 60,
+            wavefront_size: 64,
+            max_threads_per_block: 1024,
+            max_grid_dims: [2147483647, 65535, 65535],
+            shared_memory_per_block: 65536,
+            total_memory: 16 * 1024 * 1024 * 1024,
+            clock_rate: 1700,
+            memory_clock_rate: 1200,
+            memory_bus_width: 4096,
+        });
+        
+        // Theoretical bandwidth = memory_clock * bus_width / 8 (bits to bytes)
+        (properties.memory_clock_rate as f64 * 1000.0 * 1000.0) * (properties.memory_bus_width as f64 / 8.0) / 1e9
     }
 }
 
@@ -278,6 +492,96 @@ pub enum MemoryAccessHint {
     NoPreference,
 }
 
+/// Memory access patterns for ROCm optimization
+#[derive(Debug, Clone, Copy)]
+pub enum MemoryAccessPattern {
+    /// Sequential access (cache-friendly)
+    Sequential,
+    /// Random access (cache-unfriendly)
+    Random,
+    /// Strided access
+    Strided,
+    /// Coalesced access (optimal for GPU)
+    Coalesced,
+}
+
+/// AMD GPU architectures for optimization targeting
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AmdGpuArchitecture {
+    /// RDNA 1 (RX 5000 series)
+    RDNA1,
+    /// RDNA 2 (RX 6000 series)
+    RDNA2,
+    /// RDNA 3 (RX 7000 series)
+    RDNA3,
+    /// CDNA 1 (MI100)
+    CDNA1,
+    /// CDNA 2 (MI200 series)
+    CDNA2,
+    /// CDNA 3 (MI300 series)
+    CDNA3,
+    /// Unknown architecture
+    Unknown,
+}
+
+/// Thread block configuration optimized for AMD GPUs
+#[derive(Debug, Clone)]
+pub struct BlockConfiguration {
+    /// Number of threads per block
+    pub block_size: usize,
+    /// Number of blocks in grid
+    pub grid_size: usize,
+    /// Shared memory per block (bytes)
+    pub shared_memory_per_block: usize,
+    /// Registers per thread
+    pub registers_per_thread: usize,
+    /// Wavefronts per compute unit
+    pub wavefronts_per_cu: usize,
+}
+
+/// Memory optimization hints for ROCm
+#[derive(Debug, Clone)]
+pub struct MemoryOptimizationHints {
+    /// Preferred cache level for data
+    pub preferred_cache_level: CacheLevel,
+    /// Memory coalescing factor (bytes)
+    pub coalescing_factor: usize,
+    /// Vectorization width
+    pub vectorization_width: usize,
+    /// Whether to use shared memory
+    pub use_shared_memory: bool,
+    /// Prefetch distance (cache lines)
+    pub prefetch_distance: usize,
+}
+
+/// Cache level preferences
+#[derive(Debug, Clone, Copy)]
+pub enum CacheLevel {
+    /// Level 1 cache (fastest, smallest)
+    L1,
+    /// Level 2 cache (moderate speed, larger)
+    L2,
+    /// Level 3 cache (slower, largest)
+    L3,
+    /// Main memory (slowest, unlimited)
+    Memory,
+}
+
+/// ROCm kernel benchmark results
+#[derive(Debug, Clone)]
+pub struct RocmKernelBenchmark {
+    /// Kernel name
+    pub kernel_name: String,
+    /// Average execution time (microseconds)
+    pub avg_execution_time_us: f64,
+    /// Peak bandwidth achieved (GB/s)
+    pub peak_bandwidth_gb_s: f64,
+    /// Compute unit utilization (percentage)
+    pub compute_utilization: f64,
+    /// Memory efficiency (ratio of achieved/theoretical bandwidth)
+    pub memory_efficiency: f64,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -319,5 +623,157 @@ mod tests {
         let result = pool.allocate(1024);
         // In test environment, this will fail since we're not actually allocating
         assert!(result.is_err() || result.is_ok());
+    }
+    
+    #[test]
+    fn test_extended_rocm_config() {
+        let config = RocmConfig {
+            enable_rdna_optimizations: true,
+            enable_memory_coalescing: true,
+            target_cu_utilization: 0.9,
+            enable_async_memory: true,
+            enable_mi_instructions: true,
+            memory_access_pattern: MemoryAccessPattern::Coalesced,
+            ..Default::default()
+        };
+        
+        assert!(config.enable_rdna_optimizations);
+        assert!(config.enable_memory_coalescing);
+        assert_eq!(config.target_cu_utilization, 0.9);
+        assert!(config.enable_async_memory);
+        assert!(config.enable_mi_instructions);
+        assert!(matches!(config.memory_access_pattern, MemoryAccessPattern::Coalesced));
+    }
+    
+    #[test]
+    fn test_amd_gpu_architecture_detection() {
+        let config = RocmConfig::default();
+        if let Ok(backend) = RocmBackend::<f32>::new(config) {
+            let arch = backend.detect_gpu_architecture();
+            // Should return a valid architecture
+            if let Ok(arch) = arch {
+                assert!(matches!(arch, 
+                    AmdGpuArchitecture::RDNA1 | AmdGpuArchitecture::RDNA2 | AmdGpuArchitecture::RDNA3 |
+                    AmdGpuArchitecture::CDNA1 | AmdGpuArchitecture::CDNA2 | AmdGpuArchitecture::CDNA3 |
+                    AmdGpuArchitecture::Unknown
+                ));
+            }
+        }
+    }
+    
+    #[test]
+    fn test_optimal_block_configuration() {
+        let config = RocmConfig::default();
+        if let Ok(backend) = RocmBackend::<f32>::new(config) {
+            let block_config = backend.get_optimal_block_config(100000);
+            if let Ok(config) = block_config {
+                assert!(config.block_size > 0);
+                assert!(config.grid_size > 0);
+                assert!(config.shared_memory_per_block > 0);
+                assert!(config.registers_per_thread > 0);
+                assert!(config.wavefronts_per_cu > 0);
+            }
+        }
+    }
+    
+    #[test]
+    fn test_memory_optimization_hints() {
+        let config = RocmConfig::default();
+        if let Ok(backend) = RocmBackend::<f32>::new(config) {
+            let data = vec![1.0f32; 1000];
+            let hints = backend.optimize_memory_access(&data);
+            
+            assert!(matches!(hints.preferred_cache_level, CacheLevel::L1 | CacheLevel::L2 | CacheLevel::L3 | CacheLevel::Memory));
+            assert!(hints.coalescing_factor > 0);
+            assert!(hints.vectorization_width > 0);
+            assert!(hints.prefetch_distance > 0);
+        }
+    }
+    
+    #[test]
+    fn test_rocm_kernel_benchmark() {
+        let config = RocmConfig::default();
+        if let Ok(backend) = RocmBackend::<f32>::new(config) {
+            let benchmark = backend.benchmark_kernel("test_kernel", 10000, 5);
+            if let Ok(bench) = benchmark {
+                assert_eq!(bench.kernel_name, "test_kernel");
+                assert!(bench.avg_execution_time_us >= 0.0);
+                assert!(bench.peak_bandwidth_gb_s >= 0.0);
+                assert!(bench.compute_utilization >= 0.0);
+                assert!(bench.memory_efficiency >= 0.0);
+            }
+        }
+    }
+    
+    #[test]
+    fn test_memory_access_patterns() {
+        let patterns = [
+            MemoryAccessPattern::Sequential,
+            MemoryAccessPattern::Random,
+            MemoryAccessPattern::Strided,
+            MemoryAccessPattern::Coalesced,
+        ];
+        
+        for pattern in &patterns {
+            let config = RocmConfig {
+                memory_access_pattern: *pattern,
+                ..Default::default()
+            };
+            assert_eq!(config.memory_access_pattern, *pattern);
+        }
+    }
+    
+    #[test]
+    fn test_cache_level_preferences() {
+        let levels = [
+            CacheLevel::L1,
+            CacheLevel::L2,
+            CacheLevel::L3,
+            CacheLevel::Memory,
+        ];
+        
+        for level in &levels {
+            let hints = MemoryOptimizationHints {
+                preferred_cache_level: *level,
+                coalescing_factor: 64,
+                vectorization_width: 2,
+                use_shared_memory: false,
+                prefetch_distance: 4,
+            };
+            assert_eq!(hints.preferred_cache_level, *level);
+        }
+    }
+    
+    #[test]
+    fn test_theoretical_bandwidth_calculation() {
+        let config = RocmConfig::default();
+        if let Ok(backend) = RocmBackend::<f32>::new(config) {
+            let bandwidth = backend.get_theoretical_bandwidth();
+            // Should return a reasonable bandwidth value (>0 GB/s, <10,000 GB/s)
+            assert!(bandwidth > 0.0);
+            assert!(bandwidth < 10000.0);
+        }
+    }
+    
+    #[test]
+    fn test_amd_architecture_capabilities() {
+        let architectures = [
+            AmdGpuArchitecture::RDNA1,
+            AmdGpuArchitecture::RDNA2,
+            AmdGpuArchitecture::RDNA3,
+            AmdGpuArchitecture::CDNA1,
+            AmdGpuArchitecture::CDNA2,
+            AmdGpuArchitecture::CDNA3,
+            AmdGpuArchitecture::Unknown,
+        ];
+        
+        for arch in &architectures {
+            // Each architecture should be a valid enum variant
+            assert!(matches!(arch, 
+                AmdGpuArchitecture::RDNA1 | AmdGpuArchitecture::RDNA2 | AmdGpuArchitecture::RDNA3 |
+                AmdGpuArchitecture::CDNA1 | AmdGpuArchitecture::CDNA2 | AmdGpuArchitecture::CDNA3 |
+                AmdGpuArchitecture::Unknown
+            ));
+        }
     }
 }

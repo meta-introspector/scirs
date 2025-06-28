@@ -129,7 +129,7 @@ where
     ) -> InterpolateResult<Self> {
         // Check that control points and weights have the same length
         if control_points.shape()[0] != weights.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "Control points and weights must have the same length".to_string(),
             ));
         }
@@ -137,7 +137,7 @@ where
         // Check for valid weights (all positive)
         for &w in weights.iter() {
             if w <= T::zero() {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "Weights must be positive".to_string(),
                 ));
             }
@@ -354,7 +354,7 @@ where
         let t_max = self.bspline.knot_vector()[self.bspline.knot_vector().len() - self.degree() - 1];
         
         if a < t_min || b > t_max {
-            return Err(InterpolateError::DomainError(format!(
+            return Err(InterpolateError::OutOfBounds(format!(
                 "Integration bounds [{}, {}] are outside the NURBS domain [{}, {}]",
                 a, b, t_min, t_max
             )));
@@ -433,7 +433,7 @@ where
         // Check if the knot already exists
         let s = self.knot_multiplicity(u);
         if s + r > p {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "Cannot insert knot with multiplicity {} (current multiplicity: {}, degree: {})",
                 r, s, p
             )));
@@ -593,7 +593,7 @@ where
     /// Calculate a single basis function value
     fn basis_function(&self, i: usize, t: T) -> InterpolateResult<T> {
         if i >= self.weights.len() {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "Index {} out of range for weights of size {}",
                 i,
                 self.weights.len()
@@ -618,7 +618,7 @@ where
     /// Calculate a single basis function derivative
     fn basis_function_derivative(&self, i: usize, t: T, order: usize) -> InterpolateResult<T> {
         if i >= self.weights.len() {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "Index {} out of range for weights of size {}",
                 i,
                 self.weights.len()
@@ -771,14 +771,14 @@ where
     ) -> InterpolateResult<Self> {
         // Check that control points and weights have the same length
         if control_points.shape()[0] != weights.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "Control points and weights must have the same length".to_string(),
             ));
         }
 
         // Check that the number of control points matches the specified dimensions
         if control_points.shape()[0] != n_u * n_v {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "Expected {} control points for a {}x{} grid, got {}",
                 n_u * n_v,
                 n_u,
@@ -789,7 +789,7 @@ where
 
         // Check that the knot vectors have the correct length
         if knots_u.len() != n_u + degree_u + 1 {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "Expected {} knots in u direction for {} control points and degree {}, got {}",
                 n_u + degree_u + 1,
                 n_u,
@@ -799,7 +799,7 @@ where
         }
 
         if knots_v.len() != n_v + degree_v + 1 {
-            return Err(InterpolateError::ValueError(format!(
+            return Err(InterpolateError::invalid_input(format!(
                 "Expected {} knots in v direction for {} control points and degree {}, got {}",
                 n_v + degree_v + 1,
                 n_v,
@@ -811,7 +811,7 @@ where
         // Check for valid weights (all positive)
         for &w in weights.iter() {
             if w <= T::zero() {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "Weights must be positive".to_string(),
                 ));
             }
@@ -820,7 +820,7 @@ where
         // Check that knots are non-decreasing
         for i in 1..knots_u.len() {
             if knots_u[i] < knots_u[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "Knots in u direction must be non-decreasing".to_string(),
                 ));
             }
@@ -828,7 +828,7 @@ where
 
         for i in 1..knots_v.len() {
             if knots_v[i] < knots_v[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "Knots in v direction must be non-decreasing".to_string(),
                 ));
             }
@@ -890,7 +890,7 @@ where
         if (u < u_min || u > u_max || v < v_min || v > v_max)
             && self.extrapolate == ExtrapolateMode::Error
         {
-            return Err(InterpolateError::DomainError(format!(
+            return Err(InterpolateError::OutOfBounds(format!(
                 "Parameters (u,v) = ({}, {}) outside domain [{}, {}]x[{}, {}]",
                 u, v, u_min, u_max, v_min, v_max
             )));
@@ -964,7 +964,7 @@ where
         } else {
             // Evaluate at pairs (u[i], v[i])
             if u_values.len() != v_values.len() {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "When grid=false, u_values and v_values must have the same length".to_string(),
                 ));
             }
@@ -1239,13 +1239,13 @@ pub fn make_nurbs_circle<
     end_angle: Option<T>,
 ) -> InterpolateResult<NurbsCurve<T>> {
     if center.len() != 2 {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "Center must be a 2D point".to_string(),
         ));
     }
 
     if radius <= T::zero() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "Radius must be positive".to_string(),
         ));
     }
@@ -1254,7 +1254,7 @@ pub fn make_nurbs_circle<
     let end = end_angle.unwrap_or_else(|| T::from(2.0 * std::f64::consts::PI).unwrap());
 
     if start >= end {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "Start angle must be less than end angle".to_string(),
         ));
     }
@@ -1378,13 +1378,13 @@ pub fn make_nurbs_sphere<
     radius: T,
 ) -> InterpolateResult<NurbsSurface<T>> {
     if center.len() != 3 {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "Center must be a 3D point".to_string(),
         ));
     }
 
     if radius <= T::zero() {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::invalid_input(
             "Radius must be positive".to_string(),
         ));
     }

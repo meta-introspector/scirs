@@ -78,7 +78,8 @@ pub fn directed_hausdorff<T: Float + Send + Sync>(
     }
 
     if set2.shape()[1] != dims {
-        panic!("Dimension mismatch: sets must have the same number of dimensions");
+        // Return infinity for dimension mismatch (sets cannot be compared)
+        return (T::infinity(), 0, 0);
     }
 
     // Create randomized indices for shuffling
@@ -239,7 +240,7 @@ pub fn wasserstein_distance<T: Float + Send + Sync>(
     }
 
     if set2.shape()[1] != dims {
-        panic!("Dimension mismatch: sets must have the same number of dimensions");
+        return Err(crate::error::SpatialError::DimensionError("Dimension mismatch: sets must have the same number of dimensions".to_string()));
     }
 
     // For simplicity in this implementation, we'll use a greedy approach

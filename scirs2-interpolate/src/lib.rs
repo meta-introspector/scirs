@@ -252,7 +252,8 @@ pub use extrapolation::{
     ExtrapolationParameters, Extrapolator,
 };
 pub use fast_bspline::{
-    make_cached_fast_bspline_evaluator, make_fast_bspline_evaluator, FastBSplineEvaluator,
+    make_cached_fast_bspline_evaluator, make_fast_bspline_evaluator, 
+    make_fast_bspline_evaluator_owned, FastBSplineEvaluator,
     TensorProductFastEvaluator,
 };
 pub use geospatial::{
@@ -307,9 +308,10 @@ pub use neural_enhanced::{
     NeuralEnhancedInterpolator, NeuralTrainingConfig, TrainingStats,
 };
 pub use numerical_stability::{
-    apply_tikhonov_regularization, assess_matrix_condition, check_safe_division, machine_epsilon,
-    safe_reciprocal, solve_with_stability_monitoring, ConditionReport, StabilityDiagnostics,
-    StabilityLevel,
+    analyze_interpolation_edge_cases, apply_tikhonov_regularization, assess_matrix_condition, 
+    check_safe_division, early_numerical_warning_system, machine_epsilon, safe_reciprocal, 
+    solve_with_stability_monitoring, BoundaryAnalysis, ConditionReport, EdgeCaseAnalysis,
+    StabilityDiagnostics, StabilityLevel,
 };
 pub use nurbs::{make_nurbs_circle, make_nurbs_sphere, NurbsCurve, NurbsSurface};
 pub use optimization::{
@@ -353,7 +355,7 @@ pub use statistical::{
 };
 pub use spatial::balltree::BallTree;
 pub use spatial::kdtree::KdTree;
-pub use spline::{make_interp_spline, BoundaryCondition, CubicSpline};
+pub use spline::{make_interp_spline, SplineBoundaryCondition, CubicSpline, CubicSplineBuilder};
 pub use structured_matrix::{
     create_bspline_band_matrix, solve_band_system, solve_sparse_system,
     solve_structured_least_squares, BandMatrix, CSRMatrix,

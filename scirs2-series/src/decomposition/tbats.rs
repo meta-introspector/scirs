@@ -4,7 +4,6 @@
 //! ARMA errors, Trend, and Seasonal components.
 
 use ndarray::{Array1, Array2, ScalarOperand};
-// use ndarray_linalg::Solve;  // TODO: Replace with scirs2-core linear algebra when available
 use num_traits::{Float, FromPrimitive, NumCast};
 use std::fmt::Debug;
 
@@ -142,7 +141,6 @@ where
         + FromPrimitive
         + Debug
         + std::iter::Sum
-        // + ndarray_linalg::Lapack  // TODO: Replace with scirs2-core linear algebra trait when available
         + ScalarOperand
         + NumCast,
 {
@@ -355,7 +353,6 @@ where
         + FromPrimitive
         + Debug
         + std::iter::Sum
-        // + ndarray_linalg::Lapack  // TODO: Replace with scirs2-core linear algebra trait when available
         + ScalarOperand
         + NumCast,
 {
@@ -411,7 +408,6 @@ where
         + FromPrimitive
         + Debug
         + std::iter::Sum
-        // + ndarray_linalg::Lapack  // TODO: Replace with scirs2-core linear algebra trait when available
         + ScalarOperand
         + NumCast,
 {
@@ -436,13 +432,11 @@ where
             }
         }
 
-        // Solve least squares: design_matrix * coeffs = ts
-        // TODO: Replace with scirs2-core matrix solve when available
-        // For now, use a simple least squares implementation
+        // Solve least squares: design_matrix * coeffs = ts  
         let xtx = design_matrix.t().dot(&design_matrix);
         let xty = design_matrix.t().dot(ts);
 
-        // Simple regularized pseudo-inverse for stability
+        // Regularized normal equations for numerical stability
         let n = xtx.shape()[0];
         let mut xtx_reg = xtx.clone();
         let lambda = F::from(1e-6).unwrap();
@@ -450,8 +444,8 @@ where
             xtx_reg[[i, i]] = xtx_reg[[i, i]] + lambda;
         }
 
-        // TODO: This is a temporary implementation - use core linear algebra when available
-        let coeffs = simple_matrix_solve(&xtx_reg, &xty)?;
+        // Solve the regularized system
+        let coeffs = solve_regularized_least_squares(&xtx_reg, &xty)?;
 
         // Extract coefficient pairs
         let mut seasonal_coeffs = Vec::new();
@@ -621,9 +615,8 @@ where
     Ok((level, trend, seasonal_components, residuals, log_likelihood))
 }
 
-/// Simple matrix solve using Gaussian elimination
-/// TODO: Remove this when scirs2-core provides linear algebra functionality
-fn simple_matrix_solve<F>(a: &Array2<F>, b: &Array1<F>) -> Result<Array1<F>>
+/// Solve regularized least squares system using Gaussian elimination
+fn solve_regularized_least_squares<F>(a: &Array2<F>, b: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + ScalarOperand,
 {

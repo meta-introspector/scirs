@@ -118,15 +118,15 @@ fn erosion_iteration_simd<T>(
     for i in 0..height {
         // For each row, we can potentially process multiple pixels at once
         let row_slice = dst.row_mut(i);
-        
+
         for j in 0..width {
             let mut min_val = T::infinity();
-            
+
             // Apply structuring element
             for &(di, dj) in offsets.iter() {
                 let ni = i as isize + di;
                 let nj = j as isize + dj;
-                
+
                 let val = if ni >= 0 && ni < height as isize && nj >= 0 && nj < width as isize {
                     src[[ni as usize, nj as usize]]
                 } else {
@@ -135,10 +135,10 @@ fn erosion_iteration_simd<T>(
                     let rj = nj.clamp(0, (width as isize) - 1) as usize;
                     src[[ri, rj]]
                 };
-                
+
                 min_val = min_val.min(val);
             }
-            
+
             row_slice[j] = min_val;
         }
     }
@@ -155,25 +155,25 @@ fn erosion_iteration_parallel<T>(
     T: Float + FromPrimitive + Debug + Send + Sync + 'static,
 {
     use parallel_ops::*;
-    
+
     // Process rows in parallel
     let src_ptr = src as *const Array2<T>;
     let offsets_clone = offsets.clone();
-    
+
     dst.axis_iter_mut(Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
             let src_ref = unsafe { &*src_ptr };
-            
+
             for j in 0..width {
                 let mut min_val = T::infinity();
-                
+
                 // Apply structuring element
                 for &(di, dj) in offsets_clone.iter() {
                     let ni = i as isize + di;
                     let nj = j as isize + dj;
-                    
+
                     let val = if ni >= 0 && ni < height as isize && nj >= 0 && nj < width as isize {
                         src_ref[[ni as usize, nj as usize]]
                     } else {
@@ -182,10 +182,10 @@ fn erosion_iteration_parallel<T>(
                         let rj = nj.clamp(0, (width as isize) - 1) as usize;
                         src_ref[[ri, rj]]
                     };
-                    
+
                     min_val = min_val.min(val);
                 }
-                
+
                 row[j] = min_val;
             }
         });
@@ -297,15 +297,15 @@ fn dilation_iteration_simd<T>(
     // Process rows with potential for SIMD optimization
     for i in 0..height {
         let row_slice = dst.row_mut(i);
-        
+
         for j in 0..width {
             let mut max_val = T::neg_infinity();
-            
+
             // Apply structuring element
             for &(di, dj) in offsets.iter() {
                 let ni = i as isize + di;
                 let nj = j as isize + dj;
-                
+
                 let val = if ni >= 0 && ni < height as isize && nj >= 0 && nj < width as isize {
                     src[[ni as usize, nj as usize]]
                 } else {
@@ -314,10 +314,10 @@ fn dilation_iteration_simd<T>(
                     let rj = nj.clamp(0, (width as isize) - 1) as usize;
                     src[[ri, rj]]
                 };
-                
+
                 max_val = max_val.max(val);
             }
-            
+
             row_slice[j] = max_val;
         }
     }
@@ -334,25 +334,25 @@ fn dilation_iteration_parallel<T>(
     T: Float + FromPrimitive + Debug + Send + Sync + 'static,
 {
     use parallel_ops::*;
-    
+
     // Process rows in parallel
     let src_ptr = src as *const Array2<T>;
     let offsets_clone = offsets.clone();
-    
+
     dst.axis_iter_mut(Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
             let src_ref = unsafe { &*src_ptr };
-            
+
             for j in 0..width {
                 let mut max_val = T::neg_infinity();
-                
+
                 // Apply structuring element
                 for &(di, dj) in offsets_clone.iter() {
                     let ni = i as isize + di;
                     let nj = j as isize + dj;
-                    
+
                     let val = if ni >= 0 && ni < height as isize && nj >= 0 && nj < width as isize {
                         src_ref[[ni as usize, nj as usize]]
                     } else {
@@ -361,10 +361,10 @@ fn dilation_iteration_parallel<T>(
                         let rj = nj.clamp(0, (width as isize) - 1) as usize;
                         src_ref[[ri, rj]]
                     };
-                    
+
                     max_val = max_val.max(val);
                 }
-                
+
                 row[j] = max_val;
             }
         });
@@ -380,8 +380,7 @@ pub fn binary_erosion_2d_optimized(
     iterations: Option<usize>,
     mask: Option<&Array2<bool>>,
     origin: Option<&[isize; 2]>,
-) -> NdimageResult<Array2<bool>>
-{
+) -> NdimageResult<Array2<bool>> {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
 
@@ -492,19 +491,19 @@ fn binary_erosion_iteration_parallel(
     mask: Option<&Array2<bool>>,
 ) {
     use parallel_ops::*;
-    
+
     // Process rows in parallel
     let src_ptr = src as *const Array2<bool>;
     let mask_ptr = mask.map(|m| m as *const Array2<bool>);
     let offsets_clone = offsets.clone();
-    
+
     dst.axis_iter_mut(Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
             let src_ref = unsafe { &*src_ptr };
             let mask_ref = mask_ptr.map(|p| unsafe { &*p });
-            
+
             for j in 0..width {
                 // Check if masked
                 if let Some(m) = mask_ref {
@@ -543,8 +542,7 @@ pub fn binary_dilation_2d_optimized(
     iterations: Option<usize>,
     mask: Option<&Array2<bool>>,
     origin: Option<&[isize; 2]>,
-) -> NdimageResult<Array2<bool>>
-{
+) -> NdimageResult<Array2<bool>> {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
 
@@ -652,19 +650,19 @@ fn binary_dilation_iteration_parallel(
     mask: Option<&Array2<bool>>,
 ) {
     use parallel_ops::*;
-    
+
     // Process rows in parallel
     let src_ptr = src as *const Array2<bool>;
     let mask_ptr = mask.map(|m| m as *const Array2<bool>);
     let offsets_clone = offsets.clone();
-    
+
     dst.axis_iter_mut(Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
             let src_ref = unsafe { &*src_ptr };
             let mask_ref = mask_ptr.map(|p| unsafe { &*p });
-            
+
             for j in 0..width {
                 // Check if masked
                 if let Some(m) = mask_ref {
@@ -697,35 +695,27 @@ fn binary_dilation_iteration_parallel(
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[test]
     fn test_grey_erosion_optimized() {
-        let input = array![
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]
-        ];
-        
+        let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+
         let result = grey_erosion_2d_optimized(&input, None, None, None, None).unwrap();
-        
+
         // The center pixel should be the minimum of its 3x3 neighborhood
         assert_eq!(result[[1, 1]], 1.0);
     }
-    
+
     #[test]
     fn test_grey_dilation_optimized() {
-        let input = array![
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]
-        ];
-        
+        let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+
         let result = grey_dilation_2d_optimized(&input, None, None, None, None).unwrap();
-        
+
         // The center pixel should be the maximum of its 3x3 neighborhood
         assert_eq!(result[[1, 1]], 9.0);
     }
-    
+
     #[test]
     fn test_binary_erosion_optimized() {
         let input = array![
@@ -733,13 +723,13 @@ mod tests {
             [false, true, true],
             [false, false, false]
         ];
-        
+
         let result = binary_erosion_2d_optimized(&input, None, None, None, None).unwrap();
-        
+
         // Erosion should shrink the true region
         assert_eq!(result[[1, 1]], false);
     }
-    
+
     #[test]
     fn test_binary_dilation_optimized() {
         let input = array![
@@ -747,9 +737,9 @@ mod tests {
             [false, true, false],
             [false, false, false]
         ];
-        
+
         let result = binary_dilation_2d_optimized(&input, None, None, None, None).unwrap();
-        
+
         // Dilation should expand the true region
         assert_eq!(result[[0, 0]], true);
         assert_eq!(result[[1, 0]], true);

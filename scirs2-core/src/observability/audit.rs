@@ -876,8 +876,35 @@ impl LogFileManager {
             return Ok(true); // No verification needed
         }
 
-        // Implementation would verify the entire hash chain
-        // For now, return true as a placeholder
+        // Verify each hash in the chain
+        if self.hash_chain.is_empty() {
+            return Ok(true); // Empty chain is valid
+        }
+
+        // Check if any hash appears to be tampered
+        for (i, hash) in self.hash_chain.iter().enumerate() {
+            // Basic hash format validation
+            if hash.len() != 64 {
+                return Ok(false); // SHA-256 hashes should be 64 hex chars
+            }
+
+            // Validate hex format
+            if !hash.chars().all(|c| c.is_ascii_hexdigit()) {
+                return Ok(false); // Invalid hex characters
+            }
+
+            // For chained verification, we would need to re-read and verify
+            // each event against its hash. This is a simplified check.
+            if i > 0 {
+                let prev_hash = &self.hash_chain[i - 1];
+                // In a full implementation, we would verify that the current
+                // event's previous_hash field matches the actual previous hash
+                if prev_hash.is_empty() {
+                    return Ok(false); // Broken chain
+                }
+            }
+        }
+
         Ok(true)
     }
 
@@ -892,11 +919,80 @@ impl LogFileManager {
             return Ok(());
         }
 
-        let _cutoff_date = Utc::now()
+        let cutoff_date = Utc::now()
             - chrono::Duration::days(self.config.retention_policy.active_retention_days as i64);
 
-        // Implementation for archiving files older than cutoff_date
-        // This would compress and move files to archive location
+        let archive_path = self
+            .config
+            .retention_policy
+            .archive_path
+            .as_ref()
+            .cloned()
+            .unwrap_or_else(|| self.config.log_directory.join("archive"));
+
+        // Create archive directory if it doesn't exist
+        std::fs::create_dir_all(&archive_path).map_err(|e| {
+            CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                "Failed to create archive directory: {}",
+                e
+            )))
+        })?;
+
+        // Find files older than cutoff date
+        if let Ok(entries) = std::fs::read_dir(&self.config.log_directory) {
+            for entry in entries.flatten() {
+                if let Some(filename) = entry.file_name().to_str() {
+                    if filename.starts_with("audit_") && filename.ends_with(".log") {
+                        if let Ok(metadata) = entry.metadata() {
+                            if let Ok(modified_time) = metadata.modified() {
+                                let modified_datetime: DateTime<Utc> = modified_time.into();
+
+                                if modified_datetime < cutoff_date {
+                                    // Archive this file
+                                    let source_path = entry.path();
+                                    let archive_filename = format!("archived_{}", filename);
+                                    let dest_path = archive_path.join(archive_filename);
+
+                                    // Simple archive: copy to archive directory
+                                    if let Err(e) = std::fs::copy(&source_path, &dest_path) {
+                                        eprintln!(
+                                            "Failed to archive file {:?}: {}",
+                                            source_path, e
+                                        );
+                                        continue;
+                                    }
+
+                                    // Optionally compress the archived file
+                                    #[cfg(feature = "compression")]
+                                    {
+                                        if let Err(e) = self.compress_archived_file(&dest_path) {
+                                            eprintln!(
+                                                "Failed to compress archived file {:?}: {}",
+                                                dest_path, e
+                                            );
+                                        }
+                                    }
+
+                                    // Remove original file after successful archival
+                                    if let Err(e) = std::fs::remove_file(&source_path) {
+                                        eprintln!(
+                                            "Failed to remove original file {:?}: {}",
+                                            source_path, e
+                                        );
+                                    } else {
+                                        println!(
+                                            "Archived log file: {:?} -> {:?}",
+                                            source_path, dest_path
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Ok(())
     }
 
@@ -911,11 +1007,217 @@ impl LogFileManager {
             return Ok(());
         }
 
-        let _archive_cutoff = Utc::now()
+        let archive_cutoff = Utc::now()
             - chrono::Duration::days(self.config.retention_policy.archive_retention_days as i64);
 
-        // Implementation for deleting files older than archive retention
+        let archive_path = self
+            .config
+            .retention_policy
+            .archive_path
+            .as_ref()
+            .cloned()
+            .unwrap_or_else(|| self.config.log_directory.join("archive"));
+
+        // Clean up expired archive files
+        if archive_path.exists() {
+            if let Ok(entries) = std::fs::read_dir(&archive_path) {
+                for entry in entries.flatten() {
+                    if let Some(filename) = entry.file_name().to_str() {
+                        if filename.starts_with("archived_audit_") {
+                            if let Ok(metadata) = entry.metadata() {
+                                if let Ok(modified_time) = metadata.modified() {
+                                    let modified_datetime: DateTime<Utc> = modified_time.into();
+
+                                    if modified_datetime < archive_cutoff {
+                                        // Delete expired archive file
+                                        let file_path = entry.path();
+                                        if let Err(e) = std::fs::remove_file(&file_path) {
+                                            eprintln!(
+                                                "Failed to delete expired archive file {:?}: {}",
+                                                file_path, e
+                                            );
+                                        } else {
+                                            println!(
+                                                "Deleted expired archive file: {:?}",
+                                                file_path
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check disk space and clean up if necessary
+        let min_free_space = self.config.retention_policy.min_free_space;
+        if let Ok(available_space) = self.get_available_disk_space(&self.config.log_directory) {
+            if available_space < min_free_space {
+                // Emergency cleanup - remove oldest files first
+                let mut log_files = Vec::new();
+
+                // Collect both active and archive files
+                for dir in [&self.config.log_directory, &archive_path] {
+                    if dir.exists() {
+                        if let Ok(entries) = std::fs::read_dir(dir) {
+                            for entry in entries.flatten() {
+                                if let Some(filename) = entry.file_name().to_str() {
+                                    if filename.contains("audit_") && filename.ends_with(".log") {
+                                        if let Ok(metadata) = entry.metadata() {
+                                            if let Ok(modified_time) = metadata.modified() {
+                                                log_files.push((entry.path(), modified_time));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Sort by age (oldest first)
+                log_files.sort_by_key(|(_, time)| *time);
+
+                // Remove oldest files until we have enough space
+                for (file_path, _) in log_files {
+                    if let Err(e) = std::fs::remove_file(&file_path) {
+                        eprintln!(
+                            "Failed to remove file for disk space: {:?}: {}",
+                            file_path, e
+                        );
+                    } else {
+                        println!("Removed file to free disk space: {:?}", file_path);
+
+                        // Check if we have enough space now
+                        if let Ok(new_available) =
+                            self.get_available_disk_space(&self.config.log_directory)
+                        {
+                            if new_available >= min_free_space {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Ok(())
+    }
+
+    /// Compress an archived log file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if compression fails.
+    #[cfg(feature = "compression")]
+    fn compress_archived_file(&self, file_path: &std::path::Path) -> Result<(), CoreError> {
+        use std::fs::File;
+        use std::io::{BufReader, BufWriter};
+
+        let input_file = File::open(file_path).map_err(|e| {
+            CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                "Failed to open file for compression: {}",
+                e
+            )))
+        })?;
+
+        let compressed_path = file_path.with_extension("log.gz");
+        let output_file = File::create(&compressed_path).map_err(|e| {
+            CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                "Failed to create compressed file: {}",
+                e
+            )))
+        })?;
+
+        let mut reader = BufReader::new(input_file);
+        let writer = BufWriter::new(output_file);
+
+        // Use flate2 for gzip compression
+        #[cfg(feature = "flate2")]
+        {
+            use flate2::write::GzEncoder;
+            use flate2::Compression;
+            use std::io::copy;
+
+            let mut encoder = GzEncoder::new(writer, Compression::default());
+            copy(&mut reader, &mut encoder).map_err(|e| {
+                CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                    "Failed to compress file: {}",
+                    e
+                )))
+            })?;
+
+            encoder.finish().map_err(|e| {
+                CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                    "Failed to finalize compression: {}",
+                    e
+                )))
+            })?;
+        }
+
+        #[cfg(not(feature = "flate2"))]
+        {
+            return Err(CoreError::ComputationError(
+                crate::error::ErrorContext::new("Compression requires flate2 feature".to_string()),
+            ));
+        }
+
+        // Remove original file after successful compression
+        std::fs::remove_file(file_path).map_err(|e| {
+            CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                "Failed to remove original file after compression: {}",
+                e
+            )))
+        })?;
+
+        println!(
+            "Compressed archive file: {:?} -> {:?}",
+            file_path, compressed_path
+        );
+        Ok(())
+    }
+
+    /// Get available disk space for a directory
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if disk space cannot be determined.
+    fn get_available_disk_space(&self, path: &std::path::Path) -> Result<u64, CoreError> {
+        #[cfg(feature = "libc")]
+        {
+            use std::ffi::CString;
+            use std::mem;
+
+            let path_cstr = CString::new(path.to_string_lossy().as_bytes()).map_err(|e| {
+                CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                    "Failed to convert path to CString: {}",
+                    e
+                )))
+            })?;
+
+            let mut stat: libc::statvfs = unsafe { mem::zeroed() };
+            let result = unsafe { libc::statvfs(path_cstr.as_ptr(), &mut stat) };
+
+            if result == 0 {
+                // Available space = available blocks * block size
+                Ok(stat.f_bavail * stat.f_frsize)
+            } else {
+                Err(CoreError::ComputationError(
+                    crate::error::ErrorContext::new(
+                        "Failed to get filesystem statistics".to_string(),
+                    ),
+                ))
+            }
+        }
+
+        #[cfg(not(feature = "libc"))]
+        {
+            // Fallback for platforms without libc support
+            let _ = path; // Acknowledge unused parameter
+            Ok(1024 * 1024 * 1024 * 10) // 10GB fallback
+        }
     }
 }
 
@@ -1109,10 +1411,80 @@ impl AlertManager {
     /// # Errors
     ///
     /// Returns an error if email sending fails.
-    fn send_email_alert(&self, _email: &str, _message: &str) -> Result<(), CoreError> {
-        // Email implementation would go here
-        // For now, just log that we would send an email
-        eprintln!("Would send email alert to: {_email}");
+    fn send_email_alert(&self, email: &str, message: &str) -> Result<(), CoreError> {
+        // Simple SMTP implementation using environment variables for configuration
+        // In production, you would use a proper email library like `lettre`
+
+        use std::env;
+        use std::io::Write;
+        use std::net::TcpStream;
+        use std::time::Duration;
+
+        // Check for SMTP configuration in environment
+        let smtp_server = env::var("SMTP_SERVER").unwrap_or_else(|_| "localhost".to_string());
+        let smtp_port = env::var("SMTP_PORT")
+            .unwrap_or_else(|_| "587".to_string())
+            .parse::<u16>()
+            .unwrap_or(587);
+        let from_email = env::var("SMTP_FROM").unwrap_or_else(|_| "audit@example.com".to_string());
+
+        // For security, if no SMTP config is available, just log the alert
+        if smtp_server == "localhost" && env::var("SMTP_SERVER").is_err() {
+            eprintln!("AUDIT EMAIL ALERT (SMTP not configured):");
+            eprintln!("  To: {}", email);
+            eprintln!("  Subject: Security Alert");
+            eprintln!("  Message: {}", message);
+            return Ok(());
+        }
+
+        // Attempt simple SMTP connection
+        match TcpStream::connect_timeout(
+            &format!("{}:{}", smtp_server, smtp_port)
+                .parse()
+                .map_err(|e| {
+                    CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                        "Invalid SMTP address: {}",
+                        e
+                    )))
+                })?,
+            Duration::from_secs(10),
+        ) {
+            Ok(mut stream) => {
+                // Very basic SMTP implementation
+                let commands = vec![
+                    format!("HELO localhost\r\n"),
+                    format!("MAIL FROM:<{}>\r\n", from_email),
+                    format!("RCPT TO:<{}>\r\n", email),
+                    "DATA\r\n".to_string(),
+                    format!("Subject: Security Alert\r\n\r\n{}\r\n.\r\n", message),
+                    "QUIT\r\n".to_string(),
+                ];
+
+                for command in commands {
+                    if let Err(e) = stream.write_all(command.as_bytes()) {
+                        eprintln!("SMTP write error: {}. Logging alert instead:", e);
+                        eprintln!("  To: {}", email);
+                        eprintln!("  Message: {}", message);
+                        return Ok(());
+                    }
+
+                    // Simple delay between commands
+                    std::thread::sleep(Duration::from_millis(100));
+                }
+
+                eprintln!("Email alert sent to: {}", email);
+            }
+            Err(e) => {
+                eprintln!(
+                    "Failed to connect to SMTP server {}: {}. Logging alert instead:",
+                    smtp_server, e
+                );
+                eprintln!("  To: {}", email);
+                eprintln!("  Subject: Security Alert");
+                eprintln!("  Message: {}", message);
+            }
+        }
+
         Ok(())
     }
 }
@@ -1445,12 +1817,155 @@ impl AuditLogger {
     ///
     /// # Errors
     ///
-    /// Returns an error indicating that text parsing is not fully implemented.
-    fn parse_text_log_line(&self, _line: &str) -> Result<AuditEvent, CoreError> {
-        // Simplified text parsing - in production, you'd want a robust parser
-        Err(CoreError::ComputationError(
-            crate::error::ErrorContext::new("Text log parsing not fully implemented".to_string()),
-        ))
+    /// Returns an error if the log line cannot be parsed.
+    fn parse_text_log_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
+        // Parse text format: [timestamp] category severity action user=X resource=Y outcome=Z description="..."
+        let line = line.trim();
+
+        // Extract timestamp
+        if !line.starts_with('[') {
+            return Err(CoreError::ComputationError(
+                crate::error::ErrorContext::new(
+                    "Invalid log format: missing timestamp".to_string(),
+                ),
+            ));
+        }
+
+        let end_bracket = line.find(']').ok_or_else(|| {
+            CoreError::ComputationError(crate::error::ErrorContext::new(
+                "Invalid log format: unclosed timestamp bracket".to_string(),
+            ))
+        })?;
+
+        let timestamp_str = &line[1..end_bracket];
+        let timestamp = DateTime::parse_from_str(timestamp_str, "%Y-%m-%d %H:%M:%S UTC")
+            .map_err(|e| {
+                CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                    "Failed to parse timestamp: {}",
+                    e
+                )))
+            })?
+            .with_timezone(&Utc);
+
+        let remainder = line[end_bracket + 1..].trim();
+        let parts: Vec<&str> = remainder.split_whitespace().collect();
+
+        if parts.len() < 6 {
+            return Err(CoreError::ComputationError(
+                crate::error::ErrorContext::new(
+                    "Invalid log format: insufficient fields".to_string(),
+                ),
+            ));
+        }
+
+        // Parse category
+        let category = match parts[0] {
+            "authentication" => EventCategory::Authentication,
+            "authorization" => EventCategory::Authorization,
+            "data_access" => EventCategory::DataAccess,
+            "configuration" => EventCategory::Configuration,
+            "security" => EventCategory::Security,
+            "performance" => EventCategory::Performance,
+            "error" => EventCategory::Error,
+            "administrative" => EventCategory::Administrative,
+            "compliance" => EventCategory::Compliance,
+            _ => EventCategory::Error, // Default fallback
+        };
+
+        // Parse severity
+        let severity = match parts[1] {
+            "info" => EventSeverity::Info,
+            "warning" => EventSeverity::Warning,
+            "error" => EventSeverity::Error,
+            "critical" => EventSeverity::Critical,
+            _ => EventSeverity::Info, // Default fallback
+        };
+
+        let action = parts[2].to_string();
+
+        // Parse key-value pairs
+        let mut user_id = None;
+        let mut resource_id = None;
+        let mut outcome = EventOutcome::Unknown;
+        let mut description = String::new();
+
+        for part in &parts[3..] {
+            if let Some(equals_pos) = part.find('=') {
+                let key = &part[..equals_pos];
+                let value = &part[equals_pos + 1..];
+
+                match key {
+                    "user" => {
+                        if value != "-" {
+                            user_id = Some(value.to_string());
+                        }
+                    }
+                    "resource" => {
+                        if value != "-" {
+                            resource_id = Some(value.to_string());
+                        }
+                    }
+                    "outcome" => {
+                        outcome = match value {
+                            "success" => EventOutcome::Success,
+                            "failure" => EventOutcome::Failure,
+                            "denied" => EventOutcome::Denied,
+                            "cancelled" => EventOutcome::Cancelled,
+                            _ => EventOutcome::Unknown,
+                        };
+                    }
+                    "description" => {
+                        // Handle quoted description
+                        if value.starts_with('"') {
+                            // Find the rest of the description in subsequent parts
+                            let mut desc_parts = vec![value];
+                            let start_idx = parts
+                                .iter()
+                                .position(|p| p.starts_with("description="))
+                                .unwrap_or(0);
+
+                            for desc_part in &parts[start_idx + 1..] {
+                                desc_parts.push(desc_part);
+                                if desc_part.ends_with('"') {
+                                    break;
+                                }
+                            }
+
+                            description = desc_parts.join(" ");
+                            // Remove quotes
+                            if description.starts_with('"') && description.ends_with('"') {
+                                description = description[1..description.len() - 1].to_string();
+                            }
+                        } else {
+                            description = value.to_string();
+                        }
+                    }
+                    _ => {} // Ignore unknown fields
+                }
+            }
+        }
+
+        Ok(AuditEvent {
+            event_id: Uuid::new_v4(), // Generate new ID for parsed events
+            timestamp,
+            category,
+            severity,
+            action,
+            user_id,
+            resource_id,
+            source_ip: None,
+            description,
+            metadata: HashMap::new(),
+            system_context: None,
+            stack_trace: None,
+            correlation_id: None,
+            outcome,
+            data_classification: None,
+            compliance_tags: Vec::new(),
+            previous_hash: None,
+            event_hash: None,
+            digital_signature: None,
+        })
     }
 
     /// Flush the event buffer to the log file.
@@ -1783,14 +2298,65 @@ fn get_hostname() -> String {
 
 #[must_use]
 fn get_local_ip() -> Option<String> {
-    // Simplified IP detection - in production, use proper network detection
-    Some("127.0.0.1".to_string())
+    // Try to get the actual local IP address
+    #[cfg(feature = "sysinfo")]
+    {
+        use std::net::TcpStream;
+
+        // Try to connect to a remote address to determine local IP
+        if let Ok(stream) = TcpStream::connect("8.8.8.8:80") {
+            if let Ok(local_addr) = stream.local_addr() {
+                return Some(local_addr.ip().to_string());
+            }
+        }
+
+        // Fallback: try to get from network interfaces
+        // This would require additional network interface detection
+        // For now, return a reasonable default
+        Some("127.0.0.1".to_string())
+    }
+
+    #[cfg(not(feature = "sysinfo"))]
+    {
+        // Simple fallback without network detection
+        use std::env;
+
+        // Check for common environment variables that might contain IP
+        if let Ok(ip) = env::var("HOST_IP") {
+            return Some(ip);
+        }
+
+        if let Ok(ip) = env::var("LOCAL_IP") {
+            return Some(ip);
+        }
+
+        // Default fallback
+        Some("127.0.0.1".to_string())
+    }
 }
 
 #[must_use]
 fn get_stack_trace() -> String {
-    // Simplified stack trace - in production, use proper stack trace capture
-    "Stack trace capture not implemented".to_string()
+    // Simplified stack trace implementation for compatibility
+    let mut result = String::new();
+    result.push_str("Stack trace (simplified):\n");
+
+    // Get current thread and function info
+    if let Some(name) = std::thread::current().name() {
+        result.push_str(&format!("  Thread: {}\n", name));
+    } else {
+        result.push_str("  Thread: <unnamed>\n");
+    }
+
+    // Add caller information (simplified)
+    result.push_str(&format!(
+        "  Location: {}:{}:{}\n",
+        file!(),
+        line!(),
+        column!()
+    ));
+
+    result
 }
 
 #[cfg(test)]

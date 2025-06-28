@@ -140,13 +140,13 @@ where
     ) -> InterpolateResult<Self> {
         // Input validation
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 3 data points are required".to_string(),
             ));
         }
@@ -154,7 +154,7 @@ where
         // Check that x is sorted
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x values must be sorted in ascending order".to_string(),
                 ));
             }
@@ -289,7 +289,7 @@ where
         strategy: KnotStrategy,
     ) -> InterpolateResult<Self> {
         if num_knots < 2 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "num_knots must be at least 2".to_string(),
             ));
         }
@@ -479,7 +479,7 @@ where
     /// Create extended knot vector for B-splines
     fn create_extended_knots(interior_knots: &[F], degree: usize) -> InterpolateResult<Vec<F>> {
         if interior_knots.len() < 2 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "At least 2 interior knots required".to_string(),
             ));
         }
@@ -843,7 +843,7 @@ mod tests {
                 let rms_error = spline.rms_error();
                 assert!(rms_error < 1.0); // Relaxed tolerance for noisy data
             }
-            Err(InterpolateError::ValueError(msg)) if msg.contains("singular") => {
+            Err(InterpolateError::invalid_input(msg)) if msg.contains("singular") => {
                 // Accept numerical issues as this can happen with error-based strategies
                 println!(
                     "Error-based strategy encountered numerical issues (expected): {}",

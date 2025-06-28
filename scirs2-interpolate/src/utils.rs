@@ -5,7 +5,8 @@
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
-use std::fmt::Debug;
+use scirs2_core::safe_ops::{safe_divide, safe_sqrt};
+use std::fmt::{Debug, Display};
 
 /// Compute the error estimate for interpolation
 ///
@@ -57,18 +58,18 @@ pub fn error_estimate<F, Func>(
     interp_fn: Func,
 ) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug,
+    F: Float + FromPrimitive + Debug + Display,
     Func: Fn(&ArrayView1<F>, &ArrayView1<F>, &ArrayView1<F>) -> InterpolateResult<Array1<F>>,
 {
     if x.len() != y.len() {
-        return Err(InterpolateError::ValueError(
-            "x and y arrays must have the same length".to_string(),
+        return Err(InterpolateError::invalid_input(
+            "x and y arrays must have the same length"
         ));
     }
 
     if x.len() < 3 {
-        return Err(InterpolateError::ValueError(
-            "at least 3 points are required for error estimation".to_string(),
+        return Err(InterpolateError::invalid_input(
+            "at least 3 points are required for error estimation"
         ));
     }
 
@@ -99,8 +100,23 @@ where
         sum_squared_error = sum_squared_error + error * error;
     }
 
-    // Return RMSE
-    let rmse = (sum_squared_error / F::from_usize(n).unwrap()).sqrt();
+    // Return RMSE  
+    let n_f = F::from_usize(n).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert array length to float type".to_string()
+        )
+    })?;
+    
+    let variance = safe_divide(sum_squared_error, n_f)
+        .map_err(|_| InterpolateError::ComputationError(
+            "Division by zero in RMSE calculation".to_string()
+        ))?;
+    
+    let rmse = safe_sqrt(variance)
+        .map_err(|_| InterpolateError::ComputationError(
+            "Square root of negative value in RMSE calculation".to_string()
+        ))?;
+    
     Ok(rmse)
 }
 
@@ -123,13 +139,13 @@ pub fn optimize_parameter<F, Func, BuilderFunc>(
     interp_fn_builder: BuilderFunc,
 ) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug,
+    F: Float + FromPrimitive + Debug + Display,
     Func: Fn(&ArrayView1<F>, &ArrayView1<F>, &ArrayView1<F>) -> InterpolateResult<Array1<F>>,
     BuilderFunc: Fn(F) -> Func,
 {
     if param_values.is_empty() {
-        return Err(InterpolateError::ValueError(
-            "at least one parameter value must be provided".to_string(),
+        return Err(InterpolateError::invalid_input(
+            "at least one parameter value must be provided"
         ));
     }
 
@@ -191,13 +207,25 @@ where
 /// ```
 pub fn differentiate<F, Func>(x: F, h: F, eval_fn: Func) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug,
+    F: Float + FromPrimitive + Debug + Display,
     Func: Fn(F) -> InterpolateResult<F>,
 {
     // Use central difference for better accuracy
     let f_plus = eval_fn(x + h)?;
     let f_minus = eval_fn(x - h)?;
-    let derivative = (f_plus - f_minus) / (F::from_f64(2.0).unwrap() * h);
+    
+    let two = F::from_f64(2.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 2.0 to float type".to_string()
+        )
+    })?;
+    
+    let denominator = two * h;
+    let derivative = safe_divide(f_plus - f_minus, denominator)
+        .map_err(|_| InterpolateError::ComputationError(
+            "Division by zero in finite difference calculation (step size too small)".to_string()
+        ))?;
+    
     Ok(derivative)
 }
 
@@ -244,7 +272,7 @@ where
 /// ```
 pub fn integrate<F, Func>(a: F, b: F, n: usize, eval_fn: Func) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug,
+    F: Float + FromPrimitive + Debug + Display,
     Func: Fn(F) -> InterpolateResult<F>,
 {
     if a > b {
@@ -253,37 +281,79 @@ where
 
     // Use composite Simpson's rule for integration
     if n < 2 {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::InvalidValue(
             "number of intervals must be at least 2".to_string(),
         ));
     }
 
     if n % 2 != 0 {
-        return Err(InterpolateError::ValueError(
+        return Err(InterpolateError::InvalidValue(
             "number of intervals must be even".to_string(),
         ));
     }
 
-    let h = (b - a) / F::from_usize(n).unwrap();
+    let n_f = F::from_usize(n).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert number of intervals to float type".to_string()
+        )
+    })?;
+    
+    let h = safe_divide(b - a, n_f)
+        .map_err(|_| InterpolateError::ComputationError(
+            "Division by zero in step size calculation (zero intervals)".to_string()
+        ))?;
+    
     let mut sum = eval_fn(a)? + eval_fn(b)?;
 
     // Even-indexed points (except endpoints)
+    let two = F::from_f64(2.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 2.0 to float type".to_string()
+        )
+    })?;
+    
     for i in 1..n {
         if i % 2 == 0 {
-            let x_i = a + F::from_usize(i).unwrap() * h;
-            sum = sum + F::from_f64(2.0).unwrap() * eval_fn(x_i)?;
+            let i_f = F::from_usize(i).ok_or_else(|| {
+                InterpolateError::ComputationError(
+                    "Failed to convert index to float type".to_string()
+                )
+            })?;
+            let x_i = a + i_f * h;
+            sum = sum + two * eval_fn(x_i)?;
         }
     }
 
     // Odd-indexed points
+    let four = F::from_f64(4.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 4.0 to float type".to_string()
+        )
+    })?;
+    
     for i in 1..n {
         if i % 2 == 1 {
-            let x_i = a + F::from_usize(i).unwrap() * h;
-            sum = sum + F::from_f64(4.0).unwrap() * eval_fn(x_i)?;
+            let i_f = F::from_usize(i).ok_or_else(|| {
+                InterpolateError::ComputationError(
+                    "Failed to convert index to float type".to_string()
+                )
+            })?;
+            let x_i = a + i_f * h;
+            sum = sum + four * eval_fn(x_i)?;
         }
     }
 
-    let integral = h * sum / F::from_f64(3.0).unwrap();
+    let three = F::from_f64(3.0).ok_or_else(|| {
+        InterpolateError::ComputationError(
+            "Failed to convert constant 3.0 to float type".to_string()
+        )
+    })?;
+    
+    let integral = safe_divide(h * sum, three)
+        .map_err(|_| InterpolateError::ComputationError(
+            "Division by zero in Simpson's rule calculation".to_string()
+        ))?;
+    
     Ok(integral)
 }
 

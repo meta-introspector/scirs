@@ -93,13 +93,13 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
     ) -> InterpolateResult<Self> {
         // Check inputs
         if x.len() != y.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "x and y arrays must have the same length".to_string(),
             ));
         }
 
         if x.len() < 2 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "at least 2 points are required for interpolation".to_string(),
             ));
         }
@@ -107,7 +107,7 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
         // Check that x is sorted
         for i in 1..x.len() {
             if x[i] <= x[i - 1] {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "x values must be sorted in ascending order".to_string(),
                 ));
             }
@@ -154,7 +154,7 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
         // Check if we're extrapolating
         let is_extrapolating = x_new < self.x[0] || x_new > self.x[self.x.len() - 1];
         if is_extrapolating && !self.extrapolate {
-            return Err(InterpolateError::DomainError(
+            return Err(InterpolateError::OutOfBounds(
                 "x_new is outside the interpolation range".to_string(),
             ));
         }
@@ -234,21 +234,21 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
 
     /// Hermite basis function h₀₀(t)
     fn h00(t: F) -> F {
-        let two = F::from_f64(2.0).unwrap();
-        let three = F::from_f64(3.0).unwrap();
+        let two = F::from_f64(2.0).unwrap_or_else(|| F::from(2).unwrap_or(F::zero()));
+        let three = F::from_f64(3.0).unwrap_or_else(|| F::from(3).unwrap_or(F::zero()));
         (two * t * t * t) - (three * t * t) + F::one()
     }
 
     /// Hermite basis function h₁₀(t)
     fn h10(t: F) -> F {
-        let two = F::from_f64(2.0).unwrap();
+        let two = F::from_f64(2.0).unwrap_or_else(|| F::from(2).unwrap_or(F::zero()));
         (t * t * t) - (two * t * t) + t
     }
 
     /// Hermite basis function h₀₁(t)
     fn h01(t: F) -> F {
-        let two = F::from_f64(2.0).unwrap();
-        let three = F::from_f64(3.0).unwrap();
+        let two = F::from_f64(2.0).unwrap_or_else(|| F::from(2).unwrap_or(F::zero()));
+        let three = F::from_f64(3.0).unwrap_or_else(|| F::from(3).unwrap_or(F::zero()));
         -(two * t * t * t) + (three * t * t)
     }
 
@@ -283,8 +283,16 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
         }
 
         // For interior points, use PCHIP formula
-        let two = F::from_f64(2.0).unwrap();
-        let three = F::from_f64(3.0).unwrap();
+        let two = F::from_f64(2.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 2.0 to float type".to_string()
+            )
+        })?;
+        let three = F::from_f64(3.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 3.0 to float type".to_string()
+            )
+        })?;
 
         for i in 1..n - 1 {
             // Determine if slopes have different signs or if either is zero
@@ -401,7 +409,11 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
         }
 
         // Apply Hyman filtering to ensure monotonicity
-        let three = F::from_f64(3.0).unwrap();
+        let three = F::from_f64(3.0).ok_or_else(|| {
+            InterpolateError::ComputationError(
+                "Failed to convert constant 3.0 to float type".to_string()
+            )
+        })?;
 
         for i in 0..n {
             // For interior points, check adjacent slopes
@@ -497,8 +509,12 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
             // Only if the slopes have the same sign, use a weighted average approach
             if p1 * p2 > F::zero() {
                 // Bound the derivative to ensure monotonicity
-                derivatives[i] =
-                    F::min(a.abs(), min_slope * F::from_f64(2.0).unwrap()) * a.signum();
+                let two = F::from_f64(2.0).ok_or_else(|| {
+                    InterpolateError::ComputationError(
+                        "Failed to convert constant 2.0 to float type".to_string()
+                    )
+                })?;
+                derivatives[i] = F::min(a.abs(), min_slope * two) * a.signum();
             }
         }
 

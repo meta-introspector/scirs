@@ -4,9 +4,10 @@
 //! distances between all points. It extends MDS by using geodesic distances instead
 //! of Euclidean distances.
 
-use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
+use ndarray::{Array2, ArrayBase, Axis, Data, Ix2, Array1};
 use num_traits::{Float, NumCast};
-use scirs2_linalg::{eigh, svd};
+use scirs2_linalg::eigh;
+use scirs2_core::validation::{check_positive, check_shape};
 use std::collections::BinaryHeap;
 use std::f64;
 
@@ -167,7 +168,7 @@ impl Isomap {
         let n = distances.shape()[0];
         
         // Double center the squared distance matrix
-        let mut squared_distances = distances.mapv(|d| d * d);
+        let squared_distances = distances.mapv(|d| d * d);
         
         // Row means
         let row_means = squared_distances.mean_axis(Axis(1)).unwrap();
@@ -187,7 +188,7 @@ impl Isomap {
         }
         
         // Eigendecomposition
-        let (eigenvalues, eigenvectors) = match eigh(&gram.view()) {
+        let (eigenvalues, eigenvectors) = match eigh(&gram.view(), None) {
             Ok(result) => result,
             Err(e) => return Err(TransformError::LinalgError(e)),
         };
@@ -222,7 +223,12 @@ impl Isomap {
         S: Data,
         S::Elem: Float + NumCast,
     {
-        let n_samples = x.shape()[0];
+        let (n_samples, n_features) = x.dim();
+        
+        // Validate inputs
+        check_positive(self.n_neighbors, "n_neighbors")?;
+        check_positive(self.n_components, "n_components")?;
+        check_shape(x, (Some(n_samples), Some(n_features)), "x")?;
         
         if n_samples < self.n_neighbors {
             return Err(TransformError::InvalidInput(format!(
@@ -275,41 +281,24 @@ impl Isomap {
         S::Elem: Float + NumCast,
     {
         if self.embedding.is_none() {
-            return Err(TransformError::TransformationError(
+            return Err(TransformError::NotFitted(
                 "Isomap model has not been fitted".to_string(),
             ));
         }
         
-        // For simplicity, just return the fitted embedding for training data
-        // TODO: Implement proper out-of-sample extension using Landmark MDS
-        if let Some(ref training_data) = self.training_data {
-            let x_f64 = x.mapv(|v| num_traits::cast::<S::Elem, f64>(v).unwrap_or(0.0));
-            
-            // Check if this is the training data
-            if x_f64.shape() == training_data.shape() {
-                let mut is_same = true;
-                for i in 0..x_f64.shape()[0] {
-                    for j in 0..x_f64.shape()[1] {
-                        if (x_f64[[i, j]] - training_data[[i, j]]).abs() > 1e-10 {
-                            is_same = false;
-                            break;
-                        }
-                    }
-                    if !is_same {
-                        break;
-                    }
-                }
-                
-                if is_same {
-                    return Ok(self.embedding.as_ref().unwrap().clone());
-                }
-            }
+        let training_data = self.training_data.as_ref().ok_or_else(|| {
+            TransformError::NotFitted("Training data not available".to_string())
+        })?;
+        
+        let x_f64 = x.mapv(|v| num_traits::cast::<S::Elem, f64>(v).unwrap_or(0.0));
+        
+        // Check if this is the training data
+        if self.is_same_data(&x_f64, training_data) {
+            return Ok(self.embedding.as_ref().unwrap().clone());
         }
         
-        // For new data, we'd need to implement Landmark MDS
-        Err(TransformError::TransformationError(
-            "Out-of-sample extension not yet implemented".to_string(),
-        ))
+        // Implement Landmark MDS for out-of-sample extension
+        self.landmark_mds(&x_f64)
     }
 
     /// Fits the Isomap model and transforms the data
@@ -336,6 +325,204 @@ impl Isomap {
     /// Returns the geodesic distances computed during fitting
     pub fn geodesic_distances(&self) -> Option<&Array2<f64>> {
         self.geodesic_distances.as_ref()
+    }
+    
+    /// Check if the input data is the same as training data
+    fn is_same_data(&self, x: &Array2<f64>, training_data: &Array2<f64>) -> bool {
+        if x.dim() != training_data.dim() {
+            return false;
+        }
+        
+        let (n_samples, n_features) = x.dim();
+        for i in 0..n_samples {
+            for j in 0..n_features {
+                if (x[[i, j]] - training_data[[i, j]]).abs() > 1e-10 {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+    
+    /// Implement Landmark MDS for out-of-sample extension
+    fn landmark_mds(&self, x_new: &Array2<f64>) -> Result<Array2<f64>> {
+        let training_data = self.training_data.as_ref().unwrap();
+        let training_embedding = self.embedding.as_ref().unwrap();
+        let geodesic_distances = self.geodesic_distances.as_ref().unwrap();
+        
+        let (n_new, n_features) = x_new.dim();
+        let (n_training, _) = training_data.dim();
+        
+        if n_features != training_data.ncols() {
+            return Err(TransformError::InvalidInput(format!(
+                "Input features {} must match training features {}",
+                n_features, training_data.ncols()
+            )));
+        }
+        
+        // Step 1: Compute distances from new points to all training points
+        let mut distances_to_training = Array2::zeros((n_new, n_training));
+        for i in 0..n_new {
+            for j in 0..n_training {
+                let mut dist_sq = 0.0;
+                for k in 0..n_features {
+                    let diff = x_new[[i, k]] - training_data[[j, k]];
+                    dist_sq += diff * diff;
+                }
+                distances_to_training[[i, j]] = dist_sq.sqrt();
+            }
+        }
+        
+        // Step 2: Apply Landmark MDS algorithm
+        // For each new point, find its coordinates that minimize stress
+        // with respect to the known training points
+        let mut new_embedding = Array2::zeros((n_new, self.n_components));
+        
+        for i in 0..n_new {
+            // Use weighted least squares to find optimal coordinates
+            let coords = self.solve_landmark_coordinates(
+                &distances_to_training.row(i),
+                training_embedding,
+                geodesic_distances,
+            )?;
+            
+            for j in 0..self.n_components {
+                new_embedding[[i, j]] = coords[j];
+            }
+        }
+        
+        Ok(new_embedding)
+    }
+    
+    /// Solve for landmark coordinates using weighted least squares
+    fn solve_landmark_coordinates(
+        &self,
+        distances_to_landmarks: &ndarray::ArrayView1<f64>,
+        landmark_embedding: &Array2<f64>,
+        geodesic_distances: &Array2<f64>,
+    ) -> Result<Array1<f64>> {
+        let n_landmarks = landmark_embedding.nrows();
+        
+        // Use a subset of landmarks for efficiency (select k nearest)
+        let k_landmarks = (n_landmarks / 2).max(self.n_components + 1).min(n_landmarks);
+        
+        // Find k nearest landmarks
+        let mut landmark_dists: Vec<(f64, usize)> = distances_to_landmarks
+            .indexed_iter()
+            .map(|(idx, &dist)| (dist, idx))
+            .collect();
+        landmark_dists.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        
+        // Use the k nearest landmarks
+        let selected_landmarks: Vec<usize> = landmark_dists
+            .into_iter()
+            .take(k_landmarks)
+            .map(|(_, idx)| idx)
+            .collect();
+        
+        // Build system: A * x = b where x are the coordinates
+        // Using the constraint that distances in embedding space should
+        // approximate geodesic distances
+        let mut A = Array2::zeros((k_landmarks, self.n_components));
+        let mut b = Array1::zeros(k_landmarks);
+        let mut weights = Array1::zeros(k_landmarks);
+        
+        // For each selected landmark, create a constraint equation
+        for (row_idx, &landmark_idx) in selected_landmarks.iter().enumerate() {
+            let dist_to_landmark = distances_to_landmarks[landmark_idx];
+            let weight = if dist_to_landmark > 1e-10 { 1.0 / (dist_to_landmark + 1e-10) } else { 1e10 };
+            weights[row_idx] = weight;
+            
+            // Target distance is the distance from new point to this landmark
+            b[row_idx] = dist_to_landmark * weight;
+            
+            // Coefficients are the landmark coordinates (weighted)
+            for dim in 0..self.n_components {
+                A[[row_idx, dim]] = landmark_embedding[[landmark_idx, dim]] * weight;
+            }
+        }
+        
+        // Solve weighted least squares: A^T W A x = A^T W b
+        // where W is the diagonal weight matrix
+        let mut AtWA = Array2::zeros((self.n_components, self.n_components));
+        let mut AtWb = Array1::zeros(self.n_components);
+        
+        for i in 0..self.n_components {
+            for j in 0..self.n_components {
+                for k in 0..k_landmarks {
+                    AtWA[[i, j]] += A[[k, i]] * weights[k] * A[[k, j]];
+                }
+            }
+            for k in 0..k_landmarks {
+                AtWb[i] += A[[k, i]] * weights[k] * b[k];
+            }
+        }
+        
+        // Add regularization to prevent singular matrix
+        for i in 0..self.n_components {
+            AtWA[[i, i]] += 1e-10;
+        }
+        
+        // Solve using simple Gaussian elimination for small systems
+        self.solve_linear_system(&AtWA, &AtWb)
+    }
+    
+    /// Simple linear system solver for small matrices
+    fn solve_linear_system(&self, A: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+        let n = A.nrows();
+        let mut A_copy = A.clone();
+        let mut b_copy = b.clone();
+        
+        // Gaussian elimination with partial pivoting
+        for i in 0..n {
+            // Find pivot
+            let mut max_row = i;
+            for k in i + 1..n {
+                if A_copy[[k, i]].abs() > A_copy[[max_row, i]].abs() {
+                    max_row = k;
+                }
+            }
+            
+            // Swap rows
+            if max_row != i {
+                for j in 0..n {
+                    let temp = A_copy[[i, j]];
+                    A_copy[[i, j]] = A_copy[[max_row, j]];
+                    A_copy[[max_row, j]] = temp;
+                }
+                let temp = b_copy[i];
+                b_copy[i] = b_copy[max_row];
+                b_copy[max_row] = temp;
+            }
+            
+            // Check for singular matrix
+            if A_copy[[i, i]].abs() < 1e-12 {
+                return Err(TransformError::ComputationError(
+                    "Singular matrix in landmark MDS".to_string(),
+                ));
+            }
+            
+            // Eliminate
+            for k in i + 1..n {
+                let factor = A_copy[[k, i]] / A_copy[[i, i]];
+                for j in i..n {
+                    A_copy[[k, j]] -= factor * A_copy[[i, j]];
+                }
+                b_copy[k] -= factor * b_copy[i];
+            }
+        }
+        
+        // Back substitution
+        let mut x = Array1::zeros(n);
+        for i in (0..n).rev() {
+            x[i] = b_copy[i];
+            for j in i + 1..n {
+                x[i] -= A_copy[[i, j]] * x[j];
+            }
+            x[i] /= A_copy[[i, i]];
+        }
+        
+        Ok(x)
     }
 }
 

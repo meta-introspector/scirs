@@ -136,7 +136,7 @@ where
     }
 
     /// Create a partitioner with default configuration
-    pub fn default() -> Self {
+    pub fn with_default_config() -> Self {
         Self::new(PartitionerConfig::default())
     }
 
@@ -320,7 +320,7 @@ where
 
     /// Partition data into equal-sized chunks
     fn partition_equal_size(&self, data: &[T]) -> CoreResult<Vec<Vec<T>>> {
-        let chunk_size = (data.len() + self.config.num_partitions - 1) / self.config.num_partitions;
+        let chunk_size = data.len().div_ceil(self.config.num_partitions);
         let mut partitions = Vec::with_capacity(self.config.num_partitions);
 
         for chunk in data.chunks(chunk_size) {
@@ -405,7 +405,7 @@ where
 
         // Calculate total number of leaf partitions
         let num_leaves = branching_factor.pow(levels as u32);
-        let chunk_size = (data.len() + num_leaves - 1) / num_leaves;
+        let chunk_size = data.len().div_ceil(num_leaves);
 
         let mut partitions = Vec::with_capacity(num_leaves);
         for chunk in data.chunks(chunk_size) {
@@ -664,7 +664,7 @@ mod tests {
 
     #[test]
     fn test_uniform_distribution_detection() {
-        let partitioner = DataPartitioner::<f64>::default();
+        let partitioner = DataPartitioner::<f64>::with_default_config();
         let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
 
         let distribution = partitioner.analyze_distribution(&data);
@@ -678,7 +678,7 @@ mod tests {
 
     #[test]
     fn test_skewed_distribution_detection() {
-        let partitioner = DataPartitioner::<f64>::default();
+        let partitioner = DataPartitioner::<f64>::with_default_config();
         // Create heavily skewed data
         let mut data = vec![1.0; 900];
         data.extend(vec![100.0; 100]);

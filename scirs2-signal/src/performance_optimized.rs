@@ -10,7 +10,7 @@
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
 use crate::filter::FilterType;
-use ndarray::{Array1, Array2, ArrayView1, ArrayViewMut1, Axis, Zip};
+use ndarray::{Array1, Array2, ArrayView1, ArrayViewMut1, Axis, Zip, s};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -422,31 +422,42 @@ pub fn optimized_convolve_2d(
     let tile_size = (config.cache_line_size * 4) / std::mem::size_of::<f64>();
 
     if config.use_parallel {
-        // Parallel processing of tiles
-        (0..((out_rows + tile_size - 1) / tile_size))
-            .into_par_iter()
-            .try_for_each(|tile_row| {
+        // Generate tile coordinates
+        let mut tile_coords = Vec::new();
+        for tile_row in 0..((out_rows + tile_size - 1) / tile_size) {
+            for tile_col in 0..((out_cols + tile_size - 1) / tile_size) {
                 let row_start = tile_row * tile_size;
                 let row_end = (row_start + tile_size).min(out_rows);
-
-                for tile_col in 0..((out_cols + tile_size - 1) / tile_size) {
-                    let col_start = tile_col * tile_size;
-                    let col_end = (col_start + tile_size).min(out_cols);
-
-                    // Process tile
-                    process_tile_simd(
-                        image,
-                        kernel,
-                        &mut output,
-                        row_start,
-                        row_end,
-                        col_start,
-                        col_end,
-                    );
-                }
-
-                Ok::<(), SignalError>(())
-            })?;
+                let col_start = tile_col * tile_size;
+                let col_end = (col_start + tile_size).min(out_cols);
+                tile_coords.push((row_start, row_end, col_start, col_end));
+            }
+        }
+        
+        // Process tiles in parallel and collect results
+        let tile_results: Vec<Array2<f64>> = tile_coords
+            .into_par_iter()
+            .map(|(row_start, row_end, col_start, col_end)| {
+                let mut tile_output = Array2::zeros((row_end - row_start, col_end - col_start));
+                process_tile_simd_independent(
+                    image,
+                    kernel,
+                    &mut tile_output,
+                    row_start,
+                    row_end,
+                    col_start,
+                    col_end,
+                );
+                (tile_output, row_start, row_end, col_start, col_end)
+            })
+            .collect::<Vec<_>>()
+            .into_iter()
+            .map(|(tile, row_start, row_end, col_start, col_end)| {
+                // Copy tile result back to main output
+                output.slice_mut(s![row_start..row_end, col_start..col_end]).assign(&tile);
+                tile
+            })
+            .collect();
     } else {
         // Sequential processing
         for row_tile in 0..((out_rows + tile_size - 1) / tile_size) {
@@ -471,6 +482,46 @@ pub fn optimized_convolve_2d(
     }
 
     Ok(output)
+}
+
+/// Process a tile independently for parallel processing
+fn process_tile_simd_independent(
+    image: &Array2<f64>,
+    kernel: &Array2<f64>,
+    output: &mut Array2<f64>,
+    global_row_start: usize,
+    global_row_end: usize,
+    global_col_start: usize,
+    global_col_end: usize,
+) {
+    let (ker_rows, ker_cols) = kernel.dim();
+
+    for local_row in 0..(global_row_end - global_row_start) {
+        for local_col in 0..(global_col_end - global_col_start) {
+            let global_row = global_row_start + local_row;
+            let global_col = global_col_start + local_col;
+            
+            let mut sum = 0.0;
+
+            // Flatten kernel and image patch for SIMD
+            let mut patch = Vec::with_capacity(ker_rows * ker_cols);
+            let mut kernel_flat = Vec::with_capacity(ker_rows * ker_cols);
+
+            for kr in 0..ker_rows {
+                for kc in 0..ker_cols {
+                    patch.push(image[[global_row + kr, global_col + kc]]);
+                    kernel_flat.push(kernel[[kr, kc]]);
+                }
+            }
+
+            // SIMD dot product
+            let patch_view = ArrayView1::from(&patch);
+            let kernel_view = ArrayView1::from(&kernel_flat);
+            sum = f64::simd_dot(&patch_view, &kernel_view);
+
+            output[[local_row, local_col]] = sum;
+        }
+    }
 }
 
 /// Process a tile with SIMD operations

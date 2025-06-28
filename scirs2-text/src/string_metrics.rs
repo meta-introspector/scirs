@@ -585,18 +585,13 @@ impl PhoneticAlgorithm for Nysiis {
                     }
                 }
                 'H' => {
-                    if !matches!(prev, 'A' | 'E' | 'I' | 'O' | 'U') 
-                        && !matches!(next, Some('A') | Some('E') | Some('I') | Some('O') | Some('U')) {
-                        if prev != ch {
-                            result.push('H');
-                        }
+                    if !matches!(prev, 'A' | 'E' | 'I' | 'O' | 'U') && !matches!(next, Some('A') | Some('E') | Some('I') | Some('O') | Some('U')) && prev != ch {
+                        result.push('H');
                     }
                 }
                 'W' => {
-                    if matches!(prev, 'A' | 'E' | 'I' | 'O' | 'U') {
-                        if prev != ch {
-                            result.push('W');
-                        }
+                    if matches!(prev, 'A' | 'E' | 'I' | 'O' | 'U') && prev != ch {
+                        result.push('W');
                     }
                 }
                 _ => {
@@ -659,8 +654,8 @@ impl NeedlemanWunsch {
         let mut matrix = vec![vec![0; n + 1]; m + 1];
 
         // Initialize first row and column with gap penalties
-        for i in 0..=m {
-            matrix[i][0] = i as i32 * self.gap_penalty;
+        for (i, item) in matrix.iter_mut().enumerate().take(m + 1) {
+            item[0] = i as i32 * self.gap_penalty;
         }
         for j in 0..=n {
             matrix[0][j] = j as i32 * self.gap_penalty;

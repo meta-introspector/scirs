@@ -26,6 +26,7 @@ use crate::array_protocol::{
     get_implementing_args, ArrayFunction, ArrayProtocol, NdarrayWrapper, NotImplemented,
 };
 use crate::error::CoreError;
+// Note: num_traits not needed for current implementation
 
 /// Error type for array operations.
 #[derive(Debug, thiserror::Error)]
@@ -94,25 +95,18 @@ array_function_dispatch!(
         let boxed_args: Vec<Box<dyn Any>> = vec![boxed_a, boxed_b];
         let implementing_args = get_implementing_args(&boxed_args);
         if implementing_args.is_empty() {
-            // Fallback implementation for ndarray types
-            // Try with Ix2 dimension (static dimension size)
+            // Comprehensive fallback implementation for ndarray types
+
+            // f64 types with Ix2 dimension (static dimension size)
             if let (Some(a_array), Some(b_array)) = (
                 a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>(),
                 b.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>(),
             ) {
-                // Extract arrays and compute matrix multiplication manually
-                // to avoid complex borrow/trait inference issues with dot()
                 let a_array_owned = a_array.as_array().clone();
                 let b_array_owned = b_array.as_array().clone();
-
-                // Manual implementation of matrix multiplication
                 let (m, k) = a_array_owned.dim();
                 let (_, n) = b_array_owned.dim();
-
-                // Create result array
                 let mut result = ndarray::Array::<f64, _>::zeros((m, n));
-
-                // Compute the matrix multiplication
                 for i in 0..m {
                     for j in 0..n {
                         let mut sum = 0.0;
@@ -124,34 +118,25 @@ array_function_dispatch!(
                 }
                 return Ok(Box::new(NdarrayWrapper::new(result)));
             }
-            // Try with IxDyn dimension (dynamic dimension size used in tests)
-            else if let (Some(a_array), Some(b_array)) = (
+
+            // f64 types with IxDyn dimension (dynamic dimension size)
+            if let (Some(a_array), Some(b_array)) = (
                 a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
                 b.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
             ) {
-                // Extract arrays and compute matrix multiplication with dynamic dimensions manually
-                // to avoid complex borrow/trait inference issues with dot()
                 let a_array_owned = a_array.as_array().to_owned();
                 let b_array_owned = b_array.as_array().to_owned();
-
-                // Manual implementation of matrix multiplication
                 let a_dim = a_array_owned.shape();
                 let b_dim = b_array_owned.shape();
-
                 if a_dim.len() != 2 || b_dim.len() != 2 || a_dim[1] != b_dim[0] {
                     return Err(OperationError::ShapeMismatch(format!(
                         "Invalid shapes for matmul: {:?} and {:?}",
                         a_dim, b_dim
                     )));
                 }
-
                 let (m, k) = (a_dim[0], a_dim[1]);
                 let n = b_dim[1];
-
-                // Create result array
                 let mut result = ndarray::Array::<f64, _>::zeros((m, n).into_dimension());
-
-                // Compute the matrix multiplication
                 for i in 0..m {
                     for j in 0..n {
                         let mut sum = 0.0;
@@ -163,6 +148,59 @@ array_function_dispatch!(
                 }
                 return Ok(Box::new(NdarrayWrapper::new(result)));
             }
+
+            // f32 types with Ix2 dimension
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, Ix2>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, Ix2>>(),
+            ) {
+                let a_array_owned = a_array.as_array().clone();
+                let b_array_owned = b_array.as_array().clone();
+                let (m, k) = a_array_owned.dim();
+                let (_, n) = b_array_owned.dim();
+                let mut result = ndarray::Array::<f32, _>::zeros((m, n));
+                for i in 0..m {
+                    for j in 0..n {
+                        let mut sum = 0.0;
+                        for l in 0..k {
+                            sum += a_array_owned[[i, l]] * b_array_owned[[l, j]];
+                        }
+                        result[[i, j]] = sum;
+                    }
+                }
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
+            // f32 types with IxDyn dimension
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+            ) {
+                let a_array_owned = a_array.as_array().to_owned();
+                let b_array_owned = b_array.as_array().to_owned();
+                let a_dim = a_array_owned.shape();
+                let b_dim = b_array_owned.shape();
+                if a_dim.len() != 2 || b_dim.len() != 2 || a_dim[1] != b_dim[0] {
+                    return Err(OperationError::ShapeMismatch(format!(
+                        "Invalid shapes for matmul: {:?} and {:?}",
+                        a_dim, b_dim
+                    )));
+                }
+                let (m, k) = (a_dim[0], a_dim[1]);
+                let n = b_dim[1];
+                let mut result = ndarray::Array::<f32, _>::zeros((m, n).into_dimension());
+                for i in 0..m {
+                    for j in 0..n {
+                        let mut sum = 0.0;
+                        for l in 0..k {
+                            sum += a_array_owned[[i, l]] * b_array_owned[[l, j]];
+                        }
+                        result[[i, j]] = sum;
+                    }
+                }
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
             return Err(OperationError::NotImplemented(
                 "matmul not implemented for these array types".to_string(),
             ));
@@ -201,8 +239,16 @@ array_function_dispatch!(
         let boxed_args: Vec<Box<dyn Any>> = vec![boxed_a, boxed_b];
         let implementing_args = get_implementing_args(&boxed_args);
         if implementing_args.is_empty() {
-            // Fallback implementation for ndarray types
-            // Try with Ix2 dimension first (most common case)
+            // Comprehensive fallback implementation for ndarray types
+
+            // f64 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f64, Ix1>>(),
+            ) {
+                let result = a_array.as_array() + b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
             if let (Some(a_array), Some(b_array)) = (
                 a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>(),
                 b.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>(),
@@ -210,14 +256,83 @@ array_function_dispatch!(
                 let result = a_array.as_array() + b_array.as_array();
                 return Ok(Box::new(NdarrayWrapper::new(result)));
             }
-            // Try with IxDyn dimension (used in tests)
-            else if let (Some(a_array), Some(b_array)) = (
+            if let (Some(a_array), Some(b_array)) = (
                 a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
                 b.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
             ) {
                 let result = a_array.as_array() + b_array.as_array();
                 return Ok(Box::new(NdarrayWrapper::new(result)));
             }
+
+            // f32 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, Ix1>>(),
+            ) {
+                let result = a_array.as_array() + b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, Ix2>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, Ix2>>(),
+            ) {
+                let result = a_array.as_array() + b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+            ) {
+                let result = a_array.as_array() + b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
+            // i32 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i32, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i32, Ix1>>(),
+            ) {
+                let result = a_array.as_array() + b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i32, Ix2>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i32, Ix2>>(),
+            ) {
+                let result = a_array.as_array() + b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>(),
+            ) {
+                let result = a_array.as_array() + b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
+            // i64 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i64, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i64, Ix1>>(),
+            ) {
+                let result = a_array.as_array() + b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i64, Ix2>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i64, Ix2>>(),
+            ) {
+                let result = a_array.as_array() + b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>(),
+            ) {
+                let result = a_array.as_array() + b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
             return Err(OperationError::NotImplemented(
                 "add not implemented for these array types".to_string(),
             ));
@@ -256,8 +371,16 @@ array_function_dispatch!(
         let boxed_args: Vec<Box<dyn Any>> = vec![boxed_a, boxed_b];
         let implementing_args = get_implementing_args(&boxed_args);
         if implementing_args.is_empty() {
-            // Fallback implementation for ndarray types
-            // Try with Ix2 dimension first (most common case)
+            // Comprehensive fallback implementation for ndarray types
+
+            // f64 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f64, Ix1>>(),
+            ) {
+                let result = a_array.as_array() - b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
             if let (Some(a_array), Some(b_array)) = (
                 a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>(),
                 b.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>(),
@@ -265,14 +388,83 @@ array_function_dispatch!(
                 let result = a_array.as_array() - b_array.as_array();
                 return Ok(Box::new(NdarrayWrapper::new(result)));
             }
-            // Try with IxDyn dimension (used in tests)
-            else if let (Some(a_array), Some(b_array)) = (
+            if let (Some(a_array), Some(b_array)) = (
                 a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
                 b.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
             ) {
                 let result = a_array.as_array() - b_array.as_array();
                 return Ok(Box::new(NdarrayWrapper::new(result)));
             }
+
+            // f32 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, Ix1>>(),
+            ) {
+                let result = a_array.as_array() - b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, Ix2>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, Ix2>>(),
+            ) {
+                let result = a_array.as_array() - b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+            ) {
+                let result = a_array.as_array() - b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
+            // i32 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i32, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i32, Ix1>>(),
+            ) {
+                let result = a_array.as_array() - b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i32, Ix2>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i32, Ix2>>(),
+            ) {
+                let result = a_array.as_array() - b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>(),
+            ) {
+                let result = a_array.as_array() - b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
+            // i64 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i64, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i64, Ix1>>(),
+            ) {
+                let result = a_array.as_array() - b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i64, Ix2>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i64, Ix2>>(),
+            ) {
+                let result = a_array.as_array() - b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>(),
+            ) {
+                let result = a_array.as_array() - b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
             return Err(OperationError::NotImplemented(
                 "subtract not implemented for these array types".to_string(),
             ));
@@ -311,8 +503,16 @@ array_function_dispatch!(
         let boxed_args: Vec<Box<dyn Any>> = vec![boxed_a, boxed_b];
         let implementing_args = get_implementing_args(&boxed_args);
         if implementing_args.is_empty() {
-            // Fallback implementation for ndarray types
-            // Try with Ix2 dimension first (most common case)
+            // Comprehensive fallback implementation for ndarray types
+
+            // f64 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f64, Ix1>>(),
+            ) {
+                let result = a_array.as_array() * b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
             if let (Some(a_array), Some(b_array)) = (
                 a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>(),
                 b.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>(),
@@ -320,14 +520,83 @@ array_function_dispatch!(
                 let result = a_array.as_array() * b_array.as_array();
                 return Ok(Box::new(NdarrayWrapper::new(result)));
             }
-            // Try with IxDyn dimension (used in tests)
-            else if let (Some(a_array), Some(b_array)) = (
+            if let (Some(a_array), Some(b_array)) = (
                 a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
                 b.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
             ) {
                 let result = a_array.as_array() * b_array.as_array();
                 return Ok(Box::new(NdarrayWrapper::new(result)));
             }
+
+            // f32 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, Ix1>>(),
+            ) {
+                let result = a_array.as_array() * b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, Ix2>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, Ix2>>(),
+            ) {
+                let result = a_array.as_array() * b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+            ) {
+                let result = a_array.as_array() * b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
+            // i32 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i32, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i32, Ix1>>(),
+            ) {
+                let result = a_array.as_array() * b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i32, Ix2>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i32, Ix2>>(),
+            ) {
+                let result = a_array.as_array() * b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>(),
+            ) {
+                let result = a_array.as_array() * b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
+            // i64 types
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i64, Ix1>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i64, Ix1>>(),
+            ) {
+                let result = a_array.as_array() * b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i64, Ix2>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i64, Ix2>>(),
+            ) {
+                let result = a_array.as_array() * b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+            if let (Some(a_array), Some(b_array)) = (
+                a.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>(),
+                b.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>(),
+            ) {
+                let result = a_array.as_array() * b_array.as_array();
+                return Ok(Box::new(NdarrayWrapper::new(result)));
+            }
+
             return Err(OperationError::NotImplemented(
                 "multiply not implemented for these array types".to_string(),
             ));
@@ -773,6 +1042,156 @@ array_function_dispatch!(
     },
     "scirs2::array_protocol::operations::inverse"
 );
+
+// Scalar multiplication operation (implemented without macro due to generic constraints)
+pub fn multiply_by_scalar_f64(
+    a: &dyn ArrayProtocol,
+    scalar: f64,
+) -> Result<Box<dyn ArrayProtocol>, OperationError> {
+    // Get implementing args
+    let boxed_a = Box::new(a.box_clone());
+    let boxed_args: Vec<Box<dyn Any>> = vec![boxed_a];
+    let implementing_args = get_implementing_args(&boxed_args);
+    if implementing_args.is_empty() {
+        // Fallback implementation for ndarray types
+        if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix1>>() {
+            let result = a_array.as_array() * scalar;
+            return Ok(Box::new(NdarrayWrapper::new(result)));
+        }
+        if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
+            let result = a_array.as_array() * scalar;
+            return Ok(Box::new(NdarrayWrapper::new(result)));
+        }
+        if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
+            let result = a_array.as_array() * scalar;
+            return Ok(Box::new(NdarrayWrapper::new(result)));
+        }
+        return Err(OperationError::NotImplemented(
+            "multiply_by_scalar not implemented for this array type".to_string(),
+        ));
+    }
+
+    // Delegate to the implementation
+    let mut kwargs = HashMap::new();
+    kwargs.insert("scalar".to_string(), Box::new(scalar) as Box<dyn Any>);
+
+    let array_ref = implementing_args[0].1;
+
+    let result = array_ref.array_function(
+        &ArrayFunction::new("scirs2::array_protocol::operations::multiply_by_scalar_f64"),
+        &[TypeId::of::<Box<dyn ArrayProtocol>>()],
+        &[Box::new(a.box_clone())],
+        &kwargs,
+    )?;
+
+    // Try to downcast the result
+    match result.downcast::<Box<dyn ArrayProtocol>>() {
+        Ok(array) => Ok(*array),
+        Err(_) => Err(OperationError::Other(
+            "Failed to downcast result to ArrayProtocol".to_string(),
+        )),
+    }
+}
+
+// Scalar multiplication for f32
+pub fn multiply_by_scalar_f32(
+    a: &dyn ArrayProtocol,
+    scalar: f32,
+) -> Result<Box<dyn ArrayProtocol>, OperationError> {
+    // Get implementing args
+    let boxed_a = Box::new(a.box_clone());
+    let boxed_args: Vec<Box<dyn Any>> = vec![boxed_a];
+    let implementing_args = get_implementing_args(&boxed_args);
+    if implementing_args.is_empty() {
+        // Fallback implementation for ndarray types
+        if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f32, Ix1>>() {
+            let result = a_array.as_array() * scalar;
+            return Ok(Box::new(NdarrayWrapper::new(result)));
+        }
+        if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f32, Ix2>>() {
+            let result = a_array.as_array() * scalar;
+            return Ok(Box::new(NdarrayWrapper::new(result)));
+        }
+        if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>() {
+            let result = a_array.as_array() * scalar;
+            return Ok(Box::new(NdarrayWrapper::new(result)));
+        }
+        return Err(OperationError::NotImplemented(
+            "multiply_by_scalar not implemented for this array type".to_string(),
+        ));
+    }
+
+    // Delegate to the implementation
+    let mut kwargs = HashMap::new();
+    kwargs.insert("scalar".to_string(), Box::new(scalar) as Box<dyn Any>);
+
+    let array_ref = implementing_args[0].1;
+
+    let result = array_ref.array_function(
+        &ArrayFunction::new("scirs2::array_protocol::operations::multiply_by_scalar_f32"),
+        &[TypeId::of::<Box<dyn ArrayProtocol>>()],
+        &[Box::new(a.box_clone())],
+        &kwargs,
+    )?;
+
+    // Try to downcast the result
+    match result.downcast::<Box<dyn ArrayProtocol>>() {
+        Ok(array) => Ok(*array),
+        Err(_) => Err(OperationError::Other(
+            "Failed to downcast result to ArrayProtocol".to_string(),
+        )),
+    }
+}
+
+// Scalar division for f64
+pub fn divide_by_scalar_f64(
+    a: &dyn ArrayProtocol,
+    scalar: f64,
+) -> Result<Box<dyn ArrayProtocol>, OperationError> {
+    // Get implementing args
+    let boxed_a = Box::new(a.box_clone());
+    let boxed_args: Vec<Box<dyn Any>> = vec![boxed_a];
+    let implementing_args = get_implementing_args(&boxed_args);
+    if implementing_args.is_empty() {
+        // Fallback implementation for ndarray types
+        if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix1>>() {
+            let result = a_array.as_array() / scalar;
+            return Ok(Box::new(NdarrayWrapper::new(result)));
+        }
+        if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
+            let result = a_array.as_array() / scalar;
+            return Ok(Box::new(NdarrayWrapper::new(result)));
+        }
+        if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
+            let result = a_array.as_array() / scalar;
+            return Ok(Box::new(NdarrayWrapper::new(result)));
+        }
+        return Err(OperationError::NotImplemented(
+            "divide_by_scalar not implemented for this array type".to_string(),
+        ));
+    }
+
+    // Delegate to the implementation
+    let mut kwargs = HashMap::new();
+    kwargs.insert("scalar".to_string(), Box::new(scalar) as Box<dyn Any>);
+
+    let array_ref = implementing_args[0].1;
+
+    let result = array_ref.array_function(
+        &ArrayFunction::new("scirs2::array_protocol::operations::divide_by_scalar_f64"),
+        &[TypeId::of::<Box<dyn ArrayProtocol>>()],
+        &[Box::new(a.box_clone())],
+        &kwargs,
+    )?;
+
+    // Try to downcast the result
+    match result.downcast::<Box<dyn ArrayProtocol>>() {
+        Ok(array) => Ok(*array),
+        Err(_) => Err(OperationError::Other(
+            "Failed to downcast result to ArrayProtocol".to_string(),
+        )),
+    }
+}
 
 #[cfg(test)]
 mod tests {

@@ -15,7 +15,7 @@ const A4: f32 = -1.453152027;
 const A5: f32 = 1.061405429;
 const P: f32 = 0.3275911;
 
-// Error function approximation using Abramowitz and Stegun formula
+// Error function approximation using Abramowitz and Stegun formula (optimized)
 fn erf_approx(x: f32) -> f32 {
     // Save the sign of x
     let sign = select(-1.0, 1.0, x >= 0.0);
@@ -26,48 +26,58 @@ fn erf_approx(x: f32) -> f32 {
         return sign;
     }
     
-    // A&S formula 7.1.26
-    let t = 1.0 / (1.0 + P * ax);
+    // A&S formula 7.1.26 with optimized polynomial evaluation using Horner's method
+    let t = 1.0 / fma(P, ax, 1.0);
     let t2 = t * t;
-    let t3 = t2 * t;
-    let t4 = t2 * t2;
-    let t5 = t4 * t;
     
-    let y = 1.0 - (A1 * t + A2 * t2 + A3 * t3 + A4 * t4 + A5 * t5) * exp(-ax * ax);
+    // Use Horner's method for better numerical stability and performance
+    let poly = fma(fma(fma(fma(A5, t, A4), t, A3), t, A2), t, A1) * t;
+    
+    // Use fma for the final computation
+    let ax2 = ax * ax;
+    let y = fma(-poly, exp(-ax2), 1.0);
     
     return sign * y;
 }
 
-// More accurate error function for small values
+// More accurate error function for small values (optimized Taylor series)
 fn erf_taylor(x: f32) -> f32 {
-    // Taylor series for small |x|
+    // Taylor series for small |x| with optimized computation
     if (abs(x) < 0.5) {
         let x2 = x * x;
-        let x3 = x * x2;
-        let x5 = x3 * x2;
-        let x7 = x5 * x2;
-        let x9 = x7 * x2;
         
-        let two_sqrt_pi = 1.1283791670955126;
-        return (2.0 / two_sqrt_pi) * (x - x3 / 3.0 + x5 / 10.0 - x7 / 42.0 + x9 / 216.0);
+        // Use Horner's method for Taylor series: erf(x) ≈ (2/√π) * x * (1 - x²/3 + x⁴/10 - x⁶/42 + x⁸/216)
+        let series = fma(fma(fma(fma(x2, 0.004629629629629629, -0.023809523809523808), x2, 0.1), x2, -0.3333333333333333), x2, 1.0);
+        
+        let two_over_sqrt_pi = 1.1283791670955126;
+        return two_over_sqrt_pi * x * series;
     }
     
     return erf_approx(x);
 }
 
-// Main error function
+// Main error function with comprehensive optimizations
 fn erf_optimized(x: f32) -> f32 {
-    // Handle special cases
+    // Handle special cases efficiently
     if (x != x) { // NaN check
         return x;
     }
     
-    if (x == 0.0) {
+    let ax = abs(x);
+    
+    if (ax == 0.0) {
         return 0.0;
     }
     
-    if (abs(x) > 10.0) {
+    // Early exit for very large values
+    if (ax > 10.0) {
         return select(-1.0, 1.0, x > 0.0);
+    }
+    
+    // Use branch-free selection for better GPU performance
+    // For very small values (< 1e-6), use simple approximation: erf(x) ≈ (2/√π) * x
+    if (ax < 1e-6) {
+        return 1.1283791670955126 * x;
     }
     
     // Use Taylor series for small values, approximation for larger

@@ -148,8 +148,8 @@ pub fn gpu_convolve_2d(
             
             // Calculate work groups
             let workgroup_size = 16;
-            let work_groups_x = (out_height + workgroup_size - 1) / workgroup_size;
-            let work_groups_y = (out_width + workgroup_size - 1) / workgroup_size;
+            let work_groups_x = out_height.div_ceil(workgroup_size);
+            let work_groups_y = out_width.div_ceil(workgroup_size);
             
             // Dispatch the kernel
             kernel_handle.dispatch([work_groups_x as u32, work_groups_y as u32, 1]);
@@ -282,8 +282,8 @@ fn conv2d_vision(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 kernel_handle.set_u32("k_width", k_width as u32);
                 
                 let workgroup_size = 16;
-                let work_groups_x = (height + workgroup_size - 1) / workgroup_size;
-                let work_groups_y = (width + workgroup_size - 1) / workgroup_size;
+                let work_groups_x = height.div_ceil(workgroup_size);
+                let work_groups_y = width.div_ceil(workgroup_size);
                 
                 kernel_handle.dispatch([work_groups_x as u32, work_groups_y as u32, 1]);
                 
@@ -424,7 +424,7 @@ fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 kernel_handle.set_u32("size", (height * width) as u32);
                 
                 let workgroup_size = 256;
-                let work_groups = ((height * width) + workgroup_size - 1) / workgroup_size;
+                let work_groups = (height * width).div_ceil(workgroup_size);
                 
                 kernel_handle.dispatch([work_groups as u32, 1, 1]);
                 
@@ -480,10 +480,10 @@ fn generate_gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
     let mut kernel = vec![0.0f32; size];
     let mut sum = 0.0f32;
     
-    for i in 0..size {
+    for (i, kernel_val) in kernel.iter_mut().enumerate() {
         let x = i as f32 - half as f32;
         let value = (-x * x / (2.0 * sigma * sigma)).exp();
-        kernel[i] = value;
+        *kernel_val = value;
         sum += value;
     }
     
@@ -552,7 +552,7 @@ fn gpu_separable_1d_pass(
     let output_buffer = ctx.context.create_buffer::<f32>(height * width);
     
     let kernel_source = match ctx.backend() {
-        GpuBackend::Cuda => format!(r#"
+        GpuBackend::Cuda => r#"
 extern "C" __global__ void separable_conv_1d(
     const float* __restrict__ input,
     const float* __restrict__ kernel,
@@ -561,7 +561,7 @@ extern "C" __global__ void separable_conv_1d(
     int width,
     int kernel_size,
     int horizontal
-) {{
+) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int total_size = height * width;
     
@@ -572,27 +572,27 @@ extern "C" __global__ void separable_conv_1d(
     int half_kernel = kernel_size / 2;
     float sum = 0.0f;
     
-    if (horizontal) {{
+    if (horizontal) {
         // Horizontal pass
-        for (int k = 0; k < kernel_size; k++) {{
+        for (int k = 0; k < kernel_size; k++) {
             int src_x = x + k - half_kernel;
-            if (src_x >= 0 && src_x < width) {{
+            if (src_x >= 0 && src_x < width) {
                 sum += input[y * width + src_x] * kernel[k];
-            }}
-        }}
-    }} else {{
+            }
+        }
+    } else {
         // Vertical pass
-        for (int k = 0; k < kernel_size; k++) {{
+        for (int k = 0; k < kernel_size; k++) {
             int src_y = y + k - half_kernel;
-            if (src_y >= 0 && src_y < height) {{
+            if (src_y >= 0 && src_y < height) {
                 sum += input[src_y * width + x] * kernel[k];
-            }}
-        }}
-    }}
+            }
+        }
+    }
     
     output[idx] = sum;
-}}
-"#),
+}
+"#.to_string(),
         _ => {
             // Fall back for unsupported backends
             return Ok(input.to_vec());
@@ -611,7 +611,7 @@ extern "C" __global__ void separable_conv_1d(
                 kernel_handle.set_i32("horizontal", if horizontal { 1 } else { 0 });
                 
                 let workgroup_size = 256;
-                let work_groups = ((height * width) + workgroup_size - 1) / workgroup_size;
+                let work_groups = (height * width).div_ceil(workgroup_size);
                 
                 kernel_handle.dispatch([work_groups as u32, 1, 1]);
                 
@@ -722,7 +722,7 @@ fn element_wise_multiply(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 kernel_handle.set_u32("size", (height * width) as u32);
                 
                 let workgroup_size = 256;
-                let work_groups = ((height * width) + workgroup_size - 1) / workgroup_size;
+                let work_groups = (height * width).div_ceil(workgroup_size);
                 
                 kernel_handle.dispatch([work_groups as u32, 1, 1]);
                 
@@ -839,7 +839,7 @@ fn harris_response(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 kernel_handle.set_u32("size", (height * width) as u32);
                 
                 let workgroup_size = 256;
-                let work_groups = ((height * width) + workgroup_size - 1) / workgroup_size;
+                let work_groups = (height * width).div_ceil(workgroup_size);
                 
                 kernel_handle.dispatch([work_groups as u32, 1, 1]);
                 
@@ -894,9 +894,13 @@ where
 
 /// GPU memory usage statistics
 pub struct GpuMemoryStats {
+    /// Total GPU memory in bytes
     pub total_memory: usize,
+    /// Available GPU memory in bytes
     pub available_memory: usize,
+    /// Used GPU memory in bytes
     pub used_memory: usize,
+    /// GPU memory utilization as percentage (0-100)
     pub utilization_percent: f32,
 }
 
@@ -923,6 +927,7 @@ pub struct GpuBenchmark {
 }
 
 impl GpuBenchmark {
+    /// Create a new GPU benchmark instance
     pub fn new() -> Result<Self> {
         Ok(Self {
             ctx: GpuVisionContext::new()?,

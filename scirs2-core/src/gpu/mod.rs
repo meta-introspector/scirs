@@ -614,6 +614,16 @@ pub(crate) trait GpuBufferImpl: Send + Sync {
 
     /// Get a reference to self as Any for downcasting
     fn as_any(&self) -> &dyn std::any::Any;
+
+    /// Get the size of the buffer in bytes
+    fn size(&self) -> usize {
+        0 // Default implementation for backward compatibility
+    }
+
+    /// Get the device pointer (for backends that use device pointers)
+    fn device_ptr(&self) -> u64 {
+        0 // Default implementation for backward compatibility
+    }
 }
 
 /// GPU kernel implementation trait
@@ -710,6 +720,14 @@ impl GpuBufferImpl for CpuBuffer {
 
     fn as_any(&self) -> &dyn std::any::Any {
         self
+    }
+
+    fn size(&self) -> usize {
+        self.data.len()
+    }
+
+    fn device_ptr(&self) -> u64 {
+        self.data.as_ptr() as u64
     }
 }
 

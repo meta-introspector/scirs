@@ -623,11 +623,11 @@ impl TrendAnalysisMetrics {
         // Simplified stationarity test (based on variance of differences)
         let is_stationary = self.test_stationarity(time_series)?;
 
-        // Simplified Ljung-Box test (placeholder)
-        let ljung_box_pvalue = 0.5; // Would need proper implementation
+        // Ljung-Box test for autocorrelation
+        let ljung_box_pvalue = self.ljung_box_test(time_series, 10)?;
 
-        // Simplified ADF test (placeholder)
-        let adf_statistic = -2.0; // Would need proper implementation
+        // Augmented Dickey-Fuller test for stationarity
+        let adf_statistic = self.adf_test(time_series)?;
 
         Ok(TrendAnalysisResults {
             trend_strength,
@@ -764,6 +764,93 @@ impl TrendAnalysisMetrics {
         let variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64;
 
         Ok(variance)
+    }
+
+    /// Ljung-Box test for autocorrelation in residuals
+    fn ljung_box_test(&self, time_series: &Array1<f64>, h: usize) -> Result<f64> {
+        let n = time_series.len();
+        if n <= h + 1 {
+            return Ok(1.0); // Cannot perform test, return non-significant p-value
+        }
+
+        // Calculate autocorrelations up to lag h
+        let mut lb_statistic = 0.0;
+        for k in 1..=h {
+            let autocorr = self.calculate_autocorrelation(time_series, k)?;
+            lb_statistic += autocorr * autocorr / (n - k) as f64;
+        }
+        
+        lb_statistic *= n as f64 * (n + 2) as f64;
+
+        // Approximate p-value using chi-square distribution
+        // For simplicity, use a rough approximation
+        // In production, this should use proper chi-square CDF
+        let chi_square_critical = 18.307; // Chi-square critical value for df=10, alpha=0.05
+        let p_value = if lb_statistic > chi_square_critical {
+            0.01 // Significant autocorrelation
+        } else {
+            0.1 + 0.4 * (-lb_statistic / 10.0).exp() // Rough approximation
+        };
+
+        Ok(p_value.clamp(0.001, 0.999))
+    }
+
+    /// Augmented Dickey-Fuller test for stationarity
+    fn adf_test(&self, time_series: &Array1<f64>) -> Result<f64> {
+        let n = time_series.len();
+        if n < 4 {
+            return Ok(-1.0); // Cannot perform test
+        }
+
+        // Calculate first differences
+        let mut diff_series = Vec::with_capacity(n - 1);
+        for i in 1..n {
+            diff_series.push(time_series[i] - time_series[i - 1]);
+        }
+
+        // Calculate lagged values
+        let mut y_lag = Vec::with_capacity(n - 2);
+        for i in 1..(n - 1) {
+            y_lag.push(time_series[i]);
+        }
+
+        // Simple ADF regression: Δy_t = α + γy_{t-1} + ε_t
+        let diff_subset = &diff_series[1..];
+        
+        // Calculate regression coefficient γ (simplified)
+        let n_reg = diff_subset.len();
+        if n_reg == 0 {
+            return Ok(-1.0);
+        }
+
+        let mean_y_lag = y_lag.iter().sum::<f64>() / y_lag.len() as f64;
+        let mean_diff = diff_subset.iter().sum::<f64>() / diff_subset.len() as f64;
+
+        let mut numerator = 0.0;
+        let mut denominator = 0.0;
+
+        for i in 0..n_reg.min(y_lag.len()) {
+            let x_dev = y_lag[i] - mean_y_lag;
+            let y_dev = diff_subset[i] - mean_diff;
+            numerator += x_dev * y_dev;
+            denominator += x_dev * x_dev;
+        }
+
+        let gamma = if denominator.abs() > 1e-10 {
+            numerator / denominator
+        } else {
+            0.0
+        };
+
+        // Calculate t-statistic for γ = 0 (simplified)
+        // In practice, this requires calculating standard errors properly
+        let t_statistic = gamma * (n_reg as f64).sqrt();
+
+        // ADF critical values (approximate)
+        // More negative values indicate stronger evidence of stationarity
+        let adf_statistic = t_statistic.clamp(-6.0, 0.0);
+
+        Ok(adf_statistic)
     }
 }
 

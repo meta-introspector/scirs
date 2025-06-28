@@ -8,7 +8,7 @@
 use super::memmap::AccessMode;
 use super::memmap::MemoryMappedArray;
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use ndarray::{ArrayBase, Dimension, SliceInfo, SliceInfoElem};
+use ndarray::{ArrayBase, Dimension, IxDyn, SliceInfo, SliceInfoElem};
 use std::marker::PhantomData;
 use std::ops::RangeBounds;
 
@@ -68,6 +68,100 @@ where
         &self.slice_info
     }
 
+    /// Safely convert an array to the target dimension type with detailed error reporting.
+    fn safe_dimensionality_conversion(
+        array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>,
+        context: &str,
+    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+        let source_shape = array.shape().to_vec();
+        let source_ndim = source_shape.len();
+        let target_ndim = D::NDIM;
+
+        // Try direct conversion first
+        match array.into_dimensionality::<D>() {
+            Ok(converted) => Ok(converted),
+            Err(_original_array) => {
+                // Conversion failed, try to provide helpful error message and fallback strategies
+                let error_msg = match (source_ndim, target_ndim) {
+                    (s, Some(t)) if s == t => {
+                        format!(
+                            "Dimension conversion failed for {} array despite matching dimensions ({} -> {}). \
+                             Source shape: {:?}, target dimension type: {}",
+                            context, s, t, source_shape, std::any::type_name::<D>()
+                        )
+                    }
+                    (s, Some(t)) if s > t => {
+                        format!(
+                            "Cannot convert {} array: too many dimensions ({} -> {}). \
+                             Source shape: {:?}. Consider using a higher-dimensional target type or \
+                             applying additional slicing to reduce dimensions.",
+                            context, s, t, source_shape
+                        )
+                    }
+                    (s, Some(t)) if s < t => {
+                        // Try to add singleton dimensions for lower-dimensional arrays
+                        // Cannot expand dimensions automatically - return error
+                        format!(
+                            "Cannot expand {} array from {} to {} dimensions automatically. \
+                             Source shape: {:?}. Consider reshaping the array manually.",
+                            context, s, t, source_shape
+                        )
+                    }
+                    (s, None) => {
+                        format!(
+                            "Cannot convert {} array to dynamic dimension type. \
+                             Source shape: {:?}, source dimensions: {}",
+                            context, source_shape, s
+                        )
+                    }
+                    _ => {
+                        format!(
+                            "Unexpected dimension conversion failure for {} array. \
+                             Source shape: {:?}",
+                            context, source_shape
+                        )
+                    }
+                };
+
+                Err(CoreError::ShapeError(ErrorContext::new(error_msg)))
+            }
+        }
+    }
+
+    /// Try to expand dimensions by adding singleton dimensions.
+    fn try_expand_dimensions(
+        array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>,
+        context: &str,
+        source_dims: usize,
+        target_dims: usize,
+    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+        // For cases where we have fewer dimensions than needed, try adding singleton dimensions
+        if target_dims == 2 && source_dims == 1 {
+            // Try to reshape 1D array to 2D by adding a singleton dimension
+            let len = array.len();
+
+            // Try (len, 1) first
+            if let Ok(reshaped) = array.clone().into_shape_with_order((len, 1)) {
+                if let Ok(converted) = reshaped.into_dimensionality::<D>() {
+                    return Ok(converted);
+                }
+            }
+
+            // Try (1, len) orientation
+            if let Ok(reshaped) = array.into_shape_with_order((1, len)) {
+                if let Ok(converted) = reshaped.into_dimensionality::<D>() {
+                    return Ok(converted);
+                }
+            }
+        }
+
+        Err(CoreError::ShapeError(ErrorContext::new(format!(
+            "Cannot expand {} array from {} to {} dimensions. \
+             Automatic dimension expansion failed.",
+            context, source_dims, target_dims
+        ))))
+    }
+
     /// Loads the slice data into memory.
     ///
     /// This method materializes the slice by loading only the necessary data
@@ -76,75 +170,102 @@ where
         // Get the raw data slice
         let data_slice = self.source.as_slice();
 
-        // Create a view with the target dimension type directly if possible
-        if let Some(ndim) = D::NDIM {
-            if ndim == self.source.shape.len() {
-                // Try to create array view with the specific dimension type
-                match ndim {
-                    1 => {
-                        if self.source.shape.len() == 1 {
-                            // Create Ix1 shape
-                            let view =
-                                ndarray::ArrayView1::from_shape(self.source.shape[0], data_slice)
-                                    .map_err(|e| {
-                                    CoreError::ShapeError(ErrorContext::new(format!(
-                                        "Failed to create 1D array view: {}",
-                                        e
-                                    )))
-                                })?;
+        // Use generic approach that works for all dimension types
+        self.load_slice_generic(data_slice)
+    }
 
-                            // Apply slice and convert
-                            let slice_elements = self.slice_info.as_ref();
-                            return self.apply_slice_1d(view, slice_elements);
-                        }
-                    }
-                    2 => {
-                        if self.source.shape.len() == 2 {
-                            // Create Ix2 shape
-                            let view = ndarray::ArrayView2::from_shape(
-                                (self.source.shape[0], self.source.shape[1]),
-                                data_slice,
-                            )
-                            .map_err(|e| {
-                                CoreError::ShapeError(ErrorContext::new(format!(
-                                    "Failed to create 2D array view: {}",
-                                    e
-                                )))
-                            })?;
-
-                            // Apply slice and convert
-                            let slice_elements = self.slice_info.as_ref();
-                            return self.apply_slice_2d(view, slice_elements);
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-
-        // Fallback to dynamic array approach for other cases
+    /// Generic slice loading that works for all dimension types
+    fn load_slice_generic(&self, data_slice: &[A]) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
         use ndarray::IxDyn;
-        let shape = IxDyn(&self.source.shape);
-        let source_array = ndarray::ArrayView::from_shape(shape, data_slice).map_err(|e| {
+        
+        // Validate dimension compatibility first
+        self.validate_dimension_compatibility()?;
+        
+        // Create dynamic array view from source
+        let source_shape = IxDyn(&self.source.shape);
+        let source_array = ndarray::ArrayView::from_shape(source_shape, data_slice).map_err(|e| {
             CoreError::ShapeError(ErrorContext::new(format!(
-                "Failed to create array view: {}",
-                e
+                "Failed to create array view from source shape {:?}: {}",
+                self.source.shape, e
             )))
         })?;
 
-        // Convert SliceInfo to a slice arg that can be used with IxDyn
+        // Apply the slice using ndarray's generic slicing
         let slice_elements = self.slice_info.as_ref();
+        let sliced = self.apply_slice_safely_owned(source_array, slice_elements)?;
+
+        // Convert to target dimension with robust error handling
+        Self::safe_dimensionality_conversion(sliced, "sliced array")
+    }
+
+    /// Validate that the slice operation is compatible with target dimension
+    fn validate_dimension_compatibility(&self) -> CoreResult<()> {
+        let source_ndim = self.source.shape.len();
+        let slice_elements = self.slice_info.as_ref();
+        
+        // Count how many dimensions will remain after slicing (non-index slices)
+        let remaining_dims = slice_elements.iter()
+            .take(source_ndim) // Only count up to source dimensions
+            .filter(|elem| !matches!(elem, SliceInfoElem::Index(_)))
+            .count()
+            .max(source_ndim - slice_elements.iter()
+                .filter(|elem| matches!(elem, SliceInfoElem::Index(_)))
+                .count());
+
+        // Check if target dimension is compatible
+        if let Some(target_ndim) = D::NDIM {
+            if remaining_dims != target_ndim {
+                return Err(CoreError::DimensionError(ErrorContext::new(format!(
+                    "Dimension mismatch: slice operation will result in {}D array, but target type expects {}D. \
+                     Source shape: {:?}, slice elements: {} (including {} index operations)",
+                    remaining_dims, target_ndim, self.source.shape, slice_elements.len(),
+                    slice_elements.iter().filter(|e| matches!(e, SliceInfoElem::Index(_))).count()
+                ))));
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Safely apply slice to array view with proper error handling, returning owned array
+    fn apply_slice_safely_owned(
+        &self,
+        source_array: ndarray::ArrayView<A, IxDyn>,
+        slice_elements: &[SliceInfoElem],
+    ) -> CoreResult<ndarray::Array<A, IxDyn>> {
+        if slice_elements.is_empty() {
+            return Ok(source_array.to_owned());
+        }
 
         // Apply the slice using ndarray's slicing
         let sliced = source_array.slice_each_axis(|ax| {
             if ax.axis.index() < slice_elements.len() {
                 match &slice_elements[ax.axis.index()] {
                     SliceInfoElem::Slice { start, end, step } => {
-                        // Keep values as isize to avoid conversion issues
-                        let end_val = end.map(|e| e).unwrap_or(ax.len as isize);
-                        ndarray::Slice::new(*start, Some(end_val), *step)
+                        // Handle negative indices and bounds checking
+                        let dim_size = ax.len as isize;
+                        let safe_start = self.handle_negative_index(*start, dim_size);
+                        let safe_end = if let Some(e) = end {
+                            self.handle_negative_index(*e, dim_size)
+                        } else {
+                            dim_size
+                        };
+                        
+                        // Ensure indices are within bounds
+                        let clamped_start = safe_start.max(0).min(dim_size) as usize;
+                        let clamped_end = safe_end.max(0).min(dim_size) as usize;
+                        
+                        // Validate step
+                        let safe_step = step.max(&1).abs() as usize;
+                        
+                        ndarray::Slice::new(clamped_start as isize, Some(clamped_end as isize), safe_step as isize)
                     }
-                    SliceInfoElem::Index(idx) => ndarray::Slice::new(*idx, Some(*idx + 1), 1),
+                    SliceInfoElem::Index(idx) => {
+                        let dim_size = ax.len as isize;
+                        let safe_idx = self.handle_negative_index(*idx, dim_size);
+                        let clamped_idx = safe_idx.max(0).min(dim_size - 1) as usize;
+                        ndarray::Slice::new(clamped_idx as isize, Some((clamped_idx + 1) as isize), 1)
+                    }
                     _ => ndarray::Slice::new(0, None, 1),
                 }
             } else {
@@ -152,235 +273,15 @@ where
             }
         });
 
-        // Convert to owned array
-        let owned = sliced.to_owned();
-
-        // For 2D slices, we know the expected shape
-        if D::NDIM == Some(2) && slice_elements.len() == 2 {
-            // Calculate the shape from the slice elements
-            let mut new_shape = Vec::new();
-            for (i, elem) in slice_elements.iter().enumerate() {
-                match elem {
-                    SliceInfoElem::Slice { start, end, step } => {
-                        // Safely get the dimension size, defaulting to a reasonable value if out of bounds
-                        let dim_size = if i < self.source.shape.len() {
-                            self.source.shape[i] as isize
-                        } else {
-                            // This shouldn't happen for properly constructed slices
-                            1
-                        };
-
-                        // Handle negative indices properly
-                        let actual_start = if *start < 0 {
-                            (dim_size + *start).max(0) as usize
-                        } else {
-                            (*start).min(dim_size) as usize
-                        };
-
-                        let actual_end = if let Some(e) = end {
-                            if *e < 0 {
-                                (dim_size + *e).max(0) as usize
-                            } else {
-                                (*e).min(dim_size) as usize
-                            }
-                        } else {
-                            dim_size as usize
-                        };
-
-                        let step_size = (*step).abs() as usize;
-                        let len = if step_size > 0 {
-                            (actual_end.saturating_sub(actual_start)).div_ceil(step_size)
-                        } else {
-                            0
-                        };
-                        new_shape.push(len);
-                    }
-                    SliceInfoElem::Index(_) => {
-                        // Index reduces dimension, but we're expecting a 2D result
-                        new_shape.push(1);
-                    }
-                    _ => {}
-                }
-            }
-
-            // Create the properly shaped array
-            if new_shape.len() == 2 {
-                // Debug output
-                eprintln!(
-                    "DEBUG: Trying to reshape from {:?} to {:?}",
-                    owned.shape(),
-                    (new_shape[0], new_shape[1])
-                );
-                eprintln!(
-                    "DEBUG: owned.len() = {}, new_shape product = {}",
-                    owned.len(),
-                    new_shape[0] * new_shape[1]
-                );
-
-                let reshaped = owned
-                    .into_shape_with_order((new_shape[0], new_shape[1]))
-                    .map_err(|e| {
-                        CoreError::ShapeError(ErrorContext::new(format!(
-                            "Failed to reshape sliced array: {}",
-                            e
-                        )))
-                    })?;
-
-                // Convert to the target dimension type
-                match reshaped.into_dimensionality::<D>() {
-                    Ok(array) => Ok(array),
-                    Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
-                        "Failed to convert reshaped array to target dimension type",
-                    ))),
-                }
-            } else {
-                // Try the original conversion
-                match owned.into_dimensionality::<D>() {
-                    Ok(array) => Ok(array),
-                    Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
-                        "Failed to convert sliced array to target dimension type",
-                    ))),
-                }
-            }
-        } else {
-            // For other dimensions, try direct conversion
-            match owned.into_dimensionality::<D>() {
-                Ok(array) => Ok(array),
-                Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
-                    "Failed to convert sliced array to target dimension type",
-                ))),
-            }
-        }
+        Ok(sliced.to_owned())
     }
 
-    /// Apply slice to a 1D array view
-    fn apply_slice_1d(
-        &self,
-        view: ndarray::ArrayView1<A>,
-        slice_elements: &[SliceInfoElem],
-    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
-        if slice_elements.is_empty() {
-            // No slicing, just convert to owned
-            let owned = view.to_owned();
-            match owned.into_dimensionality::<D>() {
-                Ok(array) => Ok(array),
-                Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
-                    "Failed to convert 1D array to target dimension type",
-                ))),
-            }
+    /// Handle negative indices properly  
+    fn handle_negative_index(&self, index: isize, dim_size: isize) -> isize {
+        if index < 0 {
+            dim_size + index
         } else {
-            // Apply the slice and convert to owned immediately
-            let owned = match &slice_elements[0] {
-                SliceInfoElem::Slice { start, end, step } => {
-                    let end_val = end.unwrap_or(view.len() as isize);
-                    view.slice(ndarray::s![*start..end_val;*step]).to_owned()
-                }
-                SliceInfoElem::Index(idx) => {
-                    // Index reduces dimension, return a 0-d array
-                    view.slice(ndarray::s![*idx..*idx + 1]).to_owned()
-                }
-                _ => view.to_owned(),
-            };
-            match owned.into_dimensionality::<D>() {
-                Ok(array) => Ok(array),
-                Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
-                    "Failed to convert sliced 1D array to target dimension type",
-                ))),
-            }
-        }
-    }
-
-    /// Apply slice to a 2D array view
-    fn apply_slice_2d(
-        &self,
-        view: ndarray::ArrayView2<A>,
-        slice_elements: &[SliceInfoElem],
-    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
-        if slice_elements.is_empty() {
-            // No slicing, just convert to owned
-            let owned = view.to_owned();
-            match owned.into_dimensionality::<D>() {
-                Ok(array) => Ok(array),
-                Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
-                    "Failed to convert 2D array to target dimension type",
-                ))),
-            }
-        } else {
-            // Apply slices for each dimension
-            let row_slice = if slice_elements.len() > 0 {
-                &slice_elements[0]
-            } else {
-                return Err(CoreError::ShapeError(ErrorContext::new(
-                    "Missing row slice for 2D array",
-                )));
-            };
-
-            let col_slice = if slice_elements.len() > 1 {
-                &slice_elements[1]
-            } else {
-                return Err(CoreError::ShapeError(ErrorContext::new(
-                    "Missing column slice for 2D array",
-                )));
-            };
-
-            // Build the slice and convert to owned immediately
-            let owned = match (row_slice, col_slice) {
-                (
-                    SliceInfoElem::Slice {
-                        start: rs,
-                        end: re,
-                        step: rstep,
-                    },
-                    SliceInfoElem::Slice {
-                        start: cs,
-                        end: ce,
-                        step: cstep,
-                    },
-                ) => {
-                    let row_end = re.unwrap_or(view.shape()[0] as isize);
-                    let col_end = ce.unwrap_or(view.shape()[1] as isize);
-                    view.slice(ndarray::s![*rs..row_end;*rstep, *cs..col_end;*cstep])
-                        .to_owned()
-                }
-                (
-                    SliceInfoElem::Index(ridx),
-                    SliceInfoElem::Slice {
-                        start: cs,
-                        end: ce,
-                        step: cstep,
-                    },
-                ) => {
-                    let col_end = ce.unwrap_or(view.shape()[1] as isize);
-                    // Keep 2D by using range instead of index
-                    view.slice(ndarray::s![*ridx..*ridx+1, *cs..col_end;*cstep])
-                        .to_owned()
-                }
-                (
-                    SliceInfoElem::Slice {
-                        start: rs,
-                        end: re,
-                        step: rstep,
-                    },
-                    SliceInfoElem::Index(cidx),
-                ) => {
-                    let row_end = re.unwrap_or(view.shape()[0] as isize);
-                    // Keep 2D by using range instead of index
-                    view.slice(ndarray::s![*rs..row_end;*rstep, *cidx..*cidx+1])
-                        .to_owned()
-                }
-                (SliceInfoElem::Index(ridx), SliceInfoElem::Index(cidx)) => {
-                    // Keep 2D by using ranges instead of indices
-                    view.slice(ndarray::s![*ridx..*ridx + 1, *cidx..*cidx + 1])
-                        .to_owned()
-                }
-                _ => view.to_owned(),
-            };
-            match owned.into_dimensionality::<D>() {
-                Ok(array) => Ok(array),
-                Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
-                    "Failed to convert sliced 2D array to target dimension type",
-                ))),
-            }
+            index
         }
     }
 }

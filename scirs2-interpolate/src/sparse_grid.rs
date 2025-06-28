@@ -215,10 +215,10 @@ where
     {
         let bounds = self
             .bounds
-            .ok_or_else(|| InterpolateError::ValueError("Bounds must be specified".to_string()))?;
+            .ok_or_else(|| InterpolateError::invalid_input("Bounds must be specified".to_string()))?;
 
         if bounds.is_empty() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "At least one dimension required".to_string(),
             ));
         }
@@ -254,19 +254,19 @@ where
         values: &[F],
     ) -> InterpolateResult<SparseGridInterpolator<F>> {
         if points.len() != values.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "Number of points must match number of values".to_string(),
             ));
         }
 
         let bounds = self
             .bounds
-            .ok_or_else(|| InterpolateError::ValueError("Bounds must be specified".to_string()))?;
+            .ok_or_else(|| InterpolateError::invalid_input("Bounds must be specified".to_string()))?;
 
         let dimension = bounds.len();
 
         if points.is_empty() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "At least one data point required".to_string(),
             ));
         }
@@ -274,7 +274,7 @@ where
         // Verify dimensionality
         for point in points {
             if point.len() != dimension {
-                return Err(InterpolateError::ValueError(
+                return Err(InterpolateError::invalid_input(
                     "All points must have the same dimensionality".to_string(),
                 ));
             }
@@ -612,7 +612,7 @@ where
     /// Interpolate at a query point
     pub fn interpolate(&self, query: &[F]) -> InterpolateResult<F> {
         if query.len() != self.dimension {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "Query point dimension mismatch".to_string(),
             ));
         }
@@ -620,7 +620,7 @@ where
         // Check bounds
         for (i, &coord) in query.iter().enumerate() {
             if coord < self.bounds[i].0 || coord > self.bounds[i].1 {
-                return Err(InterpolateError::DomainError(
+                return Err(InterpolateError::OutOfBounds(
                     "Query point outside interpolation domain".to_string(),
                 ));
             }

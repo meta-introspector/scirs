@@ -35,6 +35,7 @@ gpu = ["cuda"]
 
 [dev-dependencies]
 criterion = { workspace = true }
+rand = { workspace = true }
 
 [[bench]]
 name = "filters_bench"
@@ -57,3 +58,6 @@ name = "streaming_processing"
 
 [[example]]
 name = "gpu_backend"
+
+[[example]]
+name = "comprehensive_analysis"

@@ -622,10 +622,11 @@ pub mod ndarray_integration {
             self.as_slice().ok()
         }
         
-        fn from_coords(coords: &[T]) -> Self {
-            // This is a limitation - we can't create an owned ArrayView from coords
-            // In practice, you'd need to work with Array1 instead
-            unimplemented!("Cannot create ArrayView1 from coordinates")
+        fn from_coords(_coords: &[T]) -> Self {
+            // This is a fundamental limitation - ArrayView1 is a view into existing data
+            // and cannot be created from raw coordinates without an underlying array.
+            // Use Array1::from_coords() instead, which creates an owned array.
+            panic!("ArrayView1 cannot be created from coordinates because it's a view into existing data. Use Array1::from_coords() instead to create an owned array.")
         }
     }
     

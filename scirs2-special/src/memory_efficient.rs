@@ -217,6 +217,12 @@ where
 /// Gamma function that can be applied in chunks
 pub struct ChunkedGamma;
 
+impl Default for ChunkedGamma {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ChunkedGamma {
     pub fn new() -> Self {
         Self
@@ -247,6 +253,12 @@ where
 
 /// Bessel J0 function that can be applied in chunks
 pub struct ChunkedBesselJ0;
+
+impl Default for ChunkedBesselJ0 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl ChunkedBesselJ0 {
     pub fn new() -> Self {
@@ -279,6 +291,12 @@ where
 /// Error function that can be applied in chunks
 pub struct ChunkedErf;
 
+impl Default for ChunkedErf {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ChunkedErf {
     pub fn new() -> Self {
         Self
@@ -308,7 +326,6 @@ where
 }
 
 /// Convenience functions for memory-efficient processing
-
 /// Process gamma function on large arrays with automatic chunking
 pub fn gamma_chunked<T>(
     input: &Array<T, Ix1>,

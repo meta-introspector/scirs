@@ -3,8 +3,7 @@
 //! This module provides utilities for processing data streams in real-time,
 //! maintaining running statistics and transforming data incrementally.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast};
+use ndarray::{Array1, Array2};
 use std::collections::VecDeque;
 
 use crate::error::{Result, TransformError};
@@ -192,7 +191,7 @@ impl StreamingTransformer for StreamingMinMaxScaler {
             ));
         }
         
-        let mut result = Array2::zeros(x.shape());
+        let mut result = Array2::zeros((x.nrows(), x.ncols()));
         let (min_val, max_val) = self.feature_range;
         let scale = max_val - min_val;
         

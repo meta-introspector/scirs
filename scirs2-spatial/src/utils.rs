@@ -29,7 +29,14 @@ where
         Some(t) => t,
         None => match T::from_f64(1e-8) {
             Some(t) => t,
-            None => panic!("Could not convert 1e-8 to generic type"),
+            None => {
+                // Fallback: use a very small value that should work for most numeric types
+                // This handles edge cases where 1e-8 cannot be represented in type T
+                match T::from_f64(0.0) {
+                    Some(zero) => zero, // Use zero as fallback tolerance (exact equality)
+                    None => return false, // If we can't even create zero, points can't be equal
+                }
+            }
         },
     };
 

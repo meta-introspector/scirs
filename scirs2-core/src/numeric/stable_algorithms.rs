@@ -626,12 +626,18 @@ where
     T: Float + StableComputation,
     F: Fn(T) -> T,
 {
-    check_finite(a.to_f64().ok_or_else(|| CoreError::TypeError(
-        ErrorContext::new("Failed to convert lower limit to f64")
-    ))?, "Lower limit")?;
-    check_finite(b.to_f64().ok_or_else(|| CoreError::TypeError(
-        ErrorContext::new("Failed to convert upper limit to f64")
-    ))?, "Upper limit")?;
+    check_finite(
+        a.to_f64().ok_or_else(|| {
+            CoreError::TypeError(ErrorContext::new("Failed to convert lower limit to f64"))
+        })?,
+        "Lower limit",
+    )?;
+    check_finite(
+        b.to_f64().ok_or_else(|| {
+            CoreError::TypeError(ErrorContext::new("Failed to convert upper limit to f64"))
+        })?,
+        "Upper limit",
+    )?;
 
     if a >= b {
         return Err(CoreError::ValidationError(ErrorContext::new(
@@ -646,7 +652,7 @@ where
         });
         let two = cast::<f64, T>(2.0).unwrap_or_else(|| T::one() + T::one());
         let four = cast::<f64, T>(4.0).unwrap_or_else(|| two + two);
-        
+
         let h = (b - a) / six;
         let mid = (a + b) / two;
         h * (f(a) + four * f(mid) + f(b))
@@ -869,8 +875,8 @@ mod tests {
         let f = |x: f64| x * x;
 
         // Derivative at x = 2 should be 4
-        let derivative = richardson_derivative(f, 2.0, 0.1, 3)
-            .expect("Richardson extrapolation should succeed");
+        let derivative =
+            richardson_derivative(f, 2.0, 0.1, 3).expect("Richardson extrapolation should succeed");
         assert_relative_eq!(derivative, 4.0, epsilon = 1e-10);
 
         // Test with sin(x)

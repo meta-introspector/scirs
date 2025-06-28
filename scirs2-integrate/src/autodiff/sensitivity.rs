@@ -9,6 +9,9 @@ use crate::error::{IntegrateError, IntegrateResult};
 use crate::ode::{solve_ivp, ODEOptions};
 use std::collections::HashMap;
 
+// Type alias for complex return type
+type SensitivityResult<F> = IntegrateResult<(HashMap<usize, Array1<F>>, HashMap<usize, Array1<F>>)>;
+
 /// Parameter sensitivity information
 #[derive(Clone)]
 pub struct ParameterSensitivity<F: IntegrateFloat> {
@@ -410,9 +413,7 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
         }
         
         let mean = sum / n;
-        let variance = sum_sq / n - mean * mean;
-        
-        variance
+        sum_sq / n - mean * mean
     }
 
     /// Compute first-order Sobol index
@@ -551,10 +552,10 @@ impl<F: IntegrateFloat> EFAST<F> {
         let mut a_omega = F::zero();
         let mut b_omega = F::zero();
         
-        for k in 0..n {
+        for (k, y_value) in y_values.iter().enumerate().take(n) {
             let angle = F::from(2.0 * std::f64::consts::PI * omega as f64 * k as f64 / n as f64).unwrap();
-            a_omega += y_values[k] * angle.cos();
-            b_omega += y_values[k] * angle.sin();
+            a_omega += *y_value * angle.cos();
+            b_omega += *y_value * angle.sin();
         }
         
         a_omega *= F::from(2.0).unwrap() / F::from(n).unwrap();
@@ -672,7 +673,7 @@ impl<F: IntegrateFloat> SobolSensitivity<F> {
         t_span: (F, F),
         t_eval: ArrayView1<F>,
         options: Option<ODEOptions<F>>,
-    ) -> IntegrateResult<(HashMap<usize, Array1<F>>, HashMap<usize, Array1<F>>)>
+    ) -> SensitivityResult<F>
     where
         Func: Fn(ArrayView1<F>) -> Array1<F>,
         SysFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
@@ -719,7 +720,7 @@ impl<F: IntegrateFloat> SobolSensitivity<F> {
         }
         
         // Compute variance of outputs
-        let mean_y = y_a.mean_axis(ndarray::Axis(0)).unwrap();
+        let _mean_y = y_a.mean_axis(ndarray::Axis(0)).unwrap();
         let var_y = y_a.var_axis(ndarray::Axis(0), F::zero());
         
         let mut first_order_indices = HashMap::new();

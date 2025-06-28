@@ -3,7 +3,7 @@
 //! This module defines standard trait bounds used throughout the interpolation library
 //! to ensure API consistency and reduce repetition.
 
-use ndarray::{ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2};
+use ndarray::{ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display, LowerExp};
 use std::ops::{AddAssign, SubAssign};
@@ -160,7 +160,7 @@ pub mod validation {
         values: &ArrayView1<T>,
     ) -> crate::InterpolateResult<()> {
         if points.nrows() != values.len() {
-            return Err(crate::InterpolateError::InvalidInput(
+            return Err(crate::InterpolateError::invalid_input(
                 format!(
                     "Inconsistent data dimensions: {} points but {} values",
                     points.nrows(),
@@ -170,8 +170,8 @@ pub mod validation {
         }
         
         if points.is_empty() || values.is_empty() {
-            return Err(crate::InterpolateError::InvalidInput(
-                "Empty input data".to_string()
+            return Err(crate::InterpolateError::invalid_input(
+                "Empty input data"
             ));
         }
         
@@ -184,7 +184,7 @@ pub mod validation {
         query_points: &ArrayView2<T>,
     ) -> crate::InterpolateResult<()> {
         if query_points.ncols() != data_dim {
-            return Err(crate::InterpolateError::InvalidInput(
+            return Err(crate::InterpolateError::invalid_input(
                 format!(
                     "Query dimension {} does not match data dimension {}",
                     query_points.ncols(),

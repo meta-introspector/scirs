@@ -59,6 +59,12 @@ pub struct CrossValidator {
     results: HashMap<String, Vec<ValidationResult>>,
 }
 
+impl Default for CrossValidator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CrossValidator {
     pub fn new() -> Self {
         Self {
@@ -123,7 +129,7 @@ impl CrossValidator {
             TestCase {
                 function: "j0".to_string(),
                 inputs: vec![10.0],
-                expected: -0.24593576445134830,
+                expected: -0.245_935_764_451_348_3,
                 source: "SciPy".to_string(),
                 tolerance: 1e-15,
             },
@@ -155,7 +161,7 @@ impl CrossValidator {
         ];
         
         self.test_cases.entry("erf".to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .extend(erf_tests);
         
         Ok(())
@@ -175,14 +181,14 @@ impl CrossValidator {
             TestCase {
                 function: "gamma".to_string(),
                 inputs: vec![170.5],
-                expected: 4.2690680090160857e+304,
+                expected: 4.269_068_009_016_085_7e304,
                 source: "MPFR".to_string(),
                 tolerance: 1e-10,
             },
         ];
         
         self.test_cases.entry("gamma".to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .extend(edge_cases);
         
         Ok(())
@@ -303,6 +309,12 @@ fn compute_ulp_error(a: f64, b: f64) -> i64 {
 /// Python script runner for SciPy validation
 pub struct PythonValidator {
     python_path: String,
+}
+
+impl Default for PythonValidator {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PythonValidator {

@@ -1135,6 +1135,470 @@ where
     ))
 }
 
+/// Advanced matrix softmax function for machine learning applications
+///
+/// Computes exp(A) / sum(exp(A)) along specified axis or element-wise.
+/// This is numerically stable and commonly used in neural networks.
+///
+/// # Arguments
+///
+/// * `a` - Input matrix
+/// * `axis` - Axis along which to compute softmax (None = element-wise)
+///
+/// # Returns
+///
+/// * Matrix softmax of a
+///
+/// # Examples
+///
+/// ```no_run
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::softmax;
+///
+/// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
+/// let softmax_a = softmax(&a.view(), None).unwrap();
+/// ```
+pub fn softmax<F>(a: &ArrayView2<F>, axis: Option<usize>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    let (m, n) = a.dim();
+    let mut result = Array2::<F>::zeros((m, n));
+    
+    match axis {
+        Some(0) => {
+            // Softmax along rows (column-wise)
+            for j in 0..n {
+                let col = a.column(j);
+                
+                // Find maximum for numerical stability
+                let max_val = col.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
+                
+                // Compute exp(x - max) for numerical stability
+                let mut exp_sum = F::zero();
+                for i in 0..m {
+                    let exp_val = (a[[i, j]] - max_val).exp();
+                    result[[i, j]] = exp_val;
+                    exp_sum += exp_val;
+                }
+                
+                // Normalize
+                for i in 0..m {
+                    result[[i, j]] /= exp_sum;
+                }
+            }
+        },
+        Some(1) => {
+            // Softmax along columns (row-wise)
+            for i in 0..m {
+                let row = a.row(i);
+                
+                // Find maximum for numerical stability
+                let max_val = row.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
+                
+                // Compute exp(x - max) for numerical stability
+                let mut exp_sum = F::zero();
+                for j in 0..n {
+                    let exp_val = (a[[i, j]] - max_val).exp();
+                    result[[i, j]] = exp_val;
+                    exp_sum += exp_val;
+                }
+                
+                // Normalize
+                for j in 0..n {
+                    result[[i, j]] /= exp_sum;
+                }
+            }
+        },
+        None => {
+            // Element-wise softmax (global normalization)
+            let max_val = a.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
+            
+            // Compute exp(x - max) for all elements
+            let mut exp_sum = F::zero();
+            for i in 0..m {
+                for j in 0..n {
+                    let exp_val = (a[[i, j]] - max_val).exp();
+                    result[[i, j]] = exp_val;
+                    exp_sum += exp_val;
+                }
+            }
+            
+            // Normalize all elements
+            result.mapv_inplace(|x| x / exp_sum);
+        },
+        _ => {
+            return Err(LinalgError::InvalidInputError(
+                format!("Invalid axis {}. Matrix is 2D, so axis must be 0, 1, or None", axis.unwrap())
+            ));
+        }
+    }
+    
+    Ok(result)
+}
+
+/// Advanced matrix sigmoid function for machine learning
+///
+/// Computes 1 / (1 + exp(-A)) element-wise with numerical stability.
+///
+/// # Arguments
+///
+/// * `a` - Input matrix
+///
+/// # Returns
+///
+/// * Element-wise sigmoid of matrix a
+///
+/// # Examples
+///
+/// ```no_run
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::sigmoid;
+///
+/// let a = array![[1.0_f64, -2.0], [0.0, 3.0]];
+/// let sigmoid_a = sigmoid(&a.view()).unwrap();
+/// ```
+pub fn sigmoid<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + One + ndarray::ScalarOperand,
+{
+    let mut result = Array2::<F>::zeros(a.raw_dim());
+    
+    for ((i, j), &val) in a.indexed_iter() {
+        // Numerically stable sigmoid computation
+        if val >= F::zero() {
+            let exp_neg = (-val).exp();
+            result[[i, j]] = F::one() / (F::one() + exp_neg);
+        } else {
+            let exp_pos = val.exp();
+            result[[i, j]] = exp_pos / (F::one() + exp_pos);
+        }
+    }
+    
+    Ok(result)
+}
+
+/// Enhanced fractional matrix power with improved numerical stability
+///
+/// Computes A^p where p can be any real number, using improved algorithms
+/// for better numerical stability and accuracy.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+/// * `p` - Fractional power (can be negative, fractional, etc.)
+/// * `method` - Algorithm method ("eigen", "schur", "pade")
+///
+/// # Returns
+///
+/// * Matrix raised to power p
+///
+/// # Examples
+///
+/// ```no_run
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::fractional_matrix_power;
+///
+/// let a = array![[4.0_f64, 0.0], [0.0, 9.0]];
+/// let sqrt_a = fractional_matrix_power(&a.view(), 0.5, "eigen").unwrap();
+/// ```
+pub fn fractional_matrix_power<F>(
+    a: &ArrayView2<F>, 
+    p: F, 
+    method: &str
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+{
+    let n = a.nrows();
+    if n != a.ncols() {
+        return Err(LinalgError::ShapeError(
+            "Matrix must be square for fractional power".to_string(),
+        ));
+    }
+    
+    match method {
+        "eigen" => {
+            // Use eigendecomposition for symmetric matrices
+            let (eigenvals, eigenvecs) = crate::eigen::eigh(a, None)?;
+            
+            // Check for negative eigenvalues if p is not an integer
+            if !is_integer(p) {
+                for &eigenval in eigenvals.iter() {
+                    if eigenval < F::zero() {
+                        return Err(LinalgError::ComputationError(
+                            "Matrix has negative eigenvalues, fractional power not real".to_string(),
+                        ));
+                    }
+                }
+            }
+            
+            // Compute eigenvalue^p
+            let powered_eigenvals = eigenvals.mapv(|x| {
+                if x > F::zero() {
+                    x.powf(p)
+                } else if x == F::zero() && p > F::zero() {
+                    F::zero()
+                } else {
+                    F::nan() // This case should have been caught above
+                }
+            });
+            
+            // Reconstruct matrix: V * Λ^p * V^T
+            let lambda_matrix = Array2::from_diag(&powered_eigenvals);
+            let temp = eigenvecs.dot(&lambda_matrix);
+            Ok(temp.dot(&eigenvecs.t()))
+        },
+        "schur" => {
+            // Use Schur decomposition for general matrices
+            let (q, t) = crate::decomposition::schur(a)?;
+            
+            // Compute T^p using specialized algorithm for upper triangular matrices
+            let t_powered = upper_triangular_power(&t, p)?;
+            
+            // Reconstruct: Q * T^p * Q^T
+            let temp = q.dot(&t_powered);
+            Ok(temp.dot(&q.t()))
+        },
+        "pade" => {
+            // Use Padé approximation combined with scaling and squaring
+            pade_fractional_power(a, p)
+        },
+        _ => {
+            Err(LinalgError::InvalidInputError(
+                format!("Unknown method '{}'. Use 'eigen', 'schur', or 'pade'", method)
+            ))
+        }
+    }
+}
+
+/// Matrix function for symmetric positive definite matrices with enhanced stability
+///
+/// Computes f(A) for symmetric positive definite matrices using specialized algorithms
+/// that take advantage of the SPD structure for improved numerical stability.
+///
+/// # Arguments
+///
+/// * `a` - Symmetric positive definite matrix
+/// * `func` - Function name ("log", "sqrt", "inv_sqrt", "exp", "power")
+/// * `param` - Optional parameter (e.g., power for "power" function)
+///
+/// # Returns
+///
+/// * f(A) computed using SPD-optimized algorithms
+pub fn spd_matrix_function<F>(
+    a: &ArrayView2<F>,
+    func: &str,
+    param: Option<F>,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+{
+    // Check if matrix is symmetric
+    let n = a.nrows();
+    if n != a.ncols() {
+        return Err(LinalgError::ShapeError(
+            "Matrix must be square for SPD function".to_string(),
+        ));
+    }
+    
+    let tolerance = F::from(1e-12).unwrap();
+    for i in 0..n {
+        for j in i+1..n {
+            if (a[[i, j]] - a[[j, i]]).abs() > tolerance {
+                return Err(LinalgError::InvalidInputError(
+                    "Matrix is not symmetric".to_string(),
+                ));
+            }
+        }
+    }
+    
+    // Use Cholesky decomposition for SPD matrices when possible
+    if let Ok(l) = crate::decomposition::cholesky(a, None) {
+        match func {
+            "sqrt" => {
+                // For SPD matrices: sqrt(A) = L * L^T where A = L * L^T
+                // So sqrt(A) is just L for lower triangular L
+                Ok(l)
+            },
+            "inv_sqrt" => {
+                // inv_sqrt(A) = L^{-1} * L^{-T}
+                let l_inv = triangular_inverse(&l, true)?;
+                Ok(l_inv.dot(&l_inv.t()))
+            },
+            "log" => {
+                // Use eigendecomposition for log
+                let (eigenvals, eigenvecs) = crate::eigen::eigh(a, None)?;
+                
+                // Check for positive eigenvalues
+                for &eigenval in eigenvals.iter() {
+                    if eigenval <= F::zero() {
+                        return Err(LinalgError::ComputationError(
+                            "Matrix is not positive definite for logarithm".to_string(),
+                        ));
+                    }
+                }
+                
+                let log_eigenvals = eigenvals.mapv(|x| x.ln());
+                let lambda_matrix = Array2::from_diag(&log_eigenvals);
+                let temp = eigenvecs.dot(&lambda_matrix);
+                Ok(temp.dot(&eigenvecs.t()))
+            },
+            "exp" => {
+                // Use eigendecomposition for exp
+                let (eigenvals, eigenvecs) = crate::eigen::eigh(a, None)?;
+                let exp_eigenvals = eigenvals.mapv(|x| x.exp());
+                let lambda_matrix = Array2::from_diag(&exp_eigenvals);
+                let temp = eigenvecs.dot(&lambda_matrix);
+                Ok(temp.dot(&eigenvecs.t()))
+            },
+            "power" => {
+                let p = param.ok_or_else(|| LinalgError::InvalidInputError(
+                    "Power parameter required for 'power' function".to_string(),
+                ))?;
+                fractional_matrix_power(a, p, "eigen")
+            },
+            _ => {
+                Err(LinalgError::InvalidInputError(
+                    format!("Unknown SPD function '{}'. Use 'log', 'sqrt', 'inv_sqrt', 'exp', or 'power'", func)
+                ))
+            }
+        }
+    } else {
+        // Fall back to eigendecomposition if Cholesky fails
+        let (eigenvals, eigenvecs) = crate::eigen::eigh(a, None)?;
+        
+        // Check for positive eigenvalues
+        for &eigenval in eigenvals.iter() {
+            if eigenval <= F::zero() {
+                return Err(LinalgError::ComputationError(
+                    "Matrix is not positive definite".to_string(),
+                ));
+            }
+        }
+        
+        let transformed_eigenvals = match func {
+            "sqrt" => eigenvals.mapv(|x| x.sqrt()),
+            "inv_sqrt" => eigenvals.mapv(|x| F::one() / x.sqrt()),
+            "log" => eigenvals.mapv(|x| x.ln()),
+            "exp" => eigenvals.mapv(|x| x.exp()),
+            "power" => {
+                let p = param.ok_or_else(|| LinalgError::InvalidInputError(
+                    "Power parameter required for 'power' function".to_string(),
+                ))?;
+                eigenvals.mapv(|x| x.powf(p))
+            },
+            _ => {
+                return Err(LinalgError::InvalidInputError(
+                    format!("Unknown SPD function '{}'", func)
+                ));
+            }
+        };
+        
+        let lambda_matrix = Array2::from_diag(&transformed_eigenvals);
+        let temp = eigenvecs.dot(&lambda_matrix);
+        Ok(temp.dot(&eigenvecs.t()))
+    }
+}
+
+// Helper functions for advanced matrix functions
+
+/// Check if a float is close to an integer
+fn is_integer<F: Float>(x: F) -> bool {
+    (x - x.round()).abs() < F::from(1e-10).unwrap()
+}
+
+/// Compute power of upper triangular matrix using specialized algorithm
+fn upper_triangular_power<F>(t: &Array2<F>, p: F) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    let n = t.nrows();
+    let mut result = Array2::<F>::eye(n);
+    
+    // Diagonal elements are easy: t[i,i]^p
+    for i in 0..n {
+        result[[i, i]] = t[[i, i]].powf(p);
+    }
+    
+    // Off-diagonal elements require special computation
+    // This is a simplified version - full implementation would use
+    // more sophisticated algorithms for numerical stability
+    for k in 1..n {
+        for i in 0..n-k {
+            let j = i + k;
+            let mut sum = F::zero();
+            
+            for l in (i+1)..j {
+                sum = sum + result[[i, l]] * t[[l, j]] - t[[i, l]] * result[[l, j]];
+            }
+            
+            let denom = t[[j, j]] - t[[i, i]];
+            if denom.abs() > F::epsilon() {
+                result[[i, j]] = (t[[i, j]] * p + sum) / denom;
+            } else {
+                // Handle near-singular case
+                result[[i, j]] = F::zero();
+            }
+        }
+    }
+    
+    Ok(result)
+}
+
+/// Padé approximation for fractional powers
+fn pade_fractional_power<F>(a: &ArrayView2<F>, p: F) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    // This is a simplified implementation
+    // Full implementation would use more sophisticated Padé approximants
+    
+    // For now, use the identity A^p = exp(p * log(A))
+    let log_a = logm(a)?;
+    let p_log_a = log_a.mapv(|x| x * p);
+    expm(&p_log_a.view(), None)
+}
+
+/// Compute inverse of triangular matrix
+fn triangular_inverse<F>(l: &Array2<F>, lower: bool) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + One + ndarray::ScalarOperand,
+{
+    let n = l.nrows();
+    let mut l_inv = Array2::<F>::zeros((n, n));
+    
+    if lower {
+        // Forward substitution for lower triangular
+        for i in 0..n {
+            l_inv[[i, i]] = F::one() / l[[i, i]];
+            
+            for j in 0..i {
+                let mut sum = F::zero();
+                for k in j..i {
+                    sum += l[[i, k]] * l_inv[[k, j]];
+                }
+                l_inv[[i, j]] = -sum / l[[i, i]];
+            }
+        }
+    } else {
+        // Back substitution for upper triangular
+        for i in (0..n).rev() {
+            l_inv[[i, i]] = F::one() / l[[i, i]];
+            
+            for j in (i+1)..n {
+                let mut sum = F::zero();
+                for k in (i+1)..=j {
+                    sum += l[[i, k]] * l_inv[[k, j]];
+                }
+                l_inv[[i, j]] = -sum / l[[i, i]];
+            }
+        }
+    }
+    
+    Ok(l_inv)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

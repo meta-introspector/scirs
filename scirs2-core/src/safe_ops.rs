@@ -32,7 +32,7 @@ where
     }
 
     let result = numerator / denominator;
-    
+
     // Validate the result
     check_finite(result, "division result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
@@ -58,7 +58,7 @@ where
     }
 
     let result = value.sqrt();
-    
+
     // Even for valid inputs, check the result
     check_finite(result, "sqrt result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
@@ -84,7 +84,7 @@ where
     }
 
     let result = value.ln();
-    
+
     check_finite(result, "log result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
             "Logarithm produced non-finite result: ln({}) = {:?}",
@@ -109,7 +109,7 @@ where
     }
 
     let result = value.log10();
-    
+
     check_finite(result, "log10 result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
             "Base-10 logarithm produced non-finite result: log10({}) = {:?}",
@@ -142,7 +142,7 @@ where
     }
 
     let result = base.powf(exponent);
-    
+
     check_finite(result, "power result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
             "Power operation produced non-finite result: {}^{} = {:?}",
@@ -170,7 +170,7 @@ where
     }
 
     let result = value.exp();
-    
+
     check_finite(result, "exp result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
             "Exponential produced non-finite result: exp({}) = {:?}",
@@ -202,7 +202,7 @@ where
 {
     if values.is_empty() {
         return Err(CoreError::InvalidArgument(ErrorContext::new(
-            "Cannot compute mean of empty array"
+            "Cannot compute mean of empty array",
         )));
     }
 

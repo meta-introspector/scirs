@@ -5,13 +5,12 @@
 //! creation and reproducibility.
 
 mod schema;
-// Temporarily commented out due to model field compatibility issues
-// mod serialize;
-// mod validation;
+mod serialize;
+mod validation;
 
 pub use schema::*;
-// pub use serialize::*;
-// pub use validation::*;
+pub use serialize::*;
+pub use validation::*;
 
 use crate::error::{Error, Result};
 use crate::models::architectures::{
@@ -92,13 +91,13 @@ impl ModelConfig {
             } else if ext == "yaml" || ext == "yml" {
                 ConfigFormat::YAML
             } else {
-                return Err(Error::InvalidInput(format!(
+                return Err(Error::InvalidArgument(format!(
                     "Unsupported file extension: {:?}. Expected .json, .yaml, or .yml",
                     ext
                 )));
             }
         } else {
-            return Err(Error::InvalidInput("File has no extension".to_string()));
+            return Err(Error::InvalidArgument("File has no extension".to_string()));
         };
 
         // Read file content
@@ -131,13 +130,13 @@ impl ModelConfig {
             } else if ext == "yaml" || ext == "yml" {
                 ConfigFormat::YAML
             } else {
-                return Err(Error::InvalidInput(format!(
+                return Err(Error::InvalidArgument(format!(
                     "Unsupported file extension: {:?}. Expected .json, .yaml, or .yml",
                     ext
                 )));
             }
         } else {
-            return Err(Error::InvalidInput("File has no extension".to_string()));
+            return Err(Error::InvalidArgument("File has no extension".to_string()));
         };
 
         // Create directory if needed

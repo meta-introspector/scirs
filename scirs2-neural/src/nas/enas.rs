@@ -8,7 +8,6 @@ use crate::layers::{Dense, Layer};
 use crate::activations::Activation;
 use crate::nas::SearchSpace;
 use crate::nas::search_space::{Architecture, LayerType};
-use crate::reinforcement::policy::PolicyNetwork;
 use ndarray::prelude::*;
 use ndarray::concatenate;
 use std::collections::HashMap;

@@ -1233,7 +1233,7 @@ where
         ));
     }
 
-    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::create(&path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     // Write metadata header

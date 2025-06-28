@@ -3,12 +3,10 @@
 //! This module provides utilities for extracting features from images,
 //! including patch extraction, HOG features, and image normalization.
 
-use ndarray::{Array1, Array2, Array3, Array4, ArrayBase, Data, Ix1, Ix2, Ix3, Ix4, s};
-use num_traits::{Float, NumCast};
+use ndarray::{Array1, Array2, Array3, Array4, s, par_azip};
 use std::f64::consts::PI;
 
 use crate::error::{Result, TransformError};
-use scirs2_core::parallel_ops::*;
 
 /// Extract patches from 2D images
 pub struct PatchExtractor {
@@ -84,12 +82,12 @@ impl PatchExtractor {
             let mut rng = if let Some(seed) = self.random_state {
                 StdRng::seed_from_u64(seed)
             } else {
-                StdRng::from_entropy()
+                StdRng::seed_from_u64(rand::random::<u64>())
             };
             
             for patch_idx in 0..n_patches {
-                let i = rng.gen_range(0..n_patches_h);
-                let j = rng.gen_range(0..n_patches_w);
+                let i = rng.random_range(0..n_patches_h);
+                let j = rng.random_range(0..n_patches_w);
                 let patch = image.slice(s![i..i+patch_height, j..j+patch_width]);
                 patches.slice_mut(s![patch_idx, .., ..]).assign(&patch);
             }
@@ -216,8 +214,8 @@ impl HOGDescriptor {
         
         // Compute magnitude and orientation
         let magnitude = (&grad_x * &grad_x + &grad_y * &grad_y).mapv(f64::sqrt);
-        let orientation = grad_y.mapv_into_any(|y| y.atan2(0.0))
-            .zip_mut_with(&grad_x, |o, &x| *o = (*o).atan2(x));
+        let mut orientation = grad_y.mapv(|y| y.atan2(0.0));
+        orientation.zip_mut_with(&grad_x, |o, &x| *o = (*o).atan2(x));
         
         // Number of cells
         let n_cells_h = height / cell_h;

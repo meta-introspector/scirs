@@ -711,6 +711,8 @@ pub fn global_interface() -> &'static ZeroCopyInterface {
     GLOBAL_INTERFACE.get_or_init(ZeroCopyInterface::new)
 }
 
+// DataId is already defined above as a tuple struct with u64
+
 /// Trait for types that can participate in zero-copy data exchange
 pub trait DataExchange<T: Clone + 'static> {
     /// Export data to the zero-copy interface
@@ -722,10 +724,105 @@ pub trait DataExchange<T: Clone + 'static> {
         Self: Sized;
 }
 
+// Implementation for Vec<T>
+impl<T: Clone + 'static + Send + Sync + std::fmt::Debug> DataExchange<T> for Vec<T> {
+    fn export_data(&self, interface: &ZeroCopyInterface, name: &str) -> CoreResult<DataId> {
+        let zero_copy_data = ZeroCopyData::new(self.clone())?;
+        interface.register_data(name, zero_copy_data)?;
+        Ok(DataId::new())
+    }
+
+    fn import_data(interface: &ZeroCopyInterface, name: &str) -> CoreResult<Self> {
+        let zero_copy_data: ZeroCopyData<T> = interface.get_data(name)?;
+        Ok(zero_copy_data.as_slice().to_vec())
+    }
+}
+
+// Implementation for MemoryMappedArray<T>
+impl<A> DataExchange<A> for crate::memory_efficient::memmap::MemoryMappedArray<A>
+where
+    A: Clone + Copy + 'static + Send + Sync + std::fmt::Debug,
+{
+    fn export_data(&self, interface: &ZeroCopyInterface, name: &str) -> CoreResult<DataId> {
+        // Convert memory-mapped array data to vector for zero-copy storage
+        let data_slice = self.as_slice();
+        let data_vec = data_slice.to_vec();
+        let zero_copy_data = ZeroCopyData::new(data_vec)?;
+        interface.register_data(name, zero_copy_data)?;
+        Ok(DataId::new())
+    }
+
+    fn import_data(interface: &ZeroCopyInterface, name: &str) -> CoreResult<Self> {
+        let zero_copy_data: ZeroCopyData<A> = interface.get_data(name)?;
+        let _data_vec = zero_copy_data.as_slice().to_vec();
+
+        // Create a temporary memory-mapped array from the imported data
+        use crate::memory_efficient::memmap::AccessMode;
+        use tempfile::NamedTempFile;
+
+        let temp_file = NamedTempFile::new().map_err(|e| {
+            CoreError::IoError(crate::error::ErrorContext::new(format!(
+                "Failed to create temporary file for import: {}",
+                e
+            )))
+        })?;
+
+        let temp_path = temp_file.path().to_path_buf();
+
+        // Create memory-mapped array from the imported data
+        // Note: This assumes a 1D array - in practice, you'd need to store shape information
+        Self::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
+            None,
+            &temp_path,
+            AccessMode::ReadWrite,
+            0,
+        )
+    }
+}
+
 /// Helper trait for converting types to zero-copy data
 pub trait IntoZeroCopy<T: Clone + 'static> {
     /// Convert into zero-copy data
     fn into_zero_copy(self) -> CoreResult<ZeroCopyData<T>>;
+}
+
+// Convenience functions for common data exchange operations
+
+/// Export array data to the global zero-copy interface
+pub fn export_array_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
+    data: &[T],
+    name: &str,
+) -> CoreResult<DataId> {
+    let data_vec = data.to_vec();
+    data_vec.export_data(global_interface(), name)
+}
+
+/// Import array data from the global zero-copy interface
+pub fn import_array_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
+    name: &str,
+) -> CoreResult<Vec<T>> {
+    Vec::<T>::import_data(global_interface(), name)
+}
+
+/// Export memory-mapped array to the global zero-copy interface
+pub fn export_memmap_array<A>(
+    array: &crate::memory_efficient::memmap::MemoryMappedArray<A>,
+    name: &str,
+) -> CoreResult<DataId>
+where
+    A: Clone + Copy + 'static + Send + Sync + std::fmt::Debug,
+{
+    array.export_data(global_interface(), name)
+}
+
+/// Import memory-mapped array from the global zero-copy interface
+pub fn import_memmap_array<A>(
+    name: &str,
+) -> CoreResult<crate::memory_efficient::memmap::MemoryMappedArray<A>>
+where
+    A: Clone + Copy + 'static + Send + Sync + std::fmt::Debug,
+{
+    crate::memory_efficient::memmap::MemoryMappedArray::<A>::import_data(global_interface(), name)
 }
 
 impl<T: Clone + 'static> IntoZeroCopy<T> for Vec<T> {

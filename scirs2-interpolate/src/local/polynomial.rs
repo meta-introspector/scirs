@@ -267,7 +267,7 @@ where
         let (indices, distances) = self.find_relevant_points(x)?;
 
         if indices.is_empty() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "No points found within effective range".to_string(),
             ));
         }

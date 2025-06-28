@@ -3,7 +3,6 @@
 use crate::error::Result;
 use crate::federated::ClientUpdate;
 use ndarray::prelude::*;
-use std::sync::Arc;
 
 /// Trait for aggregation strategies
 pub trait AggregationStrategy: Send + Sync {

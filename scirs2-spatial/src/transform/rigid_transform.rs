@@ -273,14 +273,14 @@ impl RigidTransform {
     /// let transformed = transform.apply(&point.view());
     /// // Should be [1.0, 3.0, 3.0] (rotated then translated)
     /// ```
-    pub fn apply(&self, point: &ArrayView1<f64>) -> Array1<f64> {
+    pub fn apply(&self, point: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
         if point.len() != 3 {
-            panic!("Point must have 3 elements");
+            return Err(SpatialError::DimensionError("Point must have 3 elements".to_string()));
         }
 
         // Apply rotation then translation
-        let rotated = self.rotation.apply(point);
-        rotated + &self.translation
+        let rotated = self.rotation.apply(point)?;
+        Ok(rotated + &self.translation)
     }
 
     /// Apply the rigid transform to multiple points
@@ -305,9 +305,9 @@ impl RigidTransform {
     /// let points = array![[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]];
     /// let transformed = transform.apply_multiple(&points.view());
     /// ```
-    pub fn apply_multiple(&self, points: &ArrayView2<f64>) -> Array2<f64> {
+    pub fn apply_multiple(&self, points: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
         if points.ncols() != 3 {
-            panic!("Each point must have 3 elements");
+            return Err(SpatialError::DimensionError("Each point must have 3 elements".to_string()));
         }
 
         let npoints = points.nrows();
@@ -315,13 +315,13 @@ impl RigidTransform {
 
         for i in 0..npoints {
             let point = points.row(i);
-            let transformed = self.apply(&point);
+            let transformed = self.apply(&point)?;
             for j in 0..3 {
                 result[[i, j]] = transformed[j];
             }
         }
 
-        result
+        Ok(result)
     }
 
     /// Get the inverse of the rigid transform
@@ -341,15 +341,15 @@ impl RigidTransform {
     /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
     /// let inverse = transform.inv();
     /// ```
-    pub fn inv(&self) -> RigidTransform {
+    pub fn inv(&self) -> SpatialResult<RigidTransform> {
         // Inverse of a rigid transform: R^-1, -R^-1 * t
         let inv_rotation = self.rotation.inv();
-        let inv_translation = -inv_rotation.apply(&self.translation.view());
+        let inv_translation = -inv_rotation.apply(&self.translation.view())?;
 
-        RigidTransform {
+        Ok(RigidTransform {
             rotation: inv_rotation,
             translation: inv_translation,
-        }
+        })
     }
 
     /// Compose this rigid transform with another (apply the other transform after this one)
@@ -379,18 +379,18 @@ impl RigidTransform {
     /// let combined = t1.compose(&t2);
     /// // Should have a translation of [1.0, 1.0, 0.0]
     /// ```
-    pub fn compose(&self, other: &RigidTransform) -> RigidTransform {
+    pub fn compose(&self, other: &RigidTransform) -> SpatialResult<RigidTransform> {
         // Compose rotations
         let rotation = self.rotation.compose(&other.rotation);
 
         // Compose translations: self.translation + self.rotation * other.translation
-        let rotated_trans = self.rotation.apply(&other.translation.view());
+        let rotated_trans = self.rotation.apply(&other.translation.view())?;
         let translation = &self.translation + &rotated_trans;
 
-        RigidTransform {
+        Ok(RigidTransform {
             rotation,
             translation,
-        }
+        })
     }
 
     /// Create an identity rigid transform (no rotation, no translation)

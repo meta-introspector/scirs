@@ -8,7 +8,7 @@ use ndarray::{ArrayBase, ArrayViewMut1, Data, Ix1, Ix2, s};
 use num_traits::{Float, NumCast};
 use std::cmp::Ordering;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 #[cfg(feature = "memmap")]
 use memmap2::Mmap;
@@ -76,7 +76,7 @@ where
     let n = x.len();
     if n <= ddof {
         return Err(StatsError::InvalidArgument(
-            "Not enough data points for the given degrees of freedom"
+            "Not enough data points for the given degrees of freedom".to_string()
         ));
     }
 
@@ -113,7 +113,7 @@ where
     
     if variance <= F::epsilon() {
         return Err(StatsError::InvalidArgument(
-            "Cannot normalize data with zero variance"
+            "Cannot normalize data with zero variance".to_string()
         ));
     }
 
@@ -145,7 +145,7 @@ where
     F: Float + NumCast,
 {
     if data.is_empty() {
-        return Err(StatsError::InvalidArgument("Cannot compute quantile of empty array"));
+        return Err(StatsError::InvalidArgument("Cannot compute quantile of empty array".to_string()));
     }
 
     if q < F::zero() || q > F::one() {
@@ -238,7 +238,7 @@ where
     
     if n_obs <= ddof {
         return Err(StatsError::InvalidArgument(
-            "Not enough observations for the given degrees of freedom"
+            "Not enough observations for the given degrees of freedom".to_string()
         ));
     }
 
@@ -289,6 +289,7 @@ where
 /// Streaming correlation computation for large datasets
 ///
 /// Computes correlation between two variables without loading all data at once.
+#[allow(dead_code)]
 pub struct StreamingCorrelation<F: Float> {
     n: usize,
     sum_x: F,
@@ -298,6 +299,7 @@ pub struct StreamingCorrelation<F: Float> {
     sum_xy: F,
 }
 
+#[allow(dead_code)]
 impl<F: Float + NumCast> StreamingCorrelation<F> {
     /// Create a new streaming correlation calculator
     pub fn new() -> Self {
@@ -335,7 +337,7 @@ impl<F: Float + NumCast> StreamingCorrelation<F> {
     pub fn correlation(&self) -> StatsResult<F> {
         if self.n < 2 {
             return Err(StatsError::InvalidArgument(
-                "Need at least 2 observations to compute correlation"
+                "Need at least 2 observations to compute correlation".to_string()
             ));
         }
 
@@ -349,7 +351,7 @@ impl<F: Float + NumCast> StreamingCorrelation<F> {
 
         if var_x <= F::epsilon() || var_y <= F::epsilon() {
             return Err(StatsError::InvalidArgument(
-                "Cannot compute correlation when one or both variables have zero variance"
+                "Cannot compute correlation when one or both variables have zero variance".to_string()
             ));
         }
 
@@ -370,6 +372,7 @@ impl<F: Float + NumCast> StreamingCorrelation<F> {
 /// Incremental covariance matrix computation
 ///
 /// Updates covariance matrix incrementally as new observations arrive.
+#[allow(dead_code)]
 pub struct IncrementalCovariance<F: Float> {
     n: usize,
     means: ndarray::Array1<F>,
@@ -377,7 +380,8 @@ pub struct IncrementalCovariance<F: Float> {
     n_vars: usize,
 }
 
-impl<F: Float + NumCast> IncrementalCovariance<F> {
+#[allow(dead_code)]
+impl<F: Float + NumCast + ndarray::ScalarOperand> IncrementalCovariance<F> {
     /// Create a new incremental covariance calculator
     pub fn new(n_vars: usize) -> Self {
         Self {
@@ -392,7 +396,7 @@ impl<F: Float + NumCast> IncrementalCovariance<F> {
     pub fn update(&mut self, observation: &ndarray::ArrayView1<F>) -> StatsResult<()> {
         if observation.len() != self.n_vars {
             return Err(StatsError::DimensionMismatch(
-                "Observation dimension doesn't match"
+                "Observation dimension doesn't match".to_string()
             ));
         }
 
@@ -427,7 +431,7 @@ impl<F: Float + NumCast> IncrementalCovariance<F> {
     pub fn covariance(&self, ddof: usize) -> StatsResult<ndarray::Array2<F>> {
         if self.n <= ddof {
             return Err(StatsError::InvalidArgument(
-                "Not enough observations for the given degrees of freedom"
+                "Not enough observations for the given degrees of freedom".to_string()
             ));
         }
 
@@ -444,6 +448,7 @@ impl<F: Float + NumCast> IncrementalCovariance<F> {
 /// Memory-efficient rolling window statistics
 ///
 /// Computes statistics over a sliding window without storing all data.
+#[allow(dead_code)]
 pub struct RollingStats<F: Float> {
     window_size: usize,
     buffer: Vec<F>,
@@ -453,11 +458,12 @@ pub struct RollingStats<F: Float> {
     sum_squares: F,
 }
 
+#[allow(dead_code)]
 impl<F: Float + NumCast> RollingStats<F> {
     /// Create a new rolling statistics calculator
     pub fn new(window_size: usize) -> StatsResult<Self> {
         if window_size == 0 {
-            return Err(StatsError::InvalidArgument("Window size must be positive"));
+            return Err(StatsError::InvalidArgument("Window size must be positive".to_string()));
         }
 
         Ok(Self {
@@ -511,7 +517,7 @@ impl<F: Float + NumCast> RollingStats<F> {
         let n = self.len();
         if n <= ddof {
             return Err(StatsError::InvalidArgument(
-                "Not enough data for the given degrees of freedom"
+                "Not enough data for the given degrees of freedom".to_string()
             ));
         }
 
@@ -604,11 +610,13 @@ impl<F: Float + NumCast> StreamingHistogram<F> {
 /// Out-of-core statistics for datasets larger than memory
 ///
 /// Processes data from files in chunks without loading entire dataset.
+#[allow(dead_code)]
 pub struct OutOfCoreStats<F: Float> {
     chunk_size: usize,
     _phantom: std::marker::PhantomData<F>,
 }
 
+#[allow(dead_code)]
 impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
     /// Create a new out-of-core statistics processor
     pub fn new(chunk_size: usize) -> Self {
@@ -665,7 +673,7 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
         }
 
         if count == 0 {
-            return Err(StatsError::InvalidArgument("No valid data found"));
+            return Err(StatsError::InvalidArgument("No valid data found".to_string()));
         }
 
         Ok(sum / F::from(count).unwrap())
@@ -723,11 +731,14 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
 
         if count <= ddof {
             return Err(StatsError::InvalidArgument(
-                "Not enough data for the given degrees of freedom"
+                "Not enough data for the given degrees of freedom".to_string()
             ));
         }
 
-        let variance = sum_sq / F::from(count - ddof).unwrap();
+        let variance = sum_sq / F::from(count - ddof).ok_or_else(|| 
+            StatsError::ComputationError(
+                "Failed to convert count - ddof to target type".to_string()
+            ))?;
         Ok((mean, variance))
     }
 

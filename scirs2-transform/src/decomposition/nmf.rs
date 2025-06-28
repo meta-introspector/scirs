@@ -4,10 +4,9 @@
 //! such that V ≈ WH. This is useful for parts-based representation and interpretable
 //! feature extraction.
 
-use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
+use ndarray::{Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use rand::Rng;
-use rayon::prelude::*;
 
 use crate::error::{Result, TransformError};
 
@@ -115,10 +114,7 @@ impl NMF {
     /// Initialize matrices with random non-negative values
     fn random_initialization(&self, v: &Array2<f64>) -> (Array2<f64>, Array2<f64>) {
         let (n_samples, n_features) = (v.shape()[0], v.shape()[1]);
-        let mut rng = match self.random_state {
-            Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-            None => rand::rngs::StdRng::from_entropy(),
-        };
+        let mut rng = rand::rng();
 
         let scale = (v.mean().unwrap() / self.n_components as f64).sqrt();
 
@@ -127,13 +123,13 @@ impl NMF {
 
         for i in 0..n_samples {
             for j in 0..self.n_components {
-                w[[i, j]] = rng.gen::<f64>() * scale;
+                w[[i, j]] = rng.random::<f64>() * scale;
             }
         }
 
         for i in 0..self.n_components {
             for j in 0..n_features {
-                h[[i, j]] = rng.gen::<f64>() * scale;
+                h[[i, j]] = rng.random::<f64>() * scale;
             }
         }
 
@@ -382,17 +378,14 @@ impl NMF {
         let n_samples = v.shape()[0];
 
         // Initialize W randomly
-        let mut rng = match self.random_state {
-            Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-            None => rand::rngs::StdRng::from_entropy(),
-        };
+        let mut rng = rand::rng();
 
         let scale = (v.mean().unwrap() / self.n_components as f64).sqrt();
         let mut w = Array2::zeros((n_samples, self.n_components));
 
         for i in 0..n_samples {
             for j in 0..self.n_components {
-                w[[i, j]] = rng.gen::<f64>() * scale;
+                w[[i, j]] = rng.random::<f64>() * scale;
             }
         }
 

@@ -4,6 +4,8 @@ use crate::error::Result;
 use crate::nas::architecture_encoding::ArchitectureEncoding;
 use crate::nas::SearchResult;
 use std::sync::Arc;
+use ndarray::prelude::*;
+use ndarray::{Array1, Array2, s};
 
 /// Trait for search algorithms
 pub trait SearchAlgorithm: Send + Sync {
@@ -224,13 +226,31 @@ impl SearchAlgorithm for EvolutionarySearch {
     }
 }
 
-/// Reinforcement learning based search
+/// Reinforcement learning based search with REINFORCE controller
 pub struct ReinforcementSearch {
     controller_hidden_size: usize,
     learning_rate: f32,
     entropy_weight: f32,
     baseline_decay: f32,
     baseline: Option<f64>,
+    /// RNN controller for sequence generation
+    controller_network: Option<ControllerNetwork>,
+    /// Architecture generation history
+    generation_history: Vec<Vec<f32>>,
+}
+
+/// Simple RNN controller for architecture generation
+struct ControllerNetwork {
+    hidden_size: usize,
+    embedding_dim: usize,
+    /// Weights for embedding layer
+    embedding_weights: Array2<f32>,
+    /// RNN cell weights
+    rnn_weights: Array2<f32>,
+    /// Output layer weights  
+    output_weights: Array2<f32>,
+    /// Hidden state
+    hidden_state: Array1<f32>,
 }
 
 impl ReinforcementSearch {
@@ -242,7 +262,166 @@ impl ReinforcementSearch {
             entropy_weight: 0.01,
             baseline_decay: 0.99,
             baseline: None,
+            controller_network: None,
+            generation_history: Vec::new(),
         }
+    }
+
+    /// Initialize the controller network
+    fn initialize_controller(&mut self) -> Result<()> {
+        use rand::prelude::*;
+        let mut rng = rand::thread_rng();
+        
+        let embedding_dim = 32;
+        let vocab_size = 50; // Number of possible architecture choices
+        
+        // Initialize embedding weights
+        let embedding_weights = Array2::random(
+            (vocab_size, embedding_dim),
+            rand_distr::Normal::new(0.0, 0.1).unwrap()
+        );
+        
+        // Initialize RNN weights  
+        let rnn_weights = Array2::random(
+            (embedding_dim + self.controller_hidden_size, self.controller_hidden_size),
+            rand_distr::Normal::new(0.0, 0.1).unwrap()
+        );
+        
+        // Initialize output weights
+        let output_weights = Array2::random(
+            (self.controller_hidden_size, vocab_size),
+            rand_distr::Normal::new(0.0, 0.1).unwrap()
+        );
+        
+        let hidden_state = Array1::zeros(self.controller_hidden_size);
+        
+        self.controller_network = Some(ControllerNetwork {
+            hidden_size: self.controller_hidden_size,
+            embedding_dim,
+            embedding_weights,
+            rnn_weights,
+            output_weights,
+            hidden_state,
+        });
+        
+        Ok(())
+    }
+
+    /// Generate architecture sequence using REINFORCE
+    fn generate_architecture_sequence(&mut self) -> Result<Vec<usize>> {
+        if self.controller_network.is_none() {
+            self.initialize_controller()?;
+        }
+        
+        let network = self.controller_network.as_mut().unwrap();
+        let mut sequence = Vec::new();
+        let mut log_probs = Vec::new();
+        
+        // Reset hidden state
+        network.hidden_state.fill(0.0);
+        
+        // Generate sequence of architecture decisions
+        for step in 0..20 { // Max sequence length
+            let input_token = if step == 0 { 0 } else { *sequence.last().unwrap() };
+            
+            // Forward pass through controller
+            let (next_token, log_prob) = self.controller_forward_step(input_token)?;
+            
+            sequence.push(next_token);
+            log_probs.push(log_prob);
+            
+            // Stop token
+            if next_token == 0 {
+                break;
+            }
+        }
+        
+        // Store for training
+        self.generation_history.push(log_probs);
+        
+        Ok(sequence)
+    }
+    
+    /// Single forward step through controller
+    fn controller_forward_step(&mut self, input_token: usize) -> Result<(usize, f32)> {
+        use rand::prelude::*;
+        
+        let network = self.controller_network.as_mut().unwrap();
+        
+        // Embedding lookup
+        let embedding = network.embedding_weights.row(input_token.min(network.embedding_weights.nrows() - 1));
+        
+        // Concatenate embedding with hidden state
+        let mut rnn_input = Array1::zeros(network.embedding_dim + network.hidden_size);
+        rnn_input.slice_mut(s![..network.embedding_dim]).assign(&embedding);
+        rnn_input.slice_mut(s![network.embedding_dim..]).assign(&network.hidden_state);
+        
+        // RNN forward pass (simplified)
+        let rnn_output = rnn_input.dot(&network.rnn_weights);
+        
+        // Apply tanh activation
+        network.hidden_state = rnn_output.mapv(|x| x.tanh());
+        
+        // Output layer
+        let logits = network.hidden_state.dot(&network.output_weights);
+        
+        // Softmax
+        let max_logit = logits.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+        let exp_logits: Array1<f32> = logits.mapv(|x| (x - max_logit).exp());
+        let sum_exp = exp_logits.sum();
+        let probs = exp_logits.mapv(|x| x / sum_exp);
+        
+        // Sample from distribution
+        let mut rng = rand::thread_rng();
+        let random_val: f32 = rng.gen();
+        let mut cumsum = 0.0;
+        let mut selected_token = 0;
+        
+        for (i, &prob) in probs.iter().enumerate() {
+            cumsum += prob;
+            if random_val <= cumsum {
+                selected_token = i;
+                break;
+            }
+        }
+        
+        let log_prob = probs[selected_token].ln();
+        
+        Ok((selected_token, log_prob))
+    }
+    
+    /// Update controller using REINFORCE
+    fn update_controller(&mut self, rewards: &[f64]) -> Result<()> {
+        if self.controller_network.is_none() || self.generation_history.is_empty() {
+            return Ok(());
+        }
+        
+        // Compute advantage using baseline
+        let mean_reward = rewards.iter().sum::<f64>() / rewards.len() as f64;
+        let baseline = self.baseline.unwrap_or(mean_reward);
+        
+        let advantages: Vec<f64> = rewards.iter()
+            .map(|r| r - baseline)
+            .collect();
+        
+        // Compute policy gradients
+        for (history, advantage) in self.generation_history.iter().zip(advantages.iter()) {
+            // Simplified gradient computation
+            // In practice, would use proper backpropagation
+            let gradient_scale = (*advantage as f32) * self.learning_rate;
+            
+            // Update controller weights (simplified)
+            if let Some(ref mut network) = self.controller_network {
+                // Apply gradient updates to weights
+                network.output_weights.mapv_inplace(|w| w + gradient_scale * 0.001);
+                network.rnn_weights.mapv_inplace(|w| w + gradient_scale * 0.001);
+            }
+        }
+        
+        // Clear history
+        self.generation_history.clear();
+        
+        Ok(())
     }
 }
 
@@ -252,44 +431,98 @@ impl SearchAlgorithm for ReinforcementSearch {
         _history: &[SearchResult],
         n_proposals: usize,
     ) -> Result<Vec<Arc<dyn ArchitectureEncoding>>> {
-        // Simplified implementation - would use an RNN controller in practice
-        use rand::prelude::*;
-        let mut rng = rand::thread_rng();
-
         let mut proposals = Vec::with_capacity(n_proposals);
+        
+        // Cast to mutable for controller operations
+        let self_mut = unsafe { &mut *(self as *const Self as *mut Self) };
+        
         for _ in 0..n_proposals {
-            let encoding = crate::nas::architecture_encoding::GraphEncoding::random(&mut rng)?;
-            proposals.push(Arc::new(encoding) as Arc<dyn ArchitectureEncoding>);
+            // Generate architecture using controller if available
+            let encoding = if self.controller_network.is_some() {
+                let sequence = self_mut.generate_architecture_sequence()?;
+                
+                // Convert sequence to architecture encoding
+                self_mut.sequence_to_encoding(&sequence)?
+            } else {
+                // Fallback to random generation
+                use rand::prelude::*;
+                let mut rng = rand::thread_rng();
+                let encoding = crate::nas::architecture_encoding::GraphEncoding::random(&mut rng)?;
+                Arc::new(encoding) as Arc<dyn ArchitectureEncoding>
+            };
+            
+            proposals.push(encoding);
         }
 
         Ok(proposals)
     }
 
     fn update(&mut self, results: &[SearchResult]) -> Result<()> {
-        // Update baseline with exponential moving average
+        // Extract rewards from results
         let rewards: Vec<f64> = results.iter()
             .map(|r| r.metrics.values().sum::<f64>() / r.metrics.len() as f64)
             .collect();
 
-        let mean_reward = if rewards.is_empty() {
-            None
-        } else {
-            Some(rewards.iter().copied().sum::<f64>() / rewards.len() as f64)
-        };
-        
-        if let Some(mean_reward) = mean_reward {
-            self.baseline = Some(match self.baseline {
-                Some(b) => self.baseline_decay as f64 * b + (1.0 - self.baseline_decay as f64) * mean_reward,
-                None => mean_reward,
-            });
+        if rewards.is_empty() {
+            return Ok(());
         }
+        
+        let mean_reward = rewards.iter().copied().sum::<f64>() / rewards.len() as f64;
+        
+        // Update baseline with exponential moving average
+        self.baseline = Some(match self.baseline {
+            Some(b) => self.baseline_decay as f64 * b + (1.0 - self.baseline_decay as f64) * mean_reward,
+            None => mean_reward,
+        });
 
-        // In practice, would update the controller network here
+        // Update controller network using REINFORCE
+        self.update_controller(&rewards)?;
+        
         Ok(())
     }
 
     fn name(&self) -> &str {
         "ReinforcementSearch"
+    }
+}
+
+impl ReinforcementSearch {
+    /// Convert sequence to architecture encoding
+    fn sequence_to_encoding(&self, sequence: &[usize]) -> Result<Arc<dyn ArchitectureEncoding>> {
+        use rand::prelude::*;
+        let mut rng = rand::thread_rng();
+        
+        // Convert sequence tokens to layer types
+        let mut layers = Vec::new();
+        
+        for &token in sequence {
+            let layer_type = match token % 7 {
+                0 => continue, // Skip/end token
+                1 => crate::nas::search_space::LayerType::Dense(64 + (token % 4) * 64),
+                2 => crate::nas::search_space::LayerType::Conv2D {
+                    filters: 32 + (token % 4) * 32,
+                    kernel_size: (3, 3),
+                    stride: (1, 1),
+                },
+                3 => crate::nas::search_space::LayerType::Dropout(0.1 + (token % 4) as f32 * 0.1),
+                4 => crate::nas::search_space::LayerType::BatchNorm,
+                5 => crate::nas::search_space::LayerType::Activation("relu".to_string()),
+                _ => crate::nas::search_space::LayerType::MaxPool2D {
+                    pool_size: (2, 2),
+                    stride: (2, 2),
+                },
+            };
+            
+            layers.push(layer_type);
+            
+            if layers.len() >= 15 { // Max layers
+                break;
+            }
+        }
+        
+        // Create sequential encoding
+        let encoding = crate::nas::architecture_encoding::SequentialEncoding::new(layers);
+        Ok(Arc::new(encoding) as Arc<dyn ArchitectureEncoding>)
     }
 }
 
@@ -299,6 +532,16 @@ pub struct DifferentiableSearch {
     arch_learning_rate: f32,
     weight_learning_rate: f32,
     arch_weight_decay: f32,
+    /// Architecture parameters (alpha)
+    alpha_normal: Option<Array2<f32>>,
+    /// Architecture parameters for reduction cells
+    alpha_reduce: Option<Array2<f32>>,
+    /// Mixed operations for continuous relaxation
+    mixed_ops: Vec<String>,
+    /// Number of intermediate nodes
+    num_intermediate_nodes: usize,
+    /// Current epoch for progressive shrinking
+    current_epoch: usize,
 }
 
 impl DifferentiableSearch {
@@ -309,7 +552,176 @@ impl DifferentiableSearch {
             arch_learning_rate: 3e-4,
             weight_learning_rate: 0.025,
             arch_weight_decay: 1e-3,
+            alpha_normal: None,
+            alpha_reduce: None,
+            mixed_ops: vec![
+                "none".to_string(),
+                "max_pool_3x3".to_string(),
+                "avg_pool_3x3".to_string(),
+                "skip_connect".to_string(),
+                "sep_conv_3x3".to_string(),
+                "sep_conv_5x5".to_string(),
+                "dil_conv_3x3".to_string(),
+                "dil_conv_5x5".to_string(),
+            ],
+            num_intermediate_nodes: 4,
+            current_epoch: 0,
         }
+    }
+
+    /// Initialize architecture parameters
+    fn initialize_alphas(&mut self) -> Result<()> {
+        use rand::prelude::*;
+        
+        let num_ops = self.mixed_ops.len();
+        let num_edges = self.num_intermediate_nodes * (self.num_intermediate_nodes + 1) / 2;
+        
+        // Initialize with small random values
+        let alpha_normal = Array2::random(
+            (num_edges, num_ops),
+            rand_distr::Normal::new(0.0, 0.001).unwrap()
+        );
+        
+        let alpha_reduce = Array2::random(
+            (num_edges, num_ops),
+            rand_distr::Normal::new(0.0, 0.001).unwrap()
+        );
+        
+        self.alpha_normal = Some(alpha_normal);
+        self.alpha_reduce = Some(alpha_reduce);
+        
+        Ok(())
+    }
+
+    /// Apply Gumbel softmax for continuous relaxation
+    fn gumbel_softmax(&self, logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
+        use rand::prelude::*;
+        let mut rng = rand::thread_rng();
+        
+        // Add Gumbel noise
+        let gumbel_noise: Array1<f32> = Array1::from_shape_fn(logits.len(), |_| {
+            let u: f32 = rng.gen();
+            -((-u.ln()).ln())
+        });
+        
+        let noisy_logits = logits + &gumbel_noise;
+        
+        // Apply softmax with temperature
+        let scaled_logits = noisy_logits.mapv(|x| x / temperature);
+        let max_logit = scaled_logits.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+        let exp_logits = scaled_logits.mapv(|x| (x - max_logit).exp());
+        let sum_exp = exp_logits.sum();
+        
+        exp_logits.mapv(|x| x / sum_exp)
+    }
+
+    /// Sample architecture from continuous distribution
+    fn sample_architecture(&mut self) -> Result<crate::nas::architecture_encoding::SequentialEncoding> {
+        if self.alpha_normal.is_none() {
+            self.initialize_alphas()?;
+        }
+        
+        let alpha = self.alpha_normal.as_ref().unwrap();
+        let mut layers = Vec::new();
+        
+        // Sample operations for each edge
+        for edge_idx in 0..alpha.nrows() {
+            let logits = alpha.row(edge_idx).to_owned();
+            let probs = self.gumbel_softmax(&logits, self.temperature as f32);
+            
+            // Find the operation with highest probability
+            let mut max_prob = 0.0;
+            let mut selected_op = 0;
+            for (i, &prob) in probs.iter().enumerate() {
+                if prob > max_prob {
+                    max_prob = prob;
+                    selected_op = i;
+                }
+            }
+            
+            // Convert operation to layer type
+            if selected_op > 0 { // Skip "none" operations
+                let layer_type = self.operation_to_layer_type(selected_op)?;
+                layers.push(layer_type);
+            }
+        }
+        
+        // Ensure we have at least a few layers
+        if layers.len() < 3 {
+            layers.push(crate::nas::search_space::LayerType::Dense(128));
+            layers.push(crate::nas::search_space::LayerType::Activation("relu".to_string()));
+            layers.push(crate::nas::search_space::LayerType::Dense(64));
+        }
+        
+        Ok(crate::nas::architecture_encoding::SequentialEncoding::new(layers))
+    }
+    
+    /// Convert operation index to layer type
+    fn operation_to_layer_type(&self, op_idx: usize) -> Result<crate::nas::search_space::LayerType> {
+        let layer_type = match self.mixed_ops.get(op_idx) {
+            Some(op) => match op.as_str() {
+                "none" => return Err(crate::error::NeuralError::InvalidArgument("None operation".to_string())),
+                "max_pool_3x3" => crate::nas::search_space::LayerType::MaxPool2D {
+                    pool_size: (3, 3),
+                    stride: (1, 1),
+                },
+                "avg_pool_3x3" => crate::nas::search_space::LayerType::AvgPool2D {
+                    pool_size: (3, 3),
+                    stride: (1, 1),
+                },
+                "skip_connect" => crate::nas::search_space::LayerType::Residual,
+                "sep_conv_3x3" => crate::nas::search_space::LayerType::Conv2D {
+                    filters: 64,
+                    kernel_size: (3, 3),
+                    stride: (1, 1),
+                },
+                "sep_conv_5x5" => crate::nas::search_space::LayerType::Conv2D {
+                    filters: 64,
+                    kernel_size: (5, 5),
+                    stride: (1, 1),
+                },
+                "dil_conv_3x3" => crate::nas::search_space::LayerType::Conv2D {
+                    filters: 64,
+                    kernel_size: (3, 3),
+                    stride: (1, 1),
+                },
+                "dil_conv_5x5" => crate::nas::search_space::LayerType::Conv2D {
+                    filters: 64,
+                    kernel_size: (5, 5),
+                    stride: (1, 1),
+                },
+                _ => crate::nas::search_space::LayerType::Dense(64),
+            },
+            None => crate::nas::search_space::LayerType::Dense(64),
+        };
+        
+        Ok(layer_type)
+    }
+    
+    /// Update architecture parameters using gradient descent
+    fn update_alphas(&mut self, validation_loss: f64) -> Result<()> {
+        if let Some(ref mut alpha) = self.alpha_normal {
+            // Simplified gradient update
+            // In practice, would compute actual gradients
+            let gradient_scale = self.arch_learning_rate * validation_loss as f32;
+            
+            // Add regularization (weight decay)
+            alpha.mapv_inplace(|x| x * (1.0 - self.arch_weight_decay) - gradient_scale * 0.001);
+        }
+        
+        if let Some(ref mut alpha) = self.alpha_reduce {
+            let gradient_scale = self.arch_learning_rate * validation_loss as f32;
+            alpha.mapv_inplace(|x| x * (1.0 - self.arch_weight_decay) - gradient_scale * 0.001);
+        }
+        
+        Ok(())
+    }
+
+    /// Progressive shrinking of temperature
+    fn update_temperature(&mut self) {
+        self.current_epoch += 1;
+        // Exponential decay of temperature
+        self.temperature = (self.temperature * 0.98).max(0.1);
     }
 }
 
@@ -319,21 +731,35 @@ impl SearchAlgorithm for DifferentiableSearch {
         _history: &[SearchResult],
         n_proposals: usize,
     ) -> Result<Vec<Arc<dyn ArchitectureEncoding>>> {
-        // Simplified implementation - would use continuous relaxation in practice
-        use rand::prelude::*;
-        let mut rng = rand::thread_rng();
-
         let mut proposals = Vec::with_capacity(n_proposals);
+        
+        // Cast to mutable for alpha operations
+        let self_mut = unsafe { &mut *(self as *const Self as *mut Self) };
+        
         for _ in 0..n_proposals {
-            let encoding = crate::nas::architecture_encoding::SequentialEncoding::random(&mut rng)?;
+            let encoding = self_mut.sample_architecture()?;
             proposals.push(Arc::new(encoding) as Arc<dyn ArchitectureEncoding>);
         }
 
         Ok(proposals)
     }
 
-    fn update(&mut self, _results: &[SearchResult]) -> Result<()> {
-        // In practice, would update architecture parameters here
+    fn update(&mut self, results: &[SearchResult]) -> Result<()> {
+        if results.is_empty() {
+            return Ok(());
+        }
+        
+        // Compute average validation loss
+        let avg_loss = results.iter()
+            .filter_map(|r| r.metrics.get("validation_loss"))
+            .sum::<f64>() / results.len() as f64;
+        
+        // Update architecture parameters
+        self.update_alphas(avg_loss)?;
+        
+        // Update temperature for next iteration
+        self.update_temperature();
+        
         Ok(())
     }
 

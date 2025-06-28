@@ -3,9 +3,8 @@
 //! This module provides methods for selecting relevant features from datasets,
 //! which can help reduce dimensionality and improve model performance.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix2, Axis};
+use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
-use rayon::prelude::*;
 
 use crate::error::{Result, TransformError};
 
@@ -354,9 +353,11 @@ where
             // Remove eliminated features
             let eliminated: std::collections::HashSet<usize> = 
                 indices.iter().take(n_to_remove).cloned().collect();
-            remaining_features.retain(|&idx| {
-                !eliminated.contains(&remaining_features.iter().position(|&x| x == idx).unwrap())
-            });
+            let features_to_retain: Vec<usize> = remaining_features.iter()
+                .filter(|&&idx| !eliminated.contains(&idx))
+                .cloned()
+                .collect();
+            remaining_features = features_to_retain;
         }
 
         // Mark remaining features as rank 1

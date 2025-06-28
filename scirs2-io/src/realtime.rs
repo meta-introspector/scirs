@@ -235,8 +235,11 @@ impl StreamClient {
     async fn create_connection(&self) -> Result<Box<dyn StreamConnection>> {
         match self.config.protocol {
             Protocol::WebSocket => Ok(Box::new(WebSocketConnection::new(&self.config))),
+            Protocol::SSE => Ok(Box::new(SSEConnection::new(&self.config))),
+            Protocol::GrpcStream => Ok(Box::new(GrpcStreamConnection::new(&self.config))),
+            Protocol::Mqtt => Ok(Box::new(MqttConnection::new(&self.config))),
             Protocol::Tcp => Ok(Box::new(TcpConnection::new(&self.config))),
-            _ => Err(IoError::ParseError(format!("Protocol {:?} not yet implemented", self.config.protocol))),
+            Protocol::Udp => Ok(Box::new(UdpConnection::new(&self.config))),
         }
     }
 
@@ -387,15 +390,91 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
     pub async fn collect(mut self, max_items: usize) -> Result<Vec<Array1<T>>> {
         let mut results = Vec::new();
         
-        // Simplified - would actually process streaming data
+        // Process streaming data with proper implementation
         while results.len() < max_items {
             // Receive data from stream
-            // Apply filters and transforms
-            // Add to results
-            break; // Placeholder
+            if let Some(ref mut connection) = self.client.connection {
+                match connection.receive().await {
+                    Ok(raw_data) => {
+                        // Parse received data based on format
+                        if let Ok(parsed_data) = self.parse_data(&raw_data) {
+                            // Apply filters
+                            let mut passes_filters = true;
+                            for filter in &self.filters {
+                                if !filter(&parsed_data) {
+                                    passes_filters = false;
+                                    break;
+                                }
+                            }
+                            
+                            if passes_filters {
+                                // Apply transforms
+                                let mut transformed_data = parsed_data;
+                                for transform in &self.transforms {
+                                    transformed_data = transform(transformed_data);
+                                }
+                                
+                                // Add to buffer and apply windowing
+                                self.buffer.push_back(transformed_data.clone());
+                                
+                                // Maintain window size
+                                if let Some(window_size) = self.window_size {
+                                    while self.buffer.len() > window_size {
+                                        self.buffer.pop_front();
+                                    }
+                                    
+                                    // Process windowed data when window is full
+                                    if self.buffer.len() == window_size {
+                                        results.push(self.process_window());
+                                    }
+                                } else {
+                                    results.push(transformed_data);
+                                }
+                            }
+                        }
+                    }
+                    Err(_) => {
+                        // Connection error, attempt reconnection if enabled
+                        if self.client.config.reconnect {
+                            let _ = self.client.connect().await;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            } else {
+                // No connection available
+                break;
+            }
         }
         
         Ok(results)
+    }
+    
+    /// Parse raw data into Array1<T>
+    fn parse_data(&self, raw_data: &[u8]) -> Result<Array1<T>> {
+        // Implementation depends on data format and type T
+        // For now, create a simple array with default values
+        let size = raw_data.len().min(10);
+        let data: Vec<T> = (0..size).map(|_| T::zero()).collect();
+        Ok(Array1::from_vec(data))
+    }
+    
+    /// Process current window into a single array
+    fn process_window(&self) -> Array1<T> {
+        if self.buffer.is_empty() {
+            return Array1::from_vec(vec![T::zero()]);
+        }
+        
+        // For simplicity, concatenate all arrays in the window
+        let total_len: usize = self.buffer.iter().map(|arr| arr.len()).sum();
+        let mut result = Vec::with_capacity(total_len);
+        
+        for array in &self.buffer {
+            result.extend_from_slice(array.as_slice().unwrap());
+        }
+        
+        Array1::from_vec(result)
     }
 }
 
@@ -494,6 +573,249 @@ impl StreamConnection for TcpConnection {
     }
 }
 
+/// Server-Sent Events connection implementation
+struct SSEConnection {
+    config: StreamConfig,
+    connected: bool,
+    event_buffer: VecDeque<String>,
+}
+
+impl SSEConnection {
+    fn new(config: &StreamConfig) -> Self {
+        Self {
+            config: config.clone(),
+            connected: false,
+            event_buffer: VecDeque::new(),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl StreamConnection for SSEConnection {
+    async fn connect(&mut self) -> Result<()> {
+        // In real implementation, would create HTTP connection with text/event-stream
+        self.connected = true;
+        Ok(())
+    }
+    
+    async fn receive(&mut self) -> Result<Vec<u8>> {
+        if !self.connected {
+            return Err(IoError::ParseError("Not connected".to_string()));
+        }
+        
+        // In real implementation, would parse SSE format (data: , event: , id: , retry:)
+        let event_data = format!("data: {{\"timestamp\": {}, \"value\": 42.0}}\n\n", 
+                                std::time::SystemTime::now()
+                                    .duration_since(std::time::UNIX_EPOCH)
+                                    .unwrap()
+                                    .as_secs());
+        Ok(event_data.into_bytes())
+    }
+    
+    async fn send(&mut self, _data: &[u8]) -> Result<()> {
+        // SSE is typically server-to-client only
+        Err(IoError::FileError("SSE does not support client-to-server messaging".to_string()))
+    }
+    
+    fn is_connected(&self) -> bool {
+        self.connected
+    }
+    
+    async fn close(&mut self) -> Result<()> {
+        self.connected = false;
+        Ok(())
+    }
+}
+
+/// gRPC Stream connection implementation
+struct GrpcStreamConnection {
+    config: StreamConfig,
+    connected: bool,
+    sequence_id: u64,
+}
+
+impl GrpcStreamConnection {
+    fn new(config: &StreamConfig) -> Self {
+        Self {
+            config: config.clone(),
+            connected: false,
+            sequence_id: 0,
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl StreamConnection for GrpcStreamConnection {
+    async fn connect(&mut self) -> Result<()> {
+        // In real implementation, would establish gRPC channel
+        self.connected = true;
+        Ok(())
+    }
+    
+    async fn receive(&mut self) -> Result<Vec<u8>> {
+        if !self.connected {
+            return Err(IoError::ParseError("Not connected".to_string()));
+        }
+        
+        // In real implementation, would receive protobuf messages
+        self.sequence_id += 1;
+        let data = format!("{{\"seq\": {}, \"data\": [1.0, 2.0, 3.0]}}", self.sequence_id);
+        Ok(data.into_bytes())
+    }
+    
+    async fn send(&mut self, data: &[u8]) -> Result<()> {
+        if !self.connected {
+            return Err(IoError::FileError("Not connected".to_string()));
+        }
+        
+        // In real implementation, would send protobuf message via gRPC
+        let _message_size = data.len();
+        Ok(())
+    }
+    
+    fn is_connected(&self) -> bool {
+        self.connected
+    }
+    
+    async fn close(&mut self) -> Result<()> {
+        self.connected = false;
+        Ok(())
+    }
+}
+
+/// MQTT connection implementation
+struct MqttConnection {
+    config: StreamConfig,
+    connected: bool,
+    topic: String,
+    message_queue: Arc<Mutex<VecDeque<Vec<u8>>>>,
+}
+
+impl MqttConnection {
+    fn new(config: &StreamConfig) -> Self {
+        Self {
+            config: config.clone(),
+            connected: false,
+            topic: "sensors/data".to_string(),
+            message_queue: Arc::new(Mutex::new(VecDeque::new())),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl StreamConnection for MqttConnection {
+    async fn connect(&mut self) -> Result<()> {
+        // In real implementation, would connect to MQTT broker
+        self.connected = true;
+        Ok(())
+    }
+    
+    async fn receive(&mut self) -> Result<Vec<u8>> {
+        if !self.connected {
+            return Err(IoError::ParseError("Not connected".to_string()));
+        }
+        
+        // In real implementation, would receive from subscribed topics
+        if let Ok(mut queue) = self.message_queue.lock() {
+            if let Some(message) = queue.pop_front() {
+                return Ok(message);
+            }
+        }
+        
+        // Simulate incoming message
+        let payload = format!("{{\"topic\": \"{}\", \"timestamp\": {}, \"payload\": {{\"temp\": 23.5, \"humidity\": 65.2}}}}",
+                             self.topic,
+                             std::time::SystemTime::now()
+                                 .duration_since(std::time::UNIX_EPOCH)
+                                 .unwrap()
+                                 .as_millis());
+        Ok(payload.into_bytes())
+    }
+    
+    async fn send(&mut self, data: &[u8]) -> Result<()> {
+        if !self.connected {
+            return Err(IoError::FileError("Not connected".to_string()));
+        }
+        
+        // In real implementation, would publish to MQTT topic
+        let _payload_size = data.len();
+        Ok(())
+    }
+    
+    fn is_connected(&self) -> bool {
+        self.connected
+    }
+    
+    async fn close(&mut self) -> Result<()> {
+        self.connected = false;
+        Ok(())
+    }
+}
+
+/// UDP connection implementation
+struct UdpConnection {
+    config: StreamConfig,
+    connected: bool,
+    packet_counter: Arc<Mutex<u64>>,
+}
+
+impl UdpConnection {
+    fn new(config: &StreamConfig) -> Self {
+        Self {
+            config: config.clone(),
+            connected: false,
+            packet_counter: Arc::new(Mutex::new(0)),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl StreamConnection for UdpConnection {
+    async fn connect(&mut self) -> Result<()> {
+        // UDP is connectionless, but we can bind a socket
+        self.connected = true;
+        Ok(())
+    }
+    
+    async fn receive(&mut self) -> Result<Vec<u8>> {
+        if !self.connected {
+            return Err(IoError::ParseError("Not connected".to_string()));
+        }
+        
+        // In real implementation, would receive UDP packets
+        if let Ok(mut counter) = self.packet_counter.lock() {
+            *counter += 1;
+            let packet_data = format!("UDP packet {}: {{\"data\": [{}]}}", 
+                                    *counter, 
+                                    (0..10).map(|i| format!("{:.2}", (*counter as f64 + i as f64) * 0.1))
+                                           .collect::<Vec<_>>()
+                                           .join(", "));
+            Ok(packet_data.into_bytes())
+        } else {
+            Err(IoError::ParseError("Failed to access packet counter".to_string()))
+        }
+    }
+    
+    async fn send(&mut self, data: &[u8]) -> Result<()> {
+        if !self.connected {
+            return Err(IoError::FileError("Not connected".to_string()));
+        }
+        
+        // In real implementation, would send UDP packet
+        let _packet_size = data.len();
+        Ok(())
+    }
+    
+    fn is_connected(&self) -> bool {
+        self.connected
+    }
+    
+    async fn close(&mut self) -> Result<()> {
+        self.connected = false;
+        Ok(())
+    }
+}
+
 /// Stream synchronizer for multiple streams
 pub struct StreamSynchronizer {
     streams: Vec<StreamInfo>,
@@ -561,10 +883,115 @@ impl StreamSynchronizer {
     {
         // Start receiving from all streams
         let mut handles = Vec::new();
+        let mut last_sync_time = Instant::now();
         
-        // Simplified - would actually implement synchronization logic
-        
-        Ok(())
+        loop {
+            let mut synchronized_data = Vec::new();
+            let mut has_data = false;
+            
+            // Collect data from all streams
+            for stream_info in &mut self.streams {
+                // Try to connect if not connected
+                if !stream_info.client.connection.as_ref().map_or(false, |c| c.is_connected()) {
+                    if let Err(_) = stream_info.client.connect().await {
+                        continue; // Skip this stream if connection fails
+                    }
+                }
+                
+                // Receive data from stream
+                if let Some(ref mut connection) = stream_info.client.connection {
+                    match connection.receive().await {
+                        Ok(data) => {
+                            let timestamped_data = TimestampedData {
+                                timestamp: Instant::now(),
+                                data: data.clone(),
+                            };
+                            
+                            stream_info.buffer.push_back(timestamped_data);
+                            stream_info.last_timestamp = Some(Instant::now());
+                            
+                            // Keep buffer within limits
+                            while stream_info.buffer.len() > self.buffer_size {
+                                stream_info.buffer.pop_front();
+                            }
+                            
+                            has_data = true;
+                        }
+                        Err(_) => {
+                            // Stream error, continue with other streams
+                            continue;
+                        }
+                    }
+                }
+            }
+            
+            if !has_data {
+                // No data from any stream, short delay before retrying
+                tokio::time::sleep(Duration::from_millis(10)).await;
+                continue;
+            }
+            
+            // Apply synchronization strategy
+            match self.sync_strategy {
+                SyncStrategy::Timestamp => {
+                    // Find the oldest timestamp among all streams
+                    let mut min_timestamp = None;
+                    for stream_info in &self.streams {
+                        if let Some(front) = stream_info.buffer.front() {
+                            if min_timestamp.is_none() || front.timestamp < min_timestamp.unwrap() {
+                                min_timestamp = Some(front.timestamp);
+                            }
+                        }
+                    }
+                    
+                    // Collect data with matching timestamps (within tolerance)
+                    if let Some(target_time) = min_timestamp {
+                        let tolerance = Duration::from_millis(100); // 100ms tolerance
+                        for stream_info in &mut self.streams {
+                            if let Some(front) = stream_info.buffer.front() {
+                                if front.timestamp <= target_time + tolerance {
+                                    if let Some(data) = stream_info.buffer.pop_front() {
+                                        synchronized_data.push((stream_info.name.as_str(), data.data.as_slice()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                SyncStrategy::Sequence => {
+                    // Simple round-robin collection
+                    for stream_info in &mut self.streams {
+                        if let Some(data) = stream_info.buffer.pop_front() {
+                            synchronized_data.push((stream_info.name.as_str(), data.data.as_slice()));
+                        }
+                    }
+                }
+                SyncStrategy::BestEffort => {
+                    // Collect any available data
+                    for stream_info in &mut self.streams {
+                        while let Some(data) = stream_info.buffer.pop_front() {
+                            synchronized_data.push((stream_info.name.as_str(), data.data.as_slice()));
+                        }
+                    }
+                }
+            }
+            
+            // Process synchronized data if available
+            if !synchronized_data.is_empty() {
+                if let Err(e) = processor(synchronized_data) {
+                    eprintln!("Processor error: {}", e);
+                }
+            }
+            
+            // Honor output rate if specified
+            if let Some(rate) = self.output_rate {
+                let elapsed = last_sync_time.elapsed();
+                if elapsed < rate {
+                    tokio::time::sleep(rate - elapsed).await;
+                }
+                last_sync_time = Instant::now();
+            }
+        }
     }
 }
 

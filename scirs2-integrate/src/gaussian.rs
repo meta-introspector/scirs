@@ -20,6 +20,15 @@ pub struct GaussLegendreQuadrature<F: IntegrateFloat> {
 }
 
 impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
+    /// Safe conversion from f64 to F type
+    #[allow(dead_code)]
+    fn safe_from_f64(value: f64) -> IntegrateResult<F> {
+        F::from_f64(value).ok_or_else(|| {
+            IntegrateError::ComputationError(
+                format!("Failed to convert f64 constant {} to target type", value)
+            )
+        })
+    }
     /// Create a new Gauss-Legendre quadrature with the given number of points
     ///
     /// # Arguments

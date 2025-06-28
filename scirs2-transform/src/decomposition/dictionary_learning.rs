@@ -4,10 +4,10 @@
 //! combination of basic elements called atoms. The atoms compose a dictionary.
 //! This is useful for sparse coding, denoising, and feature extraction.
 
-use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
+use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use rand::Rng;
-use scirs2_linalg::{norm::euclidean_norm, svd};
+use scirs2_linalg::{vector_norm, svd};
 
 use crate::error::{Result, TransformError};
 
@@ -29,6 +29,7 @@ pub struct DictionaryLearning {
     /// Algorithm for sparse coding: 'omp', 'lasso_lars', 'lasso_cd'
     transform_algorithm: String,
     /// Number of parallel jobs for OMP
+    #[allow(dead_code)]
     n_jobs: usize,
     /// Random state for reproducibility
     random_state: Option<u64>,
@@ -96,20 +97,17 @@ impl DictionaryLearning {
         let n_features = x.shape()[1];
         let n_samples = x.shape()[0];
         
-        let mut rng = match self.random_state {
-            Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-            None => rand::rngs::StdRng::from_entropy(),
-        };
+        let mut rng = rand::rng();
 
         let mut dictionary = Array2::zeros((self.n_components, n_features));
 
         // Select random samples as initial dictionary atoms
         for i in 0..self.n_components {
-            let idx = rng.gen_range(0..n_samples);
+            let idx = rng.random_range(0..n_samples);
             dictionary.row_mut(i).assign(&x.row(idx));
             
             // Normalize atom
-            let norm = euclidean_norm(&dictionary.row(i).view());
+            let norm = vector_norm(&dictionary.row(i).view(), 2).unwrap_or(0.0);
             if norm > 1e-10 {
                 dictionary.row_mut(i).mapv_inplace(|x| x / norm);
             }
@@ -266,7 +264,7 @@ impl DictionaryLearning {
     fn dictionary_update_step(
         &self,
         x: &Array2<f64>,
-        sparse_codes: &Array2<f64>,
+        sparse_codes: &mut Array2<f64>,
         dictionary: &mut Array2<f64>,
     ) {
         let n_atoms = dictionary.shape()[0];
@@ -311,7 +309,7 @@ impl DictionaryLearning {
                     }
                     Err(_) => {
                         // If SVD fails, normalize current atom
-                        let norm = euclidean_norm(&dictionary.row(k).view());
+                        let norm = vector_norm(&dictionary.row(k).view(), 2).unwrap_or(0.0);
                         if norm > 1e-10 {
                             dictionary.row_mut(k).mapv_inplace(|x| x / norm);
                         }
@@ -334,7 +332,7 @@ impl DictionaryLearning {
         S::Elem: Float + NumCast,
     {
         let x_f64 = x.mapv(|v| num_traits::cast::<S::Elem, f64>(v).unwrap_or(0.0));
-        let n_samples = x_f64.shape()[0];
+        let _n_samples = x_f64.shape()[0];
         let n_features = x_f64.shape()[1];
 
         if self.n_components > n_features {
@@ -355,7 +353,7 @@ impl DictionaryLearning {
             let mut sparse_codes = self.sparse_code_step(&x_f64, &dictionary);
 
             // Dictionary update step
-            self.dictionary_update_step(&x_f64, &sparse_codes, &mut dictionary);
+            self.dictionary_update_step(&x_f64, &mut sparse_codes, &mut dictionary);
 
             // Compute reconstruction error
             let reconstruction = sparse_codes.dot(&dictionary);
@@ -477,7 +475,7 @@ mod tests {
 
         // Check that dictionary atoms are normalized
         for i in 0..10 {
-            let norm = euclidean_norm(&dictionary.row(i).view());
+            let norm = vector_norm(&dictionary.row(i).view(), 2).unwrap_or(0.0);
             assert!((norm - 1.0).abs() < 1e-5);
         }
 

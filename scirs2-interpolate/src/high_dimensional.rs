@@ -308,13 +308,13 @@ where
         values: &ArrayView1<F>,
     ) -> InterpolateResult<HighDimensionalInterpolator<F>> {
         if points.nrows() != values.len() {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "Number of points must match number of values".to_string(),
             ));
         }
 
         if points.nrows() < 2 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "At least 2 points are required".to_string(),
             ));
         }

@@ -788,19 +788,26 @@ mod tests {
         let registry = PrecisionRegistry::new();
         let context = PrecisionContext::new(10.0);
 
-        registry.register_computation("test", context)
+        registry
+            .register_computation("test", context)
             .expect("Registering computation should succeed");
 
-        let retrieved = registry.get_computation_context("test")
+        let retrieved = registry
+            .get_computation_context("test")
             .expect("Retrieving registered computation should succeed");
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.expect("Retrieved context should exist").precision, 10.0);
+        assert_eq!(
+            retrieved.expect("Retrieved context should exist").precision,
+            10.0
+        );
     }
 
     #[test]
     fn test_sqrt_precision() {
         let a = TrackedFloat::with_precision(4.0, 15.0);
-        let result = a.sqrt().expect("Square root of positive number should succeed");
+        let result = a
+            .sqrt()
+            .expect("Square root of positive number should succeed");
         assert_eq!(result.value, 2.0);
         assert!(result.context.precision < 15.0); // Some precision loss expected
     }
@@ -808,7 +815,9 @@ mod tests {
     #[test]
     fn test_ln_near_one() {
         let a = TrackedFloat::with_precision(1.0 + 1e-12, 15.0);
-        let result = a.ln().expect("Natural log of positive number should succeed");
+        let result = a
+            .ln()
+            .expect("Natural log of positive number should succeed");
         // Logarithm near 1 should show some precision loss
         assert!(
             result.context.precision < 15.0,
@@ -842,7 +851,12 @@ mod tests {
             "Should have precision loss sources after setting high condition number"
         );
         assert!(context.condition_number.is_some());
-        assert_eq!(context.condition_number.expect("Condition number should be set"), 1e15);
+        assert_eq!(
+            context
+                .condition_number
+                .expect("Condition number should be set"),
+            1e15
+        );
     }
 
     #[test]

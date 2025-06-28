@@ -521,12 +521,22 @@ impl LargeScaleProcessor {
 
         for chunk_start in (0..num_elements).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(num_elements);
-            // TODO: Implement proper chunk access for memory-mapped arrays
-            // For now, create a dummy chunk to allow compilation
-            let dummy_chunk = vec![0.0f64; chunk_end - chunk_start];
-            let chunk_data = &dummy_chunk[..];
 
-            let chunk_result = processor(chunk_data)?;
+            // Access chunk data from memory-mapped array
+            let chunk_data = {
+                let array = _mmap_array.as_array::<ndarray::Ix1>().map_err(|e| {
+                    CoreError::ComputationError(ErrorContext::new(format!(
+                        "Failed to access memory-mapped array: {:?}",
+                        e
+                    )))
+                })?;
+
+                // Extract the chunk slice
+                let slice = array.slice(ndarray::s![chunk_start..chunk_end]);
+                slice.to_vec() // Convert to owned Vec for processing
+            };
+
+            let chunk_result = processor(&chunk_data)?;
             accumulator += chunk_result;
             chunks_processed += 1;
 

@@ -19,7 +19,7 @@ pub fn initialize_api_freeze() {
 fn initialize_api_freeze_impl() {
     let mut registry = global_registry_mut();
     let v1_0_0 = Version::new(1, 0, 0);
-    
+
     // Core error types and traits
     registry
         .register_api("CoreError", "error", v1_0_0)
@@ -28,7 +28,7 @@ fn initialize_api_freeze_impl() {
         .register_api("ErrorKind", "error", v1_0_0)
         .register_api("ErrorContextWithDetails", "error", v1_0_0)
         .register_api("PreciseError", "error", v1_0_0);
-    
+
     // Validation functions
     registry
         .register_api("check_finite", "validation", v1_0_0)
@@ -36,14 +36,14 @@ fn initialize_api_freeze_impl() {
         .register_api("check_positive", "validation", v1_0_0)
         .register_api("check_shape", "validation", v1_0_0)
         .register_api("check_in_bounds", "validation", v1_0_0);
-    
+
     // Numeric operations
     registry
         .register_api("NumericOps", "numeric", v1_0_0)
         .register_api("Complex", "numeric", v1_0_0)
         .register_api("Precision", "numeric", v1_0_0)
         .register_api("StableAlgorithms", "numeric", v1_0_0);
-    
+
     // Array protocol
     registry
         .register_api("ArrayProtocol", "array_protocol", v1_0_0)
@@ -51,7 +51,7 @@ fn initialize_api_freeze_impl() {
         .register_api("IntoArray", "array_protocol", v1_0_0)
         .register_api("ArrayView", "array_protocol", v1_0_0)
         .register_api("ArrayViewMut", "array_protocol", v1_0_0);
-    
+
     // Memory efficient operations (conditional)
     #[cfg(feature = "memory_efficient")]
     {
@@ -65,7 +65,7 @@ fn initialize_api_freeze_impl() {
             .register_api("chunk_wise_op", "memory_efficient", v1_0_0)
             .register_api("chunk_wise_reduce", "memory_efficient", v1_0_0);
     }
-    
+
     // SIMD operations (conditional)
     #[cfg(feature = "simd")]
     {
@@ -74,7 +74,7 @@ fn initialize_api_freeze_impl() {
             .register_api("SimdUnifiedOps", "simd_ops", v1_0_0)
             .register_api("PlatformCapabilities", "simd_ops", v1_0_0);
     }
-    
+
     // Parallel operations (conditional)
     #[cfg(feature = "parallel")]
     {
@@ -87,7 +87,7 @@ fn initialize_api_freeze_impl() {
             .register_api("num_threads", "parallel_ops", v1_0_0)
             .register_api("is_parallel_enabled", "parallel_ops", v1_0_0);
     }
-    
+
     // GPU operations (conditional)
     #[cfg(feature = "gpu")]
     {
@@ -97,7 +97,7 @@ fn initialize_api_freeze_impl() {
             .register_api("GpuBackend", "gpu", v1_0_0)
             .register_api("GpuCompute", "gpu", v1_0_0);
     }
-    
+
     // Caching (conditional)
     #[cfg(feature = "cache")]
     {
@@ -107,7 +107,7 @@ fn initialize_api_freeze_impl() {
             .register_api("LruCache", "cache", v1_0_0)
             .register_api("Cacheable", "cache", v1_0_0);
     }
-    
+
     // Types and conversions (conditional)
     #[cfg(feature = "types")]
     {
@@ -117,7 +117,7 @@ fn initialize_api_freeze_impl() {
             .register_api("ComplexConversionError", "types", v1_0_0)
             .register_api("BatchConverter", "batch_conversions", v1_0_0);
     }
-    
+
     // Array types (conditional)
     #[cfg(feature = "array")]
     {
@@ -128,53 +128,53 @@ fn initialize_api_freeze_impl() {
             .register_api("masked_invalid", "array", v1_0_0)
             .register_api("record_array_from_arrays", "array", v1_0_0);
     }
-    
+
     // Configuration system
     registry
         .register_api("Config", "config", v1_0_0)
         .register_api("ConfigValue", "config", v1_0_0)
         .register_api("get_config", "config", v1_0_0)
         .register_api("set_config_value", "config", v1_0_0);
-    
+
     // Constants
     registry
         .register_api("math::PI", "constants", v1_0_0)
         .register_api("math::E", "constants", v1_0_0)
         .register_api("physical::C", "constants", v1_0_0)
         .register_api("physical::G", "constants", v1_0_0);
-    
+
     // IO utilities
     registry
         .register_api("read_file", "io", v1_0_0)
         .register_api("write_file", "io", v1_0_0);
-    
+
     // Resource discovery
     registry
         .register_api("SystemResources", "resource", v1_0_0)
         .register_api("get_system_resources", "resource", v1_0_0)
         .register_api("get_available_memory", "resource", v1_0_0)
         .register_api("is_gpu_available", "resource", v1_0_0);
-    
+
     // Units system
     registry
         .register_api("UnitValue", "units", v1_0_0)
         .register_api("UnitRegistry", "units", v1_0_0)
         .register_api("unit_value", "units", v1_0_0)
         .register_api("convert", "units", v1_0_0);
-    
+
     // Versioning
     registry
         .register_api("Version", "versioning", v1_0_0)
         .register_api("ApiVersion", "versioning", v1_0_0)
         .register_api("CompatibilityLevel", "versioning", v1_0_0);
-    
+
     // Metrics
     registry
         .register_api("Counter", "metrics", v1_0_0)
         .register_api("Gauge", "metrics", v1_0_0)
         .register_api("Histogram", "metrics", v1_0_0)
         .register_api("Timer", "metrics", v1_0_0);
-    
+
     // Safe Operations
     registry
         .register_api("safe_add", "safe_ops", v1_0_0)
@@ -185,7 +185,7 @@ fn initialize_api_freeze_impl() {
         .register_api("safe_sqrt", "safe_ops", v1_0_0)
         .register_api("safe_log", "safe_ops", v1_0_0)
         .register_api("safe_exp", "safe_ops", v1_0_0);
-    
+
     // Random number generation (conditional)
     #[cfg(feature = "random")]
     {
@@ -197,7 +197,7 @@ fn initialize_api_freeze_impl() {
             .register_api("random_uniform", "random", v1_0_0)
             .register_api("set_random_seed", "random", v1_0_0);
     }
-    
+
     // Profiling (conditional)
     #[cfg(feature = "profiling")]
     {
@@ -209,7 +209,7 @@ fn initialize_api_freeze_impl() {
             .register_api("stop_profiling", "profiling", v1_0_0)
             .register_api("get_profile_report", "profiling", v1_0_0);
     }
-    
+
     // Testing utilities (conditional)
     #[cfg(feature = "testing")]
     {
@@ -221,7 +221,7 @@ fn initialize_api_freeze_impl() {
             .register_api("assert_array_almost_eq", "testing", v1_0_0)
             .register_api("assert_array_eq", "testing", v1_0_0);
     }
-    
+
     // Universal functions (conditional)
     #[cfg(feature = "ufuncs")]
     {
@@ -234,7 +234,7 @@ fn initialize_api_freeze_impl() {
             .register_api("ufunc_exp", "ufuncs", v1_0_0)
             .register_api("ufunc_log", "ufuncs", v1_0_0);
     }
-    
+
     // NDArray extensions
     registry
         .register_api("arange", "ndarray_ext", v1_0_0)
@@ -244,7 +244,7 @@ fn initialize_api_freeze_impl() {
         .register_api("stack", "ndarray_ext", v1_0_0)
         .register_api("split", "ndarray_ext", v1_0_0)
         .register_api("broadcast_to", "ndarray_ext", v1_0_0);
-    
+
     // Performance optimization (conditional)
     #[cfg(feature = "memory_efficient")]
     {
@@ -254,7 +254,7 @@ fn initialize_api_freeze_impl() {
             .register_api("detect_access_pattern", "performance_optimization", v1_0_0)
             .register_api("AdaptiveOptimization", "performance_optimization", v1_0_0);
     }
-    
+
     // Benchmarking (conditional)
     #[cfg(feature = "benchmarking")]
     {
@@ -264,7 +264,7 @@ fn initialize_api_freeze_impl() {
             .register_api("bench_function", "benchmarking", v1_0_0)
             .register_api("compare_benchmarks", "benchmarking", v1_0_0);
     }
-    
+
     // Observability (conditional)
     #[cfg(feature = "observability")]
     {
@@ -280,8 +280,9 @@ fn initialize_api_freeze_impl() {
 pub fn is_api_frozen(api_name: &str, module: &str) -> bool {
     let registry = global_registry_mut();
     let v1_0_0 = Version::new(1, 0, 0);
-    
-    registry.apis_in_version(&v1_0_0)
+
+    registry
+        .apis_in_version(&v1_0_0)
         .iter()
         .any(|entry| entry.name == api_name && entry.module == module)
 }
@@ -290,20 +291,24 @@ pub fn is_api_frozen(api_name: &str, module: &str) -> bool {
 pub fn generate_frozen_api_report() -> String {
     let registry = global_registry_mut();
     let v1_0_0 = Version::new(1, 0, 0);
-    
+
     let mut report = String::from("# Frozen APIs for scirs2-core 1.0\n\n");
-    
+
     let apis = registry.apis_in_version(&v1_0_0);
     let total_apis = apis.len();
-    let mut apis_by_module: std::collections::HashMap<&str, Vec<&str>> = std::collections::HashMap::new();
-    
+    let mut apis_by_module: std::collections::HashMap<&str, Vec<&str>> =
+        std::collections::HashMap::new();
+
     for api in apis {
-        apis_by_module.entry(&api.module).or_default().push(&api.name);
+        apis_by_module
+            .entry(&api.module)
+            .or_default()
+            .push(&api.name);
     }
-    
+
     let mut modules: Vec<_> = apis_by_module.keys().copied().collect();
     modules.sort();
-    
+
     for module in modules {
         report.push_str(&format!("## Module: {}\n", module));
         if let Some(apis) = apis_by_module.get(module) {
@@ -315,25 +320,25 @@ pub fn generate_frozen_api_report() -> String {
         }
         report.push('\n');
     }
-    
+
     report.push_str(&format!("\nTotal frozen APIs: {}\n", total_apis));
-    
+
     report
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_api_freeze_initialization() {
         initialize_api_freeze();
-        
+
         // Test that core APIs are registered
         assert!(is_api_frozen("CoreError", "error"));
         assert!(is_api_frozen("check_finite", "validation"));
         assert!(is_api_frozen("SystemResources", "resource"));
-        
+
         // Test that the report generates successfully
         let report = generate_frozen_api_report();
         assert!(report.contains("Frozen APIs for scirs2-core 1.0"));

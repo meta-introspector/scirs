@@ -310,6 +310,11 @@ impl RlsFilter {
         for (p_row, kx_row) in self.p_matrix.iter_mut().zip(kx_outer.iter()) {
             for (j, p_elem) in p_row.iter_mut().enumerate() {
                 let kxp = dot_product(kx_row, &get_column(&p_matrix_copy, j));
+                if self.lambda.abs() < f64::EPSILON {
+                    return Err(SignalError::ValueError(
+                        "Forgetting factor lambda is too close to zero".to_string()
+                    ));
+                }
                 *p_elem = (*p_elem - kxp) / self.lambda;
             }
         }
@@ -1142,7 +1147,13 @@ impl SmLmsFilter {
             };
 
             // Normalized update
-            let normalized_step = self.step_size / normalization;
+            // Ensure normalization is not too small to avoid numerical instability
+            let safe_normalization = if normalization.abs() < 1e-12 {
+                1e-12
+            } else {
+                normalization
+            };
+            let normalized_step = self.step_size / safe_normalization;
 
             for i in 0..self.weights.len() {
                 let buffer_idx =
@@ -1245,6 +1256,12 @@ fn solve_linear_system_small(matrix: &[Vec<f64>], rhs: &[f64]) -> SignalResult<V
 
         // Eliminate column
         for k in (i + 1)..n {
+            // Check for singular matrix (diagonal element near zero)
+            if aug_matrix[i][i].abs() < f64::EPSILON {
+                return Err(SignalError::ValueError(
+                    format!("Singular matrix detected at row {}", i)
+                ));
+            }
             let factor = aug_matrix[k][i] / aug_matrix[i][i];
             for j in i..=n {
                 aug_matrix[k][j] -= factor * aug_matrix[i][j];
@@ -1272,7 +1289,8 @@ mod tests {
 
     #[test]
     fn test_lms_creation() {
-        let lms = LmsFilter::new(4, 0.01, 0.0).unwrap();
+        let lms = LmsFilter::new(4, 0.01, 0.0)
+            .expect("LMS filter creation should succeed with valid parameters");
         assert_eq!(lms.weights().len(), 4);
         assert_eq!(lms.buffer().len(), 4);
 
@@ -1283,7 +1301,8 @@ mod tests {
 
     #[test]
     fn test_lms_adapt() {
-        let mut lms = LmsFilter::new(2, 0.1, 0.0).unwrap();
+        let mut lms = LmsFilter::new(2, 0.1, 0.0)
+            .expect("LMS filter creation should succeed with valid parameters");
 
         // Test single adaptation
         let (output, error, _mse) = lms.adapt(1.0, 0.5).unwrap();

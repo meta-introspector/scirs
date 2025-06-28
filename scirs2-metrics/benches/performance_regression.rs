@@ -58,12 +58,21 @@ fn generate_probability_distributions(n_samples: usize) -> (Array1<f64>, Array1<
     let mut p = Array1::zeros(n_samples);
     let mut q = Array1::zeros(n_samples);
 
-    let sum_p = n_samples as f64;
-    let sum_q = (n_samples * 2) as f64;
-
+    // Generate unnormalized weights
+    let mut sum_p = 0.0;
+    let mut sum_q = 0.0;
+    
     for i in 0..n_samples {
-        p[i] = (i + 1) as f64 / sum_p;
-        q[i] = ((i + 1) * 2) as f64 / sum_q;
+        p[i] = (i + 1) as f64;
+        q[i] = ((i + 1) * 2) as f64;
+        sum_p += p[i];
+        sum_q += q[i];
+    }
+
+    // Normalize to make them proper probability distributions
+    for i in 0..n_samples {
+        p[i] /= sum_p;
+        q[i] /= sum_q;
     }
 
     (p, q)

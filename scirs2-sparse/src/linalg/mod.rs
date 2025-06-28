@@ -4,6 +4,7 @@
 //! including solvers, eigenvalue computations, and matrix functions.
 
 mod cgs;
+mod eigen;
 mod expm;
 mod ic;
 mod interface;
@@ -13,10 +14,17 @@ mod matfuncs;
 mod minres;
 mod preconditioners;
 mod qmr;
+mod qmr_simple;
 mod solvers;
 mod spai;
+mod svd;
+mod decomposition;
 
 pub use cgs::{cgs, CGSOptions, CGSResult};
+pub use eigen::{
+    power_iteration, lanczos, eigs, eigsh, PowerIterationOptions, LanczosOptions, EigenResult,
+    EigenvalueMethod, ArpackOptions,
+};
 pub use expm::expm;
 pub use ic::IC0Preconditioner;
 pub use interface::{
@@ -36,3 +44,8 @@ pub use solvers::{
     sparse_lstsq, spsolve,
 };
 pub use spai::{SpaiOptions, SpaiPreconditioner};
+pub use svd::{svds, SVDOptions, SVDResult, svd_truncated};
+pub use decomposition::{
+    lu_decomposition, qr_decomposition, cholesky_decomposition, LUResult, QRResult, CholeskyResult,
+    incomplete_lu, incomplete_cholesky, ILUOptions, ICOptions,
+};

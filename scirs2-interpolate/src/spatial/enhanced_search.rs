@@ -253,7 +253,7 @@ where
         let n_dims = points.ncols();
 
         if n_points == 0 {
-            return Err(InterpolateError::ValueError(
+            return Err(InterpolateError::invalid_input(
                 "Cannot create searcher with zero points".to_string(),
             ));
         }
@@ -1240,7 +1240,7 @@ impl<F: Float + FromPrimitive> BallTreeIndex<F> {
 impl<F: Float + FromPrimitive> LSHIndex<F> {
     pub fn new(_points: &Array2<F>, _config: &SearchConfig) -> InterpolateResult<Self> {
         // Simplified stub - real implementation would build the hash tables
-        Err(InterpolateError::NotImplementedError(
+        Err(InterpolateError::NotImplemented(
             "LSHIndex not fully implemented".to_string(),
         ))
     }
@@ -1252,7 +1252,7 @@ impl<F: Float + FromPrimitive> LSHIndex<F> {
         _points: &Array2<F>,
         _stats: &mut SearchStats,
     ) -> InterpolateResult<Vec<(usize, F)>> {
-        Err(InterpolateError::NotImplementedError(
+        Err(InterpolateError::NotImplemented(
             "LSHIndex approximate_k_nearest_neighbors not implemented".to_string(),
         ))
     }
@@ -1264,7 +1264,7 @@ impl<F: Float + FromPrimitive> LSHIndex<F> {
         _points: &Array2<F>,
         _stats: &mut SearchStats,
     ) -> InterpolateResult<Vec<(usize, F)>> {
-        Err(InterpolateError::NotImplementedError(
+        Err(InterpolateError::NotImplemented(
             "LSHIndex approximate_radius_neighbors not implemented".to_string(),
         ))
     }

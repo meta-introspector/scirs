@@ -7,8 +7,6 @@
 use crate::error::{Result, NeuralError};
 use crate::federated::{ClientUpdate, AggregationStrategy};
 use ndarray::prelude::*;
-use ndarray::concatenate;
-use std::collections::HashMap;
 
 /// FedNova aggregation strategy
 pub struct FedNova {

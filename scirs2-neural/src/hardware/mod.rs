@@ -8,12 +8,18 @@ pub mod accelerator;
 pub mod kernel_compiler;
 pub mod memory_mapping;
 pub mod device_manager;
+pub mod partial_reconfiguration;
+pub mod custom_asic;
+pub mod model_partitioning;
 
 pub use fpga::{FPGADevice, FPGAKernel, FPGAConfig};
 pub use accelerator::{Accelerator, AcceleratorType, AcceleratorCapabilities};
 pub use kernel_compiler::{KernelCompiler, CompilationTarget, OptimizationLevel};
-pub use memory_mapping::{MemoryMapper, MemoryLayout, BufferAllocation, MemoryRequirements};
+pub use memory_mapping::{MemoryMapper, MemoryLayout, BufferAllocation, MemoryMapRequirements};
 pub use device_manager::{DeviceManager, DeviceInfo, DeviceSelector};
+pub use partial_reconfiguration::{DPRManager, PartialRegion, PartialBitstream, ReconfigurationState};
+pub use custom_asic::{CustomASIC, ASICConfig, ASICOperation, DataType, NativeOperation};
+pub use model_partitioning::{ModelPartitioner, ModelPartition, PartitioningStrategy, LayerProfile};
 
 use crate::error::Result;
 use ndarray::prelude::*;

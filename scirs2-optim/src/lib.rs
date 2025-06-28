@@ -55,6 +55,7 @@
 #![warn(missing_docs)]
 
 pub mod adaptive_selection;
+pub mod autodiff;
 pub mod benchmarking;
 pub mod curriculum_optimization;
 pub mod distributed;
@@ -65,6 +66,7 @@ pub mod gpu;
 pub mod gradient_accumulation;
 pub mod gradient_processing;
 pub mod hardware_aware;
+pub mod learned_optimizers;
 pub mod memory_efficient;
 pub mod meta_learning;
 pub mod metrics;
@@ -73,12 +75,17 @@ pub mod online_learning;
 pub mod optimizer_composition;
 pub mod optimizers;
 pub mod parameter_groups;
+pub mod privacy;
 pub mod regularizers;
 pub mod schedulers;
 pub mod second_order;
+pub mod self_tuning;
+pub mod streaming;
+pub mod tpu;
 pub mod training_stabilization;
 pub mod unified_api;
 pub mod utils;
+pub mod visualization;
 
 // Re-exports for convenience
 pub use gradient_processing::*;
@@ -107,6 +114,10 @@ pub use schedulers::*;
 pub use adaptive_selection::{
     AdaptiveOptimizerSelector, OptimizerStatistics, OptimizerType, PerformanceMetrics,
     ProblemCharacteristics, ProblemType, SelectionNetwork, SelectionStrategy,
+};
+pub use autodiff::{
+    ADNode, AutodiffConfig, AutodiffEngine, AutodiffUtils, GradientCheckResult, GraphStats,
+    HessianApproximation, Operation,
 };
 pub use benchmarking::visualization::{
     OptimizerDashboard, OptimizerStateSnapshot, OptimizerStateVisualizer, VisualizationExport,
@@ -137,6 +148,10 @@ pub use hardware_aware::{
     ParallelizationStrategy, PartitionStrategy, PerformanceProfiler, PrecisionStrategy,
     QuantizationSupport, ResourceMonitor, SIMDSupport, TPUVersion, TuningStrategy,
 };
+pub use learned_optimizers::{
+    LSTMOptimizer, LearnedOptimizerConfig, LearnedOptimizerMetrics, LearnedOptimizerState,
+    MetaOptimizationStrategy, NeuralOptimizerType, TransferResults,
+};
 pub use meta_learning::{
     AcquisitionFunction, HyperparameterOptimizer, HyperparameterPredictor, HyperparameterStrategy,
     MetaOptimizer, MetaOptimizerTrait, NeuralOptimizer, OptimizationTrajectory, SGDMetaOptimizer,
@@ -155,9 +170,29 @@ pub use online_learning::{
     LifelongStrategy, MemoryExample, MemoryUpdateStrategy, MirrorFunction, OnlineLearningStrategy,
     OnlineOptimizer, OnlinePerformanceMetrics, SharedKnowledge, TaskGraph,
 };
+pub use privacy::{
+    AccountingMethod, ClippingStats, DifferentialPrivacyConfig, DifferentiallyPrivateOptimizer,
+    MomentsAccountant, NoiseMechanism, PrivacyBudget, PrivacyValidation,
+};
 pub use second_order::{HessianInfo, Newton, SecondOrderOptimizer, LBFGS as SecondOrderLBFGS};
+pub use streaming::{
+    LearningRateAdaptation, StreamingConfig, StreamingDataPoint, StreamingHealthStatus,
+    StreamingMetrics, StreamingOptimizer,
+};
+pub use tpu::{
+    PodTopology, TPUConfig, TPUMemoryOptimization, TPUOptimizer, TPUPerformanceMetrics,
+    TPUTopologyInfo, TPUVersion, XLAOptimizationLevel,
+};
 pub use training_stabilization::{AveragingMethod, ModelEnsemble, PolyakAverager, WeightAverager};
 pub use unified_api::{
     OptimizerConfig, OptimizerFactory, Parameter, TrainingLoop, UnifiedAdam, UnifiedOptimizer,
     UnifiedSGD,
+};
+pub use self_tuning::{
+    SelfTuningConfig, SelfTuningOptimizer, SelfTuningStatistics, OptimizerInfo, 
+    PerformanceStats, TargetMetric, OptimizerTrait,
+};
+pub use visualization::{
+    OptimizationVisualizer, VisualizationConfig, OptimizationMetric, OptimizerComparison,
+    MemoryStats, ConvergenceInfo, ColorScheme, PlotType, DataSeries,
 };

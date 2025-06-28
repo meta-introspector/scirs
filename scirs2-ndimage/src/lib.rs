@@ -4,6 +4,7 @@
 //! It includes filters, interpolation, measurements, morphology, feature detection, and segmentation functions.
 
 // Public modules
+pub mod analysis;
 pub mod backend;
 pub mod chunked;
 pub mod chunked_v2;
@@ -21,6 +22,7 @@ pub mod scipy_compat;
 pub mod segmentation;
 pub mod streaming;
 pub mod threading;
+pub mod visualization;
 
 // Re-exports
 pub use self::error::*;
@@ -51,10 +53,47 @@ pub use self::features::{
 
 // Filters module exports
 pub use self::filters::{
-    bilateral_filter, convolve, filter_functions, gaussian_filter, gaussian_filter_chunked,
-    gaussian_filter_f32, gaussian_filter_f64, generic_filter, laplace, maximum_filter,
-    median_filter, median_filter_chunked, minimum_filter, percentile_filter, rank_filter, sobel,
-    uniform_filter, uniform_filter_chunked, BorderMode,
+    // Advanced filters
+    adaptive_wiener_filter,
+    anisotropic_diffusion,
+    bilateral_filter,
+    bilateral_gradient_filter,
+    coherence_enhancing_diffusion,
+    convolve,
+    // Wavelets
+    dwt_1d,
+    dwt_2d,
+    filter_functions,
+    gabor_filter,
+    gabor_filter_bank,
+    gaussian_filter,
+    gaussian_filter_chunked,
+    gaussian_filter_f32,
+    gaussian_filter_f64,
+    generic_filter,
+    idwt_1d,
+    idwt_2d,
+    laplace,
+    log_gabor_filter,
+    maximum_filter,
+    median_filter,
+    median_filter_chunked,
+    minimum_filter,
+    non_local_means,
+    percentile_filter,
+    rank_filter,
+    shock_filter,
+    sobel,
+    steerable_filter,
+    uniform_filter,
+    uniform_filter_chunked,
+    wavelet_decompose,
+    wavelet_denoise,
+    wavelet_reconstruct,
+    BorderMode,
+    GaborParams,
+    WaveletFamily,
+    WaveletFilter,
 };
 
 #[cfg(feature = "simd")]
@@ -143,4 +182,28 @@ pub use self::domain_specific::{
         ColocalizationMetrics, ThresholdMethod,
     },
     satellite::{compute_ndvi, detect_clouds, detect_water_bodies, pan_sharpen, PanSharpenMethod},
+};
+
+// Analysis module exports
+pub use self::analysis::{
+    batch_quality_assessment, compute_local_variance, contrast_to_noise_ratio,
+    estimate_fractal_dimension, image_entropy, image_quality_assessment, image_sharpness,
+    local_feature_analysis, mean_absolute_error, mean_squared_error, multi_scale_analysis,
+    peak_signal_to_noise_ratio, signal_to_noise_ratio, structural_similarity_index,
+    texture_analysis, ImageQualityMetrics, MultiScaleConfig, TextureMetrics,
+};
+
+// SIMD-optimized analysis functions
+#[cfg(feature = "simd")]
+pub use self::analysis::{compute_moments_simd_f32, image_quality_assessment_simd_f32};
+
+// Parallel analysis functions
+#[cfg(feature = "parallel")]
+pub use self::analysis::image_entropy_parallel;
+
+// Visualization module exports
+pub use self::visualization::{
+    create_colormap, create_image_montage, generate_report, plot_contour, plot_heatmap,
+    plot_histogram, plot_profile, plot_statistical_comparison, plot_surface, visualize_gradient,
+    ColorMap, PlotConfig, ReportConfig, ReportFormat,
 };

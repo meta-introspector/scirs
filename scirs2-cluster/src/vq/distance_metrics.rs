@@ -8,6 +8,8 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
+use crate::error::Result;
+
 /// Trait for distance metric computations
 pub trait DistanceMetric<F>
 where
@@ -258,7 +260,7 @@ where
     /// # Returns
     ///
     /// * Result containing the Mahalanobis distance metric or an error
-    pub fn from_data(data: ArrayView2<F>) -> Result<Self, crate::error::ClusteringError> {
+    pub fn from_data(data: ArrayView2<F>) -> Result<Self> {
         let cov_matrix = compute_covariance_matrix(data)?;
         let inv_cov = invert_matrix(cov_matrix)?;
         Ok(Self { inv_cov })
@@ -289,7 +291,7 @@ where
 /// Compute the covariance matrix of the given data
 fn compute_covariance_matrix<F>(
     data: ArrayView2<F>,
-) -> Result<Array2<F>, crate::error::ClusteringError>
+) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand,
 {
@@ -319,7 +321,7 @@ where
 }
 
 /// Simple matrix inversion using LU decomposition
-fn invert_matrix<F>(matrix: Array2<F>) -> Result<Array2<F>, crate::error::ClusteringError>
+fn invert_matrix<F>(matrix: Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand,
 {
@@ -420,7 +422,7 @@ pub fn create_metric<F>(
     metric_type: MetricType,
     data: Option<ArrayView2<F>>,
     p: Option<F>,
-) -> Result<Box<dyn DistanceMetric<F>>, crate::error::ClusteringError>
+) -> Result<Box<dyn DistanceMetric<F>>>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + ScalarOperand + 'static,
 {

@@ -5,11 +5,13 @@
 //! It allows seamless switching between implementations based on
 //! hardware availability and performance characteristics.
 
+pub mod device_detection;
 pub mod kernels;
 
 #[cfg(feature = "cuda")]
 pub mod cuda;
 
+pub use device_detection::{DeviceCapability, DeviceManager, MemoryManager};
 pub use kernels::{GpuBuffer, GpuKernelExecutor, KernelInfo};
 
 use ndarray::{Array, ArrayView, Dimension};
@@ -182,20 +184,28 @@ impl BackendExecutor {
 
     #[cfg(feature = "cuda")]
     fn is_cuda_available(&self) -> bool {
-        // Check if CUDA is available (would query actual CUDA runtime)
-        true
+        device_detection::get_device_manager()
+            .map(|manager| manager.lock().unwrap().is_backend_available(Backend::Cuda))
+            .unwrap_or(false)
     }
 
     #[cfg(feature = "opencl")]
     fn is_opencl_available(&self) -> bool {
-        // Check if OpenCL is available
-        true
+        device_detection::get_device_manager()
+            .map(|manager| {
+                manager
+                    .lock()
+                    .unwrap()
+                    .is_backend_available(Backend::OpenCL)
+            })
+            .unwrap_or(false)
     }
 
     #[cfg(all(target_os = "macos", feature = "metal"))]
     fn is_metal_available(&self) -> bool {
-        // Check if Metal is available
-        true
+        device_detection::get_device_manager()
+            .map(|manager| manager.lock().unwrap().is_backend_available(Backend::Metal))
+            .unwrap_or(false)
     }
 }
 
@@ -229,8 +239,9 @@ impl GpuContext for CudaContext {
     }
 
     fn device_count(&self) -> usize {
-        // Would query actual CUDA device count
-        1
+        device_detection::get_device_manager()
+            .map(|manager| manager.lock().unwrap().device_count(Backend::Cuda))
+            .unwrap_or(1)
     }
 
     fn current_device(&self) -> usize {
@@ -238,8 +249,16 @@ impl GpuContext for CudaContext {
     }
 
     fn memory_info(&self) -> (usize, usize) {
-        // Would query actual CUDA memory info
-        (0, 8_000_000_000) // 8GB dummy value
+        device_detection::get_device_manager()
+            .and_then(|manager| {
+                let mgr = manager.lock().unwrap();
+                mgr.get_device_info(Backend::Cuda, self.device_id)
+                    .map(|info| {
+                        let used = info.total_memory.saturating_sub(info.available_memory);
+                        (used, info.total_memory)
+                    })
+            })
+            .unwrap_or((0, 8_000_000_000)) // Fallback to 8GB dummy value
     }
 }
 
@@ -301,21 +320,24 @@ where
 {
     // Currently only support 2D arrays for GPU acceleration
     if input.ndim() == 2 {
-        let input_2d = input.view().into_dimensionality::<ndarray::Ix2>()
+        let input_2d = input
+            .view()
+            .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D array".into()))?;
-        
+
         if sigma.len() >= 2 {
             let sigma_2d = [sigma[0], sigma[1]];
             let cuda_ops = cuda::CudaOperations::new(None)?;
             let result_2d = cuda_ops.gaussian_filter_2d(&input_2d, sigma_2d)?;
-            
+
             // Convert back to original dimension
-            let result = result_2d.into_dimensionality::<D>()
-                .map_err(|_| NdimageError::DimensionError("Failed to convert result dimension".into()))?;
+            let result = result_2d.into_dimensionality::<D>().map_err(|_| {
+                NdimageError::DimensionError("Failed to convert result dimension".into())
+            })?;
             return Ok(result);
         }
     }
-    
+
     // Fallback for non-2D or unsupported cases
     Err(NdimageError::NotImplementedError(
         "CUDA Gaussian filter currently only supports 2D arrays".into(),

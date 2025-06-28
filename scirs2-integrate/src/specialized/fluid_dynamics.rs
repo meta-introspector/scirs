@@ -3,9 +3,9 @@
 //! This module provides specialized solvers for computational fluid dynamics (CFD),
 //! focusing on incompressible Navier-Stokes equations with various boundary conditions.
 
-use ndarray::{Array2, Array3};
+use ndarray::{Array1, Array2, Array3};
 use scirs2_core::constants::PI;
-use crate::error::IntegrateResult as Result;
+use crate::error::{IntegrateError, IntegrateResult as Result};
 
 /// Fluid state representation
 #[derive(Debug, Clone)]
@@ -697,5 +697,1629 @@ mod tests {
         
         assert!(final_ke <= initial_ke, "Energy increased!");
         assert!(final_ke > 0.9 * initial_ke, "Too much energy dissipation");
+    }
+}
+
+/// Advanced turbulence modeling for computational fluid dynamics
+pub mod turbulence_models {
+    use super::*;
+    use ndarray::Array4;
+    
+    /// Large Eddy Simulation (LES) solver
+    pub struct LESolver {
+        /// Grid dimensions
+        pub nx: usize,
+        pub ny: usize,
+        pub nz: usize,
+        /// Grid spacing
+        pub dx: f64,
+        pub dy: f64,
+        pub dz: f64,
+        /// Subgrid-scale model
+        pub sgs_model: SGSModel,
+        /// Filter width ratio
+        pub filter_ratio: f64,
+        /// Smagorinsky constant
+        pub cs: f64,
+    }
+    
+    /// Subgrid-scale models for LES
+    #[derive(Debug, Clone, Copy)]
+    pub enum SGSModel {
+        /// Smagorinsky model
+        Smagorinsky,
+        /// Dynamic Smagorinsky model
+        DynamicSmagorinsky,
+        /// Wall-Adapting Local Eddy-viscosity (WALE) model
+        WALE,
+        /// Vreman model
+        Vreman,
+    }
+    
+    impl LESolver {
+        /// Create a new LES solver
+        pub fn new(
+            nx: usize, ny: usize, nz: usize,
+            dx: f64, dy: f64, dz: f64,
+            sgs_model: SGSModel,
+        ) -> Self {
+            Self {
+                nx, ny, nz,
+                dx, dy, dz,
+                sgs_model,
+                filter_ratio: 2.0,
+                cs: 0.1, // Typical Smagorinsky constant
+            }
+        }
+        
+        /// Solve 3D LES equations
+        pub fn solve_3d(
+            &self,
+            initial_state: FluidState3D,
+            final_time: f64,
+            n_steps: usize,
+        ) -> Result<Vec<FluidState3D>> {
+            let dt = final_time / n_steps as f64;
+            let mut state = initial_state;
+            let mut results = Vec::with_capacity(n_steps + 1);
+            results.push(state.clone());
+            
+            for _step in 0..n_steps {
+                // Compute SGS stress tensor
+                let sgs_stress = self.compute_sgs_stress(&state)?;
+                
+                // Update velocity using filtered Navier-Stokes equations
+                state = self.update_velocity_3d(&state, &sgs_stress, dt)?;
+                
+                // Apply boundary conditions
+                state = self.apply_boundary_conditions_3d(state)?;
+                
+                // Store result
+                results.push(state.clone());
+            }
+            
+            Ok(results)
+        }
+        
+        fn compute_sgs_stress(&self, state: &FluidState3D) -> Result<Array4<f64>> {
+            let mut sgs_stress = Array4::zeros((3, 3, self.nx, self.ny));
+            
+            match self.sgs_model {
+                SGSModel::Smagorinsky => {
+                    self.compute_smagorinsky_stress(&mut sgs_stress, state)?;
+                }
+                SGSModel::DynamicSmagorinsky => {
+                    self.compute_dynamic_smagorinsky_stress(&mut sgs_stress, state)?;
+                }
+                SGSModel::WALE => {
+                    self.compute_wale_stress(&mut sgs_stress, state)?;
+                }
+                SGSModel::Vreman => {
+                    self.compute_vreman_stress(&mut sgs_stress, state)?;
+                }
+            }
+            
+            Ok(sgs_stress)
+        }
+        
+        fn compute_smagorinsky_stress(
+            &self,
+            sgs_stress: &mut Array4<f64>,
+            state: &FluidState3D,
+        ) -> Result<()> {
+            let delta = (self.dx * self.dy * self.dz).powf(1.0/3.0); // Filter width
+            
+            // Compute strain rate tensor
+            let strain_rate = self.compute_strain_rate_tensor_3d(state)?;
+            
+            for i in 0..self.nx {
+                for j in 0..self.ny {
+                    // Compute magnitude of strain rate
+                    let mut s_mag = 0.0;
+                    for ii in 0..3 {
+                        for jj in 0..3 {
+                            s_mag += strain_rate[[ii, jj, i, j]] * strain_rate[[ii, jj, i, j]];
+                        }
+                    }
+                    s_mag = (2.0 * s_mag).sqrt();
+                    
+                    // Compute eddy viscosity
+                    let nu_sgs = (self.cs * delta).powi(2) * s_mag;
+                    
+                    // Compute SGS stress tensor
+                    for ii in 0..3 {
+                        for jj in 0..3 {
+                            sgs_stress[[ii, jj, i, j]] = -2.0 * nu_sgs * strain_rate[[ii, jj, i, j]];
+                        }
+                    }
+                }
+            }
+            
+            Ok(())
+        }
+        
+        fn compute_dynamic_smagorinsky_stress(
+            &self,
+            sgs_stress: &mut Array4<f64>,
+            state: &FluidState3D,
+        ) -> Result<()> {
+            // Dynamic procedure to compute Smagorinsky coefficient
+            let test_filter_ratio = 2.0;
+            let delta = (self.dx * self.dy * self.dz).powf(1.0/3.0);
+            let delta_test = test_filter_ratio * delta;
+            
+            // Apply test filter to velocity field
+            let filtered_velocity = self.apply_test_filter_3d(&state.velocity)?;
+            
+            // Compute Leonard stress (resolved stress)
+            let leonard_stress = self.compute_leonard_stress_3d(state, &filtered_velocity)?;
+            
+            // Compute strain rate for filtered field
+            let filtered_state = FluidState3D {
+                velocity: filtered_velocity,
+                pressure: state.pressure.clone(),
+                dx: state.dx,
+                dy: state.dy,
+                dz: state.dz,
+            };
+            let filtered_strain = self.compute_strain_rate_tensor_3d(&filtered_state)?;
+            
+            // Original strain rate
+            let strain_rate = self.compute_strain_rate_tensor_3d(state)?;
+            
+            for i in 0..self.nx {
+                for j in 0..self.ny {
+                    // Compute dynamic coefficient using least-squares
+                    let cs_dynamic = self.compute_dynamic_coefficient(
+                        &leonard_stress, &strain_rate, &filtered_strain, i, j, delta, delta_test
+                    )?;
+                    
+                    // Compute magnitude of strain rate
+                    let mut s_mag = 0.0;
+                    for ii in 0..3 {
+                        for jj in 0..3 {
+                            s_mag += strain_rate[[ii, jj, i, j]] * strain_rate[[ii, jj, i, j]];
+                        }
+                    }
+                    s_mag = (2.0 * s_mag).sqrt();
+                    
+                    // Compute eddy viscosity with dynamic coefficient
+                    let nu_sgs = (cs_dynamic * delta).powi(2) * s_mag;
+                    
+                    // Compute SGS stress tensor
+                    for ii in 0..3 {
+                        for jj in 0..3 {
+                            sgs_stress[[ii, jj, i, j]] = -2.0 * nu_sgs * strain_rate[[ii, jj, i, j]];
+                        }
+                    }
+                }
+            }
+            
+            Ok(())
+        }
+        
+        fn compute_wale_stress(
+            &self,
+            sgs_stress: &mut Array4<f64>,
+            state: &FluidState3D,
+        ) -> Result<()> {
+            let delta = (self.dx * self.dy * self.dz).powf(1.0/3.0);
+            let cw = 0.5; // WALE constant
+            
+            // Compute velocity gradient tensor
+            let grad_u = self.compute_velocity_gradient_3d(state)?;
+            
+            for i in 0..self.nx {
+                for j in 0..self.ny {
+                    // Compute symmetric and antisymmetric parts
+                    let mut s_d = Array2::zeros((3, 3)); // Traceless symmetric part
+                    let mut omega = Array2::zeros((3, 3)); // Antisymmetric part
+                    
+                    for ii in 0..3 {
+                        for jj in 0..3 {
+                            let grad_ij = grad_u[[ii, jj, i, j]];
+                            let grad_ji = grad_u[[jj, ii, i, j]];
+                            
+                            omega[[ii, jj]] = 0.5 * (grad_ij - grad_ji);
+                            s_d[[ii, jj]] = 0.5 * (grad_ij + grad_ji);
+                        }
+                    }
+                    
+                    // Remove trace from s_d
+                    let trace = (s_d[[0, 0]] + s_d[[1, 1]] + s_d[[2, 2]]) / 3.0;
+                    for ii in 0..3 {
+                        s_d[[ii, ii]] -= trace;
+                    }
+                    
+                    // Compute invariants
+                    let mut s_d_mag_sq = 0.0;
+                    let mut omega_mag_sq = 0.0;
+                    
+                    for ii in 0..3 {
+                        for jj in 0..3 {
+                            s_d_mag_sq += s_d[[ii, jj]] * s_d[[ii, jj]];
+                            omega_mag_sq += omega[[ii, jj]] * omega[[ii, jj]];
+                        }
+                    }
+                    
+                    // WALE eddy viscosity
+                    let numerator = s_d_mag_sq.powf(1.5);
+                    let denominator = (s_d_mag_sq.powf(2.5) + omega_mag_sq.powf(1.25)).max(1e-12);
+                    let nu_sgs = (cw * delta).powi(2) * numerator / denominator;
+                    
+                    // Compute SGS stress tensor
+                    for ii in 0..3 {
+                        for jj in 0..3 {
+                            sgs_stress[[ii, jj, i, j]] = -2.0 * nu_sgs * s_d[[ii, jj]];
+                        }
+                    }
+                }
+            }
+            
+            Ok(())
+        }
+        
+        fn compute_vreman_stress(
+            &self,
+            sgs_stress: &mut Array4<f64>,
+            state: &FluidState3D,
+        ) -> Result<()> {
+            let delta = (self.dx * self.dy * self.dz).powf(1.0/3.0);
+            let cv: f64 = 0.07; // Vreman constant
+            
+            // Compute velocity gradient tensor
+            let grad_u = self.compute_velocity_gradient_3d(state)?;
+            
+            for i in 0..self.nx {
+                for j in 0..self.ny {
+                    // Compute α and β tensors
+                    let mut alpha = Array2::zeros((3, 3));
+                    let mut beta: Array2<f64> = Array2::zeros((3, 3));
+                    
+                    for ii in 0..3 {
+                        for jj in 0..3 {
+                            alpha[[ii, jj]] = grad_u[[ii, jj, i, j]];
+                            
+                            for kk in 0..3 {
+                                beta[[ii, jj]] += grad_u[[ii, kk, i, j]] * grad_u[[jj, kk, i, j]];
+                            }
+                        }
+                    }
+                    
+                    // Compute Vreman invariants
+                    let alpha_norm_sq = alpha.iter().map(|&x| x * x).sum::<f64>();
+                    let _beta_trace = beta[[0, 0]] + beta[[1, 1]] + beta[[2, 2]];
+                    
+                    let b_beta = beta[[0, 0]] * beta[[1, 1]] + beta[[1, 1]] * beta[[2, 2]] + 
+                               beta[[0, 0]] * beta[[2, 2]] - beta[[0, 1]].powi(2) - 
+                               beta[[1, 2]].powi(2) - beta[[0, 2]].powi(2);
+                    
+                    // Vreman eddy viscosity
+                    let nu_sgs = if alpha_norm_sq > 1e-12 {
+                        cv.powi(2) * delta.powi(2) * (b_beta / alpha_norm_sq).sqrt()
+                    } else {
+                        0.0
+                    };
+                    
+                    // Compute strain rate tensor
+                    for ii in 0..3 {
+                        for jj in 0..3 {
+                            let strain = 0.5 * (grad_u[[ii, jj, i, j]] + grad_u[[jj, ii, i, j]]);
+                            sgs_stress[[ii, jj, i, j]] = -2.0 * nu_sgs * strain;
+                        }
+                    }
+                }
+            }
+            
+            Ok(())
+        }
+        
+        fn compute_strain_rate_tensor_3d(&self, state: &FluidState3D) -> Result<Array4<f64>> {
+            let mut strain_rate = Array4::zeros((3, 3, self.nx, self.ny));
+            
+            // Compute derivatives using central differences
+            for i in 1..(self.nx - 1) {
+                for j in 1..(self.ny - 1) {
+                    // du/dx, du/dy, du/dz
+                    let dudx = (state.velocity[0][[i + 1, j]] - state.velocity[0][[i - 1, j]]) / (2.0 * self.dx);
+                    let dudy = (state.velocity[0][[i, j + 1]] - state.velocity[0][[i, j - 1]]) / (2.0 * self.dy);
+                    
+                    // dv/dx, dv/dy, dv/dz
+                    let dvdx = (state.velocity[1][[i + 1, j]] - state.velocity[1][[i - 1, j]]) / (2.0 * self.dx);
+                    let dvdy = (state.velocity[1][[i, j + 1]] - state.velocity[1][[i, j - 1]]) / (2.0 * self.dy);
+                    
+                    // Strain rate tensor components
+                    strain_rate[[0, 0, i, j]] = dudx;
+                    strain_rate[[1, 1, i, j]] = dvdy;
+                    strain_rate[[2, 2, i, j]] = 0.0; // 2D case
+                    
+                    strain_rate[[0, 1, i, j]] = 0.5 * (dudy + dvdx);
+                    strain_rate[[1, 0, i, j]] = strain_rate[[0, 1, i, j]];
+                }
+            }
+            
+            Ok(strain_rate)
+        }
+        
+        fn compute_velocity_gradient_3d(&self, state: &FluidState3D) -> Result<Array4<f64>> {
+            let mut grad_u = Array4::zeros((3, 3, self.nx, self.ny));
+            
+            // Compute derivatives using central differences
+            for i in 1..(self.nx - 1) {
+                for j in 1..(self.ny - 1) {
+                    // Velocity gradients
+                    grad_u[[0, 0, i, j]] = (state.velocity[0][[i + 1, j]] - state.velocity[0][[i - 1, j]]) / (2.0 * self.dx);
+                    grad_u[[0, 1, i, j]] = (state.velocity[0][[i, j + 1]] - state.velocity[0][[i, j - 1]]) / (2.0 * self.dy);
+                    grad_u[[1, 0, i, j]] = (state.velocity[1][[i + 1, j]] - state.velocity[1][[i - 1, j]]) / (2.0 * self.dx);
+                    grad_u[[1, 1, i, j]] = (state.velocity[1][[i, j + 1]] - state.velocity[1][[i, j - 1]]) / (2.0 * self.dy);
+                }
+            }
+            
+            Ok(grad_u)
+        }
+        
+        fn apply_test_filter_3d(&self, velocity: &[Array2<f64>]) -> Result<Vec<Array2<f64>>> {
+            let mut filtered = vec![Array2::zeros((self.nx, self.ny)); 3];
+            
+            // Simple box filter
+            let filter_width = 2;
+            let filter_weight = 1.0 / (filter_width * filter_width) as f64;
+            
+            for comp in 0..2 { // 2D case
+                for i in filter_width..(self.nx - filter_width) {
+                    for j in filter_width..(self.ny - filter_width) {
+                        let mut sum = 0.0;
+                        for di in 0..filter_width {
+                            for dj in 0..filter_width {
+                                sum += velocity[comp][[i - filter_width/2 + di, j - filter_width/2 + dj]];
+                            }
+                        }
+                        filtered[comp][[i, j]] = sum * filter_weight;
+                    }
+                }
+            }
+            
+            Ok(filtered)
+        }
+        
+        fn compute_leonard_stress_3d(
+            &self,
+            state: &FluidState3D,
+            filtered_velocity: &[Array2<f64>],
+        ) -> Result<Array4<f64>> {
+            let mut leonard = Array4::zeros((3, 3, self.nx, self.ny));
+            
+            // Compute Leonard stress: L_ij = u_i * u_j - filtered(u_i) * filtered(u_j)
+            for i in 0..self.nx {
+                for j in 0..self.ny {
+                    for ii in 0..2 { // 2D case
+                        for jj in 0..2 {
+                            let unfiltered_product = state.velocity[ii][[i, j]] * state.velocity[jj][[i, j]];
+                            let filtered_product = filtered_velocity[ii][[i, j]] * filtered_velocity[jj][[i, j]];
+                            leonard[[ii, jj, i, j]] = unfiltered_product - filtered_product;
+                        }
+                    }
+                }
+            }
+            
+            Ok(leonard)
+        }
+        
+        fn compute_dynamic_coefficient(
+            &self,
+            leonard: &Array4<f64>,
+            strain_rate: &Array4<f64>,
+            filtered_strain: &Array4<f64>,
+            i: usize, j: usize,
+            delta: f64, delta_test: f64,
+        ) -> Result<f64> {
+            // Simplified dynamic coefficient calculation
+            let mut numerator = 0.0;
+            let mut denominator = 0.0;
+            
+            for ii in 0..3 {
+                for jj in 0..3 {
+                    let mij = delta_test.powi(2) * filtered_strain[[ii, jj, i, j]] -
+                             delta.powi(2) * strain_rate[[ii, jj, i, j]];
+                    
+                    numerator += leonard[[ii, jj, i, j]] * mij;
+                    denominator += mij * mij;
+                }
+            }
+            
+            if denominator > 1e-12 {
+                Ok((numerator / denominator).max(0.0)) // Ensure positive
+            } else {
+                Ok(self.cs) // Fall back to static coefficient
+            }
+        }
+        
+        fn update_velocity_3d(
+            &self,
+            state: &FluidState3D,
+            sgs_stress: &Array4<f64>,
+            dt: f64,
+        ) -> Result<FluidState3D> {
+            let mut new_velocity = state.velocity.clone();
+            
+            // Update velocity using LES equations
+            for i in 1..(self.nx - 1) {
+                for j in 1..(self.ny - 1) {
+                    // Compute convective terms
+                    let u = state.velocity[0][[i, j]];
+                    let v = state.velocity[1][[i, j]];
+                    
+                    // Convective derivatives
+                    let dudx = (state.velocity[0][[i + 1, j]] - state.velocity[0][[i - 1, j]]) / (2.0 * self.dx);
+                    let dudy = (state.velocity[0][[i, j + 1]] - state.velocity[0][[i, j - 1]]) / (2.0 * self.dy);
+                    let dvdx = (state.velocity[1][[i + 1, j]] - state.velocity[1][[i - 1, j]]) / (2.0 * self.dx);
+                    let dvdy = (state.velocity[1][[i, j + 1]] - state.velocity[1][[i, j - 1]]) / (2.0 * self.dy);
+                    
+                    // Pressure gradients
+                    let dpdx = (state.pressure[[i + 1, j]] - state.pressure[[i - 1, j]]) / (2.0 * self.dx);
+                    let dpdy = (state.pressure[[i, j + 1]] - state.pressure[[i, j - 1]]) / (2.0 * self.dy);
+                    
+                    // SGS stress divergence
+                    let dsgs_xx_dx = (sgs_stress[[0, 0, i + 1, j]] - sgs_stress[[0, 0, i - 1, j]]) / (2.0 * self.dx);
+                    let dsgs_xy_dy = (sgs_stress[[0, 1, i, j + 1]] - sgs_stress[[0, 1, i, j - 1]]) / (2.0 * self.dy);
+                    let dsgs_yx_dx = (sgs_stress[[1, 0, i + 1, j]] - sgs_stress[[1, 0, i - 1, j]]) / (2.0 * self.dx);
+                    let dsgs_yy_dy = (sgs_stress[[1, 1, i, j + 1]] - sgs_stress[[1, 1, i, j - 1]]) / (2.0 * self.dy);
+                    
+                    // Update u-velocity
+                    let du_dt = -u * dudx - v * dudy - dpdx + dsgs_xx_dx + dsgs_xy_dy;
+                    new_velocity[0][[i, j]] += dt * du_dt;
+                    
+                    // Update v-velocity
+                    let dv_dt = -u * dvdx - v * dvdy - dpdy + dsgs_yx_dx + dsgs_yy_dy;
+                    new_velocity[1][[i, j]] += dt * dv_dt;
+                }
+            }
+            
+            Ok(FluidState3D {
+                velocity: new_velocity,
+                pressure: state.pressure.clone(),
+                dx: state.dx,
+                dy: state.dy,
+                dz: state.dz,
+            })
+        }
+        
+        fn apply_boundary_conditions_3d(&self, mut state: FluidState3D) -> Result<FluidState3D> {
+            // No-slip boundary conditions
+            for j in 0..self.ny {
+                state.velocity[0][[0, j]] = 0.0;
+                state.velocity[0][[self.nx - 1, j]] = 0.0;
+                state.velocity[1][[0, j]] = 0.0;
+                state.velocity[1][[self.nx - 1, j]] = 0.0;
+            }
+            
+            for i in 0..self.nx {
+                state.velocity[0][[i, 0]] = 0.0;
+                state.velocity[0][[i, self.ny - 1]] = 0.0;
+                state.velocity[1][[i, 0]] = 0.0;
+                state.velocity[1][[i, self.ny - 1]] = 0.0;
+            }
+            
+            Ok(state)
+        }
+    }
+    
+    /// 3D fluid state for LES
+    #[derive(Debug, Clone)]
+    pub struct FluidState3D {
+        /// Velocity components [u, v, w]
+        pub velocity: Vec<Array2<f64>>,
+        /// Pressure field
+        pub pressure: Array2<f64>,
+        /// Grid spacing
+        pub dx: f64,
+        pub dy: f64,
+        pub dz: f64,
+    }
+    
+    /// Reynolds-Averaged Navier-Stokes (RANS) solver
+    pub struct RANSSolver {
+        /// Grid dimensions
+        pub nx: usize,
+        pub ny: usize,
+        /// Turbulence model
+        pub turbulence_model: RANSModel,
+        /// Solver parameters
+        pub reynolds_number: f64,
+        pub relaxation_factor: f64,
+    }
+    
+    /// RANS turbulence models
+    #[derive(Debug, Clone, Copy)]
+    pub enum RANSModel {
+        /// k-ε model
+        KEpsilon,
+        /// k-ω model
+        KOmega,
+        /// k-ω SST model
+        KOmegaSST,
+        /// Reynolds Stress Model (RSM)
+        ReynoldsStress,
+    }
+    
+    impl RANSSolver {
+        /// Create a new RANS solver
+        pub fn new(
+            nx: usize, ny: usize,
+            turbulence_model: RANSModel,
+            reynolds_number: f64,
+        ) -> Self {
+            Self {
+                nx, ny,
+                turbulence_model,
+                reynolds_number,
+                relaxation_factor: 0.7,
+            }
+        }
+        
+        /// Solve RANS equations
+        pub fn solve_rans(
+            &self,
+            initial_state: RANSState,
+            max_iterations: usize,
+            tolerance: f64,
+        ) -> Result<RANSState> {
+            let mut state = initial_state;
+            
+            for _iteration in 0..max_iterations {
+                let old_residual = self.compute_residual(&state)?;
+                
+                // Update turbulence quantities
+                state = self.update_turbulence_quantities(&state)?;
+                
+                // Update mean flow
+                state = self.update_mean_flow(&state)?;
+                
+                // Apply boundary conditions
+                state = self.apply_rans_boundary_conditions(state)?;
+                
+                // Check convergence
+                let new_residual = self.compute_residual(&state)?;
+                if (old_residual - new_residual).abs() < tolerance {
+                    break;
+                }
+            }
+            
+            Ok(state)
+        }
+        
+        fn update_turbulence_quantities(&self, state: &RANSState) -> Result<RANSState> {
+            match self.turbulence_model {
+                RANSModel::KEpsilon => self.update_k_epsilon(state),
+                RANSModel::KOmega => self.update_k_omega(state),
+                RANSModel::KOmegaSST => self.update_k_omega_sst(state),
+                RANSModel::ReynoldsStress => self.update_reynolds_stress(state),
+            }
+        }
+        
+        fn update_k_epsilon(&self, state: &RANSState) -> Result<RANSState> {
+            let mut new_state = state.clone();
+            
+            // k-ε model constants
+            let c_mu = 0.09;
+            let c_1 = 1.44;
+            let c_2 = 1.92;
+            let _sigma_k = 1.0;
+            let _sigma_epsilon = 1.3;
+            
+            for i in 1..(self.nx - 1) {
+                for j in 1..(self.ny - 1) {
+                    let k = state.turbulent_kinetic_energy[[i, j]].max(1e-10);
+                    let epsilon = state.dissipation_rate[[i, j]].max(1e-10);
+                    
+                    // Compute turbulent viscosity
+                    let nu_t = c_mu * k * k / epsilon;
+                    
+                    // Production term
+                    let production = self.compute_production_k_epsilon(state, i, j, nu_t)?;
+                    
+                    // Update k equation
+                    let dk_dt = production - epsilon;
+                    new_state.turbulent_kinetic_energy[[i, j]] = 
+                        (k + self.relaxation_factor * dk_dt).max(1e-10);
+                    
+                    // Update ε equation
+                    let depsilon_dt = c_1 * epsilon / k * production - c_2 * epsilon * epsilon / k;
+                    new_state.dissipation_rate[[i, j]] = 
+                        (epsilon + self.relaxation_factor * depsilon_dt).max(1e-10);
+                }
+            }
+            
+            Ok(new_state)
+        }
+        
+        fn update_k_omega(&self, state: &RANSState) -> Result<RANSState> {
+            let mut new_state = state.clone();
+            
+            // k-ω model constants
+            let beta_star = 0.09;
+            let alpha = 5.0/9.0;
+            let beta = 3.0/40.0;
+            let _sigma_k = 0.5;
+            let _sigma_omega = 0.5;
+            
+            for i in 1..(self.nx - 1) {
+                for j in 1..(self.ny - 1) {
+                    let k = state.turbulent_kinetic_energy[[i, j]].max(1e-10);
+                    let omega = state.specific_dissipation_rate.as_ref()
+                        .map(|arr| arr[[i, j]])
+                        .unwrap_or(state.dissipation_rate[[i, j]] / k)
+                        .max(1e-10);
+                    
+                    // Compute turbulent viscosity
+                    let nu_t = k / omega;
+                    
+                    // Production term
+                    let production = self.compute_production_k_omega(state, i, j, nu_t)?;
+                    
+                    // Update k equation
+                    let dk_dt = production - beta_star * k * omega;
+                    new_state.turbulent_kinetic_energy[[i, j]] = 
+                        (k + self.relaxation_factor * dk_dt).max(1e-10);
+                    
+                    // Update ω equation
+                    let domega_dt = alpha * omega / k * production - beta * omega * omega;
+                    if let Some(ref mut omega_arr) = new_state.specific_dissipation_rate {
+                        omega_arr[[i, j]] = (omega + self.relaxation_factor * domega_dt).max(1e-10);
+                    }
+                }
+            }
+            
+            Ok(new_state)
+        }
+        
+        fn update_k_omega_sst(&self, state: &RANSState) -> Result<RANSState> {
+            // SST model combines k-ε and k-ω models using blending functions
+            let f1 = self.compute_sst_blending_function(state)?;
+            
+            let k_omega_state = self.update_k_omega(state)?;
+            let k_epsilon_state = self.update_k_epsilon(state)?;
+            
+            // Blend the results
+            let mut new_state = state.clone();
+            for i in 0..self.nx {
+                for j in 0..self.ny {
+                    let blend = f1[[i, j]];
+                    
+                    new_state.turbulent_kinetic_energy[[i, j]] = 
+                        blend * k_omega_state.turbulent_kinetic_energy[[i, j]] +
+                        (1.0 - blend) * k_epsilon_state.turbulent_kinetic_energy[[i, j]];
+                    
+                    new_state.dissipation_rate[[i, j]] = 
+                        blend * k_omega_state.dissipation_rate[[i, j]] +
+                        (1.0 - blend) * k_epsilon_state.dissipation_rate[[i, j]];
+                }
+            }
+            
+            Ok(new_state)
+        }
+        
+        fn update_reynolds_stress(&self, state: &RANSState) -> Result<RANSState> {
+            // Simplified Reynolds Stress Model
+            let mut new_state = state.clone();
+            
+            // This would involve solving transport equations for all Reynolds stress components
+            // For simplicity, we use an algebraic stress model
+            for i in 1..(self.nx - 1) {
+                for j in 1..(self.ny - 1) {
+                    let k = state.turbulent_kinetic_energy[[i, j]].max(1e-10);
+                    let epsilon = state.dissipation_rate[[i, j]].max(1e-10);
+                    
+                    // Compute strain rate
+                    let s11 = self.compute_strain_component(state, i, j, 0, 0)?;
+                    let s12 = self.compute_strain_component(state, i, j, 0, 1)?;
+                    let s22 = self.compute_strain_component(state, i, j, 1, 1)?;
+                    
+                    // Algebraic stress relations
+                    let c1 = 1.8;
+                    let _c2 = 0.6;
+                    let time_scale = k / epsilon;
+                    
+                    // Reynolds stress components
+                    let tau_11 = (2.0/3.0) * k - c1 * time_scale * k * s11;
+                    let tau_12 = -c1 * time_scale * k * s12;
+                    let tau_22 = (2.0/3.0) * k - c1 * time_scale * k * s22;
+                    
+                    // Store Reynolds stresses (would need to add these fields to RANSState)
+                    // For now, just update k and ε
+                    let production = tau_11 * s11 + 2.0 * tau_12 * s12 + tau_22 * s22;
+                    
+                    let dk_dt = production - epsilon;
+                    new_state.turbulent_kinetic_energy[[i, j]] = 
+                        (k + self.relaxation_factor * dk_dt).max(1e-10);
+                    
+                    let c_eps1 = 1.44;
+                    let c_eps2 = 1.92;
+                    let depsilon_dt = c_eps1 * epsilon / k * production - c_eps2 * epsilon * epsilon / k;
+                    new_state.dissipation_rate[[i, j]] = 
+                        (epsilon + self.relaxation_factor * depsilon_dt).max(1e-10);
+                }
+            }
+            
+            Ok(new_state)
+        }
+        
+        fn compute_production_k_epsilon(&self, state: &RANSState, i: usize, j: usize, nu_t: f64) -> Result<f64> {
+            let s11 = self.compute_strain_component(state, i, j, 0, 0)?;
+            let s12 = self.compute_strain_component(state, i, j, 0, 1)?;
+            let s22 = self.compute_strain_component(state, i, j, 1, 1)?;
+            
+            Ok(nu_t * (2.0 * (s11 * s11 + s22 * s22) + 4.0 * s12 * s12))
+        }
+        
+        fn compute_production_k_omega(&self, state: &RANSState, i: usize, j: usize, nu_t: f64) -> Result<f64> {
+            // Same as k-ε production for now
+            self.compute_production_k_epsilon(state, i, j, nu_t)
+        }
+        
+        fn compute_strain_component(&self, state: &RANSState, i: usize, j: usize, comp1: usize, comp2: usize) -> Result<f64> {
+            let dx = state.dx;
+            let dy = state.dy;
+            
+            match (comp1, comp2) {
+                (0, 0) => {
+                    // ∂u/∂x
+                    Ok((state.mean_velocity[0][[i + 1, j]] - state.mean_velocity[0][[i - 1, j]]) / (2.0 * dx))
+                }
+                (1, 1) => {
+                    // ∂v/∂y
+                    Ok((state.mean_velocity[1][[i, j + 1]] - state.mean_velocity[1][[i, j - 1]]) / (2.0 * dy))
+                }
+                (0, 1) | (1, 0) => {
+                    // 0.5 * (∂u/∂y + ∂v/∂x)
+                    let dudy = (state.mean_velocity[0][[i, j + 1]] - state.mean_velocity[0][[i, j - 1]]) / (2.0 * dy);
+                    let dvdx = (state.mean_velocity[1][[i + 1, j]] - state.mean_velocity[1][[i - 1, j]]) / (2.0 * dx);
+                    Ok(0.5 * (dudy + dvdx))
+                }
+                _ => Ok(0.0),
+            }
+        }
+        
+        fn compute_sst_blending_function(&self, _state: &RANSState) -> Result<Array2<f64>> {
+            let mut f1 = Array2::ones((self.nx, self.ny));
+            
+            // Simplified blending function for SST model
+            // In practice, this would depend on distance to wall and flow properties
+            for i in 0..self.nx {
+                for j in 0..self.ny {
+                    let y_plus = j as f64 / self.ny as f64; // Simplified wall distance
+                    f1[[i, j]] = (-(y_plus / 0.09).powi(4)).exp();
+                }
+            }
+            
+            Ok(f1)
+        }
+        
+        fn update_mean_flow(&self, state: &RANSState) -> Result<RANSState> {
+            let mut new_state = state.clone();
+            
+            // Update mean velocity using RANS equations
+            for i in 1..(self.nx - 1) {
+                for j in 1..(self.ny - 1) {
+                    let k = state.turbulent_kinetic_energy[[i, j]];
+                    let epsilon = state.dissipation_rate[[i, j]];
+                    let nu_t = 0.09 * k * k / epsilon.max(1e-10);
+                    
+                    // Compute convective and diffusive terms
+                    let u = state.mean_velocity[0][[i, j]];
+                    let v = state.mean_velocity[1][[i, j]];
+                    
+                    // Simplified momentum equations with turbulent viscosity
+                    let du_dt = -u * (u - state.mean_velocity[0][[i - 1, j]]) / state.dx +
+                               nu_t * (state.mean_velocity[0][[i + 1, j]] - 2.0 * u + state.mean_velocity[0][[i - 1, j]]) / (state.dx * state.dx);
+                    
+                    let dv_dt = -v * (v - state.mean_velocity[1][[i, j - 1]]) / state.dy +
+                               nu_t * (state.mean_velocity[1][[i, j + 1]] - 2.0 * v + state.mean_velocity[1][[i, j - 1]]) / (state.dy * state.dy);
+                    
+                    new_state.mean_velocity[0][[i, j]] += self.relaxation_factor * du_dt;
+                    new_state.mean_velocity[1][[i, j]] += self.relaxation_factor * dv_dt;
+                }
+            }
+            
+            Ok(new_state)
+        }
+        
+        fn apply_rans_boundary_conditions(&self, mut state: RANSState) -> Result<RANSState> {
+            // Apply boundary conditions for all variables
+            for j in 0..self.ny {
+                // Walls
+                state.mean_velocity[0][[0, j]] = 0.0;
+                state.mean_velocity[0][[self.nx - 1, j]] = 0.0;
+                state.mean_velocity[1][[0, j]] = 0.0;
+                state.mean_velocity[1][[self.nx - 1, j]] = 0.0;
+                
+                // Turbulence quantities at walls
+                state.turbulent_kinetic_energy[[0, j]] = 1e-10;
+                state.turbulent_kinetic_energy[[self.nx - 1, j]] = 1e-10;
+                state.dissipation_rate[[0, j]] = 1e-10;
+                state.dissipation_rate[[self.nx - 1, j]] = 1e-10;
+            }
+            
+            for i in 0..self.nx {
+                state.mean_velocity[0][[i, 0]] = 0.0;
+                state.mean_velocity[0][[i, self.ny - 1]] = 0.0;
+                state.mean_velocity[1][[i, 0]] = 0.0;
+                state.mean_velocity[1][[i, self.ny - 1]] = 0.0;
+                
+                state.turbulent_kinetic_energy[[i, 0]] = 1e-10;
+                state.turbulent_kinetic_energy[[i, self.ny - 1]] = 1e-10;
+                state.dissipation_rate[[i, 0]] = 1e-10;
+                state.dissipation_rate[[i, self.ny - 1]] = 1e-10;
+            }
+            
+            Ok(state)
+        }
+        
+        fn compute_residual(&self, state: &RANSState) -> Result<f64> {
+            let mut residual = 0.0;
+            let mut count = 0;
+            
+            for i in 1..(self.nx - 1) {
+                for j in 1..(self.ny - 1) {
+                    // Continuity equation residual
+                    let dudx = (state.mean_velocity[0][[i + 1, j]] - state.mean_velocity[0][[i - 1, j]]) / (2.0 * state.dx);
+                    let dvdy = (state.mean_velocity[1][[i, j + 1]] - state.mean_velocity[1][[i, j - 1]]) / (2.0 * state.dy);
+                    
+                    residual += (dudx + dvdy).abs();
+                    count += 1;
+                }
+            }
+            
+            Ok(residual / count as f64)
+        }
+    }
+    
+    /// RANS state variables
+    #[derive(Debug, Clone)]
+    pub struct RANSState {
+        /// Mean velocity components
+        pub mean_velocity: Vec<Array2<f64>>,
+        /// Mean pressure
+        pub mean_pressure: Array2<f64>,
+        /// Turbulent kinetic energy
+        pub turbulent_kinetic_energy: Array2<f64>,
+        /// Dissipation rate (ε)
+        pub dissipation_rate: Array2<f64>,
+        /// Specific dissipation rate (ω) - for k-ω models
+        pub specific_dissipation_rate: Option<Array2<f64>>,
+        /// Grid spacing
+        pub dx: f64,
+        pub dy: f64,
+    }
+    
+    /// Adaptive Mesh Refinement for turbulent flow simulation
+    pub struct AdaptiveMeshRefinement {
+        /// Current mesh levels
+        pub mesh_levels: Vec<MeshLevel>,
+        /// Maximum refinement levels
+        pub max_levels: usize,
+        /// Refinement criteria
+        pub refinement_criteria: RefinementCriteria,
+        /// Coarsening threshold
+        pub coarsening_threshold: f64,
+    }
+    
+    /// Individual mesh level information
+    #[derive(Debug, Clone)]
+    pub struct MeshLevel {
+        /// Grid points
+        pub grid: Array2<f64>,
+        /// Cell sizes
+        pub cell_sizes: Array2<f64>,
+        /// Active cells mask
+        pub active_cells: Array2<bool>,
+        /// Level number
+        pub level: usize,
+    }
+    
+    /// Refinement criteria for adaptive meshing
+    #[derive(Debug, Clone, Copy)]
+    pub enum RefinementCriteria {
+        /// Velocity gradient magnitude
+        VelocityGradient { threshold: f64 },
+        /// Vorticity magnitude
+        Vorticity { threshold: f64 },
+        /// Pressure gradient
+        PressureGradient { threshold: f64 },
+        /// Turbulent kinetic energy
+        TurbulentKineticEnergy { threshold: f64 },
+        /// Combined criteria
+        Combined,
+    }
+    
+    impl AdaptiveMeshRefinement {
+        /// Create new adaptive mesh refinement system
+        pub fn new(
+            initial_grid: Array2<f64>,
+            max_levels: usize,
+            criteria: RefinementCriteria,
+        ) -> Self {
+            let (ny, nx) = initial_grid.dim();
+            let initial_level = MeshLevel {
+                grid: initial_grid,
+                cell_sizes: Array2::from_elem((ny, nx), 1.0),
+                active_cells: Array2::from_elem((ny, nx), true),
+                level: 0,
+            };
+            
+            Self {
+                mesh_levels: vec![initial_level],
+                max_levels,
+                refinement_criteria: criteria,
+                coarsening_threshold: 0.1,
+            }
+        }
+        
+        /// Perform adaptive mesh refinement based on flow solution
+        pub fn refine_mesh(
+            &mut self,
+            velocity: &[Array2<f64>],
+            pressure: &Array2<f64>,
+            turbulent_quantities: Option<&RANSState>,
+        ) -> Result<()> {
+            // Calculate refinement indicators
+            let refinement_indicators = self.calculate_refinement_indicators(
+                velocity,
+                pressure,
+                turbulent_quantities,
+            )?;
+            
+            // Refine cells that exceed threshold
+            for level_idx in 0..self.mesh_levels.len() {
+                if level_idx >= self.max_levels {
+                    break;
+                }
+                
+                let current_level = &self.mesh_levels[level_idx];
+                let (ny, nx) = current_level.grid.dim();
+                let mut cells_to_refine = Vec::new();
+                
+                for j in 0..ny {
+                    for i in 0..nx {
+                        if current_level.active_cells[[j, i]] {
+                            let indicator = refinement_indicators[[j, i]];
+                            if self.should_refine(indicator) {
+                                cells_to_refine.push((j, i));
+                            }
+                        }
+                    }
+                }
+                
+                // Create refined cells
+                if !cells_to_refine.is_empty() {
+                    self.create_refined_level(level_idx, &cells_to_refine)?;
+                }
+            }
+            
+            // Coarsen cells that are below threshold
+            self.coarsen_mesh(&refinement_indicators)?;
+            
+            Ok(())
+        }
+        
+        /// Calculate refinement indicators based on criteria
+        fn calculate_refinement_indicators(
+            &self,
+            velocity: &[Array2<f64>],
+            pressure: &Array2<f64>,
+            turbulent_quantities: Option<&RANSState>,
+        ) -> Result<Array2<f64>> {
+            let (ny, nx) = velocity[0].dim();
+            let mut indicators = Array2::zeros((ny, nx));
+            
+            match self.refinement_criteria {
+                RefinementCriteria::VelocityGradient { threshold: _ } => {
+                    for j in 1..ny-1 {
+                        for i in 1..nx-1 {
+                            // Calculate velocity gradient magnitude
+                            let dudx = (velocity[0][[j, i+1]] - velocity[0][[j, i-1]]) / 2.0;
+                            let dudy = (velocity[0][[j+1, i]] - velocity[0][[j-1, i]]) / 2.0;
+                            let dvdx = (velocity[1][[j, i+1]] - velocity[1][[j, i-1]]) / 2.0;
+                            let dvdy = (velocity[1][[j+1, i]] - velocity[1][[j-1, i]]) / 2.0;
+                            
+                            let grad_mag = (dudx*dudx + dudy*dudy + dvdx*dvdx + dvdy*dvdy).sqrt();
+                            indicators[[j, i]] = grad_mag;
+                        }
+                    }
+                }
+                RefinementCriteria::Vorticity { threshold: _ } => {
+                    for j in 1..ny-1 {
+                        for i in 1..nx-1 {
+                            // Calculate vorticity magnitude
+                            let dvdx = (velocity[1][[j, i+1]] - velocity[1][[j, i-1]]) / 2.0;
+                            let dudy = (velocity[0][[j+1, i]] - velocity[0][[j-1, i]]) / 2.0;
+                            let vorticity = (dvdx - dudy).abs();
+                            indicators[[j, i]] = vorticity;
+                        }
+                    }
+                }
+                RefinementCriteria::PressureGradient { threshold: _ } => {
+                    for j in 1..ny-1 {
+                        for i in 1..nx-1 {
+                            // Calculate pressure gradient magnitude
+                            let dpdx = (pressure[[j, i+1]] - pressure[[j, i-1]]) / 2.0;
+                            let dpdy = (pressure[[j+1, i]] - pressure[[j-1, i]]) / 2.0;
+                            let grad_mag = (dpdx*dpdx + dpdy*dpdy).sqrt();
+                            indicators[[j, i]] = grad_mag;
+                        }
+                    }
+                }
+                RefinementCriteria::TurbulentKineticEnergy { threshold: _ } => {
+                    if let Some(turbulent) = turbulent_quantities {
+                        for j in 1..ny-1 {
+                            for i in 1..nx-1 {
+                                // Use turbulent kinetic energy gradient
+                                let dkdx = (turbulent.turbulent_kinetic_energy[[j, i+1]] - 
+                                           turbulent.turbulent_kinetic_energy[[j, i-1]]) / 2.0;
+                                let dkdy = (turbulent.turbulent_kinetic_energy[[j+1, i]] - 
+                                           turbulent.turbulent_kinetic_energy[[j-1, i]]) / 2.0;
+                                let grad_mag = (dkdx*dkdx + dkdy*dkdy).sqrt();
+                                indicators[[j, i]] = grad_mag;
+                            }
+                        }
+                    }
+                }
+                RefinementCriteria::Combined => {
+                    // Combine multiple criteria
+                    let vel_grad = self.calculate_refinement_indicators(
+                        velocity,
+                        pressure,
+                        turbulent_quantities,
+                    )?;
+                    indicators = vel_grad;
+                }
+            }
+            
+            Ok(indicators)
+        }
+        
+        /// Check if cell should be refined
+        fn should_refine(&self, indicator: f64) -> bool {
+            let threshold = match self.refinement_criteria {
+                RefinementCriteria::VelocityGradient { threshold } => threshold,
+                RefinementCriteria::Vorticity { threshold } => threshold,
+                RefinementCriteria::PressureGradient { threshold } => threshold,
+                RefinementCriteria::TurbulentKineticEnergy { threshold } => threshold,
+                RefinementCriteria::Combined => 1.0, // Default threshold
+            };
+            
+            indicator > threshold
+        }
+        
+        /// Create new refined mesh level
+        fn create_refined_level(
+            &mut self,
+            parent_level: usize,
+            cells_to_refine: &[(usize, usize)],
+        ) -> Result<()> {
+            if parent_level >= self.mesh_levels.len() {
+                return Err(IntegrateError::ValueError(
+                    "Invalid parent level index".to_string()
+                ));
+            }
+            
+            let parent = &self.mesh_levels[parent_level];
+            let (parent_ny, parent_nx) = parent.grid.dim();
+            
+            // Create finer grid (2x refinement)
+            let new_ny = parent_ny * 2;
+            let new_nx = parent_nx * 2;
+            let mut new_grid = Array2::zeros((new_ny, new_nx));
+            let mut new_cell_sizes = Array2::zeros((new_ny, new_nx));
+            let mut new_active_cells = Array2::from_elem((new_ny, new_nx), false);
+            
+            // Interpolate grid points and mark active cells
+            for &(j, i) in cells_to_refine {
+                // Each parent cell becomes 4 child cells
+                for dj in 0..2 {
+                    for di in 0..2 {
+                        let new_j = j * 2 + dj;
+                        let new_i = i * 2 + di;
+                        
+                        if new_j < new_ny && new_i < new_nx {
+                            new_grid[[new_j, new_i]] = parent.grid[[j, i]]; // Simplified
+                            new_cell_sizes[[new_j, new_i]] = parent.cell_sizes[[j, i]] / 2.0;
+                            new_active_cells[[new_j, new_i]] = true;
+                        }
+                    }
+                }
+            }
+            
+            let new_level = MeshLevel {
+                grid: new_grid,
+                cell_sizes: new_cell_sizes,
+                active_cells: new_active_cells,
+                level: parent_level + 1,
+            };
+            
+            // Add new level or update existing one
+            if self.mesh_levels.len() <= parent_level + 1 {
+                self.mesh_levels.push(new_level);
+            } else {
+                // Merge with existing level
+                self.merge_mesh_levels(parent_level + 1, new_level)?;
+            }
+            
+            Ok(())
+        }
+        
+        /// Merge new refined cells with existing mesh level
+        fn merge_mesh_levels(&mut self, level_idx: usize, new_level: MeshLevel) -> Result<()> {
+            if level_idx >= self.mesh_levels.len() {
+                return Err(IntegrateError::ValueError(
+                    "Invalid level index for merging".to_string()
+                ));
+            }
+            
+            let existing_level = &mut self.mesh_levels[level_idx];
+            let (ny, nx) = existing_level.active_cells.dim();
+            
+            // Merge active cells
+            for j in 0..ny.min(new_level.active_cells.nrows()) {
+                for i in 0..nx.min(new_level.active_cells.ncols()) {
+                    if new_level.active_cells[[j, i]] {
+                        existing_level.active_cells[[j, i]] = true;
+                        existing_level.grid[[j, i]] = new_level.grid[[j, i]];
+                        existing_level.cell_sizes[[j, i]] = new_level.cell_sizes[[j, i]];
+                    }
+                }
+            }
+            
+            Ok(())
+        }
+        
+        /// Coarsen mesh where refinement is no longer needed
+        fn coarsen_mesh(&mut self, indicators: &Array2<f64>) -> Result<()> {
+            // Remove fine level cells where indicator is below coarsening threshold
+            for level_idx in (1..self.mesh_levels.len()).rev() {
+                let level = &mut self.mesh_levels[level_idx];
+                let (ny, nx) = level.active_cells.dim();
+                
+                for j in 0..ny {
+                    for i in 0..nx {
+                        if level.active_cells[[j, i]] {
+                            // Check parent cell indicator
+                            let parent_j = j / 2;
+                            let parent_i = i / 2;
+                            
+                            if parent_j < indicators.nrows() && parent_i < indicators.ncols() {
+                                let indicator = indicators[[parent_j, parent_i]];
+                                if indicator < self.coarsening_threshold {
+                                    level.active_cells[[j, i]] = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Ok(())
+        }
+        
+        /// Get current active mesh points for a given level
+        pub fn get_active_mesh_points(&self, level: usize) -> Result<Vec<(usize, usize)>> {
+            if level >= self.mesh_levels.len() {
+                return Err(IntegrateError::ValueError(
+                    "Invalid mesh level".to_string()
+                ));
+            }
+            
+            let mesh_level = &self.mesh_levels[level];
+            let (ny, nx) = mesh_level.active_cells.dim();
+            let mut active_points = Vec::new();
+            
+            for j in 0..ny {
+                for i in 0..nx {
+                    if mesh_level.active_cells[[j, i]] {
+                        active_points.push((j, i));
+                    }
+                }
+            }
+            
+            Ok(active_points)
+        }
+        
+        /// Estimate computational cost for current mesh
+        pub fn estimate_computational_cost(&self) -> usize {
+            let mut total_cells = 0;
+            
+            for level in &self.mesh_levels {
+                let active_count = level.active_cells.iter().filter(|&&active| active).count();
+                // Cost increases with refinement level (finer time steps needed)
+                let level_cost = active_count * (1 << level.level);
+                total_cells += level_cost;
+            }
+            
+            total_cells
+        }
+    }
+    
+    /// Enhanced boundary layer modeling for high Reynolds number flows
+    pub struct BoundaryLayerModel {
+        /// Boundary layer thickness estimation
+        pub boundary_layer_thickness: Array1<f64>,
+        /// Wall distance function
+        pub wall_distance: Array2<f64>,
+        /// Near-wall treatment method
+        pub wall_treatment: WallTreatment,
+        /// Reynolds number
+        pub reynolds_number: f64,
+    }
+    
+    /// Wall treatment methods for boundary layer
+    #[derive(Debug, Clone, Copy)]
+    pub enum WallTreatment {
+        /// Low Reynolds number approach (resolve viscous sublayer)
+        LowRe,
+        /// Wall functions (standard wall functions)
+        WallFunctions,
+        /// Enhanced wall treatment (automatic switching)
+        Enhanced,
+    }
+    
+    impl BoundaryLayerModel {
+        /// Create new boundary layer model
+        pub fn new(
+            grid_x: &Array1<f64>,
+            grid_y: &Array1<f64>,
+            reynolds_number: f64,
+            wall_treatment: WallTreatment,
+        ) -> Self {
+            let nx = grid_x.len();
+            let ny = grid_y.len();
+            
+            // Initialize boundary layer thickness (simplified)
+            let boundary_layer_thickness = Array1::from_shape_fn(nx, |i| {
+                let x = grid_x[i];
+                if x > 0.0 {
+                    // Blasius boundary layer thickness estimate
+                    5.0 * (x / reynolds_number).sqrt()
+                } else {
+                    0.0
+                }
+            });
+            
+            // Calculate wall distance
+            let mut wall_distance = Array2::zeros((ny, nx));
+            for j in 0..ny {
+                for i in 0..nx {
+                    // Simplified: distance to bottom wall
+                    wall_distance[[j, i]] = grid_y[j];
+                }
+            }
+            
+            Self {
+                boundary_layer_thickness,
+                wall_distance,
+                wall_treatment,
+                reynolds_number,
+            }
+        }
+        
+        /// Apply boundary layer corrections to turbulent viscosity
+        pub fn apply_boundary_layer_corrections(
+            &self,
+            turbulent_viscosity: &mut Array2<f64>,
+            velocity: &[Array2<f64>],
+            turbulent_quantities: &RANSState,
+        ) -> Result<()> {
+            let (_ny, _nx) = turbulent_viscosity.dim();
+            
+            match self.wall_treatment {
+                WallTreatment::LowRe => {
+                    self.apply_low_re_corrections(turbulent_viscosity, velocity, turbulent_quantities)?;
+                }
+                WallTreatment::WallFunctions => {
+                    self.apply_wall_functions(turbulent_viscosity, velocity, turbulent_quantities)?;
+                }
+                WallTreatment::Enhanced => {
+                    self.apply_enhanced_wall_treatment(turbulent_viscosity, velocity, turbulent_quantities)?;
+                }
+            }
+            
+            Ok(())
+        }
+        
+        /// Apply low Reynolds number corrections
+        fn apply_low_re_corrections(
+            &self,
+            turbulent_viscosity: &mut Array2<f64>,
+            velocity: &[Array2<f64>],
+            turbulent_quantities: &RANSState,
+        ) -> Result<()> {
+            let (ny, nx) = turbulent_viscosity.dim();
+            
+            for j in 0..ny {
+                for i in 0..nx {
+                    let y_plus = self.calculate_y_plus(j, i, velocity)?;
+                    let k = turbulent_quantities.turbulent_kinetic_energy[[j, i]];
+                    let epsilon = turbulent_quantities.dissipation_rate[[j, i]];
+                    
+                    // Low Reynolds number damping functions
+                    let re_t = k * k / (0.01 * epsilon); // Turbulent Reynolds number
+                    let f_mu = self.calculate_viscosity_damping_function(re_t, y_plus);
+                    
+                    turbulent_viscosity[[j, i]] *= f_mu;
+                }
+            }
+            
+            Ok(())
+        }
+        
+        /// Apply standard wall functions
+        fn apply_wall_functions(
+            &self,
+            turbulent_viscosity: &mut Array2<f64>,
+            velocity: &[Array2<f64>],
+            _turbulent_quantities: &RANSState,
+        ) -> Result<()> {
+            let (ny, nx) = turbulent_viscosity.dim();
+            
+            for j in 0..ny {
+                for i in 0..nx {
+                    let y_plus = self.calculate_y_plus(j, i, velocity)?;
+                    
+                    // Standard wall function approach
+                    if y_plus > 11.225 { // Log layer
+                        let kappa = 0.41; // von Karman constant
+                        let e_val = 9.8; // Roughness parameter
+                        
+                        // Wall function modification
+                        let wall_function_factor = kappa * y_plus / (kappa * y_plus + e_val).ln();
+                        turbulent_viscosity[[j, i]] *= wall_function_factor;
+                    } else { // Viscous sublayer
+                        turbulent_viscosity[[j, i]] *= y_plus / 11.225;
+                    }
+                }
+            }
+            
+            Ok(())
+        }
+        
+        /// Apply enhanced wall treatment
+        fn apply_enhanced_wall_treatment(
+            &self,
+            turbulent_viscosity: &mut Array2<f64>,
+            velocity: &[Array2<f64>],
+            turbulent_quantities: &RANSState,
+        ) -> Result<()> {
+            let (ny, nx) = turbulent_viscosity.dim();
+            
+            for j in 0..ny {
+                for i in 0..nx {
+                    let y_plus = self.calculate_y_plus(j, i, velocity)?;
+                    
+                    // Automatic switching between low-Re and wall functions
+                    if y_plus < 1.0 {
+                        // Use low-Re approach
+                        let k = turbulent_quantities.turbulent_kinetic_energy[[j, i]];
+                        let epsilon = turbulent_quantities.dissipation_rate[[j, i]];
+                        let re_t = k * k / (0.01 * epsilon);
+                        let f_mu = self.calculate_viscosity_damping_function(re_t, y_plus);
+                        turbulent_viscosity[[j, i]] *= f_mu;
+                    } else if y_plus > 30.0 {
+                        // Use wall functions
+                        let kappa = 0.41;
+                        let wall_function_factor = kappa * y_plus / (kappa * y_plus + 9.8).ln();
+                        turbulent_viscosity[[j, i]] *= wall_function_factor;
+                    } else {
+                        // Blending region
+                        let k = turbulent_quantities.turbulent_kinetic_energy[[j, i]];
+                        let epsilon = turbulent_quantities.dissipation_rate[[j, i]];
+                        let re_t = k * k / (0.01 * epsilon);
+                        let f_mu_lowre = self.calculate_viscosity_damping_function(re_t, y_plus);
+                        
+                        let kappa = 0.41;
+                        let f_mu_wf = kappa * y_plus / (kappa * y_plus + 9.8).ln();
+                        
+                        // Blend between approaches
+                        let blend_factor = (y_plus - 1.0) / 29.0;
+                        let f_mu = (1.0 - blend_factor) * f_mu_lowre + blend_factor * f_mu_wf;
+                        turbulent_viscosity[[j, i]] *= f_mu;
+                    }
+                }
+            }
+            
+            Ok(())
+        }
+        
+        /// Calculate y+ value
+        fn calculate_y_plus(&self, j: usize, i: usize, velocity: &[Array2<f64>]) -> Result<f64> {
+            let y = self.wall_distance[[j, i]];
+            
+            // Estimate wall shear velocity
+            let u_wall = if j > 0 {
+                velocity[0][[j, i]]
+            } else {
+                0.0
+            };
+            
+            // Simplified wall shear velocity calculation
+            let u_tau = if j > 0 && self.wall_distance[[j, i]] > 1e-10 {
+                (0.01 * u_wall.abs() / self.wall_distance[[j, i]]).sqrt()
+            } else {
+                1e-6
+            };
+            
+            let nu = 1.0 / self.reynolds_number; // Kinematic viscosity
+            let y_plus = u_tau * y / nu;
+            
+            Ok(y_plus)
+        }
+        
+        /// Calculate viscosity damping function for low-Re models
+        fn calculate_viscosity_damping_function(&self, re_t: f64, y_plus: f64) -> f64 {
+            // Simplified Launder-Sharma damping function
+            let f_mu = (1.0 - (-0.0165 * re_t).exp()) * (1.0 + 20.5 / (re_t + 1e-10));
+            
+            // Additional near-wall damping
+            let f_wall = 1.0 - (-y_plus / 25.0).exp();
+            
+            f_mu * f_wall
+        }
+        
+        /// Estimate boundary layer parameters
+        pub fn estimate_boundary_layer_parameters(
+            &mut self,
+            velocity: &[Array2<f64>],
+            x_locations: &Array1<f64>,
+        ) -> Result<()> {
+            // Update boundary layer thickness based on current flow field
+            for (i, &x) in x_locations.iter().enumerate() {
+                if x > 0.0 {
+                    // Find 99% velocity location
+                    let u_edge = self.find_edge_velocity(i, velocity)?;
+                    let delta_99 = self.find_boundary_layer_thickness(i, velocity, 0.99 * u_edge)?;
+                    
+                    if i < self.boundary_layer_thickness.len() {
+                        self.boundary_layer_thickness[i] = delta_99;
+                    }
+                }
+            }
+            
+            Ok(())
+        }
+        
+        /// Find edge velocity (free stream velocity)
+        fn find_edge_velocity(&self, i: usize, velocity: &[Array2<f64>]) -> Result<f64> {
+            let (ny, nx) = velocity[0].dim();
+            
+            if i >= nx {
+                return Ok(0.0);
+            }
+            
+            // Take velocity at 90% of domain height as edge velocity
+            let edge_j = (0.9 * ny as f64) as usize;
+            if edge_j < ny {
+                Ok(velocity[0][[edge_j, i]])
+            } else {
+                Ok(0.0)
+            }
+        }
+        
+        /// Find boundary layer thickness
+        fn find_boundary_layer_thickness(
+            &self,
+            i: usize,
+            velocity: &[Array2<f64>],
+            target_velocity: f64,
+        ) -> Result<f64> {
+            let (ny, nx) = velocity[0].dim();
+            
+            if i >= nx {
+                return Ok(0.0);
+            }
+            
+            // Search from wall upward
+            for j in 1..ny {
+                if velocity[0][[j, i]] >= target_velocity {
+                    return Ok(self.wall_distance[[j, i]]);
+                }
+            }
+            
+            // If not found, return domain height
+            Ok(self.wall_distance[[ny-1, i]])
+        }
+    }
+    
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use approx::assert_relative_eq;
+        
+        #[test]
+        fn test_les_solver() {
+            let solver = LESolver::new(16, 16, 16, 0.1, 0.1, 0.1, SGSModel::Smagorinsky);
+            
+            // Create simple initial state
+            let velocity = vec![
+                Array2::ones((16, 16)),
+                Array2::zeros((16, 16)),
+                Array2::zeros((16, 16)),
+            ];
+            let pressure = Array2::zeros((16, 16));
+            
+            let initial_state = FluidState3D {
+                velocity,
+                pressure,
+                dx: 0.1,
+                dy: 0.1,
+                dz: 0.1,
+            };
+            
+            let results = solver.solve_3d(initial_state, 0.1, 5).unwrap();
+            assert_eq!(results.len(), 6); // Initial + 5 time steps
+        }
+        
+        #[test]
+        fn test_rans_solver() {
+            let solver = RANSSolver::new(16, 16, RANSModel::KEpsilon, 1000.0);
+            
+            // Create initial RANS state
+            let mean_velocity = vec![
+                Array2::ones((16, 16)),
+                Array2::zeros((16, 16)),
+            ];
+            let mean_pressure = Array2::zeros((16, 16));
+            let turbulent_kinetic_energy = Array2::from_elem((16, 16), 0.01);
+            let dissipation_rate = Array2::from_elem((16, 16), 0.001);
+            
+            let initial_state = RANSState {
+                mean_velocity,
+                mean_pressure,
+                turbulent_kinetic_energy,
+                dissipation_rate,
+                specific_dissipation_rate: None,
+                dx: 0.1,
+                dy: 0.1,
+            };
+            
+            let result = solver.solve_rans(initial_state, 10, 1e-6).unwrap();
+            
+            // Check that turbulent kinetic energy is positive
+            for i in 0..16 {
+                for j in 0..16 {
+                    assert!(result.turbulent_kinetic_energy[[i, j]] > 0.0);
+                    assert!(result.dissipation_rate[[i, j]] > 0.0);
+                }
+            }
+        }
+        
+        #[test]
+        fn test_sgs_models() {
+            let solver = LESolver::new(8, 8, 8, 0.1, 0.1, 0.1, SGSModel::WALE);
+            
+            let velocity = vec![
+                Array2::from_shape_fn((8, 8), |(i, j)| (i as f64 * 0.1).sin()),
+                Array2::zeros((8, 8)),
+                Array2::zeros((8, 8)),
+            ];
+            
+            let state = FluidState3D {
+                velocity,
+                pressure: Array2::zeros((8, 8)),
+                dx: 0.1,
+                dy: 0.1,
+                dz: 0.1,
+            };
+            
+            let sgs_stress = solver.compute_sgs_stress(&state).unwrap();
+            
+            // Check stress tensor is finite
+            for i in 0..3 {
+                for j in 0..3 {
+                    for ii in 0..8 {
+                        for jj in 0..8 {
+                            assert!(sgs_stress[[i, j, ii, jj]].is_finite());
+                        }
+                    }
+                }
+            }
+        }
     }
 }

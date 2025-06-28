@@ -288,25 +288,135 @@ This document provides a comprehensive reference for the time and space complexi
 - **Space Complexity**: O(V + E)
 - **Notes**: Rewiring model for small-world networks
 
-## Special Operations
+## Random Walk Algorithms
+
+### Random Walk
+- **Function**: `random_walk`
+- **Time Complexity**: O(steps * d) where d is average degree
+- **Space Complexity**: O(steps)
+- **Notes**: Each step requires selecting a random neighbor
+
+### Random Walk with Restart
+- **Function**: `random_walk` (with restart_probability parameter)
+- **Time Complexity**: O(steps * d) where d is average degree
+- **Space Complexity**: O(steps)
+- **Notes**: PageRank-style random walks with restart capability
+
+### Transition Matrix
+- **Function**: `transition_matrix`
+- **Time Complexity**: O(V + E)
+- **Space Complexity**: O(V²)
+- **Notes**: Creates stochastic matrix for random walks
+
+## Similarity Algorithms
+
+### Jaccard Similarity
+- **Function**: `jaccard_similarity`
+- **Time Complexity**: O(d₁ + d₂) where d₁, d₂ are node degrees
+- **Space Complexity**: O(d₁ + d₂)
+- **Notes**: Based on intersection/union of neighbor sets
+
+### Cosine Similarity
+- **Function**: `cosine_similarity`
+- **Time Complexity**: O(V) for adjacency vector comparison
+- **Space Complexity**: O(V)
+- **Notes**: Treats adjacency as feature vectors
 
 ### Graph Edit Distance
 - **Function**: `graph_edit_distance`
-- **Time Complexity**: O(V! * V) worst case
+- **Time Complexity**: O(V! * V) worst case, O(V³) with approximation
 - **Space Complexity**: O(V²)
-- **Notes**: NP-hard problem
+- **Notes**: NP-hard problem, exponential exact solution
+
+## Hypergraph Algorithms
+
+### Minimal Transversals (Hitting Set)
+- **Function**: `minimal_transversals`
+- **Time Complexity**: O(2^V) worst case (exponential in worst case)
+- **Space Complexity**: O(2^V)
+- **Notes**: NP-hard problem, finds all minimal hitting sets
+
+### Hypergraph Cut
+- **Function**: `hypergraph_cut`
+- **Time Complexity**: O(V + H) where H is number of hyperedges
+- **Space Complexity**: O(V + H)
+- **Notes**: Partitions nodes and measures cut hyperedges
+
+### Hypergraph Connectivity
+- **Function**: `hypergraph_connectivity`
+- **Time Complexity**: O(V + H)
+- **Space Complexity**: O(V)
+- **Notes**: Analyzes connectivity in hypergraph structure
+
+## Graph Transformation Algorithms
+
+### Line Graph
+- **Function**: `line_graph`
+- **Time Complexity**: O(E²) worst case for high-degree nodes
+- **Space Complexity**: O(E²)
+- **Notes**: Each edge becomes a node, adjacency based on edge incidence
+
+### Line Digraph
+- **Function**: `line_digraph`
+- **Time Complexity**: O(E²) worst case
+- **Space Complexity**: O(E²)
+- **Notes**: Directed version of line graph transformation
+
+### Complement Graph
+- **Function**: `complement`
+- **Time Complexity**: O(V²)
+- **Space Complexity**: O(V²)
+- **Notes**: Creates edges where none existed, removes existing edges
+
+### Cartesian Product
+- **Function**: `cartesian_product`
+- **Time Complexity**: O(V₁ * V₂ + E₁ * V₂ + E₂ * V₁)
+- **Space Complexity**: O(V₁ * V₂)
+- **Notes**: Graph product operation for two input graphs
+
+### Tensor Product
+- **Function**: `tensor_product`
+- **Time Complexity**: O(V₁ * V₂ + E₁ * E₂)
+- **Space Complexity**: O(V₁ * V₂ + E₁ * E₂)
+- **Notes**: Alternative graph product with different connectivity rules
+
+### Subgraph Extraction
+- **Function**: `subgraph`
+- **Time Complexity**: O(V' + E') where V', E' are subgraph size
+- **Space Complexity**: O(V' + E')
+- **Notes**: Linear in subgraph size
+
+### Edge Subgraph
+- **Function**: `edge_subgraph`
+- **Time Complexity**: O(E')
+- **Space Complexity**: O(V' + E')
+- **Notes**: Creates subgraph from selected edges
+
+### Weight Filtered Subgraph
+- **Function**: `weight_filtered_subgraph`
+- **Time Complexity**: O(E)
+- **Space Complexity**: O(V + E)
+- **Notes**: Filters edges based on weight thresholds
+
+## Special Operations
 
 ### k-Core Decomposition
 - **Function**: `k_core_decomposition`
 - **Time Complexity**: O(V + E)
 - **Space Complexity**: O(V)
-- **Notes**: Linear time algorithm
+- **Notes**: Linear time algorithm using degree-based pruning
 
 ### Motif Finding
 - **Function**: `find_motifs`
 - **Time Complexity**: O(V^k) where k is motif size
 - **Space Complexity**: O(V)
-- **Notes**: Searches for specific patterns
+- **Notes**: Searches for specific patterns (triangles, k-cliques, etc.)
+
+### Clique Detection
+- **Function**: `find_cliques`
+- **Time Complexity**: O(3^(V/3)) worst case (exponential)
+- **Space Complexity**: O(V)
+- **Notes**: NP-complete problem, uses backtracking
 
 ## Memory Considerations
 
