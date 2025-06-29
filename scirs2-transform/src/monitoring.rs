@@ -504,11 +504,11 @@ impl TransformationMonitor {
         }
 
         let statistic = max_diff;
-        
+
         // More accurate p-value calculation using the asymptotic distribution
         let effective_n = (n1 * n2) / (n1 + n2);
         let lambda = statistic * effective_n.sqrt();
-        
+
         // Kolmogorov distribution approximation for p-value
         let p_value = if lambda < 0.27 {
             1.0
@@ -807,13 +807,13 @@ impl TransformationMonitor {
         // P(X > x) = 1 - P(X <= x) = 1 - gamma_cdf(x/2, df/2)
         let alpha = df / 2.0;
         let x_half = x / 2.0;
-        
+
         // Use series expansion for gamma CDF
         if x_half < alpha + 1.0 {
             // Use series when x is relatively small compared to alpha
             let mut term = x_half.powf(alpha) * (-x_half).exp();
             let mut sum = term;
-            
+
             for k in 1..=50 {
                 term *= x_half / (alpha + k as f64);
                 sum += term;
@@ -821,7 +821,7 @@ impl TransformationMonitor {
                     break;
                 }
             }
-            
+
             let gamma_cdf = sum / self.gamma(alpha);
             1.0 - gamma_cdf.min(1.0)
         } else {
@@ -831,14 +831,18 @@ impl TransformationMonitor {
             let c = 1e30;
             let mut d = 1.0 / b;
             let mut h = d;
-            
+
             for i in 1..=100 {
                 let an = -i as f64 * (i as f64 - a);
                 let b = b + 2.0;
                 d = an * d + b;
-                if d.abs() < 1e-30 { d = 1e-30; }
+                if d.abs() < 1e-30 {
+                    d = 1e-30;
+                }
                 let c = b + an / c;
-                if c.abs() < 1e-30 { c = 1e-30; }
+                if c.abs() < 1e-30 {
+                    c = 1e-30;
+                }
                 d = 1.0 / d;
                 let del = d * c;
                 h *= del;
@@ -846,7 +850,7 @@ impl TransformationMonitor {
                     break;
                 }
             }
-            
+
             let gamma_cf = (-x_half).exp() * x_half.powf(a) * h / self.gamma(a);
             gamma_cf.max(0.0).min(1.0)
         }

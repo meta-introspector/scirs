@@ -2190,7 +2190,12 @@ where
     }
 
     /// Compute higher-order partial derivative in u direction using generalized quotient rule
-    fn compute_higher_order_u_derivative(&self, u: T, v: T, order: usize) -> InterpolateResult<Array1<T>> {
+    fn compute_higher_order_u_derivative(
+        &self,
+        u: T,
+        v: T,
+        order: usize,
+    ) -> InterpolateResult<Array1<T>> {
         if order == 0 {
             return self.evaluate(u, v);
         }
@@ -2215,10 +2220,11 @@ where
                     let idx = i * self.n_v + j;
                     let basis_product = basis_u_derivs[k][i] * basis_v[j];
                     let weight = self.weights[idx];
-                    
+
                     w_derivs[k] = w_derivs[k] + weight * basis_product;
                     for dim in 0..self.dimension {
-                        a_derivs[k][dim] = a_derivs[k][dim] + weight * self.control_points[[idx, dim]] * basis_product;
+                        a_derivs[k][dim] = a_derivs[k][dim]
+                            + weight * self.control_points[[idx, dim]] * basis_product;
                     }
                 }
             }
@@ -2238,14 +2244,14 @@ where
         // Recursive computation for higher orders
         for k in 1..=order {
             let mut temp = a_derivs[k].clone();
-            
+
             for i in 1..=k {
                 let binom_coeff = T::from(Self::binomial_coefficient(k, i)).unwrap();
                 for dim in 0..self.dimension {
                     temp[dim] = temp[dim] - binom_coeff * w_derivs[i] * s_derivs[k - i][dim];
                 }
             }
-            
+
             if w_derivs[0] > T::epsilon() {
                 for dim in 0..self.dimension {
                     s_derivs[k][dim] = temp[dim] / w_derivs[0];
@@ -2257,7 +2263,12 @@ where
     }
 
     /// Compute higher-order partial derivative in v direction using generalized quotient rule
-    fn compute_higher_order_v_derivative(&self, u: T, v: T, order: usize) -> InterpolateResult<Array1<T>> {
+    fn compute_higher_order_v_derivative(
+        &self,
+        u: T,
+        v: T,
+        order: usize,
+    ) -> InterpolateResult<Array1<T>> {
         if order == 0 {
             return self.evaluate(u, v);
         }
@@ -2282,10 +2293,11 @@ where
                     let idx = i * self.n_v + j;
                     let basis_product = basis_u[i] * basis_v_derivs[k][j];
                     let weight = self.weights[idx];
-                    
+
                     w_derivs[k] = w_derivs[k] + weight * basis_product;
                     for dim in 0..self.dimension {
-                        a_derivs[k][dim] = a_derivs[k][dim] + weight * self.control_points[[idx, dim]] * basis_product;
+                        a_derivs[k][dim] = a_derivs[k][dim]
+                            + weight * self.control_points[[idx, dim]] * basis_product;
                     }
                 }
             }
@@ -2305,14 +2317,14 @@ where
         // Recursive computation for higher orders
         for k in 1..=order {
             let mut temp = a_derivs[k].clone();
-            
+
             for i in 1..=k {
                 let binom_coeff = T::from(Self::binomial_coefficient(k, i)).unwrap();
                 for dim in 0..self.dimension {
                     temp[dim] = temp[dim] - binom_coeff * w_derivs[i] * s_derivs[k - i][dim];
                 }
             }
-            
+
             if w_derivs[0] > T::epsilon() {
                 for dim in 0..self.dimension {
                     s_derivs[k][dim] = temp[dim] / w_derivs[0];
@@ -2324,7 +2336,13 @@ where
     }
 
     /// Compute higher-order mixed partial derivative using generalized quotient rule
-    fn compute_higher_order_mixed_derivative(&self, u: T, v: T, order_u: usize, order_v: usize) -> InterpolateResult<Array1<T>> {
+    fn compute_higher_order_mixed_derivative(
+        &self,
+        u: T,
+        v: T,
+        order_u: usize,
+        order_v: usize,
+    ) -> InterpolateResult<Array1<T>> {
         if order_u == 0 && order_v == 0 {
             return self.evaluate(u, v);
         }
@@ -2359,10 +2377,11 @@ where
                         let idx = i * self.n_v + j;
                         let basis_product = basis_u_derivs[p][i] * basis_v_derivs[q][j];
                         let weight = self.weights[idx];
-                        
+
                         w_derivs[p][q] = w_derivs[p][q] + weight * basis_product;
                         for dim in 0..self.dimension {
-                            a_derivs[p][q][dim] = a_derivs[p][q][dim] + weight * self.control_points[[idx, dim]] * basis_product;
+                            a_derivs[p][q][dim] = a_derivs[p][q][dim]
+                                + weight * self.control_points[[idx, dim]] * basis_product;
                         }
                     }
                 }
@@ -2389,7 +2408,7 @@ where
                 }
 
                 let mut temp = a_derivs[p][q].clone();
-                
+
                 // Subtract correction terms
                 for i in 0..=p {
                     for j in 0..=q {
@@ -2399,17 +2418,18 @@ where
                         if i > p || j > q {
                             continue;
                         }
-                        
+
                         let binom_coeff_u = T::from(Self::binomial_coefficient(p, i)).unwrap();
                         let binom_coeff_v = T::from(Self::binomial_coefficient(q, j)).unwrap();
                         let combined_coeff = binom_coeff_u * binom_coeff_v;
-                        
+
                         for dim in 0..self.dimension {
-                            temp[dim] = temp[dim] - combined_coeff * w_derivs[i][j] * s_derivs[p - i][q - j][dim];
+                            temp[dim] = temp[dim]
+                                - combined_coeff * w_derivs[i][j] * s_derivs[p - i][q - j][dim];
                         }
                     }
                 }
-                
+
                 if w_derivs[0][0] > T::epsilon() {
                     for dim in 0..self.dimension {
                         s_derivs[p][q][dim] = temp[dim] / w_derivs[0][0];
@@ -2429,7 +2449,7 @@ where
         if k == 0 || k == n {
             return 1;
         }
-        
+
         let k = k.min(n - k); // Take advantage of symmetry
         let mut result = 1;
         for i in 0..k {

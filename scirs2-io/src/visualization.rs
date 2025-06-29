@@ -311,8 +311,7 @@ impl VisualizationExporter for PlotlyExporter {
     ) -> Result<()> {
         let json_str = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
-        file.write_all(json_str.as_bytes())
-            .map_err(IoError::Io)?;
+        file.write_all(json_str.as_bytes()).map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -422,8 +421,7 @@ impl VisualizationExporter for MatplotlibExporter {
     ) -> Result<()> {
         let script = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
-        file.write_all(script.as_bytes())
-            .map_err(IoError::Io)?;
+        file.write_all(script.as_bytes()).map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -507,8 +505,7 @@ impl VisualizationExporter for GnuplotExporter {
     ) -> Result<()> {
         let script = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
-        file.write_all(script.as_bytes())
-            .map_err(IoError::Io)?;
+        file.write_all(script.as_bytes()).map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -597,8 +594,7 @@ impl VisualizationExporter for VegaLiteExporter {
     ) -> Result<()> {
         let spec = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
-        file.write_all(spec.as_bytes())
-            .map_err(IoError::Io)?;
+        file.write_all(spec.as_bytes()).map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -1056,8 +1052,7 @@ impl DashboardBuilder {
     pub fn export_html(self, path: impl AsRef<Path>) -> Result<()> {
         let html = self.generate_html()?;
         let mut file = File::create(path).map_err(IoError::Io)?;
-        file.write_all(html.as_bytes())
-            .map_err(IoError::Io)?;
+        file.write_all(html.as_bytes()).map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -1142,8 +1137,7 @@ impl VisualizationExporter for D3Exporter {
     ) -> Result<()> {
         let html = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
-        file.write_all(html.as_bytes())
-            .map_err(IoError::Io)?;
+        file.write_all(html.as_bytes()).map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -1213,8 +1207,7 @@ impl VisualizationExporter for BokehExporter {
     ) -> Result<()> {
         let json = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
-        file.write_all(json.as_bytes())
-            .map_err(IoError::Io)?;
+        file.write_all(json.as_bytes()).map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -1324,8 +1317,7 @@ impl Visualization3DExporter for Plotly3DExporter {
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let mut file = File::create(path).map_err(IoError::Io)?;
-        file.write_all(json_str.as_bytes())
-            .map_err(IoError::Io)?;
+        file.write_all(json_str.as_bytes()).map_err(IoError::Io)?;
         Ok(())
     }
 }

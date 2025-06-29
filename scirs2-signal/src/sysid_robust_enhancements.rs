@@ -4,8 +4,11 @@
 //! and improved diagnostics for system identification methods.
 
 use crate::error::{SignalError, SignalResult};
-use crate::sysid_enhanced::{SystemModel, ParameterEstimate, ModelValidationMetrics, EnhancedSysIdConfig};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, s};
+use crate::lti::StateSpace;
+use crate::sysid_enhanced::{
+    EnhancedSysIdConfig, ModelValidationMetrics, ParameterEstimate, SystemModel,
+};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -183,7 +186,8 @@ fn estimate_snr_spectral(input: &Array1<f64>, output: &Array1<f64>) -> SignalRes
     let mut freq_count = 0;
 
     // Average coherence over meaningful frequency range
-    for k in 1..nfft/4 { // Avoid DC and very high frequencies
+    for k in 1..nfft / 4 {
+        // Avoid DC and very high frequencies
         let pxy = input_fft[k].conj() * output_fft[k];
         let pxx = input_fft[k].norm_sqr();
         let pyy = output_fft[k].norm_sqr();
@@ -207,25 +211,25 @@ fn estimate_snr_spectral(input: &Array1<f64>, output: &Array1<f64>) -> SignalRes
 /// Correlation-based SNR estimation
 fn estimate_snr_correlation(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
     let n = input.len();
-    
+
     // Compute normalized cross-correlation
     let input_mean = input.mean().unwrap_or(0.0);
     let output_mean = output.mean().unwrap_or(0.0);
-    
+
     let input_centered: Array1<f64> = input.mapv(|x| x - input_mean);
     let output_centered: Array1<f64> = output.mapv(|x| x - output_mean);
-    
+
     let cross_corr = input_centered.dot(&output_centered);
     let input_energy = input_centered.dot(&input_centered);
     let output_energy = output_centered.dot(&output_centered);
-    
+
     if input_energy < 1e-12 || output_energy < 1e-12 {
         return Ok(0.0);
     }
-    
+
     let correlation = cross_corr / (input_energy * output_energy).sqrt();
     let r_squared = correlation * correlation;
-    
+
     let snr_linear = r_squared / (1.0 - r_squared).max(1e-10);
     Ok(10.0 * snr_linear.log10())
 }
@@ -239,8 +243,8 @@ fn estimate_snr_highpass_residual(signal: &Array1<f64>) -> SignalResult<f64> {
 
     // Simple high-pass filter (difference operator)
     let mut filtered = Array1::zeros(n - 1);
-    for i in 0..n-1 {
-        filtered[i] = signal[i+1] - signal[i];
+    for i in 0..n - 1 {
+        filtered[i] = signal[i + 1] - signal[i];
     }
 
     let signal_var = signal.var(0.0);
@@ -262,17 +266,17 @@ fn estimate_snr_wavelet_denoising(signal: &Array1<f64>) -> SignalResult<f64> {
         return Ok(0.0);
     }
 
-    let window_size = 5.min(n/4);
+    let window_size = 5.min(n / 4);
     let mut denoised = Array1::zeros(n);
 
     for i in 0..n {
-        let start = i.saturating_sub(window_size/2);
-        let end = (i + window_size/2 + 1).min(n);
-        
+        let start = i.saturating_sub(window_size / 2);
+        let end = (i + window_size / 2 + 1).min(n);
+
         let mut window: Vec<f64> = signal.slice(s![start..end]).to_vec();
         window.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
-        denoised[i] = window[window.len()/2]; // Median
+
+        denoised[i] = window[window.len() / 2]; // Median
     }
 
     let noise = signal - &denoised;
@@ -300,7 +304,7 @@ pub fn robust_least_squares(
     config: &RobustSysIdConfig,
 ) -> SignalResult<Array1<f64>> {
     let (m, n) = phi.dim();
-    
+
     if m != y.len() {
         return Err(SignalError::ValueError(
             "Dimension mismatch between phi and y".to_string(),
@@ -316,9 +320,12 @@ pub fn robust_least_squares(
     // Check condition number
     let phi_t_phi = phi.t().dot(phi);
     let condition_number = estimate_condition_number(&phi_t_phi);
-    
+
     if condition_number > config.condition_threshold {
-        eprintln!("Warning: High condition number ({:.2e}). Using regularization.", condition_number);
+        eprintln!(
+            "Warning: High condition number ({:.2e}). Using regularization.",
+            condition_number
+        );
     }
 
     // Apply Tikhonov regularization
@@ -362,12 +369,12 @@ fn solve_with_robust_loss(
     for _iter in 0..max_iter {
         // Compute residuals
         let residuals = y - &phi.dot(&params);
-        
+
         // Compute robust weights (Huber)
         let mut weights = Array1::ones(m);
         let mad = compute_mad(&residuals.to_vec());
         let scale = 1.4826 * mad; // Robust scale estimate
-        
+
         for i in 0..m {
             let standardized_residual = residuals[i] / scale;
             if standardized_residual.abs() > config.huber_delta {
@@ -378,7 +385,7 @@ fn solve_with_robust_loss(
         // Weighted least squares
         let mut phi_weighted = Array2::zeros((m, n));
         let mut y_weighted = Array1::zeros(m);
-        
+
         for i in 0..m {
             let w = weights[i].sqrt();
             for j in 0..n {
@@ -436,7 +443,11 @@ pub fn enhanced_cross_validation(
     // K-fold cross-validation
     for fold in 0..k_folds {
         let val_start = fold * fold_size;
-        let val_end = if fold == k_folds - 1 { n } else { (fold + 1) * fold_size };
+        let val_end = if fold == k_folds - 1 {
+            n
+        } else {
+            (fold + 1) * fold_size
+        };
 
         // Split data
         let mut train_input = Vec::new();
@@ -469,12 +480,8 @@ pub fn enhanced_cross_validation(
         )?;
 
         // Validate
-        let val_error = compute_validation_error(
-            &val_input_array,
-            &val_output_array,
-            &a_coeffs,
-            &b_coeffs,
-        )?;
+        let val_error =
+            compute_validation_error(&val_input_array, &val_output_array, &a_coeffs, &b_coeffs)?;
 
         fold_errors[fold] = val_error;
     }
@@ -523,14 +530,10 @@ pub fn enhanced_cross_validation(
 /// * Stability analysis results
 pub fn analyze_model_stability(model: &SystemModel) -> SignalResult<StabilityAnalysis> {
     match model {
-        SystemModel::ARX { a, .. } | 
-        SystemModel::ARMAX { a, .. } => {
+        SystemModel::ARX { a, .. } | SystemModel::ARMAX { a, .. } => {
             analyze_polynomial_stability(a)
         }
-        SystemModel::OE { f, .. } |
-        SystemModel::BJ { f, .. } => {
-            analyze_polynomial_stability(f)
-        }
+        SystemModel::OE { f, .. } | SystemModel::BJ { f, .. } => analyze_polynomial_stability(f),
         SystemModel::TransferFunction(tf) => {
             // Extract denominator and analyze
             let denom = Array1::from_vec(tf.denominator().clone());
@@ -615,9 +618,13 @@ fn analyze_polynomial_stability(poly: &Array1<f64>) -> SignalResult<StabilityAna
 /// Helper functions for robust system identification
 
 fn next_power_of_2(n: usize) -> usize {
-    if n == 0 { return 1; }
+    if n == 0 {
+        return 1;
+    }
     let mut power = 1;
-    while power < n { power <<= 1; }
+    while power < n {
+        power <<= 1;
+    }
     power
 }
 
@@ -625,7 +632,7 @@ fn compute_fft_padded(signal: &Array1<f64>, nfft: usize) -> Array1<Complex64> {
     let mut padded = Array1::zeros(nfft);
     let n = signal.len().min(nfft);
     padded.slice_mut(s![..n]).assign(&signal.slice(s![..n]));
-    
+
     // Simple DFT implementation
     let mut result = Array1::zeros(nfft);
     for k in 0..nfft {
@@ -644,13 +651,13 @@ fn estimate_condition_number(matrix: &Array2<f64>) -> f64 {
     let n = matrix.nrows();
     let mut max_diag = 0.0;
     let mut min_diag = f64::INFINITY;
-    
+
     for i in 0..n {
         let val = matrix[[i, i]].abs();
         max_diag = max_diag.max(val);
         min_diag = min_diag.min(val);
     }
-    
+
     if min_diag < 1e-15 {
         1e16
     } else {
@@ -662,7 +669,7 @@ fn solve_regularized_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Ar
     // Simple Gaussian elimination with partial pivoting
     let n = a.nrows();
     let mut aug = Array2::zeros((n, n + 1));
-    
+
     // Form augmented matrix
     for i in 0..n {
         for j in 0..n {
@@ -670,17 +677,17 @@ fn solve_regularized_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Ar
         }
         aug[[i, n]] = b[i];
     }
-    
+
     // Forward elimination with partial pivoting
     for k in 0..n {
         // Find pivot
         let mut max_row = k;
-        for i in k+1..n {
+        for i in k + 1..n {
             if aug[[i, k]].abs() > aug[[max_row, k]].abs() {
                 max_row = i;
             }
         }
-        
+
         // Swap rows
         if max_row != k {
             for j in 0..=n {
@@ -689,43 +696,45 @@ fn solve_regularized_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Ar
                 aug[[max_row, j]] = temp;
             }
         }
-        
+
         // Check for singular matrix
         if aug[[k, k]].abs() < 1e-12 {
             return Err(SignalError::ComputationError(
                 "Singular matrix encountered".to_string(),
             ));
         }
-        
+
         // Eliminate
-        for i in k+1..n {
+        for i in k + 1..n {
             let factor = aug[[i, k]] / aug[[k, k]];
             for j in k..=n {
                 aug[[i, j]] -= factor * aug[[k, j]];
             }
         }
     }
-    
+
     // Back substitution
     let mut x = Array1::zeros(n);
     for i in (0..n).rev() {
         let mut sum = aug[[i, n]];
-        for j in i+1..n {
+        for j in i + 1..n {
             sum -= aug[[i, j]] * x[j];
         }
         x[i] = sum / aug[[i, i]];
     }
-    
+
     Ok(x)
 }
 
 fn compute_mad(data: &[f64]) -> f64 {
-    if data.is_empty() { return 0.0; }
-    
+    if data.is_empty() {
+        return 0.0;
+    }
+
     let mut sorted = data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let median = sorted[sorted.len() / 2];
-    
+
     let deviations: Vec<f64> = data.iter().map(|&x| (x - median).abs()).collect();
     let mut sorted_dev = deviations;
     sorted_dev.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -737,7 +746,7 @@ fn bootstrap_resample(data: &[f64]) -> Vec<f64> {
     let mut result = Vec::with_capacity(n);
     use rand::Rng;
     let mut rng = rand::rng();
-    
+
     for _ in 0..n {
         let idx = rng.random_range(0..n);
         result.push(data[idx]);
@@ -756,45 +765,45 @@ fn estimate_arx_cv(
     let n = output.len();
     let n_start = na.max(nb + delay - 1);
     let n_samples = n - n_start;
-    
+
     if n_samples <= na + nb {
         return Err(SignalError::ValueError(
             "Insufficient data for ARX estimation".to_string(),
         ));
     }
-    
+
     let mut phi = Array2::zeros((n_samples, na + nb));
     let mut y = Array1::zeros(n_samples);
-    
+
     for i in 0..n_samples {
         let t = i + n_start;
-        
+
         // AR terms
         for j in 0..na {
             phi[[i, j]] = -output[t - j - 1];
         }
-        
+
         // X terms
         for j in 0..nb {
             if t >= delay + j {
                 phi[[i, na + j]] = input[t - delay - j];
             }
         }
-        
+
         y[i] = output[t];
     }
-    
+
     // Solve least squares
     let params = solve_regularized_system(
         &(phi.t().dot(&phi) + Array2::eye(na + nb) * 1e-6),
         &phi.t().dot(&y),
     )?;
-    
+
     let a = params.slice(s![..na]).to_owned();
     let b = params.slice(s![na..]).to_owned();
     let residuals = &y - &phi.dot(&params);
     let cost = residuals.dot(&residuals) / n_samples as f64;
-    
+
     Ok((a, b, cost))
 }
 
@@ -808,28 +817,31 @@ fn compute_validation_error(
     let na = a_coeffs.len();
     let nb = b_coeffs.len();
     let delay = 1;
-    
+
     let mut predicted = Array1::zeros(n);
-    
+
     for t in na.max(nb + delay)..n {
         let mut pred = 0.0;
-        
+
         // AR terms
         for j in 0..na {
             pred += a_coeffs[j] * predicted[t - j - 1];
         }
-        
+
         // Input terms
         for j in 0..nb {
             if t >= delay + j {
                 pred += b_coeffs[j] * input[t - delay - j];
             }
         }
-        
+
         predicted[t] = pred;
     }
-    
-    let error = (output - &predicted).mapv(|x| x * x).mean().unwrap_or(f64::INFINITY);
+
+    let error = (output - &predicted)
+        .mapv(|x| x * x)
+        .mean()
+        .unwrap_or(f64::INFINITY);
     Ok(error)
 }
 
@@ -859,20 +871,20 @@ fn create_companion_matrix(poly: &Array1<f64>) -> Array2<f64> {
     if n == 0 {
         return Array2::zeros((1, 1));
     }
-    
+
     let mut companion = Array2::zeros((n, n));
-    
+
     // First row: -a1/a0, -a2/a0, ..., -an/a0
     let a0 = poly[0];
     for j in 0..n {
         companion[[0, j]] = -poly[j + 1] / a0;
     }
-    
+
     // Sub-diagonal: identity
     for i in 1..n {
         companion[[i, i - 1]] = 1.0;
     }
-    
+
     companion
 }
 
@@ -881,22 +893,22 @@ fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>> 
     if n == 0 {
         return Ok(Array1::zeros(0));
     }
-    
+
     // Simplified eigenvalue computation for small matrices
     if n == 1 {
         return Ok(Array1::from_vec(vec![Complex64::new(matrix[[0, 0]], 0.0)]));
     }
-    
+
     if n == 2 {
         let a = matrix[[0, 0]];
         let b = matrix[[0, 1]];
         let c = matrix[[1, 0]];
         let d = matrix[[1, 1]];
-        
+
         let trace = a + d;
         let det = a * d - b * c;
         let discriminant = trace * trace - 4.0 * det;
-        
+
         if discriminant >= 0.0 {
             let sqrt_disc = discriminant.sqrt();
             let lambda1 = (trace + sqrt_disc) / 2.0;
@@ -914,7 +926,7 @@ fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>> 
             ]));
         }
     }
-    
+
     // For larger matrices, use power iteration for dominant eigenvalue
     // This is a simplified implementation
     let mut v = Array1::ones(n);
@@ -925,7 +937,7 @@ fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>> 
             v /= norm;
         }
     }
-    
+
     let lambda = matrix.dot(&v).dot(&v) / v.dot(&v);
     Ok(Array1::from_vec(vec![Complex64::new(lambda, 0.0)]))
 }
@@ -942,12 +954,12 @@ mod tests {
         for i in 0..n {
             clean_signal[i] = (2.0 * PI * i as f64 / 20.0).sin();
         }
-        
+
         let mut noisy_signal = clean_signal.clone();
         for i in 0..n {
             noisy_signal[i] += 0.1 * (i as f64 * 0.1).sin();
         }
-        
+
         let snr = estimate_signal_noise_ratio_advanced(&clean_signal, &noisy_signal).unwrap();
         assert!(snr > 0.0);
         assert!(snr < 50.0);
@@ -959,7 +971,7 @@ mod tests {
         let n = 3;
         let mut phi = Array2::zeros((m, n));
         let mut y = Array1::zeros(m);
-        
+
         // Create well-conditioned test problem
         for i in 0..m {
             phi[[i, 0]] = 1.0;
@@ -967,10 +979,10 @@ mod tests {
             phi[[i, 2]] = (i as f64).powi(2);
             y[i] = 1.0 + 2.0 * i as f64 + 0.5 * (i as f64).powi(2);
         }
-        
+
         let config = RobustSysIdConfig::default();
         let params = robust_least_squares(&phi, &y, &config).unwrap();
-        
+
         assert_eq!(params.len(), n);
         // Parameters should be approximately [1.0, 2.0, 0.5]
         assert!((params[0] - 1.0).abs() < 0.1);
@@ -983,7 +995,7 @@ mod tests {
         // Stable polynomial: z^2 - 0.5z + 0.1
         let poly = Array1::from_vec(vec![1.0, -0.5, 0.1]);
         let stability = analyze_polynomial_stability(&poly).unwrap();
-        
+
         assert!(stability.is_stable);
         assert!(stability.stability_margin > 0.0);
     }

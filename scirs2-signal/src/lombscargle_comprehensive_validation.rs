@@ -449,7 +449,7 @@ fn test_lombscargle_stability(
     let precision_maintained = test_lombscargle_precision()?;
 
     Ok(LombScargleStabilityMetrics {
-        irregular_sampling_stable,
+        irregular_sampling_stable: irregular_stable,
         extreme_timescales_stable,
         large_dataset_stable,
         precision_maintained,

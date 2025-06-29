@@ -11,7 +11,7 @@
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::wpt::{wpt_decompose, wpt_reconstruct, WaveletPacketTree};
+use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
 use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use num_complex::Complex64;
@@ -805,32 +805,32 @@ fn construct_frame_matrix(
     // Construct the frame matrix for wavelet packet transform
     let num_packets = 2_usize.pow(level as u32);
     let packet_length = length / num_packets;
-    
+
     if packet_length == 0 {
         return Err(SignalError::ValueError(
             "Signal too short for specified decomposition level".to_string(),
         ));
     }
-    
+
     let mut frame_matrix = Array2::zeros((length, num_packets * packet_length));
-    
+
     // Generate basis functions for each packet
     for packet_idx in 0..num_packets {
         let mut test_signal = Array1::zeros(length);
-        
+
         // Create impulse at packet location
         let start_idx = packet_idx * packet_length;
         let end_idx = ((packet_idx + 1) * packet_length).min(length);
-        
+
         for i in start_idx..end_idx {
             test_signal[i] = 1.0 / ((end_idx - start_idx) as f64).sqrt();
         }
-        
+
         // Decompose to get basis function
         match wpt_decompose(&test_signal, wavelet, level) {
             Ok(tree) => {
                 let coeffs = extract_packet_coefficients(&tree, packet_idx, level);
-                
+
                 // Store in frame matrix
                 for (i, &coeff) in coeffs.iter().enumerate() {
                     if i < frame_matrix.ncols() {
@@ -846,7 +846,7 @@ fn construct_frame_matrix(
             }
         }
     }
-    
+
     Ok(frame_matrix)
 }
 
@@ -860,31 +860,31 @@ fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
     if n != matrix.ncols() {
         return Err(SignalError::ValueError("Matrix must be square".to_string()));
     }
-    
+
     if n == 0 {
         return Ok(vec![]);
     }
-    
+
     // For very small matrices, use simple characteristic polynomial
     if n <= 4 {
         return compute_small_matrix_eigenvalues(matrix);
     }
-    
+
     // For larger matrices, estimate dominant eigenvalues using power iteration
     let mut eigenvalues = Vec::new();
     let mut work_matrix = matrix.clone();
     let max_iterations = 100;
     let tolerance = 1e-10;
-    
+
     // Find several dominant eigenvalues
     for _ in 0..n.min(10) {
         let eigenvalue = power_iteration(&work_matrix, max_iterations, tolerance)?;
         if eigenvalue.abs() < tolerance {
             break;
         }
-        
+
         eigenvalues.push(eigenvalue);
-        
+
         // Deflate matrix to find next eigenvalue
         if let Ok(deflated) = deflate_matrix(&work_matrix, eigenvalue) {
             work_matrix = deflated;
@@ -892,23 +892,23 @@ fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
             break;
         }
     }
-    
+
     // Add remaining small eigenvalues as estimates
     let trace = (0..n).map(|i| matrix[[i, i]]).sum::<f64>();
     let eigenvalue_sum: f64 = eigenvalues.iter().sum();
     let remaining_trace = trace - eigenvalue_sum;
     let remaining_count = n - eigenvalues.len();
-    
+
     if remaining_count > 0 {
         let avg_remaining = remaining_trace / remaining_count as f64;
         for _ in 0..remaining_count {
             eigenvalues.push(avg_remaining);
         }
     }
-    
+
     // Sort in descending order
     eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap());
-    
+
     Ok(eigenvalues)
 }
 
@@ -944,11 +944,11 @@ fn compute_small_matrix_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f6
             let b = matrix[[0, 1]];
             let c = matrix[[1, 0]];
             let d = matrix[[1, 1]];
-            
+
             let trace = a + d;
             let det = a * d - b * c;
             let discriminant = trace * trace - 4.0 * det;
-            
+
             if discriminant >= 0.0 {
                 let sqrt_disc = discriminant.sqrt();
                 Ok(vec![(trace + sqrt_disc) / 2.0, (trace - sqrt_disc) / 2.0])
@@ -961,7 +961,7 @@ fn compute_small_matrix_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f6
             // For larger small matrices, use power iteration
             let mut eigenvalues = Vec::new();
             let mut work_matrix = matrix.clone();
-            
+
             for _ in 0..n {
                 if let Ok(eigenvalue) = power_iteration(&work_matrix, 50, 1e-8) {
                     eigenvalues.push(eigenvalue);
@@ -974,39 +974,43 @@ fn compute_small_matrix_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f6
                     break;
                 }
             }
-            
+
             eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap());
             Ok(eigenvalues)
         }
     }
 }
 
-fn power_iteration(matrix: &Array2<f64>, max_iterations: usize, tolerance: f64) -> SignalResult<f64> {
+fn power_iteration(
+    matrix: &Array2<f64>,
+    max_iterations: usize,
+    tolerance: f64,
+) -> SignalResult<f64> {
     let n = matrix.nrows();
     if n == 0 {
         return Ok(0.0);
     }
-    
+
     // Start with random vector
     let mut v = Array1::ones(n);
     v /= v.dot(&v).sqrt();
-    
+
     let mut eigenvalue = 0.0;
-    
+
     for _ in 0..max_iterations {
         // Multiply by matrix
         let mv = matrix.dot(&v);
-        
+
         // Compute Rayleigh quotient
         let new_eigenvalue = v.dot(&mv);
-        
+
         // Check convergence
         if (new_eigenvalue - eigenvalue).abs() < tolerance {
             return Ok(new_eigenvalue);
         }
-        
+
         eigenvalue = new_eigenvalue;
-        
+
         // Normalize
         let norm = mv.dot(&mv).sqrt();
         if norm > tolerance {
@@ -1015,7 +1019,7 @@ fn power_iteration(matrix: &Array2<f64>, max_iterations: usize, tolerance: f64) 
             break;
         }
     }
-    
+
     Ok(eigenvalue)
 }
 
@@ -1023,15 +1027,19 @@ fn deflate_matrix(matrix: &Array2<f64>, eigenvalue: f64) -> SignalResult<Array2<
     // Simple deflation by subtracting eigenvalue * I
     let n = matrix.nrows();
     let mut deflated = matrix.clone();
-    
+
     for i in 0..n {
         deflated[[i, i]] -= eigenvalue;
     }
-    
+
     Ok(deflated)
 }
 
-fn extract_packet_coefficients(tree: &WaveletPacketTree, packet_idx: usize, level: usize) -> Vec<f64> {
+fn extract_packet_coefficients(
+    tree: &WaveletPacketTree,
+    packet_idx: usize,
+    level: usize,
+) -> Vec<f64> {
     // Extract coefficients for a specific packet from the wavelet packet tree
     if let Some(packet) = tree.get_packet(level, packet_idx) {
         packet.data.clone()
@@ -1046,9 +1054,9 @@ fn compute_frame_coherence(frame_matrix: &Array2<f64>) -> SignalResult<f64> {
     if cols <= 1 {
         return Ok(0.0);
     }
-    
+
     let mut max_coherence = 0.0;
-    
+
     // Normalize columns first
     let mut normalized_matrix = frame_matrix.clone();
     for j in 0..cols {
@@ -1060,7 +1068,7 @@ fn compute_frame_coherence(frame_matrix: &Array2<f64>) -> SignalResult<f64> {
             }
         }
     }
-    
+
     // Compute pairwise inner products
     for i in 0..cols {
         for j in (i + 1)..cols {
@@ -1070,7 +1078,7 @@ fn compute_frame_coherence(frame_matrix: &Array2<f64>) -> SignalResult<f64> {
             max_coherence = max_coherence.max(inner_product);
         }
     }
-    
+
     Ok(max_coherence)
 }
 
@@ -1092,23 +1100,23 @@ fn generate_multiscale_test_signal(length: usize) -> SignalResult<Array1<f64>> {
 
 fn extract_all_coefficients(tree: &WaveletPacketTree) -> Vec<f64> {
     let mut all_coefficients = Vec::new();
-    
+
     // Extract coefficients from all levels and positions in the tree
     for level in 0..=tree.max_level() {
         let num_packets = 2_usize.pow(level as u32);
-        
+
         for position in 0..num_packets {
             if let Some(packet) = tree.get_packet(level, position) {
                 all_coefficients.extend_from_slice(&packet.data);
             }
         }
     }
-    
+
     // If tree is empty, return zeros
     if all_coefficients.is_empty() {
         all_coefficients = vec![0.0; 64];
     }
-    
+
     all_coefficients
 }
 
@@ -1117,9 +1125,9 @@ fn compute_inter_scale_correlations(coeffs: &[Vec<f64>]) -> SignalResult<Array2<
     if n == 0 {
         return Ok(Array2::zeros((0, 0)));
     }
-    
+
     let mut correlation_matrix = Array2::zeros((n, n));
-    
+
     // Compute correlation between each pair of coefficient vectors
     for i in 0..n {
         for j in 0..n {
@@ -1132,7 +1140,7 @@ fn compute_inter_scale_correlations(coeffs: &[Vec<f64>]) -> SignalResult<Array2<
             }
         }
     }
-    
+
     Ok(correlation_matrix)
 }
 
@@ -1140,35 +1148,35 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> SignalResult<f64> {
     if x.is_empty() || y.is_empty() {
         return Ok(0.0);
     }
-    
+
     // Use minimum length to handle different sized vectors
     let n = x.len().min(y.len());
     if n == 0 {
         return Ok(0.0);
     }
-    
+
     // Compute means
     let mean_x = x.iter().take(n).sum::<f64>() / n as f64;
     let mean_y = y.iter().take(n).sum::<f64>() / n as f64;
-    
+
     // Compute covariance and variances
     let mut covariance = 0.0;
     let mut var_x = 0.0;
     let mut var_y = 0.0;
-    
+
     for i in 0..n {
         let dx = x[i] - mean_x;
         let dy = y[i] - mean_y;
-        
+
         covariance += dx * dy;
         var_x += dx * dx;
         var_y += dy * dy;
     }
-    
+
     covariance /= n as f64;
     var_x /= n as f64;
     var_y /= n as f64;
-    
+
     // Compute correlation coefficient
     let denominator = (var_x * var_y).sqrt();
     if denominator < 1e-15 {
@@ -1246,40 +1254,40 @@ fn analyze_error_distribution(errors: &[f64]) -> ErrorDistribution {
             max_error_percentile: 0.0,
         };
     }
-    
+
     let n = errors.len() as f64;
     let mean_error = errors.iter().sum::<f64>() / n;
-    
+
     // Compute central moments
     let mut m2 = 0.0; // Second central moment (variance)
     let mut m3 = 0.0; // Third central moment
     let mut m4 = 0.0; // Fourth central moment
-    
+
     for &error in errors {
         let deviation = error - mean_error;
         let dev2 = deviation * deviation;
         let dev3 = dev2 * deviation;
         let dev4 = dev3 * deviation;
-        
+
         m2 += dev2;
         m3 += dev3;
         m4 += dev4;
     }
-    
+
     m2 /= n;
     m3 /= n;
     m4 /= n;
-    
+
     let error_variance = m2;
     let std_error = m2.sqrt();
-    
+
     // Compute skewness and kurtosis
     let error_skewness = if std_error > 1e-15 {
         m3 / (std_error * std_error * std_error)
     } else {
         0.0
     };
-    
+
     let error_kurtosis = if error_variance > 1e-15 {
         m4 / (error_variance * error_variance) - 3.0 // Excess kurtosis
     } else {
@@ -1308,35 +1316,34 @@ fn compute_confidence_intervals(
 ) -> ConfidenceIntervals {
     let alpha = 1.0 - confidence_level;
     let z_score = 1.96; // Approximate z-score for 95% confidence
-    
+
     // Energy conservation confidence interval
     let energy_conservation_ci = if !energy_ratios.is_empty() {
         let mean = energy_ratios.iter().sum::<f64>() / energy_ratios.len() as f64;
         let variance = energy_ratios
             .iter()
             .map(|&x| (x - mean).powi(2))
-            .sum::<f64>() / energy_ratios.len() as f64;
+            .sum::<f64>()
+            / energy_ratios.len() as f64;
         let std_error = (variance / energy_ratios.len() as f64).sqrt();
         let margin = z_score * std_error;
         (mean - margin, mean + margin)
     } else {
         (0.98, 1.02)
     };
-    
+
     // Reconstruction error confidence interval
     let reconstruction_error_ci = if !errors.is_empty() {
         let mean = errors.iter().sum::<f64>() / errors.len() as f64;
-        let variance = errors
-            .iter()
-            .map(|&x| (x - mean).powi(2))
-            .sum::<f64>() / errors.len() as f64;
+        let variance =
+            errors.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / errors.len() as f64;
         let std_error = (variance / errors.len() as f64).sqrt();
         let margin = z_score * std_error;
         (mean - margin, mean + margin)
     } else {
         (1e-12, 1e-10)
     };
-    
+
     // Frame bounds confidence interval (simplified)
     let frame_bounds_ci = if !energy_ratios.is_empty() {
         let min_ratio = energy_ratios.iter().cloned().fold(f64::INFINITY, f64::min);
@@ -1345,12 +1352,12 @@ fn compute_confidence_intervals(
         let margin = z_score * range / (energy_ratios.len() as f64).sqrt();
         (
             (min_ratio - margin, min_ratio + margin),
-            (max_ratio - margin, max_ratio + margin)
+            (max_ratio - margin, max_ratio + margin),
         )
     } else {
         ((0.8, 1.2), (0.9, 1.1))
     };
-    
+
     ConfidenceIntervals {
         energy_conservation_ci,
         reconstruction_error_ci,
@@ -1369,15 +1376,16 @@ fn run_hypothesis_tests(
         let error_variance = errors
             .iter()
             .map(|&e| (e - mean_error).powi(2))
-            .sum::<f64>() / errors.len() as f64;
-        
+            .sum::<f64>()
+            / errors.len() as f64;
+
         // One-sample t-test against zero
         let t_statistic = if error_variance > 1e-15 {
             mean_error / (error_variance / errors.len() as f64).sqrt()
         } else {
             0.0
         };
-        
+
         // Convert t-statistic to approximate p-value (simplified)
         let abs_t = t_statistic.abs();
         if abs_t > 3.0 {
@@ -1392,12 +1400,12 @@ fn run_hypothesis_tests(
     } else {
         1.0
     };
-    
+
     // Test 2: Energy conservation (energy ratios should be near 1)
     let energy_conservation_pvalue = if !energy_ratios.is_empty() {
         let deviations: Vec<f64> = energy_ratios.iter().map(|&r| (r - 1.0).abs()).collect();
         let mean_deviation = deviations.iter().sum::<f64>() / deviations.len() as f64;
-        
+
         // Test if mean deviation is significantly greater than tolerance
         if mean_deviation > tolerance * 5.0 {
             0.01
@@ -1411,14 +1419,15 @@ fn run_hypothesis_tests(
     } else {
         1.0
     };
-    
+
     // Test 3: Orthogonality (simplified test based on energy conservation)
     let orthogonality_pvalue = if !energy_ratios.is_empty() {
         let variance = energy_ratios
             .iter()
             .map(|&r| (r - 1.0).powi(2))
-            .sum::<f64>() / energy_ratios.len() as f64;
-        
+            .sum::<f64>()
+            / energy_ratios.len() as f64;
+
         // High variance indicates poor orthogonality
         if variance > tolerance.powi(2) * 100.0 {
             0.01
@@ -1430,12 +1439,12 @@ fn run_hypothesis_tests(
     } else {
         1.0
     };
-    
+
     // Test 4: Frame property (based on energy bounds)
     let frame_property_pvalue = if !energy_ratios.is_empty() {
         let min_ratio = energy_ratios.iter().cloned().fold(f64::INFINITY, f64::min);
         let max_ratio = energy_ratios.iter().cloned().fold(0.0, f64::max);
-        
+
         // Frame bounds should be reasonable
         if min_ratio < 0.5 || max_ratio > 2.0 {
             0.01
@@ -1447,7 +1456,7 @@ fn run_hypothesis_tests(
     } else {
         1.0
     };
-    
+
     HypothesisTestResults {
         perfect_reconstruction_pvalue,
         orthogonality_pvalue,

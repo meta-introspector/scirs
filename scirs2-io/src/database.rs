@@ -476,28 +476,28 @@ impl DatabaseConnector {
             DatabaseType::SQLite => Err(IoError::UnsupportedFormat(
                 "SQLite support not enabled. Enable 'sqlite' feature.".to_string(),
             )),
-            
+
             #[cfg(feature = "postgres")]
             DatabaseType::PostgreSQL => Ok(Box::new(PostgreSQLConnection::new(config)?)),
             #[cfg(not(feature = "postgres"))]
             DatabaseType::PostgreSQL => Err(IoError::UnsupportedFormat(
                 "PostgreSQL support not enabled. Enable 'postgres' feature.".to_string(),
             )),
-            
+
             #[cfg(feature = "mysql")]
             DatabaseType::MySQL => Ok(Box::new(MySQLConnection::new(config)?)),
             #[cfg(not(feature = "mysql"))]
             DatabaseType::MySQL => Err(IoError::UnsupportedFormat(
                 "MySQL support not enabled. Enable 'mysql' feature.".to_string(),
             )),
-            
+
             #[cfg(feature = "duckdb")]
             DatabaseType::DuckDB => Ok(Box::new(DuckDBConnection::new(config)?)),
             #[cfg(not(feature = "duckdb"))]
             DatabaseType::DuckDB => Err(IoError::UnsupportedFormat(
                 "DuckDB support not enabled. Enable 'duckdb' feature.".to_string(),
             )),
-            
+
             _ => Err(IoError::UnsupportedFormat(format!(
                 "Database type {:?} not yet implemented",
                 config.db_type
@@ -519,7 +519,7 @@ impl SQLiteConnection {
     fn new(config: &DatabaseConfig) -> Result<Self> {
         let conn = SqliteConn::open(&config.database)
             .map_err(|e| IoError::FileError(format!("Failed to open SQLite database: {}", e)))?;
-        
+
         Ok(Self {
             path: config.database.clone(),
             conn,
@@ -600,7 +600,9 @@ impl DatabaseConnection for SQLiteConnection {
                     }
                 }
                 serde_json::Value::String(s) => rusqlite::types::Value::Text(s.clone()),
-                serde_json::Value::Bool(b) => rusqlite::types::Value::Integer(if *b { 1 } else { 0 }),
+                serde_json::Value::Bool(b) => {
+                    rusqlite::types::Value::Integer(if *b { 1 } else { 0 })
+                }
                 _ => rusqlite::types::Value::Null,
             })
             .collect();
@@ -609,39 +611,57 @@ impl DatabaseConnection for SQLiteConnection {
 
         // Handle different SQL types
         if sql_lower.starts_with("select") || sql_lower.starts_with("explain") {
-            let mut stmt = self.conn.prepare(sql)
-                .map_err(|e| IoError::DatabaseError(format!("Failed to prepare statement: {}", e)))?;
+            let mut stmt = self.conn.prepare(sql).map_err(|e| {
+                IoError::DatabaseError(format!("Failed to prepare statement: {}", e))
+            })?;
 
-            let column_names: Vec<String> = stmt.column_names().iter().map(|s| s.to_string()).collect();
+            let column_names: Vec<String> =
+                stmt.column_names().iter().map(|s| s.to_string()).collect();
             let mut result = ResultSet::new(column_names);
 
-            let rows = stmt.query_map(&rusqlite_params[..], |row| {
-                let mut values = Vec::new();
-                for i in 0..row.column_count() {
-                    let value: rusqlite::types::Value = row.get(i)?;
-                    let json_value = match value {
-                        rusqlite::types::Value::Null => serde_json::Value::Null,
-                        rusqlite::types::Value::Integer(i) => serde_json::Value::Number(serde_json::Number::from(i)),
-                        rusqlite::types::Value::Real(f) => serde_json::Value::Number(serde_json::Number::from_f64(f).unwrap_or_else(|| serde_json::Number::from(0))),
-                        rusqlite::types::Value::Text(s) => serde_json::Value::String(s),
-                        rusqlite::types::Value::Blob(b) => serde_json::Value::String(hex::encode(b)),
-                    };
-                    values.push(json_value);
-                }
-                Ok(values)
-            }).map_err(|e| IoError::DatabaseError(format!("Query execution failed: {}", e)))?;
+            let rows = stmt
+                .query_map(&rusqlite_params[..], |row| {
+                    let mut values = Vec::new();
+                    for i in 0..row.column_count() {
+                        let value: rusqlite::types::Value = row.get(i)?;
+                        let json_value = match value {
+                            rusqlite::types::Value::Null => serde_json::Value::Null,
+                            rusqlite::types::Value::Integer(i) => {
+                                serde_json::Value::Number(serde_json::Number::from(i))
+                            }
+                            rusqlite::types::Value::Real(f) => serde_json::Value::Number(
+                                serde_json::Number::from_f64(f)
+                                    .unwrap_or_else(|| serde_json::Number::from(0)),
+                            ),
+                            rusqlite::types::Value::Text(s) => serde_json::Value::String(s),
+                            rusqlite::types::Value::Blob(b) => {
+                                serde_json::Value::String(hex::encode(b))
+                            }
+                        };
+                        values.push(json_value);
+                    }
+                    Ok(values)
+                })
+                .map_err(|e| IoError::DatabaseError(format!("Query execution failed: {}", e)))?;
 
             for row_result in rows {
                 match row_result {
                     Ok(row) => result.add_row(row),
-                    Err(e) => return Err(IoError::DatabaseError(format!("Row processing failed: {}", e))),
+                    Err(e) => {
+                        return Err(IoError::DatabaseError(format!(
+                            "Row processing failed: {}",
+                            e
+                        )))
+                    }
                 }
             }
 
             Ok(result)
         } else {
             // Handle INSERT, UPDATE, DELETE, CREATE, etc.
-            let affected_rows = self.conn.execute(sql, &rusqlite_params[..])
+            let affected_rows = self
+                .conn
+                .execute(sql, &rusqlite_params[..])
                 .map_err(|e| IoError::DatabaseError(format!("SQL execution failed: {}", e)))?;
 
             let mut result = ResultSet::new(vec!["rows_affected".to_string()]);
@@ -650,12 +670,7 @@ impl DatabaseConnection for SQLiteConnection {
         }
     }
 
-    fn insert_array(
-        &self,
-        table: &str,
-        data: ArrayView2<f64>,
-        columns: &[&str],
-    ) -> Result<usize> {
+    fn insert_array(&self, table: &str, data: ArrayView2<f64>, columns: &[&str]) -> Result<usize> {
         if columns.len() != data.ncols() {
             return Err(IoError::ValidationError(
                 "Number of columns doesn't match array dimensions".to_string(),
@@ -670,15 +685,17 @@ impl DatabaseConnection for SQLiteConnection {
             placeholders.join(", ")
         );
 
-        let mut stmt = self.conn.prepare(&sql)
-            .map_err(|e| IoError::DatabaseError(format!("Failed to prepare insert statement: {}", e)))?;
+        let mut stmt = self.conn.prepare(&sql).map_err(|e| {
+            IoError::DatabaseError(format!("Failed to prepare insert statement: {}", e))
+        })?;
 
         let mut inserted = 0;
         for row in data.rows() {
-            let params: Vec<rusqlite::types::Value> = row.iter()
+            let params: Vec<rusqlite::types::Value> = row
+                .iter()
                 .map(|&v| rusqlite::types::Value::Real(v))
                 .collect();
-            
+
             stmt.execute(&params[..])
                 .map_err(|e| IoError::DatabaseError(format!("Insert failed: {}", e)))?;
             inserted += 1;
@@ -689,22 +706,27 @@ impl DatabaseConnection for SQLiteConnection {
 
     fn create_table(&self, table: &str, schema: &TableSchema) -> Result<()> {
         let mut sql = format!("CREATE TABLE {} (", table);
-        
-        let column_defs: Vec<String> = schema.columns.iter().map(|col| {
-            let sql_type = self.data_type_to_sql(&col.data_type);
-            let nullable = if col.nullable { "" } else { " NOT NULL" };
-            format!("{} {}{}", col.name, sql_type, nullable)
-        }).collect();
-        
+
+        let column_defs: Vec<String> = schema
+            .columns
+            .iter()
+            .map(|col| {
+                let sql_type = self.data_type_to_sql(&col.data_type);
+                let nullable = if col.nullable { "" } else { " NOT NULL" };
+                format!("{} {}{}", col.name, sql_type, nullable)
+            })
+            .collect();
+
         sql.push_str(&column_defs.join(", "));
-        
+
         if let Some(ref pk) = schema.primary_key {
             sql.push_str(&format!(", PRIMARY KEY ({})", pk.join(", ")));
         }
-        
+
         sql.push(')');
 
-        self.conn.execute(&sql, [])
+        self.conn
+            .execute(&sql, [])
             .map_err(|e| IoError::DatabaseError(format!("Failed to create table: {}", e)))?;
 
         // Create indexes
@@ -712,9 +734,13 @@ impl DatabaseConnection for SQLiteConnection {
             let unique = if index.unique { "UNIQUE " } else { "" };
             let index_sql = format!(
                 "CREATE {}INDEX {} ON {} ({})",
-                unique, index.name, table, index.columns.join(", ")
+                unique,
+                index.name,
+                table,
+                index.columns.join(", ")
             );
-            self.conn.execute(&index_sql, [])
+            self.conn
+                .execute(&index_sql, [])
                 .map_err(|e| IoError::DatabaseError(format!("Failed to create index: {}", e)))?;
         }
 
@@ -723,36 +749,43 @@ impl DatabaseConnection for SQLiteConnection {
 
     fn table_exists(&self, table: &str) -> Result<bool> {
         let sql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?";
-        let mut stmt = self.conn.prepare(sql)
+        let mut stmt = self
+            .conn
+            .prepare(sql)
             .map_err(|e| IoError::DatabaseError(format!("Failed to prepare statement: {}", e)))?;
-        
-        let count: i64 = stmt.query_row([table], |row| row.get(0))
+
+        let count: i64 = stmt
+            .query_row([table], |row| row.get(0))
             .map_err(|e| IoError::DatabaseError(format!("Table existence check failed: {}", e)))?;
-        
+
         Ok(count > 0)
     }
 
     fn get_schema(&self, table: &str) -> Result<TableSchema> {
         let sql = format!("PRAGMA table_info({})", table);
-        let mut stmt = self.conn.prepare(&sql)
-            .map_err(|e| IoError::DatabaseError(format!("Failed to prepare schema query: {}", e)))?;
+        let mut stmt = self.conn.prepare(&sql).map_err(|e| {
+            IoError::DatabaseError(format!("Failed to prepare schema query: {}", e))
+        })?;
 
         let mut columns = Vec::new();
-        let rows = stmt.query_map([], |row| {
-            let name: String = row.get(1)?;
-            let type_str: String = row.get(2)?;
-            let not_null: bool = row.get(3)?;
-            let default_value: Option<String> = row.get(4)?;
-            Ok((name, type_str, not_null, default_value))
-        }).map_err(|e| IoError::DatabaseError(format!("Schema query failed: {}", e)))?;
+        let rows = stmt
+            .query_map([], |row| {
+                let name: String = row.get(1)?;
+                let type_str: String = row.get(2)?;
+                let not_null: bool = row.get(3)?;
+                let default_value: Option<String> = row.get(4)?;
+                Ok((name, type_str, not_null, default_value))
+            })
+            .map_err(|e| IoError::DatabaseError(format!("Schema query failed: {}", e)))?;
 
         for row_result in rows {
-            let (name, type_str, not_null, default_value) = row_result
-                .map_err(|e| IoError::DatabaseError(format!("Schema row processing failed: {}", e)))?;
-            
+            let (name, type_str, not_null, default_value) = row_result.map_err(|e| {
+                IoError::DatabaseError(format!("Schema row processing failed: {}", e))
+            })?;
+
             let data_type = self.sql_type_to_data_type(&type_str);
             let default = default_value.map(|v| serde_json::Value::String(v));
-            
+
             columns.push(ColumnDef {
                 name,
                 data_type,
@@ -765,7 +798,7 @@ impl DatabaseConnection for SQLiteConnection {
             name: table.to_string(),
             columns,
             primary_key: None, // Would need additional query to get primary key info
-            indexes: vec![], // Would need additional query to get index info
+            indexes: vec![],   // Would need additional query to get index info
         })
     }
 }
@@ -890,22 +923,44 @@ pub mod bulk {
 /// PostgreSQL connection implementation  
 #[cfg(feature = "postgres")]
 struct PostgreSQLConnection {
-    #[allow(dead_code)]
     config: DatabaseConfig,
-    // Note: In a real implementation, would store actual PgPool connection
+    pool: Option<PgPool>,
 }
 
 #[cfg(feature = "postgres")]
 impl PostgreSQLConnection {
-    fn new(config: &DatabaseConfig) -> Result<Self> {
-        // In a real implementation, would create actual connection:
-        // let pool = PgPoolOptions::new()
-        //     .max_connections(5)
-        //     .connect(&config.connection_string()).await?;
-        
+    async fn new(config: &DatabaseConfig) -> Result<Self> {
+        // Create actual PostgreSQL connection pool
+        let connection_string = Self::build_connection_string(config);
+
+        let pool = PgPoolOptions::new()
+            .max_connections(
+                config
+                    .options
+                    .get("max_connections")
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5),
+            )
+            .connect(&connection_string)
+            .await
+            .map_err(|e| IoError::NetworkError(format!("PostgreSQL connection failed: {}", e)))?;
+
         Ok(Self {
             config: config.clone(),
+            pool: Some(pool),
         })
+    }
+
+    fn build_connection_string(config: &DatabaseConfig) -> String {
+        let host = config.host.as_deref().unwrap_or("localhost");
+        let port = config.port.unwrap_or(5432);
+        let user = config.username.as_deref().unwrap_or("postgres");
+        let password = config.password.as_deref().unwrap_or("");
+
+        format!(
+            "postgresql://{}:{}@{}:{}/{}",
+            user, password, host, port, config.database
+        )
     }
 }
 
@@ -913,49 +968,366 @@ impl PostgreSQLConnection {
 impl DatabaseConnection for PostgreSQLConnection {
     fn query(&self, query: &QueryBuilder) -> Result<ResultSet> {
         let sql = query.build_sql();
-        self.execute_sql(&sql, &[])
+        let params = &query.values;
+        self.execute_sql(&sql, params)
     }
 
-    fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
-        // Mock PostgreSQL implementation
-        let mut result = ResultSet::new(vec![]);
+    fn execute_sql(&self, sql: &str, params: &[serde_json::Value]) -> Result<ResultSet> {
+        use sqlx::{Column, Row, TypeInfo};
 
-        let sql_lower = sql.to_lowercase();
+        let pool = self.pool.as_ref().ok_or_else(|| {
+            IoError::ConnectionError("PostgreSQL pool not initialized".to_string())
+        })?;
 
-        if sql_lower.contains("select") {
-            result = ResultSet::new(vec!["id".to_string(), "data".to_string()]);
-            result.add_row(vec![
-                serde_json::json!(1),
-                serde_json::json!("postgresql_data"),
-            ]);
+        // Execute query in a blocking context
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| IoError::NetworkError(format!("Failed to create async runtime: {}", e)))?;
+
+        rt.block_on(async {
+            // Convert params to sqlx format
+            let mut query = sqlx::query(sql);
+            for param in params {
+                match param {
+                    serde_json::Value::String(s) => query = query.bind(s),
+                    serde_json::Value::Number(n) => {
+                        if let Some(i) = n.as_i64() {
+                            query = query.bind(i);
+                        } else if let Some(f) = n.as_f64() {
+                            query = query.bind(f);
+                        }
+                    }
+                    serde_json::Value::Bool(b) => query = query.bind(*b),
+                    serde_json::Value::Null => query = query.bind(Option::<String>::None),
+                    _ => query = query.bind(param.to_string()),
+                }
+            }
+
+            let rows = query
+                .fetch_all(pool)
+                .await
+                .map_err(|e| IoError::DatabaseError(format!("PostgreSQL query failed: {}", e)))?;
+
+            if rows.is_empty() {
+                return Ok(ResultSet::new(vec![]));
+            }
+
+            // Extract column names
+            let columns: Vec<String> = rows[0]
+                .columns()
+                .iter()
+                .map(|col| col.name().to_string())
+                .collect();
+
+            let mut result = ResultSet::new(columns);
+
+            // Convert rows to JSON values
+            for row in rows {
+                let mut row_data = Vec::new();
+                for (i, column) in row.columns().iter().enumerate() {
+                    let value = match column.type_info().name() {
+                        "INT4" | "INTEGER" => {
+                            if let Ok(val) = row.try_get::<i32, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        "INT8" | "BIGINT" => {
+                            if let Ok(val) = row.try_get::<i64, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        "FLOAT4" | "REAL" => {
+                            if let Ok(val) = row.try_get::<f32, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        "FLOAT8" | "DOUBLE PRECISION" => {
+                            if let Ok(val) = row.try_get::<f64, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        "VARCHAR" | "TEXT" | "CHAR" => {
+                            if let Ok(val) = row.try_get::<String, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        "BOOL" => {
+                            if let Ok(val) = row.try_get::<bool, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        _ => {
+                            // Fallback to string conversion
+                            if let Ok(val) = row.try_get::<String, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                    };
+                    row_data.push(value);
+                }
+                result.add_row(row_data);
+            }
+
+            Ok(result)
+        })
+    }
+
+    fn insert_array(&self, table: &str, data: ArrayView2<f64>, columns: &[&str]) -> Result<usize> {
+        let pool = self.pool.as_ref().ok_or_else(|| {
+            IoError::ConnectionError("PostgreSQL pool not initialized".to_string())
+        })?;
+
+        if columns.len() != data.ncols() {
+            return Err(IoError::ValidationError(
+                "Number of columns doesn't match data dimensions".to_string(),
+            ));
         }
 
-        Ok(result)
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| IoError::NetworkError(format!("Failed to create async runtime: {}", e)))?;
+
+        rt.block_on(async {
+            let mut transaction = pool.begin().await.map_err(|e| {
+                IoError::DatabaseError(format!("Failed to begin transaction: {}", e))
+            })?;
+
+            let placeholders: Vec<String> =
+                (1..=columns.len()).map(|i| format!("${}", i)).collect();
+
+            let insert_sql = format!(
+                "INSERT INTO {} ({}) VALUES ({})",
+                table,
+                columns.join(", "),
+                placeholders.join(", ")
+            );
+
+            let mut rows_inserted = 0;
+            for row in data.rows() {
+                let mut query = sqlx::query(&insert_sql);
+                for &value in row.iter() {
+                    query = query.bind(value);
+                }
+
+                query
+                    .execute(&mut *transaction)
+                    .await
+                    .map_err(|e| IoError::DatabaseError(format!("Insert failed: {}", e)))?;
+                rows_inserted += 1;
+            }
+
+            transaction
+                .commit()
+                .await
+                .map_err(|e| IoError::DatabaseError(format!("Transaction commit failed: {}", e)))?;
+
+            Ok(rows_inserted)
+        })
     }
 
-    fn insert_array(
-        &self,
-        _table: &str,
-        data: ArrayView2<f64>,
-        _columns: &[&str],
-    ) -> Result<usize> {
-        Ok(data.nrows())
+    fn create_table(&self, table: &str, schema: &TableSchema) -> Result<()> {
+        let pool = self.pool.as_ref().ok_or_else(|| {
+            IoError::ConnectionError("PostgreSQL pool not initialized".to_string())
+        })?;
+
+        let mut create_sql = format!("CREATE TABLE {} (", table);
+
+        let column_defs: Vec<String> = schema
+            .columns
+            .iter()
+            .map(|col| {
+                let pg_type = match col.data_type {
+                    DataType::Integer => "INTEGER",
+                    DataType::BigInt => "BIGINT",
+                    DataType::Float => "REAL",
+                    DataType::Double => "DOUBLE PRECISION",
+                    DataType::Decimal(p, s) => return format!("DECIMAL({}, {})", p, s),
+                    DataType::Varchar(len) => return format!("VARCHAR({})", len),
+                    DataType::Text => "TEXT",
+                    DataType::Boolean => "BOOLEAN",
+                    DataType::Date => "DATE",
+                    DataType::Timestamp => "TIMESTAMP",
+                    DataType::Json => "JSONB",
+                    DataType::Binary => "BYTEA",
+                };
+
+                let nullable = if col.nullable { "" } else { " NOT NULL" };
+                format!("{} {}{}", col.name, pg_type, nullable)
+            })
+            .collect();
+
+        create_sql.push_str(&column_defs.join(", "));
+
+        if let Some(ref pk_cols) = schema.primary_key {
+            create_sql.push_str(&format!(", PRIMARY KEY ({})", pk_cols.join(", ")));
+        }
+
+        create_sql.push(')');
+
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| IoError::NetworkError(format!("Failed to create async runtime: {}", e)))?;
+
+        rt.block_on(async {
+            sqlx::query(&create_sql)
+                .execute(pool)
+                .await
+                .map_err(|e| IoError::DatabaseError(format!("Table creation failed: {}", e)))?;
+            Ok(())
+        })
     }
 
-    fn create_table(&self, _table: &str, _schema: &TableSchema) -> Result<()> {
-        Ok(())
-    }
+    fn table_exists(&self, table: &str) -> Result<bool> {
+        let pool = self.pool.as_ref().ok_or_else(|| {
+            IoError::ConnectionError("PostgreSQL pool not initialized".to_string())
+        })?;
 
-    fn table_exists(&self, _table: &str) -> Result<bool> {
-        Ok(true)
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| IoError::NetworkError(format!("Failed to create async runtime: {}", e)))?;
+
+        rt.block_on(async {
+            let row: (i64,) = sqlx::query_as(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = $1",
+            )
+            .bind(table)
+            .fetch_one(pool)
+            .await
+            .map_err(|e| IoError::DatabaseError(format!("Table existence check failed: {}", e)))?;
+
+            Ok(row.0 > 0)
+        })
     }
 
     fn get_schema(&self, table: &str) -> Result<TableSchema> {
-        Ok(TableSchema {
-            name: table.to_string(),
-            columns: vec![],
-            primary_key: None,
-            indexes: vec![],
+        let pool = self.pool.as_ref().ok_or_else(|| {
+            IoError::ConnectionError("PostgreSQL pool not initialized".to_string())
+        })?;
+
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| IoError::NetworkError(format!("Failed to create async runtime: {}", e)))?;
+
+        rt.block_on(async {
+            // Get column information
+            let column_rows = sqlx::query(
+                r#"
+                SELECT column_name, data_type, is_nullable, column_default
+                FROM information_schema.columns 
+                WHERE table_name = $1
+                ORDER BY ordinal_position
+                "#,
+            )
+            .bind(table)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| IoError::DatabaseError(format!("Schema query failed: {}", e)))?;
+
+            let mut columns = Vec::new();
+            for row in column_rows {
+                let column_name: String = row.get(0);
+                let data_type_str: String = row.get(1);
+                let is_nullable: String = row.get(2);
+                let column_default: Option<String> = row.get(3);
+
+                let data_type = match data_type_str.as_str() {
+                    "integer" => DataType::Integer,
+                    "bigint" => DataType::BigInt,
+                    "real" => DataType::Float,
+                    "double precision" => DataType::Double,
+                    s if s.starts_with("character varying") => DataType::Varchar(255),
+                    "text" => DataType::Text,
+                    "boolean" => DataType::Boolean,
+                    "date" => DataType::Date,
+                    "timestamp without time zone" => DataType::Timestamp,
+                    "jsonb" | "json" => DataType::Json,
+                    "bytea" => DataType::Binary,
+                    _ => DataType::Text, // Default fallback
+                };
+
+                columns.push(ColumnDef {
+                    name: column_name,
+                    data_type,
+                    nullable: is_nullable == "YES",
+                    default: column_default.map(|s| serde_json::Value::String(s)),
+                });
+            }
+
+            // Get primary key information
+            let pk_rows = sqlx::query(
+                r#"
+                SELECT a.attname
+                FROM pg_index i
+                JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+                WHERE i.indrelid = $1::regclass AND i.indisprimary
+                "#,
+            )
+            .bind(table)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| IoError::DatabaseError(format!("Primary key query failed: {}", e)))?;
+
+            let primary_key = if pk_rows.is_empty() {
+                None
+            } else {
+                Some(
+                    pk_rows
+                        .into_iter()
+                        .map(|row| row.get::<String, _>(0))
+                        .collect(),
+                )
+            };
+
+            // Get index information
+            let index_rows = sqlx::query(
+                r#"
+                SELECT 
+                    i.relname as index_name,
+                    array_agg(a.attname ORDER BY c.ordinality) as column_names,
+                    ix.indisunique as is_unique
+                FROM pg_class t
+                JOIN pg_index ix ON t.oid = ix.indrelid
+                JOIN pg_class i ON i.oid = ix.indexrelid
+                JOIN pg_attribute a ON a.attrelid = t.oid
+                JOIN unnest(ix.indkey) WITH ORDINALITY c(attnum, ordinality) ON a.attnum = c.attnum
+                WHERE t.relname = $1 AND ix.indisprimary = false
+                GROUP BY i.relname, ix.indisunique
+                ORDER BY i.relname
+                "#,
+            )
+            .bind(table)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| IoError::DatabaseError(format!("Index query failed: {}", e)))?;
+
+            let mut indexes = Vec::new();
+            for row in index_rows {
+                let index_name: String = row.get(0);
+                let column_names: Vec<String> = row.get(1);
+                let is_unique: bool = row.get(2);
+
+                indexes.push(Index {
+                    name: index_name,
+                    columns: column_names,
+                    unique: is_unique,
+                });
+            }
+
+            Ok(TableSchema {
+                name: table.to_string(),
+                columns,
+                primary_key,
+                indexes,
+            })
         })
     }
 }
@@ -963,22 +1335,44 @@ impl DatabaseConnection for PostgreSQLConnection {
 /// MySQL connection implementation
 #[cfg(feature = "mysql")]
 struct MySQLConnection {
-    #[allow(dead_code)]
     config: DatabaseConfig,
-    // Note: In a real implementation, would store actual MySqlPool connection
+    pool: Option<MySqlPool>,
 }
 
 #[cfg(feature = "mysql")]
 impl MySQLConnection {
-    fn new(config: &DatabaseConfig) -> Result<Self> {
-        // In a real implementation, would create actual connection:
-        // let pool = MySqlPoolOptions::new()
-        //     .max_connections(5)
-        //     .connect(&config.connection_string()).await?;
-        
+    async fn new(config: &DatabaseConfig) -> Result<Self> {
+        // Create actual MySQL connection pool
+        let connection_string = Self::build_connection_string(config);
+
+        let pool = MySqlPoolOptions::new()
+            .max_connections(
+                config
+                    .options
+                    .get("max_connections")
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5),
+            )
+            .connect(&connection_string)
+            .await
+            .map_err(|e| IoError::NetworkError(format!("MySQL connection failed: {}", e)))?;
+
         Ok(Self {
             config: config.clone(),
+            pool: Some(pool),
         })
+    }
+
+    fn build_connection_string(config: &DatabaseConfig) -> String {
+        let host = config.host.as_deref().unwrap_or("localhost");
+        let port = config.port.unwrap_or(3306);
+        let user = config.username.as_deref().unwrap_or("root");
+        let password = config.password.as_deref().unwrap_or("");
+
+        format!(
+            "mysql://{}:{}@{}:{}/{}",
+            user, password, host, port, config.database
+        )
     }
 }
 
@@ -986,46 +1380,371 @@ impl MySQLConnection {
 impl DatabaseConnection for MySQLConnection {
     fn query(&self, query: &QueryBuilder) -> Result<ResultSet> {
         let sql = query.build_sql();
-        self.execute_sql(&sql, &[])
+        let params = &query.values;
+        self.execute_sql(&sql, params)
     }
 
-    fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
-        // Mock MySQL implementation
-        let mut result = ResultSet::new(vec![]);
+    fn execute_sql(&self, sql: &str, params: &[serde_json::Value]) -> Result<ResultSet> {
+        use sqlx::{Column, Row, TypeInfo};
 
-        let sql_lower = sql.to_lowercase();
+        let pool = self
+            .pool
+            .as_ref()
+            .ok_or_else(|| IoError::ConnectionError("MySQL pool not initialized".to_string()))?;
 
-        if sql_lower.contains("select") {
-            result = ResultSet::new(vec!["id".to_string(), "data".to_string()]);
-            result.add_row(vec![serde_json::json!(1), serde_json::json!("mysql_data")]);
+        // Execute query in a blocking context
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| IoError::NetworkError(format!("Failed to create async runtime: {}", e)))?;
+
+        rt.block_on(async {
+            // Convert params to sqlx format
+            let mut query = sqlx::query(sql);
+            for param in params {
+                match param {
+                    serde_json::Value::String(s) => query = query.bind(s),
+                    serde_json::Value::Number(n) => {
+                        if let Some(i) = n.as_i64() {
+                            query = query.bind(i);
+                        } else if let Some(f) = n.as_f64() {
+                            query = query.bind(f);
+                        }
+                    }
+                    serde_json::Value::Bool(b) => query = query.bind(*b),
+                    serde_json::Value::Null => query = query.bind(Option::<String>::None),
+                    _ => query = query.bind(param.to_string()),
+                }
+            }
+
+            let rows = query
+                .fetch_all(pool)
+                .await
+                .map_err(|e| IoError::DatabaseError(format!("MySQL query failed: {}", e)))?;
+
+            if rows.is_empty() {
+                return Ok(ResultSet::new(vec![]));
+            }
+
+            // Extract column names
+            let columns: Vec<String> = rows[0]
+                .columns()
+                .iter()
+                .map(|col| col.name().to_string())
+                .collect();
+
+            let mut result = ResultSet::new(columns);
+
+            // Convert rows to JSON values
+            for row in rows {
+                let mut row_data = Vec::new();
+                for (i, column) in row.columns().iter().enumerate() {
+                    let value = match column.type_info().name() {
+                        "TINY" | "SHORT" | "LONG" => {
+                            if let Ok(val) = row.try_get::<i32, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        "LONGLONG" => {
+                            if let Ok(val) = row.try_get::<i64, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        "FLOAT" => {
+                            if let Ok(val) = row.try_get::<f32, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        "DOUBLE" => {
+                            if let Ok(val) = row.try_get::<f64, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        "VARCHAR" | "TEXT" | "CHAR" | "VAR_STRING" => {
+                            if let Ok(val) = row.try_get::<String, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        "TINY" if column.type_info().name() == "BOOLEAN" => {
+                            if let Ok(val) = row.try_get::<bool, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                        _ => {
+                            // Fallback to string conversion
+                            if let Ok(val) = row.try_get::<String, _>(i) {
+                                serde_json::json!(val)
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        }
+                    };
+                    row_data.push(value);
+                }
+                result.add_row(row_data);
+            }
+
+            Ok(result)
+        })
+    }
+
+    fn insert_array(&self, table: &str, data: ArrayView2<f64>, columns: &[&str]) -> Result<usize> {
+        let pool = self
+            .pool
+            .as_ref()
+            .ok_or_else(|| IoError::ConnectionError("MySQL pool not initialized".to_string()))?;
+
+        if columns.len() != data.ncols() {
+            return Err(IoError::ValidationError(
+                "Number of columns doesn't match data dimensions".to_string(),
+            ));
         }
 
-        Ok(result)
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| IoError::NetworkError(format!("Failed to create async runtime: {}", e)))?;
+
+        rt.block_on(async {
+            let mut transaction = pool.begin().await.map_err(|e| {
+                IoError::DatabaseError(format!("Failed to begin transaction: {}", e))
+            })?;
+
+            let placeholders: Vec<String> = (0..columns.len()).map(|_| "?".to_string()).collect();
+
+            let insert_sql = format!(
+                "INSERT INTO {} ({}) VALUES ({})",
+                table,
+                columns.join(", "),
+                placeholders.join(", ")
+            );
+
+            let mut rows_inserted = 0;
+            for row in data.rows() {
+                let mut query = sqlx::query(&insert_sql);
+                for &value in row.iter() {
+                    query = query.bind(value);
+                }
+
+                query
+                    .execute(&mut *transaction)
+                    .await
+                    .map_err(|e| IoError::DatabaseError(format!("Insert failed: {}", e)))?;
+                rows_inserted += 1;
+            }
+
+            transaction
+                .commit()
+                .await
+                .map_err(|e| IoError::DatabaseError(format!("Transaction commit failed: {}", e)))?;
+
+            Ok(rows_inserted)
+        })
     }
 
-    fn insert_array(
-        &self,
-        _table: &str,
-        data: ArrayView2<f64>,
-        _columns: &[&str],
-    ) -> Result<usize> {
-        Ok(data.nrows())
+    fn create_table(&self, table: &str, schema: &TableSchema) -> Result<()> {
+        let pool = self
+            .pool
+            .as_ref()
+            .ok_or_else(|| IoError::ConnectionError("MySQL pool not initialized".to_string()))?;
+
+        let mut create_sql = format!("CREATE TABLE {} (", table);
+
+        let column_defs: Vec<String> = schema
+            .columns
+            .iter()
+            .map(|col| {
+                let mysql_type = match col.data_type {
+                    DataType::Integer => "INT",
+                    DataType::BigInt => "BIGINT",
+                    DataType::Float => "FLOAT",
+                    DataType::Double => "DOUBLE",
+                    DataType::Decimal(p, s) => return format!("DECIMAL({}, {})", p, s),
+                    DataType::Varchar(len) => return format!("VARCHAR({})", len),
+                    DataType::Text => "TEXT",
+                    DataType::Boolean => "BOOLEAN",
+                    DataType::Date => "DATE",
+                    DataType::Timestamp => "TIMESTAMP",
+                    DataType::Json => "JSON",
+                    DataType::Binary => "BLOB",
+                };
+
+                let nullable = if col.nullable { "" } else { " NOT NULL" };
+                format!("{} {}{}", col.name, mysql_type, nullable)
+            })
+            .collect();
+
+        create_sql.push_str(&column_defs.join(", "));
+
+        if let Some(ref pk_cols) = schema.primary_key {
+            create_sql.push_str(&format!(", PRIMARY KEY ({})", pk_cols.join(", ")));
+        }
+
+        create_sql.push(')');
+
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| IoError::NetworkError(format!("Failed to create async runtime: {}", e)))?;
+
+        rt.block_on(async {
+            sqlx::query(&create_sql)
+                .execute(pool)
+                .await
+                .map_err(|e| IoError::DatabaseError(format!("Table creation failed: {}", e)))?;
+            Ok(())
+        })
     }
 
-    fn create_table(&self, _table: &str, _schema: &TableSchema) -> Result<()> {
-        Ok(())
-    }
+    fn table_exists(&self, table: &str) -> Result<bool> {
+        let pool = self
+            .pool
+            .as_ref()
+            .ok_or_else(|| IoError::ConnectionError("MySQL pool not initialized".to_string()))?;
 
-    fn table_exists(&self, _table: &str) -> Result<bool> {
-        Ok(true)
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| IoError::NetworkError(format!("Failed to create async runtime: {}", e)))?;
+
+        rt.block_on(async {
+            let row: (i64,) = sqlx::query_as(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = ?",
+            )
+            .bind(table)
+            .fetch_one(pool)
+            .await
+            .map_err(|e| IoError::DatabaseError(format!("Table existence check failed: {}", e)))?;
+
+            Ok(row.0 > 0)
+        })
     }
 
     fn get_schema(&self, table: &str) -> Result<TableSchema> {
-        Ok(TableSchema {
-            name: table.to_string(),
-            columns: vec![],
-            primary_key: None,
-            indexes: vec![],
+        let pool = self
+            .pool
+            .as_ref()
+            .ok_or_else(|| IoError::ConnectionError("MySQL pool not initialized".to_string()))?;
+
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| IoError::NetworkError(format!("Failed to create async runtime: {}", e)))?;
+
+        rt.block_on(async {
+            // Get column information
+            let column_rows = sqlx::query(
+                r#"
+                SELECT column_name, data_type, is_nullable, column_default
+                FROM information_schema.columns 
+                WHERE table_name = ?
+                ORDER BY ordinal_position
+                "#,
+            )
+            .bind(table)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| IoError::DatabaseError(format!("Schema query failed: {}", e)))?;
+
+            let mut columns = Vec::new();
+            for row in column_rows {
+                let column_name: String = row.get(0);
+                let data_type_str: String = row.get(1);
+                let is_nullable: String = row.get(2);
+                let column_default: Option<String> = row.get(3);
+
+                let data_type = match data_type_str.to_lowercase().as_str() {
+                    "int" | "integer" => DataType::Integer,
+                    "bigint" => DataType::BigInt,
+                    "float" => DataType::Float,
+                    "double" => DataType::Double,
+                    s if s.starts_with("varchar") => DataType::Varchar(255),
+                    "text" => DataType::Text,
+                    "tinyint" => DataType::Boolean, // MySQL uses TINYINT for boolean
+                    "date" => DataType::Date,
+                    "timestamp" | "datetime" => DataType::Timestamp,
+                    "json" => DataType::Json,
+                    "blob" => DataType::Binary,
+                    _ => DataType::Text, // Default fallback
+                };
+
+                columns.push(ColumnDef {
+                    name: column_name,
+                    data_type,
+                    nullable: is_nullable == "YES",
+                    default: column_default.map(|s| serde_json::Value::String(s)),
+                });
+            }
+
+            // Get primary key information
+            let pk_rows = sqlx::query(
+                r#"
+                SELECT column_name
+                FROM information_schema.key_column_usage
+                WHERE table_name = ? AND constraint_name = 'PRIMARY'
+                ORDER BY ordinal_position
+                "#,
+            )
+            .bind(table)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| IoError::DatabaseError(format!("Primary key query failed: {}", e)))?;
+
+            let primary_key = if pk_rows.is_empty() {
+                None
+            } else {
+                Some(
+                    pk_rows
+                        .into_iter()
+                        .map(|row| row.get::<String, _>(0))
+                        .collect(),
+                )
+            };
+
+            // Get index information
+            let index_rows = sqlx::query(
+                r#"
+                SELECT 
+                    s.index_name,
+                    GROUP_CONCAT(s.column_name ORDER BY s.seq_in_index) as column_names,
+                    CASE WHEN s.non_unique = 0 THEN true ELSE false END as is_unique
+                FROM information_schema.statistics s
+                WHERE s.table_name = ? AND s.index_name != 'PRIMARY'
+                GROUP BY s.index_name, s.non_unique
+                ORDER BY s.index_name
+                "#,
+            )
+            .bind(table)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| IoError::DatabaseError(format!("Index query failed: {}", e)))?;
+
+            let mut indexes = Vec::new();
+            for row in index_rows {
+                let index_name: String = row.get(0);
+                let column_names_str: String = row.get(1);
+                let is_unique: bool = row.get(2);
+
+                let column_names: Vec<String> = column_names_str
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .collect();
+
+                indexes.push(Index {
+                    name: index_name,
+                    columns: column_names,
+                    unique: is_unique,
+                });
+            }
+
+            Ok(TableSchema {
+                name: table.to_string(),
+                columns,
+                primary_key,
+                indexes,
+            })
         })
     }
 }
@@ -1033,19 +1752,24 @@ impl DatabaseConnection for MySQLConnection {
 /// DuckDB connection implementation (analytical database)
 #[cfg(feature = "duckdb")]
 struct DuckDBConnection {
-    #[allow(dead_code)]
     config: DatabaseConfig,
-    // Note: In a real implementation, would store actual DuckDB connection
+    connection: Option<DuckdbConn>,
 }
 
 #[cfg(feature = "duckdb")]
 impl DuckDBConnection {
     fn new(config: &DatabaseConfig) -> Result<Self> {
-        // In a real implementation, would create actual connection:
-        // let conn = DuckdbConn::open(&config.database)?;
-        
+        // Create actual DuckDB connection
+        let conn = if config.database == ":memory:" {
+            DuckdbConn::open_in_memory()
+        } else {
+            DuckdbConn::open(&config.database)
+        }
+        .map_err(|e| IoError::ConnectionError(format!("DuckDB connection failed: {}", e)))?;
+
         Ok(Self {
             config: config.clone(),
+            connection: Some(conn),
         })
     }
 }
@@ -1054,62 +1778,335 @@ impl DuckDBConnection {
 impl DatabaseConnection for DuckDBConnection {
     fn query(&self, query: &QueryBuilder) -> Result<ResultSet> {
         let sql = query.build_sql();
-        self.execute_sql(&sql, &[])
+        let params = &query.values;
+        self.execute_sql(&sql, params)
     }
 
-    fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
-        // Mock DuckDB implementation - optimized for analytics
-        let mut result = ResultSet::new(vec![]);
+    fn execute_sql(&self, sql: &str, params: &[serde_json::Value]) -> Result<ResultSet> {
+        use duckdb::params_from_iter;
 
-        let sql_lower = sql.to_lowercase();
+        let conn = self.connection.as_ref().ok_or_else(|| {
+            IoError::ConnectionError("DuckDB connection not initialized".to_string())
+        })?;
 
-        if sql_lower.contains("select") {
-            // Return analytical data
-            result = ResultSet::new(vec![
-                "metric".to_string(),
-                "count".to_string(),
-                "avg_value".to_string(),
-            ]);
+        // Convert JSON params to DuckDB values
+        let duck_params: Vec<&dyn duckdb::ToSql> = params
+            .iter()
+            .map(|p| match p {
+                serde_json::Value::String(s) => s as &dyn duckdb::ToSql,
+                serde_json::Value::Number(n) => {
+                    if n.is_i64() {
+                        &n.as_i64().unwrap() as &dyn duckdb::ToSql
+                    } else {
+                        &n.as_f64().unwrap() as &dyn duckdb::ToSql
+                    }
+                }
+                serde_json::Value::Bool(b) => b as &dyn duckdb::ToSql,
+                serde_json::Value::Null => &None::<String> as &dyn duckdb::ToSql,
+                _ => &p.to_string() as &dyn duckdb::ToSql,
+            })
+            .collect();
 
-            result.add_row(vec![
-                serde_json::json!("performance"),
-                serde_json::json!(1000),
-                serde_json::json!(95.5),
-            ]);
-            result.add_row(vec![
-                serde_json::json!("throughput"),
-                serde_json::json!(2500),
-                serde_json::json!(87.2),
-            ]);
+        let mut stmt = conn.prepare(sql).map_err(|e| {
+            IoError::DatabaseError(format!("DuckDB query preparation failed: {}", e))
+        })?;
+
+        let column_count = stmt.column_count();
+        let mut column_names = Vec::new();
+        for i in 0..column_count {
+            column_names.push(stmt.column_name(i).unwrap_or("unknown").to_string());
         }
 
-        Ok(result)
+        let mut result = ResultSet::new(column_names);
+
+        let rows = if duck_params.is_empty() {
+            stmt.query_map([], |row| {
+                let mut row_data = Vec::new();
+                for i in 0..column_count {
+                    let value = match row.get_ref(i) {
+                        Ok(val) => match val {
+                            duckdb::types::ValueRef::Null => serde_json::Value::Null,
+                            duckdb::types::ValueRef::Integer(i) => serde_json::json!(i),
+                            duckdb::types::ValueRef::Real(f) => serde_json::json!(f),
+                            duckdb::types::ValueRef::Text(s) => {
+                                serde_json::json!(std::str::from_utf8(s).unwrap_or(""))
+                            }
+                            duckdb::types::ValueRef::Blob(b) => {
+                                serde_json::json!(base64::encode(b))
+                            }
+                        },
+                        Err(_) => serde_json::Value::Null,
+                    };
+                    row_data.push(value);
+                }
+                Ok(row_data)
+            })
+        } else {
+            stmt.query_map(params_from_iter(duck_params), |row| {
+                let mut row_data = Vec::new();
+                for i in 0..column_count {
+                    let value = match row.get_ref(i) {
+                        Ok(val) => match val {
+                            duckdb::types::ValueRef::Null => serde_json::Value::Null,
+                            duckdb::types::ValueRef::Integer(i) => serde_json::json!(i),
+                            duckdb::types::ValueRef::Real(f) => serde_json::json!(f),
+                            duckdb::types::ValueRef::Text(s) => {
+                                serde_json::json!(std::str::from_utf8(s).unwrap_or(""))
+                            }
+                            duckdb::types::ValueRef::Blob(b) => {
+                                serde_json::json!(base64::encode(b))
+                            }
+                        },
+                        Err(_) => serde_json::Value::Null,
+                    };
+                    row_data.push(value);
+                }
+                Ok(row_data)
+            })
+        };
+
+        match rows {
+            Ok(row_iter) => {
+                for row_result in row_iter {
+                    match row_result {
+                        Ok(row_data) => result.add_row(row_data),
+                        Err(e) => {
+                            return Err(IoError::DatabaseError(format!(
+                                "Row processing failed: {}",
+                                e
+                            )))
+                        }
+                    }
+                }
+                Ok(result)
+            }
+            Err(e) => Err(IoError::DatabaseError(format!(
+                "DuckDB query execution failed: {}",
+                e
+            ))),
+        }
     }
 
-    fn insert_array(
-        &self,
-        _table: &str,
-        data: ArrayView2<f64>,
-        _columns: &[&str],
-    ) -> Result<usize> {
-        // DuckDB is optimized for bulk inserts
-        Ok(data.nrows())
+    fn insert_array(&self, table: &str, data: ArrayView2<f64>, columns: &[&str]) -> Result<usize> {
+        let conn = self.connection.as_ref().ok_or_else(|| {
+            IoError::ConnectionError("DuckDB connection not initialized".to_string())
+        })?;
+
+        if columns.len() != data.ncols() {
+            return Err(IoError::ValidationError(
+                "Number of columns doesn't match data dimensions".to_string(),
+            ));
+        }
+
+        // DuckDB excels at bulk inserts, so we'll use a single INSERT with multiple VALUES
+        let placeholders: Vec<String> = (0..columns.len()).map(|_| "?".to_string()).collect();
+
+        let values_clause = format!("({})", placeholders.join(", "));
+        let insert_sql = format!(
+            "INSERT INTO {} ({}) VALUES {}",
+            table,
+            columns.join(", "),
+            std::iter::repeat(values_clause.clone())
+                .take(data.nrows())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+
+        // Flatten all data into a single parameter vector
+        let mut all_params = Vec::new();
+        for row in data.rows() {
+            for &value in row.iter() {
+                all_params.push(value);
+            }
+        }
+
+        let duck_params: Vec<&dyn duckdb::ToSql> =
+            all_params.iter().map(|v| v as &dyn duckdb::ToSql).collect();
+
+        let rows_affected = conn
+            .execute(&insert_sql, duckdb::params_from_iter(duck_params))
+            .map_err(|e| IoError::DatabaseError(format!("DuckDB bulk insert failed: {}", e)))?;
+
+        Ok(rows_affected)
     }
 
-    fn create_table(&self, _table: &str, _schema: &TableSchema) -> Result<()> {
+    fn create_table(&self, table: &str, schema: &TableSchema) -> Result<()> {
+        let conn = self.connection.as_ref().ok_or_else(|| {
+            IoError::ConnectionError("DuckDB connection not initialized".to_string())
+        })?;
+
+        let mut create_sql = format!("CREATE TABLE {} (", table);
+
+        let column_defs: Vec<String> = schema
+            .columns
+            .iter()
+            .map(|col| {
+                let duck_type = match col.data_type {
+                    DataType::Integer => "INTEGER",
+                    DataType::BigInt => "BIGINT",
+                    DataType::Float => "REAL",
+                    DataType::Double => "DOUBLE",
+                    DataType::Decimal(p, s) => return format!("DECIMAL({}, {})", p, s),
+                    DataType::Varchar(len) => return format!("VARCHAR({})", len),
+                    DataType::Text => "TEXT",
+                    DataType::Boolean => "BOOLEAN",
+                    DataType::Date => "DATE",
+                    DataType::Timestamp => "TIMESTAMP",
+                    DataType::Json => "JSON",
+                    DataType::Binary => "BLOB",
+                };
+
+                let nullable = if col.nullable { "" } else { " NOT NULL" };
+                format!("{} {}{}", col.name, duck_type, nullable)
+            })
+            .collect();
+
+        create_sql.push_str(&column_defs.join(", "));
+
+        if let Some(ref pk_cols) = schema.primary_key {
+            create_sql.push_str(&format!(", PRIMARY KEY ({})", pk_cols.join(", ")));
+        }
+
+        create_sql.push(')');
+
+        conn.execute(&create_sql, [])
+            .map_err(|e| IoError::DatabaseError(format!("DuckDB table creation failed: {}", e)))?;
+
         Ok(())
     }
 
-    fn table_exists(&self, _table: &str) -> Result<bool> {
-        Ok(true)
+    fn table_exists(&self, table: &str) -> Result<bool> {
+        let conn = self.connection.as_ref().ok_or_else(|| {
+            IoError::ConnectionError("DuckDB connection not initialized".to_string())
+        })?;
+
+        let mut stmt = conn
+            .prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_name = ?")
+            .map_err(|e| {
+                IoError::DatabaseError(format!("Table existence query preparation failed: {}", e))
+            })?;
+
+        let count: i64 = stmt
+            .query_row([table], |row| row.get(0))
+            .map_err(|e| IoError::DatabaseError(format!("Table existence check failed: {}", e)))?;
+
+        Ok(count > 0)
     }
 
     fn get_schema(&self, table: &str) -> Result<TableSchema> {
+        let conn = self.connection.as_ref().ok_or_else(|| {
+            IoError::ConnectionError("DuckDB connection not initialized".to_string())
+        })?;
+
+        // Get column information using DuckDB's information schema
+        let mut stmt = conn
+            .prepare(
+                r#"
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns 
+            WHERE table_name = ?
+            ORDER BY ordinal_position
+            "#,
+            )
+            .map_err(|e| {
+                IoError::DatabaseError(format!("Schema query preparation failed: {}", e))
+            })?;
+
+        let column_rows = stmt
+            .query_map([table], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,         // column_name
+                    row.get::<_, String>(1)?,         // data_type
+                    row.get::<_, String>(2)?,         // is_nullable
+                    row.get::<_, Option<String>>(3)?, // column_default
+                ))
+            })
+            .map_err(|e| IoError::DatabaseError(format!("Schema query failed: {}", e)))?;
+
+        let mut columns = Vec::new();
+        for row_result in column_rows {
+            let (column_name, data_type_str, is_nullable, column_default) =
+                row_result.map_err(|e| {
+                    IoError::DatabaseError(format!("Schema row processing failed: {}", e))
+                })?;
+
+            let data_type = match data_type_str.to_uppercase().as_str() {
+                "INTEGER" => DataType::Integer,
+                "BIGINT" => DataType::BigInt,
+                "REAL" | "FLOAT" => DataType::Float,
+                "DOUBLE" => DataType::Double,
+                s if s.starts_with("VARCHAR") => DataType::Varchar(255),
+                "TEXT" => DataType::Text,
+                "BOOLEAN" => DataType::Boolean,
+                "DATE" => DataType::Date,
+                "TIMESTAMP" => DataType::Timestamp,
+                "JSON" => DataType::Json,
+                "BLOB" => DataType::Binary,
+                _ => DataType::Text, // Default fallback
+            };
+
+            columns.push(ColumnDef {
+                name: column_name,
+                data_type,
+                nullable: is_nullable.to_uppercase() == "YES",
+                default: column_default.map(|s| serde_json::Value::String(s)),
+            });
+        }
+
+        // DuckDB doesn't have traditional primary keys like PostgreSQL/MySQL,
+        // but we can check for unique constraints
+        let primary_key = None; // DuckDB doesn't enforce primary keys at schema level
+
+        // Get index information for DuckDB
+        // Note: DuckDB doesn't have persistent indexes like traditional databases
+        // but we can check for any available index information
+        let index_rows = conn.prepare(
+            r#"
+            SELECT 
+                index_name,
+                column_names,
+                is_unique
+            FROM duckdb_indexes() 
+            WHERE table_name = ?
+            ORDER BY index_name
+            "#,
+        );
+
+        let mut indexes = Vec::new();
+        if let Ok(mut stmt) = index_rows {
+            let rows = stmt.query_map([table], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,         // index_name
+                    row.get::<_, String>(1)?,         // column_names
+                    row.get::<_, bool>(2)?,           // is_unique
+                ))
+            });
+
+            if let Ok(row_iter) = rows {
+                for row_result in row_iter {
+                    if let Ok((index_name, column_names_str, is_unique)) = row_result {
+                        let column_names: Vec<String> = column_names_str
+                            .split(',')
+                            .map(|s| s.trim().to_string())
+                            .collect();
+
+                        indexes.push(Index {
+                            name: index_name,
+                            columns: column_names,
+                            unique: is_unique,
+                        });
+                    }
+                }
+            }
+            // If the query fails, it's likely DuckDB doesn't support this function
+            // in this version, so we just continue with empty indexes
+        }
+
         Ok(TableSchema {
             name: table.to_string(),
-            columns: vec![],
-            primary_key: None,
-            indexes: vec![],
+            columns,
+            primary_key,
+            indexes,
         })
     }
 }

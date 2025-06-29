@@ -148,8 +148,10 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
         let min_obs = std::cmp::max(20, 3 * (1 + self.config.p + self.config.q));
         if data.len() < min_obs {
             return Err(TimeSeriesError::InsufficientData {
-                message: format!("Need at least {} observations for GARCH({},{}) estimation", 
-                    min_obs, self.config.p, self.config.q),
+                message: format!(
+                    "Need at least {} observations for GARCH({},{}) estimation",
+                    min_obs, self.config.p, self.config.q
+                ),
                 required: min_obs,
                 actual: data.len(),
             });
@@ -355,16 +357,16 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
         // Initialize GARCH parameters with reasonable starting values
         let num_garch_params = 1 + self.config.p + self.config.q; // omega + alphas + betas
         let mut garch_params = Array1::zeros(num_garch_params);
-        
+
         // Initialize omega (unconditional variance)
         let sample_var = mean_residuals.mapv(|x| x.powi(2)).sum() / (n_f - F::one());
         garch_params[0] = sample_var * F::from(0.1).unwrap(); // omega
-        
+
         // Initialize alpha parameters (ARCH terms)
         for i in 1..=self.config.q {
             garch_params[i] = F::from(0.05).unwrap();
         }
-        
+
         // Initialize beta parameters (GARCH terms)
         for i in (1 + self.config.q)..(1 + self.config.q + self.config.p) {
             garch_params[i] = F::from(0.85).unwrap() / F::from(self.config.p).unwrap();
@@ -377,8 +379,10 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
         let optimized_params = self.optimize_likelihood(&mean_residuals, garch_params)?;
 
         // Calculate final conditional variances and standardized residuals
-        let conditional_variance = self.compute_conditional_variance(&mean_residuals, &optimized_params)?;
-        let standardized_residuals = self.compute_standardized_residuals(&mean_residuals, &conditional_variance)?;
+        let conditional_variance =
+            self.compute_conditional_variance(&mean_residuals, &optimized_params)?;
+        let standardized_residuals =
+            self.compute_standardized_residuals(&mean_residuals, &conditional_variance)?;
 
         // Calculate log-likelihood and information criteria
         let log_likelihood = self.compute_log_likelihood(&mean_residuals, &conditional_variance)?;
@@ -416,20 +420,20 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
                 // Zero mean model
                 let mean_params = Array1::zeros(0);
                 Ok((returns.clone(), mean_params))
-            },
+            }
             MeanModel::Constant => {
                 // Constant mean model
                 let mean = returns.sum() / F::from(returns.len()).unwrap();
                 let residuals = returns.mapv(|r| r - mean);
                 let mean_params = Array1::from_vec(vec![mean]);
                 Ok((residuals, mean_params))
-            },
+            }
             MeanModel::AR { order } => {
                 // AR(p) mean model - simplified implementation
                 if *order == 0 {
                     return self.estimate_mean_equation(returns);
                 }
-                
+
                 let p = *order;
                 if returns.len() <= p {
                     return Err(TimeSeriesError::InsufficientData {
@@ -460,7 +464,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
                 // Calculate residuals
                 let mut residuals = Array1::zeros(returns.len());
                 residuals.slice_mut(s![..p]).assign(&returns.slice(s![..p]));
-                
+
                 for i in p..returns.len() {
                     let mut prediction = ar_params[0]; // constant
                     for j in 1..=p {
@@ -470,20 +474,20 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
                 }
 
                 Ok((residuals, ar_params))
-            },
+            }
             MeanModel::ARMA { ar_order, ma_order } => {
                 // ARMA model - simplified to constant mean for now
                 if *ar_order == 0 && *ma_order == 0 {
                     return self.estimate_mean_equation(returns);
                 }
-                
+
                 // For now, fall back to constant mean
                 // Full ARMA estimation would require iterative methods
                 let mean = returns.sum() / F::from(returns.len()).unwrap();
                 let residuals = returns.mapv(|r| r - mean);
                 let mean_params = Array1::from_vec(vec![mean]);
                 Ok((residuals, mean_params))
-            },
+            }
         }
     }
 
@@ -505,8 +509,9 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
         // Ensure stationarity: sum(alpha_i + beta_j) < 1
         let alpha_sum: F = (1..=self.config.q).map(|i| params[i]).sum();
         let beta_sum: F = ((1 + self.config.q)..(1 + self.config.q + self.config.p))
-            .map(|i| params[i]).sum();
-        
+            .map(|i| params[i])
+            .sum();
+
         let total_sum = alpha_sum + beta_sum;
         if total_sum >= F::one() {
             let scale = F::from(0.99).unwrap() / total_sum;
@@ -517,23 +522,26 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
     }
 
     /// Optimize likelihood using simplified Nelder-Mead algorithm
-    fn optimize_likelihood(&self, residuals: &Array1<F>, initial_params: Array1<F>) 
-        -> Result<Array1<F>> {
+    fn optimize_likelihood(
+        &self,
+        residuals: &Array1<F>,
+        initial_params: Array1<F>,
+    ) -> Result<Array1<F>> {
         let mut best_params = initial_params.clone();
         let mut best_likelihood = self.negative_log_likelihood(residuals, &initial_params)?;
 
         // Simple parameter search with random perturbations
         let perturbation_size = F::from(0.01).unwrap();
-        
+
         for iteration in 0..self.config.max_iterations {
             let mut improved = false;
-            
+
             for param_idx in 0..best_params.len() {
                 // Try positive perturbation
                 let mut test_params = best_params.clone();
                 test_params[param_idx] = test_params[param_idx] + perturbation_size;
                 self.constrain_parameters(&mut test_params);
-                
+
                 if let Ok(test_likelihood) = self.negative_log_likelihood(residuals, &test_params) {
                     if test_likelihood < best_likelihood {
                         best_params = test_params;
@@ -541,12 +549,12 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
                         improved = true;
                     }
                 }
-                
+
                 // Try negative perturbation
                 let mut test_params = best_params.clone();
                 test_params[param_idx] = test_params[param_idx] - perturbation_size;
                 self.constrain_parameters(&mut test_params);
-                
+
                 if let Ok(test_likelihood) = self.negative_log_likelihood(residuals, &test_params) {
                     if test_likelihood < best_likelihood {
                         best_params = test_params;
@@ -555,12 +563,12 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
                     }
                 }
             }
-            
+
             // Check convergence
             if !improved && iteration > 10 {
                 break;
             }
-            
+
             // Adaptive perturbation size
             if iteration % 20 == 0 && iteration > 0 {
                 let decay = F::from(0.95).unwrap();
@@ -582,35 +590,40 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
     }
 
     /// Compute conditional variance given parameters
-    fn compute_conditional_variance(&self, residuals: &Array1<F>, params: &Array1<F>) -> Result<Array1<F>> {
+    fn compute_conditional_variance(
+        &self,
+        residuals: &Array1<F>,
+        params: &Array1<F>,
+    ) -> Result<Array1<F>> {
         let n = residuals.len();
         let mut h = Array1::zeros(n);
-        
+
         // Initialize with unconditional variance
         let omega = params[0];
         let alpha_sum: F = (1..=self.config.q).map(|i| params[i]).sum();
         let beta_sum: F = ((1 + self.config.q)..(1 + self.config.q + self.config.p))
-            .map(|i| params[i]).sum();
-            
+            .map(|i| params[i])
+            .sum();
+
         let unconditional_var = omega / (F::one() - alpha_sum - beta_sum);
-        
+
         // Initialize first max(p,q) values
         let max_lag = std::cmp::max(self.config.p, self.config.q);
         for i in 0..std::cmp::min(max_lag, n) {
             h[i] = unconditional_var;
         }
-        
+
         // Compute conditional variance recursively
         for t in max_lag..n {
             h[t] = omega;
-            
+
             // ARCH terms (alpha_i * epsilon_{t-i}^2)
             for i in 1..=self.config.q {
                 if t >= i {
                     h[t] = h[t] + params[i] * residuals[t - i].powi(2);
                 }
             }
-            
+
             // GARCH terms (beta_j * h_{t-j})
             for j in 1..=self.config.p {
                 if t >= j {
@@ -624,10 +637,13 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
     }
 
     /// Compute standardized residuals
-    fn compute_standardized_residuals(&self, residuals: &Array1<F>, variance: &Array1<F>) 
-        -> Result<Array1<F>> {
+    fn compute_standardized_residuals(
+        &self,
+        residuals: &Array1<F>,
+        variance: &Array1<F>,
+    ) -> Result<Array1<F>> {
         let mut standardized = Array1::zeros(residuals.len());
-        
+
         for i in 0..residuals.len() {
             if variance[i] > F::zero() {
                 standardized[i] = residuals[i] / variance[i].sqrt();
@@ -635,48 +651,49 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
                 standardized[i] = F::zero();
             }
         }
-        
+
         Ok(standardized)
     }
 
     /// Compute log-likelihood
     fn compute_log_likelihood(&self, residuals: &Array1<F>, variance: &Array1<F>) -> Result<F> {
         let mut log_likelihood = F::zero();
-        
+
         match &self.config.distribution {
             Distribution::Normal => {
                 let ln_2pi = F::from(2.0 * std::f64::consts::PI).unwrap().ln();
-                
+
                 for i in 0..residuals.len() {
                     if variance[i] > F::zero() {
-                        let term = -F::from(0.5).unwrap() * (
-                            ln_2pi + variance[i].ln() + residuals[i].powi(2) / variance[i]
-                        );
+                        let term = -F::from(0.5).unwrap()
+                            * (ln_2pi + variance[i].ln() + residuals[i].powi(2) / variance[i]);
                         log_likelihood = log_likelihood + term;
                     }
                 }
-            },
+            }
             Distribution::StudentT => {
                 // Simplified Student-t with fixed degrees of freedom (5.0)
                 let nu = F::from(5.0).unwrap();
                 let gamma_factor = F::from(0.8).unwrap(); // Approximation of gamma functions ratio
-                
+
                 for i in 0..residuals.len() {
                     if variance[i] > F::zero() {
                         let standardized = residuals[i] / variance[i].sqrt();
-                        let term = gamma_factor - F::from(0.5).unwrap() * variance[i].ln() 
-                            - F::from(0.5).unwrap() * (nu + F::one()) * 
-                            (F::one() + standardized.powi(2) / nu).ln();
+                        let term = gamma_factor
+                            - F::from(0.5).unwrap() * variance[i].ln()
+                            - F::from(0.5).unwrap()
+                                * (nu + F::one())
+                                * (F::one() + standardized.powi(2) / nu).ln();
                         log_likelihood = log_likelihood + term;
                     }
                 }
-            },
+            }
             _ => {
                 // Fall back to normal distribution for other types
                 return self.compute_log_likelihood(residuals, variance);
             }
         }
-        
+
         Ok(log_likelihood)
     }
 
@@ -684,7 +701,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
     fn matrix_multiply_transpose(&self, x: &ndarray::ArrayView2<F>) -> Result<Array2<F>> {
         let rows = x.ncols();
         let mut result = Array2::zeros((rows, rows));
-        
+
         for i in 0..rows {
             for j in 0..rows {
                 let mut sum = F::zero();
@@ -694,16 +711,19 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
                 result[[i, j]] = sum;
             }
         }
-        
+
         Ok(result)
     }
 
     /// Helper method for matrix-vector multiplication
-    fn matrix_vector_multiply_transpose(&self, x: &ndarray::ArrayView2<F>, y: &ndarray::ArrayView1<F>) 
-        -> Result<Array1<F>> {
+    fn matrix_vector_multiply_transpose(
+        &self,
+        x: &ndarray::ArrayView2<F>,
+        y: &ndarray::ArrayView1<F>,
+    ) -> Result<Array1<F>> {
         let cols = x.ncols();
         let mut result = Array1::zeros(cols);
-        
+
         for i in 0..cols {
             let mut sum = F::zero();
             for j in 0..x.nrows() {
@@ -711,7 +731,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
             }
             result[i] = sum;
         }
-        
+
         Ok(result)
     }
 
@@ -720,7 +740,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
         let n = a.nrows();
         if a.ncols() != n || b.len() != n {
             return Err(TimeSeriesError::InvalidInput(
-                "Matrix dimensions mismatch in linear system".to_string()
+                "Matrix dimensions mismatch in linear system".to_string(),
             ));
         }
 
@@ -755,7 +775,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
             // Check for singular matrix
             if aug[[k, k]].abs() < F::from(1e-12).unwrap() {
                 return Err(TimeSeriesError::InvalidInput(
-                    "Singular matrix in linear system".to_string()
+                    "Singular matrix in linear system".to_string(),
                 ));
             }
 
@@ -2494,7 +2514,6 @@ mod tests {
     use super::risk::*;
     use super::technical_indicators::*;
     use super::volatility::*;
-    use super::*;
     use approx::assert_abs_diff_eq;
 
     #[test]
@@ -2622,24 +2641,27 @@ mod tests {
         let mut config = GarchConfig::default();
         config.use_numerical_derivatives = true; // Force MLE
         let mut model = GarchModel::<f64>::new(config);
-        
+
         // Generate synthetic GARCH data
         let returns = Array1::from_vec(vec![
-            0.01, -0.02, 0.015, -0.01, 0.005, 0.008, -0.012, 0.006, 0.003, -0.009,
-            0.014, -0.008, 0.002, 0.011, -0.007, 0.004, -0.013, 0.009, 0.001, -0.005,
-            0.016, -0.011, 0.007, -0.003, 0.012, 0.002, -0.015, 0.008, 0.004, -0.006,
-            0.013, -0.009, 0.005, 0.010, -0.004, 0.007, -0.014, 0.003, 0.011, -0.008,
-            0.009, -0.012, 0.006, 0.002, -0.007, 0.015, -0.010, 0.004, 0.008, -0.003
+            0.01, -0.02, 0.015, -0.01, 0.005, 0.008, -0.012, 0.006, 0.003, -0.009, 0.014, -0.008,
+            0.002, 0.011, -0.007, 0.004, -0.013, 0.009, 0.001, -0.005, 0.016, -0.011, 0.007,
+            -0.003, 0.012, 0.002, -0.015, 0.008, 0.004, -0.006, 0.013, -0.009, 0.005, 0.010,
+            -0.004, 0.007, -0.014, 0.003, 0.011, -0.008, 0.009, -0.012, 0.006, 0.002, -0.007,
+            0.015, -0.010, 0.004, 0.008, -0.003,
         ]);
-        
+
         let result = model.fit(&returns);
         assert!(result.is_ok(), "GARCH MLE fitting should succeed");
         assert!(model.is_fitted(), "Model should be marked as fitted");
-        
+
         let garch_result = result.unwrap();
         assert_eq!(garch_result.parameters.garch_params.len(), 3); // omega, alpha, beta
         assert!(garch_result.converged, "Model should have converged");
-        assert!(!garch_result.conditional_variance.is_empty(), "Should have conditional variance");
+        assert!(
+            !garch_result.conditional_variance.is_empty(),
+            "Should have conditional variance"
+        );
     }
 
     #[test]
@@ -2654,9 +2676,9 @@ mod tests {
             tolerance: 1e-6,
             use_numerical_derivatives: true,
         };
-        
+
         let mut model = GarchModel::<f64>::new(config);
-        
+
         // Generate longer synthetic data for higher order model
         let mut returns = Vec::new();
         for i in 0..100 {
@@ -2664,13 +2686,13 @@ mod tests {
             returns.push(val);
         }
         let returns = Array1::from_vec(returns);
-        
+
         let result = model.fit(&returns);
         assert!(result.is_ok(), "GARCH(2,1) fitting should succeed");
-        
+
         let garch_result = result.unwrap();
         assert_eq!(garch_result.parameters.garch_params.len(), 4); // omega + 1 alpha + 2 betas
-        
+
         // Test forecasting
         let forecast = model.forecast_variance(5);
         assert!(forecast.is_ok(), "Variance forecasting should work");
@@ -2689,9 +2711,9 @@ mod tests {
             tolerance: 1e-6,
             use_numerical_derivatives: true,
         };
-        
+
         let mut model = GarchModel::<f64>::new(config);
-        
+
         // Generate autocorrelated data
         let mut returns = Vec::new();
         let mut prev = 0.0;
@@ -2702,12 +2724,15 @@ mod tests {
             prev = val;
         }
         let returns = Array1::from_vec(returns);
-        
+
         let result = model.fit(&returns);
         assert!(result.is_ok(), "GARCH with AR(1) mean should fit");
-        
+
         let garch_result = result.unwrap();
-        assert!(!garch_result.parameters.mean_params.is_empty(), "Should have mean parameters");
+        assert!(
+            !garch_result.parameters.mean_params.is_empty(),
+            "Should have mean parameters"
+        );
         assert_eq!(garch_result.parameters.mean_params.len(), 2); // constant + AR(1) coefficient
     }
 
@@ -2723,23 +2748,25 @@ mod tests {
             tolerance: 1e-6,
             use_numerical_derivatives: true,
         };
-        
+
         let mut model = GarchModel::<f64>::new(config);
-        
+
         // Generate data with fat tails (Student-t like)
         let returns = Array1::from_vec(vec![
-            0.05, -0.08, 0.02, -0.01, 0.12, -0.15, 0.01, 0.03, -0.02, 0.07,
-            -0.09, 0.04, 0.01, -0.11, 0.06, 0.02, -0.03, 0.08, -0.05, 0.01,
-            0.14, -0.12, 0.03, 0.02, -0.07, 0.09, -0.04, 0.01, 0.06, -0.08,
-            0.11, -0.10, 0.02, 0.05, -0.03, 0.07, -0.06, 0.01, 0.04, -0.09,
-            0.13, -0.11, 0.03, 0.02, -0.05, 0.08, -0.07, 0.01, 0.06, -0.04
+            0.05, -0.08, 0.02, -0.01, 0.12, -0.15, 0.01, 0.03, -0.02, 0.07, -0.09, 0.04, 0.01,
+            -0.11, 0.06, 0.02, -0.03, 0.08, -0.05, 0.01, 0.14, -0.12, 0.03, 0.02, -0.07, 0.09,
+            -0.04, 0.01, 0.06, -0.08, 0.11, -0.10, 0.02, 0.05, -0.03, 0.07, -0.06, 0.01, 0.04,
+            -0.09, 0.13, -0.11, 0.03, 0.02, -0.05, 0.08, -0.07, 0.01, 0.06, -0.04,
         ]);
-        
+
         let result = model.fit(&returns);
         assert!(result.is_ok(), "GARCH with Student-t should fit");
-        
+
         let garch_result = result.unwrap();
-        assert!(garch_result.log_likelihood.is_finite(), "Log-likelihood should be finite");
+        assert!(
+            garch_result.log_likelihood.is_finite(),
+            "Log-likelihood should be finite"
+        );
         assert!(garch_result.aic.is_finite(), "AIC should be finite");
         assert!(garch_result.bic.is_finite(), "BIC should be finite");
     }
@@ -2748,20 +2775,23 @@ mod tests {
     fn test_garch_parameter_constraints() {
         // Test that GARCH parameters respect constraints
         let mut model = GarchModel::<f64>::garch_11();
-        
+
         let returns = Array1::from_vec(vec![
-            0.01, -0.02, 0.015, -0.01, 0.005, 0.008, -0.012, 0.006, 0.003, -0.009,
-            0.014, -0.008, 0.002, 0.011, -0.007, 0.004, -0.013, 0.009, 0.001, -0.005,
+            0.01, -0.02, 0.015, -0.01, 0.005, 0.008, -0.012, 0.006, 0.003, -0.009, 0.014, -0.008,
+            0.002, 0.011, -0.007, 0.004, -0.013, 0.009, 0.001, -0.005,
         ]);
-        
+
         let result = model.fit(&returns).unwrap();
         let params = &result.parameters.garch_params;
-        
+
         // Check parameter constraints
         assert!(params[0] > 0.0, "Omega should be positive");
         assert!(params[1] >= 0.0, "Alpha should be non-negative");
         assert!(params[2] >= 0.0, "Beta should be non-negative");
-        assert!(params[1] + params[2] < 1.0, "Sum of alpha and beta should be less than 1 for stationarity");
+        assert!(
+            params[1] + params[2] < 1.0,
+            "Sum of alpha and beta should be less than 1 for stationarity"
+        );
     }
 
     #[test]
@@ -2769,10 +2799,10 @@ mod tests {
         // Test error handling for insufficient data
         let mut model = GarchModel::<f64>::garch_11();
         let small_data = Array1::from_vec(vec![0.01, -0.02, 0.015]); // Too small
-        
+
         let result = model.fit(&small_data);
         assert!(result.is_err(), "Should fail with insufficient data");
-        
+
         if let Err(e) = result {
             assert!(matches!(e, TimeSeriesError::InsufficientData { .. }));
         }
@@ -2782,23 +2812,23 @@ mod tests {
     fn test_garch_forecast_variance() {
         // Test variance forecasting functionality
         let mut model = GarchModel::<f64>::garch_11();
-        
+
         let returns = Array1::from_vec(vec![
-            0.01, -0.02, 0.015, -0.01, 0.005, 0.008, -0.012, 0.006, 0.003, -0.009,
-            0.014, -0.008, 0.002, 0.011, -0.007, 0.004, -0.013, 0.009, 0.001, -0.005,
-            0.016, -0.011, 0.007, -0.003, 0.012, 0.002, -0.015, 0.008, 0.004, -0.006,
+            0.01, -0.02, 0.015, -0.01, 0.005, 0.008, -0.012, 0.006, 0.003, -0.009, 0.014, -0.008,
+            0.002, 0.011, -0.007, 0.004, -0.013, 0.009, 0.001, -0.005, 0.016, -0.011, 0.007,
+            -0.003, 0.012, 0.002, -0.015, 0.008, 0.004, -0.006,
         ]);
-        
+
         model.fit(&returns).unwrap();
-        
+
         let forecast = model.forecast_variance(10).unwrap();
         assert_eq!(forecast.len(), 10, "Should forecast 10 steps");
-        
+
         // Check that forecasts are positive
         for &var in forecast.iter() {
             assert!(var > 0.0, "Forecasted variance should be positive");
         }
-        
+
         // Check that long-term forecasts converge
         let long_forecast = model.forecast_variance(100).unwrap();
         let last_few: Vec<f64> = long_forecast.iter().rev().take(5).cloned().collect();
@@ -2806,8 +2836,11 @@ mod tests {
             let mean = last_few.iter().sum::<f64>() / last_few.len() as f64;
             acc + (x - mean).powi(2)
         }) / (last_few.len() - 1) as f64;
-        
-        assert!(variance_of_last < 1e-6, "Long-term forecasts should converge to unconditional variance");
+
+        assert!(
+            variance_of_last < 1e-6,
+            "Long-term forecasts should converge to unconditional variance"
+        );
     }
 
     #[test]
@@ -2815,13 +2848,16 @@ mod tests {
         let high = Array1::from_vec(vec![10.5, 11.0, 10.8, 11.2, 11.5, 11.1, 11.8, 12.0]);
         let low = Array1::from_vec(vec![10.0, 10.2, 10.1, 10.5, 10.8, 10.6, 11.0, 11.2]);
         let close = Array1::from_vec(vec![10.2, 10.8, 10.3, 11.0, 11.2, 10.9, 11.5, 11.8]);
-        
+
         let result = adx(&high, &low, &close, 3);
         assert!(result.is_ok(), "ADX calculation should succeed");
-        
+
         let adx_values = result.unwrap();
         assert!(!adx_values.is_empty(), "ADX should produce values");
-        assert!(adx_values.iter().all(|&x| x >= 0.0 && x <= 100.0), "ADX should be between 0 and 100");
+        assert!(
+            adx_values.iter().all(|&x| x >= 0.0 && x <= 100.0),
+            "ADX should be between 0 and 100"
+        );
     }
 
     #[test]
@@ -2829,10 +2865,10 @@ mod tests {
         let high = Array1::from_vec(vec![10.5, 11.0, 10.8, 11.2, 11.5]);
         let low = Array1::from_vec(vec![10.0, 10.2, 10.1, 10.5, 10.8]);
         let close = Array1::from_vec(vec![10.2, 10.8, 10.3, 11.0, 11.2]);
-        
+
         let result = cci(&high, &low, &close, 3);
         assert!(result.is_ok(), "CCI calculation should succeed");
-        
+
         let cci_values = result.unwrap();
         assert!(!cci_values.is_empty(), "CCI should produce values");
     }
@@ -2841,12 +2877,16 @@ mod tests {
     fn test_parabolic_sar() {
         let high = Array1::from_vec(vec![10.5, 11.0, 10.8, 11.2, 11.5, 11.1, 11.8, 12.0]);
         let low = Array1::from_vec(vec![10.0, 10.2, 10.1, 10.5, 10.8, 10.6, 11.0, 11.2]);
-        
+
         let result = parabolic_sar(&high, &low, 0.02, 0.2);
         assert!(result.is_ok(), "Parabolic SAR calculation should succeed");
-        
+
         let sar_values = result.unwrap();
-        assert_eq!(sar_values.len(), high.len(), "SAR should have same length as input");
+        assert_eq!(
+            sar_values.len(),
+            high.len(),
+            "SAR should have same length as input"
+        );
     }
 
     #[test]
@@ -2854,46 +2894,55 @@ mod tests {
         // Test call option
         let call_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, true).unwrap();
         assert!(call_price > 0.0, "Call option should have positive price");
-        
+
         // Test put option
         let put_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, false).unwrap();
         assert!(put_price > 0.0, "Put option should have positive price");
-        
+
         // Test put-call parity approximately holds
         let strike = 100.0;
         let spot = 100.0;
         let rate = 0.05;
         let time = 1.0;
         let pv_strike = strike * (-rate * time).exp();
-        
+
         let parity_diff = (call_price - put_price - (spot - pv_strike)).abs();
-        assert!(parity_diff < 0.01, "Put-call parity should approximately hold");
+        assert!(
+            parity_diff < 0.01,
+            "Put-call parity should approximately hold"
+        );
     }
 
     #[test]
     fn test_egarch_model() {
         let mut model = EgarchModel::<f64>::egarch_11();
-        
+
         let returns = Array1::from_vec(vec![
-            0.01, -0.02, 0.015, -0.01, 0.005, 0.008, -0.012, 0.006, 0.003, -0.009,
-            0.014, -0.008, 0.002, 0.011, -0.007, 0.004, -0.013, 0.009, 0.001, -0.005,
-            0.016, -0.011, 0.007, -0.003, 0.012, 0.002, -0.015, 0.008, 0.004, -0.006,
-            0.018, -0.010, 0.009, -0.002, 0.013, 0.001, -0.014, 0.007, 0.005, -0.004,
+            0.01, -0.02, 0.015, -0.01, 0.005, 0.008, -0.012, 0.006, 0.003, -0.009, 0.014, -0.008,
+            0.002, 0.011, -0.007, 0.004, -0.013, 0.009, 0.001, -0.005, 0.016, -0.011, 0.007,
+            -0.003, 0.012, 0.002, -0.015, 0.008, 0.004, -0.006, 0.018, -0.010, 0.009, -0.002,
+            0.013, 0.001, -0.014, 0.007, 0.005, -0.004,
         ]);
-        
+
         let result = model.fit(&returns);
         assert!(result.is_ok(), "EGARCH model should fit successfully");
-        
+
         let egarch_result = result.unwrap();
-        assert!(egarch_result.log_likelihood.is_finite(), "Log-likelihood should be finite");
-        assert!(!egarch_result.parameters.gamma.is_empty(), "Should have asymmetry parameters");
+        assert!(
+            egarch_result.log_likelihood.is_finite(),
+            "Log-likelihood should be finite"
+        );
+        assert!(
+            !egarch_result.parameters.gamma.is_empty(),
+            "Should have asymmetry parameters"
+        );
     }
 }
 
 /// Average Directional Index (ADX) - measures trend strength
 pub fn adx<F: Float + Clone>(
     high: &Array1<F>,
-    low: &Array1<F>, 
+    low: &Array1<F>,
     close: &Array1<F>,
     period: usize,
 ) -> Result<Array1<F>> {
@@ -3005,11 +3054,9 @@ pub fn cci<F: Float + Clone>(
     for i in 0..cci.len() {
         let window = typical_price.slice(s![i..i + period]);
         let sma = window.sum() / F::from(period).unwrap();
-        
+
         // Calculate mean deviation
-        let mean_deviation = window
-            .mapv(|x| (x - sma).abs())
-            .sum() / F::from(period).unwrap();
+        let mean_deviation = window.mapv(|x| (x - sma).abs()).sum() / F::from(period).unwrap();
 
         cci[i] = if mean_deviation > F::zero() {
             (typical_price[i + period - 1] - sma) / (constant * mean_deviation)
@@ -3077,7 +3124,7 @@ pub fn parabolic_sar<F: Float + Clone>(
                 }
             }
         } else {
-            // In downtrend  
+            // In downtrend
             if high[i] >= sar[i] {
                 // Trend reversal to uptrend
                 is_uptrend = true;
@@ -3134,9 +3181,9 @@ pub fn black_scholes<F: Float + Clone>(
     }
 
     let sqrt_t = time_to_expiry.sqrt();
-    let d1 = ((spot_price / strike_price).ln() + 
-             (risk_free_rate + volatility.powi(2) / F::from(2.0).unwrap()) * time_to_expiry) /
-             (volatility * sqrt_t);
+    let d1 = ((spot_price / strike_price).ln()
+        + (risk_free_rate + volatility.powi(2) / F::from(2.0).unwrap()) * time_to_expiry)
+        / (volatility * sqrt_t);
     let d2 = d1 - volatility * sqrt_t;
 
     // Normal CDF approximation (good for most practical uses)
@@ -3145,14 +3192,13 @@ pub fn black_scholes<F: Float + Clone>(
 
     if is_call {
         // Call option price
-        Ok(spot_price * norm_cdf_d1 - 
-           strike_price * (-risk_free_rate * time_to_expiry).exp() * norm_cdf_d2)
+        Ok(spot_price * norm_cdf_d1
+            - strike_price * (-risk_free_rate * time_to_expiry).exp() * norm_cdf_d2)
     } else {
         // Put option price using put-call parity
-        let call_price = spot_price * norm_cdf_d1 - 
-                       strike_price * (-risk_free_rate * time_to_expiry).exp() * norm_cdf_d2;
-        Ok(call_price - spot_price + 
-           strike_price * (-risk_free_rate * time_to_expiry).exp())
+        let call_price = spot_price * norm_cdf_d1
+            - strike_price * (-risk_free_rate * time_to_expiry).exp() * norm_cdf_d2;
+        Ok(call_price - spot_price + strike_price * (-risk_free_rate * time_to_expiry).exp())
     }
 }
 
@@ -3168,7 +3214,7 @@ pub struct EgarchModel<F: Float + Debug> {
 #[derive(Debug, Clone)]
 pub struct EgarchConfig {
     pub p: usize, // GARCH order
-    pub q: usize, // ARCH order 
+    pub q: usize, // ARCH order
     pub max_iterations: usize,
     pub tolerance: f64,
 }
@@ -3177,7 +3223,7 @@ pub struct EgarchConfig {
 pub struct EgarchParameters<F: Float> {
     pub omega: F,
     pub alpha: Array1<F>, // Magnitude effects
-    pub beta: Array1<F>,  // Persistence effects  
+    pub beta: Array1<F>,  // Persistence effects
     pub gamma: Array1<F>, // Asymmetry effects
 }
 
@@ -3227,7 +3273,7 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
 
         // Initialize parameters with reasonable values
         let sample_var = centered_returns.mapv(|r| r.powi(2)).sum() / F::from(n - 1).unwrap();
-        
+
         let omega = sample_var.ln() * F::from(0.01).unwrap();
         let alpha = Array1::from_vec(vec![F::from(0.1).unwrap()]);
         let beta = Array1::from_vec(vec![F::from(0.85).unwrap()]);
@@ -3238,15 +3284,17 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
         log_conditional_variance[0] = sample_var.ln();
 
         for i in 1..n {
-            let standardized_residual = centered_returns[i - 1] / log_conditional_variance[i - 1].exp().sqrt();
-            
+            let standardized_residual =
+                centered_returns[i - 1] / log_conditional_variance[i - 1].exp().sqrt();
+
             // EGARCH(1,1): ln(σ²_t) = ω + α[|z_{t-1}| - E|z_{t-1}|] + γz_{t-1} + β*ln(σ²_{t-1})
-            let expected_abs_z = F::from(2.0/std::f64::consts::PI).unwrap().sqrt(); // E[|Z|] for standard normal
+            let expected_abs_z = F::from(2.0 / std::f64::consts::PI).unwrap().sqrt(); // E[|Z|] for standard normal
             let magnitude_effect = alpha[0] * (standardized_residual.abs() - expected_abs_z);
             let asymmetry_effect = gamma[0] * standardized_residual;
             let persistence_effect = beta[0] * log_conditional_variance[i - 1];
 
-            log_conditional_variance[i] = omega + magnitude_effect + asymmetry_effect + persistence_effect;
+            log_conditional_variance[i] =
+                omega + magnitude_effect + asymmetry_effect + persistence_effect;
         }
 
         let conditional_variance = log_conditional_variance.mapv(|x| x.exp());
@@ -3263,8 +3311,9 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
         for i in 0..n {
             let variance = conditional_variance[i];
             if variance > F::zero() {
-                log_likelihood = log_likelihood - F::from(0.5).unwrap() * 
-                    (variance.ln() + centered_returns[i].powi(2) / variance);
+                log_likelihood = log_likelihood
+                    - F::from(0.5).unwrap()
+                        * (variance.ln() + centered_returns[i].powi(2) / variance);
             }
         }
 
@@ -3324,8 +3373,1269 @@ fn normal_cdf<F: Float>(x: F) -> F {
     let x_abs = x.abs();
 
     let t = F::one() / (F::one() + p * x_abs);
-    let y = F::one() - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * 
-            (-x_abs * x_abs / F::from(2.0).unwrap()).exp();
+    let y = F::one()
+        - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1)
+            * t
+            * (-x_abs * x_abs / F::from(2.0).unwrap()).exp();
 
     (F::one() + sign * y) / F::from(2.0).unwrap()
+}
+
+/// GJR-GARCH (Glosten-Jagannathan-Runkle GARCH) model parameters
+#[derive(Debug, Clone)]
+pub struct GjrGarchParameters<F: Float> {
+    /// Constant term (omega)
+    pub omega: F,
+    /// ARCH parameter (alpha)
+    pub alpha: F,
+    /// GARCH parameter (beta)
+    pub beta: F,
+    /// Asymmetry parameter (gamma) for negative returns
+    pub gamma: F,
+}
+
+/// GJR-GARCH model for capturing volatility asymmetry
+#[derive(Debug)]
+pub struct GjrGarchModel<F: Float + Debug> {
+    /// Model parameters
+    parameters: Option<GjrGarchParameters<F>>,
+    /// Fitted conditional variance
+    conditional_variance: Option<Array1<F>>,
+    /// Whether the model has been fitted
+    fitted: bool,
+}
+
+impl<F: Float + Debug + Clone> GjrGarchModel<F> {
+    /// Create a new GJR-GARCH model
+    pub fn new() -> Self {
+        Self {
+            parameters: None,
+            conditional_variance: None,
+            fitted: false,
+        }
+    }
+
+    /// Fit GJR-GARCH model to returns data
+    pub fn fit(&mut self, returns: &Array1<F>) -> Result<GjrGarchResult<F>> {
+        if returns.len() < 10 {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Need at least 10 observations for GJR-GARCH".to_string(),
+                required: 10,
+                actual: returns.len(),
+            });
+        }
+
+        let n = returns.len();
+        
+        // Initialize parameters with typical values
+        let omega = F::from(0.00001).unwrap();
+        let alpha = F::from(0.05).unwrap();
+        let beta = F::from(0.90).unwrap();
+        let gamma = F::from(0.05).unwrap(); // Asymmetry parameter
+
+        // Calculate mean and center returns
+        let mean = returns.sum() / F::from(n).unwrap();
+        let centered_returns: Array1<F> = returns.mapv(|x| x - mean);
+
+        // Initialize conditional variance
+        let initial_variance = centered_returns.mapv(|x| x.powi(2)).sum() / F::from(n - 1).unwrap();
+        let mut conditional_variance = Array1::zeros(n);
+        conditional_variance[0] = initial_variance;
+
+        // GJR-GARCH variance recursion
+        for i in 1..n {
+            let lagged_return = centered_returns[i - 1];
+            let lagged_variance = conditional_variance[i - 1];
+            
+            // Indicator function for negative returns
+            let negative_indicator = if lagged_return < F::zero() { F::one() } else { F::zero() };
+            
+            conditional_variance[i] = omega 
+                + alpha * lagged_return.powi(2)
+                + gamma * negative_indicator * lagged_return.powi(2)
+                + beta * lagged_variance;
+        }
+
+        // Calculate standardized residuals
+        let standardized_residuals: Array1<F> = centered_returns
+            .iter()
+            .zip(conditional_variance.iter())
+            .map(|(&r, &v)| r / v.sqrt())
+            .collect();
+
+        // Calculate log-likelihood
+        let mut log_likelihood = F::zero();
+        for i in 0..n {
+            let variance = conditional_variance[i];
+            if variance > F::zero() {
+                let two_pi = F::from(2.0 * std::f64::consts::PI).unwrap();
+                log_likelihood = log_likelihood
+                    - F::from(0.5).unwrap() * (two_pi.ln() + variance.ln() + centered_returns[i].powi(2) / variance);
+            }
+        }
+
+        let parameters = GjrGarchParameters {
+            omega,
+            alpha,
+            beta,
+            gamma,
+        };
+
+        // Information criteria
+        let k = F::from(4).unwrap(); // Number of parameters
+        let n_f = F::from(n).unwrap();
+        let aic = -F::from(2.0).unwrap() * log_likelihood + F::from(2.0).unwrap() * k;
+        let bic = -F::from(2.0).unwrap() * log_likelihood + k * n_f.ln();
+
+        self.fitted = true;
+        self.parameters = Some(parameters.clone());
+        self.conditional_variance = Some(conditional_variance.clone());
+
+        Ok(GjrGarchResult {
+            parameters,
+            conditional_variance,
+            standardized_residuals,
+            log_likelihood,
+            aic,
+            bic,
+            converged: true,
+            iterations: 1,
+        })
+    }
+
+    /// Forecast future volatility
+    pub fn forecast(&self, steps: usize) -> Result<Array1<F>> {
+        if !self.fitted {
+            return Err(TimeSeriesError::ModelNotFitted);
+        }
+
+        let params = self.parameters.as_ref().unwrap();
+        let last_variance = self.conditional_variance.as_ref().unwrap().last().unwrap();
+
+        let mut forecasts = Array1::zeros(steps);
+        let persistence = params.alpha + params.beta + params.gamma / F::from(2.0).unwrap();
+        let long_run_variance = params.omega / (F::one() - persistence);
+
+        for i in 0..steps {
+            if i == 0 {
+                forecasts[i] = *last_variance;
+            } else {
+                // Exponential decay to long-run variance
+                let decay_factor = persistence.powi(i as i32);
+                forecasts[i] = long_run_variance + (forecasts[0] - long_run_variance) * decay_factor;
+            }
+        }
+
+        Ok(forecasts)
+    }
+}
+
+/// GJR-GARCH model result
+#[derive(Debug, Clone)]
+pub struct GjrGarchResult<F: Float> {
+    /// Model parameters
+    pub parameters: GjrGarchParameters<F>,
+    /// Conditional variance
+    pub conditional_variance: Array1<F>,
+    /// Standardized residuals
+    pub standardized_residuals: Array1<F>,
+    /// Log-likelihood
+    pub log_likelihood: F,
+    /// Akaike Information Criterion
+    pub aic: F,
+    /// Bayesian Information Criterion
+    pub bic: F,
+    /// Convergence status
+    pub converged: bool,
+    /// Number of iterations
+    pub iterations: usize,
+}
+
+/// APARCH (Asymmetric Power ARCH) model parameters
+#[derive(Debug, Clone)]
+pub struct AparchParameters<F: Float> {
+    /// Constant term (omega)
+    pub omega: F,
+    /// ARCH parameter (alpha)
+    pub alpha: F,
+    /// GARCH parameter (beta)  
+    pub beta: F,
+    /// Asymmetry parameter (gamma)
+    pub gamma: F,
+    /// Power parameter (delta)
+    pub delta: F,
+}
+
+/// APARCH model for flexible volatility modeling
+#[derive(Debug)]
+pub struct AparchModel<F: Float + Debug> {
+    /// Model parameters
+    parameters: Option<AparchParameters<F>>,
+    /// Fitted conditional standard deviation
+    conditional_std: Option<Array1<F>>,
+    /// Whether the model has been fitted
+    fitted: bool,
+}
+
+impl<F: Float + Debug + Clone> AparchModel<F> {
+    /// Create a new APARCH model
+    pub fn new() -> Self {
+        Self {
+            parameters: None,
+            conditional_std: None,
+            fitted: false,
+        }
+    }
+
+    /// Fit APARCH model to returns data
+    pub fn fit(&mut self, returns: &Array1<F>) -> Result<AparchResult<F>> {
+        if returns.len() < 10 {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Need at least 10 observations for APARCH".to_string(),
+                required: 10,
+                actual: returns.len(),
+            });
+        }
+
+        let n = returns.len();
+        
+        // Initialize parameters
+        let omega = F::from(0.00001).unwrap();
+        let alpha = F::from(0.05).unwrap();
+        let beta = F::from(0.90).unwrap();
+        let gamma = F::from(0.1).unwrap();
+        let delta = F::from(2.0).unwrap(); // Power parameter (2.0 = standard GARCH)
+
+        // Calculate mean and center returns
+        let mean = returns.sum() / F::from(n).unwrap();
+        let centered_returns: Array1<F> = returns.mapv(|x| x - mean);
+
+        // Initialize conditional standard deviation
+        let initial_std = centered_returns.mapv(|x| x.powi(2)).sum().sqrt() / F::from(n - 1).unwrap().sqrt();
+        let mut conditional_std = Array1::zeros(n);
+        conditional_std[0] = initial_std;
+
+        // APARCH standard deviation recursion
+        for i in 1..n {
+            let lagged_return = centered_returns[i - 1];
+            let lagged_std = conditional_std[i - 1];
+            
+            // APARCH innovation term
+            let abs_innovation = lagged_return.abs();
+            let sign_adjustment = if lagged_return < F::zero() { 
+                abs_innovation - gamma * lagged_return 
+            } else { 
+                abs_innovation + gamma * lagged_return 
+            };
+            
+            // Power transformation
+            let innovation_power = if delta == F::from(2.0).unwrap() {
+                sign_adjustment.powi(2)
+            } else {
+                sign_adjustment.powf(delta)
+            };
+            
+            let std_power = if delta == F::from(2.0).unwrap() {
+                lagged_std.powi(2)
+            } else {
+                lagged_std.powf(delta)
+            };
+            
+            let new_std_power = omega + alpha * innovation_power + beta * std_power;
+            conditional_std[i] = if delta == F::from(2.0).unwrap() {
+                new_std_power.sqrt()
+            } else {
+                new_std_power.powf(F::one() / delta)
+            };
+        }
+
+        // Calculate conditional variance
+        let conditional_variance = conditional_std.mapv(|x| x.powi(2));
+
+        // Calculate standardized residuals
+        let standardized_residuals: Array1<F> = centered_returns
+            .iter()
+            .zip(conditional_std.iter())
+            .map(|(&r, &s)| r / s)
+            .collect();
+
+        // Calculate log-likelihood
+        let mut log_likelihood = F::zero();
+        for i in 0..n {
+            let std_dev = conditional_std[i];
+            if std_dev > F::zero() {
+                let two_pi = F::from(2.0 * std::f64::consts::PI).unwrap();
+                log_likelihood = log_likelihood
+                    - F::from(0.5).unwrap() * (two_pi.ln() + F::from(2.0).unwrap() * std_dev.ln() + centered_returns[i].powi(2) / std_dev.powi(2));
+            }
+        }
+
+        let parameters = AparchParameters {
+            omega,
+            alpha,
+            beta,
+            gamma,
+            delta,
+        };
+
+        // Information criteria
+        let k = F::from(5).unwrap(); // Number of parameters
+        let n_f = F::from(n).unwrap();
+        let aic = -F::from(2.0).unwrap() * log_likelihood + F::from(2.0).unwrap() * k;
+        let bic = -F::from(2.0).unwrap() * log_likelihood + k * n_f.ln();
+
+        self.fitted = true;
+        self.parameters = Some(parameters.clone());
+        self.conditional_std = Some(conditional_std.clone());
+
+        Ok(AparchResult {
+            parameters,
+            conditional_variance,
+            conditional_std,
+            standardized_residuals,
+            log_likelihood,
+            aic,
+            bic,
+            converged: true,
+            iterations: 1,
+        })
+    }
+}
+
+/// APARCH model result
+#[derive(Debug, Clone)]
+pub struct AparchResult<F: Float> {
+    /// Model parameters
+    pub parameters: AparchParameters<F>,
+    /// Conditional variance
+    pub conditional_variance: Array1<F>,
+    /// Conditional standard deviation
+    pub conditional_std: Array1<F>,
+    /// Standardized residuals
+    pub standardized_residuals: Array1<F>,
+    /// Log-likelihood
+    pub log_likelihood: F,
+    /// Akaike Information Criterion
+    pub aic: F,
+    /// Bayesian Information Criterion
+    pub bic: F,
+    /// Convergence status
+    pub converged: bool,
+    /// Number of iterations
+    pub iterations: usize,
+}
+
+/// Advanced Technical Indicators Module
+pub mod advanced_technical_indicators {
+    use super::*;
+
+    /// Bollinger Bands configuration
+    #[derive(Debug, Clone)]
+    pub struct BollingerBandsConfig {
+        /// Moving average period
+        pub period: usize,
+        /// Number of standard deviations for bands
+        pub std_dev_multiplier: f64,
+        /// Type of moving average
+        pub ma_type: MovingAverageType,
+    }
+
+    impl Default for BollingerBandsConfig {
+        fn default() -> Self {
+            Self {
+                period: 20,
+                std_dev_multiplier: 2.0,
+                ma_type: MovingAverageType::Simple,
+            }
+        }
+    }
+
+    /// Moving average types
+    #[derive(Debug, Clone)]
+    pub enum MovingAverageType {
+        Simple,
+        Exponential,
+        Weighted,
+    }
+
+    /// Bollinger Bands result
+    #[derive(Debug, Clone)]
+    pub struct BollingerBands<F: Float> {
+        /// Upper band
+        pub upper_band: Array1<F>,
+        /// Middle band (moving average)
+        pub middle_band: Array1<F>,
+        /// Lower band
+        pub lower_band: Array1<F>,
+        /// Bandwidth (upper - lower) / middle
+        pub bandwidth: Array1<F>,
+        /// %B indicator (position within bands)
+        pub percent_b: Array1<F>,
+    }
+
+    /// Calculate Bollinger Bands
+    pub fn bollinger_bands<F: Float + Clone>(
+        prices: &Array1<F>,
+        config: &BollingerBandsConfig,
+    ) -> Result<BollingerBands<F>> {
+        if prices.len() < config.period {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Not enough data for Bollinger Bands".to_string(),
+                required: config.period,
+                actual: prices.len(),
+            });
+        }
+
+        let output_len = prices.len() - config.period + 1;
+        let mut upper_band = Array1::zeros(output_len);
+        let mut middle_band = Array1::zeros(output_len);
+        let mut lower_band = Array1::zeros(output_len);
+        let mut bandwidth = Array1::zeros(output_len);
+        let mut percent_b = Array1::zeros(output_len);
+
+        let std_multiplier = F::from(config.std_dev_multiplier).unwrap();
+
+        for i in 0..output_len {
+            let window = &prices[i..i + config.period];
+            
+            // Calculate moving average
+            let ma = match config.ma_type {
+                MovingAverageType::Simple => {
+                    window.sum() / F::from(config.period).unwrap()
+                }
+                MovingAverageType::Exponential => {
+                    // Simplified EMA calculation
+                    let alpha = F::from(2.0).unwrap() / F::from(config.period + 1).unwrap();
+                    let mut ema = window[0];
+                    for &price in window.iter().skip(1) {
+                        ema = alpha * price + (F::one() - alpha) * ema;
+                    }
+                    ema
+                }
+                MovingAverageType::Weighted => {
+                    // Linear weighted moving average
+                    let mut sum = F::zero();
+                    let mut weight_sum = F::zero();
+                    for (j, &price) in window.iter().enumerate() {
+                        let weight = F::from(j + 1).unwrap();
+                        sum = sum + weight * price;
+                        weight_sum = weight_sum + weight;
+                    }
+                    sum / weight_sum
+                }
+            };
+
+            // Calculate standard deviation
+            let variance = window
+                .iter()
+                .map(|&price| (price - ma).powi(2))
+                .fold(F::zero(), |acc, x| acc + x) / F::from(config.period).unwrap();
+            let std_dev = variance.sqrt();
+
+            middle_band[i] = ma;
+            upper_band[i] = ma + std_multiplier * std_dev;
+            lower_band[i] = ma - std_multiplier * std_dev;
+            
+            // Calculate bandwidth
+            bandwidth[i] = if ma > F::zero() {
+                (upper_band[i] - lower_band[i]) / ma
+            } else {
+                F::zero()
+            };
+
+            // Calculate %B
+            let current_price = prices[i + config.period - 1];
+            percent_b[i] = if upper_band[i] != lower_band[i] {
+                (current_price - lower_band[i]) / (upper_band[i] - lower_band[i])
+            } else {
+                F::from(0.5).unwrap()
+            };
+        }
+
+        Ok(BollingerBands {
+            upper_band,
+            middle_band,
+            lower_band,
+            bandwidth,
+            percent_b,
+        })
+    }
+
+    /// Stochastic Oscillator configuration
+    #[derive(Debug, Clone)]
+    pub struct StochasticConfig {
+        /// %K period
+        pub k_period: usize,
+        /// %D period (smoothing)
+        pub d_period: usize,
+        /// %D smoothing type
+        pub d_smoothing: MovingAverageType,
+    }
+
+    impl Default for StochasticConfig {
+        fn default() -> Self {
+            Self {
+                k_period: 14,
+                d_period: 3,
+                d_smoothing: MovingAverageType::Simple,
+            }
+        }
+    }
+
+    /// Stochastic Oscillator result
+    #[derive(Debug, Clone)]
+    pub struct StochasticOscillator<F: Float> {
+        /// %K line (fast stochastic)
+        pub percent_k: Array1<F>,
+        /// %D line (slow stochastic)
+        pub percent_d: Array1<F>,
+    }
+
+    /// Calculate Stochastic Oscillator
+    pub fn stochastic_oscillator<F: Float + Clone>(
+        high: &Array1<F>,
+        low: &Array1<F>,
+        close: &Array1<F>,
+        config: &StochasticConfig,
+    ) -> Result<StochasticOscillator<F>> {
+        if high.len() != low.len() || low.len() != close.len() {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: high.len(),
+                actual: close.len(),
+            });
+        }
+
+        if high.len() < config.k_period {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Not enough data for Stochastic Oscillator".to_string(),
+                required: config.k_period,
+                actual: high.len(),
+            });
+        }
+
+        let k_output_len = high.len() - config.k_period + 1;
+        let mut percent_k = Array1::zeros(k_output_len);
+
+        // Calculate %K
+        for i in 0..k_output_len {
+            let window_start = i;
+            let window_end = i + config.k_period;
+            
+            let highest_high = high[window_start..window_end]
+                .iter()
+                .fold(F::neg_infinity(), |acc, &x| acc.max(x));
+            let lowest_low = low[window_start..window_end]
+                .iter()
+                .fold(F::infinity(), |acc, &x| acc.min(x));
+            
+            let current_close = close[window_end - 1];
+            
+            percent_k[i] = if highest_high != lowest_low {
+                F::from(100.0).unwrap() * (current_close - lowest_low) / (highest_high - lowest_low)
+            } else {
+                F::from(50.0).unwrap()
+            };
+        }
+
+        // Calculate %D (smoothed %K)
+        let d_output_len = if k_output_len >= config.d_period {
+            k_output_len - config.d_period + 1
+        } else {
+            0
+        };
+        
+        let mut percent_d = Array1::zeros(d_output_len);
+        
+        for i in 0..d_output_len {
+            let k_window = &percent_k[i..i + config.d_period];
+            percent_d[i] = match config.d_smoothing {
+                MovingAverageType::Simple => {
+                    k_window.sum() / F::from(config.d_period).unwrap()
+                }
+                MovingAverageType::Exponential => {
+                    let alpha = F::from(2.0).unwrap() / F::from(config.d_period + 1).unwrap();
+                    let mut ema = k_window[0];
+                    for &k_val in k_window.iter().skip(1) {
+                        ema = alpha * k_val + (F::one() - alpha) * ema;
+                    }
+                    ema
+                }
+                MovingAverageType::Weighted => {
+                    let mut sum = F::zero();
+                    let mut weight_sum = F::zero();
+                    for (j, &k_val) in k_window.iter().enumerate() {
+                        let weight = F::from(j + 1).unwrap();
+                        sum = sum + weight * k_val;
+                        weight_sum = weight_sum + weight;
+                    }
+                    sum / weight_sum
+                }
+            };
+        }
+
+        Ok(StochasticOscillator {
+            percent_k,
+            percent_d,
+        })
+    }
+
+    /// Ichimoku Cloud configuration
+    #[derive(Debug, Clone)]
+    pub struct IchimokuConfig {
+        /// Tenkan-sen period (conversion line)
+        pub tenkan_period: usize,
+        /// Kijun-sen period (base line)
+        pub kijun_period: usize,
+        /// Senkou Span B period
+        pub senkou_b_period: usize,
+        /// Displacement for Senkou spans
+        pub displacement: usize,
+    }
+
+    impl Default for IchimokuConfig {
+        fn default() -> Self {
+            Self {
+                tenkan_period: 9,
+                kijun_period: 26,
+                senkou_b_period: 52,
+                displacement: 26,
+            }
+        }
+    }
+
+    /// Ichimoku Cloud result
+    #[derive(Debug, Clone)]
+    pub struct IchimokuCloud<F: Float> {
+        /// Tenkan-sen (Conversion Line)
+        pub tenkan_sen: Array1<F>,
+        /// Kijun-sen (Base Line)
+        pub kijun_sen: Array1<F>,
+        /// Chikou Span (Lagging Span)
+        pub chikou_span: Array1<F>,
+        /// Senkou Span A (Leading Span A)
+        pub senkou_span_a: Array1<F>,
+        /// Senkou Span B (Leading Span B)
+        pub senkou_span_b: Array1<F>,
+    }
+
+    /// Calculate Ichimoku Cloud
+    pub fn ichimoku_cloud<F: Float + Clone>(
+        high: &Array1<F>,
+        low: &Array1<F>,
+        close: &Array1<F>,
+        config: &IchimokuConfig,
+    ) -> Result<IchimokuCloud<F>> {
+        if high.len() != low.len() || low.len() != close.len() {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: high.len(),
+                actual: close.len(),
+            });
+        }
+
+        let min_length = config.senkou_b_period.max(config.displacement);
+        if high.len() < min_length {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Not enough data for Ichimoku Cloud".to_string(),
+                required: min_length,
+                actual: high.len(),
+            });
+        }
+
+        let n = high.len();
+        
+        // Helper function to calculate highest high and lowest low
+        let calculate_hl_midpoint = |period: usize, start_idx: usize| -> F {
+            let end_idx = (start_idx + period).min(n);
+            let highest = high[start_idx..end_idx].iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
+            let lowest = low[start_idx..end_idx].iter().fold(F::infinity(), |acc, &x| acc.min(x));
+            (highest + lowest) / F::from(2.0).unwrap()
+        };
+
+        // Calculate Tenkan-sen
+        let mut tenkan_sen = Array1::zeros(n);
+        for i in 0..n {
+            if i + 1 >= config.tenkan_period {
+                let start = i + 1 - config.tenkan_period;
+                tenkan_sen[i] = calculate_hl_midpoint(config.tenkan_period, start);
+            } else {
+                tenkan_sen[i] = calculate_hl_midpoint(i + 1, 0);
+            }
+        }
+
+        // Calculate Kijun-sen
+        let mut kijun_sen = Array1::zeros(n);
+        for i in 0..n {
+            if i + 1 >= config.kijun_period {
+                let start = i + 1 - config.kijun_period;
+                kijun_sen[i] = calculate_hl_midpoint(config.kijun_period, start);
+            } else {
+                kijun_sen[i] = calculate_hl_midpoint(i + 1, 0);
+            }
+        }
+
+        // Calculate Chikou Span (displaced close)
+        let mut chikou_span = Array1::zeros(n);
+        for i in 0..n {
+            chikou_span[i] = close[i];
+        }
+
+        // Calculate Senkou Span A
+        let mut senkou_span_a = Array1::zeros(n);
+        for i in 0..n {
+            senkou_span_a[i] = (tenkan_sen[i] + kijun_sen[i]) / F::from(2.0).unwrap();
+        }
+
+        // Calculate Senkou Span B
+        let mut senkou_span_b = Array1::zeros(n);
+        for i in 0..n {
+            if i + 1 >= config.senkou_b_period {
+                let start = i + 1 - config.senkou_b_period;
+                senkou_span_b[i] = calculate_hl_midpoint(config.senkou_b_period, start);
+            } else {
+                senkou_span_b[i] = calculate_hl_midpoint(i + 1, 0);
+            }
+        }
+
+        Ok(IchimokuCloud {
+            tenkan_sen,
+            kijun_sen,
+            chikou_span,
+            senkou_span_a,
+            senkou_span_b,
+        })
+    }
+}
+
+/// Risk Metrics Module for comprehensive financial risk analysis
+pub mod risk_metrics {
+    use super::*;
+
+    /// Risk metrics configuration
+    #[derive(Debug, Clone)]
+    pub struct RiskConfig {
+        /// Confidence level for VaR/CVaR calculations (e.g., 0.95 for 95%)
+        pub confidence_level: f64,
+        /// Number of trading days per year for annualization
+        pub trading_days_per_year: usize,
+        /// Risk-free rate for Sharpe ratio calculation
+        pub risk_free_rate: f64,
+        /// Window size for rolling calculations
+        pub window_size: Option<usize>,
+    }
+
+    impl Default for RiskConfig {
+        fn default() -> Self {
+            Self {
+                confidence_level: 0.95,
+                trading_days_per_year: 252,
+                risk_free_rate: 0.02, // 2% annual risk-free rate
+                window_size: None,
+            }
+        }
+    }
+
+    /// Comprehensive risk metrics result
+    #[derive(Debug, Clone)]
+    pub struct RiskMetrics<F: Float> {
+        /// Value at Risk (VaR)
+        pub var: F,
+        /// Conditional Value at Risk (Expected Shortfall)
+        pub cvar: F,
+        /// Maximum Drawdown
+        pub max_drawdown: F,
+        /// Sharpe Ratio
+        pub sharpe_ratio: F,
+        /// Sortino Ratio
+        pub sortino_ratio: F,
+        /// Calmar Ratio
+        pub calmar_ratio: F,
+        /// Information Ratio
+        pub information_ratio: F,
+        /// Skewness of returns
+        pub skewness: F,
+        /// Kurtosis of returns
+        pub kurtosis: F,
+        /// Volatility (annualized standard deviation)
+        pub volatility: F,
+        /// Downside deviation
+        pub downside_deviation: F,
+        /// Maximum consecutive losses
+        pub max_consecutive_losses: usize,
+        /// Hit ratio (percentage of positive returns)
+        pub hit_ratio: F,
+        /// Pain Index (average drawdown)
+        pub pain_index: F,
+        /// Ulcer Index (drawdown-based risk measure)
+        pub ulcer_index: F,
+    }
+
+    /// Calculate comprehensive risk metrics for returns data
+    pub fn calculate_risk_metrics<F: Float + Clone>(
+        returns: &Array1<F>,
+        config: &RiskConfig,
+    ) -> Result<RiskMetrics<F>> {
+        if returns.is_empty() {
+            return Err(TimeSeriesError::InvalidInput(
+                "Returns array cannot be empty".to_string(),
+            ));
+        }
+
+        let n = returns.len();
+        let confidence_level = F::from(config.confidence_level).unwrap();
+        let trading_days = F::from(config.trading_days_per_year).unwrap();
+        let risk_free_rate = F::from(config.risk_free_rate).unwrap();
+
+        // Basic statistics
+        let mean_return = returns.sum() / F::from(n).unwrap();
+        let variance = returns
+            .iter()
+            .map(|&r| (r - mean_return).powi(2))
+            .fold(F::zero(), |acc, x| acc + x) / F::from(n - 1).unwrap();
+        let std_dev = variance.sqrt();
+        let volatility = std_dev * trading_days.sqrt();
+
+        // Value at Risk (VaR) - Historical method
+        let mut sorted_returns = returns.to_vec();
+        sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let var_index = ((F::one() - confidence_level) * F::from(n).unwrap()).to_usize().unwrap();
+        let var = if var_index < sorted_returns.len() {
+            -sorted_returns[var_index] // VaR is typically reported as positive
+        } else {
+            -sorted_returns[0]
+        };
+
+        // Conditional Value at Risk (CVaR/Expected Shortfall)
+        let tail_returns: Vec<F> = sorted_returns
+            .iter()
+            .take(var_index + 1)
+            .cloned()
+            .collect();
+        let cvar = if !tail_returns.is_empty() {
+            -tail_returns.iter().sum::<F>() / F::from(tail_returns.len()).unwrap()
+        } else {
+            var
+        };
+
+        // Calculate cumulative returns for drawdown analysis
+        let mut cumulative_returns = Array1::zeros(n);
+        cumulative_returns[0] = F::one() + returns[0];
+        for i in 1..n {
+            cumulative_returns[i] = cumulative_returns[i - 1] * (F::one() + returns[i]);
+        }
+
+        // Maximum Drawdown
+        let max_drawdown = calculate_max_drawdown(&cumulative_returns);
+
+        // Sharpe Ratio
+        let excess_return = mean_return * trading_days - risk_free_rate;
+        let sharpe_ratio = if volatility > F::zero() {
+            excess_return / volatility
+        } else {
+            F::zero()
+        };
+
+        // Downside deviation (for Sortino ratio)
+        let downside_variance = returns
+            .iter()
+            .map(|&r| if r < F::zero() { r.powi(2) } else { F::zero() })
+            .fold(F::zero(), |acc, x| acc + x) / F::from(n - 1).unwrap();
+        let downside_deviation = downside_variance.sqrt() * trading_days.sqrt();
+
+        // Sortino Ratio
+        let sortino_ratio = if downside_deviation > F::zero() {
+            excess_return / downside_deviation
+        } else {
+            F::zero()
+        };
+
+        // Calmar Ratio
+        let annualized_return = mean_return * trading_days;
+        let calmar_ratio = if max_drawdown > F::zero() {
+            annualized_return / max_drawdown
+        } else {
+            F::zero()
+        };
+
+        // Information Ratio (assuming benchmark return is risk-free rate)
+        let tracking_error = std_dev * trading_days.sqrt();
+        let information_ratio = if tracking_error > F::zero() {
+            excess_return / tracking_error
+        } else {
+            F::zero()
+        };
+
+        // Skewness
+        let skewness = if std_dev > F::zero() {
+            let skew_sum = returns
+                .iter()
+                .map(|&r| ((r - mean_return) / std_dev).powi(3))
+                .fold(F::zero(), |acc, x| acc + x);
+            skew_sum / F::from(n).unwrap()
+        } else {
+            F::zero()
+        };
+
+        // Kurtosis
+        let kurtosis = if std_dev > F::zero() {
+            let kurt_sum = returns
+                .iter()
+                .map(|&r| ((r - mean_return) / std_dev).powi(4))
+                .fold(F::zero(), |acc, x| acc + x);
+            kurt_sum / F::from(n).unwrap() - F::from(3.0).unwrap() // Excess kurtosis
+        } else {
+            F::zero()
+        };
+
+        // Maximum consecutive losses
+        let max_consecutive_losses = calculate_max_consecutive_losses(returns);
+
+        // Hit ratio (percentage of positive returns)
+        let positive_returns = returns.iter().filter(|&&r| r > F::zero()).count();
+        let hit_ratio = F::from(positive_returns).unwrap() / F::from(n).unwrap();
+
+        // Pain Index (average drawdown)
+        let pain_index = calculate_pain_index(&cumulative_returns);
+
+        // Ulcer Index
+        let ulcer_index = calculate_ulcer_index(&cumulative_returns);
+
+        Ok(RiskMetrics {
+            var,
+            cvar,
+            max_drawdown,
+            sharpe_ratio,
+            sortino_ratio,
+            calmar_ratio,
+            information_ratio,
+            skewness,
+            kurtosis,
+            volatility,
+            downside_deviation,
+            max_consecutive_losses,
+            hit_ratio,
+            pain_index,
+            ulcer_index,
+        })
+    }
+
+    /// Calculate Value at Risk using parametric method
+    pub fn parametric_var<F: Float + Clone>(
+        returns: &Array1<F>,
+        confidence_level: F,
+    ) -> Result<F> {
+        if returns.is_empty() {
+            return Err(TimeSeriesError::InvalidInput(
+                "Returns array cannot be empty".to_string(),
+            ));
+        }
+
+        let n = returns.len();
+        let mean = returns.sum() / F::from(n).unwrap();
+        let variance = returns
+            .iter()
+            .map(|&r| (r - mean).powi(2))
+            .fold(F::zero(), |acc, x| acc + x) / F::from(n - 1).unwrap();
+        let std_dev = variance.sqrt();
+
+        // Normal distribution inverse CDF approximation
+        let alpha = F::one() - confidence_level;
+        let z_score = normal_inverse_cdf(alpha);
+        let var = -(mean + z_score * std_dev);
+
+        Ok(var)
+    }
+
+    /// Calculate Monte Carlo Value at Risk
+    pub fn monte_carlo_var<F: Float + Clone>(
+        returns: &Array1<F>,
+        confidence_level: F,
+        num_simulations: usize,
+    ) -> Result<F> {
+        if returns.is_empty() {
+            return Err(TimeSeriesError::InvalidInput(
+                "Returns array cannot be empty".to_string(),
+            ));
+        }
+
+        let n = returns.len();
+        let mean = returns.sum() / F::from(n).unwrap();
+        let variance = returns
+            .iter()
+            .map(|&r| (r - mean).powi(2))
+            .fold(F::zero(), |acc, x| acc + x) / F::from(n - 1).unwrap();
+        let std_dev = variance.sqrt();
+
+        // Simple Monte Carlo simulation using normal distribution
+        let mut simulated_returns = Vec::with_capacity(num_simulations);
+        
+        // Simple random number generation (in practice, use proper RNG)
+        let mut seed = 12345u64;
+        for _ in 0..num_simulations {
+            // Simple LCG for demonstration
+            seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
+            let u1 = (seed as f64) / (u64::MAX as f64);
+            
+            seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
+            let u2 = (seed as f64) / (u64::MAX as f64);
+            
+            // Box-Muller transformation
+            let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+            let simulated_return = mean + std_dev * F::from(z).unwrap();
+            simulated_returns.push(simulated_return);
+        }
+
+        // Sort and find VaR
+        simulated_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let var_index = ((F::one() - confidence_level) * F::from(num_simulations).unwrap()).to_usize().unwrap();
+        let var = if var_index < simulated_returns.len() {
+            -simulated_returns[var_index]
+        } else {
+            -simulated_returns[0]
+        };
+
+        Ok(var)
+    }
+
+    /// Calculate rolling Value at Risk
+    pub fn rolling_var<F: Float + Clone>(
+        returns: &Array1<F>,
+        window_size: usize,
+        confidence_level: F,
+    ) -> Result<Array1<F>> {
+        if returns.len() < window_size {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Not enough data for rolling VaR".to_string(),
+                required: window_size,
+                actual: returns.len(),
+            });
+        }
+
+        let output_len = returns.len() - window_size + 1;
+        let mut rolling_var = Array1::zeros(output_len);
+
+        for i in 0..output_len {
+            let window_returns = returns.slice(s![i..i + window_size]);
+            let window_array = Array1::from_vec(window_returns.to_vec());
+            rolling_var[i] = parametric_var(&window_array, confidence_level)?;
+        }
+
+        Ok(rolling_var)
+    }
+
+    /// Calculate maximum drawdown from cumulative returns
+    fn calculate_max_drawdown<F: Float + Clone>(cumulative_returns: &Array1<F>) -> F {
+        let mut max_drawdown = F::zero();
+        let mut peak = cumulative_returns[0];
+
+        for &value in cumulative_returns.iter() {
+            if value > peak {
+                peak = value;
+            }
+            let drawdown = (peak - value) / peak;
+            if drawdown > max_drawdown {
+                max_drawdown = drawdown;
+            }
+        }
+
+        max_drawdown
+    }
+
+    /// Calculate maximum consecutive losses
+    fn calculate_max_consecutive_losses<F: Float + Clone>(returns: &Array1<F>) -> usize {
+        let mut max_consecutive = 0;
+        let mut current_consecutive = 0;
+
+        for &ret in returns.iter() {
+            if ret < F::zero() {
+                current_consecutive += 1;
+                max_consecutive = max_consecutive.max(current_consecutive);
+            } else {
+                current_consecutive = 0;
+            }
+        }
+
+        max_consecutive
+    }
+
+    /// Calculate Pain Index (average drawdown)
+    fn calculate_pain_index<F: Float + Clone>(cumulative_returns: &Array1<F>) -> F {
+        let mut peak = cumulative_returns[0];
+        let mut total_drawdown = F::zero();
+        let n = cumulative_returns.len();
+
+        for &value in cumulative_returns.iter() {
+            if value > peak {
+                peak = value;
+            }
+            let drawdown = (peak - value) / peak;
+            total_drawdown = total_drawdown + drawdown;
+        }
+
+        total_drawdown / F::from(n).unwrap()
+    }
+
+    /// Calculate Ulcer Index (RMS of drawdowns)
+    fn calculate_ulcer_index<F: Float + Clone>(cumulative_returns: &Array1<F>) -> F {
+        let mut peak = cumulative_returns[0];
+        let mut sum_squared_drawdowns = F::zero();
+        let n = cumulative_returns.len();
+
+        for &value in cumulative_returns.iter() {
+            if value > peak {
+                peak = value;
+            }
+            let drawdown = (peak - value) / peak;
+            sum_squared_drawdowns = sum_squared_drawdowns + drawdown.powi(2);
+        }
+
+        (sum_squared_drawdowns / F::from(n).unwrap()).sqrt()
+    }
+
+    /// Beta calculation against a benchmark
+    pub fn calculate_beta<F: Float + Clone>(
+        returns: &Array1<F>,
+        benchmark_returns: &Array1<F>,
+    ) -> Result<F> {
+        if returns.len() != benchmark_returns.len() {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: returns.len(),
+                actual: benchmark_returns.len(),
+            });
+        }
+
+        if returns.is_empty() {
+            return Err(TimeSeriesError::InvalidInput(
+                "Returns arrays cannot be empty".to_string(),
+            ));
+        }
+
+        let n = F::from(returns.len()).unwrap();
+        let mean_asset = returns.sum() / n;
+        let mean_benchmark = benchmark_returns.sum() / n;
+
+        let mut covariance = F::zero();
+        let mut benchmark_variance = F::zero();
+
+        for (&asset_ret, &bench_ret) in returns.iter().zip(benchmark_returns.iter()) {
+            let asset_dev = asset_ret - mean_asset;
+            let bench_dev = bench_ret - mean_benchmark;
+            covariance = covariance + asset_dev * bench_dev;
+            benchmark_variance = benchmark_variance + bench_dev.powi(2);
+        }
+
+        covariance = covariance / (n - F::one());
+        benchmark_variance = benchmark_variance / (n - F::one());
+
+        if benchmark_variance > F::zero() {
+            Ok(covariance / benchmark_variance)
+        } else {
+            Ok(F::zero())
+        }
+    }
+
+    /// Treynor Ratio calculation
+    pub fn treynor_ratio<F: Float + Clone>(
+        returns: &Array1<F>,
+        benchmark_returns: &Array1<F>,
+        risk_free_rate: F,
+        trading_days_per_year: usize,
+    ) -> Result<F> {
+        let beta = calculate_beta(returns, benchmark_returns)?;
+        
+        if beta.abs() < F::from(1e-10).unwrap() {
+            return Ok(F::zero());
+        }
+
+        let n = F::from(returns.len()).unwrap();
+        let mean_return = returns.sum() / n;
+        let annualized_return = mean_return * F::from(trading_days_per_year).unwrap();
+        let excess_return = annualized_return - risk_free_rate;
+
+        Ok(excess_return / beta)
+    }
+
+    /// Jensen's Alpha calculation
+    pub fn jensens_alpha<F: Float + Clone>(
+        returns: &Array1<F>,
+        benchmark_returns: &Array1<F>,
+        risk_free_rate: F,
+        trading_days_per_year: usize,
+    ) -> Result<F> {
+        let beta = calculate_beta(returns, benchmark_returns)?;
+        
+        let n = F::from(returns.len()).unwrap();
+        let mean_asset_return = returns.sum() / n;
+        let mean_benchmark_return = benchmark_returns.sum() / n;
+        
+        let annualized_asset = mean_asset_return * F::from(trading_days_per_year).unwrap();
+        let annualized_benchmark = mean_benchmark_return * F::from(trading_days_per_year).unwrap();
+        
+        let expected_return = risk_free_rate + beta * (annualized_benchmark - risk_free_rate);
+        Ok(annualized_asset - expected_return)
+    }
+
+    /// Approximate normal inverse CDF
+    fn normal_inverse_cdf<F: Float>(p: F) -> F {
+        // Beasley-Springer-Moro algorithm approximation
+        let a0 = F::from(2.515517).unwrap();
+        let a1 = F::from(0.802853).unwrap();
+        let a2 = F::from(0.010328).unwrap();
+        let b1 = F::from(1.432788).unwrap();
+        let b2 = F::from(0.189269).unwrap();
+        let b3 = F::from(0.001308).unwrap();
+
+        let t = if p < F::from(0.5).unwrap() {
+            (-F::from(2.0).unwrap() * (p.ln())).sqrt()
+        } else {
+            (-F::from(2.0).unwrap() * ((F::one() - p).ln())).sqrt()
+        };
+
+        let numerator = a0 + a1 * t + a2 * t.powi(2);
+        let denominator = F::one() + b1 * t + b2 * t.powi(2) + b3 * t.powi(3);
+        let z = t - numerator / denominator;
+
+        if p < F::from(0.5).unwrap() { -z } else { z }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn test_risk_metrics_calculation() {
+            let returns = Array1::from_vec(vec![0.01, -0.02, 0.015, -0.01, 0.005, -0.008, 0.02]);
+            let config = RiskConfig::default();
+            
+            let metrics = calculate_risk_metrics(&returns, &config).unwrap();
+            
+            assert!(metrics.var > 0.0);
+            assert!(metrics.cvar >= metrics.var);
+            assert!(metrics.max_drawdown >= 0.0);
+            assert!(metrics.hit_ratio >= 0.0 && metrics.hit_ratio <= 1.0);
+        }
+
+        #[test]
+        fn test_parametric_var() {
+            let returns = Array1::from_vec(vec![0.01, -0.02, 0.015, -0.01, 0.005]);
+            let var = parametric_var(&returns, 0.95).unwrap();
+            assert!(var > 0.0);
+        }
+
+        #[test]
+        fn test_beta_calculation() {
+            let asset_returns = Array1::from_vec(vec![0.01, -0.02, 0.015, -0.01, 0.005]);
+            let benchmark_returns = Array1::from_vec(vec![0.008, -0.015, 0.012, -0.008, 0.004]);
+            
+            let beta = calculate_beta(&asset_returns, &benchmark_returns).unwrap();
+            assert!(beta.abs() < 10.0); // Reasonable beta range
+        }
+
+        #[test]
+        fn test_max_drawdown() {
+            let cumulative = Array1::from_vec(vec![1.0, 1.1, 1.05, 0.95, 1.2, 1.15]);
+            let mdd = calculate_max_drawdown(&cumulative);
+            assert!(mdd > 0.0);
+            assert!(mdd < 1.0);
+        }
+    }
 }

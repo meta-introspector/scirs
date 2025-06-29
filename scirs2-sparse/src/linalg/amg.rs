@@ -182,13 +182,13 @@ where
         &self,
         matrix: &CsrArray<T>,
     ) -> SparseResult<(CsrArray<T>, CsrArray<T>, CsrArray<T>)> {
-        let (n, _) = matrix.shape();
+        let (_n, _) = matrix.shape();
 
         // Step 1: Detect strong connections
         let strong_connections = self.detect_strong_connections(matrix)?;
 
         // Step 2: Perform C/F splitting using classical Ruge-Stuben algorithm
-        let (c_points, f_points) = self.classical_cf_splitting(matrix, &strong_connections)?;
+        let (c_points, _f_points) = self.classical_cf_splitting(matrix, &strong_connections)?;
 
         // Step 3: Build coarse point mapping
         let mut fine_to_coarse = HashMap::new();
@@ -203,17 +203,29 @@ where
 
         // Build restriction operator (typically transpose of prolongation)
         let restriction_box = prolongation.transpose()?;
-        let restriction = restriction_box.as_any().downcast_ref::<CsrArray<T>>()
-            .ok_or_else(|| SparseError::ValueError("Failed to downcast restriction to CsrArray".to_string()))?
+        let restriction = restriction_box
+            .as_any()
+            .downcast_ref::<CsrArray<T>>()
+            .ok_or_else(|| {
+                SparseError::ValueError("Failed to downcast restriction to CsrArray".to_string())
+            })?
             .clone();
 
         // Build coarse matrix: A_coarse = R * A * P
         let temp_box = restriction.dot(matrix)?;
-        let temp = temp_box.as_any().downcast_ref::<CsrArray<T>>()
-            .ok_or_else(|| SparseError::ValueError("Failed to downcast temp to CsrArray".to_string()))?;
+        let temp = temp_box
+            .as_any()
+            .downcast_ref::<CsrArray<T>>()
+            .ok_or_else(|| {
+                SparseError::ValueError("Failed to downcast temp to CsrArray".to_string())
+            })?;
         let coarse_matrix_box = temp.dot(&prolongation)?;
-        let coarse_matrix = coarse_matrix_box.as_any().downcast_ref::<CsrArray<T>>()
-            .ok_or_else(|| SparseError::ValueError("Failed to downcast coarse_matrix to CsrArray".to_string()))?
+        let coarse_matrix = coarse_matrix_box
+            .as_any()
+            .downcast_ref::<CsrArray<T>>()
+            .ok_or_else(|| {
+                SparseError::ValueError("Failed to downcast coarse_matrix to CsrArray".to_string())
+            })?
             .clone();
 
         Ok((coarse_matrix, prolongation, restriction))
@@ -264,7 +276,7 @@ where
         strong_connections: &[Vec<usize>],
     ) -> SparseResult<(Vec<usize>, Vec<usize>)> {
         let (n, _) = matrix.shape();
-        
+
         // Count strong connections for each point (influence measure)
         let mut influence = vec![0; n];
         for i in 0..n {
@@ -287,14 +299,16 @@ where
 
             // Check if this point needs to be a C-point
             let mut needs_coarse = false;
-            
+
             // If this point has strong F-point neighbors without coarse interpolatory set
             for &j in &strong_connections[i] {
-                if point_type[j] == 2 { // F-point
+                if point_type[j] == 2 {
+                    // F-point
                     // Check if F-point j has a coarse interpolatory set
                     let mut has_coarse_interp = false;
                     for &k in &strong_connections[j] {
-                        if point_type[k] == 1 { // C-point
+                        if point_type[k] == 1 {
+                            // C-point
                             has_coarse_interp = true;
                             break;
                         }
@@ -310,7 +324,7 @@ where
                 // Make this a C-point
                 point_type[i] = 1;
                 c_points.push(i);
-                
+
                 // Make strongly connected neighbors F-points
                 for &j in &strong_connections[i] {
                     if point_type[j] == 0 {
@@ -355,10 +369,10 @@ where
             } else {
                 // Algebraic interpolation for fine points
                 let interp_weights = self.compute_interpolation_weights(
-                    i, 
-                    matrix, 
-                    &strong_connections[i], 
-                    fine_to_coarse
+                    i,
+                    matrix,
+                    &strong_connections[i],
+                    fine_to_coarse,
                 )?;
 
                 if interp_weights.is_empty() {
@@ -462,7 +476,6 @@ where
 
         Ok(weights)
     }
-
 
     /// Apply the AMG preconditioner
     ///
@@ -728,7 +741,6 @@ where
 mod tests {
     use super::*;
     use crate::csr_array::CsrArray;
-    use approx::assert_relative_eq;
 
     #[test]
     fn test_amg_preconditioner_creation() {
@@ -801,24 +813,26 @@ mod tests {
         // Create a larger test matrix to better test algebraic coarsening
         let rows = vec![0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4];
         let cols = vec![0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 3, 4, 0];
-        let data = vec![4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, 4.0, -1.0];
+        let data = vec![
+            4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, 4.0, -1.0,
+        ];
         let matrix = CsrArray::from_triplets(&rows, &cols, &data, (5, 5), false).unwrap();
 
         let mut options = AMGOptions::default();
         options.theta = 0.25; // Strong connection threshold
-        
+
         let amg = AMGPreconditioner::new(&matrix, options).unwrap();
 
         // Should have created a hierarchy
         assert!(amg.num_levels() >= 1);
-        
+
         // Test that it can be applied
         let b = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0]);
         let x = amg.apply(&b.view()).unwrap();
-        
+
         // Check that the result has the right size
         assert_eq!(x.len(), 5);
-        
+
         // Check that the solution is reasonable (not all zeros)
         assert!(x.iter().any(|&val| val.abs() > 1e-10));
     }
@@ -829,17 +843,17 @@ mod tests {
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![4.0, -2.0, -2.0, 4.0, -2.0, 4.0];
         let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
-        
+
         let mut options = AMGOptions::default();
         options.theta = 0.25;
         let amg = AMGPreconditioner::new(&matrix, options).unwrap();
-        
+
         let strong_connections = amg.detect_strong_connections(&matrix).unwrap();
-        
+
         // Each point should have some strong connections
         assert!(!strong_connections[0].is_empty());
         assert!(!strong_connections[1].is_empty());
-        
+
         // Verify strong connections are bidirectional for symmetric matrix
         if strong_connections[0].contains(&1) {
             assert!(strong_connections[1].contains(&0));

@@ -63,8 +63,7 @@ impl Default for EndianMode {
 }
 
 /// Record marker size for Fortran unformatted files
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum RecordMarkerSize {
     /// 4-byte record markers (default for most compilers)
     #[default]
@@ -73,10 +72,8 @@ pub enum RecordMarkerSize {
     EightByte,
 }
 
-
 /// Fortran file access mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum AccessMode {
     /// Sequential access (default)
     #[default]
@@ -86,7 +83,6 @@ pub enum AccessMode {
     /// Stream access (Fortran 2003+)
     Stream,
 }
-
 
 /// Fortran data types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

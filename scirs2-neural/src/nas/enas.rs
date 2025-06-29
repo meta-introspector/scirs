@@ -551,8 +551,8 @@ fn softmax(logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
 
 /// Helper function to sample from categorical distribution
 fn sample_categorical(probs: &Array1<f32>) -> Result<usize> {
-    let mut rng = rand::thread_rng();
-    let uniform: f32 = rand::Rng::gen(&mut rng);
+    let mut rng = rand::rng();
+    let uniform: f32 = rand::Rng::random(&mut rng);
     let mut cumsum = 0.0;
 
     for (i, &p) in probs.iter().enumerate() {

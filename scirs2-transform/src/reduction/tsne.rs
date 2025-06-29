@@ -849,7 +849,7 @@ impl TSNE {
     }
 
     /// Sets the metric for pairwise distance computation
-    /// 
+    ///
     /// Supported metrics:
     /// - "euclidean": Euclidean distance (L2 norm) - default
     /// - "manhattan": Manhattan distance (L1 norm)

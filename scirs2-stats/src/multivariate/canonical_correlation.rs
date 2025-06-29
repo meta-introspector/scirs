@@ -668,7 +668,7 @@ impl PLSCanonical {
             let w = w / (w.dot(&w)).sqrt();
             let t = x_current.dot(&w);
             let c = y_current.t().dot(&t);
-            let c = c / (c.dot(&c)).sqrt();
+            let c = c.clone() / (c.dot(&c)).sqrt();
             let u = y_current.dot(&c);
 
             let p = x_current.t().dot(&t) / t.dot(&t);

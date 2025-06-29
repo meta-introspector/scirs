@@ -733,6 +733,14 @@ where
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
+
+    fn get_indptr(&self) -> Option<&Array1<usize>> {
+        Some(&self.indptr)
+    }
+
+    fn indptr(&self) -> Option<&Array1<usize>> {
+        Some(&self.indptr)
+    }
 }
 
 impl<T> fmt::Debug for CscArray<T>

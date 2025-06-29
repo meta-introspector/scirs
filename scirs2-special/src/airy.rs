@@ -90,7 +90,7 @@
 //!
 //! Airy functions appear in numerous physical contexts:
 //!
-//! 1. **Quantum Mechanics**: 
+//! 1. **Quantum Mechanics**:
 //!    - Solutions to the Schrödinger equation with linear potential
 //!    - Quantum tunneling through potential barriers
 //!    - WKB approximation near turning points

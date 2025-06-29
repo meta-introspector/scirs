@@ -600,9 +600,8 @@ mod tests {
             |values: &[f64]| -> f64 { values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b)) };
 
         // Test with BorderMode::Nearest
-        let result =
-            generic_filter(&input, max_func, &[2, 2], Some(BorderMode::Nearest), None)
-                .expect("generic_filter should succeed for test");
+        let result = generic_filter(&input, max_func, &[2, 2], Some(BorderMode::Nearest), None)
+            .expect("generic_filter should succeed for test");
 
         // Check shape preservation and that center position sees the global maximum
         assert_eq!(result.shape(), input.shape());
@@ -622,15 +621,13 @@ mod tests {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
         // Test maximum filter
-        let result =
-            generic_filter(&input, filter_functions::maximum, &[3, 3], None, None)
-                .expect("generic_filter should succeed for test");
+        let result = generic_filter(&input, filter_functions::maximum, &[3, 3], None, None)
+            .expect("generic_filter should succeed for test");
         assert_abs_diff_eq!(result[[1, 1]], 9.0, epsilon = 1e-10);
 
         // Test minimum filter
-        let result =
-            generic_filter(&input, filter_functions::minimum, &[3, 3], None, None)
-                .expect("generic_filter should succeed for test");
+        let result = generic_filter(&input, filter_functions::minimum, &[3, 3], None, None)
+            .expect("generic_filter should succeed for test");
         assert_abs_diff_eq!(result[[1, 1]], 1.0, epsilon = 1e-10);
 
         // Test median filter

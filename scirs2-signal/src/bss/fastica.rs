@@ -3,7 +3,7 @@
 //! This module implements the FastICA algorithm for blind source separation.
 
 use super::{BssConfig, NonlinearityFunction};
-use crate::error::SignalResult;
+use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2};
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};

@@ -54,18 +54,18 @@ pub use cleansing::{
 };
 pub use distance::{cosine_similarity, jaccard_similarity, levenshtein_distance};
 pub use domain_processors::{
-    Domain, DomainProcessorConfig, FinancialTextProcessor, LegalTextProcessor, MedicalTextProcessor, 
-    NewsTextProcessor, PatentTextProcessor, ProcessedDomainText, ScientificTextProcessor, 
-    SocialMediaTextProcessor, UnifiedDomainProcessor,
+    Domain, DomainProcessorConfig, FinancialTextProcessor, LegalTextProcessor,
+    MedicalTextProcessor, NewsTextProcessor, PatentTextProcessor, ProcessedDomainText,
+    ScientificTextProcessor, SocialMediaTextProcessor, UnifiedDomainProcessor,
 };
 pub use embeddings::{Word2Vec, Word2VecAlgorithm, Word2VecConfig};
 pub use enhanced_vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer};
 pub use error::{Result, TextError};
 pub use huggingface_compat::{
-    ClassificationResult, FeatureExtractionPipeline, FillMaskPipeline, FillMaskResult, 
-    FormatConverter, HfConfig, HfEncodedInput, HfHub, HfModelAdapter, HfPipeline, 
-    HfTokenizer, HfTokenizerConfig, QuestionAnsweringPipeline, QuestionAnsweringResult,
-    TextClassificationPipeline, ZeroShotClassificationPipeline,
+    ClassificationResult, FeatureExtractionPipeline, FillMaskPipeline, FillMaskResult,
+    FormatConverter, HfConfig, HfEncodedInput, HfHub, HfModelAdapter, HfPipeline, HfTokenizer,
+    HfTokenizerConfig, QuestionAnsweringPipeline, QuestionAnsweringResult,
+    TextClassificationPipeline as HfTextClassificationPipeline, ZeroShotClassificationPipeline,
 };
 pub use information_extraction::{
     Entity, EntityType, ExtractedInformation, InformationExtractionPipeline, KeyPhraseExtractor,
@@ -78,16 +78,18 @@ pub use ml_sentiment::{
     ClassMetrics, EvaluationMetrics, MLSentimentAnalyzer, MLSentimentConfig, TrainingMetrics,
 };
 pub use model_registry::{
-    ModelMetadata, ModelRegistry, ModelType, PrebuiltModels, RegistrableModel, SerializableModelData,
+    ModelMetadata, ModelRegistry, ModelType, PrebuiltModels, RegistrableModel,
+    SerializableModelData,
 };
 pub use multilingual::{
     Language, LanguageDetectionResult, LanguageDetector, MultilingualProcessor, ProcessedText,
     StopWords,
 };
 pub use neural_architectures::{
-    ActivationFunction, AdditiveAttention, BiLSTM, CNNLSTMHybrid, Conv1D, CrossAttention, 
-    Dropout, GRUCell, LayerNorm, LSTMCell, MaxPool1D, MultiHeadAttention, MultiScaleCNN, 
-    PositionwiseFeedForward, ResidualBlock1D, SelfAttention, TextCNN,
+    ActivationFunction, AdditiveAttention, BiLSTM, CNNLSTMHybrid, Conv1D, CrossAttention, Dropout,
+    GRUCell, LSTMCell, LayerNorm as NeuralLayerNorm, MaxPool1D,
+    MultiHeadAttention as NeuralMultiHeadAttention, MultiScaleCNN, PositionwiseFeedForward,
+    ResidualBlock1D, SelfAttention, TextCNN,
 };
 pub use parallel::{
     ParallelCorpusProcessor, ParallelTextProcessor, ParallelTokenizer, ParallelVectorizer,
@@ -142,7 +144,7 @@ pub use topic_modeling::{
 };
 pub use transformer::{
     FeedForward, LayerNorm, MultiHeadAttention, PositionalEncoding, TokenEmbedding,
-    TransformerConfig, TransformerDecoder, TransformerDecoderLayer, TransformerEncoder, 
+    TransformerConfig, TransformerDecoder, TransformerDecoderLayer, TransformerEncoder,
     TransformerEncoderLayer, TransformerModel,
 };
 pub use vectorize::{CountVectorizer, TfidfVectorizer, Vectorizer};

@@ -418,13 +418,13 @@ where
 
     /// Build the enhanced kriging interpolator
     pub fn build(self) -> InterpolateResult<EnhancedKriging<F>> {
-        let points = self.points.ok_or_else(|| {
-            InterpolateError::invalid_input("points must be set".to_string())
-        })?;
-        
-        let values = self.values.ok_or_else(|| {
-            InterpolateError::invalid_input("values must be set".to_string())
-        })?;
+        let points = self
+            .points
+            .ok_or_else(|| InterpolateError::invalid_input("points must be set".to_string()))?;
+
+        let values = self
+            .values
+            .ok_or_else(|| InterpolateError::invalid_input("values must be set".to_string()))?;
 
         // Input validation
         if points.shape()[0] != values.len() {
@@ -548,20 +548,17 @@ where
     /// Evaluate covariance function with anisotropic parameters
     fn evaluate_covariance(r: F, cov: &AnisotropicCovariance<F>) -> F {
         match cov.cov_fn {
-            CovarianceFunction::SquaredExponential => {
-                cov.sigma_sq * (-r * r).exp()
-            }
-            CovarianceFunction::Exponential => {
-                cov.sigma_sq * (-r).exp()
-            }
+            CovarianceFunction::SquaredExponential => cov.sigma_sq * (-r * r).exp(),
+            CovarianceFunction::Exponential => cov.sigma_sq * (-r).exp(),
             CovarianceFunction::Matern32 => {
                 let sqrt3_r = F::from_f64(3.0).unwrap().sqrt() * r;
                 cov.sigma_sq * (F::one() + sqrt3_r) * (-sqrt3_r).exp()
             }
             CovarianceFunction::Matern52 => {
                 let sqrt5_r = F::from_f64(5.0).unwrap().sqrt() * r;
-                let factor = F::one() + sqrt5_r + 
-                    F::from_f64(5.0).unwrap() * r * r / F::from_f64(3.0).unwrap();
+                let factor = F::one()
+                    + sqrt5_r
+                    + F::from_f64(5.0).unwrap() * r * r / F::from_f64(3.0).unwrap();
                 cov.sigma_sq * factor * (-sqrt5_r).exp()
             }
             CovarianceFunction::RationalQuadratic => {
@@ -796,7 +793,8 @@ where
                     &sample_point,
                     &self.anisotropic_cov,
                 );
-                k_star[j] = EnhancedKrigingBuilder::evaluate_covariance(dist, &self.anisotropic_cov);
+                k_star[j] =
+                    EnhancedKrigingBuilder::evaluate_covariance(dist, &self.anisotropic_cov);
             }
 
             // Enhanced prediction using anisotropic weights
@@ -820,7 +818,7 @@ where
 
             // Enhanced variance calculation with anisotropic consideration
             let mut variance = self.anisotropic_cov.sigma_sq;
-            
+
             // Reduce variance based on proximity to training points
             let mut influence = F::zero();
             for j in 0..n_points {
@@ -830,16 +828,17 @@ where
                     &sample_point,
                     &self.anisotropic_cov,
                 );
-                
+
                 // Use covariance as measure of influence
-                let cov_influence = EnhancedKrigingBuilder::evaluate_covariance(dist, &self.anisotropic_cov);
+                let cov_influence =
+                    EnhancedKrigingBuilder::evaluate_covariance(dist, &self.anisotropic_cov);
                 influence = influence + cov_influence / self.anisotropic_cov.sigma_sq;
             }
 
             // Scale variance by influence
             influence = influence / F::from_usize(n_points).unwrap();
             variance = variance * (F::one() - influence.min(F::one()));
-            
+
             // Add nugget for numerical stability
             variance = variance + self.anisotropic_cov.nugget;
 
@@ -878,45 +877,47 @@ where
     ) -> InterpolateResult<BayesianPredictionResult<F>> {
         // Get basic prediction first
         let basic_result = self.predict(query_points)?;
-        
+
         let n_query = query_points.shape()[0];
-        
+
         // For this implementation, generate simple posterior samples
         // In a full implementation, this would use MCMC or other sampling methods
         let mut posterior_samples = Array2::zeros((n_samples, n_query));
-        
+
         // Use normal distribution around the mean with the predicted variance
         for i in 0..n_query {
             let mean = basic_result.value[i];
             let std_dev = basic_result.variance[i].sqrt();
-            
+
             for s in 0..n_samples {
                 // Simple approximation - in practice would use proper random sampling
                 let offset = F::from_f64((s as f64 / n_samples as f64 - 0.5) * 4.0).unwrap();
                 posterior_samples[[s, i]] = mean + std_dev * offset;
             }
         }
-        
+
         // Compute quantiles
         let mut quantiles = Vec::new();
         for &level in quantile_levels {
             let mut quantile_values = Array1::zeros(n_query);
-            
+
             for i in 0..n_query {
                 // Simple quantile approximation
-                let sample_idx = ((level * F::from_usize(n_samples).unwrap()).to_usize().unwrap_or(0))
-                    .min(n_samples - 1);
+                let sample_idx = ((level * F::from_usize(n_samples).unwrap())
+                    .to_usize()
+                    .unwrap_or(0))
+                .min(n_samples - 1);
                 quantile_values[i] = posterior_samples[[sample_idx, i]];
             }
-            
+
             quantiles.push((level, quantile_values));
         }
-        
+
         // Compute log marginal likelihood (simplified)
-        let log_marginal_likelihood = F::from_f64(-0.5).unwrap() * 
-            F::from_usize(self.points.shape()[0]).unwrap() * 
-            F::from_f64(2.0 * std::f64::consts::PI).unwrap().ln();
-        
+        let log_marginal_likelihood = F::from_f64(-0.5).unwrap()
+            * F::from_usize(self.points.shape()[0]).unwrap()
+            * F::from_f64(2.0 * std::f64::consts::PI).unwrap().ln();
+
         Ok(BayesianPredictionResult {
             mean: basic_result.value,
             variance: basic_result.variance,

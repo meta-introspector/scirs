@@ -39,8 +39,11 @@ echo "-----------------------------------"
 cd ..
 
 # Run the validation tests
-echo "Running numerical validation tests..."
+echo "Running basic numerical validation tests..."
 cargo test --test numerical_validation -- --nocapture
+
+echo "Running comprehensive validation tests..."
+cargo test --test comprehensive_validation -- --nocapture
 
 echo ""
 echo "3. Running large-scale stability tests..."

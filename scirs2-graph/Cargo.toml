@@ -30,6 +30,7 @@ ordered-float = "3.9"
 # Performance dependencies
 # rayon = "1.8"  # Now use scirs2-core parallel abstractions
 parking_lot = "0.12"
+sysinfo = "0.30"
 
 # Serialization for attributes and embeddings
 serde = { workspace = true, features = ["derive"] }

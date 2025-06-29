@@ -108,7 +108,7 @@ pub enum ChannelAggregation {
 
 /// Activation statistics for a layer
 #[derive(Debug, Clone, Serialize)]
-pub struct ActivationStatistics<F: Float + Debug> {
+pub struct ActivationStatistics<F: Float + Debug + serde::Serialize> {
     /// Layer name
     pub layer_name: String,
     /// Mean activation value
@@ -161,8 +161,16 @@ pub struct ActivationHistogram<F: Float + Debug> {
 
 // Implementation for ActivationVisualizer
 
-impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Send + Sync>
-    ActivationVisualizer<F>
+impl<
+        F: Float
+            + Debug
+            + 'static
+            + num_traits::FromPrimitive
+            + ScalarOperand
+            + Send
+            + Sync
+            + serde::Serialize,
+    > ActivationVisualizer<F>
 {
     /// Create a new activation visualizer
     pub fn new(model: Sequential<F>, config: VisualizationConfig) -> Self {
@@ -810,15 +818,19 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
         // X-axis
         svg.push_str(&format!(
             "<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" stroke=\"#333\" stroke-width=\"2\"/>\n",
-            margins.left, margins.top + plot_height,
-            margins.left + plot_width, margins.top + plot_height
+            margins.left,
+            margins.top + plot_height,
+            margins.left + plot_width,
+            margins.top + plot_height
         ));
 
         // Y-axis
         svg.push_str(&format!(
             "<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" stroke=\"#333\" stroke-width=\"2\"/>\n",
-            margins.left, margins.top,
-            margins.left, margins.top + plot_height
+            margins.left,
+            margins.top,
+            margins.left,
+            margins.top + plot_height
         ));
 
         svg.push_str("</svg>");
@@ -1044,16 +1056,14 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
         // Draw nodes
         for (layer, &(x, y)) in &layer_positions {
             svg.push_str(&format!(
-                r#"<rect x="{}" y="{}" width="{}" height="{}" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="5"/>
-"#,
-                x, y, node_width, node_height
+                "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"#{}\" stroke=\"#{}\" stroke-width=\"2\" rx=\"5\"/>\n",
+                x, y, node_width, node_height, "e3f2fd", "1976d2"
             ));
 
             svg.push_str(&format!(
-                r#"<text x="{}" y="{}" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">{}</text>
-"#,
+                "<text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-family=\"{}\" font-size=\"{}\" fill=\"#{}\">{}</text>\n",
                 x + node_width / 2, y + node_height / 2 + 5,
-                self.config.style.font.family, self.config.style.font.size, layer
+                self.config.style.font.family, self.config.style.font.size, "333", layer
             ));
         }
 
@@ -1082,18 +1092,17 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
                 let mid_y = (from_y + to_y + node_height) / 2;
 
                 svg.push_str(&format!(
-                    r#"<text x="{}" y="{}" text-anchor="middle" font-family="{}" font-size="{}" fill="#666">{:.3}</text>
-"#,
+                    "<text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-family=\"{}\" font-size=\"{}\" fill=\"#{}\">{:.3}</text>\n",
                     mid_x, mid_y,
                     self.config.style.font.family,
                     (self.config.style.font.size as f32 * self.config.style.font.label_scale) as u32,
-                    flow_strength
+                    "666", flow_strength
                 ));
             }
         }
 
         // Add arrow marker definition
-        svg.push_str("<defs><marker id=\"arrowhead\" markerWidth=\"10\" markerHeight=\"7\" refX=\"9\" refY=\"3.5\" orient=\"auto\"><polygon points=\"0 0, 10 3.5, 0 7\" fill=\"#333\"/></marker></defs>");
+        svg.push_str(&format!("<defs><marker id=\"arrowhead\" markerWidth=\"10\" markerHeight=\"7\" refX=\"9\" refY=\"3.5\" orient=\"auto\"><polygon points=\"0 0, 10 3.5, 0 7\" fill=\"#{}\"/></marker></defs>", "333"));
 
         svg.push_str("</svg>");
         Ok(svg)

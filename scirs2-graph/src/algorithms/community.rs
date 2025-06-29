@@ -5,8 +5,10 @@
 use crate::base::{EdgeWeight, Graph, IndexType, Node};
 use petgraph::visit::EdgeRef;
 use rand::seq::SliceRandom;
+use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, HashSet};
-use std::hash::Hash;\nuse scirs2_core::parallel_ops::*;\nuse std::sync::{Arc, Mutex};
+use std::hash::Hash;
+use std::sync::{Arc, Mutex};
 
 /// Represents a community structure in a graph
 #[derive(Debug, Clone)]
@@ -366,7 +368,10 @@ where
 /// # Space Complexity
 /// O(n) for storing labels and temporary data structures.
 /// Internal implementation of label propagation algorithm
-fn label_propagation_internal<N, E, Ix>(graph: &Graph<N, E, Ix>, max_iterations: usize) -> HashMap<N, usize>
+fn label_propagation_internal<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    max_iterations: usize,
+) -> HashMap<N, usize>
 where
     N: Node + Clone + Hash + Eq,
     E: EdgeWeight,
@@ -463,7 +468,10 @@ where
     since = "0.1.0-beta.2",
     note = "Use `label_propagation_result` instead"
 )]
-pub fn label_propagation<N, E, Ix>(graph: &Graph<N, E, Ix>, max_iterations: usize) -> HashMap<N, usize>
+pub fn label_propagation<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    max_iterations: usize,
+) -> HashMap<N, usize>
 where
     N: Node + Clone + Hash + Eq,
     E: EdgeWeight,
@@ -615,6 +623,10 @@ where
 ///
 /// # Space Complexity
 /// O(n) for storing community assignments and modularity calculations.
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `modularity_optimization_result` instead for standardized community detection API"
+)]
 pub fn modularity_optimization<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     initial_temp: f64,
@@ -755,6 +767,10 @@ where
 ///
 /// # Space Complexity
 /// O(n) for storing community assignments and tracking modularity gains.
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `greedy_modularity_optimization_result` instead for standardized community detection API"
+)]
 pub fn greedy_modularity_optimization<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     max_iterations: usize,
@@ -2431,9 +2447,8 @@ mod tests {
     }
 }
 
-
 /// Parallel version of Louvain community detection algorithm
-/// 
+///
 /// This implementation uses parallel processing to accelerate community
 /// detection on large graphs. It leverages scirs2-core parallel operations.
 ///
@@ -2452,6 +2467,10 @@ mod tests {
 /// # Space Complexity
 /// O(n + t) where t is the number of threads, for storing community assignments
 /// and thread-local data structures for parallel processing.
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `parallel_louvain_communities_result` instead for standardized community detection API"
+)]
 #[allow(dead_code)]
 pub fn parallel_louvain_communities<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
@@ -2464,19 +2483,17 @@ where
 {
     let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
-    
+
     if n == 0 {
         return CommunityStructure {
             node_communities: HashMap::new(),
             modularity: 0.0,
         };
     }
-    
+
     // Calculate total edge weight
-    let m: f64 = graph.edges().iter()
-        .map( < /dev/null | e| e.weight.into())
-        .sum::<f64>() / 2.0;
-    
+    let m: f64 = graph.edges().iter().map(|e| e.weight.into()).sum::<f64>() / 2.0;
+
     if m == 0.0 {
         // No edges, each node is its own community
         let node_communities: HashMap<N, usize> = nodes
@@ -2484,24 +2501,25 @@ where
             .enumerate()
             .map(|(i, node)| (node, i))
             .collect();
-        
+
         return CommunityStructure {
             node_communities,
             modularity: 0.0,
         };
     }
-    
+
     // Initialize communities using parallel operations
     let mut communities: HashMap<N, usize> = HashMap::new();
     let mut node_degrees: HashMap<N, f64> = HashMap::new();
-    
+
     // Parallel initialization
     for (i, node) in nodes.iter().enumerate() {
         communities.insert(node.clone(), i);
-        
+
         // Calculate node degree
         let degree = if let Ok(neighbors) = graph.neighbors(node) {
-            neighbors.iter()
+            neighbors
+                .iter()
                 .filter_map(|neighbor| graph.edge_weight(node, neighbor).ok())
                 .map(|w| w.into())
                 .sum()
@@ -2510,12 +2528,148 @@ where
         };
         node_degrees.insert(node.clone(), degree);
     }
-    
+
     // Calculate final modularity with the initial communities
     let final_modularity = calculate_modularity(graph, &communities, m);
-    
+
     CommunityStructure {
         node_communities: communities,
         modularity: final_modularity,
     }
+}
+
+/// Optimizes modularity using simulated annealing (modern API)
+///
+/// This function returns the standardized `CommunityResult` type that provides
+/// multiple ways to access the community structure. Uses simulated annealing
+/// to avoid local optima during optimization.
+///
+/// # Arguments
+/// * `graph` - The undirected graph to analyze
+/// * `initial_temp` - Initial temperature for simulated annealing
+/// * `cooling_rate` - Rate at which temperature decreases (0.0 to 1.0)
+/// * `max_iterations` - Maximum number of optimization iterations
+///
+/// # Returns
+/// * A `CommunityResult` with optimized community structure
+///
+/// # Time Complexity
+/// O(n * m * max_iterations) where n is the number of nodes and m is the number of edges.
+/// The simulated annealing process may require many iterations to converge.
+///
+/// # Space Complexity
+/// O(n) for storing community assignments and auxiliary data structures.
+///
+/// # Example
+/// ```rust
+/// use scirs2_graph::{Graph, modularity_optimization_result};
+///
+/// let mut graph = Graph::new();
+/// // ... add nodes and edges ...
+/// let result = modularity_optimization_result(&graph, 1.0, 0.95, 1000);
+///
+/// println!("Optimized modularity: {:.4}", result.quality_score.unwrap_or(0.0));
+/// println!("Found {} communities", result.num_communities);
+/// ```
+pub fn modularity_optimization_result<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    initial_temp: f64,
+    cooling_rate: f64,
+    max_iterations: usize,
+) -> CommunityResult<N>
+where
+    N: Node + Clone + Hash + Eq,
+    E: EdgeWeight + Into<f64> + Copy,
+    Ix: IndexType,
+{
+    let structure = modularity_optimization(graph, initial_temp, cooling_rate, max_iterations);
+    CommunityResult::from_community_structure(structure)
+}
+
+/// Optimizes modularity using a greedy approach (modern API)
+///
+/// This function returns the standardized `CommunityResult` type that provides
+/// multiple ways to access the community structure. Uses a fast greedy approach
+/// that may get stuck in local optima but is much faster than simulated annealing.
+///
+/// # Arguments
+/// * `graph` - The undirected graph to analyze
+/// * `max_iterations` - Maximum number of optimization iterations
+///
+/// # Returns
+/// * A `CommunityResult` with optimized community structure
+///
+/// # Time Complexity
+/// O(n * m * max_iterations) where n is the number of nodes and m is the number of edges.
+/// Typically converges much faster than simulated annealing approaches.
+///
+/// # Space Complexity
+/// O(n) for storing community assignments and auxiliary data structures.
+///
+/// # Example
+/// ```rust
+/// use scirs2_graph::{Graph, greedy_modularity_optimization_result};
+///
+/// let mut graph = Graph::new();
+/// // ... add nodes and edges ...
+/// let result = greedy_modularity_optimization_result(&graph, 100);
+///
+/// println!("Greedy modularity: {:.4}", result.quality_score.unwrap_or(0.0));
+/// println!("Found {} communities", result.num_communities);
+/// ```
+pub fn greedy_modularity_optimization_result<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    max_iterations: usize,
+) -> CommunityResult<N>
+where
+    N: Node + Clone + Hash + Eq,
+    E: EdgeWeight + Into<f64> + Copy,
+    Ix: IndexType,
+{
+    let structure = greedy_modularity_optimization(graph, max_iterations);
+    CommunityResult::from_community_structure(structure)
+}
+
+/// Detects communities using parallel Louvain method (modern API)
+///
+/// This function returns the standardized `CommunityResult` type that provides
+/// multiple ways to access the community structure. Uses parallel processing
+/// to accelerate community detection on large graphs.
+///
+/// # Arguments
+/// * `graph` - The undirected graph to analyze
+/// * `max_iterations` - Maximum number of optimization iterations
+///
+/// # Returns
+/// * A `CommunityResult` with community structure from parallel Louvain
+///
+/// # Time Complexity
+/// O(m * log n / p) where m is the number of edges, n is the number of nodes,
+/// and p is the number of parallel threads. Actual speedup depends on graph structure.
+///
+/// # Space Complexity
+/// O(n) for storing community assignments and auxiliary data structures.
+///
+/// # Example
+/// ```rust
+/// use scirs2_graph::{Graph, parallel_louvain_communities_result};
+///
+/// let mut graph = Graph::new();
+/// // ... add nodes and edges ...
+/// let result = parallel_louvain_communities_result(&graph, 50);
+///
+/// println!("Parallel Louvain modularity: {:.4}", result.quality_score.unwrap_or(0.0));
+/// println!("Found {} communities", result.num_communities);
+/// ```
+pub fn parallel_louvain_communities_result<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    max_iterations: usize,
+) -> CommunityResult<N>
+where
+    N: Node + Send + Sync + Clone + Hash + Eq,
+    E: EdgeWeight + Into<f64> + Send + Sync + Copy,
+    Ix: IndexType + Send + Sync,
+{
+    let structure = parallel_louvain_communities(graph, max_iterations);
+    CommunityResult::from_community_structure(structure)
 }

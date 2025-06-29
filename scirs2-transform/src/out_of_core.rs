@@ -71,7 +71,7 @@ impl ChunkedArrayReader {
 
         // Pre-allocate buffer pool for maximum chunk size
         let max_chunk_bytes = chunk_size * shape.1 * std::mem::size_of::<f64>();
-        
+
         Ok(ChunkedArrayReader {
             file: BufReader::new(file),
             shape,
@@ -94,24 +94,27 @@ impl ChunkedArrayReader {
         // Use pre-allocated buffer to avoid allocation overhead
         let total_elements = rows_to_read * self.shape.1;
         let total_bytes = total_elements * self.dtype_size;
-        
+
         // Ensure buffer is large enough (it should be from constructor)
         if self.buffer_pool.len() < total_bytes {
             return Err(TransformError::TransformationError(
-                "Buffer pool too small for chunk".to_string()
+                "Buffer pool too small for chunk".to_string(),
             ));
         }
-        
+
         // Read into pre-allocated buffer
-        self.file.read_exact(&mut self.buffer_pool[..total_bytes]).map_err(|e| {
-            TransformError::TransformationError(format!("Failed to read data: {}", e))
-        })?;
+        self.file
+            .read_exact(&mut self.buffer_pool[..total_bytes])
+            .map_err(|e| {
+                TransformError::TransformationError(format!("Failed to read data: {}", e))
+            })?;
 
         // Convert bytes to f64 values efficiently using chunks iterator
-        for (element_idx, f64_bytes) in self.buffer_pool[..total_bytes].chunks_exact(8).enumerate() {
+        for (element_idx, f64_bytes) in self.buffer_pool[..total_bytes].chunks_exact(8).enumerate()
+        {
             let i = element_idx / self.shape.1;
             let j = element_idx % self.shape.1;
-            
+
             // Convert 8 bytes to f64 safely
             let mut bytes_array = [0u8; 8];
             bytes_array.copy_from_slice(f64_bytes);
@@ -195,7 +198,7 @@ impl ChunkedArrayWriter {
         // Optimize bulk writing by batching bytes
         let total_elements = chunk.shape()[0] * chunk.shape()[1];
         let total_bytes = total_elements * std::mem::size_of::<f64>();
-        
+
         // Ensure buffer has enough capacity
         self.write_buffer.clear();
         self.write_buffer.reserve(total_bytes);

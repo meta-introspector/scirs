@@ -4,15 +4,16 @@
 //! optimization, automatic tuning, and intelligent resource allocation
 //! based on system characteristics and workload patterns.
 
-use crate::error::{CoreResult, CoreError};
-use crate::performance::{PerformanceProfile, OptimizationSettings, WorkloadType};
-use std::sync::{Arc, Mutex, RwLock};
+use crate::error::{CoreError, CoreResult};
+use crate::performance::{OptimizationSettings, PerformanceProfile, WorkloadType};
 use std::collections::{HashMap, VecDeque};
-use std::time::{Duration, Instant};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
+use std::time::{Duration, Instant};
 
 /// Global resource manager instance
-static GLOBAL_RESOURCE_MANAGER: std::sync::OnceLock<Arc<ResourceManager>> = std::sync::OnceLock::new();
+static GLOBAL_RESOURCE_MANAGER: std::sync::OnceLock<Arc<ResourceManager>> =
+    std::sync::OnceLock::new();
 
 /// Production-ready resource manager with auto-tuning capabilities
 #[derive(Debug)]
@@ -27,9 +28,11 @@ impl ResourceManager {
     /// Create new resource manager
     pub fn new() -> CoreResult<Self> {
         let performance_profile = PerformanceProfile::detect();
-        
+
         Ok(Self {
-            allocator: Arc::new(Mutex::new(AdaptiveAllocator::new(performance_profile.clone())?)),
+            allocator: Arc::new(Mutex::new(AdaptiveAllocator::new(
+                performance_profile.clone(),
+            )?)),
             tuner: Arc::new(RwLock::new(AutoTuner::new(performance_profile.clone())?)),
             monitor: Arc::new(Mutex::new(ResourceMonitor::new()?)),
             policies: Arc::new(RwLock::new(ResourcePolicies::default())),
@@ -38,7 +41,9 @@ impl ResourceManager {
 
     /// Get global resource manager instance
     pub fn global() -> CoreResult<Arc<Self>> {
-        Ok(GLOBAL_RESOURCE_MANAGER.get_or_init(|| Arc::new(Self::new().unwrap())).clone())
+        Ok(GLOBAL_RESOURCE_MANAGER
+            .get_or_init(|| Arc::new(Self::new().unwrap()))
+            .clone())
     }
 
     /// Start resource management services
@@ -47,27 +52,23 @@ impl ResourceManager {
         let monitor = self.monitor.clone();
         let policies = self.policies.clone();
         let tuner = self.tuner.clone();
-        
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = Self::monitoring_loop(&monitor, &policies, &tuner) {
-                    eprintln!("Resource monitoring error: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(10));
+
+        thread::spawn(move || loop {
+            if let Err(e) = Self::monitoring_loop(&monitor, &policies, &tuner) {
+                eprintln!("Resource monitoring error: {:?}", e);
             }
+            thread::sleep(Duration::from_secs(10));
         });
 
         // Start auto-tuning thread
         let tuner_clone = self.tuner.clone();
         let monitor_clone = self.monitor.clone();
-        
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = Self::tuning_loop(&tuner_clone, &monitor_clone) {
-                    eprintln!("Auto-tuning error: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(30));
+
+        thread::spawn(move || loop {
+            if let Err(e) = Self::tuning_loop(&tuner_clone, &monitor_clone) {
+                eprintln!("Auto-tuning error: {:?}", e);
             }
+            thread::sleep(Duration::from_secs(30));
         });
 
         Ok(())
@@ -80,7 +81,7 @@ impl ResourceManager {
     ) -> CoreResult<()> {
         let mut monitor = monitor.lock().unwrap();
         let metrics = monitor.collect_metrics()?;
-        
+
         // Check for policy violations
         let policies = policies.read().unwrap();
         if let Some(action) = policies.check_violations(&metrics)? {
@@ -88,18 +89,18 @@ impl ResourceManager {
                 PolicyAction::ScaleUp => {
                     let mut tuner = tuner.write().unwrap();
                     tuner.increase_resources(&metrics)?;
-                },
+                }
                 PolicyAction::ScaleDown => {
                     let mut tuner = tuner.write().unwrap();
                     tuner.decrease_resources(&metrics)?;
-                },
+                }
                 PolicyAction::Optimize => {
                     let mut tuner = tuner.write().unwrap();
                     tuner.optimize_configuration(&metrics)?;
-                },
+                }
                 PolicyAction::Alert => {
                     monitor.trigger_alert(&metrics)?;
-                },
+                }
             }
         }
 
@@ -122,7 +123,11 @@ impl ResourceManager {
     }
 
     /// Allocate resources with adaptive optimization
-    pub fn allocate_optimized<T>(&self, size: usize, workload_type: WorkloadType) -> CoreResult<OptimizedAllocation<T>> {
+    pub fn allocate_optimized<T>(
+        &self,
+        size: usize,
+        workload_type: WorkloadType,
+    ) -> CoreResult<OptimizedAllocation<T>> {
         let mut allocator = self.allocator.lock().unwrap();
         allocator.allocate_optimized(size, workload_type)
     }
@@ -185,7 +190,7 @@ impl AdaptiveAllocator {
 
         // Initialize default allocation patterns
         allocator.initialize_patterns()?;
-        
+
         Ok(allocator)
     }
 
@@ -198,7 +203,7 @@ impl AdaptiveAllocator {
                 typical_lifetime: Duration::from_secs(60),
                 access_pattern: AccessPattern::Sequential,
                 alignment_requirement: 64, // Cache line aligned
-            }
+            },
         );
 
         // Statistics workloads often use smaller, random access patterns
@@ -209,7 +214,7 @@ impl AdaptiveAllocator {
                 typical_lifetime: Duration::from_secs(30),
                 access_pattern: AccessPattern::Random,
                 alignment_requirement: 32,
-            }
+            },
         );
 
         // Signal processing uses sequential access with temporal locality
@@ -220,14 +225,20 @@ impl AdaptiveAllocator {
                 typical_lifetime: Duration::from_secs(45),
                 access_pattern: AccessPattern::Temporal,
                 alignment_requirement: 64,
-            }
+            },
         );
 
         Ok(())
     }
 
-    pub fn allocate_optimized<T>(&mut self, size: usize, workload_type: WorkloadType) -> CoreResult<OptimizedAllocation<T>> {
-        let pattern = self.allocation_patterns.get(&workload_type)
+    pub fn allocate_optimized<T>(
+        &mut self,
+        size: usize,
+        workload_type: WorkloadType,
+    ) -> CoreResult<OptimizedAllocation<T>> {
+        let pattern = self
+            .allocation_patterns
+            .get(&workload_type)
             .cloned()
             .unwrap_or_else(|| AllocationPattern {
                 typical_size: size,
@@ -238,18 +249,14 @@ impl AdaptiveAllocator {
 
         // Choose optimal allocation strategy
         let strategy = self.choose_allocation_strategy(size, &pattern)?;
-        
+
         // Allocate using the chosen strategy
         let allocation = match strategy {
-            AllocationStrategy::Pool(pool_name) => {
-                self.allocate_from_pool(&pool_name, size)?
-            },
+            AllocationStrategy::Pool(pool_name) => self.allocate_from_pool(&pool_name, size)?,
             AllocationStrategy::Direct => {
                 self.allocate_direct(size, pattern.alignment_requirement)?
-            },
-            AllocationStrategy::MemoryMapped => {
-                self.allocate_memory_mapped(size)?
-            },
+            }
+            AllocationStrategy::MemoryMapped => self.allocate_memory_mapped(size)?,
         };
 
         self.total_allocated += size * std::mem::size_of::<T>();
@@ -258,16 +265,22 @@ impl AdaptiveAllocator {
         Ok(allocation)
     }
 
-    fn choose_allocation_strategy(&self, size: usize, pattern: &AllocationPattern) -> CoreResult<AllocationStrategy> {
+    fn choose_allocation_strategy(
+        &self,
+        size: usize,
+        pattern: &AllocationPattern,
+    ) -> CoreResult<AllocationStrategy> {
         let size_bytes = size * std::mem::size_of::<u8>();
-        
+
         // Use memory mapping for very large allocations
-        if size_bytes > 100 * 1024 * 1024 { // > 100MB
+        if size_bytes > 100 * 1024 * 1024 {
+            // > 100MB
             return Ok(AllocationStrategy::MemoryMapped);
         }
 
         // Use pools for frequent, similar-sized allocations
-        if size_bytes > 1024 && size_bytes < 10 * 1024 * 1024 { // 1KB - 10MB
+        if size_bytes > 1024 && size_bytes < 10 * 1024 * 1024 {
+            // 1KB - 10MB
             let pool_name = format!("{}_{}", size_bytes / 1024, pattern.access_pattern as u8);
             return Ok(AllocationStrategy::Pool(pool_name));
         }
@@ -276,7 +289,11 @@ impl AdaptiveAllocator {
         Ok(AllocationStrategy::Direct)
     }
 
-    fn allocate_from_pool<T>(&mut self, pool_name: &str, size: usize) -> CoreResult<OptimizedAllocation<T>> {
+    fn allocate_from_pool<T>(
+        &mut self,
+        pool_name: &str,
+        size: usize,
+    ) -> CoreResult<OptimizedAllocation<T>> {
         // Create pool if it doesn't exist
         if !self.memory_pools.contains_key(pool_name) {
             let pool = MemoryPool::new(size * std::mem::size_of::<T>(), 10)?; // 10 blocks initially
@@ -294,15 +311,24 @@ impl AdaptiveAllocator {
         })
     }
 
-    fn allocate_direct<T>(&self, size: usize, alignment: usize) -> CoreResult<OptimizedAllocation<T>> {
+    fn allocate_direct<T>(
+        &self,
+        size: usize,
+        alignment: usize,
+    ) -> CoreResult<OptimizedAllocation<T>> {
         let layout = std::alloc::Layout::from_size_align(
             size * std::mem::size_of::<T>(),
-            alignment.max(std::mem::align_of::<T>())
-        ).map_err(|_| CoreError::AllocationError(crate::error::ErrorContext::new("Invalid layout")))?;
+            alignment.max(std::mem::align_of::<T>()),
+        )
+        .map_err(|_| {
+            CoreError::AllocationError(crate::error::ErrorContext::new("Invalid layout"))
+        })?;
 
         let ptr = unsafe { std::alloc::alloc(layout) as *mut T };
         if ptr.is_null() {
-            return Err(CoreError::AllocationError(crate::error::ErrorContext::new("Allocation failed")));
+            return Err(CoreError::AllocationError(crate::error::ErrorContext::new(
+                "Allocation failed",
+            )));
         }
 
         Ok(OptimizedAllocation {
@@ -368,17 +394,15 @@ impl<T> OptimizedAllocation<T> {
 impl<T> Drop for OptimizedAllocation<T> {
     fn drop(&mut self) {
         match &self.allocation_type {
-            AllocationType::Direct(layout) => {
-                unsafe {
-                    std::alloc::dealloc(self.ptr as *mut u8, *layout);
-                }
+            AllocationType::Direct(layout) => unsafe {
+                std::alloc::dealloc(self.ptr as *mut u8, *layout);
             },
             AllocationType::Pool(_) => {
                 // Pool cleanup handled by pool itself
-            },
+            }
             AllocationType::MemoryMapped => {
                 // Memory mapping cleanup
-            },
+            }
         }
     }
 }
@@ -413,12 +437,15 @@ impl MemoryPool {
     }
 
     fn add_block(&mut self) -> CoreResult<()> {
-        let layout = std::alloc::Layout::from_size_align(self.block_size, 64)
-            .map_err(|_| CoreError::AllocationError(crate::error::ErrorContext::new("Invalid layout")))?;
+        let layout = std::alloc::Layout::from_size_align(self.block_size, 64).map_err(|_| {
+            CoreError::AllocationError(crate::error::ErrorContext::new("Invalid layout"))
+        })?;
 
         let ptr = unsafe { std::alloc::alloc(layout) };
         if ptr.is_null() {
-            return Err(CoreError::AllocationError(crate::error::ErrorContext::new("Pool block allocation failed")));
+            return Err(CoreError::AllocationError(crate::error::ErrorContext::new(
+                "Pool block allocation failed",
+            )));
         }
 
         self.blocks.push_back(ptr);
@@ -428,7 +455,9 @@ impl MemoryPool {
 
     fn allocate(&mut self, size: usize) -> CoreResult<*mut u8> {
         if size > self.block_size {
-            return Err(CoreError::AllocationError(crate::error::ErrorContext::new("Requested size exceeds block size")));
+            return Err(CoreError::AllocationError(crate::error::ErrorContext::new(
+                "Requested size exceeds block size",
+            )));
         }
 
         if self.blocks.is_empty() {
@@ -487,12 +516,12 @@ impl AutoTuner {
     pub fn adaptive_optimization(&mut self, metrics: &ResourceMetrics) -> CoreResult<()> {
         // Analyze current performance
         let performance_score = self.calculate_performance_score(metrics);
-        
+
         // Check if optimization is needed
         if self.needs_optimization(metrics, performance_score) {
             let new_settings = self.generate_optimized_settings(metrics)?;
             self.apply_settings(&new_settings)?;
-            
+
             // Record optimization event
             let event = OptimizationEvent {
                 timestamp: Instant::now(),
@@ -501,7 +530,7 @@ impl AutoTuner {
                 settings_applied: new_settings.clone(),
                 performance_delta: 0.0, // Will be calculated later
             };
-            
+
             self.optimization_history.push_back(event);
             self.current_settings = new_settings;
         }
@@ -513,13 +542,14 @@ impl AutoTuner {
         let cpu_efficiency = 1.0 - metrics.cpu_utilization;
         let memory_efficiency = 1.0 - metrics.memory_utilization;
         let throughput_score = metrics.operations_per_second / 1000.0; // Normalize
-        
+
         (cpu_efficiency + memory_efficiency + throughput_score) / 3.0
     }
 
     fn needs_optimization(&self, metrics: &ResourceMetrics, performance_score: f64) -> bool {
         // Check for performance degradation
-        if performance_score < 0.7 { // Below 70% efficiency
+        if performance_score < 0.7 {
+            // Below 70% efficiency
             return true;
         }
 
@@ -529,14 +559,18 @@ impl AutoTuner {
         }
 
         // Check for instability
-        if metrics.cache_miss_rate > 0.1 { // > 10% cache misses
+        if metrics.cache_miss_rate > 0.1 {
+            // > 10% cache misses
             return true;
         }
 
         false
     }
 
-    fn generate_optimized_settings(&self, metrics: &ResourceMetrics) -> CoreResult<OptimizationSettings> {
+    fn generate_optimized_settings(
+        &self,
+        metrics: &ResourceMetrics,
+    ) -> CoreResult<OptimizationSettings> {
         let mut settings = self.current_settings.clone();
 
         // Adjust based on CPU utilization
@@ -569,20 +603,24 @@ impl AutoTuner {
         // Parallel ops support temporarily disabled
         // crate::parallel_ops::set_num_threads(settings.num_threads);
         let _ = settings.num_threads; // Suppress unused variable warning
-        
+
         // Other settings would be applied to respective modules
         Ok(())
     }
 
     pub fn increase_resources(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
-        self.current_settings.num_threads = ((self.current_settings.num_threads as f64) * 1.2) as usize;
-        self.current_settings.chunk_size = ((self.current_settings.chunk_size as f64) * 1.1) as usize;
+        self.current_settings.num_threads =
+            ((self.current_settings.num_threads as f64) * 1.2) as usize;
+        self.current_settings.chunk_size =
+            ((self.current_settings.chunk_size as f64) * 1.1) as usize;
         self.apply_settings(&self.current_settings)
     }
 
     pub fn decrease_resources(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
-        self.current_settings.num_threads = ((self.current_settings.num_threads as f64) * 0.8) as usize;
-        self.current_settings.chunk_size = ((self.current_settings.chunk_size as f64) * 0.9) as usize;
+        self.current_settings.num_threads =
+            ((self.current_settings.num_threads as f64) * 0.8) as usize;
+        self.current_settings.chunk_size =
+            ((self.current_settings.chunk_size as f64) * 0.9) as usize;
         self.apply_settings(&self.current_settings)
     }
 
@@ -599,7 +637,7 @@ impl AutoTuner {
         // Analyze optimization history
         if self.optimization_history.len() >= 5 {
             let recent_events: Vec<_> = self.optimization_history.iter().rev().take(5).collect();
-            
+
             // Check for patterns
             if recent_events.iter().all(|e| e.performance_delta < 0.0) {
                 recommendations.push(TuningRecommendation {
@@ -640,7 +678,9 @@ impl Default for OptimizationSettings {
             block_size: 64,
             prefetch_enabled: false,
             parallel_threshold: 10000,
-            num_threads: std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1),
+            num_threads: std::thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(1),
         }
     }
 }
@@ -708,7 +748,7 @@ impl ResourceMonitor {
         };
 
         self.metrics_history.push_back(metrics.clone());
-        
+
         // Keep only recent history
         while self.metrics_history.len() > 1000 {
             self.metrics_history.pop_front();
@@ -753,28 +793,30 @@ impl ResourceMonitor {
                     let iowait: u64 = fields[5].parse().unwrap_or(0);
                     let irq: u64 = fields[6].parse().unwrap_or(0);
                     let softirq: u64 = fields[7].parse().unwrap_or(0);
-                    
+
                     let total_idle = idle + iowait;
                     let total_active = user + nice + system + irq + softirq;
                     let total = total_idle + total_active;
-                    
+
                     if total > 0 {
                         return Ok(total_active as f64 / total as f64);
                     }
                 }
             }
         }
-        
+
         // Fallback: try reading from /proc/loadavg
         if let Ok(loadavg) = std::fs::read_to_string("/proc/loadavg") {
             if let Some(load_str) = loadavg.split_whitespace().next() {
                 if let Ok(load) = load_str.parse::<f64>() {
-                    let cpu_cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1) as f64;
+                    let cpu_cores = std::thread::available_parallelism()
+                        .map(|n| n.get())
+                        .unwrap_or(1) as f64;
                     return Ok((load / cpu_cores).min(1.0));
                 }
             }
         }
-        
+
         Ok(0.5) // Fallback
     }
 
@@ -808,7 +850,7 @@ impl ResourceMonitor {
             let mut mem_free = 0u64;
             let mut mem_buffers = 0u64;
             let mut mem_cached = 0u64;
-            
+
             for line in meminfo.lines() {
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 2 {
@@ -824,7 +866,7 @@ impl ResourceMonitor {
                     }
                 }
             }
-            
+
             if mem_total > 0 {
                 // If MemAvailable is present, use it (kernel 3.14+)
                 if mem_available > 0 {
@@ -837,7 +879,7 @@ impl ResourceMonitor {
                 }
             }
         }
-        
+
         Ok(0.6) // Fallback
     }
 
@@ -863,13 +905,13 @@ impl ResourceMonitor {
 
     pub fn get_current_metrics(&self) -> CoreResult<ResourceMetrics> {
         use crate::error::ErrorContext;
-        self.metrics_history.back()
-            .cloned()
-            .ok_or_else(|| CoreError::InvalidState(ErrorContext {
+        self.metrics_history.back().cloned().ok_or_else(|| {
+            CoreError::InvalidState(ErrorContext {
                 message: "No metrics collected yet".to_string(),
                 location: None,
                 cause: None,
-            }))
+            })
+        })
     }
 
     pub fn get_current_utilization(&self) -> CoreResult<ResourceUtilization> {
@@ -912,9 +954,9 @@ pub struct ResourcePolicies {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PerformanceMode {
-    Conservative,  // Prioritize stability
-    Balanced,      // Balance performance and stability
-    Aggressive,    // Maximum performance
+    Conservative, // Prioritize stability
+    Balanced,     // Balance performance and stability
+    Aggressive,   // Maximum performance
 }
 
 impl Default for ResourcePolicies {
@@ -1013,8 +1055,10 @@ mod tests {
     fn test_adaptive_allocator() {
         let profile = PerformanceProfile::detect();
         let mut allocator = AdaptiveAllocator::new(profile).unwrap();
-        
-        let allocation = allocator.allocate_optimized::<f64>(1000, WorkloadType::LinearAlgebra).unwrap();
+
+        let allocation = allocator
+            .allocate_optimized::<f64>(1000, WorkloadType::LinearAlgebra)
+            .unwrap();
         assert_eq!(allocation.size(), 1000);
         assert!(allocation.is_cache_aligned());
     }
@@ -1023,7 +1067,7 @@ mod tests {
     fn test_auto_tuner() {
         let profile = PerformanceProfile::detect();
         let mut tuner = AutoTuner::new(profile).unwrap();
-        
+
         // Need to build up optimization history (at least 5 events)
         for i in 0..6 {
             let metrics = ResourceMetrics {
@@ -1037,7 +1081,7 @@ mod tests {
             };
             tuner.adaptive_optimization(&metrics).unwrap();
         }
-        
+
         let recommendations = tuner.get_recommendations().unwrap();
         // The recommendations might still be empty due to the performance_delta issue,
         // but at least we've built up enough history. For now, just check that the method works.
@@ -1050,7 +1094,7 @@ mod tests {
     fn test_resource_monitor() {
         let mut monitor = ResourceMonitor::new().unwrap();
         let metrics = monitor.collect_metrics().unwrap();
-        
+
         assert!(metrics.cpu_utilization >= 0.0 && metrics.cpu_utilization <= 1.0);
         assert!(metrics.memory_utilization >= 0.0 && metrics.memory_utilization <= 1.0);
     }

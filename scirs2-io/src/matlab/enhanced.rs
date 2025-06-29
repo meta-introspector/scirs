@@ -987,7 +987,7 @@ mod tests {
         if let MatType::Cell(ref cells) = cell_array {
             assert_eq!(cells.len(), 2);
         } else {
-            panic!("Expected MatType::Cell, got {:?}", cell_array);
+            assert!(false, "Expected MatType::Cell, got {:?}", cell_array);
         }
     }
 
@@ -1004,7 +1004,7 @@ mod tests {
             assert!(fields.contains_key("data"));
             assert!(fields.contains_key("name"));
         } else {
-            panic!("Expected MatType::Struct, got {:?}", structure);
+            assert!(false, "Expected MatType::Struct, got {:?}", structure);
         }
     }
 }

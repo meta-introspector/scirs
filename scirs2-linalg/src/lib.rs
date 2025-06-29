@@ -234,7 +234,8 @@ pub use self::matrix_factorization::{
     cur_decomposition, interpolative_decomposition, nmf, rank_revealing_qr, utv_decomposition,
 };
 pub use self::matrix_functions::{
-    acosm, asinm, atanm, coshm, cosm, expm, logm, signm, sinhm, sinm, sqrtm, tanhm, tanm,
+    acosm, asinm, atanm, coshm, cosm, expm, logm, logm_parallel, signm, sinhm, sinm, sqrtm,
+    sqrtm_parallel, tanhm, tanm,
 };
 pub use self::matrixfree::{
     block_diagonal_operator, conjugate_gradient as matrix_free_conjugate_gradient,
@@ -358,8 +359,8 @@ pub mod prelude {
         interpolative_decomposition, nmf, rank_revealing_qr, utv_decomposition,
     };
     pub use super::matrix_functions::{
-        acosm, asinm, atanm, coshm, cosm, expm, logm, matrix_power, signm, sinhm, sinm, sqrtm,
-        tanhm, tanm,
+        acosm, asinm, atanm, coshm, cosm, expm, logm, logm_parallel, matrix_power, signm, sinhm,
+        sinm, sqrtm, sqrtm_parallel, tanhm, tanm,
     };
     pub use super::matrixfree::{
         block_diagonal_operator, conjugate_gradient as matrix_free_conjugate_gradient,
@@ -378,7 +379,7 @@ pub mod prelude {
     //     simd_mixed_precision_dot_f32_f64, simd_mixed_precision_matmul_f32_f64,
     //     simd_mixed_precision_matvec_f32_f64,
     // };
-    pub use super::norm::{cond, matrix_norm, matrix_rank, vector_norm};
+    pub use super::norm::{cond, matrix_norm, matrix_rank, vector_norm, vector_norm_parallel};
     pub use super::optim::{block_matmul, strassen_matmul, tiled_matmul};
     pub use super::perf_opt::{
         blocked_matmul, inplace_add, inplace_scale, matmul_benchmark, optimized_transpose,

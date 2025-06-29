@@ -40,8 +40,7 @@ where
     T: Float + PartialOrd,
 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        // Reverse ordering for min-heap behavior
-        other.weight.partial_cmp(&self.weight)
+        Some(self.cmp(other))
     }
 }
 
@@ -50,7 +49,8 @@ where
     T: Float + PartialOrd,
 {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap_or(Ordering::Equal)
+        // Reverse ordering for min-heap behavior
+        other.weight.partial_cmp(&self.weight).unwrap_or(Ordering::Equal)
     }
 }
 
@@ -110,6 +110,7 @@ pub enum MSTAlgorithm {
 }
 
 impl MSTAlgorithm {
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> SparseResult<Self> {
         match s.to_lowercase().as_str() {
             "kruskal" => Ok(Self::Kruskal),
@@ -535,7 +536,7 @@ mod tests {
     #[test]
     fn test_kruskal_mst() {
         let graph = create_test_graph();
-        let (total_weight, mst, parents) = kruskal_mst(&graph, true).unwrap();
+        let (total_weight, mst, _parents) = kruskal_mst(&graph, true).unwrap();
 
         // MST should have weight 5 (edges: 0-1 weight 1, 1-2 weight 1, 1-3 weight 3)
         assert_relative_eq!(total_weight, 5.0);
@@ -556,7 +557,7 @@ mod tests {
     #[test]
     fn test_prim_mst() {
         let graph = create_test_graph();
-        let (total_weight, mst, parents) = prim_mst(&graph, 0, true).unwrap();
+        let (total_weight, mst, _parents) = prim_mst(&graph, 0, true).unwrap();
 
         // Should produce the same weight as Kruskal
         assert_relative_eq!(total_weight, 5.0);
@@ -601,7 +602,7 @@ mod tests {
     #[test]
     fn test_single_vertex() {
         // Single vertex graph
-        let graph = CsrArray::from_triplets(&[], &[], &[], (1, 1), false).unwrap();
+        let graph: CsrArray<f64> = CsrArray::from_triplets(&[], &[], &[], (1, 1), false).unwrap();
 
         let (total_weight, mst, _) = minimum_spanning_tree(&graph, "kruskal", true).unwrap();
         assert_relative_eq!(total_weight, 0.0);
@@ -672,7 +673,7 @@ mod tests {
 
     #[test]
     fn test_algorithm_selection() {
-        let graph = create_test_graph();
+        let _graph = create_test_graph();
 
         // Test algorithm string parsing
         assert!(matches!(

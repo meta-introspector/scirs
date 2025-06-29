@@ -1324,16 +1324,15 @@ impl From<SpectralResult> for PDESolution<f64> {
 /// # Returns
 /// * A complex-valued array containing the FFT result
 fn fft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
-    let n = x.len();
-    
     // Convert to complex array
-    let mut input: Vec<num_complex::Complex<f64>> = x.iter()
+    let mut input: Vec<num_complex::Complex<f64>> = x
+        .iter()
         .map(|&val| num_complex::Complex::new(val, 0.0))
         .collect();
-    
+
     // Perform FFT
     fft_complex(&mut input);
-    
+
     // Convert back to Array1
     Array1::from_vec(input)
 }
@@ -1341,11 +1340,11 @@ fn fft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
 /// Cooley-Tukey FFT algorithm for complex input (in-place)
 fn fft_complex(x: &mut [num_complex::Complex<f64>]) {
     let n = x.len();
-    
+
     if n <= 1 {
         return;
     }
-    
+
     // For power-of-2 lengths, use radix-2 FFT
     if n.is_power_of_two() {
         fft_radix2(x);
@@ -1358,11 +1357,11 @@ fn fft_complex(x: &mut [num_complex::Complex<f64>]) {
 /// Radix-2 Cooley-Tukey FFT for power-of-2 lengths
 fn fft_radix2(x: &mut [num_complex::Complex<f64>]) {
     let n = x.len();
-    
+
     if n <= 1 {
         return;
     }
-    
+
     // Bit-reversal permutation
     let mut j = 0;
     for i in 1..n {
@@ -1372,32 +1371,32 @@ fn fft_radix2(x: &mut [num_complex::Complex<f64>]) {
             bit >>= 1;
         }
         j ^= bit;
-        
+
         if j > i {
             x.swap(i, j);
         }
     }
-    
+
     // Cooley-Tukey FFT
     let mut length = 2;
     while length <= n {
         let angle = -2.0 * PI / (length as f64);
         let wlen = num_complex::Complex::new(angle.cos(), angle.sin());
-        
+
         for i in (0..n).step_by(length) {
             let mut w = num_complex::Complex::new(1.0, 0.0);
-            
+
             for j in 0..length / 2 {
                 let u = x[i + j];
                 let v = x[i + j + length / 2] * w;
-                
+
                 x[i + j] = u + v;
                 x[i + j + length / 2] = u - v;
-                
+
                 w *= wlen;
             }
         }
-        
+
         length <<= 1;
     }
 }
@@ -1405,7 +1404,7 @@ fn fft_radix2(x: &mut [num_complex::Complex<f64>]) {
 /// Mixed-radix FFT for non-power-of-2 lengths
 fn fft_mixed_radix(x: &mut [num_complex::Complex<f64>]) {
     let n = x.len();
-    
+
     // Simple DFT for small sizes or non-power-of-2
     if n < 32 || !n.is_power_of_two() {
         let input = x.to_vec();
@@ -1433,21 +1432,21 @@ fn fft_mixed_radix(x: &mut [num_complex::Complex<f64>]) {
 fn ifft(x: &Array1<num_complex::Complex<f64>>) -> Array1<num_complex::Complex<f64>> {
     let n = x.len();
     let mut input: Vec<num_complex::Complex<f64>> = x.to_vec();
-    
+
     // Take complex conjugate
     for val in &mut input {
         *val = val.conj();
     }
-    
+
     // Perform FFT
     fft_complex(&mut input);
-    
+
     // Take complex conjugate and scale by 1/n
     let scale = 1.0 / (n as f64);
     for val in &mut input {
         *val = val.conj() * scale;
     }
-    
+
     Array1::from_vec(input)
 }
 
@@ -1461,16 +1460,16 @@ fn ifft(x: &Array1<num_complex::Complex<f64>>) -> Array1<num_complex::Complex<f6
 fn rfft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
     let n = x.len();
     let full_fft = fft(x);
-    
+
     // For real input, the FFT is symmetric: X[n-k] = X[k]^*
     // We only need the first n/2 + 1 components
     let rfft_size = n / 2 + 1;
     let mut result = Array1::zeros(rfft_size);
-    
+
     for i in 0..rfft_size {
         result[i] = full_fft[i];
     }
-    
+
     result
 }
 
@@ -1486,26 +1485,26 @@ fn irfft_with_size(x: &Array1<num_complex::Complex<f64>>, n: usize) -> Array1<f6
     // Reconstruct the full complex spectrum using Hermitian symmetry
     let mut full_spectrum = Array1::zeros(n);
     let rfft_size = x.len();
-    
+
     // Copy the positive frequencies
     for i in 0..rfft_size {
         full_spectrum[i] = x[i];
     }
-    
+
     // Fill in the negative frequencies using Hermitian symmetry: X[n-k] = X[k]^*
-    for i in 1..n/2 {
+    for i in 1..n / 2 {
         full_spectrum[n - i] = x[i].conj();
     }
-    
+
     // Perform IFFT
     let complex_result = ifft(&full_spectrum);
-    
+
     // Extract real parts (imaginary parts should be negligible for real input)
     let mut result = Array1::zeros(n);
     for i in 0..n {
         result[i] = complex_result[i].re;
     }
-    
+
     result
 }
 

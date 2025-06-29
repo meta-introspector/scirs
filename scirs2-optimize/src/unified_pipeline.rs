@@ -88,6 +88,9 @@ pub struct UnifiedOptimizer<M: MPIInterface> {
     acceleration_manager: Option<AccelerationManager>,
     visualizer: Option<OptimizationVisualizer>,
     trajectory_tracker: Option<TrajectoryTracker>,
+    
+    // Internal state for convergence checking
+    previous_function_value: Option<f64>,
 }
 
 impl<M: MPIInterface> UnifiedOptimizer<M> {
@@ -157,6 +160,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
             acceleration_manager,
             visualizer,
             trajectory_tracker,
+            previous_function_value: None,
         })
     }
 
@@ -224,8 +228,13 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
             // Self-tuning parameter adaptation
             if let Some(ref mut tuner) = self.self_tuning_optimizer {
                 let improvement = if iteration > 1 {
-                    // This would be computed from previous function value
-                    0.0 // Placeholder
+                    // Compute relative improvement in function value
+                    let prev_f = self.previous_function_value.unwrap_or(current_f);
+                    if prev_f.abs() > 1e-14 {
+                        (prev_f - current_f) / prev_f.abs()
+                    } else {
+                        prev_f - current_f
+                    }
                 } else {
                     0.0
                 };
@@ -274,11 +283,24 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
                 tracker.record_step_size(step_size);
             }
 
-            // Check function tolerance
-            if iteration > 1 {
-                // This would check relative improvement
-                // Placeholder for now
+            // Check function tolerance convergence
+            if let Some(prev_f) = self.previous_function_value {
+                let abs_improvement = (prev_f - current_f).abs();
+                let rel_improvement = if prev_f.abs() > 1e-14 {
+                    abs_improvement / prev_f.abs()
+                } else {
+                    abs_improvement
+                };
+
+                // Check both absolute and relative improvements
+                if abs_improvement < self.config.function_tolerance ||
+                   rel_improvement < self.config.function_tolerance {
+                    break;
+                }
             }
+
+            // Update previous function value for next iteration
+            self.previous_function_value = Some(current_f);
         }
 
         let total_time = start_time.elapsed().as_secs_f64();

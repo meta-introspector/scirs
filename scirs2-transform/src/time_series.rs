@@ -411,47 +411,47 @@ impl WaveletFeatures {
                 ];
                 Ok((h, g))
             }
-            _ => Err(TransformError::InvalidInput(
-                format!("Unsupported wavelet type: {}", self.wavelet),
-            )),
+            _ => Err(TransformError::InvalidInput(format!(
+                "Unsupported wavelet type: {}",
+                self.wavelet
+            ))),
         }
     }
 
     /// Generic wavelet transform using filter bank
     fn wavelet_transform(&self, x: &[f64]) -> Result<(Vec<f64>, Vec<f64>)> {
         let (h, g) = self.get_wavelet_coeffs()?;
-        
+
         if x.len() < h.len() {
             return Err(TransformError::InvalidInput(
                 "Input signal too short for selected wavelet".to_string(),
             ));
         }
-        
+
         let n = x.len();
         let mut approx = Vec::with_capacity(n / 2);
         let mut detail = Vec::with_capacity(n / 2);
-        
+
         // Convolution with downsampling
         for i in (0..n).step_by(2) {
             let mut h_sum = 0.0;
             let mut g_sum = 0.0;
-            
+
             for (j, (&h_coeff, &g_coeff)) in h.iter().zip(g.iter()).enumerate() {
                 let idx = (i + j) % n; // Periodic boundary condition
                 h_sum += h_coeff * x[idx];
                 g_sum += g_coeff * x[idx];
             }
-            
+
             approx.push(h_sum);
             detail.push(g_sum);
         }
-        
+
         Ok((approx, detail))
     }
 
     /// Multi-level wavelet decomposition
     fn wavelet_decompose(&self, x: &[f64]) -> Result<Vec<Vec<f64>>> {
-
         let mut coefficients = Vec::new();
         let mut current = x.to_vec();
 

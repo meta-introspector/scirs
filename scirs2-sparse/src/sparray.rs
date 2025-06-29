@@ -140,6 +140,18 @@ where
 
     /// Returns the concrete type of the array for downcasting.
     fn as_any(&self) -> &dyn std::any::Any;
+
+    /// Returns the indptr array for CSR/CSC formats.
+    /// For formats that don't have indptr, returns None.
+    fn get_indptr(&self) -> Option<&Array1<usize>> {
+        None
+    }
+
+    /// Returns the indptr array for CSR/CSC formats.
+    /// For formats that don't have indptr, returns None.
+    fn indptr(&self) -> Option<&Array1<usize>> {
+        None
+    }
 }
 
 /// Represents the result of a sum operation on a sparse array.

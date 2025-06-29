@@ -204,7 +204,7 @@ impl SuperNetEstimator {
     /// Sample a random architecture for training
     fn sample_random_architecture(&self) -> Vec<String> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut architecture = Vec::new();
         let num_layers = rng.gen_range(3..8);

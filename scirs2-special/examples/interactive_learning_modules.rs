@@ -12,9 +12,9 @@
 use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
-use std::io::{self, Write};
 use std::collections::HashMap;
 use std::f64::consts::PI;
+use std::io::{self, Write};
 
 #[derive(Debug, Clone)]
 struct LearningProgress {
@@ -45,7 +45,10 @@ impl LearningProgress {
     }
 
     fn complete_exercise(&mut self, exercise_name: &str) {
-        if !self.exercises_completed.contains(&exercise_name.to_string()) {
+        if !self
+            .exercises_completed
+            .contains(&exercise_name.to_string())
+        {
             self.exercises_completed.push(exercise_name.to_string());
         }
     }
@@ -60,7 +63,8 @@ impl LearningProgress {
             println!("  {}: {:.1}%", quiz, score * 100.0);
         }
         if !self.quiz_scores.is_empty() {
-            let avg_score: f64 = self.quiz_scores.values().sum::<f64>() / self.quiz_scores.len() as f64;
+            let avg_score: f64 =
+                self.quiz_scores.values().sum::<f64>() / self.quiz_scores.len() as f64;
             println!("Average quiz score: {:.1}%", avg_score * 100.0);
         }
         println!("Total time spent: {} minutes", self.total_time_spent);
@@ -112,13 +116,14 @@ fn display_main_menu(progress: &LearningProgress) {
     println!("8. 🎯 Custom Challenge Mode");
     println!("q. Quit and Show Progress");
     println!();
-    
+
     // Show progress indicators
     if !progress.modules_completed.is_empty() {
         println!("✅ Completed: {}", progress.modules_completed.join(", "));
     }
     if !progress.quiz_scores.is_empty() {
-        let avg_score: f64 = progress.quiz_scores.values().sum::<f64>() / progress.quiz_scores.len() as f64;
+        let avg_score: f64 =
+            progress.quiz_scores.values().sum::<f64>() / progress.quiz_scores.len() as f64;
         println!("📈 Current average: {:.1}%", avg_score * 100.0);
     }
     println!();
@@ -142,7 +147,7 @@ fn fundamentals_module(progress: &mut LearningProgress) -> Result<(), Box<dyn st
     // Lesson 1: What are Special Functions?
     println!("📖 Lesson 1: What are Special Functions?");
     println!("========================================\n");
-    
+
     println!("Special functions are mathematical functions that arise frequently in");
     println!("mathematics, physics, and engineering. Unlike elementary functions");
     println!("(polynomials, trigonometric, exponential), special functions often:");
@@ -209,16 +214,23 @@ fn fundamentals_module(progress: &mut LearningProgress) -> Result<(), Box<dyn st
 
     progress.complete_module("Fundamentals");
     println!("\n✅ Fundamentals module completed!\n");
-    
+
     Ok(())
 }
 
-fn gamma_function_deep_dive(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn gamma_function_deep_dive(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 GAMMA FUNCTION DEEP DIVE");
     println!("===========================\n");
 
-    if !progress.modules_completed.contains(&"Fundamentals".to_string()) {
-        println!("⚠️ Recommendation: Complete the Fundamentals module first for better understanding.");
+    if !progress
+        .modules_completed
+        .contains(&"Fundamentals".to_string())
+    {
+        println!(
+            "⚠️ Recommendation: Complete the Fundamentals module first for better understanding."
+        );
         let proceed = get_user_input("Continue anyway? (y/n): ")?;
         if proceed.to_lowercase() != "y" {
             return Ok(());
@@ -243,16 +255,20 @@ fn gamma_function_deep_dive(progress: &mut LearningProgress) -> Result<(), Box<d
 
     // Interactive demonstration
     println!("🧮 Let's verify these properties:");
-    
+
     // Property 1: Recurrence relation
     println!("\n1. Recurrence relation verification:");
     for z in [1.5, 2.3, 3.7] {
         let gamma_z = gamma(z);
         let gamma_z_plus_1 = gamma(z + 1.0);
         let computed_from_recurrence = z * gamma_z;
-        println!("z = {:.1}: Γ(z+1) = {:.6}, z·Γ(z) = {:.6}, difference = {:.2e}",
-                 z, gamma_z_plus_1, computed_from_recurrence, 
-                 (gamma_z_plus_1 - computed_from_recurrence).abs());
+        println!(
+            "z = {:.1}: Γ(z+1) = {:.6}, z·Γ(z) = {:.6}, difference = {:.2e}",
+            z,
+            gamma_z_plus_1,
+            computed_from_recurrence,
+            (gamma_z_plus_1 - computed_from_recurrence).abs()
+        );
     }
 
     // Property 2: Factorial verification
@@ -260,8 +276,10 @@ fn gamma_function_deep_dive(progress: &mut LearningProgress) -> Result<(), Box<d
     for n in 1..=5 {
         let gamma_n = gamma(n as f64);
         let factorial_n_minus_1 = (1..n).product::<usize>() as f64;
-        println!("n = {}: Γ({}) = {:.6}, ({}−1)! = {:.6}",
-                 n, n, gamma_n, n, factorial_n_minus_1);
+        println!(
+            "n = {}: Γ({}) = {:.6}, ({}−1)! = {:.6}",
+            n, n, gamma_n, n, factorial_n_minus_1
+        );
     }
 
     // Property 3: Special value
@@ -302,7 +320,9 @@ fn gamma_function_deep_dive(progress: &mut LearningProgress) -> Result<(), Box<d
     Ok(())
 }
 
-fn bessel_functions_masterclass(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn bessel_functions_masterclass(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 BESSEL FUNCTIONS MASTERCLASS");
     println!("===============================\n");
 
@@ -369,7 +389,9 @@ fn bessel_functions_masterclass(progress: &mut LearningProgress) -> Result<(), B
     Ok(())
 }
 
-fn probability_and_statistics_module(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn probability_and_statistics_module(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 PROBABILITY & STATISTICS APPLICATIONS");
     println!("=========================================\n");
 
@@ -420,7 +442,9 @@ fn probability_and_statistics_module(progress: &mut LearningProgress) -> Result<
     Ok(())
 }
 
-fn physics_applications_module(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn physics_applications_module(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚛️ PHYSICS APPLICATIONS WORKSHOP");
     println!("================================\n");
 
@@ -455,7 +479,9 @@ fn physics_applications_module(progress: &mut LearningProgress) -> Result<(), Bo
     Ok(())
 }
 
-fn engineering_problems_module(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn engineering_problems_module(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔧 ENGINEERING PROBLEM SOLVING");
     println!("==============================\n");
 
@@ -490,7 +516,9 @@ fn engineering_problems_module(progress: &mut LearningProgress) -> Result<(), Bo
     Ok(())
 }
 
-fn advanced_topics_module(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn advanced_topics_module(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🚀 ADVANCED TOPICS & RESEARCH");
     println!("=============================\n");
 
@@ -533,7 +561,9 @@ fn advanced_topics_module(progress: &mut LearningProgress) -> Result<(), Box<dyn
     Ok(())
 }
 
-fn custom_challenge_mode(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn custom_challenge_mode(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎯 CUSTOM CHALLENGE MODE");
     println!("========================\n");
 
@@ -637,8 +667,13 @@ fn fundamentals_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     }
 
     let score = correct as f64 / total as f64;
-    println!("Quiz completed! Score: {}/{} ({:.1}%)", correct, total, score * 100.0);
-    
+    println!(
+        "Quiz completed! Score: {}/{} ({:.1}%)",
+        correct,
+        total,
+        score * 100.0
+    );
+
     Ok(score)
 }
 
@@ -658,13 +693,18 @@ fn series_approximation_demo() -> Result<(), Box<dyn std::error::Error>> {
     let coeff = 2.0 / PI.sqrt();
 
     for n in 0..10 {
-        let term = (-1.0_f64).powi(n as i32) * x.powi(2 * n as i32 + 1) 
-                  / ((2 * n + 1) as f64 * factorial(n as u32) as f64);
+        let term = (-1.0_f64).powi(n as i32) * x.powi(2 * n as i32 + 1)
+            / ((2 * n + 1) as f64 * factorial(n as u32) as f64);
         partial_sum += coeff * term;
-        
+
         let error = (partial_sum - true_value).abs();
-        println!("{:5}  {:10.6}    {:10.6}   {:8.2e}", 
-                 n + 1, partial_sum, true_value, error);
+        println!(
+            "{:5}  {:10.6}    {:10.6}   {:8.2e}",
+            n + 1,
+            partial_sum,
+            true_value,
+            error
+        );
     }
 
     println!("\nNotice how the series converges to the true value!");
@@ -677,7 +717,9 @@ fn factorial(n: u32) -> u64 {
     (1..=n as u64).product()
 }
 
-fn series_convergence_exercise(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn series_convergence_exercise(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n💪 Exercise: Estimate sin(1) using its Taylor series");
     println!("sin(x) = x - x³/3! + x⁵/5! - x⁷/7! + ...\n");
 
@@ -716,15 +758,15 @@ fn series_convergence_exercise(progress: &mut LearningProgress) -> Result<(), Bo
 fn gamma_related_functions_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("Exploring gamma-related functions at x = 2.5:");
     let x = 2.5;
-    
+
     println!("Γ({}) = {:.6}", x, gamma(x));
     println!("ln Γ({}) = {:.6}", x, gammaln(x));
     println!("ψ({}) = {:.6}", x, digamma(x));
-    
+
     let a = 2.0;
     let b = 3.0;
     println!("B({}, {}) = {:.6}", a, b, beta(a, b));
-    
+
     pause_for_user();
     Ok(())
 }
@@ -770,12 +812,19 @@ fn gamma_function_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     }
 
     let score = correct as f64 / total as f64;
-    println!("Quiz completed! Score: {}/{} ({:.1}%)", correct, total, score * 100.0);
-    
+    println!(
+        "Quiz completed! Score: {}/{} ({:.1}%)",
+        correct,
+        total,
+        score * 100.0
+    );
+
     Ok(score)
 }
 
-fn stirling_approximation_exercise(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn stirling_approximation_exercise(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Stirling's approximation: Γ(z) ≈ √(2π/z) * (z/e)^z");
     println!("Let's test this approximation for large values:\n");
 
@@ -783,9 +832,11 @@ fn stirling_approximation_exercise(progress: &mut LearningProgress) -> Result<()
         let exact = gamma(z);
         let stirling = (2.0 * PI / z).sqrt() * (z / std::f64::consts::E).powf(z);
         let relative_error = (exact - stirling).abs() / exact;
-        
-        println!("z = {:4.0}: Exact = {:12.2e}, Stirling = {:12.2e}, Error = {:.2e}",
-                 z, exact, stirling, relative_error);
+
+        println!(
+            "z = {:4.0}: Exact = {:12.2e}, Stirling = {:12.2e}, Error = {:.2e}",
+            z, exact, stirling, relative_error
+        );
     }
 
     println!("\nNotice how the approximation improves for larger z!");
@@ -803,14 +854,18 @@ fn bessel_oscillation_demo() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn vibrating_membrane_problem(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn vibrating_membrane_problem(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Solving vibrating circular membrane problem...");
     progress.complete_exercise("Vibrating Membrane");
     pause_for_user();
     Ok(())
 }
 
-fn cylindrical_heat_conduction_problem(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn cylindrical_heat_conduction_problem(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Solving cylindrical heat conduction problem...");
     progress.complete_exercise("Cylindrical Heat Conduction");
     pause_for_user();
@@ -834,7 +889,9 @@ fn gamma_distribution_family_demo() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn bayesian_analysis_workshop(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn bayesian_analysis_workshop(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Bayesian analysis workshop...");
     progress.complete_exercise("Bayesian Analysis");
     pause_for_user();
@@ -847,21 +904,27 @@ fn statistics_quiz() -> Result<f64, Box<dyn std::error::Error>> {
 }
 
 // Stub implementations for remaining functions
-fn quantum_mechanics_hydrogen_atom(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn quantum_mechanics_hydrogen_atom(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Quantum mechanics: Hydrogen atom analysis...");
     progress.complete_exercise("Hydrogen Atom");
     pause_for_user();
     Ok(())
 }
 
-fn electromagnetic_multipoles(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn electromagnetic_multipoles(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Electromagnetic multipole expansion...");
     progress.complete_exercise("EM Multipoles");
     pause_for_user();
     Ok(())
 }
 
-fn statistical_mechanics_distributions(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn statistical_mechanics_distributions(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Statistical mechanics distributions...");
     progress.complete_exercise("Statistical Mechanics");
     pause_for_user();
@@ -873,21 +936,27 @@ fn physics_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     Ok(0.90) // Placeholder score
 }
 
-fn signal_processing_filters(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn signal_processing_filters(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Signal processing filter design...");
     progress.complete_exercise("Filter Design");
     pause_for_user();
     Ok(())
 }
 
-fn control_systems_analysis(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn control_systems_analysis(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Control systems analysis...");
     progress.complete_exercise("Control Systems");
     pause_for_user();
     Ok(())
 }
 
-fn structural_vibration_analysis(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn structural_vibration_analysis(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Structural vibration analysis...");
     progress.complete_exercise("Structural Vibration");
     pause_for_user();
@@ -905,14 +974,18 @@ fn research_frontiers_overview() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn computational_challenges_workshop(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn computational_challenges_workshop(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Computational challenges workshop...");
     progress.complete_exercise("Computational Challenges");
     pause_for_user();
     Ok(())
 }
 
-fn interdisciplinary_applications(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn interdisciplinary_applications(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Interdisciplinary applications...");
     progress.complete_exercise("Interdisciplinary Apps");
     pause_for_user();
@@ -931,7 +1004,9 @@ fn beginner_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std
     Ok(())
 }
 
-fn intermediate_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn intermediate_challenge(
+    progress: &mut LearningProgress,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Intermediate challenge...");
     progress.complete_exercise("Intermediate Challenge");
     pause_for_user();
@@ -962,7 +1037,10 @@ fn ultimate_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std
 fn show_challenge_statistics(progress: &LearningProgress) {
     println!("\n📊 Challenge Statistics");
     println!("=======================");
-    println!("Exercises completed: {}", progress.exercises_completed.len());
+    println!(
+        "Exercises completed: {}",
+        progress.exercises_completed.len()
+    );
     for exercise in &progress.exercises_completed {
         println!("✅ {}", exercise);
     }

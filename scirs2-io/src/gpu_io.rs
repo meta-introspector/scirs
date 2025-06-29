@@ -66,9 +66,9 @@ impl GpuIoProcessor {
     pub fn detect_optimal_backend() -> Result<GpuBackend> {
         // Check each backend in order of preference
         let backends_to_try = [
-            GpuBackend::Cuda,    // NVIDIA - best performance and feature support
-            GpuBackend::Metal,   // Apple Silicon - excellent for Mac
-            GpuBackend::OpenCL,  // Cross-platform fallback
+            GpuBackend::Cuda,   // NVIDIA - best performance and feature support
+            GpuBackend::Metal,  // Apple Silicon - excellent for Mac
+            GpuBackend::OpenCL, // Cross-platform fallback
         ];
 
         for &backend in &backends_to_try {
@@ -81,7 +81,9 @@ impl GpuIoProcessor {
             }
         }
 
-        Err(IoError::Other("No suitable GPU backend available".to_string()))
+        Err(IoError::Other(
+            "No suitable GPU backend available".to_string(),
+        ))
     }
 
     /// Validate that a backend is functional (not just available)
@@ -140,7 +142,7 @@ impl GpuIoProcessor {
     /// Get detailed backend capabilities
     pub fn get_backend_capabilities(&self) -> Result<BackendCapabilities> {
         let info = self.device.get_info();
-        
+
         Ok(BackendCapabilities {
             backend: self.backend(),
             memory_gb: info.memory_gb,
@@ -361,14 +363,14 @@ pub mod gpu_compression {
         ) -> Result<Vec<u8>> {
             // Metal-specific implementation using Metal Performance Shaders (MPS)
             // and Metal compute shaders for optimal performance on Apple Silicon
-            
+
             // Check Metal backend capabilities
             let capabilities = self.gpu_processor.get_backend_capabilities()?;
             if !capabilities.supports_fp16 && std::mem::size_of::<T>() < 4 {
                 // Fall back to CUDA implementation for older Metal versions
                 return self.compress_cuda(data, algorithm, level);
             }
-            
+
             // Convert array data to bytes
             let data_slice = data.as_slice().ok_or_else(|| {
                 IoError::Other("Cannot get contiguous slice from array".to_string())
@@ -399,7 +401,8 @@ pub mod gpu_compression {
 
                             // Use lower compression level for Metal to leverage parallel execution
                             let compression_level = level.unwrap_or(4).min(6);
-                            let mut encoder = GzEncoder::new(Vec::new(), Compression::new(compression_level));
+                            let mut encoder =
+                                GzEncoder::new(Vec::new(), Compression::new(compression_level));
                             encoder.write_all(chunk).map_err(|e| IoError::Io(e))?;
                             encoder.finish().map_err(|e| IoError::Io(e))
                         }
@@ -421,7 +424,7 @@ pub mod gpu_compression {
 
             // Use Metal-specific header format for better GPU decompression
             let mut result = Vec::new();
-            
+
             // Metal header: magic + version + chunk count
             result.extend_from_slice(b"METL"); // Magic number for Metal compression
             result.extend_from_slice(&1u32.to_le_bytes()); // Version
@@ -445,14 +448,14 @@ pub mod gpu_compression {
             level: Option<u32>,
         ) -> Result<Vec<u8>> {
             // OpenCL-specific implementation optimized for cross-platform GPU compute
-            
+
             // Check OpenCL backend capabilities
             let capabilities = self.gpu_processor.get_backend_capabilities()?;
             if capabilities.local_memory_size < 32 * 1024 {
                 // Insufficient local memory, fall back to CUDA implementation
                 return self.compress_cuda(data, algorithm, level);
             }
-            
+
             // Convert array data to bytes
             let data_slice = data.as_slice().ok_or_else(|| {
                 IoError::Other("Cannot get contiguous slice from array".to_string())
@@ -482,7 +485,8 @@ pub mod gpu_compression {
 
                             // Use moderate compression for OpenCL to balance speed and size
                             let compression_level = level.unwrap_or(5).clamp(1, 9);
-                            let mut encoder = GzEncoder::new(Vec::new(), Compression::new(compression_level));
+                            let mut encoder =
+                                GzEncoder::new(Vec::new(), Compression::new(compression_level));
                             encoder.write_all(chunk).map_err(|e| IoError::Io(e))?;
                             encoder.finish().map_err(|e| IoError::Io(e))
                         }
@@ -494,8 +498,9 @@ pub mod gpu_compression {
                         }
                         CompressionAlgorithm::Lz4 => {
                             // LZ4 works particularly well with OpenCL due to its simplicity
-                            lz4_flex::compress_prepend_size(chunk)
-                                .map_err(|e| IoError::Other(format!("LZ4 compression error: {}", e)))
+                            lz4_flex::compress_prepend_size(chunk).map_err(|e| {
+                                IoError::Other(format!("LZ4 compression error: {}", e))
+                            })
                         }
                         _ => Err(IoError::UnsupportedFormat(format!(
                             "Compression algorithm {:?} not supported for OpenCL",
@@ -509,7 +514,7 @@ pub mod gpu_compression {
 
             // OpenCL-specific header format optimized for GPU decompression
             let mut result = Vec::new();
-            
+
             // OpenCL header: magic + version + device info + chunk count
             result.extend_from_slice(b"OPCL"); // Magic number for OpenCL compression
             result.extend_from_slice(&1u32.to_le_bytes()); // Version
@@ -521,7 +526,7 @@ pub mod gpu_compression {
                 result.extend_from_slice(&(i as u32).to_le_bytes()); // Chunk index
                 result.extend_from_slice(&(chunk.len() as u32).to_le_bytes()); // Chunk size
             }
-            
+
             // Write chunk data
             for chunk in chunks {
                 result.extend_from_slice(&chunk);
@@ -636,7 +641,9 @@ pub mod gpu_compression {
 
             let version = u32::from_le_bytes([data[4], data[5], data[6], data[7]]);
             if version != 1 {
-                return Err(IoError::Other("Unsupported Metal compression version".to_string()));
+                return Err(IoError::Other(
+                    "Unsupported Metal compression version".to_string(),
+                ));
             }
 
             let num_chunks = u32::from_le_bytes([data[8], data[9], data[10], data[11]]) as usize;
@@ -646,7 +653,9 @@ pub mod gpu_compression {
             let mut chunk_sizes = Vec::with_capacity(num_chunks);
             for _ in 0..num_chunks {
                 if offset + 4 > data.len() {
-                    return Err(IoError::Other("Invalid Metal compressed data format".to_string()));
+                    return Err(IoError::Other(
+                        "Invalid Metal compressed data format".to_string(),
+                    ));
                 }
                 let size = u32::from_le_bytes([
                     data[offset],
@@ -676,7 +685,9 @@ pub mod gpu_compression {
 
             let version = u32::from_le_bytes([data[4], data[5], data[6], data[7]]);
             if version != 1 {
-                return Err(IoError::Other("Unsupported OpenCL compression version".to_string()));
+                return Err(IoError::Other(
+                    "Unsupported OpenCL compression version".to_string(),
+                ));
             }
 
             let compute_units = u32::from_le_bytes([data[8], data[9], data[10], data[11]]);
@@ -687,11 +698,13 @@ pub mod gpu_compression {
             let mut chunk_info = Vec::with_capacity(num_chunks);
             for _ in 0..num_chunks {
                 if offset + 8 > data.len() {
-                    return Err(IoError::Other("Invalid OpenCL compressed data format".to_string()));
+                    return Err(IoError::Other(
+                        "Invalid OpenCL compressed data format".to_string(),
+                    ));
                 }
                 let chunk_index = u32::from_le_bytes([
                     data[offset],
-                    data[offset + 1], 
+                    data[offset + 1],
                     data[offset + 2],
                     data[offset + 3],
                 ]) as usize;
@@ -752,10 +765,8 @@ pub mod gpu_compression {
                         zstd::bulk::decompress(chunk, 16 * 1024 * 1024) // 16MB max
                             .map_err(|e| IoError::Other(e.to_string()))
                     }
-                    CompressionAlgorithm::Lz4 => {
-                        lz4_flex::decompress_size_prepended(chunk)
-                            .map_err(|e| IoError::Other(format!("LZ4 decompression error: {}", e)))
-                    }
+                    CompressionAlgorithm::Lz4 => lz4_flex::decompress_size_prepended(chunk)
+                        .map_err(|e| IoError::Other(format!("LZ4 decompression error: {}", e))),
                     _ => Err(IoError::UnsupportedFormat(format!(
                         "Compression algorithm {:?} not supported",
                         algorithm
@@ -774,7 +785,9 @@ pub mod gpu_compression {
             // Convert bytes back to T array
             let element_size = std::mem::size_of::<T>();
             if combined_data.len() % element_size != 0 {
-                return Err(IoError::Other("Decompressed data size mismatch".to_string()));
+                return Err(IoError::Other(
+                    "Decompressed data size mismatch".to_string(),
+                ));
             }
 
             let num_elements = combined_data.len() / element_size;

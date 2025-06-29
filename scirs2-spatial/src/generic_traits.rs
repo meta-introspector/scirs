@@ -34,13 +34,14 @@
 //! ```
 
 use num_traits::{Float, NumCast};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 
 /// Trait for scalar types that can be used in spatial computations
 ///
 /// This trait extends standard numeric traits with requirements specific
 /// to spatial algorithms, including floating-point operations and conversions.
-pub trait SpatialScalar: Float + Debug + Default + NumCast + Send + Sync + 'static {
+pub trait SpatialScalar: Float + Debug + Default + NumCast + Send + Sync + SimdUnifiedOps + 'static {
     /// The epsilon value for floating-point comparisons
     fn epsilon() -> Self;
 
@@ -106,6 +107,21 @@ pub trait SpatialScalar: Float + Debug + Default + NumCast + Send + Sync + 'stat
     fn is_nan(self) -> bool {
         Float::is_nan(self)
     }
+
+    /// SIMD-optimized squared Euclidean distance
+    fn simd_squared_euclidean_distance(_a: &[Self], _b: &[Self]) -> Result<Self, &'static str> {
+        Err("SIMD not available for this type")
+    }
+
+    /// SIMD-optimized Manhattan distance
+    fn simd_manhattan_distance(_a: &[Self], _b: &[Self]) -> Result<Self, &'static str> {
+        Err("SIMD not available for this type")
+    }
+
+    /// SIMD-optimized dot product
+    fn simd_dot_product(_a: &[Self], _b: &[Self]) -> Result<Self, &'static str> {
+        Err("SIMD not available for this type")
+    }
 }
 
 impl SpatialScalar for f32 {
@@ -116,6 +132,46 @@ impl SpatialScalar for f32 {
     fn max_finite() -> Self {
         f32::MAX
     }
+
+    fn simd_squared_euclidean_distance(a: &[Self], b: &[Self]) -> Result<Self, &'static str> {
+        if a.len() != b.len() {
+            return Err("Slice lengths must match");
+        }
+
+        use ndarray::Array1;
+        let a_array = Array1::from(a.to_vec());
+        let b_array = Array1::from(b.to_vec());
+        
+        let diff = Self::simd_sub(&a_array.view(), &b_array.view());
+        let squared = Self::simd_mul(&diff.view(), &diff.view());
+        Ok(Self::simd_sum(&squared.view()))
+    }
+
+    fn simd_manhattan_distance(a: &[Self], b: &[Self]) -> Result<Self, &'static str> {
+        if a.len() != b.len() {
+            return Err("Slice lengths must match");
+        }
+
+        use ndarray::Array1;
+        let a_array = Array1::from(a.to_vec());
+        let b_array = Array1::from(b.to_vec());
+        
+        let diff = Self::simd_sub(&a_array.view(), &b_array.view());
+        let abs_diff = Self::simd_abs(&diff.view());
+        Ok(Self::simd_sum(&abs_diff.view()))
+    }
+
+    fn simd_dot_product(a: &[Self], b: &[Self]) -> Result<Self, &'static str> {
+        if a.len() != b.len() {
+            return Err("Slice lengths must match");
+        }
+
+        use ndarray::Array1;
+        let a_array = Array1::from(a.to_vec());
+        let b_array = Array1::from(b.to_vec());
+        
+        Ok(Self::simd_dot(&a_array.view(), &b_array.view()))
+    }
 }
 
 impl SpatialScalar for f64 {
@@ -125,6 +181,46 @@ impl SpatialScalar for f64 {
 
     fn max_finite() -> Self {
         f64::MAX
+    }
+
+    fn simd_squared_euclidean_distance(a: &[Self], b: &[Self]) -> Result<Self, &'static str> {
+        if a.len() != b.len() {
+            return Err("Slice lengths must match");
+        }
+
+        use ndarray::Array1;
+        let a_array = Array1::from(a.to_vec());
+        let b_array = Array1::from(b.to_vec());
+        
+        let diff = Self::simd_sub(&a_array.view(), &b_array.view());
+        let squared = Self::simd_mul(&diff.view(), &diff.view());
+        Ok(Self::simd_sum(&squared.view()))
+    }
+
+    fn simd_manhattan_distance(a: &[Self], b: &[Self]) -> Result<Self, &'static str> {
+        if a.len() != b.len() {
+            return Err("Slice lengths must match");
+        }
+
+        use ndarray::Array1;
+        let a_array = Array1::from(a.to_vec());
+        let b_array = Array1::from(b.to_vec());
+        
+        let diff = Self::simd_sub(&a_array.view(), &b_array.view());
+        let abs_diff = Self::simd_abs(&diff.view());
+        Ok(Self::simd_sum(&abs_diff.view()))
+    }
+
+    fn simd_dot_product(a: &[Self], b: &[Self]) -> Result<Self, &'static str> {
+        if a.len() != b.len() {
+            return Err("Slice lengths must match");
+        }
+
+        use ndarray::Array1;
+        let a_array = Array1::from(a.to_vec());
+        let b_array = Array1::from(b.to_vec());
+        
+        Ok(Self::simd_dot(&a_array.view(), &b_array.view()))
     }
 }
 
@@ -153,6 +249,14 @@ pub trait SpatialPoint<T: SpatialScalar> {
             return T::max_finite();
         }
 
+        // Try SIMD-optimized calculation if slices are available
+        if let (Some(slice_a), Some(slice_b)) = (self.as_slice(), other.as_slice()) {
+            if let Ok(simd_result) = T::simd_squared_euclidean_distance(slice_a, slice_b) {
+                return simd_result;
+            }
+        }
+
+        // Fallback to scalar calculation
         let mut sum = T::zero();
         for i in 0..self.dimension() {
             if let (Some(a), Some(b)) = (self.coordinate(i), other.coordinate(i)) {
@@ -174,6 +278,14 @@ pub trait SpatialPoint<T: SpatialScalar> {
             return T::max_finite();
         }
 
+        // Try SIMD-optimized calculation if slices are available
+        if let (Some(slice_a), Some(slice_b)) = (self.as_slice(), other.as_slice()) {
+            if let Ok(simd_result) = T::simd_manhattan_distance(slice_a, slice_b) {
+                return simd_result;
+            }
+        }
+
+        // Fallback to scalar calculation
         let mut sum = T::zero();
         for i in 0..self.dimension() {
             if let (Some(a), Some(b)) = (self.coordinate(i), other.coordinate(i)) {
@@ -350,7 +462,9 @@ impl<T: SpatialScalar> SpatialPoint<T> for &[T] {
         // This is a fundamental limitation - &[T] is a reference to existing data
         // and cannot be created from raw coordinates without an underlying array.
         // This implementation is not meaningful for slice references.
-        unreachable!("&[T]::from_coords() should not be called - &[T] is a reference to existing data")
+        unreachable!(
+            "&[T]::from_coords() should not be called - &[T] is a reference to existing data"
+        )
     }
 }
 
@@ -462,6 +576,12 @@ impl<T: SpatialScalar> Point<T> {
             return None;
         }
 
+        // Try SIMD-optimized calculation
+        if let Ok(simd_result) = T::simd_dot_product(&self.coords, &other.coords) {
+            return Some(simd_result);
+        }
+
+        // Fallback to scalar calculation
         let dot_product = self
             .coords
             .iter()
@@ -478,7 +598,7 @@ impl<T: SpatialScalar> Point<T> {
             self.coords
                 .iter()
                 .map(|&c| c * c)
-                .fold(T::zero(), |acc, x| acc + x)
+                .fold(T::zero(), |acc, x| acc + x),
         )
     }
 

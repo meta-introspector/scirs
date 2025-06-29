@@ -140,13 +140,20 @@ pub use linalg::{
     bicgstab,
     cg,
     cholesky_decomposition,
+    // Enhanced operators
+    convolution_operator,
     diag_matrix,
     eigs,
     eigsh,
+    enhanced_add,
+    enhanced_diagonal,
+    enhanced_scale,
+    enhanced_subtract,
     expm,
     // Functions from matfuncs
     expm_multiply,
     eye,
+    finite_difference_operator,
     // GCROT solver
     gcrot,
     gmres,
@@ -179,14 +186,24 @@ pub use linalg::{
     BiCGOptions,
     BiCGSTABOptions,
     BiCGSTABResult,
+    // Enhanced operator types
+    BoundaryCondition,
     CGOptions,
     CGSOptions,
     CGSResult,
     CholeskyResult,
+    ConvolutionMode,
+    ConvolutionOperator,
     // Operator types
     DiagonalOperator,
     EigenResult,
     EigenvalueMethod,
+    EnhancedDiagonalOperator,
+    EnhancedDifferenceOperator,
+    EnhancedOperatorOptions,
+    EnhancedScaledOperator,
+    EnhancedSumOperator,
+    FiniteDifferenceOperator,
     GCROTOptions,
     GCROTResult,
     GMRESOptions,
@@ -237,22 +254,28 @@ pub use sym_ops::{
 // GPU-accelerated operations
 pub mod gpu_ops;
 pub use gpu_ops::{
-    gpu_sparse_matvec, gpu_sym_sparse_matvec, AdvancedGpuOps, GpuKernelScheduler,
-    GpuMemoryManager, GpuOptions, GpuProfiler, OptimizedGpuOps,
+    gpu_sparse_matvec, gpu_sym_sparse_matvec, AdvancedGpuOps, GpuKernelScheduler, GpuMemoryManager,
+    GpuOptions, GpuProfiler, OptimizedGpuOps,
 };
 
 // Memory-efficient algorithms and patterns
 pub mod memory_efficient;
 pub use memory_efficient::{
-    CacheAwareOps, MemoryPool, MemoryTracker, OutOfCoreProcessor, streaming_sparse_matvec,
+    streaming_sparse_matvec, CacheAwareOps, MemoryPool, MemoryTracker, OutOfCoreProcessor,
 };
 
 // SIMD-accelerated operations
 pub mod simd_ops;
 pub use simd_ops::{
-    simd_csr_matvec, simd_sparse_elementwise, simd_sparse_matmul, simd_sparse_norm, 
-    simd_sparse_scale, simd_sparse_transpose, simd_sparse_linear_combination,
-    ElementwiseOp, SimdOptions,
+    simd_csr_matvec, simd_sparse_elementwise, simd_sparse_linear_combination, simd_sparse_matmul,
+    simd_sparse_norm, simd_sparse_scale, simd_sparse_transpose, ElementwiseOp, SimdOptions,
+};
+
+// Parallel vector operations for iterative solvers
+pub mod parallel_vector_ops;
+pub use parallel_vector_ops::{
+    parallel_axpy, parallel_dot, parallel_linear_combination, parallel_norm2, parallel_vector_add,
+    parallel_vector_copy, parallel_vector_scale, parallel_vector_sub, ParallelVectorOptions,
 };
 
 // Compressed sparse graph algorithms

@@ -2652,10 +2652,11 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
             .compilation_times
             .push(start_time.elapsed());
 
+        let performance_characteristics = self.estimate_performance(&optimized_computation)?;
         Ok(CompiledOptimizer {
             computation: optimized_computation,
             code: generated_code,
-            performance_characteristics: self.estimate_performance(&optimized_computation)?,
+            performance_characteristics,
         })
     }
 
@@ -2945,7 +2946,7 @@ pub struct TPUHardwareParameters {
     pub cores_per_chip: usize,
     pub memory_bandwidth: f64, // GB/s
     pub peak_tflops: f64,
-    pub cache_size: usize, // bytes
+    pub cache_size: usize,   // bytes
     pub memory_latency: f64, // nanoseconds
 }
 
@@ -3322,10 +3323,10 @@ pub struct PrecisionRequirements {
 /// Quality metrics for quantization
 #[derive(Debug, Clone)]
 pub enum QualityMetric {
-    SNR, // Signal-to-noise ratio
+    SNR,  // Signal-to-noise ratio
     PSNR, // Peak signal-to-noise ratio
     SSIM, // Structural similarity
-    MSE, // Mean squared error
+    MSE,  // Mean squared error
     Custom(String),
 }
 
@@ -3532,8 +3533,10 @@ impl OptimizationResult {
     }
 
     pub fn merge(&mut self, other: OptimizationResult) {
-        self.optimizations_applied.extend(other.optimizations_applied);
-        self.performance_improvement = (self.performance_improvement + other.performance_improvement).max(0.0);
+        self.optimizations_applied
+            .extend(other.optimizations_applied);
+        self.performance_improvement =
+            (self.performance_improvement + other.performance_improvement).max(0.0);
         self.memory_savings += other.memory_savings;
         self.compilation_time_overhead += other.compilation_time_overhead;
         self.warnings.extend(other.warnings);
@@ -3551,10 +3554,15 @@ pub struct MemoryCoalescingOptimizer<T: Float> {
 
 impl<T: Float> MemoryCoalescingOptimizer<T> {
     pub fn new(_config: &XLACompilerConfig) -> Self {
-        Self { _phantom: std::marker::PhantomData }
+        Self {
+            _phantom: std::marker::PhantomData,
+        }
     }
 
-    pub fn optimize(&mut self, _computation: &mut XLAComputation<T>) -> Result<OptimizationResult, OptimizerError> {
+    pub fn optimize(
+        &mut self,
+        _computation: &mut XLAComputation<T>,
+    ) -> Result<OptimizationResult, OptimizerError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3567,10 +3575,15 @@ pub struct DynamicShapeOptimizer<T: Float> {
 
 impl<T: Float> DynamicShapeOptimizer<T> {
     pub fn new(_config: &XLACompilerConfig) -> Self {
-        Self { _phantom: std::marker::PhantomData }
+        Self {
+            _phantom: std::marker::PhantomData,
+        }
     }
 
-    pub fn optimize(&mut self, _computation: &mut XLAComputation<T>) -> Result<OptimizationResult, OptimizerError> {
+    pub fn optimize(
+        &mut self,
+        _computation: &mut XLAComputation<T>,
+    ) -> Result<OptimizationResult, OptimizerError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3583,10 +3596,15 @@ pub struct CrossReplicaOptimizer<T: Float> {
 
 impl<T: Float> CrossReplicaOptimizer<T> {
     pub fn new(_config: &XLACompilerConfig) -> Self {
-        Self { _phantom: std::marker::PhantomData }
+        Self {
+            _phantom: std::marker::PhantomData,
+        }
     }
 
-    pub fn optimize(&mut self, _computation: &mut XLAComputation<T>) -> Result<OptimizationResult, OptimizerError> {
+    pub fn optimize(
+        &mut self,
+        _computation: &mut XLAComputation<T>,
+    ) -> Result<OptimizationResult, OptimizerError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3596,15 +3614,22 @@ impl<T: Float> TensorCoreOptimizer<T> {
         Self {
             supported_ops: HashSet::new(),
             matrix_size_thresholds: MatrixSizeThresholds {
-                min_m: 16, min_n: 16, min_k: 16,
-                optimal_m: 128, optimal_n: 128, optimal_k: 128,
+                min_m: 16,
+                min_n: 16,
+                min_k: 16,
+                optimal_m: 128,
+                optimal_n: 128,
+                optimal_k: 128,
             },
             data_type_preferences: HashMap::new(),
             tile_size_optimizer: TileSizeOptimizer::new(),
         }
     }
 
-    pub fn optimize(&mut self, _computation: &mut XLAComputation<T>) -> Result<OptimizationResult, OptimizerError> {
+    pub fn optimize(
+        &mut self,
+        _computation: &mut XLAComputation<T>,
+    ) -> Result<OptimizationResult, OptimizerError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3672,7 +3697,10 @@ impl<T: Float> SparsityOptimizer<T> {
         }
     }
 
-    pub fn optimize(&mut self, _computation: &mut XLAComputation<T>) -> Result<OptimizationResult, OptimizerError> {
+    pub fn optimize(
+        &mut self,
+        _computation: &mut XLAComputation<T>,
+    ) -> Result<OptimizationResult, OptimizerError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3693,7 +3721,10 @@ impl<T: Float> QuantizationOptimizer<T> {
         }
     }
 
-    pub fn optimize(&mut self, _computation: &mut XLAComputation<T>) -> Result<OptimizationResult, OptimizerError> {
+    pub fn optimize(
+        &mut self,
+        _computation: &mut XLAComputation<T>,
+    ) -> Result<OptimizationResult, OptimizerError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3963,8 +3994,9 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
         let mut changed = false;
 
         // Find fusable operation patterns
-        for (op_id, operation) in &computation.operations {
-            if let Some(fusion_candidates) = self.find_fusion_candidates(computation, *op_id) {
+        let op_ids: Vec<_> = computation.operations.keys().copied().collect();
+        for op_id in op_ids {
+            if let Some(fusion_candidates) = self.find_fusion_candidates(computation, op_id) {
                 if self.apply_fusion(computation, fusion_candidates)? {
                     changed = true;
                 }

@@ -1240,14 +1240,18 @@ where
     /// // results[[0, 0]] = f(1.5), results[[0, 1]] = f'(1.5), results[[0, 2]] = f''(1.5)
     /// ```
     #[allow(dead_code)]
-    pub fn derivative_batch_all(&self, xs: &ArrayView1<T>, max_order: usize) -> InterpolateResult<Array2<T>> {
+    pub fn derivative_batch_all(
+        &self,
+        xs: &ArrayView1<T>,
+        max_order: usize,
+    ) -> InterpolateResult<Array2<T>> {
         let effective_max_order = max_order.min(self.k);
         let mut result = Array2::zeros((xs.len(), effective_max_order + 1));
 
         // Pre-compute derivative splines up to max_order
         let mut derivative_splines = Vec::with_capacity(effective_max_order + 1);
         derivative_splines.push(self.clone()); // 0th derivative (original function)
-        
+
         for order in 1..=effective_max_order {
             let deriv_spline = derivative_splines[order - 1].derivative_spline(1)?;
             derivative_splines.push(deriv_spline);

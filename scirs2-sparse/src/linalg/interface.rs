@@ -1,5 +1,9 @@
 //! Linear operator interface for sparse matrices
 
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+
 use crate::error::{SparseError, SparseResult};
 use num_traits::{Float, NumAssign};
 use std::fmt::Debug;
@@ -412,8 +416,9 @@ pub struct FunctionOperator<F> {
     rmatvec_fn: Option<Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>>,
 }
 
-impl<F: Float> FunctionOperator<F> {
+impl<F: Float + 'static> FunctionOperator<F> {
     /// Create a new function-based operator
+    #[allow(dead_code)]
     pub fn new<MV, RMV>(shape: (usize, usize), matvec_fn: MV, rmatvec_fn: Option<RMV>) -> Self
     where
         MV: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
@@ -428,6 +433,7 @@ impl<F: Float> FunctionOperator<F> {
     }
 
     /// Create a matrix-free operator from a function
+    #[allow(dead_code)]
     pub fn from_function<FMv>(shape: (usize, usize), matvec_fn: FMv) -> Self
     where
         FMv: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
@@ -468,6 +474,7 @@ pub struct InverseOperator<F> {
 
 impl<F: Float> InverseOperator<F> {
     /// Create a new inverse operator with a custom solver function
+    #[allow(dead_code)]
     pub fn new<S>(original: Box<dyn LinearOperator<F>>, solver_fn: S) -> SparseResult<Self>
     where
         S: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
@@ -516,7 +523,6 @@ impl<F: Float> LinearOperator<F> for InverseOperator<F> {
         false // Simplified for now
     }
 }
-
 
 /// Transpose operator: A^T
 pub struct TransposeOperator<F> {
@@ -688,6 +694,7 @@ pub struct ChainOperator<F> {
 impl<F: Float + NumAssign> ChainOperator<F> {
     /// Create a new chain operator from a list of operators
     /// Operators are applied from right to left (like function composition)
+    #[allow(dead_code)]
     pub fn new(operators: Vec<Box<dyn LinearOperator<F>>>) -> SparseResult<Self> {
         if operators.is_empty() {
             return Err(SparseError::ValueError(
@@ -811,25 +818,26 @@ impl<F: Float + NumAssign> LinearOperator<F> for PowerOperator<F> {
 }
 
 /// Enhanced LinearOperator trait with composition methods
+#[allow(dead_code)]
 pub trait LinearOperatorExt<F: Float + NumAssign>: LinearOperator<F> {
     /// Add this operator with another
     fn add(&self, other: Box<dyn LinearOperator<F>>) -> SparseResult<Box<dyn LinearOperator<F>>>;
-    
+
     /// Subtract another operator from this one
     fn sub(&self, other: Box<dyn LinearOperator<F>>) -> SparseResult<Box<dyn LinearOperator<F>>>;
-    
+
     /// Multiply this operator with another (composition)
     fn mul(&self, other: Box<dyn LinearOperator<F>>) -> SparseResult<Box<dyn LinearOperator<F>>>;
-    
+
     /// Scale this operator by a scalar
     fn scale(&self, alpha: F) -> Box<dyn LinearOperator<F>>;
-    
+
     /// Transpose this operator
     fn transpose(&self) -> Box<dyn LinearOperator<F>>;
-    
+
     /// Adjoint of this operator
     fn adjoint(&self) -> SparseResult<Box<dyn LinearOperator<F>>>;
-    
+
     /// Power of this operator
     fn pow(&self, n: usize) -> SparseResult<Box<dyn LinearOperator<F>>>;
 }
@@ -837,37 +845,46 @@ pub trait LinearOperatorExt<F: Float + NumAssign>: LinearOperator<F> {
 // Specific implementations for each cloneable operator type
 macro_rules! impl_linear_operator_ext {
     ($typ:ty) => {
-        impl<F: Float + NumAssign + Copy> LinearOperatorExt<F> for $typ {
-            fn add(&self, other: Box<dyn LinearOperator<F>>) -> SparseResult<Box<dyn LinearOperator<F>>> {
+        impl<F: Float + NumAssign + Copy + 'static> LinearOperatorExt<F> for $typ {
+            fn add(
+                &self,
+                other: Box<dyn LinearOperator<F>>,
+            ) -> SparseResult<Box<dyn LinearOperator<F>>> {
                 let self_box = Box::new(self.clone());
                 Ok(Box::new(SumOperator::new(self_box, other)?))
             }
-            
-            fn sub(&self, other: Box<dyn LinearOperator<F>>) -> SparseResult<Box<dyn LinearOperator<F>>> {
+
+            fn sub(
+                &self,
+                other: Box<dyn LinearOperator<F>>,
+            ) -> SparseResult<Box<dyn LinearOperator<F>>> {
                 let self_box = Box::new(self.clone());
                 Ok(Box::new(DifferenceOperator::new(self_box, other)?))
             }
-            
-            fn mul(&self, other: Box<dyn LinearOperator<F>>) -> SparseResult<Box<dyn LinearOperator<F>>> {
+
+            fn mul(
+                &self,
+                other: Box<dyn LinearOperator<F>>,
+            ) -> SparseResult<Box<dyn LinearOperator<F>>> {
                 let self_box = Box::new(self.clone());
                 Ok(Box::new(ProductOperator::new(self_box, other)?))
             }
-            
+
             fn scale(&self, alpha: F) -> Box<dyn LinearOperator<F>> {
                 let self_box = Box::new(self.clone());
                 Box::new(ScaledOperator::new(alpha, self_box))
             }
-            
+
             fn transpose(&self) -> Box<dyn LinearOperator<F>> {
                 let self_box = Box::new(self.clone());
                 Box::new(TransposeOperator::new(self_box))
             }
-            
+
             fn adjoint(&self) -> SparseResult<Box<dyn LinearOperator<F>>> {
                 let self_box = Box::new(self.clone());
                 Ok(Box::new(AdjointOperator::new(self_box)?))
             }
-            
+
             fn pow(&self, n: usize) -> SparseResult<Box<dyn LinearOperator<F>>> {
                 let self_box = Box::new(self.clone());
                 Ok(Box::new(PowerOperator::new(self_box, n)?))
@@ -883,9 +900,9 @@ impl_linear_operator_ext!(DiagonalOperator<F>);
 impl_linear_operator_ext!(ZeroOperator<F>);
 
 /// Utility functions for operator composition
-
 /// Add two operators: left + right
-pub fn add_operators<F: Float + NumAssign>(
+#[allow(dead_code)]
+pub fn add_operators<F: Float + NumAssign + 'static>(
     left: Box<dyn LinearOperator<F>>,
     right: Box<dyn LinearOperator<F>>,
 ) -> SparseResult<Box<dyn LinearOperator<F>>> {
@@ -893,7 +910,8 @@ pub fn add_operators<F: Float + NumAssign>(
 }
 
 /// Subtract two operators: left - right
-pub fn subtract_operators<F: Float + NumAssign>(
+#[allow(dead_code)]
+pub fn subtract_operators<F: Float + NumAssign + 'static>(
     left: Box<dyn LinearOperator<F>>,
     right: Box<dyn LinearOperator<F>>,
 ) -> SparseResult<Box<dyn LinearOperator<F>>> {
@@ -901,7 +919,8 @@ pub fn subtract_operators<F: Float + NumAssign>(
 }
 
 /// Multiply two operators: left * right  
-pub fn multiply_operators<F: Float + NumAssign>(
+#[allow(dead_code)]
+pub fn multiply_operators<F: Float + NumAssign + 'static>(
     left: Box<dyn LinearOperator<F>>,
     right: Box<dyn LinearOperator<F>>,
 ) -> SparseResult<Box<dyn LinearOperator<F>>> {
@@ -909,7 +928,8 @@ pub fn multiply_operators<F: Float + NumAssign>(
 }
 
 /// Scale an operator: alpha * operator
-pub fn scale_operator<F: Float + NumAssign>(
+#[allow(dead_code)]
+pub fn scale_operator<F: Float + NumAssign + 'static>(
     alpha: F,
     operator: Box<dyn LinearOperator<F>>,
 ) -> Box<dyn LinearOperator<F>> {
@@ -917,28 +937,32 @@ pub fn scale_operator<F: Float + NumAssign>(
 }
 
 /// Transpose an operator: A^T
-pub fn transpose_operator<F: Float + NumAssign>(
+#[allow(dead_code)]
+pub fn transpose_operator<F: Float + NumAssign + 'static>(
     operator: Box<dyn LinearOperator<F>>,
 ) -> Box<dyn LinearOperator<F>> {
     Box::new(TransposeOperator::new(operator))
 }
 
 /// Adjoint of an operator: A^H
-pub fn adjoint_operator<F: Float + NumAssign>(
+#[allow(dead_code)]
+pub fn adjoint_operator<F: Float + NumAssign + 'static>(
     operator: Box<dyn LinearOperator<F>>,
 ) -> SparseResult<Box<dyn LinearOperator<F>>> {
     Ok(Box::new(AdjointOperator::new(operator)?))
 }
 
 /// Compose multiple operators: A_n * A_(n-1) * ... * A_1
-pub fn compose_operators<F: Float + NumAssign>(
+#[allow(dead_code)]
+pub fn compose_operators<F: Float + NumAssign + 'static>(
     operators: Vec<Box<dyn LinearOperator<F>>>,
 ) -> SparseResult<Box<dyn LinearOperator<F>>> {
     Ok(Box::new(ChainOperator::new(operators)?))
 }
 
 /// Power of an operator: A^n
-pub fn power_operator<F: Float + NumAssign>(
+#[allow(dead_code)]
+pub fn power_operator<F: Float + NumAssign + 'static>(
     operator: Box<dyn LinearOperator<F>>,
     n: usize,
 ) -> SparseResult<Box<dyn LinearOperator<F>>> {
@@ -1065,7 +1089,7 @@ mod tests {
     fn test_composition_utility_functions() {
         let id = Box::new(IdentityOperator::<f64>::new(3));
         let scaled = Box::new(ScaledIdentityOperator::new(3, 2.0));
-        
+
         // Test add_operators
         let sum = add_operators(id.clone(), scaled.clone()).unwrap();
         let x = vec![1.0, 2.0, 3.0];
@@ -1093,7 +1117,7 @@ mod tests {
         assert_eq!(y5, vec![2.0, 4.0, 6.0]); // (2I)^T * x = 2I * x = 2x
 
         // Test compose_operators
-        let ops = vec![scaled.clone(), id.clone()];
+        let ops: Vec<Box<dyn LinearOperator<f64>>> = vec![scaled.clone(), id.clone()];
         let composed = compose_operators(ops).unwrap();
         let y6 = composed.matvec(&x).unwrap();
         assert_eq!(y6, vec![2.0, 4.0, 6.0]); // (2I * I) * x = 2x
@@ -1108,13 +1132,13 @@ mod tests {
     fn test_dimension_mismatch_errors() {
         let op1 = Box::new(IdentityOperator::<f64>::new(3));
         let op2 = Box::new(IdentityOperator::<f64>::new(4));
-        
+
         // Test sum operator dimension mismatch
         assert!(SumOperator::new(op1.clone(), op2.clone()).is_err());
-        
+
         // Test difference operator dimension mismatch
         assert!(DifferenceOperator::new(op1.clone(), op2.clone()).is_err());
-        
+
         // Test product operator dimension mismatch (incompatible dimensions)
         let rect1 = Box::new(ZeroOperator::<f64>::new(3, 4));
         let rect2 = Box::new(ZeroOperator::<f64>::new(5, 3));
@@ -1124,11 +1148,10 @@ mod tests {
     #[test]
     fn test_adjoint_not_supported_error() {
         // Create a function operator without adjoint support
-        let func_op = Box::new(FunctionOperator::from_function(
-            (3, 3), 
-            |x: &[f64]| Ok(x.to_vec())
-        ));
-        
+        let func_op = Box::new(FunctionOperator::from_function((3, 3), |x: &[f64]| {
+            Ok(x.to_vec())
+        }));
+
         // Attempting to create adjoint should fail
         assert!(AdjointOperator::new(func_op).is_err());
     }
@@ -1136,12 +1159,12 @@ mod tests {
     #[test]
     fn test_power_operator_errors() {
         let rect_op = Box::new(ZeroOperator::<f64>::new(3, 4));
-        
+
         // Power of non-square operator should fail
         assert!(PowerOperator::new(rect_op, 2).is_err());
-        
+
         let square_op = Box::new(IdentityOperator::<f64>::new(3));
-        
+
         // Power of 0 should fail
         assert!(PowerOperator::new(square_op, 0).is_err());
     }

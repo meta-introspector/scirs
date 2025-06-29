@@ -1202,15 +1202,45 @@ pub fn validate_multitaper_robustness(
 ) -> SignalResult<EnhancedMultitaperValidationResult> {
     let mut issues = Vec::new();
     let mut robustness_scores = Vec::new();
-    
+
     // 1. Test extreme parameter combinations
     let extreme_tests = vec![
-        ("Very small NW", TestSignalConfig { nw: 1.01, k: 1, ..test_signals.clone() }),
-        ("Large NW", TestSignalConfig { nw: 20.0, k: 39, ..test_signals.clone() }),
-        ("Short signal", TestSignalConfig { n: 64, nw: 2.0, k: 3, ..test_signals.clone() }),
-        ("Very long signal", TestSignalConfig { n: 100_000, nw: 4.0, k: 7, ..test_signals.clone() }),
+        (
+            "Very small NW",
+            TestSignalConfig {
+                nw: 1.01,
+                k: 1,
+                ..test_signals.clone()
+            },
+        ),
+        (
+            "Large NW",
+            TestSignalConfig {
+                nw: 20.0,
+                k: 39,
+                ..test_signals.clone()
+            },
+        ),
+        (
+            "Short signal",
+            TestSignalConfig {
+                n: 64,
+                nw: 2.0,
+                k: 3,
+                ..test_signals.clone()
+            },
+        ),
+        (
+            "Very long signal",
+            TestSignalConfig {
+                n: 100_000,
+                nw: 4.0,
+                k: 7,
+                ..test_signals.clone()
+            },
+        ),
     ];
-    
+
     for (test_name, config) in extreme_tests {
         match validate_extreme_case(&config, tolerance) {
             Ok(score) => {
@@ -1221,39 +1251,40 @@ pub fn validate_multitaper_robustness(
             }
         }
     }
-    
+
     // 2. Cross-platform numerical consistency
     let consistency_score = if extensive {
         validate_numerical_consistency(test_signals, tolerance)?
     } else {
         0.95 // Default good score for quick tests
     };
-    
+
     // 3. Memory scaling validation
     let memory_efficiency = validate_memory_scaling(test_signals)?;
-    
+
     // 4. Performance scaling analysis
     let performance_metrics = if extensive {
         analyze_performance_scaling(test_signals)?
     } else {
         PerformanceScalingMetrics::default()
     };
-    
+
     // 5. Convergence stability testing
     let convergence_metrics = test_convergence_stability(test_signals, tolerance)?;
-    
+
     // 6. Noise robustness testing
     let noise_robustness = test_noise_robustness(test_signals, tolerance)?;
-    
+
     // Calculate overall robustness score
-    let overall_score = (
-        robustness_scores.iter().sum::<f64>() / robustness_scores.len().max(1) as f64 * 0.3 +
-        consistency_score * 0.2 +
-        memory_efficiency * 0.2 +
-        convergence_metrics.stability_score * 0.15 +
-        noise_robustness * 0.15
-    ).min(100.0).max(0.0);
-    
+    let overall_score =
+        (robustness_scores.iter().sum::<f64>() / robustness_scores.len().max(1) as f64 * 0.3
+            + consistency_score * 0.2
+            + memory_efficiency * 0.2
+            + convergence_metrics.stability_score * 0.15
+            + noise_robustness * 0.15)
+            .min(100.0)
+            .max(0.0);
+
     Ok(EnhancedMultitaperValidationResult {
         basic_validation: validate_multitaper_comprehensive(test_signals, tolerance)?,
         robustness_score: overall_score,
@@ -1331,19 +1362,19 @@ fn validate_extreme_case(config: &TestSignalConfig, tolerance: f64) -> SignalRes
     let signal: Vec<f64> = (0..config.n)
         .map(|i| (2.0 * PI * 10.0 * i as f64 / config.fs).sin())
         .collect();
-    
+
     let mt_config = MultitaperConfig {
         fs: config.fs,
         nw: config.nw,
         k: config.k,
         ..Default::default()
     };
-    
+
     match enhanced_pmtm(&signal, &mt_config) {
         Ok(result) => {
             // Check result validity
             let mut score = 100.0;
-            
+
             // Check for NaN or infinite values
             for &val in &result.psd {
                 if !val.is_finite() || val < 0.0 {
@@ -1351,18 +1382,18 @@ fn validate_extreme_case(config: &TestSignalConfig, tolerance: f64) -> SignalRes
                     break;
                 }
             }
-            
+
             // Check frequency resolution is reasonable
             if result.frequencies.len() < 2 {
                 score -= 30.0;
             }
-            
+
             // Check for reasonable energy conservation
             let total_energy: f64 = result.psd.iter().sum();
             if total_energy < 1e-12 || total_energy > 1e12 {
                 score -= 20.0;
             }
-            
+
             Ok(score.max(0.0))
         }
         Err(_) => {
@@ -1378,7 +1409,7 @@ fn validate_numerical_consistency(config: &TestSignalConfig, tolerance: f64) -> 
     let signal: Vec<f64> = (0..config.n)
         .map(|i| (2.0 * PI * 10.0 * i as f64 / config.fs).sin())
         .collect();
-    
+
     let mt_config1 = MultitaperConfig {
         fs: config.fs,
         nw: config.nw,
@@ -1386,7 +1417,7 @@ fn validate_numerical_consistency(config: &TestSignalConfig, tolerance: f64) -> 
         parallel: false,
         ..Default::default()
     };
-    
+
     let mt_config2 = MultitaperConfig {
         fs: config.fs,
         nw: config.nw,
@@ -1394,15 +1425,15 @@ fn validate_numerical_consistency(config: &TestSignalConfig, tolerance: f64) -> 
         parallel: true,
         ..Default::default()
     };
-    
+
     let result1 = enhanced_pmtm(&signal, &mt_config1)?;
     let result2 = enhanced_pmtm(&signal, &mt_config2)?;
-    
+
     // Compare results
     let errors = compute_relative_errors(&result1.psd, &result2.psd);
     let max_error = errors.iter().cloned().fold(0.0, f64::max);
     let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;
-    
+
     let consistency_score = if max_error < tolerance * 10.0 && mean_error < tolerance {
         100.0
     } else if max_error < tolerance * 100.0 && mean_error < tolerance * 10.0 {
@@ -1410,7 +1441,7 @@ fn validate_numerical_consistency(config: &TestSignalConfig, tolerance: f64) -> 
     } else {
         50.0
     };
-    
+
     Ok(consistency_score)
 }
 
@@ -1419,13 +1450,16 @@ fn validate_memory_scaling(config: &TestSignalConfig) -> SignalResult<f64> {
     // Test different signal sizes and measure memory efficiency
     let sizes = vec![1024, 4096, 16384];
     let mut efficiency_scores = Vec::new();
-    
+
     for &n in &sizes {
-        let test_config = TestSignalConfig { n, ..config.clone() };
+        let test_config = TestSignalConfig {
+            n,
+            ..config.clone()
+        };
         let signal: Vec<f64> = (0..n)
             .map(|i| (2.0 * PI * 10.0 * i as f64 / test_config.fs).sin())
             .collect();
-        
+
         let mt_config = MultitaperConfig {
             fs: test_config.fs,
             nw: test_config.nw,
@@ -1433,7 +1467,7 @@ fn validate_memory_scaling(config: &TestSignalConfig) -> SignalResult<f64> {
             memory_optimized: true,
             ..Default::default()
         };
-        
+
         match enhanced_pmtm(&signal, &mt_config) {
             Ok(_) => {
                 // Simple heuristic: larger signals should still work efficiently
@@ -1446,22 +1480,27 @@ fn validate_memory_scaling(config: &TestSignalConfig) -> SignalResult<f64> {
             }
         }
     }
-    
+
     Ok(efficiency_scores.iter().sum::<f64>() / efficiency_scores.len() as f64)
 }
 
 /// Analyze performance scaling characteristics
-fn analyze_performance_scaling(config: &TestSignalConfig) -> SignalResult<PerformanceScalingMetrics> {
+fn analyze_performance_scaling(
+    config: &TestSignalConfig,
+) -> SignalResult<PerformanceScalingMetrics> {
     // This would normally involve detailed timing analysis
     // For now, return reasonable default values
     Ok(PerformanceScalingMetrics::default())
 }
 
 /// Test convergence stability of adaptive algorithms
-fn test_convergence_stability(config: &TestSignalConfig, _tolerance: f64) -> SignalResult<ConvergenceMetrics> {
+fn test_convergence_stability(
+    config: &TestSignalConfig,
+    _tolerance: f64,
+) -> SignalResult<ConvergenceMetrics> {
     // Test adaptive multitaper convergence with different signals
     let mut convergence_rates = Vec::new();
-    
+
     for _ in 0..5 {
         let signal: Vec<f64> = (0..config.n)
             .map(|i| {
@@ -1469,7 +1508,7 @@ fn test_convergence_stability(config: &TestSignalConfig, _tolerance: f64) -> Sig
                 (2.0 * PI * 10.0 * t).sin() + 0.5 * (2.0 * PI * 25.0 * t).sin()
             })
             .collect();
-        
+
         let mt_config = MultitaperConfig {
             fs: config.fs,
             nw: config.nw,
@@ -1477,7 +1516,7 @@ fn test_convergence_stability(config: &TestSignalConfig, _tolerance: f64) -> Sig
             adaptive: true,
             ..Default::default()
         };
-        
+
         match enhanced_pmtm(&signal, &mt_config) {
             Ok(_) => {
                 // In a real implementation, we'd track convergence iterations
@@ -1488,11 +1527,11 @@ fn test_convergence_stability(config: &TestSignalConfig, _tolerance: f64) -> Sig
             }
         }
     }
-    
+
     let avg_iterations = convergence_rates.iter().sum::<f64>() / convergence_rates.len() as f64;
     let stability_score = if avg_iterations < 20.0 { 100.0 } else { 80.0 };
     let consistency = 95.0; // Placeholder
-    
+
     Ok(ConvergenceMetrics {
         stability_score,
         avg_convergence_iterations: avg_iterations,
@@ -1504,7 +1543,7 @@ fn test_convergence_stability(config: &TestSignalConfig, _tolerance: f64) -> Sig
 fn test_noise_robustness(config: &TestSignalConfig, _tolerance: f64) -> SignalResult<f64> {
     let noise_levels = vec![0.1, 0.5, 1.0, 2.0]; // Different SNR conditions
     let mut robustness_scores = Vec::new();
-    
+
     for &noise_level in &noise_levels {
         let signal: Vec<f64> = (0..config.n)
             .map(|i| {
@@ -1514,27 +1553,29 @@ fn test_noise_robustness(config: &TestSignalConfig, _tolerance: f64) -> SignalRe
                 clean_signal + noise
             })
             .collect();
-        
+
         let mt_config = MultitaperConfig {
             fs: config.fs,
             nw: config.nw,
             k: config.k,
             ..Default::default()
         };
-        
+
         match enhanced_pmtm(&signal, &mt_config) {
             Ok(result) => {
                 // Check if peak is still detectable
-                let peak_idx = result.psd.iter()
+                let peak_idx = result
+                    .psd
+                    .iter()
                     .enumerate()
                     .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
                     .map(|(i, _)| i)
                     .unwrap_or(0);
-                
+
                 let expected_freq = 10.0;
                 let actual_freq = result.frequencies[peak_idx];
                 let freq_error = (actual_freq - expected_freq).abs() / expected_freq;
-                
+
                 let score = if freq_error < 0.1 { 100.0 } else { 50.0 };
                 robustness_scores.push(score);
             }
@@ -1543,7 +1584,7 @@ fn test_noise_robustness(config: &TestSignalConfig, _tolerance: f64) -> SignalRe
             }
         }
     }
-    
+
     Ok(robustness_scores.iter().sum::<f64>() / robustness_scores.len() as f64)
 }
 

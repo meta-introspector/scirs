@@ -88,6 +88,10 @@ pub struct PRMConfig {
     pub goal_bias: f64,
     /// Threshold for considering a point close enough to the goal
     pub goal_threshold: f64,
+    /// Enable bidirectional search for faster pathfinding
+    pub bidirectional: bool,
+    /// Use lazy evaluation for collision checking
+    pub lazy_evaluation: bool,
 }
 
 impl PRMConfig {
@@ -100,6 +104,8 @@ impl PRMConfig {
             seed: None,
             goal_bias: 0.05,
             goal_threshold: 0.1,
+            bidirectional: false,
+            lazy_evaluation: false,
         }
     }
 
@@ -136,6 +142,18 @@ impl PRMConfig {
     /// Set the goal threshold
     pub fn with_goal_threshold(mut self, threshold: f64) -> Self {
         self.goal_threshold = threshold;
+        self
+    }
+
+    /// Enable bidirectional search
+    pub fn with_bidirectional(mut self, bidirectional: bool) -> Self {
+        self.bidirectional = bidirectional;
+        self
+    }
+
+    /// Enable lazy evaluation for collision checking
+    pub fn with_lazy_evaluation(mut self, lazy_evaluation: bool) -> Self {
+        self.lazy_evaluation = lazy_evaluation;
         self
     }
 }
@@ -295,7 +313,7 @@ impl PRMPlanner {
         for i in 0..self.dimension {
             let lower = self.bounds.0[i];
             let upper = self.bounds.1[i];
-            config[i] = self.rng.gen_range(lower..upper);
+            config[i] = self.rng.random_range(lower..upper);
         }
 
         config
@@ -309,7 +327,7 @@ impl PRMPlanner {
         for i in 0..self.dimension {
             let lower = (target[i] - radius).max(self.bounds.0[i]);
             let upper = (target[i] + radius).min(self.bounds.1[i]);
-            config[i] = self.rng.gen_range(lower..upper);
+            config[i] = self.rng.random_range(lower..upper);
         }
 
         config

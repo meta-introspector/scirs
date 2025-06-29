@@ -636,7 +636,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
             self.config.enable_forward_mode = true;
             self.config.enable_reverse_mode = true;
             self.config.gradient_checkpointing = true;
-            
+
             // Enable candle-specific optimizations
             self.setup_candle_compatibility()?;
         }
@@ -649,19 +649,22 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         self.config.max_derivative_order = 3; // Support higher-order derivatives
         self.config.enable_hessian = true;
         self.config.sparse_hessian = true; // Efficient for large models
-        
+
         // Set up memory-efficient gradient computation
         self.config.checkpoint_chunk_size = 500; // Balanced for candle tensors
-        
+
         // Initialize candle-specific tape format
         self.tape.clear();
         self.tape.reserve(10000); // Pre-allocate for efficiency
-        
+
         Ok(())
     }
 
     /// Convert candle tensor gradients to internal format
-    pub fn from_candle_gradients<D: Dimension>(&mut self, gradients: &Array<T, D>) -> Result<Vec<T>, OptimizerError> {
+    pub fn from_candle_gradients<D: Dimension>(
+        &mut self,
+        gradients: &Array<T, D>,
+    ) -> Result<Vec<T>, OptimizerError> {
         if let Some(grad_slice) = gradients.as_slice() {
             Ok(grad_slice.to_vec())
         } else {
@@ -672,10 +675,14 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Convert internal gradients to candle-compatible format
-    pub fn to_candle_gradients<D: Dimension>(&self, gradients: &[T], shape: &[usize]) -> Result<Array<T, D>, OptimizerError> {
+    pub fn to_candle_gradients<D: Dimension>(
+        &self,
+        gradients: &[T],
+        shape: &[usize],
+    ) -> Result<Array<T, D>, OptimizerError> {
         if gradients.len() != shape.iter().product() {
             return Err(OptimizerError::InvalidConfig(
-                "Gradient size mismatch with shape".to_string()
+                "Gradient size mismatch with shape".to_string(),
             ));
         }
 
@@ -684,18 +691,20 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Compute candle-compatible Jacobian-vector product
-    pub fn compute_jvp(&mut self, 
-                      output_id: usize, 
-                      tangent: &[T]) -> Result<Vec<T>, OptimizerError> {
+    pub fn compute_jvp(
+        &mut self,
+        output_id: usize,
+        tangent: &[T],
+    ) -> Result<Vec<T>, OptimizerError> {
         if tangent.len() != self.variables.len() {
             return Err(OptimizerError::InvalidConfig(
-                "Tangent vector size mismatch".to_string()
+                "Tangent vector size mismatch".to_string(),
             ));
         }
 
         // Forward-mode AD for computing JVP
         let mut jvp_values = vec![T::zero(); self.graph.len()];
-        
+
         // Initialize tangent values for input variables
         for (var_name, &var_id) in &self.variables {
             if var_id < tangent.len() {
@@ -706,13 +715,14 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         // Forward pass through computation graph
         for entry in &self.tape {
             let mut output_tangent = T::zero();
-            
+
             for (i, &input_id) in entry.inputs.iter().enumerate() {
                 if i < entry.local_gradients.len() {
-                    output_tangent = output_tangent + entry.local_gradients[i] * jvp_values[input_id];
+                    output_tangent =
+                        output_tangent + entry.local_gradients[i] * jvp_values[input_id];
                 }
             }
-            
+
             jvp_values[entry.output] = output_tangent;
         }
 
@@ -720,9 +730,11 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Compute candle-compatible vector-Jacobian product
-    pub fn compute_vjp(&mut self, 
-                      output_id: usize, 
-                      cotangent: T) -> Result<Vec<T>, OptimizerError> {
+    pub fn compute_vjp(
+        &mut self,
+        output_id: usize,
+        cotangent: T,
+    ) -> Result<Vec<T>, OptimizerError> {
         // Reverse-mode AD for computing VJP
         let mut vjp_values = vec![T::zero(); self.graph.len()];
         vjp_values[output_id] = cotangent;
@@ -730,11 +742,11 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         // Reverse pass through computation graph
         for entry in self.tape.iter().rev() {
             let output_cotangent = vjp_values[entry.output];
-            
+
             for (i, &input_id) in entry.inputs.iter().enumerate() {
                 if i < entry.local_gradients.len() {
-                    vjp_values[input_id] = vjp_values[input_id] + 
-                        output_cotangent * entry.local_gradients[i];
+                    vjp_values[input_id] =
+                        vjp_values[input_id] + output_cotangent * entry.local_gradients[i];
                 }
             }
         }
@@ -749,13 +761,15 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Candle tensor operation registration
-    pub fn register_candle_operation(&mut self, 
-                                   op_name: &str,
-                                   inputs: &[usize],
-                                   output_value: T,
-                                   local_grads: &[T]) -> usize {
+    pub fn register_candle_operation(
+        &mut self,
+        op_name: &str,
+        inputs: &[usize],
+        output_value: T,
+        local_grads: &[T],
+    ) -> usize {
         let output_id = self.graph.len();
-        
+
         // Create output node
         let output_node = ADNode {
             value: output_value,
@@ -765,9 +779,9 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
             parents: inputs.to_vec(),
             id: output_id,
         };
-        
+
         self.graph.push(output_node);
-        
+
         // Record operation in tape
         let tape_entry = TapeEntry {
             operation: Operation::Custom(op_name.to_string()),
@@ -775,9 +789,9 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
             output: output_id,
             local_gradients: local_grads.to_vec(),
         };
-        
+
         self.tape.push(tape_entry);
-        
+
         output_id
     }
 
@@ -787,7 +801,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         self.fuse_operations()?;
         self.eliminate_dead_code()?;
         self.optimize_memory_layout()?;
-        
+
         Ok(())
     }
 
@@ -795,17 +809,17 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     fn fuse_operations(&mut self) -> Result<(), OptimizerError> {
         // Identify fusion opportunities (e.g., add + multiply, exp + log)
         let mut fused_operations = Vec::new();
-        
+
         for i in 0..self.tape.len() {
             if i + 1 < self.tape.len() {
                 let curr_op = &self.tape[i];
                 let next_op = &self.tape[i + 1];
-                
+
                 // Example fusion: add followed by multiply
-                if matches!(curr_op.operation, Operation::Add) && 
-                   matches!(next_op.operation, Operation::Multiply) &&
-                   next_op.inputs.contains(&curr_op.output) {
-                    
+                if matches!(curr_op.operation, Operation::Add)
+                    && matches!(next_op.operation, Operation::Multiply)
+                    && next_op.inputs.contains(&curr_op.output)
+                {
                     fused_operations.push((i, i + 1, "fused_add_mul".to_string()));
                 }
             }
@@ -820,11 +834,11 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
                 output: self.tape[*end].output,
                 local_gradients: vec![], // Would compute combined gradients
             };
-            
+
             self.tape[*start] = fused_entry;
             self.tape.remove(*end);
         }
-        
+
         Ok(())
     }
 
@@ -833,13 +847,13 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         // Mark reachable nodes from outputs
         let mut reachable = vec![false; self.graph.len()];
         let mut stack = Vec::new();
-        
+
         // Start from all variable nodes (they're always reachable)
         for &var_id in self.variables.values() {
             reachable[var_id] = true;
             stack.push(var_id);
         }
-        
+
         // Mark all nodes reachable from variables
         while let Some(node_id) = stack.pop() {
             for entry in &self.tape {
@@ -849,10 +863,10 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
                 }
             }
         }
-        
+
         // Remove unreachable operations
         self.tape.retain(|entry| reachable[entry.output]);
-        
+
         Ok(())
     }
 
@@ -860,18 +874,18 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     fn optimize_memory_layout(&mut self) -> Result<(), OptimizerError> {
         // Sort tape entries to improve memory locality
         self.tape.sort_by_key(|entry| entry.output);
-        
+
         // Compact graph representation
         let mut new_graph = Vec::new();
         let mut id_mapping = HashMap::new();
-        
+
         for (new_id, node) in self.graph.iter().enumerate() {
             id_mapping.insert(node.id, new_id);
             let mut new_node = node.clone();
             new_node.id = new_id;
             new_graph.push(new_node);
         }
-        
+
         // Update references in tape
         for entry in &mut self.tape {
             entry.output = *id_mapping.get(&entry.output).unwrap_or(&entry.output);
@@ -879,9 +893,9 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
                 *input = *id_mapping.get(input).unwrap_or(input);
             }
         }
-        
+
         self.graph = new_graph;
-        
+
         Ok(())
     }
 

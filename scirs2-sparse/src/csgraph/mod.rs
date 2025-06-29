@@ -99,8 +99,7 @@ where
     T: Float + PartialOrd,
 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        // Reverse the ordering for min-heap behavior
-        other.distance.partial_cmp(&self.distance)
+        Some(self.cmp(other))
     }
 }
 
@@ -109,7 +108,8 @@ where
     T: Float + PartialOrd,
 {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap_or(Ordering::Equal)
+        // Reverse the ordering for min-heap behavior
+        other.distance.partial_cmp(&self.distance).unwrap_or(Ordering::Equal)
     }
 }
 
@@ -244,7 +244,6 @@ where
 mod tests {
     use super::*;
     use crate::csr_array::CsrArray;
-    use approx::assert_relative_eq;
 
     fn create_test_graph() -> CsrArray<f64> {
         // Create a simple 4-vertex graph:

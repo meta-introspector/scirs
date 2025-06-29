@@ -599,7 +599,7 @@ where
 /// * Norm of the vector
 pub fn vector_norm<F>(a: &ArrayView1<F>, ord: Option<f64>, check_finite: bool) -> LinalgResult<F>
 where
-    F: Float + Sum + NumAssign,
+    F: Float + Sum + NumAssign + Send + Sync,
 {
     if check_finite {
         for &elem in a.iter() {

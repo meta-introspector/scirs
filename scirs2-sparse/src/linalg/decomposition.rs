@@ -520,7 +520,7 @@ where
         // Compute diagonal element
         let mut sum = T::zero();
         let row_k_before_k = working_matrix.get_row_before_column(k, k);
-        for (col_j, &val_kj) in &row_k_before_k {
+        for &val_kj in row_k_before_k.values() {
             sum = sum + val_kj * val_kj;
         }
 
@@ -641,7 +641,7 @@ where
 
     fn get_column_below_diagonal(&self, col: usize) -> Vec<usize> {
         let mut result = Vec::new();
-        for (&(r, c), _) in &self.data {
+        for &(r, c) in self.data.keys() {
             if c == col && r > col {
                 result.push(r);
             }
@@ -656,7 +656,7 @@ fn find_pivot<T>(
     matrix: &SparseWorkingMatrix<T>,
     k: usize,
     p: &[usize],
-    threshold: f64,
+    _threshold: f64,
 ) -> SparseResult<usize>
 where
     T: Float + Debug + Copy,
@@ -782,7 +782,6 @@ where
 mod tests {
     use super::*;
     use crate::csr_array::CsrArray;
-    use approx::assert_relative_eq;
 
     fn create_test_matrix() -> CsrArray<f64> {
         // Create a simple test matrix

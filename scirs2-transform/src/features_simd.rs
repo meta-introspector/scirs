@@ -43,14 +43,14 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
         // Validate input using scirs2-core validation
         check_not_empty(x, "x")?;
         check_finite(x, "x")?;
-        
+
         let n_samples = x.shape()[0];
         let n_features = x.shape()[1];
 
         if n_samples == 0 || n_features == 0 {
             return Err(TransformError::InvalidInput("Empty input data".to_string()));
         }
-        
+
         if n_features > 1000 {
             return Err(TransformError::InvalidInput(
                 "Too many features for polynomial expansion (>1000)".to_string(),
@@ -59,21 +59,21 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
 
         // Calculate output dimensions with overflow check
         let n_output_features = self.calculate_n_output_features(n_features)?;
-        
+
         // Check for memory constraints
         if n_samples > 100_000 && n_output_features > 10_000 {
             return Err(TransformError::ComputationError(
                 "Output matrix would be too large (>1B elements)".to_string(),
             ));
         }
-        
+
         let mut output = Array2::zeros((n_samples, n_output_features));
 
         // Process samples in batches for better cache locality
         const BATCH_SIZE: usize = 256;
         for batch_start in (0..n_samples).step_by(BATCH_SIZE) {
             let batch_end = (batch_start + BATCH_SIZE).min(n_samples);
-            
+
             for i in batch_start..batch_end {
                 let sample = x.row(i);
                 let poly_features = self.transform_sample_simd(&sample)?;
@@ -152,12 +152,12 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
                 if remaining_features > 0 {
                     // Use SIMD for remaining cross products
                     let sample_j = sample[j];
-                    let remaining_slice = sample.slice(ndarray::s![j+1..]);
-                    
+                    let remaining_slice = sample.slice(ndarray::s![j + 1..]);
+
                     // Create a vector filled with sample[j]
                     let sample_j_vec = Array1::from_elem(remaining_features, sample_j);
                     let cross_products = F::simd_mul(&sample_j_vec.view(), &remaining_slice);
-                    
+
                     for &val in cross_products.iter() {
                         output[output_idx] = val;
                         output_idx += 1;
@@ -191,12 +191,12 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
                 let remaining_features = n_features - j - 1;
                 if remaining_features > 0 {
                     let sample_j = sample[j];
-                    let remaining_slice = sample.slice(ndarray::s![j+1..]);
-                    
+                    let remaining_slice = sample.slice(ndarray::s![j + 1..]);
+
                     // Use SIMD for batch processing of interactions
                     let sample_j_vec = Array1::from_elem(remaining_features, sample_j);
                     let interactions = F::simd_mul(&sample_j_vec.view(), &remaining_slice);
-                    
+
                     for &val in interactions.iter() {
                         output[output_idx] = val;
                         output_idx += 1;
@@ -204,8 +204,9 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
                 } else {
                     // Fallback for remaining elements
                     for k in j + 1..n_features {
-                    output[output_idx] = sample[j] * sample[k];
-                    output_idx += 1;
+                        output[output_idx] = sample[j] * sample[k];
+                        output_idx += 1;
+                    }
                 }
             }
         } else {
@@ -418,17 +419,17 @@ where
     F: Float + NumCast + SimdUnifiedOps,
 {
     let n = data.len();
-    
+
     if n == 0 {
         return Ok(Array1::zeros(0));
     }
-    
+
     if !exponent.is_finite() {
         return Err(TransformError::InvalidInput(
             "Exponent must be finite".to_string(),
         ));
     }
-    
+
     let mut result = Array1::zeros(n);
 
     // For common exponents, use optimized SIMD operations
@@ -459,7 +460,7 @@ where
         // General case: use vectorized exponentiation
         let exponent_array = Array1::from_elem(n, exponent);
         result = F::simd_pow(&data.view(), &exponent_array.view());
-        
+
         // Validate results
         for &val in result.iter() {
             if !val.is_finite() {
@@ -480,34 +481,34 @@ where
 {
     check_not_empty(data, "data")?;
     check_finite(data, "data")?;
-    
+
     if !threshold.is_finite() {
         return Err(TransformError::InvalidInput(
             "Threshold must be finite".to_string(),
         ));
     }
-    
+
     let shape = data.shape();
     let mut result = Array2::zeros((shape[0], shape[1]));
 
     // Process in chunks for better cache locality
     const CHUNK_SIZE: usize = 64;
-    
+
     for i in 0..shape[0] {
         let row = data.row(i);
         let row_array = row.to_owned();
-        
+
         // Process row in chunks using SIMD
         for chunk_start in (0..shape[1]).step_by(CHUNK_SIZE) {
             let chunk_end = (chunk_start + CHUNK_SIZE).min(shape[1]);
             let chunk_size = chunk_end - chunk_start;
-            
+
             let chunk_slice = row_array.slice(ndarray::s![chunk_start..chunk_end]);
             let threshold_array = Array1::from_elem(chunk_size, threshold);
-            
+
             // Use SIMD comparison where available
             let comparison_result = F::simd_greater_than(&chunk_slice, &threshold_array.view());
-            
+
             for (j, &cmp_result) in comparison_result.iter().enumerate() {
                 result[[i, chunk_start + j]] = if cmp_result > F::zero() {
                     F::one()

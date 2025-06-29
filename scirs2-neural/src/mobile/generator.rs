@@ -13,7 +13,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::platform::{
-    MobileOptimizationConfig, MobilePlatform, PruningType, QuantizationStrategy,
+    MobileOptimizationConfig, MobilePlatform, MobilePruningStrategy, PruningType, QuantizationPrecision,
+    QuantizationStrategy,
 };
 
 /// Mobile deployment generator

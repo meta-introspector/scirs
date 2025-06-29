@@ -69,7 +69,7 @@ where
     }
 
     let nnz = matrix.nnz();
-    
+
     // Use parallel implementation for larger matrices
     if nnz >= 1000 {
         sym_csr_matvec_parallel(matrix, x)
@@ -79,7 +79,10 @@ where
 }
 
 /// Parallel symmetric CSR matrix-vector multiplication
-fn sym_csr_matvec_parallel<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn sym_csr_matvec_parallel<T>(
+    matrix: &SymCsrMatrix<T>,
+    x: &ArrayView1<T>,
+) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
 {
@@ -87,14 +90,18 @@ where
     let mut y = Array1::zeros(n);
 
     // Determine optimal chunk size based on matrix size
-    let chunk_size = std::cmp::max(1, n / rayon::current_num_threads()).min(256);
+    let chunk_size = std::cmp::max(1, n / scirs2_core::parallel_ops::get_num_threads()).min(256);
 
     // Use scirs2-core parallel operations for better performance
-    let chunks: Vec<_> = (0..n).collect::<Vec<_>>().chunks(chunk_size).map(|chunk| chunk.to_vec()).collect();
-    
+    let chunks: Vec<_> = (0..n)
+        .collect::<Vec<_>>()
+        .chunks(chunk_size)
+        .map(|chunk| chunk.to_vec())
+        .collect();
+
     let results: Vec<_> = parallel_map(&chunks, |row_chunk| {
         let mut local_y = Array1::zeros(n);
-        
+
         for &row_i in row_chunk {
             let row_start = matrix.indptr[row_i];
             let row_end = matrix.indptr[row_i + 1];
@@ -104,9 +111,9 @@ where
             for j in row_start..row_end {
                 let col = matrix.indices[j];
                 let val = matrix.data[j];
-                
+
                 sum = sum + val * x[col];
-                
+
                 // For symmetric matrices, also add the symmetric contribution
                 // if we're below the diagonal
                 if row_i != col {
@@ -118,18 +125,15 @@ where
         local_y
     });
 
-    // Parallel reduction of results
-    parallel_reduce(&results, Array1::zeros(n), |mut acc, local_y| {
+    // Combine results from all chunks (manual reduction since parallel_reduce not available)
+    for local_y in results {
         for i in 0..n {
-            acc[i] = acc[i] + local_y[i];
+            y[i] = y[i] + local_y[i];
         }
-        acc
-    }, &mut y);
+    }
 
     Ok(y)
 }
-
-
 
 /// Scalar fallback version of symmetric CSR matrix-vector multiplication
 fn sym_csr_matvec_scalar<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>

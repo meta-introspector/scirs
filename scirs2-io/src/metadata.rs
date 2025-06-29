@@ -166,10 +166,7 @@ impl Metadata {
             self.data.insert(key.clone(), value.clone());
         }
         for (format, ext_data) in &other.extensions {
-            let ext = self
-                .extensions
-                .entry(format.clone())
-                .or_default();
+            let ext = self.extensions.entry(format.clone()).or_default();
             for (key, value) in ext_data {
                 ext.insert(key.clone(), value.clone());
             }

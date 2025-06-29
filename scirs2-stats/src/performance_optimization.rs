@@ -51,11 +51,15 @@ impl Default for PerformanceConfig {
         let capabilities = scirs2_core::simd_ops::PlatformCapabilities::detect();
 
         Self {
-            enable_simd: capabilities.has_sse()
-                || capabilities.has_avx2()
-                || capabilities.has_avx512(),
+            enable_simd: capabilities.simd_available
+                || capabilities.avx2_available
+                || capabilities.avx512_available,
             enable_parallel: num_threads() > 1,
-            simd_threshold: if capabilities.has_avx512() { 32 } else { 64 },
+            simd_threshold: if capabilities.avx512_available {
+                32
+            } else {
+                64
+            },
             parallel_threshold: 1000,
             max_threads: None,
             auto_tune: true,
@@ -481,7 +485,7 @@ impl OptimizedLinearDiscriminantAnalysis {
                 let row = x.row(i);
                 for j in 0..n_components {
                     let column = result.scalings.column(j);
-                    transformed[[i, j]] = f64::simd_dot_product(&row, &column.view());
+                    transformed[[i, j]] = f64::simd_dot(&row, &column.view());
                 }
             }
 

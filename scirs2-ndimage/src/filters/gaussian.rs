@@ -298,7 +298,9 @@ where
                     // Extract row
                     let row_view = array2d.row(i).to_owned();
                     let row_1d = row_view.as_slice().ok_or_else(|| {
-                        NdimageError::ComputationError("Failed to get contiguous slice from row".into())
+                        NdimageError::ComputationError(
+                            "Failed to get contiguous slice from row".into(),
+                        )
                     })?;
                     // Create a 1D array from the slice
                     let row_array = Array1::from_vec(row_1d.to_vec());
@@ -318,7 +320,9 @@ where
                     // Extract column
                     let col_view = array2d.column(j).to_owned();
                     let col_1d = col_view.as_slice().ok_or_else(|| {
-                        NdimageError::ComputationError("Failed to get contiguous slice from column".into())
+                        NdimageError::ComputationError(
+                            "Failed to get contiguous slice from column".into(),
+                        )
                     })?;
                     // Create a 1D array from the slice
                     let col_array = Array1::from_vec(col_1d.to_vec());
@@ -996,9 +1000,8 @@ mod tests {
 
         // Check that applying filter with very small sigma doesn't change the input much
         let small_sigma = 0.1;
-        let small_result =
-            gaussian_filter(&input, small_sigma, Some(BorderMode::Reflect), None)
-                .expect("gaussian_filter should succeed for test");
+        let small_result = gaussian_filter(&input, small_sigma, Some(BorderMode::Reflect), None)
+            .expect("gaussian_filter should succeed for test");
         println!(
             "Gaussian 3D filter (small sigma) center value: {}",
             small_result[[2, 2, 2]]

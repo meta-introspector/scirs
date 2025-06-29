@@ -160,7 +160,7 @@ pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Ar
                 edges
             }
         }
-    })
+    }
 }
 
 /// Canny edge detector
@@ -233,7 +233,8 @@ fn canny_impl(
 
     // Step 1: Gaussian filter to reduce noise
     let image_d = image.clone().into_dyn();
-    let smoothed = gaussian_filter_f32(&image_d, sigma, Some(mode), None).unwrap_or_else(|_| image_d.clone());
+    let smoothed =
+        gaussian_filter_f32(&image_d, sigma, Some(mode), None).unwrap_or_else(|_| image_d.clone());
 
     // Step 2: Calculate gradients using the specified method
     let gradients = calculate_gradient(&smoothed, method, mode);
@@ -264,13 +265,17 @@ fn calculate_gradient(
             (gx, gy)
         }
         GradientMethod::Prewitt => {
-            let gy = prewitt(image, 0, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
-            let gx = prewitt(image, 1, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
+            let gy =
+                prewitt(image, 0, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
+            let gx =
+                prewitt(image, 1, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
             (gx, gy)
         }
         GradientMethod::Scharr => {
-            let gy = scharr(image, 0, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
-            let gx = scharr(image, 1, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
+            let gy =
+                scharr(image, 0, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
+            let gx =
+                scharr(image, 1, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
             (gx, gy)
         }
     }
@@ -510,7 +515,8 @@ fn laplacian_edges_impl(
     let image_d = image.clone().into_dyn();
 
     // First, apply Gaussian filter to reduce noise
-    let smoothed = gaussian_filter_f32(&image_d, sigma, Some(mode), None).unwrap_or_else(|_| image_d.clone());
+    let smoothed =
+        gaussian_filter_f32(&image_d, sigma, Some(mode), None).unwrap_or_else(|_| image_d.clone());
 
     // Create Laplace kernel size based on sigma (typically 2*ceil(3*sigma) + 1)
     let ksize = ((2.0 * (3.0 * sigma).ceil() + 1.0).max(3.0)) as usize;
@@ -545,8 +551,9 @@ fn laplacian_edges_impl(
     }
 
     // Apply convolution
-    let laplacian = convolve(&smoothed, &kernel, Some(mode))
-        .map_err(|e| NdimageError::ComputationError(format!("Laplacian convolution failed: {}", e)))?;
+    let laplacian = convolve(&smoothed, &kernel, Some(mode)).map_err(|e| {
+        NdimageError::ComputationError(format!("Laplacian convolution failed: {}", e))
+    })?;
 
     // Convert back to 2D array
     let mut result_copy = Array::zeros(image.dim());
@@ -625,8 +632,9 @@ fn gradient_edges_impl(
 
     // Apply Gaussian smoothing if sigma > 0
     let processed = if sigma > 0.0 {
-        gaussian_filter_f32(&image_d, sigma, Some(mode), None)
-            .map_err(|e| NdimageError::ComputationError(format!("Gaussian smoothing failed: {}", e)))?
+        gaussian_filter_f32(&image_d, sigma, Some(mode), None).map_err(|e| {
+            NdimageError::ComputationError(format!("Gaussian smoothing failed: {}", e))
+        })?
     } else {
         image_d
     };
@@ -639,8 +647,9 @@ fn gradient_edges_impl(
     };
 
     // Calculate gradient magnitude
-    let magnitude = gradient_magnitude(&processed, Some(mode), Some(method_str))
-        .map_err(|e| NdimageError::ComputationError(format!("Gradient magnitude calculation failed: {}", e)))?;
+    let magnitude = gradient_magnitude(&processed, Some(mode), Some(method_str)).map_err(|e| {
+        NdimageError::ComputationError(format!("Gradient magnitude calculation failed: {}", e))
+    })?;
 
     // Convert back to 2D array
     let mut result_copy = Array::zeros(image.dim());

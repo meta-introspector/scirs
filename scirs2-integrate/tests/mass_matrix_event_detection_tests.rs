@@ -14,7 +14,6 @@ use scirs2_integrate::ode::{
 /// Test event detection with a constant mass matrix
 #[test]
 fn test_constant_mass_with_events() -> IntegrateResult<()> {
-
     // Simple oscillator with a non-identity mass matrix
     // [2 0] [x'] = [    v    ]
     // [0 1] [v']   [   -x    ]
@@ -183,7 +182,6 @@ fn test_constant_mass_with_events() -> IntegrateResult<()> {
 /// Test event detection with a time-dependent mass matrix
 #[test]
 fn test_time_dependent_mass_with_events() -> IntegrateResult<()> {
-
     // Oscillator with a time-dependent mass: m(t) = 1 + 0.5·sin(t)
     // [m(t) 0] [x'] = [    v    ]
     // [  0  1] [v']   [   -x    ]
@@ -279,7 +277,6 @@ fn test_time_dependent_mass_with_events() -> IntegrateResult<()> {
 /// Test event detection with a state-dependent mass matrix and terminal event
 #[test]
 fn test_state_dependent_mass_with_terminal_event() -> IntegrateResult<()> {
-
     // Nonlinear pendulum with state-dependent effective mass
     // The effective mass increases with angle due to the nonlinear term
 

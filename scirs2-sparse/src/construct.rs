@@ -3,6 +3,10 @@
 // This module provides functions for constructing sparse arrays,
 // including identity matrices, diagonal matrices, random arrays, etc.
 
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+
 use ndarray::Array1;
 use num_traits::Float;
 use rand::seq::SliceRandom;
@@ -531,23 +535,28 @@ where
     let expected_nnz = (total_elements as f64 * density) as usize;
 
     // Determine number of chunks based on available parallelism
-    let num_chunks = std::cmp::min(rayon::current_num_threads(), rows.min(cols));
+    let num_chunks = std::cmp::min(scirs2_core::parallel_ops::get_num_threads(), rows.min(cols));
     let chunk_size = std::cmp::max(1, rows / num_chunks);
 
     // Create row chunks for parallel processing
-    let row_chunks: Vec<_> = (0..rows).collect::<Vec<_>>().chunks(chunk_size).map(|chunk| chunk.to_vec()).collect();
+    let row_chunks: Vec<_> = (0..rows)
+        .collect::<Vec<_>>()
+        .chunks(chunk_size)
+        .map(|chunk| chunk.to_vec())
+        .collect();
 
-    // Generate random elements in parallel
-    let results: Vec<_> = parallel_map_with_index(&row_chunks, |chunk_idx, row_chunk| {
+    // Generate random elements in parallel using enumerate to get chunk index
+    let chunk_data: Vec<_> = row_chunks.iter().enumerate().collect();
+    let results: Vec<_> = parallel_map(&chunk_data, |(chunk_idx, row_chunk)| {
         let mut local_rows = Vec::new();
         let mut local_cols = Vec::new();
         let mut local_data = Vec::new();
 
         // Use a different seed for each chunk to ensure good randomization
-        let chunk_seed = seed.unwrap_or(42) + chunk_idx as u64 * 1000007; // Large prime offset
+        let chunk_seed = seed.unwrap_or(42) + *chunk_idx as u64 * 1000007; // Large prime offset
         let mut rng = rand::rngs::StdRng::seed_from_u64(chunk_seed);
 
-        for &row in row_chunk {
+        for &row in row_chunk.iter() {
             // Determine how many elements to generate for this row
             let row_elements = cols;
             let row_expected_nnz = std::cmp::max(1, (row_elements as f64 * density) as usize);

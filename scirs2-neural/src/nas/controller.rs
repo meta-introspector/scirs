@@ -82,20 +82,20 @@ impl NASController {
             match layer_type {
                 LayerType::Dense(units) => {
                     let input_size = current_shape.iter().product();
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rand::rng();
                     model.add_layer(crate::layers::Dense::new(
                         input_size, *units, None, &mut rng,
                     )?);
                     current_shape = vec![*units];
                 }
                 LayerType::Dropout(rate) => {
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rand::rng();
                     model.add_layer(crate::layers::Dropout::new(*rate as f64, &mut rng)?);
                     // Dropout doesn't change shape
                 }
                 LayerType::BatchNorm => {
                     let features = current_shape.last().copied().unwrap_or(1);
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rand::rng();
                     model.add_layer(crate::layers::BatchNorm::new(
                         features, 0.9, 1e-5, &mut rng,
                     )?);
@@ -103,7 +103,7 @@ impl NASController {
                 }
                 LayerType::Activation(name) => {
                     let size = current_shape.iter().product();
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rand::rng();
                     model.add_layer(crate::layers::Dense::new(
                         size,
                         size,
@@ -115,7 +115,7 @@ impl NASController {
                 LayerType::Flatten => {
                     // For now, simulate flatten with a dense layer
                     let input_size: usize = current_shape.iter().product();
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rand::rng();
                     model.add_layer(crate::layers::Dense::new(
                         input_size, input_size, None, &mut rng,
                     )?);
@@ -131,7 +131,7 @@ impl NASController {
         // Add final classification layer if needed
         if self.config.add_softmax {
             let input_size = current_shape.iter().product();
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             model.add_layer(crate::layers::Dense::new(
                 input_size,
                 self.config.num_classes,
@@ -227,22 +227,22 @@ impl NASController {
         match layer_type {
             LayerType::Dense(units) => {
                 let input_size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(input_size, *units, None, &mut rng)?))
             }
             LayerType::Dropout(rate) => {
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dropout::new(*rate as f64, &mut rng)?))
             }
             LayerType::BatchNorm => {
                 let features = input_shape.last().copied().unwrap_or(1);
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(BatchNorm::new(features, 0.9, 1e-5, &mut rng)?))
             }
             LayerType::Activation(name) => {
                 // Create a simple dense layer with 1:1 mapping and activation
                 let size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(
                     size,
                     size,
@@ -302,7 +302,7 @@ impl NASController {
                 let output_size = filters
                     * ((input_shape[0] - kernel_size.0) / stride.0 + 1)
                     * ((input_shape[1] - kernel_size.1) / stride.1 + 1);
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(
                     input_size,
                     output_size,
@@ -319,7 +319,7 @@ impl NASController {
                 // For now, create a simple dense layer as placeholder
                 let input_size = input_shape.iter().product();
                 let output_size = filters * ((input_shape[0] - kernel_size) / stride + 1);
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(
                     input_size,
                     output_size,
@@ -338,27 +338,27 @@ impl NASController {
                 // Pooling layers don't change the number of parameters, just spatial dimensions
                 // For now, create an identity transformation
                 let size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(size, size, None, &mut rng)?))
             }
             LayerType::GlobalMaxPool2D | LayerType::GlobalAvgPool2D => {
                 // Global pooling reduces spatial dimensions to 1x1
                 let channels = input_shape.last().copied().unwrap_or(1);
                 let input_size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(input_size, channels, None, &mut rng)?))
             }
             LayerType::LayerNorm => {
                 // Layer normalization
                 let features = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 // Use BatchNorm as a placeholder since we don't have LayerNorm implemented
                 Ok(Box::new(BatchNorm::new(features, 0.9, 1e-5, &mut rng)?))
             }
             LayerType::Residual => {
                 // Residual connection - for now, just pass through
                 let size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(size, size, None, &mut rng)?))
             }
             LayerType::Attention {
@@ -367,7 +367,7 @@ impl NASController {
             } => {
                 // Attention mechanism
                 let input_size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(input_size, *key_dim, None, &mut rng)?))
             }
             LayerType::LSTM {
@@ -376,7 +376,7 @@ impl NASController {
             } => {
                 // LSTM layer
                 let input_size = input_shape.last().copied().unwrap_or(1);
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(
                     input_size,
                     *units,
@@ -390,7 +390,7 @@ impl NASController {
             } => {
                 // GRU layer
                 let input_size = input_shape.last().copied().unwrap_or(1);
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(
                     input_size,
                     *units,
@@ -403,7 +403,7 @@ impl NASController {
                 embedding_dim,
             } => {
                 // Embedding layer - map vocabulary indices to dense vectors
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(
                     *vocab_size,
                     *embedding_dim,
@@ -486,7 +486,7 @@ impl NASController {
                     * ((input_shape[0] - kernel_size.0) / stride.0 + 1)
                     * ((input_shape[1] - kernel_size.1) / stride.1 + 1)
                     * ((input_shape[2] - kernel_size.2) / stride.2 + 1);
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(
                     input_size,
                     output_size,
@@ -502,13 +502,8 @@ impl NASController {
             } => {
                 // Separable convolution layer
                 let input_size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
-                Ok(Box::new(Dense::new(
-                    input_size,
-                    *filters,
-                    None,
-                    &mut rng,
-                )?))
+                let mut rng = rand::rng();
+                Ok(Box::new(Dense::new(input_size, *filters, None, &mut rng)?))
             }
             LayerType::Conv2DTranspose {
                 filters,
@@ -518,76 +513,88 @@ impl NASController {
             } => {
                 // Transposed convolution (deconvolution) layer
                 let input_size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
-                Ok(Box::new(Dense::new(
-                    input_size,
-                    *filters,
-                    None,
-                    &mut rng,
-                )?))
+                let mut rng = rand::rng();
+                Ok(Box::new(Dense::new(input_size, *filters, None, &mut rng)?))
             }
-            LayerType::MaxPool1D { pool_size: _, stride: _ }
-            | LayerType::AvgPool1D { pool_size: _, stride: _ } => {
+            LayerType::MaxPool1D {
+                pool_size: _,
+                stride: _,
+            }
+            | LayerType::AvgPool1D {
+                pool_size: _,
+                stride: _,
+            } => {
                 // 1D pooling layers
                 let size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(size, size, None, &mut rng)?))
             }
-            LayerType::MaxPool3D { pool_size: _, stride: _ }
-            | LayerType::AvgPool3D { pool_size: _, stride: _ } => {
+            LayerType::MaxPool3D {
+                pool_size: _,
+                stride: _,
+            }
+            | LayerType::AvgPool3D {
+                pool_size: _,
+                stride: _,
+            } => {
                 // 3D pooling layers
                 let size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(size, size, None, &mut rng)?))
             }
             LayerType::GlobalMaxPool1D | LayerType::GlobalAvgPool1D => {
                 // Global pooling for 1D
                 let channels = input_shape.last().copied().unwrap_or(1);
                 let input_size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(input_size, channels, None, &mut rng)?))
             }
             LayerType::GlobalMaxPool3D | LayerType::GlobalAvgPool3D => {
                 // Global pooling for 3D
                 let channels = input_shape.last().copied().unwrap_or(1);
                 let input_size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(input_size, channels, None, &mut rng)?))
             }
             LayerType::UpSampling2D { size: _ } => {
                 // Upsampling layer
                 let input_size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
-                Ok(Box::new(Dense::new(input_size, input_size * 4, None, &mut rng)?))
+                let mut rng = rand::rng();
+                Ok(Box::new(Dense::new(
+                    input_size,
+                    input_size * 4,
+                    None,
+                    &mut rng,
+                )?))
             }
             LayerType::ZeroPadding2D { padding: _ } => {
                 // Zero padding layer
                 let size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(size, size, None, &mut rng)?))
             }
             LayerType::Cropping2D { cropping: _ } => {
                 // Cropping layer
                 let size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(size, size / 2, None, &mut rng)?))
             }
             LayerType::Concatenate { axis: _ } => {
                 // Concatenation layer
                 let size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(size, size * 2, None, &mut rng)?))
             }
             LayerType::Add => {
                 // Element-wise addition layer
                 let size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(size, size, None, &mut rng)?))
             }
             LayerType::Multiply => {
                 // Element-wise multiplication layer
                 let size = input_shape.iter().product();
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 Ok(Box::new(Dense::new(size, size, None, &mut rng)?))
             }
         }

@@ -956,6 +956,6 @@ mod tests {
 
         let output = result.unwrap();
         assert_eq!(output.dim(), (4, 4));
-        assert!((output[[0, 0]] - 3.0).abs() < 1e-10);
+        assert!((output[[0, 0]] - 3.0_f64).abs() < 1e-10);
     }
 }

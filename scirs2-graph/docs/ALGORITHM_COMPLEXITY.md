@@ -174,6 +174,24 @@ This document provides a comprehensive reference for the time and space complexi
 - **Space Complexity**: O(V²)
 - **Notes**: Builds dendrogram of communities
 
+### Modularity Optimization (Simulated Annealing)
+- **Function**: `modularity_optimization_result`
+- **Time Complexity**: O(k * V * E) where k is number of iterations
+- **Space Complexity**: O(V)
+- **Notes**: Uses simulated annealing to avoid local optima, typically requires many iterations to converge
+
+### Greedy Modularity Optimization
+- **Function**: `greedy_modularity_optimization_result`
+- **Time Complexity**: O(k * V * d) where k is iterations, d is average degree
+- **Space Complexity**: O(V)
+- **Notes**: Fast greedy approach, converges much faster than simulated annealing but may get stuck in local optima
+
+### Parallel Louvain Method
+- **Function**: `parallel_louvain_communities_result`
+- **Time Complexity**: O((E * log V) / p) where p is number of parallel threads
+- **Space Complexity**: O(V + p)
+- **Notes**: Parallel version of Louvain method, actual speedup depends on graph structure and load balancing
+
 ## Matching Algorithms
 
 ### Maximum Bipartite Matching

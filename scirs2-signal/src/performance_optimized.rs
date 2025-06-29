@@ -711,7 +711,7 @@ pub mod benchmark {
 
         // Standard convolution
         let start = Instant::now();
-        let result_standard = crate::convolution::convolve(&signal, &kernel, "same")?;
+        let result_standard = crate::convolve::convolve(&signal, &kernel, "same")?;
         let standard_time = start.elapsed().as_secs_f64() * 1000.0;
 
         // Optimized convolution

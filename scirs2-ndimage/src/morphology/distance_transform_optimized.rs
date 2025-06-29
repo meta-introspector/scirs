@@ -209,8 +209,7 @@ where
     let spacing_sq = spacing * spacing;
 
     let two = safe_f64_to_float(2.0)?;
-    Ok(((q_t * q_t - p_t * p_t) * spacing_sq + f[q] - f[p])
-        / (two * (q_t - p_t) * spacing_sq))
+    Ok(((q_t * q_t - p_t * p_t) * spacing_sq + f[q] - f[p]) / (two * (q_t - p_t) * spacing_sq))
 }
 
 /// Compute the Euclidean distance transform (not squared)
@@ -286,7 +285,8 @@ where
                                     let dy = safe_i32_to_float(dj).unwrap_or_else(|_| T::zero());
                                     let dist = (dx * dx + dy * dy).sqrt();
 
-                                    let tolerance = safe_f64_to_float(0.1).unwrap_or_else(|_| T::one());
+                                    let tolerance =
+                                        safe_f64_to_float(0.1).unwrap_or_else(|_| T::one());
                                     if (dist - target_dist).abs() < tolerance {
                                         indices[[0, i, j]] = ni;
                                         indices[[1, i, j]] = nj;

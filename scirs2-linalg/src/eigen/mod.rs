@@ -419,7 +419,17 @@ fn kahan_vector_subtraction<F>(a: &Array1<F>, b: &Array1<F>) -> Array1<F>
 where
     F: Float,
 {
-    a.iter().zip(b.iter()).map(|(ai, bi)| *ai - *bi).collect()
+    let mut result = Array1::zeros(a.len());
+    let mut compensation = Array1::zeros(a.len());
+
+    for i in 0..a.len() {
+        let term = a[i] - b[i] - compensation[i];
+        let new_result = result[i] + term;
+        compensation[i] = (new_result - result[i]) - term;
+        result[i] = new_result;
+    }
+
+    result
 }
 
 /// Kahan summation algorithm for numerically stable dot product
@@ -691,9 +701,8 @@ where
             }
 
             if min_sv <= F::zero() || min_sv == F::infinity() {
-                F::from(1e12).unwrap_or_else(|| {
-                    F::max_value() / F::from(1000.0).unwrap_or(F::one())
-                })
+                F::from(1e12)
+                    .unwrap_or_else(|| F::max_value() / F::from(1000.0).unwrap_or(F::one()))
             } else {
                 max_sv / min_sv
             }
@@ -883,16 +892,21 @@ mod tests {
 
         // Ill-conditioned matrix
         let ill_conditioned = array![[1.0_f64, 0.0], [0.0, 1e-12]];
-        
+
         // Let's try computing the condition number directly using diagonal elements
         // For a diagonal matrix, condition number = max(diag) / min(diag)
         let direct_cond = 1.0_f64 / 1e-12_f64; // Should be 1e12
-        
+
         let cond2 = estimate_condition_number(&ill_conditioned.view());
-        
+
         // If the function is working correctly, it should give a result close to direct_cond
         // Let's be more lenient for now and check if it's at least in the right order of magnitude
-        assert!(cond2 > 1e10, "Condition number {:.2e} should be > 1e10 (expected ~{:.2e})", cond2, direct_cond);
+        assert!(
+            cond2 > 1e10,
+            "Condition number {:.2e} should be > 1e10 (expected ~{:.2e})",
+            cond2,
+            direct_cond
+        );
     }
 
     #[test]

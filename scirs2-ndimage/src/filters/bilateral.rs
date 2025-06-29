@@ -768,7 +768,8 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, 1.0, 1.0, 5.0, 5.0, 5.0]);
 
         // Apply bilateral filter
-        let result = bilateral_filter(&signal, 1.0, 1.0, None).expect("bilateral_filter should succeed for 1D test");
+        let result = bilateral_filter(&signal, 1.0, 1.0, None)
+            .expect("bilateral_filter should succeed for 1D test");
 
         // Check that result has same shape
         assert_eq!(result.shape(), signal.shape());
@@ -792,7 +793,8 @@ mod tests {
         }
 
         // Apply bilateral filter
-        let result = bilateral_filter(&image, 1.0, 1.0, None).expect("bilateral_filter should succeed for 2D test");
+        let result = bilateral_filter(&image, 1.0, 1.0, None)
+            .expect("bilateral_filter should succeed for 2D test");
 
         // Check that result has same shape
         assert_eq!(result.shape(), image.shape());
@@ -809,7 +811,8 @@ mod tests {
         let image = Array2::from_elem((5, 5), 3.0);
 
         // Apply bilateral filter
-        let result = bilateral_filter(&image, 1.0, 1.0, None).expect("bilateral_filter should succeed for uniform region test");
+        let result = bilateral_filter(&image, 1.0, 1.0, None)
+            .expect("bilateral_filter should succeed for uniform region test");
 
         // Should remain approximately constant
         for &val in result.iter() {
@@ -824,7 +827,8 @@ mod tests {
         signal[5] = 10.0; // Single outlier
 
         // Apply bilateral filter with appropriate parameters
-        let result = bilateral_filter(&signal, 1.0, 2.0, None).expect("bilateral_filter should succeed for noise suppression test");
+        let result = bilateral_filter(&signal, 1.0, 2.0, None)
+            .expect("bilateral_filter should succeed for noise suppression test");
 
         // The outlier should be reduced but not completely smoothed
         assert!(result[5] > 2.0); // Still elevated
@@ -854,8 +858,10 @@ mod tests {
         // Test SIMD version produces similar results to regular version
         let signal = Array1::from_vec(vec![1.0f32, 1.0, 1.0, 5.0, 5.0, 5.0]);
 
-        let regular_result = bilateral_filter(&signal, 1.0, 1.0, None).expect("bilateral_filter should succeed for SIMD f32 test");
-        let simd_result = bilateral_filter_simd_f32(&signal, 1.0, 1.0, None).expect("bilateral_filter_simd_f32 should succeed");
+        let regular_result = bilateral_filter(&signal, 1.0, 1.0, None)
+            .expect("bilateral_filter should succeed for SIMD f32 test");
+        let simd_result = bilateral_filter_simd_f32(&signal, 1.0, 1.0, None)
+            .expect("bilateral_filter_simd_f32 should succeed");
 
         // Results should be very close
         for i in 0..signal.len() {
@@ -869,8 +875,10 @@ mod tests {
         // Test SIMD version produces similar results to regular version
         let signal = Array1::from_vec(vec![1.0f64, 1.0, 1.0, 5.0, 5.0, 5.0]);
 
-        let regular_result = bilateral_filter(&signal, 1.0, 1.0, None).expect("bilateral_filter should succeed for SIMD f64 test");
-        let simd_result = bilateral_filter_simd_f64(&signal, 1.0, 1.0, None).expect("bilateral_filter_simd_f64 should succeed");
+        let regular_result = bilateral_filter(&signal, 1.0, 1.0, None)
+            .expect("bilateral_filter should succeed for SIMD f64 test");
+        let simd_result = bilateral_filter_simd_f64(&signal, 1.0, 1.0, None)
+            .expect("bilateral_filter_simd_f64 should succeed");
 
         // Results should be very close
         for i in 0..signal.len() {
@@ -892,8 +900,10 @@ mod tests {
             }
         }
 
-        let regular_result = bilateral_filter(&image, 1.0, 1.0, None).expect("bilateral_filter should succeed for 2D SIMD test");
-        let simd_result = bilateral_filter_simd_f32(&image, 1.0, 1.0, None).expect("bilateral_filter_simd_f32 should succeed for 2D test");
+        let regular_result = bilateral_filter(&image, 1.0, 1.0, None)
+            .expect("bilateral_filter should succeed for 2D SIMD test");
+        let simd_result = bilateral_filter_simd_f32(&image, 1.0, 1.0, None)
+            .expect("bilateral_filter_simd_f32 should succeed for 2D test");
 
         // Results should be very close
         for i in 0..5 {

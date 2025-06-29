@@ -14,6 +14,7 @@ pub mod cuda {
     use super::*;
 
     pub struct CudaBackend {
+        #[allow(dead_code)]
         initialized: bool,
     }
 
@@ -53,6 +54,7 @@ pub mod opencl {
     use super::*;
 
     pub struct OpenClBackend {
+        #[allow(dead_code)]
         platforms: Vec<String>,
     }
 
@@ -94,6 +96,7 @@ pub mod rocm {
     use super::*;
 
     pub struct RocmBackend {
+        #[allow(dead_code)]
         devices: Vec<String>,
     }
 
@@ -135,6 +138,7 @@ pub mod metal {
     use super::*;
 
     pub struct MetalBackend {
+        #[allow(dead_code)]
         device_registry: HashMap<String, String>,
     }
 
@@ -175,6 +179,12 @@ pub struct CpuFallbackBackend {
     device_info: GpuDeviceInfo,
 }
 
+impl Default for CpuFallbackBackend {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CpuFallbackBackend {
     pub fn new() -> Self {
         Self {
@@ -187,6 +197,15 @@ impl CpuFallbackBackend {
                 supports_fp64: true,
                 supports_fp16: false,
                 max_work_group_size: 1024,
+                memory_bandwidth: 100.0, // CPU memory bandwidth estimate
+                l2_cache_size: 32 * 1024 * 1024, // 32MB L2 cache estimate
+                shared_memory_per_block: 0, // No shared memory concept for CPU
+                registers_per_block: 0,
+                warp_size: 1, // No SIMD grouping for CPU
+                max_threads_per_mp: 1,
+                multiprocessor_count: num_cpus::get() as u32,
+                supports_tensor_cores: false,
+                supports_mixed_precision: false,
                 vendor: "CPU".to_string(),
             },
         }
@@ -241,7 +260,7 @@ impl GpuContext for CpuFallbackContext {
 }
 
 impl GpuContextAlloc for CpuFallbackContext {
-    fn allocate_buffer<T: Clone + Send + Sync>(
+    fn allocate_buffer<T: Clone + Send + Sync + Copy + 'static>(
         &self,
         size: usize,
     ) -> LinalgResult<Box<dyn GpuBuffer<T>>> {
@@ -262,7 +281,7 @@ impl<T: Clone + Send + Sync> CpuBuffer<T> {
     }
 }
 
-impl<T: Clone + Send + Sync> GpuBuffer<T> for CpuBuffer<T> {
+impl<T: Clone + Send + Sync + Copy> GpuBuffer<T> for CpuBuffer<T> {
     fn len(&self) -> usize {
         self.data.len()
     }
@@ -314,9 +333,11 @@ mod tests {
     #[test]
     fn test_cpu_buffer() {
         let backend = CpuFallbackBackend::new();
-        let context = backend.create_context(0).unwrap();
+        let device_info = backend.device_info.clone();
 
-        let mut buffer = context.allocate_buffer::<f32>(10).unwrap();
+        // Create context directly to access allocate_buffer method
+        let cpu_context = CpuFallbackContext { device_info };
+        let mut buffer = cpu_context.allocate_buffer::<f32>(10).unwrap();
         assert_eq!(buffer.len(), 0); // Initially empty
 
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];

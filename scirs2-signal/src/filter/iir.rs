@@ -8,6 +8,13 @@
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
+
+// Helper enum for handling either single values or slices
+#[derive(Debug, Clone)]
+pub enum Either<A, B> {
+    Left(A),
+    Right(B),
+}
 use std::fmt::Debug;
 
 use super::common::{
@@ -272,13 +279,6 @@ where
         ));
     }
 
-    // For now, return a simple error for unsupported types
-    if !matches!(filter_type, FilterType::Lowpass | FilterType::Highpass) {
-        return Err(SignalError::NotImplementedError(
-            "Bandpass and bandstop Chebyshev I filters not yet implemented".to_string(),
-        ));
-    }
-
     // Convert ripple from dB to linear
     let epsilon = (10.0_f64.powf(ripple / 10.0) - 1.0).sqrt();
 
@@ -309,7 +309,11 @@ where
             let hp_poles: Vec<_> = poles.iter().map(|p| warped_freq / p).collect();
             (Vec::<Complex64>::new(), hp_poles, 1.0)
         }
-        _ => unreachable!(),
+        FilterType::Bandpass | FilterType::Bandstop => {
+            return Err(SignalError::NotImplementedError(
+                "Bandpass and bandstop Chebyshev I filters should use cheby1_bandpass_bandstop function".to_string(),
+            ));
+        }
     };
 
     let digital_poles: Vec<_> = transformed_poles
@@ -323,6 +327,147 @@ where
         .collect();
 
     digital_zeros.extend(add_digital_zeros(filter_type, order));
+
+    zpk_to_tf(&digital_zeros, &digital_poles, gain)
+}
+
+/// Chebyshev Type I bandpass and bandstop filter design
+///
+/// Designs digital Chebyshev Type I bandpass or bandstop filters with specified
+/// passband ripple and frequency band. The total filter order will be 2*order.
+///
+/// # Arguments
+///
+/// * `order` - Filter order (total poles will be 2*order for bandpass/bandstop)
+/// * `ripple` - Passband ripple in dB (e.g., 0.5 for 0.5 dB ripple)
+/// * `low_freq` - Low cutoff frequency (normalized from 0 to 1)
+/// * `high_freq` - High cutoff frequency (normalized from 0 to 1)
+/// * `filter_type` - Filter type (must be Bandpass or Bandstop)
+///
+/// # Returns
+///
+/// * A tuple of filter coefficients (b, a)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_signal::filter::iir::cheby1_bandpass_bandstop;
+/// use scirs2_signal::filter::FilterType;
+///
+/// // Design a 2nd order Chebyshev I bandpass filter (4 poles total)
+/// let (b, a) = cheby1_bandpass_bandstop(2, 0.5, 0.2, 0.6, FilterType::Bandpass).unwrap();
+/// ```
+pub fn cheby1_bandpass_bandstop<T, U>(
+    order: usize,
+    ripple: f64,
+    low_freq: T,
+    high_freq: U,
+    filter_type: FilterType,
+) -> SignalResult<FilterCoefficients>
+where
+    T: Float + NumCast + Debug,
+    U: Float + NumCast + Debug,
+{
+    validate_order(order)?;
+    let low_wn = validate_cutoff_frequency(low_freq)?;
+    let high_wn = validate_cutoff_frequency(high_freq)?;
+
+    if ripple <= 0.0 {
+        return Err(SignalError::ValueError(
+            "Ripple must be positive".to_string(),
+        ));
+    }
+
+    if !matches!(filter_type, FilterType::Bandpass | FilterType::Bandstop) {
+        return Err(SignalError::ValueError(
+            "Filter type must be Bandpass or Bandstop".to_string(),
+        ));
+    }
+
+    if low_wn >= high_wn {
+        return Err(SignalError::ValueError(
+            "Low frequency must be less than high frequency".to_string(),
+        ));
+    }
+
+    // Convert ripple from dB to linear
+    let epsilon = (10.0_f64.powf(ripple / 10.0) - 1.0).sqrt();
+
+    // Calculate Chebyshev Type I analog prototype poles
+    let mut prototype_poles = Vec::with_capacity(order);
+    let a = (1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0).sqrt()).ln() / order as f64;
+
+    for k in 0..order {
+        let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64);
+        let real = -a.sinh() * theta.sin();
+        let imag = a.cosh() * theta.cos();
+        prototype_poles.push(Complex64::new(real, imag));
+    }
+
+    // Prewarp frequencies
+    let w1 = prewarp_frequency(low_wn);
+    let w2 = prewarp_frequency(high_wn);
+    let w0 = (w1 * w2).sqrt(); // Center frequency
+    let bw = w2 - w1; // Bandwidth
+
+    let (analog_zeros, analog_poles, gain) = match filter_type {
+        FilterType::Bandpass => {
+            let mut bp_zeros = Vec::new();
+            let mut bp_poles = Vec::new();
+
+            // Transform each prototype pole to bandpass using s -> (s^2 + w0^2)/(s*bw)
+            for &pole in &prototype_poles {
+                let temp = (pole * bw / 2.0).powi(2) + w0 * w0;
+                let sqrt_term = temp.sqrt();
+                
+                bp_poles.push(pole * bw / 2.0 + sqrt_term);
+                bp_poles.push(pole * bw / 2.0 - sqrt_term);
+            }
+
+            // Bandpass has zeros at origin (DC) and infinity
+            for _ in 0..order {
+                bp_zeros.push(Complex64::new(0.0, 0.0)); // Zero at origin
+            }
+
+            let bp_gain = bw.powi(order as i32);
+            (bp_zeros, bp_poles, bp_gain)
+        }
+        FilterType::Bandstop => {
+            let mut bs_zeros = Vec::new();
+            let mut bs_poles = Vec::new();
+
+            // Transform each prototype pole to bandstop using s -> (s*bw)/(s^2 + w0^2)
+            for &pole in &prototype_poles {
+                if pole.norm() > 1e-10 {
+                    let temp = (bw / (2.0 * pole)).powi(2) + w0 * w0;
+                    let sqrt_term = temp.sqrt();
+                    
+                    bs_poles.push(bw / (2.0 * pole) + sqrt_term);
+                    bs_poles.push(bw / (2.0 * pole) - sqrt_term);
+                }
+            }
+
+            // Bandstop has zeros at ±j*w0
+            for _ in 0..order {
+                bs_zeros.push(Complex64::new(0.0, w0));
+                bs_zeros.push(Complex64::new(0.0, -w0));
+            }
+
+            (bs_zeros, bs_poles, 1.0)
+        }
+        _ => unreachable!(),
+    };
+
+    // Apply bilinear transform
+    let digital_poles: Vec<_> = analog_poles
+        .iter()
+        .map(|&pole| bilinear_pole_transform(pole))
+        .collect();
+
+    let digital_zeros: Vec<_> = analog_zeros
+        .iter()
+        .map(|&zero| bilinear_pole_transform(zero))
+        .collect();
 
     zpk_to_tf(&digital_zeros, &digital_poles, gain)
 }

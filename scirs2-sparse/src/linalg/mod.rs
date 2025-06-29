@@ -7,6 +7,7 @@ mod amg;
 mod cgs;
 mod decomposition;
 mod eigen;
+mod enhanced_operators;
 mod expm;
 mod gcrot;
 mod ic;
@@ -34,6 +35,12 @@ pub use decomposition::{
 pub use eigen::{
     eigs, eigsh, lanczos, power_iteration, ArpackOptions, EigenResult, EigenvalueMethod,
     LanczosOptions, PowerIterationOptions,
+};
+pub use enhanced_operators::{
+    convolution_operator, enhanced_add, enhanced_diagonal, enhanced_scale, enhanced_subtract,
+    finite_difference_operator, BoundaryCondition, ConvolutionMode, ConvolutionOperator,
+    EnhancedDiagonalOperator, EnhancedDifferenceOperator, EnhancedOperatorOptions,
+    EnhancedScaledOperator, EnhancedSumOperator, FiniteDifferenceOperator,
 };
 pub use expm::expm;
 pub use gcrot::{gcrot, GCROTOptions, GCROTResult};

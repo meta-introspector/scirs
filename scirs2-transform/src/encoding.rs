@@ -1509,9 +1509,9 @@ impl FrequencyEncoder {
 
 /// Weight of Evidence (WOE) Encoder for converting categorical features using target information
 ///
-/// WOE encoding transforms categorical features based on the relationship between 
-/// each category and a binary target variable. It's particularly useful for credit 
-/// scoring and other binary classification tasks. 
+/// WOE encoding transforms categorical features based on the relationship between
+/// each category and a binary target variable. It's particularly useful for credit
+/// scoring and other binary classification tasks.
 ///
 /// WOE = ln(P(target=1|category) / P(target=0|category))
 #[derive(Debug, Clone)]
@@ -1639,7 +1639,7 @@ impl WOEEncoder {
             for i in 0..n_samples {
                 let category = x_u64[[i, j]];
                 let target = y[i];
-                
+
                 let (events, non_events) = category_stats.entry(category).or_insert((0.0, 0.0));
                 if target == 1.0 {
                     *events += 1.0;
@@ -1656,8 +1656,10 @@ impl WOEEncoder {
                 // Add regularization to handle zero counts
                 let reg_events = events + self.regularization;
                 let reg_non_events = non_events + self.regularization;
-                let reg_total_events = total_events + self.regularization * category_stats.len() as f64;
-                let reg_total_non_events = total_non_events + self.regularization * category_stats.len() as f64;
+                let reg_total_events =
+                    total_events + self.regularization * category_stats.len() as f64;
+                let reg_total_non_events =
+                    total_non_events + self.regularization * category_stats.len() as f64;
 
                 // Calculate distribution percentages
                 let event_rate = reg_events / reg_total_events;
@@ -1778,7 +1780,7 @@ impl WOEEncoder {
     }
 
     /// Returns the Information Values for each feature if fitted
-    /// 
+    ///
     /// Information Value interpretation:
     /// - < 0.02: Not useful for prediction
     /// - 0.02 - 0.1: Weak predictive power
@@ -1800,11 +1802,8 @@ impl WOEEncoder {
     /// * `Option<Vec<(usize, f64)>>` - Vector of (feature_index, information_value) pairs
     pub fn feature_importance_ranking(&self) -> Option<Vec<(usize, f64)>> {
         self.information_values_.as_ref().map(|ivs| {
-            let mut ranking: Vec<(usize, f64)> = ivs
-                .iter()
-                .enumerate()
-                .map(|(idx, &iv)| (idx, iv))
-                .collect();
+            let mut ranking: Vec<(usize, f64)> =
+                ivs.iter().enumerate().map(|(idx, &iv)| (idx, iv)).collect();
             ranking.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
             ranking
         })

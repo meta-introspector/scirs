@@ -44,17 +44,21 @@ fn validate_bounds(bounds: &[(f64, f64)]) -> Result<(), OptimizeError> {
     for (i, &(lb, ub)) in bounds.iter().enumerate() {
         if !lb.is_finite() || !ub.is_finite() {
             return Err(OptimizeError::InvalidInput(format!(
-                "Bounds must be finite values. Variable {}: bounds = ({}, {})", i, lb, ub
+                "Bounds must be finite values. Variable {}: bounds = ({}, {})",
+                i, lb, ub
             )));
         }
         if lb >= ub {
             return Err(OptimizeError::InvalidInput(format!(
-                "Lower bound must be less than upper bound. Variable {}: lb = {}, ub = {}", i, lb, ub
+                "Lower bound must be less than upper bound. Variable {}: lb = {}, ub = {}",
+                i, lb, ub
             )));
         }
         if (ub - lb) < 1e-12 {
             return Err(OptimizeError::InvalidInput(format!(
-                "Bounds range is too small. Variable {}: range = {}", i, ub - lb
+                "Bounds range is too small. Variable {}: range = {}",
+                i,
+                ub - lb
             )));
         }
     }
@@ -186,7 +190,8 @@ where
                     if let Some(ref bounds) = bounds {
                         if i < bounds.len() {
                             let (lb, ub) = bounds[i];
-                            x_new[i] = enforce_bounds_with_reflection(&mut local_rng, x_new[i], lb, ub);
+                            x_new[i] =
+                                enforce_bounds_with_reflection(&mut local_rng, x_new[i], lb, ub);
                         }
                     }
                 }

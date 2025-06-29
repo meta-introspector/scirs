@@ -122,10 +122,7 @@ where
     }
 
     /// Convert dimensions vector to target dimension type D
-    fn convert_dims_to_target_type(
-        result_dims: &[usize],
-        source_shape: &[usize],
-    ) -> CoreResult<D> {
+    fn convert_dims_to_target_type(result_dims: &[usize], source_shape: &[usize]) -> CoreResult<D> {
         let source_ndim = result_dims.len();
         let target_ndim = D::NDIM;
 
@@ -157,7 +154,7 @@ where
             // Add singleton dimensions at the end
             let mut expanded_dims = result_dims.to_vec();
             expanded_dims.extend(std::iter::repeat_n(1, target_ndim - source_ndim));
-            
+
             D::from_dimension(&ndarray::IxDyn(&expanded_dims)).ok_or_else(|| {
                 CoreError::DimensionError(ErrorContext::new(format!(
                     "Cannot expand sliced shape {:?} to {} dimensions",
@@ -287,7 +284,10 @@ where
         expanded_shape.extend(std::iter::repeat_n(1, dims_to_add));
 
         // Try to reshape to expanded shape
-        match array.clone().into_shape_with_order(ndarray::IxDyn(&expanded_shape)) {
+        match array
+            .clone()
+            .into_shape_with_order(ndarray::IxDyn(&expanded_shape))
+        {
             Ok(reshaped) => reshaped.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
                     "Failed to convert expanded {} array to target dimension type",

@@ -21,6 +21,7 @@ pub enum TraversalOrder {
 }
 
 impl TraversalOrder {
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> SparseResult<Self> {
         match s.to_lowercase().as_str() {
             "breadth_first" | "bfs" | "breadth-first" => Ok(Self::BreadthFirst),

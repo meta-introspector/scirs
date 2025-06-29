@@ -116,34 +116,45 @@ fn execute_wgpu_kernel(
     // Check if the backend is WGPU
     match context.backend() {
         GpuBackend::Wgpu => {
-            // For now, since the WGPU backend is not fully implemented in scirs2-core,
-            // we'll try to use the backend-agnostic kernel execution with enhanced error handling
-            log::debug!(
-                "Attempting GPU execution via kernel abstraction for {}",
-                kernel.name()
-            );
-
-            // Try to execute via the kernel's own execution method
-            match kernel.execute(context, params, input_data, output_data) {
-                Ok(()) => {
-                    log::debug!(
-                        "Successfully executed {} kernel via GPU abstraction",
-                        kernel.name()
-                    );
-                    Ok(())
+            log::debug!("Executing WGPU compute kernel for {}", kernel.name());
+            
+            // First try to get WGPU device and queue from context
+            // If not available, fall back to CPU execution
+            let device_result = context.try_get_wgpu_device();
+            let queue_result = context.try_get_wgpu_queue();
+            
+            match (device_result, queue_result) {
+                (Ok(device), Ok(queue)) => {
+                    // Execute actual WGPU compute kernel
+                    execute_wgpu_compute_shader(
+                        &device,
+                        &queue,
+                        source,
+                        kernel.metadata(),
+                        params,
+                        input_data,
+                        output_data,
+                        num_workgroups,
+                    )
+                    .map_err(|e| {
+                        log::warn!(
+                            "WGPU compute execution failed for {}: {:?}, falling back to CPU",
+                            kernel.name(),
+                            e
+                        );
+                        // Fall back to CPU execution
+                        if let Err(cpu_err) = execute_optimized_cpu_kernel(kernel, params, input_data, output_data) {
+                            log::error!("CPU fallback also failed: {:?}", cpu_err);
+                            e // Return original GPU error
+                        } else {
+                            return Ok(());
+                        }
+                    })
                 }
-                Err(GpuError::BackendNotImplemented(_)) | Err(GpuError::UnsupportedBackend(_)) => {
+                _ => {
                     log::debug!(
-                        "GPU backend not available for {}, falling back to optimized CPU",
+                        "WGPU device/queue not available for {}, falling back to CPU",
                         kernel.name()
-                    );
-                    execute_optimized_cpu_kernel(kernel, params, input_data, output_data)
-                }
-                Err(e) => {
-                    log::warn!(
-                        "GPU execution failed for {}: {:?}, falling back to CPU",
-                        kernel.name(),
-                        e
                     );
                     execute_optimized_cpu_kernel(kernel, params, input_data, output_data)
                 }
@@ -153,6 +164,163 @@ fn execute_wgpu_kernel(
             // Non-WGPU backends - delegate to the kernel's execution method
             kernel.execute(context, params, input_data, output_data)
         }
+    }
+}
+
+/// Execute WGPU compute shader with proper buffer management
+#[cfg(feature = "gpu")]
+fn execute_wgpu_compute_shader(
+    device: &wgpu::Device,
+    queue: &wgpu::Queue,
+    shader_source: &str,
+    metadata: &KernelMetadata,
+    params: &KernelParams,
+    input_data: &[u8],
+    output_data: &mut [u8],
+    num_workgroups: usize,
+) -> Result<(), GpuError> {
+    // Create shader module from WGSL source
+    let shader_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: Some("Special Function Compute Shader"),
+        source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+    });
+
+    // Create input buffer
+    let input_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label: Some("Input Buffer"),
+        contents: input_data,
+        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+    });
+
+    // Create output buffer
+    let output_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("Output Buffer"),
+        size: output_data.len() as u64,
+        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+        mapped_at_creation: false,
+    });
+
+    // Create staging buffer for reading results
+    let staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("Staging Buffer"),
+        size: output_data.len() as u64,
+        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+
+    // Create bind group layout
+    let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        label: Some("Compute Bind Group Layout"),
+        entries: &[
+            wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+            wgpu::BindGroupLayoutEntry {
+                binding: 1,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Storage { read_only: false },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+        ],
+    });
+
+    // Create bind group
+    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("Compute Bind Group"),
+        layout: &bind_group_layout,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: input_buffer.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: output_buffer.as_entire_binding(),
+            },
+        ],
+    });
+
+    // Create compute pipeline
+    let compute_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        label: Some("Compute Pipeline Layout"),
+        bind_group_layouts: &[&bind_group_layout],
+        push_constant_ranges: &[],
+    });
+
+    let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+        label: Some("Special Function Compute Pipeline"),
+        layout: Some(&compute_pipeline_layout),
+        module: &shader_module,
+        entry_point: "main",
+    });
+
+    // Create command encoder
+    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+        label: Some("Compute Encoder"),
+    });
+
+    // Begin compute pass
+    {
+        let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+            label: Some("Special Function Compute Pass"),
+            timestamp_writes: None,
+        });
+
+        compute_pass.set_pipeline(&compute_pipeline);
+        compute_pass.set_bind_group(0, &bind_group, &[]);
+        
+        // Dispatch work groups based on metadata
+        let workgroup_size = metadata.workgroup_size;
+        compute_pass.dispatch_workgroups(
+            num_workgroups as u32,
+            workgroup_size[1] as u32,
+            workgroup_size[2] as u32,
+        );
+    }
+
+    // Copy output buffer to staging buffer for CPU readback
+    encoder.copy_buffer_to_buffer(
+        &output_buffer,
+        0,
+        &staging_buffer,
+        0,
+        output_data.len() as u64,
+    );
+
+    // Submit commands
+    queue.submit(std::iter::once(encoder.finish()));
+
+    // Map staging buffer and copy data back
+    let buffer_slice = staging_buffer.slice(..);
+    let (sender, receiver) = futures::channel::oneshot::channel();
+    buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
+        sender.send(result).unwrap();
+    });
+
+    // Wait for mapping to complete
+    device.poll(wgpu::Maintain::Wait);
+    
+    match futures::executor::block_on(receiver) {
+        Ok(Ok(())) => {
+            let data = buffer_slice.get_mapped_range();
+            output_data.copy_from_slice(&data);
+            drop(data);
+            staging_buffer.unmap();
+            Ok(())
+        }
+        Ok(Err(e)) => Err(GpuError::BufferMapError(format!("Failed to map buffer: {:?}", e))),
+        Err(e) => Err(GpuError::ExecutionError(format!("Channel error: {:?}", e))),
     }
 }
 

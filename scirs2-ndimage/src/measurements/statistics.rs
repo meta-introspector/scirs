@@ -486,7 +486,8 @@ mod tests {
     fn test_sum_labels_basic() {
         let input: Array2<f64> = Array2::eye(3);
         let labels: Array2<usize> = Array2::from_elem((3, 3), 1);
-        let result = sum_labels(&input, &labels, None).expect("sum_labels should succeed for basic test");
+        let result =
+            sum_labels(&input, &labels, None).expect("sum_labels should succeed for basic test");
 
         assert!(!result.is_empty());
         assert_eq!(result.len(), 1);
@@ -498,7 +499,8 @@ mod tests {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
         let labels = array![[1, 1, 2], [1, 2, 2], [3, 3, 3]];
 
-        let sums = sum_labels(&input, &labels, None).expect("sum_labels should succeed for multiple regions test");
+        let sums = sum_labels(&input, &labels, None)
+            .expect("sum_labels should succeed for multiple regions test");
         assert_eq!(sums.len(), 3);
         assert_abs_diff_eq!(sums[0], 1.0 + 2.0 + 4.0, epsilon = 1e-10); // Region 1
         assert_abs_diff_eq!(sums[1], 3.0 + 5.0 + 6.0, epsilon = 1e-10); // Region 2
@@ -510,7 +512,8 @@ mod tests {
         let input = array![[1.0, 2.0], [3.0, 4.0]];
         let labels = array![[0, 1], [1, 2]]; // Label 0 is background
 
-        let sums = sum_labels(&input, &labels, None).expect("sum_labels should succeed with background test");
+        let sums = sum_labels(&input, &labels, None)
+            .expect("sum_labels should succeed with background test");
         assert_eq!(sums.len(), 2); // Should exclude background (label 0)
         assert_abs_diff_eq!(sums[0], 2.0 + 3.0, epsilon = 1e-10); // Region 1
         assert_abs_diff_eq!(sums[1], 4.0, epsilon = 1e-10); // Region 2
@@ -521,7 +524,8 @@ mod tests {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let labels = array![[1, 2, 3], [1, 2, 3]];
 
-        let sums = sum_labels(&input, &labels, Some(&[1, 3])).expect("sum_labels should succeed with selective index test");
+        let sums = sum_labels(&input, &labels, Some(&[1, 3]))
+            .expect("sum_labels should succeed with selective index test");
         assert_eq!(sums.len(), 2); // Only regions 1 and 3
         assert_abs_diff_eq!(sums[0], 1.0 + 4.0, epsilon = 1e-10); // Region 1
         assert_abs_diff_eq!(sums[1], 3.0 + 6.0, epsilon = 1e-10); // Region 3
@@ -532,13 +536,15 @@ mod tests {
         // Empty result case
         let input = array![[1.0, 2.0]];
         let labels = array![[0, 0]]; // All background
-        let sums = sum_labels(&input, &labels, None).expect("sum_labels should succeed for empty result test");
+        let sums = sum_labels(&input, &labels, None)
+            .expect("sum_labels should succeed for empty result test");
         assert_eq!(sums.len(), 0);
 
         // Single pixel regions
         let input2 = array![[1.0, 2.0, 3.0]];
         let labels2 = array![[1, 2, 3]];
-        let sums2 = sum_labels(&input2, &labels2, None).expect("sum_labels should succeed for single pixel test");
+        let sums2 = sum_labels(&input2, &labels2, None)
+            .expect("sum_labels should succeed for single pixel test");
         assert_eq!(sums2.len(), 3);
         assert_abs_diff_eq!(sums2[0], 1.0, epsilon = 1e-10);
         assert_abs_diff_eq!(sums2[1], 2.0, epsilon = 1e-10);
@@ -550,7 +556,8 @@ mod tests {
         let input = Array3::from_shape_fn((2, 2, 2), |(i, j, k)| (i + j + k) as f64);
         let labels = Array3::from_shape_fn((2, 2, 2), |(i, j, _k)| if i == j { 1 } else { 2 });
 
-        let sums = sum_labels(&input, &labels, None).expect("sum_labels should succeed for 3D test");
+        let sums =
+            sum_labels(&input, &labels, None).expect("sum_labels should succeed for 3D test");
         assert_eq!(sums.len(), 2);
         assert!(sums[0] > 0.0);
         assert!(sums[1] > 0.0);
@@ -560,7 +567,8 @@ mod tests {
     fn test_mean_labels_basic() {
         let input: Array2<f64> = Array2::eye(3);
         let labels: Array2<usize> = Array2::from_elem((3, 3), 1);
-        let result = mean_labels(&input, &labels, None).expect("mean_labels should succeed for basic test");
+        let result =
+            mean_labels(&input, &labels, None).expect("mean_labels should succeed for basic test");
 
         assert!(!result.is_empty());
         assert_eq!(result.len(), 1);
@@ -572,7 +580,8 @@ mod tests {
         let input = array![[2.0, 4.0, 6.0], [8.0, 10.0, 12.0]];
         let labels = array![[1, 1, 2], [1, 2, 2]];
 
-        let means = mean_labels(&input, &labels, None).expect("mean_labels should succeed for multiple regions test");
+        let means = mean_labels(&input, &labels, None)
+            .expect("mean_labels should succeed for multiple regions test");
         assert_eq!(means.len(), 2);
         assert_abs_diff_eq!(means[0], (2.0 + 4.0 + 8.0) / 3.0, epsilon = 1e-10);
         assert_abs_diff_eq!(means[1], (6.0 + 10.0 + 12.0) / 3.0, epsilon = 1e-10);
@@ -583,7 +592,8 @@ mod tests {
         let input = array![[1.0, 3.0, 5.0], [2.0, 4.0, 6.0]];
         let labels = array![[1, 1, 2], [1, 2, 2]];
 
-        let variances = variance_labels(&input, &labels, None).expect("variance_labels should succeed for basic test");
+        let variances = variance_labels(&input, &labels, None)
+            .expect("variance_labels should succeed for basic test");
         assert_eq!(variances.len(), 2);
 
         // Manual variance calculation for region 1: [1, 3, 2]
@@ -600,7 +610,8 @@ mod tests {
         let input = array![[5.0, 5.0, 3.0], [5.0, 3.0, 3.0]];
         let labels = array![[1, 1, 2], [1, 2, 2]];
 
-        let variances = variance_labels(&input, &labels, None).expect("variance_labels should succeed for zero variance test");
+        let variances = variance_labels(&input, &labels, None)
+            .expect("variance_labels should succeed for zero variance test");
         assert_eq!(variances.len(), 2);
         assert_abs_diff_eq!(variances[0], 0.0, epsilon = 1e-10); // All values are 5.0
         assert_abs_diff_eq!(variances[1], 0.0, epsilon = 1e-10); // All values are 3.0
@@ -611,7 +622,8 @@ mod tests {
         let input = array![[1.0, 2.0, 3.0]];
         let labels = array![[1, 2, 3]]; // Each pixel is its own region
 
-        let variances = variance_labels(&input, &labels, None).expect("variance_labels should succeed for single pixel test");
+        let variances = variance_labels(&input, &labels, None)
+            .expect("variance_labels should succeed for single pixel test");
         assert_eq!(variances.len(), 3);
         // Single pixel regions should have zero variance
         assert_abs_diff_eq!(variances[0], 0.0, epsilon = 1e-10);
@@ -622,7 +634,8 @@ mod tests {
     #[test]
     fn test_count_labels_basic() {
         let labels: Array2<usize> = Array2::from_elem((3, 3), 1);
-        let result = count_labels(&labels, None).expect("count_labels should succeed for basic test");
+        let result =
+            count_labels(&labels, None).expect("count_labels should succeed for basic test");
 
         assert!(!result.is_empty());
         assert_eq!(result.len(), 1);
@@ -633,7 +646,8 @@ mod tests {
     fn test_count_labels_multiple_regions() {
         let labels = array![[1, 1, 2, 2], [1, 3, 3, 2], [4, 4, 4, 4]];
 
-        let counts = count_labels(&labels, None).expect("count_labels should succeed for multiple regions test");
+        let counts = count_labels(&labels, None)
+            .expect("count_labels should succeed for multiple regions test");
         assert_eq!(counts.len(), 4);
         assert_eq!(counts[0], 3); // Region 1: 3 pixels
         assert_eq!(counts[1], 3); // Region 2: 3 pixels
@@ -645,7 +659,8 @@ mod tests {
     fn test_count_labels_with_background() {
         let labels = array![[0, 1, 1], [0, 2, 2], [0, 0, 3]];
 
-        let counts = count_labels(&labels, None).expect("count_labels should succeed with background test");
+        let counts =
+            count_labels(&labels, None).expect("count_labels should succeed with background test");
         assert_eq!(counts.len(), 3); // Should exclude background (label 0)
         assert_eq!(counts[0], 2); // Region 1: 2 pixels
         assert_eq!(counts[1], 2); // Region 2: 2 pixels
@@ -678,9 +693,12 @@ mod tests {
         let input = Array::from_shape_fn((2, 2, 2, 2), |(i, j, k, l)| (i + j + k + l) as f64);
         let labels = Array::from_shape_fn((2, 2, 2, 2), |(i, j, _k, _l)| i + j + 1);
 
-        let sums = sum_labels(&input, &labels, None).expect("sum_labels should succeed for 4D test");
-        let means = mean_labels(&input, &labels, None).expect("mean_labels should succeed for 4D test");
-        let variances = variance_labels(&input, &labels, None).expect("variance_labels should succeed for 4D test");
+        let sums =
+            sum_labels(&input, &labels, None).expect("sum_labels should succeed for 4D test");
+        let means =
+            mean_labels(&input, &labels, None).expect("mean_labels should succeed for 4D test");
+        let variances = variance_labels(&input, &labels, None)
+            .expect("variance_labels should succeed for 4D test");
         let counts = count_labels(&labels, None).expect("count_labels should succeed for 4D test");
 
         assert!(!sums.is_empty());

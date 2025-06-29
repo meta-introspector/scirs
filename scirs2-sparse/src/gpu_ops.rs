@@ -3,6 +3,10 @@
 //! This module provides GPU acceleration for sparse matrix operations
 //! using the scirs2-core GPU backend system.
 
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+
 use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
@@ -12,8 +16,167 @@ use num_traits::Float;
 use std::fmt::Debug;
 
 // Import GPU capabilities from scirs2-core
-use scirs2_core::gpu::kernels::sparse::{SpMSKernel, SpMVKernel};
-use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuDevice, GpuError, GpuKernel};
+// TODO: Re-enable when GPU module is available in scirs2-core
+// use scirs2_core::gpu::kernels::sparse::{SpMSKernel, SpMVKernel};
+// use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuDevice, GpuError, GpuKernel};
+
+// Stub implementations for GPU types when GPU feature is not available
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum GpuBackend {
+    Cpu,
+    Cuda,
+    OpenCl,
+    Metal,
+}
+
+impl Default for GpuBackend {
+    fn default() -> Self {
+        Self::Cpu
+    }
+}
+
+#[derive(Debug)]
+pub struct GpuError {
+    message: String,
+}
+
+impl GpuError {
+    fn new(message: &str) -> Self {
+        Self {
+            message: message.to_string(),
+        }
+    }
+}
+
+impl std::fmt::Display for GpuError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "GPU Error: {}", self.message)
+    }
+}
+
+impl std::error::Error for GpuError {}
+
+impl GpuError {
+    pub fn invalid_buffer(msg: String) -> Self {
+        Self { message: msg }
+    }
+}
+
+#[derive(Debug)]
+pub struct GpuDevice {
+    #[allow(dead_code)]
+    backend: GpuBackend,
+}
+
+impl GpuDevice {
+    pub fn get_default(_backend: GpuBackend) -> Result<Self, GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+
+    pub fn create_buffer<T>(&self, _data: &[T]) -> Result<GpuBuffer<T>, GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+
+    pub fn create_buffer_zeros<T>(&self, _size: usize) -> Result<GpuBuffer<T>, GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+
+    pub fn create_buffer_uninit<T>(&self, _size: usize) -> Result<GpuBuffer<T>, GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+}
+
+#[derive(Debug)]
+pub struct GpuBuffer<T> {
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T> GpuBuffer<T> {
+    pub fn to_host(&self) -> Result<Vec<T>, GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+
+    pub fn to_host_range(&self, _range: std::ops::Range<usize>) -> Result<Vec<T>, GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+}
+
+#[derive(Debug)]
+pub struct SpMVKernel {
+    _phantom: std::marker::PhantomData<()>,
+}
+
+impl SpMVKernel {
+    pub fn new(_device: &GpuDevice, _workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+
+    pub fn execute<T>(
+        &self,
+        _rows: usize,
+        _cols: usize,
+        _indptr: &GpuBuffer<usize>,
+        _indices: &GpuBuffer<usize>,
+        _data: &GpuBuffer<T>,
+        _x: &GpuBuffer<T>,
+        _y: &mut GpuBuffer<T>,
+    ) -> Result<(), GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+}
+
+#[derive(Debug)]
+pub struct SpMSKernel {
+    _phantom: std::marker::PhantomData<()>,
+}
+
+impl SpMSKernel {
+    pub fn new(_device: &GpuDevice, _workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+
+    pub fn execute_symmetric<T>(
+        &self,
+        _rows: usize,
+        _indptr: &GpuBuffer<usize>,
+        _indices: &GpuBuffer<usize>,
+        _data: &GpuBuffer<T>,
+        _x: &GpuBuffer<T>,
+        _y: &mut GpuBuffer<T>,
+    ) -> Result<(), GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+
+    pub fn execute_spmm<T>(
+        &self,
+        _a_rows: usize,
+        _a_cols: usize,
+        _b_cols: usize,
+        _a_indptr: &GpuBuffer<usize>,
+        _a_indices: &GpuBuffer<usize>,
+        _a_data: &GpuBuffer<T>,
+        _b_indptr: &GpuBuffer<usize>,
+        _b_indices: &GpuBuffer<usize>,
+        _b_data: &GpuBuffer<T>,
+        _c_indptr: &mut GpuBuffer<usize>,
+        _c_indices: &mut GpuBuffer<usize>,
+        _c_data: &mut GpuBuffer<T>,
+    ) -> Result<usize, GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+
+    pub fn execute_triangular_solve<T>(
+        &self,
+        _n: usize,
+        _indptr: &GpuBuffer<usize>,
+        _indices: &GpuBuffer<usize>,
+        _data: &GpuBuffer<T>,
+        _b: &GpuBuffer<T>,
+        _x: &mut GpuBuffer<T>,
+    ) -> Result<(), GpuError> {
+        Err(GpuError::new("GPU operations not available"))
+    }
+}
 
 /// GPU acceleration options for sparse operations
 #[derive(Debug, Clone)]
@@ -93,7 +256,7 @@ where
     }
 
     // Check if we should use GPU acceleration
-    let use_gpu = should_use_gpu(rows, cols, matrix.nnz(), &options);
+    let use_gpu = should_use_gpu::<T>(rows, cols, matrix.nnz(), &options);
 
     if use_gpu {
         // Try GPU acceleration first
@@ -130,7 +293,7 @@ pub fn gpu_sym_sparse_matvec<T>(
     options: GpuOptions,
 ) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + Send + Sync,
 {
     let (rows, cols) = matrix.shape();
 
@@ -142,7 +305,7 @@ where
     }
 
     // Check if we should use GPU acceleration
-    let use_gpu = should_use_gpu(rows, cols, matrix.nnz(), &options);
+    let use_gpu = should_use_gpu::<T>(rows, cols, matrix.nnz(), &options);
 
     if use_gpu {
         // Try GPU acceleration first
@@ -304,6 +467,7 @@ where
 
 /// GPU memory management utilities
 pub struct GpuMemoryManager {
+    #[allow(dead_code)]
     backend: GpuBackend,
     allocated_buffers: Vec<usize>,
 }
@@ -335,7 +499,7 @@ impl GpuMemoryManager {
             self.allocated_buffers[buffer_id] = 0;
             Ok(())
         } else {
-            Err(GpuError::InvalidBuffer("Invalid buffer ID".to_string()))
+            Err(GpuError::invalid_buffer("Invalid buffer ID".to_string()))
         }
     }
 
@@ -347,6 +511,7 @@ impl GpuMemoryManager {
 
 /// GPU performance profiler for sparse operations
 pub struct GpuProfiler {
+    #[allow(dead_code)]
     backend: GpuBackend,
     timing_data: Vec<(String, f64)>,
 }
@@ -442,13 +607,13 @@ impl AdvancedGpuOps {
         let (b_rows, b_cols) = b.shape();
 
         // Convert matrices to GPU buffers
-        let a_indptr_buffer = device.create_buffer(&a.indptr)?;
-        let a_indices_buffer = device.create_buffer(&a.indices)?;
-        let a_data_buffer = device.create_buffer(&a.data)?;
+        let a_indptr_buffer = device.create_buffer(a.get_indptr().as_slice().unwrap())?;
+        let a_indices_buffer = device.create_buffer(a.get_indices().as_slice().unwrap())?;
+        let a_data_buffer = device.create_buffer(a.get_data().as_slice().unwrap())?;
 
-        let b_indptr_buffer = device.create_buffer(&b.indptr)?;
-        let b_indices_buffer = device.create_buffer(&b.indices)?;
-        let b_data_buffer = device.create_buffer(&b.data)?;
+        let b_indptr_buffer = device.create_buffer(b.get_indptr().as_slice().unwrap())?;
+        let b_indices_buffer = device.create_buffer(b.get_indices().as_slice().unwrap())?;
+        let b_data_buffer = device.create_buffer(b.get_data().as_slice().unwrap())?;
 
         // Estimate result size (upper bound)
         let max_result_nnz = (a.nnz() * b.nnz()) / a_cols.max(1);
@@ -481,12 +646,13 @@ impl AdvancedGpuOps {
         let c_data: Vec<T> = c_data_buffer.to_host_range(0..actual_nnz)?;
 
         // Create result CSR matrix
-        Ok(CsrArray::new(
-            c_data,
-            c_indptr,
-            c_indices,
+        CsrArray::new(
+            Array1::from_vec(c_data),
+            Array1::from_vec(c_indices),
+            Array1::from_vec(c_indptr),
             (a_rows, b_cols),
-        )?)
+        )
+        .map_err(|e| GpuError::new(&e.to_string()))
     }
 
     /// CPU fallback for sparse matrix multiplication
@@ -494,8 +660,8 @@ impl AdvancedGpuOps {
     where
         T: Float + Debug + Copy + 'static,
     {
-        // Convert B to CSC format for efficient column access
-        let b_csc = b.to_csc();
+        // Note: This implementation is O(nnz_a * nnz_b) which is not optimal
+        // A proper implementation would convert B to CSC format first
 
         let (a_rows, a_cols) = a.shape();
         let (_, b_cols) = b.shape();
@@ -514,27 +680,29 @@ impl AdvancedGpuOps {
                 let mut sum = T::zero();
 
                 // Compute dot product of row i of A with column j of B
-                let a_row_start = a.indptr[i];
-                let a_row_end = a.indptr[i + 1];
-                let b_col_start = b_csc.indptr[j];
-                let b_col_end = b_csc.indptr[j + 1];
+                let a_indptr = a.get_indptr();
+                let a_indices = a.get_indices();
+                let a_data = a.get_data();
 
-                let mut a_idx = a_row_start;
-                let mut b_idx = b_col_start;
+                let a_row_start = a_indptr[i];
+                let a_row_end = a_indptr[i + 1];
 
-                // Merge-like intersection
-                while a_idx < a_row_end && b_idx < b_col_end {
-                    let a_col = a.indices[a_idx];
-                    let b_row = b_csc.indices[b_idx];
+                // Get elements of column j in B (inefficient but simple implementation)
+                let (b_rows_all, b_cols_all, b_vals_all) = b.find();
 
-                    if a_col == b_row {
-                        sum = sum + a.data[a_idx] * b_csc.data[b_idx];
-                        a_idx += 1;
-                        b_idx += 1;
-                    } else if a_col < b_row {
-                        a_idx += 1;
-                    } else {
-                        b_idx += 1;
+                // For each non-zero in row i of A
+                for a_idx in a_row_start..a_row_end {
+                    let a_col = a_indices[a_idx];
+                    let a_val = a_data[a_idx];
+
+                    // Find corresponding element in column j of B
+                    for (k, (&b_row, &b_col)) in
+                        b_rows_all.iter().zip(b_cols_all.iter()).enumerate()
+                    {
+                        if b_row == a_col && b_col == j {
+                            sum = sum + a_val * b_vals_all[k];
+                            break;
+                        }
                     }
                 }
 
@@ -550,9 +718,9 @@ impl AdvancedGpuOps {
         }
 
         Ok(CsrArray::new(
-            result_data,
-            result_indptr,
-            result_indices,
+            Array1::from_vec(result_data),
+            Array1::from_vec(result_indices),
+            Array1::from_vec(result_indptr),
             (a_rows, b_cols),
         )?)
     }
@@ -609,9 +777,9 @@ impl AdvancedGpuOps {
         let n = l.shape().0;
 
         // Create GPU buffers
-        let indptr_buffer = device.create_buffer(&l.indptr)?;
-        let indices_buffer = device.create_buffer(&l.indices)?;
-        let data_buffer = device.create_buffer(&l.data)?;
+        let indptr_buffer = device.create_buffer(l.get_indptr().as_slice().unwrap())?;
+        let indices_buffer = device.create_buffer(l.get_indices().as_slice().unwrap())?;
+        let data_buffer = device.create_buffer(l.get_data().as_slice().unwrap())?;
         let b_buffer = device.create_buffer(b.as_slice().unwrap())?;
         let mut x_buffer = device.create_buffer_zeros::<T>(n)?;
 
@@ -644,12 +812,16 @@ impl AdvancedGpuOps {
         let mut x = Array1::zeros(n);
 
         // Forward substitution for lower triangular matrix
+        let l_indptr = l.get_indptr();
+        let l_indices = l.get_indices();
+        let l_data = l.get_data();
+
         for i in 0..n {
             let mut sum = b[i];
 
-            for j in l.indptr[i]..l.indptr[i + 1] {
-                let col = l.indices[j];
-                let val = l.data[j];
+            for j in l_indptr[i]..l_indptr[i + 1] {
+                let col = l_indices[j];
+                let val = l_data[j];
 
                 if col < i {
                     sum = sum - val * x[col];
@@ -668,6 +840,7 @@ impl AdvancedGpuOps {
 pub struct GpuKernelScheduler {
     backend: GpuBackend,
     available_memory: usize,
+    #[allow(dead_code)]
     compute_units: usize,
     warp_size: usize,
 }
@@ -679,11 +852,10 @@ impl GpuKernelScheduler {
         let (available_memory, compute_units, warp_size) = match backend {
             GpuBackend::Cuda => (8_000_000_000, 108, 32), // Example RTX 3080 specs
             GpuBackend::OpenCl => (4_000_000_000, 36, 64), // Example values
-            GpuBackend::Metal => (8_000_000_000, 32, 32),  // Example M1 specs
-            GpuBackend::Cpu => (16_000_000_000, 16, 1),    // Fallback values
-            _ => (4_000_000_000, 16, 32),
+            GpuBackend::Metal => (8_000_000_000, 32, 32), // Example M1 specs
+            GpuBackend::Cpu => (16_000_000_000, 16, 1),   // Fallback values
         };
-        
+
         Self {
             backend,
             available_memory,
@@ -691,11 +863,11 @@ impl GpuKernelScheduler {
             warp_size,
         }
     }
-    
+
     /// Calculate optimal workgroup size for a given problem
     pub fn calculate_optimal_workgroup(&self, rows: usize, cols: usize, nnz: usize) -> [u32; 3] {
         let base_size = self.warp_size as u32;
-        
+
         match self.backend {
             GpuBackend::Cuda => {
                 // For CUDA, optimize for tensor cores when possible
@@ -704,21 +876,21 @@ impl GpuKernelScheduler {
                 } else if nnz > 100_000 {
                     [base_size, 16, 1] // High parallelism
                 } else {
-                    [base_size, 8, 1]  // Balanced approach
+                    [base_size, 8, 1] // Balanced approach
                 }
-            },
+            }
             GpuBackend::OpenCl => {
                 // OpenCL optimization focuses on memory coalescing
                 [base_size, 8, 1]
-            },
+            }
             GpuBackend::Metal => {
                 // Metal optimization for Apple GPUs
                 [32, 8, 1]
-            },
-            _ => [16, 16, 1] // Conservative default
+            }
+            _ => [16, 16, 1], // Conservative default
         }
     }
-    
+
     /// Estimate memory usage for a sparse operation
     pub fn estimate_memory_usage<T>(&self, rows: usize, cols: usize, nnz: usize) -> usize
     where
@@ -726,19 +898,19 @@ impl GpuKernelScheduler {
     {
         let element_size = std::mem::size_of::<T>();
         let index_size = std::mem::size_of::<usize>();
-        
+
         // Matrix storage: indices + indptr + data
         let matrix_memory = nnz * index_size + (rows + 1) * index_size + nnz * element_size;
-        
+
         // Input/output vectors
         let vector_memory = (rows + cols) * element_size;
-        
+
         // Working memory (intermediate results, etc.)
         let working_memory = nnz * element_size; // Conservative estimate
-        
+
         matrix_memory + vector_memory + working_memory
     }
-    
+
     /// Check if operation can fit in GPU memory
     pub fn can_fit_in_memory<T>(&self, rows: usize, cols: usize, nnz: usize) -> bool
     where
@@ -746,7 +918,7 @@ impl GpuKernelScheduler {
     {
         let required_memory = self.estimate_memory_usage::<T>(rows, cols, nnz);
         let safety_factor = 0.8; // Leave 20% margin
-        
+
         required_memory <= (self.available_memory as f64 * safety_factor) as usize
     }
 }
@@ -765,44 +937,40 @@ impl OptimizedGpuOps {
             profiler: GpuProfiler::new(backend),
         }
     }
-    
+
     /// GPU-accelerated sparse matrix-vector multiplication with automatic optimization
-    pub fn optimized_spmv<T, S>(
-        &mut self,
-        matrix: &S,
-        x: &ArrayView1<T>,
-    ) -> SparseResult<Array1<T>>
+    pub fn optimized_spmv<T, S>(&mut self, matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
     where
         T: Float + Debug + Copy + 'static,
         S: SparseArray<T>,
     {
         let (rows, cols) = matrix.shape();
         let nnz = matrix.nnz();
-        
+
         // Check memory constraints
         if !self.scheduler.can_fit_in_memory::<T>(rows, cols, nnz) {
             return Err(SparseError::ValueError(
-                "Matrix too large for available GPU memory".to_string()
+                "Matrix too large for available GPU memory".to_string(),
             ));
         }
-        
+
         // Calculate optimal workgroup size
         let optimal_workgroup = self.scheduler.calculate_optimal_workgroup(rows, cols, nnz);
-        
+
         let options = GpuOptions {
             backend: self.scheduler.backend,
             workgroup_size: optimal_workgroup,
             min_gpu_size: 1000, // Always try GPU for this optimized version
             use_tensor_cores: self.scheduler.backend == GpuBackend::Cuda && rows >= 256,
         };
-        
+
         self.profiler.start_timer("optimized_spmv");
         let result = gpu_sparse_matvec(matrix, x, options);
         self.profiler.stop_timer("optimized_spmv", 0.0); // Duration would be measured in real implementation
-        
+
         result
     }
-    
+
     /// GPU-accelerated iterative solver with preconditioning
     pub fn gpu_iterative_solve<T>(
         &mut self,
@@ -823,15 +991,18 @@ impl OptimizedGpuOps {
                 found: b.len(),
             });
         }
-        
+
         match method {
             "cg" => self.gpu_conjugate_gradient(matrix, b, preconditioner, max_iter, tol),
             "bicgstab" => self.gpu_bicgstab(matrix, b, preconditioner, max_iter, tol),
             "gmres" => self.gpu_gmres(matrix, b, preconditioner, max_iter, tol),
-            _ => Err(SparseError::ValueError(format!("Unknown solver method: {}", method)))
+            _ => Err(SparseError::ValueError(format!(
+                "Unknown solver method: {}",
+                method
+            ))),
         }
     }
-    
+
     /// GPU implementation of Conjugate Gradient
     fn gpu_conjugate_gradient<T>(
         &mut self,
@@ -845,61 +1016,65 @@ impl OptimizedGpuOps {
         T: Float + Debug + Copy + 'static,
     {
         let n = matrix.shape().0;
-        
+
         // Initialize solution vector
         let mut x = Array1::zeros(n);
-        
+
         // GPU implementation would use multiple kernels:
         // 1. SpMV kernel for matrix-vector products
         // 2. Vector operations kernels (dot products, axpy)
         // 3. Norm computation kernels
-        
+
         self.profiler.start_timer("gpu_cg");
-        
+
         // Simplified implementation - in reality this would be fully on GPU
         let mut r = b.to_owned();
         let mut p = r.clone();
         let mut rsold = r.iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x);
-        
+
         for _iter in 0..max_iter {
             // A * p (would be done on GPU)
             let ap = self.optimized_spmv(matrix, &p.view())?;
-            
+
             // alpha = rsold / (p^T * Ap)
-            let pap = p.iter().zip(ap.iter()).map(|(&pi, &api)| pi * api).fold(T::zero(), |acc, x| acc + x);
+            let pap = p
+                .iter()
+                .zip(ap.iter())
+                .map(|(&pi, &api)| pi * api)
+                .fold(T::zero(), |acc, x| acc + x);
             let alpha = rsold / pap;
-            
+
             // x = x + alpha * p
             for i in 0..n {
                 x[i] = x[i] + alpha * p[i];
             }
-            
+
             // r = r - alpha * Ap
             for i in 0..n {
                 r[i] = r[i] - alpha * ap[i];
             }
-            
+
             let rsnew = r.iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x);
-            
+
             if rsnew.sqrt() < T::from(tol).unwrap() {
                 break;
             }
-            
+
             let beta = rsnew / rsold;
-            
+
             // p = r + beta * p
             for i in 0..n {
                 p[i] = r[i] + beta * p[i];
             }
-            
+
             rsold = rsnew;
         }
-        
+
         self.profiler.stop_timer("gpu_cg", 0.0);
-        
+
         Ok(x)
     }
-    
+
     /// GPU implementation of BiCGSTAB
     fn gpu_bicgstab<T>(
         &mut self,
@@ -914,9 +1089,9 @@ impl OptimizedGpuOps {
     {
         let n = matrix.shape().0;
         let mut x = Array1::zeros(n);
-        
+
         self.profiler.start_timer("gpu_bicgstab");
-        
+
         // Simplified BiCGSTAB implementation
         // Real implementation would use GPU kernels for all vector operations
         let mut r = b.to_owned();
@@ -926,33 +1101,46 @@ impl OptimizedGpuOps {
         let mut omega = T::one();
         let mut v = Array1::zeros(n);
         let mut p = Array1::zeros(n);
-        
+
         for _iter in 0..max_iter {
-            let rho_new = r.iter().zip(r_tilde.iter()).map(|(&ri, &rti)| ri * rti).fold(T::zero(), |acc, x| acc + x);
-            
+            let rho_new = r
+                .iter()
+                .zip(r_tilde.iter())
+                .map(|(&ri, &rti)| ri * rti)
+                .fold(T::zero(), |acc, x| acc + x);
+
             if rho_new.abs() < T::from(1e-16).unwrap() {
                 break;
             }
-            
+
             let beta = (rho_new / rho) * (alpha / omega);
-            
+
             // p = r + beta * (p - omega * v)
             for i in 0..n {
                 p[i] = r[i] + beta * (p[i] - omega * v[i]);
             }
-            
+
             v = self.optimized_spmv(matrix, &p.view())?;
-            
-            alpha = rho_new / r_tilde.iter().zip(v.iter()).map(|(&rti, &vi)| rti * vi).fold(T::zero(), |acc, x| acc + x);
-            
+
+            alpha = rho_new
+                / r_tilde
+                    .iter()
+                    .zip(v.iter())
+                    .map(|(&rti, &vi)| rti * vi)
+                    .fold(T::zero(), |acc, x| acc + x);
+
             // s = r - alpha * v
             let mut s = Array1::zeros(n);
             for i in 0..n {
                 s[i] = r[i] - alpha * v[i];
             }
-            
+
             // Check for convergence
-            let s_norm = s.iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x).sqrt();
+            let s_norm = s
+                .iter()
+                .map(|&x| x * x)
+                .fold(T::zero(), |acc, x| acc + x)
+                .sqrt();
             if s_norm < T::from(tol).unwrap() {
                 // x = x + alpha * p
                 for i in 0..n {
@@ -960,35 +1148,45 @@ impl OptimizedGpuOps {
                 }
                 break;
             }
-            
+
             let t = self.optimized_spmv(matrix, &s.view())?;
-            
-            omega = t.iter().zip(s.iter()).map(|(&ti, &si)| ti * si).fold(T::zero(), |acc, x| acc + x) /
-                    t.iter().map(|&ti| ti * ti).fold(T::zero(), |acc, x| acc + x);
-            
+
+            omega = t
+                .iter()
+                .zip(s.iter())
+                .map(|(&ti, &si)| ti * si)
+                .fold(T::zero(), |acc, x| acc + x)
+                / t.iter()
+                    .map(|&ti| ti * ti)
+                    .fold(T::zero(), |acc, x| acc + x);
+
             // x = x + alpha * p + omega * s
             for i in 0..n {
                 x[i] = x[i] + alpha * p[i] + omega * s[i];
             }
-            
+
             // r = s - omega * t
             for i in 0..n {
                 r[i] = s[i] - omega * t[i];
             }
-            
-            let r_norm = r.iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x).sqrt();
+
+            let r_norm = r
+                .iter()
+                .map(|&x| x * x)
+                .fold(T::zero(), |acc, x| acc + x)
+                .sqrt();
             if r_norm < T::from(tol).unwrap() {
                 break;
             }
-            
+
             rho = rho_new;
         }
-        
+
         self.profiler.stop_timer("gpu_bicgstab", 0.0);
-        
+
         Ok(x)
     }
-    
+
     /// GPU implementation of GMRES
     fn gpu_gmres<T>(
         &mut self,
@@ -1003,53 +1201,65 @@ impl OptimizedGpuOps {
     {
         let n = matrix.shape().0;
         let restart = 30.min(max_iter); // GMRES(30)
-        
-        let mut x = Array1::zeros(n);
-        
+
+        let x = Array1::zeros(n);
+
         self.profiler.start_timer("gpu_gmres");
-        
+
         // Simplified GMRES implementation
         // Real GPU implementation would use specialized kernels for Arnoldi process
-        for _restart_iter in 0..(max_iter / restart) {
+        if let Some(_restart_iter) = (0..(max_iter / restart)).next() {
             let r = b.to_owned(); // r = b - A*x (x starts as zero)
-            let beta = r.iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x).sqrt();
-            
+            let beta = r
+                .iter()
+                .map(|&x| x * x)
+                .fold(T::zero(), |acc, x| acc + x)
+                .sqrt();
+
             if beta < T::from(tol).unwrap() {
-                break;
+                return Ok(x);
             }
-            
+
             let mut v = vec![Array1::zeros(n); restart + 1];
             for i in 0..n {
                 v[0][i] = r[i] / beta;
             }
-            
+
             let mut h = vec![vec![T::zero(); restart]; restart + 1];
             let mut g = vec![T::zero(); restart + 1];
             g[0] = beta;
-            
+
             for j in 0..restart {
                 let w = self.optimized_spmv(matrix, &v[j].view())?;
-                
+
                 // Modified Gram-Schmidt
                 for i in 0..=j {
-                    h[i][j] = v[i].iter().zip(w.iter()).map(|(&vi, &wi)| vi * wi).fold(T::zero(), |acc, x| acc + x);
+                    h[i][j] = v[i]
+                        .iter()
+                        .zip(w.iter())
+                        .map(|(&vi, &wi)| vi * wi)
+                        .fold(T::zero(), |acc, x| acc + x);
                 }
-                
+
                 let mut w_orth = w;
                 for i in 0..=j {
                     for k in 0..n {
                         w_orth[k] = w_orth[k] - h[i][j] * v[i][k];
                     }
                 }
-                
-                h[j + 1][j] = w_orth.iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x).sqrt();
-                
+
+                h[j + 1][j] = w_orth
+                    .iter()
+                    .map(|&x| x * x)
+                    .fold(T::zero(), |acc, x| acc + x)
+                    .sqrt();
+
                 if h[j + 1][j] > T::from(1e-12).unwrap() {
                     for k in 0..n {
                         v[j + 1][k] = w_orth[k] / h[j + 1][j];
                     }
                 }
-                
+
                 // Apply previous Givens rotations
                 for i in 0..j {
                     let temp = h[i][j];
@@ -1057,21 +1267,21 @@ impl OptimizedGpuOps {
                     h[i][j] = temp;
                     h[i + 1][j] = T::zero();
                 }
-                
+
                 // Check for convergence
                 if g[j].abs() < T::from(tol).unwrap() {
                     break;
                 }
             }
-            
-            break; // Simplified - only one restart iteration
+
+            // Simplified - only one restart iteration
         }
-        
+
         self.profiler.stop_timer("gpu_gmres", 0.0);
-        
+
         Ok(x)
     }
-    
+
     /// Get profiling information
     pub fn get_profiling_data(&self) -> &[(String, f64)] {
         self.profiler.get_timing_data()
@@ -1097,7 +1307,7 @@ mod tests {
     use super::*;
     use crate::csr_array::CsrArray;
     use approx::assert_relative_eq;
-    
+
     #[test]
     fn test_gpu_kernel_scheduler_creation() {
         // Test that all GPU backends can create schedulers
@@ -1105,7 +1315,7 @@ mod tests {
         let _opencl_scheduler = GpuKernelScheduler::new(GpuBackend::OpenCl);
         let _metal_scheduler = GpuKernelScheduler::new(GpuBackend::Metal);
         let _cpu_scheduler = GpuKernelScheduler::new(GpuBackend::Cpu);
-        
+
         // All should create successfully without panicking
     }
 
@@ -1247,18 +1457,18 @@ mod tests {
     #[test]
     fn test_gpu_kernel_scheduler() {
         let scheduler = GpuKernelScheduler::new(GpuBackend::Cuda);
-        
+
         // Test workgroup calculation
         let workgroup = scheduler.calculate_optimal_workgroup(1000, 1000, 50000);
         assert_eq!(workgroup, [32, 32, 1]); // Should use tensor core friendly size
-        
+
         let workgroup_small = scheduler.calculate_optimal_workgroup(100, 100, 500);
         assert_eq!(workgroup_small, [32, 8, 1]); // Should use balanced approach
-        
+
         // Test memory estimation
         let memory_usage = scheduler.estimate_memory_usage::<f64>(1000, 1000, 10000);
         assert!(memory_usage > 0);
-        
+
         // Test memory capacity check
         let can_fit = scheduler.can_fit_in_memory::<f64>(100, 100, 1000);
         assert!(can_fit); // Small matrix should fit
@@ -1267,38 +1477,38 @@ mod tests {
     #[test]
     fn test_optimized_gpu_ops() {
         let mut gpu_ops = OptimizedGpuOps::new(GpuBackend::Cpu); // Use CPU backend for testing
-        
+
         // Create test matrix
         let rows = vec![0, 0, 1, 2, 2];
         let cols = vec![0, 2, 1, 0, 2];
         let data = vec![2.0, 1.0, 3.0, 1.0, 4.0];
         let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
-        
+
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        
+
         // Test optimized SpMV
         let result = gpu_ops.optimized_spmv(&matrix, &x.view()).unwrap();
         assert_eq!(result.len(), 3);
-        
+
         // Test iterative solvers
         let b = Array1::from_vec(vec![5.0, 6.0, 9.0]);
-        
+
         // Test CG solver (should fall back to CPU implementation)
         let solution = gpu_ops.gpu_iterative_solve(&matrix, &b.view(), "cg", None, 100, 1e-6);
         assert!(solution.is_ok());
-        
+
         // Test BiCGSTAB solver
         let solution = gpu_ops.gpu_iterative_solve(&matrix, &b.view(), "bicgstab", None, 100, 1e-6);
         assert!(solution.is_ok());
-        
+
         // Test GMRES solver
         let solution = gpu_ops.gpu_iterative_solve(&matrix, &b.view(), "gmres", None, 100, 1e-6);
         assert!(solution.is_ok());
-        
+
         // Test invalid solver
         let result = gpu_ops.gpu_iterative_solve(&matrix, &b.view(), "invalid", None, 100, 1e-6);
         assert!(result.is_err());
-        
+
         // Check profiling data
         let profiling_data = gpu_ops.get_profiling_data();
         assert!(profiling_data.len() > 0);
@@ -1307,11 +1517,11 @@ mod tests {
     #[test]
     fn test_gpu_memory_constraints() {
         let scheduler = GpuKernelScheduler::new(GpuBackend::Cuda);
-        
+
         // Test that very large matrices are detected as not fitting
         let can_fit_large = scheduler.can_fit_in_memory::<f64>(1_000_000, 1_000_000, 100_000_000);
         assert!(!can_fit_large); // Should not fit in typical GPU memory
-        
+
         // Test that reasonable matrices fit
         let can_fit_reasonable = scheduler.can_fit_in_memory::<f64>(1000, 1000, 10000);
         assert!(can_fit_reasonable); // Should fit easily
@@ -1323,12 +1533,12 @@ mod tests {
         let cuda_scheduler = GpuKernelScheduler::new(GpuBackend::Cuda);
         let cuda_workgroup = cuda_scheduler.calculate_optimal_workgroup(512, 512, 50000);
         assert_eq!(cuda_workgroup, [32, 32, 1]); // Tensor core friendly
-        
+
         // Test OpenCL optimizations
         let opencl_scheduler = GpuKernelScheduler::new(GpuBackend::OpenCl);
         let opencl_workgroup = opencl_scheduler.calculate_optimal_workgroup(512, 512, 50000);
         assert_eq!(opencl_workgroup, [64, 8, 1]); // Memory coalescing focused
-        
+
         // Test Metal optimizations
         let metal_scheduler = GpuKernelScheduler::new(GpuBackend::Metal);
         let metal_workgroup = metal_scheduler.calculate_optimal_workgroup(512, 512, 50000);
@@ -1338,17 +1548,18 @@ mod tests {
     #[test]
     fn test_gpu_error_propagation() {
         let mut gpu_ops = OptimizedGpuOps::new(GpuBackend::Cpu);
-        
+
         // Create matrices with dimension mismatch
         let rows = vec![0, 1];
         let cols = vec![0, 1];
         let data = vec![1.0, 2.0];
         let matrix = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
-        
+
         let wrong_size_b = Array1::from_vec(vec![1.0, 2.0, 3.0]); // Wrong size
-        
+
         // Test that dimension mismatch is caught
-        let result = gpu_ops.gpu_iterative_solve(&matrix, &wrong_size_b.view(), "cg", None, 100, 1e-6);
+        let result =
+            gpu_ops.gpu_iterative_solve(&matrix, &wrong_size_b.view(), "cg", None, 100, 1e-6);
         assert!(result.is_err());
     }
 }

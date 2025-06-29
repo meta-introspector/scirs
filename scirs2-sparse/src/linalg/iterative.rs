@@ -1,3 +1,7 @@
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::LinearOperator;
 use num_traits::{Float, NumAssign};
@@ -835,10 +839,15 @@ pub(crate) fn norm2<F: Float + Sum>(x: &[F]) -> F {
 
 /// Options for LSQR solver
 pub struct LSQROptions<F> {
+    #[allow(dead_code)]
     pub max_iter: usize,
+    #[allow(dead_code)]
     pub rtol: F,
+    #[allow(dead_code)]
     pub atol: F,
+    #[allow(dead_code)]
     pub btol: F,
+    #[allow(dead_code)]
     pub x0: Option<Vec<F>>,
 }
 
@@ -855,6 +864,7 @@ impl<F: Float> Default for LSQROptions<F> {
 }
 
 /// Options for LSMR solver
+#[allow(dead_code)]
 pub struct LSMROptions<F> {
     pub max_iter: usize,
     pub rtol: F,
@@ -878,6 +888,7 @@ impl<F: Float> Default for LSMROptions<F> {
 }
 
 /// Options for GCROT solver
+#[allow(dead_code)]
 pub struct GCROTOptions<F> {
     pub max_iter: usize,
     pub restart: usize,
@@ -903,6 +914,7 @@ impl<F: Float> Default for GCROTOptions<F> {
 }
 
 /// Options for TFQMR solver
+#[allow(dead_code)]
 pub struct TFQMROptions<F> {
     pub max_iter: usize,
     pub rtol: F,
@@ -927,6 +939,7 @@ impl<F: Float> Default for TFQMROptions<F> {
 ///
 /// Solves the least squares problem min ||Ax - b||_2 or the system Ax = b
 /// using the LSQR algorithm. Suitable for large sparse least squares problems.
+#[allow(dead_code)]
 pub fn lsqr<F>(
     a: &dyn LinearOperator<F>,
     b: &[F],
@@ -1022,7 +1035,7 @@ where
         let rho_old = rho;
         let c = rho_old / (rho_old * rho_old + alpha * alpha).sqrt();
         let s = alpha / (rho_old * rho_old + alpha * alpha).sqrt();
-        
+
         let theta = s * beta;
         rho = -c * beta;
         phi = c * phi;
@@ -1060,6 +1073,7 @@ where
 /// Least Squares Minimal Residual (LSMR) solver
 ///
 /// An enhanced version of LSQR with better numerical properties
+#[allow(dead_code)]
 pub fn lsmr<F>(
     a: &dyn LinearOperator<F>,
     b: &[F],
@@ -1200,6 +1214,7 @@ where
 /// Transpose-Free Quasi-Minimal Residual (TFQMR) solver
 ///
 /// A transpose-free variant of QMR that avoids the need for A^T
+#[allow(dead_code)]
 pub fn tfqmr<F>(
     a: &dyn LinearOperator<F>,
     b: &[F],

@@ -4,21 +4,24 @@
 //! work across threads, with timing analysis and adaptive chunking based on
 //! workload characteristics.
 
-use crate::error::{LinalgResult, LinalgError};
+use crate::error::{LinalgError, LinalgResult};
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
-use num_traits::{Float, NumAssign, Zero, One};
+use num_traits::{Float, NumAssign, One, Zero};
 use std::collections::VecDeque;
-use std::sync::{Arc, Mutex, Condvar};
+use std::iter::Sum;
+use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use std::iter::Sum;
 
 /// Type alias for complex work item types used in QR decomposition
 type QRWorkItem<F> = WorkItem<(usize, Array1<F>, Array2<F>)>;
 
+/// Type alias for complex work item types used in band matrix solving
+type BandSolveWorkItem<F> = WorkItem<(usize, usize, usize, Array2<F>, Array1<F>)>;
+
 /// Work item for the work-stealing scheduler
 #[derive(Debug, Clone)]
-pub struct WorkItem<T> 
+pub struct WorkItem<T>
 where
     T: Clone,
 {
@@ -115,14 +118,15 @@ impl<T: Clone> WorkQueue<T> {
             self.avg_time
         };
 
-        self.items.iter()
+        self.items
+            .iter()
             .map(|item| item.estimated_time.unwrap_or(base_time))
             .sum()
     }
 }
 
 /// Work-stealing scheduler with dynamic load balancing
-pub struct WorkStealingScheduler<T: Clone> 
+pub struct WorkStealingScheduler<T: Clone>
 where
     T: Send + 'static,
 {
@@ -250,14 +254,18 @@ pub struct SchedulerStats {
 impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
     /// Create a new work-stealing scheduler
     pub fn new(num_workers: usize) -> Self {
-        Self::with_strategy(num_workers, StealingStrategy::default(), LoadBalancingParams::default())
+        Self::with_strategy(
+            num_workers,
+            StealingStrategy::default(),
+            LoadBalancingParams::default(),
+        )
     }
 
     /// Create a new work-stealing scheduler with custom strategy
     pub fn with_strategy(
-        num_workers: usize, 
-        strategy: StealingStrategy, 
-        params: LoadBalancingParams
+        num_workers: usize,
+        strategy: StealingStrategy,
+        params: LoadBalancingParams,
     ) -> Self {
         let worker_queues = (0..num_workers)
             .map(|_| Arc::new(Mutex::new(WorkQueue::default())))
@@ -282,55 +290,70 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
         let (strategy, params) = match operation_type {
             MatrixOperationType::MatrixVectorMultiplication => {
                 // Matrix-vector operations benefit from locality-aware stealing
-                (StealingStrategy::LocalityAware, LoadBalancingParams {
-                    steal_threshold: 4,
-                    max_steal_attempts: 2,
-                    chunk_size: matrix_size.0 / num_workers,
-                    priority_scheduling: false,
-                    ..LoadBalancingParams::default()
-                })
-            },
+                (
+                    StealingStrategy::LocalityAware,
+                    LoadBalancingParams {
+                        steal_threshold: 4,
+                        max_steal_attempts: 2,
+                        chunk_size: matrix_size.0 / num_workers,
+                        priority_scheduling: false,
+                        ..LoadBalancingParams::default()
+                    },
+                )
+            }
             MatrixOperationType::MatrixMatrixMultiplication => {
                 // Matrix-matrix operations benefit from adaptive stealing
-                (StealingStrategy::Adaptive, LoadBalancingParams {
-                    steal_threshold: 2,
-                    max_steal_attempts: 4,
-                    chunk_size: (matrix_size.0 * matrix_size.1) / (num_workers * 8),
-                    priority_scheduling: true,
-                    ..LoadBalancingParams::default()
-                })
-            },
+                (
+                    StealingStrategy::Adaptive,
+                    LoadBalancingParams {
+                        steal_threshold: 2,
+                        max_steal_attempts: 4,
+                        chunk_size: (matrix_size.0 * matrix_size.1) / (num_workers * 8),
+                        priority_scheduling: true,
+                        ..LoadBalancingParams::default()
+                    },
+                )
+            }
             MatrixOperationType::Decomposition => {
                 // Decompositions have irregular workloads, use adaptive approach
-                (StealingStrategy::Adaptive, LoadBalancingParams {
-                    steal_threshold: 1,
-                    max_steal_attempts: 6,
-                    chunk_size: matrix_size.0 / (num_workers * 2),
-                    priority_scheduling: true,
-                    backoff_base: Duration::from_micros(5),
-                    max_backoff: Duration::from_millis(2),
-                })
-            },
+                (
+                    StealingStrategy::Adaptive,
+                    LoadBalancingParams {
+                        steal_threshold: 1,
+                        max_steal_attempts: 6,
+                        chunk_size: matrix_size.0 / (num_workers * 2),
+                        priority_scheduling: true,
+                        backoff_base: Duration::from_micros(5),
+                        max_backoff: Duration::from_millis(2),
+                    },
+                )
+            }
             MatrixOperationType::EigenComputation => {
                 // Eigenvalue computations have sequential dependencies
-                (StealingStrategy::MostLoaded, LoadBalancingParams {
-                    steal_threshold: 8,
-                    max_steal_attempts: 2,
-                    chunk_size: matrix_size.0 / num_workers,
-                    priority_scheduling: false,
-                    ..LoadBalancingParams::default()
-                })
-            },
+                (
+                    StealingStrategy::MostLoaded,
+                    LoadBalancingParams {
+                        steal_threshold: 8,
+                        max_steal_attempts: 2,
+                        chunk_size: matrix_size.0 / num_workers,
+                        priority_scheduling: false,
+                        ..LoadBalancingParams::default()
+                    },
+                )
+            }
             MatrixOperationType::IterativeSolver => {
                 // Iterative solvers need balanced load distribution
-                (StealingStrategy::RoundRobin, LoadBalancingParams {
-                    steal_threshold: 3,
-                    max_steal_attempts: 3,
-                    chunk_size: matrix_size.0 / (num_workers * 4),
-                    priority_scheduling: false,
-                    ..LoadBalancingParams::default()
-                })
-            },
+                (
+                    StealingStrategy::RoundRobin,
+                    LoadBalancingParams {
+                        steal_threshold: 3,
+                        max_steal_attempts: 3,
+                        chunk_size: matrix_size.0 / (num_workers * 4),
+                        priority_scheduling: false,
+                        ..LoadBalancingParams::default()
+                    },
+                )
+            }
         };
 
         Self::with_strategy(num_workers, strategy, params)
@@ -362,17 +385,17 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                 // Random distribution
                 use std::collections::hash_map::DefaultHasher;
                 use std::hash::{Hash, Hasher};
-                
+
                 for (i, item) in items.into_iter().enumerate() {
                     let mut hasher = DefaultHasher::new();
                     i.hash(&mut hasher);
                     let worker_id = (hasher.finish() as usize) % self.num_workers;
-                    
+
                     if let Ok(mut queue) = self.worker_queues[worker_id].lock() {
                         queue.push_front(item);
                     }
                 }
-            },
+            }
             StealingStrategy::RoundRobin => {
                 // Round-robin distribution (default)
                 for (i, item) in items.into_iter().enumerate() {
@@ -381,20 +404,20 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                         queue.push_front(item);
                     }
                 }
-            },
+            }
             StealingStrategy::MostLoaded => {
                 // Distribute to least loaded workers first
                 let load_info = self.get_worker_loads();
                 let mut sorted_workers: Vec<usize> = (0..self.num_workers).collect();
                 sorted_workers.sort_by_key(|&i| load_info[i]);
-                
+
                 for (i, item) in items.into_iter().enumerate() {
                     let worker_id = sorted_workers[i % self.num_workers];
                     if let Ok(mut queue) = self.worker_queues[worker_id].lock() {
                         queue.push_front(item);
                     }
                 }
-            },
+            }
             StealingStrategy::LocalityAware => {
                 // Try to maintain work locality (simplified implementation)
                 let chunk_size = self.load_balancing_params.chunk_size;
@@ -406,20 +429,20 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                         }
                     }
                 }
-            },
+            }
             StealingStrategy::Adaptive => {
                 // Use adaptive strategy based on historical performance
                 self.adaptive_work_distribution(items)?;
             }
         }
-        
+
         Ok(())
     }
 
     /// Get current load (number of work items) for each worker
     fn get_worker_loads(&self) -> Vec<usize> {
         let mut loads = Vec::with_capacity(self.num_workers);
-        
+
         for queue in &self.worker_queues {
             if let Ok(queue) = queue.lock() {
                 loads.push(queue.items.len());
@@ -427,7 +450,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                 loads.push(0);
             }
         }
-        
+
         loads
     }
 
@@ -436,7 +459,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
         // Get current worker utilization
         let loads = self.get_worker_loads();
         let total_load: usize = loads.iter().sum();
-        
+
         if total_load == 0 {
             // No existing load, use round-robin
             for (i, item) in items.into_iter().enumerate() {
@@ -449,12 +472,12 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
             // Distribute inversely proportional to current load
             let mut worker_weights = Vec::with_capacity(self.num_workers);
             let max_load = loads.iter().max().unwrap_or(&1);
-            
+
             for &load in &loads {
                 // Higher load = lower weight
                 worker_weights.push(max_load + 1 - load);
             }
-            
+
             let total_weight: usize = worker_weights.iter().sum();
             let mut cumulative_weights = Vec::with_capacity(self.num_workers);
             let mut sum = 0;
@@ -462,21 +485,22 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                 sum += weight;
                 cumulative_weights.push(sum);
             }
-            
+
             // Distribute items based on weights
             let items_len = items.len();
             for (i, item) in items.into_iter().enumerate() {
                 let target = (i * total_weight / items_len).min(total_weight - 1);
-                let worker_id = cumulative_weights.iter()
+                let worker_id = cumulative_weights
+                    .iter()
                     .position(|&w| w > target)
                     .unwrap_or(self.num_workers - 1);
-                
+
                 if let Ok(mut queue) = self.worker_queues[worker_id].lock() {
                     queue.push_front(item);
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -485,10 +509,10 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
     fn steal_work(&self, thief_id: usize) -> Option<WorkItem<T>> {
         let mut attempts = 0;
         let max_attempts = self.load_balancing_params.max_steal_attempts;
-        
+
         while attempts < max_attempts {
             let victim_id = self.select_victim(thief_id, attempts);
-            
+
             if let Some(victim_id) = victim_id {
                 if let Ok(mut victim_queue) = self.worker_queues[victim_id].try_lock() {
                     if let Some(stolen_item) = victim_queue.steal_back() {
@@ -500,22 +524,22 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                     }
                 }
             }
-            
+
             attempts += 1;
-            
+
             // Exponential backoff
-            let backoff_duration = self.load_balancing_params.backoff_base 
-                * 2_u32.pow(attempts.min(10) as u32);
+            let backoff_duration =
+                self.load_balancing_params.backoff_base * 2_u32.pow(attempts.min(10) as u32);
             let capped_backoff = backoff_duration.min(self.load_balancing_params.max_backoff);
-            
+
             thread::sleep(capped_backoff);
         }
-        
+
         // Update failed steal statistics
         if let Ok(mut stats) = self.stats.lock() {
             stats.failed_steals += max_attempts;
         }
-        
+
         None
     }
 
@@ -526,36 +550,35 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
             StealingStrategy::Random => {
                 use std::collections::hash_map::DefaultHasher;
                 use std::hash::{Hash, Hasher};
-                
+
                 let mut hasher = DefaultHasher::new();
                 (thief_id + attempt).hash(&mut hasher);
                 let victim = (hasher.finish() as usize) % self.num_workers;
-                
+
                 if victim != thief_id {
                     Some(victim)
                 } else {
                     Some((victim + 1) % self.num_workers)
                 }
-            },
-            StealingStrategy::RoundRobin => {
-                Some((thief_id + attempt + 1) % self.num_workers)
-            },
+            }
+            StealingStrategy::RoundRobin => Some((thief_id + attempt + 1) % self.num_workers),
             StealingStrategy::MostLoaded => {
                 // Target the worker with the most work
                 let loads = self.get_worker_loads();
-                let max_load_worker = loads.iter()
+                let max_load_worker = loads
+                    .iter()
                     .enumerate()
                     .filter(|(i, _)| *i != thief_id)
                     .max_by_key(|(_, &load)| load)
                     .map(|(i, _)| i);
-                
+
                 max_load_worker
-            },
+            }
             StealingStrategy::LocalityAware => {
                 // Try to steal from nearby workers first
                 let distance = (attempt % (self.num_workers / 2)) + 1;
                 Some((thief_id + distance) % self.num_workers)
-            },
+            }
             StealingStrategy::Adaptive => {
                 // Combine strategies based on historical success rates
                 if attempt < 2 {
@@ -573,7 +596,8 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
     #[allow(dead_code)]
     fn select_victim_most_loaded(&self, thief_id: usize) -> Option<usize> {
         let loads = self.get_worker_loads();
-        loads.iter()
+        loads
+            .iter()
             .enumerate()
             .filter(|(i, _)| *i != thief_id)
             .max_by_key(|(_, &load)| load)
@@ -609,9 +633,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
         // Wait for all workers to complete
         for handle in handles {
             handle.join().map_err(|_| {
-                crate::error::LinalgError::ComputationError(
-                    "Worker thread panicked".to_string()
-                )
+                crate::error::LinalgError::ComputationError("Worker thread panicked".to_string())
             })?;
         }
 
@@ -636,7 +658,9 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
         let (lock, cvar) = &*sync;
 
         // Wait for work to be available
-        let _started = cvar.wait_while(lock.lock().unwrap(), |&mut started| !started).unwrap();
+        let _started = cvar
+            .wait_while(lock.lock().unwrap(), |&mut started| !started)
+            .unwrap();
 
         loop {
             let work_item = {
@@ -758,7 +782,10 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
     }
 
     /// Adaptive performance monitoring and load balancing optimization
-    pub fn optimize_for_workload(&self, workload_characteristics: WorkloadCharacteristics) -> LinalgResult<()> {
+    pub fn optimize_for_workload(
+        &self,
+        workload_characteristics: WorkloadCharacteristics,
+    ) -> LinalgResult<()> {
         let mut stats = self.stats.lock().map_err(|_| {
             crate::error::LinalgError::ComputationError("Failed to acquire stats lock".to_string())
         })?;
@@ -772,25 +799,24 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
         };
 
         // Adapt strategy based on workload characteristics and performance
-        let _suggested_strategy = match (workload_characteristics, load_imbalance, steal_success_rate) {
-            (WorkloadCharacteristics::HighVariance, imbalance, _) if imbalance > 0.3 => {
-                StealingStrategy::Adaptive
-            },
-            (WorkloadCharacteristics::LowVariance, _, success_rate) if success_rate < 0.2 => {
-                StealingStrategy::RoundRobin
-            },
-            (WorkloadCharacteristics::MemoryBound, _, _) => {
-                StealingStrategy::LocalityAware
-            },
-            (WorkloadCharacteristics::ComputeBound, _, success_rate) if success_rate > 0.8 => {
-                StealingStrategy::MostLoaded
-            },
-            _ => StealingStrategy::Adaptive,
-        };
+        let _suggested_strategy =
+            match (workload_characteristics, load_imbalance, steal_success_rate) {
+                (WorkloadCharacteristics::HighVariance, imbalance, _) if imbalance > 0.3 => {
+                    StealingStrategy::Adaptive
+                }
+                (WorkloadCharacteristics::LowVariance, _, success_rate) if success_rate < 0.2 => {
+                    StealingStrategy::RoundRobin
+                }
+                (WorkloadCharacteristics::MemoryBound, _, _) => StealingStrategy::LocalityAware,
+                (WorkloadCharacteristics::ComputeBound, _, success_rate) if success_rate > 0.8 => {
+                    StealingStrategy::MostLoaded
+                }
+                _ => StealingStrategy::Adaptive,
+            };
 
         // Update performance recommendations
         stats.load_balance_efficiency = 1.0 - load_imbalance;
-        
+
         Ok(())
     }
 
@@ -803,26 +829,33 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
 
         let total_load: usize = loads.iter().sum();
         let avg_load = total_load as f64 / loads.len() as f64;
-        
+
         if avg_load == 0.0 {
             return 0.0;
         }
 
-        let variance: f64 = loads.iter()
+        let variance: f64 = loads
+            .iter()
             .map(|&load| (load as f64 - avg_load).powi(2))
-            .sum::<f64>() / loads.len() as f64;
-        
+            .sum::<f64>()
+            / loads.len() as f64;
+
         let std_dev = variance.sqrt();
         std_dev / avg_load // Coefficient of variation
     }
 
     /// Dynamic chunk size adjustment based on performance history
-    pub fn adaptive_chunk_sizing(&self, base_work_size: usize, worker_efficiency: &[f64]) -> Vec<usize> {
+    pub fn adaptive_chunk_sizing(
+        &self,
+        base_work_size: usize,
+        worker_efficiency: &[f64],
+    ) -> Vec<usize> {
         let total_efficiency: f64 = worker_efficiency.iter().sum();
         let avg_efficiency = total_efficiency / worker_efficiency.len() as f64;
-        
+
         // Adjust chunk sizes based on relative worker efficiency
-        worker_efficiency.iter()
+        worker_efficiency
+            .iter()
             .map(|&efficiency| {
                 let efficiency_ratio = efficiency / avg_efficiency;
                 let chunk_size = (base_work_size as f64 * efficiency_ratio) as usize;
@@ -834,7 +867,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
     /// Advanced workload prediction based on execution history
     pub fn predict_execution_time(&self, work_complexity: WorkComplexity) -> Duration {
         let stats = self.stats.lock().unwrap();
-        
+
         let base_time = if stats.total_items > 0 {
             stats.total_execution_time / stats.total_items as u32
         } else {
@@ -848,19 +881,18 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
             WorkComplexity::Variable => {
                 // Use historical variance to estimate
                 Duration::from_nanos(
-                    (base_time.as_nanos() as f64 * (1.0 + stats.time_variance)).max(1.0) as u64
+                    (base_time.as_nanos() as f64 * (1.0 + stats.time_variance)).max(1.0) as u64,
                 )
-            },
+            }
         }
     }
 
     /// Calculate load balancing efficiency
     fn calculate_load_balance_efficiency(&self) -> f64 {
-        let worker_times: Vec<Duration> = self.worker_queues
+        let worker_times: Vec<Duration> = self
+            .worker_queues
             .iter()
-            .filter_map(|queue| {
-                queue.lock().ok().map(|q| q.total_time)
-            })
+            .filter_map(|queue| queue.lock().ok().map(|q| q.total_time))
             .collect();
 
         if worker_times.is_empty() {
@@ -879,11 +911,10 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
 
     /// Calculate time variance across workers
     fn calculate_time_variance(&self) -> f64 {
-        let worker_times: Vec<f64> = self.worker_queues
+        let worker_times: Vec<f64> = self
+            .worker_queues
             .iter()
-            .filter_map(|queue| {
-                queue.lock().ok().map(|q| q.total_time.as_nanos() as f64)
-            })
+            .filter_map(|queue| queue.lock().ok().map(|q| q.total_time.as_nanos() as f64))
             .collect();
 
         if worker_times.len() < 2 {
@@ -891,9 +922,11 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
         }
 
         let mean = worker_times.iter().sum::<f64>() / worker_times.len() as f64;
-        let variance = worker_times.iter()
+        let variance = worker_times
+            .iter()
             .map(|&x| (x - mean).powi(2))
-            .sum::<f64>() / worker_times.len() as f64;
+            .sum::<f64>()
+            / worker_times.len() as f64;
 
         variance.sqrt()
     }
@@ -985,7 +1018,8 @@ pub mod matrix_ops {
 
         // Execute work and collect results
         let results = scheduler.execute(|(indices, a_copy, b_copy)| {
-            indices.into_iter()
+            indices
+                .into_iter()
                 .map(|(i, j)| {
                     let value = a_copy.row(i).dot(&b_copy.column(j));
                     (i, j, value)
@@ -1020,7 +1054,7 @@ pub mod matrix_ops {
 
         let mut l = Array2::zeros((n, n));
         let matrix_owned = matrix.to_owned(); // Create owned copy to avoid lifetime issues
-        
+
         // Cholesky decomposition with work-stealing for column operations
         for k in 0..n {
             // Compute diagonal element
@@ -1032,10 +1066,12 @@ pub mod matrix_ops {
 
             if k + 1 < n {
                 let scheduler = WorkStealingScheduler::new(num_workers);
-                
+
                 // Create work items for remaining elements in column k
                 #[allow(clippy::type_complexity)]
-                let work_items: Vec<WorkItem<(usize, usize, Array2<F>, Array2<F>)>> = (k + 1..n)
+                let work_items: Vec<
+                    WorkItem<(usize, usize, Array2<F>, Array2<F>)>,
+                > = (k + 1..n)
                     .map(|i| WorkItem::new(i, (i, k, l.clone(), matrix_owned.clone())))
                     .collect();
 
@@ -1078,12 +1114,16 @@ pub mod matrix_ops {
             // Compute Householder vector for column k
             let col_slice = r.slice(s![k.., k]).to_owned();
             let alpha = col_slice.iter().map(|x| *x * *x).sum::<F>().sqrt();
-            let alpha = if col_slice[0] >= F::zero() { -alpha } else { alpha };
-            
+            let alpha = if col_slice[0] >= F::zero() {
+                -alpha
+            } else {
+                alpha
+            };
+
             let mut v = col_slice.clone();
             v[0] -= alpha;
             let v_norm = v.iter().map(|x| *x * *x).sum::<F>().sqrt();
-            
+
             if v_norm > F::zero() {
                 for elem in v.iter_mut() {
                     *elem /= v_norm;
@@ -1098,8 +1138,14 @@ pub mod matrix_ops {
                     scheduler.submit_work(work_items)?;
                     let results = scheduler.execute(move |(j, v_col, r_matrix)| {
                         let col = r_matrix.slice(s![k.., j]).to_owned();
-                        let dot_product = v_col.iter().zip(col.iter()).map(|(a, b)| *a * *b).sum::<F>();
-                        let new_col: Array1<F> = col.iter().zip(v_col.iter())
+                        let dot_product = v_col
+                            .iter()
+                            .zip(col.iter())
+                            .map(|(a, b)| *a * *b)
+                            .sum::<F>();
+                        let new_col: Array1<F> = col
+                            .iter()
+                            .zip(v_col.iter())
                             .map(|(c, v)| *c - F::one() + F::one() * dot_product * *v)
                             .collect();
                         (j, new_col)
@@ -1121,8 +1167,14 @@ pub mod matrix_ops {
                 scheduler.submit_work(q_work_items)?;
                 let q_results = scheduler.execute(move |(i, v_col, q_matrix)| {
                     let row = q_matrix.slice(s![i, k..]).to_owned();
-                    let dot_product = row.iter().zip(v_col.iter()).map(|(a, b)| *a * *b).sum::<F>();
-                    let new_row: Array1<F> = row.iter().zip(v_col.iter())
+                    let dot_product = row
+                        .iter()
+                        .zip(v_col.iter())
+                        .map(|(a, b)| *a * *b)
+                        .sum::<F>();
+                    let new_row: Array1<F> = row
+                        .iter()
+                        .zip(v_col.iter())
                         .map(|(q_val, v)| *q_val - F::one() + F::one() * dot_product * *v)
                         .collect();
                     (i, new_row)
@@ -1150,18 +1202,18 @@ pub mod matrix_ops {
     {
         let (m, n) = matrix.dim();
         let a = matrix.to_owned();
-        
+
         // For large matrices, use parallel approach
         if m.min(n) > 32 {
             // Compute A^T * A for eigenvalue decomposition approach
             let scheduler = WorkStealingScheduler::new(num_workers);
             let ata = parallel_matrix_multiply_ata(&a.view(), &scheduler)?;
-            
+
             // This is a simplified implementation - in practice you'd use more sophisticated methods
             let u = Array2::eye(m);
             let mut s = Array1::zeros(n.min(m));
             let vt = Array2::eye(n);
-            
+
             // Basic parallel Jacobi iterations (simplified)
             for _iter in 0..50 {
                 let work_items: Vec<WorkItem<(usize, usize, Array2<F>)>> = (0..n)
@@ -1204,7 +1256,7 @@ pub mod matrix_ops {
     {
         let (m, n) = matrix.dim();
         let mut result = Array2::zeros((n, n));
-        
+
         // Create work items for computing each element of A^T * A
         let work_items: Vec<WorkItem<(usize, usize, Array2<F>)>> = (0..n)
             .flat_map(|i| (i..n).map(move |j| (i, j)))
@@ -1283,11 +1335,11 @@ pub mod matrix_ops {
             let results = scheduler.execute(move |(i, mut a_copy)| {
                 let factor = a_copy[(i, k)] / a_copy[(k, k)];
                 a_copy[(i, k)] = factor;
-                
+
                 for j in (k + 1)..n {
                     a_copy[(i, j)] = a_copy[(i, j)] - factor * a_copy[(k, j)];
                 }
-                
+
                 (i, factor, a_copy.slice(s![i, (k + 1)..]).to_owned())
             })?;
 
@@ -1334,20 +1386,22 @@ pub mod matrix_ops {
             ));
         }
 
-        let _scheduler: WorkStealingScheduler<(usize, Array1<F>)> = WorkStealingScheduler::new(num_workers);
+        let _scheduler: WorkStealingScheduler<(usize, Array1<F>)> =
+            WorkStealingScheduler::new(num_workers);
         let mut v = Array1::ones(n);
         let mut eigenvalue = F::zero();
 
         for _iter in 0..max_iterations {
             // Parallel matrix-vector multiplication
-            let result = matrix_ops::parallel_matvec_work_stealing(
-                matrix, &v.view(), num_workers
-            )?;
+            let result = matrix_ops::parallel_matvec_work_stealing(matrix, &v.view(), num_workers)?;
 
             // Compute eigenvalue (Rayleigh quotient)
-            let new_eigenvalue = v.iter().zip(result.iter())
+            let new_eigenvalue = v
+                .iter()
+                .zip(result.iter())
                 .map(|(vi, rvi)| *vi * *rvi)
-                .sum::<F>() / v.iter().map(|x| *x * *x).sum::<F>();
+                .sum::<F>()
+                / v.iter().map(|x| *x * *x).sum::<F>();
 
             // Normalize vector
             let norm = result.iter().map(|x| *x * *x).sum::<F>().sqrt();
@@ -1388,19 +1442,23 @@ pub mod matrix_ops {
             // Create Householder vector for column k
             let col_slice = h.slice(s![(k + 1).., k]).to_owned();
             let alpha = col_slice.iter().map(|x| *x * *x).sum::<F>().sqrt();
-            let alpha = if col_slice[0] >= F::zero() { -alpha } else { alpha };
-            
+            let alpha = if col_slice[0] >= F::zero() {
+                -alpha
+            } else {
+                alpha
+            };
+
             let mut v = col_slice.clone();
             v[0] -= alpha;
             let v_norm = v.iter().map(|x| *x * *x).sum::<F>().sqrt();
-            
+
             if v_norm > F::zero() {
                 for elem in v.iter_mut() {
                     *elem /= v_norm;
                 }
 
                 // Apply Householder reflection to remaining columns in parallel
-                let work_items: Vec<WorkItem<(usize, Array1<F>, Array2<F>)>> = ((k + 1)..n)
+                let work_items: Vec<QRWorkItem<F>> = ((k + 1)..n)
                     .map(|j| WorkItem::new(j, (j, v.clone(), h.clone())))
                     .collect();
 
@@ -1408,9 +1466,15 @@ pub mod matrix_ops {
                     scheduler.submit_work(work_items)?;
                     let results = scheduler.execute(move |(j, v_col, h_matrix)| {
                         let col = h_matrix.slice(s![(k + 1).., j]).to_owned();
-                        let dot_product = v_col.iter().zip(col.iter()).map(|(a, b)| *a * *b).sum::<F>();
+                        let dot_product = v_col
+                            .iter()
+                            .zip(col.iter())
+                            .map(|(a, b)| *a * *b)
+                            .sum::<F>();
                         let two = F::one() + F::one();
-                        let new_col: Array1<F> = col.iter().zip(v_col.iter())
+                        let new_col: Array1<F> = col
+                            .iter()
+                            .zip(v_col.iter())
                             .map(|(c, v)| *c - two * dot_product * *v)
                             .collect();
                         (j, new_col)
@@ -1425,16 +1489,22 @@ pub mod matrix_ops {
                 }
 
                 // Apply reflection to rows in parallel
-                let row_work_items: Vec<WorkItem<(usize, Array1<F>, Array2<F>)>> = (0..=k)
+                let row_work_items: Vec<QRWorkItem<F>> = (0..=k)
                     .map(|i| WorkItem::new(i, (i, v.clone(), h.clone())))
                     .collect();
 
                 scheduler.submit_work(row_work_items)?;
                 let row_results = scheduler.execute(move |(i, v_col, h_matrix)| {
                     let row = h_matrix.slice(s![i, (k + 1)..]).to_owned();
-                    let dot_product = row.iter().zip(v_col.iter()).map(|(a, b)| *a * *b).sum::<F>();
+                    let dot_product = row
+                        .iter()
+                        .zip(v_col.iter())
+                        .map(|(a, b)| *a * *b)
+                        .sum::<F>();
                     let two = F::one() + F::one();
-                    let new_row: Array1<F> = row.iter().zip(v_col.iter())
+                    let new_row: Array1<F> = row
+                        .iter()
+                        .zip(v_col.iter())
                         .map(|(r, v)| *r - two * dot_product * *v)
                         .collect();
                     (i, new_row)
@@ -1448,16 +1518,22 @@ pub mod matrix_ops {
                 }
 
                 // Update Q matrix with the same reflection
-                let q_work_items: Vec<WorkItem<(usize, Array1<F>, Array2<F>)>> = (0..n)
+                let q_work_items: Vec<QRWorkItem<F>> = (0..n)
                     .map(|i| WorkItem::new(i, (i, v.clone(), q.clone())))
                     .collect();
 
                 scheduler.submit_work(q_work_items)?;
                 let q_results = scheduler.execute(move |(i, v_col, q_matrix)| {
                     let row = q_matrix.slice(s![i, (k + 1)..]).to_owned();
-                    let dot_product = row.iter().zip(v_col.iter()).map(|(a, b)| *a * *b).sum::<F>();
+                    let dot_product = row
+                        .iter()
+                        .zip(v_col.iter())
+                        .map(|(a, b)| *a * *b)
+                        .sum::<F>();
                     let two = F::one() + F::one();
-                    let new_row: Array1<F> = row.iter().zip(v_col.iter())
+                    let new_row: Array1<F> = row
+                        .iter()
+                        .zip(v_col.iter())
                         .map(|(q_val, v)| *q_val - two * dot_product * *v)
                         .collect();
                     (i, new_row)
@@ -1498,8 +1574,7 @@ pub mod matrix_ops {
         let optimal_block_size = block_size.unwrap_or_else(|| {
             let l1_cache_size = 32 * 1024; // 32KB L1 cache assumption
             let element_size = std::mem::size_of::<F>();
-            let optimal_size = (l1_cache_size / (3 * element_size)).max(64).min(512);
-            optimal_size
+            (l1_cache_size / (3 * element_size)).clamp(64, 512)
         });
 
         let mut result = Array2::zeros((m, n));
@@ -1513,7 +1588,7 @@ pub mod matrix_ops {
             for j in (0..n).step_by(optimal_block_size) {
                 let i_end = (i + optimal_block_size).min(m);
                 let j_end = (j + optimal_block_size).min(n);
-                
+
                 work_items.push(WorkItem::new(
                     block_id,
                     (i, j, i_end, j_end, a.to_owned(), b.to_owned()),
@@ -1524,26 +1599,27 @@ pub mod matrix_ops {
 
         scheduler.submit_work(work_items)?;
 
-        let results = scheduler.execute(move |(i_start, j_start, i_end, j_end, a_copy, b_copy)| {
-            let mut block_result = Array2::zeros((i_end - i_start, j_end - j_start));
-            
-            // Block multiplication with cache-friendly access pattern
-            for k in (0..k1).step_by(optimal_block_size) {
-                let k_end = (k + optimal_block_size).min(k1);
-                
-                for i in 0..(i_end - i_start) {
-                    for j in 0..(j_end - j_start) {
-                        let mut sum = F::zero();
-                        for kk in k..k_end {
-                            sum += a_copy[(i_start + i, kk)] * b_copy[(kk, j_start + j)];
+        let results =
+            scheduler.execute(move |(i_start, j_start, i_end, j_end, a_copy, b_copy)| {
+                let mut block_result = Array2::zeros((i_end - i_start, j_end - j_start));
+
+                // Block multiplication with cache-friendly access pattern
+                for k in (0..k1).step_by(optimal_block_size) {
+                    let k_end = (k + optimal_block_size).min(k1);
+
+                    for i in 0..(i_end - i_start) {
+                        for j in 0..(j_end - j_start) {
+                            let mut sum = F::zero();
+                            for kk in k..k_end {
+                                sum += a_copy[(i_start + i, kk)] * b_copy[(kk, j_start + j)];
+                            }
+                            block_result[(i, j)] += sum;
                         }
-                        block_result[(i, j)] += sum;
                     }
                 }
-            }
-            
-            (i_start, j_start, i_end, j_end, block_result)
-        })?;
+
+                (i_start, j_start, i_end, j_end, block_result)
+            })?;
 
         // Assemble final result
         for (i_start, j_start, i_end, j_end, block_result) in results {
@@ -1581,10 +1657,9 @@ pub mod matrix_ops {
         for i in 0..n {
             let start_j = i.saturating_sub(bandwidth);
             let end_j = (i + bandwidth + 1).min(n);
-            
+
             if end_j > i + 1 {
-                let work_items: Vec<WorkItem<(usize, usize, usize, Array2<F>, Array1<F>)>> = 
-                    ((i + 1)..end_j)
+                let work_items: Vec<BandSolveWorkItem<F>> = ((i + 1)..end_j)
                     .map(|j| WorkItem::new(j, (i, j, start_j, band_matrix.to_owned(), x.clone())))
                     .collect();
 
@@ -1608,6 +1683,273 @@ pub mod matrix_ops {
 
         Ok(x)
     }
+
+    /// Parallel eigenvalue computation for symmetric matrices using work stealing
+    ///
+    /// This function computes eigenvalues and eigenvectors of symmetric matrices
+    /// using parallel Householder tridiagonalization followed by parallel QR algorithm.
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - Input symmetric matrix
+    /// * `workers` - Number of worker threads
+    ///
+    /// # Returns
+    ///
+    /// * Tuple (eigenvalues, eigenvectors)
+    pub fn parallel_eigvalsh_work_stealing<F>(
+        a: &ArrayView2<F>,
+        workers: usize,
+    ) -> LinalgResult<(Array1<F>, Array2<F>)>
+    where
+        F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+    {
+        let n = a.nrows();
+        if n != a.ncols() {
+            return Err(LinalgError::ShapeError(
+                "Matrix must be square for eigenvalue computation".to_string(),
+            ));
+        }
+
+        // For small matrices, use sequential algorithm
+        if n < 64 || workers == 1 {
+            return crate::eigen::eigh(a, None);
+        }
+
+        // Step 1: Parallel Householder tridiagonalization
+        let (mut tridiag, mut q) = parallel_householder_tridiagonalization(a, workers)?;
+
+        // Step 2: Parallel QR algorithm on tridiagonal matrix
+        let eigenvalues = parallel_tridiagonal_qr(&mut tridiag, &mut q, workers)?;
+
+        Ok((eigenvalues, q))
+    }
+
+    /// Parallel matrix exponential computation using work stealing
+    ///
+    /// Computes the matrix exponential exp(A) using parallel scaling and squaring
+    /// method with Padé approximation.
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - Input square matrix
+    /// * `workers` - Number of worker threads
+    ///
+    /// # Returns
+    ///
+    /// * Matrix exponential exp(A)
+    pub fn parallel_matrix_exponential_work_stealing<F>(
+        a: &ArrayView2<F>,
+        workers: usize,
+    ) -> LinalgResult<Array2<F>>
+    where
+        F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+    {
+        let n = a.nrows();
+        if n != a.ncols() {
+            return Err(LinalgError::ShapeError(
+                "Matrix must be square for matrix exponential".to_string(),
+            ));
+        }
+
+        // For small matrices, use sequential algorithm
+        if n < 32 || workers == 1 {
+            return crate::matrix_functions::expm(a, None);
+        }
+
+        // Compute matrix norm for scaling
+        let norm_a = crate::norm::matrix_norm(a, "1", Some(workers))?;
+        let log2_norm = norm_a.ln() / F::from(2.0).unwrap().ln();
+        let scaling_factor = log2_norm.ceil().max(F::zero()).to_usize().unwrap_or(0);
+
+        // Scale matrix
+        let scaled_factor = F::from(2.0).unwrap().powi(-(scaling_factor as i32));
+        let mut scaled_matrix = a.to_owned();
+        scaled_matrix *= scaled_factor;
+
+        // Parallel Padé approximation
+        let result = parallel_pade_approximation(&scaled_matrix.view(), 13, workers)?;
+
+        // Square the result `scaling_factor` times
+        let mut final_result = result;
+        for _ in 0..scaling_factor {
+            final_result =
+                parallel_gemm_work_stealing(&final_result.view(), &final_result.view(), workers)?;
+        }
+
+        Ok(final_result)
+    }
+
+    /// Parallel matrix square root computation using work stealing
+    ///
+    /// Computes the matrix square root using parallel Newton-Schulz iteration.
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - Input positive definite matrix
+    /// * `workers` - Number of worker threads
+    ///
+    /// # Returns
+    ///
+    /// * Matrix square root
+    pub fn parallel_matrix_sqrt_work_stealing<F>(
+        a: &ArrayView2<F>,
+        workers: usize,
+    ) -> LinalgResult<Array2<F>>
+    where
+        F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+    {
+        let n = a.nrows();
+        if n != a.ncols() {
+            return Err(LinalgError::ShapeError(
+                "Matrix must be square for matrix square root".to_string(),
+            ));
+        }
+
+        // For small matrices, use sequential algorithm
+        if n < 32 || workers == 1 {
+            let max_iter = 20;
+            let tolerance = F::epsilon().sqrt();
+            return crate::matrix_functions::sqrtm(a, max_iter, tolerance);
+        }
+
+        // Initialize with scaled identity matrix
+        let trace = (0..n).map(|i| a[[i, i]]).fold(F::zero(), |acc, x| acc + x);
+        let initial_scaling = (trace / F::from(n).unwrap()).sqrt();
+        let mut x = Array2::eye(n) * initial_scaling;
+        let mut z = Array2::eye(n);
+
+        let max_iterations = 20;
+        let tolerance = F::epsilon().sqrt();
+
+        for _iter in 0..max_iterations {
+            // Newton-Schulz iteration with parallel matrix operations
+            let x_squared = parallel_gemm_work_stealing(&x.view(), &x.view(), workers)?;
+            let z_squared = parallel_gemm_work_stealing(&z.view(), &z.view(), workers)?;
+
+            // Convergence check
+            let error_matrix = &x_squared - a;
+            let error_norm =
+                parallel_matrix_norm_work_stealing(&error_matrix.view(), "fro", workers)?;
+
+            if error_norm < tolerance {
+                break;
+            }
+
+            // Update x and z using Newton-Schulz iteration
+            let three = F::from(3.0).unwrap();
+            let two = F::from(2.0).unwrap();
+
+            // Create 3*I - Z² where I is identity matrix
+            let three_i = Array2::eye(n) * three;
+            let three_minus_z_squared = three_i - &z_squared;
+
+            let temp_x = &x * &three_minus_z_squared / two;
+            let temp_z = &z * &three_minus_z_squared / two;
+
+            x = temp_x;
+            z = temp_z;
+        }
+
+        Ok(x)
+    }
+
+    /// Parallel batch matrix operations using work stealing
+    ///
+    /// Performs the same operation on multiple matrices in parallel.
+    ///
+    /// # Arguments
+    ///
+    /// * `matrices` - Vector of input matrices
+    /// * `operation` - Function to apply to each matrix
+    /// * `workers` - Number of worker threads
+    ///
+    /// # Returns
+    ///
+    /// * Vector of results
+    pub fn parallel_batch_operations_work_stealing<F, Op, R>(
+        matrices: &[ArrayView2<F>],
+        operation: Op,
+        workers: usize,
+    ) -> LinalgResult<Vec<R>>
+    where
+        F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+        Op: Fn(&ArrayView2<F>) -> LinalgResult<R> + Send + Sync,
+        R: Send + Sync,
+    {
+        if matrices.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // For small batches, use sequential processing
+        if matrices.len() < workers || workers == 1 {
+            return matrices.iter().map(&operation).collect();
+        }
+
+        // Process matrices in parallel using chunks
+        let chunk_size = matrices.len().div_ceil(workers);
+        
+        let results = std::thread::scope(|s| {
+            let handles: Vec<_> = (0..workers)
+                .map(|worker_id| {
+                    let start_idx = worker_id * chunk_size;
+                    let end_idx = ((worker_id + 1) * chunk_size).min(matrices.len());
+                    let op_ref = &operation;
+                    
+                    s.spawn(move || {
+                        matrices[start_idx..end_idx]
+                            .iter()
+                            .map(op_ref)
+                            .collect::<Result<Vec<_>, _>>()
+                    })
+                })
+                .collect();
+            
+            let mut results = Vec::new();
+            for handle in handles {
+                let chunk_results = handle.join().unwrap()?;
+                results.extend(chunk_results);
+            }
+            Ok::<Vec<R>, LinalgError>(results)
+        })?;
+
+        Ok(results)
+    }
+
+    /// Parallel specialized matrix norm computation using work stealing
+    ///
+    /// Computes various matrix norms using parallel algorithms optimized
+    /// for different norm types.
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - Input matrix
+    /// * `norm_type` - Type of norm ("fro", "nuc", "1", "2", "inf")
+    /// * `workers` - Number of worker threads
+    ///
+    /// # Returns
+    ///
+    /// * Computed norm value
+    pub fn parallel_matrix_norm_work_stealing<F>(
+        a: &ArrayView2<F>,
+        norm_type: &str,
+        workers: usize,
+    ) -> LinalgResult<F>
+    where
+        F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+    {
+        match norm_type {
+            "fro" | "frobenius" => parallel_frobenius_norm(a, workers),
+            "nuc" | "nuclear" => parallel_nuclear_norm(a, workers),
+            "1" => parallel_matrix_1_norm(a, workers),
+            "2" | "spectral" => parallel_spectral_norm(a, workers),
+            "inf" | "infinity" => parallel_matrix_inf_norm(a, workers),
+            _ => Err(LinalgError::InvalidInputError(format!(
+                "Unknown norm type: {}",
+                norm_type
+            ))),
+        }
+    }
 }
 
 /// Sequential SVD fallback for small matrices
@@ -1623,6 +1965,486 @@ where
     Ok((u, s, vt))
 }
 
+// Helper functions for the new parallel algorithms
+
+/// Parallel Householder tridiagonalization for symmetric matrices
+fn parallel_householder_tridiagonalization<F>(
+    a: &ArrayView2<F>,
+    workers: usize,
+) -> LinalgResult<(Array2<F>, Array2<F>)>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+{
+    let n = a.nrows();
+    let mut matrix = a.to_owned();
+    let mut q = Array2::eye(n);
+
+    for k in 0..(n - 2) {
+        // Create Householder vector for column k
+        let column_slice = matrix.slice(s![k + 1.., k]);
+        let householder_vector = create_householder_vector(&column_slice);
+
+        if householder_vector.is_none() {
+            continue;
+        }
+
+        let v = householder_vector.unwrap();
+
+        // Apply Householder transformation in parallel
+        apply_householder_parallel(&mut matrix, &v, k + 1, workers)?;
+        apply_householder_to_q_parallel(&mut q, &v, k + 1, workers)?;
+    }
+
+    Ok((matrix, q))
+}
+
+/// Create Householder vector for reflection
+fn create_householder_vector<F>(x: &ArrayView1<F>) -> Option<Array1<F>>
+where
+    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand,
+{
+    let n = x.len();
+    if n == 0 {
+        return None;
+    }
+
+    let norm_x = x.dot(x).sqrt();
+    if norm_x <= F::epsilon() {
+        return None;
+    }
+
+    let mut v = x.to_owned();
+    let sign = if x[0] >= F::zero() {
+        F::one()
+    } else {
+        -F::one()
+    };
+    v[0] += sign * norm_x;
+
+    let norm_v = v.dot(&v).sqrt();
+    if norm_v <= F::epsilon() {
+        return None;
+    }
+
+    v /= norm_v;
+    Some(v)
+}
+
+/// Apply Householder transformation in parallel
+fn apply_householder_parallel<F>(
+    matrix: &mut Array2<F>,
+    v: &Array1<F>,
+    start_idx: usize,
+    workers: usize,
+) -> LinalgResult<()>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand,
+{
+    let n = matrix.nrows();
+    let v_size = v.len();
+    let two = F::from(2.0).unwrap();
+
+    // Compute column updates in parallel, then apply them
+    let chunk_size = n.div_ceil(workers);
+    let updates = std::thread::scope(|s| {
+        let handles: Vec<_> = (0..workers)
+            .map(|worker_id| {
+                let start_col = worker_id * chunk_size;
+                let end_col = ((worker_id + 1) * chunk_size).min(n);
+                let matrix_clone = matrix.clone();
+                let v_clone = v.clone();
+
+                s.spawn(move || {
+                    let mut column_updates = Vec::new();
+                    for j in start_col..end_col {
+                        let mut dot = F::zero();
+                        for i in 0..v_size {
+                            if start_idx + i < n {
+                                dot += v_clone[i] * matrix_clone[[start_idx + i, j]];
+                            }
+                        }
+
+                        let mut updates_for_col = Vec::new();
+                        for i in 0..v_size {
+                            if start_idx + i < n {
+                                let update = two * v_clone[i] * dot;
+                                updates_for_col.push((start_idx + i, update));
+                            }
+                        }
+                        column_updates.push((j, updates_for_col));
+                    }
+                    column_updates
+                })
+            })
+            .collect();
+
+        let mut all_updates = Vec::new();
+        for handle in handles {
+            all_updates.extend(handle.join().unwrap());
+        }
+        all_updates
+    });
+
+    // Apply updates sequentially
+    for (j, updates_for_col) in updates {
+        for (i, update) in updates_for_col {
+            matrix[[i, j]] -= update;
+        }
+    }
+
+    Ok(())
+}
+
+/// Apply Householder transformation to Q matrix in parallel
+fn apply_householder_to_q_parallel<F>(
+    q: &mut Array2<F>,
+    v: &Array1<F>,
+    start_idx: usize,
+    workers: usize,
+) -> LinalgResult<()>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand,
+{
+    let n = q.nrows();
+    let v_size = v.len();
+    let two = F::from(2.0).unwrap();
+
+    // Compute row updates in parallel, then apply them
+    let chunk_size = n.div_ceil(workers);
+    let updates = std::thread::scope(|s| {
+        let handles: Vec<_> = (0..workers)
+            .map(|worker_id| {
+                let start_row = worker_id * chunk_size;
+                let end_row = ((worker_id + 1) * chunk_size).min(n);
+                let q_clone = q.clone();
+                let v_clone = v.clone();
+
+                s.spawn(move || {
+                    let mut row_updates = Vec::new();
+                    for i in start_row..end_row {
+                        let mut dot = F::zero();
+                        for j in 0..v_size {
+                            if start_idx + j < q_clone.ncols() {
+                                dot += q_clone[[i, start_idx + j]] * v_clone[j];
+                            }
+                        }
+
+                        let mut updates_for_row = Vec::new();
+                        for j in 0..v_size {
+                            if start_idx + j < q_clone.ncols() {
+                                let update = two * dot * v_clone[j];
+                                updates_for_row.push((start_idx + j, update));
+                            }
+                        }
+                        row_updates.push((i, updates_for_row));
+                    }
+                    row_updates
+                })
+            })
+            .collect();
+
+        let mut all_updates = Vec::new();
+        for handle in handles {
+            all_updates.extend(handle.join().unwrap());
+        }
+        all_updates
+    });
+
+    // Apply updates sequentially
+    for (i, updates_for_row) in updates {
+        for (j, update) in updates_for_row {
+            q[[i, j]] -= update;
+        }
+    }
+
+    Ok(())
+}
+
+/// Parallel QR algorithm for tridiagonal matrices
+fn parallel_tridiagonal_qr<F>(
+    tridiag: &mut Array2<F>,
+    q: &mut Array2<F>,
+    workers: usize,
+) -> LinalgResult<Array1<F>>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+{
+    let n = tridiag.nrows();
+    let max_iterations = 30 * n;
+    let tolerance = F::epsilon().sqrt();
+
+    for _iter in 0..max_iterations {
+        // Check for convergence
+        let mut converged = true;
+        for i in 0..(n - 1) {
+            if tridiag[[i + 1, i]].abs()
+                > tolerance * (tridiag[[i, i]].abs() + tridiag[[i + 1, i + 1]].abs())
+            {
+                converged = false;
+                break;
+            }
+        }
+
+        if converged {
+            break;
+        }
+
+        // Apply QR step with parallel operations
+        let shift = wilkinson_shift(tridiag, n)?;
+        apply_qr_step_parallel(tridiag, q, shift, workers)?;
+    }
+
+    // Extract eigenvalues from diagonal
+    let eigenvalues = (0..n).map(|i| tridiag[[i, i]]).collect();
+    Ok(Array1::from_vec(eigenvalues))
+}
+
+/// Compute Wilkinson shift for QR algorithm
+fn wilkinson_shift<F>(tridiag: &Array2<F>, n: usize) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Zero + One + Sum,
+{
+    if n < 2 {
+        return Ok(F::zero());
+    }
+
+    let a = tridiag[[n - 2, n - 2]];
+    let b = tridiag[[n - 1, n - 2]];
+    let c = tridiag[[n - 1, n - 1]];
+
+    let delta = (a - c) / F::from(2.0).unwrap();
+    let sign = if delta >= F::zero() {
+        F::one()
+    } else {
+        -F::one()
+    };
+
+    Ok(c - b * b / (delta + sign * (delta * delta + b * b).sqrt()))
+}
+
+/// Apply QR step with shift in parallel
+fn apply_qr_step_parallel<F>(
+    tridiag: &mut Array2<F>,
+    q: &mut Array2<F>,
+    shift: F,
+    _workers: usize,
+) -> LinalgResult<()>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+{
+    let n = tridiag.nrows();
+
+    // Apply shift
+    for i in 0..n {
+        tridiag[[i, i]] -= shift;
+    }
+
+    // QR decomposition of shifted matrix
+    let (q_qr, r) = crate::decomposition::qr(&tridiag.view(), None)?;
+
+    // Multiply R * Q
+    *tridiag = r.dot(&q_qr);
+
+    // Apply shift back
+    for i in 0..n {
+        tridiag[[i, i]] += shift;
+    }
+
+    // Update Q matrix
+    *q = q.dot(&q_qr);
+
+    Ok(())
+}
+
+/// Parallel Padé approximation for matrix exponential
+fn parallel_pade_approximation<F>(
+    a: &ArrayView2<F>,
+    order: usize,
+    workers: usize,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+{
+    let n = a.nrows();
+    let mut numerator = Array2::eye(n);
+    let mut denominator = Array2::eye(n);
+    let mut a_power = Array2::eye(n);
+
+    for k in 1..=order {
+        // Compute A^k in parallel
+        a_power = crate::parallel::work_stealing::matrix_ops::parallel_gemm_work_stealing(
+            &a_power.view(),
+            a,
+            workers,
+        )?;
+
+        let coeff_num = factorial(order + k) / (factorial(k) * factorial(order + k - k));
+        let coeff_den = factorial(order + k) / (factorial(k) * factorial(order + k - k));
+
+        let term_num = &a_power * F::from(coeff_num).unwrap();
+        let term_den =
+            &a_power * F::from(coeff_den).unwrap() * if k % 2 == 0 { F::one() } else { -F::one() };
+
+        numerator = numerator + term_num;
+        denominator = denominator + term_den;
+    }
+
+    // Solve denominator * result = numerator by computing denominator^-1 * numerator
+    let inv_denominator = crate::basic::inv(&denominator.view(), Some(workers))?;
+    crate::parallel::work_stealing::matrix_ops::parallel_gemm_work_stealing(
+        &inv_denominator.view(),
+        &numerator.view(),
+        workers,
+    )
+}
+
+/// Compute factorial (helper for Padé approximation)
+fn factorial(n: usize) -> usize {
+    if n <= 1 {
+        1
+    } else {
+        n * factorial(n - 1)
+    }
+}
+
+// Parallel norm computations
+
+/// Parallel Frobenius norm computation
+fn parallel_frobenius_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand,
+{
+    let (rows, cols) = a.dim();
+    let total_elements = rows * cols;
+    let chunk_size = total_elements.div_ceil(workers);
+
+    let sum = std::thread::scope(|s| {
+        let handles: Vec<_> = (0..workers)
+            .map(|worker_id| {
+                let start_idx = worker_id * chunk_size;
+                let end_idx = ((worker_id + 1) * chunk_size).min(total_elements);
+
+                s.spawn(move || {
+                    let mut local_sum = F::zero();
+                    for idx in start_idx..end_idx {
+                        let i = idx / cols;
+                        let j = idx % cols;
+                        if i < rows && j < cols {
+                            local_sum += a[[i, j]] * a[[i, j]];
+                        }
+                    }
+                    local_sum
+                })
+            })
+            .collect();
+
+        handles
+            .into_iter()
+            .map(|h| h.join().unwrap())
+            .fold(F::zero(), |acc, x| acc + x)
+    });
+
+    Ok(sum.sqrt())
+}
+
+/// Parallel nuclear norm computation (sum of singular values)
+fn parallel_nuclear_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+{
+    let (_, s, _) =
+        crate::parallel::work_stealing::matrix_ops::parallel_svd_work_stealing(a, workers)?;
+    Ok(s.sum())
+}
+
+/// Parallel matrix 1-norm computation (maximum column sum)
+fn parallel_matrix_1_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand,
+{
+    let (rows, cols) = a.dim();
+    let chunk_size = cols.div_ceil(workers);
+
+    let max_col_sum = std::thread::scope(|s| {
+        let handles: Vec<_> = (0..workers)
+            .map(|worker_id| {
+                let start_col = worker_id * chunk_size;
+                let end_col = ((worker_id + 1) * chunk_size).min(cols);
+
+                s.spawn(move || {
+                    let mut local_max = F::zero();
+                    for j in start_col..end_col {
+                        let mut col_sum = F::zero();
+                        for i in 0..rows {
+                            col_sum += a[[i, j]].abs();
+                        }
+                        if col_sum > local_max {
+                            local_max = col_sum;
+                        }
+                    }
+                    local_max
+                })
+            })
+            .collect();
+
+        handles
+            .into_iter()
+            .map(|h| h.join().unwrap())
+            .fold(F::zero(), |acc, x| acc.max(x))
+    });
+
+    Ok(max_col_sum)
+}
+
+/// Parallel spectral norm computation (largest singular value)
+fn parallel_spectral_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
+{
+    let (_, s, _) =
+        crate::parallel::work_stealing::matrix_ops::parallel_svd_work_stealing(a, workers)?;
+    Ok(s[0]) // Singular values are returned in descending order
+}
+
+/// Parallel matrix infinity norm computation (maximum row sum)
+fn parallel_matrix_inf_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand,
+{
+    let (rows, cols) = a.dim();
+    let chunk_size = rows.div_ceil(workers);
+
+    let max_row_sum = std::thread::scope(|s| {
+        let handles: Vec<_> = (0..workers)
+            .map(|worker_id| {
+                let start_row = worker_id * chunk_size;
+                let end_row = ((worker_id + 1) * chunk_size).min(rows);
+
+                s.spawn(move || {
+                    let mut local_max = F::zero();
+                    for i in start_row..end_row {
+                        let mut row_sum = F::zero();
+                        for j in 0..cols {
+                            row_sum += a[[i, j]].abs();
+                        }
+                        if row_sum > local_max {
+                            local_max = row_sum;
+                        }
+                    }
+                    local_max
+                })
+            })
+            .collect();
+
+        handles
+            .into_iter()
+            .map(|h| h.join().unwrap())
+            .fold(F::zero(), |acc, x| acc.max(x))
+    });
+
+    Ok(max_row_sum)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1631,7 +2453,7 @@ mod tests {
     #[test]
     fn test_work_stealing_scheduler() {
         let scheduler = WorkStealingScheduler::new(2);
-        
+
         let work_items = vec![
             WorkItem::new(0, 1),
             WorkItem::new(1, 2),
@@ -1640,9 +2462,9 @@ mod tests {
         ];
 
         scheduler.submit_work(work_items).unwrap();
-        
+
         let results = scheduler.execute(|x| x * 2).unwrap();
-        
+
         // Results might be in different order due to parallel execution
         let mut sorted_results = results;
         sorted_results.sort();
@@ -1653,28 +2475,22 @@ mod tests {
     fn test_work_stealing_matvec() {
         let matrix = array![[1.0, 2.0], [3.0, 4.0]];
         let vector = array![1.0, 2.0];
-        
-        let result = matrix_ops::parallel_matvec_work_stealing(
-            &matrix.view(),
-            &vector.view(),
-            2,
-        ).unwrap();
-        
+
+        let result =
+            matrix_ops::parallel_matvec_work_stealing(&matrix.view(), &vector.view(), 2).unwrap();
+
         assert_eq!(result, array![5.0, 11.0]);
     }
 
     #[test]
     fn test_scheduler_stats() {
         let scheduler = WorkStealingScheduler::new(2);
-        
-        let work_items = vec![
-            WorkItem::new(0, 1),
-            WorkItem::new(1, 2),
-        ];
+
+        let work_items = vec![WorkItem::new(0, 1), WorkItem::new(1, 2)];
 
         scheduler.submit_work(work_items).unwrap();
         scheduler.execute(|x| x * 2).unwrap();
-        
+
         let stats = scheduler.get_stats();
         assert_eq!(stats.total_items, 2);
         assert!(stats.load_balance_efficiency > 0.0);

@@ -399,16 +399,21 @@ impl CustomASIC {
 
                 // Load convolution kernel to processing elements
                 // Distribute kernels across available PEs
-                let kernels_per_pe = (output_channels + config.processing_elements as usize - 1) 
-                    / config.processing_elements as usize;
-                
-                for pe_id in 0..config.processing_elements as usize {
+                let kernels_per_pe =
+                    (output_channels + self.self.config.processing_elements as usize - 1)
+                        / self.self.config.processing_elements as usize;
+
+                for pe_id in 0..self.config.processing_elements as usize {
                     let start_channel = pe_id * kernels_per_pe;
-                    let end_channel = std::cmp::min(start_channel + kernels_per_pe, output_channels);
-                    
+                    let end_channel =
+                        std::cmp::min(start_channel + kernels_per_pe, output_channels);
+
                     if start_channel < output_channels {
                         program.add_instruction(ASICInstruction::LoadConvKernel {
-                            src_addr: start_channel * kernel_channels * kernel_height * kernel_width,
+                            src_addr: start_channel
+                                * kernel_channels
+                                * kernel_height
+                                * kernel_width,
                             dst_pe: pe_id,
                             kernel_height,
                             kernel_width,
@@ -422,7 +427,7 @@ impl CustomASIC {
                 for batch_idx in 0..batch_size {
                     // Load input data for this batch
                     let input_offset = batch_idx * input_channels * input_height * input_width;
-                    
+
                     program.add_instruction(ASICInstruction::LoadConvInput {
                         src_addr: input_offset,
                         dst_pe: 0, // Input is shared across PEs
@@ -432,7 +437,7 @@ impl CustomASIC {
                     });
 
                     // Execute convolution on each PE
-                    for pe_id in 0..config.processing_elements as usize {
+                    for pe_id in 0..self.config.processing_elements as usize {
                         program.add_instruction(ASICInstruction::Convolution {
                             pe_id,
                             stride_h,
@@ -445,13 +450,15 @@ impl CustomASIC {
 
                     // Store results
                     let output_offset = batch_idx * output_channels * output_height * output_width;
-                    for pe_id in 0..config.processing_elements as usize {
+                    for pe_id in 0..self.config.processing_elements as usize {
                         let start_channel = pe_id * kernels_per_pe;
                         if start_channel < output_channels {
-                            let channels_this_pe = std::cmp::min(kernels_per_pe, output_channels - start_channel);
+                            let channels_this_pe =
+                                std::cmp::min(kernels_per_pe, output_channels - start_channel);
                             program.add_instruction(ASICInstruction::StoreMatrix {
                                 src_pe: pe_id,
-                                dst_addr: output_offset + start_channel * output_height * output_width,
+                                dst_addr: output_offset
+                                    + start_channel * output_height * output_width,
                                 rows: output_height,
                                 cols: output_width * channels_this_pe,
                             });
@@ -470,7 +477,7 @@ impl CustomASIC {
                         // Example: Element-wise addition
                         let opcode = 0x1000; // Custom opcode for elementwise add
                         let size = parameters.get("size").unwrap_or(&0.0) as &f32;
-                        
+
                         program.add_instruction(ASICInstruction::Custom {
                             opcode,
                             operands: vec![*size as u32],
@@ -480,7 +487,7 @@ impl CustomASIC {
                         // Example: Element-wise multiplication
                         let opcode = 0x1001; // Custom opcode for elementwise mul
                         let size = parameters.get("size").unwrap_or(&0.0) as &f32;
-                        
+
                         program.add_instruction(ASICInstruction::Custom {
                             opcode,
                             operands: vec![*size as u32],
@@ -490,7 +497,7 @@ impl CustomASIC {
                         // Example: ReLU activation
                         let opcode = 0x2000; // Custom opcode for ReLU
                         let size = parameters.get("size").unwrap_or(&0.0) as &f32;
-                        
+
                         program.add_instruction(ASICInstruction::Custom {
                             opcode,
                             operands: vec![*size as u32],
@@ -500,7 +507,7 @@ impl CustomASIC {
                         // Example: Sigmoid activation
                         let opcode = 0x2001; // Custom opcode for Sigmoid
                         let size = parameters.get("size").unwrap_or(&0.0) as &f32;
-                        
+
                         program.add_instruction(ASICInstruction::Custom {
                             opcode,
                             operands: vec![*size as u32],
@@ -513,7 +520,7 @@ impl CustomASIC {
                         let stride = parameters.get("stride").unwrap_or(&2.0) as &f32;
                         let input_height = parameters.get("input_height").unwrap_or(&0.0) as &f32;
                         let input_width = parameters.get("input_width").unwrap_or(&0.0) as &f32;
-                        
+
                         program.add_instruction(ASICInstruction::Custom {
                             opcode,
                             operands: vec![
@@ -529,7 +536,7 @@ impl CustomASIC {
                         let opcode = 0x4000; // Custom opcode for batch norm
                         let channels = parameters.get("channels").unwrap_or(&0.0) as &f32;
                         let epsilon = parameters.get("epsilon").unwrap_or(&1e-5) as &f32;
-                        
+
                         program.add_instruction(ASICInstruction::Custom {
                             opcode,
                             operands: vec![
@@ -543,13 +550,13 @@ impl CustomASIC {
                         // Use a generic custom opcode and encode the name hash
                         use std::collections::hash_map::DefaultHasher;
                         use std::hash::{Hash, Hasher};
-                        
+
                         let mut hasher = DefaultHasher::new();
                         name.hash(&mut hasher);
                         let name_hash = hasher.finish() as u32;
-                        
+
                         let opcode = 0x9000 | (name_hash & 0x0FFF); // Generic custom opcode with name hash
-                        
+
                         // Encode parameters as operands (simplified)
                         let mut operands = vec![name_hash];
                         for (key, value) in parameters {
@@ -559,17 +566,14 @@ impl CustomASIC {
                             operands.push(key_hash);
                             operands.push((*value * 1000.0) as u32); // Scale float to integer
                         }
-                        
-                        program.add_instruction(ASICInstruction::Custom {
-                            opcode,
-                            operands,
-                        });
-                        
+
+                        program.add_instruction(ASICInstruction::Custom { opcode, operands });
+
                         // Log that this is an unrecognized operation for debugging
                         eprintln!("Warning: Unrecognized custom operation '{}' compiled with generic handler", name);
                     }
                 }
-                
+
                 // Add synchronization after custom operations
                 program.add_instruction(ASICInstruction::Synchronize);
             }
@@ -581,7 +585,10 @@ impl CustomASIC {
     /// Execute an ASIC program
     pub fn execute_program(&self, program: &ASICProgram) -> Result<()> {
         let mut counters = self.performance_counters.lock().map_err(|e| {
-            crate::error::NeuralError::DeviceError(format!("Failed to lock performance counters: {}", e))
+            crate::error::NeuralError::DeviceError(format!(
+                "Failed to lock performance counters: {}",
+                e
+            ))
         })?;
         let start_time = std::time::Instant::now();
 
@@ -629,7 +636,7 @@ impl CustomASIC {
     /// Find optimal tiling strategy for matrix multiplication
     fn find_optimal_tiling(&self, m: usize, n: usize, k: usize) -> Result<TilingConfig> {
         // Simple tiling strategy based on available PEs and memory
-        let num_pes = self.config.processing_elements as usize;
+        let num_pes = self.self.config.processing_elements as usize;
         let tile_size = 64; // Default tile size
 
         let mut tiles = Vec::new();
@@ -660,7 +667,10 @@ impl CustomASIC {
     /// Get performance statistics
     pub fn get_performance_stats(&self) -> Result<PerformanceStats> {
         let counters = self.performance_counters.lock().map_err(|e| {
-            crate::error::NeuralError::DeviceError(format!("Failed to lock performance counters: {}", e))
+            crate::error::NeuralError::DeviceError(format!(
+                "Failed to lock performance counters: {}",
+                e
+            ))
         })?;
 
         Ok(PerformanceStats {

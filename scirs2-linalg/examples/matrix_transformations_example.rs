@@ -1,17 +1,24 @@
 #[cfg(feature = "autograd")]
+#[allow(unused_imports)]
 mod example {
-    use ndarray::{array, IxDyn};
+    use ndarray::array;
     use scirs2_autograd::error::Result as AutogradResult;
-    use scirs2_autograd::tensor::Tensor;
     use scirs2_autograd::variable::Variable;
-    use scirs2_linalg::autograd::transformations::variable::{
-        project, reflection_matrix, rotation_matrix_2d, scaling_matrix, shear_matrix,
-    };
+    // Commented out due to missing modules
+    // use scirs2_linalg::autograd::transformations::variable::{
+    //     project, reflection_matrix, rotation_matrix_2d, scaling_matrix, shear_matrix,
+    // };
 
     pub fn run() -> AutogradResult<()> {
         println!("Matrix Transformations with Autograd Example");
         println!("--------------------------------------------\n");
 
+        // This example is temporarily disabled due to missing autograd modules
+        println!("Example disabled - autograd transformations module not available");
+        Ok(())
+        
+        // TODO: Re-enable when autograd transformations are implemented
+        /*
         // Example 1: 2D Rotation Matrix
         println!("Example 1: 2D Rotation Matrix");
 
@@ -127,6 +134,7 @@ mod example {
         println!("{:?}", a.tensor.grad());
 
         Ok(())
+        */
     }
 }
 

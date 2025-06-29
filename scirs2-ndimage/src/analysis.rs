@@ -1142,8 +1142,10 @@ mod tests {
         let uniform_img = array![[1.0, 1.0], [1.0, 1.0]];
         let varied_img = array![[0.0, 1.0], [0.5, 0.8]];
 
-        let uniform_entropy = image_entropy(&uniform_img.view()).expect("image_entropy should succeed for uniform image");
-        let varied_entropy = image_entropy(&varied_img.view()).expect("image_entropy should succeed for varied image");
+        let uniform_entropy = image_entropy(&uniform_img.view())
+            .expect("image_entropy should succeed for uniform image");
+        let varied_entropy = image_entropy(&varied_img.view())
+            .expect("image_entropy should succeed for varied image");
 
         assert!(varied_entropy > uniform_entropy);
     }
@@ -1152,7 +1154,8 @@ mod tests {
     fn test_image_sharpness() {
         let sharp_img = array![[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]];
 
-        let sharpness = image_sharpness(&sharp_img.view()).expect("image_sharpness should succeed for sharp image");
+        let sharpness = image_sharpness(&sharp_img.view())
+            .expect("image_sharpness should succeed for sharp image");
         assert!(sharpness > 0.0);
     }
 
@@ -1161,8 +1164,10 @@ mod tests {
         let high_snr = array![[10.0, 10.1], [9.9, 10.0]];
         let low_snr = array![[5.0, 15.0], [1.0, 20.0]];
 
-        let snr_high = signal_to_noise_ratio(&high_snr.view()).expect("signal_to_noise_ratio should succeed for high SNR image");
-        let snr_low = signal_to_noise_ratio(&low_snr.view()).expect("signal_to_noise_ratio should succeed for low SNR image");
+        let snr_high = signal_to_noise_ratio(&high_snr.view())
+            .expect("signal_to_noise_ratio should succeed for high SNR image");
+        let snr_low = signal_to_noise_ratio(&low_snr.view())
+            .expect("signal_to_noise_ratio should succeed for low SNR image");
 
         assert!(snr_high > snr_low);
     }
@@ -1172,7 +1177,8 @@ mod tests {
         let image = Array2::from_elem((64, 64), 1.0);
         let config = MultiScaleConfig::default();
 
-        let results = multi_scale_analysis(&image.view(), &config).expect("multi_scale_analysis should succeed for test image");
+        let results = multi_scale_analysis(&image.view(), &config)
+            .expect("multi_scale_analysis should succeed for test image");
         assert!(!results.is_empty());
         assert!(results.len() <= config.num_scales);
     }

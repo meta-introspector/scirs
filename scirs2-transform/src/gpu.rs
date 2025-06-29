@@ -6,7 +6,7 @@
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView2, ArrayViewMut2};
 use scirs2_core::gpu::{CudaContext, GpuArray, GpuBackend};
-use scirs2_core::validation::{check_positive, check_shape, check_not_empty, check_array_finite};
+use scirs2_core::validation::{check_array_finite, check_not_empty, check_positive, check_shape};
 
 /// GPU-accelerated Principal Component Analysis
 #[cfg(feature = "gpu")]
@@ -74,56 +74,108 @@ impl GpuPCA {
         // Compute covariance matrix on GPU with optimized approach selection
         let gpu_cov = if n_samples > n_features {
             // Use X^T X approach when n_features < n_samples (more efficient)
-            let gpu_xt = gpu_x_centered.transpose()
-                .map_err(|e| TransformError::ComputationError(format!("Failed to transpose data matrix on GPU: {}", e)))?;
-            let gpu_cov = gpu_xt.matmul(&gpu_x_centered)
-                .map_err(|e| TransformError::ComputationError(format!("Failed to compute covariance matrix (X^T X) on GPU: {}", e)))?;
-            gpu_cov.scale(1.0 / (n_samples - 1) as f64)
-                .map_err(|e| TransformError::ComputationError(format!("Failed to scale covariance matrix on GPU: {}", e)))?
+            let gpu_xt = gpu_x_centered.transpose().map_err(|e| {
+                TransformError::ComputationError(format!(
+                    "Failed to transpose data matrix on GPU: {}",
+                    e
+                ))
+            })?;
+            let gpu_cov = gpu_xt.matmul(&gpu_x_centered).map_err(|e| {
+                TransformError::ComputationError(format!(
+                    "Failed to compute covariance matrix (X^T X) on GPU: {}",
+                    e
+                ))
+            })?;
+            gpu_cov.scale(1.0 / (n_samples - 1) as f64).map_err(|e| {
+                TransformError::ComputationError(format!(
+                    "Failed to scale covariance matrix on GPU: {}",
+                    e
+                ))
+            })?
         } else {
             // Use X X^T approach when n_samples < n_features
-            let gpu_xt = gpu_x_centered.transpose()
-                .map_err(|e| TransformError::ComputationError(format!("Failed to transpose data matrix on GPU: {}", e)))?;
-            let gpu_gram = gpu_x_centered.matmul(&gpu_xt)
-                .map_err(|e| TransformError::ComputationError(format!("Failed to compute Gram matrix (X X^T) on GPU: {}", e)))?;
-            gpu_gram.scale(1.0 / (n_samples - 1) as f64)
-                .map_err(|e| TransformError::ComputationError(format!("Failed to scale Gram matrix on GPU: {}", e)))?
+            let gpu_xt = gpu_x_centered.transpose().map_err(|e| {
+                TransformError::ComputationError(format!(
+                    "Failed to transpose data matrix on GPU: {}",
+                    e
+                ))
+            })?;
+            let gpu_gram = gpu_x_centered.matmul(&gpu_xt).map_err(|e| {
+                TransformError::ComputationError(format!(
+                    "Failed to compute Gram matrix (X X^T) on GPU: {}",
+                    e
+                ))
+            })?;
+            gpu_gram.scale(1.0 / (n_samples - 1) as f64).map_err(|e| {
+                TransformError::ComputationError(format!(
+                    "Failed to scale Gram matrix on GPU: {}",
+                    e
+                ))
+            })?
         };
 
         // Compute eigendecomposition on GPU
         let (gpu_eigenvalues, gpu_eigenvectors) = gpu_cov.eigh()?;
 
         // Sort eigenvalues and eigenvectors in descending order with validation
-        let (gpu_eigenvalues_sorted, gpu_eigenvectors_sorted) =
-            gpu_eigenvalues.sort_with_vectors(&gpu_eigenvectors, false)
-                .map_err(|e| TransformError::ComputationError(format!("Failed to sort eigenvalues and eigenvectors on GPU: {}", e)))?;
+        let (gpu_eigenvalues_sorted, gpu_eigenvectors_sorted) = gpu_eigenvalues
+            .sort_with_vectors(&gpu_eigenvectors, false)
+            .map_err(|e| {
+                TransformError::ComputationError(format!(
+                    "Failed to sort eigenvalues and eigenvectors on GPU: {}",
+                    e
+                ))
+            })?;
 
         // Take top n_components with bounds checking
-        let gpu_components = gpu_eigenvectors_sorted.slice((.., ..self.n_components))
-            .map_err(|e| TransformError::ComputationError(format!("Failed to slice eigenvectors for components on GPU: {}", e)))?;
-        let gpu_explained_var = gpu_eigenvalues_sorted.slice(..self.n_components)
-            .map_err(|e| TransformError::ComputationError(format!("Failed to slice eigenvalues for explained variance on GPU: {}", e)))?;
+        let gpu_components = gpu_eigenvectors_sorted
+            .slice((.., ..self.n_components))
+            .map_err(|e| {
+                TransformError::ComputationError(format!(
+                    "Failed to slice eigenvectors for components on GPU: {}",
+                    e
+                ))
+            })?;
+        let gpu_explained_var = gpu_eigenvalues_sorted
+            .slice(..self.n_components)
+            .map_err(|e| {
+                TransformError::ComputationError(format!(
+                    "Failed to slice eigenvalues for explained variance on GPU: {}",
+                    e
+                ))
+            })?;
 
         // Transfer results back to host with validation
-        let components_host = gpu_components.to_ndarray()
-            .map_err(|e| TransformError::ComputationError(format!("Failed to transfer components from GPU to host: {}", e)))?;
-        let explained_var_host = gpu_explained_var.to_ndarray()
-            .map_err(|e| TransformError::ComputationError(format!("Failed to transfer explained variance from GPU to host: {}", e)))?;
-            
+        let components_host = gpu_components.to_ndarray().map_err(|e| {
+            TransformError::ComputationError(format!(
+                "Failed to transfer components from GPU to host: {}",
+                e
+            ))
+        })?;
+        let explained_var_host = gpu_explained_var.to_ndarray().map_err(|e| {
+            TransformError::ComputationError(format!(
+                "Failed to transfer explained variance from GPU to host: {}",
+                e
+            ))
+        })?;
+
         // Validate components matrix
         if components_host.dim().0 != n_features || components_host.dim().1 != self.n_components {
             return Err(TransformError::ComputationError(
                 "Component matrix has incorrect dimensions after GPU computation".to_string(),
             ));
         }
-        
+
         // Validate explained variance values
-        if explained_var_host.iter().any(|&x| !x.is_finite() || x < 0.0) {
+        if explained_var_host
+            .iter()
+            .any(|&x| !x.is_finite() || x < 0.0)
+        {
             return Err(TransformError::ComputationError(
                 "Invalid explained variance values computed on GPU".to_string(),
             ));
         }
-        
+
         self.components = Some(components_host.t().to_owned());
         self.explained_variance = Some(explained_var_host);
         self.mean = mean;
@@ -136,26 +188,31 @@ impl GpuPCA {
         // Validate input
         check_not_empty(x, "x")?;
         check_array_finite(x, "x")?;
-        
+
         let components = self
             .components
             .as_ref()
             .ok_or_else(|| TransformError::NotFitted("PCA model not fitted".to_string()))?;
-            
+
         // Validate input dimensions match training data
         let (_, n_features) = x.dim();
         if n_features != components.dim().1 {
-            return Err(TransformError::InvalidInput(
-                format!("Input has {} features, but model was trained on {} features", 
-                    n_features, components.dim().1)
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Input has {} features, but model was trained on {} features",
+                n_features,
+                components.dim().1
+            )));
         }
 
         let cuda_ctx = self.cuda_context.as_ref().unwrap();
 
         // Transfer data to GPU
-        let gpu_x = GpuArray::from_ndarray(x, cuda_ctx)
-            .map_err(|e| TransformError::ComputationError(format!("Failed to transfer transform data to GPU: {}", e)))?;
+        let gpu_x = GpuArray::from_ndarray(x, cuda_ctx).map_err(|e| {
+            TransformError::ComputationError(format!(
+                "Failed to transfer transform data to GPU: {}",
+                e
+            ))
+        })?;
 
         // Center data if needed
         let gpu_x_processed = if let Some(ref mean) = self.mean {
@@ -335,60 +392,62 @@ impl GpuTSNE {
     fn compute_p_matrix(&self, gpu_distances: &GpuArray) -> Result<GpuArray> {
         let n_samples = gpu_distances.shape()[0];
         let mut gpu_p = gpu_distances.zeros_like()?;
-        
+
         // Binary search for optimal sigma for each point to achieve target perplexity
         for i in 0..n_samples {
             let row_distances = gpu_distances.get_row(i)?;
             let sigma = self.binary_search_sigma(&row_distances, self.perplexity)?;
-            
+
             // Compute Gaussian similarities for this row
-            let neg_dist_sq = row_distances.square()?.scale(-1.0 / (2.0 * sigma * sigma))?;
+            let neg_dist_sq = row_distances
+                .square()?
+                .scale(-1.0 / (2.0 * sigma * sigma))?;
             let mut probs = neg_dist_sq.exp()?;
-            
+
             // Set diagonal to zero and normalize
             probs.set_item(i, 0.0)?;
             let prob_sum = probs.sum()?;
             if prob_sum > 1e-8 {
                 probs = probs.scale(1.0 / prob_sum)?;
             }
-            
+
             gpu_p.set_row(i, &probs)?;
         }
-        
+
         // Symmetrize P matrix
         let gpu_p_t = gpu_p.transpose()?;
         let gpu_p_sym = gpu_p.add(&gpu_p_t)?.scale(0.5)?;
-        
+
         // Ensure minimum probability and normalize
         let max_p = gpu_p_sym.max()?;
         let min_p = (max_p * 1e-12).max(1e-12);
         gpu_p_sym.clamp_min(min_p)?.normalize()
     }
-    
+
     fn binary_search_sigma(&self, distances: &GpuArray, target_perplexity: f64) -> Result<f64> {
         let mut sigma_min = 1e-20;
         let mut sigma_max = 1e3;
         let mut sigma = 1.0;
         let tolerance = 1e-5;
         let max_iter = 50;
-        
+
         for _ in 0..max_iter {
             sigma = (sigma_min + sigma_max) / 2.0;
-            
+
             // Compute conditional probabilities
             let neg_dist_sq = distances.square()?.scale(-1.0 / (2.0 * sigma * sigma))?;
             let probs = neg_dist_sq.exp()?;
             let prob_sum = probs.sum()?;
-            
+
             if prob_sum > 1e-8 {
                 let normalized_probs = probs.scale(1.0 / prob_sum)?;
                 let entropy = self.compute_entropy(&normalized_probs)?;
                 let perplexity = 2.0_f64.powf(entropy);
-                
+
                 if (perplexity - target_perplexity).abs() < tolerance {
                     break;
                 }
-                
+
                 if perplexity > target_perplexity {
                     sigma_max = sigma;
                 } else {
@@ -398,10 +457,10 @@ impl GpuTSNE {
                 sigma_min = sigma;
             }
         }
-        
+
         Ok(sigma)
     }
-    
+
     fn compute_entropy(&self, probs: &GpuArray) -> Result<f64> {
         let log_probs = probs.log()?;
         let entropy_terms = probs.multiply(&log_probs)?;
@@ -410,21 +469,21 @@ impl GpuTSNE {
 
     fn compute_q_matrix(&self, gpu_y: &GpuArray) -> Result<GpuArray> {
         let n_samples = gpu_y.shape()[0];
-        
+
         // Compute pairwise squared distances efficiently
         let y_norm_sq = gpu_y.norm_squared_axis(1)?;
         let y_dot = gpu_y.matmul(&gpu_y.transpose()?)?;
         let dist_sq = y_norm_sq.broadcast_add(&y_norm_sq.transpose()?)? - y_dot.scale(2.0)?;
-        
+
         // Apply t-distribution kernel with degrees of freedom = 1
         let gpu_q_unnorm = (dist_sq + 1.0)?.pow(-1.0)?;
-        
+
         // Set diagonal to zero (self-similarities)
         let mut gpu_q = gpu_q_unnorm.clone();
         for i in 0..n_samples {
             gpu_q.set_item(i * n_samples + i, 0.0)?;
         }
-        
+
         // Normalize to get probabilities
         let q_sum = gpu_q.sum()?;
         if q_sum > 1e-12 {
@@ -443,52 +502,52 @@ impl GpuTSNE {
     ) -> Result<GpuArray> {
         let n_samples = gpu_y.shape()[0];
         let n_components = gpu_y.shape()[1];
-        
+
         // Compute pairwise squared distances
         let y_norm_sq = gpu_y.norm_squared_axis(1)?;
         let y_dot = gpu_y.matmul(&gpu_y.transpose()?)?;
         let dist_sq = y_norm_sq.broadcast_add(&y_norm_sq.transpose()?)? - y_dot.scale(2.0)?;
-        
+
         // Compute t-distribution weights (1 + ||yi - yj||^2)^(-1)
         let t_weights = (dist_sq + 1.0)?.pow(-1.0)?;
-        
+
         // Compute PQ difference matrix
         let pq_diff = gpu_p.subtract(gpu_q)?;
-        
+
         // Compute attractive and repulsive forces efficiently
         let mut gradient = gpu_y.zeros_like()?;
-        
+
         for i in 0..n_samples {
             let yi = gpu_y.get_row(i)?;
             let mut grad_i = vec![0.0; n_components];
-            
+
             for j in 0..n_samples {
                 if i != j {
                     let yj = gpu_y.get_row(j)?;
                     let y_diff = yi.subtract(&yj)?;
-                    
+
                     let pq_ij = pq_diff.get_item(i * n_samples + j)?;
                     let t_ij = t_weights.get_item(i * n_samples + j)?;
-                    
+
                     // Gradient contribution: 4 * (pij - qij) * (yi - yj) * (1 + ||yi - yj||^2)^(-1)
                     let force_factor = 4.0 * pq_ij * t_ij;
-                    
+
                     for k in 0..n_components {
                         let y_diff_k = y_diff.get_item(k)?;
                         grad_i[k] += force_factor * y_diff_k;
                     }
                 }
             }
-            
+
             // Set the gradient for point i
             for k in 0..n_components {
                 gradient.set_item(i * n_components + k, grad_i[k])?;
             }
         }
-        
+
         Ok(gradient)
     }
-    
+
     /// Adaptive learning rate with momentum and gains
     fn update_embedding_with_momentum(
         &mut self,
@@ -498,46 +557,42 @@ impl GpuTSNE {
     ) -> Result<()> {
         let n_samples = gpu_y.shape()[0];
         let n_components = gpu_y.shape()[1];
-        
+
         // Initialize momentum and gains if not present
         if self.momentum.is_none() {
             self.momentum = Some(gpu_y.zeros_like()?);
             self.gains = Some(GpuArray::ones(gpu_y.shape())?);
         }
-        
+
         let momentum = self.momentum.as_mut().unwrap();
         let gains = self.gains.as_mut().unwrap();
-        
+
         // Adaptive learning rate
-        let learning_rate = if iteration < 250 {
-            500.0
-        } else {
-            200.0
-        };
-        
+        let learning_rate = if iteration < 250 { 500.0 } else { 200.0 };
+
         // Update gains (adaptive per-dimension learning rates)
         for i in 0..n_samples * n_components {
             let grad_i = gradient.get_item(i)?;
             let mom_i = momentum.get_item(i)?;
             let gain_i = gains.get_item(i)?;
-            
+
             let new_gain = if grad_i * mom_i < 0.0 {
-                (gain_i + 0.2).min(50.0)  // Increase gain if gradient and momentum oppose
+                (gain_i + 0.2).min(50.0) // Increase gain if gradient and momentum oppose
             } else {
-                (gain_i * 0.8).max(0.01)  // Decrease gain if they align
+                (gain_i * 0.8).max(0.01) // Decrease gain if they align
             };
-            
+
             gains.set_item(i, new_gain)?;
         }
-        
+
         // Update momentum
         let momentum_coeff = if iteration < 250 { 0.5 } else { 0.8 };
         let scaled_grad = gradient.multiply(gains)?.scale(learning_rate)?;
         *momentum = momentum.scale(momentum_coeff)?.subtract(&scaled_grad)?;
-        
+
         // Update embedding
         *gpu_y = gpu_y.add(momentum)?;
-        
+
         Ok(())
     }
 }

@@ -9,8 +9,8 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 
 use super::forward_mode::ForwardModeEngine;
+use super::higher_order::{HessianConfig, HigherOrderEngine, HvpMode};
 use super::reverse_mode::ReverseModeEngine;
-use super::higher_order::{HigherOrderEngine, HessianConfig, HvpMode};
 use crate::error::OptimizerError;
 
 /// Meta-gradient computation engine
@@ -437,12 +437,12 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
     ) -> Self {
         let mut engine = Self::new(algorithm, inner_config, outer_config);
         engine.advanced_config = advanced_config;
-        
+
         // Configure higher-order engine based on advanced config
         if advanced_config.use_higher_order_hessian {
             engine.higher_order_engine.set_mixed_mode(true);
         }
-        
+
         engine
     }
 
@@ -785,10 +785,20 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
     ) -> Result<Array1<T>, OptimizerError> {
         if self.advanced_config.use_higher_order_hessian {
             // Use sophisticated higher-order differentiation
-            self.compute_advanced_second_order_gradients(meta_params, adapted_params, task, objective_fn)
+            self.compute_advanced_second_order_gradients(
+                meta_params,
+                adapted_params,
+                task,
+                objective_fn,
+            )
         } else {
             // Fallback to finite differences
-            self.compute_finite_difference_second_order(meta_params, adapted_params, task, objective_fn)
+            self.compute_finite_difference_second_order(
+                meta_params,
+                adapted_params,
+                task,
+                objective_fn,
+            )
         }
     }
 
@@ -801,20 +811,26 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<Array1<T>, OptimizerError> {
         let cache_key = format!("hessian_{}_{}", task.id, meta_params.len());
-        
+
         // Check cache first
         if let Some(cached_hessian) = self.hessian_cache.get(&cache_key) {
             // Use cached Hessian for HVP computation
-            return self.compute_hvp_with_cached_hessian(cached_hessian, meta_params, task, objective_fn);
+            return self.compute_hvp_with_cached_hessian(
+                cached_hessian,
+                meta_params,
+                task,
+                objective_fn,
+            );
         }
 
         // Create composite function: F(θ) = L_query(φ*(θ))
         // where φ*(θ) is the result of inner optimization starting from θ
         let composite_fn = |theta: &Array1<T>| -> T {
             // Perform inner loop adaptation
-            let adapted = self.inner_loop_adaptation(theta, task, objective_fn)
+            let adapted = self
+                .inner_loop_adaptation(theta, task, objective_fn)
                 .unwrap_or_else(|_| theta.clone());
-            
+
             // Compute query loss
             objective_fn(&adapted, theta, &task.query_set)
         };
@@ -828,18 +844,25 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
             ..Default::default()
         };
 
-        let hessian = self.higher_order_engine
-            .hessian_forward_over_reverse(composite_fn, meta_params, &hessian_config)?;
+        let hessian = self.higher_order_engine.hessian_forward_over_reverse(
+            composite_fn,
+            meta_params,
+            &hessian_config,
+        )?;
 
         // Cache the Hessian for future use
         self.hessian_cache.insert(cache_key, hessian.clone());
 
         // Compute gradient using the Hessian
-        let gradient = self.gradient_at_point(&|theta: &Array1<T>| -> T {
-            let adapted = self.inner_loop_adaptation(theta, task, objective_fn)
-                .unwrap_or_else(|_| theta.clone());
-            objective_fn(&adapted, theta, &task.query_set)
-        }, meta_params)?;
+        let gradient = self.gradient_at_point(
+            &|theta: &Array1<T>| -> T {
+                let adapted = self
+                    .inner_loop_adaptation(theta, task, objective_fn)
+                    .unwrap_or_else(|_| theta.clone());
+                objective_fn(&adapted, theta, &task.query_set)
+            },
+            meta_params,
+        )?;
 
         Ok(gradient)
     }
@@ -853,11 +876,15 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<Array1<T>, OptimizerError> {
         // Compute gradient direction
-        let gradient_direction = self.gradient_at_point(&|theta: &Array1<T>| -> T {
-            let adapted = self.inner_loop_adaptation(theta, task, objective_fn)
-                .unwrap_or_else(|_| theta.clone());
-            objective_fn(&adapted, theta, &task.query_set)
-        }, meta_params)?;
+        let gradient_direction = self.gradient_at_point(
+            &|theta: &Array1<T>| -> T {
+                let adapted = self
+                    .inner_loop_adaptation(theta, task, objective_fn)
+                    .unwrap_or_else(|_| theta.clone());
+                objective_fn(&adapted, theta, &task.query_set)
+            },
+            meta_params,
+        )?;
 
         // Compute Hessian-vector product: H * gradient_direction
         let hvp = hessian.dot(&gradient_direction);
@@ -1057,8 +1084,10 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<T, OptimizerError> {
-        let grad1 = self.compute_gradient_wrt_params(meta_params, &task1.support_set, objective_fn)?;
-        let grad2 = self.compute_gradient_wrt_params(meta_params, &task2.support_set, objective_fn)?;
+        let grad1 =
+            self.compute_gradient_wrt_params(meta_params, &task1.support_set, objective_fn)?;
+        let grad2 =
+            self.compute_gradient_wrt_params(meta_params, &task2.support_set, objective_fn)?;
 
         let norm1 = grad1.iter().map(|&x| x * x).sum::<T>().sqrt();
         let norm2 = grad2.iter().map(|&x| x * x).sum::<T>().sqrt();
@@ -1081,8 +1110,10 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
     ) -> Result<T, OptimizerError> {
         // Simplified Fisher distance computation
         // In practice, would compute Fisher Information Matrices and their distance
-        let grad1 = self.compute_gradient_wrt_params(meta_params, &task1.support_set, objective_fn)?;
-        let grad2 = self.compute_gradient_wrt_params(meta_params, &task2.support_set, objective_fn)?;
+        let grad1 =
+            self.compute_gradient_wrt_params(meta_params, &task1.support_set, objective_fn)?;
+        let grad2 =
+            self.compute_gradient_wrt_params(meta_params, &task2.support_set, objective_fn)?;
 
         // Use L2 distance as approximation
         let diff = &grad1 - &grad2;
@@ -1100,7 +1131,12 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
     ) -> Result<T, OptimizerError> {
         if !self.advanced_config.use_higher_order_hessian {
             // Fallback to gradient similarity
-            return self.compute_gradient_cosine_similarity(task1, task2, meta_params, objective_fn);
+            return self.compute_gradient_cosine_similarity(
+                task1,
+                task2,
+                meta_params,
+                objective_fn,
+            );
         }
 
         // Create objective functions for each task
@@ -1114,10 +1150,16 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
             ..Default::default()
         };
 
-        let hessian1 = self.higher_order_engine
-            .hessian_forward_over_reverse(objective1, meta_params, &hessian_config)?;
-        let hessian2 = self.higher_order_engine
-            .hessian_forward_over_reverse(objective2, meta_params, &hessian_config)?;
+        let hessian1 = self.higher_order_engine.hessian_forward_over_reverse(
+            objective1,
+            meta_params,
+            &hessian_config,
+        )?;
+        let hessian2 = self.higher_order_engine.hessian_forward_over_reverse(
+            objective2,
+            meta_params,
+            &hessian_config,
+        )?;
 
         // Compute Frobenius similarity
         let mut similarity = T::zero();
@@ -1251,9 +1293,11 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         // Compute gradient statistics
         let grad_mean = gradient.iter().sum::<T>() / T::from(gradient.len()).unwrap();
         let grad_std = {
-            let variance = gradient.iter()
+            let variance = gradient
+                .iter()
                 .map(|&g| (g - grad_mean) * (g - grad_mean))
-                .sum::<T>() / T::from(gradient.len()).unwrap();
+                .sum::<T>()
+                / T::from(gradient.len()).unwrap();
             variance.sqrt()
         };
 
@@ -1311,7 +1355,11 @@ impl<T: Float + Default + Clone> CheckpointManager<T> {
     }
 
     /// Create checkpoint with specified policy
-    pub fn with_policy(max_checkpoints: usize, memory_threshold: usize, policy: CheckpointPolicy) -> Self {
+    pub fn with_policy(
+        max_checkpoints: usize,
+        memory_threshold: usize,
+        policy: CheckpointPolicy,
+    ) -> Self {
         Self {
             checkpoints: HashMap::new(),
             max_checkpoints,
@@ -1332,7 +1380,7 @@ impl<T: Float + Default + Clone> CheckpointManager<T> {
         step: usize,
     ) -> Result<(), OptimizerError> {
         let memory_usage = self.estimate_checkpoint_memory(&parameters, &gradients, &hessian);
-        
+
         let checkpoint = MetaCheckpoint {
             id: id.clone(),
             parameters,
@@ -1395,7 +1443,8 @@ impl<T: Float + Default + Clone> CheckpointManager<T> {
 
     /// Remove oldest checkpoint
     fn remove_oldest_checkpoint(&mut self) {
-        if let Some((oldest_id, oldest_checkpoint)) = self.checkpoints
+        if let Some((oldest_id, oldest_checkpoint)) = self
+            .checkpoints
             .iter()
             .min_by_key(|(_, checkpoint)| checkpoint.timestamp)
             .map(|(id, checkpoint)| (id.clone(), checkpoint.clone()))

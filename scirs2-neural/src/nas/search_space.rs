@@ -244,7 +244,7 @@ impl SearchSpace {
     /// Sample a random architecture from the search space
     pub fn sample(&self) -> Result<Architecture> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut layers = Vec::new();
         let mut connections = Vec::new();
 
@@ -318,7 +318,7 @@ impl SearchSpace {
     /// Mutate an architecture
     pub fn mutate(&self, architecture: &Architecture, mutation_rate: f32) -> Result<Architecture> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut mutated = architecture.clone();
 
         // Mutate layers
@@ -400,7 +400,7 @@ impl SearchSpace {
         parent2: &Architecture,
     ) -> Result<Architecture> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Determine child length
         let min_len = parent1.layers.len().min(parent2.layers.len());

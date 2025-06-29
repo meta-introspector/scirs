@@ -831,7 +831,7 @@ mod tests {
             for j in 0..n {
                 let mut sum = Complex::<f64>::zero();
                 for k in 0..n {
-                    sum = sum + l[[i, k]] * u[[k, j]];
+                    sum += l[[i, k]] * u[[k, j]];
                 }
                 lu_product[[i, j]] = sum;
             }
@@ -843,7 +843,7 @@ mod tests {
             for j in 0..n {
                 let mut sum = Complex::<f64>::zero();
                 for k in 0..n {
-                    sum = sum + p[[i, k]] * a[[k, j]];
+                    sum += p[[i, k]] * a[[k, j]];
                 }
                 pa[[i, j]] = sum;
             }
@@ -864,22 +864,26 @@ mod tests {
         // Verify L is lower triangular with unit diagonal
         for i in 0..n {
             for j in 0..n {
-                if i < j {
-                    assert!(
-                        l[[i, j]].norm() < 1e-10,
-                        "L is not lower triangular at ({}, {})",
-                        i,
-                        j
-                    );
-                } else if i == j {
-                    let diff = (l[[i, j]] - Complex::<f64>::one()).norm();
-                    assert!(
-                        diff < 1e-10,
-                        "L does not have unit diagonal at ({}, {}): value = {}",
-                        i,
-                        j,
-                        l[[i, j]]
-                    );
+                match i.cmp(&j) {
+                    std::cmp::Ordering::Less => {
+                        assert!(
+                            l[[i, j]].norm() < 1e-10,
+                            "L is not lower triangular at ({}, {})",
+                            i,
+                            j
+                        );
+                    }
+                    std::cmp::Ordering::Equal => {
+                        let diff = (l[[i, j]] - Complex::<f64>::one()).norm();
+                        assert!(
+                            diff < 1e-10,
+                            "L does not have unit diagonal at ({}, {}): value = {}",
+                            i,
+                            j,
+                            l[[i, j]]
+                        );
+                    }
+                    std::cmp::Ordering::Greater => {}
                 }
             }
         }

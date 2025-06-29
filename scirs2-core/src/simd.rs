@@ -334,7 +334,7 @@ pub fn simd_gemv_cache_optimized_f32(
     y: &mut Array1<f32>,
 ) {
     f32::simd_gemv(a, x, beta, y);
-    
+
     // Apply alpha scaling (could be optimized further)
     if alpha != 1.0 {
         for elem in y.iter_mut() {

@@ -4,15 +4,16 @@
 //! including node discovery, health monitoring, resource allocation,
 //! and fault-tolerant cluster coordination.
 
-use crate::error::{CoreResult, CoreError, ErrorContext};
-use std::sync::{Arc, RwLock, Mutex};
-use std::collections::{HashMap, BTreeMap, VecDeque};
-use std::time::{Duration, Instant, SystemTime};
-use std::net::{SocketAddr, IpAddr};
+use crate::error::{CoreError, CoreResult, ErrorContext};
+use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::net::{IpAddr, SocketAddr};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
+use std::time::{Duration, Instant, SystemTime};
 
 /// Global cluster manager instance
-static GLOBAL_CLUSTER_MANAGER: std::sync::OnceLock<Arc<ClusterManager>> = std::sync::OnceLock::new();
+static GLOBAL_CLUSTER_MANAGER: std::sync::OnceLock<Arc<ClusterManager>> =
+    std::sync::OnceLock::new();
 
 /// Comprehensive cluster management system
 #[derive(Debug)]
@@ -40,22 +41,22 @@ impl ClusterManager {
 
     /// Get global cluster manager instance
     pub fn global() -> CoreResult<Arc<Self>> {
-        Ok(GLOBAL_CLUSTER_MANAGER.get_or_init(|| {
-            Arc::new(Self::new(ClusterConfiguration::default()).unwrap())
-        }).clone())
+        Ok(GLOBAL_CLUSTER_MANAGER
+            .get_or_init(|| Arc::new(Self::new(ClusterConfiguration::default()).unwrap()))
+            .clone())
     }
 
     /// Start cluster management services
     pub fn start(&self) -> CoreResult<()> {
         // Start node discovery
         self.start_node_discovery()?;
-        
+
         // Start health monitoring
         self.start_health_monitoring()?;
-        
+
         // Start resource management
         self.start_resource_management()?;
-        
+
         // Start cluster coordination
         self.start_cluster_coordination()?;
 
@@ -66,14 +67,12 @@ impl ClusterManager {
         let registry = self.node_registry.clone();
         let config = self.configuration.clone();
         let event_log = self.event_log.clone();
-        
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = Self::node_discovery_loop(&registry, &config, &event_log) {
-                    eprintln!("Node discovery error: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(30));
+
+        thread::spawn(move || loop {
+            if let Err(e) = Self::node_discovery_loop(&registry, &config, &event_log) {
+                eprintln!("Node discovery error: {:?}", e);
             }
+            thread::sleep(Duration::from_secs(30));
         });
 
         Ok(())
@@ -83,14 +82,12 @@ impl ClusterManager {
         let health_monitor = self.health_monitor.clone();
         let registry = self.node_registry.clone();
         let event_log = self.event_log.clone();
-        
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = Self::health_monitoring_loop(&health_monitor, &registry, &event_log) {
-                    eprintln!("Health monitoring error: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(10));
+
+        thread::spawn(move || loop {
+            if let Err(e) = Self::health_monitoring_loop(&health_monitor, &registry, &event_log) {
+                eprintln!("Health monitoring error: {:?}", e);
             }
+            thread::sleep(Duration::from_secs(10));
         });
 
         Ok(())
@@ -99,14 +96,12 @@ impl ClusterManager {
     fn start_resource_management(&self) -> CoreResult<()> {
         let allocator = self.resource_allocator.clone();
         let registry = self.node_registry.clone();
-        
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = Self::resource_management_loop(&allocator, &registry) {
-                    eprintln!("Resource management error: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(15));
+
+        thread::spawn(move || loop {
+            if let Err(e) = Self::resource_management_loop(&allocator, &registry) {
+                eprintln!("Resource management error: {:?}", e);
             }
+            thread::sleep(Duration::from_secs(15));
         });
 
         Ok(())
@@ -116,14 +111,12 @@ impl ClusterManager {
         let cluster_state = self.cluster_state.clone();
         let registry = self.node_registry.clone();
         let event_log = self.event_log.clone();
-        
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = Self::cluster_coordination_loop(&cluster_state, &registry, &event_log) {
-                    eprintln!("Cluster coordination error: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(5));
+
+        thread::spawn(move || loop {
+            if let Err(e) = Self::cluster_coordination_loop(&cluster_state, &registry, &event_log) {
+                eprintln!("Cluster coordination error: {:?}", e);
             }
+            thread::sleep(Duration::from_secs(5));
         });
 
         Ok(())
@@ -134,9 +127,10 @@ impl ClusterManager {
         config: &Arc<RwLock<ClusterConfiguration>>,
         event_log: &Arc<Mutex<ClusterEventLog>>,
     ) -> CoreResult<()> {
-        let config_read = config.read()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire config lock")))?;
-        
+        let config_read = config.read().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire config lock"))
+        })?;
+
         if !config_read.auto_discovery_enabled {
             return Ok(());
         }
@@ -144,15 +138,19 @@ impl ClusterManager {
         // Discover nodes using configured methods
         for discovery_method in &config_read.discovery_methods {
             let discovered_nodes = Self::discover_nodes_by_method(discovery_method)?;
-            
-            let mut registry_write = registry.write()
-                .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock")))?;
-            
+
+            let mut registry_write = registry.write().map_err(|_| {
+                CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock"))
+            })?;
+
             for node_info in discovered_nodes {
                 if registry_write.register_node(node_info.clone())? {
                     // New node discovered
-                    let mut log = event_log.lock()
-                        .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire event log lock")))?;
+                    let mut log = event_log.lock().map_err(|_| {
+                        CoreError::InvalidState(ErrorContext::new(
+                            "Failed to acquire event log lock",
+                        ))
+                    })?;
                     log.log_event(ClusterEvent::NodeDiscovered {
                         node_id: node_info.id.clone(),
                         address: node_info.address,
@@ -183,19 +181,19 @@ impl ClusterManager {
                     }
                 }
                 Ok(nodes)
-            },
+            }
             NodeDiscoveryMethod::Multicast { group, port } => {
                 // Implement multicast discovery
                 Self::discover_via_multicast(group, *port)
-            },
+            }
             NodeDiscoveryMethod::DnsService { service_name } => {
                 // Implement DNS-SD discovery
                 Self::discover_via_dns_service(service_name)
-            },
+            }
             NodeDiscoveryMethod::Consul { endpoint } => {
                 // Implement Consul discovery
                 Self::discover_via_consul(endpoint)
-            },
+            }
         }
     }
 
@@ -206,33 +204,39 @@ impl ClusterManager {
     }
 
     fn discover_via_multicast(group: &IpAddr, port: u16) -> CoreResult<Vec<NodeInfo>> {
-        use std::net::{UdpSocket, SocketAddr};
+        use std::net::{SocketAddr, UdpSocket};
         use std::time::Duration;
-        
+
         let mut discovered_nodes = Vec::new();
-        
+
         // Create a UDP socket for multicast discovery
-        let socket = UdpSocket::bind(SocketAddr::new(*group, port))
-            .map_err(|e| CoreError::IoError(
-                crate::error::ErrorContext::new(format!("Failed to bind multicast socket: {}", e))
-            ))?;
-        
+        let socket = UdpSocket::bind(SocketAddr::new(*group, port)).map_err(|e| {
+            CoreError::IoError(crate::error::ErrorContext::new(format!(
+                "Failed to bind multicast socket: {}",
+                e
+            )))
+        })?;
+
         // Set socket timeout for non-blocking operation
-        socket.set_read_timeout(Some(Duration::from_secs(5)))
-            .map_err(|e| CoreError::IoError(
-                crate::error::ErrorContext::new(format!("Failed to set socket timeout: {}", e))
-            ))?;
-        
+        socket
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .map_err(|e| {
+                CoreError::IoError(crate::error::ErrorContext::new(format!(
+                    "Failed to set socket timeout: {}",
+                    e
+                )))
+            })?;
+
         // Send discovery broadcast
         let discovery_message = b"SCIRS2_NODE_DISCOVERY";
         let broadcast_addr = SocketAddr::new(*group, port);
-        
+
         match socket.send_to(discovery_message, broadcast_addr) {
             Ok(_) => {
                 // Listen for responses
                 let mut buffer = [0u8; 1024];
                 let start_time = std::time::Instant::now();
-                
+
                 while start_time.elapsed() < Duration::from_secs(3) {
                     match socket.recv_from(&mut buffer) {
                         Ok((size, addr)) => {
@@ -249,7 +253,7 @@ impl ClusterManager {
                                         "compute" => NodeType::Compute,
                                         _ => NodeType::Worker,
                                     };
-                                    
+
                                     discovered_nodes.push(NodeInfo {
                                         id: node_id,
                                         address: addr,
@@ -261,18 +265,18 @@ impl ClusterManager {
                                     });
                                 }
                             }
-                        },
+                        }
                         Err(_) => break, // Timeout or error, exit loop
                     }
                 }
-            },
+            }
             Err(e) => {
-                return Err(CoreError::IoError(
-                    crate::error::ErrorContext::new(format!("Failed to send discovery broadcast: {}", e))
-                ));
+                return Err(CoreError::IoError(crate::error::ErrorContext::new(
+                    format!("Failed to send discovery broadcast: {}", e),
+                )));
             }
         }
-        
+
         Ok(discovered_nodes)
     }
 
@@ -281,9 +285,9 @@ impl ClusterManager {
         // This would typically use DNS SRV records to discover services
         use std::process::Command;
         use std::str;
-        
+
         let mut discovered_nodes = Vec::new();
-        
+
         #[cfg(target_os = "linux")]
         {
             // Try to use avahi-browse for DNS-SD discovery on Linux
@@ -292,14 +296,16 @@ impl ClusterManager {
                 .arg("-r")  // Resolve found services
                 .arg("-p")  // Parseable output
                 .arg(service_name)
-                .output() 
+                .output()
             {
                 Ok(output) => {
-                    let output_str = str::from_utf8(&output.stdout)
-                        .map_err(|e| CoreError::ValidationError(
-                            ErrorContext::new(format!("Failed to parse avahi output: {}", e))
-                        ))?;
-                    
+                    let output_str = str::from_utf8(&output.stdout).map_err(|e| {
+                        CoreError::ValidationError(ErrorContext::new(format!(
+                            "Failed to parse avahi output: {}",
+                            e
+                        )))
+                    })?;
+
                     // Parse avahi-browse output format
                     for line in output_str.lines() {
                         let parts: Vec<&str> = line.split(';').collect();
@@ -308,13 +314,13 @@ impl ClusterManager {
                             let hostname = parts[6];
                             let address_str = parts[7];
                             let port_str = parts[8];
-                            
+
                             if let Ok(port) = port_str.parse::<u16>() {
                                 // Try to parse IP address
                                 if let Ok(ip) = address_str.parse::<IpAddr>() {
                                     let socket_addr = SocketAddr::new(ip, port);
                                     let node_id = format!("dns_{}_{}", hostname, port);
-                                    
+
                                     discovered_nodes.push(NodeInfo {
                                         id: node_id,
                                         address: socket_addr,
@@ -334,7 +340,7 @@ impl ClusterManager {
                             }
                         }
                     }
-                },
+                }
                 Err(_) => {
                     // avahi-browse not available, try nslookup for basic SRV record resolution
                     match Command::new("nslookup")
@@ -343,11 +349,13 @@ impl ClusterManager {
                         .output()
                     {
                         Ok(output) => {
-                            let output_str = str::from_utf8(&output.stdout)
-                                .map_err(|e| CoreError::ValidationError(
-                                    ErrorContext::new(format!("Failed to parse nslookup output: {}", e))
-                                ))?;
-                            
+                            let output_str = str::from_utf8(&output.stdout).map_err(|e| {
+                                CoreError::ValidationError(ErrorContext::new(format!(
+                                    "Failed to parse nslookup output: {}",
+                                    e
+                                )))
+                            })?;
+
                             // Parse SRV records (simplified)
                             for line in output_str.lines() {
                                 if line.contains("service =") {
@@ -357,9 +365,14 @@ impl ClusterManager {
                                         if let Ok(port) = parts[2].parse::<u16>() {
                                             let hostname = parts[3].trim_end_matches('.');
                                             let node_id = format!("srv_{}_{}", hostname, port);
-                                            
+
                                             // Try to resolve hostname to IP
-                                            if let Ok(mut addrs) = std::net::ToSocketAddrs::to_socket_addrs(&format!("{}:{}", hostname, port)) {
+                                            if let Ok(mut addrs) =
+                                                std::net::ToSocketAddrs::to_socket_addrs(&format!(
+                                                    "{}:{}",
+                                                    hostname, port
+                                                ))
+                                            {
                                                 if let Some(addr) = addrs.next() {
                                                     discovered_nodes.push(NodeInfo {
                                                         id: node_id,
@@ -373,7 +386,8 @@ impl ClusterManager {
                                                             operating_system: "unknown".to_string(),
                                                             kernel_version: "unknown".to_string(),
                                                             container_runtime: None,
-                                                            labels: std::collections::HashMap::new(),
+                                                            labels: std::collections::HashMap::new(
+                                                            ),
                                                         },
                                                     });
                                                 }
@@ -382,7 +396,7 @@ impl ClusterManager {
                                     }
                                 }
                             }
-                        },
+                        }
                         Err(_) => {
                             // Both avahi-browse and nslookup failed, return empty list
                         }
@@ -390,7 +404,7 @@ impl ClusterManager {
                 }
             }
         }
-        
+
         #[cfg(target_os = "windows")]
         {
             // On Windows, try to use dns-sd command if available
@@ -400,11 +414,13 @@ impl ClusterManager {
                 .output()
             {
                 Ok(output) => {
-                    let output_str = str::from_utf8(&output.stdout)
-                        .map_err(|e| CoreError::ValidationError(
-                            ErrorContext::new(format!("Failed to parse dns-sd output: {}", e))
-                        ))?;
-                    
+                    let output_str = str::from_utf8(&output.stdout).map_err(|e| {
+                        CoreError::ValidationError(ErrorContext::new(format!(
+                            "Failed to parse dns-sd output: {}",
+                            e
+                        )))
+                    })?;
+
                     // Parse dns-sd output (simplified implementation)
                     for line in output_str.lines() {
                         if line.contains(service_name) {
@@ -414,14 +430,14 @@ impl ClusterManager {
                             if parts.len() >= 2 {
                                 let service_instance = parts[1];
                                 let node_id = format!("dnssd_{}", service_instance);
-                                
+
                                 // For now, use a default port and localhost
                                 // Real implementation would resolve the service
                                 let socket_addr = SocketAddr::new(
-                                    IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)), 
-                                    8080
+                                    IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)),
+                                    8080,
                                 );
-                                
+
                                 discovered_nodes.push(NodeInfo {
                                     id: node_id,
                                     address: socket_addr,
@@ -434,13 +450,13 @@ impl ClusterManager {
                             }
                         }
                     }
-                },
+                }
                 Err(_) => {
                     // dns-sd not available
                 }
             }
         }
-        
+
         Ok(discovered_nodes)
     }
 
@@ -448,16 +464,16 @@ impl ClusterManager {
         // Consul discovery implementation via HTTP API
         use std::process::Command;
         use std::str;
-        
+
         let mut discovered_nodes = Vec::new();
-        
+
         // Try to query Consul catalog API for services
         let consul_url = if endpoint.starts_with("http") {
             format!("{}/v1/catalog/services", endpoint)
         } else {
             format!("http://{}/v1/catalog/services", endpoint)
         };
-        
+
         // Use curl to query Consul API (most portable approach)
         match Command::new("curl")
             .arg("-s")  // Silent mode
@@ -469,11 +485,13 @@ impl ClusterManager {
         {
             Ok(output) => {
                 if output.status.success() {
-                    let json_str = str::from_utf8(&output.stdout)
-                        .map_err(|e| CoreError::ValidationError(
-                            ErrorContext::new(format!("Failed to parse Consul response: {}", e))
-                        ))?;
-                    
+                    let json_str = str::from_utf8(&output.stdout).map_err(|e| {
+                        CoreError::ValidationError(ErrorContext::new(format!(
+                            "Failed to parse Consul response: {}",
+                            e
+                        )))
+                    })?;
+
                     // Parse JSON response (simplified - would use serde_json in real implementation)
                     // Looking for service names in the format: {"service_name": ["tag1", "tag2"]}
                     if json_str.trim().starts_with('{') {
@@ -483,14 +501,17 @@ impl ClusterManager {
                             let service_parts: Vec<&str> = service_entry.split(':').collect();
                             if service_parts.len() >= 2 {
                                 let service_name = service_parts[0].trim().trim_matches('"');
-                                
+
                                 // Query specific service details
                                 let service_url = if endpoint.starts_with("http") {
                                     format!("{}/v1/catalog/service/{}", endpoint, service_name)
                                 } else {
-                                    format!("http://{}/v1/catalog/service/{}", endpoint, service_name)
+                                    format!(
+                                        "http://{}/v1/catalog/service/{}",
+                                        endpoint, service_name
+                                    )
                                 };
-                                
+
                                 match Command::new("curl")
                                     .arg("-s")
                                     .arg("-f")
@@ -501,39 +522,54 @@ impl ClusterManager {
                                 {
                                     Ok(service_output) => {
                                         if service_output.status.success() {
-                                            let service_json = str::from_utf8(&service_output.stdout)
-                                                .unwrap_or("");
-                                            
+                                            let service_json =
+                                                str::from_utf8(&service_output.stdout)
+                                                    .unwrap_or("");
+
                                             // Simple JSON parsing to extract Address and ServicePort
                                             // In real implementation, would use proper JSON parsing
-                                            if service_json.contains("\"Address\"") && service_json.contains("\"ServicePort\"") {
+                                            if service_json.contains("\"Address\"")
+                                                && service_json.contains("\"ServicePort\"")
+                                            {
                                                 // Extract address and port (very simplified)
-                                                let lines: Vec<&str> = service_json.lines().collect();
+                                                let lines: Vec<&str> =
+                                                    service_json.lines().collect();
                                                 let mut address_str = "";
                                                 let mut port_str = "";
-                                                
+
                                                 for line in lines {
                                                     if line.contains("\"Address\"") {
-                                                        if let Some(addr_part) = line.split(':').nth(1) {
-                                                            address_str = addr_part.trim().trim_matches('"').trim_matches(',');
+                                                        if let Some(addr_part) =
+                                                            line.split(':').nth(1)
+                                                        {
+                                                            address_str = addr_part
+                                                                .trim()
+                                                                .trim_matches('"')
+                                                                .trim_matches(',');
                                                         }
                                                     }
                                                     if line.contains("\"ServicePort\"") {
-                                                        if let Some(port_part) = line.split(':').nth(1) {
-                                                            port_str = port_part.trim().trim_matches(',');
+                                                        if let Some(port_part) =
+                                                            line.split(':').nth(1)
+                                                        {
+                                                            port_str =
+                                                                port_part.trim().trim_matches(',');
                                                         }
                                                     }
                                                 }
-                                                
+
                                                 // Create node info if we have both address and port
                                                 if !address_str.is_empty() && !port_str.is_empty() {
                                                     if let (Ok(ip), Ok(port)) = (
                                                         address_str.parse::<IpAddr>(),
-                                                        port_str.parse::<u16>()
+                                                        port_str.parse::<u16>(),
                                                     ) {
                                                         let socket_addr = SocketAddr::new(ip, port);
-                                                        let node_id = format!("consul_{}_{}", service_name, address_str);
-                                                        
+                                                        let node_id = format!(
+                                                            "consul_{}_{}",
+                                                            service_name, address_str
+                                                        );
+
                                                         discovered_nodes.push(NodeInfo {
                                                             id: node_id,
                                                             address: socket_addr,
@@ -558,25 +594,26 @@ impl ClusterManager {
                                                 }
                                             }
                                         }
-                                    },
+                                    }
                                     Err(_) => continue, // Skip this service if query fails
                                 }
                             }
                         }
                     }
                 } else {
-                    return Err(CoreError::IoError(
-                        ErrorContext::new(format!("Failed to connect to Consul at {}", endpoint))
-                    ));
+                    return Err(CoreError::IoError(ErrorContext::new(format!(
+                        "Failed to connect to Consul at {}",
+                        endpoint
+                    ))));
                 }
-            },
+            }
             Err(_) => {
-                return Err(CoreError::InvalidState(
-                    ErrorContext::new("curl command not available for Consul discovery")
-                ));
+                return Err(CoreError::InvalidState(ErrorContext::new(
+                    "curl command not available for Consul discovery",
+                )));
             }
         }
-        
+
         Ok(discovered_nodes)
     }
 
@@ -586,29 +623,35 @@ impl ClusterManager {
         event_log: &Arc<Mutex<ClusterEventLog>>,
     ) -> CoreResult<()> {
         let nodes = {
-            let registry_read = registry.read()
-                .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock")))?;
+            let registry_read = registry.read().map_err(|_| {
+                CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock"))
+            })?;
             registry_read.get_all_nodes()
         };
 
-        let mut monitor = health_monitor.lock()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire health monitor lock")))?;
-        
+        let mut monitor = health_monitor.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire health monitor lock"))
+        })?;
+
         for node_info in nodes {
             let health_status = monitor.check_node_health(&node_info)?;
-            
+
             // Update node status
-            let mut registry_write = registry.write()
-                .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock")))?;
-            
+            let mut registry_write = registry.write().map_err(|_| {
+                CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock"))
+            })?;
+
             let previous_status = registry_write.get_node_status(&node_info.id);
             registry_write.update_node_status(&node_info.id, health_status.status)?;
-            
+
             // Log status changes
             if let Some(prev_status) = previous_status {
                 if prev_status != health_status.status {
-                    let mut log = event_log.lock()
-                        .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire event log lock")))?;
+                    let mut log = event_log.lock().map_err(|_| {
+                        CoreError::InvalidState(ErrorContext::new(
+                            "Failed to acquire event log lock",
+                        ))
+                    })?;
                     log.log_event(ClusterEvent::NodeStatusChanged {
                         node_id: node_info.id.clone(),
                         old_status: prev_status,
@@ -627,14 +670,16 @@ impl ClusterManager {
         registry: &Arc<RwLock<NodeRegistry>>,
     ) -> CoreResult<()> {
         let nodes = {
-            let registry_read = registry.read()
-                .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock")))?;
+            let registry_read = registry.read().map_err(|_| {
+                CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock"))
+            })?;
             registry_read.get_healthy_nodes()
         };
 
-        let mut allocator_write = allocator.write()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire allocator lock")))?;
-        
+        let mut allocator_write = allocator.write().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire allocator lock"))
+        })?;
+
         allocator_write.update_available_resources(&nodes)?;
         allocator_write.optimize_resource_allocation()?;
 
@@ -647,25 +692,28 @@ impl ClusterManager {
         event_log: &Arc<Mutex<ClusterEventLog>>,
     ) -> CoreResult<()> {
         let healthy_nodes = {
-            let registry_read = registry.read()
-                .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock")))?;
+            let registry_read = registry.read().map_err(|_| {
+                CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock"))
+            })?;
             registry_read.get_healthy_nodes()
         };
 
-        let mut state_write = cluster_state.write()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire cluster state lock")))?;
-        
+        let mut state_write = cluster_state.write().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire cluster state lock"))
+        })?;
+
         // Update cluster topology
         state_write.update_topology(&healthy_nodes)?;
-        
+
         // Check for leadership changes
         if state_write.needs_leader_election() {
             let new_leader = Self::elect_leader(&healthy_nodes)?;
             if let Some(leader) = new_leader {
                 state_write.set_leader(leader.clone());
-                
-                let mut log = event_log.lock()
-                    .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire event log lock")))?;
+
+                let mut log = event_log.lock().map_err(|_| {
+                    CoreError::InvalidState(ErrorContext::new("Failed to acquire event log lock"))
+                })?;
                 log.log_event(ClusterEvent::LeaderElected {
                     node_id: leader,
                     timestamp: Instant::now(),
@@ -683,7 +731,8 @@ impl ClusterManager {
         }
 
         // Select node with smallest ID (deterministic)
-        let leader = nodes.iter()
+        let leader = nodes
+            .iter()
             .filter(|node| node.status == NodeStatus::Healthy)
             .min_by(|a, b| a.id.cmp(&b.id));
 
@@ -692,26 +741,31 @@ impl ClusterManager {
 
     /// Register a new node in the cluster
     pub fn register_node(&self, node_info: NodeInfo) -> CoreResult<()> {
-        let mut registry = self.node_registry.write()
-            .map_err(|_| CoreError::InvalidState(
+        let mut registry = self.node_registry.write().map_err(|_| {
+            CoreError::InvalidState(
                 ErrorContext::new("Failed to acquire registry lock")
-                    .with_location(crate::error::ErrorLocation::new(file!(), line!()))
-            ))?;
-        
+                    .with_location(crate::error::ErrorLocation::new(file!(), line!())),
+            )
+        })?;
+
         registry.register_node(node_info)?;
         Ok(())
     }
 
     /// Get cluster health status
     pub fn get_health(&self) -> CoreResult<ClusterHealth> {
-        let registry = self.node_registry.read()
-            .map_err(|_| CoreError::InvalidState(
+        let registry = self.node_registry.read().map_err(|_| {
+            CoreError::InvalidState(
                 ErrorContext::new("Failed to acquire registry lock")
-                    .with_location(crate::error::ErrorLocation::new(file!(), line!()))
-            ))?;
-        
+                    .with_location(crate::error::ErrorLocation::new(file!(), line!())),
+            )
+        })?;
+
         let all_nodes = registry.get_all_nodes();
-        let healthy_nodes = all_nodes.iter().filter(|n| n.status == NodeStatus::Healthy).count();
+        let healthy_nodes = all_nodes
+            .iter()
+            .filter(|n| n.status == NodeStatus::Healthy)
+            .count();
         let total_nodes = all_nodes.len();
 
         let health_percentage = if total_nodes == 0 {
@@ -739,23 +793,25 @@ impl ClusterManager {
 
     /// Get list of active nodes
     pub fn get_active_nodes(&self) -> CoreResult<Vec<NodeInfo>> {
-        let registry = self.node_registry.read()
-            .map_err(|_| CoreError::InvalidState(
+        let registry = self.node_registry.read().map_err(|_| {
+            CoreError::InvalidState(
                 ErrorContext::new("Failed to acquire registry lock")
-                    .with_location(crate::error::ErrorLocation::new(file!(), line!()))
-            ))?;
-        
+                    .with_location(crate::error::ErrorLocation::new(file!(), line!())),
+            )
+        })?;
+
         Ok(registry.get_healthy_nodes())
     }
 
     /// Get total cluster compute capacity
     pub fn get_total_capacity(&self) -> CoreResult<ComputeCapacity> {
-        let registry = self.node_registry.read()
-            .map_err(|_| CoreError::InvalidState(
+        let registry = self.node_registry.read().map_err(|_| {
+            CoreError::InvalidState(
                 ErrorContext::new("Failed to acquire registry lock")
-                    .with_location(crate::error::ErrorLocation::new(file!(), line!()))
-            ))?;
-        
+                    .with_location(crate::error::ErrorLocation::new(file!(), line!())),
+            )
+        })?;
+
         let nodes = registry.get_healthy_nodes();
         let mut total_capacity = ComputeCapacity::default();
 
@@ -771,11 +827,12 @@ impl ClusterManager {
 
     /// Submit a distributed task to the cluster
     pub fn submit_task(&self, task: DistributedTask) -> CoreResult<TaskId> {
-        let allocator = self.resource_allocator.read()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire allocator lock")))?;
-        
+        let allocator = self.resource_allocator.read().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire allocator lock"))
+        })?;
+
         let allocation = allocator.allocate_resources(&task.resource_requirements)?;
-        
+
         // Create task execution plan
         let task_id = TaskId::generate();
         let _execution_plan = ExecutionPlan {
@@ -793,14 +850,16 @@ impl ClusterManager {
 
     /// Get cluster statistics
     pub fn get_cluster_statistics(&self) -> CoreResult<ClusterStatistics> {
-        let registry = self.node_registry.read()
-            .map_err(|_| CoreError::InvalidState(
+        let registry = self.node_registry.read().map_err(|_| {
+            CoreError::InvalidState(
                 ErrorContext::new("Failed to acquire registry lock")
-                    .with_location(crate::error::ErrorLocation::new(file!(), line!()))
-            ))?;
-        
-        let allocator = self.resource_allocator.read()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire allocator lock")))?;
+                    .with_location(crate::error::ErrorLocation::new(file!(), line!())),
+            )
+        })?;
+
+        let allocator = self.resource_allocator.read().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire allocator lock"))
+        })?;
 
         let nodes = registry.get_all_nodes();
         let total_capacity = self.get_total_capacity()?;
@@ -808,12 +867,17 @@ impl ClusterManager {
 
         Ok(ClusterStatistics {
             total_nodes: nodes.len(),
-            healthy_nodes: nodes.iter().filter(|n| n.status == NodeStatus::Healthy).count(),
+            healthy_nodes: nodes
+                .iter()
+                .filter(|n| n.status == NodeStatus::Healthy)
+                .count(),
             total_capacity: total_capacity.clone(),
             available_capacity: available_capacity.clone(),
             resource_utilization: ResourceUtilization {
-                cpu_utilization: 1.0 - (available_capacity.cpu_cores as f64 / total_capacity.cpu_cores as f64),
-                memory_utilization: 1.0 - (available_capacity.memory_gb as f64 / total_capacity.memory_gb as f64),
+                cpu_utilization: 1.0
+                    - (available_capacity.cpu_cores as f64 / total_capacity.cpu_cores as f64),
+                memory_utilization: 1.0
+                    - (available_capacity.memory_gb as f64 / total_capacity.memory_gb as f64),
                 gpu_utilization: if total_capacity.gpu_count > 0 {
                     1.0 - (available_capacity.gpu_count as f64 / total_capacity.gpu_count as f64)
                 } else {
@@ -854,8 +918,8 @@ impl ClusterState {
     }
 
     pub fn needs_leader_election(&self) -> bool {
-        self.leader_node.is_none() || 
-        self.last_updated.elapsed() > Duration::from_secs(300) // Re-elect every 5 minutes
+        self.leader_node.is_none() || self.last_updated.elapsed() > Duration::from_secs(300)
+        // Re-elect every 5 minutes
     }
 
     pub fn set_leader(&mut self, node_id: String) {
@@ -888,7 +952,8 @@ impl NodeRegistry {
     pub fn register_node(&mut self, node_info: NodeInfo) -> CoreResult<bool> {
         let is_new = !self.nodes.contains_key(&node_info.id);
         self.nodes.insert(node_info.id.clone(), node_info.clone());
-        self.node_status.insert(node_info.id.clone(), node_info.status);
+        self.node_status
+            .insert(node_info.id.clone(), node_info.status);
         Ok(is_new)
     }
 
@@ -897,7 +962,8 @@ impl NodeRegistry {
     }
 
     pub fn get_healthy_nodes(&self) -> Vec<NodeInfo> {
-        self.nodes.values()
+        self.nodes
+            .values()
             .filter(|node| self.node_status.get(&node.id) == Some(&NodeStatus::Healthy))
             .cloned()
             .collect()
@@ -952,7 +1018,7 @@ impl HealthMonitor {
                         health_score -= result.impact_score;
                         failing_checks.push(check.clone());
                     }
-                },
+                }
                 Err(_) => {
                     health_score -= 20.0; // Penalty for failed check
                     failing_checks.push(check.clone());
@@ -976,7 +1042,11 @@ impl HealthMonitor {
         })
     }
 
-    fn execute_health_check(&self, check: &HealthCheck, node: &NodeInfo) -> CoreResult<HealthCheckResult> {
+    fn execute_health_check(
+        &self,
+        check: &HealthCheck,
+        node: &NodeInfo,
+    ) -> CoreResult<HealthCheckResult> {
         match check {
             HealthCheck::Ping => {
                 // Simple ping check
@@ -985,7 +1055,7 @@ impl HealthMonitor {
                     impact_score: 10.0,
                     details: "Ping successful".to_string(),
                 })
-            },
+            }
             HealthCheck::CpuLoad => {
                 // CPU load check
                 Ok(HealthCheckResult {
@@ -993,7 +1063,7 @@ impl HealthMonitor {
                     impact_score: 15.0,
                     details: "CPU load normal".to_string(),
                 })
-            },
+            }
             HealthCheck::MemoryUsage => {
                 // Memory usage check
                 Ok(HealthCheckResult {
@@ -1001,7 +1071,7 @@ impl HealthMonitor {
                     impact_score: 20.0,
                     details: "Memory usage normal".to_string(),
                 })
-            },
+            }
             HealthCheck::DiskSpace => {
                 // Disk space check
                 Ok(HealthCheckResult {
@@ -1009,7 +1079,7 @@ impl HealthMonitor {
                     impact_score: 10.0,
                     details: "Disk space adequate".to_string(),
                 })
-            },
+            }
             HealthCheck::NetworkConnectivity => {
                 // Network connectivity check
                 let _ = node; // Suppress unused variable warning
@@ -1018,7 +1088,7 @@ impl HealthMonitor {
                     impact_score: 15.0,
                     details: "Network connectivity good".to_string(),
                 })
-            },
+            }
         }
     }
 }
@@ -1048,7 +1118,7 @@ impl ResourceAllocator {
 
     pub fn update_available_resources(&mut self, nodes: &[NodeInfo]) -> CoreResult<()> {
         self.available_resources = ComputeCapacity::default();
-        
+
         for node in nodes {
             if node.status == NodeStatus::Healthy {
                 self.available_resources.cpu_cores += node.capabilities.cpu_cores;
@@ -1060,19 +1130,36 @@ impl ResourceAllocator {
 
         // Subtract already allocated resources
         for allocation in self.allocations.values() {
-            self.available_resources.cpu_cores = self.available_resources.cpu_cores.saturating_sub(allocation.allocated_resources.cpu_cores);
-            self.available_resources.memory_gb = self.available_resources.memory_gb.saturating_sub(allocation.allocated_resources.memory_gb);
-            self.available_resources.gpu_count = self.available_resources.gpu_count.saturating_sub(allocation.allocated_resources.gpu_count);
-            self.available_resources.disk_space_gb = self.available_resources.disk_space_gb.saturating_sub(allocation.allocated_resources.disk_space_gb);
+            self.available_resources.cpu_cores = self
+                .available_resources
+                .cpu_cores
+                .saturating_sub(allocation.allocated_resources.cpu_cores);
+            self.available_resources.memory_gb = self
+                .available_resources
+                .memory_gb
+                .saturating_sub(allocation.allocated_resources.memory_gb);
+            self.available_resources.gpu_count = self
+                .available_resources
+                .gpu_count
+                .saturating_sub(allocation.allocated_resources.gpu_count);
+            self.available_resources.disk_space_gb = self
+                .available_resources
+                .disk_space_gb
+                .saturating_sub(allocation.allocated_resources.disk_space_gb);
         }
 
         Ok(())
     }
 
-    pub fn allocate_resources(&self, requirements: &ResourceRequirements) -> CoreResult<ResourceAllocation> {
+    pub fn allocate_resources(
+        &self,
+        requirements: &ResourceRequirements,
+    ) -> CoreResult<ResourceAllocation> {
         // Check if resources are available
         if !self.can_satisfy_requirements(requirements) {
-            return Err(CoreError::ResourceError(ErrorContext::new("Insufficient resources available")));
+            return Err(CoreError::ResourceError(ErrorContext::new(
+                "Insufficient resources available",
+            )));
         }
 
         // Create allocation
@@ -1091,10 +1178,10 @@ impl ResourceAllocator {
     }
 
     fn can_satisfy_requirements(&self, requirements: &ResourceRequirements) -> bool {
-        self.available_resources.cpu_cores >= requirements.cpu_cores &&
-        self.available_resources.memory_gb >= requirements.memory_gb &&
-        self.available_resources.gpu_count >= requirements.gpu_count &&
-        self.available_resources.disk_space_gb >= requirements.disk_space_gb
+        self.available_resources.cpu_cores >= requirements.cpu_cores
+            && self.available_resources.memory_gb >= requirements.memory_gb
+            && self.available_resources.gpu_count >= requirements.gpu_count
+            && self.available_resources.disk_space_gb >= requirements.disk_space_gb
     }
 
     pub fn optimize_resource_allocation(&mut self) -> CoreResult<()> {
@@ -1102,15 +1189,15 @@ impl ResourceAllocator {
         match self.allocation_strategy {
             AllocationStrategy::FirstFit => {
                 // First-fit allocation (already implemented)
-            },
+            }
             AllocationStrategy::BestFit => {
                 // Best-fit allocation
                 self.optimize_best_fit()?;
-            },
+            }
             AllocationStrategy::LoadBalanced => {
                 // Load-balanced allocation
                 self.optimize_load_balanced()?;
-            },
+            }
         }
         Ok(())
     }
@@ -1153,7 +1240,7 @@ impl ClusterEventLog {
 
     pub fn log_event(&mut self, event: ClusterEvent) {
         self.events.push_back(event);
-        
+
         // Maintain max size
         while self.events.len() > self.max_events {
             self.events.pop_front();
@@ -1181,9 +1268,7 @@ impl Default for ClusterConfiguration {
     fn default() -> Self {
         Self {
             auto_discovery_enabled: true,
-            discovery_methods: vec![
-                NodeDiscoveryMethod::Static(vec![]),
-            ],
+            discovery_methods: vec![NodeDiscoveryMethod::Static(vec![])],
             health_check_interval: Duration::from_secs(30),
             leadership_timeout: Duration::from_secs(300),
             resource_allocation_strategy: AllocationStrategy::FirstFit,
@@ -1304,7 +1389,7 @@ impl ClusterTopology {
     pub fn update(&mut self, nodes: &[NodeInfo]) {
         // Simple topology update - group nodes by network zone
         self.zones.clear();
-        
+
         for node in nodes {
             let zone_name = self.determine_zone(&node.address);
             let zone = self.zones.entry(zone_name).or_default();
@@ -1315,7 +1400,10 @@ impl ClusterTopology {
     fn determine_zone(&self, address: &SocketAddr) -> String {
         // Simple zone determination based on IP address
         // In a real implementation, this would use proper network topology discovery
-        format!("zone_{}", address.ip().to_string().split('.').next().unwrap_or("0"))
+        format!(
+            "zone_{}",
+            address.ip().to_string().split('.').next().unwrap_or("0")
+        )
     }
 }
 
@@ -1344,7 +1432,7 @@ impl Zone {
         self.capacity.memory_gb += node.capabilities.memory_gb;
         self.capacity.gpu_count += node.capabilities.gpu_count;
         self.capacity.disk_space_gb += node.capabilities.disk_space_gb;
-        
+
         self.nodes.push(node);
     }
 }
@@ -1434,7 +1522,13 @@ pub struct AllocationId(String);
 
 impl AllocationId {
     pub fn generate() -> Self {
-        Self(format!("alloc_{}", SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis()))
+        Self(format!(
+            "alloc_{}",
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        ))
     }
 }
 
@@ -1460,7 +1554,13 @@ pub struct TaskId(String);
 
 impl TaskId {
     pub fn generate() -> Self {
-        Self(format!("task_{}", SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis()))
+        Self(format!(
+            "task_{}",
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        ))
     }
 }
 
@@ -1608,7 +1708,7 @@ mod tests {
     #[test]
     fn test_node_registry() {
         let mut registry = NodeRegistry::new();
-        
+
         let node = NodeInfo {
             id: "test_node".to_string(),
             address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080),
@@ -1630,7 +1730,7 @@ mod tests {
     #[test]
     fn test_resource_allocator() {
         let mut allocator = ResourceAllocator::new();
-        
+
         // Set some available resources
         allocator.available_resources = ComputeCapacity {
             cpu_cores: 8,
@@ -1655,7 +1755,7 @@ mod tests {
     #[test]
     fn test_health_monitor() {
         let mut monitor = HealthMonitor::new().unwrap();
-        
+
         let node = NodeInfo {
             id: "test_node".to_string(),
             address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080),
@@ -1673,7 +1773,7 @@ mod tests {
     #[test]
     fn test_cluster_topology() {
         let mut topology = ClusterTopology::new();
-        
+
         let nodes = vec![
             NodeInfo {
                 id: "node1".to_string(),

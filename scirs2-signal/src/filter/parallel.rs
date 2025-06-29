@@ -676,7 +676,7 @@ pub fn parallel_fir_filter_bank(
     }
 
     let signal_array = Array1::from(signal.to_vec());
-    
+
     // Process each filter in parallel
     let results: Vec<Vec<f64>> = par_iter_with_setup(
         filter_bank.iter().enumerate(),
@@ -734,18 +734,13 @@ pub fn parallel_iir_filter_bank(
     }
 
     let signal_array = Array1::from(signal.to_vec());
-    
+
     // Process each filter in parallel
     let results: Vec<Vec<f64>> = par_iter_with_setup(
         numerators.iter().zip(denominators.iter()).enumerate(),
         || {},
         |_, (i, (num_coeffs, den_coeffs))| {
-            parallel_filter_overlap_save(
-                num_coeffs,
-                den_coeffs,
-                &signal_array,
-                chunk_size,
-            )
+            parallel_filter_overlap_save(num_coeffs, den_coeffs, &signal_array, chunk_size)
         },
         |results, filter_result| {
             results.push(filter_result?);
@@ -793,7 +788,7 @@ pub fn parallel_adaptive_lms_filter(
 
     let n = signal.len();
     let chunk = chunk_size.unwrap_or(1024.min(n / 4));
-    
+
     let mut coeffs = vec![0.0; filter_length];
     let mut output = vec![0.0; n];
     let mut error = vec![0.0; n];
@@ -801,12 +796,12 @@ pub fn parallel_adaptive_lms_filter(
 
     // Process in chunks for parallel efficiency
     let n_chunks = (n + chunk - 1) / chunk;
-    
+
     for chunk_idx in 0..n_chunks {
         let start = chunk_idx * chunk;
         let end = (start + chunk).min(n);
         let chunk_len = end - start;
-        
+
         // Process each sample in the chunk
         for i in start..end {
             // Update delay line
@@ -814,18 +809,18 @@ pub fn parallel_adaptive_lms_filter(
                 delay_line[j] = delay_line[j - 1];
             }
             delay_line[0] = signal[i];
-            
+
             // Filter output using parallel dot product
             let delay_array = Array1::from(delay_line.clone());
             let coeffs_array = Array1::from(coeffs.clone());
-            
+
             // Use SIMD operations from scirs2-core
             use scirs2_core::simd_ops::SimdUnifiedOps;
             output[i] = f64::simd_dot(&delay_array.view(), &coeffs_array.view());
-            
+
             // Error calculation
             error[i] = desired[i] - output[i];
-            
+
             // Coefficient update using parallel operations
             for j in 0..filter_length {
                 coeffs[j] += 2.0 * step_size * error[i] * delay_line[j];
@@ -908,7 +903,7 @@ pub fn parallel_wavelet_filter_bank(
 
         // Continue with approximation coefficients for next level
         current_signal = approx_downsampled;
-        
+
         // Stop if signal becomes too short
         if current_signal.len() < lowpass.len() * 2 {
             break;
@@ -947,7 +942,7 @@ pub fn parallel_polyphase_filter(
 
     let n_phases = polyphase_filters.len();
     let filter_length = polyphase_filters[0].len();
-    
+
     // Verify all polyphase filters have same length
     for filter in polyphase_filters {
         if filter.len() != filter_length {
@@ -959,10 +954,10 @@ pub fn parallel_polyphase_filter(
 
     let output_length = signal.len() / decimation_factor;
     let mut output = vec![0.0; output_length];
-    
+
     // Process decimated samples in parallel
     let output_indices: Vec<usize> = (0..output_length).collect();
-    
+
     let parallel_results: Vec<f64> = par_iter_with_setup(
         output_indices.iter(),
         || {},
@@ -971,23 +966,23 @@ pub fn parallel_polyphase_filter(
             if input_idx >= signal.len() {
                 return Ok(0.0);
             }
-            
+
             let mut sample_sum = 0.0;
-            
+
             // Sum contributions from all polyphase filters
             for (phase, filter_coeffs) in polyphase_filters.iter().enumerate() {
                 let mut filter_sum = 0.0;
-                
+
                 for (tap, &coeff) in filter_coeffs.iter().enumerate() {
                     let signal_idx = input_idx + phase + tap * n_phases;
                     if signal_idx < signal.len() {
                         filter_sum += coeff * signal[signal_idx];
                     }
                 }
-                
+
                 sample_sum += filter_sum;
             }
-            
+
             Ok(sample_sum)
         },
         |results, sample| {
@@ -1017,12 +1012,12 @@ pub fn parallel_fft_filter(
     impulse_response: &[f64],
     chunk_size: Option<usize>,
 ) -> SignalResult<Vec<f64>> {
-    use rustfft::{FftPlanner, num_complex::Complex};
-    
+    use rustfft::{num_complex::Complex, FftPlanner};
+
     let fft_size = chunk_size.unwrap_or(4096);
     let ir_len = impulse_response.len();
     let useful_size = fft_size - ir_len + 1;
-    
+
     if useful_size <= 0 {
         return Err(SignalError::ValueError(
             "FFT size too small for impulse response length".to_string(),
@@ -1040,13 +1035,13 @@ pub fn parallel_fft_filter(
         .map(|&x| Complex::new(x, 0.0))
         .collect();
     ir_padded.resize(fft_size, Complex::new(0.0, 0.0));
-    
+
     let mut ir_fft = ir_padded.clone();
     fft.process(&mut ir_fft);
 
     // Calculate number of chunks needed
     let n_chunks = (signal.len() + useful_size - 1) / useful_size;
-    
+
     // Process chunks in parallel
     let chunk_results: Vec<Vec<f64>> = par_iter_with_setup(
         0..n_chunks,
@@ -1054,31 +1049,27 @@ pub fn parallel_fft_filter(
         |_, &chunk_idx| {
             let start = chunk_idx * useful_size;
             let end = (start + useful_size).min(signal.len());
-            
+
             // Prepare input chunk
-            let mut chunk_data: Vec<Complex<f64>> = (start..end)
-                .map(|i| Complex::new(signal[i], 0.0))
-                .collect();
+            let mut chunk_data: Vec<Complex<f64>> =
+                (start..end).map(|i| Complex::new(signal[i], 0.0)).collect();
             chunk_data.resize(fft_size, Complex::new(0.0, 0.0));
-            
+
             // FFT of input chunk
             let mut chunk_fft = chunk_data;
             fft.process(&mut chunk_fft);
-            
+
             // Frequency domain multiplication
             for i in 0..fft_size {
                 chunk_fft[i] *= ir_fft[i];
             }
-            
+
             // IFFT to get time domain result
             ifft.process(&mut chunk_fft);
-            
+
             // Extract real part and normalize
-            let chunk_result: Vec<f64> = chunk_fft
-                .iter()
-                .map(|c| c.re / fft_size as f64)
-                .collect();
-            
+            let chunk_result: Vec<f64> = chunk_fft.iter().map(|c| c.re / fft_size as f64).collect();
+
             Ok(chunk_result)
         },
         |results, chunk_result| {
@@ -1090,7 +1081,7 @@ pub fn parallel_fft_filter(
     // Overlap-add to combine results
     let output_len = signal.len() + ir_len - 1;
     let mut output = vec![0.0; output_len];
-    
+
     for (chunk_idx, chunk_result) in chunk_results.iter().enumerate() {
         let start = chunk_idx * useful_size;
         for (i, &val) in chunk_result.iter().enumerate() {
@@ -1116,6 +1107,10 @@ pub struct ParallelFilterConfig {
     pub use_simd: bool,
     /// Memory optimization mode
     pub memory_efficient: bool,
+    /// Enable load balancing for uneven workloads
+    pub load_balancing: bool,
+    /// Prefetch factor for memory optimization
+    pub prefetch_factor: usize,
 }
 
 impl Default for ParallelFilterConfig {
@@ -1125,6 +1120,8 @@ impl Default for ParallelFilterConfig {
             num_threads: None,
             use_simd: true,
             memory_efficient: false,
+            load_balancing: true,
+            prefetch_factor: 2,
         }
     }
 }
@@ -1154,13 +1151,20 @@ pub fn parallel_filter_advanced(
             let signal_array = Array1::from(signal.to_vec());
             parallel_filter_overlap_save(coeffs, &dummy_denom, &signal_array, config.chunk_size)
         }
-        
-        ParallelFilterType::IIR { numerator, denominator } => {
+
+        ParallelFilterType::IIR {
+            numerator,
+            denominator,
+        } => {
             let signal_array = Array1::from(signal.to_vec());
             parallel_filter_overlap_save(numerator, denominator, &signal_array, config.chunk_size)
         }
-        
-        ParallelFilterType::Adaptive { desired, filter_length, step_size } => {
+
+        ParallelFilterType::Adaptive {
+            desired,
+            filter_length,
+            step_size,
+        } => {
             let (output, _, _) = parallel_adaptive_lms_filter(
                 signal,
                 desired,
@@ -1170,7 +1174,7 @@ pub fn parallel_filter_advanced(
             )?;
             Ok(output)
         }
-        
+
         ParallelFilterType::FFT { impulse_response } => {
             parallel_fft_filter(signal, impulse_response, config.chunk_size)
         }
@@ -1181,9 +1185,7 @@ pub fn parallel_filter_advanced(
 #[derive(Debug, Clone)]
 pub enum ParallelFilterType {
     /// FIR filter with coefficients
-    FIR {
-        coeffs: Vec<f64>,
-    },
+    FIR { coeffs: Vec<f64> },
     /// IIR filter with numerator and denominator
     IIR {
         numerator: Vec<f64>,
@@ -1196,9 +1198,547 @@ pub enum ParallelFilterType {
         step_size: f64,
     },
     /// FFT-based convolution filter
-    FFT {
-        impulse_response: Vec<f64>,
-    },
+    FFT { impulse_response: Vec<f64> },
+}
+
+/// Parallel median filtering for noise reduction
+///
+/// Applies a median filter in parallel chunks for efficient noise reduction
+/// while preserving edges. Particularly effective for impulse noise.
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+/// * `kernel_size` - Size of median filter kernel (must be odd)
+/// * `chunk_size` - Size of chunks for parallel processing
+///
+/// # Returns
+///
+/// * Median filtered signal
+pub fn parallel_median_filter(
+    signal: &[f64],
+    kernel_size: usize,
+    chunk_size: Option<usize>,
+) -> SignalResult<Vec<f64>> {
+    if kernel_size % 2 == 0 {
+        return Err(SignalError::ValueError(
+            "Kernel size must be odd".to_string(),
+        ));
+    }
+
+    let n = signal.len();
+    let half_kernel = kernel_size / 2;
+    let chunk = chunk_size.unwrap_or(1024.min(n / num_cpus::get()));
+    let overlap = half_kernel;
+
+    // Process signal in overlapping chunks
+    let n_chunks = (n + chunk - overlap - 1) / (chunk - overlap);
+    let mut results = vec![Vec::new(); n_chunks];
+
+    par_iter_with_setup(
+        0..n_chunks,
+        || {},
+        |_, &i| {
+            let start = i * (chunk - overlap);
+            let end = (start + chunk).min(n);
+            let chunk_start = start.saturating_sub(overlap);
+            let chunk_end = (end + overlap).min(n);
+
+            // Extract chunk with padding
+            let chunk_data = &signal[chunk_start..chunk_end];
+            let mut chunk_result = Vec::with_capacity(end - start);
+
+            // Apply median filter to chunk
+            for j in 0..(end - start) {
+                let global_idx = start + j;
+                let local_idx = global_idx - chunk_start;
+
+                // Extract neighborhood for median computation
+                let neighborhood_start = local_idx.saturating_sub(half_kernel);
+                let neighborhood_end = (local_idx + half_kernel + 1).min(chunk_data.len());
+
+                let mut neighborhood: Vec<f64> =
+                    chunk_data[neighborhood_start..neighborhood_end].to_vec();
+                neighborhood.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+                let median = neighborhood[neighborhood.len() / 2];
+                chunk_result.push(median);
+            }
+
+            Ok(chunk_result)
+        },
+        |i, result: SignalResult<Vec<f64>>| {
+            results[i] = result?;
+            Ok(())
+        },
+    )?;
+
+    // Concatenate results
+    let mut output = Vec::with_capacity(n);
+    for chunk_result in results {
+        output.extend(chunk_result);
+    }
+    output.truncate(n);
+
+    Ok(output)
+}
+
+/// Parallel morphological filtering operations
+///
+/// Applies morphological operations (erosion, dilation, opening, closing)
+/// in parallel for efficient shape-based filtering.
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+/// * `structuring_element` - Structuring element for morphological operation
+/// * `operation` - Type of morphological operation
+/// * `chunk_size` - Size of chunks for parallel processing
+///
+/// # Returns
+///
+/// * Morphologically filtered signal
+pub fn parallel_morphological_filter(
+    signal: &[f64],
+    structuring_element: &[f64],
+    operation: MorphologicalOperation,
+    chunk_size: Option<usize>,
+) -> SignalResult<Vec<f64>> {
+    let n = signal.len();
+    let se_len = structuring_element.len();
+    let half_se = se_len / 2;
+    let chunk = chunk_size.unwrap_or(1024.min(n / num_cpus::get()));
+    let overlap = half_se;
+
+    // Process signal in overlapping chunks
+    let n_chunks = (n + chunk - overlap - 1) / (chunk - overlap);
+    let mut results = vec![Vec::new(); n_chunks];
+
+    par_iter_with_setup(
+        0..n_chunks,
+        || {},
+        |_, &i| {
+            let start = i * (chunk - overlap);
+            let end = (start + chunk).min(n);
+            let chunk_start = start.saturating_sub(overlap);
+            let chunk_end = (end + overlap).min(n);
+
+            // Extract chunk with padding
+            let chunk_data = &signal[chunk_start..chunk_end];
+            let mut chunk_result = Vec::with_capacity(end - start);
+
+            // Apply morphological operation to chunk
+            for j in 0..(end - start) {
+                let global_idx = start + j;
+                let local_idx = global_idx - chunk_start;
+
+                let result_val = match operation {
+                    MorphologicalOperation::Erosion => {
+                        apply_erosion(chunk_data, local_idx, structuring_element, se_len)
+                    }
+                    MorphologicalOperation::Dilation => {
+                        apply_dilation(chunk_data, local_idx, structuring_element, se_len)
+                    }
+                    MorphologicalOperation::Opening => {
+                        // Opening = erosion followed by dilation
+                        let eroded =
+                            apply_erosion(chunk_data, local_idx, structuring_element, se_len);
+                        apply_dilation(&[eroded], 0, structuring_element, se_len)
+                    }
+                    MorphologicalOperation::Closing => {
+                        // Closing = dilation followed by erosion
+                        let dilated =
+                            apply_dilation(chunk_data, local_idx, structuring_element, se_len);
+                        apply_erosion(&[dilated], 0, structuring_element, se_len)
+                    }
+                };
+
+                chunk_result.push(result_val);
+            }
+
+            Ok(chunk_result)
+        },
+        |i, result: SignalResult<Vec<f64>>| {
+            results[i] = result?;
+            Ok(())
+        },
+    )?;
+
+    // Concatenate results
+    let mut output = Vec::with_capacity(n);
+    for chunk_result in results {
+        output.extend(chunk_result);
+    }
+    output.truncate(n);
+
+    Ok(output)
+}
+
+/// Types of morphological operations
+#[derive(Debug, Clone, Copy)]
+pub enum MorphologicalOperation {
+    Erosion,
+    Dilation,
+    Opening,
+    Closing,
+}
+
+/// Apply erosion operation at a specific index
+fn apply_erosion(signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
+    let half_se = se_len / 2;
+    let mut min_val = f64::INFINITY;
+
+    for (k, &se_val) in se.iter().enumerate() {
+        if se_val > 0.0 {
+            let sig_idx = idx + k;
+            if sig_idx >= half_se && sig_idx - half_se < signal.len() {
+                min_val = min_val.min(signal[sig_idx - half_se]);
+            }
+        }
+    }
+
+    if min_val == f64::INFINITY {
+        0.0
+    } else {
+        min_val
+    }
+}
+
+/// Apply dilation operation at a specific index
+fn apply_dilation(signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
+    let half_se = se_len / 2;
+    let mut max_val = f64::NEG_INFINITY;
+
+    for (k, &se_val) in se.iter().enumerate() {
+        if se_val > 0.0 {
+            let sig_idx = idx + k;
+            if sig_idx >= half_se && sig_idx - half_se < signal.len() {
+                max_val = max_val.max(signal[sig_idx - half_se]);
+            }
+        }
+    }
+
+    if max_val == f64::NEG_INFINITY {
+        0.0
+    } else {
+        max_val
+    }
+}
+
+/// Parallel rank-order filtering
+///
+/// Applies rank-order filtering in parallel, where the output is the
+/// k-th order statistic within a sliding window.
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+/// * `window_size` - Size of the sliding window
+/// * `rank` - Rank to extract (0 = minimum, window_size-1 = maximum)
+/// * `chunk_size` - Size of chunks for parallel processing
+///
+/// # Returns
+///
+/// * Rank-order filtered signal
+pub fn parallel_rank_order_filter(
+    signal: &[f64],
+    window_size: usize,
+    rank: usize,
+    chunk_size: Option<usize>,
+) -> SignalResult<Vec<f64>> {
+    if rank >= window_size {
+        return Err(SignalError::ValueError(
+            "Rank must be less than window size".to_string(),
+        ));
+    }
+
+    let n = signal.len();
+    let half_window = window_size / 2;
+    let chunk = chunk_size.unwrap_or(1024.min(n / num_cpus::get()));
+    let overlap = half_window;
+
+    // Process signal in overlapping chunks
+    let n_chunks = (n + chunk - overlap - 1) / (chunk - overlap);
+    let mut results = vec![Vec::new(); n_chunks];
+
+    par_iter_with_setup(
+        0..n_chunks,
+        || {},
+        |_, &i| {
+            let start = i * (chunk - overlap);
+            let end = (start + chunk).min(n);
+            let chunk_start = start.saturating_sub(overlap);
+            let chunk_end = (end + overlap).min(n);
+
+            // Extract chunk with padding
+            let chunk_data = &signal[chunk_start..chunk_end];
+            let mut chunk_result = Vec::with_capacity(end - start);
+
+            // Apply rank-order filter to chunk
+            for j in 0..(end - start) {
+                let global_idx = start + j;
+                let local_idx = global_idx - chunk_start;
+
+                // Extract window
+                let window_start = local_idx.saturating_sub(half_window);
+                let window_end = (local_idx + half_window + 1).min(chunk_data.len());
+
+                let mut window: Vec<f64> = chunk_data[window_start..window_end].to_vec();
+                window.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+                let rank_val = if rank < window.len() {
+                    window[rank]
+                } else {
+                    window[window.len() - 1]
+                };
+                chunk_result.push(rank_val);
+            }
+
+            Ok(chunk_result)
+        },
+        |i, result: SignalResult<Vec<f64>>| {
+            results[i] = result?;
+            Ok(())
+        },
+    )?;
+
+    // Concatenate results
+    let mut output = Vec::with_capacity(n);
+    for chunk_result in results {
+        output.extend(chunk_result);
+    }
+    output.truncate(n);
+
+    Ok(output)
+}
+
+/// Parallel bilateral filtering for edge-preserving smoothing
+///
+/// Applies bilateral filtering in parallel, which preserves edges while
+/// smoothing noise by considering both spatial and intensity differences.
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+/// * `window_size` - Size of the spatial window
+/// * `sigma_spatial` - Standard deviation for spatial Gaussian kernel
+/// * `sigma_intensity` - Standard deviation for intensity Gaussian kernel
+/// * `chunk_size` - Size of chunks for parallel processing
+///
+/// # Returns
+///
+/// * Bilateral filtered signal
+pub fn parallel_bilateral_filter(
+    signal: &[f64],
+    window_size: usize,
+    sigma_spatial: f64,
+    sigma_intensity: f64,
+    chunk_size: Option<usize>,
+) -> SignalResult<Vec<f64>> {
+    let n = signal.len();
+    let half_window = window_size / 2;
+    let chunk = chunk_size.unwrap_or(512.min(n / num_cpus::get())); // Smaller chunks due to computational intensity
+    let overlap = half_window;
+
+    // Precompute spatial kernel
+    let spatial_kernel: Vec<f64> = (0..window_size)
+        .map(|i| {
+            let dist = (i as f64 - half_window as f64).abs();
+            (-0.5 * (dist / sigma_spatial).powi(2)).exp()
+        })
+        .collect();
+
+    // Process signal in overlapping chunks
+    let n_chunks = (n + chunk - overlap - 1) / (chunk - overlap);
+    let mut results = vec![Vec::new(); n_chunks];
+
+    par_iter_with_setup(
+        0..n_chunks,
+        || spatial_kernel.clone(),
+        |spatial_k, &i| {
+            let start = i * (chunk - overlap);
+            let end = (start + chunk).min(n);
+            let chunk_start = start.saturating_sub(overlap);
+            let chunk_end = (end + overlap).min(n);
+
+            // Extract chunk with padding
+            let chunk_data = &signal[chunk_start..chunk_end];
+            let mut chunk_result = Vec::with_capacity(end - start);
+
+            // Apply bilateral filter to chunk
+            for j in 0..(end - start) {
+                let global_idx = start + j;
+                let local_idx = global_idx - chunk_start;
+                let center_val = chunk_data[local_idx];
+
+                // Extract window
+                let window_start = local_idx.saturating_sub(half_window);
+                let window_end = (local_idx + half_window + 1).min(chunk_data.len());
+
+                let mut weighted_sum = 0.0;
+                let mut weight_sum = 0.0;
+
+                for (k, &val) in chunk_data[window_start..window_end].iter().enumerate() {
+                    let spatial_idx = k + window_start - local_idx + half_window;
+                    if spatial_idx < spatial_k.len() {
+                        let spatial_weight = spatial_k[spatial_idx];
+                        let intensity_diff = (val - center_val).abs();
+                        let intensity_weight =
+                            (-0.5 * (intensity_diff / sigma_intensity).powi(2)).exp();
+                        let total_weight = spatial_weight * intensity_weight;
+
+                        weighted_sum += val * total_weight;
+                        weight_sum += total_weight;
+                    }
+                }
+
+                let filtered_val = if weight_sum > 1e-10 {
+                    weighted_sum / weight_sum
+                } else {
+                    center_val
+                };
+
+                chunk_result.push(filtered_val);
+            }
+
+            Ok(chunk_result)
+        },
+        |i, result: SignalResult<Vec<f64>>| {
+            results[i] = result?;
+            Ok(())
+        },
+    )?;
+
+    // Concatenate results
+    let mut output = Vec::with_capacity(n);
+    for chunk_result in results {
+        output.extend(chunk_result);
+    }
+    output.truncate(n);
+
+    Ok(output)
+}
+
+/// Parallel cascaded integrator-comb (CIC) filter
+///
+/// Implements a CIC filter with parallel processing for efficient
+/// decimation filtering. CIC filters are particularly useful for
+/// high decimation ratios in digital down-conversion.
+///
+/// # Arguments
+///
+/// * `signal` - Input signal
+/// * `decimation_factor` - Decimation factor
+/// * `num_stages` - Number of integrator-comb stages
+/// * `chunk_size` - Size of chunks for parallel processing
+///
+/// # Returns
+///
+/// * CIC filtered and decimated signal
+pub fn parallel_cic_filter(
+    signal: &[f64],
+    decimation_factor: usize,
+    num_stages: usize,
+    chunk_size: Option<usize>,
+) -> SignalResult<Vec<f64>> {
+    if decimation_factor == 0 || num_stages == 0 {
+        return Err(SignalError::ValueError(
+            "Decimation factor and number of stages must be positive".to_string(),
+        ));
+    }
+
+    let n = signal.len();
+    let chunk = chunk_size.unwrap_or(2048.min(n / num_cpus::get()));
+    let output_length = n / decimation_factor;
+
+    // Process signal in chunks for integrator stages
+    let mut integrator_output = signal.to_vec();
+
+    // Apply integrator stages in parallel chunks
+    for _ in 0..num_stages {
+        let chunk_results: Vec<Vec<f64>> = par_iter_with_setup(
+            (0..n).step_by(chunk).enumerate(),
+            || {},
+            |_, (chunk_idx, start)| {
+                let end = (start + chunk).min(n);
+                let mut chunk_result = vec![0.0; end - start];
+                let mut accumulator = if chunk_idx == 0 {
+                    0.0
+                } else {
+                    integrator_output[start - 1]
+                };
+
+                for (i, &val) in integrator_output[start..end].iter().enumerate() {
+                    accumulator += val;
+                    chunk_result[i] = accumulator;
+                }
+
+                Ok(chunk_result)
+            },
+            |results, chunk_result| {
+                results.push(chunk_result?);
+                Ok(())
+            },
+        )?;
+
+        // Reassemble integrator output
+        integrator_output.clear();
+        for chunk_result in chunk_results {
+            integrator_output.extend(chunk_result);
+        }
+    }
+
+    // Decimate
+    let decimated: Vec<f64> = integrator_output
+        .into_iter()
+        .enumerate()
+        .filter_map(|(i, val)| {
+            if i % decimation_factor == 0 {
+                Some(val)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // Apply comb stages in parallel
+    let mut comb_output = decimated;
+
+    for _ in 0..num_stages {
+        let comb_chunk_size = chunk.min(comb_output.len() / num_cpus::get().max(1));
+        let comb_results: Vec<Vec<f64>> = par_iter_with_setup(
+            (0..comb_output.len()).step_by(comb_chunk_size).enumerate(),
+            || {},
+            |_, (chunk_idx, start)| {
+                let end = (start + comb_chunk_size).min(comb_output.len());
+                let mut chunk_result = vec![0.0; end - start];
+
+                for (i, &val) in comb_output[start..end].iter().enumerate() {
+                    let global_idx = start + i;
+                    let delayed_val = if global_idx >= decimation_factor {
+                        comb_output[global_idx - decimation_factor]
+                    } else {
+                        0.0
+                    };
+                    chunk_result[i] = val - delayed_val;
+                }
+
+                Ok(chunk_result)
+            },
+            |results, chunk_result| {
+                results.push(chunk_result?);
+                Ok(())
+            },
+        )?;
+
+        // Reassemble comb output
+        comb_output.clear();
+        for chunk_result in comb_results {
+            comb_output.extend(chunk_result);
+        }
+    }
+
+    Ok(comb_output)
 }
 
 #[cfg(test)]
@@ -1208,14 +1748,16 @@ mod tests {
 
     #[test]
     fn test_parallel_fir_filter_bank() {
-        let signal: Vec<f64> = (0..1000).map(|i| (2.0 * PI * i as f64 / 100.0).sin()).collect();
-        
+        let signal: Vec<f64> = (0..1000)
+            .map(|i| (2.0 * PI * i as f64 / 100.0).sin())
+            .collect();
+
         // Create simple filter bank
         let filter_bank = vec![
-            vec![0.5, 0.5], // Simple averaging filter
+            vec![0.5, 0.5],  // Simple averaging filter
             vec![1.0, -1.0], // Simple differencing filter
         ];
-        
+
         let results = parallel_fir_filter_bank(&signal, &filter_bank, None).unwrap();
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].len(), signal.len());
@@ -1227,27 +1769,28 @@ mod tests {
         let n = 100;
         let signal: Vec<f64> = (0..n).map(|i| (2.0 * PI * i as f64 / 10.0).sin()).collect();
         let desired: Vec<f64> = signal.iter().map(|&x| x * 0.5).collect(); // Attenuated version
-        
-        let (output, coeffs, _error) = parallel_adaptive_lms_filter(
-            &signal, &desired, 10, 0.01, None
-        ).unwrap();
-        
+
+        let (output, coeffs, _error) =
+            parallel_adaptive_lms_filter(&signal, &desired, 10, 0.01, None).unwrap();
+
         assert_eq!(output.len(), n);
         assert_eq!(coeffs.len(), 10);
     }
 
     #[test]
     fn test_parallel_wavelet_filter_bank() {
-        let signal: Vec<f64> = (0..512).map(|i| (2.0 * PI * i as f64 / 32.0).sin()).collect();
-        
+        let signal: Vec<f64> = (0..512)
+            .map(|i| (2.0 * PI * i as f64 / 32.0).sin())
+            .collect();
+
         // Simple Haar wavelet filters
         let lowpass = vec![0.7071, 0.7071];
         let highpass = vec![0.7071, -0.7071];
         let wavelet_filters = (lowpass, highpass);
-        
+
         let results = parallel_wavelet_filter_bank(&signal, &wavelet_filters, 3, None).unwrap();
         assert_eq!(results.len(), 3); // 3 levels of decomposition
-        
+
         // Check that each level has approximation and detail coefficients
         for (approx, detail) in &results {
             assert!(!approx.is_empty());
@@ -1257,15 +1800,86 @@ mod tests {
 
     #[test]
     fn test_parallel_filter_advanced() {
-        let signal: Vec<f64> = (0..100).map(|i| (2.0 * PI * i as f64 / 10.0).sin()).collect();
-        
+        let signal: Vec<f64> = (0..100)
+            .map(|i| (2.0 * PI * i as f64 / 10.0).sin())
+            .collect();
+
         let filter_type = ParallelFilterType::FIR {
             coeffs: vec![0.25, 0.5, 0.25], // Simple smoothing filter
         };
-        
+
         let config = ParallelFilterConfig::default();
         let result = parallel_filter_advanced(&signal, &filter_type, &config).unwrap();
-        
+
         assert_eq!(result.len(), signal.len());
+    }
+
+    #[test]
+    fn test_parallel_median_filter() {
+        let mut signal = vec![1.0, 2.0, 3.0, 100.0, 5.0, 6.0, 7.0]; // Contains impulse noise
+        let result = parallel_median_filter(&signal, 3, None).unwrap();
+
+        assert_eq!(result.len(), signal.len());
+        // Median filter should reduce the impulse noise
+        assert!(result[3] < 50.0); // Should be much less than the original 100.0
+    }
+
+    #[test]
+    fn test_parallel_morphological_filter() {
+        let signal = vec![0.0, 1.0, 2.0, 3.0, 2.0, 1.0, 0.0];
+        let structuring_element = vec![1.0, 1.0, 1.0];
+
+        let result = parallel_morphological_filter(
+            &signal,
+            &structuring_element,
+            MorphologicalOperation::Erosion,
+            None,
+        )
+        .unwrap();
+
+        assert_eq!(result.len(), signal.len());
+    }
+
+    #[test]
+    fn test_parallel_rank_order_filter() {
+        let signal: Vec<f64> = (0..50)
+            .map(|i| (2.0 * PI * i as f64 / 10.0).sin())
+            .collect();
+
+        // Test minimum filter (rank = 0)
+        let min_result = parallel_rank_order_filter(&signal, 5, 0, None).unwrap();
+        assert_eq!(min_result.len(), signal.len());
+
+        // Test maximum filter (rank = window_size - 1)
+        let max_result = parallel_rank_order_filter(&signal, 5, 4, None).unwrap();
+        assert_eq!(max_result.len(), signal.len());
+    }
+
+    #[test]
+    fn test_parallel_bilateral_filter() {
+        let signal: Vec<f64> = (0..100)
+            .map(|i| (2.0 * PI * i as f64 / 10.0).sin() + 0.1 * (i as f64 * 0.5).sin()) // Signal with noise
+            .collect();
+
+        let result = parallel_bilateral_filter(&signal, 5, 1.0, 0.1, None).unwrap();
+        assert_eq!(result.len(), signal.len());
+    }
+
+    #[test]
+    fn test_parallel_cic_filter() {
+        let signal: Vec<f64> = (0..1000)
+            .map(|i| (2.0 * PI * i as f64 / 50.0).sin())
+            .collect();
+
+        let result = parallel_cic_filter(&signal, 4, 3, None).unwrap();
+        assert_eq!(result.len(), signal.len() / 4); // Should be decimated by factor of 4
+    }
+
+    #[test]
+    fn test_enhanced_parallel_config() {
+        let config = ParallelFilterConfig::default();
+        assert!(config.load_balancing);
+        assert_eq!(config.prefetch_factor, 2);
+        assert!(config.use_simd);
     }
 }

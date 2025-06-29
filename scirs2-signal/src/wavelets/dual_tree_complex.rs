@@ -813,9 +813,93 @@ fn create_dtcwt_filters(filter_set: FilterSet) -> SignalResult<DtcwtFilters> {
                 g1b,
             })
         }
-        _ => Err(SignalError::NotImplementedError(
-            "Filter set not yet implemented".to_string(),
-        )),
+        FilterSet::Daubechies97 => {
+            // Daubechies 9/7 filters (used in JPEG 2000)
+            // Analysis filters
+            let h0a = Array1::from_vec(vec![
+                0.0378284555,
+                -0.0238494650,
+                -0.1106244044,
+                0.3774028556,
+                0.8526986790,
+                0.3774028556,
+                -0.1106244044,
+                -0.0238494650,
+                0.0378284555,
+            ]);
+            
+            let h1a = Array1::from_vec(vec![
+                -0.0645388826,
+                0.0406894251,
+                0.4180922732,
+                -0.7884856164,
+                0.4180922732,
+                0.0406894251,
+                -0.0645388826,
+            ]);
+
+            // For dual-tree implementation, create shifted versions
+            let h0b = Array1::from_vec(vec![
+                0.0189142278,
+                -0.0119247325,
+                -0.0553122022,
+                0.1887014278,
+                0.4263493395,
+                0.4263493395,
+                0.1887014278,
+                -0.0553122022,
+                -0.0119247325,
+                0.0189142278,
+            ]);
+            
+            let h1b = Array1::from_vec(vec![
+                -0.0322694413,
+                0.0203447126,
+                0.2090461366,
+                -0.3942428082,
+                0.2090461366,
+                0.0203447126,
+                -0.0322694413,
+                0.0,
+            ]);
+
+            // Synthesis filters (time-reversed and possibly sign-flipped)
+            let mut g0a: Array1<f64> = h0a.iter().rev().cloned().collect();
+            let mut g1a: Array1<f64> = h1a.iter().rev().cloned().collect();
+            // Alternate signs for g1
+            for (i, val) in g1a.iter_mut().enumerate() {
+                if i % 2 == 1 {
+                    *val = -*val;
+                }
+            }
+
+            let mut g0b: Array1<f64> = h0b.iter().rev().cloned().collect();
+            let mut g1b: Array1<f64> = h1b.iter().rev().cloned().collect();
+            // Alternate signs for g1
+            for (i, val) in g1b.iter_mut().enumerate() {
+                if i % 2 == 1 {
+                    *val = -*val;
+                }
+            }
+
+            Ok(DtcwtFilters {
+                h0a,
+                h1a,
+                h0b,
+                h1b,
+                g0a,
+                g1a,
+                g0b,
+                g1b,
+            })
+        }
+        FilterSet::Custom => {
+            // For custom filters, return a simple default implementation
+            // In practice, this would accept user-provided filter coefficients
+            Err(SignalError::ValueError(
+                "Custom filter sets require user-provided coefficients".to_string(),
+            ))
+        }
     }
 }
 

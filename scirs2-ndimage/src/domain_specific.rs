@@ -21,9 +21,9 @@ fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
 
 /// Helper function for safe float to f64 conversion
 fn safe_float_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
-    value.to_f64().ok_or_else(|| {
-        NdimageError::ComputationError("Failed to convert float to f64".to_string())
-    })
+    value
+        .to_f64()
+        .ok_or_else(|| NdimageError::ComputationError("Failed to convert float to f64".to_string()))
 }
 
 /// Helper function for safe usize conversion
@@ -848,7 +848,8 @@ mod tests {
 
         let nir = arr2(&[[0.5, 0.6, 0.7], [0.6, 0.7, 0.8], [0.7, 0.8, 0.9]]);
 
-        let ndvi = satellite::compute_ndvi(&red.view(), &nir.view()).expect("compute_ndvi should succeed");
+        let ndvi =
+            satellite::compute_ndvi(&red.view(), &nir.view()).expect("compute_ndvi should succeed");
 
         // Check NDVI values are in expected range
         for &val in ndvi.iter() {
@@ -876,7 +877,8 @@ mod tests {
             }
         }
 
-        let vesselness = medical::frangi_vesselness(&image.view(), None).expect("frangi_vesselness should succeed");
+        let vesselness = medical::frangi_vesselness(&image.view(), None)
+            .expect("frangi_vesselness should succeed");
 
         // Check that vessel regions have high response
         assert!(vesselness[[25, 25]] > 0.0);
@@ -904,7 +906,8 @@ mod tests {
             }
         }
 
-        let (labels, cells) = microscopy::segment_cells(&image.view(), None).expect("segment_cells should succeed");
+        let (labels, cells) =
+            microscopy::segment_cells(&image.view(), None).expect("segment_cells should succeed");
 
         assert_eq!(cells.len(), 4); // Should detect 4 cells
         assert!(labels.max() == Some(&4));

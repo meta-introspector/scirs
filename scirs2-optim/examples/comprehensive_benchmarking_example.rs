@@ -8,8 +8,8 @@ use scirs2_optim::{
     adam::{Adam, AdamConfig},
     benchmarking::{cross_framework::*, BenchmarkResult, TestFunction},
     error::Result,
-    sgd::{SGD, SGDConfig},
     optimizers::Optimizer,
+    sgd::{SGDConfig, SGD},
 };
 use std::collections::HashMap;
 
@@ -99,27 +99,36 @@ fn add_custom_test_functions(benchmark: &mut CrossFrameworkBenchmark<f64>) {
         function: Box::new(|x: &Array1<f64>| {
             let n = x.len() as f64;
             let sum_sq = x.iter().map(|&xi| xi * xi).sum::<f64>();
-            let sum_cos = x.iter().map(|&xi| (2.0 * std::f64::consts::PI * xi).cos()).sum::<f64>();
-            
-            -20.0 * (-0.2 * (sum_sq / n).sqrt()).exp() 
-                - (sum_cos / n).exp() 
-                + 20.0 
+            let sum_cos = x
+                .iter()
+                .map(|&xi| (2.0 * std::f64::consts::PI * xi).cos())
+                .sum::<f64>();
+
+            -20.0 * (-0.2 * (sum_sq / n).sqrt()).exp() - (sum_cos / n).exp()
+                + 20.0
                 + std::f64::consts::E
         }),
         gradient: Box::new(|x: &Array1<f64>| {
             let n = x.len() as f64;
             let sum_sq = x.iter().map(|&xi| xi * xi).sum::<f64>();
-            let sum_cos = x.iter().map(|&xi| (2.0 * std::f64::consts::PI * xi).cos()).sum::<f64>();
-            
+            let sum_cos = x
+                .iter()
+                .map(|&xi| (2.0 * std::f64::consts::PI * xi).cos())
+                .sum::<f64>();
+
             let sqrt_term = (sum_sq / n).sqrt();
             let exp1 = (-0.2 * sqrt_term).exp();
             let exp2 = (sum_cos / n).exp();
-            
-            x.iter().map(|&xi| {
-                let grad_term1 = 4.0 * exp1 * xi / (sqrt_term * n);
-                let grad_term2 = (2.0 * std::f64::consts::PI * xi).sin() * 2.0 * std::f64::consts::PI * exp2 / n;
-                grad_term1 + grad_term2
-            }).collect::<Array1<f64>>()
+
+            x.iter()
+                .map(|&xi| {
+                    let grad_term1 = 4.0 * exp1 * xi / (sqrt_term * n);
+                    let grad_term2 =
+                        (2.0 * std::f64::consts::PI * xi).sin() * 2.0 * std::f64::consts::PI * exp2
+                            / n;
+                    grad_term1 + grad_term2
+                })
+                .collect::<Array1<f64>>()
         }),
         optimal_value: Some(0.0),
         optimal_point: Some(Array1::zeros(10)),
@@ -148,8 +157,14 @@ fn add_custom_test_functions(benchmark: &mut CrossFrameworkBenchmark<f64>) {
 }
 
 /// Prepare SciRS2 optimizers with various configurations
-fn prepare_scirs2_optimizers() -> Vec<(String, Box<dyn Fn(&Array1<f64>, &Array1<f64>) -> Array1<f64>>)> {
-    let mut optimizers: Vec<(String, Box<dyn Fn(&Array1<f64>, &Array1<f64>) -> Array1<f64>>)> = Vec::new();
+fn prepare_scirs2_optimizers() -> Vec<(
+    String,
+    Box<dyn Fn(&Array1<f64>, &Array1<f64>) -> Array1<f64>>,
+)> {
+    let mut optimizers: Vec<(
+        String,
+        Box<dyn Fn(&Array1<f64>, &Array1<f64>) -> Array1<f64>>,
+    )> = Vec::new();
 
     // Adam optimizer with default settings
     {
@@ -162,12 +177,12 @@ fn prepare_scirs2_optimizers() -> Vec<(String, Box<dyn Fn(&Array1<f64>, &Array1<
             amsgrad: false,
         };
         let mut adam = Adam::new(config);
-        
+
         optimizers.push((
             "Adam_default".to_string(),
             Box::new(move |params: &Array1<f64>, grads: &Array1<f64>| {
                 adam.step(params, grads).unwrap_or_else(|_| params.clone())
-            })
+            }),
         ));
     }
 
@@ -182,12 +197,14 @@ fn prepare_scirs2_optimizers() -> Vec<(String, Box<dyn Fn(&Array1<f64>, &Array1<
             amsgrad: false,
         };
         let mut adam_high_lr = Adam::new(config);
-        
+
         optimizers.push((
             "Adam_high_lr".to_string(),
             Box::new(move |params: &Array1<f64>, grads: &Array1<f64>| {
-                adam_high_lr.step(params, grads).unwrap_or_else(|_| params.clone())
-            })
+                adam_high_lr
+                    .step(params, grads)
+                    .unwrap_or_else(|_| params.clone())
+            }),
         ));
     }
 
@@ -202,12 +219,14 @@ fn prepare_scirs2_optimizers() -> Vec<(String, Box<dyn Fn(&Array1<f64>, &Array1<
             amsgrad: false,
         };
         let mut adam_wd = Adam::new(config);
-        
+
         optimizers.push((
             "Adam_weight_decay".to_string(),
             Box::new(move |params: &Array1<f64>, grads: &Array1<f64>| {
-                adam_wd.step(params, grads).unwrap_or_else(|_| params.clone())
-            })
+                adam_wd
+                    .step(params, grads)
+                    .unwrap_or_else(|_| params.clone())
+            }),
         ));
     }
 
@@ -222,12 +241,14 @@ fn prepare_scirs2_optimizers() -> Vec<(String, Box<dyn Fn(&Array1<f64>, &Array1<
             amsgrad: true,
         };
         let mut amsgrad = Adam::new(config);
-        
+
         optimizers.push((
             "AMSGrad".to_string(),
             Box::new(move |params: &Array1<f64>, grads: &Array1<f64>| {
-                amsgrad.step(params, grads).unwrap_or_else(|_| params.clone())
-            })
+                amsgrad
+                    .step(params, grads)
+                    .unwrap_or_else(|_| params.clone())
+            }),
         ));
     }
 
@@ -241,12 +262,14 @@ fn prepare_scirs2_optimizers() -> Vec<(String, Box<dyn Fn(&Array1<f64>, &Array1<
             nesterov: false,
         };
         let mut sgd_momentum = SGD::new(config);
-        
+
         optimizers.push((
             "SGD_momentum".to_string(),
             Box::new(move |params: &Array1<f64>, grads: &Array1<f64>| {
-                sgd_momentum.step(params, grads).unwrap_or_else(|_| params.clone())
-            })
+                sgd_momentum
+                    .step(params, grads)
+                    .unwrap_or_else(|_| params.clone())
+            }),
         ));
     }
 
@@ -260,12 +283,14 @@ fn prepare_scirs2_optimizers() -> Vec<(String, Box<dyn Fn(&Array1<f64>, &Array1<
             nesterov: true,
         };
         let mut nesterov = SGD::new(config);
-        
+
         optimizers.push((
             "Nesterov_SGD".to_string(),
             Box::new(move |params: &Array1<f64>, grads: &Array1<f64>| {
-                nesterov.step(params, grads).unwrap_or_else(|_| params.clone())
-            })
+                nesterov
+                    .step(params, grads)
+                    .unwrap_or_else(|_| params.clone())
+            }),
         ));
     }
 
@@ -280,11 +305,13 @@ fn save_detailed_results(results: &[CrossFrameworkBenchmarkResult<f64>]) -> Resu
     // Simplified serialization for now - would use serde_json in full implementation
     let json_data = format!("{:#?}", results);
 
-    let mut file = File::create("/tmp/scirs2_benchmark_results.json")
-        .map_err(|e| scirs2_optim::error::OptimError::InvalidConfig(format!("File creation failed: {}", e)))?;
+    let mut file = File::create("/tmp/scirs2_benchmark_results.json").map_err(|e| {
+        scirs2_optim::error::OptimError::InvalidConfig(format!("File creation failed: {}", e))
+    })?;
 
-    file.write_all(json_data.as_bytes())
-        .map_err(|e| scirs2_optim::error::OptimError::InvalidConfig(format!("File write failed: {}", e)))?;
+    file.write_all(json_data.as_bytes()).map_err(|e| {
+        scirs2_optim::error::OptimError::InvalidConfig(format!("File write failed: {}", e))
+    })?;
 
     println!("💾 Detailed results saved to /tmp/scirs2_benchmark_results.json");
     Ok(())
@@ -300,7 +327,7 @@ fn generate_visualization_data(results: &[CrossFrameworkBenchmarkResult<f64>]) -
 
     for result in results {
         let mut convergence_summary = Vec::new();
-        
+
         for (optimizer_id, summary) in &result.optimizer_results {
             convergence_summary.push(format!(
                 "optimizer: {}, framework: {}, success_rate: {:.2}, avg_iterations: {:.1}",
@@ -324,11 +351,13 @@ fn generate_visualization_data(results: &[CrossFrameworkBenchmarkResult<f64>]) -
     // Simplified serialization - would use proper JSON in full implementation
     let json_data = format!("[\n{}\n]", plot_data.join(",\n"));
 
-    let mut file = File::create("/tmp/scirs2_benchmark_plots.json")
-        .map_err(|e| scirs2_optim::error::OptimError::InvalidConfig(format!("File creation failed: {}", e)))?;
+    let mut file = File::create("/tmp/scirs2_benchmark_plots.json").map_err(|e| {
+        scirs2_optim::error::OptimError::InvalidConfig(format!("File creation failed: {}", e))
+    })?;
 
-    file.write_all(json_data.as_bytes())
-        .map_err(|e| scirs2_optim::error::OptimError::InvalidConfig(format!("File write failed: {}", e)))?;
+    file.write_all(json_data.as_bytes()).map_err(|e| {
+        scirs2_optim::error::OptimError::InvalidConfig(format!("File write failed: {}", e))
+    })?;
 
     println!("📈 Visualization data saved to /tmp/scirs2_benchmark_plots.json");
     Ok(())
@@ -341,41 +370,55 @@ fn run_performance_analysis(results: &[CrossFrameworkBenchmarkResult<f64>]) -> R
 
     let mut framework_wins = HashMap::new();
     let mut optimizer_performance = HashMap::new();
-    
+
     for result in results {
-        println!("\n📊 Analysis for {} ({}D, batch={})", 
-                 result.function_name, result.problem_dim, result.batch_size);
-        
+        println!(
+            "\n📊 Analysis for {} ({}D, batch={})",
+            result.function_name, result.problem_dim, result.batch_size
+        );
+
         // Find best performing optimizer
         if let Some((best_optimizer, best_score)) = result.performance_ranking.first() {
-            println!("🏆 Best performer: {} (score: {:.6})", best_optimizer, best_score);
-            
+            println!(
+                "🏆 Best performer: {} (score: {:.6})",
+                best_optimizer, best_score
+            );
+
             // Track framework wins
-            *framework_wins.entry(best_optimizer.framework.clone()).or_insert(0) += 1;
-            
+            *framework_wins
+                .entry(best_optimizer.framework.clone())
+                .or_insert(0) += 1;
+
             // Track optimizer performance
-            optimizer_performance.entry(best_optimizer.clone())
+            optimizer_performance
+                .entry(best_optimizer.clone())
                 .or_insert(Vec::new())
                 .push(*best_score);
         }
 
         // Analyze convergence characteristics
         analyze_convergence_characteristics(result);
-        
+
         // Check statistical significance
         let anova = &result.statistical_comparison.anova_results;
         if anova.p_value < 0.05 {
-            println!("📈 Statistically significant differences found (p={:.6})", anova.p_value);
+            println!(
+                "📈 Statistically significant differences found (p={:.6})",
+                anova.p_value
+            );
             analyze_pairwise_comparisons(result);
         } else {
-            println!("📊 No statistically significant differences (p={:.6})", anova.p_value);
+            println!(
+                "📊 No statistically significant differences (p={:.6})",
+                anova.p_value
+            );
         }
     }
 
     // Overall framework comparison
     println!("\n🌟 OVERALL FRAMEWORK COMPARISON");
     println!("=================================");
-    
+
     for (framework, wins) in &framework_wins {
         let win_rate = *wins as f64 / results.len() as f64 * 100.0;
         println!("{}: {} wins ({:.1}%)", framework, wins, win_rate);
@@ -384,7 +427,7 @@ fn run_performance_analysis(results: &[CrossFrameworkBenchmarkResult<f64>]) -> R
     // Top performing optimizers
     println!("\n🚀 TOP PERFORMING OPTIMIZERS");
     println!("===============================");
-    
+
     let mut avg_scores: Vec<_> = optimizer_performance
         .iter()
         .map(|(optimizer, scores)| {
@@ -392,12 +435,17 @@ fn run_performance_analysis(results: &[CrossFrameworkBenchmarkResult<f64>]) -> R
             (optimizer.clone(), avg_score, scores.len())
         })
         .collect();
-    
+
     avg_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-    
+
     for (i, (optimizer, avg_score, test_count)) in avg_scores.iter().take(10).enumerate() {
-        println!("{}. {} - Avg Score: {:.6} ({} tests)", 
-                 i + 1, optimizer, avg_score, test_count);
+        println!(
+            "{}. {} - Avg Score: {:.6} ({} tests)",
+            i + 1,
+            optimizer,
+            avg_score,
+            test_count
+        );
     }
 
     Ok(())
@@ -406,21 +454,26 @@ fn run_performance_analysis(results: &[CrossFrameworkBenchmarkResult<f64>]) -> R
 /// Analyze convergence characteristics for a specific test
 fn analyze_convergence_characteristics(result: &CrossFrameworkBenchmarkResult<f64>) {
     println!("  📉 Convergence Analysis:");
-    
+
     for (optimizer_id, summary) in &result.optimizer_results {
         if summary.successful_runs > 0 {
             let success_rate = summary.success_rate * 100.0;
             let avg_time_ms = summary.mean_convergence_time.as_millis();
-            
-            println!("    {} - Success: {:.1}%, Avg Time: {}ms, Avg Iters: {:.1}", 
-                     optimizer_id.name, success_rate, avg_time_ms, summary.mean_iterations);
-            
+
+            println!(
+                "    {} - Success: {:.1}%, Avg Time: {}ms, Avg Iters: {:.1}",
+                optimizer_id.name, success_rate, avg_time_ms, summary.mean_iterations
+            );
+
             // Analyze convergence speed
             if !summary.convergence_curves.is_empty() {
-                let avg_curve_length = summary.convergence_curves.iter()
+                let avg_curve_length = summary
+                    .convergence_curves
+                    .iter()
                     .map(|curve| curve.len())
-                    .sum::<usize>() as f64 / summary.convergence_curves.len() as f64;
-                
+                    .sum::<usize>() as f64
+                    / summary.convergence_curves.len() as f64;
+
                 if avg_curve_length < 100.0 {
                     println!("      ⚡ Fast convergence");
                 } else if avg_curve_length < 500.0 {
@@ -438,26 +491,30 @@ fn analyze_convergence_characteristics(result: &CrossFrameworkBenchmarkResult<f6
 /// Analyze pairwise statistical comparisons
 fn analyze_pairwise_comparisons(result: &CrossFrameworkBenchmarkResult<f64>) {
     println!("  🔬 Pairwise Comparisons:");
-    
+
     let mut significant_pairs = Vec::new();
-    
+
     for ((opt1, opt2), test_result) in &result.statistical_comparison.final_value_tests {
         if test_result.is_significant {
             significant_pairs.push((opt1, opt2, test_result.p_value));
         }
     }
-    
+
     if significant_pairs.is_empty() {
         println!("    No significant pairwise differences found");
     } else {
-        significant_pairs.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal));
-        
+        significant_pairs
+            .sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal));
+
         for (opt1, opt2, p_value) in significant_pairs.iter().take(5) {
             println!("    {} vs {} - p={:.6}", opt1.name, opt2.name, p_value);
         }
-        
+
         if significant_pairs.len() > 5 {
-            println!("    ... and {} more significant comparisons", significant_pairs.len() - 5);
+            println!(
+                "    ... and {} more significant comparisons",
+                significant_pairs.len() - 5
+            );
         }
     }
 }

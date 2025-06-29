@@ -6,9 +6,18 @@ pub mod compact;
 
 pub use compact::{BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph, MemmapGraph};
 
+pub use {
+    AdvancedMemoryAnalyzer, FragmentationReport, MemoryMetrics, MemoryProfiler, MemorySample,
+    MemoryStats, OptimizationSuggestions, OptimizedGraphBuilder, RealTimeMemoryProfiler,
+};
+
 use crate::{DiGraph, Graph};
 use std::collections::HashMap;
 use std::mem;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::{Duration, Instant};
+use sysinfo::{ProcessExt, System, SystemExt};
 
 /// Memory usage statistics for a graph
 #[derive(Debug, Clone)]
@@ -323,6 +332,357 @@ pub fn suggest_optimizations(
     }
 }
 
+/// Real-time memory profiler for monitoring memory usage during algorithm execution
+#[derive(Debug)]
+pub struct RealTimeMemoryProfiler {
+    /// Process ID for monitoring
+    pid: u32,
+    /// System information handle
+    system: Arc<Mutex<System>>,
+    /// Is monitoring active
+    is_monitoring: Arc<Mutex<bool>>,
+    /// Memory usage samples
+    samples: Arc<Mutex<Vec<MemorySample>>>,
+    /// Monitoring thread handle
+    monitor_thread: Option<thread::JoinHandle<()>>,
+}
+
+/// Memory usage sample at a specific time
+#[derive(Debug, Clone)]
+pub struct MemorySample {
+    /// Timestamp when sample was taken
+    pub timestamp: Instant,
+    /// Physical memory used (RSS) in bytes
+    pub physical_memory: u64,
+    /// Virtual memory used in bytes
+    pub virtual_memory: u64,
+    /// Memory growth since last sample in bytes
+    pub growth_rate: i64,
+}
+
+/// Memory monitoring metrics collected over time
+#[derive(Debug, Clone)]
+pub struct MemoryMetrics {
+    /// Peak memory usage in bytes
+    pub peak_memory: u64,
+    /// Average memory usage in bytes
+    pub average_memory: u64,
+    /// Memory growth rate in bytes per second
+    pub growth_rate: f64,
+    /// Total monitoring duration
+    pub duration: Duration,
+    /// Number of samples collected
+    pub sample_count: usize,
+    /// Memory variance (indicates stability)
+    pub memory_variance: f64,
+}
+
+impl RealTimeMemoryProfiler {
+    /// Create a new real-time memory profiler
+    pub fn new() -> Self {
+        let mut system = System::new_all();
+        system.refresh_all();
+
+        let pid = std::process::id();
+
+        Self {
+            pid,
+            system: Arc::new(Mutex::new(system)),
+            is_monitoring: Arc::new(Mutex::new(false)),
+            samples: Arc::new(Mutex::new(Vec::new())),
+            monitor_thread: None,
+        }
+    }
+
+    /// Start monitoring memory usage
+    pub fn start_monitoring(&mut self, sample_interval: Duration) {
+        let mut is_monitoring = self.is_monitoring.lock().unwrap();
+        if *is_monitoring {
+            return; // Already monitoring
+        }
+        *is_monitoring = true;
+        drop(is_monitoring);
+
+        // Clear previous samples
+        self.samples.lock().unwrap().clear();
+
+        let pid = self.pid;
+        let system = Arc::clone(&self.system);
+        let is_monitoring = Arc::clone(&self.is_monitoring);
+        let samples = Arc::clone(&self.samples);
+
+        let handle = thread::spawn(move || {
+            let mut last_memory = 0u64;
+            let start_time = Instant::now();
+
+            while *is_monitoring.lock().unwrap() {
+                {
+                    let mut sys = system.lock().unwrap();
+                    sys.refresh_process(pid.into());
+
+                    if let Some(process) = sys.process(pid.into()) {
+                        let physical_memory = process.memory() * 1024; // Convert KB to bytes
+                        let virtual_memory = process.virtual_memory() * 1024;
+                        let growth_rate = physical_memory as i64 - last_memory as i64;
+
+                        let sample = MemorySample {
+                            timestamp: Instant::now(),
+                            physical_memory,
+                            virtual_memory,
+                            growth_rate,
+                        };
+
+                        samples.lock().unwrap().push(sample);
+                        last_memory = physical_memory;
+                    }
+                }
+
+                thread::sleep(sample_interval);
+            }
+        });
+
+        self.monitor_thread = Some(handle);
+    }
+
+    /// Stop monitoring and return collected metrics
+    pub fn stop_monitoring(&mut self) -> MemoryMetrics {
+        {
+            let mut is_monitoring = self.is_monitoring.lock().unwrap();
+            *is_monitoring = false;
+        }
+
+        if let Some(handle) = self.monitor_thread.take() {
+            let _ = handle.join();
+        }
+
+        let samples = self.samples.lock().unwrap();
+        self.calculate_metrics(&samples)
+    }
+
+    /// Get current memory metrics without stopping monitoring
+    pub fn get_current_metrics(&self) -> MemoryMetrics {
+        let samples = self.samples.lock().unwrap();
+        self.calculate_metrics(&samples)
+    }
+
+    /// Calculate metrics from collected samples
+    fn calculate_metrics(&self, samples: &[MemorySample]) -> MemoryMetrics {
+        if samples.is_empty() {
+            return MemoryMetrics {
+                peak_memory: 0,
+                average_memory: 0,
+                growth_rate: 0.0,
+                duration: Duration::new(0, 0),
+                sample_count: 0,
+                memory_variance: 0.0,
+            };
+        }
+
+        let peak_memory = samples.iter().map(|s| s.physical_memory).max().unwrap_or(0);
+        let total_memory: u64 = samples.iter().map(|s| s.physical_memory).sum();
+        let average_memory = total_memory / samples.len() as u64;
+
+        let duration = if samples.len() > 1 {
+            samples
+                .last()
+                .unwrap()
+                .timestamp
+                .duration_since(samples[0].timestamp)
+        } else {
+            Duration::new(0, 0)
+        };
+
+        let growth_rate = if duration.as_secs_f64() > 0.0 && samples.len() > 1 {
+            let total_growth =
+                samples.last().unwrap().physical_memory as i64 - samples[0].physical_memory as i64;
+            total_growth as f64 / duration.as_secs_f64()
+        } else {
+            0.0
+        };
+
+        // Calculate memory variance
+        let variance = if samples.len() > 1 {
+            let mean = average_memory as f64;
+            let sum_sq_diff: f64 = samples
+                .iter()
+                .map(|s| {
+                    let diff = s.physical_memory as f64 - mean;
+                    diff * diff
+                })
+                .sum();
+            sum_sq_diff / samples.len() as f64
+        } else {
+            0.0
+        };
+
+        MemoryMetrics {
+            peak_memory,
+            average_memory,
+            growth_rate,
+            duration,
+            sample_count: samples.len(),
+            memory_variance: variance,
+        }
+    }
+
+    /// Check for memory leaks based on growth rate
+    pub fn detect_memory_leaks(&self, threshold_bytes_per_sec: f64) -> bool {
+        let metrics = self.get_current_metrics();
+        metrics.growth_rate > threshold_bytes_per_sec && metrics.sample_count > 10
+    }
+
+    /// Generate memory usage report
+    pub fn generate_report(&self) -> String {
+        let metrics = self.get_current_metrics();
+        let samples = self.samples.lock().unwrap();
+
+        let mut report = String::new();
+        report.push_str("=== Memory Usage Report ===\n");
+        report.push_str(&format!(
+            "Peak Memory: {:.2} MB\n",
+            metrics.peak_memory as f64 / 1_048_576.0
+        ));
+        report.push_str(&format!(
+            "Average Memory: {:.2} MB\n",
+            metrics.average_memory as f64 / 1_048_576.0
+        ));
+        report.push_str(&format!(
+            "Growth Rate: {:.2} KB/s\n",
+            metrics.growth_rate / 1024.0
+        ));
+        report.push_str(&format!(
+            "Duration: {:.2} seconds\n",
+            metrics.duration.as_secs_f64()
+        ));
+        report.push_str(&format!("Samples: {}\n", metrics.sample_count));
+        report.push_str(&format!(
+            "Memory Variance: {:.2} MB²\n",
+            metrics.memory_variance / 1_048_576.0_f64.powi(2)
+        ));
+
+        if metrics.growth_rate > 1024.0 * 1024.0 {
+            // > 1 MB/s
+            report.push_str("\n⚠️  WARNING: High memory growth rate detected!\n");
+        }
+
+        if metrics.memory_variance > (100.0 * 1_048_576.0_f64).powi(2) {
+            // > 100 MB variance
+            report.push_str("⚠️  WARNING: High memory usage variance!\n");
+        }
+
+        report
+    }
+}
+
+/// Advanced memory analysis for graph algorithms
+pub struct AdvancedMemoryAnalyzer;
+
+impl AdvancedMemoryAnalyzer {
+    /// Analyze memory allocation patterns for different graph operations
+    pub fn analyze_operation_memory<F, R>(
+        operation_name: &str,
+        operation: F,
+        sample_interval: Duration,
+    ) -> (R, MemoryMetrics)
+    where
+        F: FnOnce() -> R,
+    {
+        let mut profiler = RealTimeMemoryProfiler::new();
+        profiler.start_monitoring(sample_interval);
+
+        let result = operation();
+
+        let metrics = profiler.stop_monitoring();
+
+        println!(
+            "Memory analysis for '{}': Peak={:.2}MB, Growth={:.2}KB/s",
+            operation_name,
+            metrics.peak_memory as f64 / 1_048_576.0,
+            metrics.growth_rate / 1024.0
+        );
+
+        (result, metrics)
+    }
+
+    /// Compare memory usage between different algorithm implementations
+    pub fn compare_implementations<F1, F2, R>(
+        impl1: F1,
+        impl2: F2,
+        impl1_name: &str,
+        impl2_name: &str,
+    ) -> (MemoryMetrics, MemoryMetrics)
+    where
+        F1: FnOnce() -> R,
+        F2: FnOnce() -> R,
+    {
+        let sample_interval = Duration::from_millis(10);
+
+        let (_, metrics1) = Self::analyze_operation_memory(impl1_name, impl1, sample_interval);
+        let (_, metrics2) = Self::analyze_operation_memory(impl2_name, impl2, sample_interval);
+
+        println!("\n=== Implementation Comparison ===");
+        println!(
+            "{} - Peak: {:.2}MB, Growth: {:.2}KB/s",
+            impl1_name,
+            metrics1.peak_memory as f64 / 1_048_576.0,
+            metrics1.growth_rate / 1024.0
+        );
+        println!(
+            "{} - Peak: {:.2}MB, Growth: {:.2}KB/s",
+            impl2_name,
+            metrics2.peak_memory as f64 / 1_048_576.0,
+            metrics2.growth_rate / 1024.0
+        );
+
+        let memory_improvement = if metrics2.peak_memory > 0 {
+            ((metrics1.peak_memory as f64 - metrics2.peak_memory as f64)
+                / metrics2.peak_memory as f64)
+                * 100.0
+        } else {
+            0.0
+        };
+
+        println!("Memory improvement: {:.1}%", memory_improvement);
+
+        (metrics1, metrics2)
+    }
+
+    /// Benchmark memory usage for graph algorithms at different scales
+    pub fn scale_analysis<F>(
+        algorithm_factory: F,
+        scales: Vec<usize>,
+        algorithm_name: &str,
+    ) -> Vec<(usize, MemoryMetrics)>
+    where
+        F: Fn(usize) -> Box<dyn FnOnce() -> ()>,
+    {
+        let mut results = Vec::new();
+
+        println!("\n=== Scaling Analysis for {} ===", algorithm_name);
+        for scale in scales {
+            let operation = algorithm_factory(scale);
+            let (_, metrics) = Self::analyze_operation_memory(
+                &format!("{} (n={})", algorithm_name, scale),
+                || operation(),
+                Duration::from_millis(5),
+            );
+            results.push((scale, metrics));
+        }
+
+        // Print scaling summary
+        println!("\nScaling Summary:");
+        for (scale, metrics) in &results {
+            println!(
+                "  n={}: {:.2}MB peak",
+                scale,
+                metrics.peak_memory as f64 / 1_048_576.0
+            );
+        }
+
+        results
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -388,5 +748,73 @@ mod tests {
         let graph = builder.build().unwrap();
         assert_eq!(graph.node_count(), 100);
         assert_eq!(graph.edge_count(), 99);
+    }
+
+    #[test]
+    fn test_real_time_memory_profiler() {
+        use std::time::Duration;
+
+        let mut profiler = RealTimeMemoryProfiler::new();
+        profiler.start_monitoring(Duration::from_millis(10));
+
+        // Simulate some work
+        std::thread::sleep(Duration::from_millis(50));
+
+        let metrics = profiler.stop_monitoring();
+        assert!(metrics.sample_count > 0);
+        assert!(metrics.peak_memory > 0);
+    }
+
+    #[test]
+    fn test_advanced_memory_analyzer() {
+        let (result, metrics) = AdvancedMemoryAnalyzer::analyze_operation_memory(
+            "test_operation",
+            || {
+                // Simulate some graph operation
+                let mut v = Vec::new();
+                for i in 0..1000 {
+                    v.push(i);
+                }
+                v.len()
+            },
+            Duration::from_millis(1),
+        );
+
+        assert_eq!(result, 1000);
+        assert!(metrics.peak_memory > 0);
+    }
+
+    #[test]
+    fn test_memory_leak_detection() {
+        let mut profiler = RealTimeMemoryProfiler::new();
+
+        // Should not detect leaks for stable memory usage
+        let has_leak = profiler.detect_memory_leaks(1024.0 * 1024.0); // 1MB/s threshold
+        assert!(!has_leak); // Should be false for new profiler
+    }
+
+    #[test]
+    fn test_optimization_suggestions() {
+        // Create a mock fragmentation report with high fragmentation
+        let fragmentation = FragmentationReport {
+            degree_distribution: std::collections::HashMap::new(),
+            total_capacity: 1000,
+            total_used: 500,
+            fragmentation_ratio: 0.5, // High fragmentation
+            wasted_bytes: 500 * mem::size_of::<(usize, f64)>(),
+        };
+
+        let stats = MemoryStats {
+            total_bytes: 10000,
+            node_bytes: 2000,
+            edge_bytes: 3000,
+            adjacency_bytes: 4000,
+            overhead_bytes: 1000,
+            efficiency: 0.5, // Low efficiency
+        };
+
+        let suggestions = suggest_optimizations(&stats, &fragmentation);
+        assert!(!suggestions.suggestions.is_empty());
+        assert!(suggestions.potential_savings > 0);
     }
 }

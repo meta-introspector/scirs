@@ -548,7 +548,7 @@ impl MultiObjectiveOptimizer {
     /// Tournament selection for parent selection
     fn tournament_selection(&self) -> Result<&MultiObjectiveSolution> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let tournament_size = 3;
         let mut best_idx = rng.gen_range(0..self.population.len());
@@ -615,7 +615,7 @@ impl MultiObjectiveOptimizer {
     /// Generate random architecture for initialization
     fn generate_random_architecture(&self) -> Result<Arc<dyn ArchitectureEncoding>> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let encoding = crate::nas::architecture_encoding::SequentialEncoding::random(&mut rng)?;
         Ok(Arc::new(encoding) as Arc<dyn ArchitectureEncoding>)

@@ -191,13 +191,13 @@ where
         if mass_matrix.matrix_type != MassMatrixType::Identity {
             // Estimate condition number heuristically and adjust tolerance accordingly
             let condition_factor = match mass_matrix.matrix_type {
-                MassMatrixType::Constant => F::from_f64(5.0).unwrap(),  // Moderate relaxation
+                MassMatrixType::Constant => F::from_f64(5.0).unwrap(), // Moderate relaxation
                 MassMatrixType::TimeDependent => F::from_f64(8.0).unwrap(), // More relaxation
                 MassMatrixType::StateDependent => F::from_f64(12.0).unwrap(), // Most relaxation
-                MassMatrixType::Identity => F::one(), // No change
+                MassMatrixType::Identity => F::one(),                  // No change
             };
             newton_tol *= condition_factor;
-            
+
             // Cap the tolerance to prevent excessive relaxation
             newton_tol = newton_tol.min(F::from_f64(1e-4).unwrap());
         }
@@ -390,71 +390,110 @@ where
                 // This avoids numerical issues with computing the inverse of potentially ill-conditioned mass matrices
 
                 // Helper function to solve Newton correction for each stage
-                let solve_newton_stage = |mass_mat: &Option<Array2<F>>, 
-                                        residual: &Array1<F>, 
-                                        jacobian: &Array2<F>, 
-                                        a_coeff: F| -> IntegrateResult<Array1<F>> {
+                let solve_newton_stage = |mass_mat: &Option<Array2<F>>,
+                                          residual: &Array1<F>,
+                                          jacobian: &Array2<F>,
+                                          a_coeff: F,
+                                          k_prime: &Array1<F>|
+                 -> IntegrateResult<Array1<F>> {
                     match mass_mat {
                         Some(m) => {
-                            // For mass matrix DAEs, solve: (M - h*a_ii*J) * dk = r
-                            // where r is the residual and dk is the Newton correction
+                            // CORRECTED Newton system for mass matrix DAEs:
+                            // For the system M(t,k) * k' = f(t,k) and k = y + h * sum(a_ij * k'_j)
+                            // The Newton correction dk should satisfy:
+                            // dk = h * a_ii * dk'  (stage coupling approximation)
+                            // M * dk' + (∂M/∂k * k') * dk = J * dk
+                            // 
+                            // Substituting dk = h * a_ii * dk':
+                            // M * dk' + h * a_ii * (∂M/∂k * k') * dk' = h * a_ii * J * dk'
+                            // [M + h * a_ii * (∂M/∂k * k' - J)] * dk' = rhs
+                            // 
+                            // For numerical stability, we approximate ∂M/∂k ≈ 0 for most cases
+                            // This gives us: [M - h * a_ii * J] * dk' = -residual/(h * a_ii)
+                            // And then: dk = h * a_ii * dk'
+
                             let mut newton_matrix = m.clone();
-                            
-                            // Subtract h*a_ii*J from M
+
+                            // Subtract h*a_ii*J from M (corrected sign and interpretation)
                             for i in 0..n_dim {
                                 for j in 0..n_dim {
                                     newton_matrix[[i, j]] -= h * a_coeff * jacobian[[i, j]];
                                 }
                             }
-                            
+
+                            // The RHS is -residual/(h * a_ii) to get dk'
+                            let rhs = residual / (-h * a_coeff);
+
                             // Solve with iterative improvement for better numerical stability
-                            let solve_with_conditioning = |matrix: &Array2<F>, b: &Array1<F>| -> IntegrateResult<Array1<F>> {
-                                // First attempt with original matrix
-                                match solve_linear_system(&matrix.view(), &b.view()) {
-                                    Ok(solution) => {
-                                        // Verify solution quality by checking residual
-                                        let mut check_residual = Array1::<F>::zeros(n_dim);
-                                        for i in 0..n_dim {
-                                            for j in 0..n_dim {
-                                                check_residual[i] += matrix[[i, j]] * solution[j];
+                            let solve_with_conditioning =
+                                |matrix: &Array2<F>, b: &Array1<F>| -> IntegrateResult<Array1<F>> {
+                                    // First attempt with original matrix
+                                    match solve_linear_system(&matrix.view(), &b.view()) {
+                                        Ok(solution) => {
+                                            // Verify solution quality by checking residual
+                                            let mut check_residual = Array1::<F>::zeros(n_dim);
+                                            for i in 0..n_dim {
+                                                for j in 0..n_dim {
+                                                    check_residual[i] +=
+                                                        matrix[[i, j]] * solution[j];
+                                                }
+                                                check_residual[i] -= b[i];
                                             }
-                                            check_residual[i] -= b[i];
+
+                                            let residual_norm = check_residual
+                                                .iter()
+                                                .fold(F::zero(), |acc, &x| acc + x * x)
+                                                .sqrt();
+                                            let b_norm = b
+                                                .iter()
+                                                .fold(F::zero(), |acc, &x| acc + x * x)
+                                                .sqrt();
+
+                                            if residual_norm
+                                                < F::from_f64(1e-10).unwrap() * (F::one() + b_norm)
+                                            {
+                                                Ok(solution)
+                                            } else {
+                                                // Solution not accurate enough, try with regularization
+                                                Err(crate::error::IntegrateError::ComputationError(
+                                                    "Solution accuracy insufficient".to_string(),
+                                                ))
+                                            }
                                         }
-                                        
-                                        let residual_norm = check_residual.iter().fold(F::zero(), |acc, &x| acc + x*x).sqrt();
-                                        let b_norm = b.iter().fold(F::zero(), |acc, &x| acc + x*x).sqrt();
-                                        
-                                        if residual_norm < F::from_f64(1e-10).unwrap() * (F::one() + b_norm) {
-                                            Ok(solution)
-                                        } else {
-                                            // Solution not accurate enough, try with regularization
-                                            Err(crate::error::IntegrateError::ComputationError("Solution accuracy insufficient".to_string()))
-                                        }
+                                        Err(e) => Err(e),
                                     }
-                                    Err(e) => Err(e),
-                                }
-                            };
-                            
-                            match solve_with_conditioning(&newton_matrix, residual) {
-                                Ok(solution) => Ok(solution),
+                                };
+
+                            match solve_with_conditioning(&newton_matrix, &rhs) {
+                                Ok(dk_prime) => {
+                                    // Convert dk' back to dk = h * a_ii * dk'
+                                    Ok(&dk_prime * (h * a_coeff))
+                                },
                                 Err(_) => {
                                     // Apply Tikhonov regularization for better conditioning
                                     let mut regularized = newton_matrix.clone();
                                     let reg_param = F::from_f64(1e-10).unwrap() * h;
-                                    
+
                                     for i in 0..n_dim {
                                         regularized[[i, i]] += reg_param;
                                     }
-                                    
-                                    match solve_linear_system(&regularized.view(), &residual.view()) {
-                                        Ok(solution) => Ok(solution),
+
+                                    match solve_linear_system(&regularized.view(), &rhs.view())
+                                    {
+                                        Ok(dk_prime) => Ok(&dk_prime * (h * a_coeff)),
                                         Err(_) => {
                                             // Last resort: stronger regularization
                                             let strong_reg = F::from_f64(1e-8).unwrap() * h;
                                             for i in 0..n_dim {
                                                 regularized[[i, i]] += strong_reg;
                                             }
-                                            solve_linear_system(&regularized.view(), &residual.view())
+                                            match solve_linear_system(
+                                                &regularized.view(),
+                                                &rhs.view(),
+                                            ) {
+                                                Ok(dk_prime) => Ok(&dk_prime * (h * a_coeff)),
+                                                Err(e) => Err(e),
+                                            }
                                         }
                                     }
                                 }
@@ -474,9 +513,9 @@ where
                 };
 
                 // Solve Newton corrections for each stage
-                let dk1 = solve_newton_stage(&m1, &r1, jac, a11)?;
-                let dk2 = solve_newton_stage(&m2, &r2, jac, a22)?;
-                let dk3 = solve_newton_stage(&m3, &r3, jac, a33)?;
+                let dk1 = solve_newton_stage(&m1, &r1, jac, a11, &k1_prime)?;
+                let dk2 = solve_newton_stage(&m2, &r2, jac, a22, &k2_prime)?;
+                let dk3 = solve_newton_stage(&m3, &r3, jac, a33, &k3_prime)?;
                 n_lu += 3;
 
                 // Apply adaptive damping based on Newton iteration progress
@@ -540,7 +579,7 @@ where
             // For mass matrix systems, compute error in physical coordinates
             // Error estimate based on stage differences weighted by mass matrix
             let stage_diff = &k3 - &k2;
-            
+
             // Apply mass matrix scaling to error estimate
             match mass_matrix.evaluate(t + h, k3.view()) {
                 Some(ref m3_matrix) => {

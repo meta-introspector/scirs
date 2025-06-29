@@ -154,6 +154,7 @@ pub mod extrapolation;
 pub mod fast_bspline;
 pub mod geospatial;
 pub mod gpu_accelerated;
+pub mod gpu_production;
 pub mod grid;
 pub mod griddata;
 pub mod hermite;
@@ -183,6 +184,7 @@ pub mod sparse_grid;
 pub mod spatial;
 pub mod spline;
 pub mod statistical;
+pub mod statistical_advanced;
 pub mod stress_testing;
 pub mod tension;
 pub mod tensor;
@@ -191,10 +193,6 @@ pub mod utils;
 pub mod voronoi;
 
 // Re-exports for convenience
-pub use deprecation::{
-    DeprecationConfig, DeprecationInfo, DeprecationLevel, FeatureRegistry,
-    configure_deprecation, init_deprecation_system, issue_deprecation_warning,
-};
 pub use adaptive_gp::{
     make_adaptive_gp, AdaptiveGPConfig, AdaptiveGaussianProcess, GPStats, KernelHyperparameters,
     KernelModel, KernelType as GPKernelType,
@@ -253,6 +251,10 @@ pub use constrained::{
     ConstrainedSpline, Constraint, ConstraintRegion, ConstraintSatisfactionSummary, ConstraintType,
     ConstraintViolationInfo, FittingMethod,
 };
+pub use deprecation::{
+    configure_deprecation, init_deprecation_system, issue_deprecation_warning, DeprecationConfig,
+    DeprecationInfo, DeprecationLevel, FeatureRegistry,
+};
 pub use extrapolation::{
     make_adaptive_extrapolator,
     make_autoregressive_extrapolator,
@@ -296,6 +298,12 @@ pub use gpu_accelerated::{
     get_gpu_device_info, gpu_utils, is_gpu_acceleration_available, make_gpu_rbf_interpolator,
     GpuBatchSplineEvaluator, GpuConfig, GpuDeviceInfo, GpuKernelConfig, GpuMemoryManager,
     GpuRBFInterpolator, GpuRBFKernel, GpuStats,
+};
+
+// Production GPU acceleration
+pub use gpu_production::{
+    DeviceMetrics, GpuDevice, GpuMemoryPool, ProductionGpuAccelerator, ProductionGpuConfig,
+    ProductionPerformanceReport, SystemMetrics, WorkloadDistribution,
 };
 pub use grid::{
     create_regular_grid, map_grid_to_points, resample_grid_to_grid, resample_to_grid,
@@ -346,11 +354,11 @@ pub use neural_enhanced::{
     NeuralEnhancedInterpolator, NeuralTrainingConfig, TrainingStats,
 };
 pub use numerical_stability::{
-    analyze_interpolation_edge_cases, apply_tikhonov_regularization, assess_enhanced_matrix_condition,
-    assess_matrix_condition, check_safe_division, compute_adaptive_regularization,
-    early_numerical_warning_system, enhanced_matrix_multiply, machine_epsilon, safe_reciprocal,
-    solve_with_stability_monitoring, BoundaryAnalysis, ConditionReport, EdgeCaseAnalysis,
-    StabilityDiagnostics, StabilityLevel,
+    analyze_interpolation_edge_cases, apply_tikhonov_regularization,
+    assess_enhanced_matrix_condition, assess_matrix_condition, check_safe_division,
+    compute_adaptive_regularization, early_numerical_warning_system, enhanced_matrix_multiply,
+    machine_epsilon, safe_reciprocal, solve_with_stability_monitoring, BoundaryAnalysis,
+    ConditionReport, EdgeCaseAnalysis, StabilityDiagnostics, StabilityLevel,
 };
 pub use nurbs::{make_nurbs_circle, make_nurbs_sphere, NurbsCurve, NurbsSurface};
 pub use optimization::{
@@ -388,6 +396,7 @@ pub use sparse_grid::{
 };
 pub use spatial::balltree::BallTree;
 pub use spatial::kdtree::KdTree;
+pub use spatial::{AdvancedSimdOps, SimdBenchmark};
 pub use spline::{make_interp_spline, CubicSpline, CubicSplineBuilder, SplineBoundaryCondition};
 pub use statistical::{
     make_auto_kde_interpolator,
@@ -418,6 +427,12 @@ pub use statistical::{
     QuantileInterpolator,
     RobustInterpolator,
     StochasticInterpolator,
+};
+
+// Advanced statistical interpolation methods
+pub use statistical_advanced::{
+    AdvancedBootstrap, BootstrapMethod, KernelParameters, KernelType, StatisticalSpline,
+    VariationalSparseGP,
 };
 pub use structured_matrix::{
     create_bspline_band_matrix, solve_band_system, solve_sparse_system,

@@ -258,8 +258,7 @@ impl FastaWriter {
 }
 
 /// FASTQ quality encoding
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum QualityEncoding {
     /// Sanger/Illumina 1.8+ (Phred+33)
     #[default]
@@ -267,7 +266,6 @@ pub enum QualityEncoding {
     /// Illumina 1.3-1.7 (Phred+64)
     Illumina,
 }
-
 
 /// FASTQ sequence record
 #[derive(Debug, Clone, PartialEq)]
@@ -915,10 +913,7 @@ pub mod analysis {
             all_scores.extend_from_slice(&scores);
 
             for (pos, &score) in scores.iter().enumerate() {
-                position_scores
-                    .entry(pos)
-                    .or_default()
-                    .push(score);
+                position_scores.entry(pos).or_default().push(score);
             }
         }
 

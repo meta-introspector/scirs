@@ -130,16 +130,18 @@ impl<F: Float + FromPrimitive + ScalarOperand> CFNode<F> {
     }
 
     /// Get the CF that summarizes this entire node
-    fn get_cf(&self) -> ClusteringFeature<F> {
+    fn get_cf(&self) -> Result<ClusteringFeature<F>> {
         if self.cfs.is_empty() {
-            panic!("Node has no CFs");
+            return Err(ClusteringError::InvalidInput(
+                "Node has no CFs - cannot compute summary".to_string(),
+            ));
         }
 
         let mut result = self.cfs[0].clone();
         for cf in self.cfs.iter().skip(1) {
             result.add(cf);
         }
-        result
+        Ok(result)
     }
 }
 

@@ -226,7 +226,7 @@ where
 
         output_row[x] = sum_value / sum_weight;
     }
-    
+
     Ok(())
 }
 
@@ -385,7 +385,7 @@ where
 
         output_row[x] = value_sum / weight_sum;
     }
-    
+
     Ok(())
 }
 
@@ -737,7 +737,9 @@ where
                 let start = i * simd_width;
                 let end = start + simd_width;
                 let slice = row_slice.as_slice().ok_or_else(|| {
-                    NdimageError::ComputationError("Failed to convert row slice to contiguous slice".to_string())
+                    NdimageError::ComputationError(
+                        "Failed to convert row slice to contiguous slice".to_string(),
+                    )
                 })?;
                 let chunk_sum = T::simd_sum(&slice[start..end]);
                 sum = sum + chunk_sum;
@@ -751,7 +753,7 @@ where
 
         output_row[x] = sum / norm;
     }
-    
+
     Ok(())
 }
 
@@ -779,7 +781,9 @@ where
 
             for (local_y, mut row) in chunk.axis_iter_mut(Axis(0)).enumerate() {
                 let y = y_start + local_y;
-                if let Err(e) = simd_box_filter_product_row(input1, input2, &mut row, y, radius, norm) {
+                if let Err(e) =
+                    simd_box_filter_product_row(input1, input2, &mut row, y, radius, norm)
+                {
                     // For parallel processing, we can't propagate errors directly
                     // Log error and continue with default values
                     eprintln!("Warning: box filter product row processing failed: {:?}", e);
@@ -824,10 +828,14 @@ where
                 let start = i * simd_width;
                 let end = start + simd_width;
                 let slice1_raw = row1.as_slice().ok_or_else(|| {
-                    NdimageError::ComputationError("Failed to convert row1 to contiguous slice".to_string())
+                    NdimageError::ComputationError(
+                        "Failed to convert row1 to contiguous slice".to_string(),
+                    )
                 })?;
                 let slice2_raw = row2.as_slice().ok_or_else(|| {
-                    NdimageError::ComputationError("Failed to convert row2 to contiguous slice".to_string())
+                    NdimageError::ComputationError(
+                        "Failed to convert row2 to contiguous slice".to_string(),
+                    )
                 })?;
                 let slice1 = &slice1_raw[start..end];
                 let slice2 = &slice2_raw[start..end];
@@ -845,7 +853,7 @@ where
 
         output_row[x] = sum / norm;
     }
-    
+
     Ok(())
 }
 
@@ -905,7 +913,10 @@ where
                 ) {
                     // For parallel processing, we can't propagate errors directly
                     // Log error and continue with default values
-                    eprintln!("Warning: joint bilateral filter row processing failed: {:?}", e);
+                    eprintln!(
+                        "Warning: joint bilateral filter row processing failed: {:?}",
+                        e
+                    );
                 }
             }
         });
@@ -957,7 +968,7 @@ where
 
         output_row[x] = sum_value / sum_weight;
     }
-    
+
     Ok(())
 }
 

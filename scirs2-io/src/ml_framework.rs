@@ -955,10 +955,8 @@ pub mod batch_processing {
         where
             F: Fn(&[MLTensor]) -> Result<Vec<MLTensor>> + Send + Sync,
         {
-            let results: Result<Vec<Vec<MLTensor>>> = data
-                .par_chunks(self.batch_size)
-                .map(process_fn)
-                .collect();
+            let results: Result<Vec<Vec<MLTensor>>> =
+                data.par_chunks(self.batch_size).map(process_fn).collect();
 
             results.map(|chunks| chunks.into_iter().flatten().collect())
         }

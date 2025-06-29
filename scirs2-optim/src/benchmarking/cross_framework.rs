@@ -291,7 +291,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
     /// Create a new cross-framework benchmark suite
     pub fn new(config: CrossFrameworkConfig) -> Result<Self> {
         let python_scripts = PythonScriptTemplates::new();
-        
+
         // Create temporary directory
         std::fs::create_dir_all(&config.temp_dir).map_err(|e| {
             OptimError::InvalidConfig(format!("Failed to create temp directory: {}", e))
@@ -352,24 +352,40 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             function: Box::new(|x: &Array1<A>| {
                 let x1 = x[0];
                 let x2 = x[1];
-                let term1 = (A::from(1.5).unwrap() - x1 + x1 * x2) * (A::from(1.5).unwrap() - x1 + x1 * x2);
-                let term2 = (A::from(2.25).unwrap() - x1 + x1 * x2 * x2) * (A::from(2.25).unwrap() - x1 + x1 * x2 * x2);
-                let term3 = (A::from(2.625).unwrap() - x1 + x1 * x2 * x2 * x2) * (A::from(2.625).unwrap() - x1 + x1 * x2 * x2 * x2);
+                let term1 =
+                    (A::from(1.5).unwrap() - x1 + x1 * x2) * (A::from(1.5).unwrap() - x1 + x1 * x2);
+                let term2 = (A::from(2.25).unwrap() - x1 + x1 * x2 * x2)
+                    * (A::from(2.25).unwrap() - x1 + x1 * x2 * x2);
+                let term3 = (A::from(2.625).unwrap() - x1 + x1 * x2 * x2 * x2)
+                    * (A::from(2.625).unwrap() - x1 + x1 * x2 * x2 * x2);
                 term1 + term2 + term3
             }),
             gradient: Box::new(|x: &Array1<A>| {
                 let x1 = x[0];
                 let x2 = x[1];
-                let dx1 = A::from(2.0).unwrap() * (A::from(1.5).unwrap() - x1 + x1 * x2) * (x2 - A::one())
-                    + A::from(2.0).unwrap() * (A::from(2.25).unwrap() - x1 + x1 * x2 * x2) * (x2 * x2 - A::one())
-                    + A::from(2.0).unwrap() * (A::from(2.625).unwrap() - x1 + x1 * x2 * x2 * x2) * (x2 * x2 * x2 - A::one());
+                let dx1 = A::from(2.0).unwrap()
+                    * (A::from(1.5).unwrap() - x1 + x1 * x2)
+                    * (x2 - A::one())
+                    + A::from(2.0).unwrap()
+                        * (A::from(2.25).unwrap() - x1 + x1 * x2 * x2)
+                        * (x2 * x2 - A::one())
+                    + A::from(2.0).unwrap()
+                        * (A::from(2.625).unwrap() - x1 + x1 * x2 * x2 * x2)
+                        * (x2 * x2 * x2 - A::one());
                 let dx2 = A::from(2.0).unwrap() * (A::from(1.5).unwrap() - x1 + x1 * x2) * x1
-                    + A::from(2.0).unwrap() * (A::from(2.25).unwrap() - x1 + x1 * x2 * x2) * (A::from(2.0).unwrap() * x1 * x2)
-                    + A::from(2.0).unwrap() * (A::from(2.625).unwrap() - x1 + x1 * x2 * x2 * x2) * (A::from(3.0).unwrap() * x1 * x2 * x2);
+                    + A::from(2.0).unwrap()
+                        * (A::from(2.25).unwrap() - x1 + x1 * x2 * x2)
+                        * (A::from(2.0).unwrap() * x1 * x2)
+                    + A::from(2.0).unwrap()
+                        * (A::from(2.625).unwrap() - x1 + x1 * x2 * x2 * x2)
+                        * (A::from(3.0).unwrap() * x1 * x2 * x2);
                 Array1::from_vec(vec![dx1, dx2])
             }),
             optimal_value: Some(A::zero()),
-            optimal_point: Some(Array1::from_vec(vec![A::from(3.0).unwrap(), A::from(0.5).unwrap()])),
+            optimal_point: Some(Array1::from_vec(vec![
+                A::from(3.0).unwrap(),
+                A::from(0.5).unwrap(),
+            ])),
         });
     }
 
@@ -416,32 +432,22 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
                 version: Some("0.1.0-beta.1".to_string()),
             };
 
-            let summary = self.benchmark_scirs2_optimizer(
-                test_function,
-                problem_dim,
-                batch_size,
-                optimizer,
-            )?;
+            let summary =
+                self.benchmark_scirs2_optimizer(test_function, problem_dim, batch_size, optimizer)?;
             optimizer_results.insert(identifier, summary);
         }
 
         // Run PyTorch optimizers
         if self.config.enable_pytorch {
-            let pytorch_results = self.benchmark_pytorch_optimizers(
-                test_function,
-                problem_dim,
-                batch_size,
-            )?;
+            let pytorch_results =
+                self.benchmark_pytorch_optimizers(test_function, problem_dim, batch_size)?;
             optimizer_results.extend(pytorch_results);
         }
 
         // Run TensorFlow optimizers
         if self.config.enable_tensorflow {
-            let tensorflow_results = self.benchmark_tensorflow_optimizers(
-                test_function,
-                problem_dim,
-                batch_size,
-            )?;
+            let tensorflow_results =
+                self.benchmark_tensorflow_optimizers(test_function, problem_dim, batch_size)?;
             optimizer_results.extend(tensorflow_results);
         }
 
@@ -485,7 +491,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         for run in 0..self.config.num_runs {
             // Set random seed for reproducibility
             let mut rng_seed = self.config.random_seed + run as u64;
-            
+
             // Initialize parameters
             let mut x = Array1::from_vec(
                 (0..problem_dim)
@@ -541,7 +547,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         // Calculate statistics
         let success_rate = successful_runs as f64 / self.config.num_runs as f64;
-        
+
         let mean_convergence_time = if !convergence_times.is_empty() {
             convergence_times.iter().sum::<Duration>() / convergence_times.len() as u32
         } else {
@@ -549,7 +555,8 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         };
 
         let mean_final_value = if !final_values.is_empty() {
-            final_values.iter().fold(A::zero(), |acc, &x| acc + x) / A::from(final_values.len()).unwrap()
+            final_values.iter().fold(A::zero(), |acc, &x| acc + x)
+                / A::from(final_values.len()).unwrap()
         } else {
             A::zero()
         };
@@ -561,13 +568,15 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         };
 
         let mean_gradient_norm = if !gradient_norms.is_empty() {
-            gradient_norms.iter().fold(A::zero(), |acc, &x| acc + x) / A::from(gradient_norms.len()).unwrap()
+            gradient_norms.iter().fold(A::zero(), |acc, &x| acc + x)
+                / A::from(gradient_norms.len()).unwrap()
         } else {
             A::zero()
         };
 
         // Calculate standard deviations
-        let std_convergence_time = self.calculate_duration_std(&convergence_times, mean_convergence_time);
+        let std_convergence_time =
+            self.calculate_duration_std(&convergence_times, mean_convergence_time);
         let std_final_value = self.calculate_std(&final_values, mean_final_value);
         let std_iterations = self.calculate_f64_std(&iterations_counts, mean_iterations);
         let std_gradient_norm = self.calculate_std(&gradient_norms, mean_gradient_norm);
@@ -608,7 +617,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         batch_size: usize,
     ) -> Result<HashMap<OptimizerIdentifier, OptimizerBenchmarkSummary<A>>> {
         let script_path = format!("{}/pytorch_benchmark.py", self.config.temp_dir);
-        
+
         // Write PyTorch benchmark script
         let script_content = self.python_scripts.generate_pytorch_script(
             &test_function.name,
@@ -616,7 +625,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             batch_size,
             &self.config,
         );
-        
+
         std::fs::write(&script_path, script_content).map_err(|e| {
             OptimError::InvalidConfig(format!("Failed to write PyTorch script: {}", e))
         })?;
@@ -643,7 +652,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         let results: HashMap<String, HashMap<String, f64>> = HashMap::new(); // Placeholder
 
         let mut optimizer_results = HashMap::new();
-        
+
         for (optimizer_name, result_data) in results {
             let identifier = OptimizerIdentifier {
                 framework: Framework::PyTorch,
@@ -666,7 +675,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         batch_size: usize,
     ) -> Result<HashMap<OptimizerIdentifier, OptimizerBenchmarkSummary<A>>> {
         let script_path = format!("{}/tensorflow_benchmark.py", self.config.temp_dir);
-        
+
         // Write TensorFlow benchmark script
         let script_content = self.python_scripts.generate_tensorflow_script(
             &test_function.name,
@@ -674,7 +683,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             batch_size,
             &self.config,
         );
-        
+
         std::fs::write(&script_path, script_content).map_err(|e| {
             OptimError::InvalidConfig(format!("Failed to write TensorFlow script: {}", e))
         })?;
@@ -701,7 +710,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         let results: HashMap<String, HashMap<String, f64>> = HashMap::new(); // Placeholder
 
         let mut optimizer_results = HashMap::new();
-        
+
         for (optimizer_name, result_data) in results {
             let identifier = OptimizerIdentifier {
                 framework: Framework::TensorFlow,
@@ -726,21 +735,27 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         let successful_runs = result_data.get("successful_runs").unwrap_or(&0.0) as &f64 as usize;
         let total_runs = result_data.get("total_runs").unwrap_or(&5.0) as &f64 as usize;
         let success_rate = *result_data.get("success_rate").unwrap_or(&1.0);
-        
-        let mean_convergence_time_ms = *result_data.get("mean_convergence_time_ms").unwrap_or(&100.0);
+
+        let mean_convergence_time_ms = *result_data
+            .get("mean_convergence_time_ms")
+            .unwrap_or(&100.0);
         let mean_convergence_time = Duration::from_millis(mean_convergence_time_ms as u64);
-        
+
         let std_convergence_time_ms = *result_data.get("std_convergence_time_ms").unwrap_or(&10.0);
         let std_convergence_time = Duration::from_millis(std_convergence_time_ms as u64);
-        
-        let mean_final_value = A::from(*result_data.get("mean_final_value").unwrap_or(&0.1)).unwrap();
-        let std_final_value = A::from(*result_data.get("std_final_value").unwrap_or(&0.01)).unwrap();
-        
+
+        let mean_final_value =
+            A::from(*result_data.get("mean_final_value").unwrap_or(&0.1)).unwrap();
+        let std_final_value =
+            A::from(*result_data.get("std_final_value").unwrap_or(&0.01)).unwrap();
+
         let mean_iterations = *result_data.get("mean_iterations").unwrap_or(&100.0);
         let std_iterations = *result_data.get("std_iterations").unwrap_or(&10.0);
-        
-        let mean_gradient_norm = A::from(*result_data.get("mean_gradient_norm").unwrap_or(&0.01)).unwrap();
-        let std_gradient_norm = A::from(*result_data.get("std_gradient_norm").unwrap_or(&0.001)).unwrap();
+
+        let mean_gradient_norm =
+            A::from(*result_data.get("mean_gradient_norm").unwrap_or(&0.01)).unwrap();
+        let std_gradient_norm =
+            A::from(*result_data.get("std_gradient_norm").unwrap_or(&0.001)).unwrap();
 
         // Simplified convergence curves
         let convergence_curves: Vec<Vec<A>> = vec![vec![mean_final_value; 100]; total_runs];
@@ -760,8 +775,10 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             std_gradient_norm,
             convergence_curves,
             memory_stats: MemoryStats {
-                peak_memory_bytes: *result_data.get("peak_memory_bytes").unwrap_or(&1000000.0) as usize,
-                avg_memory_bytes: *result_data.get("avg_memory_bytes").unwrap_or(&500000.0) as usize,
+                peak_memory_bytes: *result_data.get("peak_memory_bytes").unwrap_or(&1000000.0)
+                    as usize,
+                avg_memory_bytes: *result_data.get("avg_memory_bytes").unwrap_or(&500000.0)
+                    as usize,
                 allocation_count: *result_data.get("allocation_count").unwrap_or(&100.0) as usize,
                 fragmentation_ratio: *result_data.get("fragmentation_ratio").unwrap_or(&0.1),
             },
@@ -785,7 +802,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             for j in (i + 1)..optimizers.len() {
                 let opt1 = optimizers[i];
                 let opt2 = optimizers[j];
-                
+
                 let result1 = &results[opt1];
                 let result2 = &results[opt2];
 
@@ -902,10 +919,13 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
     /// Generate comprehensive benchmark report
     pub fn generate_comprehensive_report(&self) -> String {
         let mut report = String::new();
-        
+
         report.push_str("# Cross-Framework Optimizer Benchmark Report\n\n");
-        report.push_str(&format!("Generated: {:?}\n\n", std::time::SystemTime::now()));
-        
+        report.push_str(&format!(
+            "Generated: {:?}\n\n",
+            std::time::SystemTime::now()
+        ));
+
         if self.results.is_empty() {
             report.push_str("No benchmark results available.\n");
             return report;
@@ -913,10 +933,14 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         // Executive summary
         report.push_str("## Executive Summary\n\n");
-        report.push_str(&format!("Total test configurations: {}\n", self.results.len()));
-        
+        report.push_str(&format!(
+            "Total test configurations: {}\n",
+            self.results.len()
+        ));
+
         // Framework coverage
-        let frameworks: std::collections::HashSet<_> = self.results
+        let frameworks: std::collections::HashSet<_> = self
+            .results
             .iter()
             .flat_map(|result| result.optimizer_results.keys())
             .map(|id| &id.framework)
@@ -926,12 +950,18 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         // Performance rankings
         report.push_str("## Overall Performance Rankings\n\n");
         for result in &self.results {
-            report.push_str(&format!("### {} ({}D, batch={})\n\n", 
-                result.function_name, result.problem_dim, result.batch_size));
-            
+            report.push_str(&format!(
+                "### {} ({}D, batch={})\n\n",
+                result.function_name, result.problem_dim, result.batch_size
+            ));
+
             for (rank, (optimizer, score)) in result.performance_ranking.iter().enumerate() {
-                report.push_str(&format!("{}. {} - Score: {:.6}\n", 
-                    rank + 1, optimizer, score));
+                report.push_str(&format!(
+                    "{}. {} - Score: {:.6}\n",
+                    rank + 1,
+                    optimizer,
+                    score
+                ));
             }
             report.push_str("\n");
         }
@@ -940,14 +970,18 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         report.push_str("## Statistical Analysis\n\n");
         for result in &self.results {
             report.push_str(&format!("### {} Results\n\n", result.function_name));
-            
+
             // ANOVA results
             let anova = &result.statistical_comparison.anova_results;
-            report.push_str(&format!("ANOVA F-statistic: {:.4}, p-value: {:.6}\n", 
-                anova.f_statistic, anova.p_value));
-            
+            report.push_str(&format!(
+                "ANOVA F-statistic: {:.4}, p-value: {:.6}\n",
+                anova.f_statistic, anova.p_value
+            ));
+
             if anova.p_value < 0.05 {
-                report.push_str("**Statistically significant differences found between optimizers.**\n\n");
+                report.push_str(
+                    "**Statistically significant differences found between optimizers.**\n\n",
+                );
             } else {
                 report.push_str("No statistically significant differences found.\n\n");
             }
@@ -970,7 +1004,8 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
                 let diff = v.as_millis() as i64 - mean.as_millis() as i64;
                 (diff * diff) as f64
             })
-            .sum::<f64>() / (values.len() - 1) as f64;
+            .sum::<f64>()
+            / (values.len() - 1) as f64;
 
         Duration::from_millis(variance.sqrt() as u64)
     }
@@ -996,10 +1031,8 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             return 0.0;
         }
 
-        let variance = values
-            .iter()
-            .map(|&v| (v - mean) * (v - mean))
-            .sum::<f64>() / (values.len() - 1) as f64;
+        let variance = values.iter().map(|&v| (v - mean) * (v - mean)).sum::<f64>()
+            / (values.len() - 1) as f64;
 
         variance.sqrt()
     }
@@ -1034,20 +1067,20 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         let n1 = sample1.len() as f64;
         let n2 = sample2.len() as f64;
-        
+
         let mean1 = sample1.iter().sum::<f64>() / n1;
         let mean2 = sample2.iter().sum::<f64>() / n2;
-        
+
         let var1 = sample1.iter().map(|&x| (x - mean1).powi(2)).sum::<f64>() / (n1 - 1.0);
         let var2 = sample2.iter().map(|&x| (x - mean2).powi(2)).sum::<f64>() / (n2 - 1.0);
-        
+
         let pooled_se = ((var1 / n1) + (var2 / n2)).sqrt();
         let t_statistic = (mean1 - mean2) / pooled_se;
         let degrees_of_freedom = n1 + n2 - 2.0;
-        
+
         // Simplified p-value calculation (two-tailed)
         let p_value = 2.0 * (1.0 - self.t_distribution_cdf(t_statistic.abs(), degrees_of_freedom));
-        
+
         TTestResult {
             t_statistic,
             p_value,
@@ -1071,16 +1104,22 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         let mean1 = sample1.iter().sum::<f64>() / sample1.len() as f64;
         let mean2 = sample2.iter().sum::<f64>() / sample2.len() as f64;
-        
-        let var1 = sample1.iter().map(|&x| (x - mean1).powi(2)).sum::<f64>() / (sample1.len() - 1) as f64;
-        let var2 = sample2.iter().map(|&x| (x - mean2).powi(2)).sum::<f64>() / (sample2.len() - 1) as f64;
-        
+
+        let var1 =
+            sample1.iter().map(|&x| (x - mean1).powi(2)).sum::<f64>() / (sample1.len() - 1) as f64;
+        let var2 =
+            sample2.iter().map(|&x| (x - mean2).powi(2)).sum::<f64>() / (sample2.len() - 1) as f64;
+
         let pooled_std = ((var1 + var2) / 2.0).sqrt();
         (mean1 - mean2) / pooled_std
     }
 
     /// Calculate confidence interval
-    fn calculate_confidence_interval(&self, values: &[f64], confidence_level: f64) -> ConfidenceInterval<A> {
+    fn calculate_confidence_interval(
+        &self,
+        values: &[f64],
+        confidence_level: f64,
+    ) -> ConfidenceInterval<A> {
         if values.is_empty() {
             return ConfidenceInterval {
                 lower: A::zero(),
@@ -1091,13 +1130,13 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         let mean = values.iter().sum::<f64>() / values.len() as f64;
         let std_err = self.calculate_f64_std(values, mean) / (values.len() as f64).sqrt();
-        
+
         // Simplified critical value (should use proper t-distribution)
         let alpha = 1.0 - confidence_level;
         let critical_value = 1.96; // Approximate for 95% confidence
-        
+
         let margin_of_error = critical_value * std_err;
-        
+
         ConfidenceInterval {
             lower: A::from(mean - margin_of_error).unwrap(),
             upper: A::from(mean + margin_of_error).unwrap(),
@@ -1120,10 +1159,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         }
 
         let total_n: usize = groups.iter().map(|g| g.len()).sum();
-        let grand_mean = groups
-            .iter()
-            .flat_map(|g| g.iter())
-            .sum::<f64>() / total_n as f64;
+        let grand_mean = groups.iter().flat_map(|g| g.iter()).sum::<f64>() / total_n as f64;
 
         // Between-group sum of squares
         let between_ss = groups
@@ -1149,9 +1185,9 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         let ms_between = between_ss / df_between as f64;
         let ms_within = within_ss / df_within as f64;
-        
+
         let f_statistic = ms_between / ms_within;
-        
+
         // Simplified p-value calculation
         let p_value = if f_statistic > 3.0 { 0.01 } else { 0.1 }; // Very rough approximation
 
@@ -1171,7 +1207,8 @@ impl PythonScriptTemplates {
     fn new() -> Self {
         Self {
             pytorch_template: include_str!("python_templates/pytorch_benchmark.py").to_string(),
-            tensorflow_template: include_str!("python_templates/tensorflow_benchmark.py").to_string(),
+            tensorflow_template: include_str!("python_templates/tensorflow_benchmark.py")
+                .to_string(),
         }
     }
 
@@ -1250,7 +1287,7 @@ mod tests {
     fn test_python_script_generation() {
         let templates = PythonScriptTemplates::new();
         let config = CrossFrameworkConfig::default();
-        
+
         let script = templates.generate_pytorch_script("Quadratic", 10, 32, &config);
         assert!(script.contains("10")); // problem_dim
         assert!(script.contains("32")); // batch_size

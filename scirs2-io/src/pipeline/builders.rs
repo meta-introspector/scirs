@@ -16,7 +16,7 @@ impl<I, O> Default for PipelineBuilder<I, O>
 where
     I: 'static + Send + Sync,
     O: 'static + Send + Sync,
- {
+{
     fn default() -> Self {
         Self::new()
     }

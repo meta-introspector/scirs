@@ -72,6 +72,11 @@ impl DatasetRegistry {
                 n_samples: 150,
                 n_features: 4,
                 task_type: "classification".to_string(),
+                target_names: Some(vec![
+                    "setosa".to_string(),
+                    "versicolor".to_string(),
+                    "virginica".to_string(),
+                ]),
             }),
             "boston" => Ok(DatasetMetadata {
                 name: "Boston Housing".to_string(),
@@ -79,6 +84,7 @@ impl DatasetRegistry {
                 n_samples: 506,
                 n_features: 13,
                 task_type: "regression".to_string(),
+                target_names: None,
             }),
             "digits" => Ok(DatasetMetadata {
                 name: "Digits".to_string(),
@@ -86,6 +92,18 @@ impl DatasetRegistry {
                 n_samples: 1797,
                 n_features: 64,
                 task_type: "classification".to_string(),
+                target_names: Some(vec![
+                    "0".to_string(),
+                    "1".to_string(),
+                    "2".to_string(),
+                    "3".to_string(),
+                    "4".to_string(),
+                    "5".to_string(),
+                    "6".to_string(),
+                    "7".to_string(),
+                    "8".to_string(),
+                    "9".to_string(),
+                ]),
             }),
             "wine" => Ok(DatasetMetadata {
                 name: "Wine".to_string(),
@@ -93,6 +111,11 @@ impl DatasetRegistry {
                 n_samples: 178,
                 n_features: 13,
                 task_type: "classification".to_string(),
+                target_names: Some(vec![
+                    "class_0".to_string(),
+                    "class_1".to_string(),
+                    "class_2".to_string(),
+                ]),
             }),
             "breast_cancer" => Ok(DatasetMetadata {
                 name: "Breast Cancer".to_string(),
@@ -100,6 +123,7 @@ impl DatasetRegistry {
                 n_samples: 569,
                 n_features: 30,
                 task_type: "classification".to_string(),
+                target_names: Some(vec!["malignant".to_string(), "benign".to_string()]),
             }),
             "diabetes" => Ok(DatasetMetadata {
                 name: "Diabetes".to_string(),
@@ -107,6 +131,7 @@ impl DatasetRegistry {
                 n_samples: 442,
                 n_features: 10,
                 task_type: "regression".to_string(),
+                target_names: None,
             }),
             _ => Err(DatasetsError::Other(format!("Unknown dataset: {}", name))),
         }

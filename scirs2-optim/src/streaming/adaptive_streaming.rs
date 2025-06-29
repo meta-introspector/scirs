@@ -1170,13 +1170,13 @@ impl<A: Float + Default + Clone> PerformanceTracker<A> {
 
         // Update trend analyzer
         self.trend_analyzer.update(&snapshot)?;
-        
+
         // Update predictor
         self.predictor.update(&snapshot)?;
-        
+
         // Check for anomalies
         self.anomaly_detector.detect_anomaly(&snapshot)?;
-        
+
         // Update aggregated metrics
         self.aggregator.aggregate(&snapshot)?;
 
@@ -1211,7 +1211,8 @@ impl<A: Float + Default + Clone> TrendAnalyzer<A> {
     }
 
     fn compute_trends(&mut self) -> Result<(), OptimizerError> {
-        let values: Vec<A> = self.performance_history
+        let values: Vec<A> = self
+            .performance_history
             .iter()
             .map(|snapshot| match snapshot.primary_metric {
                 PerformanceMetric::Loss(l) => l,
@@ -1253,7 +1254,9 @@ impl<A: Float + Default + Clone> TrendAnalyzer<A> {
         let n = A::from(values.len()).unwrap();
         let sum_x = (0..values.len()).map(|i| A::from(i).unwrap()).sum::<A>();
         let sum_y = values.iter().cloned().sum::<A>();
-        let sum_xy = values.iter().enumerate()
+        let sum_xy = values
+            .iter()
+            .enumerate()
             .map(|(i, &y)| A::from(i).unwrap() * y)
             .sum::<A>();
         let sum_x2 = (0..values.len())
@@ -1275,17 +1278,25 @@ impl<A: Float + Default + Clone> TrendAnalyzer<A> {
 
         let n = A::from(values.len()).unwrap();
         let x_values: Vec<A> = (0..values.len()).map(|i| A::from(i).unwrap()).collect();
-        
+
         let mean_x = x_values.iter().cloned().sum::<A>() / n;
         let mean_y = values.iter().cloned().sum::<A>() / n;
 
-        let numerator = x_values.iter().zip(values.iter())
+        let numerator = x_values
+            .iter()
+            .zip(values.iter())
             .map(|(&x, &y)| (x - mean_x) * (y - mean_y))
             .sum::<A>();
-            
-        let sum_x_sq = x_values.iter().map(|&x| (x - mean_x) * (x - mean_x)).sum::<A>();
-        let sum_y_sq = values.iter().map(|&y| (y - mean_y) * (y - mean_y)).sum::<A>();
-        
+
+        let sum_x_sq = x_values
+            .iter()
+            .map(|&x| (x - mean_x) * (x - mean_x))
+            .sum::<A>();
+        let sum_y_sq = values
+            .iter()
+            .map(|&y| (y - mean_y) * (y - mean_y))
+            .sum::<A>();
+
         let denominator = (sum_x_sq * sum_y_sq).sqrt();
         if denominator == A::zero() {
             return Ok(A::zero());
@@ -1299,22 +1310,26 @@ impl<A: Float + Default + Clone> TrendAnalyzer<A> {
             return Ok(A::zero());
         }
 
-        let changes: Vec<A> = values.windows(2)
+        let changes: Vec<A> = values
+            .windows(2)
             .map(|window| window[1] - window[0])
             .collect();
 
         let mean_change = changes.iter().cloned().sum::<A>() / A::from(changes.len()).unwrap();
-        let variance = changes.iter()
+        let variance = changes
+            .iter()
             .map(|&change| (change - mean_change) * (change - mean_change))
-            .sum::<A>() / A::from(changes.len()).unwrap();
+            .sum::<A>()
+            / A::from(changes.len()).unwrap();
 
         Ok(variance.sqrt())
     }
 
     fn compute_confidence(&self, values: &[A]) -> Result<A, OptimizerError> {
-        let data_quantity_factor = A::from(values.len()).unwrap() / A::from(self.trend_window_size).unwrap();
+        let data_quantity_factor =
+            A::from(values.len()).unwrap() / A::from(self.trend_window_size).unwrap();
         let consistency_factor = A::one() - self.volatility; // Lower volatility = higher confidence
-        
+
         let confidence = (data_quantity_factor + consistency_factor) / A::from(2.0).unwrap();
         Ok(confidence.min(A::one()).max(A::zero()))
     }
@@ -1346,7 +1361,10 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
         Ok(())
     }
 
-    fn predict_performance(&mut self, steps_ahead: usize) -> Result<PerformanceMetric<A>, OptimizerError> {
+    fn predict_performance(
+        &mut self,
+        steps_ahead: usize,
+    ) -> Result<PerformanceMetric<A>, OptimizerError> {
         if self.training_data.len() < 10 {
             return Ok(PerformanceMetric::Loss(A::zero()));
         }
@@ -1358,16 +1376,18 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
 
         // Weighted average of predictions
         let w1 = A::from(0.4).unwrap(); // Linear
-        let w2 = A::from(0.3).unwrap(); // Exponential  
+        let w2 = A::from(0.3).unwrap(); // Exponential
         let w3 = A::from(0.3).unwrap(); // Trend-based
 
         let combined_pred = w1 * linear_pred + w2 * exp_pred + w3 * trend_pred;
-        
+
         Ok(PerformanceMetric::Loss(combined_pred))
     }
 
     fn linear_prediction(&self, steps_ahead: usize) -> Result<A, OptimizerError> {
-        let values: Vec<A> = self.training_data.iter()
+        let values: Vec<A> = self
+            .training_data
+            .iter()
             .map(|snapshot| match snapshot.primary_metric {
                 PerformanceMetric::Loss(l) => l,
                 PerformanceMetric::Accuracy(a) => a,
@@ -1382,12 +1402,14 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
         // Simple linear extrapolation
         let recent_slope = (values[values.len() - 1] - values[values.len() - 2]);
         let prediction = values[values.len() - 1] + recent_slope * A::from(steps_ahead).unwrap();
-        
+
         Ok(prediction)
     }
 
     fn exponential_prediction(&self, steps_ahead: usize) -> Result<A, OptimizerError> {
-        let values: Vec<A> = self.training_data.iter()
+        let values: Vec<A> = self
+            .training_data
+            .iter()
             .map(|snapshot| match snapshot.primary_metric {
                 PerformanceMetric::Loss(l) => l,
                 PerformanceMetric::Accuracy(a) => a,
@@ -1402,7 +1424,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
         // Exponential smoothing
         let alpha = A::from(0.3).unwrap();
         let mut smoothed = values[0];
-        
+
         for &value in values.iter().skip(1) {
             smoothed = alpha * value + (A::one() - alpha) * smoothed;
         }
@@ -1418,7 +1440,9 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
     }
 
     fn trend_based_prediction(&self, steps_ahead: usize) -> Result<A, OptimizerError> {
-        let values: Vec<A> = self.training_data.iter()
+        let values: Vec<A> = self
+            .training_data
+            .iter()
             .map(|snapshot| match snapshot.primary_metric {
                 PerformanceMetric::Loss(l) => l,
                 PerformanceMetric::Accuracy(a) => a,
@@ -1427,22 +1451,26 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
             .collect();
 
         if values.len() < 3 {
-            return Ok(if values.is_empty() { A::zero() } else { values[values.len() - 1] });
+            return Ok(if values.is_empty() {
+                A::zero()
+            } else {
+                values[values.len() - 1]
+            });
         }
 
         // Use last 10 points to establish trend
         let trend_window = 10.min(values.len());
         let recent_values = &values[values.len() - trend_window..];
-        
+
         // Calculate average rate of change
         let mut total_change = A::zero();
         for window in recent_values.windows(2) {
             total_change = total_change + (window[1] - window[0]);
         }
-        
+
         let avg_change = total_change / A::from(recent_values.len() - 1).unwrap();
         let prediction = values[values.len() - 1] + avg_change * A::from(steps_ahead).unwrap();
-        
+
         Ok(prediction)
     }
 
@@ -1474,7 +1502,10 @@ impl<A: Float + Default + Clone> AnomalyDetector<A> {
         }
     }
 
-    fn detect_anomaly(&mut self, snapshot: &PerformanceSnapshot<A>) -> Result<bool, OptimizerError> {
+    fn detect_anomaly(
+        &mut self,
+        snapshot: &PerformanceSnapshot<A>,
+    ) -> Result<bool, OptimizerError> {
         self.historical_data.push_back(snapshot.clone());
         if self.historical_data.len() > 1000 {
             self.historical_data.pop_front();
@@ -1490,7 +1521,10 @@ impl<A: Float + Default + Clone> AnomalyDetector<A> {
         let performance_anomaly = self.performance_anomaly_detection(snapshot)?;
 
         // Ensemble decision
-        let anomaly_score = (statistical_anomaly as u8 + isolation_anomaly as u8 + performance_anomaly as u8) as f64 / 3.0;
+        let anomaly_score = (statistical_anomaly as u8
+            + isolation_anomaly as u8
+            + performance_anomaly as u8) as f64
+            / 3.0;
         let is_anomaly = anomaly_score >= self.detection_sensitivity.to_f64().unwrap_or(0.8);
 
         if is_anomaly {
@@ -1498,11 +1532,15 @@ impl<A: Float + Default + Clone> AnomalyDetector<A> {
                 timestamp: snapshot.timestamp,
                 step: snapshot.step,
                 anomaly_type: AnomalyType::Performance,
-                severity: if anomaly_score > 0.9 { AnomalySeverity::High } else { AnomalySeverity::Medium },
+                severity: if anomaly_score > 0.9 {
+                    AnomalySeverity::High
+                } else {
+                    AnomalySeverity::Medium
+                },
                 confidence: A::from(anomaly_score).unwrap(),
                 affected_metrics: vec!["primary_metric".to_string()],
             };
-            
+
             self.recent_anomalies.push_back(anomaly);
             if self.recent_anomalies.len() > 100 {
                 self.recent_anomalies.pop_front();
@@ -1512,8 +1550,13 @@ impl<A: Float + Default + Clone> AnomalyDetector<A> {
         Ok(is_anomaly)
     }
 
-    fn statistical_anomaly_detection(&self, snapshot: &PerformanceSnapshot<A>) -> Result<bool, OptimizerError> {
-        let values: Vec<A> = self.historical_data.iter()
+    fn statistical_anomaly_detection(
+        &self,
+        snapshot: &PerformanceSnapshot<A>,
+    ) -> Result<bool, OptimizerError> {
+        let values: Vec<A> = self
+            .historical_data
+            .iter()
             .map(|s| match s.primary_metric {
                 PerformanceMetric::Loss(l) => l,
                 PerformanceMetric::Accuracy(a) => a,
@@ -1533,9 +1576,8 @@ impl<A: Float + Default + Clone> AnomalyDetector<A> {
 
         // Z-score based detection
         let mean = values.iter().cloned().sum::<A>() / A::from(values.len()).unwrap();
-        let variance = values.iter()
-            .map(|&x| (x - mean) * (x - mean))
-            .sum::<A>() / A::from(values.len()).unwrap();
+        let variance = values.iter().map(|&x| (x - mean) * (x - mean)).sum::<A>()
+            / A::from(values.len()).unwrap();
         let std_dev = variance.sqrt();
 
         if std_dev == A::zero() {
@@ -1546,19 +1588,27 @@ impl<A: Float + Default + Clone> AnomalyDetector<A> {
         Ok(z_score > self.anomaly_threshold)
     }
 
-    fn isolation_based_detection(&self, _snapshot: &PerformanceSnapshot<A>) -> Result<bool, OptimizerError> {
+    fn isolation_based_detection(
+        &self,
+        _snapshot: &PerformanceSnapshot<A>,
+    ) -> Result<bool, OptimizerError> {
         // Simplified isolation forest approach
         // In practice, this would implement proper isolation forest algorithm
         Ok(false)
     }
 
-    fn performance_anomaly_detection(&self, snapshot: &PerformanceSnapshot<A>) -> Result<bool, OptimizerError> {
+    fn performance_anomaly_detection(
+        &self,
+        snapshot: &PerformanceSnapshot<A>,
+    ) -> Result<bool, OptimizerError> {
         // Check for sudden performance drops
         if self.historical_data.len() < 5 {
             return Ok(false);
         }
 
-        let recent_values: Vec<A> = self.historical_data.iter()
+        let recent_values: Vec<A> = self
+            .historical_data
+            .iter()
             .rev()
             .take(5)
             .map(|s| match s.primary_metric {
@@ -1574,8 +1624,9 @@ impl<A: Float + Default + Clone> AnomalyDetector<A> {
             _ => A::zero(),
         };
 
-        let recent_avg = recent_values.iter().cloned().sum::<A>() / A::from(recent_values.len()).unwrap();
-        
+        let recent_avg =
+            recent_values.iter().cloned().sum::<A>() / A::from(recent_values.len()).unwrap();
+
         // Detect sudden performance degradation (increase in loss or decrease in accuracy)
         let degradation_ratio = current_value / recent_avg;
         Ok(degradation_ratio > A::from(1.5).unwrap()) // 50% worse than recent average
@@ -1595,17 +1646,20 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
     fn aggregate(&mut self, snapshot: &PerformanceSnapshot<A>) -> Result<(), OptimizerError> {
         // Update accumulated metrics
         self.update_accumulated_metrics(snapshot)?;
-        
+
         // Update windowed aggregations
         self.update_windowed_aggregations(snapshot)?;
-        
+
         // Update temporal aggregations
         self.update_temporal_aggregations(snapshot)?;
-        
+
         Ok(())
     }
 
-    fn update_accumulated_metrics(&mut self, snapshot: &PerformanceSnapshot<A>) -> Result<(), OptimizerError> {
+    fn update_accumulated_metrics(
+        &mut self,
+        snapshot: &PerformanceSnapshot<A>,
+    ) -> Result<(), OptimizerError> {
         let primary_value = match snapshot.primary_metric {
             PerformanceMetric::Loss(l) => l,
             PerformanceMetric::Accuracy(a) => a,
@@ -1616,36 +1670,54 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
             PerformanceMetric::Loss(_) => "loss",
             PerformanceMetric::Accuracy(_) => "accuracy",
             _ => "unknown",
-        }.to_string();
+        }
+        .to_string();
 
         // Update running statistics
-        let entry = self.accumulated_metrics.entry(metric_name.clone()).or_insert(AccumulatedMetric {
-            count: 0,
-            sum: A::zero(),
-            sum_squares: A::zero(),
-            min: primary_value,
-            max: primary_value,
-            last_value: primary_value,
-        });
+        let entry = self
+            .accumulated_metrics
+            .entry(metric_name.clone())
+            .or_insert(AccumulatedMetric {
+                count: 0,
+                sum: A::zero(),
+                sum_squares: A::zero(),
+                min: primary_value,
+                max: primary_value,
+                last_value: primary_value,
+            });
 
         entry.count += 1;
         entry.sum = entry.sum + primary_value;
         entry.sum_squares = entry.sum_squares + primary_value * primary_value;
-        entry.min = if primary_value < entry.min { primary_value } else { entry.min };
-        entry.max = if primary_value > entry.max { primary_value } else { entry.max };
+        entry.min = if primary_value < entry.min {
+            primary_value
+        } else {
+            entry.min
+        };
+        entry.max = if primary_value > entry.max {
+            primary_value
+        } else {
+            entry.max
+        };
         entry.last_value = primary_value;
 
         Ok(())
     }
 
-    fn update_windowed_aggregations(&mut self, snapshot: &PerformanceSnapshot<A>) -> Result<(), OptimizerError> {
+    fn update_windowed_aggregations(
+        &mut self,
+        snapshot: &PerformanceSnapshot<A>,
+    ) -> Result<(), OptimizerError> {
         // Implement sliding window aggregations for different time windows
         let windows = vec![10, 50, 100, 500]; // Different window sizes
-        
+
         for &window_size in &windows {
             let window_key = format!("window_{}", window_size);
-            let window = self.aggregation_windows.entry(window_key).or_insert_with(|| VecDeque::with_capacity(window_size));
-            
+            let window = self
+                .aggregation_windows
+                .entry(window_key)
+                .or_insert_with(|| VecDeque::with_capacity(window_size));
+
             window.push_back(snapshot.clone());
             if window.len() > window_size {
                 window.pop_front();
@@ -1655,7 +1727,10 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
         Ok(())
     }
 
-    fn update_temporal_aggregations(&mut self, snapshot: &PerformanceSnapshot<A>) -> Result<(), OptimizerError> {
+    fn update_temporal_aggregations(
+        &mut self,
+        snapshot: &PerformanceSnapshot<A>,
+    ) -> Result<(), OptimizerError> {
         let temporal_entry = TemporalAggregation {
             timestamp: snapshot.timestamp,
             step: snapshot.step,
@@ -1747,11 +1822,11 @@ impl<A: Float + Default + Clone> MetaLearner<A> {
 
         // Simple heuristic: if performance is degrading, reduce LR; if improving, maintain or slightly increase
         let recent_experiences: Vec<_> = self.experience_buffer.iter().rev().take(5).collect();
-        
+
         if recent_experiences.len() >= 2 {
             let recent_reward = recent_experiences[0].reward;
             let previous_reward = recent_experiences[1].reward;
-            
+
             if recent_reward < previous_reward * A::from(0.95).unwrap() {
                 // Performance degrading, reduce learning rate
                 let current_lr = recent_experiences[0].action.lr_adjustment;
@@ -1770,13 +1845,17 @@ impl<A: Float + Default + Clone> MetaLearner<A> {
     ) -> Result<Option<Adaptation<A>>, OptimizerError> {
         // Suggest buffer size based on data characteristics and processing time
         let data_diversity = self.compute_data_diversity(batch)?;
-        
+
         if data_diversity > A::from(0.8).unwrap() {
             // High diversity, can use smaller buffer
-            return Ok(Some(Adaptation::BufferSize { new_size: batch.len().max(16) }));
+            return Ok(Some(Adaptation::BufferSize {
+                new_size: batch.len().max(16),
+            }));
         } else if data_diversity < A::from(0.3).unwrap() {
             // Low diversity, use larger buffer
-            return Ok(Some(Adaptation::BufferSize { new_size: (batch.len() * 2).min(128) }));
+            return Ok(Some(Adaptation::BufferSize {
+                new_size: (batch.len() * 2).min(128),
+            }));
         }
 
         Ok(None)
@@ -1794,24 +1873,23 @@ impl<A: Float + Default + Clone> MetaLearner<A> {
         };
 
         let recent_experiences: Vec<_> = self.experience_buffer.iter().rev().take(10).collect();
-        
+
         if recent_experiences.len() >= 5 {
             // Calculate performance variance
             let values: Vec<A> = recent_experiences.iter().map(|exp| exp.reward).collect();
             let mean = values.iter().cloned().sum::<A>() / A::from(values.len()).unwrap();
-            let variance = values.iter()
-                .map(|&x| (x - mean) * (x - mean))
-                .sum::<A>() / A::from(values.len()).unwrap();
-            
+            let variance = values.iter().map(|&x| (x - mean) * (x - mean)).sum::<A>()
+                / A::from(values.len()).unwrap();
+
             if variance > A::from(0.1).unwrap() {
                 // High variance, increase drift sensitivity
-                return Ok(Some(Adaptation::DriftSensitivity { 
-                    new_sensitivity: A::from(0.05).unwrap() 
+                return Ok(Some(Adaptation::DriftSensitivity {
+                    new_sensitivity: A::from(0.05).unwrap(),
                 }));
             } else if variance < A::from(0.01).unwrap() {
                 // Low variance, decrease drift sensitivity
-                return Ok(Some(Adaptation::DriftSensitivity { 
-                    new_sensitivity: A::from(0.2).unwrap() 
+                return Ok(Some(Adaptation::DriftSensitivity {
+                    new_sensitivity: A::from(0.2).unwrap(),
                 }));
             }
         }
@@ -1831,15 +1909,14 @@ impl<A: Float + Default + Clone> MetaLearner<A> {
         for dim in 0..feature_dim {
             let values: Vec<A> = batch.iter().map(|point| point.features[dim]).collect();
             let mean = values.iter().cloned().sum::<A>() / A::from(values.len()).unwrap();
-            let variance = values.iter()
-                .map(|&x| (x - mean) * (x - mean))
-                .sum::<A>() / A::from(values.len()).unwrap();
+            let variance = values.iter().map(|&x| (x - mean) * (x - mean)).sum::<A>()
+                / A::from(values.len()).unwrap();
             total_variance = total_variance + variance;
         }
 
         // Normalize by number of dimensions
         let avg_variance = total_variance / A::from(feature_dim).unwrap();
-        
+
         // Convert to diversity score (higher variance = higher diversity)
         Ok(avg_variance.sqrt())
     }
@@ -1883,7 +1960,7 @@ impl<A: Float + Default + Clone> MetaModel<A> {
     fn update_online(&mut self) -> Result<(), OptimizerError> {
         // Simple online parameter update (placeholder)
         let learning_rate = A::from(0.01).unwrap();
-        
+
         // Simplified gradient descent update
         for param in self.parameters.iter_mut() {
             *param = *param * (A::one() - learning_rate);
@@ -2216,8 +2293,9 @@ impl ResourceManager {
         Ok(())
     }
 
-    fn compute_allocation_adaptation(&mut self) -> Result<Option<Adaptation<A>>, OptimizerError> {
-        Ok(None)
+    fn compute_allocation_adaptation(&mut self) -> Result<(), OptimizerError> {
+        // ResourceManager doesn't directly produce adaptations
+        Ok(())
     }
 }
 

@@ -107,7 +107,11 @@ impl Dataset {
     /// # Returns
     ///
     /// A new Dataset instance with metadata applied
-    pub fn from_metadata(data: Array2<f64>, target: Option<Array1<f64>>, metadata: crate::registry::DatasetMetadata) -> Self {
+    pub fn from_metadata(
+        data: Array2<f64>,
+        target: Option<Array1<f64>>,
+        metadata: crate::registry::DatasetMetadata,
+    ) -> Self {
         let mut dataset_metadata = HashMap::new();
         dataset_metadata.insert("name".to_string(), metadata.name);
         dataset_metadata.insert("task_type".to_string(), metadata.task_type);

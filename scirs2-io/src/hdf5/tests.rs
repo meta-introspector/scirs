@@ -194,13 +194,13 @@ mod tests {
         if let Some(AttributeValue::Integer(val)) = group.attributes.get("int_attr") {
             assert_eq!(*val, 42);
         } else {
-            panic!("Integer attribute not found or wrong type");
+            assert!(false, "Integer attribute not found or wrong type");
         }
 
         if let Some(AttributeValue::String(val)) = group.attributes.get("string_attr") {
             assert_eq!(val, "hello");
         } else {
-            panic!("String attribute not found or wrong type");
+            assert!(false, "String attribute not found or wrong type");
         }
     }
 

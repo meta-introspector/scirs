@@ -225,20 +225,22 @@ impl<T: Float + FromPrimitive + Debug + Display> BayesianInterpolator<T> {
         let m = x_new.len();
 
         if n == 0 {
-            return Err(InterpolateError::invalid_input("No observed data points".to_string()));
+            return Err(InterpolateError::invalid_input(
+                "No observed data points".to_string(),
+            ));
         }
 
         // Compute covariance matrix K(X, X) + σ²I
         let mut k_xx = Array2::<T>::zeros((n, n));
         let length_scale = T::one(); // TODO: Make this configurable
-        
+
         // Build covariance matrix with RBF kernel
         for i in 0..n {
             for j in 0..n {
                 let dist_sq = (self.x_obs[i] - self.x_obs[j]).powi(2);
-                k_xx[[i, j]] = self.config.prior_variance * 
-                    (-dist_sq / (T::from(2.0).unwrap() * length_scale.powi(2))).exp();
-                
+                k_xx[[i, j]] = self.config.prior_variance
+                    * (-dist_sq / (T::from(2.0).unwrap() * length_scale.powi(2))).exp();
+
                 // Add noise variance to diagonal
                 if i == j {
                     k_xx[[i, j]] = k_xx[[i, j]] + self.config.noise_variance;
@@ -265,8 +267,8 @@ impl<T: Float + FromPrimitive + Debug + Display> BayesianInterpolator<T> {
         for i in 0..m {
             for j in 0..n {
                 let dist_sq = (x_new[i] - self.x_obs[j]).powi(2);
-                k_star_x[[i, j]] = self.config.prior_variance * 
-                    (-dist_sq / (T::from(2.0).unwrap() * length_scale.powi(2))).exp();
+                k_star_x[[i, j]] = self.config.prior_variance
+                    * (-dist_sq / (T::from(2.0).unwrap() * length_scale.powi(2))).exp();
             }
         }
 
@@ -285,9 +287,13 @@ impl<T: Float + FromPrimitive + Debug + Display> BayesianInterpolator<T> {
     }
 
     /// Solve the GP linear system using available numerical methods
-    fn solve_gp_system(&self, k_matrix: &Array2<T>, y_obs: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    fn solve_gp_system(
+        &self,
+        k_matrix: &Array2<T>,
+        y_obs: &ArrayView1<T>,
+    ) -> InterpolateResult<Array1<T>> {
         use crate::structured_matrix::solve_dense_system;
-        
+
         // Try using the structured matrix solver
         match solve_dense_system(k_matrix, y_obs) {
             Ok(solution) => Ok(solution),
@@ -313,7 +319,7 @@ impl<T: Float + FromPrimitive + Debug + Display> BayesianInterpolator<T> {
         // the main posterior uncertainty while avoiding expensive matrix operations.
         // A full implementation would compute the posterior covariance matrix:
         // Σ* = K(X*, X*) - K(X*, X)[K(X, X) + σ²I]^(-1)K(X, X*)
-        
+
         let mut samples = Array2::zeros((n_samples, m));
         let mut rng = rand::rng();
 
@@ -323,22 +329,23 @@ impl<T: Float + FromPrimitive + Debug + Display> BayesianInterpolator<T> {
             // Compute posterior variance as prior variance minus reduction from observations
             let mut reduction_factor = T::zero();
             let mut total_influence = T::zero();
-            
+
             for i in 0..self.x_obs.len() {
                 let dist_sq = (x_new[j] - self.x_obs[i]).powi(2);
                 let influence = (-dist_sq / (T::from(2.0).unwrap() * length_scale.powi(2))).exp();
                 total_influence = total_influence + influence;
                 reduction_factor = reduction_factor + influence * influence;
             }
-            
+
             // Approximate posterior variance
             let noise_ratio = self.config.noise_variance / self.config.prior_variance;
-            let posterior_var = self.config.prior_variance * 
-                (T::one() - reduction_factor / (total_influence + noise_ratio + T::from(1e-8).unwrap()));
-            
+            let posterior_var = self.config.prior_variance
+                * (T::one()
+                    - reduction_factor / (total_influence + noise_ratio + T::from(1e-8).unwrap()));
+
             // Ensure positive variance
             let std_dev = posterior_var.max(T::from(1e-12).unwrap()).sqrt();
-            
+
             // Draw samples for this query point
             for i in 0..n_samples {
                 if let Ok(normal) =
@@ -677,9 +684,7 @@ pub fn make_bayesian_interpolator<T: Float + FromPrimitive + Debug + Display>(
 }
 
 /// Create a median (0.5 quantile) interpolator
-pub fn make_median_interpolator<T>(
-    bandwidth: T,
-) -> InterpolateResult<QuantileInterpolator<T>>
+pub fn make_median_interpolator<T>(bandwidth: T) -> InterpolateResult<QuantileInterpolator<T>>
 where
     T: Float + FromPrimitive + Debug + Display + std::iter::Sum<T> + for<'a> std::iter::Sum<&'a T>,
 {
@@ -771,17 +776,17 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum> Ensembl
         self.methods.push(Box::new(|x, y, x_new| {
             // Cubic spline interpolation using natural boundary conditions
             use crate::spline::CubicSpline;
-            
+
             // Need at least 3 points for cubic spline
             if x.len() < 3 {
                 return Err(InterpolateError::invalid_input(
-                    "Cubic spline requires at least 3 data points".to_string()
+                    "Cubic spline requires at least 3 data points".to_string(),
                 ));
             }
-            
+
             // Create cubic spline with natural boundary conditions
             let spline = CubicSpline::new(x, y)?;
-            
+
             // Evaluate at all query points
             let mut result = Array1::zeros(x_new.len());
             for (i, &x_val) in x_new.iter().enumerate() {

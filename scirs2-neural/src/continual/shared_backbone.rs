@@ -26,8 +26,12 @@ impl SharedBackbone {
 
         for &layer_size in layer_sizes {
             // Create dense layer
-            let dense_layer =
-                Dense::<f32>::new(current_dim, layer_size, Some("relu"), &mut rand::thread_rng())?;
+            let dense_layer = Dense::<f32>::new(
+                current_dim,
+                layer_size,
+                Some("relu"),
+                &mut rand::rng(),
+            )?;
             layers.push(Box::new(dense_layer));
             current_dim = layer_size;
         }
@@ -157,8 +161,12 @@ impl TaskSpecificHead {
 
         // Add hidden layers
         for &layer_size in layer_sizes {
-            let dense_layer =
-                Dense::<f32>::new(current_dim, layer_size, Some("relu"), &mut rand::thread_rng())?;
+            let dense_layer = Dense::<f32>::new(
+                current_dim,
+                layer_size,
+                Some("relu"),
+                &mut rand::rng(),
+            )?;
             layers.push(Box::new(dense_layer));
             current_dim = layer_size;
         }
@@ -171,8 +179,12 @@ impl TaskSpecificHead {
             TaskType::Structured { .. } => None,
         };
 
-        let output_layer =
-            Dense::<f32>::new(current_dim, output_dim, output_activation, &mut rand::thread_rng())?;
+        let output_layer = Dense::<f32>::new(
+            current_dim,
+            output_dim,
+            output_activation,
+            &mut rand::rng(),
+        )?;
         layers.push(Box::new(output_layer));
 
         Ok(Self {
@@ -328,7 +340,8 @@ impl TaskSpecificHead {
     /// Clone the task head
     pub fn clone_head(&self) -> Result<Self> {
         // Extract layer sizes from actual Dense layers
-        let layer_sizes: Vec<usize> = self.layers[..self.layers.len()-1].iter()
+        let layer_sizes: Vec<usize> = self.layers[..self.layers.len() - 1]
+            .iter()
             .map(|layer| {
                 if let Some(dense_layer) = layer.as_any().downcast_ref::<Dense<f32>>() {
                     dense_layer.output_dim()

@@ -548,19 +548,26 @@ where
         use std::sync::mpsc;
 
         let (tx, rx) = mpsc::channel();
+        let rx = Arc::new(Mutex::new(rx));
         let mut worker_handles = Vec::new();
 
         // Start worker threads
         for worker_id in 0..self.config.num_workers {
-            let tx_clone = tx.clone();
+            let _tx_clone = tx.clone();
+            let rx_clone = Arc::clone(&rx);
             let processor_clone = processor.clone();
 
             let handle = thread::spawn(move || {
-                while let Ok(chunk) = rx.recv() {
+                loop {
+                    let chunk = {
+                        let rx = rx_clone.lock().unwrap();
+                        rx.recv().ok()
+                    };
+
                     match chunk {
-                        Some(chunk) => {
+                        Some(Some(chunk)) => {
                             match processor_clone(chunk) {
-                                Ok(result) => {
+                                Ok(_result) => {
                                     // Send result back (simplified for this example)
                                     // In a real implementation, you'd have a result channel
                                 }
@@ -570,7 +577,8 @@ where
                                 }
                             }
                         }
-                        None => break, // End signal
+                        Some(None) => break, // End signal
+                        None => break,       // Channel closed
                     }
                 }
             });
@@ -579,10 +587,10 @@ where
         }
 
         // Send chunks to workers
-        let mut results = Vec::new();
+        let results = Vec::new();
         while let Some(chunk) = iterator.next_chunk()? {
             tx.send(Some(chunk))
-                .map_err(|e| DatasetsError::Other(format!("Send error: {}", e))))?;
+                .map_err(|e| DatasetsError::Other(format!("Send error: {}", e)))?;
             // Note: This is a simplified implementation
             // A complete implementation would collect results properly
         }

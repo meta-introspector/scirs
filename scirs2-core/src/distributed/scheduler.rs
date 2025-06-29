@@ -4,15 +4,16 @@
 //! distributed computing, including priority-based scheduling, load
 //! balancing, and fault-tolerant task execution coordination.
 
-use crate::error::{CoreResult, CoreError, ErrorContext};
-use super::cluster::{TaskId, DistributedTask, NodeInfo, ResourceRequirements, ComputeCapacity};
-use std::sync::{Arc, RwLock, Mutex};
-use std::collections::{BinaryHeap, HashMap, VecDeque};
-use std::time::{Duration, Instant};
+use super::cluster::{ComputeCapacity, DistributedTask, NodeInfo, ResourceRequirements, TaskId};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap, VecDeque};
+use std::sync::{Arc, Mutex, RwLock};
+use std::time::{Duration, Instant};
 
 /// Global distributed scheduler instance
-static GLOBAL_SCHEDULER: std::sync::OnceLock<Arc<DistributedScheduler>> = std::sync::OnceLock::new();
+static GLOBAL_SCHEDULER: std::sync::OnceLock<Arc<DistributedScheduler>> =
+    std::sync::OnceLock::new();
 
 /// Comprehensive distributed task scheduler
 #[derive(Debug)]
@@ -36,63 +37,73 @@ impl DistributedScheduler {
 
     /// Get global scheduler instance
     pub fn global() -> CoreResult<Arc<Self>> {
-        Ok(GLOBAL_SCHEDULER.get_or_init(|| Arc::new(Self::new().unwrap())).clone())
+        Ok(GLOBAL_SCHEDULER
+            .get_or_init(|| Arc::new(Self::new().unwrap()))
+            .clone())
     }
 
     /// Submit task to scheduler
     pub fn submit_task(&self, task: DistributedTask) -> CoreResult<TaskId> {
-        let mut queue = self.task_queue.lock()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire task queue lock")))?;
-        
+        let mut queue = self.task_queue.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire task queue lock"))
+        })?;
+
         let task_id = task.task_id.clone();
         queue.enqueue(task)?;
-        
+
         Ok(task_id)
     }
 
     /// Get pending task count
     pub fn get_pending_task_count(&self) -> CoreResult<usize> {
-        let queue = self.task_queue.lock()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire task queue lock")))?;
-        
+        let queue = self.task_queue.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire task queue lock"))
+        })?;
+
         Ok(queue.size())
     }
 
     /// Schedule next batch of tasks
     pub fn schedule_tasks(&self, available_nodes: &[NodeInfo]) -> CoreResult<Vec<TaskAssignment>> {
-        let mut queue = self.task_queue.lock()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire task queue lock")))?;
-        
-        let policies = self.scheduling_policies.read()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire policies lock")))?;
-        
-        let mut load_balancer = self.load_balancer.write()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire load balancer lock")))?;
-        
+        let mut queue = self.task_queue.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire task queue lock"))
+        })?;
+
+        let policies = self.scheduling_policies.read().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire policies lock"))
+        })?;
+
+        let mut load_balancer = self.load_balancer.write().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire load balancer lock"))
+        })?;
+
         // Schedule tasks based on policy
         let assignments = match policies.scheduling_algorithm {
             SchedulingAlgorithm::FirstComeFirstServe => {
                 self.schedule_fcfs(&mut queue, available_nodes, &mut load_balancer)?
-            },
+            }
             SchedulingAlgorithm::PriorityBased => {
                 self.schedule_priority(&mut queue, available_nodes, &mut load_balancer)?
-            },
+            }
             SchedulingAlgorithm::LoadBalanced => {
                 self.schedule_load_balanced(&mut queue, available_nodes, &mut load_balancer)?
-            },
+            }
             SchedulingAlgorithm::ResourceAware => {
                 self.schedule_resource_aware(&mut queue, available_nodes, &mut load_balancer)?
-            },
+            }
         };
-        
+
         // Update execution tracker
-        let mut tracker = self.execution_tracker.write()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire execution tracker lock")))?;
-        
+        let mut tracker = self.execution_tracker.write().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire execution tracker lock",
+            ))
+        })?;
+
         for assignment in &assignments {
             tracker.track_assignment(assignment.clone())?;
         }
-        
+
         Ok(assignments)
     }
 
@@ -103,7 +114,7 @@ impl DistributedScheduler {
         load_balancer: &mut LoadBalancer,
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
-        
+
         while let Some(task) = queue.dequeue_next() {
             if let Some(node) = load_balancer.select_node_for_task(&task, available_nodes)? {
                 assignments.push(TaskAssignment {
@@ -112,8 +123,9 @@ impl DistributedScheduler {
                     assigned_at: Instant::now(),
                     estimated_duration: self.estimate_task_duration(&task, &node)?,
                 });
-                
-                if assignments.len() >= 10 { // Batch size limit
+
+                if assignments.len() >= 10 {
+                    // Batch size limit
                     break;
                 }
             } else {
@@ -122,7 +134,7 @@ impl DistributedScheduler {
                 break;
             }
         }
-        
+
         Ok(assignments)
     }
 
@@ -134,7 +146,7 @@ impl DistributedScheduler {
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
         let mut scheduled_tasks = Vec::new();
-        
+
         // Get tasks ordered by priority
         while let Some(task) = queue.dequeue_highest_priority() {
             if let Some(node) = load_balancer.select_node_for_task(&task, available_nodes)? {
@@ -144,8 +156,9 @@ impl DistributedScheduler {
                     assigned_at: Instant::now(),
                     estimated_duration: self.estimate_task_duration(&task, &node)?,
                 });
-                
-                if assignments.len() >= 10 { // Batch size limit
+
+                if assignments.len() >= 10 {
+                    // Batch size limit
                     break;
                 }
             } else {
@@ -153,12 +166,12 @@ impl DistributedScheduler {
                 scheduled_tasks.push(task);
             }
         }
-        
+
         // Put unscheduled tasks back
         for task in scheduled_tasks {
             queue.enqueue(task)?;
         }
-        
+
         Ok(assignments)
     }
 
@@ -169,10 +182,10 @@ impl DistributedScheduler {
         load_balancer: &mut LoadBalancer,
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
-        
+
         // Update load balancer with current node loads
         load_balancer.update_node_loads(available_nodes)?;
-        
+
         while let Some(task) = queue.dequeue_next() {
             if let Some(node) = load_balancer.select_least_loaded_node(&task, available_nodes)? {
                 assignments.push(TaskAssignment {
@@ -181,11 +194,12 @@ impl DistributedScheduler {
                     assigned_at: Instant::now(),
                     estimated_duration: self.estimate_task_duration(&task, &node)?,
                 });
-                
+
                 // Update load balancer with new assignment
                 load_balancer.record_assignment(&node.id, &task)?;
-                
-                if assignments.len() >= 10 { // Batch size limit
+
+                if assignments.len() >= 10 {
+                    // Batch size limit
                     break;
                 }
             } else {
@@ -193,7 +207,7 @@ impl DistributedScheduler {
                 break;
             }
         }
-        
+
         Ok(assignments)
     }
 
@@ -204,7 +218,7 @@ impl DistributedScheduler {
         load_balancer: &mut LoadBalancer,
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
-        
+
         while let Some(task) = queue.dequeue_next() {
             if let Some(node) = load_balancer.select_best_fit_node(&task, available_nodes)? {
                 assignments.push(TaskAssignment {
@@ -213,8 +227,9 @@ impl DistributedScheduler {
                     assigned_at: Instant::now(),
                     estimated_duration: self.estimate_task_duration(&task, &node)?,
                 });
-                
-                if assignments.len() >= 10 { // Batch size limit
+
+                if assignments.len() >= 10 {
+                    // Batch size limit
                     break;
                 }
             } else {
@@ -222,19 +237,27 @@ impl DistributedScheduler {
                 break;
             }
         }
-        
+
         Ok(assignments)
     }
 
-    fn estimate_task_duration(&self, task: &DistributedTask, node: &NodeInfo) -> CoreResult<Duration> {
+    fn estimate_task_duration(
+        &self,
+        task: &DistributedTask,
+        node: &NodeInfo,
+    ) -> CoreResult<Duration> {
         // Simple estimation based on task requirements and node capabilities
-        let cpu_factor = task.resource_requirements.cpu_cores as f64 / node.capabilities.cpu_cores as f64;
-        let memory_factor = task.resource_requirements.memory_gb as f64 / node.capabilities.memory_gb as f64;
-        
+        let cpu_factor =
+            task.resource_requirements.cpu_cores as f64 / node.capabilities.cpu_cores as f64;
+        let memory_factor =
+            task.resource_requirements.memory_gb as f64 / node.capabilities.memory_gb as f64;
+
         let complexity_factor = cpu_factor.max(memory_factor);
         let base_duration = Duration::from_secs(60); // 1 minute base
-        
-        Ok(Duration::from_secs((base_duration.as_secs() as f64 * complexity_factor) as u64))
+
+        Ok(Duration::from_secs(
+            (base_duration.as_secs() as f64 * complexity_factor) as u64,
+        ))
     }
 }
 
@@ -265,12 +288,15 @@ impl TaskQueue {
         match task.priority {
             super::cluster::TaskPriority::Low | super::cluster::TaskPriority::Normal => {
                 self.fifo_queue.push_back(task);
-            },
+            }
             super::cluster::TaskPriority::High | super::cluster::TaskPriority::Critical => {
-                self.priority_queue.push(PriorityTask { task, submitted_at: Instant::now() });
-            },
+                self.priority_queue.push(PriorityTask {
+                    task,
+                    submitted_at: Instant::now(),
+                });
+            }
         }
-        
+
         self.task_count += 1;
         Ok(())
     }
@@ -281,13 +307,13 @@ impl TaskQueue {
             self.task_count -= 1;
             return Some(priority_task.task);
         }
-        
+
         // Then FIFO tasks
         if let Some(task) = self.fifo_queue.pop_front() {
             self.task_count -= 1;
             return Some(task);
         }
-        
+
         None
     }
 
@@ -331,7 +357,7 @@ impl Ord for PriorityTask {
         // Higher priority first, then FIFO for same priority
         match self.task.priority.cmp(&other.task.priority) {
             Ordering::Equal => other.submitted_at.cmp(&self.submitted_at), // FIFO for same priority
-            other => other, // Higher priority first
+            other => other,                                                // Higher priority first
         }
     }
 }
@@ -360,7 +386,8 @@ impl ExecutionTracker {
     }
 
     pub fn track_assignment(&mut self, assignment: TaskAssignment) -> CoreResult<()> {
-        self.active_assignments.insert(assignment.task_id.clone(), assignment);
+        self.active_assignments
+            .insert(assignment.task_id.clone(), assignment);
         Ok(())
     }
 
@@ -372,15 +399,15 @@ impl ExecutionTracker {
                 execution_time,
                 completed_at: Instant::now(),
             };
-            
+
             self.completed_tasks.push_back(completed_task);
-            
+
             // Maintain size limit
             while self.completed_tasks.len() > 1000 {
                 self.completed_tasks.pop_front();
             }
         }
-        
+
         Ok(())
     }
 
@@ -392,15 +419,15 @@ impl ExecutionTracker {
                 error,
                 failed_at: Instant::now(),
             };
-            
+
             self.failed_tasks.push_back(failed_task);
-            
+
             // Maintain size limit
             while self.failed_tasks.len() > 1000 {
                 self.failed_tasks.pop_front();
             }
         }
-        
+
         Ok(())
     }
 
@@ -430,7 +457,11 @@ impl LoadBalancer {
         }
     }
 
-    pub fn select_node_for_task(&self, task: &DistributedTask, nodes: &[NodeInfo]) -> CoreResult<Option<NodeInfo>> {
+    pub fn select_node_for_task(
+        &self,
+        task: &DistributedTask,
+        nodes: &[NodeInfo],
+    ) -> CoreResult<Option<NodeInfo>> {
         match self.balancing_strategy {
             LoadBalancingStrategy::RoundRobin => self.select_round_robin(nodes),
             LoadBalancingStrategy::LeastLoaded => self.select_least_loaded_impl(task, nodes),
@@ -438,11 +469,19 @@ impl LoadBalancer {
         }
     }
 
-    pub fn select_least_loaded_node(&self, task: &DistributedTask, nodes: &[NodeInfo]) -> CoreResult<Option<NodeInfo>> {
+    pub fn select_least_loaded_node(
+        &self,
+        task: &DistributedTask,
+        nodes: &[NodeInfo],
+    ) -> CoreResult<Option<NodeInfo>> {
         self.select_least_loaded_impl(task, nodes)
     }
 
-    pub fn select_best_fit_node(&self, task: &DistributedTask, nodes: &[NodeInfo]) -> CoreResult<Option<NodeInfo>> {
+    pub fn select_best_fit_node(
+        &self,
+        task: &DistributedTask,
+        nodes: &[NodeInfo],
+    ) -> CoreResult<Option<NodeInfo>> {
         self.select_resource_based(task, nodes)
     }
 
@@ -450,88 +489,115 @@ impl LoadBalancer {
         if nodes.is_empty() {
             return Ok(None);
         }
-        
+
         // Simple round-robin selection
         let index = self.node_loads.len() % nodes.len();
         Ok(Some(nodes[index].clone()))
     }
 
-    fn select_least_loaded_impl(&self, _task: &DistributedTask, nodes: &[NodeInfo]) -> CoreResult<Option<NodeInfo>> {
+    fn select_least_loaded_impl(
+        &self,
+        _task: &DistributedTask,
+        nodes: &[NodeInfo],
+    ) -> CoreResult<Option<NodeInfo>> {
         if nodes.is_empty() {
             return Ok(None);
         }
-        
+
         // Select node with lowest current load
-        let least_loaded = nodes.iter()
-            .min_by_key(|node| {
-                self.node_loads.get(&node.id)
-                    .map(|load| load.current_tasks)
-                    .unwrap_or(0)
-            });
-        
+        let least_loaded = nodes.iter().min_by_key(|node| {
+            self.node_loads
+                .get(&node.id)
+                .map(|load| load.current_tasks)
+                .unwrap_or(0)
+        });
+
         Ok(least_loaded.cloned())
     }
 
-    fn select_resource_based(&self, task: &DistributedTask, nodes: &[NodeInfo]) -> CoreResult<Option<NodeInfo>> {
+    fn select_resource_based(
+        &self,
+        task: &DistributedTask,
+        nodes: &[NodeInfo],
+    ) -> CoreResult<Option<NodeInfo>> {
         if nodes.is_empty() {
             return Ok(None);
         }
-        
+
         // Select node that best fits the resource requirements
-        let best_fit = nodes.iter()
+        let best_fit = nodes
+            .iter()
             .filter(|node| self.can_satisfy_requirements(node, &task.resource_requirements))
-            .min_by_key(|node| {
-                self.calculate_resource_waste(node, &task.resource_requirements)
-            });
-        
+            .min_by_key(|node| self.calculate_resource_waste(node, &task.resource_requirements));
+
         Ok(best_fit.cloned())
     }
 
-    fn can_satisfy_requirements(&self, node: &NodeInfo, requirements: &ResourceRequirements) -> bool {
+    fn can_satisfy_requirements(
+        &self,
+        node: &NodeInfo,
+        requirements: &ResourceRequirements,
+    ) -> bool {
         let available = self.get_available_capacity(&node.id, &node.capabilities);
-        
-        available.cpu_cores >= requirements.cpu_cores &&
-        available.memory_gb >= requirements.memory_gb &&
-        available.gpu_count >= requirements.gpu_count &&
-        available.disk_space_gb >= requirements.disk_space_gb
+
+        available.cpu_cores >= requirements.cpu_cores
+            && available.memory_gb >= requirements.memory_gb
+            && available.gpu_count >= requirements.gpu_count
+            && available.disk_space_gb >= requirements.disk_space_gb
     }
 
-    fn calculate_resource_waste(&self, node: &NodeInfo, requirements: &ResourceRequirements) -> usize {
+    fn calculate_resource_waste(
+        &self,
+        node: &NodeInfo,
+        requirements: &ResourceRequirements,
+    ) -> usize {
         let available = self.get_available_capacity(&node.id, &node.capabilities);
-        
+
         let cpu_waste = available.cpu_cores.saturating_sub(requirements.cpu_cores);
         let memory_waste = available.memory_gb.saturating_sub(requirements.memory_gb);
         let gpu_waste = available.gpu_count.saturating_sub(requirements.gpu_count);
-        let disk_waste = available.disk_space_gb.saturating_sub(requirements.disk_space_gb);
-        
+        let disk_waste = available
+            .disk_space_gb
+            .saturating_sub(requirements.disk_space_gb);
+
         cpu_waste + memory_waste + gpu_waste + disk_waste / 10 // Scale disk waste
     }
 
-    fn get_available_capacity(&self, node_id: &str, total_capacity: &super::cluster::NodeCapabilities) -> ComputeCapacity {
-        let used = self.node_loads.get(node_id)
+    fn get_available_capacity(
+        &self,
+        node_id: &str,
+        total_capacity: &super::cluster::NodeCapabilities,
+    ) -> ComputeCapacity {
+        let used = self
+            .node_loads
+            .get(node_id)
             .map(|load| &load.used_capacity)
             .cloned()
             .unwrap_or_default();
-        
+
         ComputeCapacity {
             cpu_cores: total_capacity.cpu_cores.saturating_sub(used.cpu_cores),
             memory_gb: total_capacity.memory_gb.saturating_sub(used.memory_gb),
             gpu_count: total_capacity.gpu_count.saturating_sub(used.gpu_count),
-            disk_space_gb: total_capacity.disk_space_gb.saturating_sub(used.disk_space_gb),
+            disk_space_gb: total_capacity
+                .disk_space_gb
+                .saturating_sub(used.disk_space_gb),
         }
     }
 
     pub fn update_node_loads(&mut self, nodes: &[NodeInfo]) -> CoreResult<()> {
         // Initialize or update node loads
         for node in nodes {
-            self.node_loads.entry(node.id.clone()).or_insert_with(|| NodeLoad {
-                node_id: node.id.clone(),
-                current_tasks: 0,
-                used_capacity: ComputeCapacity::default(),
-                last_updated: Instant::now(),
-            });
+            self.node_loads
+                .entry(node.id.clone())
+                .or_insert_with(|| NodeLoad {
+                    node_id: node.id.clone(),
+                    current_tasks: 0,
+                    used_capacity: ComputeCapacity::default(),
+                    last_updated: Instant::now(),
+                });
         }
-        
+
         Ok(())
     }
 
@@ -544,7 +610,7 @@ impl LoadBalancer {
             load.used_capacity.disk_space_gb += task.resource_requirements.disk_space_gb;
             load.last_updated = Instant::now();
         }
-        
+
         Ok(())
     }
 }
@@ -632,10 +698,10 @@ pub fn initialize_distributed_scheduler() -> CoreResult<()> {
 mod tests {
     use super::*;
     use crate::distributed::{
-        NodeCapabilities, NodeType, NodeStatus, NodeMetadata, 
-        TaskType, TaskParameters, RetryPolicy, BackoffStrategy, ClusterTaskPriority
+        BackoffStrategy, ClusterTaskPriority, NodeCapabilities, NodeMetadata, NodeStatus, NodeType,
+        RetryPolicy, TaskParameters, TaskType,
     };
-    use std::net::{SocketAddr, IpAddr, Ipv4Addr};
+    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
     #[test]
     fn test_scheduler_creation() {
@@ -660,18 +726,18 @@ mod tests {
     #[test]
     fn test_priority_scheduling() {
         let mut queue = TaskQueue::new();
-        
+
         // Add tasks with different priorities
         let low_task = create_test_task(ClusterTaskPriority::Low);
         let high_task = create_test_task(ClusterTaskPriority::High);
-        
+
         queue.enqueue(low_task).unwrap();
         queue.enqueue(high_task).unwrap();
-        
+
         // High priority task should come first
         let first = queue.dequeue_next().unwrap();
         assert_eq!(first.priority, ClusterTaskPriority::High);
-        
+
         let second = queue.dequeue_next().unwrap();
         assert_eq!(second.priority, ClusterTaskPriority::Low);
     }
@@ -681,7 +747,7 @@ mod tests {
         let balancer = LoadBalancer::new();
         let nodes = vec![create_test_node("node1"), create_test_node("node2")];
         let task = create_test_task(ClusterTaskPriority::Normal);
-        
+
         let selected = balancer.select_node_for_task(&task, &nodes).unwrap();
         assert!(selected.is_some());
     }

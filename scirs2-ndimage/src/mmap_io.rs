@@ -224,10 +224,7 @@ impl Default for MmapConfig {
 /// # Returns
 ///
 /// A regular ndarray containing the loaded data
-pub fn load_regular_array<T, D, P>(
-    path: P,
-    shape: &[usize],
-) -> NdimageResult<Array<T, D>>
+pub fn load_regular_array<T, D, P>(path: P, shape: &[usize]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
     D: Dimension + 'static,
@@ -245,7 +242,8 @@ where
         .map_err(|e| NdimageError::IOError(format!("Failed to open file: {}", e)))?;
 
     // Check file size
-    let file_size = file.metadata()
+    let file_size = file
+        .metadata()
         .map_err(|e| NdimageError::IOError(format!("Failed to get file metadata: {}", e)))?
         .len() as usize;
 
@@ -263,25 +261,29 @@ where
 
     // Convert bytes to the target type
     let mut data = Vec::with_capacity(total_elements);
-    
+
     if std::mem::size_of::<T>() == std::mem::size_of::<f64>() {
         // Handle f64 case
         for chunk in buffer.chunks_exact(8) {
-            let bytes: [u8; 8] = chunk.try_into()
+            let bytes: [u8; 8] = chunk
+                .try_into()
                 .map_err(|_| NdimageError::ProcessingError("Invalid byte alignment".into()))?;
             let value = f64::from_le_bytes(bytes);
-            let converted = T::from_f64(value)
-                .ok_or_else(|| NdimageError::ProcessingError("Failed to convert f64 to target type".into()))?;
+            let converted = T::from_f64(value).ok_or_else(|| {
+                NdimageError::ProcessingError("Failed to convert f64 to target type".into())
+            })?;
             data.push(converted);
         }
     } else if std::mem::size_of::<T>() == std::mem::size_of::<f32>() {
         // Handle f32 case
         for chunk in buffer.chunks_exact(4) {
-            let bytes: [u8; 4] = chunk.try_into()
+            let bytes: [u8; 4] = chunk
+                .try_into()
                 .map_err(|_| NdimageError::ProcessingError("Invalid byte alignment".into()))?;
             let value = f32::from_le_bytes(bytes);
-            let converted = T::from_f32(value)
-                .ok_or_else(|| NdimageError::ProcessingError("Failed to convert f32 to target type".into()))?;
+            let converted = T::from_f32(value).ok_or_else(|| {
+                NdimageError::ProcessingError("Failed to convert f32 to target type".into())
+            })?;
             data.push(converted);
         }
     } else {

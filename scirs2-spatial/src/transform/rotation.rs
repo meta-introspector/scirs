@@ -887,9 +887,9 @@ impl Rotation {
 
         // Generate random quaternion using method from:
         // http://planning.cs.uiuc.edu/node198.html
-        let u1 = rng.gen_range(0.0..1.0);
-        let u2 = rng.gen_range(0.0..1.0);
-        let u3 = rng.gen_range(0.0..1.0);
+        let u1 = rng.random_range(0.0..1.0);
+        let u2 = rng.random_range(0.0..1.0);
+        let u3 = rng.random_range(0.0..1.0);
 
         let sqrt_u1 = u1.sqrt();
         let sqrt_1_minus_u1 = (1.0 - u1).sqrt();
@@ -904,6 +904,110 @@ impl Rotation {
         ];
 
         Rotation { quat }
+    }
+
+    /// Spherical linear interpolation (SLERP) between two rotations
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The target rotation to interpolate towards
+    /// * `t` - Interpolation parameter (0.0 = this rotation, 1.0 = other rotation)
+    ///
+    /// # Returns
+    ///
+    /// A new rotation interpolated between this and the other rotation
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use scirs2_spatial::transform::Rotation;
+    /// use ndarray::array;
+    /// use std::f64::consts::PI;
+    ///
+    /// let rot1 = Rotation::identity();
+    /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
+    /// let interpolated = rot1.slerp(&rot2, 0.5);
+    /// ```
+    pub fn slerp(&self, other: &Rotation, t: f64) -> Rotation {
+        // Ensure t is in [0, 1]
+        let t = t.clamp(0.0, 1.0);
+
+        if t == 0.0 {
+            return self.clone();
+        }
+        if t == 1.0 {
+            return other.clone();
+        }
+
+        let q1 = &self.quat;
+        let mut q2 = other.quat.clone();
+
+        // Compute dot product
+        let mut dot = q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2] + q1[3] * q2[3];
+
+        // If dot product is negative, use -q2 to take the shorter path
+        if dot < 0.0 {
+            q2 *= -1.0;
+            dot = -dot;
+        }
+
+        // If the quaternions are very close, use linear interpolation
+        if dot > 0.9995 {
+            let result = q1 * (1.0 - t) + &q2 * t;
+            let norm = (result.iter().map(|&x| x * x).sum::<f64>()).sqrt();
+            return Rotation {
+                quat: result / norm,
+            };
+        }
+
+        // Calculate the angle between quaternions
+        let theta_0 = dot.acos();
+        let sin_theta_0 = theta_0.sin();
+
+        let theta = theta_0 * t;
+        let sin_theta = theta.sin();
+
+        let s0 = (theta_0 - theta).cos() / sin_theta_0;
+        let s1 = sin_theta / sin_theta_0;
+
+        let result = q1 * s0 + &q2 * s1;
+        Rotation { quat: result }
+    }
+
+    /// Calculate the angular distance between two rotations
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The other rotation to calculate distance to
+    ///
+    /// # Returns
+    ///
+    /// The angular distance in radians (always positive, in range [0, π])
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use scirs2_spatial::transform::Rotation;
+    /// use ndarray::array;
+    /// use std::f64::consts::PI;
+    ///
+    /// let rot1 = Rotation::identity();
+    /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
+    /// let distance = rot1.angular_distance(&rot2);
+    /// assert!((distance - PI/2.0).abs() < 1e-10);
+    /// ```
+    pub fn angular_distance(&self, other: &Rotation) -> f64 {
+        let q1 = &self.quat;
+        let q2 = &other.quat;
+
+        // Compute dot product
+        let dot = (q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2] + q1[3] * q2[3]).abs();
+
+        // Clamp to avoid numerical issues with acos
+        let dot_clamped = dot.min(1.0);
+
+        // Return the angular distance
+        2.0 * dot_clamped.acos()
     }
 }
 
@@ -1051,5 +1155,56 @@ mod tests {
         assert_relative_eq!(rotated1[0], rotated3[0], epsilon = 1e-10);
         assert_relative_eq!(rotated1[1], rotated3[1], epsilon = 1e-10);
         assert_relative_eq!(rotated1[2], rotated3[2], epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_slerp_interpolation() {
+        // Test SLERP between identity and 90-degree Z rotation
+        let rot1 = Rotation::identity();
+        let rot2 = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap();
+
+        // Test endpoints
+        let slerp_0 = rot1.slerp(&rot2, 0.0);
+        let slerp_1 = rot1.slerp(&rot2, 1.0);
+
+        let vec = array![1.0, 0.0, 0.0];
+        let result_0 = slerp_0.apply(&vec.view()).unwrap();
+        let result_1 = slerp_1.apply(&vec.view()).unwrap();
+
+        // At t=0, should be same as rot1 (identity)
+        assert_relative_eq!(result_0[0], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(result_0[1], 0.0, epsilon = 1e-10);
+
+        // At t=1, should be same as rot2 (90 degree rotation)
+        assert_relative_eq!(result_1[0], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(result_1[1], 1.0, epsilon = 1e-10);
+
+        // Test midpoint
+        let slerp_mid = rot1.slerp(&rot2, 0.5);
+        let result_mid = slerp_mid.apply(&vec.view()).unwrap();
+
+        // Should be roughly 45 degrees
+        let expected_angle = PI / 4.0;
+        assert_relative_eq!(result_mid[0], expected_angle.cos(), epsilon = 1e-10);
+        assert_relative_eq!(result_mid[1], expected_angle.sin(), epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_angular_distance() {
+        let rot1 = Rotation::identity();
+        let rot2 = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap();
+        let rot3 = rotation_from_euler(0.0, 0.0, PI, "xyz").unwrap();
+
+        // Distance from identity to 90-degree rotation should be PI/2
+        let dist1 = rot1.angular_distance(&rot2);
+        assert_relative_eq!(dist1, PI / 2.0, epsilon = 1e-10);
+
+        // Distance from identity to 180-degree rotation should be PI
+        let dist2 = rot1.angular_distance(&rot3);
+        assert_relative_eq!(dist2, PI, epsilon = 1e-10);
+
+        // Distance from rotation to itself should be 0
+        let dist3 = rot1.angular_distance(&rot1);
+        assert_relative_eq!(dist3, 0.0, epsilon = 1e-10);
     }
 }

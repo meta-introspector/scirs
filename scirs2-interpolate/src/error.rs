@@ -242,11 +242,7 @@ impl InterpolateError {
     }
 
     /// Create a numerical stability error with actionable advice
-    pub fn numerical_instability_with_advice(
-        context: &str,
-        details: &str,
-        advice: &str,
-    ) -> Self {
+    pub fn numerical_instability_with_advice(context: &str, details: &str, advice: &str) -> Self {
         Self::NumericalError(format!(
             "Numerical instability in {}: {} - ADVICE: {}",
             context, details, advice
@@ -254,11 +250,7 @@ impl InterpolateError {
     }
 
     /// Create a convergence failure with actionable recommendations
-    pub fn convergence_failure_with_advice(
-        method: &str,
-        iterations: usize,
-        advice: &str,
-    ) -> Self {
+    pub fn convergence_failure_with_advice(method: &str, iterations: usize, advice: &str) -> Self {
         Self::ComputationError(format!(
             "{} failed to converge after {} iterations - RECOMMENDATION: {}",
             method, iterations, advice
@@ -285,18 +277,18 @@ impl InterpolateError {
 
         Self::LinalgError(format!(
             "{}: {} - SOLUTION: {}",
-            context, 
-            if condition_number > 1e16 { "Severe numerical instability" } else { "Poor numerical conditioning" },
+            context,
+            if condition_number > 1e16 {
+                "Severe numerical instability"
+            } else {
+                "Poor numerical conditioning"
+            },
             advice
         ))
     }
 
     /// Create a data quality error with preprocessing suggestions
-    pub fn data_quality_error(
-        issue: &str,
-        context: &str,
-        preprocessing_advice: &str,
-    ) -> Self {
+    pub fn data_quality_error(issue: &str, context: &str, preprocessing_advice: &str) -> Self {
         Self::InvalidInput {
             message: format!(
                 "{} detected in {}: {} - DATA PREPROCESSING: {}",

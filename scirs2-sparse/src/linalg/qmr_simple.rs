@@ -1,3 +1,7 @@
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::LinearOperator;
 use num_traits::{Float, NumAssign};
@@ -6,6 +10,7 @@ use std::iter::Sum;
 
 /// Result of QMR solver
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct QMRResult<F> {
     pub x: Vec<F>,
     pub iterations: usize,
@@ -15,6 +20,7 @@ pub struct QMRResult<F> {
 }
 
 /// Options for QMR solver
+#[allow(dead_code)]
 pub struct QMROptions<F> {
     pub max_iter: usize,
     pub rtol: F,
@@ -40,6 +46,7 @@ impl<F: Float> Default for QMROptions<F> {
 /// Simple QMR implementation for testing
 ///
 /// This is a simplified version that should work for basic cases
+#[allow(dead_code)]
 pub fn qmr<F>(
     a: &dyn LinearOperator<F>,
     b: &[F],
@@ -147,14 +154,17 @@ where
 }
 
 // Helper functions
+#[allow(dead_code)]
 fn dot<F: Float + Sum>(a: &[F], b: &[F]) -> F {
     a.iter().zip(b.iter()).map(|(&ai, &bi)| ai * bi).sum()
 }
 
+#[allow(dead_code)]
 fn norm2<F: Float + Sum>(v: &[F]) -> F {
     v.iter().map(|&vi| vi * vi).sum::<F>().sqrt()
 }
 
+#[allow(dead_code)]
 fn vec_add<F: Float>(a: &[F], b: &[F]) -> Vec<F> {
     a.iter().zip(b.iter()).map(|(&ai, &bi)| ai + bi).collect()
 }

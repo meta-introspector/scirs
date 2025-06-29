@@ -14,6 +14,72 @@ use rand::distr::Uniform;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 
+/// Simplified Sobol sequence generator
+/// For production use, a full Sobol implementation with proper generating matrices would be preferred
+struct SobolState {
+    dimension: usize,
+    count: usize,
+    direction_numbers: Vec<Vec<u32>>,
+}
+
+impl SobolState {
+    fn new(dimension: usize) -> Self {
+        let mut direction_numbers = Vec::new();
+        
+        // Initialize direction numbers for first few dimensions
+        // This is a simplified implementation - full Sobol needs proper generating matrices
+        for d in 0..dimension {
+            let mut dirs = Vec::new();
+            if d == 0 {
+                // First dimension uses powers of 2
+                for i in 0..32 {
+                    dirs.push(1u32 << (31 - i));
+                }
+            } else {
+                // Other dimensions use simple polynomial recurrence
+                // This is not optimal but provides better distribution than random
+                let base = (d + 1) as u32;
+                dirs.push(1u32 << 31);
+                for i in 1..32 {
+                    let prev = dirs[i - 1];
+                    dirs.push(prev ^ (prev >> base));
+                }
+            }
+            direction_numbers.push(dirs);
+        }
+        
+        SobolState {
+            dimension,
+            count: 0,
+            direction_numbers,
+        }
+    }
+    
+    fn next_point(&mut self) -> Vec<f64> {
+        self.count += 1;
+        let mut point = Vec::with_capacity(self.dimension);
+        
+        for d in 0..self.dimension {
+            let mut x = 0u32;
+            let mut c = self.count;
+            let mut j = 0;
+            
+            while c > 0 {
+                if (c & 1) == 1 {
+                    x ^= self.direction_numbers[d][j];
+                }
+                c >>= 1;
+                j += 1;
+            }
+            
+            // Convert to [0, 1)
+            point.push(x as f64 / (1u64 << 32) as f64);
+        }
+        
+        point
+    }
+}
+
 /// Options for Differential Evolution algorithm
 #[derive(Debug, Clone)]
 pub struct DifferentialEvolutionOptions {
@@ -165,13 +231,23 @@ where
     fn validate_bounds(&self) {
         for (i, &(lb, ub)) in self.bounds.iter().enumerate() {
             if !lb.is_finite() || !ub.is_finite() {
-                panic!("Bounds must be finite values. Variable {}: bounds = ({}, {})", i, lb, ub);
+                panic!(
+                    "Bounds must be finite values. Variable {}: bounds = ({}, {})",
+                    i, lb, ub
+                );
             }
             if lb >= ub {
-                panic!("Lower bound must be less than upper bound. Variable {}: lb = {}, ub = {}", i, lb, ub);
+                panic!(
+                    "Lower bound must be less than upper bound. Variable {}: lb = {}, ub = {}",
+                    i, lb, ub
+                );
             }
             if (ub - lb) < 1e-12 {
-                panic!("Bounds range is too small. Variable {}: range = {}", i, ub - lb);
+                panic!(
+                    "Bounds range is too small. Variable {}: range = {}",
+                    i,
+                    ub - lb
+                );
             }
         }
     }
@@ -267,20 +343,64 @@ where
 
     /// Initialize population using Halton sequence
     fn init_halton(&mut self) {
-        // Simplified Halton sequence implementation
-        self.init_random(); // Fallback to random for now
+        let primes = vec![2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
+        
+        for i in 0..self.popsize {
+            for j in 0..self.n_vars {
+                // Use the (i+1)th term of the Halton sequence for base primes[j % primes.len()]
+                let base = primes[j % primes.len()];
+                let halton_value = self.halton_number(i + 1, base);
+                
+                // Scale to bounds
+                let (lb, ub) = self.bounds[j];
+                self.population[[i, j]] = lb + halton_value * (ub - lb);
+            }
+        }
     }
 
     /// Initialize population using Sobol sequence
     fn init_sobol(&mut self) {
-        // Simplified Sobol sequence implementation
-        self.init_random(); // Fallback to random for now
+        // Simplified Sobol sequence using scrambled Van der Corput sequence
+        // For a full Sobol implementation, we would need generating matrices
+        let mut sobol_state = SobolState::new(self.n_vars);
+        
+        for i in 0..self.popsize {
+            let sobol_point = sobol_state.next_point();
+            for j in 0..self.n_vars {
+                // Scale to bounds
+                let (lb, ub) = self.bounds[j];
+                let scaled_value = if j < sobol_point.len() {
+                    lb + sobol_point[j] * (ub - lb)
+                } else {
+                    // Fallback for higher dimensions
+                    let base = 2u32.pow((j + 1) as u32);
+                    let halton_value = self.halton_number(i + 1, base as usize);
+                    lb + halton_value * (ub - lb)
+                };
+                self.population[[i, j]] = scaled_value;
+            }
+        }
+    }
+
+    /// Generate the n-th number in the Halton sequence for given base
+    fn halton_number(&self, n: usize, base: usize) -> f64 {
+        let mut result = 0.0;
+        let mut f = 1.0 / base as f64;
+        let mut i = n;
+        
+        while i > 0 {
+            result += f * (i % base) as f64;
+            i /= base;
+            f /= base as f64;
+        }
+        
+        result
     }
 
     /// Ensure bounds for a parameter using reflection method
     fn ensure_bounds(&mut self, idx: usize, val: f64) -> f64 {
         let (lb, ub) = self.bounds[idx];
-        
+
         if val >= lb && val <= ub {
             // Value is within bounds
             val

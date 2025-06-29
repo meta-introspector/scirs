@@ -94,7 +94,11 @@ where
 /// # Returns
 ///
 /// * Distance matrix (n_samples × n_clusters)
-pub fn distance_to_centroids_simd<F>(data: ArrayView2<F>, centroids: ArrayView2<F>) -> Array2<F>
+///
+/// # Errors
+///
+/// * Returns error if data and centroids have different numbers of features
+pub fn distance_to_centroids_simd<F>(data: ArrayView2<F>, centroids: ArrayView2<F>) -> Result<Array2<F>, String>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {
@@ -103,7 +107,10 @@ where
     let n_features = data.shape()[1];
 
     if centroids.shape()[1] != n_features {
-        panic!("Data and centroids must have the same number of features");
+        return Err(format!(
+            "Data and centroids must have the same number of features: data has {}, centroids have {}",
+            n_features, centroids.shape()[1]
+        ));
     }
 
     let mut distances = Array2::zeros((n_samples, n_clusters));
@@ -117,7 +124,7 @@ where
         distance_to_centroids_standard(data, centroids, &mut distances);
     }
 
-    distances
+    Ok(distances)
 }
 
 /// Standard distance to centroids computation
@@ -244,7 +251,7 @@ mod tests {
 
         let centroids = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.5, 1.0]).unwrap();
 
-        let distances = distance_to_centroids_simd(data.view(), centroids.view());
+        let distances = distance_to_centroids_simd(data.view(), centroids.view()).unwrap();
 
         assert_eq!(distances.shape(), &[4, 2]);
 

@@ -56,12 +56,21 @@ uuid = { workspace = true, features = ["v4", "serde"] }
 urlencoding = { workspace = true }
 crossbeam-channel = { workspace = true }
 cron = "0.12"
+snap = { workspace = true }
+brotli = { workspace = true }
 # Database drivers
 rusqlite = { version = "0.32", optional = true }
 sqlx = { version = "0.8", optional = true, features = ["runtime-tokio-rustls", "postgres", "mysql", "sqlite"] }
 duckdb = { version = "0.10", optional = true }
 mongodb = { version = "2.8", optional = true }
 redis = { version = "0.24", optional = true }
+# Real-time streaming
+tokio-tungstenite = { version = "0.21", optional = true }
+rumqttc = { version = "0.24", optional = true }
+eventsource-client = { version = "0.12", optional = true }
+tonic = { version = "0.11", optional = true }
+prost = { version = "0.12", optional = true }
+url = { workspace = true }
 
 [dev-dependencies]
 tokio-test = { workspace = true }
@@ -87,7 +96,13 @@ duckdb = ["dep:duckdb"]
 mongodb = ["dep:mongodb", "async"]
 redis = ["dep:redis"]
 database = ["sqlite", "postgres", "mysql", "duckdb"]
-all = ["csv", "compression", "validation", "hdf5", "async", "reqwest", "aws-sdk-s3", "google-cloud-storage", "azure-storage-blobs", "gpu", "exif", "database", "mongodb", "redis"]
+# Real-time streaming features
+websocket = ["dep:tokio-tungstenite", "async"]
+mqtt = ["dep:rumqttc", "async"]
+sse = ["dep:eventsource-client", "async", "reqwest"]
+grpc = ["dep:tonic", "dep:prost", "async"]
+realtime = ["websocket", "mqtt", "sse", "grpc"]
+all = ["csv", "compression", "validation", "hdf5", "async", "reqwest", "aws-sdk-s3", "google-cloud-storage", "azure-storage-blobs", "gpu", "exif", "database", "mongodb", "redis", "realtime"]
 
 [[example]]
 name = "hdf5_example"

@@ -7,13 +7,26 @@ use ndarray::{Array, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
 use std::collections::VecDeque;
 
+pub mod byzantine_tolerance;
 pub mod dp_sgd;
+pub mod enhanced_audit;
 pub mod federated_privacy;
 pub mod moment_accountant;
 pub mod noise_mechanisms;
+pub mod private_hyperparameter_optimization;
+pub mod secure_multiparty;
+pub mod utility_analysis;
 
 use crate::error::{OptimError, OptimizerError};
 use crate::optimizers::Optimizer;
+
+// Re-export key utility analysis types
+pub use utility_analysis::{
+    PrivacyUtilityAnalyzer, AnalysisConfig, PrivacyParameterSpace, UtilityMetric,
+    PrivacyUtilityResults, ParetoPoint, OptimalConfiguration, PrivacyConfiguration,
+    SensitivityResults, RobustnessResults, BudgetRecommendations,
+    PrivacyRiskAssessment, StatisticalTestResults, AnalysisMetadata,
+};
 
 /// Differential privacy configuration
 #[derive(Debug, Clone)]

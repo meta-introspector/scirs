@@ -297,42 +297,857 @@ pub enum BatchBufferType {
     GradientAccumulation,
     /// Parameter update buffer
     ParameterUpdate,
-    /// Activation checkpointing buffer
-    ActivationCheckpoint,
-    /// Mixed precision conversion buffer
-    MixedPrecision,
     /// Multi-GPU communication buffer
-    Communication,
-    /// Temporary computation buffer
-    Temporary,
+    MultiGpuComm,
+    /// Optimizer workspace buffer
+    OptimizerWorkspace,
+}
+
+impl CudaMemoryPool {
+    /// Create new memory pool
+    pub fn new() -> Self {
+        Self {
+            free_blocks: HashMap::new(),
+            all_blocks: Vec::new(),
+            stats: MemoryStats::default(),
+            max_pool_size: 2 * 1024 * 1024 * 1024, // 2GB default
+            min_block_size: 256,                   // 256 bytes minimum
+            enable_defrag: true,
+            gpu_context: None,
+            large_batch_config: LargeBatchConfig::default(),
+            allocation_strategy: AllocationStrategy::default(),
+            adaptive_sizing: AdaptiveSizing::default(),
+            pressure_monitor: MemoryPressureMonitor::default(),
+            batch_buffers: Vec::new(),
+        }
+    }
+
+    /// Create memory pool for specific GPU
+    #[cfg(feature = "gpu")]
+    pub fn new_with_gpu(gpu_id: usize) -> Result<Self, GpuOptimizerError> {
+        let context = Arc::new(GpuContext::new_with_device(gpu_id)?);
+
+        Ok(Self {
+            free_blocks: HashMap::new(),
+            all_blocks: Vec::new(),
+            stats: MemoryStats::default(),
+            max_pool_size: 2 * 1024 * 1024 * 1024,
+            min_block_size: 256,
+            enable_defrag: true,
+            gpu_context: Some(context),
+            large_batch_config: LargeBatchConfig::default(),
+            allocation_strategy: AllocationStrategy::default(),
+            adaptive_sizing: AdaptiveSizing::default(),
+            pressure_monitor: MemoryPressureMonitor::default(),
+            batch_buffers: Vec::new(),
+        })
+    }
+
+    /// Allocate memory from pool
+    pub fn allocate(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+        let start_time = std::time::Instant::now();
+
+        // Check for large batch optimization
+        if size >= self.large_batch_config.min_batch_size {
+            if let Some(ptr) = self.try_allocate_from_batch_buffer(size)? {
+                self.record_allocation_success(size, true, start_time);
+                return Ok(ptr);
+            }
+        }
+
+        // Try to find existing free block
+        if let Some(ptr) = self.find_free_block(size) {
+            self.record_allocation_success(size, true, start_time);
+            return Ok(ptr);
+        }
+
+        // Allocate new block
+        let ptr = self.allocate_new_block(size)?;
+        self.record_allocation_success(size, false, start_time);
+
+        // Update adaptive sizing
+        if self.adaptive_sizing.enable_adaptive_resize {
+            self.update_adaptive_sizing(size);
+        }
+
+        // Monitor memory pressure
+        if self.pressure_monitor.enable_monitoring {
+            self.update_memory_pressure();
+        }
+
+        Ok(ptr)
+    }
+
+    /// Try to allocate from pre-allocated batch buffers
+    fn try_allocate_from_batch_buffer(
+        &mut self,
+        size: usize,
+    ) -> Result<Option<*mut u8>, GpuOptimizerError> {
+        // Look for suitable batch buffer
+        for buffer in &mut self.batch_buffers {
+            if !buffer.in_use && buffer.size >= size {
+                buffer.in_use = true;
+                buffer.last_used = std::time::Instant::now();
+                buffer.usage_count += 1;
+                return Ok(Some(buffer.ptr));
+            }
+        }
+
+        // Create new batch buffer if under limit
+        if self.batch_buffers.len() < self.large_batch_config.max_batch_buffers {
+            let buffer_size = (size as f32 * self.large_batch_config.growth_factor) as usize;
+            let ptr = self.allocate_raw_memory(buffer_size)?;
+
+            let mut buffer = BatchBuffer {
+                ptr,
+                size: buffer_size,
+                in_use: true,
+                created_at: std::time::Instant::now(),
+                last_used: std::time::Instant::now(),
+                usage_count: 1,
+                buffer_type: BatchBufferType::General,
+            };
+
+            self.batch_buffers.push(buffer);
+            return Ok(Some(ptr));
+        }
+
+        Ok(None)
+    }
+
+    /// Find free block using allocation strategy
+    fn find_free_block(&mut self, size: usize) -> Option<*mut u8> {
+        match self.allocation_strategy {
+            AllocationStrategy::FirstFit => self.find_first_fit(size),
+            AllocationStrategy::BestFit => self.find_best_fit(size),
+            AllocationStrategy::WorstFit => self.find_worst_fit(size),
+            AllocationStrategy::BuddySystem => self.find_buddy_block(size),
+            AllocationStrategy::SegregatedList => self.find_segregated_block(size),
+            AllocationStrategy::Adaptive => self.find_adaptive_block(size),
+        }
+    }
+
+    fn find_first_fit(&mut self, size: usize) -> Option<*mut u8> {
+        // Find first block that fits
+        for (&block_size, blocks) in &mut self.free_blocks {
+            if block_size >= size && !blocks.is_empty() {
+                let mut block = blocks.pop_front().unwrap();
+                block.mark_used();
+                self.stats.cache_hits += 1;
+                return Some(block.ptr);
+            }
+        }
+        None
+    }
+
+    fn find_best_fit(&mut self, size: usize) -> Option<*mut u8> {
+        // Find smallest block that fits
+        let mut best_size = None;
+        let mut best_fit_size = usize::MAX;
+
+        for (&block_size, blocks) in &self.free_blocks {
+            if block_size >= size && block_size < best_fit_size && !blocks.is_empty() {
+                best_fit_size = block_size;
+                best_size = Some(block_size);
+            }
+        }
+
+        if let Some(block_size) = best_size {
+            if let Some(blocks) = self.free_blocks.get_mut(&block_size) {
+                if let Some(mut block) = blocks.pop_front() {
+                    block.mark_used();
+                    self.stats.cache_hits += 1;
+                    return Some(block.ptr);
+                }
+            }
+        }
+
+        None
+    }
+
+    fn find_worst_fit(&mut self, size: usize) -> Option<*mut u8> {
+        // Find largest block that fits (reduces fragmentation)
+        let mut worst_size = None;
+        let mut worst_fit_size = 0;
+
+        for (&block_size, blocks) in &self.free_blocks {
+            if block_size >= size && block_size > worst_fit_size && !blocks.is_empty() {
+                worst_fit_size = block_size;
+                worst_size = Some(block_size);
+            }
+        }
+
+        if let Some(block_size) = worst_size {
+            if let Some(blocks) = self.free_blocks.get_mut(&block_size) {
+                if let Some(mut block) = blocks.pop_front() {
+                    block.mark_used();
+                    self.stats.cache_hits += 1;
+                    return Some(block.ptr);
+                }
+            }
+        }
+
+        None
+    }
+
+    fn find_buddy_block(&mut self, size: usize) -> Option<*mut u8> {
+        // Buddy system: find power-of-2 sized block
+        let buddy_size = size.next_power_of_two();
+
+        if let Some(blocks) = self.free_blocks.get_mut(&buddy_size) {
+            if let Some(mut block) = blocks.pop_front() {
+                block.mark_used();
+                self.stats.cache_hits += 1;
+                return Some(block.ptr);
+            }
+        }
+
+        None
+    }
+
+    fn find_segregated_block(&mut self, size: usize) -> Option<*mut u8> {
+        // Segregated list: different size classes
+        let size_class = self.get_size_class(size);
+
+        for class_size in size_class.. {
+            if let Some(blocks) = self.free_blocks.get_mut(&class_size) {
+                if let Some(mut block) = blocks.pop_front() {
+                    block.mark_used();
+                    self.stats.cache_hits += 1;
+                    return Some(block.ptr);
+                }
+            }
+        }
+
+        None
+    }
+
+    fn find_adaptive_block(&mut self, size: usize) -> Option<*mut u8> {
+        // Adaptive strategy based on allocation patterns
+        let allocation_history = &self.adaptive_sizing.allocation_history;
+
+        if allocation_history.len() < 10 {
+            // Not enough history, use best fit
+            self.find_best_fit(size)
+        } else {
+            // Analyze recent allocation patterns
+            let recent_avg_size: usize = allocation_history
+                .iter()
+                .rev()
+                .take(10)
+                .map(|event| event.size)
+                .sum::<usize>()
+                / 10;
+
+            if size < recent_avg_size {
+                // Small allocation, use first fit for speed
+                self.find_first_fit(size)
+            } else {
+                // Large allocation, use best fit for efficiency
+                self.find_best_fit(size)
+            }
+        }
+    }
+
+    fn get_size_class(&self, size: usize) -> usize {
+        // Define size classes for segregated list
+        match size {
+            0..=256 => 256,
+            257..=512 => 512,
+            513..=1024 => 1024,
+            1025..=2048 => 2048,
+            2049..=4096 => 4096,
+            4097..=8192 => 8192,
+            8193..=16384 => 16384,
+            _ => size.next_power_of_two(),
+        }
+    }
+
+    /// Allocate new memory block
+    fn allocate_new_block(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+        // Check pool size limits
+        if self.stats.total_allocated + size > self.max_pool_size {
+            if self.enable_defrag {
+                self.defragment_memory()?;
+            }
+
+            if self.stats.total_allocated + size > self.max_pool_size {
+                return Err(GpuOptimizerError::MemoryError);
+            }
+        }
+
+        let ptr = self.allocate_raw_memory(size)?;
+
+        // Create and track memory block
+        let block = MemoryBlock::new(ptr, size);
+        self.all_blocks.push(block);
+
+        // Update statistics
+        self.stats.total_allocated += size;
+        self.stats.current_used += size;
+        self.stats.allocation_count += 1;
+        self.stats.cache_misses += 1;
+
+        if self.stats.current_used > self.stats.peak_usage {
+            self.stats.peak_usage = self.stats.current_used;
+        }
+
+        Ok(ptr)
+    }
+
+    /// Allocate raw GPU memory
+    fn allocate_raw_memory(&self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+        #[cfg(feature = "gpu")]
+        {
+            if let Some(ref context) = self.gpu_context {
+                let buffer = context.allocate_memory(size)?;
+                Ok(buffer.as_ptr() as *mut u8)
+            } else {
+                Err(GpuOptimizerError::InvalidState(
+                    "No GPU context".to_string(),
+                ))
+            }
+        }
+
+        #[cfg(not(feature = "gpu"))]
+        {
+            // Simulate allocation for non-GPU builds
+            Ok(ptr::null_mut())
+        }
+    }
+
+    /// Deallocate memory back to pool
+    pub fn deallocate(&mut self, ptr: *mut u8, size: usize) -> Result<(), GpuOptimizerError> {
+        // Find the block in our tracking
+        let block_index = self
+            .all_blocks
+            .iter()
+            .position(|block| block.ptr == ptr)
+            .ok_or_else(|| GpuOptimizerError::InvalidState("Block not found".to_string()))?;
+
+        // Mark block as free and add to free list
+        self.all_blocks[block_index].mark_free();
+
+        // Add to appropriate free list
+        let free_list = self.free_blocks.entry(size).or_insert_with(VecDeque::new);
+        free_list.push_back(MemoryBlock::new(ptr, size));
+
+        // Update statistics
+        self.stats.current_used = self.stats.current_used.saturating_sub(size);
+        self.stats.deallocation_count += 1;
+
+        // Check for batch buffer deallocation
+        for buffer in &mut self.batch_buffers {
+            if buffer.ptr == ptr {
+                buffer.in_use = false;
+                break;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Defragment memory by coalescing adjacent blocks
+    fn defragment_memory(&mut self) -> Result<(), GpuOptimizerError> {
+        if !self.enable_defrag {
+            return Ok(());
+        }
+
+        // Sort blocks by pointer address
+        self.all_blocks.sort_by_key(|block| block.ptr as usize);
+
+        // Coalesce adjacent free blocks
+        let mut i = 0;
+        while i < self.all_blocks.len() - 1 {
+            let current_block = &self.all_blocks[i];
+            let next_block = &self.all_blocks[i + 1];
+
+            if !current_block.in_use && !next_block.in_use {
+                let current_end = unsafe { current_block.ptr.add(current_block.size) };
+                if current_end == next_block.ptr {
+                    // Adjacent blocks can be coalesced
+                    let new_size = current_block.size + next_block.size;
+
+                    // Remove old entries from free lists
+                    self.remove_from_free_list(current_block.ptr, current_block.size);
+                    self.remove_from_free_list(next_block.ptr, next_block.size);
+
+                    // Update current block
+                    self.all_blocks[i].size = new_size;
+
+                    // Add coalesced block to free list
+                    let free_list = self
+                        .free_blocks
+                        .entry(new_size)
+                        .or_insert_with(VecDeque::new);
+                    free_list.push_back(MemoryBlock::new(current_block.ptr, new_size));
+
+                    // Remove next block
+                    self.all_blocks.remove(i + 1);
+                    continue;
+                }
+            }
+            i += 1;
+        }
+
+        Ok(())
+    }
+
+    fn remove_from_free_list(&mut self, ptr: *mut u8, size: usize) {
+        if let Some(blocks) = self.free_blocks.get_mut(&size) {
+            blocks.retain(|block| block.ptr != ptr);
+            if blocks.is_empty() {
+                self.free_blocks.remove(&size);
+            }
+        }
+    }
+
+    /// Update adaptive sizing based on allocation patterns
+    fn update_adaptive_sizing(&mut self, size: usize) {
+        let event = AllocationEvent {
+            size,
+            timestamp: std::time::Instant::now(),
+            cache_hit: false, // Updated later
+            latency_us: 0,    // Updated later
+        };
+
+        self.adaptive_sizing.allocation_history.push_back(event);
+
+        // Maintain history size limit
+        while self.adaptive_sizing.allocation_history.len() > self.adaptive_sizing.max_history_size
+        {
+            self.adaptive_sizing.allocation_history.pop_front();
+        }
+
+        // Analyze patterns and adjust pool size if needed
+        if self.adaptive_sizing.allocation_history.len() >= self.adaptive_sizing.analysis_window {
+            self.analyze_and_adjust_pool_size();
+        }
+    }
+
+    fn analyze_and_adjust_pool_size(&mut self) {
+        let utilization = self.stats.current_used as f32 / self.stats.total_allocated as f32;
+
+        if utilization > self.adaptive_sizing.resize_threshold {
+            // High utilization - consider growing pool
+            let new_size =
+                (self.max_pool_size as f32 * self.adaptive_sizing.growth_factor) as usize;
+            self.max_pool_size = new_size;
+        } else if utilization < (1.0 - self.adaptive_sizing.resize_threshold)
+            && self.max_pool_size > self.adaptive_sizing.min_pool_size
+        {
+            // Low utilization - consider shrinking pool
+            let new_size =
+                (self.max_pool_size as f32 * self.adaptive_sizing.shrink_factor) as usize;
+            self.max_pool_size = new_size.max(self.adaptive_sizing.min_pool_size);
+        }
+    }
+
+    /// Update memory pressure monitoring
+    fn update_memory_pressure(&mut self) {
+        let now = std::time::Instant::now();
+        let elapsed = now
+            .duration_since(
+                self.pressure_monitor
+                    .pressure_history
+                    .back()
+                    .map(|r| r.timestamp)
+                    .unwrap_or(now),
+            )
+            .as_millis() as u64;
+
+        if elapsed >= self.pressure_monitor.monitor_interval_ms {
+            let utilization = self.stats.current_used as f32 / self.stats.total_allocated as f32;
+
+            let reading = PressureReading {
+                timestamp: now,
+                pressure: utilization,
+                available_memory: self.stats.total_allocated - self.stats.current_used,
+                allocated_memory: self.stats.current_used,
+            };
+
+            self.pressure_monitor.pressure_history.push_back(reading);
+            self.pressure_monitor.current_pressure = utilization;
+
+            // Maintain history size
+            while self.pressure_monitor.pressure_history.len()
+                > self.pressure_monitor.max_history_size
+            {
+                self.pressure_monitor.pressure_history.pop_front();
+            }
+
+            // Trigger cleanup if pressure is too high
+            if self.pressure_monitor.auto_cleanup
+                && utilization > self.pressure_monitor.cleanup_threshold
+            {
+                let _ = self.emergency_cleanup();
+            }
+        }
+    }
+
+    /// Emergency cleanup when memory pressure is high
+    fn emergency_cleanup(&mut self) -> Result<(), GpuOptimizerError> {
+        // Clean up expired batch buffers
+        let lifetime = self.large_batch_config.buffer_lifetime;
+        self.batch_buffers.retain(|buffer| {
+            if buffer.is_expired(lifetime) && !buffer.in_use {
+                // Free the buffer memory
+                #[cfg(feature = "gpu")]
+                {
+                    if let Some(ref context) = self.gpu_context {
+                        let _ = context.free_memory(buffer.ptr as *mut std::ffi::c_void);
+                    }
+                }
+                false
+            } else {
+                true
+            }
+        });
+
+        // Force defragmentation
+        self.defragment_memory()?;
+
+        Ok(())
+    }
+
+    /// Record successful allocation for statistics
+    fn record_allocation_success(
+        &mut self,
+        size: usize,
+        cache_hit: bool,
+        start_time: std::time::Instant,
+    ) {
+        let latency_us = start_time.elapsed().as_micros() as u64;
+
+        if cache_hit {
+            self.stats.cache_hits += 1;
+        } else {
+            self.stats.cache_misses += 1;
+        }
+
+        // Update allocation history if adaptive sizing is enabled
+        if self.adaptive_sizing.enable_adaptive_resize {
+            if let Some(last_event) = self.adaptive_sizing.allocation_history.back_mut() {
+                last_event.cache_hit = cache_hit;
+                last_event.latency_us = latency_us;
+            }
+        }
+    }
+
+    /// Calculate memory fragmentation ratio
+    pub fn calculate_fragmentation_ratio(&self) -> f32 {
+        if self.all_blocks.is_empty() {
+            return 0.0;
+        }
+
+        let total_free_blocks = self.free_blocks.values().map(|v| v.len()).sum::<usize>();
+        let total_blocks = self.all_blocks.len();
+
+        if total_blocks == 0 {
+            0.0
+        } else {
+            total_free_blocks as f32 / total_blocks as f32
+        }
+    }
+
+    /// Get detailed memory statistics
+    pub fn get_detailed_stats(&self) -> DetailedMemoryStats {
+        let fragmentation_ratio = self.calculate_fragmentation_ratio();
+        let utilization = if self.stats.total_allocated > 0 {
+            self.stats.current_used as f32 / self.stats.total_allocated as f32
+        } else {
+            0.0
+        };
+
+        DetailedMemoryStats {
+            basic_stats: self.stats.clone(),
+            fragmentation_ratio,
+            utilization,
+            free_block_count: self.free_blocks.values().map(|v| v.len()).sum(),
+            total_block_count: self.all_blocks.len(),
+            batch_buffer_count: self.batch_buffers.len(),
+            active_batch_buffers: self.batch_buffers.iter().filter(|b| b.in_use).count(),
+            current_pressure: self.pressure_monitor.current_pressure,
+            max_pool_size: self.max_pool_size,
+        }
+    }
+
+    /// Preallocate batch buffers for anticipated large operations
+    pub fn preallocate_batch_buffers(&mut self, sizes: &[usize]) -> Result<(), GpuOptimizerError> {
+        for &size in sizes {
+            if self.batch_buffers.len() >= self.large_batch_config.max_batch_buffers {
+                break;
+            }
+
+            let ptr = self.allocate_raw_memory(size)?;
+            let buffer = BatchBuffer {
+                ptr,
+                size,
+                in_use: false,
+                created_at: std::time::Instant::now(),
+                last_used: std::time::Instant::now(),
+                usage_count: 0,
+                buffer_type: BatchBufferType::General,
+            };
+
+            self.batch_buffers.push(buffer);
+        }
+
+        Ok(())
+    }
+
+    /// Cleanup unused batch buffers to free memory
+    pub fn cleanup_batch_buffers(&mut self) -> Result<usize, GpuOptimizerError> {
+        let mut freed_count = 0;
+        let lifetime = self.large_batch_config.buffer_lifetime;
+
+        self.batch_buffers.retain(|buffer| {
+            if !buffer.in_use && buffer.is_expired(lifetime) {
+                // Free the buffer memory
+                #[cfg(feature = "gpu")]
+                {
+                    if let Some(ref context) = self.gpu_context {
+                        let _ = context.free_memory(buffer.ptr as *mut std::ffi::c_void);
+                    }
+                }
+                freed_count += 1;
+                false
+            } else {
+                true
+            }
+        });
+
+        Ok(freed_count)
+    }
+}
+
+impl BatchBuffer {
+    /// Check if buffer has expired based on configured lifetime
+    pub fn is_expired(&self, lifetime_seconds: u64) -> bool {
+        self.created_at.elapsed().as_secs() > lifetime_seconds
+    }
+
+    /// Get efficiency score based on usage patterns
+    pub fn get_efficiency_score(&self) -> f32 {
+        let age_seconds = self.created_at.elapsed().as_secs() as f32;
+        if age_seconds == 0.0 {
+            return 0.0;
+        }
+
+        let usage_frequency = self.usage_count as f32 / age_seconds;
+        let recency_factor = {
+            let seconds_since_last_use = self.last_used.elapsed().as_secs() as f32;
+            (-seconds_since_last_use / 3600.0).exp() // Exponential decay over 1 hour
+        };
+
+        usage_frequency * recency_factor
+    }
+}
+
+/// Detailed memory statistics including fragmentation and utilization
+#[derive(Debug, Clone)]
+pub struct DetailedMemoryStats {
+    /// Basic memory statistics
+    pub basic_stats: MemoryStats,
+    /// Memory fragmentation ratio (0.0-1.0)
+    pub fragmentation_ratio: f32,
+    /// Memory utilization (0.0-1.0)
+    pub utilization: f32,
+    /// Number of free blocks
+    pub free_block_count: usize,
+    /// Total number of blocks
+    pub total_block_count: usize,
+    /// Number of batch buffers
+    pub batch_buffer_count: usize,
+    /// Number of active batch buffers
+    pub active_batch_buffers: usize,
+    /// Current memory pressure
+    pub current_pressure: f32,
+    /// Maximum pool size
+    pub max_pool_size: usize,
+}
+
+impl fmt::Display for DetailedMemoryStats {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Memory Pool Statistics:\n\
+             Total Allocated: {:.2} MB\n\
+             Currently Used: {:.2} MB\n\
+             Peak Usage: {:.2} MB\n\
+             Utilization: {:.1}%\n\
+             Fragmentation: {:.1}%\n\
+             Cache Hit Rate: {:.1}%\n\
+             Allocations: {}\n\
+             Deallocations: {}\n\
+             Free Blocks: {}\n\
+             Total Blocks: {}\n\
+             Batch Buffers: {} ({} active)\n\
+             Memory Pressure: {:.1}%\n\
+             Max Pool Size: {:.2} MB",
+            self.basic_stats.total_allocated as f64 / (1024.0 * 1024.0),
+            self.basic_stats.current_used as f64 / (1024.0 * 1024.0),
+            self.basic_stats.peak_usage as f64 / (1024.0 * 1024.0),
+            self.utilization * 100.0,
+            self.fragmentation_ratio * 100.0,
+            if self.basic_stats.allocation_count > 0 {
+                self.basic_stats.cache_hits as f64 / self.basic_stats.allocation_count as f64
+                    * 100.0
+            } else {
+                0.0
+            },
+            self.basic_stats.allocation_count,
+            self.basic_stats.deallocation_count,
+            self.free_block_count,
+            self.total_block_count,
+            self.batch_buffer_count,
+            self.active_batch_buffers,
+            self.current_pressure * 100.0,
+            self.max_pool_size as f64 / (1024.0 * 1024.0)
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_memory_pool_creation() {
+        let pool = CudaMemoryPool::new();
+        assert_eq!(pool.stats.total_allocated, 0);
+        assert_eq!(pool.stats.current_used, 0);
+        assert_eq!(pool.stats.allocation_count, 0);
+    }
+
+    #[test]
+    fn test_allocation_strategies() {
+        let mut pool = CudaMemoryPool::new();
+
+        // Test different allocation strategies
+        let strategies = [
+            AllocationStrategy::FirstFit,
+            AllocationStrategy::BestFit,
+            AllocationStrategy::WorstFit,
+            AllocationStrategy::BuddySystem,
+            AllocationStrategy::SegregatedList,
+            AllocationStrategy::Adaptive,
+        ];
+
+        for strategy in &strategies {
+            pool.allocation_strategy = *strategy;
+            // The actual allocation will be tested in integration tests with GPU support
+        }
+    }
+
+    #[test]
+    fn test_batch_buffer_efficiency() {
+        let buffer = BatchBuffer {
+            ptr: ptr::null_mut(),
+            size: 1024,
+            in_use: false,
+            created_at: std::time::Instant::now() - std::time::Duration::from_secs(60),
+            last_used: std::time::Instant::now() - std::time::Duration::from_secs(30),
+            usage_count: 5,
+            buffer_type: BatchBufferType::General,
+        };
+
+        let efficiency = buffer.get_efficiency_score();
+        assert!(efficiency > 0.0);
+        assert!(efficiency <= 1.0);
+    }
+
+    #[test]
+    fn test_memory_pressure_monitoring() {
+        let monitor = MemoryPressureMonitor::default();
+        assert!(monitor.enable_monitoring);
+        assert_eq!(monitor.pressure_threshold, 0.9);
+        assert_eq!(monitor.current_pressure, 0.0);
+    }
+
+    #[test]
+    fn test_large_batch_config() {
+        let config = LargeBatchConfig::default();
+        assert_eq!(config.min_batch_size, 1024 * 1024);
+        assert_eq!(config.max_batch_buffers, 16);
+        assert_eq!(config.growth_factor, 1.5);
+        assert!(config.enable_coalescing);
+    }
+
+    #[test]
+    fn test_adaptive_sizing() {
+        let sizing = AdaptiveSizing::default();
+        assert!(sizing.enable_adaptive_resize);
+        assert_eq!(sizing.max_history_size, 10000);
+        assert_eq!(sizing.resize_threshold, 0.85);
+        assert_eq!(sizing.analysis_window, 100);
+    }
+
+    #[test]
+    fn test_size_class_calculation() {
+        let pool = CudaMemoryPool::new();
+
+        assert_eq!(pool.get_size_class(100), 256);
+        assert_eq!(pool.get_size_class(300), 512);
+        assert_eq!(pool.get_size_class(1500), 2048);
+        assert_eq!(pool.get_size_class(10000), 16384);
+    }
+
+    #[test]
+    fn test_detailed_stats_display() {
+        let stats = DetailedMemoryStats {
+            basic_stats: MemoryStats {
+                total_allocated: 1024 * 1024,
+                current_used: 512 * 1024,
+                peak_usage: 768 * 1024,
+                allocation_count: 100,
+                deallocation_count: 50,
+                cache_hits: 80,
+                cache_misses: 20,
+            },
+            fragmentation_ratio: 0.1,
+            utilization: 0.5,
+            free_block_count: 10,
+            total_block_count: 20,
+            batch_buffer_count: 5,
+            active_batch_buffers: 2,
+            current_pressure: 0.5,
+            max_pool_size: 2 * 1024 * 1024,
+        };
+
+        let display = format!("{}", stats);
+        assert!(display.contains("Memory Pool Statistics"));
+        assert!(display.contains("Utilization: 50.0%"));
+        assert!(display.contains("Cache Hit Rate: 80.0%"));
+    }
 }
 
 /// Advanced GPU memory pool with hierarchical allocation and adaptive optimization
 pub struct AdvancedGpuMemoryPool {
     /// Base memory pool
     base_pool: CudaMemoryPool,
-    
+
     /// Hierarchical memory tiers
     memory_tiers: Vec<MemoryTier>,
-    
+
     /// Memory compaction engine
     compaction_engine: MemoryCompactionEngine,
-    
+
     /// Predictive allocation engine
     predictive_allocator: PredictiveAllocator,
-    
+
     /// Cross-GPU memory coordination
     cross_gpu_coordinator: Option<CrossGpuCoordinator>,
-    
+
     /// Memory health monitor
     health_monitor: MemoryHealthMonitor,
-    
+
     /// Advanced allocation strategies
     advanced_strategies: AdvancedAllocationStrategies,
-    
+
     /// Memory bandwidth optimizer
     bandwidth_optimizer: MemoryBandwidthOptimizer,
-    
+
     /// Kernel-aware allocation
     kernel_aware_allocator: KernelAwareAllocator,
 }
@@ -342,28 +1157,28 @@ pub struct AdvancedGpuMemoryPool {
 pub struct MemoryTier {
     /// Tier identifier
     pub tier_id: usize,
-    
+
     /// Memory type (HBM, GDDR, System)
     pub memory_type: MemoryType,
-    
+
     /// Tier capacity (bytes)
     pub capacity: usize,
-    
+
     /// Current usage (bytes)
     pub usage: usize,
-    
+
     /// Access latency (nanoseconds)
     pub latency_ns: u64,
-    
+
     /// Bandwidth (GB/s)
     pub bandwidth_gb_s: f64,
-    
+
     /// Allocation priority (higher = preferred)
     pub priority: u8,
-    
+
     /// Tier-specific allocator
     pub allocator: TierAllocator,
-    
+
     /// Migration policy
     pub migration_policy: MigrationPolicy,
 }
@@ -388,16 +1203,16 @@ pub enum MemoryType {
 pub struct TierAllocator {
     /// Allocation strategy for this tier
     pub strategy: AllocationStrategy,
-    
+
     /// Block size preferences
     pub preferred_block_sizes: Vec<usize>,
-    
+
     /// Alignment requirements
     pub alignment: usize,
-    
+
     /// Coalescing settings
     pub coalescing_config: CoalescingConfig,
-    
+
     /// Eviction policy
     pub eviction_policy: EvictionPolicy,
 }
@@ -407,16 +1222,16 @@ pub struct TierAllocator {
 pub struct CoalescingConfig {
     /// Enable automatic coalescing
     pub enable_auto_coalescing: bool,
-    
+
     /// Coalescing threshold (minimum fragmentation to trigger)
     pub fragmentation_threshold: f32,
-    
+
     /// Coalescing interval (milliseconds)
     pub coalescing_interval_ms: u64,
-    
+
     /// Maximum coalescing time (milliseconds)
     pub max_coalescing_time_ms: u64,
-    
+
     /// Live object relocation
     pub enable_live_relocation: bool,
 }
@@ -445,19 +1260,19 @@ pub enum EvictionPolicy {
 pub struct MigrationPolicy {
     /// Enable automatic migration
     pub enable_auto_migration: bool,
-    
+
     /// Migration triggers
     pub triggers: Vec<MigrationTrigger>,
-    
+
     /// Migration strategy
     pub strategy: MigrationStrategy,
-    
+
     /// Bandwidth allocation for migration
     pub migration_bandwidth_limit: f64,
-    
+
     /// Migration batching
     pub batch_migrations: bool,
-    
+
     /// Maximum migration batch size
     pub max_batch_size: usize,
 }
@@ -467,16 +1282,16 @@ pub struct MigrationPolicy {
 pub enum MigrationTrigger {
     /// Access frequency threshold
     AccessFrequency(f64),
-    
+
     /// Tier utilization threshold
     TierUtilization(f32),
-    
+
     /// Performance benefit threshold
     PerformanceBenefit(f64),
-    
+
     /// Time-based (age threshold)
     TimeBased(std::time::Duration),
-    
+
     /// Manual migration request
     Manual,
 }
@@ -486,13 +1301,13 @@ pub enum MigrationTrigger {
 pub enum MigrationStrategy {
     /// Immediate migration
     Immediate,
-    
+
     /// Deferred migration (during idle periods)
     Deferred,
-    
+
     /// Copy-on-write migration
     CopyOnWrite,
-    
+
     /// Incremental migration
     Incremental,
 }
@@ -502,22 +1317,22 @@ pub enum MigrationStrategy {
 pub struct MemoryCompactionEngine {
     /// Enable automatic compaction
     pub enable_auto_compaction: bool,
-    
+
     /// Fragmentation threshold for triggering compaction
     pub fragmentation_threshold: f32,
-    
+
     /// Compaction algorithm
     pub algorithm: CompactionAlgorithm,
-    
+
     /// Maximum compaction time (milliseconds)
     pub max_compaction_time_ms: u64,
-    
+
     /// Compaction scheduling
     pub scheduler: CompactionScheduler,
-    
+
     /// Live object relocation
     pub relocator: LiveObjectRelocator,
-    
+
     /// Compaction statistics
     pub stats: CompactionStats,
 }
@@ -527,16 +1342,16 @@ pub struct MemoryCompactionEngine {
 pub enum CompactionAlgorithm {
     /// Mark and sweep compaction
     MarkAndSweep,
-    
+
     /// Copying compaction
     Copying,
-    
+
     /// Incremental compaction
     Incremental,
-    
+
     /// Concurrent compaction
     Concurrent,
-    
+
     /// Generational compaction
     Generational,
 }
@@ -546,13 +1361,13 @@ pub enum CompactionAlgorithm {
 pub struct CompactionScheduler {
     /// Scheduling strategy
     pub strategy: SchedulingStrategy,
-    
+
     /// Compaction triggers
     pub triggers: Vec<CompactionTrigger>,
-    
+
     /// Compaction windows
     pub preferred_windows: Vec<TimeWindow>,
-    
+
     /// Priority levels
     pub priorities: CompactionPriorities,
 }
@@ -562,16 +1377,16 @@ pub struct CompactionScheduler {
 pub enum SchedulingStrategy {
     /// Immediate when triggered
     Immediate,
-    
+
     /// During idle periods
     Idle,
-    
+
     /// Background continuous
     Background,
-    
+
     /// Scheduled at specific times
     Scheduled,
-    
+
     /// Adaptive based on workload
     Adaptive,
 }
@@ -581,16 +1396,16 @@ pub enum SchedulingStrategy {
 pub enum CompactionTrigger {
     /// Fragmentation level exceeded
     FragmentationLevel(f32),
-    
+
     /// Allocation failure
     AllocationFailure,
-    
+
     /// Memory pressure threshold
     MemoryPressure(f32),
-    
+
     /// Time-based trigger
     TimeBased(std::time::Duration),
-    
+
     /// Manual trigger
     Manual,
 }
@@ -600,13 +1415,13 @@ pub enum CompactionTrigger {
 pub struct TimeWindow {
     /// Start hour (24-hour format)
     pub start_hour: u8,
-    
+
     /// End hour (24-hour format)
     pub end_hour: u8,
-    
+
     /// Days of week (bitmask)
     pub days_of_week: u8,
-    
+
     /// Priority during this window
     pub priority: u8,
 }
@@ -616,13 +1431,13 @@ pub struct TimeWindow {
 pub struct CompactionPriorities {
     /// High priority threshold
     pub high_priority_threshold: f32,
-    
+
     /// Medium priority threshold
     pub medium_priority_threshold: f32,
-    
+
     /// Low priority threshold
     pub low_priority_threshold: f32,
-    
+
     /// Emergency compaction threshold
     pub emergency_threshold: f32,
 }
@@ -632,16 +1447,16 @@ pub struct CompactionPriorities {
 pub struct LiveObjectRelocator {
     /// Enable live relocation
     pub enable_live_relocation: bool,
-    
+
     /// Relocation strategy
     pub strategy: RelocationStrategy,
-    
+
     /// Maximum objects to relocate per cycle
     pub max_relocations_per_cycle: usize,
-    
+
     /// Relocation bandwidth limit
     pub bandwidth_limit: f64,
-    
+
     /// Object tracking
     pub object_tracker: ObjectTracker,
 }
@@ -651,16 +1466,16 @@ pub struct LiveObjectRelocator {
 pub enum RelocationStrategy {
     /// Relocate oldest objects first
     OldestFirst,
-    
+
     /// Relocate largest objects first
     LargestFirst,
-    
+
     /// Relocate most accessed objects first
     MostAccessedFirst,
-    
+
     /// Relocate by benefit analysis
     BenefitAnalysis,
-    
+
     /// Adaptive relocation
     Adaptive,
 }
@@ -670,10 +1485,10 @@ pub enum RelocationStrategy {
 pub struct ObjectTracker {
     /// Tracked objects
     pub objects: HashMap<*mut u8, ObjectMetadata>,
-    
+
     /// Access pattern tracking
     pub access_patterns: HashMap<*mut u8, AccessPattern>,
-    
+
     /// Relocation history
     pub relocation_history: VecDeque<RelocationEvent>,
 }
@@ -683,22 +1498,22 @@ pub struct ObjectTracker {
 pub struct ObjectMetadata {
     /// Object size
     pub size: usize,
-    
+
     /// Allocation time
     pub allocated_at: std::time::Instant,
-    
+
     /// Last access time
     pub last_accessed: std::time::Instant,
-    
+
     /// Access count
     pub access_count: usize,
-    
+
     /// Object type
     pub object_type: ObjectType,
-    
+
     /// Memory tier
     pub tier: usize,
-    
+
     /// Is pinned (cannot be relocated)
     pub pinned: bool,
 }
@@ -708,22 +1523,22 @@ pub struct ObjectMetadata {
 pub enum ObjectType {
     /// Model parameters
     Parameters,
-    
+
     /// Gradients
     Gradients,
-    
+
     /// Activations
     Activations,
-    
+
     /// Optimizer state
     OptimizerState,
-    
+
     /// Temporary buffers
     TemporaryBuffer,
-    
+
     /// Communication buffers
     CommunicationBuffer,
-    
+
     /// User data
     UserData,
 }
@@ -733,19 +1548,19 @@ pub enum ObjectType {
 pub struct AccessPattern {
     /// Access frequency (accesses per second)
     pub frequency: f64,
-    
+
     /// Access regularity (variance in access intervals)
     pub regularity: f64,
-    
+
     /// Spatial locality (nearby access probability)
     pub spatial_locality: f64,
-    
+
     /// Temporal locality (recent access probability)
     pub temporal_locality: f64,
-    
+
     /// Access stride pattern
     pub stride_pattern: Vec<usize>,
-    
+
     /// Predicted next access time
     pub next_access_prediction: Option<std::time::Instant>,
 }
@@ -755,19 +1570,19 @@ pub struct AccessPattern {
 pub struct RelocationEvent {
     /// Object pointer
     pub object: *mut u8,
-    
+
     /// Source tier
     pub from_tier: usize,
-    
+
     /// Destination tier
     pub to_tier: usize,
-    
+
     /// Relocation time
     pub timestamp: std::time::Instant,
-    
+
     /// Relocation reason
     pub reason: RelocationReason,
-    
+
     /// Performance impact
     pub performance_impact: f64,
 }
@@ -777,16 +1592,16 @@ pub struct RelocationEvent {
 pub enum RelocationReason {
     /// Compaction/defragmentation
     Compaction,
-    
+
     /// Performance optimization
     PerformanceOptimization,
-    
+
     /// Memory pressure
     MemoryPressure,
-    
+
     /// Tier migration
     TierMigration,
-    
+
     /// Manual request
     Manual,
 }
@@ -796,22 +1611,22 @@ pub enum RelocationReason {
 pub struct CompactionStats {
     /// Total compaction cycles
     pub total_cycles: usize,
-    
+
     /// Total time spent compacting (milliseconds)
     pub total_time_ms: u64,
-    
+
     /// Total memory freed (bytes)
     pub total_memory_freed: usize,
-    
+
     /// Total objects relocated
     pub total_objects_relocated: usize,
-    
+
     /// Average compaction time (milliseconds)
     pub avg_compaction_time_ms: f64,
-    
+
     /// Fragmentation reduction achieved
     pub fragmentation_reduction: f64,
-    
+
     /// Performance improvement from compaction
     pub performance_improvement: f64,
 }
@@ -821,22 +1636,22 @@ pub struct CompactionStats {
 pub struct PredictiveAllocator {
     /// Enable predictive allocation
     pub enable_prediction: bool,
-    
+
     /// Allocation pattern models
     pub models: Vec<AllocationModel>,
-    
+
     /// Prediction horizon (seconds)
     pub prediction_horizon: f64,
-    
+
     /// Confidence threshold for predictions
     pub confidence_threshold: f64,
-    
+
     /// Pre-allocation strategy
     pub preallocation_strategy: PreallocationStrategy,
-    
+
     /// Model training data
     pub training_data: AllocationTrainingData,
-    
+
     /// Prediction accuracy metrics
     pub accuracy_metrics: PredictionAccuracyMetrics,
 }
@@ -846,13 +1661,13 @@ pub struct PredictiveAllocator {
 pub enum AllocationModel {
     /// Time series forecasting
     TimeSeries(TimeSeriesModel),
-    
+
     /// Neural network model
     NeuralNetwork(NeuralNetworkModel),
-    
+
     /// Statistical model
     Statistical(StatisticalModel),
-    
+
     /// Hybrid ensemble model
     Ensemble(Vec<Box<AllocationModel>>),
 }
@@ -862,16 +1677,16 @@ pub enum AllocationModel {
 pub struct TimeSeriesModel {
     /// Model type
     pub model_type: TimeSeriesModelType,
-    
+
     /// Model parameters
     pub parameters: Vec<f64>,
-    
+
     /// Seasonal components
     pub seasonal_components: Option<SeasonalComponents>,
-    
+
     /// Trend components
     pub trend_components: Option<TrendComponents>,
-    
+
     /// Model accuracy
     pub accuracy: f64,
 }
@@ -881,16 +1696,16 @@ pub struct TimeSeriesModel {
 pub enum TimeSeriesModelType {
     /// Autoregressive Integrated Moving Average
     ARIMA,
-    
+
     /// Exponential smoothing
     ExponentialSmoothing,
-    
+
     /// Seasonal decomposition
     SeasonalDecomposition,
-    
+
     /// Long Short-Term Memory neural network
     LSTM,
-    
+
     /// Prophet forecasting
     Prophet,
 }
@@ -900,10 +1715,10 @@ pub enum TimeSeriesModelType {
 pub struct SeasonalComponents {
     /// Seasonal periods (e.g., daily, weekly)
     pub periods: Vec<f64>,
-    
+
     /// Seasonal strengths
     pub strengths: Vec<f64>,
-    
+
     /// Phase shifts
     pub phases: Vec<f64>,
 }
@@ -913,13 +1728,13 @@ pub struct SeasonalComponents {
 pub struct TrendComponents {
     /// Linear trend coefficient
     pub linear: f64,
-    
+
     /// Exponential trend coefficient
     pub exponential: f64,
-    
+
     /// Polynomial trend coefficients
     pub polynomial: Vec<f64>,
-    
+
     /// Change point detection
     pub change_points: Vec<std::time::Instant>,
 }
@@ -929,19 +1744,19 @@ pub struct TrendComponents {
 pub struct NeuralNetworkModel {
     /// Network architecture
     pub architecture: NetworkArchitecture,
-    
+
     /// Trained weights
     pub weights: Vec<Vec<f64>>,
-    
+
     /// Biases
     pub biases: Vec<Vec<f64>>,
-    
+
     /// Activation functions
     pub activations: Vec<ActivationFunction>,
-    
+
     /// Input normalization parameters
     pub normalization: NormalizationParams,
-    
+
     /// Model performance metrics
     pub performance: ModelPerformanceMetrics,
 }
@@ -951,16 +1766,16 @@ pub struct NeuralNetworkModel {
 pub struct NetworkArchitecture {
     /// Input layer size
     pub input_size: usize,
-    
+
     /// Hidden layer sizes
     pub hidden_sizes: Vec<usize>,
-    
+
     /// Output layer size
     pub output_size: usize,
-    
+
     /// Dropout rates
     pub dropout_rates: Vec<f64>,
-    
+
     /// Regularization parameters
     pub regularization: RegularizationParams,
 }
@@ -982,13 +1797,13 @@ pub enum ActivationFunction {
 pub struct NormalizationParams {
     /// Feature means
     pub means: Vec<f64>,
-    
+
     /// Feature standard deviations
     pub stds: Vec<f64>,
-    
+
     /// Min-max normalization bounds
     pub min_max_bounds: Option<(Vec<f64>, Vec<f64>)>,
-    
+
     /// Normalization method
     pub method: NormalizationMethod,
 }
@@ -1007,16 +1822,16 @@ pub enum NormalizationMethod {
 pub struct RegularizationParams {
     /// L1 regularization coefficient
     pub l1_lambda: f64,
-    
+
     /// L2 regularization coefficient
     pub l2_lambda: f64,
-    
+
     /// Dropout probability
     pub dropout_prob: f64,
-    
+
     /// Batch normalization
     pub batch_norm: bool,
-    
+
     /// Early stopping patience
     pub early_stopping_patience: usize,
 }
@@ -1026,22 +1841,22 @@ pub struct RegularizationParams {
 pub struct ModelPerformanceMetrics {
     /// Mean Absolute Error
     pub mae: f64,
-    
+
     /// Root Mean Square Error
     pub rmse: f64,
-    
+
     /// Mean Absolute Percentage Error
     pub mape: f64,
-    
+
     /// R-squared score
     pub r_squared: f64,
-    
+
     /// Training loss
     pub training_loss: f64,
-    
+
     /// Validation loss
     pub validation_loss: f64,
-    
+
     /// Model complexity score
     pub complexity_score: f64,
 }
@@ -1051,16 +1866,16 @@ pub struct ModelPerformanceMetrics {
 pub struct StatisticalModel {
     /// Model type
     pub model_type: StatisticalModelType,
-    
+
     /// Model coefficients
     pub coefficients: Vec<f64>,
-    
+
     /// Feature importance scores
     pub feature_importance: Vec<f64>,
-    
+
     /// Model confidence intervals
     pub confidence_intervals: Vec<(f64, f64)>,
-    
+
     /// Statistical significance tests
     pub significance_tests: StatisticalTests,
 }
@@ -1082,16 +1897,16 @@ pub enum StatisticalModelType {
 pub struct StatisticalTests {
     /// P-values for coefficients
     pub p_values: Vec<f64>,
-    
+
     /// F-statistic
     pub f_statistic: f64,
-    
+
     /// Chi-square statistic
     pub chi_square: f64,
-    
+
     /// Degrees of freedom
     pub degrees_of_freedom: usize,
-    
+
     /// Confidence level
     pub confidence_level: f64,
 }
@@ -1101,16 +1916,16 @@ pub struct StatisticalTests {
 pub enum PreallocationStrategy {
     /// Conservative pre-allocation
     Conservative,
-    
+
     /// Aggressive pre-allocation
     Aggressive,
-    
+
     /// Balanced pre-allocation
     Balanced,
-    
+
     /// Pattern-based pre-allocation
     PatternBased,
-    
+
     /// Cost-benefit based pre-allocation
     CostBenefit,
 }
@@ -1120,19 +1935,19 @@ pub enum PreallocationStrategy {
 pub struct AllocationTrainingData {
     /// Historical allocation sizes
     pub allocation_sizes: VecDeque<usize>,
-    
+
     /// Allocation timestamps
     pub timestamps: VecDeque<std::time::Instant>,
-    
+
     /// Context features
     pub features: VecDeque<Vec<f64>>,
-    
+
     /// Allocation lifetimes
     pub lifetimes: VecDeque<std::time::Duration>,
-    
+
     /// Training window size
     pub window_size: usize,
-    
+
     /// Maximum training data size
     pub max_data_size: usize,
 }
@@ -1142,16 +1957,16 @@ pub struct AllocationTrainingData {
 pub struct PredictionAccuracyMetrics {
     /// Correct predictions
     pub correct_predictions: usize,
-    
+
     /// Total predictions made
     pub total_predictions: usize,
-    
+
     /// Average prediction error
     pub avg_prediction_error: f64,
-    
+
     /// Prediction confidence scores
     pub confidence_scores: VecDeque<f64>,
-    
+
     /// Model performance over time
     pub performance_history: VecDeque<f64>,
 }
@@ -1161,19 +1976,19 @@ pub struct PredictionAccuracyMetrics {
 pub struct CrossGpuCoordinator {
     /// Number of GPUs
     pub num_gpus: usize,
-    
+
     /// GPU memory pools
     pub gpu_pools: Vec<Arc<Mutex<AdvancedGpuMemoryPool>>>,
-    
+
     /// Cross-GPU allocation strategy
     pub allocation_strategy: CrossGpuStrategy,
-    
+
     /// Load balancing configuration
     pub load_balancing: LoadBalancingConfig,
-    
+
     /// Inter-GPU communication manager
     pub comm_manager: InterGpuCommManager,
-    
+
     /// Global memory statistics
     pub global_stats: GlobalMemoryStats,
 }
@@ -1183,16 +1998,16 @@ pub struct CrossGpuCoordinator {
 pub enum CrossGpuStrategy {
     /// Round-robin allocation
     RoundRobin,
-    
+
     /// Load-based allocation
     LoadBased,
-    
+
     /// Locality-aware allocation
     LocalityAware,
-    
+
     /// Performance-optimized allocation
     PerformanceOptimized,
-    
+
     /// Custom strategy
     Custom,
 }
@@ -1202,16 +2017,16 @@ pub enum CrossGpuStrategy {
 pub struct LoadBalancingConfig {
     /// Enable dynamic load balancing
     pub enable_dynamic_balancing: bool,
-    
+
     /// Load balancing interval (milliseconds)
     pub balancing_interval_ms: u64,
-    
+
     /// Load threshold for rebalancing
     pub load_threshold: f32,
-    
+
     /// Migration cost threshold
     pub migration_cost_threshold: f64,
-    
+
     /// Balancing strategy
     pub strategy: LoadBalancingStrategy,
 }
@@ -1221,13 +2036,13 @@ pub struct LoadBalancingConfig {
 pub enum LoadBalancingStrategy {
     /// Least loaded GPU first
     LeastLoaded,
-    
+
     /// Weighted round robin
     WeightedRoundRobin,
-    
+
     /// Performance-based allocation
     PerformanceBased,
-    
+
     /// Adaptive balancing
     Adaptive,
 }
@@ -1237,16 +2052,16 @@ pub enum LoadBalancingStrategy {
 pub struct InterGpuCommManager {
     /// Communication topology
     pub topology: CommunicationTopology,
-    
+
     /// Bandwidth measurements
     pub bandwidth_measurements: HashMap<(usize, usize), f64>,
-    
+
     /// Latency measurements
     pub latency_measurements: HashMap<(usize, usize), std::time::Duration>,
-    
+
     /// Communication protocols
     pub protocols: Vec<CommunicationProtocol>,
-    
+
     /// Transfer scheduling
     pub scheduler: TransferScheduler,
 }
@@ -1256,16 +2071,16 @@ pub struct InterGpuCommManager {
 pub enum CommunicationTopology {
     /// Fully connected topology
     FullyConnected,
-    
+
     /// Ring topology
     Ring,
-    
+
     /// Tree topology
     Tree,
-    
+
     /// Mesh topology
     Mesh,
-    
+
     /// Custom topology
     Custom(Vec<Vec<bool>>), // Adjacency matrix
 }
@@ -1275,16 +2090,16 @@ pub enum CommunicationTopology {
 pub enum CommunicationProtocol {
     /// Direct GPU-to-GPU transfer
     DirectTransfer,
-    
+
     /// Host-mediated transfer
     HostMediated,
-    
+
     /// RDMA transfer
     RDMA,
-    
+
     /// NVLink transfer
     NVLink,
-    
+
     /// PCIe transfer
     PCIe,
 }
@@ -1294,16 +2109,16 @@ pub enum CommunicationProtocol {
 pub struct TransferScheduler {
     /// Pending transfers
     pub pending_transfers: VecDeque<TransferRequest>,
-    
+
     /// Active transfers
     pub active_transfers: HashMap<usize, ActiveTransfer>,
-    
+
     /// Scheduling algorithm
     pub algorithm: SchedulingAlgorithm,
-    
+
     /// Bandwidth allocation
     pub bandwidth_allocation: BandwidthAllocation,
-    
+
     /// Priority queues
     pub priority_queues: HashMap<TransferPriority, VecDeque<TransferRequest>>,
 }
@@ -1313,22 +2128,22 @@ pub struct TransferScheduler {
 pub struct TransferRequest {
     /// Request ID
     pub id: usize,
-    
+
     /// Source GPU
     pub source_gpu: usize,
-    
+
     /// Destination GPU
     pub dest_gpu: usize,
-    
+
     /// Data size
     pub size: usize,
-    
+
     /// Transfer priority
     pub priority: TransferPriority,
-    
+
     /// Deadline
     pub deadline: Option<std::time::Instant>,
-    
+
     /// Callback on completion
     pub completion_callback: Option<Box<dyn Fn(TransferResult) + Send + Sync>>,
 }
@@ -1338,16 +2153,16 @@ pub struct TransferRequest {
 pub struct ActiveTransfer {
     /// Transfer request
     pub request: TransferRequest,
-    
+
     /// Start time
     pub start_time: std::time::Instant,
-    
+
     /// Bytes transferred
     pub bytes_transferred: usize,
-    
+
     /// Transfer rate (bytes/sec)
     pub transfer_rate: f64,
-    
+
     /// Estimated completion time
     pub estimated_completion: std::time::Instant,
 }
@@ -1380,19 +2195,19 @@ pub enum TransferResult {
 pub enum SchedulingAlgorithm {
     /// First-Come-First-Served
     FCFS,
-    
+
     /// Shortest Job First
     SJF,
-    
+
     /// Priority-based scheduling
     Priority,
-    
+
     /// Round-robin scheduling
     RoundRobin,
-    
+
     /// Deadline-aware scheduling
     DeadlineAware,
-    
+
     /// Bandwidth-aware scheduling
     BandwidthAware,
 }
@@ -1402,13 +2217,13 @@ pub enum SchedulingAlgorithm {
 pub struct BandwidthAllocation {
     /// Total bandwidth budget
     pub total_bandwidth: f64,
-    
+
     /// Allocation strategy
     pub strategy: BandwidthStrategy,
-    
+
     /// Reserved bandwidth per priority
     pub priority_reservations: HashMap<TransferPriority, f64>,
-    
+
     /// Dynamic allocation enabled
     pub dynamic_allocation: bool,
 }
@@ -1418,16 +2233,16 @@ pub struct BandwidthAllocation {
 pub enum BandwidthStrategy {
     /// Equal allocation
     Equal,
-    
+
     /// Priority-based allocation
     PriorityBased,
-    
+
     /// Demand-based allocation
     DemandBased,
-    
+
     /// Fair share allocation
     FairShare,
-    
+
     /// Adaptive allocation
     Adaptive,
 }
@@ -1437,22 +2252,22 @@ pub enum BandwidthStrategy {
 pub struct GlobalMemoryStats {
     /// Total memory across all GPUs
     pub total_memory: usize,
-    
+
     /// Total allocated memory
     pub total_allocated: usize,
-    
+
     /// Total available memory
     pub total_available: usize,
-    
+
     /// Per-GPU memory usage
     pub per_gpu_usage: Vec<usize>,
-    
+
     /// Load imbalance metric
     pub load_imbalance: f64,
-    
+
     /// Cross-GPU transfer statistics
     pub transfer_stats: TransferStatistics,
-    
+
     /// Global fragmentation level
     pub global_fragmentation: f64,
 }
@@ -1462,16 +2277,16 @@ pub struct GlobalMemoryStats {
 pub struct TransferStatistics {
     /// Total transfers completed
     pub total_transfers: usize,
-    
+
     /// Total bytes transferred
     pub total_bytes_transferred: usize,
-    
+
     /// Average transfer time
     pub avg_transfer_time: std::time::Duration,
-    
+
     /// Transfer success rate
     pub success_rate: f64,
-    
+
     /// Bandwidth utilization
     pub bandwidth_utilization: f64,
 }
@@ -1481,16 +2296,16 @@ pub struct TransferStatistics {
 pub struct MemoryHealthMonitor {
     /// Health metrics
     pub health_metrics: HealthMetrics,
-    
+
     /// Health thresholds
     pub thresholds: HealthThresholds,
-    
+
     /// Monitoring configuration
     pub config: HealthMonitorConfig,
-    
+
     /// Alert system
     pub alerts: HealthAlertSystem,
-    
+
     /// Health history
     pub health_history: VecDeque<HealthSnapshot>,
 }
@@ -1500,22 +2315,22 @@ pub struct MemoryHealthMonitor {
 pub struct HealthMetrics {
     /// Overall health score (0.0-1.0)
     pub overall_health_score: f64,
-    
+
     /// Memory fragmentation level
     pub fragmentation_level: f64,
-    
+
     /// Allocation success rate
     pub allocation_success_rate: f64,
-    
+
     /// Average allocation latency
     pub avg_allocation_latency: std::time::Duration,
-    
+
     /// Memory leak detection score
     pub leak_detection_score: f64,
-    
+
     /// Performance degradation indicator
     pub performance_degradation: f64,
-    
+
     /// Resource utilization efficiency
     pub utilization_efficiency: f64,
 }
@@ -1525,19 +2340,19 @@ pub struct HealthMetrics {
 pub struct HealthThresholds {
     /// Critical health score threshold
     pub critical_health_threshold: f64,
-    
+
     /// Warning health score threshold
     pub warning_health_threshold: f64,
-    
+
     /// Maximum fragmentation threshold
     pub max_fragmentation_threshold: f64,
-    
+
     /// Minimum success rate threshold
     pub min_success_rate_threshold: f64,
-    
+
     /// Maximum latency threshold
     pub max_latency_threshold: std::time::Duration,
-    
+
     /// Performance degradation threshold
     pub performance_degradation_threshold: f64,
 }
@@ -1547,16 +2362,16 @@ pub struct HealthThresholds {
 pub struct HealthMonitorConfig {
     /// Monitoring interval
     pub monitoring_interval: std::time::Duration,
-    
+
     /// Enable continuous monitoring
     pub continuous_monitoring: bool,
-    
+
     /// Health history size
     pub history_size: usize,
-    
+
     /// Enable predictive health analysis
     pub predictive_analysis: bool,
-    
+
     /// Enable automatic remediation
     pub auto_remediation: bool,
 }
@@ -1566,13 +2381,13 @@ pub struct HealthMonitorConfig {
 pub struct HealthAlertSystem {
     /// Alert handlers
     pub handlers: Vec<Box<dyn Fn(&HealthAlert) + Send + Sync>>,
-    
+
     /// Alert history
     pub alert_history: VecDeque<HealthAlert>,
-    
+
     /// Alert suppression rules
     pub suppression_rules: Vec<AlertSuppressionRule>,
-    
+
     /// Alert escalation policies
     pub escalation_policies: Vec<AlertEscalationPolicy>,
 }
@@ -1582,16 +2397,16 @@ pub struct HealthAlertSystem {
 pub struct HealthAlert {
     /// Alert severity
     pub severity: AlertSeverity,
-    
+
     /// Alert message
     pub message: String,
-    
+
     /// Timestamp
     pub timestamp: std::time::Instant,
-    
+
     /// Health metrics at time of alert
     pub metrics: HealthMetrics,
-    
+
     /// Suggested remediation actions
     pub remediation_actions: Vec<String>,
 }
@@ -1610,10 +2425,10 @@ pub enum AlertSeverity {
 pub struct AlertSuppressionRule {
     /// Suppression condition
     pub condition: SuppressionCondition,
-    
+
     /// Suppression duration
     pub duration: std::time::Duration,
-    
+
     /// Maximum suppressions
     pub max_suppressions: Option<usize>,
 }
@@ -1623,13 +2438,13 @@ pub struct AlertSuppressionRule {
 pub enum SuppressionCondition {
     /// Suppress by severity
     Severity(AlertSeverity),
-    
+
     /// Suppress by message pattern
     MessagePattern(String),
-    
+
     /// Suppress by frequency
     Frequency(std::time::Duration),
-    
+
     /// Custom condition
     Custom(fn(&HealthAlert) -> bool),
 }
@@ -1639,10 +2454,10 @@ pub enum SuppressionCondition {
 pub struct AlertEscalationPolicy {
     /// Initial alert severity
     pub initial_severity: AlertSeverity,
-    
+
     /// Escalation steps
     pub escalation_steps: Vec<EscalationStep>,
-    
+
     /// Auto-escalation enabled
     pub auto_escalation: bool,
 }
@@ -1652,10 +2467,10 @@ pub struct AlertEscalationPolicy {
 pub struct EscalationStep {
     /// Target severity
     pub target_severity: AlertSeverity,
-    
+
     /// Escalation delay
     pub delay: std::time::Duration,
-    
+
     /// Escalation condition
     pub condition: EscalationCondition,
 }
@@ -1665,10 +2480,10 @@ pub struct EscalationStep {
 pub enum EscalationCondition {
     /// Time-based escalation
     TimeBased,
-    
+
     /// Metric-based escalation
     MetricBased(String, f64),
-    
+
     /// Manual escalation
     Manual,
 }
@@ -1678,13 +2493,13 @@ pub enum EscalationCondition {
 pub struct HealthSnapshot {
     /// Timestamp
     pub timestamp: std::time::Instant,
-    
+
     /// Health metrics
     pub metrics: HealthMetrics,
-    
+
     /// System state
     pub system_state: SystemState,
-    
+
     /// Active alerts
     pub active_alerts: Vec<HealthAlert>,
 }
@@ -1694,16 +2509,16 @@ pub struct HealthSnapshot {
 pub struct SystemState {
     /// CPU usage
     pub cpu_usage: f64,
-    
+
     /// System memory usage
     pub system_memory_usage: f64,
-    
+
     /// GPU utilization
     pub gpu_utilization: Vec<f64>,
-    
+
     /// Active processes
     pub active_processes: usize,
-    
+
     /// System load average
     pub load_average: f64,
 }
@@ -1713,16 +2528,16 @@ pub struct SystemState {
 pub struct AdvancedAllocationStrategies {
     /// Machine learning-based allocation
     pub ml_allocator: Option<MLAllocator>,
-    
+
     /// Game theory-based allocation
     pub game_theory_allocator: Option<GameTheoryAllocator>,
-    
+
     /// Quantum-inspired allocation
     pub quantum_allocator: Option<QuantumInspiredAllocator>,
-    
+
     /// Genetic algorithm allocator
     pub genetic_allocator: Option<GeneticAllocator>,
-    
+
     /// Reinforcement learning allocator
     pub rl_allocator: Option<RLAllocator>,
 }
@@ -1732,16 +2547,16 @@ pub struct AdvancedAllocationStrategies {
 pub struct MLAllocator {
     /// Trained models
     pub models: Vec<AllocationModel>,
-    
+
     /// Feature extractor
     pub feature_extractor: FeatureExtractor,
-    
+
     /// Model ensemble weights
     pub ensemble_weights: Vec<f64>,
-    
+
     /// Online learning enabled
     pub online_learning: bool,
-    
+
     /// Model performance tracker
     pub performance_tracker: ModelPerformanceTracker,
 }
@@ -1751,13 +2566,13 @@ pub struct MLAllocator {
 pub struct FeatureExtractor {
     /// Enabled features
     pub enabled_features: Vec<FeatureType>,
-    
+
     /// Feature normalization
     pub normalization: FeatureNormalization,
-    
+
     /// Feature selection method
     pub selection_method: FeatureSelectionMethod,
-    
+
     /// Feature engineering pipeline
     pub engineering_pipeline: Vec<FeatureTransform>,
 }
@@ -1767,25 +2582,25 @@ pub struct FeatureExtractor {
 pub enum FeatureType {
     /// Current memory usage
     MemoryUsage,
-    
+
     /// Allocation size
     AllocationSize,
-    
+
     /// Time of day
     TimeOfDay,
-    
+
     /// Historical allocation pattern
     HistoricalPattern,
-    
+
     /// System load
     SystemLoad,
-    
+
     /// Fragment size distribution
     FragmentDistribution,
-    
+
     /// Access frequency
     AccessFrequency,
-    
+
     /// Custom feature
     Custom(String),
 }
@@ -1816,19 +2631,19 @@ pub enum FeatureSelectionMethod {
 pub enum FeatureTransform {
     /// Polynomial features
     Polynomial(usize),
-    
+
     /// Logarithmic transform
     Logarithmic,
-    
+
     /// Square root transform
     SquareRoot,
-    
+
     /// Principal Component Analysis
     PCA(usize),
-    
+
     /// Interaction features
     Interactions,
-    
+
     /// Custom transform
     Custom(String),
 }
@@ -1838,13 +2653,13 @@ pub enum FeatureTransform {
 pub struct ModelPerformanceTracker {
     /// Performance history
     pub performance_history: VecDeque<ModelPerformance>,
-    
+
     /// Current performance metrics
     pub current_metrics: ModelPerformanceMetrics,
-    
+
     /// Performance trends
     pub trends: PerformanceTrends,
-    
+
     /// Anomaly detection
     pub anomaly_detector: AnomalyDetector,
 }
@@ -1854,16 +2669,16 @@ pub struct ModelPerformanceTracker {
 pub struct ModelPerformance {
     /// Timestamp
     pub timestamp: std::time::Instant,
-    
+
     /// Accuracy metrics
     pub accuracy: f64,
-    
+
     /// Latency metrics
     pub latency: std::time::Duration,
-    
+
     /// Memory usage
     pub memory_usage: usize,
-    
+
     /// Feature importance
     pub feature_importance: Vec<f64>,
 }
@@ -1873,13 +2688,13 @@ pub struct ModelPerformance {
 pub struct PerformanceTrends {
     /// Accuracy trend
     pub accuracy_trend: TrendDirection,
-    
+
     /// Latency trend
     pub latency_trend: TrendDirection,
-    
+
     /// Memory usage trend
     pub memory_trend: TrendDirection,
-    
+
     /// Overall performance trend
     pub overall_trend: TrendDirection,
 }
@@ -1899,13 +2714,13 @@ pub enum TrendDirection {
 pub struct AnomalyDetector {
     /// Detection algorithm
     pub algorithm: AnomalyDetectionAlgorithm,
-    
+
     /// Anomaly threshold
     pub threshold: f64,
-    
+
     /// Detected anomalies
     pub detected_anomalies: VecDeque<Anomaly>,
-    
+
     /// Anomaly scoring model
     pub scoring_model: Option<AnomalyModel>,
 }
@@ -1915,16 +2730,16 @@ pub struct AnomalyDetector {
 pub enum AnomalyDetectionAlgorithm {
     /// Isolation Forest
     IsolationForest,
-    
+
     /// One-Class SVM
     OneClassSVM,
-    
+
     /// Local Outlier Factor
     LocalOutlierFactor,
-    
+
     /// Statistical outlier detection
     Statistical,
-    
+
     /// Autoencoder-based detection
     Autoencoder,
 }
@@ -1934,16 +2749,16 @@ pub enum AnomalyDetectionAlgorithm {
 pub struct Anomaly {
     /// Timestamp
     pub timestamp: std::time::Instant,
-    
+
     /// Anomaly score
     pub score: f64,
-    
+
     /// Anomaly type
     pub anomaly_type: AnomalyType,
-    
+
     /// Affected features
     pub affected_features: Vec<String>,
-    
+
     /// Severity
     pub severity: AnomalySeverity,
 }
@@ -1953,16 +2768,16 @@ pub struct Anomaly {
 pub enum AnomalyType {
     /// Performance degradation
     PerformanceDegradation,
-    
+
     /// Memory leak
     MemoryLeak,
-    
+
     /// Unusual allocation pattern
     UnusualPattern,
-    
+
     /// System overload
     SystemOverload,
-    
+
     /// Hardware failure indication
     HardwareIssue,
 }
@@ -1981,13 +2796,13 @@ pub enum AnomalySeverity {
 pub struct AnomalyModel {
     /// Model type
     pub model_type: AnomalyModelType,
-    
+
     /// Model parameters
     pub parameters: Vec<f64>,
-    
+
     /// Training data
     pub training_data: Vec<Vec<f64>>,
-    
+
     /// Model accuracy
     pub accuracy: f64,
 }
@@ -2047,13 +2862,13 @@ pub struct RLAgent {
 pub struct MemoryBandwidthOptimizer {
     /// Bandwidth optimization strategies
     pub strategies: Vec<BandwidthOptimizationStrategy>,
-    
+
     /// Current bandwidth utilization
     pub current_utilization: f64,
-    
+
     /// Target bandwidth utilization
     pub target_utilization: f64,
-    
+
     /// Optimization history
     pub optimization_history: VecDeque<BandwidthOptimization>,
 }
@@ -2063,16 +2878,16 @@ pub struct MemoryBandwidthOptimizer {
 pub enum BandwidthOptimizationStrategy {
     /// Request coalescing
     RequestCoalescing,
-    
+
     /// Access pattern optimization
     AccessPatternOptimization,
-    
+
     /// Prefetching optimization
     PrefetchingOptimization,
-    
+
     /// Cache optimization
     CacheOptimization,
-    
+
     /// Memory layout optimization
     LayoutOptimization,
 }
@@ -2082,13 +2897,13 @@ pub enum BandwidthOptimizationStrategy {
 pub struct BandwidthOptimization {
     /// Timestamp
     pub timestamp: std::time::Instant,
-    
+
     /// Strategy applied
     pub strategy: BandwidthOptimizationStrategy,
-    
+
     /// Bandwidth improvement
     pub improvement: f64,
-    
+
     /// Cost of optimization
     pub cost: f64,
 }
@@ -2098,13 +2913,13 @@ pub struct BandwidthOptimization {
 pub struct KernelAwareAllocator {
     /// Kernel profiles
     pub kernel_profiles: HashMap<String, KernelProfile>,
-    
+
     /// Active kernel tracking
     pub active_kernels: HashMap<String, KernelExecution>,
-    
+
     /// Allocation recommendations
     pub recommendations: Vec<AllocationRecommendation>,
-    
+
     /// Performance predictions
     pub performance_predictor: KernelPerformancePredictor,
 }
@@ -2114,16 +2929,16 @@ pub struct KernelAwareAllocator {
 pub struct KernelProfile {
     /// Kernel name
     pub name: String,
-    
+
     /// Typical memory usage pattern
     pub memory_pattern: MemoryUsagePattern,
-    
+
     /// Execution characteristics
     pub execution_characteristics: ExecutionCharacteristics,
-    
+
     /// Memory access pattern
     pub access_pattern: KernelAccessPattern,
-    
+
     /// Performance metrics
     pub performance_metrics: KernelPerformanceMetrics,
 }
@@ -2133,13 +2948,13 @@ pub struct KernelProfile {
 pub struct MemoryUsagePattern {
     /// Peak memory usage
     pub peak_usage: usize,
-    
+
     /// Average memory usage
     pub avg_usage: usize,
-    
+
     /// Memory usage over time
     pub usage_timeline: Vec<(std::time::Duration, usize)>,
-    
+
     /// Memory type preferences
     pub type_preferences: Vec<(MemoryType, f64)>,
 }
@@ -2149,13 +2964,13 @@ pub struct MemoryUsagePattern {
 pub struct ExecutionCharacteristics {
     /// Average execution time
     pub avg_execution_time: std::time::Duration,
-    
+
     /// Launch frequency
     pub launch_frequency: f64,
-    
+
     /// Resource requirements
     pub resource_requirements: ResourceRequirements,
-    
+
     /// Scalability characteristics
     pub scalability: ScalabilityCharacteristics,
 }
@@ -2165,13 +2980,13 @@ pub struct ExecutionCharacteristics {
 pub struct ResourceRequirements {
     /// Compute units required
     pub compute_units: usize,
-    
+
     /// Memory bandwidth required
     pub memory_bandwidth: f64,
-    
+
     /// Shared memory required
     pub shared_memory: usize,
-    
+
     /// Register usage
     pub register_usage: usize,
 }
@@ -2181,13 +2996,13 @@ pub struct ResourceRequirements {
 pub struct ScalabilityCharacteristics {
     /// Parallel efficiency
     pub parallel_efficiency: f64,
-    
+
     /// Memory scaling factor
     pub memory_scaling: f64,
-    
+
     /// Compute scaling factor
     pub compute_scaling: f64,
-    
+
     /// Optimal batch sizes
     pub optimal_batch_sizes: Vec<usize>,
 }
@@ -2197,13 +3012,13 @@ pub struct ScalabilityCharacteristics {
 pub struct KernelAccessPattern {
     /// Access locality
     pub locality: AccessLocality,
-    
+
     /// Access stride
     pub stride: usize,
-    
+
     /// Cache behavior
     pub cache_behavior: CacheBehavior,
-    
+
     /// Memory coalescing efficiency
     pub coalescing_efficiency: f64,
 }
@@ -2213,10 +3028,10 @@ pub struct KernelAccessPattern {
 pub struct AccessLocality {
     /// Temporal locality score
     pub temporal: f64,
-    
+
     /// Spatial locality score
     pub spatial: f64,
-    
+
     /// Working set size
     pub working_set_size: usize,
 }
@@ -2226,10 +3041,10 @@ pub struct AccessLocality {
 pub struct CacheBehavior {
     /// Cache hit ratio
     pub hit_ratio: f64,
-    
+
     /// Cache miss penalty
     pub miss_penalty: std::time::Duration,
-    
+
     /// Preferred cache level
     pub preferred_cache_level: usize,
 }
@@ -2239,13 +3054,13 @@ pub struct CacheBehavior {
 pub struct KernelPerformanceMetrics {
     /// Throughput (operations/second)
     pub throughput: f64,
-    
+
     /// Latency (time per operation)
     pub latency: std::time::Duration,
-    
+
     /// Memory efficiency
     pub memory_efficiency: f64,
-    
+
     /// Compute utilization
     pub compute_utilization: f64,
 }
@@ -2255,16 +3070,16 @@ pub struct KernelPerformanceMetrics {
 pub struct KernelExecution {
     /// Kernel profile
     pub profile: KernelProfile,
-    
+
     /// Start time
     pub start_time: std::time::Instant,
-    
+
     /// Allocated memory blocks
     pub allocated_blocks: Vec<*mut u8>,
-    
+
     /// Expected completion time
     pub expected_completion: std::time::Instant,
-    
+
     /// Current memory usage
     pub current_memory_usage: usize,
 }
@@ -2274,16 +3089,16 @@ pub struct KernelExecution {
 pub struct AllocationRecommendation {
     /// Recommended memory tier
     pub memory_tier: usize,
-    
+
     /// Recommended block size
     pub block_size: usize,
-    
+
     /// Recommended alignment
     pub alignment: usize,
-    
+
     /// Confidence score
     pub confidence: f64,
-    
+
     /// Expected performance benefit
     pub expected_benefit: f64,
 }
@@ -2293,10 +3108,10 @@ pub struct AllocationRecommendation {
 pub struct KernelPerformancePredictor {
     /// Prediction models
     pub models: HashMap<String, PredictionModel>,
-    
+
     /// Model training data
     pub training_data: HashMap<String, Vec<PerformanceDataPoint>>,
-    
+
     /// Prediction accuracy
     pub accuracy_metrics: HashMap<String, f64>,
 }
@@ -2306,10 +3121,10 @@ pub struct KernelPerformancePredictor {
 pub enum PredictionModel {
     /// Linear regression model
     LinearRegression(LinearModel),
-    
+
     /// Neural network model
     NeuralNetwork(SimpleNeuralNetwork),
-    
+
     /// Decision tree model
     DecisionTree(DecisionTreeModel),
 }
@@ -2319,7 +3134,7 @@ pub enum PredictionModel {
 pub struct LinearModel {
     /// Model coefficients
     pub coefficients: Vec<f64>,
-    
+
     /// Intercept
     pub intercept: f64,
 }
@@ -2329,7 +3144,7 @@ pub struct LinearModel {
 pub struct SimpleNeuralNetwork {
     /// Layer weights
     pub weights: Vec<Vec<Vec<f64>>>,
-    
+
     /// Layer biases
     pub biases: Vec<Vec<f64>>,
 }
@@ -2339,7 +3154,7 @@ pub struct SimpleNeuralNetwork {
 pub struct DecisionTreeModel {
     /// Tree nodes
     pub nodes: Vec<DecisionNode>,
-    
+
     /// Root node index
     pub root: usize,
 }
@@ -2349,16 +3164,16 @@ pub struct DecisionTreeModel {
 pub struct DecisionNode {
     /// Feature index for split
     pub feature_index: Option<usize>,
-    
+
     /// Split threshold
     pub threshold: Option<f64>,
-    
+
     /// Left child index
     pub left_child: Option<usize>,
-    
+
     /// Right child index
     pub right_child: Option<usize>,
-    
+
     /// Prediction value (for leaf nodes)
     pub prediction: Option<f64>,
 }
@@ -2368,10 +3183,10 @@ pub struct DecisionNode {
 pub struct PerformanceDataPoint {
     /// Input features
     pub features: Vec<f64>,
-    
+
     /// Target performance metric
     pub target: f64,
-    
+
     /// Timestamp
     pub timestamp: std::time::Instant,
 }
@@ -2387,7 +3202,7 @@ impl AdvancedGpuMemoryPool {
         let advanced_strategies = AdvancedAllocationStrategies::new();
         let bandwidth_optimizer = MemoryBandwidthOptimizer::new();
         let kernel_aware_allocator = KernelAwareAllocator::new();
-        
+
         Ok(Self {
             base_pool,
             memory_tiers,
@@ -2400,22 +3215,22 @@ impl AdvancedGpuMemoryPool {
             kernel_aware_allocator,
         })
     }
-    
-    fn initialize_memory_tiers(config: &GpuMemoryPoolConfig) -> Result<Vec<MemoryTier>, GpuOptimizerError> {
+
+    fn initialize_memory_tiers(
+        config: &GpuMemoryPoolConfig,
+    ) -> Result<Vec<MemoryTier>, GpuOptimizerError> {
         // Simplified tier initialization
-        Ok(vec![
-            MemoryTier {
-                tier_id: 0,
-                memory_type: MemoryType::HBM,
-                capacity: 32 * 1024 * 1024 * 1024, // 32GB
-                usage: 0,
-                latency_ns: 100,
-                bandwidth_gb_s: 900.0,
-                priority: 3,
-                allocator: TierAllocator::default(),
-                migration_policy: MigrationPolicy::default(),
-            }
-        ])
+        Ok(vec![MemoryTier {
+            tier_id: 0,
+            memory_type: MemoryType::HBM,
+            capacity: 32 * 1024 * 1024 * 1024, // 32GB
+            usage: 0,
+            latency_ns: 100,
+            bandwidth_gb_s: 900.0,
+            priority: 3,
+            allocator: TierAllocator::default(),
+            migration_policy: MigrationPolicy::default(),
+        }])
     }
 }
 
@@ -2424,13 +3239,13 @@ impl AdvancedGpuMemoryPool {
 pub struct GpuMemoryPoolConfig {
     /// Base pool configuration
     pub base_config: BasePoolConfig,
-    
+
     /// Compaction configuration
     pub compaction_config: CompactionConfig,
-    
+
     /// Prediction configuration
     pub prediction_config: PredictionConfig,
-    
+
     /// Health monitoring configuration
     pub health_config: HealthConfig,
 }
@@ -2440,7 +3255,7 @@ pub struct GpuMemoryPoolConfig {
 pub struct BasePoolConfig {
     /// Pool size
     pub pool_size: usize,
-    
+
     /// Allocation strategy
     pub strategy: AllocationStrategy,
 }
@@ -2450,7 +3265,7 @@ pub struct BasePoolConfig {
 pub struct CompactionConfig {
     /// Enable compaction
     pub enabled: bool,
-    
+
     /// Fragmentation threshold
     pub fragmentation_threshold: f32,
 }
@@ -2460,7 +3275,7 @@ pub struct CompactionConfig {
 pub struct PredictionConfig {
     /// Enable prediction
     pub enabled: bool,
-    
+
     /// Prediction horizon
     pub horizon: f64,
 }
@@ -2470,7 +3285,7 @@ pub struct PredictionConfig {
 pub struct HealthConfig {
     /// Enable monitoring
     pub enabled: bool,
-    
+
     /// Monitoring interval
     pub interval: std::time::Duration,
 }
@@ -2706,7 +3521,6 @@ impl Default for KernelPerformancePredictor {
             accuracy_metrics: HashMap::new(),
         }
     }
-}
 }
 
 impl BatchBuffer {
@@ -3419,8 +4233,16 @@ impl CudaMemoryPool {
             self.batch_buffers.iter().filter(|b| b.in_use).count(),
             self.batch_buffers.iter().map(|b| b.size).sum::<usize>() as f64 / (1024.0 * 1024.0),
             self.allocation_strategy,
-            if self.enable_defrag { "Enabled" } else { "Disabled" },
-            if self.pressure_monitor.auto_cleanup { "Enabled" } else { "Disabled" }
+            if self.enable_defrag {
+                "Enabled"
+            } else {
+                "Disabled"
+            },
+            if self.pressure_monitor.auto_cleanup {
+                "Enabled"
+            } else {
+                "Disabled"
+            }
         )
     }
 

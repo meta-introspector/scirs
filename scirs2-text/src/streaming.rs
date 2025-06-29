@@ -8,6 +8,7 @@ use crate::sparse::{CsrMatrix, SparseMatrixBuilder, SparseVector};
 use crate::tokenize::{Tokenizer, WordTokenizer};
 use crate::vocabulary::Vocabulary;
 use memmap2::{Mmap, MmapOptions};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};

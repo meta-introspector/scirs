@@ -146,7 +146,6 @@ fn main() -> CoreResult<()> {
 fn display_ecosystem_summary(
     result: &scirs2_core::testing::ecosystem_integration::EcosystemTestResult,
 ) {
-
     println!("📈 ECOSYSTEM HEALTH SUMMARY");
     println!("   Overall Health Score: {:.1}/100", result.health_score);
     println!("   Modules Discovered: {}", result.discovered_modules.len());

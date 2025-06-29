@@ -11,6 +11,8 @@
 //! - **Windowed metrics**: Track metrics over sliding windows
 //! - **Multiple metric types**: Classification, regression, and ranking metrics
 //! - **Reset capabilities**: Start new evaluation periods
+//! - **Advanced streaming**: Concept drift detection and adaptive windowing
+//! - **Anomaly detection**: Real-time anomaly detection in streaming data
 //!
 //! # Examples
 //!
@@ -51,6 +53,14 @@
 use crate::error::{MetricsError, Result};
 use num_traits::Float;
 use std::collections::VecDeque;
+
+// Re-export advanced streaming capabilities
+pub mod advanced_streaming;
+pub use advanced_streaming::{
+    AdaptiveStreamingMetrics, AdwinDetector, AlertSeverity, AnomalyDetectionAlgorithm,
+    AnomalySummary, ConceptDriftDetector, DdmDetector, DriftDetectionMethod, DriftStatus,
+    PageHinkleyDetector, StreamingConfig, UpdateResult, WindowAdaptationStrategy,
+};
 
 /// Streaming classification metrics with incremental computation
 #[derive(Debug, Clone)]

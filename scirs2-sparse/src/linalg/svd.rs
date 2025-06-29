@@ -3,6 +3,10 @@
 //! This module provides efficient SVD algorithms for sparse matrices,
 //! including truncated SVD and randomized SVD methods.
 
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, Array2};

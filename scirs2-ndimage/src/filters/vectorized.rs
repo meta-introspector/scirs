@@ -42,9 +42,9 @@ fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 
 /// Helper function for safe float to f64 conversion
 fn safe_float_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
-    value.to_f64().ok_or_else(|| {
-        NdimageError::ComputationError("Failed to convert float to f64".to_string())
-    })
+    value
+        .to_f64()
+        .ok_or_else(|| NdimageError::ComputationError("Failed to convert float to f64".to_string()))
 }
 
 /// Batch processing configuration
@@ -455,7 +455,7 @@ where
     let one = safe_i32_to_float(1)?;
     let neg_two = safe_i32_to_float(-2)?;
     let two = safe_i32_to_float(2)?;
-    
+
     let kernel_x = Array2::from_shape_vec(
         (3, 3),
         vec![
@@ -470,7 +470,9 @@ where
             one,
         ],
     )
-    .map_err(|e| NdimageError::ComputationError(format!("Failed to create Sobel X kernel: {}", e)))?;
+    .map_err(|e| {
+        NdimageError::ComputationError(format!("Failed to create Sobel X kernel: {}", e))
+    })?;
 
     let kernel_y = Array2::from_shape_vec(
         (3, 3),
@@ -486,7 +488,9 @@ where
             one,
         ],
     )
-    .map_err(|e| NdimageError::ComputationError(format!("Failed to create Sobel Y kernel: {}", e)))?;
+    .map_err(|e| {
+        NdimageError::ComputationError(format!("Failed to create Sobel Y kernel: {}", e))
+    })?;
 
     Ok((kernel_x, kernel_y))
 }
@@ -505,8 +509,8 @@ mod tests {
             [[2.0, 2.0, 2.0], [2.0, 2.0, 2.0], [2.0, 2.0, 2.0]],
         ]);
 
-        let result =
-            gaussian_filter_batch(&batch, 1.0, BorderMode::Constant, Some(0.0), None).expect("gaussian_filter_batch should succeed");
+        let result = gaussian_filter_batch(&batch, 1.0, BorderMode::Constant, Some(0.0), None)
+            .expect("gaussian_filter_batch should succeed");
 
         assert_eq!(result.shape(), batch.shape());
 
@@ -526,7 +530,8 @@ mod tests {
     fn test_convolve_batch() {
         let batch = arr3(&[[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]]);
 
-        let kernel = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0]).expect("kernel creation should succeed");
+        let kernel = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0])
+            .expect("kernel creation should succeed");
 
         let config = BatchConfig {
             num_threads: Some(1), // Force sequential for deterministic test

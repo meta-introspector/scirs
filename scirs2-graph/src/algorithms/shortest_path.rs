@@ -802,7 +802,8 @@ where
                 }
 
                 // Skip if this node is in excluded nodes (except source and target)
-                if &neighbor != source && &neighbor != target && excluded_nodes.contains(&neighbor) {
+                if &neighbor != source && &neighbor != target && excluded_nodes.contains(&neighbor)
+                {
                     continue;
                 }
 

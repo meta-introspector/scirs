@@ -31,6 +31,7 @@ thiserror = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
 rand_chacha = { workspace = true }
+log = { workspace = true }
 # BLAS dependencies handled through scirs2-core
 
 # AI/ML specific dependencies

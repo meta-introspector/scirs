@@ -152,11 +152,11 @@ impl DistributedComputationEngine {
     {
         use scirs2_core::parallel_ops::*;
         
-        // Execute operations in parallel using rayon
-        let results: Result<Vec<R>, LinalgError> = operations
-            .into_par_iter()
-            .map(|op| op())
-            .collect();
+        // Execute operations in parallel using scirs2-core parallel operations
+        let results: Result<Vec<R>, LinalgError> = 
+            parallel_map(&operations, |op| op())
+                .into_iter()
+                .collect();
         
         results
     }

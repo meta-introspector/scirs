@@ -1024,8 +1024,8 @@ pub mod natural_gradients {
 /// Advanced K-FAC enhancements for production-scale optimization
 pub mod advanced_kfac {
     use super::*;
+    use std::collections::{BTreeMap, VecDeque};
     use std::sync::{Arc, Mutex};
-    use std::collections::BTreeMap;
 
     /// Distributed K-FAC optimizer for large-scale training
     #[derive(Debug)]
@@ -2644,7 +2644,10 @@ pub mod advanced_kfac {
 
     impl LocalCommunicationBackend {
         pub fn new(num_workers: usize, worker_rank: usize) -> Self {
-            Self { num_workers, worker_rank }
+            Self {
+                num_workers,
+                worker_rank,
+            }
         }
     }
 
@@ -2696,12 +2699,9 @@ pub mod advanced_kfac {
     }
 
     /// Basic implementations for missing components
-    
+
     impl<T: Float> DistributedKFAC<T> {
-        pub fn new(
-            base_config: KFACConfig<T>,
-            dist_config: DistributedKFACConfig,
-        ) -> Result<Self> {
+        pub fn new(base_config: KFACConfig<T>, dist_config: DistributedKFACConfig) -> Result<Self> {
             let base_kfac = KFACOptimizer::new(base_config);
             let comm_backend = Some(Arc::new(LocalCommunicationBackend::new(
                 dist_config.num_workers,
@@ -2731,19 +2731,21 @@ pub mod advanced_kfac {
             // 2. All-reduce gradients across workers
             if let Some(ref comm) = self.comm_backend {
                 // Convert to f32 for communication (in practice would handle T generically)
-                let mut grad_data: Vec<f32> = local_gradients.iter()
+                let mut grad_data: Vec<f32> = local_gradients
+                    .iter()
                     .map(|&x| x.to_f64().unwrap_or(0.0) as f32)
                     .collect();
-                
+
                 comm.all_reduce(&mut grad_data)?;
-                
+
                 // Convert back and apply distributed update
                 // (Implementation details would depend on communication backend)
             }
 
             // 3. Apply block-wise decomposition if enabled
             if self.dist_config.block_size > 0 {
-                self.block_decomposition.apply_block_update(layer_name, &local_update)
+                self.block_decomposition
+                    .apply_block_update(layer_name, &local_update)
             } else {
                 Ok(local_update)
             }
@@ -2775,7 +2777,7 @@ pub mod advanced_kfac {
             }
 
             let mut result = update.clone();
-            
+
             // Apply blocks sequentially
             let num_row_blocks = (update.nrows() + self.block_size - 1) / self.block_size;
             let num_col_blocks = (update.ncols() + self.block_size - 1) / self.block_size;
@@ -2788,11 +2790,9 @@ pub mod advanced_kfac {
                     let col_end = ((j + 1) * self.block_size).min(update.ncols());
 
                     // Process block
-                    let mut block = result.slice_mut(ndarray::s![
-                        row_start..row_end, 
-                        col_start..col_end
-                    ]);
-                    
+                    let mut block =
+                        result.slice_mut(ndarray::s![row_start..row_end, col_start..col_end]);
+
                     // Apply block-specific processing (placeholder)
                     block.mapv_inplace(|x| x * T::from(0.99).unwrap());
                 }
@@ -2822,10 +2822,8 @@ pub mod advanced_kfac {
             }
 
             if !self.condition_monitors.contains_key(layer_name) {
-                self.condition_monitors.insert(
-                    layer_name.to_string(),
-                    ConditionMonitor::new(),
-                );
+                self.condition_monitors
+                    .insert(layer_name.to_string(), ConditionMonitor::new());
             }
 
             // Update monitoring
@@ -2852,8 +2850,10 @@ pub mod advanced_kfac {
 
         pub fn update(&mut self, matrix: &Array2<T>) -> Result<()> {
             // Simplified eigenvalue estimation using power iteration
-            let eigenvalue = self.power_iteration_state.estimate_dominant_eigenvalue(matrix)?;
-            
+            let eigenvalue = self
+                .power_iteration_state
+                .estimate_dominant_eigenvalue(matrix)?;
+
             // Store eigenvalue
             let mut eigenvals = vec![eigenvalue];
             if self.eigenvalue_history.len() > 0 {
@@ -2889,22 +2889,22 @@ pub mod advanced_kfac {
 
         pub fn estimate_dominant_eigenvalue(&mut self, matrix: &Array2<T>) -> Result<T> {
             let max_iterations = 50;
-            
+
             for _ in 0..max_iterations {
                 let new_vector = matrix.dot(&self.vector);
                 let norm = new_vector.iter().map(|&x| x * x).sum::<T>().sqrt();
-                
+
                 if norm < T::from(1e-12).unwrap() {
                     break;
                 }
-                
+
                 self.vector = new_vector / norm;
                 let new_value = self.vector.dot(&matrix.dot(&self.vector));
-                
+
                 if (new_value - self.value).abs() < self.tolerance {
                     break;
                 }
-                
+
                 self.value = new_value;
                 self.iterations += 1;
             }
@@ -2959,7 +2959,7 @@ pub mod advanced_kfac {
                 old_damping: 0.001,
                 new_damping: 0.01,
             };
-            
+
             self.remediation_log.push(action);
             Ok(())
         }

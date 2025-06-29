@@ -52,9 +52,10 @@ where
         }
     }
 
-    // Placeholder implementation returning a copy of the input
-    // This will be implemented with proper uniform filtering
-    Ok(input.to_owned())
+    // Delegate to the full uniform filter implementation
+    use super::uniform::uniform_filter as uniform_filter_impl;
+
+    uniform_filter_impl(input, size, Some(_border_mode), None)
 }
 
 /// Convolve an n-dimensional array with a filter kernel
@@ -352,7 +353,7 @@ where
 {
     let input_len = input.len();
     let weights_len = weights.len();
-    
+
     if weights_len == 0 {
         return Err(NdimageError::InvalidInput("Kernel cannot be empty".into()));
     }
@@ -362,10 +363,10 @@ where
 
     for i in 0..input_len {
         let mut sum = T::zero();
-        
+
         for k in 0..weights_len {
             let input_idx = (i as isize) + (k as isize) - (half_kernel as isize);
-            
+
             // Handle border mode
             let value = if input_idx < 0 || input_idx >= input_len as isize {
                 match mode {
@@ -386,7 +387,9 @@ where
                         input[reflected_idx.min(input_len - 1)]
                     }
                     BorderMode::Wrap => {
-                        let wrapped_idx = ((input_idx % (input_len as isize) + input_len as isize) % (input_len as isize)) as usize;
+                        let wrapped_idx = ((input_idx % (input_len as isize) + input_len as isize)
+                            % (input_len as isize))
+                            as usize;
                         input[wrapped_idx]
                     }
                     BorderMode::Mirror => {
@@ -401,10 +404,10 @@ where
             } else {
                 input[input_idx as usize]
             };
-            
+
             sum += value * weights[k];
         }
-        
+
         output[i] = sum;
     }
 
@@ -422,35 +425,37 @@ where
 {
     let (input_d, input_h, input_w) = input.dim();
     let (weights_d, weights_h, weights_w) = weights.dim();
-    
+
     if weights_d == 0 || weights_h == 0 || weights_w == 0 {
-        return Err(NdimageError::InvalidInput("Kernel cannot have zero dimensions".into()));
+        return Err(NdimageError::InvalidInput(
+            "Kernel cannot have zero dimensions".into(),
+        ));
     }
 
     let half_d = weights_d / 2;
     let half_h = weights_h / 2;
     let half_w = weights_w / 2;
-    
+
     let mut output = Array::zeros((input_d, input_h, input_w));
 
     for z in 0..input_d {
         for y in 0..input_h {
             for x in 0..input_w {
                 let mut sum = T::zero();
-                
+
                 for kz in 0..weights_d {
                     for ky in 0..weights_h {
                         for kx in 0..weights_w {
                             let input_z = (z as isize) + (kz as isize) - (half_d as isize);
                             let input_y = (y as isize) + (ky as isize) - (half_h as isize);
                             let input_x = (x as isize) + (kx as isize) - (half_w as isize);
-                            
+
                             let value = get_padded_value_3d(input, input_z, input_y, input_x, mode);
                             sum += value * weights[[kz, ky, kx]];
                         }
                     }
                 }
-                
+
                 output[[z, y, x]] = sum;
             }
         }
@@ -463,7 +468,7 @@ where
 fn get_padded_value_3d<T>(
     input: &Array<T, ndarray::Ix3>,
     z: isize,
-    y: isize, 
+    y: isize,
     x: isize,
     mode: &BorderMode,
 ) -> T
@@ -471,13 +476,12 @@ where
     T: Float + Clone,
 {
     let (depth, height, width) = input.dim();
-    
-    if z >= 0 && z < depth as isize && 
-       y >= 0 && y < height as isize && 
-       x >= 0 && x < width as isize {
+
+    if z >= 0 && z < depth as isize && y >= 0 && y < height as isize && x >= 0 && x < width as isize
+    {
         return input[[z as usize, y as usize, x as usize]];
     }
-    
+
     match mode {
         BorderMode::Constant => T::zero(),
         BorderMode::Nearest => {
@@ -496,7 +500,7 @@ where
                     coord as usize
                 }
             };
-            
+
             let ref_z = reflect_coord(z, depth);
             let ref_y = reflect_coord(y, height);
             let ref_x = reflect_coord(x, width);
@@ -506,7 +510,7 @@ where
             let wrap_coord = |coord: isize, size: usize| -> usize {
                 ((coord % size as isize + size as isize) % size as isize) as usize
             };
-            
+
             let wrap_z = wrap_coord(z, depth);
             let wrap_y = wrap_coord(y, height);
             let wrap_x = wrap_coord(x, width);
@@ -522,7 +526,7 @@ where
                     coord as usize
                 }
             };
-            
+
             let mir_z = mirror_coord(z, depth);
             let mir_y = mirror_coord(y, height);
             let mir_x = mirror_coord(x, width);
@@ -545,43 +549,46 @@ where
     let input_shape = input.shape();
     let weights_shape = weights.shape();
     let ndim = input.ndim();
-    
+
     if ndim != weights.ndim() {
         return Err(NdimageError::DimensionError(
             "Input and weights must have the same number of dimensions".into(),
         ));
     }
-    
+
     if weights_shape.iter().any(|&s| s == 0) {
-        return Err(NdimageError::InvalidInput("Kernel cannot have zero dimensions".into()));
+        return Err(NdimageError::InvalidInput(
+            "Kernel cannot have zero dimensions".into(),
+        ));
     }
 
     // Calculate half sizes for centering the kernel
     let half_sizes: Vec<usize> = weights_shape.iter().map(|&s| s / 2).collect();
-    
+
     let mut output = Array::zeros(input.raw_dim());
-    
+
     // Iterate over all output positions
     for out_indices in ndarray::indices(input_shape) {
         let out_coords: Vec<usize> = out_indices.slice().to_vec();
         let mut sum = T::zero();
-        
+
         // Iterate over all kernel positions
         for weight_indices in ndarray::indices(weights_shape) {
             let weight_coords: Vec<usize> = weight_indices.slice().to_vec();
-            
+
             // Calculate input coordinates
             let mut input_coords = vec![0isize; ndim];
             for d in 0..ndim {
-                input_coords[d] = (out_coords[d] as isize) + (weight_coords[d] as isize) - (half_sizes[d] as isize);
+                input_coords[d] = (out_coords[d] as isize) + (weight_coords[d] as isize)
+                    - (half_sizes[d] as isize);
             }
-            
+
             // Get padded value
             let value = get_padded_value_nd(input, &input_coords, mode);
             let weight = weights[weight_indices];
             sum += value * weight;
         }
-        
+
         output[out_indices] = sum;
     }
 
@@ -589,38 +596,32 @@ where
 }
 
 /// Helper function to get padded values for n-dimensional arrays
-fn get_padded_value_nd<T, D>(
-    input: &Array<T, D>,
-    coords: &[isize],
-    mode: &BorderMode,
-) -> T
+fn get_padded_value_nd<T, D>(input: &Array<T, D>, coords: &[isize], mode: &BorderMode) -> T
 where
     T: Float + Clone,
     D: Dimension,
 {
     let shape = input.shape();
     let ndim = input.ndim();
-    
+
     // Check if coordinates are within bounds
     let mut in_bounds = true;
     let mut clamped_coords = vec![0usize; ndim];
-    
+
     for d in 0..ndim {
         if coords[d] < 0 || coords[d] >= shape[d] as isize {
             in_bounds = false;
         }
         clamped_coords[d] = coords[d].max(0).min(shape[d] as isize - 1) as usize;
     }
-    
+
     if in_bounds {
         return input[ndarray::IxDyn(&clamped_coords)];
     }
-    
+
     match mode {
         BorderMode::Constant => T::zero(),
-        BorderMode::Nearest => {
-            input[ndarray::IxDyn(&clamped_coords)]
-        }
+        BorderMode::Nearest => input[ndarray::IxDyn(&clamped_coords)],
         BorderMode::Reflect => {
             let mut reflected_coords = vec![0usize; ndim];
             for d in 0..ndim {
@@ -637,7 +638,8 @@ where
         BorderMode::Wrap => {
             let mut wrapped_coords = vec![0usize; ndim];
             for d in 0..ndim {
-                wrapped_coords[d] = ((coords[d] % shape[d] as isize + shape[d] as isize) % shape[d] as isize) as usize;
+                wrapped_coords[d] = ((coords[d] % shape[d] as isize + shape[d] as isize)
+                    % shape[d] as isize) as usize;
             }
             input[ndarray::IxDyn(&wrapped_coords)]
         }

@@ -481,18 +481,20 @@ pub fn simd_autocorrelation_enhanced(
 ) -> SignalResult<(Array1<f64>, AutocorrelationMetrics)> {
     let n = signal.len();
     let max_lag = max_lag.unwrap_or(n / 4).min(n - 1); // Default to 25% for efficiency
-    
+
     // Validate inputs
     if n == 0 {
         return Err(SignalError::ValueError("Signal is empty".to_string()));
     }
-    
+
     if max_lag >= n {
-        return Err(SignalError::ValueError("max_lag must be less than signal length".to_string()));
+        return Err(SignalError::ValueError(
+            "max_lag must be less than signal length".to_string(),
+        ));
     }
-    
+
     let start_time = std::time::Instant::now();
-    
+
     // Determine chunk size for memory optimization
     let effective_chunk_size = chunk_size.unwrap_or_else(|| {
         if n > 100_000 {
@@ -501,12 +503,12 @@ pub fn simd_autocorrelation_enhanced(
             n // Process all at once for smaller signals
         }
     });
-    
+
     let mut autocorr = Array1::zeros(max_lag + 1);
-    
+
     // Use parallel processing if beneficial
     let use_parallel = max_lag > 50 && n > 1000;
-    
+
     if use_parallel {
         // Parallel computation of lags
         let results: Result<Vec<f64>, SignalError> = (0..=max_lag)
@@ -522,7 +524,7 @@ pub fn simd_autocorrelation_enhanced(
                 }
             })
             .collect();
-        
+
         let results = results?;
         for (lag, value) in results.into_iter().enumerate() {
             autocorr[lag] = value;
@@ -538,16 +540,16 @@ pub fn simd_autocorrelation_enhanced(
             }
         }
     }
-    
+
     // Normalize if requested
     if normalize && autocorr[0] != 0.0 {
         let autocorr_view = autocorr.view_mut();
         let scale = Array1::from_elem(autocorr.len(), 1.0 / autocorr[0]);
         f64::simd_mul(&autocorr.view(), &scale.view(), &autocorr_view);
     }
-    
+
     let computation_time = start_time.elapsed();
-    
+
     // Compute performance metrics
     let metrics = AutocorrelationMetrics {
         signal_length: n,
@@ -557,7 +559,7 @@ pub fn simd_autocorrelation_enhanced(
         parallel_used: use_parallel,
         chunk_size_used: effective_chunk_size,
     };
-    
+
     Ok((autocorr, metrics))
 }
 
@@ -583,7 +585,7 @@ fn estimate_memory_usage(signal_length: usize, max_lag: usize) -> f64 {
     let signal_memory = signal_length * 8; // 8 bytes per f64
     let autocorr_memory = (max_lag + 1) * 8;
     let working_memory = signal_length * 2 * 8; // For slices
-    
+
     (signal_memory + autocorr_memory + working_memory) as f64 / (1024.0 * 1024.0)
 }
 
@@ -933,7 +935,7 @@ pub fn simd_autocorrelation_slice_f64(signal: &[f64], max_lag: usize) -> SignalR
         if available_len > 0 {
             let x1 = signal_view.slice(s![0..available_len]);
             let x2 = signal_view.slice(s![lag..n]);
-            
+
             // SIMD dot product for correlation
             autocorr[lag] = f64::simd_dot(&x1, &x2) / available_len as f64;
         }
@@ -957,7 +959,7 @@ pub fn simd_spectral_features_f64(
     let energy = f64::simd_dot(&signal_view, &signal_view);
     let mean = signal.iter().sum::<f64>() / signal.len() as f64;
     let variance = signal.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64;
-    
+
     Ok((energy, variance.sqrt(), mean))
 }
 
@@ -979,18 +981,18 @@ pub fn simd_spectral_centroid_f64(spectrum: &[f64], frequencies: &[f64]) -> Sign
             "Spectrum and frequencies must have same length".to_string(),
         ));
     }
-    
+
     if spectrum.is_empty() {
         return Ok(0.0);
     }
-    
+
     let spectrum_view = ArrayView1::from(spectrum);
     let freq_view = ArrayView1::from(frequencies);
-    
+
     // SIMD dot products for numerator and denominator
     let numerator = f64::simd_dot(&spectrum_view, &freq_view);
     let denominator = spectrum.iter().sum::<f64>();
-    
+
     if denominator > 1e-15 {
         Ok(numerator / denominator)
     } else {
@@ -1012,25 +1014,25 @@ pub fn simd_spectral_centroid_f64(spectrum: &[f64], frequencies: &[f64]) -> Sign
 ///
 /// * Rolloff frequency in Hz
 pub fn simd_spectral_rolloff_f64(
-    spectrum: &[f64], 
-    frequencies: &[f64], 
-    rolloff_ratio: f64
+    spectrum: &[f64],
+    frequencies: &[f64],
+    rolloff_ratio: f64,
 ) -> SignalResult<f64> {
     if spectrum.len() != frequencies.len() {
         return Err(SignalError::ShapeMismatch(
             "Spectrum and frequencies must have same length".to_string(),
         ));
     }
-    
+
     if spectrum.is_empty() || rolloff_ratio < 0.0 || rolloff_ratio > 1.0 {
         return Err(SignalError::ValueError(
             "Invalid spectrum or rolloff ratio".to_string(),
         ));
     }
-    
+
     let total_energy: f64 = spectrum.iter().sum();
     let target_energy = total_energy * rolloff_ratio;
-    
+
     let mut cumulative_energy = 0.0;
     for (i, &power) in spectrum.iter().enumerate() {
         cumulative_energy += power;
@@ -1038,7 +1040,7 @@ pub fn simd_spectral_rolloff_f64(
             return Ok(frequencies[i]);
         }
     }
-    
+
     Ok(frequencies[frequencies.len() - 1])
 }
 
@@ -1055,16 +1057,16 @@ pub fn simd_zero_crossing_rate_f64(signal: &[f64]) -> f64 {
     if signal.len() < 2 {
         return 0.0;
     }
-    
+
     let mut crossings = 0;
-    
+
     // Use SIMD for sign detection and counting
     for i in 1..signal.len() {
-        if (signal[i] >= 0.0) != (signal[i-1] >= 0.0) {
+        if (signal[i] >= 0.0) != (signal[i - 1] >= 0.0) {
             crossings += 1;
         }
     }
-    
+
     crossings as f64 / (signal.len() - 1) as f64
 }
 
@@ -1083,29 +1085,29 @@ pub fn simd_spectral_flatness_f64(spectrum: &[f64]) -> SignalResult<f64> {
     if spectrum.is_empty() {
         return Ok(0.0);
     }
-    
+
     // Check for negative values
     if spectrum.iter().any(|&x| x < 0.0) {
         return Err(SignalError::ValueError(
             "Spectrum values must be non-negative".to_string(),
         ));
     }
-    
+
     // Filter out zero values for geometric mean computation
     let positive_values: Vec<f64> = spectrum.iter().cloned().filter(|&x| x > 1e-15).collect();
-    
+
     if positive_values.is_empty() {
         return Ok(0.0);
     }
-    
+
     // Arithmetic mean using SIMD
     let spectrum_view = ArrayView1::from(&positive_values);
     let arithmetic_mean = positive_values.iter().sum::<f64>() / positive_values.len() as f64;
-    
+
     // Geometric mean (log domain for numerical stability)
     let log_sum = positive_values.iter().map(|&x| x.ln()).sum::<f64>();
     let geometric_mean = (log_sum / positive_values.len() as f64).exp();
-    
+
     if arithmetic_mean > 1e-15 {
         Ok(geometric_mean / arithmetic_mean)
     } else {
@@ -1140,32 +1142,32 @@ pub fn simd_mel_filterbank_f64(
             "Spectrum and frequencies must have same length".to_string(),
         ));
     }
-    
+
     if n_mels == 0 || f_min >= f_max {
         return Err(SignalError::ValueError(
             "Invalid mel filterbank parameters".to_string(),
         ));
     }
-    
+
     // Convert Hz to mel scale
     let hz_to_mel = |f: f64| 2595.0 * (1.0 + f / 700.0).log10();
     let mel_to_hz = |m: f64| 700.0 * (10.0_f64.powf(m / 2595.0) - 1.0);
-    
+
     let mel_min = hz_to_mel(f_min);
     let mel_max = hz_to_mel(f_max);
-    
+
     // Create mel filter bank
     let mut mel_energies = vec![0.0; n_mels];
-    
+
     for m in 0..n_mels {
         let mel_center = mel_min + (mel_max - mel_min) * (m + 1) as f64 / (n_mels + 1) as f64;
         let mel_low = mel_min + (mel_max - mel_min) * m as f64 / (n_mels + 1) as f64;
         let mel_high = mel_min + (mel_max - mel_min) * (m + 2) as f64 / (n_mels + 1) as f64;
-        
+
         let f_center = mel_to_hz(mel_center);
         let f_low = mel_to_hz(mel_low);
         let f_high = mel_to_hz(mel_high);
-        
+
         // Apply triangular filter using SIMD
         for (i, &freq) in frequencies.iter().enumerate() {
             if freq >= f_low && freq <= f_high {
@@ -1178,7 +1180,7 @@ pub fn simd_mel_filterbank_f64(
             }
         }
     }
-    
+
     Ok(mel_energies)
 }
 
@@ -1195,45 +1197,41 @@ pub fn simd_mel_filterbank_f64(
 /// # Returns
 ///
 /// * Filtered output sample
-pub fn simd_realtime_iir_f64(
-    input: f64,
-    coeffs: &[f64],
-    delays: &mut [f64],
-) -> SignalResult<f64> {
+pub fn simd_realtime_iir_f64(input: f64, coeffs: &[f64], delays: &mut [f64]) -> SignalResult<f64> {
     if coeffs.len() % 5 != 0 {
         return Err(SignalError::ValueError(
             "Coefficients must be groups of 5 [b0, b1, b2, a1, a2]".to_string(),
         ));
     }
-    
+
     let n_biquads = coeffs.len() / 5;
     if delays.len() != n_biquads * 2 {
         return Err(SignalError::ValueError(
             "Delays must have 2 elements per biquad".to_string(),
         ));
     }
-    
+
     let mut output = input;
-    
+
     for i in 0..n_biquads {
         let b0 = coeffs[i * 5];
         let b1 = coeffs[i * 5 + 1];
         let b2 = coeffs[i * 5 + 2];
         let a1 = coeffs[i * 5 + 3];
         let a2 = coeffs[i * 5 + 4];
-        
+
         let d1 = delays[i * 2];
         let d2 = delays[i * 2 + 1];
-        
+
         // Direct-form II biquad
         let w = output - a1 * d1 - a2 * d2;
         output = b0 * w + b1 * d1 + b2 * d2;
-        
+
         // Update delays
         delays[i * 2 + 1] = d1;
         delays[i * 2] = w;
     }
-    
+
     Ok(output)
 }
 
@@ -1258,10 +1256,10 @@ pub fn simd_polyphase_filter_f64(
             "Invalid polyphase filter parameters".to_string(),
         ));
     }
-    
+
     let n_phases = polyphase_filters.len();
     let filter_len = polyphase_filters[0].len();
-    
+
     // Check that all subfilters have the same length
     for subfilter in polyphase_filters {
         if subfilter.len() != filter_len {
@@ -1270,22 +1268,22 @@ pub fn simd_polyphase_filter_f64(
             ));
         }
     }
-    
+
     let output_len = signal.len() / decimation_factor;
     let mut output = vec![0.0; output_len];
     let mut delay_line = vec![0.0; filter_len];
-    
+
     for (out_idx, &sample) in signal.iter().step_by(decimation_factor).enumerate() {
         if out_idx >= output_len {
             break;
         }
-        
+
         // Update delay line
         for i in (1..filter_len).rev() {
             delay_line[i] = delay_line[i - 1];
         }
         delay_line[0] = sample;
-        
+
         // Apply polyphase filters using SIMD
         let mut sum = 0.0;
         for (phase, subfilter) in polyphase_filters.iter().enumerate() {
@@ -1295,10 +1293,10 @@ pub fn simd_polyphase_filter_f64(
                 sum += f64::simd_dot(&delay_view, &filter_view);
             }
         }
-        
+
         output[out_idx] = sum;
     }
-    
+
     Ok(output)
 }
 
@@ -1323,30 +1321,30 @@ pub fn simd_overlap_add_f64(
     let block_size = input_block.len();
     let ir_len = impulse_response.len();
     let output_len = block_size + ir_len - 1;
-    
+
     // Initialize overlap buffer if needed
     if overlap_buffer.len() != ir_len - 1 {
         overlap_buffer.resize(ir_len - 1, 0.0);
     }
-    
+
     // Convolve current block with impulse response
     let conv_result = simd_convolve_f64(input_block, impulse_response, "full")?;
-    
+
     // Prepare output
     let mut output = vec![0.0; block_size];
-    
+
     // Add overlap from previous block
     for i in 0..(ir_len - 1).min(block_size) {
         output[i] = conv_result[i] + overlap_buffer[i];
     }
-    
+
     // Copy remaining convolution result
     for i in (ir_len - 1)..block_size {
         if i < conv_result.len() {
             output[i] = conv_result[i];
         }
     }
-    
+
     // Update overlap buffer for next block
     for i in 0..(ir_len - 1) {
         let src_idx = block_size + i;
@@ -1356,7 +1354,7 @@ pub fn simd_overlap_add_f64(
             overlap_buffer[i] = 0.0;
         }
     }
-    
+
     Ok(output)
 }
 
@@ -1388,20 +1386,20 @@ where
             "Invalid window or hop size".to_string(),
         ));
     }
-    
+
     let n_windows = (signal.len() - window_size) / hop_size + 1;
     let mut features = Vec::with_capacity(n_windows);
-    
+
     for i in 0..n_windows {
         let start = i * hop_size;
         let end = start + window_size;
-        
+
         if end <= signal.len() {
             let window = &signal[start..end];
             features.push(feature_fn(window));
         }
     }
-    
+
     Ok(features)
 }
 
@@ -1417,20 +1415,17 @@ where
 /// # Returns
 ///
 /// * Cepstral coefficients
-pub fn simd_cepstral_analysis_f64(
-    log_spectrum: &[f64],
-    n_coeffs: usize,
-) -> SignalResult<Vec<f64>> {
+pub fn simd_cepstral_analysis_f64(log_spectrum: &[f64], n_coeffs: usize) -> SignalResult<Vec<f64>> {
     if log_spectrum.is_empty() || n_coeffs == 0 || n_coeffs > log_spectrum.len() {
         return Err(SignalError::ValueError(
             "Invalid spectrum or coefficient count".to_string(),
         ));
     }
-    
+
     let n = log_spectrum.len();
     let mut cepstrum = vec![0.0; n_coeffs];
     use std::f64::consts::PI;
-    
+
     // DCT computation using SIMD where possible
     for k in 0..n_coeffs {
         let mut sum = 0.0;
@@ -1440,7 +1435,7 @@ pub fn simd_cepstral_analysis_f64(
         }
         cepstrum[k] = sum * (2.0 / n as f64).sqrt();
     }
-    
+
     Ok(cepstrum)
 }
 
@@ -1448,59 +1443,60 @@ pub fn simd_cepstral_analysis_f64(
 mod tests {
     use super::*;
     use std::f64::consts::PI;
-    
+
     #[test]
     fn test_simd_spectral_centroid() {
         let frequencies: Vec<f64> = (0..100).map(|i| i as f64).collect();
         let spectrum: Vec<f64> = frequencies.iter().map(|&f| (-0.01 * f).exp()).collect();
-        
+
         let centroid = simd_spectral_centroid_f64(&spectrum, &frequencies).unwrap();
         assert!(centroid > 0.0);
         assert!(centroid < 100.0);
     }
-    
+
     #[test]
     fn test_simd_zero_crossing_rate() {
-        let signal: Vec<f64> = (0..100).map(|i| (2.0 * PI * i as f64 / 10.0).sin()).collect();
+        let signal: Vec<f64> = (0..100)
+            .map(|i| (2.0 * PI * i as f64 / 10.0).sin())
+            .collect();
         let zcr = simd_zero_crossing_rate_f64(&signal);
         assert!(zcr > 0.0);
         assert!(zcr < 1.0);
     }
-    
+
     #[test]
     fn test_simd_spectral_flatness() {
         // Flat spectrum should have high flatness
         let flat_spectrum = vec![1.0; 100];
         let flatness = simd_spectral_flatness_f64(&flat_spectrum).unwrap();
         assert!(flatness > 0.9);
-        
+
         // Spiky spectrum should have low flatness
         let mut spiky_spectrum = vec![0.1; 100];
         spiky_spectrum[50] = 10.0;
         let flatness = simd_spectral_flatness_f64(&spiky_spectrum).unwrap();
         assert!(flatness < 0.5);
     }
-    
+
     #[test]
     fn test_simd_realtime_iir() {
         // Simple lowpass biquad coefficients
         let coeffs = vec![0.067455, 0.134911, 0.067455, -0.942809, 0.333333];
         let mut delays = vec![0.0, 0.0];
-        
+
         let output = simd_realtime_iir_f64(1.0, &coeffs, &mut delays).unwrap();
         assert!(output.is_finite());
         assert!(output > 0.0);
     }
-    
+
     #[test]
     fn test_simd_overlap_add() {
         let input = vec![1.0, 0.0, 0.0, 0.0];
         let ir = vec![1.0, 0.5, 0.25];
         let mut overlap = Vec::new();
-        
+
         let output = simd_overlap_add_f64(&input, &ir, &mut overlap).unwrap();
         assert_eq!(output.len(), input.len());
         assert_eq!(output[0], 1.0); // Direct path
     }
 }
-

@@ -105,7 +105,7 @@ pub use algorithms::{
     floyd_warshall_digraph,
     fluid_communities_result,
     greedy_coloring,
-    greedy_modularity_optimization,
+    greedy_modularity_optimization_result,
     hierarchical_communities_result,
     infomap_communities,
     is_bipartite,
@@ -117,6 +117,7 @@ pub use algorithms::{
     line_graph,
     // Community detection algorithms - stable for 1.0
     louvain_communities_result,
+    parallel_louvain_communities_result,
     // Matching algorithms - stable for 1.0
     maximal_matching,
     maximum_bipartite_matching,
@@ -126,7 +127,7 @@ pub use algorithms::{
     minimum_weight_bipartite_matching,
     modularity,
 
-    modularity_optimization,
+    modularity_optimization_result,
     pagerank,
     personalized_pagerank,
     push_relabel_max_flow,
@@ -206,6 +207,24 @@ pub use algorithms::fluid_communities;
 )]
 pub use algorithms::hierarchical_communities;
 
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `modularity_optimization_result` instead"
+)]
+pub use algorithms::modularity_optimization;
+
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `greedy_modularity_optimization_result` instead"
+)]
+pub use algorithms::greedy_modularity_optimization;
+
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `parallel_louvain_communities_result` instead"
+)]
+pub use algorithms::parallel_louvain_communities;
+
 // Attribute system - stable for 1.0
 stable!("graph_attributes", "0.1.0-beta.1");
 pub use attributes::{
@@ -245,7 +264,7 @@ pub use layout::{circular_layout, hierarchical_layout, spectral_layout, spring_l
 stable!("graph_measures", "0.1.0-beta.1");
 pub use measures::{
     centrality, clustering_coefficient, graph_density, hits_algorithm, katz_centrality,
-    katz_centrality_digraph, pagerank_centrality, pagerank_centrality_digraph, 
+    katz_centrality_digraph, pagerank_centrality, pagerank_centrality_digraph,
     parallel_pagerank_centrality, CentralityType, HitsScores,
 };
 

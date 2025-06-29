@@ -104,10 +104,12 @@ impl Default for ThreadPoolConfig {
 impl ThreadPoolConfig {
     /// Create optimized configuration for matrix multiplication workloads
     pub fn for_matrix_multiplication(matrix_size: (usize, usize)) -> Self {
-        let num_cpus = thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
         let (m, n) = matrix_size;
         let total_ops = m * n;
-        
+
         // Optimize based on problem size
         let (threads, stack_size, queue_capacity) = if total_ops > 1_000_000 {
             // Large matrices: use all cores with larger stacks and queues
@@ -136,8 +138,10 @@ impl ThreadPoolConfig {
 
     /// Create optimized configuration for eigenvalue computation
     pub fn for_eigenvalue_computation(matrix_order: usize) -> Self {
-        let num_cpus = thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
-        
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+
         // Eigenvalue problems benefit from fewer threads due to synchronization
         let threads = if matrix_order > 1000 {
             num_cpus
@@ -163,27 +167,33 @@ impl ThreadPoolConfig {
 
     /// Create optimized configuration for decomposition algorithms
     pub fn for_decomposition(decomp_type: DecompositionType, matrix_size: (usize, usize)) -> Self {
-        let num_cpus = thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
         let (m, n) = matrix_size;
         let size = m.max(n);
 
         let (threads, work_stealing, affinity) = match decomp_type {
             DecompositionType::LU => {
                 // LU benefits from sequential processing with some parallelism
-                ((num_cpus * 2) / 3, false, AffinityStrategy::Pinned(vec![0, 1, 2, 3]))
-            },
+                (
+                    (num_cpus * 2) / 3,
+                    false,
+                    AffinityStrategy::Pinned(vec![0, 1, 2, 3]),
+                )
+            }
             DecompositionType::QR => {
                 // QR can use more parallelism due to independent Householder reflections
                 (num_cpus, true, AffinityStrategy::NumaSpread)
-            },
+            }
             DecompositionType::SVD => {
                 // SVD is compute-intensive and benefits from all cores
                 (num_cpus, true, AffinityStrategy::NumaSpread)
-            },
+            }
             DecompositionType::Cholesky => {
                 // Cholesky is inherently sequential but can parallelize column operations
-                ((num_cpus + 1) / 2, false, AffinityStrategy::NumaCompact)
-            },
+                (num_cpus.div_ceil(2), false, AffinityStrategy::NumaCompact)
+            }
         };
 
         Self {
@@ -202,21 +212,23 @@ impl ThreadPoolConfig {
 
     /// Create optimized configuration for iterative solvers
     pub fn for_iterative_solver(problem_size: usize, solver_type: IterativeSolverType) -> Self {
-        let num_cpus = thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
-        
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+
         let (threads, queue_capacity, affinity) = match solver_type {
             IterativeSolverType::ConjugateGradient => {
                 // CG benefits from moderate parallelism
                 ((num_cpus * 3) / 4, 1024, AffinityStrategy::NumaSpread)
-            },
+            }
             IterativeSolverType::GMRES => {
                 // GMRES needs more memory and moderate parallelism
                 (num_cpus / 2, 2048, AffinityStrategy::NumaCompact)
-            },
+            }
             IterativeSolverType::BiCGSTAB => {
                 // BiCGSTAB can use more parallelism
                 (num_cpus, 1024, AffinityStrategy::NumaSpread)
-            },
+            }
         };
 
         Self {
@@ -446,8 +458,8 @@ impl ThreadPoolConfig {
             numa_aware: true,
             work_stealing: true,
             stack_size: Some(4 * 1024 * 1024), // 4MB stack
-            queue_capacity: 2048, // Large queue for convergence iterations
-            idle_timeout: Duration::from_secs(180)
+            queue_capacity: 2048,              // Large queue for convergence iterations
+            idle_timeout: Duration::from_secs(180),
         }
     }
 
@@ -540,7 +552,7 @@ impl ThreadPoolManager {
             let pools = self.pools.read().map_err(|_| {
                 LinalgError::ComputationError("Failed to acquire pool read lock".to_string())
             })?;
-            
+
             if let Some(pool) = pools.get(&profile) {
                 return Ok(Arc::clone(pool));
             }
@@ -570,7 +582,10 @@ impl ThreadPoolManager {
     }
 
     /// Create configuration for a specific profile
-    fn create_config_for_profile(&self, profile: &ThreadPoolProfile) -> LinalgResult<ThreadPoolConfig> {
+    fn create_config_for_profile(
+        &self,
+        profile: &ThreadPoolProfile,
+    ) -> LinalgResult<ThreadPoolConfig> {
         let base_config = match profile {
             ThreadPoolProfile::CpuIntensive => ThreadPoolConfig::cpu_intensive(),
             ThreadPoolProfile::MemoryBound => ThreadPoolConfig::memory_bound(),
@@ -586,9 +601,14 @@ impl ThreadPoolManager {
             ThreadPoolProfile::HybridComputing => ThreadPoolConfig::hybrid_computing(),
             ThreadPoolProfile::Custom(_) => {
                 // Use global config for custom profiles
-                self.global_config.lock().map_err(|_| {
-                    LinalgError::ComputationError("Failed to acquire global config lock".to_string())
-                })?.clone()
+                self.global_config
+                    .lock()
+                    .map_err(|_| {
+                        LinalgError::ComputationError(
+                            "Failed to acquire global config lock".to_string(),
+                        )
+                    })?
+                    .clone()
             }
         };
 
@@ -611,7 +631,10 @@ impl ThreadPoolManager {
 
     /// Get statistics for all pools
     pub fn get_all_stats(&self) -> HashMap<ThreadPoolProfile, ThreadPoolStats> {
-        self.stats.lock().map(|stats| stats.clone()).unwrap_or_default()
+        self.stats
+            .lock()
+            .map(|stats| stats.clone())
+            .unwrap_or_default()
     }
 
     /// Shutdown all pools
@@ -629,8 +652,9 @@ impl ThreadPoolManager {
     }
 
     /// Adaptive pool selection based on workload characteristics
-    pub fn recommend_profile(&self, 
-        matrix_size: usize, 
+    pub fn recommend_profile(
+        &self,
+        matrix_size: usize,
         operation_type: OperationType,
         memory_usage: Option<usize>,
     ) -> ThreadPoolProfile {
@@ -661,22 +685,17 @@ impl ThreadPoolManager {
                     ThreadPoolProfile::LinearAlgebra
                 }
             }
-            OperationType::Solve if matrix_size < 100 => {
-                ThreadPoolProfile::LowLatency
-            }
-            OperationType::Solve => {
-                ThreadPoolProfile::LinearAlgebra
-            }
+            OperationType::Solve if matrix_size < 100 => ThreadPoolProfile::LowLatency,
+            OperationType::Solve => ThreadPoolProfile::LinearAlgebra,
             OperationType::IterativeSolver => {
-                if memory_usage.is_some_and(|mem| mem > 1_000_000_000) { // > 1GB
+                if memory_usage.is_some_and(|mem| mem > 1_000_000_000) {
+                    // > 1GB
                     ThreadPoolProfile::IterativeSolver
                 } else {
                     ThreadPoolProfile::MemoryBound
                 }
             }
-            OperationType::BatchOperations => {
-                ThreadPoolProfile::HighThroughput
-            }
+            OperationType::BatchOperations => ThreadPoolProfile::HighThroughput,
             OperationType::ElementWise => {
                 if matrix_size > 10000 {
                     ThreadPoolProfile::NumaOptimized
@@ -684,12 +703,8 @@ impl ThreadPoolManager {
                     ThreadPoolProfile::CpuIntensive
                 }
             }
-            OperationType::Reduction => {
-                ThreadPoolProfile::CpuIntensive
-            }
-            OperationType::HybridGpuCpu => {
-                ThreadPoolProfile::HybridComputing
-            }
+            OperationType::Reduction => ThreadPoolProfile::CpuIntensive,
+            OperationType::HybridGpuCpu => ThreadPoolProfile::HybridComputing,
         }
     }
 }
@@ -735,15 +750,17 @@ impl ThreadPool {
         for i in 0..config.active_threads {
             let shutdown_clone = Arc::clone(&shutdown);
             let config_clone = config.clone();
-            
+
             let handle = thread::Builder::new()
                 .name(format!("worker-{}", i))
                 .stack_size(config.stack_size.unwrap_or(1024 * 1024))
                 .spawn(move || {
                     Self::worker_thread(i, config_clone, shutdown_clone);
                 })
-                .map_err(|e| LinalgError::ComputationError(format!("Failed to spawn thread: {}", e)))?;
-            
+                .map_err(|e| {
+                    LinalgError::ComputationError(format!("Failed to spawn thread: {}", e))
+                })?;
+
             threads.push(handle);
         }
 
@@ -894,13 +911,13 @@ mod tests {
     #[test]
     fn test_thread_pool_manager() {
         let manager = ThreadPoolManager::new();
-        
+
         let pool = manager.get_pool(ThreadPoolProfile::Balanced);
         assert!(pool.is_ok());
-        
+
         let pool2 = manager.get_pool(ThreadPoolProfile::Balanced);
         assert!(pool2.is_ok());
-        
+
         // Should be the same pool instance
         assert!(Arc::ptr_eq(&pool.unwrap(), &pool2.unwrap()));
     }
@@ -908,19 +925,11 @@ mod tests {
     #[test]
     fn test_profile_recommendation() {
         let manager = ThreadPoolManager::new();
-        
-        let profile = manager.recommend_profile(
-            2000, 
-            OperationType::MatrixMultiplication, 
-            None
-        );
+
+        let profile = manager.recommend_profile(2000, OperationType::MatrixMultiplication, None);
         assert_eq!(profile, ThreadPoolProfile::LinearAlgebra);
-        
-        let profile = manager.recommend_profile(
-            50, 
-            OperationType::Solve, 
-            None
-        );
+
+        let profile = manager.recommend_profile(50, OperationType::Solve, None);
         assert_eq!(profile, ThreadPoolProfile::LowLatency);
     }
 
@@ -929,7 +938,7 @@ mod tests {
         let config = ThreadPoolConfig::default();
         let scoped_pool = ScopedThreadPool::new(config);
         assert!(scoped_pool.is_ok());
-        
+
         // Pool should be automatically cleaned up when dropped
     }
 }

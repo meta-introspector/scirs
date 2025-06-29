@@ -477,7 +477,8 @@ impl<
                 data_flow: DataFlowInfo {
                     tensor_shape: vec![32, 32, 3], // Placeholder
                     data_type: "f32".to_string(),
-                    memory_usage: 4096, // Placeholder
+                    memory_usage: 4096,   // Placeholder
+                    batch_size: Some(32), // Default batch size
                     throughput: Some(ThroughputInfo {
                         samples_per_second: 1000.0,
                         bytes_per_second: 4096000,
@@ -502,14 +503,14 @@ impl<
 
         let mut positions = Vec::new();
         let mut connections = Vec::new();
-        
+
         // Force-directed layout parameters
         let area = 800.0 * 600.0; // Canvas area
         let k = (area / layer_info.len() as f32).sqrt(); // Optimal distance
         let iterations = 100;
         let cooling_factor = 0.95;
         let mut temperature = 100.0;
-        
+
         // Initialize random positions
         let mut node_positions: Vec<Point2D> = (0..layer_info.len())
             .map(|i| Point2D {
@@ -517,78 +518,122 @@ impl<
                 y: ((i / 4) as f32 - 1.5) * 100.0,
             })
             .collect();
-        
+
         // Force-directed algorithm iterations
         for _iteration in 0..iterations {
             let mut forces: Vec<Point2D> = vec![Point2D { x: 0.0, y: 0.0 }; layer_info.len()];
-            
+
             // Calculate repulsive forces between all pairs
             for i in 0..layer_info.len() {
                 for j in (i + 1)..layer_info.len() {
                     let dx = node_positions[i].x - node_positions[j].x;
                     let dy = node_positions[i].y - node_positions[j].y;
                     let distance = (dx * dx + dy * dy).sqrt().max(1.0);
-                    
+
                     let repulsive_force = k * k / distance;
                     let fx = repulsive_force * dx / distance;
                     let fy = repulsive_force * dy / distance;
-                    
+
                     forces[i].x += fx;
                     forces[i].y += fy;
                     forces[j].x -= fx;
                     forces[j].y -= fy;
                 }
             }
-            
+
             // Calculate attractive forces for connected layers (sequential connections)
             for i in 0..(layer_info.len() - 1) {
                 let dx = node_positions[i].x - node_positions[i + 1].x;
                 let dy = node_positions[i].y - node_positions[i + 1].y;
                 let distance = (dx * dx + dy * dy).sqrt().max(1.0);
-                
+
                 let attractive_force = distance * distance / k;
                 let fx = attractive_force * dx / distance;
                 let fy = attractive_force * dy / distance;
-                
+
                 forces[i].x -= fx;
                 forces[i].y -= fy;
                 forces[i + 1].x += fx;
                 forces[i + 1].y += fy;
             }
-            
+
             // Apply forces with temperature cooling
             for i in 0..layer_info.len() {
-                let force_magnitude = (forces[i].x * forces[i].x + forces[i].y * forces[i].y).sqrt();
+                let force_magnitude =
+                    (forces[i].x * forces[i].x + forces[i].y * forces[i].y).sqrt();
                 if force_magnitude > 0.0 {
                     let displacement = temperature.min(force_magnitude);
                     node_positions[i].x += forces[i].x / force_magnitude * displacement;
                     node_positions[i].y += forces[i].y / force_magnitude * displacement;
                 }
             }
-            
+
             temperature *= cooling_factor;
         }
-        
+
         // Create layer positions with visual properties
         for (i, layer) in layer_info.iter().enumerate() {
             let (fill_color, border_color, icon) = match layer.layer_type.as_str() {
-                "Dense" => ("#4CAF50".to_string(), "#2E7D32".to_string(), Some("◯".to_string())),
-                "Conv2D" => ("#2196F3".to_string(), "#1565C0".to_string(), Some("⬜".to_string())),
-                "Conv1D" => ("#03A9F4".to_string(), "#0277BD".to_string(), Some("▬".to_string())),
-                "MaxPool2D" | "AvgPool2D" => ("#FF9800".to_string(), "#E65100".to_string(), Some("▣".to_string())),
-                "Dropout" => ("#9C27B0".to_string(), "#6A1B9A".to_string(), Some("×".to_string())),
-                "BatchNorm" => ("#607D8B".to_string(), "#37474F".to_string(), Some("∼".to_string())),
-                "Activation" => ("#FFC107".to_string(), "#F57C00".to_string(), Some("∘".to_string())),
-                "LSTM" => ("#E91E63".to_string(), "#AD1457".to_string(), Some("⟲".to_string())),
-                "GRU" => ("#8BC34A".to_string(), "#558B2F".to_string(), Some("⟳".to_string())),
-                _ => ("#757575".to_string(), "#424242".to_string(), Some("▢".to_string())),
+                "Dense" => (
+                    "#4CAF50".to_string(),
+                    "#2E7D32".to_string(),
+                    Some("◯".to_string()),
+                ),
+                "Conv2D" => (
+                    "#2196F3".to_string(),
+                    "#1565C0".to_string(),
+                    Some("⬜".to_string()),
+                ),
+                "Conv1D" => (
+                    "#03A9F4".to_string(),
+                    "#0277BD".to_string(),
+                    Some("▬".to_string()),
+                ),
+                "MaxPool2D" | "AvgPool2D" => (
+                    "#FF9800".to_string(),
+                    "#E65100".to_string(),
+                    Some("▣".to_string()),
+                ),
+                "Dropout" => (
+                    "#9C27B0".to_string(),
+                    "#6A1B9A".to_string(),
+                    Some("×".to_string()),
+                ),
+                "BatchNorm" => (
+                    "#607D8B".to_string(),
+                    "#37474F".to_string(),
+                    Some("∼".to_string()),
+                ),
+                "Activation" => (
+                    "#FFC107".to_string(),
+                    "#F57C00".to_string(),
+                    Some("∘".to_string()),
+                ),
+                "LSTM" => (
+                    "#E91E63".to_string(),
+                    "#AD1457".to_string(),
+                    Some("⟲".to_string()),
+                ),
+                "GRU" => (
+                    "#8BC34A".to_string(),
+                    "#558B2F".to_string(),
+                    Some("⟳".to_string()),
+                ),
+                _ => (
+                    "#757575".to_string(),
+                    "#424242".to_string(),
+                    Some("▢".to_string()),
+                ),
             };
-            
+
             let position = LayerPosition {
                 name: layer.layer_name.clone(),
                 layer_type: layer.layer_type.clone(),
                 position: node_positions[i].clone(),
-                size: Size2D { width: 120.0, height: 60.0 },
+                size: Size2D {
+                    width: 120.0,
+                    height: 60.0,
+                },
                 io_info: LayerIOInfo {
                     input_shape: vec![1, 32], // Placeholder
                     output_shape: vec![1, 32],
@@ -603,10 +648,10 @@ impl<
                     icon,
                 },
             };
-            
+
             positions.push(position);
         }
-        
+
         // Create connections between sequential layers
         for i in 0..(layer_info.len() - 1) {
             let connection = Connection {
@@ -616,7 +661,9 @@ impl<
                 data_flow: DataFlowInfo {
                     tensor_shape: vec![1, 32],
                     data_type: "float32".to_string(),
+                    memory_usage: 128, // 1 * 32 * 4 bytes
                     batch_size: Some(1),
+                    throughput: None,
                 },
                 visual_props: ConnectionVisualProps {
                     color: "#666666".to_string(),
@@ -626,10 +673,10 @@ impl<
                     opacity: 0.7,
                 },
             };
-            
+
             connections.push(connection);
         }
-        
+
         Ok((positions, connections))
     }
 
@@ -643,7 +690,7 @@ impl<
 
         let mut positions = Vec::new();
         let mut connections = Vec::new();
-        
+
         // Circular layout parameters
         let radius = if layer_info.len() == 1 {
             50.0
@@ -652,10 +699,10 @@ impl<
             let circumference = layer_info.len() as f32 * 150.0; // 150px minimum spacing
             circumference / (2.0 * std::f32::consts::PI)
         };
-        
+
         let center_x = 0.0;
         let center_y = 0.0;
-        
+
         // Create layer positions around the circle
         for (i, layer) in layer_info.iter().enumerate() {
             let angle = if layer_info.len() == 1 {
@@ -663,29 +710,72 @@ impl<
             } else {
                 2.0 * std::f32::consts::PI * i as f32 / layer_info.len() as f32
             };
-            
+
             let x = center_x + radius * angle.cos();
             let y = center_y + radius * angle.sin();
-            
+
             // Determine layer visual properties based on type
             let (fill_color, border_color, icon) = match layer.layer_type.as_str() {
-                "Dense" => ("#4CAF50".to_string(), "#2E7D32".to_string(), Some("◯".to_string())),
-                "Conv2D" => ("#2196F3".to_string(), "#1565C0".to_string(), Some("⬜".to_string())),
-                "Conv1D" => ("#03A9F4".to_string(), "#0277BD".to_string(), Some("▬".to_string())),
-                "MaxPool2D" | "AvgPool2D" => ("#FF9800".to_string(), "#E65100".to_string(), Some("▣".to_string())),
-                "Dropout" => ("#9C27B0".to_string(), "#6A1B9A".to_string(), Some("×".to_string())),
-                "BatchNorm" => ("#607D8B".to_string(), "#37474F".to_string(), Some("∼".to_string())),
-                "Activation" => ("#FFC107".to_string(), "#F57C00".to_string(), Some("∘".to_string())),
-                "LSTM" => ("#E91E63".to_string(), "#AD1457".to_string(), Some("⟲".to_string())),
-                "GRU" => ("#8BC34A".to_string(), "#558B2F".to_string(), Some("⟳".to_string())),
-                _ => ("#757575".to_string(), "#424242".to_string(), Some("▢".to_string())),
+                "Dense" => (
+                    "#4CAF50".to_string(),
+                    "#2E7D32".to_string(),
+                    Some("◯".to_string()),
+                ),
+                "Conv2D" => (
+                    "#2196F3".to_string(),
+                    "#1565C0".to_string(),
+                    Some("⬜".to_string()),
+                ),
+                "Conv1D" => (
+                    "#03A9F4".to_string(),
+                    "#0277BD".to_string(),
+                    Some("▬".to_string()),
+                ),
+                "MaxPool2D" | "AvgPool2D" => (
+                    "#FF9800".to_string(),
+                    "#E65100".to_string(),
+                    Some("▣".to_string()),
+                ),
+                "Dropout" => (
+                    "#9C27B0".to_string(),
+                    "#6A1B9A".to_string(),
+                    Some("×".to_string()),
+                ),
+                "BatchNorm" => (
+                    "#607D8B".to_string(),
+                    "#37474F".to_string(),
+                    Some("∼".to_string()),
+                ),
+                "Activation" => (
+                    "#FFC107".to_string(),
+                    "#F57C00".to_string(),
+                    Some("∘".to_string()),
+                ),
+                "LSTM" => (
+                    "#E91E63".to_string(),
+                    "#AD1457".to_string(),
+                    Some("⟲".to_string()),
+                ),
+                "GRU" => (
+                    "#8BC34A".to_string(),
+                    "#558B2F".to_string(),
+                    Some("⟳".to_string()),
+                ),
+                _ => (
+                    "#757575".to_string(),
+                    "#424242".to_string(),
+                    Some("▢".to_string()),
+                ),
             };
-            
+
             let position = LayerPosition {
                 name: layer.layer_name.clone(),
                 layer_type: layer.layer_type.clone(),
                 position: Point2D { x, y },
-                size: Size2D { width: 120.0, height: 60.0 },
+                size: Size2D {
+                    width: 120.0,
+                    height: 60.0,
+                },
                 io_info: LayerIOInfo {
                     input_shape: vec![1, 32], // Placeholder
                     output_shape: vec![1, 32],
@@ -700,10 +790,10 @@ impl<
                     icon,
                 },
             };
-            
+
             positions.push(position);
         }
-        
+
         // Create connections between sequential layers
         for i in 0..(layer_info.len() - 1) {
             let connection = Connection {
@@ -713,7 +803,9 @@ impl<
                 data_flow: DataFlowInfo {
                     tensor_shape: vec![1, 32],
                     data_type: "float32".to_string(),
+                    memory_usage: 128, // 1 * 32 * 4 bytes
                     batch_size: Some(1),
+                    throughput: None,
                 },
                 visual_props: ConnectionVisualProps {
                     color: "#666666".to_string(),
@@ -723,10 +815,10 @@ impl<
                     opacity: 0.7,
                 },
             };
-            
+
             connections.push(connection);
         }
-        
+
         // For circular layout, also connect the last layer back to the first (if more than 2 layers)
         if layer_info.len() > 2 {
             let connection = Connection {
@@ -736,7 +828,9 @@ impl<
                 data_flow: DataFlowInfo {
                     tensor_shape: vec![1, 32],
                     data_type: "float32".to_string(),
+                    memory_usage: 128, // 1 * 32 * 4 bytes
                     batch_size: Some(1),
+                    throughput: None,
                 },
                 visual_props: ConnectionVisualProps {
                     color: "#999999".to_string(),
@@ -746,10 +840,10 @@ impl<
                     opacity: 0.5,
                 },
             };
-            
+
             connections.push(connection);
         }
-        
+
         Ok((positions, connections))
     }
 
@@ -763,52 +857,92 @@ impl<
 
         let mut positions = Vec::new();
         let mut connections = Vec::new();
-        
+
         // Grid layout parameters
         let cell_width = 180.0;
         let cell_height = 120.0;
         let margin = 20.0;
-        
+
         // Calculate grid dimensions (prefer square or wide rectangle)
         let total_layers = layer_info.len();
         let grid_cols = (total_layers as f32).sqrt().ceil() as usize;
         let grid_rows = (total_layers as f32 / grid_cols as f32).ceil() as usize;
-        
+
         // Calculate starting position to center the grid
         let total_width = grid_cols as f32 * cell_width;
         let total_height = grid_rows as f32 * cell_height;
         let start_x = -total_width / 2.0 + cell_width / 2.0;
         let start_y = -total_height / 2.0 + cell_height / 2.0;
-        
+
         // Create layer positions in grid formation
         for (i, layer) in layer_info.iter().enumerate() {
             let col = i % grid_cols;
             let row = i / grid_cols;
-            
+
             let x = start_x + col as f32 * cell_width;
             let y = start_y + row as f32 * cell_height;
-            
+
             // Determine layer visual properties based on type
             let (fill_color, border_color, icon) = match layer.layer_type.as_str() {
-                "Dense" => ("#4CAF50".to_string(), "#2E7D32".to_string(), Some("◯".to_string())),
-                "Conv2D" => ("#2196F3".to_string(), "#1565C0".to_string(), Some("⬜".to_string())),
-                "Conv1D" => ("#03A9F4".to_string(), "#0277BD".to_string(), Some("▬".to_string())),
-                "MaxPool2D" | "AvgPool2D" => ("#FF9800".to_string(), "#E65100".to_string(), Some("▣".to_string())),
-                "Dropout" => ("#9C27B0".to_string(), "#6A1B9A".to_string(), Some("×".to_string())),
-                "BatchNorm" => ("#607D8B".to_string(), "#37474F".to_string(), Some("∼".to_string())),
-                "Activation" => ("#FFC107".to_string(), "#F57C00".to_string(), Some("∘".to_string())),
-                "LSTM" => ("#E91E63".to_string(), "#AD1457".to_string(), Some("⟲".to_string())),
-                "GRU" => ("#8BC34A".to_string(), "#558B2F".to_string(), Some("⟳".to_string())),
-                _ => ("#757575".to_string(), "#424242".to_string(), Some("▢".to_string())),
+                "Dense" => (
+                    "#4CAF50".to_string(),
+                    "#2E7D32".to_string(),
+                    Some("◯".to_string()),
+                ),
+                "Conv2D" => (
+                    "#2196F3".to_string(),
+                    "#1565C0".to_string(),
+                    Some("⬜".to_string()),
+                ),
+                "Conv1D" => (
+                    "#03A9F4".to_string(),
+                    "#0277BD".to_string(),
+                    Some("▬".to_string()),
+                ),
+                "MaxPool2D" | "AvgPool2D" => (
+                    "#FF9800".to_string(),
+                    "#E65100".to_string(),
+                    Some("▣".to_string()),
+                ),
+                "Dropout" => (
+                    "#9C27B0".to_string(),
+                    "#6A1B9A".to_string(),
+                    Some("×".to_string()),
+                ),
+                "BatchNorm" => (
+                    "#607D8B".to_string(),
+                    "#37474F".to_string(),
+                    Some("∼".to_string()),
+                ),
+                "Activation" => (
+                    "#FFC107".to_string(),
+                    "#F57C00".to_string(),
+                    Some("∘".to_string()),
+                ),
+                "LSTM" => (
+                    "#E91E63".to_string(),
+                    "#AD1457".to_string(),
+                    Some("⟲".to_string()),
+                ),
+                "GRU" => (
+                    "#8BC34A".to_string(),
+                    "#558B2F".to_string(),
+                    Some("⟳".to_string()),
+                ),
+                _ => (
+                    "#757575".to_string(),
+                    "#424242".to_string(),
+                    Some("▢".to_string()),
+                ),
             };
-            
+
             let position = LayerPosition {
                 name: layer.layer_name.clone(),
                 layer_type: layer.layer_type.clone(),
                 position: Point2D { x, y },
-                size: Size2D { 
-                    width: cell_width - margin, 
-                    height: cell_height - margin 
+                size: Size2D {
+                    width: cell_width - margin,
+                    height: cell_height - margin,
                 },
                 io_info: LayerIOInfo {
                     input_shape: vec![1, 32], // Placeholder
@@ -824,17 +958,17 @@ impl<
                     icon,
                 },
             };
-            
+
             positions.push(position);
         }
-        
+
         // Create connections between sequential layers
         for i in 0..(layer_info.len() - 1) {
             let from_col = i % grid_cols;
             let from_row = i / grid_cols;
             let to_col = (i + 1) % grid_cols;
             let to_row = (i + 1) / grid_cols;
-            
+
             // Determine connection visual style based on grid position relationship
             let (color, style, width) = if from_row == to_row {
                 // Same row - horizontal connection
@@ -846,7 +980,7 @@ impl<
                 // Diagonal connection
                 ("#FF9800".to_string(), LineStyle::Dashed, 2.0)
             };
-            
+
             let connection = Connection {
                 from_layer: i,
                 to_layer: i + 1,
@@ -854,7 +988,9 @@ impl<
                 data_flow: DataFlowInfo {
                     tensor_shape: vec![1, 32],
                     data_type: "float32".to_string(),
+                    memory_usage: 128, // 1 * 32 * 4 bytes
                     batch_size: Some(1),
+                    throughput: None,
                 },
                 visual_props: ConnectionVisualProps {
                     color,
@@ -864,10 +1000,10 @@ impl<
                     opacity: 0.7,
                 },
             };
-            
+
             connections.push(connection);
         }
-        
+
         // Add some additional connections for grid pattern visualization
         // Connect layers in the same row (if there are multiple rows)
         if grid_rows > 1 {
@@ -875,7 +1011,7 @@ impl<
                 for col in 0..(grid_cols - 1) {
                     let from_idx = row * grid_cols + col;
                     let to_idx = row * grid_cols + col + 1;
-                    
+
                     if from_idx < total_layers && to_idx < total_layers && from_idx + 1 != to_idx {
                         let connection = Connection {
                             from_layer: from_idx,
@@ -884,7 +1020,9 @@ impl<
                             data_flow: DataFlowInfo {
                                 tensor_shape: vec![1, 16],
                                 data_type: "float32".to_string(),
+                                memory_usage: 64, // 1 * 16 * 4 bytes
                                 batch_size: Some(1),
+                                throughput: None,
                             },
                             visual_props: ConnectionVisualProps {
                                 color: "#9E9E9E".to_string(),
@@ -894,13 +1032,13 @@ impl<
                                 opacity: 0.4,
                             },
                         };
-                        
+
                         connections.push(connection);
                     }
                 }
             }
         }
-        
+
         Ok((positions, connections))
     }
 
@@ -990,27 +1128,27 @@ impl<
         let viewbox_height = bounds.max_y - bounds.min_y + 2.0 * margin;
 
         let mut svg = format!(
-            r#"<?xml version="1.0" encoding="UTF-8"?>
-<svg width="{}" height="{}" viewBox="{} {} {} {}" xmlns="http://www.w3.org/2000/svg">
-  <title>Neural Network Architecture</title>
-  <defs>
-    <style>
-      .layer-rect {{ stroke-width: 2; }}
-      .connection {{ fill: none; marker-end: url(#arrowhead); }}
-      .layer-text {{ font-family: Arial, sans-serif; font-size: 11px; text-anchor: middle; fill: white; font-weight: bold; }}
-      .layer-info {{ font-family: Arial, sans-serif; font-size: 9px; text-anchor: middle; fill: #333; }}
-      .layer-icon {{ font-family: Arial, sans-serif; font-size: 16px; text-anchor: middle; fill: white; font-weight: bold; }}
-    </style>
-    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#666666"/>
-    </marker>
-  </defs>
-  
-  <!-- Background -->
-  <rect x="{}" y="{}" width="{}" height="{}" fill="#{}" stroke="#{}"/>
-  
-"#,
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+<svg width=\"{}\" height=\"{}\" viewBox=\"{} {} {} {}\" xmlns=\"http://www.w3.org/2000/svg\">\n\
+  <title>Neural Network Architecture</title>\n\
+  <defs>\n\
+    <style>\n\
+      .layer-rect {{ stroke-width: 2; }}\n\
+      .connection {{ fill: none; marker-end: url(#arrowhead); }}\n\
+      .layer-text {{ font-family: Arial, sans-serif; font-size: 11px; text-anchor: middle; fill: white; font-weight: bold; }}\n\
+      .layer-info {{ font-family: Arial, sans-serif; font-size: 9px; text-anchor: middle; fill: #333; }}\n\
+      .layer-icon {{ font-family: Arial, sans-serif; font-size: 16px; text-anchor: middle; fill: white; font-weight: bold; }}\n\
+    </style>\n\
+    <marker id=\"arrowhead\" markerWidth=\"10\" markerHeight=\"7\" refX=\"10\" refY=\"3.5\" orient=\"auto\">\n\
+      <polygon points=\"0 0, 10 3.5, 0 7\" fill=\"#{}\"/>\n\
+    </marker>\n\
+  </defs>\n\
+  \n\
+  <!-- Background -->\n\
+  <rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"#{}\" stroke=\"#{}\"/>\n\
+  \n",
             svg_width, svg_height, viewbox_x, viewbox_y, viewbox_width, viewbox_height,
+            "666666",
             viewbox_x, viewbox_y, viewbox_width, viewbox_height, "f8f9fa", "dee2e6"
         );
 
@@ -1109,15 +1247,14 @@ impl<
         let legend_y = viewbox_y + viewbox_height - 100.0;
 
         svg.push_str(&format!(
-            r#"  <!-- Legend -->
-  <rect x="{}" y="{}" width="200" height="80" fill="white" stroke="#ccc" stroke-width="1" opacity="0.9" rx="5"/>
-  <text x="{}" y="{}" font-family="Arial" font-size="12" font-weight="bold" fill="#333">Legend</text>
-  <text x="{}" y="{}" font-family="Arial" font-size="10" fill="#666">◯ Dense Layer</text>
-  <text x="{}" y="{}" font-family="Arial" font-size="10" fill="#666">⬜ Conv2D Layer</text>
-  <text x="{}" y="{}" font-family="Arial" font-size="10" fill="#666">× Dropout Layer</text>
-  <text x="{}" y="{}" font-family="Arial" font-size="10" fill="#666">∼ BatchNorm Layer</text>
-"#,
-            legend_x, legend_y,
+            "  <!-- Legend -->\n\
+  <rect x=\"{}\" y=\"{}\" width=\"200\" height=\"80\" fill=\"white\" stroke=\"#{}\" stroke-width=\"1\" opacity=\"0.9\" rx=\"5\"/>\n\
+  <text x=\"{}\" y=\"{}\" font-family=\"Arial\" font-size=\"12\" font-weight=\"bold\" fill=\"#333\">Legend</text>\n\
+  <text x=\"{}\" y=\"{}\" font-family=\"Arial\" font-size=\"10\" fill=\"#666\">◯ Dense Layer</text>\n\
+  <text x=\"{}\" y=\"{}\" font-family=\"Arial\" font-size=\"10\" fill=\"#666\">⬜ Conv2D Layer</text>\n\
+  <text x=\"{}\" y=\"{}\" font-family=\"Arial\" font-size=\"10\" fill=\"#666\">× Dropout Layer</text>\n\
+  <text x=\"{}\" y=\"{}\" font-family=\"Arial\" font-size=\"10\" fill=\"#666\">∼ BatchNorm Layer</text>\n",
+            legend_x, legend_y, "ccc",
             legend_x + 10.0, legend_y + 15.0,
             legend_x + 10.0, legend_y + 30.0,
             legend_x + 10.0, legend_y + 45.0,
@@ -1133,9 +1270,10 @@ impl<
     fn create_html_content(&self, layout: &NetworkLayout) -> Result<String> {
         // Generate SVG content for embedding
         let svg_content = self.create_svg_content(layout)?;
-        
+
         // Create the interactive HTML with embedded SVG and JavaScript controls
-        let html_content = format!(r#"<!DOCTYPE html>
+        let html_content = format!(
+            r#"<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">

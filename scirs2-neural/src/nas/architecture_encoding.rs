@@ -195,7 +195,7 @@ impl ArchitectureEncoding for GraphEncoding {
 
     fn mutate(&self, mutation_rate: f32) -> Result<Box<dyn ArchitectureEncoding>> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut mutated = self.clone();
 
         // Mutate nodes
@@ -232,7 +232,7 @@ impl ArchitectureEncoding for GraphEncoding {
         // Try to downcast to GraphEncoding
         if let Some(other_graph) = other.to_string().contains("GraphEncoding").then_some(self) {
             use rand::prelude::*;
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             let mut child = self.clone();
 
@@ -440,7 +440,7 @@ impl ArchitectureEncoding for SequentialEncoding {
 
     fn mutate(&self, mutation_rate: f32) -> Result<Box<dyn ArchitectureEncoding>> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut mutated = self.clone();
 
         // Mutate layers
@@ -489,7 +489,7 @@ impl ArchitectureEncoding for SequentialEncoding {
     fn crossover(&self, other: &dyn ArchitectureEncoding) -> Result<Box<dyn ArchitectureEncoding>> {
         // Try to work with any encoding by using vector representation
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut child = self.clone();
 
@@ -604,7 +604,7 @@ mod tests {
     #[test]
     fn test_random_generation() {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let graph = GraphEncoding::random(&mut rng).unwrap();
         assert!(graph.nodes.len() >= 5);

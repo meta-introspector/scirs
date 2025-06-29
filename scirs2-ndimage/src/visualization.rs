@@ -1834,8 +1834,8 @@ mod tests {
             ..PlotConfig::default()
         };
 
-        let plot = plot_histogram(&data.view(), &config)
-            .expect("plot_histogram should succeed for test");
+        let plot =
+            plot_histogram(&data.view(), &config).expect("plot_histogram should succeed for test");
         assert!(plot.contains("Image Analysis Plot"));
     }
 

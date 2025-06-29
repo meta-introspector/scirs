@@ -24,6 +24,8 @@ thiserror = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
 sha2 = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 num_cpus = "1.16"
 rand_chacha = "0.3"
 rayon = "1.8"

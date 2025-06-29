@@ -12,12 +12,15 @@
 
 use crate::error::InterpolateResult;
 use crate::spatial::{BallTree, KdTree};
-use ndarray::{ArrayView2, Axis};
-use num_traits::{Float, FromPrimitive};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
 
 #[cfg(feature = "simd")]
 use scirs2_core::simd_ops::SimdUnifiedOps;
+
+#[cfg(feature = "parallel")]
+use scirs2_core::parallel_ops::*;
 
 /// Enhanced spatial search interface with multiple optimization strategies
 pub trait OptimizedSpatialSearch<F: Float> {
@@ -94,7 +97,7 @@ impl SimdDistanceOps {
         let n_queries = queries.nrows();
         let n_points = points.nrows();
         let dim = points.ncols();
-        
+
         let mut results = Vec::with_capacity(n_queries);
 
         for query_idx in 0..n_queries {
@@ -104,13 +107,13 @@ impl SimdDistanceOps {
             if F::simd_available() && dim >= 4 && n_points >= 8 {
                 // Process in chunks for better cache utilization
                 const CHUNK_SIZE: usize = 16;
-                
+
                 for chunk_start in (0..n_points).step_by(CHUNK_SIZE) {
                     let chunk_end = (chunk_start + CHUNK_SIZE).min(n_points);
-                    
+
                     for point_idx in chunk_start..chunk_end {
                         let point = points.row(point_idx);
-                        
+
                         // Use SIMD-optimized distance calculation
                         let distance = if dim >= 8 {
                             // For higher dimensions, use vectorized operations
@@ -121,10 +124,10 @@ impl SimdDistanceOps {
                             // Fallback for lower dimensions
                             Self::squared_euclidean_distance(
                                 point.as_slice().unwrap(),
-                                query.as_slice().unwrap()
+                                query.as_slice().unwrap(),
                             )
                         };
-                        
+
                         distances.push(distance);
                     }
                 }
@@ -134,12 +137,12 @@ impl SimdDistanceOps {
                     let point = points.row(point_idx);
                     let distance = Self::squared_euclidean_distance(
                         point.as_slice().unwrap(),
-                        query.as_slice().unwrap()
+                        query.as_slice().unwrap(),
                     );
                     distances.push(distance);
                 }
             }
-            
+
             results.push(distances);
         }
 
@@ -157,10 +160,10 @@ impl SimdDistanceOps {
         F: Float + FromPrimitive + SimdUnifiedOps + Debug + Send + Sync,
     {
         use scirs2_core::parallel_ops::*;
-        
+
         let n_queries = queries.nrows();
         let chunk_size = (n_queries / num_threads.unwrap_or(4)).max(1);
-        
+
         // Parallel processing of query chunks
         (0..n_queries)
             .into_par_iter()

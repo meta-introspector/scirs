@@ -5,7 +5,7 @@
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::wpt::{wpt_decompose, wpt_reconstruct, WaveletPacketTree};
+use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;

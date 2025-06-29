@@ -882,9 +882,7 @@ impl AdaptiveOptimizer {
         };
 
         if let Ok(mut history) = self.performance_history.lock() {
-            let workload_metrics = history
-                .entry(workload.to_string())
-                .or_default();
+            let workload_metrics = history.entry(workload.to_string()).or_default();
             workload_metrics.push_back(metric);
 
             // Limit history size

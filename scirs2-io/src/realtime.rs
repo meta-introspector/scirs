@@ -60,6 +60,12 @@ use tokio::sync::{broadcast, mpsc, RwLock};
 use tokio::time::{interval, sleep};
 use url;
 
+#[cfg(feature = "websocket")]
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
+
+#[cfg(feature = "sse")]
+use futures::StreamExt;
+
 /// Streaming protocol types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Protocol {
@@ -214,7 +220,7 @@ impl StreamClient {
             // Add timeout for total connection time (5 minutes max)
             if start_time.elapsed() > Duration::from_secs(300) {
                 return Err(IoError::TimeoutError(
-                    "Connection timeout: exceeded maximum connection time of 5 minutes".to_string()
+                    "Connection timeout: exceeded maximum connection time of 5 minutes".to_string(),
                 ));
             }
 
@@ -223,23 +229,28 @@ impl StreamClient {
                     Ok(()) => {
                         self.connection = Some(conn);
                         self.metrics.write().await.successful_connections += 1;
-                        
+
                         // Log successful connection for debugging
                         if attempts > 1 {
-                            println!("Successfully connected after {} attempts in {:.2}s", 
-                                   attempts, start_time.elapsed().as_secs_f64());
+                            println!(
+                                "Successfully connected after {} attempts in {:.2}s",
+                                attempts,
+                                start_time.elapsed().as_secs_f64()
+                            );
                         }
                         return Ok(());
                     }
                     Err(e)
                         if self.config.reconnect && attempts < self.config.backoff.max_retries =>
                     {
-                        eprintln!("Connection failed (attempt {}/{}): {}", 
-                                attempts, self.config.backoff.max_retries, e);
+                        eprintln!(
+                            "Connection failed (attempt {}/{}): {}",
+                            attempts, self.config.backoff.max_retries, e
+                        );
                         sleep(delay).await;
                         delay = Duration::from_secs_f64(
                             (delay.as_secs_f64() * self.config.backoff.multiplier)
-                                .min(self.config.backoff.max_delay.as_secs_f64())
+                                .min(self.config.backoff.max_delay.as_secs_f64()),
                         );
                     }
                     Err(e) => return Err(e),
@@ -499,7 +510,11 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
 /// WebSocket connection implementation
 struct WebSocketConnection {
     config: StreamConfig,
-    ws_stream: Option<tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>>,
+    ws_stream: Option<
+        tokio_tungstenite::WebSocketStream<
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+        >,
+    >,
     connected: bool,
 }
 
@@ -517,39 +532,41 @@ impl WebSocketConnection {
 impl StreamConnection for WebSocketConnection {
     async fn connect(&mut self) -> Result<()> {
         use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
-        
+
         let url = url::Url::parse(&self.config.endpoint)
             .map_err(|e| IoError::ParseError(format!("Invalid WebSocket URL: {}", e)))?;
-        
-        let (ws_stream, _response) = tokio::time::timeout(
-            self.config.timeout,
-            connect_async(url)
-        ).await
+
+        let (ws_stream, _response) = tokio::time::timeout(self.config.timeout, connect_async(url))
+            .await
             .map_err(|_| IoError::TimeoutError("WebSocket connection timeout".to_string()))?
             .map_err(|e| IoError::NetworkError(format!("WebSocket connection failed: {}", e)))?;
-        
+
         self.ws_stream = Some(ws_stream);
         self.connected = true;
         Ok(())
     }
 
     async fn receive(&mut self) -> Result<Vec<u8>> {
-        use tokio_tungstenite::tungstenite::protocol::Message;
         use futures::SinkExt;
-        
+        use tokio_tungstenite::tungstenite::protocol::Message;
+
         if !self.connected || self.ws_stream.is_none() {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
-        
+
         if let Some(ws_stream) = &mut self.ws_stream {
             match tokio::time::timeout(self.config.timeout, ws_stream.next()).await {
                 Ok(Some(msg_result)) => {
-                    match msg_result.map_err(|e| IoError::NetworkError(format!("WebSocket receive error: {}", e)))? {
+                    match msg_result.map_err(|e| {
+                        IoError::NetworkError(format!("WebSocket receive error: {}", e))
+                    })? {
                         Message::Binary(data) => Ok(data),
                         Message::Text(text) => Ok(text.into_bytes()),
                         Message::Close(_) => {
                             self.connected = false;
-                            Err(IoError::NetworkError("WebSocket connection closed by peer".to_string()))
+                            Err(IoError::NetworkError(
+                                "WebSocket connection closed by peer".to_string(),
+                            ))
                         }
                         Message::Ping(data) => {
                             // Respond to ping with pong
@@ -569,40 +586,46 @@ impl StreamConnection for WebSocketConnection {
                     self.connected = false;
                     Err(IoError::NetworkError("WebSocket stream ended".to_string()))
                 }
-                Err(_) => {
-                    Err(IoError::TimeoutError("WebSocket receive timeout".to_string()))
-                }
+                Err(_) => Err(IoError::TimeoutError(
+                    "WebSocket receive timeout".to_string(),
+                )),
             }
         } else {
-            Err(IoError::ParseError("WebSocket stream not initialized".to_string()))
+            Err(IoError::ParseError(
+                "WebSocket stream not initialized".to_string(),
+            ))
         }
     }
 
     async fn send(&mut self, data: &[u8]) -> Result<()> {
-        use tokio_tungstenite::tungstenite::protocol::Message;
         use futures::SinkExt;
-        
+        use tokio_tungstenite::tungstenite::protocol::Message;
+
         if !self.connected || self.ws_stream.is_none() {
             return Err(IoError::FileError("Not connected".to_string()));
         }
-        
+
         if let Some(ws_stream) = &mut self.ws_stream {
             let message = match self.config.format {
                 DataFormat::Binary => Message::Binary(data.to_vec()),
-                DataFormat::Json => Message::Text(
-                    String::from_utf8(data.to_vec())
-                        .map_err(|e| IoError::ParseError(format!("Invalid UTF-8 for JSON: {}", e)))?
-                ),
+                DataFormat::Json => {
+                    Message::Text(String::from_utf8(data.to_vec()).map_err(|e| {
+                        IoError::ParseError(format!("Invalid UTF-8 for JSON: {}", e))
+                    })?)
+                }
                 _ => Message::Binary(data.to_vec()),
             };
-            
-            tokio::time::timeout(self.config.timeout, ws_stream.send(message)).await
+
+            tokio::time::timeout(self.config.timeout, ws_stream.send(message))
+                .await
                 .map_err(|_| IoError::TimeoutError("WebSocket send timeout".to_string()))?
                 .map_err(|e| IoError::NetworkError(format!("WebSocket send error: {}", e)))?;
-            
+
             Ok(())
         } else {
-            Err(IoError::ParseError("WebSocket stream not initialized".to_string()))
+            Err(IoError::ParseError(
+                "WebSocket stream not initialized".to_string(),
+            ))
         }
     }
 
@@ -611,9 +634,9 @@ impl StreamConnection for WebSocketConnection {
     }
 
     async fn close(&mut self) -> Result<()> {
-        use tokio_tungstenite::tungstenite::protocol::Message;
         use futures::SinkExt;
-        
+        use tokio_tungstenite::tungstenite::protocol::Message;
+
         if let Some(ws_stream) = &mut self.ws_stream {
             let _ = ws_stream.send(Message::Close(None)).await;
             let _ = ws_stream.close().await;
@@ -645,18 +668,19 @@ impl TcpConnection {
 impl StreamConnection for TcpConnection {
     async fn connect(&mut self) -> Result<()> {
         use tokio::net::TcpStream;
-        
+
         // Parse endpoint address
-        let addr = self.config.endpoint.parse::<std::net::SocketAddr>()
+        let addr = self
+            .config
+            .endpoint
+            .parse::<std::net::SocketAddr>()
             .map_err(|e| IoError::ParseError(format!("Invalid TCP address: {}", e)))?;
-        
-        let stream = tokio::time::timeout(
-            self.config.timeout,
-            TcpStream::connect(addr)
-        ).await
+
+        let stream = tokio::time::timeout(self.config.timeout, TcpStream::connect(addr))
+            .await
             .map_err(|_| IoError::TimeoutError("TCP connection timeout".to_string()))?
             .map_err(|e| IoError::NetworkError(format!("TCP connection failed: {}", e)))?;
-        
+
         self.stream = Some(stream);
         self.connected = true;
         Ok(())
@@ -664,19 +688,21 @@ impl StreamConnection for TcpConnection {
 
     async fn receive(&mut self) -> Result<Vec<u8>> {
         use tokio::io::{AsyncReadExt, BufReader};
-        
+
         if !self.connected || self.stream.is_none() {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
-        
+
         if let Some(stream) = &mut self.stream {
             let mut buffer = vec![0u8; self.config.buffer_size];
-            
+
             match tokio::time::timeout(self.config.timeout, stream.read(&mut buffer)).await {
                 Ok(Ok(bytes_read)) => {
                     if bytes_read == 0 {
                         self.connected = false;
-                        return Err(IoError::NetworkError("TCP connection closed by peer".to_string()));
+                        return Err(IoError::NetworkError(
+                            "TCP connection closed by peer".to_string(),
+                        ));
                     }
                     buffer.truncate(bytes_read);
                     Ok(buffer)
@@ -685,35 +711,39 @@ impl StreamConnection for TcpConnection {
                     self.connected = false;
                     Err(IoError::NetworkError(format!("TCP read error: {}", e)))
                 }
-                Err(_) => {
-                    Err(IoError::TimeoutError("TCP receive timeout".to_string()))
-                }
+                Err(_) => Err(IoError::TimeoutError("TCP receive timeout".to_string())),
             }
         } else {
-            Err(IoError::ParseError("TCP stream not initialized".to_string()))
+            Err(IoError::ParseError(
+                "TCP stream not initialized".to_string(),
+            ))
         }
     }
 
     async fn send(&mut self, data: &[u8]) -> Result<()> {
         use tokio::io::AsyncWriteExt;
-        
+
         if !self.connected || self.stream.is_none() {
             return Err(IoError::FileError("Not connected".to_string()));
         }
-        
+
         if let Some(stream) = &mut self.stream {
-            tokio::time::timeout(self.config.timeout, stream.write_all(data)).await
+            tokio::time::timeout(self.config.timeout, stream.write_all(data))
+                .await
                 .map_err(|_| IoError::TimeoutError("TCP send timeout".to_string()))?
                 .map_err(|e| IoError::NetworkError(format!("TCP write error: {}", e)))?;
-            
+
             // Ensure data is flushed
-            tokio::time::timeout(self.config.timeout, stream.flush()).await
+            tokio::time::timeout(self.config.timeout, stream.flush())
+                .await
                 .map_err(|_| IoError::TimeoutError("TCP flush timeout".to_string()))?
                 .map_err(|e| IoError::NetworkError(format!("TCP flush error: {}", e)))?;
-            
+
             Ok(())
         } else {
-            Err(IoError::ParseError("TCP stream not initialized".to_string()))
+            Err(IoError::ParseError(
+                "TCP stream not initialized".to_string(),
+            ))
         }
     }
 
@@ -723,7 +753,7 @@ impl StreamConnection for TcpConnection {
 
     async fn close(&mut self) -> Result<()> {
         use tokio::io::AsyncWriteExt;
-        
+
         if let Some(mut stream) = self.stream.take() {
             let _ = stream.shutdown().await;
         }
@@ -737,6 +767,10 @@ struct SSEConnection {
     config: StreamConfig,
     connected: bool,
     event_buffer: VecDeque<String>,
+    #[cfg(feature = "sse")]
+    client: Option<eventsource_client::Client>,
+    #[cfg(feature = "sse")]
+    receiver: Option<tokio::sync::mpsc::Receiver<eventsource_client::SSE>>,
 }
 
 impl SSEConnection {
@@ -745,6 +779,10 @@ impl SSEConnection {
             config: config.clone(),
             connected: false,
             event_buffer: VecDeque::new(),
+            #[cfg(feature = "sse")]
+            client: None,
+            #[cfg(feature = "sse")]
+            receiver: None,
         }
     }
 }
@@ -752,9 +790,52 @@ impl SSEConnection {
 #[async_trait::async_trait]
 impl StreamConnection for SSEConnection {
     async fn connect(&mut self) -> Result<()> {
-        // In real implementation, would create HTTP connection with text/event-stream
-        self.connected = true;
-        Ok(())
+        #[cfg(feature = "sse")]
+        {
+            use eventsource_client::Client;
+            use tokio::sync::mpsc;
+
+            let url = url::Url::parse(&self.config.endpoint)
+                .map_err(|e| IoError::ParseError(format!("Invalid SSE URL: {}", e)))?;
+
+            let (sender, receiver) = mpsc::channel(self.config.buffer_size);
+
+            let client = Client::for_url(&url.to_string())
+                .map_err(|e| IoError::NetworkError(format!("SSE client creation failed: {}", e)))?
+                .header("Cache-Control", "no-cache")
+                .header("Accept", "text/event-stream")
+                .reconnect(
+                    eventsource_client::ReconnectOptions::reconnect(true)
+                        .retry_initial(true)
+                        .delay(self.config.backoff.initial_delay)
+                        .backoff_factor(self.config.backoff.multiplier)
+                        .delay_max(self.config.backoff.max_delay)
+                        .max_retries(self.config.backoff.max_retries),
+                );
+
+            // Start the SSE stream
+            let stream = client.stream();
+            tokio::spawn(async move {
+                let mut stream = stream;
+                while let Some(event) = stream.next().await {
+                    if sender.send(event).await.is_err() {
+                        break;
+                    }
+                }
+            });
+
+            self.client = Some(client);
+            self.receiver = Some(receiver);
+            self.connected = true;
+            Ok(())
+        }
+
+        #[cfg(not(feature = "sse"))]
+        {
+            // Fallback implementation without eventsource-client
+            self.connected = true;
+            Ok(())
+        }
     }
 
     async fn receive(&mut self) -> Result<Vec<u8>> {
@@ -762,15 +843,55 @@ impl StreamConnection for SSEConnection {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
 
-        // In real implementation, would parse SSE format (data: , event: , id: , retry:)
-        let event_data = format!(
-            "data: {{\"timestamp\": {}, \"value\": 42.0}}\n\n",
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
-        );
-        Ok(event_data.into_bytes())
+        #[cfg(feature = "sse")]
+        {
+            if let Some(receiver) = &mut self.receiver {
+                match tokio::time::timeout(self.config.timeout, receiver.recv()).await {
+                    Ok(Some(event)) => {
+                        match event {
+                            Ok(sse_event) => {
+                                let event_type = sse_event
+                                    .event_type
+                                    .unwrap_or_else(|| "message".to_string());
+                                let data = sse_event.data;
+
+                                // Format as SSE protocol: event: type\ndata: content\n\n
+                                let formatted = if event_type == "message" {
+                                    format!("data: {}\n\n", data)
+                                } else {
+                                    format!("event: {}\ndata: {}\n\n", event_type, data)
+                                };
+
+                                Ok(formatted.into_bytes())
+                            }
+                            Err(e) => Err(IoError::NetworkError(format!("SSE event error: {}", e))),
+                        }
+                    }
+                    Ok(None) => {
+                        self.connected = false;
+                        Err(IoError::NetworkError("SSE stream ended".to_string()))
+                    }
+                    Err(_) => Err(IoError::TimeoutError("SSE receive timeout".to_string())),
+                }
+            } else {
+                Err(IoError::ParseError(
+                    "SSE receiver not initialized".to_string(),
+                ))
+            }
+        }
+
+        #[cfg(not(feature = "sse"))]
+        {
+            // Fallback: simulate SSE event data
+            let event_data = format!(
+                "data: {{\"timestamp\": {}, \"value\": 42.0}}\n\n",
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs()
+            );
+            Ok(event_data.into_bytes())
+        }
     }
 
     async fn send(&mut self, _data: &[u8]) -> Result<()> {
@@ -785,6 +906,13 @@ impl StreamConnection for SSEConnection {
     }
 
     async fn close(&mut self) -> Result<()> {
+        #[cfg(feature = "sse")]
+        {
+            // Close SSE client connection
+            self.client = None;
+            self.receiver = None;
+        }
+
         self.connected = false;
         Ok(())
     }
@@ -795,6 +923,10 @@ struct GrpcStreamConnection {
     config: StreamConfig,
     connected: bool,
     sequence_id: u64,
+    #[cfg(feature = "grpc")]
+    channel: Option<tonic::transport::Channel>,
+    #[cfg(feature = "grpc")]
+    metadata: Option<tonic::metadata::MetadataMap>,
 }
 
 impl GrpcStreamConnection {
@@ -803,6 +935,10 @@ impl GrpcStreamConnection {
             config: config.clone(),
             connected: false,
             sequence_id: 0,
+            #[cfg(feature = "grpc")]
+            channel: None,
+            #[cfg(feature = "grpc")]
+            metadata: None,
         }
     }
 }
@@ -810,9 +946,37 @@ impl GrpcStreamConnection {
 #[async_trait::async_trait]
 impl StreamConnection for GrpcStreamConnection {
     async fn connect(&mut self) -> Result<()> {
-        // In real implementation, would establish gRPC channel
-        self.connected = true;
-        Ok(())
+        #[cfg(feature = "grpc")]
+        {
+            use tonic::metadata::MetadataMap;
+            use tonic::transport::{Channel, Endpoint};
+
+            let endpoint = Endpoint::from_shared(self.config.endpoint.clone())
+                .map_err(|e| IoError::ParseError(format!("Invalid gRPC endpoint: {}", e)))?
+                .timeout(self.config.timeout)
+                .connect_timeout(self.config.timeout);
+
+            let channel = tokio::time::timeout(self.config.timeout, endpoint.connect())
+                .await
+                .map_err(|_| IoError::TimeoutError("gRPC connection timeout".to_string()))?
+                .map_err(|e| IoError::NetworkError(format!("gRPC connection failed: {}", e)))?;
+
+            // Set up default metadata
+            let mut metadata = MetadataMap::new();
+            metadata.insert("content-type", "application/grpc".parse().unwrap());
+
+            self.channel = Some(channel);
+            self.metadata = Some(metadata);
+            self.connected = true;
+            Ok(())
+        }
+
+        #[cfg(not(feature = "grpc"))]
+        {
+            // Fallback implementation without tonic
+            self.connected = true;
+            Ok(())
+        }
     }
 
     async fn receive(&mut self) -> Result<Vec<u8>> {
@@ -820,13 +984,42 @@ impl StreamConnection for GrpcStreamConnection {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
 
-        // In real implementation, would receive protobuf messages
-        self.sequence_id += 1;
-        let data = format!(
-            "{{\"seq\": {}, \"data\": [1.0, 2.0, 3.0]}}",
-            self.sequence_id
-        );
-        Ok(data.into_bytes())
+        #[cfg(feature = "grpc")]
+        {
+            // In a real implementation, this would use a generated gRPC client
+            // to receive streaming data. For now, we'll simulate the structure.
+            self.sequence_id += 1;
+
+            // Create a simple protobuf-like message structure
+            let message = serde_json::json!({
+                "sequence_id": self.sequence_id,
+                "timestamp": std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis() as u64,
+                "data": {
+                    "values": [1.0, 2.0, 3.0, 4.0, 5.0],
+                    "metadata": {
+                        "source": "sensor",
+                        "unit": "celsius"
+                    }
+                }
+            });
+
+            // In real implementation, this would be serialized protobuf
+            Ok(message.to_string().into_bytes())
+        }
+
+        #[cfg(not(feature = "grpc"))]
+        {
+            // Fallback: simulate gRPC message
+            self.sequence_id += 1;
+            let data = format!(
+                "{{\"seq\": {}, \"data\": [1.0, 2.0, 3.0]}}",
+                self.sequence_id
+            );
+            Ok(data.into_bytes())
+        }
     }
 
     async fn send(&mut self, data: &[u8]) -> Result<()> {
@@ -834,9 +1027,33 @@ impl StreamConnection for GrpcStreamConnection {
             return Err(IoError::FileError("Not connected".to_string()));
         }
 
-        // In real implementation, would send protobuf message via gRPC
-        let _message_size = data.len();
-        Ok(())
+        #[cfg(feature = "grpc")]
+        {
+            if let Some(_channel) = &self.channel {
+                // In a real implementation, this would use a generated gRPC client
+                // to send the data via a streaming RPC call
+
+                // Validate the data can be parsed as JSON (for this example)
+                let _json_data: serde_json::Value = serde_json::from_slice(data).map_err(|e| {
+                    IoError::ParseError(format!("Invalid JSON data for gRPC: {}", e))
+                })?;
+
+                // Simulate gRPC send operation
+                tokio::time::sleep(Duration::from_millis(10)).await;
+                Ok(())
+            } else {
+                Err(IoError::ParseError(
+                    "gRPC channel not initialized".to_string(),
+                ))
+            }
+        }
+
+        #[cfg(not(feature = "grpc"))]
+        {
+            // Fallback: simulate send operation
+            let _message_size = data.len();
+            Ok(())
+        }
     }
 
     fn is_connected(&self) -> bool {
@@ -844,6 +1061,12 @@ impl StreamConnection for GrpcStreamConnection {
     }
 
     async fn close(&mut self) -> Result<()> {
+        #[cfg(feature = "grpc")]
+        {
+            self.channel = None;
+            self.metadata = None;
+        }
+
         self.connected = false;
         Ok(())
     }
@@ -853,13 +1076,14 @@ impl StreamConnection for GrpcStreamConnection {
 struct MqttConnection {
     config: StreamConfig,
     client_id: String,
-    topic: String, 
+    topic: String,
     qos: u8,
     connected: bool,
     message_queue: Arc<Mutex<VecDeque<Vec<u8>>>>,
-    // In real implementation, would hold MQTT client handle
-    // client: Option<rumqttc::AsyncClient>,
-    // eventloop: Option<rumqttc::EventLoop>,
+    #[cfg(feature = "mqtt")]
+    client: Option<rumqttc::AsyncClient>,
+    #[cfg(feature = "mqtt")]
+    eventloop: Option<rumqttc::EventLoop>,
 }
 
 impl MqttConnection {
@@ -872,7 +1096,7 @@ impl MqttConnection {
                 .unwrap()
                 .as_millis()
         );
-        
+
         Self {
             config: config.clone(),
             client_id,
@@ -880,6 +1104,10 @@ impl MqttConnection {
             qos: 1, // At least once delivery
             connected: false,
             message_queue: Arc::new(Mutex::new(VecDeque::new())),
+            #[cfg(feature = "mqtt")]
+            client: None,
+            #[cfg(feature = "mqtt")]
+            eventloop: None,
         }
     }
 }
@@ -891,45 +1119,52 @@ impl StreamConnection for MqttConnection {
         // Format: mqtt://[username:password@]host:port[/topic]
         let url = url::Url::parse(&self.config.endpoint)
             .map_err(|e| IoError::ParseError(format!("Invalid MQTT URL: {}", e)))?;
-        
-        let host = url.host_str()
+
+        let host = url
+            .host_str()
             .ok_or_else(|| IoError::ParseError("MQTT URL missing host".to_string()))?;
         let port = url.port().unwrap_or(1883);
-        
+
         // Extract topic from path if provided
         if !url.path().is_empty() && url.path() != "/" {
             self.topic = url.path().trim_start_matches('/').to_string();
         }
-        
-        // In real implementation, would use rumqttc or similar MQTT client
-        /*
-        let mut mqttoptions = rumqttc::MqttOptions::new(&self.client_id, host, port);
-        
-        if let Some(password) = url.password() {
-            let username = url.username();
-            if !username.is_empty() {
-                mqttoptions.set_credentials(username, password);
+
+        #[cfg(feature = "mqtt")]
+        {
+            let mut mqttoptions = rumqttc::MqttOptions::new(&self.client_id, host, port);
+
+            if let Some(password) = url.password() {
+                let username = url.username();
+                if !username.is_empty() {
+                    mqttoptions.set_credentials(username, password);
+                }
             }
+
+            mqttoptions.set_keep_alive(Duration::from_secs(60));
+            mqttoptions.set_connection_timeout(self.config.timeout);
+
+            let (client, eventloop) = rumqttc::AsyncClient::new(mqttoptions, 10);
+
+            // Subscribe to the topic
+            client
+                .subscribe(&self.topic, rumqttc::QoS::AtLeastOnce)
+                .await
+                .map_err(|e| IoError::NetworkError(format!("MQTT subscribe error: {}", e)))?;
+
+            self.client = Some(client);
+            self.eventloop = Some(eventloop);
+            self.connected = true;
+            Ok(())
         }
-        
-        mqttoptions.set_keep_alive(Duration::from_secs(60));
-        mqttoptions.set_connection_timeout(self.config.timeout);
-        
-        let (client, mut eventloop) = rumqttc::AsyncClient::new(mqttoptions, 10);
-        
-        // Connect and subscribe
-        client.connect().await.map_err(|e| IoError::NetworkError(format!("MQTT connect error: {}", e)))?;
-        client.subscribe(&self.topic, rumqttc::QoS::AtLeastOnce).await
-            .map_err(|e| IoError::NetworkError(format!("MQTT subscribe error: {}", e)))?;
-        
-        self.client = Some(client);
-        self.eventloop = Some(eventloop);
-        */
-        
-        // Placeholder implementation
-        tokio::time::sleep(Duration::from_millis(100)).await; // Simulate connection time
-        self.connected = true;
-        Ok(())
+
+        #[cfg(not(feature = "mqtt"))]
+        {
+            // Fallback implementation without rumqttc
+            tokio::time::sleep(Duration::from_millis(100)).await; // Simulate connection time
+            self.connected = true;
+            Ok(())
+        }
     }
 
     async fn receive(&mut self) -> Result<Vec<u8>> {
@@ -937,30 +1172,39 @@ impl StreamConnection for MqttConnection {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
 
-        // In real implementation, would poll the event loop for incoming messages
-        /*
-        if let Some(eventloop) = &mut self.eventloop {
-            match tokio::time::timeout(self.config.timeout, eventloop.poll()).await {
-                Ok(Ok(event)) => {
-                    match event {
-                        rumqttc::Event::Incoming(rumqttc::Packet::Publish(publish)) => {
-                            return Ok(publish.payload.to_vec());
-                        }
-                        _ => {
-                            // Handle other events (connection, ping, etc.)
+        #[cfg(feature = "mqtt")]
+        {
+            if let Some(eventloop) = &mut self.eventloop {
+                match tokio::time::timeout(self.config.timeout, eventloop.poll()).await {
+                    Ok(Ok(event)) => {
+                        match event {
+                            rumqttc::Event::Incoming(rumqttc::Packet::Publish(publish)) => {
+                                return Ok(publish.payload.to_vec());
+                            }
+                            rumqttc::Event::Incoming(rumqttc::Packet::ConnAck(_)) => {
+                                // Connection acknowledged, continue polling
+                            }
+                            rumqttc::Event::Incoming(rumqttc::Packet::SubAck(_)) => {
+                                // Subscription acknowledged, continue polling
+                            }
+                            rumqttc::Event::Incoming(rumqttc::Packet::PingResp) => {
+                                // Ping response, continue polling
+                            }
+                            _ => {
+                                // Handle other events (connection, ping, etc.)
+                            }
                         }
                     }
-                }
-                Ok(Err(e)) => {
-                    return Err(IoError::NetworkError(format!("MQTT receive error: {}", e)));
-                }
-                Err(_) => {
-                    return Err(IoError::TimeoutError("MQTT receive timeout".to_string()));
+                    Ok(Err(e)) => {
+                        return Err(IoError::NetworkError(format!("MQTT receive error: {}", e)));
+                    }
+                    Err(_) => {
+                        return Err(IoError::TimeoutError("MQTT receive timeout".to_string()));
+                    }
                 }
             }
         }
-        */
-        
+
         // Check local message queue first
         if let Ok(mut queue) = self.message_queue.lock() {
             if let Some(message) = queue.pop_front() {
@@ -983,7 +1227,7 @@ impl StreamConnection for MqttConnection {
                 "pressure": 1013.25 + (rand::random::<f64>() - 0.5) * 50.0
             }
         });
-        
+
         Ok(sensor_data.to_string().into_bytes())
     }
 
@@ -992,26 +1236,30 @@ impl StreamConnection for MqttConnection {
             return Err(IoError::FileError("Not connected".to_string()));
         }
 
-        // In real implementation, would publish to MQTT topic
-        /*
-        if let Some(client) = &self.client {
-            let qos = match self.qos {
-                0 => rumqttc::QoS::AtMostOnce,
-                1 => rumqttc::QoS::AtLeastOnce,
-                2 => rumqttc::QoS::ExactlyOnce,
-                _ => rumqttc::QoS::AtLeastOnce,
-            };
-            
-            client.publish(&self.topic, qos, false, data).await
-                .map_err(|e| IoError::NetworkError(format!("MQTT publish error: {}", e)))?;
+        #[cfg(feature = "mqtt")]
+        {
+            if let Some(client) = &self.client {
+                let qos = match self.qos {
+                    0 => rumqttc::QoS::AtMostOnce,
+                    1 => rumqttc::QoS::AtLeastOnce,
+                    2 => rumqttc::QoS::ExactlyOnce,
+                    _ => rumqttc::QoS::AtLeastOnce,
+                };
+
+                client
+                    .publish(&self.topic, qos, false, data)
+                    .await
+                    .map_err(|e| IoError::NetworkError(format!("MQTT publish error: {}", e)))?;
+
+                return Ok(());
+            }
         }
-        */
-        
+
         // Placeholder: Add to local queue for testing
         if let Ok(mut queue) = self.message_queue.lock() {
             queue.push_back(data.to_vec());
         }
-        
+
         Ok(())
     }
 
@@ -1020,15 +1268,18 @@ impl StreamConnection for MqttConnection {
     }
 
     async fn close(&mut self) -> Result<()> {
-        // In real implementation, would disconnect client
-        /*
-        if let Some(client) = &self.client {
-            client.disconnect().await.map_err(|e| IoError::NetworkError(format!("MQTT disconnect error: {}", e)))?;
+        #[cfg(feature = "mqtt")]
+        {
+            if let Some(client) = &self.client {
+                client
+                    .disconnect()
+                    .await
+                    .map_err(|e| IoError::NetworkError(format!("MQTT disconnect error: {}", e)))?;
+            }
+            self.client = None;
+            self.eventloop = None;
         }
-        self.client = None;
-        self.eventloop = None;
-        */
-        
+
         self.connected = false;
         Ok(())
     }
@@ -1059,25 +1310,31 @@ impl UdpConnection {
 impl StreamConnection for UdpConnection {
     async fn connect(&mut self) -> Result<()> {
         use tokio::net::UdpSocket;
-        
+
         // Parse remote address from endpoint
-        let remote_addr = self.config.endpoint.parse::<std::net::SocketAddr>()
+        let remote_addr = self
+            .config
+            .endpoint
+            .parse::<std::net::SocketAddr>()
             .map_err(|e| IoError::ParseError(format!("Invalid UDP address: {}", e)))?;
-        
+
         // Bind to a local address (let OS choose port)
         let local_addr = if remote_addr.is_ipv4() {
             "0.0.0.0:0"
         } else {
             "[::]:0"
         };
-        
-        let socket = UdpSocket::bind(local_addr).await
+
+        let socket = UdpSocket::bind(local_addr)
+            .await
             .map_err(|e| IoError::NetworkError(format!("UDP bind failed: {}", e)))?;
-        
+
         // Optionally connect to remote address for more efficient sends
-        socket.connect(remote_addr).await
+        socket
+            .connect(remote_addr)
+            .await
             .map_err(|e| IoError::NetworkError(format!("UDP connect failed: {}", e)))?;
-        
+
         self.socket = Some(socket);
         self.remote_addr = Some(remote_addr);
         self.connected = true;
@@ -1088,28 +1345,26 @@ impl StreamConnection for UdpConnection {
         if !self.connected || self.socket.is_none() {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
-        
+
         if let Some(socket) = &self.socket {
             let mut buffer = vec![0u8; self.config.buffer_size];
-            
+
             match tokio::time::timeout(self.config.timeout, socket.recv(&mut buffer)).await {
                 Ok(Ok(bytes_received)) => {
                     if let Ok(mut counter) = self.packet_counter.lock() {
                         *counter += 1;
                     }
-                    
+
                     buffer.truncate(bytes_received);
                     Ok(buffer)
                 }
-                Ok(Err(e)) => {
-                    Err(IoError::NetworkError(format!("UDP receive error: {}", e)))
-                }
-                Err(_) => {
-                    Err(IoError::TimeoutError("UDP receive timeout".to_string()))
-                }
+                Ok(Err(e)) => Err(IoError::NetworkError(format!("UDP receive error: {}", e))),
+                Err(_) => Err(IoError::TimeoutError("UDP receive timeout".to_string())),
             }
         } else {
-            Err(IoError::ParseError("UDP socket not initialized".to_string()))
+            Err(IoError::ParseError(
+                "UDP socket not initialized".to_string(),
+            ))
         }
     }
 
@@ -1117,32 +1372,31 @@ impl StreamConnection for UdpConnection {
         if !self.connected || self.socket.is_none() {
             return Err(IoError::FileError("Not connected".to_string()));
         }
-        
+
         if let Some(socket) = &self.socket {
             match tokio::time::timeout(self.config.timeout, socket.send(data)).await {
                 Ok(Ok(bytes_sent)) => {
                     if bytes_sent != data.len() {
                         return Err(IoError::NetworkError(format!(
                             "UDP partial send: {} of {} bytes",
-                            bytes_sent, data.len()
+                            bytes_sent,
+                            data.len()
                         )));
                     }
-                    
+
                     if let Ok(mut counter) = self.packet_counter.lock() {
                         *counter += 1;
                     }
-                    
+
                     Ok(())
                 }
-                Ok(Err(e)) => {
-                    Err(IoError::NetworkError(format!("UDP send error: {}", e)))
-                }
-                Err(_) => {
-                    Err(IoError::TimeoutError("UDP send timeout".to_string()))
-                }
+                Ok(Err(e)) => Err(IoError::NetworkError(format!("UDP send error: {}", e))),
+                Err(_) => Err(IoError::TimeoutError("UDP send timeout".to_string())),
             }
         } else {
-            Err(IoError::ParseError("UDP socket not initialized".to_string()))
+            Err(IoError::ParseError(
+                "UDP socket not initialized".to_string(),
+            ))
         }
     }
 

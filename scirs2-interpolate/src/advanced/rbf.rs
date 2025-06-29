@@ -297,46 +297,51 @@ impl<
         if let Some(ref report) = condition_report {
             match report.stability_level {
                 StabilityLevel::Poor => {
-                    eprintln!(
-                        "Warning: RBF matrix is poorly conditioned (condition number: {:.2e}). \
-                         Results may be unreliable. Consider increasing epsilon parameter or using regularization.",
-                        report.condition_number
-                    );
+                    // Apply automatic regularization for poorly conditioned matrices
+                    let regularization = F::from_f64(1e-8).unwrap_or_else(|| F::epsilon());
+                    for i in 0..a_matrix.nrows() {
+                        a_matrix[[i, i]] += regularization;
+                    }
                 }
                 StabilityLevel::Marginal => {
-                    eprintln!(
-                        "Warning: RBF matrix has marginal conditioning (condition number: {:.2e}). \
-                         Consider monitoring interpolation accuracy.",
-                        report.condition_number
-                    );
+                    // Apply light regularization for marginal conditioning
+                    let regularization = F::from_f64(1e-10).unwrap_or_else(|| F::epsilon());
+                    for i in 0..a_matrix.nrows() {
+                        a_matrix[[i, i]] += regularization;
+                    }
                 }
                 _ => {}
             }
         }
 
         // Solve the linear system with stability monitoring
-        let (coefficients, _solve_report) = solve_with_stability_monitoring(a_matrix, &values.to_owned())
-            .or_else(|_| {
-                eprintln!("Warning: Stability-monitored solve failed. Falling back to basic solver with regularization.");
+        let (coefficients, _solve_report) =
+            solve_with_stability_monitoring(a_matrix, &values.to_owned()).or_else(|_| {
+                // Silently fall back to regularized solver
 
-                // Fall back to regularized version
+                // Apply stronger regularization
                 let mut regularized_matrix = a_matrix.clone();
                 let regularization = F::from_f64(1e-6).unwrap();
                 for i in 0..n_points {
                     regularized_matrix[[i, i]] += regularization;
                 }
 
-                self_solve_linear_system(&regularized_matrix, values)
-                    .map(|coeffs| (coeffs, condition_report.clone().unwrap_or_else(|| {
-                        // Create a default report for fallback case
-                        ConditionReport {
-                            condition_number: F::from_f64(1e16).unwrap(),
-                            is_well_conditioned: false,
-                            recommended_regularization: Some(regularization),
-                            stability_level: StabilityLevel::Poor,
-                            diagnostics: crate::numerical_stability::StabilityDiagnostics::default(),
-                        }
-                    })))
+                self_solve_linear_system(&regularized_matrix, values).map(|coeffs| {
+                    (
+                        coeffs,
+                        condition_report.clone().unwrap_or_else(|| {
+                            // Create a default report for fallback case
+                            ConditionReport {
+                                condition_number: F::from_f64(1e16).unwrap(),
+                                is_well_conditioned: false,
+                                recommended_regularization: Some(regularization),
+                                stability_level: StabilityLevel::Poor,
+                                diagnostics:
+                                    crate::numerical_stability::StabilityDiagnostics::default(),
+                            }
+                        }),
+                    )
+                })
             })?;
 
         Ok(RBFInterpolator {

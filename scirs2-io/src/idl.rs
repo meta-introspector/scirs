@@ -964,14 +964,14 @@ mod tests {
         if let IdlType::Byte(array) = byte_array {
             assert_eq!(array.len(), 4);
         } else {
-            panic!("Expected IdlType::Byte, got {:?}", byte_array);
+            assert!(false, "Expected IdlType::Byte, got {:?}", byte_array);
         }
 
         let double_array = IdlType::Double(arr1(&[1.0, 2.0, 3.0]).into_dyn());
         if let IdlType::Double(array) = double_array {
             assert_eq!(array.len(), 3);
         } else {
-            panic!("Expected IdlType::Double, got {:?}", double_array);
+            assert!(false, "Expected IdlType::Double, got {:?}", double_array);
         }
     }
 

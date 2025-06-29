@@ -10,9 +10,8 @@ pub use silhouette::{silhouette_samples, silhouette_score};
 
 mod information_theoretic;
 pub use information_theoretic::{
-    adjusted_mutual_info_score, adjusted_rand_score, 
-    mutual_info_score, normalized_mutual_info_score, 
-    v_measure_score, completeness_score, homogeneity_score
+    adjusted_mutual_info_score, adjusted_rand_score, completeness_score, homogeneity_score,
+    mutual_info_score, normalized_mutual_info_score, v_measure_score,
 };
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
@@ -1834,6 +1833,906 @@ pub mod ensemble {
             / F::from(bootstrap_scores.len()).unwrap();
 
         Ok((lower_bound, mean_score, upper_bound))
+    }
+}
+
+/// Advanced stability and quality analysis for clustering
+pub mod advanced_stability {
+    use super::*;
+    use crate::vq::{kmeans2, MinitMethod};
+    use rand::seq::SliceRandom;
+    use rand::Rng;
+    use std::collections::HashMap;
+
+    /// Configuration for advanced stability analysis
+    #[derive(Debug, Clone)]
+    pub struct StabilityConfig {
+        pub n_bootstrap: usize,
+        pub n_subsamples: usize,
+        pub subsample_ratio: f64,
+        pub noise_perturbation: f64,
+        pub feature_subsampling: bool,
+        pub temporal_analysis: bool,
+    }
+
+    impl Default for StabilityConfig {
+        fn default() -> Self {
+            Self {
+                n_bootstrap: 100,
+                n_subsamples: 50,
+                subsample_ratio: 0.8,
+                noise_perturbation: 0.01,
+                feature_subsampling: true,
+                temporal_analysis: false,
+            }
+        }
+    }
+
+    /// Comprehensive stability analysis result
+    #[derive(Debug, Clone)]
+    pub struct StabilityResult<F: Float> {
+        pub bootstrap_stability: F,
+        pub subsample_stability: F,
+        pub noise_stability: F,
+        pub feature_stability: F,
+        pub connectivity_stability: F,
+        pub cluster_persistence: Vec<F>,
+        pub stability_trend: Vec<F>,
+        pub confidence_intervals: (F, F, F), // (lower, median, upper)
+    }
+
+    /// Multi-scale clustering stability analysis
+    pub fn comprehensive_stability_analysis<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        config: StabilityConfig,
+    ) -> Result<StabilityResult<F>>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        // 1. Bootstrap stability
+        let bootstrap_stability = bootstrap_clustering_stability(
+            data,
+            n_clusters,
+            config.n_bootstrap,
+            config.subsample_ratio,
+        )?;
+
+        // 2. Subsample stability with different ratios
+        let subsample_stability =
+            multi_scale_subsample_stability(data, n_clusters, config.n_subsamples)?;
+
+        // 3. Noise robustness
+        let noise_stability =
+            noise_robustness_analysis(data, n_clusters, config.noise_perturbation, 25)?;
+
+        // 4. Feature subspace stability
+        let feature_stability = if config.feature_subsampling {
+            feature_subspace_stability(data, n_clusters, 30)?
+        } else {
+            F::one()
+        };
+
+        // 5. Connectivity-based stability
+        let connectivity_stability = connectivity_stability_analysis(data, n_clusters)?;
+
+        // 6. Cluster persistence analysis
+        let cluster_persistence = cluster_persistence_analysis(data, 2..=(n_clusters + 3))?;
+
+        // 7. Temporal stability trend (if enabled)
+        let stability_trend = if config.temporal_analysis {
+            temporal_stability_analysis(data, n_clusters, 20)?
+        } else {
+            vec![bootstrap_stability]
+        };
+
+        // 8. Confidence intervals via bootstrap
+        let confidence_intervals = bootstrap_confidence_intervals(data, n_clusters, 0.95, 200)?;
+
+        Ok(StabilityResult {
+            bootstrap_stability,
+            subsample_stability,
+            noise_stability,
+            feature_stability,
+            connectivity_stability,
+            cluster_persistence,
+            stability_trend,
+            confidence_intervals,
+        })
+    }
+
+    /// Bootstrap clustering stability with enhanced analysis
+    fn bootstrap_clustering_stability<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        n_bootstrap: usize,
+        subsample_ratio: f64,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        let mut rng = rand::thread_rng();
+        let n_samples = data.shape()[0];
+        let subsample_size = (n_samples as f64 * subsample_ratio) as usize;
+
+        let mut all_labels = Vec::new();
+        let mut sample_indices_list = Vec::new();
+
+        // Perform bootstrap clustering with improved sampling
+        for _iter in 0..n_bootstrap {
+            // Stratified bootstrap sampling for better representation
+            let mut indices: Vec<usize> = (0..n_samples).collect();
+            indices.shuffle(&mut rng);
+            indices.truncate(subsample_size);
+            indices.sort();
+
+            let bootstrap_data = data.select(ndarray::Axis(0), &indices);
+
+            // Enhanced clustering with multiple initialization attempts
+            let mut best_labels = None;
+            let mut best_inertia = F::infinity();
+
+            for seed in 0..3 {
+                if let Ok((_, labels)) = kmeans2(
+                    bootstrap_data.view(),
+                    n_clusters,
+                    Some(150),
+                    Some(F::from(1e-6).unwrap()),
+                    Some(MinitMethod::PlusPlus),
+                    None,
+                    Some(true),
+                    Some(seed),
+                ) {
+                    // Compute inertia to select best clustering
+                    let inertia = compute_clustering_inertia(&bootstrap_data, &labels)?;
+                    if inertia < best_inertia {
+                        best_inertia = inertia;
+                        best_labels = Some(labels);
+                    }
+                }
+            }
+
+            if let Some(labels) = best_labels {
+                all_labels.push(labels);
+                sample_indices_list.push(indices);
+            }
+        }
+
+        if all_labels.len() < 2 {
+            return Ok(F::zero());
+        }
+
+        // Compute enhanced pairwise stability
+        let mut stability_scores = Vec::new();
+        let mut co_association_matrix = Array2::<f64>::zeros((n_samples, n_samples));
+
+        for i in 0..all_labels.len() {
+            for j in (i + 1)..all_labels.len() {
+                let common_indices =
+                    find_common_indices(&sample_indices_list[i], &sample_indices_list[j]);
+
+                if common_indices.len() < n_clusters {
+                    continue;
+                }
+
+                let labels_i =
+                    extract_common_labels(&all_labels[i], &sample_indices_list[i], &common_indices);
+                let labels_j =
+                    extract_common_labels(&all_labels[j], &sample_indices_list[j], &common_indices);
+
+                // Update co-association matrix
+                update_co_association_matrix(
+                    &mut co_association_matrix,
+                    &labels_i,
+                    &labels_j,
+                    &common_indices,
+                );
+
+                // Compute multiple stability metrics
+                if let Ok(ari) = adjusted_rand_index::<F>(
+                    Array1::from_vec(labels_i.clone()).view(),
+                    Array1::from_vec(labels_j.clone()).view(),
+                ) {
+                    stability_scores.push(ari);
+                }
+            }
+        }
+
+        // Enhanced stability score combining ARI and co-association
+        let ari_stability = if !stability_scores.is_empty() {
+            stability_scores.iter().fold(F::zero(), |acc, &x| acc + x)
+                / F::from(stability_scores.len()).unwrap()
+        } else {
+            F::zero()
+        };
+
+        // Co-association stability
+        let co_assoc_stability = compute_co_association_stability(&co_association_matrix);
+
+        // Combined stability score
+        let combined_stability =
+            (ari_stability + F::from(co_assoc_stability).unwrap()) / F::from(2.0).unwrap();
+
+        Ok(combined_stability.max(F::zero()).min(F::one()))
+    }
+
+    /// Multi-scale subsample stability analysis
+    fn multi_scale_subsample_stability<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        n_trials: usize,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        let ratios = [0.5, 0.6, 0.7, 0.8, 0.9];
+        let mut scale_stabilities = Vec::new();
+
+        for &ratio in &ratios {
+            let stability = bootstrap_clustering_stability(data, n_clusters, n_trials, ratio)?;
+            scale_stabilities.push(stability);
+        }
+
+        // Compute weighted average with emphasis on mid-range ratios
+        let weights = [0.15, 0.2, 0.3, 0.25, 0.1];
+        let weighted_stability = scale_stabilities
+            .iter()
+            .zip(weights.iter())
+            .map(|(&s, &w)| s * F::from(w).unwrap())
+            .fold(F::zero(), |acc, x| acc + x);
+
+        Ok(weighted_stability)
+    }
+
+    /// Noise robustness analysis for clustering stability
+    fn noise_robustness_analysis<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        noise_level: f64,
+        n_trials: usize,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        let mut rng = rand::thread_rng();
+        let mut noise_stabilities = Vec::new();
+
+        // Reference clustering on original data
+        let (_, ref_labels) = kmeans2(
+            data,
+            n_clusters,
+            Some(100),
+            Some(F::from(1e-6).unwrap()),
+            Some(MinitMethod::PlusPlus),
+            None,
+            Some(true),
+            None,
+        )?;
+
+        // Test with different noise levels
+        let noise_levels = [
+            noise_level * 0.5,
+            noise_level,
+            noise_level * 1.5,
+            noise_level * 2.0,
+        ];
+
+        for &current_noise in &noise_levels {
+            let mut trial_stabilities = Vec::new();
+
+            for _trial in 0..n_trials {
+                // Add noise to data
+                let mut noisy_data = data.to_owned();
+                for element in noisy_data.iter_mut() {
+                    let noise = rng.gen_range(-current_noise..current_noise);
+                    *element = *element + F::from(noise).unwrap();
+                }
+
+                // Cluster noisy data
+                if let Ok((_, noisy_labels)) = kmeans2(
+                    noisy_data.view(),
+                    n_clusters,
+                    Some(100),
+                    Some(F::from(1e-6).unwrap()),
+                    Some(MinitMethod::PlusPlus),
+                    None,
+                    Some(true),
+                    Some(_trial as u64),
+                ) {
+                    // Compare with reference clustering
+                    let ref_labels_i32: Vec<i32> = ref_labels.iter().map(|&x| x as i32).collect();
+                    let noisy_labels_i32: Vec<i32> =
+                        noisy_labels.iter().map(|&x| x as i32).collect();
+
+                    if let Ok(ari) = adjusted_rand_index::<F>(
+                        Array1::from_vec(ref_labels_i32).view(),
+                        Array1::from_vec(noisy_labels_i32).view(),
+                    ) {
+                        trial_stabilities.push(ari);
+                    }
+                }
+            }
+
+            if !trial_stabilities.is_empty() {
+                let mean_stability = trial_stabilities.iter().fold(F::zero(), |acc, &x| acc + x)
+                    / F::from(trial_stabilities.len()).unwrap();
+                noise_stabilities.push(mean_stability);
+            }
+        }
+
+        // Return average across all noise levels
+        if noise_stabilities.is_empty() {
+            Ok(F::zero())
+        } else {
+            let overall_stability = noise_stabilities.iter().fold(F::zero(), |acc, &x| acc + x)
+                / F::from(noise_stabilities.len()).unwrap();
+            Ok(overall_stability)
+        }
+    }
+
+    /// Feature subspace stability analysis
+    fn feature_subspace_stability<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        n_trials: usize,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        let mut rng = rand::thread_rng();
+        let n_features = data.shape()[1];
+        let mut subspace_stabilities = Vec::new();
+
+        // Reference clustering on full feature space
+        let (_, ref_labels) = kmeans2(
+            data,
+            n_clusters,
+            Some(100),
+            Some(F::from(1e-6).unwrap()),
+            Some(MinitMethod::PlusPlus),
+            None,
+            Some(true),
+            None,
+        )?;
+
+        // Test with different feature subsets
+        let subset_sizes = [
+            (n_features * 2 / 3).max(2),
+            (n_features * 3 / 4).max(2),
+            (n_features * 4 / 5).max(2),
+        ];
+
+        for &subset_size in &subset_sizes {
+            let mut trial_stabilities = Vec::new();
+
+            for _trial in 0..n_trials {
+                // Random feature subset selection
+                let mut feature_indices: Vec<usize> = (0..n_features).collect();
+                feature_indices.shuffle(&mut rng);
+                feature_indices.truncate(subset_size);
+                feature_indices.sort();
+
+                // Extract feature subset
+                let subset_data = data.select(ndarray::Axis(1), &feature_indices);
+
+                // Cluster on feature subset
+                if let Ok((_, subset_labels)) = kmeans2(
+                    subset_data.view(),
+                    n_clusters,
+                    Some(100),
+                    Some(F::from(1e-6).unwrap()),
+                    Some(MinitMethod::PlusPlus),
+                    None,
+                    Some(true),
+                    Some(_trial as u64),
+                ) {
+                    // Compare with reference clustering
+                    let ref_labels_i32: Vec<i32> = ref_labels.iter().map(|&x| x as i32).collect();
+                    let subset_labels_i32: Vec<i32> =
+                        subset_labels.iter().map(|&x| x as i32).collect();
+
+                    if let Ok(ari) = adjusted_rand_index::<F>(
+                        Array1::from_vec(ref_labels_i32).view(),
+                        Array1::from_vec(subset_labels_i32).view(),
+                    ) {
+                        trial_stabilities.push(ari);
+                    }
+                }
+            }
+
+            if !trial_stabilities.is_empty() {
+                let mean_stability = trial_stabilities.iter().fold(F::zero(), |acc, &x| acc + x)
+                    / F::from(trial_stabilities.len()).unwrap();
+                subspace_stabilities.push(mean_stability);
+            }
+        }
+
+        // Return weighted average favoring larger subsets
+        if subspace_stabilities.is_empty() {
+            Ok(F::zero())
+        } else {
+            let weights = [0.3, 0.35, 0.35];
+            let weighted_stability = subspace_stabilities
+                .iter()
+                .zip(weights.iter())
+                .map(|(&s, &w)| s * F::from(w).unwrap())
+                .fold(F::zero(), |acc, x| acc + x);
+            Ok(weighted_stability)
+        }
+    }
+
+    /// Connectivity-based stability analysis
+    fn connectivity_stability_analysis<F>(data: ArrayView2<F>, n_clusters: usize) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        let n_samples = data.shape()[0];
+        let k_neighbors = [3, 5, 7, 10];
+        let mut connectivity_scores = Vec::new();
+
+        for &k in &k_neighbors {
+            if k >= n_samples {
+                continue;
+            }
+
+            // Build k-NN connectivity matrix
+            let connectivity_matrix = build_knn_connectivity_matrix(data, k)?;
+
+            // Perform clustering
+            let (_, labels) = kmeans2(
+                data,
+                n_clusters,
+                Some(100),
+                Some(F::from(1e-6).unwrap()),
+                Some(MinitMethod::PlusPlus),
+                None,
+                Some(true),
+                None,
+            )?;
+
+            // Compute connectivity-based stability
+            let connectivity_score = compute_connectivity_score(&connectivity_matrix, &labels)?;
+            connectivity_scores.push(connectivity_score);
+        }
+
+        if connectivity_scores.is_empty() {
+            Ok(F::zero())
+        } else {
+            let mean_score = connectivity_scores
+                .iter()
+                .fold(F::zero(), |acc, &x| acc + x)
+                / F::from(connectivity_scores.len()).unwrap();
+            Ok(mean_score)
+        }
+    }
+
+    /// Cluster persistence analysis across different k values
+    fn cluster_persistence_analysis<F>(
+        data: ArrayView2<F>,
+        k_range: std::ops::RangeInclusive<usize>,
+    ) -> Result<Vec<F>>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        let mut persistence_scores = Vec::new();
+        let mut previous_labels = None;
+
+        for k in k_range {
+            if k >= data.shape()[0] {
+                break;
+            }
+
+            // Cluster with current k
+            if let Ok((_, labels)) = kmeans2(
+                data,
+                k,
+                Some(100),
+                Some(F::from(1e-6).unwrap()),
+                Some(MinitMethod::PlusPlus),
+                None,
+                Some(true),
+                None,
+            ) {
+                if let Some(ref prev_labels) = previous_labels {
+                    // Compute persistence score (how much clustering structure is preserved)
+                    let persistence = compute_persistence_score(prev_labels, &labels)?;
+                    persistence_scores.push(persistence);
+                } else {
+                    persistence_scores.push(F::one()); // First clustering has perfect persistence
+                }
+                previous_labels = Some(labels);
+            } else {
+                persistence_scores.push(F::zero());
+            }
+        }
+
+        Ok(persistence_scores)
+    }
+
+    /// Temporal stability analysis (simulated by multiple random initializations)
+    fn temporal_stability_analysis<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        n_timepoints: usize,
+    ) -> Result<Vec<F>>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        let mut temporal_stabilities = Vec::new();
+        let mut reference_labels = None;
+
+        for timepoint in 0..n_timepoints {
+            if let Ok((_, labels)) = kmeans2(
+                data,
+                n_clusters,
+                Some(100),
+                Some(F::from(1e-6).unwrap()),
+                Some(MinitMethod::PlusPlus),
+                None,
+                Some(true),
+                Some(timepoint as u64),
+            ) {
+                if let Some(ref ref_labels) = reference_labels {
+                    let ref_labels_i32: Vec<i32> = ref_labels.iter().map(|&x| x as i32).collect();
+                    let curr_labels_i32: Vec<i32> = labels.iter().map(|&x| x as i32).collect();
+
+                    if let Ok(ari) = adjusted_rand_index::<F>(
+                        Array1::from_vec(ref_labels_i32).view(),
+                        Array1::from_vec(curr_labels_i32).view(),
+                    ) {
+                        temporal_stabilities.push(ari);
+                    } else {
+                        temporal_stabilities.push(F::zero());
+                    }
+                } else {
+                    temporal_stabilities.push(F::one()); // First timepoint
+                    reference_labels = Some(labels);
+                }
+            } else {
+                temporal_stabilities.push(F::zero());
+            }
+        }
+
+        Ok(temporal_stabilities)
+    }
+
+    /// Bootstrap confidence intervals for stability
+    fn bootstrap_confidence_intervals<F>(
+        data: ArrayView2<F>,
+        n_clusters: usize,
+        confidence_level: f64,
+        n_bootstrap: usize,
+    ) -> Result<(F, F, F)>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+    {
+        let mut bootstrap_scores = Vec::new();
+
+        for _iter in 0..n_bootstrap {
+            if let Ok(score) = bootstrap_clustering_stability(data, n_clusters, 20, 0.8) {
+                bootstrap_scores.push(score);
+            }
+        }
+
+        if bootstrap_scores.is_empty() {
+            return Ok((F::zero(), F::zero(), F::zero()));
+        }
+
+        bootstrap_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        let alpha = 1.0 - confidence_level;
+        let lower_idx = (bootstrap_scores.len() as f64 * alpha / 2.0) as usize;
+        let upper_idx = (bootstrap_scores.len() as f64 * (1.0 - alpha / 2.0)) as usize;
+        let median_idx = bootstrap_scores.len() / 2;
+
+        let lower = bootstrap_scores[lower_idx.min(bootstrap_scores.len() - 1)];
+        let median = bootstrap_scores[median_idx];
+        let upper = bootstrap_scores[upper_idx.min(bootstrap_scores.len() - 1)];
+
+        Ok((lower, median, upper))
+    }
+
+    // Helper functions
+
+    fn compute_clustering_inertia<F>(data: &Array2<F>, labels: &Array1<usize>) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        let n_clusters = labels.iter().max().copied().unwrap_or(0) + 1;
+        let n_features = data.ncols();
+
+        // Compute cluster centers
+        let mut centers = Array2::<F>::zeros((n_clusters, n_features));
+        let mut cluster_counts = vec![0; n_clusters];
+
+        for (i, &label) in labels.iter().enumerate() {
+            centers.row_mut(label).scaled_add(F::one(), &data.row(i));
+            cluster_counts[label] += 1;
+        }
+
+        for (i, &count) in cluster_counts.iter().enumerate() {
+            if count > 0 {
+                centers
+                    .row_mut(i)
+                    .mapv_inplace(|x| x / F::from(count).unwrap());
+            }
+        }
+
+        // Compute inertia
+        let mut inertia = F::zero();
+        for (i, &label) in labels.iter().enumerate() {
+            let diff = &data.row(i) - &centers.row(label);
+            inertia = inertia + diff.dot(&diff);
+        }
+
+        Ok(inertia)
+    }
+
+    fn find_common_indices(indices_a: &[usize], indices_b: &[usize]) -> Vec<usize> {
+        let mut common = Vec::new();
+        let mut i = 0;
+        let mut j = 0;
+
+        while i < indices_a.len() && j < indices_b.len() {
+            if indices_a[i] == indices_b[j] {
+                common.push(indices_a[i]);
+                i += 1;
+                j += 1;
+            } else if indices_a[i] < indices_b[j] {
+                i += 1;
+            } else {
+                j += 1;
+            }
+        }
+
+        common
+    }
+
+    fn extract_common_labels(
+        labels: &Array1<usize>,
+        sample_indices: &[usize],
+        common_indices: &[usize],
+    ) -> Vec<i32> {
+        let mut common_labels = Vec::new();
+
+        for &common_idx in common_indices {
+            if let Some(pos) = sample_indices.iter().position(|&x| x == common_idx) {
+                if pos < labels.len() {
+                    common_labels.push(labels[pos] as i32);
+                }
+            }
+        }
+
+        common_labels
+    }
+
+    fn update_co_association_matrix(
+        co_matrix: &mut Array2<f64>,
+        labels_i: &[i32],
+        labels_j: &[i32],
+        common_indices: &[usize],
+    ) {
+        for (idx1, &point1) in common_indices.iter().enumerate() {
+            for (idx2, &point2) in common_indices.iter().enumerate() {
+                if idx1 < labels_i.len()
+                    && idx2 < labels_i.len()
+                    && idx1 < labels_j.len()
+                    && idx2 < labels_j.len()
+                {
+                    let same_cluster_i = labels_i[idx1] == labels_i[idx2];
+                    let same_cluster_j = labels_j[idx1] == labels_j[idx2];
+
+                    if same_cluster_i && same_cluster_j {
+                        co_matrix[[point1, point2]] += 1.0;
+                    }
+                }
+            }
+        }
+    }
+
+    fn compute_co_association_stability(co_matrix: &Array2<f64>) -> f64 {
+        if co_matrix.is_empty() {
+            return 0.0;
+        }
+
+        let total_pairs = co_matrix.len();
+        let max_value = co_matrix.iter().fold(0.0, |acc, &x| acc.max(x));
+
+        if max_value == 0.0 {
+            return 0.0;
+        }
+
+        let normalized_sum: f64 = co_matrix.iter().map(|&x| x / max_value).sum();
+        normalized_sum / total_pairs as f64
+    }
+
+    fn build_knn_connectivity_matrix<F>(data: ArrayView2<F>, k: usize) -> Result<Array2<bool>>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        let n_samples = data.shape()[0];
+        let mut connectivity = Array2::<bool>::default((n_samples, n_samples));
+
+        for i in 0..n_samples {
+            let mut distances: Vec<(usize, F)> = (0..n_samples)
+                .map(|j| {
+                    let diff = &data.row(i) - &data.row(j);
+                    (j, diff.dot(&diff).sqrt())
+                })
+                .collect();
+
+            distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+
+            for &(neighbor_idx, _) in distances.iter().take(k + 1).skip(1) {
+                connectivity[[i, neighbor_idx]] = true;
+                connectivity[[neighbor_idx, i]] = true; // Make symmetric
+            }
+        }
+
+        Ok(connectivity)
+    }
+
+    fn compute_connectivity_score<F>(
+        connectivity: &Array2<bool>,
+        labels: &Array1<usize>,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        let n_samples = labels.len();
+        let mut within_cluster_connections = 0;
+        let mut total_connections = 0;
+
+        for i in 0..n_samples {
+            for j in (i + 1)..n_samples {
+                if connectivity[[i, j]] {
+                    total_connections += 1;
+                    if labels[i] == labels[j] {
+                        within_cluster_connections += 1;
+                    }
+                }
+            }
+        }
+
+        if total_connections == 0 {
+            Ok(F::zero())
+        } else {
+            Ok(F::from(within_cluster_connections).unwrap() / F::from(total_connections).unwrap())
+        }
+    }
+
+    fn compute_persistence_score<F>(
+        prev_labels: &Array1<usize>,
+        curr_labels: &Array1<usize>,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        if prev_labels.len() != curr_labels.len() {
+            return Ok(F::zero());
+        }
+
+        // Convert to i32 for ARI computation
+        let prev_i32: Vec<i32> = prev_labels.iter().map(|&x| x as i32).collect();
+        let curr_i32: Vec<i32> = curr_labels.iter().map(|&x| x as i32).collect();
+
+        adjusted_rand_index::<F>(
+            Array1::from_vec(prev_i32).view(),
+            Array1::from_vec(curr_i32).view(),
+        )
+    }
+
+    /// Clustering quality assessment using graph-theoretic measures
+    pub fn graph_theoretic_quality<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + PartialOrd + 'static,
+    {
+        let n_samples = data.shape()[0];
+        if n_samples != labels.len() {
+            return Err(ClusteringError::InvalidInput(
+                "Data and labels must have same number of samples".to_string(),
+            ));
+        }
+
+        // Build k-NN graph
+        let k = (n_samples as f64).sqrt() as usize;
+        let adjacency = build_knn_connectivity_matrix(data, k)?;
+
+        // Compute modularity
+        let modularity = compute_modularity(&adjacency, &labels)?;
+
+        // Compute conductance
+        let conductance = compute_conductance(&adjacency, &labels)?;
+
+        // Combine measures
+        let quality = modularity * (F::one() - conductance);
+        Ok(quality)
+    }
+
+    fn compute_modularity<F>(adjacency: &Array2<bool>, labels: &ArrayView1<i32>) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        let n = adjacency.shape()[0];
+        let m = adjacency.iter().filter(|&&x| x).count() as f64 / 2.0; // Number of edges
+
+        if m == 0.0 {
+            return Ok(F::zero());
+        }
+
+        let mut modularity = 0.0;
+
+        for i in 0..n {
+            for j in 0..n {
+                if labels[i] == labels[j] {
+                    let a_ij = if adjacency[[i, j]] { 1.0 } else { 0.0 };
+                    let k_i = adjacency.row(i).iter().filter(|&&x| x).count() as f64;
+                    let k_j = adjacency.row(j).iter().filter(|&&x| x).count() as f64;
+
+                    modularity += a_ij - (k_i * k_j) / (2.0 * m);
+                }
+            }
+        }
+
+        Ok(F::from(modularity / (2.0 * m)).unwrap())
+    }
+
+    fn compute_conductance<F>(adjacency: &Array2<bool>, labels: &ArrayView1<i32>) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + 'static,
+    {
+        let unique_labels: std::collections::HashSet<i32> = labels.iter().copied().collect();
+        let mut total_conductance = 0.0;
+        let mut n_clusters = 0;
+
+        for &cluster_label in &unique_labels {
+            if cluster_label < 0 {
+                continue; // Skip noise points
+            }
+
+            let cluster_indices: Vec<usize> = labels
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &label)| {
+                    if label == cluster_label {
+                        Some(i)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            if cluster_indices.len() < 2 {
+                continue;
+            }
+
+            let mut cut_edges = 0;
+            let mut internal_edges = 0;
+
+            for &i in &cluster_indices {
+                for j in 0..adjacency.shape()[1] {
+                    if adjacency[[i, j]] {
+                        if cluster_indices.contains(&j) {
+                            internal_edges += 1;
+                        } else {
+                            cut_edges += 1;
+                        }
+                    }
+                }
+            }
+
+            if internal_edges + cut_edges > 0 {
+                let conductance = cut_edges as f64 / (internal_edges + cut_edges) as f64;
+                total_conductance += conductance;
+                n_clusters += 1;
+            }
+        }
+
+        if n_clusters == 0 {
+            Ok(F::zero())
+        } else {
+            Ok(F::from(total_conductance / n_clusters as f64).unwrap())
+        }
     }
 }
 

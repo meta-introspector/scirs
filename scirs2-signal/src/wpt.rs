@@ -397,7 +397,7 @@ impl WaveletPacketTree {
                 // Enhanced reconstruction: Proper inverse wavelet packet transform
                 // This implementation correctly reconstructs from coefficients at any level
                 let mut current_nodes = HashMap::new();
-                
+
                 // Initialize with the nodes at the given level
                 for (i, subband) in subbands.iter().enumerate() {
                     let node = WaveletPacket::new(
@@ -419,8 +419,9 @@ impl WaveletPacketTree {
                         let left_pos = parent_pos * 2;
                         let right_pos = left_pos + 1;
 
-                        if let (Some(left), Some(right)) = 
-                           (current_nodes.get(&left_pos), current_nodes.get(&right_pos)) {
+                        if let (Some(left), Some(right)) =
+                            (current_nodes.get(&left_pos), current_nodes.get(&right_pos))
+                        {
                             match WaveletPacket::reconstruct(left, right) {
                                 Ok(parent) => {
                                     next_level_nodes.insert(parent_pos, parent);
@@ -435,7 +436,8 @@ impl WaveletPacketTree {
                         } else {
                             return Err(SignalError::ValueError(format!(
                                 "Missing child nodes for reconstruction at level {} position {}",
-                                l + 1, left_pos
+                                l + 1,
+                                left_pos
                             )));
                         }
                     }
@@ -446,22 +448,22 @@ impl WaveletPacketTree {
                 // Extract the reconstructed signal from the root node
                 if let Some(root_node) = current_nodes.get(&0) {
                     let reconstructed = root_node.data.clone();
-                    
+
                     // Validate reconstruction quality
                     let original_energy: f64 = self.root.data.iter().map(|x| x * x).sum();
                     let reconstructed_energy: f64 = reconstructed.iter().map(|x| x * x).sum();
-                    
+
                     if original_energy > 1e-12 {
                         let energy_ratio = reconstructed_energy / original_energy;
                         if (energy_ratio - 1.0).abs() > 0.1 {
                             eprintln!("Warning: Energy conservation issue in WPT reconstruction. Ratio: {:.6}", energy_ratio);
                         }
                     }
-                    
+
                     return Ok(reconstructed);
                 } else {
                     return Err(SignalError::ComputationError(
-                        "Failed to reconstruct root node".to_string()
+                        "Failed to reconstruct root node".to_string(),
                     ));
                 }
             }
@@ -474,7 +476,7 @@ impl WaveletPacketTree {
     }
 
     /// Enhanced validation of the wavelet packet tree
-    /// 
+    ///
     /// This function performs comprehensive validation including:
     /// - Energy conservation at each level
     /// - Orthogonality of basis functions
@@ -482,21 +484,22 @@ impl WaveletPacketTree {
     /// - Numerical stability
     pub fn validate_enhanced(&self) -> SignalResult<WaveletPacketValidationResult> {
         let mut issues = Vec::new();
-        
+
         // Check energy conservation across levels
         let original_energy: f64 = self.root.data.iter().map(|x| x * x).sum();
         let mut energy_ratios = Vec::new();
-        
+
         for level in 1..=self.max_level {
             let level_nodes = self.get_level(level);
-            let level_energy: f64 = level_nodes.iter()
+            let level_energy: f64 = level_nodes
+                .iter()
                 .map(|node| node.data.iter().map(|x| x * x).sum::<f64>())
                 .sum();
-            
+
             if original_energy > 1e-12 {
                 let ratio = level_energy / original_energy;
                 energy_ratios.push(ratio);
-                
+
                 if (ratio - 1.0).abs() > 0.01 {
                     issues.push(format!(
                         "Energy conservation violation at level {}: ratio = {:.6}",
@@ -505,39 +508,41 @@ impl WaveletPacketTree {
                 }
             }
         }
-        
+
         // Test reconstruction accuracy for complete decompositions
         let mut max_reconstruction_error = 0.0;
         let mut mean_reconstruction_error = 0.0;
         let mut reconstruction_snr = f64::INFINITY;
-        
+
         for level in 1..=self.max_level {
-            let nodes_at_level: Vec<(usize, usize)> = (0..(1 << level))
-                .map(|pos| (level, pos))
-                .collect();
-            
+            let nodes_at_level: Vec<(usize, usize)> =
+                (0..(1 << level)).map(|pos| (level, pos)).collect();
+
             if let Ok(reconstructed) = self.reconstruct_selective(&nodes_at_level) {
                 if reconstructed.len() == self.root.data.len() {
-                    let errors: Vec<f64> = self.root.data.iter()
+                    let errors: Vec<f64> = self
+                        .root
+                        .data
+                        .iter()
                         .zip(reconstructed.iter())
                         .map(|(&orig, &recon)| (orig - recon).abs())
                         .collect();
-                    
+
                     let max_error = errors.iter().fold(0.0, |a, &b| a.max(b));
                     let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;
-                    
+
                     max_reconstruction_error = max_reconstruction_error.max(max_error);
                     mean_reconstruction_error = mean_reconstruction_error.max(mean_error);
-                    
+
                     // Calculate SNR
                     let signal_power: f64 = self.root.data.iter().map(|x| x * x).sum();
                     let noise_power: f64 = errors.iter().map(|x| x * x).sum();
-                    
+
                     if noise_power > 1e-15 && signal_power > 1e-15 {
                         let snr = 10.0 * (signal_power / noise_power).log10();
                         reconstruction_snr = reconstruction_snr.min(snr);
                     }
-                    
+
                     if max_error > 1e-10 {
                         issues.push(format!(
                             "Reconstruction error at level {}: max = {:.2e}, mean = {:.2e}",
@@ -547,7 +552,7 @@ impl WaveletPacketTree {
                 }
             }
         }
-        
+
         // Check for numerical stability issues
         let mut stability_score = 1.0;
         for (_, node) in &self.nodes {
@@ -562,20 +567,20 @@ impl WaveletPacketTree {
                 }
             }
         }
-        
+
         // Calculate Parseval frame ratio
         let mut parseval_ratio = 1.0;
         if let Some(&first_ratio) = energy_ratios.first() {
             parseval_ratio = first_ratio;
         }
-        
+
         // Orthogonality check (simplified)
         let orthogonality = self.check_orthogonality();
-        
+
         if reconstruction_snr.is_infinite() {
             reconstruction_snr = 200.0; // Perfect reconstruction
         }
-        
+
         Ok(WaveletPacketValidationResult {
             energy_ratios,
             max_reconstruction_error,
@@ -587,31 +592,40 @@ impl WaveletPacketTree {
             issues,
         })
     }
-    
+
     /// Check orthogonality of wavelet packet basis functions
     fn check_orthogonality(&self) -> f64 {
         let mut min_orthogonality = 1.0;
-        
+
         // Check orthogonality within each level
         for level in 1..=self.max_level {
             let level_nodes = self.get_level(level);
-            
+
             for i in 0..level_nodes.len() {
                 for j in (i + 1)..level_nodes.len() {
                     let node1 = &level_nodes[i];
                     let node2 = &level_nodes[j];
-                    
+
                     // Compute normalized inner product
                     let min_len = node1.data.len().min(node2.data.len());
                     if min_len > 0 {
-                        let inner_product: f64 = node1.data[..min_len].iter()
+                        let inner_product: f64 = node1.data[..min_len]
+                            .iter()
                             .zip(node2.data[..min_len].iter())
                             .map(|(a, b)| a * b)
                             .sum();
-                        
-                        let norm1: f64 = node1.data[..min_len].iter().map(|x| x * x).sum::<f64>().sqrt();
-                        let norm2: f64 = node2.data[..min_len].iter().map(|x| x * x).sum::<f64>().sqrt();
-                        
+
+                        let norm1: f64 = node1.data[..min_len]
+                            .iter()
+                            .map(|x| x * x)
+                            .sum::<f64>()
+                            .sqrt();
+                        let norm2: f64 = node2.data[..min_len]
+                            .iter()
+                            .map(|x| x * x)
+                            .sum::<f64>()
+                            .sqrt();
+
                         if norm1 > 1e-12 && norm2 > 1e-12 {
                             let normalized_ip = inner_product.abs() / (norm1 * norm2);
                             min_orthogonality = min_orthogonality.min(1.0 - normalized_ip);
@@ -620,7 +634,7 @@ impl WaveletPacketTree {
                 }
             }
         }
-        
+
         min_orthogonality
     }
 }

@@ -232,10 +232,10 @@ pub struct CommunicationPrivacyConfig {
 
     /// Traffic analysis protection
     pub traffic_analysis_protection: bool,
-    
+
     /// Advanced threat modeling configuration
     pub threat_modeling: AdvancedThreatModelingConfig,
-    
+
     /// Cross-silo federated learning configuration
     pub cross_silo_config: CrossSiloFederatedConfig,
 }
@@ -245,19 +245,19 @@ pub struct CommunicationPrivacyConfig {
 pub struct AdvancedThreatModelingConfig {
     /// Enable advanced threat analysis
     pub enabled: bool,
-    
+
     /// Adversarial capabilities modeling
     pub adversarial_capabilities: AdversarialCapabilities,
-    
+
     /// Attack surface analysis
     pub attack_surface_analysis: AttackSurfaceConfig,
-    
+
     /// Threat intelligence integration
     pub threat_intelligence: ThreatIntelligenceConfig,
-    
+
     /// Risk assessment framework
     pub risk_assessment: RiskAssessmentConfig,
-    
+
     /// Countermeasure effectiveness evaluation
     pub countermeasure_evaluation: CountermeasureEvaluationConfig,
 }
@@ -267,19 +267,19 @@ pub struct AdvancedThreatModelingConfig {
 pub struct AdversarialCapabilities {
     /// Computational resources available to adversary
     pub computational_resources: ComputationalThreatLevel,
-    
+
     /// Network access and control capabilities
     pub network_capabilities: NetworkThreatCapabilities,
-    
+
     /// Data access and manipulation capabilities
     pub data_capabilities: DataThreatCapabilities,
-    
+
     /// Model and algorithm knowledge
     pub algorithmic_knowledge: AlgorithmicKnowledgeLevel,
-    
+
     /// Collusion potential among malicious clients
     pub collusion_potential: CollusionThreatLevel,
-    
+
     /// Persistence and adaptability of attacks
     pub attack_persistence: AttackPersistenceLevel,
 }
@@ -289,16 +289,16 @@ pub struct AdversarialCapabilities {
 pub struct AttackSurfaceConfig {
     /// Client-side attack vectors
     pub client_attack_vectors: ClientAttackVectors,
-    
+
     /// Server-side attack vectors
     pub server_attack_vectors: ServerAttackVectors,
-    
+
     /// Communication channel vulnerabilities
     pub communication_vulnerabilities: CommunicationVulnerabilities,
-    
+
     /// Aggregation phase vulnerabilities
     pub aggregation_vulnerabilities: AggregationVulnerabilities,
-    
+
     /// Privacy mechanism vulnerabilities
     pub privacy_mechanism_vulnerabilities: PrivacyMechanismVulnerabilities,
 }
@@ -308,16 +308,16 @@ pub struct AttackSurfaceConfig {
 pub struct ThreatIntelligenceConfig {
     /// Enable threat intelligence feeds
     pub enabled: bool,
-    
+
     /// Real-time threat monitoring
     pub real_time_monitoring: bool,
-    
+
     /// Threat signature database
     pub signature_database: ThreatSignatureDatabase,
-    
+
     /// Anomaly detection for novel threats
     pub anomaly_detection: AnomalyDetectionConfig,
-    
+
     /// Threat correlation and analysis
     pub threat_correlation: ThreatCorrelationConfig,
 }
@@ -327,16 +327,16 @@ pub struct ThreatIntelligenceConfig {
 pub struct RiskAssessmentConfig {
     /// Risk assessment methodology
     pub methodology: RiskAssessmentMethodology,
-    
+
     /// Risk tolerance levels
     pub risk_tolerance: RiskToleranceLevels,
-    
+
     /// Impact assessment criteria
     pub impact_assessment: ImpactAssessmentCriteria,
-    
+
     /// Likelihood estimation methods
     pub likelihood_estimation: LikelihoodEstimationMethods,
-    
+
     /// Risk mitigation strategies
     pub mitigation_strategies: RiskMitigationStrategies,
 }
@@ -398,13 +398,13 @@ pub struct CountermeasureOptimizationConfig {
 pub struct CountermeasureEvaluationConfig {
     /// Effectiveness metrics
     pub effectiveness_metrics: EffectivenessMetrics,
-    
+
     /// Cost-benefit analysis
     pub cost_benefit_analysis: CostBenefitAnalysisConfig,
-    
+
     /// Dynamic adaptation based on threat landscape
     pub dynamic_adaptation: DynamicAdaptationConfig,
-    
+
     /// Countermeasure optimization
     pub optimization: CountermeasureOptimizationConfig,
 }
@@ -569,22 +569,22 @@ pub struct DataRetentionPolicies {
 pub struct CrossSiloFederatedConfig {
     /// Enable cross-silo federated learning
     pub enabled: bool,
-    
+
     /// Organization trust levels and relationships
     pub organization_trust: OrganizationTrustConfig,
-    
+
     /// Data governance and compliance
     pub data_governance: DataGovernanceConfig,
-    
+
     /// Inter-organizational privacy agreements
     pub privacy_agreements: PrivacyAgreementConfig,
-    
+
     /// Federated data marketplaces
     pub data_marketplace: DataMarketplaceConfig,
-    
+
     /// Regulatory compliance framework
     pub regulatory_compliance: RegulatoryComplianceConfig,
-    
+
     /// Audit and accountability mechanisms
     pub audit_accountability: AuditAccountabilityConfig,
 }
@@ -594,60 +594,26 @@ pub struct CrossSiloFederatedConfig {
 pub struct OrganizationTrustConfig {
     /// Trust establishment methods
     pub trust_establishment: TrustEstablishmentMethods,
-    
+
     /// Trust verification mechanisms
     pub trust_verification: TrustVerificationMechanisms,
-    
+
     /// Reputation systems for organizations
     pub reputation_system: OrganizationReputationSystem,
-    
+
     /// Trust degradation and recovery
     pub trust_lifecycle: TrustLifecycleManagement,
 }
 
-/// Data governance configuration for federated environments
-#[derive(Debug, Clone)]
-pub struct DataGovernanceConfig {
-    /// Data classification and labeling
-    pub data_classification: DataClassificationConfig,
-    
-    /// Data lineage tracking
-    pub data_lineage: DataLineageConfig,
-    
-    /// Data quality assurance
-    pub quality_assurance: DataQualityAssuranceConfig,
-    
-    /// Data retention and disposal policies
-    pub retention_policies: DataRetentionPolicies,
-    
-    /// Data sovereignty requirements
-    pub sovereignty_requirements: DataSovereigntyRequirements,
-}
-
-/// Privacy agreement configuration for inter-organizational collaboration
-#[derive(Debug, Clone)]
-pub struct PrivacyAgreementConfig {
-    /// Service level agreements for privacy
-    pub privacy_sla: PrivacySLAConfig,
-    
-    /// Data sharing agreements
-    pub data_sharing_agreements: DataSharingAgreementConfig,
-    
-    /// Privacy budget allocation mechanisms
-    pub budget_allocation: PrivacyBudgetAllocationConfig,
-    
-    /// Violation detection and remediation
-    pub violation_handling: ViolationHandlingConfig,
-}
 
 // Supporting enums and types for the advanced configurations
 
 #[derive(Debug, Clone, Copy)]
 pub enum ComputationalThreatLevel {
-    Limited,      // Individual attacker with limited resources
-    Moderate,     // Small organization or group
-    Substantial,  // Large organization or nation-state
-    Unlimited,    // Theoretical unlimited computational resources
+    Limited,     // Individual attacker with limited resources
+    Moderate,    // Small organization or group
+    Substantial, // Large organization or nation-state
+    Unlimited,   // Theoretical unlimited computational resources
 }
 
 #[derive(Debug, Clone)]
@@ -684,18 +650,18 @@ pub struct DataThreatCapabilities {
 
 #[derive(Debug, Clone, Copy)]
 pub enum AlgorithmicKnowledgeLevel {
-    BlackBox,     // No knowledge of algorithms
-    GrayBox,      // Partial knowledge
-    WhiteBox,     // Full algorithm knowledge
-    Adaptive,     // Can adapt based on observations
+    BlackBox, // No knowledge of algorithms
+    GrayBox,  // Partial knowledge
+    WhiteBox, // Full algorithm knowledge
+    Adaptive, // Can adapt based on observations
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum CollusionThreatLevel {
-    None,         // No collusion
-    Limited,      // Small number of colluding clients
-    Substantial,  // Significant fraction colluding
-    Majority,     // Majority collusion attack
+    None,        // No collusion
+    Limited,     // Small number of colluding clients
+    Substantial, // Significant fraction colluding
+    Majority,    // Majority collusion attack
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -4580,7 +4546,7 @@ impl<T: Float + Default + Clone + Send + Sync> StatisticalAnalyzer<T> {
             for &client_b in client_ids.iter().skip(i + 1) {
                 let update_a = &client_updates[client_a];
                 let update_b = &client_updates[client_b];
-                
+
                 if update_a.len() != update_b.len() {
                     continue;
                 }
@@ -4608,14 +4574,19 @@ impl<T: Float + Default + Clone + Send + Sync> StatisticalAnalyzer<T> {
     }
 
     fn compute_euclidean_distance(&self, a: &Array1<T>, b: &Array1<T>) -> f64 {
-        let diff_squared: T = a.iter()
+        let diff_squared: T = a
+            .iter()
             .zip(b.iter())
             .map(|(&x, &y)| (x - y) * (x - y))
             .sum();
         diff_squared.sqrt().to_f64().unwrap_or(0.0)
     }
 
-    fn compute_outlier_score(&self, client_id: &str, distances: &HashMap<(String, String), f64>) -> f64 {
+    fn compute_outlier_score(
+        &self,
+        client_id: &str,
+        distances: &HashMap<(String, String), f64>,
+    ) -> f64 {
         let mut client_distances = Vec::new();
 
         for ((a, b), &distance) in distances {
@@ -4630,9 +4601,11 @@ impl<T: Float + Default + Clone + Send + Sync> StatisticalAnalyzer<T> {
 
         // Z-score based outlier detection
         let mean: f64 = client_distances.iter().sum::<f64>() / client_distances.len() as f64;
-        let variance: f64 = client_distances.iter()
+        let variance: f64 = client_distances
+            .iter()
             .map(|&x| (x - mean) * (x - mean))
-            .sum::<f64>() / client_distances.len() as f64;
+            .sum::<f64>()
+            / client_distances.len() as f64;
         let std_dev = variance.sqrt();
 
         if std_dev == 0.0 {
@@ -4661,7 +4634,9 @@ impl<T: Float + Default + Clone + Send + Sync> RobustEstimators<T> {
         trim_ratio: f64,
     ) -> Result<Array1<T>, OptimizerError> {
         if client_updates.is_empty() {
-            return Err(OptimizerError::InvalidConfig("No client updates provided".to_string()));
+            return Err(OptimizerError::InvalidConfig(
+                "No client updates provided".to_string(),
+            ));
         }
 
         let first_update = client_updates.values().next().unwrap();
@@ -4688,7 +4663,7 @@ impl<T: Float + Default + Clone + Send + Sync> RobustEstimators<T> {
             // Remove extreme values
             let start = num_trim;
             let end = values.len() - num_trim;
-            
+
             if start >= end {
                 // If too many values trimmed, use median
                 result[i] = values[values.len() / 2];
@@ -4707,7 +4682,9 @@ impl<T: Float + Default + Clone + Send + Sync> RobustEstimators<T> {
         client_updates: &HashMap<String, Array1<T>>,
     ) -> Result<Array1<T>, OptimizerError> {
         if client_updates.is_empty() {
-            return Err(OptimizerError::InvalidConfig("No client updates provided".to_string()));
+            return Err(OptimizerError::InvalidConfig(
+                "No client updates provided".to_string(),
+            ));
         }
 
         let first_update = client_updates.values().next().unwrap();
@@ -4764,16 +4741,20 @@ impl<T: Float + Default + Clone + Send + Sync> RobustEstimators<T> {
         }
 
         // Find client with minimum score
-        let best_client = scores.iter()
+        let best_client = scores
+            .iter()
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(client, _)| client)
-            .ok_or_else(|| OptimizerError::InvalidConfig("Failed to find best client".to_string()))?;
+            .ok_or_else(|| {
+                OptimizerError::InvalidConfig("Failed to find best client".to_string())
+            })?;
 
         Ok(client_updates[best_client].clone())
     }
 
     fn compute_squared_distance(&self, a: &Array1<T>, b: &Array1<T>) -> f64 {
-        let distance_squared: T = a.iter()
+        let distance_squared: T = a
+            .iter()
             .zip(b.iter())
             .map(|(&x, &y)| (x - y) * (x - y))
             .sum();
@@ -4811,7 +4792,7 @@ impl UtilityEstimator {
         };
 
         self.measurement_history.push_back(measurement.clone());
-        
+
         if self.measurement_history.len() > 1000 {
             self.measurement_history.pop_front();
         }
@@ -4828,7 +4809,8 @@ impl UtilityEstimator {
         let recent = &self.measurement_history[self.measurement_history.len() - 1];
         let baseline = &self.measurement_history[0];
 
-        let accuracy_degradation = (baseline.model_accuracy - recent.model_accuracy) / baseline.model_accuracy;
+        let accuracy_degradation =
+            (baseline.model_accuracy - recent.model_accuracy) / baseline.model_accuracy;
         accuracy_degradation > self.degradation_threshold
     }
 
@@ -4839,10 +4821,13 @@ impl UtilityEstimator {
         }
 
         let recent_window = &self.measurement_history[self.measurement_history.len() - 5..];
-        let earlier_window = &self.measurement_history[self.measurement_history.len() - 10..self.measurement_history.len() - 5];
+        let earlier_window = &self.measurement_history
+            [self.measurement_history.len() - 10..self.measurement_history.len() - 5];
 
-        let recent_avg: f64 = recent_window.iter().map(|m| m.model_accuracy).sum::<f64>() / recent_window.len() as f64;
-        let earlier_avg: f64 = earlier_window.iter().map(|m| m.model_accuracy).sum::<f64>() / earlier_window.len() as f64;
+        let recent_avg: f64 = recent_window.iter().map(|m| m.model_accuracy).sum::<f64>()
+            / recent_window.len() as f64;
+        let earlier_avg: f64 = earlier_window.iter().map(|m| m.model_accuracy).sum::<f64>()
+            / earlier_window.len() as f64;
 
         (recent_avg - earlier_avg) / earlier_avg
     }
@@ -4872,13 +4857,11 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
             CompressionStrategy::None => (gradients.clone(), 1.0),
             CompressionStrategy::Quantization { bits } => {
                 self.quantize_gradients(gradients, bits)?
-            },
-            CompressionStrategy::TopK { k } => {
-                self.top_k_sparsification(gradients, k)?
-            },
+            }
+            CompressionStrategy::TopK { k } => self.top_k_sparsification(gradients, k)?,
             CompressionStrategy::RandomSparsification { sparsity_ratio } => {
                 self.random_sparsification(gradients, sparsity_ratio)?
-            },
+            }
             _ => (gradients.clone(), 1.0), // Fallback
         };
 
@@ -4909,11 +4892,15 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
         Ok(result)
     }
 
-    fn quantize_gradients(&self, gradients: &Array1<T>, bits: u8) -> Result<(Array1<T>, f64), OptimizerError> {
+    fn quantize_gradients(
+        &self,
+        gradients: &Array1<T>,
+        bits: u8,
+    ) -> Result<(Array1<T>, f64), OptimizerError> {
         let levels = (1 << bits) as f64;
         let max_val = gradients.iter().cloned().fold(T::neg_infinity(), T::max);
         let min_val = gradients.iter().cloned().fold(T::infinity(), T::min);
-        
+
         let range = max_val - min_val;
         if range == T::zero() {
             return Ok((gradients.clone(), 1.0));
@@ -4930,8 +4917,13 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
         Ok((quantized, compression_ratio))
     }
 
-    fn top_k_sparsification(&self, gradients: &Array1<T>, k: usize) -> Result<(Array1<T>, f64), OptimizerError> {
-        let mut indexed_grads: Vec<(usize, T)> = gradients.iter()
+    fn top_k_sparsification(
+        &self,
+        gradients: &Array1<T>,
+        k: usize,
+    ) -> Result<(Array1<T>, f64), OptimizerError> {
+        let mut indexed_grads: Vec<(usize, T)> = gradients
+            .iter()
             .enumerate()
             .map(|(i, &val)| (i, val))
             .collect();
@@ -4940,7 +4932,9 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
         indexed_grads.sort_by(|(_, a), (_, b)| {
             let abs_a = if *a >= T::zero() { *a } else { T::zero() - *a };
             let abs_b = if *b >= T::zero() { *b } else { T::zero() - *b };
-            abs_b.partial_cmp(&abs_a).unwrap_or(std::cmp::Ordering::Equal)
+            abs_b
+                .partial_cmp(&abs_a)
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
 
         let mut sparse_gradients = Array1::zeros(gradients.len());
@@ -4952,10 +4946,14 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
         Ok((sparse_gradients, compression_ratio))
     }
 
-    fn random_sparsification(&self, gradients: &Array1<T>, sparsity_ratio: f64) -> Result<(Array1<T>, f64), OptimizerError> {
+    fn random_sparsification(
+        &self,
+        gradients: &Array1<T>,
+        sparsity_ratio: f64,
+    ) -> Result<(Array1<T>, f64), OptimizerError> {
         let mut rng = rand::thread_rng();
         let keep_probability = 1.0 - sparsity_ratio;
-        
+
         let sparse_gradients = gradients.mapv(|x| {
             if rng.gen::<f64>() < keep_probability {
                 x / T::from(keep_probability).unwrap() // Unbiased estimator
@@ -5007,14 +5005,14 @@ impl BandwidthMonitor {
         };
 
         self.measurements.push_back(measurement.clone());
-        
+
         if self.measurements.len() > 1000 {
             self.measurements.pop_front();
         }
 
         // Update current conditions
         self.update_network_conditions();
-        
+
         measurement
     }
 
@@ -5024,14 +5022,18 @@ impl BandwidthMonitor {
         }
 
         let recent_measurements: Vec<_> = self.measurements.iter().rev().take(5).collect();
-        
-        let avg_bandwidth: f64 = recent_measurements.iter()
-            .map(|m| m.bandwidth_bps as f64)
-            .sum::<f64>() / recent_measurements.len() as f64;
 
-        let avg_latency: f64 = recent_measurements.iter()
+        let avg_bandwidth: f64 = recent_measurements
+            .iter()
+            .map(|m| m.bandwidth_bps as f64)
+            .sum::<f64>()
+            / recent_measurements.len() as f64;
+
+        let avg_latency: f64 = recent_measurements
+            .iter()
             .map(|m| m.latency_ms as f64)
-            .sum::<f64>() / recent_measurements.len() as f64;
+            .sum::<f64>()
+            / recent_measurements.len() as f64;
 
         self.current_conditions = NetworkConditions {
             available_bandwidth_bps: avg_bandwidth as u64,
@@ -5039,7 +5041,8 @@ impl BandwidthMonitor {
             jitter_ms: self.calculate_jitter(&recent_measurements),
             packet_loss_rate: 0.0, // Would need additional monitoring
             connection_quality: self.assess_connection_quality(avg_bandwidth, avg_latency),
-            congestion_level: self.congestion_level_to_f64(self.assess_congestion_level(&recent_measurements)),
+            congestion_level: self
+                .congestion_level_to_f64(self.assess_congestion_level(&recent_measurements)),
         };
     }
 
@@ -5050,11 +5053,13 @@ impl BandwidthMonitor {
 
         let latencies: Vec<u64> = measurements.iter().map(|m| m.latency_ms).collect();
         let avg_latency: f64 = latencies.iter().sum::<u64>() as f64 / latencies.len() as f64;
-        
-        let variance: f64 = latencies.iter()
+
+        let variance: f64 = latencies
+            .iter()
             .map(|&l| (l as f64 - avg_latency).powi(2))
-            .sum::<f64>() / latencies.len() as f64;
-        
+            .sum::<f64>()
+            / latencies.len() as f64;
+
         variance.sqrt() as u64
     }
 
@@ -5075,7 +5080,8 @@ impl BandwidthMonitor {
             return CongestionLevel::Low;
         }
 
-        let bandwidth_trend: Vec<i64> = measurements.windows(2)
+        let bandwidth_trend: Vec<i64> = measurements
+            .windows(2)
             .map(|pair| pair[1].bandwidth_bps as i64 - pair[0].bandwidth_bps as i64)
             .collect();
 

@@ -362,7 +362,9 @@ pub struct ProfilingScope {
 
 impl ProfilingScope {
     pub fn new(name: impl Into<String>, shape: &[usize], backend: Backend) -> Self {
-        let profiler = PROFILER.lock().expect("PROFILER mutex should not be poisoned");
+        let profiler = PROFILER
+            .lock()
+            .expect("PROFILER mutex should not be poisoned");
         let initial_memory = profiler.current_memory;
         drop(profiler);
 
@@ -381,7 +383,9 @@ impl Drop for ProfilingScope {
         let duration = self.start.elapsed();
         let thread_count = rayon::current_num_threads();
 
-        let mut profiler = PROFILER.lock().expect("PROFILER mutex should not be poisoned");
+        let mut profiler = PROFILER
+            .lock()
+            .expect("PROFILER mutex should not be poisoned");
         let memory_allocated = profiler.current_memory.saturating_sub(self.initial_memory);
 
         let metric = OperationMetrics {
@@ -410,27 +414,42 @@ macro_rules! profile_op {
 
 /// Enable global profiling
 pub fn enable_profiling() {
-    PROFILER.lock().expect("PROFILER mutex should not be poisoned").enable();
+    PROFILER
+        .lock()
+        .expect("PROFILER mutex should not be poisoned")
+        .enable();
 }
 
 /// Disable global profiling
 pub fn disable_profiling() {
-    PROFILER.lock().expect("PROFILER mutex should not be poisoned").disable();
+    PROFILER
+        .lock()
+        .expect("PROFILER mutex should not be poisoned")
+        .disable();
 }
 
 /// Enable memory tracking
 pub fn enable_memory_tracking() {
-    PROFILER.lock().expect("PROFILER mutex should not be poisoned").enable_memory_tracking();
+    PROFILER
+        .lock()
+        .expect("PROFILER mutex should not be poisoned")
+        .enable_memory_tracking();
 }
 
 /// Clear all profiling data
 pub fn clear_profiling_data() {
-    PROFILER.lock().expect("PROFILER mutex should not be poisoned").clear();
+    PROFILER
+        .lock()
+        .expect("PROFILER mutex should not be poisoned")
+        .clear();
 }
 
 /// Get performance report
 pub fn get_performance_report() -> PerformanceReport {
-    PROFILER.lock().expect("PROFILER mutex should not be poisoned").report()
+    PROFILER
+        .lock()
+        .expect("PROFILER mutex should not be poisoned")
+        .report()
 }
 
 /// Display performance report
@@ -1029,7 +1048,10 @@ impl MemoryProfiler {
             return;
         }
 
-        let mut allocations = self.allocations.lock().expect("Memory allocations mutex should not be poisoned");
+        let mut allocations = self
+            .allocations
+            .lock()
+            .expect("Memory allocations mutex should not be poisoned");
         let info = allocations
             .entry(operation.to_string())
             .or_insert(AllocationInfo {
@@ -1050,14 +1072,20 @@ impl MemoryProfiler {
             return;
         }
 
-        let mut allocations = self.allocations.lock().expect("Memory allocations mutex should not be poisoned");
+        let mut allocations = self
+            .allocations
+            .lock()
+            .expect("Memory allocations mutex should not be poisoned");
         if let Some(info) = allocations.get_mut(operation) {
             info.current_allocated = info.current_allocated.saturating_sub(size);
         }
     }
 
     pub fn report(&self) -> MemoryReport {
-        let allocations = self.allocations.lock().expect("Memory allocations mutex should not be poisoned");
+        let allocations = self
+            .allocations
+            .lock()
+            .expect("Memory allocations mutex should not be poisoned");
 
         let mut operations: Vec<_> = allocations
             .iter()

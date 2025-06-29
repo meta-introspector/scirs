@@ -28,15 +28,21 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 }
 
 /// Calculate optimal kernel size for a given sigma
-pub fn calculate_kernel_size<T: Float + FromPrimitive>(sigma: T, truncate: Option<T>) -> NdimageResult<usize> {
+pub fn calculate_kernel_size<T: Float + FromPrimitive>(
+    sigma: T,
+    truncate: Option<T>,
+) -> NdimageResult<usize> {
     let truncate_val = truncate.unwrap_or_else(|| {
-        safe_f64_to_float(4.0).unwrap_or_else(|_| {
-            T::from(4).unwrap_or_else(|| T::zero())
-        })
+        safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4).unwrap_or_else(|| T::zero()))
     });
-    let size = safe_usize_to_float::<T>(1)? + (sigma * truncate_val * safe_f64_to_float(2.0)?).ceil().to_usize()
-        .ok_or_else(|| NdimageError::ComputationError("Failed to convert kernel size to usize".into()))?;
-    
+    let size = safe_usize_to_float::<T>(1)?
+        + (sigma * truncate_val * safe_f64_to_float(2.0)?)
+            .ceil()
+            .to_usize()
+            .ok_or_else(|| {
+                NdimageError::ComputationError("Failed to convert kernel size to usize".into())
+            })?;
+
     // Ensure odd size
     if size % 2 == 0 {
         Ok(size + 1)
@@ -46,55 +52,59 @@ pub fn calculate_kernel_size<T: Float + FromPrimitive>(sigma: T, truncate: Optio
 }
 
 /// Generate a Gaussian kernel with specified sigma
-pub fn generate_gaussian_kernel<T: Float + FromPrimitive>(sigma: T, size: Option<usize>) -> NdimageResult<Array<T, Ix1>> {
+pub fn generate_gaussian_kernel<T: Float + FromPrimitive>(
+    sigma: T,
+    size: Option<usize>,
+) -> NdimageResult<Array<T, Ix1>> {
     let kernel_size = match size {
         Some(s) => s,
         None => calculate_kernel_size(sigma, None)?,
     };
-    
+
     if kernel_size % 2 == 0 {
         return Err(NdimageError::InvalidInput("Kernel size must be odd".into()));
     }
-    
+
     let half = kernel_size / 2;
     let mut kernel = Array::zeros(kernel_size);
     let sigma_sq = sigma * sigma;
-    let norm_factor = safe_f64_to_float::<T>(1.0)? / (sigma * safe_f64_to_float(std::f64::consts::TAU.sqrt())?);
+    let norm_factor =
+        safe_f64_to_float::<T>(1.0)? / (sigma * safe_f64_to_float(std::f64::consts::TAU.sqrt())?);
     let exp_factor = safe_f64_to_float(-0.5)? / sigma_sq;
-    
+
     let mut sum = T::zero();
     for (i, k) in kernel.iter_mut().enumerate() {
         let x = safe_usize_to_float(i)? - safe_usize_to_float(half)?;
         *k = norm_factor * (exp_factor * x * x).exp();
         sum = sum + *k;
     }
-    
+
     // Normalize the kernel to sum to 1
     for k in kernel.iter_mut() {
         *k = *k / sum;
     }
-    
+
     Ok(kernel)
 }
 
 /// Fast separable Gaussian blur implementation
 pub fn separable_gaussian_blur<T>(
-    input: ArrayView2<T>, 
-    sigma_x: T, 
-    sigma_y: T
+    input: ArrayView2<T>,
+    sigma_x: T,
+    sigma_y: T,
 ) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + Zero,
 {
     let (height, width) = input.dim();
-    
+
     // Generate kernels
     let kernel_x = generate_gaussian_kernel(sigma_x, None)?;
     let kernel_y = generate_gaussian_kernel(sigma_y, None)?;
-    
+
     // Horizontal pass
     let mut temp = Array::zeros((height, width));
-    
+
     #[cfg(feature = "parallel")]
     {
         temp.axis_iter_mut(ndarray::Axis(0))
@@ -104,24 +114,25 @@ where
                 for x in 0..width {
                     let mut sum = T::zero();
                     let kernel_half = kernel_x.len() / 2;
-                    
+
                     for (k_idx, &k_val) in kernel_x.iter().enumerate() {
                         let src_x = (x as isize + k_idx as isize - kernel_half as isize)
-                            .clamp(0, width as isize - 1) as usize;
+                            .clamp(0, width as isize - 1)
+                            as usize;
                         sum = sum + input[(y, src_x)] * k_val;
                     }
                     row[x] = sum;
                 }
             });
     }
-    
+
     #[cfg(not(feature = "parallel"))]
     {
         for y in 0..height {
             for x in 0..width {
                 let mut sum = T::zero();
                 let kernel_half = kernel_x.len() / 2;
-                
+
                 for (k_idx, &k_val) in kernel_x.iter().enumerate() {
                     let src_x = (x as isize + k_idx as isize - kernel_half as isize)
                         .clamp(0, width as isize - 1) as usize;
@@ -131,37 +142,39 @@ where
             }
         }
     }
-    
+
     // Vertical pass
     let mut output = Array::zeros((height, width));
-    
+
     #[cfg(feature = "parallel")]
     {
-        output.axis_chunks_iter_mut(ndarray::Axis(1), 1)
+        output
+            .axis_chunks_iter_mut(ndarray::Axis(1), 1)
             .into_par_iter()
             .enumerate()
             .for_each(|(x, mut col)| {
                 for y in 0..height {
                     let mut sum = T::zero();
                     let kernel_half = kernel_y.len() / 2;
-                    
+
                     for (k_idx, &k_val) in kernel_y.iter().enumerate() {
                         let src_y = (y as isize + k_idx as isize - kernel_half as isize)
-                            .clamp(0, height as isize - 1) as usize;
+                            .clamp(0, height as isize - 1)
+                            as usize;
                         sum = sum + temp[(src_y, x)] * k_val;
                     }
                     col[[y, 0]] = sum;
                 }
             });
     }
-    
+
     #[cfg(not(feature = "parallel"))]
     {
         for x in 0..width {
             for y in 0..height {
                 let mut sum = T::zero();
                 let kernel_half = kernel_y.len() / 2;
-                
+
                 for (k_idx, &k_val) in kernel_y.iter().enumerate() {
                     let src_y = (y as isize + k_idx as isize - kernel_half as isize)
                         .clamp(0, height as isize - 1) as usize;
@@ -171,7 +184,7 @@ where
             }
         }
     }
-    
+
     Ok(output)
 }
 
@@ -186,29 +199,32 @@ where
 {
     let (input_h, input_w) = input.dim();
     let (kernel_h, kernel_w) = kernel.dim();
-    
+
     if kernel_h == 0 || kernel_w == 0 {
         return Err(NdimageError::InvalidInput("Kernel cannot be empty".into()));
     }
-    
+
     let kernel_half_h = kernel_h / 2;
     let kernel_half_w = kernel_w / 2;
-    
+
     let mut output = Array::zeros((input_h, input_w));
-    
+
     for y in 0..input_h {
         for x in 0..input_w {
             let mut sum = T::zero();
-            
+
             for ky in 0..kernel_h {
                 for kx in 0..kernel_w {
                     let src_y = y as isize + ky as isize - kernel_half_h as isize;
                     let src_x = x as isize + kx as isize - kernel_half_w as isize;
-                    
+
                     let pixel_value = match mode {
                         BorderMode::Constant => {
-                            if src_y >= 0 && src_y < input_h as isize && 
-                               src_x >= 0 && src_x < input_w as isize {
+                            if src_y >= 0
+                                && src_y < input_h as isize
+                                && src_x >= 0
+                                && src_x < input_w as isize
+                            {
                                 input[(src_y as usize, src_x as usize)]
                             } else {
                                 T::zero()
@@ -221,16 +237,18 @@ where
                                 input_h - 2 - (src_y - input_h as isize) as usize
                             } else {
                                 src_y as usize
-                            }.min(input_h - 1);
-                            
+                            }
+                            .min(input_h - 1);
+
                             let reflect_x = if src_x < 0 {
                                 (-src_x) as usize
                             } else if src_x >= input_w as isize {
                                 input_w - 2 - (src_x - input_w as isize) as usize
                             } else {
                                 src_x as usize
-                            }.min(input_w - 1);
-                            
+                            }
+                            .min(input_w - 1);
+
                             input[(reflect_y, reflect_x)]
                         }
                         BorderMode::Nearest => {
@@ -239,39 +257,47 @@ where
                             input[(clamp_y, clamp_x)]
                         }
                         BorderMode::Wrap => {
-                            let wrap_y = ((src_y % input_h as isize + input_h as isize) % input_h as isize) as usize;
-                            let wrap_x = ((src_x % input_w as isize + input_w as isize) % input_w as isize) as usize;
+                            let wrap_y = ((src_y % input_h as isize + input_h as isize)
+                                % input_h as isize)
+                                as usize;
+                            let wrap_x = ((src_x % input_w as isize + input_w as isize)
+                                % input_w as isize)
+                                as usize;
                             input[(wrap_y, wrap_x)]
                         }
                         BorderMode::Mirror => {
                             let mirror_y = if src_y < 0 {
                                 ((-src_y - 1) % (2 * input_h as isize)) as usize
                             } else if src_y >= input_h as isize {
-                                ((2 * input_h as isize - src_y - 1) % (2 * input_h as isize)) as usize
+                                ((2 * input_h as isize - src_y - 1) % (2 * input_h as isize))
+                                    as usize
                             } else {
                                 src_y as usize
-                            }.min(input_h - 1);
-                            
+                            }
+                            .min(input_h - 1);
+
                             let mirror_x = if src_x < 0 {
                                 ((-src_x - 1) % (2 * input_w as isize)) as usize
                             } else if src_x >= input_w as isize {
-                                ((2 * input_w as isize - src_x - 1) % (2 * input_w as isize)) as usize
+                                ((2 * input_w as isize - src_x - 1) % (2 * input_w as isize))
+                                    as usize
                             } else {
                                 src_x as usize
-                            }.min(input_w - 1);
-                            
+                            }
+                            .min(input_w - 1);
+
                             input[(mirror_y, mirror_x)]
                         }
                     };
-                    
+
                     sum = sum + pixel_value * kernel[(ky, kx)];
                 }
             }
-            
+
             output[(y, x)] = sum;
         }
     }
-    
+
     Ok(output)
 }
 
@@ -325,8 +351,9 @@ where
 
     // Create output array with default constant value
     let const_val = constant_value.unwrap_or_else(|| T::zero());
-    let dimension = D::from_dimension(&ndarray::IxDyn(&new_shape))
-        .map_err(|_| NdimageError::DimensionError("Could not create dimension from shape".into()))?;
+    let dimension = D::from_dimension(&ndarray::IxDyn(&new_shape)).map_err(|_| {
+        NdimageError::DimensionError("Could not create dimension from shape".into())
+    })?;
     let mut output = Array::<T, D>::from_elem(dimension, const_val);
 
     // For 1D arrays
@@ -667,11 +694,17 @@ where
     let input_dyn = input
         .clone()
         .into_dimensionality::<ndarray::IxDyn>()
-        .map_err(|_| NdimageError::DimensionError("Failed to convert input to dynamic dimensionality".into()))?;
+        .map_err(|_| {
+            NdimageError::DimensionError("Failed to convert input to dynamic dimensionality".into())
+        })?;
     let mut output_dyn = output
         .clone()
         .into_dimensionality::<ndarray::IxDyn>()
-        .map_err(|_| NdimageError::DimensionError("Failed to convert output to dynamic dimensionality".into()))?;
+        .map_err(|_| {
+            NdimageError::DimensionError(
+                "Failed to convert output to dynamic dimensionality".into(),
+            )
+        })?;
 
     // Calculate starts for center region
     let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
@@ -1816,9 +1849,13 @@ mod tests {
         let dest = Array3::<f64>::zeros((4, 4, 4));
 
         // Convert to dynamic dimensionality
-        let source_dyn = source.clone().into_dimensionality::<IxDyn>()
+        let source_dyn = source
+            .clone()
+            .into_dimensionality::<IxDyn>()
             .expect("source conversion to dynamic dimensionality should succeed");
-        let mut dest_dyn = dest.clone().into_dimensionality::<IxDyn>()
+        let mut dest_dyn = dest
+            .clone()
+            .into_dimensionality::<IxDyn>()
             .expect("dest conversion to dynamic dimensionality should succeed");
 
         // Copy source to position (1,1,1) in destination
@@ -1827,7 +1864,8 @@ mod tests {
             .expect("copy_nd_array should succeed for test");
 
         // Convert back for easier testing
-        let dest = dest_dyn.into_dimensionality::<ndarray::Ix3>()
+        let dest = dest_dyn
+            .into_dimensionality::<ndarray::Ix3>()
             .expect("dest conversion back to 3D should succeed");
 
         // Check that source values are correctly copied to destination

@@ -355,7 +355,10 @@ where
         expanded_shape.extend(std::iter::repeat_n(1, dims_to_add));
 
         // Try to reshape to expanded shape
-        match array.clone().into_shape_with_order(ndarray::IxDyn(&expanded_shape)) {
+        match array
+            .clone()
+            .into_shape_with_order(ndarray::IxDyn(&expanded_shape))
+        {
             Ok(reshaped) => reshaped.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(
                     ErrorContext::new(format!(

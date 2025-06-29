@@ -517,4 +517,6 @@ pub fn star_discrepancy(samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> {
 
 /// Advanced QMC sequences and stratified sampling
 pub mod advanced;
+pub mod enhanced_sequences;
 pub use advanced::*;
+pub use enhanced_sequences::*;

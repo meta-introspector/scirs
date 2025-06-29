@@ -5,9 +5,9 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, NumCast, Zero, One};
-use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*, parallel_ops::*};
+use num_traits::{Float, NumCast, One, Zero};
 use rand::Rng;
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 
 /// SIMD-optimized rolling statistics with configurable functions
 ///
@@ -23,7 +23,7 @@ where
 {
     check_array_finite(data, "data")?;
     check_positive(window_size, "window_size")?;
-    
+
     if window_size > data.len() {
         return Err(StatsError::InvalidArgument(
             "Window size cannot be larger than data length".to_string(),
@@ -32,7 +32,7 @@ where
 
     let n_windows = data.len() - window_size + 1;
     let mut results = RollingStatsResult::new(n_windows, statistics);
-    
+
     // Sequential processing for all datasets (parallel version needs different implementation)
     for i in 0..n_windows {
         let window = data.slice(ndarray::s![i..i + window_size]);
@@ -97,8 +97,12 @@ impl<F: Zero + Clone> RollingStatsResult<F> {
                 RollingStatistic::Skewness => result.skewness = Some(Array1::zeros(n_windows)),
                 RollingStatistic::Kurtosis => result.kurtosis = Some(Array1::zeros(n_windows)),
                 RollingStatistic::Range => result.ranges = Some(Array1::zeros(n_windows)),
-                RollingStatistic::StandardDeviation => result.std_devs = Some(Array1::zeros(n_windows)),
-                RollingStatistic::MeanAbsoluteDeviation => result.mad = Some(Array1::zeros(n_windows)),
+                RollingStatistic::StandardDeviation => {
+                    result.std_devs = Some(Array1::zeros(n_windows))
+                }
+                RollingStatistic::MeanAbsoluteDeviation => {
+                    result.mad = Some(Array1::zeros(n_windows))
+                }
             }
         }
 
@@ -116,7 +120,7 @@ fn compute_window_statistics<F>(
 {
     let window_size = window.len();
     let window_size_f = F::from(window_size).unwrap();
-    
+
     // Compute basic statistics that might be needed for derived ones
     let (sum, sum_sq, min_val, max_val) = if window_size > 16 {
         // SIMD path
@@ -130,8 +134,12 @@ fn compute_window_statistics<F>(
         // Scalar fallback
         let sum = window.iter().fold(F::zero(), |acc, &x| acc + x);
         let sum_sq = window.iter().fold(F::zero(), |acc, &x| acc + x * x);
-        let min_val = window.iter().fold(window[0], |acc, &x| if x < acc { x } else { acc });
-        let max_val = window.iter().fold(window[0], |acc, &x| if x > acc { x } else { acc });
+        let min_val = window
+            .iter()
+            .fold(window[0], |acc, &x| if x < acc { x } else { acc });
+        let max_val = window
+            .iter()
+            .fold(window[0], |acc, &x| if x > acc { x } else { acc });
         (sum, sum_sq, min_val, max_val)
     };
 
@@ -179,7 +187,10 @@ fn compute_window_statistics<F>(
             RollingStatistic::Median => {
                 if let Some(ref mut medians) = results.medians {
                     let mut sorted_window = window.to_owned();
-                    sorted_window.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    sorted_window
+                        .as_slice_mut()
+                        .unwrap()
+                        .sort_by(|a, b| a.partial_cmp(b).unwrap());
                     medians[window_idx] = if window_size % 2 == 1 {
                         sorted_window[window_size / 2]
                     } else {
@@ -196,13 +207,19 @@ fn compute_window_statistics<F>(
                         let skew_sum = if window_size > 16 {
                             let mean_vec = Array1::from_elem(window_size, mean);
                             let centered = F::simd_sub(window, &mean_vec.view());
-                            let cubed = F::simd_mul(&F::simd_mul(&centered.view(), &centered.view()).view(), &centered.view());
+                            let cubed = F::simd_mul(
+                                &F::simd_mul(&centered.view(), &centered.view()).view(),
+                                &centered.view(),
+                            );
                             F::simd_sum(&cubed.view())
                         } else {
-                            window.iter().map(|&x| {
-                                let dev = x - mean;
-                                dev * dev * dev
-                            }).fold(F::zero(), |acc, x| acc + x)
+                            window
+                                .iter()
+                                .map(|&x| {
+                                    let dev = x - mean;
+                                    dev * dev * dev
+                                })
+                                .fold(F::zero(), |acc, x| acc + x)
                         };
                         skewness[window_idx] = skew_sum / (window_size_f * std_dev.powi(3));
                     } else {
@@ -220,13 +237,17 @@ fn compute_window_statistics<F>(
                             let fourth = F::simd_mul(&squared.view(), &squared.view());
                             F::simd_sum(&fourth.view())
                         } else {
-                            window.iter().map(|&x| {
-                                let dev = x - mean;
-                                let dev_sq = dev * dev;
-                                dev_sq * dev_sq
-                            }).fold(F::zero(), |acc, x| acc + x)
+                            window
+                                .iter()
+                                .map(|&x| {
+                                    let dev = x - mean;
+                                    let dev_sq = dev * dev;
+                                    dev_sq * dev_sq
+                                })
+                                .fold(F::zero(), |acc, x| acc + x)
                         };
-                        kurtosis[window_idx] = (kurt_sum / (window_size_f * variance * variance)) - F::from(3.0).unwrap();
+                        kurtosis[window_idx] = (kurt_sum / (window_size_f * variance * variance))
+                            - F::from(3.0).unwrap();
                     } else {
                         kurtosis[window_idx] = F::zero();
                     }
@@ -240,7 +261,10 @@ fn compute_window_statistics<F>(
                         let abs_centered = F::simd_abs(&centered.view());
                         F::simd_sum(&abs_centered.view())
                     } else {
-                        window.iter().map(|&x| (x - mean).abs()).fold(F::zero(), |acc, x| acc + x)
+                        window
+                            .iter()
+                            .map(|&x| (x - mean).abs())
+                            .fold(F::zero(), |acc, x| acc + x)
                     };
                     mad[window_idx] = mad_sum / window_size_f;
                 }
@@ -262,9 +286,9 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
 {
     check_array_finite(data, "data")?;
-    
+
     let (n_rows, n_cols) = data.dim();
-    
+
     if n_rows == 0 || n_cols == 0 {
         return Err(StatsError::InvalidArgument(
             "Data matrix cannot be empty".to_string(),
@@ -324,7 +348,7 @@ where
 {
     let (n_rows, n_cols) = data.dim();
     let mut results = MatrixStatsResult::new_column_wise(n_cols, operations);
-    
+
     // Use parallel processing for wide matrices
     if n_cols > 100 {
         parallel_for(0..n_cols, |chunk| {
@@ -352,7 +376,7 @@ where
 {
     let (n_rows, n_cols) = data.dim();
     let mut results = MatrixStatsResult::new_row_wise(n_rows, operations);
-    
+
     // Use parallel processing for tall matrices
     if n_rows > 100 {
         parallel_for(0..n_rows, |chunk| {
@@ -379,16 +403,19 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
 {
     let mut results = MatrixStatsResult::new_global(operations);
-    
+
     for operation in operations {
         match operation {
             MatrixOperation::FrobeniusNorm => {
                 let squared_sum = if data.len() > 1000 {
                     // Use parallel reduction for large matrices
                     let chunks: Vec<_> = data.chunks(1000).collect();
-                    parallel_reduce(&chunks, F::zero(), |chunk| {
-                        F::simd_sum(&F::simd_mul(&chunk.view(), &chunk.view()).view())
-                    }, |acc, val| acc + val)
+                    parallel_reduce(
+                        &chunks,
+                        F::zero(),
+                        |chunk| F::simd_sum(&F::simd_mul(&chunk.view(), &chunk.view()).view()),
+                        |acc, val| acc + val,
+                    )
                 } else {
                     let squared = F::simd_mul(&data.view(), &data.view());
                     F::simd_sum(&squared.view())
@@ -561,7 +588,10 @@ fn compute_vector_operation<F>(
         MatrixOperation::Median => {
             if let Some(ref mut medians) = results.medians {
                 let mut sorted_data = data.to_owned();
-                sorted_data.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
+                sorted_data
+                    .as_slice_mut()
+                    .unwrap()
+                    .sort_by(|a, b| a.partial_cmp(b).unwrap());
                 medians[idx] = if n % 2 == 1 {
                     sorted_data[n / 2]
                 } else {
@@ -574,7 +604,10 @@ fn compute_vector_operation<F>(
         MatrixOperation::Quantile(q) => {
             if let Some(ref mut quantiles) = results.quantiles {
                 let mut sorted_data = data.to_owned();
-                sorted_data.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
+                sorted_data
+                    .as_slice_mut()
+                    .unwrap()
+                    .sort_by(|a, b| a.partial_cmp(b).unwrap());
                 let pos = q * (n - 1) as f64;
                 let lower_idx = pos.floor() as usize;
                 let upper_idx = (lower_idx + 1).min(n - 1);
@@ -695,60 +728,65 @@ where
     check_array_finite(data, "data")?;
     check_positive(n_bootstrap, "n_bootstrap")?;
     check_probability(confidence_level, "confidence_level")?;
-    
+
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Data array cannot be empty".to_string(),
         ));
     }
 
-    use rand::{Rng, SeedableRng};
     use rand::rngs::StdRng;
-    
+    use rand::{Rng, SeedableRng};
+
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
-        None => StdRng::from_entropy(),
+        None => SeedableRng::from_entropy(),
     };
 
     let n_data = data.len();
     let mut bootstrap_stats = Array1::zeros(n_bootstrap);
-    
+
     // Parallel bootstrap sampling for large numbers of bootstrap samples
     if n_bootstrap > 1000 {
         let seeds: Vec<u64> = (0..n_bootstrap).map(|_| rng.gen()).collect();
-        
+
         parallel_for_indexed(0..n_bootstrap, |chunk, chunk_start| {
             let mut local_rng = StdRng::seed_from_u64(seeds[chunk_start]);
             for (local_idx, global_idx) in chunk.enumerate() {
                 let bootstrap_sample = generate_bootstrap_sample(data, &mut local_rng);
-                bootstrap_stats[global_idx] = compute_bootstrap_statistic(&bootstrap_sample.view(), &statistic_fn);
+                bootstrap_stats[global_idx] =
+                    compute_bootstrap_statistic(&bootstrap_sample.view(), &statistic_fn);
             }
         });
     } else {
         for i in 0..n_bootstrap {
             let bootstrap_sample = generate_bootstrap_sample(data, &mut rng);
-            bootstrap_stats[i] = compute_bootstrap_statistic(&bootstrap_sample.view(), &statistic_fn);
+            bootstrap_stats[i] =
+                compute_bootstrap_statistic(&bootstrap_sample.view(), &statistic_fn);
         }
     }
 
     // Sort bootstrap statistics for confidence interval computation
-    bootstrap_stats.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
-    
+    bootstrap_stats
+        .as_slice_mut()
+        .unwrap()
+        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+
     // Compute confidence interval
     let alpha = 1.0 - confidence_level;
     let lower_idx = ((alpha / 2.0) * n_bootstrap as f64) as usize;
     let upper_idx = ((1.0 - alpha / 2.0) * n_bootstrap as f64) as usize;
-    
+
     let lower_bound = bootstrap_stats[lower_idx.min(n_bootstrap - 1)];
     let upper_bound = bootstrap_stats[upper_idx.min(n_bootstrap - 1)];
-    
+
     // Compute original statistic
     let original_stat = compute_bootstrap_statistic(data, &statistic_fn);
-    
+
     // Compute bootstrap statistics
     let bootstrap_mean = bootstrap_stats.mean().unwrap();
     let bootstrap_std = bootstrap_stats.var(1.0).sqrt(); // ddof=1
-    
+
     Ok(BootstrapResult {
         original_statistic: original_stat,
         bootstrap_mean,
@@ -795,12 +833,12 @@ where
 {
     let n = data.len();
     let mut sample = Array1::zeros(n);
-    
+
     for i in 0..n {
         let idx = rng.gen_range(0..n);
         sample[i] = data[idx];
     }
-    
+
     sample
 }
 
@@ -893,7 +931,10 @@ where
         }
         BootstrapStatistic::Median => {
             let mut sorted_data = data.to_owned();
-            sorted_data.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_data
+                .as_slice_mut()
+                .unwrap()
+                .sort_by(|a, b| a.partial_cmp(b).unwrap());
             if n % 2 == 1 {
                 sorted_data[n / 2]
             } else {
@@ -904,7 +945,10 @@ where
         }
         BootstrapStatistic::Quantile(q) => {
             let mut sorted_data = data.to_owned();
-            sorted_data.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_data
+                .as_slice_mut()
+                .unwrap()
+                .sort_by(|a, b| a.partial_cmp(b).unwrap());
             let pos = q * (n - 1) as f64;
             let lower_idx = pos.floor() as usize;
             let upper_idx = (lower_idx + 1).min(n - 1);
@@ -915,20 +959,25 @@ where
         }
         BootstrapStatistic::InterquartileRange => {
             let mut sorted_data = data.to_owned();
-            sorted_data.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_data
+                .as_slice_mut()
+                .unwrap()
+                .sort_by(|a, b| a.partial_cmp(b).unwrap());
             let q1_pos = 0.25 * (n - 1) as f64;
             let q3_pos = 0.75 * (n - 1) as f64;
-            
+
             let q1_lower = q1_pos.floor() as usize;
             let q1_upper = (q1_lower + 1).min(n - 1);
             let q1_weight = F::from(q1_pos - q1_lower as f64).unwrap();
-            let q1 = sorted_data[q1_lower] + q1_weight * (sorted_data[q1_upper] - sorted_data[q1_lower]);
-            
+            let q1 =
+                sorted_data[q1_lower] + q1_weight * (sorted_data[q1_upper] - sorted_data[q1_lower]);
+
             let q3_lower = q3_pos.floor() as usize;
             let q3_upper = (q3_lower + 1).min(n - 1);
             let q3_weight = F::from(q3_pos - q3_lower as f64).unwrap();
-            let q3 = sorted_data[q3_lower] + q3_weight * (sorted_data[q3_upper] - sorted_data[q3_lower]);
-            
+            let q3 =
+                sorted_data[q3_lower] + q3_weight * (sorted_data[q3_upper] - sorted_data[q3_lower]);
+
             q3 - q1
         }
         BootstrapStatistic::Skewness => {
@@ -938,7 +987,7 @@ where
                 data.iter().copied().sum::<F>()
             };
             let mean = sum / n_f;
-            
+
             let (variance, skew_sum) = if use_simd {
                 let mean_vec = Array1::from_elem(n, mean);
                 let centered = F::simd_sub(data, &mean_vec.view());
@@ -959,7 +1008,7 @@ where
                 let variance = variance_sum / F::from(n - 1).unwrap();
                 (variance, skew_sum)
             };
-            
+
             if variance > F::zero() {
                 let std_dev = variance.sqrt();
                 skew_sum / (n_f * std_dev.powi(3))
@@ -974,7 +1023,7 @@ where
                 data.iter().copied().sum::<F>()
             };
             let mean = sum / n_f;
-            
+
             let (variance, kurt_sum) = if use_simd {
                 let mean_vec = Array1::from_elem(n, mean);
                 let centered = F::simd_sub(data, &mean_vec.view());
@@ -995,7 +1044,7 @@ where
                 let variance = variance_sum / F::from(n - 1).unwrap();
                 (variance, kurt_sum)
             };
-            
+
             if variance > F::zero() {
                 (kurt_sum / (n_f * variance * variance)) - F::from(3.0).unwrap()
             } else {
@@ -1020,16 +1069,16 @@ where
 {
     check_array_finite(data, "data")?;
     check_array_finite(eval_points, "eval_points")?;
-    
+
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Data array cannot be empty".to_string(),
         ));
     }
-    
+
     let n_data = data.len();
     let n_eval = eval_points.len();
-    
+
     // Compute bandwidth using Scott's rule if not provided
     let h = match bandwidth {
         Some(bw) => {
@@ -1048,50 +1097,54 @@ where
                 variance.sqrt()
             } else {
                 let mean = data.iter().copied().sum::<F>() / F::from(n_data).unwrap();
-                let variance = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>() / F::from(n_data - 1).unwrap();
+                let variance = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
+                    / F::from(n_data - 1).unwrap();
                 variance.sqrt()
             };
-            
+
             let scott_factor = F::from(n_data as f64).unwrap().powf(F::from(-0.2).unwrap());
             std_dev * scott_factor
         }
     };
-    
+
     let mut density = Array1::zeros(n_eval);
     let n_data_f = F::from(n_data).unwrap();
     let normalization = F::one() / (n_data_f * h);
-    
+
     // Use parallel processing for large evaluation grids
     if n_eval > 100 && n_data > 100 {
         parallel_for(0..n_eval, |chunk| {
             for eval_idx in chunk {
                 let eval_point = eval_points[eval_idx];
                 let mut density_sum = F::zero();
-                
+
                 // SIMD-optimized kernel evaluation
                 let n_simd_chunks = n_data / 8; // Assume 8-wide SIMD
                 let remainder = n_data % 8;
-                
+
                 // Process SIMD chunks
                 for chunk_start in (0..n_simd_chunks * 8).step_by(8) {
                     let chunk_end = (chunk_start + 8).min(n_data);
                     let data_chunk = data.slice(ndarray::s![chunk_start..chunk_end]);
                     let eval_vec = Array1::from_elem(chunk_end - chunk_start, eval_point);
-                    
+
                     let differences = F::simd_sub(&data_chunk, &eval_vec.view());
-                    let standardized = F::simd_div(&differences.view(), &Array1::from_elem(chunk_end - chunk_start, h).view());
-                    
+                    let standardized = F::simd_div(
+                        &differences.view(),
+                        &Array1::from_elem(chunk_end - chunk_start, h).view(),
+                    );
+
                     for &z in standardized.iter() {
                         density_sum = density_sum + kernel_function(z, &kernel);
                     }
                 }
-                
+
                 // Process remainder
                 for i in n_simd_chunks * 8..n_data {
                     let z = (data[i] - eval_point) / h;
                     density_sum = density_sum + kernel_function(z, &kernel);
                 }
-                
+
                 density[eval_idx] = density_sum * normalization;
             }
         });
@@ -1099,14 +1152,14 @@ where
         // Sequential processing for smaller datasets
         for (eval_idx, &eval_point) in eval_points.iter().enumerate() {
             let mut density_sum = F::zero();
-            
+
             if n_data > 16 {
                 // SIMD path
                 let eval_vec = Array1::from_elem(n_data, eval_point);
                 let differences = F::simd_sub(data, &eval_vec.view());
                 let h_vec = Array1::from_elem(n_data, h);
                 let standardized = F::simd_div(&differences.view(), &h_vec.view());
-                
+
                 for &z in standardized.iter() {
                     density_sum = density_sum + kernel_function(z, &kernel);
                 }
@@ -1117,11 +1170,11 @@ where
                     density_sum = density_sum + kernel_function(z, &kernel);
                 }
             }
-            
+
             density[eval_idx] = density_sum * normalization;
         }
     }
-    
+
     Ok(density)
 }
 

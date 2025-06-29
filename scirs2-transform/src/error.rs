@@ -115,7 +115,7 @@ pub type Result<T> = std::result::Result<T, TransformError>;
 pub trait ErrorContext<T> {
     /// Add context to an error
     fn context(self, msg: &str) -> Result<T>;
-    
+
     /// Add context with a format string
     fn with_context<F>(self, f: F) -> Result<T>
     where
@@ -126,7 +126,7 @@ impl<T> ErrorContext<T> for Result<T> {
     fn context(self, msg: &str) -> Result<T> {
         self.map_err(|e| TransformError::Other(format!("{}: {}", msg, e)))
     }
-    
+
     fn with_context<F>(self, f: F) -> Result<T>
     where
         F: FnOnce() -> String,
@@ -142,7 +142,7 @@ where
     fn context(self, msg: &str) -> Result<T> {
         self.map_err(|e| TransformError::Other(format!("{}: {}", msg, e)))
     }
-    
+
     fn with_context<F>(self, f: F) -> Result<T>
     where
         F: FnOnce() -> String,
@@ -172,44 +172,43 @@ impl TransformError {
     /// Get the error kind
     pub fn kind(&self) -> ErrorKind {
         match self {
-            TransformError::InvalidInput(_) 
-            | TransformError::DataValidationError(_) 
+            TransformError::InvalidInput(_)
+            | TransformError::DataValidationError(_)
             | TransformError::ConfigurationError(_) => ErrorKind::Validation,
-            
+
             TransformError::ComputationError(_)
             | TransformError::TransformationError(_)
             | TransformError::ConvergenceError(_)
             | TransformError::SimdError(_) => ErrorKind::Computation,
-            
+
             TransformError::MemoryError(_)
             | TransformError::GpuError(_)
             | TransformError::TimeoutError(_) => ErrorKind::Resource,
-            
+
             TransformError::IoError(_)
             | TransformError::DistributedError(_)
             | TransformError::StreamingError(_)
             | TransformError::MonitoringError(_) => ErrorKind::External,
-            
+
             TransformError::NotImplemented(_)
             | TransformError::NotFitted(_)
             | TransformError::FeatureNotEnabled(_)
             | TransformError::Other(_) => ErrorKind::Internal,
-            
-            TransformError::CoreError(_)
-            | TransformError::LinalgError(_) => ErrorKind::External,
-            
+
+            TransformError::CoreError(_) | TransformError::LinalgError(_) => ErrorKind::External,
+
             TransformError::ParallelError(_)
             | TransformError::CrossValidationError(_)
             | TransformError::ParseError(_) => ErrorKind::Computation,
-            
+
             #[cfg(feature = "monitoring")]
             TransformError::PrometheusError(_) => ErrorKind::External,
-            
+
             #[cfg(feature = "distributed")]
             TransformError::SerializationError(_) => ErrorKind::External,
         }
     }
-    
+
     /// Check if the error is recoverable
     pub fn is_recoverable(&self) -> bool {
         match self.kind() {
@@ -219,7 +218,7 @@ impl TransformError {
             ErrorKind::Internal => false,
         }
     }
-    
+
     /// Check if the error should trigger a retry
     pub fn should_retry(&self) -> bool {
         match self {
@@ -232,7 +231,7 @@ impl TransformError {
             _ => false,
         }
     }
-    
+
     /// Get user-friendly error message
     pub fn user_message(&self) -> String {
         match self {

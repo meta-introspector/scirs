@@ -58,6 +58,8 @@ impl ExtendedDeviceInfo {
             GpuDeviceType::Rocm => estimate_rocm_specs(&basic_info),
             GpuDeviceType::Vulkan => estimate_vulkan_specs(&basic_info),
             GpuDeviceType::Metal => estimate_metal_specs(&basic_info),
+            GpuDeviceType::OneApi => estimate_oneapi_specs(&basic_info),
+            GpuDeviceType::WebGpu => estimate_webgpu_specs(&basic_info),
         };
 
         Self {
@@ -102,6 +104,8 @@ impl ExtendedDeviceInfo {
             GpuDeviceType::Rocm => (32, 32),   // Similar to CUDA
             GpuDeviceType::Vulkan => (32, 32),
             GpuDeviceType::Metal => (16, 16),
+            GpuDeviceType::OneApi => (16, 16), // Conservative size for Intel
+            GpuDeviceType::WebGpu => (8, 8),   // Small size for web compatibility
         }
     }
 }
@@ -233,6 +237,56 @@ fn estimate_metal_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerf
     (capabilities, performance)
 }
 
+fn estimate_oneapi_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
+    let capabilities = DeviceCapabilities {
+        supports_fp64: info.supports_fp64,
+        supports_fp16: true,           // Intel GPUs support fp16
+        supports_unified_memory: true, // Intel unified memory
+        supports_p2p: false,
+        max_threads_per_block: 256,
+        max_shared_memory: 64 * 1024,
+        warp_size: 16, // Intel GPU execution units
+    };
+
+    let estimated_cores = info.compute_units * 16;
+    let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 2.0 / 1000.0;
+
+    let performance = DevicePerformance {
+        memory_bandwidth: (info.total_memory as f64 / 1e9) * 8.0,
+        peak_gflops_fp32: peak_gflops,
+        peak_gflops_fp64: peak_gflops * 0.5,
+        memory_latency_ns: 300.0,
+        cache_size: 32 * 1024,
+    };
+
+    (capabilities, performance)
+}
+
+fn estimate_webgpu_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
+    let capabilities = DeviceCapabilities {
+        supports_fp64: false, // WebGPU typically doesn't support fp64
+        supports_fp16: false, // Limited fp16 support in WebGPU
+        supports_unified_memory: false,
+        supports_p2p: false,
+        max_threads_per_block: 256,
+        max_shared_memory: 16 * 1024, // Limited by web constraints
+        warp_size: 32,
+    };
+
+    let estimated_cores = info.compute_units * 8; // Conservative for web
+    let peak_gflops = estimated_cores as f64 * info.clock_frequency as f64 * 1.0 / 1000.0;
+
+    let performance = DevicePerformance {
+        memory_bandwidth: (info.total_memory as f64 / 1e9) * 2.0, // Limited by web APIs
+        peak_gflops_fp32: peak_gflops,
+        peak_gflops_fp64: 0.0,     // No fp64 support
+        memory_latency_ns: 1000.0, // Higher latency in web environment
+        cache_size: 8 * 1024,
+    };
+
+    (capabilities, performance)
+}
+
 /// Benchmark a device to get actual performance characteristics
 pub fn benchmark_device_performance(
     device_info: &GpuDeviceInfo,
@@ -258,6 +312,15 @@ mod tests {
             supports_fp64: true,
             supports_fp16: true,
             max_work_group_size: 1024,
+            memory_bandwidth: 900.0,
+            l2_cache_size: 6 * 1024 * 1024,     // 6MB
+            shared_memory_per_block: 48 * 1024, // 48KB
+            registers_per_block: 65536,
+            warp_size: 32,
+            max_threads_per_mp: 2048,
+            multiprocessor_count: 80,
+            supports_tensor_cores: true,
+            supports_mixed_precision: true,
             vendor: "NVIDIA".to_string(),
         };
 
@@ -279,6 +342,15 @@ mod tests {
             supports_fp64: false,
             supports_fp16: true,
             max_work_group_size: 1024,
+            memory_bandwidth: 400.0,
+            l2_cache_size: 1024 * 1024,         // 1MB
+            shared_memory_per_block: 32 * 1024, // 32KB
+            registers_per_block: 32768,
+            warp_size: 32,
+            max_threads_per_mp: 1536,
+            multiprocessor_count: 10,
+            supports_tensor_cores: false,
+            supports_mixed_precision: false,
             vendor: "Test".to_string(),
         };
 
@@ -305,6 +377,15 @@ mod tests {
             supports_fp64: true,
             supports_fp16: true,
             max_work_group_size: 1024,
+            memory_bandwidth: 900.0,
+            l2_cache_size: 6 * 1024 * 1024,     // 6MB
+            shared_memory_per_block: 48 * 1024, // 48KB
+            registers_per_block: 65536,
+            warp_size: 32,
+            max_threads_per_mp: 2048,
+            multiprocessor_count: 80,
+            supports_tensor_cores: true,
+            supports_mixed_precision: true,
             vendor: "Test".to_string(),
         };
 

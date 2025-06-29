@@ -119,7 +119,8 @@ fn test_hyperparameter() {
     assert_eq!(hp_discrete.value(), 32.0);
 
     // Test categorical hyperparameter
-    let hp_categorical = HyperParameter::categorical("activation", 0.0, vec![0.0, 1.0, 2.0]).unwrap();
+    let hp_categorical =
+        HyperParameter::categorical("activation", 0.0, vec![0.0, 1.0, 2.0]).unwrap();
     assert_eq!(hp_categorical.name(), "activation");
     assert_eq!(hp_categorical.value(), 0.0);
 

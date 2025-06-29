@@ -6,15 +6,10 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Axis};
-use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 use scirs2_stats::{
-    descriptive::*,
-    distributions::*,
-    correlation::*,
-    regression::linear::*,
-    tests::*,
-    quantile::*,
+    correlation::*, descriptive::*, distributions::*, quantile::*, regression::linear::*, tests::*,
     traits::Distribution,
 };
 use std::time::Duration;
@@ -32,81 +27,55 @@ fn generate_matrix_data(rows: usize, cols: usize, seed: u64) -> Array2<f64> {
 }
 
 /// Generate correlated data for correlation benchmarks
-fn generate_correlated_data(size: usize, correlation: f64, seed: u64) -> (Array1<f64>, Array1<f64>) {
+fn generate_correlated_data(
+    size: usize,
+    correlation: f64,
+    seed: u64,
+) -> (Array1<f64>, Array1<f64>) {
     let mut rng = StdRng::seed_from_u64(seed);
     let x = Array1::from_iter((0..size).map(|_| rng.gen::<f64>() * 100.0 - 50.0));
-    
+
     // Generate correlated y
     let noise = Array1::from_iter((0..size).map(|_| rng.gen::<f64>() * 10.0 - 5.0));
     let y = &x * correlation + noise * (1.0 - correlation.abs()).sqrt();
-    
+
     (x, y)
 }
 
 /// Benchmark basic descriptive statistics
 fn bench_descriptive_stats(c: &mut Criterion) {
     let mut group = c.benchmark_group("descriptive_statistics");
-    
+
     for size in [100, 1_000, 10_000, 100_000, 1_000_000].iter() {
         let data = generate_test_data(*size, 42);
-        
+
         group.throughput(Throughput::Elements(*size as u64));
-        
+
         // Mean benchmark
-        group.bench_with_input(
-            BenchmarkId::new("mean", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(mean(&data.view()).unwrap())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("mean", size), &data, |b, data| {
+            b.iter(|| black_box(mean(&data.view()).unwrap()))
+        });
+
         // Variance benchmark
-        group.bench_with_input(
-            BenchmarkId::new("variance", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(var(&data.view(), 0).unwrap())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("variance", size), &data, |b, data| {
+            b.iter(|| black_box(var(&data.view(), 0).unwrap()))
+        });
+
         // Standard deviation benchmark
-        group.bench_with_input(
-            BenchmarkId::new("std_dev", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(std(&data.view(), 0).unwrap())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("std_dev", size), &data, |b, data| {
+            b.iter(|| black_box(std(&data.view(), 0).unwrap()))
+        });
+
         // Skewness benchmark
-        group.bench_with_input(
-            BenchmarkId::new("skewness", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(skew(&data.view(), false).unwrap())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("skewness", size), &data, |b, data| {
+            b.iter(|| black_box(skew(&data.view(), false).unwrap()))
+        });
+
         // Kurtosis benchmark
-        group.bench_with_input(
-            BenchmarkId::new("kurtosis", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(kurtosis(&data.view(), true, false).unwrap())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("kurtosis", size), &data, |b, data| {
+            b.iter(|| black_box(kurtosis(&data.view(), true, false).unwrap()))
+        });
+
         // Combined stats benchmark (demonstrates SIMD advantages)
         group.bench_with_input(
             BenchmarkId::new("combined_stats", size),
@@ -121,41 +90,31 @@ fn bench_descriptive_stats(c: &mut Criterion) {
             },
         );
     }
-    
+
     group.finish();
 }
 
 /// Benchmark quantile computations
 fn bench_quantile_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("quantile_operations");
-    
+
     for size in [1_000, 10_000, 100_000, 1_000_000].iter() {
         let data = generate_test_data(*size, 42);
-        
+
         group.throughput(Throughput::Elements(*size as u64));
-        
+
         // Single quantile
         group.bench_with_input(
             BenchmarkId::new("single_quantile", size),
             &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(quantile(&data.view(), 0.5).unwrap())
-                })
-            },
+            |b, data| b.iter(|| black_box(quantile(&data.view(), 0.5).unwrap())),
         );
-        
+
         // Median (optimized quantile)
-        group.bench_with_input(
-            BenchmarkId::new("median", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(median(&data.view()).unwrap())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("median", size), &data, |b, data| {
+            b.iter(|| black_box(median(&data.view()).unwrap()))
+        });
+
         // Multiple quantiles
         group.bench_with_input(
             BenchmarkId::new("multiple_quantiles", size),
@@ -169,100 +128,80 @@ fn bench_quantile_operations(c: &mut Criterion) {
                 })
             },
         );
-        
+
         // IQR computation
-        group.bench_with_input(
-            BenchmarkId::new("iqr", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    let q25 = quantile(&data.view(), 0.25).unwrap();
-                    let q75 = quantile(&data.view(), 0.75).unwrap();
-                    black_box(q75 - q25)
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("iqr", size), &data, |b, data| {
+            b.iter(|| {
+                let q25 = quantile(&data.view(), 0.25).unwrap();
+                let q75 = quantile(&data.view(), 0.75).unwrap();
+                black_box(q75 - q25)
+            })
+        });
     }
-    
+
     group.finish();
 }
 
 /// Benchmark correlation computations
 fn bench_correlation_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("correlation_operations");
-    
+
     for size in [1_000, 10_000, 100_000, 1_000_000].iter() {
         let (x, y) = generate_correlated_data(*size, 0.7, 42);
-        
+
         group.throughput(Throughput::Elements(*size as u64));
-        
+
         // Pearson correlation
         group.bench_with_input(
             BenchmarkId::new("pearson_correlation", size),
             &(x.clone(), y.clone()),
-            |b, (x, y)| {
-                b.iter(|| {
-                    black_box(pearson_r(&x.view(), &y.view()).unwrap())
-                })
-            },
+            |b, (x, y)| b.iter(|| black_box(pearson_r(&x.view(), &y.view()).unwrap())),
         );
-        
+
         // Spearman correlation
         group.bench_with_input(
             BenchmarkId::new("spearman_correlation", size),
             &(x.clone(), y.clone()),
-            |b, (x, y)| {
-                b.iter(|| {
-                    black_box(spearman_r(&x.view(), &y.view()).unwrap())
-                })
-            },
+            |b, (x, y)| b.iter(|| black_box(spearman_r(&x.view(), &y.view()).unwrap())),
         );
-        
+
         // Kendall tau correlation
         group.bench_with_input(
             BenchmarkId::new("kendall_tau", size),
             &(x.clone(), y.clone()),
-            |b, (x, y)| {
-                b.iter(|| {
-                    black_box(kendalltau(&x.view(), &y.view()).unwrap())
-                })
-            },
+            |b, (x, y)| b.iter(|| black_box(kendalltau(&x.view(), &y.view()).unwrap())),
         );
     }
-    
+
     // Benchmark correlation matrix computation
     for (rows, cols) in [(100, 10), (1000, 50), (5000, 100)].iter() {
         let data = generate_matrix_data(*rows, *cols, 42);
-        
+
         group.throughput(Throughput::Elements((rows * cols) as u64));
-        
+
         group.bench_with_input(
             BenchmarkId::new("correlation_matrix", format!("{}x{}", rows, cols)),
             &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(corrcoef(&data.view(), "pearson").unwrap())
-                })
-            },
+            |b, data| b.iter(|| black_box(corrcoef(&data.view(), "pearson").unwrap())),
         );
     }
-    
+
     group.finish();
 }
 
 /// Benchmark linear regression operations
 fn bench_regression_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("regression_operations");
-    
+
     for (n_samples, n_features) in [(1000, 10), (10000, 50), (50000, 100)].iter() {
         let x = generate_matrix_data(*n_samples, *n_features, 42);
         let mut rng = StdRng::seed_from_u64(42);
         let true_coef = Array1::from_iter((0..*n_features).map(|_| rng.gen::<f64>() * 2.0 - 1.0));
         let noise = Array1::from_iter((0..*n_samples).map(|_| rng.gen::<f64>() * 0.1));
         let y = x.dot(&true_coef) + noise;
-        
+
         group.throughput(Throughput::Elements((n_samples * n_features) as u64));
-        
+
         // Ordinary Least Squares
         group.bench_with_input(
             BenchmarkId::new("ols_regression", format!("{}x{}", n_samples, n_features)),
@@ -274,7 +213,7 @@ fn bench_regression_operations(c: &mut Criterion) {
                 })
             },
         );
-        
+
         // Ridge regression
         group.bench_with_input(
             BenchmarkId::new("ridge_regression", format!("{}x{}", n_samples, n_features)),
@@ -286,58 +225,49 @@ fn bench_regression_operations(c: &mut Criterion) {
                 })
             },
         );
-        
+
         // Prediction benchmark
         let mut ols_model = LinearRegression::new();
         let ols_result = ols_model.fit(&x.view(), &y.view()).unwrap();
         let test_x = generate_matrix_data(*n_samples / 10, *n_features, 123);
-        
+
         group.bench_with_input(
-            BenchmarkId::new("ols_prediction", format!("{}x{}", n_samples / 10, n_features)),
+            BenchmarkId::new(
+                "ols_prediction",
+                format!("{}x{}", n_samples / 10, n_features),
+            ),
             &(ols_result, test_x),
-            |b, (result, test_x)| {
-                b.iter(|| {
-                    black_box(result.predict(&test_x.view()).unwrap())
-                })
-            },
+            |b, (result, test_x)| b.iter(|| black_box(result.predict(&test_x.view()).unwrap())),
         );
     }
-    
+
     group.finish();
 }
 
 /// Benchmark statistical tests
 fn bench_statistical_tests(c: &mut Criterion) {
     let mut group = c.benchmark_group("statistical_tests");
-    
+
     for size in [1_000, 10_000, 100_000].iter() {
         let data1 = generate_test_data(*size, 42);
         let data2 = generate_test_data(*size, 123);
-        
+
         group.throughput(Throughput::Elements(*size as u64));
-        
+
         // T-test (one sample)
-        group.bench_with_input(
-            BenchmarkId::new("ttest_1samp", size),
-            &data1,
-            |b, data| {
-                b.iter(|| {
-                    black_box(ttest_1samp(&data.view(), 0.0).unwrap())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("ttest_1samp", size), &data1, |b, data| {
+            b.iter(|| black_box(ttest_1samp(&data.view(), 0.0).unwrap()))
+        });
+
         // T-test (independent samples)
         group.bench_with_input(
             BenchmarkId::new("ttest_ind", size),
             &(data1.clone(), data2.clone()),
             |b, (data1, data2)| {
-                b.iter(|| {
-                    black_box(ttest_ind(&data1.view(), &data2.view(), true).unwrap())
-                })
+                b.iter(|| black_box(ttest_ind(&data1.view(), &data2.view(), true).unwrap()))
             },
         );
-        
+
         // Mann-Whitney U test
         group.bench_with_input(
             BenchmarkId::new("mannwhitneyu", size),
@@ -348,44 +278,36 @@ fn bench_statistical_tests(c: &mut Criterion) {
                 })
             },
         );
-        
+
         // Kolmogorov-Smirnov test
         group.bench_with_input(
             BenchmarkId::new("ks_2samp", size),
             &(data1.clone(), data2.clone()),
             |b, (data1, data2)| {
-                b.iter(|| {
-                    black_box(ks_2samp(&data1.view(), &data2.view()).unwrap())
-                })
+                b.iter(|| black_box(ks_2samp(&data1.view(), &data2.view()).unwrap()))
             },
         );
-        
+
         // Shapiro-Wilk normality test (limited to smaller sizes)
         if *size <= 10_000 {
-            group.bench_with_input(
-                BenchmarkId::new("shapiro_wilk", size),
-                &data1,
-                |b, data| {
-                    b.iter(|| {
-                        black_box(shapiro(&data.view()).unwrap())
-                    })
-                },
-            );
+            group.bench_with_input(BenchmarkId::new("shapiro_wilk", size), &data1, |b, data| {
+                b.iter(|| black_box(shapiro(&data.view()).unwrap()))
+            });
         }
     }
-    
+
     group.finish();
 }
 
 /// Benchmark distribution operations
 fn bench_distribution_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("distribution_operations");
-    
+
     for size in [1_000, 10_000, 100_000, 1_000_000].iter() {
         let x_values = Array1::linspace(-5.0, 5.0, *size);
-        
+
         group.throughput(Throughput::Elements(*size as u64));
-        
+
         // Normal distribution PDF
         group.bench_with_input(
             BenchmarkId::new("normal_pdf", size),
@@ -399,7 +321,7 @@ fn bench_distribution_operations(c: &mut Criterion) {
                 })
             },
         );
-        
+
         // Normal distribution CDF
         group.bench_with_input(
             BenchmarkId::new("normal_cdf", size),
@@ -413,7 +335,7 @@ fn bench_distribution_operations(c: &mut Criterion) {
                 })
             },
         );
-        
+
         // Gamma distribution PDF
         group.bench_with_input(
             BenchmarkId::new("gamma_pdf", size),
@@ -429,7 +351,7 @@ fn bench_distribution_operations(c: &mut Criterion) {
                 })
             },
         );
-        
+
         // Beta distribution PDF
         group.bench_with_input(
             BenchmarkId::new("beta_pdf", size),
@@ -444,49 +366,41 @@ fn bench_distribution_operations(c: &mut Criterion) {
             },
         );
     }
-    
+
     // Random number generation benchmarks
     for size in [10_000, 100_000, 1_000_000].iter() {
         group.throughput(Throughput::Elements(*size as u64));
-        
-        group.bench_with_input(
-            BenchmarkId::new("normal_rvs", size),
-            size,
-            |b, &size| {
-                b.iter(|| {
-                    let normal = norm(0.0, 1.0).unwrap();
-                    let samples: Vec<f64> = (0..size).map(|_| normal.rvs()).collect();
-                    black_box(samples)
-                })
-            },
-        );
-        
-        group.bench_with_input(
-            BenchmarkId::new("uniform_rvs", size),
-            size,
-            |b, &size| {
-                b.iter(|| {
-                    let uniform = uniform(0.0, 1.0).unwrap();
-                    let samples: Vec<f64> = (0..size).map(|_| uniform.rvs()).collect();
-                    black_box(samples)
-                })
-            },
-        );
+
+        group.bench_with_input(BenchmarkId::new("normal_rvs", size), size, |b, &size| {
+            b.iter(|| {
+                let normal = norm(0.0, 1.0).unwrap();
+                let samples: Vec<f64> = (0..size).map(|_| normal.rvs()).collect();
+                black_box(samples)
+            })
+        });
+
+        group.bench_with_input(BenchmarkId::new("uniform_rvs", size), size, |b, &size| {
+            b.iter(|| {
+                let uniform = uniform(0.0, 1.0).unwrap();
+                let samples: Vec<f64> = (0..size).map(|_| uniform.rvs()).collect();
+                black_box(samples)
+            })
+        });
     }
-    
+
     group.finish();
 }
 
 /// Benchmark memory efficiency and cache performance
 fn bench_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency");
-    
+
     // Test different data access patterns
     for size in [10_000, 100_000, 1_000_000].iter() {
         let data = generate_test_data(*size, 42);
-        
+
         group.throughput(Throughput::Elements(*size as u64));
-        
+
         // Sequential access pattern (cache-friendly)
         group.bench_with_input(
             BenchmarkId::new("sequential_sum", size),
@@ -501,18 +415,12 @@ fn bench_memory_efficiency(c: &mut Criterion) {
                 })
             },
         );
-        
+
         // SIMD-optimized sum
-        group.bench_with_input(
-            BenchmarkId::new("simd_sum", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(data.sum())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("simd_sum", size), &data, |b, data| {
+            b.iter(|| black_box(data.sum()))
+        });
+
         // Chunked processing (simulates large dataset handling)
         group.bench_with_input(
             BenchmarkId::new("chunked_processing", size),
@@ -529,132 +437,104 @@ fn bench_memory_efficiency(c: &mut Criterion) {
             },
         );
     }
-    
+
     group.finish();
 }
 
 /// Benchmark parallel processing efficiency
 fn bench_parallel_processing(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_processing");
-    
+
     for size in [100_000, 1_000_000, 10_000_000].iter() {
         let data = generate_matrix_data(*size / 1000, 1000, 42);
-        
+
         group.throughput(Throughput::Elements(*size as u64));
-        
+
         // Row-wise operations (potentially parallel)
-        group.bench_with_input(
-            BenchmarkId::new("row_means", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(data.mean_axis(Axis(1)).unwrap())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("row_means", size), &data, |b, data| {
+            b.iter(|| black_box(data.mean_axis(Axis(1)).unwrap()))
+        });
+
         // Column-wise operations (potentially parallel)
-        group.bench_with_input(
-            BenchmarkId::new("column_means", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(data.mean_axis(Axis(0)).unwrap())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("column_means", size), &data, |b, data| {
+            b.iter(|| black_box(data.mean_axis(Axis(0)).unwrap()))
+        });
+
         // Element-wise operations (SIMD + parallel)
         group.bench_with_input(
             BenchmarkId::new("matrix_transform", size),
             &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(data.mapv(|x| x.exp().tanh()))
-                })
-            },
+            |b, data| b.iter(|| black_box(data.mapv(|x| x.exp().tanh()))),
         );
     }
-    
+
     group.finish();
 }
 
 /// Benchmark numerical stability
 fn bench_numerical_stability(c: &mut Criterion) {
     let mut group = c.benchmark_group("numerical_stability");
-    
+
     // Test with extreme values
     let tiny_values = Array1::from_iter((0..10_000).map(|_| 1e-15));
     let large_values = Array1::from_iter((0..10_000).map(|_| 1e15));
-    let mixed_scale = Array1::from_iter((0..10_000).map(|i| {
-        if i % 2 == 0 { 1e-10 } else { 1e10 }
-    }));
-    
+    let mixed_scale = Array1::from_iter((0..10_000).map(|i| if i % 2 == 0 { 1e-10 } else { 1e10 }));
+
     group.throughput(Throughput::Elements(10_000));
-    
+
     // Stability of mean computation
     group.bench_function("mean_tiny_values", |b| {
         b.iter(|| black_box(mean(&tiny_values.view()).unwrap()))
     });
-    
+
     group.bench_function("mean_large_values", |b| {
         b.iter(|| black_box(mean(&large_values.view()).unwrap()))
     });
-    
+
     group.bench_function("mean_mixed_scale", |b| {
         b.iter(|| black_box(mean(&mixed_scale.view()).unwrap()))
     });
-    
+
     // Stability of variance computation
     group.bench_function("var_tiny_values", |b| {
         b.iter(|| black_box(var(&tiny_values.view(), 0).unwrap()))
     });
-    
+
     group.bench_function("var_large_values", |b| {
         b.iter(|| black_box(var(&large_values.view(), 0).unwrap()))
     });
-    
+
     group.bench_function("var_mixed_scale", |b| {
         b.iter(|| black_box(var(&mixed_scale.view(), 0).unwrap()))
     });
-    
+
     group.finish();
 }
 
 /// Benchmark SIMD vs scalar implementations
 fn bench_simd_vs_scalar(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_vs_scalar");
-    
+
     for size in [1_000, 10_000, 100_000, 1_000_000].iter() {
         let data = generate_test_data(*size, 42);
-        
+
         group.throughput(Throughput::Elements(*size as u64));
-        
+
         // Compare SIMD vs scalar for basic operations
-        group.bench_with_input(
-            BenchmarkId::new("scalar_sum", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    let mut sum = 0.0;
-                    for &x in data.iter() {
-                        sum += x;
-                    }
-                    black_box(sum)
-                })
-            },
-        );
-        
-        group.bench_with_input(
-            BenchmarkId::new("ndarray_sum", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(data.sum())
-                })
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("scalar_sum", size), &data, |b, data| {
+            b.iter(|| {
+                let mut sum = 0.0;
+                for &x in data.iter() {
+                    sum += x;
+                }
+                black_box(sum)
+            })
+        });
+
+        group.bench_with_input(BenchmarkId::new("ndarray_sum", size), &data, |b, data| {
+            b.iter(|| black_box(data.sum()))
+        });
+
         // Variance computation comparison
         group.bench_with_input(
             BenchmarkId::new("scalar_variance", size),
@@ -668,18 +548,14 @@ fn bench_simd_vs_scalar(c: &mut Criterion) {
                 })
             },
         );
-        
+
         group.bench_with_input(
             BenchmarkId::new("optimized_variance", size),
             &data,
-            |b, data| {
-                b.iter(|| {
-                    black_box(var(&data.view(), 0).unwrap())
-                })
-            },
+            |b, data| b.iter(|| black_box(var(&data.view(), 0).unwrap())),
         );
     }
-    
+
     group.finish();
 }
 
@@ -688,14 +564,14 @@ fn bench_comprehensive_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("comprehensive_comparison");
     group.measurement_time(Duration::from_secs(10));
     group.sample_size(50);
-    
+
     // Large-scale realistic workload
     let n_samples = 1_000_000;
     let data = generate_test_data(n_samples, 42);
     let (x, y) = generate_correlated_data(n_samples, 0.8, 42);
-    
+
     group.throughput(Throughput::Elements(n_samples as u64));
-    
+
     // Complete descriptive statistics pipeline
     group.bench_function("complete_descriptive_pipeline", |b| {
         b.iter(|| {
@@ -711,7 +587,7 @@ fn bench_comprehensive_comparison(c: &mut Criterion) {
             let _max = black_box(data.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x)));
         })
     });
-    
+
     // Complete correlation analysis pipeline
     group.bench_function("complete_correlation_pipeline", |b| {
         b.iter(|| {
@@ -720,15 +596,13 @@ fn bench_comprehensive_comparison(c: &mut Criterion) {
             let _kendall = black_box(kendalltau(&x.view(), &y.view()).unwrap());
         })
     });
-    
+
     // Large matrix operations
     let matrix = generate_matrix_data(10_000, 100, 42);
     group.bench_function("large_matrix_correlation", |b| {
-        b.iter(|| {
-            black_box(corrcoef(&matrix.view(), "pearson").unwrap())
-        })
+        b.iter(|| black_box(corrcoef(&matrix.view(), "pearson").unwrap()))
     });
-    
+
     group.finish();
 }
 
@@ -754,9 +628,9 @@ criterion_main!(benches);
 #[cfg(test)]
 mod scipy_comparison_tests {
     use super::*;
-    use std::process::Command;
     use std::fs;
-    
+    use std::process::Command;
+
     #[test]
     fn generate_scipy_comparison_report() {
         // Create Python script for SciPy benchmarks
@@ -819,32 +693,33 @@ def benchmark_scipy():
 if __name__ == "__main__":
     benchmark_scipy()
 "#;
-        
+
         fs::write("scipy_benchmark.py", python_script).unwrap();
-        
+
         // Run SciPy benchmarks
-        let output = Command::new("python")
-            .arg("scipy_benchmark.py")
-            .output();
-        
+        let output = Command::new("python").arg("scipy_benchmark.py").output();
+
         match output {
             Ok(result) => {
                 if result.status.success() {
                     println!("SciPy benchmarks completed successfully");
-                    
+
                     // Load and compare results
                     if let Ok(scipy_results) = fs::read_to_string("scipy_benchmark_results.json") {
                         println!("SciPy benchmark results:\n{}", scipy_results);
                     }
                 } else {
-                    println!("SciPy benchmark failed: {}", String::from_utf8_lossy(&result.stderr));
+                    println!(
+                        "SciPy benchmark failed: {}",
+                        String::from_utf8_lossy(&result.stderr)
+                    );
                 }
             }
             Err(e) => {
                 println!("Could not run Python/SciPy benchmarks: {}", e);
             }
         }
-        
+
         // Clean up
         let _ = fs::remove_file("scipy_benchmark.py");
         let _ = fs::remove_file("scipy_benchmark_results.json");

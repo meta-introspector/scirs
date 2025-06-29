@@ -104,6 +104,8 @@ pub mod lti;
 pub mod lti_analysis_enhanced;
 pub mod lti_response;
 pub mod median;
+pub mod memory_optimized;
+pub mod memory_efficient;
 pub mod multirate;
 pub mod multitaper;
 pub mod nlm;
@@ -123,9 +125,8 @@ pub mod resample;
 pub mod robust;
 pub mod savgol;
 pub mod separation;
-pub mod simd_ops;
 pub mod simd_advanced;
-pub mod memory_optimized;
+pub mod simd_ops;
 pub mod sparse;
 pub mod spectral;
 pub mod spline;
@@ -221,18 +222,18 @@ pub use lombscargle::{
     find_peaks as find_ls_peaks, lombscargle, significance_levels, AutoFreqMethod,
 };
 pub use lombscargle_simd::{simd_lombscargle, SimdLombScargleResult, ValidationMetrics};
-pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
-pub use simd_advanced::{
-    simd_fir_filter, simd_autocorrelation, simd_cross_correlation, simd_apply_window,
-    simd_complex_fft_butterfly, benchmark_simd_operations, SimdConfig,
-};
-pub use memory_optimized::{
-    memory_optimized_fir_filter, memory_optimized_fft, memory_optimized_spectrogram,
-    MemoryConfig, MemoryOptimizedResult, MemoryOptimizedData, MemoryStats, TimingStats,
-};
 pub use median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
+};
+pub use memory_optimized::{
+    memory_optimized_fft, memory_optimized_fir_filter, memory_optimized_spectrogram, MemoryConfig,
+    MemoryOptimizedData, MemoryOptimizedResult, MemoryStats, TimingStats,
+};
+pub use memory_efficient::{
+    memory_efficient_correlation, memory_efficient_fft, memory_efficient_filter,
+    memory_efficient_spectrogram, MemoryCache, StreamingCorrelationResult, StreamingFFTResult,
+    StreamingFilterResult, StreamingProcessor, StreamingSpectrogramResult,
 };
 pub use multirate::{
     FilterBankProperties, MultirateConverter, PerfectReconstructionConfig,
@@ -268,6 +269,11 @@ pub use robust::{
 pub use separation::{
     harmonic_percussive_separation, multiband_separation, HarmonicPercussiveConfig, MultibandConfig,
 };
+pub use simd_advanced::{
+    benchmark_simd_operations, simd_apply_window, simd_autocorrelation, simd_complex_fft_butterfly,
+    simd_cross_correlation, simd_fir_filter, SimdConfig,
+};
+pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
 pub use sparse::{
     basis_pursuit, compressed_sensing_recover, cosamp, estimate_rip_constant, fista, iht,
     image_inpainting, ista, lasso, matrix_coherence, measure_sparsity, mp, omp,

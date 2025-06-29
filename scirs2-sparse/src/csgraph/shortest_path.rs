@@ -25,6 +25,7 @@ pub enum ShortestPathMethod {
 }
 
 impl ShortestPathMethod {
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> SparseResult<Self> {
         match s.to_lowercase().as_str() {
             "dijkstra" | "dij" => Ok(Self::Dijkstra),
@@ -123,7 +124,7 @@ where
             let (distances, predecessors) =
                 single_source_shortest_path(graph, source, method, directed, return_predecessors)?;
 
-            let mut dist_matrix = Array2::from_elem((1, 1), distances[target]);
+            let dist_matrix = Array2::from_elem((1, 1), distances[target]);
             let pred_matrix = if return_predecessors {
                 let mut pred_mat = Array2::from_elem((1, 1), -1isize);
                 if let Some(ref preds) = predecessors {
@@ -525,7 +526,7 @@ mod tests {
     #[test]
     fn test_dijkstra_with_predecessors() {
         let graph = create_test_graph();
-        let (distances, predecessors) = dijkstra_single_source(&graph, 0, false, true).unwrap();
+        let (_distances, predecessors) = dijkstra_single_source(&graph, 0, false, true).unwrap();
         let preds = predecessors.unwrap();
 
         assert_eq!(preds[0], -1); // Source has no predecessor

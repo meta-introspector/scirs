@@ -27,9 +27,7 @@ fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
 /// Helper function for safe conversion from float to usize
 fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     value.to_usize().ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert float value to usize"
-        ))
+        NdimageError::ComputationError(format!("Failed to convert float value to usize"))
     })
 }
 

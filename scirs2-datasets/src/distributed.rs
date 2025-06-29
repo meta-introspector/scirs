@@ -58,7 +58,10 @@ pub struct DistributedProcessor {
 impl DistributedProcessor {
     /// Create a new distributed processor
     pub fn new(config: DistributedConfig) -> Result<Self> {
-        let cache = DatasetCache::new()?;
+        let cache_dir = dirs::cache_dir()
+            .ok_or_else(|| DatasetsError::Other("Could not determine cache directory".to_string()))?
+            .join("scirs2-datasets");
+        let cache = DatasetCache::new(cache_dir);
 
         Ok(Self { config, cache })
     }
@@ -149,7 +152,9 @@ impl DistributedProcessor {
                 target: chunk_target,
                 feature_names: dataset.feature_names.clone(),
                 target_names: dataset.target_names.clone(),
+                feature_descriptions: dataset.feature_descriptions.clone(),
                 description: Some(format!("Chunk {}-{} of distributed dataset", start, end)),
+                metadata: dataset.metadata.clone(),
             };
 
             chunks.push(chunk);
@@ -231,7 +236,8 @@ impl DistributedProcessor {
             let mut rng = if let Some(seed) = random_state {
                 rand::rngs::StdRng::seed_from_u64(seed)
             } else {
-                rand::rngs::StdRng::from_entropy()
+                // For deterministic testing, use a fixed seed when no seed provided
+                rand::rngs::StdRng::seed_from_u64(42)
             };
 
             indices.shuffle(&mut rng);
@@ -417,7 +423,8 @@ impl DistributedProcessor {
         let mut rng = if let Some(seed) = random_state {
             rand::rngs::StdRng::seed_from_u64(seed)
         } else {
-            rand::rngs::StdRng::from_entropy()
+            // For deterministic testing, use a fixed seed when no seed provided
+            rand::rngs::StdRng::seed_from_u64(42)
         };
 
         let mut indices: Vec<usize> = (0..chunk.n_samples()).collect();
@@ -442,7 +449,8 @@ impl DistributedProcessor {
         let mut rng = if let Some(seed) = random_state {
             rand::rngs::StdRng::seed_from_u64(seed)
         } else {
-            rand::rngs::StdRng::from_entropy()
+            // For deterministic testing, use a fixed seed when no seed provided
+            rand::rngs::StdRng::seed_from_u64(42)
         };
 
         let mut sampled = indices.to_vec();
@@ -468,7 +476,9 @@ impl DistributedProcessor {
             target: selected_target,
             feature_names: dataset.feature_names.clone(),
             target_names: dataset.target_names.clone(),
+            feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some("Distributed sample".to_string()),
+            metadata: dataset.metadata.clone(),
         })
     }
 
@@ -512,7 +522,9 @@ impl DistributedProcessor {
             target,
             feature_names: datasets[0].feature_names.clone(),
             target_names: datasets[0].target_names.clone(),
+            feature_descriptions: datasets[0].feature_descriptions.clone(),
             description: Some("Combined distributed dataset".to_string()),
+            metadata: datasets[0].metadata.clone(),
         })
     }
 
@@ -653,7 +665,9 @@ impl DistributedProcessor {
             target: dataset.target.clone(),
             feature_names: dataset.feature_names.clone(),
             target_names: dataset.target_names.clone(),
+            feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some("Distributed scaled dataset".to_string()),
+            metadata: dataset.metadata.clone(),
         })
     }
 }

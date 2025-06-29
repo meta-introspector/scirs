@@ -1844,12 +1844,15 @@ mod tests {
     fn test_physics_informed_extrapolation() {
         // Test physics-informed extrapolation with conservation laws
         let extrapolator = make_physics_informed_extrapolator(
-            0.0, 1.0,  // domain bounds
-            0.0, 1.0,  // boundary values
-            1.0, 1.0,  // boundary derivatives
+            0.0,
+            1.0, // domain bounds
+            0.0,
+            1.0, // boundary values
+            1.0,
+            1.0, // boundary derivatives
             PhysicsLaw::MassConservation,
         );
-        
+
         let result = extrapolator.extrapolate(-0.5).unwrap();
         assert!(result.is_finite());
         assert!(result >= 0.0); // Mass conservation - no negative values
@@ -1881,7 +1884,8 @@ pub fn make_physics_informed_extrapolator<T: Float + FromPrimitive>(
             // Ensure non-negative extrapolation for mass quantities
             extrapolator.lower_method = ExtrapolationMethod::Exponential;
             extrapolator.upper_method = ExtrapolationMethod::Linear;
-            extrapolator.parameters.exponential_rate = T::from_f64(-0.1).unwrap(); // Decay rate
+            extrapolator.parameters.exponential_rate = T::from_f64(-0.1).unwrap();
+            // Decay rate
         }
         PhysicsLaw::EnergyConservation => {
             // Energy-conserving polynomial extrapolation
@@ -1991,7 +1995,9 @@ pub fn make_smart_adaptive_extrapolator<T: Float + FromPrimitive>(
     if data_characteristics.is_periodic {
         extrapolator.lower_method = ExtrapolationMethod::Periodic;
         extrapolator.upper_method = ExtrapolationMethod::Periodic;
-        extrapolator.parameters.period = data_characteristics.estimated_period.unwrap_or_else(|| T::from_f64(2.0 * std::f64::consts::PI).unwrap());
+        extrapolator.parameters.period = data_characteristics
+            .estimated_period
+            .unwrap_or_else(|| T::from_f64(2.0 * std::f64::consts::PI).unwrap());
     } else if data_characteristics.is_monotonic {
         if data_characteristics.is_exponential_like {
             extrapolator.lower_method = ExtrapolationMethod::Exponential;

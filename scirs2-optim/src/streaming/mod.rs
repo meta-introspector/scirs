@@ -14,16 +14,11 @@ pub mod concept_drift;
 pub mod enhanced_adaptive_lr;
 pub mod low_latency;
 pub mod streaming_metrics;
-pub mod multi_stream_coordination;
-pub mod predictive_streaming;
-pub mod stream_fusion;
-pub mod advanced_qos;
-pub mod real_time_optimization;
 
 // Re-export key types for convenience
 pub use concept_drift::{ConceptDriftDetector, DriftDetectorConfig, DriftEvent, DriftStatus};
 pub use enhanced_adaptive_lr::{
-    AdaptiveLRConfig, AdaptationStatistics, EnhancedAdaptiveLRController,
+    AdaptationStatistics, AdaptiveLRConfig, EnhancedAdaptiveLRController,
 };
 pub use low_latency::{LowLatencyConfig, LowLatencyMetrics, LowLatencyOptimizer};
 pub use streaming_metrics::{MetricsSample, MetricsSummary, StreamingMetricsCollector};
@@ -87,31 +82,31 @@ pub struct StreamingConfig {
 
     /// Quality of service guarantees
     pub qos_enabled: bool,
-    
+
     /// Enable multi-stream coordination
     pub multi_stream_coordination: bool,
-    
+
     /// Enable predictive streaming algorithms
     pub predictive_streaming: bool,
-    
+
     /// Enable stream fusion optimization
     pub stream_fusion: bool,
-    
+
     /// Advanced QoS configuration
     pub advanced_qos_config: AdvancedQoSConfig,
-    
+
     /// Real-time optimization parameters
     pub real_time_config: RealTimeConfig,
-    
+
     /// Pipeline parallelism degree
     pub pipeline_parallelism_degree: usize,
-    
+
     /// Enable adaptive resource allocation
     pub adaptive_resource_allocation: bool,
-    
+
     /// Enable distributed streaming
     pub distributed_streaming: bool,
-    
+
     /// Stream processing priority
     pub processing_priority: StreamPriority,
 }
@@ -209,27 +204,26 @@ where
 
     /// Current step count
     step_count: usize,
-    
-    /// Multi-stream coordinator
-    multi_stream_coordinator: Option<MultiStreamCoordinator<A>>,
-    
-    /// Predictive streaming engine
-    predictive_engine: Option<PredictiveStreamingEngine<A>>,
-    
-    /// Stream fusion optimizer
-    fusion_optimizer: Option<StreamFusionOptimizer<A>>,
-    
-    /// Advanced QoS manager
-    qos_manager: AdvancedQoSManager,
-    
-    /// Real-time performance optimizer
-    rt_optimizer: RealTimeOptimizer,
-    
-    /// Resource allocation manager
-    resource_manager: Option<AdaptiveResourceManager>,
-    
-    /// Pipeline execution manager
-    pipeline_manager: PipelineExecutionManager<A>,
+    // /// Multi-stream coordinator
+    // multi_stream_coordinator: Option<MultiStreamCoordinator<A>>,
+
+    // /// Predictive streaming engine
+    // predictive_engine: Option<PredictiveStreamingEngine<A>>,
+
+    // /// Stream fusion optimizer
+    // fusion_optimizer: Option<StreamFusionOptimizer<A>>,
+
+    // /// Advanced QoS manager
+    // qos_manager: AdvancedQoSManager,
+
+    // /// Real-time performance optimizer
+    // rt_optimizer: RealTimeOptimizer,
+
+    // /// Resource allocation manager
+    // resource_manager: Option<AdaptiveResourceManager>,
+
+    // /// Pipeline execution manager
+    // pipeline_manager: PipelineExecutionManager<A>,
 }
 
 /// Streaming data point
@@ -446,39 +440,39 @@ where
         } else {
             None
         };
-        
+
         // Initialize advanced components
-        let multi_stream_coordinator = if config.multi_stream_coordination {
-            Some(MultiStreamCoordinator::new(&config)?)
-        } else {
-            None
-        };
-        
-        let predictive_engine = if config.predictive_streaming {
-            Some(PredictiveStreamingEngine::new(&config)?)
-        } else {
-            None
-        };
-        
-        let fusion_optimizer = if config.stream_fusion {
-            Some(StreamFusionOptimizer::new(&config)?)
-        } else {
-            None
-        };
-        
-        let qos_manager = AdvancedQoSManager::new(config.advanced_qos_config.clone());
-        let rt_optimizer = RealTimeOptimizer::new(config.real_time_config.clone())?;
-        
-        let resource_manager = if config.adaptive_resource_allocation {
-            Some(AdaptiveResourceManager::new(&config)?)
-        } else {
-            None
-        };
-        
-        let pipeline_manager = PipelineExecutionManager::new(
-            config.pipeline_parallelism_degree,
-            config.processing_priority,
-        );
+        // let multi_stream_coordinator = if config.multi_stream_coordination {
+        //     Some(MultiStreamCoordinator::new(&config)?)
+        // } else {
+        //     None
+        // };
+
+        // let predictive_engine = if config.predictive_streaming {
+        //     Some(PredictiveStreamingEngine::new(&config)?)
+        // } else {
+        //     None
+        // };
+
+        // let fusion_optimizer = if config.stream_fusion {
+        //     Some(StreamFusionOptimizer::new(&config)?)
+        // } else {
+        //     None
+        // };
+
+        // let qos_manager = AdvancedQoSManager::new(config.advanced_qos_config.clone());
+        // let rt_optimizer = RealTimeOptimizer::new(config.real_time_config.clone())?;
+
+        // let resource_manager = if config.adaptive_resource_allocation {
+        //     Some(AdaptiveResourceManager::new(&config)?)
+        // } else {
+        //     None
+        // };
+
+        // let pipeline_manager = PipelineExecutionManager::new(
+        //     config.pipeline_parallelism_degree,
+        //     config.processing_priority,
+        // );
 
         Ok(Self {
             base_optimizer,
@@ -492,13 +486,13 @@ where
             memory_tracker,
             async_state,
             step_count: 0,
-            multi_stream_coordinator,
-            predictive_engine,
-            fusion_optimizer,
-            qos_manager,
-            rt_optimizer,
-            resource_manager,
-            pipeline_manager,
+            // multi_stream_coordinator,
+            // predictive_engine,
+            // fusion_optimizer,
+            // qos_manager,
+            // rt_optimizer,
+            // resource_manager,
+            // pipeline_manager,
         })
     }
 
@@ -1005,26 +999,30 @@ where
         if self.lr_adaptation_state.ema_squared_gradients.is_none() {
             self.lr_adaptation_state.ema_squared_gradients = Some(Array1::zeros(gradient.len()));
         }
-        
-        let momentum = self.lr_adaptation_state.ema_squared_gradients.as_mut().unwrap();
+
+        let momentum = self
+            .lr_adaptation_state
+            .ema_squared_gradients
+            .as_mut()
+            .unwrap();
         let beta = A::from(0.9).unwrap();
         let one_minus_beta = A::one() - beta;
-        
+
         // Update momentum
         for i in 0..gradient.len() {
             momentum[i] = beta * momentum[i] + one_minus_beta * gradient[i];
         }
-        
+
         // Adapt learning rate based on momentum magnitude
         let momentum_norm = momentum.iter().map(|&m| m * m).sum::<A>().sqrt();
         let base_lr = A::from(0.01).unwrap();
         let adaptation_factor = A::one() + momentum_norm * A::from(0.1).unwrap();
-        
+
         self.lr_adaptation_state.current_lr = base_lr / adaptation_factor;
-        
+
         Ok(())
     }
-    
+
     /// Gradient variance-based learning rate adaptation
     fn adapt_gradient_variance(&mut self, gradient: &Array1<A>) -> Result<(), OptimizerError> {
         // Track gradient variance
@@ -1032,59 +1030,71 @@ where
             self.lr_adaptation_state.accumulated_gradients = Some(Array1::zeros(gradient.len()));
             self.lr_adaptation_state.ema_squared_gradients = Some(Array1::zeros(gradient.len()));
         }
-        
-        let mean_grad = self.lr_adaptation_state.accumulated_gradients.as_mut().unwrap();
-        let mean_squared_grad = self.lr_adaptation_state.ema_squared_gradients.as_mut().unwrap();
-        
+
+        let mean_grad = self
+            .lr_adaptation_state
+            .accumulated_gradients
+            .as_mut()
+            .unwrap();
+        let mean_squared_grad = self
+            .lr_adaptation_state
+            .ema_squared_gradients
+            .as_mut()
+            .unwrap();
+
         let alpha = A::from(0.99).unwrap(); // Decay for moving average
         let one_minus_alpha = A::one() - alpha;
-        
+
         // Update running means
         for i in 0..gradient.len() {
             mean_grad[i] = alpha * mean_grad[i] + one_minus_alpha * gradient[i];
-            mean_squared_grad[i] = alpha * mean_squared_grad[i] + one_minus_alpha * gradient[i] * gradient[i];
+            mean_squared_grad[i] =
+                alpha * mean_squared_grad[i] + one_minus_alpha * gradient[i] * gradient[i];
         }
-        
+
         // Compute variance
-        let variance = mean_squared_grad.iter().zip(mean_grad.iter())
+        let variance = mean_squared_grad
+            .iter()
+            .zip(mean_grad.iter())
             .map(|(&sq, &m)| sq - m * m)
-            .sum::<A>() / A::from(gradient.len()).unwrap();
-        
+            .sum::<A>()
+            / A::from(gradient.len()).unwrap();
+
         // Adapt learning rate inversely to variance
         let base_lr = A::from(0.01).unwrap();
         let var_factor = A::one() + variance.sqrt() * A::from(10.0).unwrap();
-        
+
         self.lr_adaptation_state.current_lr = base_lr / var_factor;
-        
+
         Ok(())
     }
-    
+
     /// Predictive learning rate adaptation
     fn adapt_predictive(&mut self) -> Result<(), OptimizerError> {
         // Use performance history to predict optimal learning rate
         if self.lr_adaptation_state.performance_history.len() < 3 {
             return Ok(());
         }
-        
+
         let history = &self.lr_adaptation_state.performance_history;
         let n = history.len();
-        
+
         // Simple linear prediction of next performance
         let recent_trend = if n >= 3 {
-            let last = history[n-1];
-            let second_last = history[n-2];
-            let third_last = history[n-3];
-            
+            let last = history[n - 1];
+            let second_last = history[n - 2];
+            let third_last = history[n - 3];
+
             // Compute second derivative (acceleration)
             let first_diff = last - second_last;
             let second_diff = second_last - third_last;
             let acceleration = first_diff - second_diff;
-            
+
             acceleration
         } else {
             A::zero()
         };
-        
+
         // Adjust learning rate based on predicted trend
         let adjustment = if recent_trend > A::zero() {
             // Performance is accelerating (getting worse), decrease LR
@@ -1093,17 +1103,16 @@ where
             // Performance is improving or stable, slightly increase LR
             A::from(1.02).unwrap()
         };
-        
+
         self.lr_adaptation_state.current_lr = self.lr_adaptation_state.current_lr * adjustment;
-        
+
         // Clamp to reasonable bounds
         let min_lr = A::from(1e-6).unwrap();
         let max_lr = A::from(1.0).unwrap();
-        
-        self.lr_adaptation_state.current_lr = self.lr_adaptation_state.current_lr
-            .max(min_lr)
-            .min(max_lr);
-        
+
+        self.lr_adaptation_state.current_lr =
+            self.lr_adaptation_state.current_lr.max(min_lr).min(max_lr);
+
         Ok(())
     }
 }
@@ -1156,19 +1165,19 @@ pub enum QoSViolation {
 pub struct AdvancedQoSConfig {
     /// Strict latency guarantees
     pub strict_latency_bounds: bool,
-    
+
     /// Quality degradation tolerance
     pub quality_degradation_tolerance: f64,
-    
+
     /// Resource reservation strategy
     pub resource_reservation: ResourceReservationStrategy,
-    
+
     /// Adaptive QoS adjustment
     pub adaptive_adjustment: bool,
-    
+
     /// Priority-based scheduling
     pub priority_scheduling: bool,
-    
+
     /// Service level objectives
     pub service_level_objectives: Vec<ServiceLevelObjective>,
 }
@@ -1230,22 +1239,22 @@ pub enum QoSMetric {
 pub struct RealTimeConfig {
     /// Real-time scheduling priority
     pub scheduling_priority: i32,
-    
+
     /// CPU affinity mask
     pub cpu_affinity: Option<Vec<usize>>,
-    
+
     /// Memory pre-allocation size
     pub memory_preallocation_mb: usize,
-    
+
     /// Enable NUMA optimization
     pub numa_optimization: bool,
-    
+
     /// Real-time deadline (microseconds)
     pub deadline_us: u64,
-    
+
     /// Enable lock-free data structures
     pub lock_free_structures: bool,
-    
+
     /// Interrupt handling strategy
     pub interrupt_strategy: InterruptStrategy,
 }

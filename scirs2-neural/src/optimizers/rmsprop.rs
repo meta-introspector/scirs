@@ -50,10 +50,14 @@ impl<F: Float + ScalarOperand + Debug> RMSprop<F> {
     /// * `learning_rate` - The learning rate for parameter updates
     pub fn new(learning_rate: F) -> Result<Self> {
         let rho = F::from(0.9).ok_or_else(|| {
-            NeuralError::InvalidArgument("Failed to convert 0.9 to the appropriate floating point type".to_string())
+            NeuralError::InvalidArgument(
+                "Failed to convert 0.9 to the appropriate floating point type".to_string(),
+            )
         })?;
         let epsilon = F::from(1e-8).ok_or_else(|| {
-            NeuralError::InvalidArgument("Failed to convert 1e-8 to the appropriate floating point type".to_string())
+            NeuralError::InvalidArgument(
+                "Failed to convert 1e-8 to the appropriate floating point type".to_string(),
+            )
         })?;
 
         Ok(Self {

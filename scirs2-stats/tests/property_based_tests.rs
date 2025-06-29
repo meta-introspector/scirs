@@ -12,10 +12,10 @@ use quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
 use quickcheck_macros::quickcheck;
 use scirs2_stats::{
     corrcoef,
-    distributions::{norm, uniform, beta, gamma},
-    kurtosis, mean, median, pearson_r, skew, std,
+    distributions::{beta, gamma, norm, uniform},
+    kurtosis, mean, median, pearson_r, quantile, range, skew, std,
     traits::Distribution,
-    var, range, quantile,
+    var,
 };
 
 /// Helper function to generate valid statistical data
@@ -511,7 +511,9 @@ mod extended_properties {
         let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
-        TestResult::from_bool(median_val >= min_val && median_val <= max_val && median_val.is_finite())
+        TestResult::from_bool(
+            median_val >= min_val && median_val <= max_val && median_val.is_finite(),
+        )
     }
 
     #[quickcheck]
@@ -550,9 +552,7 @@ mod extended_properties {
         let std_mean = mean(&standardized.view()).unwrap();
         let std_var = var(&standardized.view(), 0).unwrap();
 
-        TestResult::from_bool(
-            std_mean.abs() < 1e-10 && (std_var - 1.0).abs() < 1e-10
-        )
+        TestResult::from_bool(std_mean.abs() < 1e-10 && (std_var - 1.0).abs() < 1e-10)
     }
 }
 
@@ -576,7 +576,9 @@ mod robust_statistics_properties {
 
         // Add extreme outlier
         let mut with_outlier = data;
-        let max_val = with_outlier.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let max_val = with_outlier
+            .iter()
+            .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         with_outlier.push(max_val * outlier_factor);
         let outlier_arr = Array1::from_vec(with_outlier);
         let outlier_median = median(&outlier_arr.view()).unwrap();
@@ -646,8 +648,11 @@ mod advanced_distribution_properties {
                 let pdf_val = dist.pdf(x);
                 let cdf_val = dist.cdf(x);
                 TestResult::from_bool(
-                    pdf_val >= 0.0 && pdf_val.is_finite() &&
-                    cdf_val >= 0.0 && cdf_val <= 1.0 && cdf_val.is_finite()
+                    pdf_val >= 0.0
+                        && pdf_val.is_finite()
+                        && cdf_val >= 0.0
+                        && cdf_val <= 1.0
+                        && cdf_val.is_finite(),
                 )
             }
             Err(_) => TestResult::discard(),
@@ -673,8 +678,11 @@ mod advanced_distribution_properties {
                 let pdf_val = dist.pdf(x);
                 let cdf_val = dist.cdf(x);
                 TestResult::from_bool(
-                    pdf_val >= 0.0 && pdf_val.is_finite() &&
-                    cdf_val >= 0.0 && cdf_val <= 1.0 && cdf_val.is_finite()
+                    pdf_val >= 0.0
+                        && pdf_val.is_finite()
+                        && cdf_val >= 0.0
+                        && cdf_val <= 1.0
+                        && cdf_val.is_finite(),
                 )
             }
             Err(_) => TestResult::discard(),
@@ -735,7 +743,7 @@ mod simd_consistency_properties {
 
         let arr = Array1::from_vec(data.clone());
         let simd_result = mean(&arr.view()).unwrap();
-        
+
         // Compute scalar version manually
         let scalar_result = data.iter().sum::<f64>() / data.len() as f64;
 
@@ -750,12 +758,11 @@ mod simd_consistency_properties {
 
         let arr = Array1::from_vec(data.clone());
         let simd_result = var(&arr.view(), 0).unwrap();
-        
+
         // Compute scalar version manually
         let mean_val = data.iter().sum::<f64>() / data.len() as f64;
-        let scalar_result = data.iter()
-            .map(|&x| (x - mean_val).powi(2))
-            .sum::<f64>() / (data.len() - 1) as f64;
+        let scalar_result =
+            data.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / (data.len() - 1) as f64;
 
         TestResult::from_bool((simd_result - scalar_result).abs() < 1e-10)
     }
@@ -775,10 +782,12 @@ mod simd_consistency_properties {
         let std_val = std(&arr.view(), 0).unwrap();
 
         TestResult::from_bool(
-            mean_val.is_finite() && 
-            var_val.is_finite() && var_val >= 0.0 &&
-            std_val.is_finite() && std_val >= 0.0 &&
-            (std_val * std_val - var_val).abs() < 1e-10
+            mean_val.is_finite()
+                && var_val.is_finite()
+                && var_val >= 0.0
+                && std_val.is_finite()
+                && std_val >= 0.0
+                && (std_val * std_val - var_val).abs() < 1e-10,
         )
     }
 }
@@ -802,8 +811,7 @@ mod numerical_stability_properties {
         let var_val = var(&arr.view(), 0).unwrap();
 
         TestResult::from_bool(
-            mean_val.is_finite() && mean_val > 0.0 &&
-            var_val.is_finite() && var_val >= 0.0
+            mean_val.is_finite() && mean_val > 0.0 && var_val.is_finite() && var_val >= 0.0,
         )
     }
 
@@ -820,10 +828,7 @@ mod numerical_stability_properties {
         let mean_val = mean(&arr.view()).unwrap();
         let var_val = var(&arr.view(), 0).unwrap();
 
-        TestResult::from_bool(
-            mean_val.is_finite() &&
-            var_val.is_finite() && var_val >= 0.0
-        )
+        TestResult::from_bool(mean_val.is_finite() && var_val.is_finite() && var_val >= 0.0)
     }
 
     #[quickcheck]
@@ -834,11 +839,11 @@ mod numerical_stability_properties {
 
         let epsilon = 10.0_f64.powi(epsilon_exp);
         let data = vec![
-            base, 
-            base + epsilon, 
-            base - epsilon, 
-            base + 2.0 * epsilon, 
-            base - 2.0 * epsilon
+            base,
+            base + epsilon,
+            base - epsilon,
+            base + 2.0 * epsilon,
+            base - 2.0 * epsilon,
         ];
         let arr = Array1::from_vec(data);
 
@@ -847,10 +852,12 @@ mod numerical_stability_properties {
         let std_val = std(&arr.view(), 0).unwrap();
 
         TestResult::from_bool(
-            mean_val.is_finite() &&
-            var_val.is_finite() && var_val >= 0.0 &&
-            std_val.is_finite() && std_val >= 0.0 &&
-            (mean_val - base).abs() < epsilon * 10.0
+            mean_val.is_finite()
+                && var_val.is_finite()
+                && var_val >= 0.0
+                && std_val.is_finite()
+                && std_val >= 0.0
+                && (mean_val - base).abs() < epsilon * 10.0,
         )
     }
 }
@@ -899,7 +906,7 @@ mod multivariate_properties {
 
         // Check correlation matrix properties
         let mut properties_hold = true;
-        
+
         // 1. Diagonal elements should be 1.0
         for i in 0..corr_matrix.nrows() {
             if (corr_matrix[[i, i]] - 1.0).abs() > 1e-10 {
@@ -953,12 +960,12 @@ mod comprehensive_test_runner {
         println!("Running extended property-based tests...");
 
         // Extended properties
-        qc.clone().quickcheck(
-            extended_properties::range_property as fn(Vec<f64>) -> TestResult,
-        );
+        qc.clone()
+            .quickcheck(extended_properties::range_property as fn(Vec<f64>) -> TestResult);
 
         qc.clone().quickcheck(
-            extended_properties::quantile_monotonicity_property as fn(Vec<f64>, f64, f64) -> TestResult,
+            extended_properties::quantile_monotonicity_property
+                as fn(Vec<f64>, f64, f64) -> TestResult,
         );
 
         qc.clone().quickcheck(
@@ -967,7 +974,8 @@ mod comprehensive_test_runner {
 
         // Robust statistics
         qc.clone().quickcheck(
-            robust_statistics_properties::median_outlier_resistance as fn(Vec<f64>, f64) -> TestResult,
+            robust_statistics_properties::median_outlier_resistance
+                as fn(Vec<f64>, f64) -> TestResult,
         );
 
         // SIMD consistency
@@ -976,7 +984,8 @@ mod comprehensive_test_runner {
         );
 
         qc.clone().quickcheck(
-            simd_consistency_properties::simd_scalar_consistency_variance as fn(Vec<f64>) -> TestResult,
+            simd_consistency_properties::simd_scalar_consistency_variance
+                as fn(Vec<f64>) -> TestResult,
         );
 
         // Numerical stability
@@ -985,7 +994,8 @@ mod comprehensive_test_runner {
         );
 
         qc.clone().quickcheck(
-            numerical_stability_properties::near_identical_values_stability as fn(f64, i32) -> TestResult,
+            numerical_stability_properties::near_identical_values_stability
+                as fn(f64, i32) -> TestResult,
         );
 
         println!("All extended property-based tests passed!");
@@ -993,20 +1003,18 @@ mod comprehensive_test_runner {
 
     #[test]
     fn run_distribution_property_tests() {
-        let mut qc = QuickCheck::new()
-            .tests(1000)
-            .max_tests(10000);
+        let mut qc = QuickCheck::new().tests(1000).max_tests(10000);
 
         println!("Running distribution property tests...");
 
         qc.clone().quickcheck(
-            advanced_distribution_properties::beta_distribution_bounds_property 
-            as fn(f64, f64, f64) -> TestResult,
+            advanced_distribution_properties::beta_distribution_bounds_property
+                as fn(f64, f64, f64) -> TestResult,
         );
 
         qc.clone().quickcheck(
-            advanced_distribution_properties::distribution_symmetry_property 
-            as fn(f64, f64) -> TestResult,
+            advanced_distribution_properties::distribution_symmetry_property
+                as fn(f64, f64) -> TestResult,
         );
 
         println!("All distribution property tests passed!");
@@ -1021,8 +1029,8 @@ mod comprehensive_test_runner {
         println!("Running multivariate property tests...");
 
         qc.clone().quickcheck(
-            multivariate_properties::correlation_matrix_properties 
-            as fn(Vec<Vec<f64>>) -> TestResult,
+            multivariate_properties::correlation_matrix_properties
+                as fn(Vec<Vec<f64>>) -> TestResult,
         );
 
         println!("All multivariate property tests passed!");

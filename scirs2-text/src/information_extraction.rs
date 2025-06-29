@@ -996,6 +996,7 @@ impl DocumentInformationExtractor {
         // Identify document topics
         let topics = self.identify_topics(&document_summaries)?;
 
+        let total_relations = all_relations.len();
         Ok(StructuredDocumentInformation {
             documents: document_summaries,
             entity_clusters,
@@ -1003,7 +1004,7 @@ impl DocumentInformationExtractor {
             events,
             topics,
             total_entities: all_entities.len(),
-            total_relations: all_relations.len(),
+            total_relations,
         })
     }
 

@@ -456,10 +456,10 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync + Zero + PartialOrd> SparseT
 
                 // Randomly select elements to prune
                 use rand::seq::SliceRandom;
-                use rand::thread_rng;
+                use rand::rng;
 
                 let mut indices: Vec<usize> = (0..total_elements).collect();
-                indices.shuffle(&mut thread_rng());
+                indices.shuffle(&mut rng());
 
                 for &idx in indices.iter().take(target_pruned) {
                     let nd_idx = mask.linear_index_to_nd(idx, param.shape());

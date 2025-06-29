@@ -155,7 +155,7 @@ pub mod helpers {
     ) -> ag::Tensor<'g, F> {
         if n == 1 {
             // 1x1 matrix determinant is the single element
-            return matrix.clone();
+            return *matrix;
         }
 
         if n == 2 {
@@ -208,11 +208,11 @@ pub mod helpers {
 
         // Gradient descent: x = x - lr * A^T * (A*x - b)
         for _iter in 0..iterations {
-            let ax = ag::tensor_ops::matmul(a, &x);
+            let ax = ag::tensor_ops::matmul(a, x);
             let residual = ax - b;
-            let at = ag::tensor_ops::transpose(a);
-            let gradient = ag::tensor_ops::matmul(&at, &residual);
-            let update = gradient * &lr_tensor;
+            let at = ag::tensor_ops::transpose(a, &[1, 0]);
+            let gradient = ag::tensor_ops::matmul(at, residual);
+            let update = gradient * lr_tensor;
             x = x - update;
         }
 
@@ -232,8 +232,8 @@ pub mod helpers {
         // Initialize random vector
         let mut v_data = vec![F::one(); n];
         v_data[0] = F::one();
-        for i in 1..n {
-            v_data[i] = F::from(0.1).unwrap() * F::from(i as f64).unwrap();
+        for (i, item) in v_data.iter_mut().enumerate().take(n).skip(1) {
+            *item = F::from(0.1).unwrap() * F::from(i as f64).unwrap();
         }
 
         let mut v = ag::tensor_ops::convert_to_tensor(
@@ -243,16 +243,16 @@ pub mod helpers {
 
         // Power iteration
         for _iter in 0..iterations {
-            let av = ag::tensor_ops::matmul(matrix, &v);
+            let av = ag::tensor_ops::matmul(matrix, v);
             let norm = frobenius_norm(&av);
             v = av / norm;
         }
 
         // Compute eigenvalue: λ = v^T * A * v / (v^T * v)
-        let vt = ag::tensor_ops::transpose(&v);
-        let av = ag::tensor_ops::matmul(matrix, &v);
-        let numerator = ag::tensor_ops::matmul(&vt, &av);
-        let denominator = ag::tensor_ops::matmul(&vt, &v);
+        let vt = ag::tensor_ops::transpose(v, &[1, 0]);
+        let av = ag::tensor_ops::matmul(matrix, v);
+        let numerator = ag::tensor_ops::matmul(vt, av);
+        let denominator = ag::tensor_ops::matmul(vt, v);
 
         numerator / denominator
     }
@@ -276,8 +276,8 @@ pub mod helpers {
     ///
     /// This is a simplified rank estimation - actual rank would require full SVD
     pub fn rank_approximation<'g, F: ag::Float>(
-        matrix: &ag::Tensor<'g, F>,
-        tolerance: F,
+        _matrix: &ag::Tensor<'g, F>,
+        _tolerance: F,
         ctx: &'g ag::Context<'g, F>,
     ) -> ag::Tensor<'g, F> {
         // For now, return a constant estimate

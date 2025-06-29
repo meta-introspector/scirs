@@ -8,11 +8,13 @@
 //! - Advanced methods (Multiple-try Metropolis, Parallel Tempering, Slice Sampling, Ensemble Methods)
 
 mod advanced;
+mod enhanced_hamiltonian;
 mod gibbs;
 mod hamiltonian;
 mod metropolis;
 
 pub use advanced::*;
+pub use enhanced_hamiltonian::*;
 pub use gibbs::*;
 pub use hamiltonian::*;
 pub use metropolis::*;

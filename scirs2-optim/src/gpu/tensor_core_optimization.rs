@@ -588,7 +588,7 @@ impl TensorCoreOptimizer {
 
             for (i, op) in sorted_ops.iter().enumerate() {
                 let stream = stream_pool.get_stream(i % pipeline_config.num_streams);
-                
+
                 // Pre-allocate result
                 let mut result = Array2::zeros((op.output_dims.0, op.output_dims.1));
 
@@ -620,14 +620,14 @@ impl TensorCoreOptimizer {
         operations: &[TensorCoreOperation<T>],
     ) -> Vec<TensorCoreOperation<T>> {
         let mut sorted_ops = operations.to_vec();
-        
+
         // Sort by priority (larger matrices first for better GPU utilization)
         sorted_ops.sort_by(|a, b| {
             let size_a = a.output_dims.0 * a.output_dims.1;
             let size_b = b.output_dims.0 * b.output_dims.1;
             size_b.cmp(&size_a)
         });
-        
+
         sorted_ops
     }
 
@@ -643,7 +643,12 @@ impl TensorCoreOptimizer {
                 TensorCoreOpType::GEMM { a, b, alpha, beta } => {
                     self.tensor_core_gemm(a, b, result, *alpha, *beta, operation.precision)?;
                 }
-                TensorCoreOpType::SparseGEMM { a, b_sparse, alpha, beta } => {
+                TensorCoreOpType::SparseGEMM {
+                    a,
+                    b_sparse,
+                    alpha,
+                    beta,
+                } => {
                     self.sparse_tensor_core_gemm(a, b_sparse, result, *alpha, *beta)?;
                 }
                 TensorCoreOpType::FusedAdam { params, grads, .. } => {
@@ -652,7 +657,7 @@ impl TensorCoreOptimizer {
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -673,7 +678,7 @@ impl TensorCoreOptimizer {
                 _ => {}
             }
         }
-        
+
         Ok(())
     }
 
@@ -695,11 +700,11 @@ impl TensorCoreOptimizer {
 
     fn analyze_memory_access_pattern<T: Float>(&self, matrix: &Array2<T>) -> MemoryAccessPattern {
         let (rows, cols) = matrix.dim();
-        
+
         // Analyze stride patterns
         let stride_x = if cols > 1 { 1 } else { 0 };
         let stride_y = cols;
-        
+
         // Determine access pattern type
         let pattern_type = if rows == 1 || cols == 1 {
             AccessPatternType::Sequential
@@ -708,26 +713,30 @@ impl TensorCoreOptimizer {
         } else {
             AccessPatternType::Random
         };
-        
+
         // Estimate coalescing efficiency
         let coalescing_efficiency = match pattern_type {
             AccessPatternType::Sequential => 1.0,
             AccessPatternType::Strided => {
-                if stride_y % 128 == 0 { 0.8 } else { 0.4 }
+                if stride_y % 128 == 0 {
+                    0.8
+                } else {
+                    0.4
+                }
             }
             _ => 0.2,
         };
-        
+
         // Estimate cache hit ratio
         let cache_hit_ratio = match pattern_type {
             AccessPatternType::Sequential => 0.95,
             AccessPatternType::Strided => 0.7,
             _ => 0.3,
         };
-        
+
         // Detect bank conflicts (simplified)
         let bank_conflicts = if stride_y % 32 == 0 { stride_y / 32 } else { 0 };
-        
+
         MemoryAccessPattern {
             pattern_type,
             stride_x,
@@ -744,7 +753,7 @@ impl TensorCoreOptimizer {
         access_pattern: &MemoryAccessPattern,
     ) -> Result<OptimizedMatrix<T>, GpuOptimizerError> {
         let (rows, cols) = matrix.dim();
-        
+
         // Determine optimal layout based on access pattern
         let layout = match access_pattern.pattern_type {
             AccessPatternType::Sequential => MatrixLayout::RowMajor,
@@ -757,24 +766,24 @@ impl TensorCoreOptimizer {
             }
             _ => MatrixLayout::TensorCoreOptimized,
         };
-        
+
         // Calculate padding for optimal alignment
         let alignment = 128; // 128-byte alignment for GPU
         let element_size = std::mem::size_of::<T>();
         let elements_per_line = alignment / element_size;
-        
+
         let padding_rows = if rows % elements_per_line != 0 {
             elements_per_line - (rows % elements_per_line)
         } else {
             0
         };
-        
+
         let padding_cols = if cols % elements_per_line != 0 {
             elements_per_line - (cols % elements_per_line)
         } else {
             0
         };
-        
+
         // Create optimized matrix (in practice would do actual memory layout transformation)
         let mut optimized_data = matrix.clone();
         if padding_rows > 0 || padding_cols > 0 {
@@ -785,7 +794,7 @@ impl TensorCoreOptimizer {
             padded.slice_mut(ndarray::s![..rows, ..cols]).assign(matrix);
             optimized_data = padded;
         }
-        
+
         Ok(OptimizedMatrix {
             data: optimized_data,
             layout,
@@ -802,7 +811,7 @@ impl TensorCoreOptimizer {
     ) -> Result<SchedulingPlan, GpuOptimizerError> {
         let hardware_state = self.query_hardware_utilization()?;
         let optimal_config = self.compute_optimal_scheduling(workload, &hardware_state)?;
-        
+
         Ok(SchedulingPlan {
             operation_order: optimal_config.operation_order,
             stream_assignments: optimal_config.stream_assignments,
@@ -856,20 +865,25 @@ impl TensorCoreOptimizer {
         sorted_indices.sort_by(|&a, &b| {
             let op_a = &operations[a];
             let op_b = &operations[b];
-            
+
             // Primary sort: priority (higher first)
             let priority_cmp = op_b.priority.cmp(&op_a.priority);
             if priority_cmp != std::cmp::Ordering::Equal {
                 return priority_cmp;
             }
-            
+
             // Secondary sort: compute cost (larger first for better GPU utilization)
-            op_b.compute_cost.partial_cmp(&op_a.compute_cost)
+            op_b.compute_cost
+                .partial_cmp(&op_a.compute_cost)
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
 
         // Assign operations to streams
-        let num_streams = if hardware_state.gpu_utilization < 50.0 { 4 } else { 2 };
+        let num_streams = if hardware_state.gpu_utilization < 50.0 {
+            4
+        } else {
+            2
+        };
         let mut current_stream = 0;
 
         for (idx, &op_idx) in sorted_indices.iter().enumerate() {
@@ -977,7 +991,7 @@ impl TensorCoreOptimizer {
         for (idx, &op_idx) in operation_order.iter().enumerate() {
             let operation = &workload.operations[op_idx];
             let precision = precision_assignments[idx];
-            
+
             // Estimate operation time based on precision and hardware utilization
             let base_time = operation.compute_cost / self.estimate_tensor_ops_throughput();
             let precision_factor = match precision {
@@ -986,13 +1000,14 @@ impl TensorCoreOptimizer {
                 TensorCorePrecision::BF16 => 0.8,
                 TensorCorePrecision::TF32 => 1.0,
             };
-            
+
             let utilization_factor = 1.0 - (hardware_state.gpu_utilization / 100.0) as f64 * 0.3;
             let op_time = base_time * precision_factor * utilization_factor;
-            
+
             total_flops += operation.compute_cost;
             total_time_ms += op_time * 1000.0; // Convert to milliseconds
-            total_memory += operation.output_dims.0 * operation.output_dims.1 * std::mem::size_of::<T>();
+            total_memory +=
+                operation.output_dims.0 * operation.output_dims.1 * std::mem::size_of::<T>();
         }
 
         // Account for parallelization across streams
@@ -1001,8 +1016,9 @@ impl TensorCoreOptimizer {
         total_time_ms *= 1.0 - parallelization_factor * 0.5;
 
         let throughput_tflops = total_flops / (total_time_ms / 1000.0) / 1e12;
-        let efficiency_percent = (throughput_tflops / (self.estimate_tensor_ops_throughput() / 1e12)) * 100.0;
-        
+        let efficiency_percent =
+            (throughput_tflops / (self.estimate_tensor_ops_throughput() / 1e12)) * 100.0;
+
         PerformanceEstimate {
             total_time_ms,
             throughput_tflops,
@@ -1501,16 +1517,16 @@ pub enum TensorCoreOperation {
 pub struct PipelineOptimizationConfig {
     /// Number of parallel streams
     pub num_streams: usize,
-    
+
     /// Enable dependency tracking
     pub dependency_tracking: bool,
-    
+
     /// Memory prefetch distance
     pub prefetch_distance: usize,
-    
+
     /// Load balancing strategy
     pub load_balancing: LoadBalancingStrategy,
-    
+
     /// Priority scheduling enabled
     pub priority_scheduling: bool,
 }
@@ -1541,22 +1557,22 @@ pub enum LoadBalancingStrategy {
 pub struct TensorCoreOperation<T: Float> {
     /// Operation type and parameters
     pub op_type: TensorCoreOpType<T>,
-    
+
     /// Output dimensions
     pub output_dims: (usize, usize),
-    
+
     /// Precision to use
     pub precision: TensorCorePrecision,
-    
+
     /// Operation priority (higher = more important)
     pub priority: i32,
-    
+
     /// Dependencies on other operations
     pub dependencies: Vec<usize>,
-    
+
     /// Estimated compute cost
     pub compute_cost: f64,
-    
+
     /// Memory bandwidth requirement
     pub memory_bandwidth: f64,
 }
@@ -1595,10 +1611,10 @@ pub enum TensorCoreOpType<T: Float> {
 pub struct StreamPool {
     #[cfg(feature = "gpu")]
     streams: Vec<CudaStream>,
-    
+
     #[cfg(not(feature = "gpu"))]
     _phantom: std::marker::PhantomData<()>,
-    
+
     current_stream: usize,
     num_streams: usize,
 }
@@ -1610,14 +1626,14 @@ impl StreamPool {
         for _ in 0..num_streams {
             streams.push(CudaStream::new(context)?);
         }
-        
+
         Ok(Self {
             streams,
             current_stream: 0,
             num_streams,
         })
     }
-    
+
     #[cfg(not(feature = "gpu"))]
     pub fn new(_context: &GpuContext, num_streams: usize) -> Result<Self, GpuOptimizerError> {
         Ok(Self {
@@ -1626,17 +1642,17 @@ impl StreamPool {
             num_streams,
         })
     }
-    
+
     #[cfg(feature = "gpu")]
     pub fn get_stream(&mut self, index: usize) -> &CudaStream {
         &self.streams[index % self.num_streams]
     }
-    
+
     #[cfg(not(feature = "gpu"))]
     pub fn get_stream(&mut self, _index: usize) -> &() {
         &()
     }
-    
+
     #[cfg(feature = "gpu")]
     pub fn synchronize_all(&self) -> Result<(), GpuOptimizerError> {
         for stream in &self.streams {
@@ -1644,7 +1660,7 @@ impl StreamPool {
         }
         Ok(())
     }
-    
+
     #[cfg(not(feature = "gpu"))]
     pub fn synchronize_all(&self) -> Result<(), GpuOptimizerError> {
         Ok(())
@@ -1656,16 +1672,16 @@ impl StreamPool {
 pub struct OptimizedMatrix<T: Float> {
     /// Matrix data
     pub data: Array2<T>,
-    
+
     /// Memory layout used
     pub layout: MatrixLayout,
-    
+
     /// Padding applied
     pub padding: (usize, usize),
-    
+
     /// Stride information
     pub strides: (usize, usize),
-    
+
     /// Memory alignment
     pub alignment: usize,
 }
@@ -1675,17 +1691,17 @@ pub struct OptimizedMatrix<T: Float> {
 pub struct MemoryAccessPattern {
     /// Access pattern type
     pub pattern_type: AccessPatternType,
-    
+
     /// Stride information
     pub stride_x: usize,
     pub stride_y: usize,
-    
+
     /// Coalescing efficiency
     pub coalescing_efficiency: f32,
-    
+
     /// Cache hit ratio
     pub cache_hit_ratio: f32,
-    
+
     /// Bank conflicts detected
     pub bank_conflicts: usize,
 }
@@ -1706,13 +1722,13 @@ pub enum AccessPatternType {
 pub struct TensorCoreWorkload<T: Float> {
     /// Operations to perform
     pub operations: Vec<TensorCoreOperation<T>>,
-    
+
     /// Resource requirements
     pub resource_requirements: ResourceRequirements,
-    
+
     /// Performance targets
     pub performance_targets: PerformanceTargets,
-    
+
     /// Constraints
     pub constraints: WorkloadConstraints,
 }
@@ -1722,13 +1738,13 @@ pub struct TensorCoreWorkload<T: Float> {
 pub struct ResourceRequirements {
     /// Memory requirements (bytes)
     pub memory_bytes: usize,
-    
+
     /// Compute requirements (FLOPS)
     pub compute_flops: f64,
-    
+
     /// Bandwidth requirements (GB/s)
     pub bandwidth_gbps: f64,
-    
+
     /// Number of tensor cores needed
     pub tensor_cores: usize,
 }
@@ -1738,13 +1754,13 @@ pub struct ResourceRequirements {
 pub struct PerformanceTargets {
     /// Target throughput (operations/sec)
     pub target_throughput: f64,
-    
+
     /// Maximum latency (milliseconds)
     pub max_latency_ms: f64,
-    
+
     /// Target efficiency (%)
     pub target_efficiency: f32,
-    
+
     /// Energy budget (Watts)
     pub energy_budget: f32,
 }
@@ -1754,13 +1770,13 @@ pub struct PerformanceTargets {
 pub struct WorkloadConstraints {
     /// Memory limit (bytes)
     pub memory_limit: usize,
-    
+
     /// Time limit (milliseconds)
     pub time_limit_ms: u64,
-    
+
     /// Power limit (Watts)
     pub power_limit: f32,
-    
+
     /// Precision requirements
     pub precision_requirements: Vec<TensorCorePrecision>,
 }
@@ -1770,19 +1786,19 @@ pub struct WorkloadConstraints {
 pub struct HardwareUtilizationState {
     /// GPU utilization (%)
     pub gpu_utilization: f32,
-    
+
     /// Memory utilization (%)
     pub memory_utilization: f32,
-    
+
     /// Tensor core utilization (%)
     pub tensor_core_utilization: f32,
-    
+
     /// Memory bandwidth utilization (%)
     pub bandwidth_utilization: f32,
-    
+
     /// Temperature (Celsius)
     pub temperature: f32,
-    
+
     /// Power consumption (Watts)
     pub power_consumption: f32,
 }
@@ -1792,16 +1808,16 @@ pub struct HardwareUtilizationState {
 pub struct SchedulingPlan {
     /// Ordered list of operations
     pub operation_order: Vec<usize>,
-    
+
     /// Stream assignments
     pub stream_assignments: Vec<usize>,
-    
+
     /// Memory layout changes required
     pub memory_layout_changes: Vec<LayoutChange>,
-    
+
     /// Precision assignments
     pub precision_assignments: Vec<TensorCorePrecision>,
-    
+
     /// Estimated performance
     pub estimated_performance: PerformanceEstimate,
 }
@@ -1811,13 +1827,13 @@ pub struct SchedulingPlan {
 pub struct LayoutChange {
     /// Operation index
     pub operation_index: usize,
-    
+
     /// Old layout
     pub old_layout: MatrixLayout,
-    
+
     /// New layout
     pub new_layout: MatrixLayout,
-    
+
     /// Transformation cost
     pub transformation_cost: f64,
 }
@@ -1827,16 +1843,16 @@ pub struct LayoutChange {
 pub struct PerformanceEstimate {
     /// Estimated total time (milliseconds)
     pub total_time_ms: f64,
-    
+
     /// Estimated throughput (TFLOPS)
     pub throughput_tflops: f64,
-    
+
     /// Estimated efficiency (%)
     pub efficiency_percent: f32,
-    
+
     /// Estimated memory usage (bytes)
     pub memory_usage: usize,
-    
+
     /// Estimated power consumption (Watts)
     pub power_consumption: f32,
 }
@@ -1846,16 +1862,16 @@ pub struct PerformanceEstimate {
 pub struct OptimalSchedulingConfig {
     /// Operation order
     pub operation_order: Vec<usize>,
-    
+
     /// Stream assignments
     pub stream_assignments: Vec<usize>,
-    
+
     /// Memory layout changes
     pub memory_layout_changes: Vec<LayoutChange>,
-    
+
     /// Precision assignments
     pub precision_assignments: Vec<TensorCorePrecision>,
-    
+
     /// Estimated performance
     pub estimated_performance: PerformanceEstimate,
 }

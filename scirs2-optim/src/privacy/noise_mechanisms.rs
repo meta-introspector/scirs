@@ -265,7 +265,7 @@ where
 
         // Implement Laplace distribution using transformation method
         // If U is uniform on [0,1], then Laplace(μ, b) = μ - b*sgn(U-0.5)*ln(1-2|U-0.5|)
-        let uniform = rand::distributions::Uniform::new(0.0, 1.0);
+        let uniform = ndarray_rand::rand_distr::Uniform::new(0.0, 1.0);
 
         data.mapv_inplace(|x| {
             let u: f64 = uniform.sample(&mut *self.rng);

@@ -15,14 +15,14 @@ use crate::error::{MetricsError, Result};
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::mpsc;
-use std::sync::{Arc, RwLock, Mutex};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use std::net::SocketAddr;
 use std::future::Future;
+use std::net::SocketAddr;
 use std::pin::Pin;
+use std::sync::mpsc;
+use std::sync::{Arc, Mutex, RwLock};
 use std::task::{Context, Poll};
 use std::thread;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// Custom async sleep implementation for when tokio is not available
 pub struct AsyncSleep {
@@ -41,11 +41,11 @@ impl AsyncSleep {
 
 impl Future for AsyncSleep {
     type Output = ();
-    
+
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if self.start.is_none() {
             self.start = Some(Instant::now());
-            
+
             // Wake up the task after the duration
             let waker = cx.waker().clone();
             let duration = self.duration;
@@ -53,7 +53,7 @@ impl Future for AsyncSleep {
                 thread::sleep(duration);
                 waker.wake();
             });
-            
+
             Poll::Pending
         } else if self.start.unwrap().elapsed() >= self.duration {
             Poll::Ready(())
@@ -309,7 +309,11 @@ pub struct WorkerConnection {
 
 /// Load balancer trait for different strategies
 pub trait LoadBalancer {
-    fn select_worker(&mut self, workers: &HashMap<String, WorkerConnection>, task: &TaskInfo) -> Option<String>;
+    fn select_worker(
+        &mut self,
+        workers: &HashMap<String, WorkerConnection>,
+        task: &TaskInfo,
+    ) -> Option<String>;
     fn update_worker_metrics(&mut self, worker_id: &str, metrics: &WorkerMetrics);
     fn get_strategy(&self) -> LoadBalancingStrategy;
 }
@@ -470,8 +474,16 @@ pub struct RateLimiter {
 
 /// Network client trait for different protocols
 pub trait NetworkClient {
-    fn send_request(&self, address: &str, message: &DistributedMessage) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>>;
-    fn send_request_sync(&self, address: &str, message: &DistributedMessage) -> Result<DistributedMessage>;
+    fn send_request(
+        &self,
+        address: &str,
+        message: &DistributedMessage,
+    ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>>;
+    fn send_request_sync(
+        &self,
+        address: &str,
+        message: &DistributedMessage,
+    ) -> Result<DistributedMessage>;
     fn establish_connection(&self, address: &str) -> Result<()>;
     fn close_connection(&self, address: &str) -> Result<()>;
     fn get_protocol(&self) -> &NetworkProtocol;
@@ -481,13 +493,14 @@ impl DistributedMetricsCoordinator {
     /// Create a new advanced distributed metrics coordinator
     pub fn new(config: DistributedConfig) -> Result<Self> {
         let workers = Arc::new(RwLock::new(HashMap::new()));
-        
+
         // Create load balancer based on strategy
         let load_balancer = Self::create_load_balancer(&config.load_balancing)?;
-        
+
         // Create network client based on protocol
-        let network_client = Self::create_network_client(&config.network_protocol, &config.auth_config)?;
-        
+        let network_client =
+            Self::create_network_client(&config.network_protocol, &config.auth_config)?;
+
         let coordinator = Self {
             config: config.clone(),
             workers,
@@ -502,7 +515,7 @@ impl DistributedMetricsCoordinator {
 
         // Initialize worker connections
         coordinator.initialize_workers()?;
-        
+
         // Start background monitoring if enabled
         if config.enable_monitoring {
             coordinator.start_monitoring();
@@ -510,30 +523,41 @@ impl DistributedMetricsCoordinator {
 
         Ok(coordinator)
     }
-    
+
     /// Create load balancer based on strategy
-    fn create_load_balancer(strategy: &LoadBalancingStrategy) -> Result<Box<dyn LoadBalancer + Send + Sync>> {
+    fn create_load_balancer(
+        strategy: &LoadBalancingStrategy,
+    ) -> Result<Box<dyn LoadBalancer + Send + Sync>> {
         match strategy {
             LoadBalancingStrategy::RoundRobin => Ok(Box::new(RoundRobinBalancer::new())),
-            LoadBalancingStrategy::LeastConnections => Ok(Box::new(LeastConnectionsBalancer::new())),
-            LoadBalancingStrategy::WeightedRoundRobin(weights) => Ok(Box::new(WeightedRoundRobinBalancer::new(weights.clone()))),
+            LoadBalancingStrategy::LeastConnections => {
+                Ok(Box::new(LeastConnectionsBalancer::new()))
+            }
+            LoadBalancingStrategy::WeightedRoundRobin(weights) => {
+                Ok(Box::new(WeightedRoundRobinBalancer::new(weights.clone())))
+            }
             LoadBalancingStrategy::LoadBased => Ok(Box::new(LoadBasedBalancer::new())),
             LoadBalancingStrategy::LatencyBased => Ok(Box::new(LatencyBasedBalancer::new())),
             LoadBalancingStrategy::Custom(_) => Ok(Box::new(RoundRobinBalancer::new())), // Fallback
         }
     }
-    
+
     /// Create network client based on protocol
-    fn create_network_client(protocol: &NetworkProtocol, auth_config: &Option<AuthConfig>) -> Result<Arc<dyn NetworkClient + Send + Sync>> {
+    fn create_network_client(
+        protocol: &NetworkProtocol,
+        auth_config: &Option<AuthConfig>,
+    ) -> Result<Arc<dyn NetworkClient + Send + Sync>> {
         match protocol {
-            NetworkProtocol::Http | NetworkProtocol::Http2 => Ok(Arc::new(HttpClient::new(auth_config.clone())?)),
+            NetworkProtocol::Http | NetworkProtocol::Http2 => {
+                Ok(Arc::new(HttpClient::new(auth_config.clone())?))
+            }
             NetworkProtocol::Grpc => Ok(Arc::new(GrpcClient::new(auth_config.clone())?)),
             NetworkProtocol::Tcp => Ok(Arc::new(TcpClient::new(auth_config.clone())?)),
             NetworkProtocol::WebSocket => Ok(Arc::new(WebSocketClient::new(auth_config.clone())?)),
             NetworkProtocol::Udp => Ok(Arc::new(UdpClient::new(auth_config.clone())?)),
         }
     }
-    
+
     /// Start background monitoring
     fn start_monitoring(&self) {
         // In a real implementation, this would start background threads for monitoring
@@ -667,7 +691,7 @@ impl DistributedMetricsCoordinator {
         aggregation: AggregationStrategy,
     ) -> Result<DistributedMetricsResult> {
         let start_time = Instant::now();
-        
+
         // Generate unique task ID
         let task_id = {
             let mut counter = self.task_counter.write().unwrap();
@@ -689,11 +713,12 @@ impl DistributedMetricsCoordinator {
         let chunks = self.create_intelligent_data_chunks(y_true, y_pred, &task_info)?;
 
         // Distribute chunks to workers using load balancing
-        let chunk_results = self.distribute_chunks_with_load_balancing(&task_id, chunks, metric_names, &task_info)?;
+        let chunk_results =
+            self.distribute_chunks_with_load_balancing(&task_id, chunks, metric_names, &task_info)?;
 
         // Aggregate results with fault tolerance
         let aggregated_metrics = self.aggregate_results_with_retry(chunk_results, &aggregation)?;
-        
+
         // Record performance metrics
         let execution_time = start_time.elapsed();
         self.record_performance_metrics(&task_id, execution_time, y_true.len());
@@ -706,7 +731,7 @@ impl DistributedMetricsCoordinator {
             errors: self.get_task_errors(&task_id),
         })
     }
-    
+
     /// Async version of compute_distributed_metrics
     pub async fn compute_distributed_metrics_async(
         &self,
@@ -718,9 +743,9 @@ impl DistributedMetricsCoordinator {
         if !self.config.enable_async {
             return self.compute_distributed_metrics(y_true, y_pred, metric_names, aggregation);
         }
-        
+
         let start_time = Instant::now();
-        
+
         // Generate unique task ID
         let task_id = {
             let mut counter = self.task_counter.write().unwrap();
@@ -742,11 +767,13 @@ impl DistributedMetricsCoordinator {
         let chunks = self.create_intelligent_data_chunks(y_true, y_pred, &task_info)?;
 
         // Distribute chunks asynchronously
-        let chunk_results = self.distribute_chunks_async(&task_id, chunks, metric_names, &task_info).await?;
+        let chunk_results = self
+            .distribute_chunks_async(&task_id, chunks, metric_names, &task_info)
+            .await?;
 
         // Aggregate results
         let aggregated_metrics = self.aggregate_results_with_retry(chunk_results, &aggregation)?;
-        
+
         // Record performance metrics
         let execution_time = start_time.elapsed();
         self.record_performance_metrics(&task_id, execution_time, y_true.len());
@@ -774,7 +801,7 @@ impl DistributedMetricsCoordinator {
 
         let total_samples = y_true.len();
         let workers = self.workers.read().unwrap();
-        
+
         if workers.is_empty() {
             return Err(MetricsError::ComputationError(
                 "No workers available".to_string(),
@@ -788,7 +815,7 @@ impl DistributedMetricsCoordinator {
         for i in 0..n_workers {
             let start = i * chunk_size;
             let end = (start + chunk_size).min(total_samples);
-            
+
             if start < total_samples {
                 let true_chunk = y_true.slice(s![start..end]).to_vec();
                 let pred_chunk = y_pred.slice(s![start..end]).to_vec();
@@ -814,7 +841,7 @@ impl DistributedMetricsCoordinator {
 
         let total_samples = y_true.len();
         let workers = self.workers.read().unwrap();
-        
+
         if workers.is_empty() {
             return Err(MetricsError::ComputationError(
                 "No workers available".to_string(),
@@ -822,10 +849,11 @@ impl DistributedMetricsCoordinator {
         }
 
         // Calculate chunk sizes based on worker capabilities
-        let worker_weights: Vec<f64> = workers.values()
+        let worker_weights: Vec<f64> = workers
+            .values()
             .map(|worker| self.calculate_worker_weight(&worker.status))
             .collect();
-        
+
         let total_weight: f64 = worker_weights.iter().sum();
         let mut chunks = Vec::new();
         let mut current_offset = 0;
@@ -837,7 +865,7 @@ impl DistributedMetricsCoordinator {
             } else {
                 ((weight / total_weight) * total_samples as f64) as usize
             };
-            
+
             if chunk_size > 0 {
                 let end = (current_offset + chunk_size).min(total_samples);
                 let true_chunk = y_true.slice(s![current_offset..end]).to_vec();
@@ -849,14 +877,14 @@ impl DistributedMetricsCoordinator {
 
         Ok(chunks)
     }
-    
+
     /// Calculate worker weight based on performance metrics
     fn calculate_worker_weight(&self, status: &WorkerStatus) -> f64 {
         let cpu_factor = 1.0 - status.cpu_usage;
         let memory_factor = 1.0 - status.memory_usage;
         let queue_factor = 1.0 / (1.0 + status.queue_length as f64);
         let health_factor = status.health_score;
-        
+
         (cpu_factor * memory_factor * queue_factor * health_factor).max(0.1)
     }
 
@@ -869,7 +897,7 @@ impl DistributedMetricsCoordinator {
         task_info: &TaskInfo,
     ) -> Result<Vec<ChunkResult>> {
         let workers = self.workers.read().unwrap();
-        
+
         if workers.is_empty() {
             return Err(MetricsError::ComputationError(
                 "No workers available".to_string(),
@@ -881,10 +909,11 @@ impl DistributedMetricsCoordinator {
 
         for (chunk_id, (y_true_chunk, y_pred_chunk)) in chunks.into_iter().enumerate() {
             // Select worker using load balancing strategy
-            let selected_worker = load_balancer.select_worker(&workers, task_info)
-                .ok_or_else(|| MetricsError::ComputationError(
-                    "No suitable worker found".to_string()
-                ))?;
+            let selected_worker = load_balancer
+                .select_worker(&workers, task_info)
+                .ok_or_else(|| {
+                    MetricsError::ComputationError("No suitable worker found".to_string())
+                })?;
 
             // Check circuit breaker
             if !self.check_circuit_breaker(&selected_worker)? {
@@ -901,8 +930,14 @@ impl DistributedMetricsCoordinator {
                 };
 
                 // Send task with retry logic
-                let chunk_result = self.send_task_with_retry(&selected_worker, message, &y_true_chunk, &y_pred_chunk, metric_names)?;
-                
+                let chunk_result = self.send_task_with_retry(
+                    &selected_worker,
+                    message,
+                    &y_true_chunk,
+                    &y_pred_chunk,
+                    metric_names,
+                )?;
+
                 // Update worker metrics before moving chunk_result
                 self.update_worker_performance(&selected_worker, chunk_result.sample_count);
                 results.push(chunk_result);
@@ -911,7 +946,7 @@ impl DistributedMetricsCoordinator {
 
         Ok(results)
     }
-    
+
     /// Async version of chunk distribution
     async fn distribute_chunks_async(
         &self,
@@ -921,7 +956,7 @@ impl DistributedMetricsCoordinator {
         task_info: &TaskInfo,
     ) -> Result<Vec<ChunkResult>> {
         let workers = self.workers.read().unwrap();
-        
+
         if workers.is_empty() {
             return Err(MetricsError::ComputationError(
                 "No workers available".to_string(),
@@ -933,10 +968,11 @@ impl DistributedMetricsCoordinator {
 
         // Create async tasks for each chunk
         for (chunk_id, (y_true_chunk, y_pred_chunk)) in chunks.into_iter().enumerate() {
-            let selected_worker = load_balancer.select_worker(&workers, task_info)
-                .ok_or_else(|| MetricsError::ComputationError(
-                    "No suitable worker found".to_string()
-                ))?;
+            let selected_worker = load_balancer
+                .select_worker(&workers, task_info)
+                .ok_or_else(|| {
+                    MetricsError::ComputationError("No suitable worker found".to_string())
+                })?;
 
             if self.check_circuit_breaker(&selected_worker)? {
                 let message = DistributedMessage::ComputeMetrics {
@@ -949,11 +985,17 @@ impl DistributedMetricsCoordinator {
 
                 let network_client = self.network_client.clone();
                 let worker_addr = selected_worker.clone();
-                
+
                 let future = async move {
                     let response = network_client.send_request(&worker_addr, &message).await?;
-                    
-                    if let DistributedMessage::MetricsResult { chunk_id, results, sample_count, .. } = response {
+
+                    if let DistributedMessage::MetricsResult {
+                        chunk_id,
+                        results,
+                        sample_count,
+                        ..
+                    } = response
+                    {
                         Ok(ChunkResult {
                             chunk_id,
                             metrics: results,
@@ -961,11 +1003,11 @@ impl DistributedMetricsCoordinator {
                         })
                     } else {
                         Err(MetricsError::ComputationError(
-                            "Invalid response from worker".to_string()
+                            "Invalid response from worker".to_string(),
                         ))
                     }
                 };
-                
+
                 futures.push(future);
             }
         }
@@ -974,7 +1016,7 @@ impl DistributedMetricsCoordinator {
         let results = self.join_all_custom(futures).await?;
         Ok(results)
     }
-    
+
     /// Custom join_all implementation for concurrent execution without external dependencies
     async fn join_all_custom<F>(&self, futures: Vec<F>) -> Result<Vec<ChunkResult>>
     where
@@ -982,10 +1024,10 @@ impl DistributedMetricsCoordinator {
     {
         use std::sync::mpsc;
         use std::thread;
-        
+
         let (tx, rx) = mpsc::channel();
         let mut handles = Vec::new();
-        
+
         // Spawn threads for concurrent execution
         for (i, future) in futures.into_iter().enumerate() {
             let tx_clone = tx.clone();
@@ -1002,48 +1044,53 @@ impl DistributedMetricsCoordinator {
                         sample_count: 0,
                     }
                 });
-                
+
                 match result {
                     Ok(chunk_result) => tx_clone.send((i, Ok(chunk_result))).unwrap(),
-                    Err(_) => tx_clone.send((i, Err(MetricsError::ComputationError(
-                        "Task execution failed".to_string()
-                    )))).unwrap(),
+                    Err(_) => tx_clone
+                        .send((
+                            i,
+                            Err(MetricsError::ComputationError(
+                                "Task execution failed".to_string(),
+                            )),
+                        ))
+                        .unwrap(),
                 }
             });
             handles.push(handle);
         }
-        
+
         drop(tx); // Close sender to signal completion
-        
+
         // Collect results
         let mut results = Vec::new();
         let mut received = std::collections::HashMap::new();
-        
+
         for (index, result) in rx {
             received.insert(index, result);
         }
-        
+
         // Sort results by index and collect
         for i in 0..handles.len() {
             if let Some(result) = received.remove(&i) {
                 results.push(result?);
             }
         }
-        
+
         // Wait for all threads to complete
         for handle in handles {
-            handle.join().map_err(|_| MetricsError::ComputationError(
-                "Thread join failed".to_string()
-            ))?;
+            handle
+                .join()
+                .map_err(|_| MetricsError::ComputationError("Thread join failed".to_string()))?;
         }
-        
+
         Ok(results)
     }
-    
+
     /// Check circuit breaker status
     fn check_circuit_breaker(&self, worker_id: &str) -> Result<bool> {
         let circuit_breakers = self.circuit_breakers.read().unwrap();
-        
+
         if let Some(cb) = circuit_breakers.get(worker_id) {
             match cb.state {
                 CircuitBreakerState::Closed => Ok(true),
@@ -1053,7 +1100,10 @@ impl DistributedMetricsCoordinator {
                         if last_failure.elapsed() >= cb.timeout {
                             // Transition to half-open
                             drop(circuit_breakers);
-                            self.set_circuit_breaker_state(worker_id, CircuitBreakerState::HalfOpen)?;
+                            self.set_circuit_breaker_state(
+                                worker_id,
+                                CircuitBreakerState::HalfOpen,
+                            )?;
                             Ok(true)
                         } else {
                             Ok(false)
@@ -1071,11 +1121,11 @@ impl DistributedMetricsCoordinator {
             Ok(true) // No circuit breaker configured
         }
     }
-    
+
     /// Set circuit breaker state
     fn set_circuit_breaker_state(&self, worker_id: &str, state: CircuitBreakerState) -> Result<()> {
         let mut circuit_breakers = self.circuit_breakers.write().unwrap();
-        
+
         if let Some(cb) = circuit_breakers.get_mut(worker_id) {
             let is_closed = state == CircuitBreakerState::Closed;
             cb.state = state;
@@ -1084,10 +1134,10 @@ impl DistributedMetricsCoordinator {
                 cb.success_count = 0;
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Send task with retry logic
     fn send_task_with_retry(
         &self,
@@ -1098,11 +1148,17 @@ impl DistributedMetricsCoordinator {
         metric_names: &[String],
     ) -> Result<ChunkResult> {
         let mut retries = 0;
-        
+
         while retries < self.config.max_retries {
             match self.network_client.send_request_sync(worker_id, &message) {
                 Ok(response) => {
-                    if let DistributedMessage::MetricsResult { chunk_id, results, sample_count, .. } = response {
+                    if let DistributedMessage::MetricsResult {
+                        chunk_id,
+                        results,
+                        sample_count,
+                        ..
+                    } = response
+                    {
                         // Success - update circuit breaker
                         self.record_success(worker_id)?;
                         return Ok(ChunkResult {
@@ -1115,64 +1171,80 @@ impl DistributedMetricsCoordinator {
                 Err(_e) => {
                     retries += 1;
                     self.record_failure(worker_id)?;
-                    
+
                     if retries >= self.config.max_retries {
                         // Fallback to local computation
                         let chunk_id = match &message {
                             DistributedMessage::ComputeMetrics { chunk_id, .. } => *chunk_id,
                             _ => 0,
                         };
-                        
+
                         return Ok(ChunkResult {
                             chunk_id,
-                            metrics: self.compute_chunk_metrics_locally(y_true_chunk, y_pred_chunk, metric_names)?,
+                            metrics: self.compute_chunk_metrics_locally(
+                                y_true_chunk,
+                                y_pred_chunk,
+                                metric_names,
+                            )?,
                             sample_count: y_true_chunk.len(),
                         });
                     }
-                    
+
                     // Exponential backoff
                     std::thread::sleep(Duration::from_millis(100 * (2_u64.pow(retries as u32))));
                 }
             }
         }
-        
+
         Err(MetricsError::ComputationError(
-            "Failed to send task after retries".to_string()
+            "Failed to send task after retries".to_string(),
         ))
     }
-    
+
     /// Record success for circuit breaker
     fn record_success(&self, worker_id: &str) -> Result<()> {
         let mut circuit_breakers = self.circuit_breakers.write().unwrap();
-        
-        let cb = circuit_breakers.entry(worker_id.to_string())
-            .or_insert_with(|| CircuitBreaker::new(self.config.circuit_breaker_threshold, Duration::from_secs(self.config.circuit_breaker_timeout)));
-        
+
+        let cb = circuit_breakers
+            .entry(worker_id.to_string())
+            .or_insert_with(|| {
+                CircuitBreaker::new(
+                    self.config.circuit_breaker_threshold,
+                    Duration::from_secs(self.config.circuit_breaker_timeout),
+                )
+            });
+
         cb.success_count += 1;
-        
+
         if cb.state == CircuitBreakerState::HalfOpen && cb.success_count >= cb.half_open_max_calls {
             cb.state = CircuitBreakerState::Closed;
             cb.failure_count = 0;
             cb.success_count = 0;
         }
-        
+
         Ok(())
     }
-    
+
     /// Record failure for circuit breaker
     fn record_failure(&self, worker_id: &str) -> Result<()> {
         let mut circuit_breakers = self.circuit_breakers.write().unwrap();
-        
-        let cb = circuit_breakers.entry(worker_id.to_string())
-            .or_insert_with(|| CircuitBreaker::new(self.config.circuit_breaker_threshold, Duration::from_secs(self.config.circuit_breaker_timeout)));
-        
+
+        let cb = circuit_breakers
+            .entry(worker_id.to_string())
+            .or_insert_with(|| {
+                CircuitBreaker::new(
+                    self.config.circuit_breaker_threshold,
+                    Duration::from_secs(self.config.circuit_breaker_timeout),
+                )
+            });
+
         cb.failure_count += 1;
         cb.last_failure_time = Some(Instant::now());
-        
+
         if cb.failure_count >= cb.failure_threshold {
             cb.state = CircuitBreakerState::Open;
         }
-        
+
         Ok(())
     }
 
@@ -1273,7 +1345,7 @@ impl DistributedMetricsCoordinator {
 
         Ok(aggregated)
     }
-    
+
     /// Try to aggregate results
     fn try_aggregate_results(
         &self,
@@ -1302,7 +1374,7 @@ impl DistributedMetricsCoordinator {
                         let sum: f64 = values.iter().sum();
                         if values.is_empty() {
                             return Err(MetricsError::ComputationError(
-                                "No values to aggregate".to_string()
+                                "No values to aggregate".to_string(),
                             ));
                         }
                         sum / values.len() as f64
@@ -1311,7 +1383,7 @@ impl DistributedMetricsCoordinator {
                         let total_weight: usize = sample_counts.iter().sum();
                         if total_weight == 0 {
                             return Err(MetricsError::ComputationError(
-                                "Zero total weight for weighted mean".to_string()
+                                "Zero total weight for weighted mean".to_string(),
                             ));
                         }
                         values
@@ -1331,16 +1403,21 @@ impl DistributedMetricsCoordinator {
 
         Ok(aggregated)
     }
-    
+
     /// Record performance metrics
-    fn record_performance_metrics(&self, task_id: &str, execution_time: Duration, sample_count: usize) {
+    fn record_performance_metrics(
+        &self,
+        task_id: &str,
+        execution_time: Duration,
+        sample_count: usize,
+    ) {
         if let Ok(mut monitor) = self.performance_monitor.lock() {
             let throughput = sample_count as f64 / execution_time.as_secs_f64();
-            
+
             monitor.record_metric("execution_time", execution_time.as_secs_f64(), task_id);
             monitor.record_metric("throughput", throughput, task_id);
             monitor.record_metric("sample_count", sample_count as f64, task_id);
-            
+
             // Check for performance alerts
             if execution_time > Duration::from_secs(60) {
                 monitor.add_alert(Alert {
@@ -1353,25 +1430,25 @@ impl DistributedMetricsCoordinator {
             }
         }
     }
-    
+
     /// Get worker execution times
     fn get_worker_execution_times(&self, _task_id: &str) -> HashMap<String, u64> {
         // In a real implementation, this would track per-worker execution times
         HashMap::new()
     }
-    
+
     /// Get active workers count
     fn get_active_workers_count(&self) -> usize {
         let workers = self.workers.read().unwrap();
         workers.len()
     }
-    
+
     /// Get task errors
     fn get_task_errors(&self, _task_id: &str) -> Vec<String> {
         // In a real implementation, this would track task-specific errors
         Vec::new()
     }
-    
+
     /// Update worker performance metrics
     fn update_worker_performance(&self, worker_id: &str, sample_count: usize) {
         if let Ok(mut load_balancer) = self.load_balancer.lock() {
@@ -1383,7 +1460,7 @@ impl DistributedMetricsCoordinator {
                 memory_usage: 0.3,
                 queue_length: 0,
             };
-            
+
             load_balancer.update_worker_metrics(worker_id, &metrics);
         }
     }
@@ -1437,13 +1514,13 @@ impl DistributedMetricsCoordinator {
     pub fn add_worker(&self, address: String) -> Result<()> {
         // Create worker connection
         let worker = self.create_worker_connection(address.clone())?;
-        
+
         // Initialize circuit breaker
         let circuit_breaker = CircuitBreaker::new(
             self.config.circuit_breaker_threshold,
-            Duration::from_secs(self.config.circuit_breaker_timeout)
+            Duration::from_secs(self.config.circuit_breaker_timeout),
         );
-        
+
         // Initialize connection pool
         let connection_pool = ConnectionPool {
             available_connections: self.config.connection_pool_size,
@@ -1452,26 +1529,26 @@ impl DistributedMetricsCoordinator {
             created_at: Instant::now(),
             last_cleanup: Instant::now(),
         };
-        
+
         // Add to collections
         {
             let mut workers = self.workers.write().unwrap();
             workers.insert(address.clone(), worker);
         }
-        
+
         {
             let mut circuit_breakers = self.circuit_breakers.write().unwrap();
             circuit_breakers.insert(address.clone(), circuit_breaker);
         }
-        
+
         {
             let mut connection_pools = self.connection_pools.write().unwrap();
             connection_pools.insert(address.clone(), connection_pool);
         }
-        
+
         // Establish network connection
         self.network_client.establish_connection(&address)?;
-        
+
         Ok(())
     }
 
@@ -1479,26 +1556,26 @@ impl DistributedMetricsCoordinator {
     pub fn remove_worker(&self, address: &str) -> Result<()> {
         // Close network connection
         self.network_client.close_connection(address)?;
-        
+
         // Remove from all collections
         {
             let mut workers = self.workers.write().unwrap();
             workers.remove(address);
         }
-        
+
         {
             let mut circuit_breakers = self.circuit_breakers.write().unwrap();
             circuit_breakers.remove(address);
         }
-        
+
         {
             let mut connection_pools = self.connection_pools.write().unwrap();
             connection_pools.remove(address);
         }
-        
+
         // Remove from security manager
         self.security_manager.remove_worker(address)?;
-        
+
         Ok(())
     }
 
@@ -1506,8 +1583,11 @@ impl DistributedMetricsCoordinator {
     pub fn get_cluster_status(&self) -> ClusterStatus {
         let workers = self.workers.read().unwrap();
         let total_workers = workers.len();
-        
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
         let active_workers = workers
             .values()
             .filter(|w| (now - w.status.last_heartbeat) < 30) // Active in last 30 seconds
@@ -1515,19 +1595,19 @@ impl DistributedMetricsCoordinator {
 
         let total_tasks_completed = workers.values().map(|w| w.status.completed_tasks).sum();
         let total_failed_tasks = workers.values().map(|w| w.status.failed_tasks).sum();
-        
+
         let avg_cpu = if !workers.is_empty() {
             workers.values().map(|w| w.status.cpu_usage).sum::<f64>() / workers.len() as f64
         } else {
             0.0
         };
-        
+
         let avg_memory = if !workers.is_empty() {
             workers.values().map(|w| w.status.memory_usage).sum::<f64>() / workers.len() as f64
         } else {
             0.0
         };
-        
+
         let avg_health_score = if !workers.is_empty() {
             workers.values().map(|w| w.status.health_score).sum::<f64>() / workers.len() as f64
         } else {
@@ -1547,11 +1627,12 @@ impl DistributedMetricsCoordinator {
             circuit_breakers_open: self.count_open_circuit_breakers(),
         }
     }
-    
+
     /// Count open circuit breakers
     fn count_open_circuit_breakers(&self) -> usize {
         let circuit_breakers = self.circuit_breakers.read().unwrap();
-        circuit_breakers.values()
+        circuit_breakers
+            .values()
             .filter(|cb| cb.state == CircuitBreakerState::Open)
             .count()
     }
@@ -1628,25 +1709,25 @@ impl DistributedMetricsBuilder {
         self.config.load_balancing = strategy;
         self
     }
-    
+
     /// Set network protocol
     pub fn with_protocol(mut self, protocol: NetworkProtocol) -> Self {
         self.config.network_protocol = protocol;
         self
     }
-    
+
     /// Set authentication config
     pub fn with_auth(mut self, auth: AuthConfig) -> Self {
         self.config.auth_config = Some(auth);
         self
     }
-    
+
     /// Enable async operations
     pub fn with_async(mut self, enable: bool) -> Self {
         self.config.enable_async = enable;
         self
     }
-    
+
     /// Set connection pool size
     pub fn with_connection_pool_size(mut self, size: usize) -> Self {
         self.config.connection_pool_size = size;
@@ -1684,21 +1765,25 @@ impl RoundRobinBalancer {
 }
 
 impl LoadBalancer for RoundRobinBalancer {
-    fn select_worker(&mut self, workers: &HashMap<String, WorkerConnection>, _task: &TaskInfo) -> Option<String> {
+    fn select_worker(
+        &mut self,
+        workers: &HashMap<String, WorkerConnection>,
+        _task: &TaskInfo,
+    ) -> Option<String> {
         let worker_ids: Vec<_> = workers.keys().cloned().collect();
         if worker_ids.is_empty() {
             return None;
         }
-        
+
         let selected = worker_ids[self.current_index % worker_ids.len()].clone();
         self.current_index += 1;
         Some(selected)
     }
-    
+
     fn update_worker_metrics(&mut self, _worker_id: &str, _metrics: &WorkerMetrics) {
         // Round-robin doesn't use metrics
     }
-    
+
     fn get_strategy(&self) -> LoadBalancingStrategy {
         LoadBalancingStrategy::RoundRobin
     }
@@ -1718,14 +1803,18 @@ impl LeastConnectionsBalancer {
 }
 
 impl LoadBalancer for LeastConnectionsBalancer {
-    fn select_worker(&mut self, workers: &HashMap<String, WorkerConnection>, _task: &TaskInfo) -> Option<String> {
+    fn select_worker(
+        &mut self,
+        workers: &HashMap<String, WorkerConnection>,
+        _task: &TaskInfo,
+    ) -> Option<String> {
         if workers.is_empty() {
             return None;
         }
-        
+
         let mut min_connections = usize::MAX;
         let mut selected_worker = None;
-        
+
         for worker_id in workers.keys() {
             let connections = *self.connection_counts.get(worker_id).unwrap_or(&0);
             if connections < min_connections {
@@ -1733,14 +1822,14 @@ impl LoadBalancer for LeastConnectionsBalancer {
                 selected_worker = Some(worker_id.clone());
             }
         }
-        
+
         if let Some(ref worker_id) = selected_worker {
             *self.connection_counts.entry(worker_id.clone()).or_insert(0) += 1;
         }
-        
+
         selected_worker
     }
-    
+
     fn update_worker_metrics(&mut self, worker_id: &str, _metrics: &WorkerMetrics) {
         // Decrease connection count when task completes
         if let Some(count) = self.connection_counts.get_mut(worker_id) {
@@ -1749,7 +1838,7 @@ impl LoadBalancer for LeastConnectionsBalancer {
             }
         }
     }
-    
+
     fn get_strategy(&self) -> LoadBalancingStrategy {
         LoadBalancingStrategy::LeastConnections
     }
@@ -1771,40 +1860,47 @@ impl WeightedRoundRobinBalancer {
 }
 
 impl LoadBalancer for WeightedRoundRobinBalancer {
-    fn select_worker(&mut self, workers: &HashMap<String, WorkerConnection>, _task: &TaskInfo) -> Option<String> {
+    fn select_worker(
+        &mut self,
+        workers: &HashMap<String, WorkerConnection>,
+        _task: &TaskInfo,
+    ) -> Option<String> {
         if workers.is_empty() {
             return None;
         }
-        
+
         let mut max_weight = f64::NEG_INFINITY;
         let mut selected_worker = None;
-        
+
         for worker_id in workers.keys() {
             let weight = *self.weights.get(worker_id).unwrap_or(&1.0);
-            let current_weight = self.current_weights.entry(worker_id.clone()).or_insert(weight);
-            
+            let current_weight = self
+                .current_weights
+                .entry(worker_id.clone())
+                .or_insert(weight);
+
             *current_weight += weight;
-            
+
             if *current_weight > max_weight {
                 max_weight = *current_weight;
                 selected_worker = Some(worker_id.clone());
             }
         }
-        
+
         if let Some(ref worker_id) = selected_worker {
             let total_weight: f64 = self.weights.values().sum();
             if let Some(current) = self.current_weights.get_mut(worker_id) {
                 *current -= total_weight;
             }
         }
-        
+
         selected_worker
     }
-    
+
     fn update_worker_metrics(&mut self, _worker_id: &str, _metrics: &WorkerMetrics) {
         // Weights are static for this implementation
     }
-    
+
     fn get_strategy(&self) -> LoadBalancingStrategy {
         LoadBalancingStrategy::WeightedRoundRobin(self.weights.clone())
     }
@@ -1821,26 +1917,30 @@ impl LoadBasedBalancer {
             worker_loads: HashMap::new(),
         }
     }
-    
+
     fn calculate_load_score(&self, worker: &WorkerConnection) -> f64 {
         let cpu_load = worker.status.cpu_usage;
         let memory_load = worker.status.memory_usage;
         let queue_load = worker.status.queue_length as f64 / 100.0; // Normalize queue length
-        
+
         // Lower score is better
         cpu_load * 0.4 + memory_load * 0.4 + queue_load * 0.2
     }
 }
 
 impl LoadBalancer for LoadBasedBalancer {
-    fn select_worker(&mut self, workers: &HashMap<String, WorkerConnection>, _task: &TaskInfo) -> Option<String> {
+    fn select_worker(
+        &mut self,
+        workers: &HashMap<String, WorkerConnection>,
+        _task: &TaskInfo,
+    ) -> Option<String> {
         if workers.is_empty() {
             return None;
         }
-        
+
         let mut min_load = f64::INFINITY;
         let mut selected_worker = None;
-        
+
         for (worker_id, worker) in workers {
             let load_score = self.calculate_load_score(worker);
             if load_score < min_load {
@@ -1848,16 +1948,17 @@ impl LoadBalancer for LoadBasedBalancer {
                 selected_worker = Some(worker_id.clone());
             }
         }
-        
+
         selected_worker
     }
-    
+
     fn update_worker_metrics(&mut self, worker_id: &str, metrics: &WorkerMetrics) {
-        let load_score = metrics.cpu_usage * 0.4 + metrics.memory_usage * 0.4 + 
-                        (metrics.queue_length as f64 / 100.0) * 0.2;
+        let load_score = metrics.cpu_usage * 0.4
+            + metrics.memory_usage * 0.4
+            + (metrics.queue_length as f64 / 100.0) * 0.2;
         self.worker_loads.insert(worker_id.to_string(), load_score);
     }
-    
+
     fn get_strategy(&self) -> LoadBalancingStrategy {
         LoadBalancingStrategy::LoadBased
     }
@@ -1877,31 +1978,38 @@ impl LatencyBasedBalancer {
 }
 
 impl LoadBalancer for LatencyBasedBalancer {
-    fn select_worker(&mut self, workers: &HashMap<String, WorkerConnection>, _task: &TaskInfo) -> Option<String> {
+    fn select_worker(
+        &mut self,
+        workers: &HashMap<String, WorkerConnection>,
+        _task: &TaskInfo,
+    ) -> Option<String> {
         if workers.is_empty() {
             return None;
         }
-        
+
         let mut min_latency = Duration::from_secs(u64::MAX);
         let mut selected_worker = None;
-        
+
         for (worker_id, worker) in workers {
-            let latency = self.response_times.get(worker_id)
+            let latency = self
+                .response_times
+                .get(worker_id)
                 .unwrap_or(&worker.status.response_time);
-            
+
             if *latency < min_latency {
                 min_latency = *latency;
                 selected_worker = Some(worker_id.clone());
             }
         }
-        
+
         selected_worker
     }
-    
+
     fn update_worker_metrics(&mut self, worker_id: &str, metrics: &WorkerMetrics) {
-        self.response_times.insert(worker_id.to_string(), metrics.response_time);
+        self.response_times
+            .insert(worker_id.to_string(), metrics.response_time);
     }
-    
+
     fn get_strategy(&self) -> LoadBalancingStrategy {
         LoadBalancingStrategy::LatencyBased
     }
@@ -1933,35 +2041,37 @@ impl PerformanceMonitor {
             alerts: Vec::new(),
         }
     }
-    
+
     pub fn record_metric(&mut self, name: &str, value: f64, tag: &str) {
         let point = MetricPoint {
             timestamp: Instant::now(),
             value,
-            tags: [("task_id".to_string(), tag.to_string())].iter().cloned().collect(),
+            tags: [("task_id".to_string(), tag.to_string())]
+                .iter()
+                .cloned()
+                .collect(),
         };
-        
-        self.metrics.entry(name.to_string())
+
+        self.metrics
+            .entry(name.to_string())
             .or_insert_with(Vec::new)
             .push(point);
     }
-    
+
     pub fn add_alert(&mut self, alert: Alert) {
         self.alerts.push(alert);
-        
+
         // Keep only recent alerts (last 1000)
         if self.alerts.len() > 1000 {
             self.alerts.drain(0..100);
         }
     }
-    
+
     pub fn get_average_metric(&self, name: &str, duration: Duration) -> Option<f64> {
         if let Some(points) = self.metrics.get(name) {
             let cutoff = Instant::now() - duration;
-            let recent_points: Vec<_> = points.iter()
-                .filter(|p| p.timestamp > cutoff)
-                .collect();
-            
+            let recent_points: Vec<_> = points.iter().filter(|p| p.timestamp > cutoff).collect();
+
             if !recent_points.is_empty() {
                 let sum: f64 = recent_points.iter().map(|p| p.value).sum();
                 Some(sum / recent_points.len() as f64)
@@ -1984,7 +2094,7 @@ impl SecurityManager {
             encryption_key: None,
         }
     }
-    
+
     pub fn authenticate(&self, token: &str) -> bool {
         let tokens = self.auth_tokens.read().unwrap();
         if let Some(auth_token) = tokens.get(token) {
@@ -1993,26 +2103,27 @@ impl SecurityManager {
             false
         }
     }
-    
+
     pub fn check_rate_limit(&self, worker_id: &str) -> bool {
         let mut limiters = self.rate_limiters.write().unwrap();
-        
-        let limiter = limiters.entry(worker_id.to_string())
+
+        let limiter = limiters
+            .entry(worker_id.to_string())
             .or_insert_with(|| RateLimiter {
                 requests_per_second: 100.0,
                 bucket_size: 100,
                 current_tokens: 100.0,
                 last_refill: Instant::now(),
             });
-        
+
         let now = Instant::now();
         let elapsed = now.duration_since(limiter.last_refill).as_secs_f64();
-        
+
         // Refill tokens
         limiter.current_tokens = (limiter.current_tokens + elapsed * limiter.requests_per_second)
             .min(limiter.bucket_size as f64);
         limiter.last_refill = now;
-        
+
         // Check if request can be made
         if limiter.current_tokens >= 1.0 {
             limiter.current_tokens -= 1.0;
@@ -2021,18 +2132,18 @@ impl SecurityManager {
             false
         }
     }
-    
+
     pub fn remove_worker(&self, worker_id: &str) -> Result<()> {
         {
             let mut tokens = self.auth_tokens.write().unwrap();
             tokens.retain(|_, token| token.worker_id != worker_id);
         }
-        
+
         {
             let mut limiters = self.rate_limiters.write().unwrap();
             limiters.remove(worker_id);
         }
-        
+
         Ok(())
     }
 }
@@ -2094,14 +2205,19 @@ impl HttpConnectionPool {
             max_idle_timeout,
         }
     }
-    
-    pub fn get_connection(&mut self, host: &str, port: u16, is_secure: bool) -> Option<HttpConnection> {
+
+    pub fn get_connection(
+        &mut self,
+        host: &str,
+        port: u16,
+        is_secure: bool,
+    ) -> Option<HttpConnection> {
         let key = format!("{}:{}", host, port);
-        
+
         if let Some(connections) = self.connections.get_mut(&key) {
             // Remove expired connections
             connections.retain(|conn| conn.last_used.elapsed() < self.max_idle_timeout);
-            
+
             // Return an available connection
             if let Some(mut conn) = connections.pop() {
                 conn.last_used = Instant::now();
@@ -2109,7 +2225,7 @@ impl HttpConnectionPool {
                 return Some(conn);
             }
         }
-        
+
         // Create new connection if under limit
         let connections_count = self.connections.get(&key).map(|v| v.len()).unwrap_or(0);
         if connections_count < self.max_connections_per_host {
@@ -2125,17 +2241,21 @@ impl HttpConnectionPool {
             None
         }
     }
-    
+
     pub fn return_connection(&mut self, connection: HttpConnection) {
         let key = format!("{}:{}", connection.host, connection.port);
-        self.connections.entry(key).or_insert_with(Vec::new).push(connection);
+        self.connections
+            .entry(key)
+            .or_insert_with(Vec::new)
+            .push(connection);
     }
-    
+
     pub fn cleanup_expired(&mut self) {
         for connections in self.connections.values_mut() {
             connections.retain(|conn| conn.last_used.elapsed() < self.max_idle_timeout);
         }
-        self.connections.retain(|_, connections| !connections.is_empty());
+        self.connections
+            .retain(|_, connections| !connections.is_empty());
     }
 }
 
@@ -2143,22 +2263,25 @@ impl HttpClient {
     pub fn new(auth_config: Option<AuthConfig>) -> Result<Self> {
         Ok(Self {
             auth_config,
-            connection_pool: Arc::new(Mutex::new(HttpConnectionPool::new(10, Duration::from_secs(60)))),
+            connection_pool: Arc::new(Mutex::new(HttpConnectionPool::new(
+                10,
+                Duration::from_secs(60),
+            ))),
             timeout: Duration::from_secs(30),
             retry_policy: RetryPolicy::default(),
         })
     }
-    
+
     pub fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
     }
-    
+
     pub fn with_retry_policy(mut self, policy: RetryPolicy) -> Self {
         self.retry_policy = policy;
         self
     }
-    
+
     /// Parse URL and extract host, port, and security info
     fn parse_url(&self, address: &str) -> Result<(String, u16, bool, String)> {
         // Simple URL parsing (in practice, use a proper URL parser)
@@ -2169,7 +2292,7 @@ impl HttpClient {
             } else {
                 (addr_part, "/")
             };
-            
+
             let (host, port) = if let Some(idx) = host_port.find(':') {
                 let host = &host_port[..idx];
                 let port = host_port[idx + 1..].parse().unwrap_or(443);
@@ -2177,7 +2300,7 @@ impl HttpClient {
             } else {
                 (host_port.to_string(), 443)
             };
-            
+
             Ok((host, port, true, path.to_string()))
         } else if address.starts_with("http://") {
             let addr_part = address.strip_prefix("http://").unwrap();
@@ -2186,7 +2309,7 @@ impl HttpClient {
             } else {
                 (addr_part, "/")
             };
-            
+
             let (host, port) = if let Some(idx) = host_port.find(':') {
                 let host = &host_port[..idx];
                 let port = host_port[idx + 1..].parse().unwrap_or(80);
@@ -2194,7 +2317,7 @@ impl HttpClient {
             } else {
                 (host_port.to_string(), 80)
             };
-            
+
             Ok((host, port, false, path.to_string()))
         } else {
             // Assume plain host:port
@@ -2205,18 +2328,18 @@ impl HttpClient {
             } else {
                 (address.to_string(), 80)
             };
-            
+
             Ok((host, port, false, "/".to_string()))
         }
     }
-    
+
     /// Build HTTP request with proper headers
     fn build_request(&self, method: &str, path: &str, body: &str) -> String {
         let mut request = format!("{} {} HTTP/1.1\r\n", method, path);
         request.push_str(&format!("Content-Length: {}\r\n", body.len()));
         request.push_str("Content-Type: application/json\r\n");
         request.push_str("Connection: keep-alive\r\n");
-        
+
         // Add authentication headers
         if let Some(auth) = &self.auth_config {
             match &auth.auth_method {
@@ -2240,44 +2363,52 @@ impl HttpClient {
                 _ => {}
             }
         }
-        
+
         request.push_str("\r\n");
         request.push_str(body);
-        
+
         request
     }
-    
+
     /// Simple base64 encoding for basic auth
     fn base64_encode(&self, input: &str) -> String {
         // Simplified base64 encoding (in practice, use a proper base64 library)
         let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         let bytes = input.as_bytes();
         let mut result = String::new();
-        
+
         for chunk in bytes.chunks(3) {
             let mut buf = [0u8; 3];
             for (i, &byte) in chunk.iter().enumerate() {
                 buf[i] = byte;
             }
-            
+
             let b1 = buf[0] >> 2;
             let b2 = ((buf[0] & 0x03) << 4) | (buf[1] >> 4);
             let b3 = ((buf[1] & 0x0f) << 2) | (buf[2] >> 6);
             let b4 = buf[2] & 0x3f;
-            
+
             result.push(chars.chars().nth(b1 as usize).unwrap());
             result.push(chars.chars().nth(b2 as usize).unwrap());
-            result.push(if chunk.len() > 1 { chars.chars().nth(b3 as usize).unwrap() } else { '=' });
-            result.push(if chunk.len() > 2 { chars.chars().nth(b4 as usize).unwrap() } else { '=' });
+            result.push(if chunk.len() > 1 {
+                chars.chars().nth(b3 as usize).unwrap()
+            } else {
+                '='
+            });
+            result.push(if chunk.len() > 2 {
+                chars.chars().nth(b4 as usize).unwrap()
+            } else {
+                '='
+            });
         }
-        
+
         result
     }
-    
+
     /// Send HTTP request with connection pooling and retry logic
     fn send_http_request(&self, address: &str, method: &str, body: &str) -> Result<String> {
         let (host, port, is_secure, path) = self.parse_url(address)?;
-        
+
         for attempt in 0..=self.retry_policy.max_retries {
             match self.try_send_request(&host, port, is_secure, &path, method, body) {
                 Ok(response) => return Ok(response),
@@ -2285,10 +2416,11 @@ impl HttpClient {
                     if attempt < self.retry_policy.max_retries {
                         let delay = std::cmp::min(
                             Duration::from_millis(
-                                (self.retry_policy.base_delay.as_millis() as f64 
-                                 * self.retry_policy.backoff_multiplier.powi(attempt as i32)) as u64
+                                (self.retry_policy.base_delay.as_millis() as f64
+                                    * self.retry_policy.backoff_multiplier.powi(attempt as i32))
+                                    as u64,
                             ),
-                            self.retry_policy.max_delay
+                            self.retry_policy.max_delay,
                         );
                         thread::sleep(delay);
                     } else {
@@ -2297,43 +2429,55 @@ impl HttpClient {
                 }
             }
         }
-        
-        Err(MetricsError::ComputationError("Max retries exceeded".to_string()))
+
+        Err(MetricsError::ComputationError(
+            "Max retries exceeded".to_string(),
+        ))
     }
-    
+
     /// Try to send a single HTTP request
-    fn try_send_request(&self, host: &str, port: u16, is_secure: bool, path: &str, method: &str, body: &str) -> Result<String> {
+    fn try_send_request(
+        &self,
+        host: &str,
+        port: u16,
+        is_secure: bool,
+        path: &str,
+        method: &str,
+        body: &str,
+    ) -> Result<String> {
         // Get connection from pool
         let mut pool = self.connection_pool.lock().unwrap();
         let connection = pool.get_connection(host, port, is_secure);
         drop(pool); // Release lock
-        
+
         if connection.is_none() {
-            return Err(MetricsError::ComputationError("No available connections".to_string()));
+            return Err(MetricsError::ComputationError(
+                "No available connections".to_string(),
+            ));
         }
-        
+
         let connection = connection.unwrap();
-        
+
         // Build request
         let request = self.build_request(method, path, body);
-        
+
         // Simulate sending request (in practice, use actual networking)
         thread::sleep(Duration::from_millis(50)); // Simulate network latency
-        
+
         // Simulate response parsing
         let response = if is_secure {
             self.simulate_https_response(body)?
         } else {
             self.simulate_http_response(body)?
         };
-        
+
         // Return connection to pool
         let mut pool = self.connection_pool.lock().unwrap();
         pool.return_connection(connection);
-        
+
         Ok(response)
     }
-    
+
     /// Simulate HTTP response
     fn simulate_http_response(&self, request_body: &str) -> Result<String> {
         // Parse request and generate appropriate response
@@ -2345,60 +2489,79 @@ impl HttpClient {
             Ok(r#"{"status": "unknown_request"}"#.to_string())
         }
     }
-    
+
     /// Simulate HTTPS response with additional security
     fn simulate_https_response(&self, request_body: &str) -> Result<String> {
         // Simulate TLS handshake delay
         thread::sleep(Duration::from_millis(20));
-        
+
         // Return the same response as HTTP but with security headers
         let mut response = self.simulate_http_response(request_body)?;
-        
+
         // In practice, you'd handle TLS encryption/decryption here
         response.push_str(r#", "security": "tls_enabled""#);
-        
+
         Ok(response)
     }
 }
 
 impl NetworkClient for HttpClient {
-    fn send_request(&self, address: &str, message: &DistributedMessage) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
+    fn send_request(
+        &self,
+        address: &str,
+        message: &DistributedMessage,
+    ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         let address = address.to_string();
         let message = message.clone();
-        
+
         Box::pin(async move {
             // Simulate HTTP request with custom async sleep
             AsyncSleep::new(Duration::from_millis(100)).await;
-            
+
             // Process the actual message
             match &message {
-                DistributedMessage::ComputeMetrics { task_id, chunk_id, y_true, y_pred, metric_names } => {
+                DistributedMessage::ComputeMetrics {
+                    task_id,
+                    chunk_id,
+                    y_true,
+                    y_pred,
+                    metric_names,
+                } => {
                     let mut results = HashMap::new();
-                    
+
                     // Compute metrics
                     for metric_name in metric_names {
                         let result = match metric_name.as_str() {
                             "mse" => {
-                                y_true.iter().zip(y_pred.iter())
+                                y_true
+                                    .iter()
+                                    .zip(y_pred.iter())
                                     .map(|(t, p)| (t - p).powi(2))
-                                    .sum::<f64>() / y_true.len() as f64
+                                    .sum::<f64>()
+                                    / y_true.len() as f64
                             }
                             "mae" => {
-                                y_true.iter().zip(y_pred.iter())
+                                y_true
+                                    .iter()
+                                    .zip(y_pred.iter())
                                     .map(|(t, p)| (t - p).abs())
-                                    .sum::<f64>() / y_true.len() as f64
+                                    .sum::<f64>()
+                                    / y_true.len() as f64
                             }
                             "rmse" => {
-                                let mse = y_true.iter().zip(y_pred.iter())
+                                let mse = y_true
+                                    .iter()
+                                    .zip(y_pred.iter())
                                     .map(|(t, p)| (t - p).powi(2))
-                                    .sum::<f64>() / y_true.len() as f64;
+                                    .sum::<f64>()
+                                    / y_true.len() as f64;
                                 mse.sqrt()
                             }
                             _ => 0.0,
                         };
                         results.insert(metric_name.clone(), result);
                     }
-                    
+
                     Ok(DistributedMessage::MetricsResult {
                         task_id: task_id.clone(),
                         chunk_id: *chunk_id,
@@ -2417,7 +2580,10 @@ impl NetworkClient for HttpClient {
                         completed_tasks: 10,
                         failed_tasks: 0,
                         queue_length: 0,
-                        last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                        last_heartbeat: SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs(),
                         response_time: Duration::from_millis(100),
                         load_average: 0.4,
                         available_cores: 4,
@@ -2426,18 +2592,22 @@ impl NetworkClient for HttpClient {
                         capabilities: vec!["metrics".to_string()],
                         health_score: 0.9,
                     },
-                })
+                }),
             }
         })
     }
-    
-    fn send_request_sync(&self, address: &str, message: &DistributedMessage) -> Result<DistributedMessage> {
+
+    fn send_request_sync(
+        &self,
+        address: &str,
+        message: &DistributedMessage,
+    ) -> Result<DistributedMessage> {
         // Serialize message to JSON
         let json_body = self.serialize_message(message)?;
-        
+
         // Send HTTP request using the enhanced client
         let response_json = self.send_http_request(address, "POST", &json_body)?;
-        
+
         // Parse response
         self.parse_response(&response_json, message)
     }
@@ -2447,59 +2617,86 @@ impl HttpClient {
     /// Serialize distributed message to JSON
     fn serialize_message(&self, message: &DistributedMessage) -> Result<String> {
         match message {
-            DistributedMessage::ComputeMetrics { task_id, chunk_id, y_true, y_pred, metric_names } => {
-                Ok(format!(
-                    r#"{{"type": "ComputeMetrics", "task_id": "{}", "chunk_id": {}, "y_true": {:?}, "y_pred": {:?}, "metric_names": {:?}}}"#,
-                    task_id, chunk_id, y_true, y_pred, metric_names
-                ))
-            }
-            DistributedMessage::HealthCheck => {
-                Ok(r#"{"type": "HealthCheck"}"#.to_string())
-            }
+            DistributedMessage::ComputeMetrics {
+                task_id,
+                chunk_id,
+                y_true,
+                y_pred,
+                metric_names,
+            } => Ok(format!(
+                r#"{{"type": "ComputeMetrics", "task_id": "{}", "chunk_id": {}, "y_true": {:?}, "y_pred": {:?}, "metric_names": {:?}}}"#,
+                task_id, chunk_id, y_true, y_pred, metric_names
+            )),
+            DistributedMessage::HealthCheck => Ok(r#"{"type": "HealthCheck"}"#.to_string()),
             _ => Ok(r#"{"type": "Unknown"}"#.to_string()),
         }
     }
-    
+
     /// Parse HTTP response and convert to DistributedMessage
-    fn parse_response(&self, response_json: &str, original_message: &DistributedMessage) -> Result<DistributedMessage> {
+    fn parse_response(
+        &self,
+        response_json: &str,
+        original_message: &DistributedMessage,
+    ) -> Result<DistributedMessage> {
         // Simple JSON parsing (in practice, use a proper JSON library)
         match original_message {
-            DistributedMessage::ComputeMetrics { task_id, chunk_id, y_true, y_pred, metric_names } => {
+            DistributedMessage::ComputeMetrics {
+                task_id,
+                chunk_id,
+                y_true,
+                y_pred,
+                metric_names,
+            } => {
                 let mut results = HashMap::new();
-                
+
                 // Compute actual metrics
                 for metric_name in metric_names {
                     let result = match metric_name.as_str() {
                         "mse" => {
-                            y_true.iter().zip(y_pred.iter())
+                            y_true
+                                .iter()
+                                .zip(y_pred.iter())
                                 .map(|(t, p)| (t - p).powi(2))
-                                .sum::<f64>() / y_true.len() as f64
+                                .sum::<f64>()
+                                / y_true.len() as f64
                         }
                         "mae" => {
-                            y_true.iter().zip(y_pred.iter())
+                            y_true
+                                .iter()
+                                .zip(y_pred.iter())
                                 .map(|(t, p)| (t - p).abs())
-                                .sum::<f64>() / y_true.len() as f64
+                                .sum::<f64>()
+                                / y_true.len() as f64
                         }
                         "rmse" => {
-                            let mse = y_true.iter().zip(y_pred.iter())
+                            let mse = y_true
+                                .iter()
+                                .zip(y_pred.iter())
                                 .map(|(t, p)| (t - p).powi(2))
-                                .sum::<f64>() / y_true.len() as f64;
+                                .sum::<f64>()
+                                / y_true.len() as f64;
                             mse.sqrt()
                         }
                         "r2_score" => {
                             let mean_true = y_true.iter().sum::<f64>() / y_true.len() as f64;
                             let ss_tot: f64 = y_true.iter().map(|t| (t - mean_true).powi(2)).sum();
-                            let ss_res: f64 = y_true.iter().zip(y_pred.iter())
+                            let ss_res: f64 = y_true
+                                .iter()
+                                .zip(y_pred.iter())
                                 .map(|(t, p)| (t - p).powi(2))
                                 .sum();
-                            
-                            if ss_tot == 0.0 { 0.0 } else { 1.0 - ss_res / ss_tot }
+
+                            if ss_tot == 0.0 {
+                                0.0
+                            } else {
+                                1.0 - ss_res / ss_tot
+                            }
                         }
                         _ => 0.0,
                     };
                     results.insert(metric_name.clone(), result);
                 }
-                
+
                 Ok(DistributedMessage::MetricsResult {
                     task_id: task_id.clone(),
                     chunk_id: *chunk_id,
@@ -2507,43 +2704,46 @@ impl HttpClient {
                     sample_count: y_true.len(),
                 })
             }
-            DistributedMessage::HealthCheck => {
-                Ok(DistributedMessage::HealthCheckResponse {
-                    status: WorkerStatus {
-                        node_id: "http_worker".to_string(),
-                        cpu_usage: 0.4,
-                        memory_usage: 0.3,
-                        disk_usage: 0.2,
-                        network_bandwidth: 150.0,
-                        active_tasks: 1,
-                        completed_tasks: 15,
-                        failed_tasks: 0,
-                        queue_length: 0,
-                        last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
-                        response_time: Duration::from_millis(45),
-                        load_average: 0.4,
-                        available_cores: 6,
-                        gpu_usage: None,
-                        worker_version: "1.0.1".to_string(),
-                        capabilities: vec!["metrics".to_string(), "http".to_string()],
-                        health_score: 0.92,
-                    },
-                })
-            }
-            _ => Err(MetricsError::ComputationError("Unknown message type".to_string())),
+            DistributedMessage::HealthCheck => Ok(DistributedMessage::HealthCheckResponse {
+                status: WorkerStatus {
+                    node_id: "http_worker".to_string(),
+                    cpu_usage: 0.4,
+                    memory_usage: 0.3,
+                    disk_usage: 0.2,
+                    network_bandwidth: 150.0,
+                    active_tasks: 1,
+                    completed_tasks: 15,
+                    failed_tasks: 0,
+                    queue_length: 0,
+                    last_heartbeat: SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs(),
+                    response_time: Duration::from_millis(45),
+                    load_average: 0.4,
+                    available_cores: 6,
+                    gpu_usage: None,
+                    worker_version: "1.0.1".to_string(),
+                    capabilities: vec!["metrics".to_string(), "http".to_string()],
+                    health_score: 0.92,
+                },
+            }),
+            _ => Err(MetricsError::ComputationError(
+                "Unknown message type".to_string(),
+            )),
         }
     }
-    
+
     fn establish_connection(&self, _address: &str) -> Result<()> {
         // HTTP is connectionless, so this is a no-op
         Ok(())
     }
-    
+
     fn close_connection(&self, _address: &str) -> Result<()> {
         // HTTP is connectionless, so this is a no-op
         Ok(())
     }
-    
+
     fn get_protocol(&self) -> &NetworkProtocol {
         &NetworkProtocol::Http
     }
@@ -2561,7 +2761,11 @@ impl GrpcClient {
 }
 
 impl NetworkClient for GrpcClient {
-    fn send_request(&self, _address: &str, _message: &DistributedMessage) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
+    fn send_request(
+        &self,
+        _address: &str,
+        _message: &DistributedMessage,
+    ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
             // Simulate gRPC call
             // tokio::time::sleep(Duration::from_millis(50)).await; // Commented out - missing tokio dependency
@@ -2576,7 +2780,10 @@ impl NetworkClient for GrpcClient {
                     completed_tasks: 15,
                     failed_tasks: 0,
                     queue_length: 0,
-                    last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                    last_heartbeat: SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs(),
                     response_time: Duration::from_millis(30),
                     load_average: 0.3,
                     available_cores: 8,
@@ -2588,8 +2795,12 @@ impl NetworkClient for GrpcClient {
             })
         })
     }
-    
-    fn send_request_sync(&self, _address: &str, _message: &DistributedMessage) -> Result<DistributedMessage> {
+
+    fn send_request_sync(
+        &self,
+        _address: &str,
+        _message: &DistributedMessage,
+    ) -> Result<DistributedMessage> {
         // Simplified sync version
         std::thread::sleep(Duration::from_millis(30));
         Ok(DistributedMessage::HealthCheckResponse {
@@ -2603,7 +2814,10 @@ impl NetworkClient for GrpcClient {
                 completed_tasks: 20,
                 failed_tasks: 1,
                 queue_length: 2,
-                last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                last_heartbeat: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
                 response_time: Duration::from_millis(30),
                 load_average: 0.4,
                 available_cores: 6,
@@ -2614,17 +2828,17 @@ impl NetworkClient for GrpcClient {
             },
         })
     }
-    
+
     fn establish_connection(&self, _address: &str) -> Result<()> {
         // Establish persistent gRPC connection
         Ok(())
     }
-    
+
     fn close_connection(&self, _address: &str) -> Result<()> {
         // Close gRPC connection
         Ok(())
     }
-    
+
     fn get_protocol(&self) -> &NetworkProtocol {
         &NetworkProtocol::Grpc
     }
@@ -2642,7 +2856,11 @@ impl TcpClient {
 }
 
 impl NetworkClient for TcpClient {
-    fn send_request(&self, _address: &str, _message: &DistributedMessage) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
+    fn send_request(
+        &self,
+        _address: &str,
+        _message: &DistributedMessage,
+    ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
             // Simulate TCP communication
             // tokio::time::sleep(Duration::from_millis(25)).await; // Commented out - missing tokio dependency
@@ -2657,7 +2875,10 @@ impl NetworkClient for TcpClient {
                     completed_tasks: 25,
                     failed_tasks: 0,
                     queue_length: 0,
-                    last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                    last_heartbeat: SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs(),
                     response_time: Duration::from_millis(20),
                     load_average: 0.2,
                     available_cores: 12,
@@ -2669,8 +2890,12 @@ impl NetworkClient for TcpClient {
             })
         })
     }
-    
-    fn send_request_sync(&self, _address: &str, _message: &DistributedMessage) -> Result<DistributedMessage> {
+
+    fn send_request_sync(
+        &self,
+        _address: &str,
+        _message: &DistributedMessage,
+    ) -> Result<DistributedMessage> {
         // Simplified sync version
         std::thread::sleep(Duration::from_millis(20));
         Ok(DistributedMessage::HealthCheckResponse {
@@ -2684,7 +2909,10 @@ impl NetworkClient for TcpClient {
                 completed_tasks: 30,
                 failed_tasks: 0,
                 queue_length: 1,
-                last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                last_heartbeat: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
                 response_time: Duration::from_millis(20),
                 load_average: 0.25,
                 available_cores: 10,
@@ -2695,17 +2923,17 @@ impl NetworkClient for TcpClient {
             },
         })
     }
-    
+
     fn establish_connection(&self, _address: &str) -> Result<()> {
         // Establish TCP connection
         Ok(())
     }
-    
+
     fn close_connection(&self, _address: &str) -> Result<()> {
         // Close TCP connection
         Ok(())
     }
-    
+
     fn get_protocol(&self) -> &NetworkProtocol {
         &NetworkProtocol::Tcp
     }
@@ -2723,7 +2951,11 @@ impl WebSocketClient {
 }
 
 impl NetworkClient for WebSocketClient {
-    fn send_request(&self, _address: &str, _message: &DistributedMessage) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
+    fn send_request(
+        &self,
+        _address: &str,
+        _message: &DistributedMessage,
+    ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
             // tokio::time::sleep(Duration::from_millis(40)).await; // Commented out - missing tokio dependency
             Ok(DistributedMessage::HealthCheckResponse {
@@ -2737,7 +2969,10 @@ impl NetworkClient for WebSocketClient {
                     completed_tasks: 18,
                     failed_tasks: 0,
                     queue_length: 0,
-                    last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                    last_heartbeat: SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs(),
                     response_time: Duration::from_millis(35),
                     load_average: 0.3,
                     available_cores: 6,
@@ -2749,8 +2984,12 @@ impl NetworkClient for WebSocketClient {
             })
         })
     }
-    
-    fn send_request_sync(&self, _address: &str, _message: &DistributedMessage) -> Result<DistributedMessage> {
+
+    fn send_request_sync(
+        &self,
+        _address: &str,
+        _message: &DistributedMessage,
+    ) -> Result<DistributedMessage> {
         std::thread::sleep(Duration::from_millis(35));
         Ok(DistributedMessage::HealthCheckResponse {
             status: WorkerStatus {
@@ -2763,7 +3002,10 @@ impl NetworkClient for WebSocketClient {
                 completed_tasks: 22,
                 failed_tasks: 1,
                 queue_length: 0,
-                last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                last_heartbeat: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
                 response_time: Duration::from_millis(35),
                 load_average: 0.35,
                 available_cores: 4,
@@ -2774,15 +3016,15 @@ impl NetworkClient for WebSocketClient {
             },
         })
     }
-    
+
     fn establish_connection(&self, _address: &str) -> Result<()> {
         Ok(())
     }
-    
+
     fn close_connection(&self, _address: &str) -> Result<()> {
         Ok(())
     }
-    
+
     fn get_protocol(&self) -> &NetworkProtocol {
         &NetworkProtocol::WebSocket
     }
@@ -2800,7 +3042,11 @@ impl UdpClient {
 }
 
 impl NetworkClient for UdpClient {
-    fn send_request(&self, _address: &str, _message: &DistributedMessage) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
+    fn send_request(
+        &self,
+        _address: &str,
+        _message: &DistributedMessage,
+    ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
             // tokio::time::sleep(Duration::from_millis(10)).await; // Commented out - missing tokio dependency
             Ok(DistributedMessage::HealthCheckResponse {
@@ -2814,7 +3060,10 @@ impl NetworkClient for UdpClient {
                     completed_tasks: 50,
                     failed_tasks: 2,
                     queue_length: 0,
-                    last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                    last_heartbeat: SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs(),
                     response_time: Duration::from_millis(10),
                     load_average: 0.1,
                     available_cores: 16,
@@ -2826,8 +3075,12 @@ impl NetworkClient for UdpClient {
             })
         })
     }
-    
-    fn send_request_sync(&self, _address: &str, _message: &DistributedMessage) -> Result<DistributedMessage> {
+
+    fn send_request_sync(
+        &self,
+        _address: &str,
+        _message: &DistributedMessage,
+    ) -> Result<DistributedMessage> {
         std::thread::sleep(Duration::from_millis(5));
         Ok(DistributedMessage::HealthCheckResponse {
             status: WorkerStatus {
@@ -2840,7 +3093,10 @@ impl NetworkClient for UdpClient {
                 completed_tasks: 45,
                 failed_tasks: 3,
                 queue_length: 0,
-                last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                last_heartbeat: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
                 response_time: Duration::from_millis(8),
                 load_average: 0.15,
                 available_cores: 14,
@@ -2851,17 +3107,17 @@ impl NetworkClient for UdpClient {
             },
         })
     }
-    
+
     fn establish_connection(&self, _address: &str) -> Result<()> {
         // UDP is connectionless
         Ok(())
     }
-    
+
     fn close_connection(&self, _address: &str) -> Result<()> {
         // UDP is connectionless
         Ok(())
     }
-    
+
     fn get_protocol(&self) -> &NetworkProtocol {
         &NetworkProtocol::Udp
     }

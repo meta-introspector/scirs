@@ -238,14 +238,16 @@ impl DistributedReader {
     {
         let partitions = self.create_partitions()?;
         let num_partitions = partitions.len();
-        
+
         // Adaptive load balancing: adjust partition size based on system resources
         let available_workers = std::cmp::min(self.num_workers, num_partitions);
         let cpu_count = num_cpus::get();
         let optimal_workers = std::cmp::min(available_workers, cpu_count * 2); // Don't over-subscribe
-        
-        println!("Processing {} partitions with {} workers (CPU cores: {})", 
-                num_partitions, optimal_workers, cpu_count);
+
+        println!(
+            "Processing {} partitions with {} workers (CPU cores: {})",
+            num_partitions, optimal_workers, cpu_count
+        );
 
         // Create worker info tracking
         let worker_infos = Arc::new(Mutex::new(

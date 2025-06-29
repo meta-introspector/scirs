@@ -306,18 +306,24 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Feed
         let cached_input_2d = cached_input
             .clone()
             .into_shape_with_order((batch_size, self.d_model))
-            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape cached input: {}", e)))?;
+            .map_err(|e| {
+                NeuralError::InferenceError(format!("Failed to reshape cached input: {}", e))
+            })?;
 
         let cached_hidden_2d = cached_hidden
             .clone()
             .into_shape_with_order((batch_size, self.d_ff))
-            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape cached hidden: {}", e)))?;
+            .map_err(|e| {
+                NeuralError::InferenceError(format!("Failed to reshape cached hidden: {}", e))
+            })?;
 
         // Reshape grad_output to 2D
         let grad_output_2d = grad_output
             .clone()
             .into_shape_with_order((batch_size, self.d_model))
-            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape grad_output: {}", e)))?;
+            .map_err(|e| {
+                NeuralError::InferenceError(format!("Failed to reshape grad_output: {}", e))
+            })?;
 
         // Backward through second linear layer: grad_output -> grad_hidden
         let mut grad_hidden = Array::<F, _>::zeros((batch_size, self.d_ff));
@@ -407,7 +413,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Feed
         // Reshape grad_input back to original shape
         let grad_input = grad_input_2d
             .into_shape_with_order(input_shape)
-            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape grad_input: {}", e)))?;
+            .map_err(|e| {
+                NeuralError::InferenceError(format!("Failed to reshape grad_input: {}", e))
+            })?;
 
         Ok(grad_input)
     }

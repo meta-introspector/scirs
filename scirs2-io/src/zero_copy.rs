@@ -586,10 +586,7 @@ impl<T: Copy + 'static> ZeroCopyStreamProcessor<T> {
             Ok(results)
         } else {
             // Sequential processing for smaller datasets
-            let results: Vec<R> = data_slice
-                .chunks(self.chunk_size)
-                .map(processor)
-                .collect();
+            let results: Vec<R> = data_slice.chunks(self.chunk_size).map(processor).collect();
 
             Ok(results)
         }

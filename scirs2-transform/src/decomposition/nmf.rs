@@ -397,15 +397,13 @@ impl NMF {
             let val = num_traits::cast::<S::Elem, f64>(*elem).unwrap_or(0.0);
             if val < 0.0 {
                 return Err(TransformError::InvalidInput(
-                    "NMF requires non-negative input data".to_string()
+                    "NMF requires non-negative input data".to_string(),
                 ));
             }
         }
 
         // Convert to f64
-        let v = x.mapv(|x| {
-            num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0)
-        });
+        let v = x.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
 
         let (n_samples, n_features) = (v.shape()[0], v.shape()[1]);
 
@@ -482,15 +480,13 @@ impl NMF {
             let val = num_traits::cast::<S::Elem, f64>(*elem).unwrap_or(0.0);
             if val < 0.0 {
                 return Err(TransformError::InvalidInput(
-                    "NMF requires non-negative input data".to_string()
+                    "NMF requires non-negative input data".to_string(),
                 ));
             }
         }
 
         // Convert to f64
-        let v = x.mapv(|x| {
-            num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0)
-        });
+        let v = x.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
 
         let h = self.components.as_ref().unwrap();
         let n_samples = v.shape()[0];

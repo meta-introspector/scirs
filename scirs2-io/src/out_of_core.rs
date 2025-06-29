@@ -314,6 +314,10 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             Some(CompressionAlgorithm::Zstd) => 2,
             Some(CompressionAlgorithm::Lz4) => 3,
             Some(CompressionAlgorithm::Bzip2) => 4,
+            Some(CompressionAlgorithm::Brotli) => 5,
+            Some(CompressionAlgorithm::Snappy) => 6,
+            Some(CompressionAlgorithm::FpZip) => 7,
+            Some(CompressionAlgorithm::DeltaLz4) => 8,
         };
         buffer[cursor] = compression_id;
 
@@ -1090,10 +1094,7 @@ impl<T: ScientificNumber + Ord + Clone> OutOfCoreSorter<T> {
         use std::collections::BinaryHeap;
 
         // Create readers with buffering
-        let mut buffered_readers: Vec<_> = readers
-            .into_iter()
-            .map(BufReader::new)
-            .collect();
+        let mut buffered_readers: Vec<_> = readers.into_iter().map(BufReader::new).collect();
 
         // Priority queue for k-way merge (min-heap using Reverse)
         let mut heap: BinaryHeap<Reverse<(T, usize)>> = BinaryHeap::new();

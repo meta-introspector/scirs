@@ -11,6 +11,7 @@ use rand::Rng;
 //use std::cell::RefCell; // Removed in favor of RwLock
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::cell::RefCell;
 use std::sync::{Arc, RwLock};
 
 /// Layer Normalization layer
@@ -50,9 +51,9 @@ pub struct LayerNorm<F: Float + Debug> {
     /// Learnable shift parameter
     beta: Array<F, IxDyn>,
     /// Gradient of gamma
-    dgamma: Arc<RwLock<Array<F, IxDyn>>>,
+    dgamma: RefCell<Array<F, IxDyn>>,
     /// Gradient of beta
-    dbeta: Arc<RwLock<Array<F, IxDyn>>>,
+    dbeta: RefCell<Array<F, IxDyn>>,
     /// Small constant for numerical stability
     eps: F,
     /// Input cache for backward pass
@@ -179,8 +180,8 @@ impl<F: Float + Debug + ScalarOperand + 'static> Clone for LayerNorm<F> {
             normalized_shape: self.normalized_shape.clone(),
             gamma: self.gamma.clone(),
             beta: self.beta.clone(),
-            dgamma: Arc::new(RwLock::new(self.dgamma.read().unwrap().clone())),
-            dbeta: Arc::new(RwLock::new(self.dbeta.read().unwrap().clone())),
+            dgamma: RefCell::new(self.dgamma.borrow().clone()),
+            dbeta: RefCell::new(self.dbeta.borrow().clone()),
             eps: self.eps,
             input_cache: Arc::new(RwLock::new(input_cache_clone)),
             norm_cache: Arc::new(RwLock::new(norm_cache_clone)),
@@ -218,8 +219,8 @@ impl<F: Float + Debug + ScalarOperand + 'static> LayerNorm<F> {
         let beta = Array::<F, _>::from_elem(IxDyn(&[normalized_shape]), F::zero());
 
         // Initialize gradient arrays to zeros
-        let dgamma = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape]))));
-        let dbeta = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape]))));
+        let dgamma = RefCell::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape])));
+        let dbeta = RefCell::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape])));
 
         // Convert epsilon to F
         let eps = F::from(eps).ok_or_else(|| {
@@ -310,36 +311,34 @@ impl<F: Float + Debug + ScalarOperand + 'static> LayerNorm<F> {
     }
 
     /// Accumulate gradients for gamma and beta parameters
-    pub fn accumulate_gradients(&self, dgamma: &Array<F, IxDyn>, dbeta: &Array<F, IxDyn>) -> Result<()> {
-        // Get mutable access to gradients
-        let mut dgamma_guard = self.dgamma.write().map_err(|_| {
-            NeuralError::InferenceError("Failed to acquire write lock on dgamma".to_string())
-        })?;
+    pub fn accumulate_gradients(
+        &self,
+        dgamma: &Array<F, IxDyn>,
+        dbeta: &Array<F, IxDyn>,
+    ) -> Result<()> {
+        let mut dgamma_ref = self.dgamma.borrow_mut();
+        let mut dbeta_ref = self.dbeta.borrow_mut();
         
-        let mut dbeta_guard = self.dbeta.write().map_err(|_| {
-            NeuralError::InferenceError("Failed to acquire write lock on dbeta".to_string())
-        })?;
-
-        if dgamma.shape() != dgamma_guard.shape() {
+        if dgamma.shape() != dgamma_ref.shape() {
             return Err(NeuralError::InvalidArchitecture(format!(
                 "dgamma shape mismatch: expected {:?}, got {:?}",
-                dgamma_guard.shape(),
+                dgamma_ref.shape(),
                 dgamma.shape()
             )));
         }
-        
-        if dbeta.shape() != dbeta_guard.shape() {
+
+        if dbeta.shape() != dbeta_ref.shape() {
             return Err(NeuralError::InvalidArchitecture(format!(
                 "dbeta shape mismatch: expected {:?}, got {:?}",
-                dbeta_guard.shape(),
+                dbeta_ref.shape(),
                 dbeta.shape()
             )));
         }
 
         // Accumulate gradients
         for i in 0..self.normalized_shape[0] {
-            dgamma_guard[[i]] = dgamma_guard[[i]] + dgamma[[i]];
-            dbeta_guard[[i]] = dbeta_guard[[i]] + dbeta[[i]];
+            dgamma_ref[[i]] = dgamma_ref[[i]] + dgamma[[i]];
+            dbeta_ref[[i]] = dbeta_ref[[i]] + dbeta[[i]];
         }
 
         Ok(())
@@ -519,17 +518,17 @@ impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for LayerNorm<F> {
         for j in 0..feat_dim {
             let mut gamma_grad = F::zero();
             let mut beta_grad = F::zero();
-            
+
             for i in 0..batch_size {
                 gamma_grad = gamma_grad + grad_output_reshaped[[i, j]] * x_norm_reshaped[[i, j]];
                 beta_grad = beta_grad + grad_output_reshaped[[i, j]];
             }
-            
+
             dgamma[[j]] = gamma_grad;
             dbeta[[j]] = beta_grad;
         }
 
-        // Store gradients using interior mutability
+        // Store gradients
         self.accumulate_gradients(&dgamma, &dbeta)?;
 
         // Compute gradient w.r.t. input
@@ -539,27 +538,30 @@ impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for LayerNorm<F> {
         for i in 0..batch_size {
             let var_i = var[[i, 0]];
             let std_i = (var_i + self.eps).sqrt();
-            
+
             for j in 0..feat_dim {
                 // Standard layer norm gradient computation
                 let grad_norm = grad_output_reshaped[[i, j]] * self.gamma[[j]];
-                
+
                 // Gradient w.r.t. normalized input
                 let mut grad_x = grad_norm / std_i;
-                
+
                 // Gradient contributions from mean and variance
                 let mut sum_grad_norm = F::zero();
                 let mut sum_grad_norm_x = F::zero();
-                
+
                 for k in 0..feat_dim {
                     let grad_norm_k = grad_output_reshaped[[i, k]] * self.gamma[[k]];
                     sum_grad_norm = sum_grad_norm + grad_norm_k;
-                    sum_grad_norm_x = sum_grad_norm_x + grad_norm_k * (input_reshaped[[i, k]] - mean[[i, 0]]);
+                    sum_grad_norm_x =
+                        sum_grad_norm_x + grad_norm_k * (input_reshaped[[i, k]] - mean[[i, 0]]);
                 }
-                
+
                 grad_x = grad_x - sum_grad_norm / (n * std_i);
-                grad_x = grad_x - (input_reshaped[[i, j]] - mean[[i, 0]]) * sum_grad_norm_x / (n * std_i * std_i * std_i);
-                
+                grad_x = grad_x
+                    - (input_reshaped[[i, j]] - mean[[i, 0]]) * sum_grad_norm_x
+                        / (n * std_i * std_i * std_i);
+
                 grad_input[[i, j]] = grad_x;
             }
         }
@@ -575,27 +577,21 @@ impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for LayerNorm<F> {
     }
 
     fn update(&mut self, learning_rate: F) -> Result<()> {
-        // Get access to gradients
-        let mut dgamma_guard = self.dgamma.write().map_err(|_| {
-            NeuralError::InferenceError("Failed to acquire write lock on dgamma".to_string())
-        })?;
+        let mut dgamma_ref = self.dgamma.borrow_mut();
+        let mut dbeta_ref = self.dbeta.borrow_mut();
         
-        let mut dbeta_guard = self.dbeta.write().map_err(|_| {
-            NeuralError::InferenceError("Failed to acquire write lock on dbeta".to_string())
-        })?;
-
         // Update parameters using accumulated gradients
         for i in 0..self.normalized_shape[0] {
             // Update gamma: gamma = gamma - learning_rate * dgamma
-            self.gamma[[i]] = self.gamma[[i]] - learning_rate * dgamma_guard[[i]];
-            
+            self.gamma[[i]] = self.gamma[[i]] - learning_rate * dgamma_ref[[i]];
+
             // Update beta: beta = beta - learning_rate * dbeta
-            self.beta[[i]] = self.beta[[i]] - learning_rate * dbeta_guard[[i]];
+            self.beta[[i]] = self.beta[[i]] - learning_rate * dbeta_ref[[i]];
         }
 
         // Reset gradients after update
-        dgamma_guard.fill(F::zero());
-        dbeta_guard.fill(F::zero());
+        dgamma_ref.fill(F::zero());
+        dbeta_ref.fill(F::zero());
 
         Ok(())
     }
@@ -607,8 +603,9 @@ impl<F: Float + Debug + ScalarOperand + 'static> ParamLayer<F> for LayerNorm<F> 
     }
 
     fn get_gradients(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
-        // TODO: This method needs to be redesigned to work with RwLock-wrapped gradients
-        // For now, returning empty vector to prevent compilation errors
+        // Note: This is a limitation of the trait design with RefCell
+        // RefCell doesn't allow returning references, so we return empty for now
+        // This method should be redesigned in the trait to work with interior mutability
         vec![]
     }
 

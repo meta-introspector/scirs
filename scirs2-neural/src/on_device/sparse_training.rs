@@ -98,7 +98,7 @@ impl SparseTrainer {
         sparsity: f32,
     ) -> Result<SparsityStats> {
         use rand::seq::SliceRandom;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let total_params = weights.len();
         let params_to_prune = (total_params as f32 * sparsity) as usize;
@@ -354,7 +354,7 @@ impl DynamicSparseNetwork {
         num_to_grow: usize,
     ) -> Result<()> {
         use rand::seq::SliceRandom;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let mut zero_indices: Vec<(usize, usize)> = weights
             .indexed_iter()

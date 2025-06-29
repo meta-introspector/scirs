@@ -210,7 +210,7 @@ pub trait GpuContext: Send + Sync {
 /// GPU context with generic operations (separate trait for dyn compatibility)
 pub trait GpuContextAlloc: GpuContext {
     /// Allocate buffer on GPU
-    fn allocate_buffer<T: Clone + Send + Sync>(
+    fn allocate_buffer<T: Clone + Send + Sync + Copy + 'static>(
         &self,
         size: usize,
     ) -> LinalgResult<Box<dyn GpuBuffer<T>>>;
@@ -256,12 +256,7 @@ where
     ) -> LinalgResult<()>;
 
     /// Vector dot product
-    fn dot(
-        &self,
-        a: &dyn GpuBuffer<T>,
-        b: &dyn GpuBuffer<T>,
-        size: usize,
-    ) -> LinalgResult<T>;
+    fn dot(&self, a: &dyn GpuBuffer<T>, b: &dyn GpuBuffer<T>, size: usize) -> LinalgResult<T>;
 
     /// Matrix transpose
     fn transpose(
@@ -273,11 +268,7 @@ where
     ) -> LinalgResult<()>;
 
     /// Cholesky decomposition
-    fn cholesky(
-        &self,
-        matrix: &mut dyn GpuBuffer<T>,
-        n: usize,
-    ) -> LinalgResult<()>;
+    fn cholesky(&self, matrix: &mut dyn GpuBuffer<T>, n: usize) -> LinalgResult<()>;
 
     /// LU decomposition with partial pivoting
     fn lu_decomposition(
@@ -313,6 +304,7 @@ pub struct GpuManager {
     /// Current acceleration strategy
     strategy: GpuAccelerationStrategy,
     /// Performance profiles for each device
+    #[allow(dead_code)]
     performance_profiles: std::collections::HashMap<usize, GpuPerformanceProfile>,
 }
 
@@ -355,7 +347,7 @@ impl GpuManager {
     ) -> GpuRecommendation {
         let total_elements = matrix_size * matrix_size;
         let memory_required = total_elements * data_type_size;
-        
+
         // Check if matrix is large enough for GPU acceleration
         if matrix_size < self.strategy.min_size_threshold {
             return GpuRecommendation::UseCpu {
@@ -364,7 +356,8 @@ impl GpuManager {
         }
 
         // Check if any GPU has enough memory
-        let suitable_devices: Vec<usize> = self.devices
+        let suitable_devices: Vec<usize> = self
+            .devices
             .iter()
             .enumerate()
             .filter(|(_, device)| device.device_info().total_memory > memory_required)
@@ -379,7 +372,7 @@ impl GpuManager {
 
         // Select best device based on operation type and performance
         let best_device = self.select_best_device(&suitable_devices, operation);
-        
+
         if matrix_size > self.strategy.max_single_gpu_size && self.strategy.multi_gpu_enabled {
             GpuRecommendation::UseMultiGpu {
                 devices: suitable_devices,
@@ -396,20 +389,20 @@ impl GpuManager {
     }
 
     /// Select the best device for a specific operation
-    fn select_best_device(&self, candidates: &[usize], operation: GpuOperation) -> usize {
+    fn select_best_device(&self, candidates: &[usize], _operation: GpuOperation) -> usize {
         // Simple heuristic: select device with most memory for now
         // In a full implementation, this would consider performance profiles
-        candidates.iter()
-            .max_by_key(|&&device_id| {
-                self.devices[device_id].device_info().total_memory
-            })
+        candidates
+            .iter()
+            .max_by_key(|&&device_id| self.devices[device_id].device_info().total_memory)
             .copied()
             .unwrap_or(0)
     }
 
     /// Get performance statistics for all devices
     pub fn get_performance_stats(&self) -> Vec<GpuPerformanceStats> {
-        self.devices.iter()
+        self.devices
+            .iter()
             .enumerate()
             .map(|(idx, device)| {
                 GpuPerformanceStats {
@@ -429,9 +422,7 @@ impl GpuManager {
 #[derive(Debug, Clone)]
 pub enum GpuRecommendation {
     /// Use CPU for computation
-    UseCpu {
-        reason: String,
-    },
+    UseCpu { reason: String },
     /// Use single GPU
     UseSingleGpu {
         device_id: usize,
@@ -566,12 +557,12 @@ pub trait GpuBackend: Send + Sync {
 
 /// GPU manager for handling multiple backends
 #[derive(Default)]
-pub struct GpuManager {
+pub struct GpuBackendManager {
     backends: Vec<Box<dyn GpuBackend>>,
 }
 
-impl GpuManager {
-    /// Create a new GPU manager
+impl GpuBackendManager {
+    /// Create a new GPU backend manager
     pub fn new() -> Self {
         Self {
             backends: Vec::new(),
@@ -632,8 +623,8 @@ impl GpuManager {
 }
 
 /// Initialize GPU manager with all available backends
-pub fn initialize_gpu_manager() -> LinalgResult<GpuManager> {
-    let mut manager = GpuManager::new();
+pub fn initialize_gpu_manager() -> LinalgResult<GpuBackendManager> {
+    let mut manager = GpuBackendManager::new();
 
     // Register CUDA backend if available
     #[cfg(feature = "cuda")]
@@ -712,7 +703,7 @@ mod tests {
 
     #[test]
     fn test_gpu_manager_creation() {
-        let manager = GpuManager::new();
+        let manager = GpuBackendManager::new();
         assert_eq!(manager.available_backends().len(), 0);
     }
 

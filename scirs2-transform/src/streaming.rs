@@ -4,8 +4,8 @@
 //! maintaining running statistics and transforming data incrementally.
 
 use ndarray::{Array1, Array2};
-use std::collections::VecDeque;
 use scirs2_linalg::eigen::standard::SymmetricEigendecomposition;
+use std::collections::VecDeque;
 
 use crate::error::{Result, TransformError};
 
@@ -497,7 +497,12 @@ pub struct StreamingPCA {
 
 impl StreamingPCA {
     /// Create a new streaming PCA
-    pub fn new(n_features: usize, n_components: usize, alpha: f64, min_samples: usize) -> Result<Self> {
+    pub fn new(
+        n_features: usize,
+        n_components: usize,
+        alpha: f64,
+        min_samples: usize,
+    ) -> Result<Self> {
         if n_components > n_features {
             return Err(TransformError::InvalidInput(
                 "n_components cannot be larger than n_features".to_string(),
@@ -533,12 +538,12 @@ impl StreamingPCA {
         }
 
         let batch_size = x.shape()[0];
-        
+
         // Update mean using exponential moving average
         for sample in x.rows() {
             self.n_samples += 1;
             let weight = if self.n_samples == 1 { 1.0 } else { self.alpha };
-            
+
             for (i, &value) in sample.iter().enumerate() {
                 self.mean[i] = (1.0 - weight) * self.mean[i] + weight * value;
             }
@@ -548,8 +553,10 @@ impl StreamingPCA {
         if self.n_samples >= self.min_samples {
             for sample in x.rows() {
                 let centered = &sample.to_owned() - &self.mean;
-                let outer_product = centered.insert_axis(ndarray::Axis(1)).dot(&centered.insert_axis(ndarray::Axis(0)));
-                
+                let outer_product = centered
+                    .insert_axis(ndarray::Axis(1))
+                    .dot(&centered.insert_axis(ndarray::Axis(0)));
+
                 let weight = self.alpha;
                 self.cov_matrix = (1.0 - weight) * &self.cov_matrix + weight * outer_product;
             }
@@ -563,9 +570,11 @@ impl StreamingPCA {
 
     fn compute_pca(&mut self) -> Result<()> {
         // Perform proper eigendecomposition of covariance matrix
-        let eigen_decomp = SymmetricEigendecomposition::new(&self.cov_matrix.view())
-            .map_err(|e| TransformError::ComputationError(format!("Eigendecomposition failed: {}", e)))?;
-        
+        let eigen_decomp =
+            SymmetricEigendecomposition::new(&self.cov_matrix.view()).map_err(|e| {
+                TransformError::ComputationError(format!("Eigendecomposition failed: {}", e))
+            })?;
+
         let eigenvalues = eigen_decomp.eigenvalues();
         let eigenvectors = eigen_decomp.eigenvectors();
 
@@ -575,7 +584,7 @@ impl StreamingPCA {
             .zip(eigenvectors.columns())
             .map(|(&val, vec)| (val, vec.to_owned()))
             .collect();
-        
+
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
         // Take top n_components
@@ -592,7 +601,6 @@ impl StreamingPCA {
         Ok(())
     }
 
-
     /// Transform data using current PCA
     pub fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>> {
         if let Some(ref components) = self.components {
@@ -605,7 +613,7 @@ impl StreamingPCA {
             }
 
             let mut result = Array2::zeros((x.shape()[0], self.n_components));
-            
+
             for (i, sample) in x.rows().enumerate() {
                 let centered = &sample.to_owned() - &self.mean;
                 let transformed = components.dot(&centered);
@@ -726,7 +734,7 @@ impl StreamingOutlierDetector {
         match self.method {
             OutlierMethod::ZScore => {
                 let stds = self.get_standard_deviations();
-                
+
                 for (i, sample) in x.rows().enumerate() {
                     let mut is_outlier = false;
                     for (j, &value) in sample.iter().enumerate() {
@@ -746,7 +754,8 @@ impl StreamingOutlierDetector {
                 for (i, sample) in x.rows().enumerate() {
                     let mut is_outlier = false;
                     for (j, &value) in sample.iter().enumerate() {
-                        let mad_estimate = (self.variances[j] / (self.n_samples - 1) as f64).sqrt() * 0.6745;
+                        let mad_estimate =
+                            (self.variances[j] / (self.n_samples - 1) as f64).sqrt() * 0.6745;
                         if mad_estimate > 1e-8 {
                             let modified_z = 0.6745 * (value - self.means[j]).abs() / mad_estimate;
                             if modified_z > self.threshold {
@@ -774,57 +783,59 @@ impl StreamingOutlierDetector {
         if self.n_samples <= 1 {
             Array1::ones(self.n_features)
         } else {
-            self.variances.mapv(|v| (v / (self.n_samples - 1) as f64).sqrt().max(1e-8))
+            self.variances
+                .mapv(|v| (v / (self.n_samples - 1) as f64).sqrt().max(1e-8))
         }
     }
-    
+
     /// Compute isolation score using path length estimation
     fn compute_isolation_score(&self, sample: ndarray::ArrayView1<f64>) -> f64 {
         let mut path_length = 0.0;
         let mut current_sample = sample.to_owned();
-        
+
         // Simulate isolation tree path length with statistical approximation
         let max_depth = ((self.n_samples as f64).log2().ceil() as usize).min(20);
-        
+
         for depth in 0..max_depth {
             let mut min_split_distance = f64::INFINITY;
-            
+
             // Find the most isolating dimension
             for j in 0..self.n_features {
                 let std_dev = (self.variances[j] / (self.n_samples - 1) as f64).sqrt();
                 if std_dev > 1e-8 {
                     // Distance from mean normalized by standard deviation
                     let normalized_distance = (current_sample[j] - self.means[j]).abs() / std_dev;
-                    
+
                     // Estimate how "isolating" this split would be
                     let split_effectiveness = normalized_distance * (1.0 + depth as f64 * 0.1);
                     min_split_distance = min_split_distance.min(split_effectiveness);
                 }
             }
-            
+
             // If sample is well-isolated in any dimension, break early
             if min_split_distance > 3.0 {
                 path_length += depth as f64 + min_split_distance / 3.0;
                 break;
             }
-            
+
             path_length += 1.0;
-            
+
             // Adjust sample position for next iteration (simulating tree traversal)
             for j in 0..self.n_features {
                 let adjustment = (current_sample[j] - self.means[j]) * 0.1;
                 current_sample[j] -= adjustment;
             }
         }
-        
+
         // Shorter path lengths indicate anomalies
         // Normalize by expected path length for a dataset of this size
         let expected_path_length = if self.n_samples > 2 {
-            2.0 * ((self.n_samples - 1) as f64).ln() + (std::f64::consts::E * 0.57721566) - 2.0 * (self.n_samples - 1) as f64 / self.n_samples as f64
+            2.0 * ((self.n_samples - 1) as f64).ln() + (std::f64::consts::E * 0.57721566)
+                - 2.0 * (self.n_samples - 1) as f64 / self.n_samples as f64
         } else {
             1.0
         };
-        
+
         // Return anomaly score (higher = more anomalous)
         2.0_f64.powf(-path_length / expected_path_length)
     }
@@ -933,7 +944,7 @@ impl StreamingFeatureSelector {
                         let val_i = sample[i] - self.means[i];
                         let val_j = sample[j] - self.means[j];
                         let covar_update = val_i * val_j / (n - 1.0);
-                        self.correlations[[i, j]] = 
+                        self.correlations[[i, j]] =
                             (self.correlations[[i, j]] * (n - 2.0) + covar_update) / (n - 1.0);
                     }
                 }
@@ -941,7 +952,8 @@ impl StreamingFeatureSelector {
         }
 
         // Update selected features based on current statistics
-        if self.n_samples >= 10 {  // Minimum samples for stable statistics
+        if self.n_samples >= 10 {
+            // Minimum samples for stable statistics
             self.update_selected_features();
         }
 
@@ -951,7 +963,7 @@ impl StreamingFeatureSelector {
     fn update_selected_features(&mut self) {
         let mut selected = Vec::new();
         let current_variances = self.get_current_variances();
-        
+
         // First pass: select features based on variance threshold
         for i in 0..self.n_features {
             if current_variances[i] > self.variance_threshold {
@@ -963,7 +975,7 @@ impl StreamingFeatureSelector {
         let mut final_selected = Vec::new();
         for &i in &selected {
             let mut should_include = true;
-            
+
             for &j in &final_selected {
                 if i != j {
                     let corr = self.get_correlation(i, j, &current_variances);
@@ -976,7 +988,7 @@ impl StreamingFeatureSelector {
                     }
                 }
             }
-            
+
             if should_include {
                 final_selected.push(i);
             }
@@ -996,7 +1008,7 @@ impl StreamingFeatureSelector {
     fn get_correlation(&self, i: usize, j: usize, variances: &Array1<f64>) -> f64 {
         let var_i = variances[i];
         let var_j = variances[j];
-        
+
         if var_i > 1e-8 && var_j > 1e-8 {
             let idx = if i < j { (i, j) } else { (j, i) };
             self.correlations[idx] / (var_i * var_j).sqrt()
@@ -1021,7 +1033,7 @@ impl StreamingFeatureSelector {
             }
 
             let mut result = Array2::zeros((x.shape()[0], selected.len()));
-            
+
             for (row_idx, sample) in x.rows().enumerate() {
                 for (col_idx, &feature_idx) in selected.iter().enumerate() {
                     result[[row_idx, col_idx]] = sample[feature_idx];
@@ -1042,7 +1054,9 @@ impl StreamingFeatureSelector {
 
     /// Get number of selected features
     pub fn n_features_selected(&self) -> usize {
-        self.selected_features.as_ref().map_or(self.n_features, |s| s.len())
+        self.selected_features
+            .as_ref()
+            .map_or(self.n_features, |s| s.len())
     }
 
     /// Reset selector to initial state

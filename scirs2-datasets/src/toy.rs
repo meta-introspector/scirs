@@ -7,7 +7,7 @@ use crate::error::Result;
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use rand::thread_rng;
+use rand::rng;
 
 /// Generate the classic Iris dataset
 pub fn load_iris() -> Result<Dataset> {
@@ -246,7 +246,7 @@ pub fn load_digits() -> Result<Dataset> {
     ];
 
     // Create 5 samples per digit with small random variations
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let noise_level = 0.1;
 
     for (digit, &pattern) in digit_patterns.iter().enumerate() {
@@ -375,24 +375,28 @@ This is a regression dataset."
 }
 
 /// Generate a synthetic diabetes dataset for regression
-/// 
+///
 /// This is a simplified version of the classic diabetes dataset with 442 samples
 /// and 10 features, suitable for regression tasks.
 pub fn load_diabetes() -> Result<Dataset> {
     // Use a fixed seed for reproducibility
     let mut rng = StdRng::seed_from_u64(42);
-    
+
     let n_samples = 442;
     let n_features = 10;
-    
+
     // Generate synthetic data that resembles the diabetes dataset structure
     let mut data = Vec::with_capacity(n_samples * n_features);
     let mut targets = Vec::with_capacity(n_samples);
-    
+
     for _ in 0..n_samples {
         // Generate correlated features (representing biomarkers)
         let age = rng.random::<f64>() * 0.1 - 0.05;
-        let sex = if rng.random::<f64>() < 0.5 { -0.05 } else { 0.05 };
+        let sex = if rng.random::<f64>() < 0.5 {
+            -0.05
+        } else {
+            0.05
+        };
         let bmi = (rng.random::<f64>() * 0.12 - 0.06) + age * 0.3;
         let bp = (rng.random::<f64>() * 0.1 - 0.05) + bmi * 0.4;
         let s1 = (rng.random::<f64>() * 0.14 - 0.07) + bmi * 0.2;
@@ -401,21 +405,25 @@ pub fn load_diabetes() -> Result<Dataset> {
         let s4 = (rng.random::<f64>() * 0.12 - 0.06) + s1 * 0.3;
         let s5 = (rng.random::<f64>() * 0.14 - 0.07) + bmi * 0.25;
         let s6 = (rng.random::<f64>() * 0.1 - 0.05) + s5 * 0.4;
-        
+
         data.extend_from_slice(&[age, sex, bmi, bp, s1, s2, s3, s4, s5, s6]);
-        
+
         // Generate target as a linear combination with noise
-        let target = 152.0 + 938.0 * bmi + 519.0 * bp + 324.0 * s1 + 
-                     217.0 * s5 + (rng.random::<f64>() * 40.0 - 20.0);
+        let target = 152.0
+            + 938.0 * bmi
+            + 519.0 * bp
+            + 324.0 * s1
+            + 217.0 * s5
+            + (rng.random::<f64>() * 40.0 - 20.0);
         targets.push(target);
     }
-    
+
     let data_array = Array2::from_shape_vec((n_samples, n_features), data).unwrap();
     let target_array = Array1::from_vec(targets);
-    
+
     let feature_names = vec![
         "age".to_string(),
-        "sex".to_string(), 
+        "sex".to_string(),
         "bmi".to_string(),
         "bp".to_string(),
         "s1".to_string(),
@@ -425,7 +433,7 @@ pub fn load_diabetes() -> Result<Dataset> {
         "s5".to_string(),
         "s6".to_string(),
     ];
-    
+
     let feature_descriptions = vec![
         "Age".to_string(),
         "Sex".to_string(),
@@ -438,14 +446,14 @@ pub fn load_diabetes() -> Result<Dataset> {
         "Log of serum triglycerides level".to_string(),
         "Blood sugar level".to_string(),
     ];
-    
+
     let description = "Diabetes dataset for regression. A synthetic version of the classic diabetes dataset with 442 samples and 10 physiological features.".to_string();
-    
+
     let dataset = Dataset::new(data_array, Some(target_array))
         .with_feature_names(feature_names)
         .with_feature_descriptions(feature_descriptions)
         .with_description(description);
-    
+
     Ok(dataset)
 }
 

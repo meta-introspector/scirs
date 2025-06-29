@@ -240,11 +240,14 @@ impl AdvancedGenerator {
         let mut metadata = base_dataset.metadata.clone();
         let _old_description = metadata.get("description").cloned().unwrap_or_default();
         let old_name = metadata.get("name").cloned().unwrap_or_default();
-        
-        metadata.insert("description".to_string(), format!(
-            "Adversarial examples generated using {:?}",
-            config.attack_method
-        ));
+
+        metadata.insert(
+            "description".to_string(),
+            format!(
+                "Adversarial examples generated using {:?}",
+                config.attack_method
+            ),
+        );
         metadata.insert("name".to_string(), format!("{} (Adversarial)", old_name));
 
         Ok(Dataset {
@@ -312,7 +315,11 @@ impl AdvancedGenerator {
             ..Default::default()
         };
 
-        Ok(Dataset::from_metadata(shuffled_data, Some(shuffled_target), metadata))
+        Ok(Dataset::from_metadata(
+            shuffled_data,
+            Some(shuffled_target),
+            metadata,
+        ))
     }
 
     /// Generate multi-task learning dataset
@@ -366,7 +373,11 @@ impl AdvancedGenerator {
                 ..Default::default()
             };
 
-            task_datasets.push(Dataset::from_metadata(task_data, Some(task_target), task_metadata));
+            task_datasets.push(Dataset::from_metadata(
+                task_data,
+                Some(task_target),
+                task_metadata,
+            ));
         }
 
         Ok(MultiTaskDataset {
@@ -503,11 +514,17 @@ impl AdvancedGenerator {
             )?;
 
             let mut metadata = task_dataset.metadata.clone();
-            metadata.insert("name".to_string(), format!("Continual Learning Task {}", task_id));
-            metadata.insert("description".to_string(), format!(
-                "Task {} with concept drift strength {:.2}",
-                task_id, concept_drift_strength
-            ));
+            metadata.insert(
+                "name".to_string(),
+                format!("Continual Learning Task {}", task_id),
+            );
+            metadata.insert(
+                "description".to_string(),
+                format!(
+                    "Task {} with concept drift strength {:.2}",
+                    task_id, concept_drift_strength
+                ),
+            );
 
             task_datasets.push(Dataset {
                 data: task_dataset.data,
@@ -553,7 +570,7 @@ impl AdvancedGenerator {
             }
             AttackMethod::PGD => {
                 // Projected Gradient Descent (simplified)
-                let mut perturbations = Array2::zeros((n_samples, n_features));
+                let mut perturbations: Array2<f64> = Array2::zeros((n_samples, n_features));
                 for _iter in 0..config.iterations {
                     for i in 0..n_samples {
                         for j in 0..n_features {
@@ -614,35 +631,38 @@ impl AdvancedGenerator {
         normal_data: &Array2<f64>,
         config: &AnomalyConfig,
     ) -> Result<Array2<f64>> {
+        use rand::Rng;
+        let mut rng = rand::rng();
+
         match config.anomaly_type {
             AnomalyType::Point => {
                 // Point anomalies - outliers far from normal distribution
                 let normal_mean = normal_data.mean_axis(Axis(0)).unwrap();
                 let normal_std = normal_data.std_axis(Axis(0), 0.0);
 
-                let anomalies = Array2::from_shape_fn((n_anomalies, n_features), |(_, j)| {
-                    let direction = if rand::random::<f64>() > 0.5 {
-                        1.0
-                    } else {
-                        -1.0
-                    };
-                    normal_mean[j] + direction * config.severity * normal_std[j]
-                });
+                let mut anomalies = Array2::zeros((n_anomalies, n_features));
+                for i in 0..n_anomalies {
+                    for j in 0..n_features {
+                        let direction = if rng.random::<f64>() > 0.5 { 1.0 } else { -1.0 };
+                        anomalies[[i, j]] =
+                            normal_mean[j] + direction * config.severity * normal_std[j];
+                    }
+                }
                 Ok(anomalies)
             }
             AnomalyType::Contextual => {
                 // Contextual anomalies - normal values but in wrong context
-                let mut anomalies = Array2::zeros((n_anomalies, n_features));
+                let mut anomalies: Array2<f64> = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
                     // Pick a random normal sample and permute some features
-                    let base_idx = rand::random::<usize>() % normal_data.nrows();
+                    let base_idx = rng.random_range(0..normal_data.nrows());
                     let mut anomaly = normal_data.row(base_idx).to_owned();
 
                     // Permute random features
                     let n_permute = (n_features as f64 * 0.3) as usize;
                     for _ in 0..n_permute {
-                        let j = rand::random::<usize>() % n_features;
-                        let k = rand::random::<usize>() % n_features;
+                        let j = rng.random_range(0..n_features);
+                        let k = rng.random_range(0..n_features);
                         let temp = anomaly[j];
                         anomaly[j] = anomaly[k];
                         anomaly[k] = temp;
@@ -668,11 +688,13 @@ impl AdvancedGenerator {
     }
 
     fn generate_shuffle_indices(&self, n_samples: usize) -> Result<Vec<usize>> {
+        use rand::Rng;
+        let mut rng = rand::rng();
         let mut indices: Vec<usize> = (0..n_samples).collect();
 
         // Simple shuffle using Fisher-Yates
         for i in (1..n_samples).rev() {
-            let j = rand::random::<usize>() % (i + 1);
+            let j = rng.random_range(0..=i);
             indices.swap(i, j);
         }
 
@@ -803,7 +825,10 @@ impl AdvancedGenerator {
 
         let mut metadata = base_dataset.metadata.clone();
         let old_description = metadata.get("description").cloned().unwrap_or_default();
-        metadata.insert("description".to_string(), format!("{} (Domain Shifted)", old_description));
+        metadata.insert(
+            "description".to_string(),
+            format!("{} (Domain Shifted)", old_description),
+        );
 
         Ok(Dataset {
             data: shifted_data,

@@ -209,7 +209,11 @@ pub struct BatchEvaluationResult<T: InterpolationFloat> {
 /// Spline-specific interface for methods that support derivatives and integrals
 pub trait SplineInterpolator<T: InterpolationFloat>: Interpolator<T> {
     /// Evaluate the nth derivative at query points
-    fn derivative(&self, query_points: &ArrayView2<T>, order: usize) -> crate::InterpolateResult<Vec<T>>;
+    fn derivative(
+        &self,
+        query_points: &ArrayView2<T>,
+        order: usize,
+    ) -> crate::InterpolateResult<Vec<T>>;
 
     /// Evaluate the definite integral over specified bounds
     fn integrate(&self, bounds: &[(T, T)]) -> crate::InterpolateResult<Vec<T>>;
@@ -221,7 +225,11 @@ pub trait SplineInterpolator<T: InterpolationFloat>: Interpolator<T> {
     fn find_roots(&self, bounds: &[(T, T)], tolerance: T) -> crate::InterpolateResult<Vec<T>>;
 
     /// Find extrema (local minima and maxima) within given bounds
-    fn find_extrema(&self, bounds: &[(T, T)], tolerance: T) -> crate::InterpolateResult<Vec<(T, T, ExtremaType)>>;
+    fn find_extrema(
+        &self,
+        bounds: &[(T, T)],
+        tolerance: T,
+    ) -> crate::InterpolateResult<Vec<(T, T, ExtremaType)>>;
 }
 
 /// Type of extrema for spline analysis
@@ -360,9 +368,11 @@ pub mod validation {
         }
 
         let mut out_of_bounds = Vec::new();
-        
+
         for (row_idx, point) in query_points.outer_iter().enumerate() {
-            for (_dim_idx, (&coord, &(min_bound, max_bound))) in point.iter().zip(bounds.iter()).enumerate() {
+            for (_dim_idx, (&coord, &(min_bound, max_bound))) in
+                point.iter().zip(bounds.iter()).enumerate()
+            {
                 if coord < min_bound || coord > max_bound {
                     out_of_bounds.push(row_idx);
                     break;

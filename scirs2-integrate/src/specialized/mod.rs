@@ -17,12 +17,13 @@ pub use fluid_dynamics::turbulence_models::{
     FluidState3D, LESolver, RANSModel, RANSSolver, RANSState, SGSModel,
 };
 pub use fluid_dynamics::{
-    FluidBoundaryCondition, FluidState, NavierStokesParams, NavierStokesSolver,
+    DealiasingStrategy, FluidBoundaryCondition, FluidState, NavierStokesParams, 
+    NavierStokesSolver, SpectralNavierStokesSolver,
 };
 pub use quantum::quantum_algorithms::{
     MultiBodyQuantumSolver, QuantumAnnealer, VariationalQuantumEigensolver,
 };
 pub use quantum::{
-    HarmonicOscillator, HydrogenAtom, ParticleInBox, QuantumPotential, QuantumState,
-    SchrodingerMethod, SchrodingerSolver,
+    GPUMultiBodyQuantumSolver, GPUQuantumSolver, HarmonicOscillator, HydrogenAtom, ParticleInBox,
+    QuantumPotential, QuantumState, SchrodingerMethod, SchrodingerSolver,
 };

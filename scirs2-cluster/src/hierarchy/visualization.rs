@@ -1005,10 +1005,19 @@ impl TreeNode {
     fn to_newick(&self) -> String {
         match self {
             TreeNode::Leaf { label, .. } => label.clone(),
-            TreeNode::Internal { left, right, distance, .. } => {
-                format!("({}:{},{}:{})", 
-                    left.to_newick(), distance,
-                    right.to_newick(), distance)
+            TreeNode::Internal {
+                left,
+                right,
+                distance,
+                ..
+            } => {
+                format!(
+                    "({}:{},{}:{})",
+                    left.to_newick(),
+                    distance,
+                    right.to_newick(),
+                    distance
+                )
             }
         }
     }
@@ -1656,11 +1665,10 @@ pub mod export {
             VisualizationFormat::Json => export_to_json(plot),
             VisualizationFormat::Dot => export_to_dot(plot),
             VisualizationFormat::Csv => export_to_csv(plot),
-            VisualizationFormat::Newick => {
-                Err(ClusteringError::InvalidInput(
-                    "Newick export requires linkage matrix. Use export_dendrogram_newick instead.".to_string()
-                ))
-            }
+            VisualizationFormat::Newick => Err(ClusteringError::InvalidInput(
+                "Newick export requires linkage matrix. Use export_dendrogram_newick instead."
+                    .to_string(),
+            )),
         }
     }
 
@@ -1694,16 +1702,18 @@ pub mod export {
 
         // Add styles
         svg.push_str("<defs>\n");
-        
+
         // Add shadow filter if enabled
         if config.styling.shadows {
-            svg.push_str(r#"
+            svg.push_str(
+                r#"
                 <filter id="drop-shadow">
                     <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.3"/>
                 </filter>
-            "#);
+            "#,
+            );
         }
-        
+
         svg.push_str("</defs>\n");
 
         // Add background
@@ -1787,10 +1797,10 @@ pub mod export {
                 "#000000"
             };
 
-            let shadow_filter = if config.styling.shadows { 
-                " filter=\"url(#drop-shadow)\"" 
-            } else { 
-                "" 
+            let shadow_filter = if config.styling.shadows {
+                " filter=\"url(#drop-shadow)\""
+            } else {
+                ""
             };
 
             svg.push_str(&format!(
@@ -1846,10 +1856,10 @@ pub mod export {
             };
 
             let transform = if config.styling.label_style.rotation != 0.0 {
-                format!(" transform=\"rotate({}, {}, {})\"", 
-                    config.styling.label_style.rotation,
-                    leaf.position.0,
-                    leaf.position.1)
+                format!(
+                    " transform=\"rotate({}, {}, {})\"",
+                    config.styling.label_style.rotation, leaf.position.0, leaf.position.1
+                )
             } else {
                 String::new()
             };
@@ -1897,42 +1907,45 @@ pub mod export {
         labels: Option<&[String]>,
     ) -> Result<String> {
         let n_samples = linkage_matrix.shape()[0] + 1;
-        
+
         // Build tree structure from linkage matrix
         let mut tree_nodes = Vec::new();
-        
+
         // Create leaf nodes
         for i in 0..n_samples {
             let label = if let Some(labels) = labels {
-                labels.get(i).cloned().unwrap_or_else(|| format!("node_{}", i))
+                labels
+                    .get(i)
+                    .cloned()
+                    .unwrap_or_else(|| format!("node_{}", i))
             } else {
                 format!("node_{}", i)
             };
             tree_nodes.push(TreeNode::Leaf { id: i, label });
         }
-        
+
         // Create internal nodes from linkage matrix
         for (merge_idx, row) in linkage_matrix.outer_iter().enumerate() {
             let left_id = row[0].to_usize().unwrap();
             let right_id = row[1].to_usize().unwrap();
             let distance = row[2].to_f64().unwrap_or(0.0);
-            
+
             let left_child = tree_nodes[left_id].clone();
             let right_child = tree_nodes[right_id].clone();
-            
+
             let internal_node = TreeNode::Internal {
                 id: n_samples + merge_idx,
                 left: Box::new(left_child),
                 right: Box::new(right_child),
                 distance,
             };
-            
+
             tree_nodes.push(internal_node);
         }
-        
+
         // The root is the last node created
         let root = &tree_nodes[tree_nodes.len() - 1];
-        
+
         // Convert to Newick format
         let newick = format!("{};", root.to_newick());
         Ok(newick)

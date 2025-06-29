@@ -945,34 +945,34 @@ where
 /// Compute Jacobian using finite differences for multiple constraint functions
 #[allow(dead_code)]
 fn finite_diff_jacobian(
-    constraint_fns: &[ConstraintFn], 
-    x: &ArrayView1<f64>, 
-    eps: f64
+    constraint_fns: &[ConstraintFn],
+    x: &ArrayView1<f64>,
+    eps: f64,
 ) -> Array2<f64> {
     let n = x.len();
     let m = constraint_fns.len();
     let mut jac = Array2::zeros((m, n));
     let x_slice = x.as_slice().unwrap();
-    
+
     // Evaluate constraints at current point
     let f0: Vec<f64> = constraint_fns.iter().map(|f| f(x_slice)).collect();
-    
+
     let mut x_pert = x.to_owned();
-    
+
     for j in 0..n {
         let h = eps * (1.0 + x[j].abs());
         x_pert[j] = x[j] + h;
         let x_pert_slice = x_pert.as_slice().unwrap();
-        
+
         // Evaluate constraints at perturbed point
         for i in 0..m {
             let f_plus = constraint_fns[i](x_pert_slice);
             jac[[i, j]] = (f_plus - f0[i]) / h;
         }
-        
+
         x_pert[j] = x[j]; // Reset
     }
-    
+
     jac
 }
 
@@ -1067,11 +1067,8 @@ where
     )?;
 
     // Handle bounds constraints separately if present
-    let bounds_constraints: Vec<_> = constraints
-        .iter()
-        .filter(|c| c.is_bounds())
-        .collect();
-    
+    let bounds_constraints: Vec<_> = constraints.iter().filter(|c| c.is_bounds()).collect();
+
     if !bounds_constraints.is_empty() {
         eprintln!("Warning: Box constraints (bounds) are not yet fully integrated with interior point method");
     }

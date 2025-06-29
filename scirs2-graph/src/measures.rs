@@ -963,15 +963,16 @@ where
 
     // Initialize PageRank values
     let mut pagerank = Array1::<f64>::from_elem(n, 1.0 / n as f64);
-    
+
     // Get degree of each node for normalization
     let degrees = graph.degree_vector();
-    
+
     // Pre-compute neighbor indices for efficient parallel access
     let neighbor_lists: Vec<Vec<usize>> = (0..n)
         .map(|i| {
             let node_idx = petgraph::graph::NodeIndex::new(i);
-            graph.inner()
+            graph
+                .inner()
                 .neighbors(node_idx)
                 .map(|neighbor_idx| neighbor_idx.index())
                 .collect()
@@ -980,20 +981,23 @@ where
 
     for iteration in 0..max_iter {
         // Parallel computation of new PageRank values
-        let new_pagerank = Arc::new(Mutex::new(Array1::<f64>::from_elem(n, (1.0 - damping) / n as f64)));
-        
+        let new_pagerank = Arc::new(Mutex::new(Array1::<f64>::from_elem(
+            n,
+            (1.0 - damping) / n as f64,
+        )));
+
         // Use parallel iteration for PageRank calculation
         (0..n).into_par_iter().for_each(|i| {
             let node_degree = degrees[i] as f64;
             if node_degree > 0.0 {
                 let contribution = damping * pagerank[i] / node_degree;
-                
+
                 // Distribute to all neighbors
                 let mut local_updates = Vec::new();
                 for &neighbor_i in &neighbor_lists[i] {
                     local_updates.push((neighbor_i, contribution));
                 }
-                
+
                 // Apply updates atomically
                 if !local_updates.is_empty() {
                     let mut new_pr = new_pagerank.lock().unwrap();
@@ -1007,7 +1011,8 @@ where
         let new_pagerank = Arc::try_unwrap(new_pagerank).unwrap().into_inner().unwrap();
 
         // Parallel convergence check
-        let diff = pagerank.par_iter()
+        let diff = pagerank
+            .par_iter()
             .zip(new_pagerank.par_iter())
             .map(|(old, new)| (new - old).abs())
             .sum::<f64>();
@@ -1021,7 +1026,8 @@ where
     }
 
     // Parallel conversion to HashMap
-    let result: HashMap<N, f64> = nodes.par_iter()
+    let result: HashMap<N, f64> = nodes
+        .par_iter()
         .enumerate()
         .map(|(i, node)| (node.clone(), pagerank[i]))
         .collect();

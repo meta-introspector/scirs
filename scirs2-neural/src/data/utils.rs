@@ -49,7 +49,7 @@ pub fn train_val_split<F: Float + Debug + ScalarOperand>(
     if shuffle {
         // Create shuffled indices
         let mut indices: Vec<usize> = (0..n_samples).collect();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         indices.shuffle(&mut rng);
 
         // Split indices
@@ -150,7 +150,7 @@ impl KFold {
                 let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
                 indices.shuffle(&mut rng);
             } else {
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 indices.shuffle(&mut rng);
             }
         }
@@ -206,7 +206,7 @@ pub fn create_batches<F: Float + Debug + ScalarOperand>(
 
     // Shuffle if needed
     if shuffle {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         indices.shuffle(&mut rng);
     }
 

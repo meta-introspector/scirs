@@ -240,11 +240,14 @@ impl MomentsAccountant {
     }
 
     /// Enhanced single step log moment computation with adaptive precision
-    pub fn compute_enhanced_single_step_log_moment(&self, order: usize) -> Result<f64, OptimizerError> {
+    pub fn compute_enhanced_single_step_log_moment(
+        &self,
+        order: usize,
+    ) -> Result<f64, OptimizerError> {
         // Use higher precision for better accuracy
         let q = self.sampling_probability;
         let sigma = self.noise_multiplier;
-        
+
         // Enhanced computation with stability improvements
         let result = if q < 1e-6 {
             // Use series expansion for very small q
@@ -256,76 +259,98 @@ impl MomentsAccountant {
             // Standard computation with enhanced numerical stability
             self.compute_standard_log_moment(order, q, sigma)
         }?;
-        
+
         Ok(result)
     }
 
     /// Compute log moment using series expansion for small sampling probabilities
-    fn compute_small_q_approximation(&self, order: usize, q: f64, sigma: f64) -> Result<f64, OptimizerError> {
+    fn compute_small_q_approximation(
+        &self,
+        order: usize,
+        q: f64,
+        sigma: f64,
+    ) -> Result<f64, OptimizerError> {
         // For small q, use Taylor series expansion: M_lambda(q) ≈ q * lambda * exp(lambda/(2*sigma^2))
         let lambda = order as f64;
         let variance = sigma * sigma;
-        
+
         // Leading term
         let leading_term = q * lambda * (lambda / (2.0 * variance)).exp();
-        
+
         // Higher order corrections for better accuracy
         let correction1 = q * q * lambda * lambda * (lambda / variance).exp() / 2.0;
-        let correction2 = q * q * q * lambda * lambda * lambda * (3.0 * lambda / (2.0 * variance)).exp() / 6.0;
-        
+        let correction2 =
+            q * q * q * lambda * lambda * lambda * (3.0 * lambda / (2.0 * variance)).exp() / 6.0;
+
         let result = leading_term + correction1 + correction2;
         Ok(result.ln())
     }
 
     /// Compute log moment for large sampling probabilities
-    fn compute_large_q_log_moment(&self, order: usize, q: f64, sigma: f64) -> Result<f64, OptimizerError> {
+    fn compute_large_q_log_moment(
+        &self,
+        order: usize,
+        q: f64,
+        sigma: f64,
+    ) -> Result<f64, OptimizerError> {
         // For large q, use complementary approach
         let lambda = order as f64;
         let variance = sigma * sigma;
-        
+
         // Use the exact formula but with better numerical handling
         let term1 = (1.0 - q + q * (lambda / (2.0 * variance)).exp()).ln();
         let term2 = (1.0 - q + q * (-lambda / (2.0 * variance)).exp()).ln();
-        
+
         Ok(lambda * lambda / (2.0 * variance) + term1 - term2)
     }
 
     /// Standard log moment computation with enhanced stability
-    fn compute_standard_log_moment(&self, order: usize, q: f64, sigma: f64) -> Result<f64, OptimizerError> {
+    fn compute_standard_log_moment(
+        &self,
+        order: usize,
+        q: f64,
+        sigma: f64,
+    ) -> Result<f64, OptimizerError> {
         let lambda = order as f64;
         let variance = sigma * sigma;
-        
+
         // Use log-sum-exp trick for numerical stability
         let exp_term = lambda / (2.0 * variance);
         let max_exp = exp_term.abs();
-        
+
         let term1 = (1.0 - q + q * (exp_term - max_exp).exp()).ln() + max_exp;
         let term2 = (1.0 - q + q * (-exp_term - max_exp).exp()).ln() + max_exp;
-        
+
         Ok(lambda * lambda / (2.0 * variance) + term1 - term2)
     }
 
     /// Enhanced privacy budget tracking with time-varying parameters
-    pub fn track_heterogeneous_composition(&mut self, mechanisms: &[MechanismParameters]) -> Result<CompositionAnalysis, OptimizerError> {
+    pub fn track_heterogeneous_composition(
+        &mut self,
+        mechanisms: &[MechanismParameters],
+    ) -> Result<CompositionAnalysis, OptimizerError> {
         let mut total_log_moments = HashMap::new();
-        
+
         // Initialize log moments
         for order in 2..=self.max_order {
             total_log_moments.insert(order, 0.0);
         }
-        
+
         // Compose over all mechanisms
         for mechanism in mechanisms {
             for order in 2..=self.max_order {
                 let single_log_moment = self.compute_mechanism_log_moment(order, mechanism)?;
                 let current = total_log_moments.get(&order).unwrap_or(&0.0);
-                total_log_moments.insert(order, current + single_log_moment * mechanism.applications as f64);
+                total_log_moments.insert(
+                    order,
+                    current + single_log_moment * mechanism.applications as f64,
+                );
             }
         }
-        
+
         // Find optimal epsilon
         let (composed_epsilon, _) = self.compute_optimal_epsilon(&total_log_moments)?;
-        
+
         Ok(CompositionAnalysis {
             mechanisms: mechanisms.to_vec(),
             composed_epsilon,
@@ -336,16 +361,20 @@ impl MomentsAccountant {
     }
 
     /// Compute log moment for a specific mechanism
-    fn compute_mechanism_log_moment(&self, order: usize, mechanism: &MechanismParameters) -> Result<f64, OptimizerError> {
+    fn compute_mechanism_log_moment(
+        &self,
+        order: usize,
+        mechanism: &MechanismParameters,
+    ) -> Result<f64, OptimizerError> {
         let lambda = order as f64;
         let q = mechanism.sampling_probability;
         let sigma = mechanism.noise_multiplier;
         let sensitivity = mechanism.sensitivity;
-        
+
         // Adjust for sensitivity
         let effective_sigma = sigma / sensitivity;
         let variance = effective_sigma * effective_sigma;
-        
+
         // Use the same enhanced computation as before
         let result = if q < 1e-6 {
             self.compute_small_q_approximation(order, q, effective_sigma)
@@ -354,35 +383,39 @@ impl MomentsAccountant {
         } else {
             self.compute_standard_log_moment(order, q, effective_sigma)
         }?;
-        
+
         Ok(result)
     }
 
     /// Advanced epsilon-delta conversion with tighter bounds
-    pub fn compute_tight_epsilon_delta_bound(&self, steps: usize, target_delta: f64) -> Result<f64, OptimizerError> {
+    pub fn compute_tight_epsilon_delta_bound(
+        &self,
+        steps: usize,
+        target_delta: f64,
+    ) -> Result<f64, OptimizerError> {
         // Use refined bound that accounts for finite sampling
         let mut best_epsilon = f64::INFINITY;
-        
+
         for order in 2..=self.max_order {
             let log_moment = self.compute_log_moment(order, steps)?;
-            
+
             // Enhanced epsilon computation with finite sample corrections
             let finite_sample_correction = self.compute_finite_sample_correction(order, steps);
             let adjusted_log_moment = log_moment + finite_sample_correction;
-            
+
             let epsilon = (adjusted_log_moment - target_delta.ln()) / (order as f64 - 1.0);
-            
+
             if epsilon > 0.0 && epsilon < best_epsilon {
                 best_epsilon = epsilon;
             }
         }
-        
+
         if best_epsilon == f64::INFINITY {
             return Err(OptimizerError::InvalidConfig(
-                "Could not compute valid epsilon bound".to_string()
+                "Could not compute valid epsilon bound".to_string(),
             ));
         }
-        
+
         Ok(best_epsilon)
     }
 
@@ -392,20 +425,20 @@ impl MomentsAccountant {
         let n = self.dataset_size as f64;
         let t = steps as f64;
         let lambda = order as f64;
-        
+
         // Correction term: O(t/n) for subsampling without replacement
         let basic_correction = t / n * lambda * lambda / 8.0;
-        
+
         // Additional higher-order correction
         let higher_order_correction = t * t / (n * n) * lambda * lambda * lambda / 24.0;
-        
+
         basic_correction + higher_order_correction
     }
 
     /// Privacy amplification analysis with refined bounds
     pub fn analyze_privacy_amplification(&self) -> f64 {
         let q = self.sampling_probability;
-        
+
         // Enhanced amplification factor accounting for composition
         if q <= 0.01 {
             // Strong amplification for small sampling probabilities
@@ -420,11 +453,14 @@ impl MomentsAccountant {
     }
 
     /// Real-time privacy budget monitoring
-    pub fn get_privacy_budget_status(&self, steps: usize) -> Result<PrivacyBudgetStatus, OptimizerError> {
+    pub fn get_privacy_budget_status(
+        &self,
+        steps: usize,
+    ) -> Result<PrivacyBudgetStatus, OptimizerError> {
         let analysis = self.analyze_privacy(steps)?;
-        let remaining_epsilon = 1.0 - analysis.epsilon;  // Assuming target epsilon = 1.0
+        let remaining_epsilon = 1.0 - analysis.epsilon; // Assuming target epsilon = 1.0
         let utilization = analysis.epsilon;
-        
+
         let status = if utilization < 0.5 {
             BudgetStatus::Healthy
         } else if utilization < 0.8 {
@@ -434,7 +470,7 @@ impl MomentsAccountant {
         } else {
             BudgetStatus::Exhausted
         };
-        
+
         Ok(PrivacyBudgetStatus {
             epsilon_remaining: remaining_epsilon,
             delta_remaining: self.target_delta,
@@ -447,17 +483,17 @@ impl MomentsAccountant {
 
     /// Estimate maximum number of steps within privacy budget
     fn estimate_max_steps(&self) -> Result<usize, OptimizerError> {
-        let target_epsilon = 1.0;  // Configurable target
-        
+        let target_epsilon = 1.0; // Configurable target
+
         // Binary search for maximum steps
         let mut low = 1;
-        let mut high = 100000;  // Upper bound
+        let mut high = 100000; // Upper bound
         let mut result = 0;
-        
+
         while low <= high {
             let mid = (low + high) / 2;
             let (epsilon, _) = self.get_privacy_spent(mid)?;
-            
+
             if epsilon <= target_epsilon {
                 result = mid;
                 low = mid + 1;
@@ -465,7 +501,7 @@ impl MomentsAccountant {
                 high = mid - 1;
             }
         }
-        
+
         Ok(result)
     }
 

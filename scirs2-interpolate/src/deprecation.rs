@@ -37,16 +37,16 @@ static DEPRECATION_CONFIG: OnceLock<Mutex<DeprecationConfig>> = OnceLock::new();
 pub struct DeprecationConfig {
     /// Whether to show deprecation warnings
     pub show_warnings: bool,
-    
+
     /// Whether to treat deprecation warnings as errors
     pub warnings_as_errors: bool,
-    
+
     /// Maximum number of times to show each deprecation warning
     pub max_warning_count: usize,
-    
+
     /// Track warning counts per function
     pub warning_counts: HashMap<String, usize>,
-    
+
     /// Current library version for deprecation context
     pub current_version: String,
 }
@@ -81,22 +81,22 @@ pub enum DeprecationLevel {
 pub struct DeprecationInfo {
     /// Function or feature name
     pub name: String,
-    
+
     /// Version when deprecation was introduced
     pub since: String,
-    
+
     /// Version when feature will be removed (if known)
     pub remove_in: Option<String>,
-    
+
     /// Deprecation level
     pub level: DeprecationLevel,
-    
+
     /// Reason for deprecation
     pub reason: String,
-    
+
     /// Suggested alternative or migration path
     pub alternative: Option<String>,
-    
+
     /// Additional notes for migration
     pub migration_notes: Option<String>,
 }
@@ -117,21 +117,21 @@ pub fn configure_deprecation(config: DeprecationConfig) {
 /// Issue a deprecation warning if enabled
 pub fn issue_deprecation_warning(info: &DeprecationInfo) {
     init_deprecation_system();
-    
+
     if let Ok(mut config) = DEPRECATION_CONFIG.get().unwrap().lock() {
         if !config.show_warnings {
             return;
         }
-        
+
         let count = config.warning_counts.entry(info.name.clone()).or_insert(0);
         *count += 1;
-        
+
         if *count > config.max_warning_count {
             return;
         }
-        
+
         let warning_msg = format_deprecation_warning(info);
-        
+
         if config.warnings_as_errors {
             panic!("Deprecation error: {}", warning_msg);
         } else {
@@ -142,22 +142,25 @@ pub fn issue_deprecation_warning(info: &DeprecationInfo) {
 
 /// Format a deprecation warning message
 fn format_deprecation_warning(info: &DeprecationInfo) -> String {
-    let mut msg = format!("Function '{}' is deprecated since v{}", info.name, info.since);
-    
+    let mut msg = format!(
+        "Function '{}' is deprecated since v{}",
+        info.name, info.since
+    );
+
     if let Some(remove_version) = &info.remove_in {
         msg.push_str(&format!(" and will be removed in v{}", remove_version));
     }
-    
+
     msg.push_str(&format!(": {}", info.reason));
-    
+
     if let Some(alternative) = &info.alternative {
         msg.push_str(&format!(" Use '{}' instead.", alternative));
     }
-    
+
     if let Some(notes) = &info.migration_notes {
         msg.push_str(&format!(" Migration notes: {}", notes));
     }
-    
+
     msg
 }
 
@@ -175,7 +178,7 @@ macro_rules! deprecated_function {
     ) => {
         {
             use $crate::deprecation::{DeprecationInfo, DeprecationLevel, issue_deprecation_warning};
-            
+
             let info = DeprecationInfo {
                 name: $name.to_string(),
                 since: $since.to_string(),
@@ -185,7 +188,7 @@ macro_rules! deprecated_function {
                 alternative: None $(.or(Some($alternative.to_string())))?,
                 migration_notes: None $(.or(Some($notes.to_string())))?,
             };
-            
+
             issue_deprecation_warning(&info);
         }
     };
@@ -194,23 +197,21 @@ macro_rules! deprecated_function {
 /// Experimental feature marker
 #[macro_export]
 macro_rules! experimental_feature {
-    ($name:expr, $description:expr) => {
-        {
-            use $crate::deprecation::{DeprecationInfo, DeprecationLevel, issue_deprecation_warning};
-            
-            let info = DeprecationInfo {
-                name: $name.to_string(),
-                since: "0.1.0-beta.1".to_string(),
-                remove_in: None,
-                level: DeprecationLevel::Experimental,
-                reason: format!("This is an experimental feature: {}", $description),
-                alternative: None,
-                migration_notes: Some("API may change in future versions".to_string()),
-            };
-            
-            issue_deprecation_warning(&info);
-        }
-    };
+    ($name:expr, $description:expr) => {{
+        use $crate::deprecation::{issue_deprecation_warning, DeprecationInfo, DeprecationLevel};
+
+        let info = DeprecationInfo {
+            name: $name.to_string(),
+            since: "0.1.0-beta.1".to_string(),
+            remove_in: None,
+            level: DeprecationLevel::Experimental,
+            reason: format!("This is an experimental feature: {}", $description),
+            alternative: None,
+            migration_notes: Some("API may change in future versions".to_string()),
+        };
+
+        issue_deprecation_warning(&info);
+    }};
 }
 
 /// Registry of deprecated and experimental features in the library
@@ -228,9 +229,10 @@ impl FeatureRegistry {
                 level: DeprecationLevel::Experimental,
                 reason: "GPU acceleration is experimental and may change".to_string(),
                 alternative: None,
-                migration_notes: Some("Enable with 'gpu' feature flag. API subject to change.".to_string()),
+                migration_notes: Some(
+                    "Enable with 'gpu' feature flag. API subject to change.".to_string(),
+                ),
             },
-            
             // Neural enhanced interpolation (experimental)
             DeprecationInfo {
                 name: "neural_enhanced".to_string(),
@@ -239,9 +241,10 @@ impl FeatureRegistry {
                 level: DeprecationLevel::Experimental,
                 reason: "Neural enhanced interpolation is experimental".to_string(),
                 alternative: None,
-                migration_notes: Some("API may change significantly in future versions".to_string()),
+                migration_notes: Some(
+                    "API may change significantly in future versions".to_string(),
+                ),
             },
-            
             // Physics-informed interpolation (experimental)
             DeprecationInfo {
                 name: "physics_informed".to_string(),
@@ -250,9 +253,10 @@ impl FeatureRegistry {
                 level: DeprecationLevel::Experimental,
                 reason: "Physics-informed methods are experimental".to_string(),
                 alternative: None,
-                migration_notes: Some("Consider using standard RBF or spline methods for production".to_string()),
+                migration_notes: Some(
+                    "Consider using standard RBF or spline methods for production".to_string(),
+                ),
             },
-            
             // Some Kriging variants with warnings
             DeprecationInfo {
                 name: "experimental_kriging_variants".to_string(),
@@ -261,11 +265,13 @@ impl FeatureRegistry {
                 level: DeprecationLevel::Experimental,
                 reason: "Some advanced Kriging variants show implementation warnings".to_string(),
                 alternative: Some("enhanced_kriging::make_enhanced_kriging".to_string()),
-                migration_notes: Some("Use stable Kriging implementations for production workloads".to_string()),
+                migration_notes: Some(
+                    "Use stable Kriging implementations for production workloads".to_string(),
+                ),
             },
         ]
     }
-    
+
     /// Get features planned for removal in specific version
     pub fn features_removed_in(version: &str) -> Vec<DeprecationInfo> {
         Self::deprecated_features()
@@ -273,14 +279,14 @@ impl FeatureRegistry {
             .filter(|f| f.remove_in.as_ref().map(|v| v == version).unwrap_or(false))
             .collect()
     }
-    
+
     /// Check if a feature is deprecated
     pub fn is_feature_deprecated(feature_name: &str) -> bool {
         Self::deprecated_features()
             .iter()
             .any(|f| f.name == feature_name)
     }
-    
+
     /// Get deprecation info for a specific feature
     pub fn get_deprecation_info(feature_name: &str) -> Option<DeprecationInfo> {
         Self::deprecated_features()
@@ -292,7 +298,7 @@ impl FeatureRegistry {
 /// Convenience functions for common deprecation scenarios
 pub mod convenience {
     use super::*;
-    
+
     /// Mark a GPU feature as experimental
     pub fn warn_gpu_experimental(feature_name: &str) {
         experimental_feature!(
@@ -300,7 +306,7 @@ pub mod convenience {
             "GPU acceleration support is experimental and may change significantly"
         );
     }
-    
+
     /// Mark a neural network feature as experimental  
     pub fn warn_neural_experimental(feature_name: &str) {
         experimental_feature!(
@@ -308,7 +314,7 @@ pub mod convenience {
             "Neural network enhanced interpolation is experimental"
         );
     }
-    
+
     /// Mark a physics-informed feature as experimental
     pub fn warn_physics_experimental(feature_name: &str) {
         experimental_feature!(
@@ -316,7 +322,7 @@ pub mod convenience {
             "Physics-informed interpolation methods are experimental"
         );
     }
-    
+
     /// Issue a matrix conditioning warning
     pub fn warn_matrix_conditioning(condition_number: f64, context: &str) {
         if condition_number > 1e14 {
@@ -327,7 +333,7 @@ pub mod convenience {
             );
         }
     }
-    
+
     /// Issue a performance warning for large datasets
     pub fn warn_performance_large_dataset(operation: &str, size: usize, threshold: usize) {
         if size > threshold {
@@ -343,7 +349,7 @@ pub mod convenience {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_deprecation_config() {
         let config = DeprecationConfig::default();
@@ -351,19 +357,19 @@ mod tests {
         assert!(!config.warnings_as_errors);
         assert_eq!(config.max_warning_count, 3);
     }
-    
+
     #[test]
     fn test_feature_registry() {
         let deprecated = FeatureRegistry::deprecated_features();
         assert!(!deprecated.is_empty());
-        
+
         let gpu_deprecated = FeatureRegistry::is_feature_deprecated("gpu_accelerated");
         assert!(gpu_deprecated);
-        
+
         let standard_feature = FeatureRegistry::is_feature_deprecated("spline");
         assert!(!standard_feature);
     }
-    
+
     #[test]
     fn test_deprecation_info() {
         let info = DeprecationInfo {
@@ -375,7 +381,7 @@ mod tests {
             alternative: Some("new_function".to_string()),
             migration_notes: Some("Easy migration".to_string()),
         };
-        
+
         let message = format_deprecation_warning(&info);
         assert!(message.contains("test_function"));
         assert!(message.contains("0.1.0"));

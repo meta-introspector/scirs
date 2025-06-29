@@ -6,6 +6,7 @@
 
 use ndarray::{Array, Array1, Array2, ArrayBase, Axis, Data, DataMut, Dimension};
 use num_traits::Float;
+use rand::{thread_rng, Rng};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::future::Future;
 use std::pin::Pin;

@@ -1538,25 +1538,30 @@ impl ContextualDisambiguator {
 
         for ((left, target, right), new_tag, confidence) in &rules {
             self.context_rules.push(ContextRule {
-                pattern: (*left, *target, *right),
-                new_tag: *new_tag,
+                pattern: (left.clone(), target.clone(), right.clone()),
+                new_tag: new_tag.clone(),
                 confidence: *confidence,
             });
         }
     }
 
     /// Apply contextual disambiguation to a sequence
-    pub fn disambiguate(&self, tokens: &[String], tags: &mut [PosTag], confidences: &mut [f64]) {
+    pub fn disambiguate(&self, _tokens: &[String], tags: &mut [PosTag], confidences: &mut [f64]) {
         for i in 0..tags.len() {
-            let left = if i > 0 { Some(&tags[i - 1]) } else { None };
-            let right = if i < tags.len() - 1 {
-                Some(&tags[i + 1])
+            let left = if i > 0 {
+                Some(tags[i - 1].clone())
             } else {
                 None
             };
+            let right = if i < tags.len() - 1 {
+                Some(tags[i + 1].clone())
+            } else {
+                None
+            };
+            let current = tags[i].clone();
 
             for rule in &self.context_rules {
-                if self.matches_pattern(&rule.pattern, left, &tags[i], right) {
+                if self.matches_pattern(&rule.pattern, left.as_ref(), &current, right.as_ref()) {
                     if confidences[i] < rule.confidence {
                         tags[i] = rule.new_tag.clone();
                         confidences[i] = rule.confidence;

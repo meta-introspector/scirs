@@ -159,6 +159,87 @@ where
     }
 }
 
+/// Compute the norm of a vector with parallel processing support.
+///
+/// This function uses parallel computation to calculate vector norms efficiently
+/// for large vectors. The computation is distributed across multiple worker threads
+/// using the scirs2-core parallel operations framework.
+///
+/// # Arguments
+///
+/// * `x` - Input vector
+/// * `ord` - Norm order (1, 2, or usize::MAX for infinity norm)  
+/// * `workers` - Number of worker threads (None = use default)
+///
+/// # Returns
+///
+/// * Norm of the vector
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::vector_norm_parallel;
+///
+/// let x = array![3.0_f64, 4.0];
+/// let norm2 = vector_norm_parallel(&x.view(), 2, Some(4)).unwrap();
+/// assert!((norm2 - 5.0).abs() < 1e-10);
+/// ```
+pub fn vector_norm_parallel<F>(
+    x: &ArrayView1<F>,
+    ord: usize,
+    workers: Option<usize>,
+) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Sum + Send + Sync,
+{
+    use crate::parallel;
+    use scirs2_core::parallel_ops::*;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
+    // Parameter validation using validation helpers
+    validate_not_empty_vector(x, "Vector norm computation")?;
+    validate_finite_vector(x, "Vector norm computation")?;
+
+    // Use threshold to determine if parallel processing is worthwhile
+    const PARALLEL_THRESHOLD: usize = 1000;
+    
+    if x.len() < PARALLEL_THRESHOLD {
+        // For small vectors, use sequential implementation
+        return vector_norm(x, ord);
+    }
+
+    match ord {
+        1 => {
+            // 1-norm (sum of absolute values) - parallel sum
+            let sum_abs = (0..x.len()).into_par_iter()
+                .map(|i| x[i].abs())
+                .sum();
+            Ok(sum_abs)
+        }
+        2 => {
+            // 2-norm (Euclidean norm) - parallel sum of squares
+            let sum_sq: F = (0..x.len()).into_par_iter()
+                .map(|i| x[i] * x[i])
+                .sum();
+            Ok(sum_sq.sqrt())
+        }
+        usize::MAX => {
+            // Infinity norm (maximum absolute value) - parallel max
+            let max_abs = (0..x.len()).into_par_iter()
+                .map(|i| x[i].abs())
+                .reduce(|| F::zero(), |a, b| if a > b { a } else { b });
+            Ok(max_abs)
+        }
+        _ => Err(LinalgError::InvalidInputError(format!(
+            "Vector norm computation failed: Invalid norm order {}\nSupported norms: 1 (L1), 2 (L2/Euclidean), {} (infinity)",
+            ord, usize::MAX
+        ))),
+    }
+}
+
 /// Compute the condition number of a matrix.
 ///
 /// # Arguments

@@ -4,18 +4,19 @@
 //! optimization capabilities, real-time tuning, and predictive performance
 //! management for production 1.0 deployments.
 
-use crate::error::{CoreResult, CoreError, ErrorContext};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 #[allow(unused_imports)]
-use crate::performance::{PerformanceProfile, OptimizationSettings, WorkloadType};
+use crate::performance::{OptimizationSettings, PerformanceProfile, WorkloadType};
 #[allow(unused_imports)]
 use crate::resource::auto_tuning::{ResourceManager, ResourceMetrics};
-use std::sync::{Arc, RwLock, Mutex};
 use std::collections::{HashMap, VecDeque};
-use std::time::{Duration, Instant, SystemTime};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
+use std::time::{Duration, Instant, SystemTime};
 
 /// Global adaptive monitoring system
-static GLOBAL_MONITORING: std::sync::OnceLock<Arc<AdaptiveMonitoringSystem>> = std::sync::OnceLock::new();
+static GLOBAL_MONITORING: std::sync::OnceLock<Arc<AdaptiveMonitoringSystem>> =
+    std::sync::OnceLock::new();
 
 /// Comprehensive adaptive monitoring and optimization system
 #[derive(Debug)]
@@ -43,7 +44,9 @@ impl AdaptiveMonitoringSystem {
 
     /// Get global monitoring system instance
     pub fn global() -> CoreResult<Arc<Self>> {
-        Ok(GLOBAL_MONITORING.get_or_init(|| Arc::new(Self::new().unwrap())).clone())
+        Ok(GLOBAL_MONITORING
+            .get_or_init(|| Arc::new(Self::new().unwrap()))
+            .clone())
     }
 
     /// Start adaptive monitoring and optimization
@@ -52,54 +55,46 @@ impl AdaptiveMonitoringSystem {
         let monitor = self.performance_monitor.clone();
         let config = self.configuration.clone();
         let metrics_collector = self.metrics_collector.clone();
-        
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = Self::monitoring_loop(&monitor, &config, &metrics_collector) {
-                    eprintln!("Monitoring error: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(1));
+
+        thread::spawn(move || loop {
+            if let Err(e) = Self::monitoring_loop(&monitor, &config, &metrics_collector) {
+                eprintln!("Monitoring error: {:?}", e);
             }
+            thread::sleep(Duration::from_secs(1));
         });
 
         // Start optimization engine thread
         let optimization = self.optimization_engine.clone();
         let monitor_clone = self.performance_monitor.clone();
         let prediction = self.prediction_engine.clone();
-        
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = Self::optimization_loop(&optimization, &monitor_clone, &prediction) {
-                    eprintln!("Optimization error: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(10));
+
+        thread::spawn(move || loop {
+            if let Err(e) = Self::optimization_loop(&optimization, &monitor_clone, &prediction) {
+                eprintln!("Optimization error: {:?}", e);
             }
+            thread::sleep(Duration::from_secs(10));
         });
 
         // Start prediction engine thread
         let prediction_clone = self.prediction_engine.clone();
         let monitor_clone2 = self.performance_monitor.clone();
-        
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = Self::prediction_loop(&prediction_clone, &monitor_clone2) {
-                    eprintln!("Prediction error: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(30));
+
+        thread::spawn(move || loop {
+            if let Err(e) = Self::prediction_loop(&prediction_clone, &monitor_clone2) {
+                eprintln!("Prediction error: {:?}", e);
             }
+            thread::sleep(Duration::from_secs(30));
         });
 
         // Start alerting system thread
         let alerting = self.alerting_system.clone();
         let monitor_clone3 = self.performance_monitor.clone();
-        
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = Self::alerting_loop(&alerting, &monitor_clone3) {
-                    eprintln!("Alerting error: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(5));
+
+        thread::spawn(move || loop {
+            if let Err(e) = Self::alerting_loop(&alerting, &monitor_clone3) {
+                eprintln!("Alerting error: {:?}", e);
             }
+            thread::sleep(Duration::from_secs(5));
         });
 
         Ok(())
@@ -110,21 +105,30 @@ impl AdaptiveMonitoringSystem {
         config: &Arc<RwLock<MonitoringConfiguration>>,
         metrics_collector: &Arc<Mutex<MetricsCollector>>,
     ) -> CoreResult<()> {
-        let config_read = config.read()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire config lock".to_string())))?;
-        
+        let config_read = config.read().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire config lock".to_string(),
+            ))
+        })?;
+
         if !config_read.monitoring_enabled {
             return Ok(());
         }
 
         // Collect current metrics
-        let mut collector = metrics_collector.lock()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire collector lock".to_string())))?;
+        let mut collector = metrics_collector.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire collector lock".to_string(),
+            ))
+        })?;
         let metrics = collector.collect_comprehensive_metrics()?;
 
         // Update performance monitor
-        let mut monitor_write = monitor.write()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire monitor lock".to_string())))?;
+        let mut monitor_write = monitor.write().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire monitor lock".to_string(),
+            ))
+        })?;
         monitor_write.record_metrics(metrics)?;
 
         Ok(())
@@ -136,19 +140,28 @@ impl AdaptiveMonitoringSystem {
         prediction: &Arc<RwLock<PredictionEngine>>,
     ) -> CoreResult<()> {
         let current_metrics = {
-            let monitor_read = monitor.read()
-                .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire monitor lock".to_string())))?;
+            let monitor_read = monitor.read().map_err(|_| {
+                CoreError::InvalidState(ErrorContext::new(
+                    "Failed to acquire monitor lock".to_string(),
+                ))
+            })?;
             monitor_read.get_current_performance()?
         };
 
         let predictions = {
-            let prediction_read = prediction.read()
-                .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire prediction lock".to_string())))?;
+            let prediction_read = prediction.read().map_err(|_| {
+                CoreError::InvalidState(ErrorContext::new(
+                    "Failed to acquire prediction lock".to_string(),
+                ))
+            })?;
             prediction_read.get_current_predictions()?
         };
 
-        let mut optimization_write = optimization.write()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire optimization lock".to_string())))?;
+        let mut optimization_write = optimization.write().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire optimization lock".to_string(),
+            ))
+        })?;
         optimization_write.adaptive_optimize(&current_metrics, &predictions)?;
 
         Ok(())
@@ -159,13 +172,19 @@ impl AdaptiveMonitoringSystem {
         monitor: &Arc<RwLock<PerformanceMonitor>>,
     ) -> CoreResult<()> {
         let historical_data = {
-            let monitor_read = monitor.read()
-                .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire monitor lock".to_string())))?;
+            let monitor_read = monitor.read().map_err(|_| {
+                CoreError::InvalidState(ErrorContext::new(
+                    "Failed to acquire monitor lock".to_string(),
+                ))
+            })?;
             monitor_read.get_historical_data()?
         };
 
-        let mut prediction_write = prediction.write()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire prediction lock".to_string())))?;
+        let mut prediction_write = prediction.write().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire prediction lock".to_string(),
+            ))
+        })?;
         prediction_write.update_predictions(&historical_data)?;
 
         Ok(())
@@ -176,13 +195,19 @@ impl AdaptiveMonitoringSystem {
         monitor: &Arc<RwLock<PerformanceMonitor>>,
     ) -> CoreResult<()> {
         let current_performance = {
-            let monitor_read = monitor.read()
-                .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire monitor lock".to_string())))?;
+            let monitor_read = monitor.read().map_err(|_| {
+                CoreError::InvalidState(ErrorContext::new(
+                    "Failed to acquire monitor lock".to_string(),
+                ))
+            })?;
             monitor_read.get_current_performance()?
         };
 
-        let mut alerting_write = alerting.lock()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire alerting lock".to_string())))?;
+        let mut alerting_write = alerting.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire alerting lock".to_string(),
+            ))
+        })?;
         alerting_write.check_and_trigger_alerts(&current_performance)?;
 
         Ok(())
@@ -190,29 +215,41 @@ impl AdaptiveMonitoringSystem {
 
     /// Get current system performance metrics
     pub fn get_performance_metrics(&self) -> CoreResult<ComprehensivePerformanceMetrics> {
-        let monitor = self.performance_monitor.read()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire monitor lock".to_string())))?;
+        let monitor = self.performance_monitor.read().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire monitor lock".to_string(),
+            ))
+        })?;
         monitor.get_current_performance()
     }
 
     /// Get optimization recommendations
     pub fn get_optimization_recommendations(&self) -> CoreResult<Vec<OptimizationRecommendation>> {
-        let optimization = self.optimization_engine.read()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire optimization lock".to_string())))?;
+        let optimization = self.optimization_engine.read().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire optimization lock".to_string(),
+            ))
+        })?;
         optimization.get_recommendations()
     }
 
     /// Get performance predictions
     pub fn get_performance_predictions(&self) -> CoreResult<PerformancePredictions> {
-        let prediction = self.prediction_engine.read()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire prediction lock".to_string())))?;
+        let prediction = self.prediction_engine.read().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire prediction lock".to_string(),
+            ))
+        })?;
         prediction.get_current_predictions()
     }
 
     /// Update monitoring configuration
     pub fn update_configuration(&self, new_config: MonitoringConfiguration) -> CoreResult<()> {
-        let mut config = self.configuration.write()
-            .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire config lock".to_string())))?;
+        let mut config = self.configuration.write().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire config lock".to_string(),
+            ))
+        })?;
         *config = new_config;
         Ok(())
     }
@@ -222,10 +259,13 @@ impl AdaptiveMonitoringSystem {
         let performance = self.get_performance_metrics()?;
         let recommendations = self.get_optimization_recommendations()?;
         let predictions = self.get_performance_predictions()?;
-        
+
         let alerts = {
-            let alerting = self.alerting_system.lock()
-                .map_err(|_| CoreError::InvalidState(ErrorContext::new("Failed to acquire alerting lock".to_string())))?;
+            let alerting = self.alerting_system.lock().map_err(|_| {
+                CoreError::InvalidState(ErrorContext::new(
+                    "Failed to acquire alerting lock".to_string(),
+                ))
+            })?;
             alerting.get_active_alerts()?
         };
 
@@ -277,7 +317,7 @@ impl PerformanceMonitor {
 
         // Add to history
         self.metrics_history.push_back(metrics);
-        
+
         // Maintain history size
         while self.metrics_history.len() > self.max_history_size {
             self.metrics_history.pop_front();
@@ -287,30 +327,47 @@ impl PerformanceMonitor {
     }
 
     pub fn get_current_performance(&self) -> CoreResult<ComprehensivePerformanceMetrics> {
-        self.metrics_history.back()
-            .cloned()
-            .ok_or_else(|| CoreError::InvalidState(ErrorContext::new("No performance metrics available".to_string())))
+        self.metrics_history.back().cloned().ok_or_else(|| {
+            CoreError::InvalidState(ErrorContext::new(
+                "No performance metrics available".to_string(),
+            ))
+        })
     }
 
     pub fn get_historical_data(&self) -> CoreResult<Vec<ComprehensivePerformanceMetrics>> {
         Ok(self.metrics_history.iter().cloned().collect())
     }
 
-    fn update_performance_trends(&mut self, metrics: &ComprehensivePerformanceMetrics) -> CoreResult<()> {
+    fn update_performance_trends(
+        &mut self,
+        metrics: &ComprehensivePerformanceMetrics,
+    ) -> CoreResult<()> {
         // Update CPU trend
-        let cpu_trend = self.performance_trends.entry("cpu".to_string()).or_default();
+        let cpu_trend = self
+            .performance_trends
+            .entry("cpu".to_string())
+            .or_default();
         cpu_trend.add_data_point(metrics.cpu_utilization, metrics.timestamp);
 
         // Update memory trend
-        let memory_trend = self.performance_trends.entry("memory".to_string()).or_default();
+        let memory_trend = self
+            .performance_trends
+            .entry("memory".to_string())
+            .or_default();
         memory_trend.add_data_point(metrics.memory_utilization, metrics.timestamp);
 
         // Update throughput trend
-        let throughput_trend = self.performance_trends.entry("throughput".to_string()).or_default();
+        let throughput_trend = self
+            .performance_trends
+            .entry("throughput".to_string())
+            .or_default();
         throughput_trend.add_data_point(metrics.operations_per_second, metrics.timestamp);
 
         // Update latency trend
-        let latency_trend = self.performance_trends.entry("latency".to_string()).or_default();
+        let latency_trend = self
+            .performance_trends
+            .entry("latency".to_string())
+            .or_default();
         latency_trend.add_data_point(metrics.average_latency_ms, metrics.timestamp);
 
         Ok(())
@@ -322,28 +379,35 @@ impl PerformanceMonitor {
                 AnomalySeverity::Critical => {
                     // Trigger immediate response
                     eprintln!("CRITICAL ANOMALY DETECTED: {}", anomaly.description);
-                },
+                }
                 AnomalySeverity::Warning => {
                     // Log warning
                     println!("Performance warning: {}", anomaly.description);
-                },
+                }
                 AnomalySeverity::Info => {
                     // Log info
                     println!("Performance info: {}", anomaly.description);
-                },
+                }
             }
         }
         Ok(())
     }
 
-    fn should_update_baseline(&self, metrics: &ComprehensivePerformanceMetrics) -> CoreResult<bool> {
+    fn should_update_baseline(
+        &self,
+        metrics: &ComprehensivePerformanceMetrics,
+    ) -> CoreResult<bool> {
         if let Some(baseline) = &self.baseline_performance {
             // Update baseline if performance has significantly improved
             let improvement_threshold = 0.2; // 20% improvement
-            let cpu_improvement = (baseline.cpu_utilization - metrics.cpu_utilization) / baseline.cpu_utilization;
-            let throughput_improvement = (metrics.operations_per_second - baseline.operations_per_second) / baseline.operations_per_second;
-            
-            Ok(cpu_improvement > improvement_threshold || throughput_improvement > improvement_threshold)
+            let cpu_improvement =
+                (baseline.cpu_utilization - metrics.cpu_utilization) / baseline.cpu_utilization;
+            let throughput_improvement = (metrics.operations_per_second
+                - baseline.operations_per_second)
+                / baseline.operations_per_second;
+
+            Ok(cpu_improvement > improvement_threshold
+                || throughput_improvement > improvement_threshold)
         } else {
             Ok(true)
         }
@@ -376,10 +440,11 @@ impl OptimizationEngine {
     ) -> CoreResult<()> {
         // Analyze current performance
         let performance_score = self.calculate_performance_score(current_metrics);
-        
+
         // Check if optimization is needed
         if self.needs_optimization(current_metrics, predictions)? {
-            let optimization_action = self.determine_optimization_action(current_metrics, predictions)?;
+            let optimization_action =
+                self.determine_optimization_action(current_metrics, predictions)?;
             self.execute_optimization(optimization_action)?;
         }
 
@@ -397,7 +462,7 @@ impl OptimizationEngine {
         let memory_score = 1.0 - metrics.memory_utilization;
         let latency_score = 1.0 / (1.0 + metrics.average_latency_ms / 100.0);
         let throughput_score = metrics.operations_per_second / 10000.0;
-        
+
         (cpu_score + memory_score + latency_score + throughput_score) / 4.0
     }
 
@@ -417,7 +482,9 @@ impl OptimizationEngine {
         }
 
         // Check for performance degradation trends
-        if current_metrics.operations_per_second < 100.0 || current_metrics.average_latency_ms > 1000.0 {
+        if current_metrics.operations_per_second < 100.0
+            || current_metrics.average_latency_ms > 1000.0
+        {
             return Ok(true);
         }
 
@@ -471,27 +538,27 @@ impl OptimizationEngine {
                 OptimizationActionType::ReduceThreads => {
                     // Implement thread reduction
                     self.reduce_thread_count()?;
-                },
+                }
                 OptimizationActionType::IncreaseParallelism => {
                     // Implement parallelism increase
                     self.increase_parallelism()?;
-                },
+                }
                 OptimizationActionType::ReduceMemoryUsage => {
                     // Implement memory reduction
                     self.reduce_memory_usage()?;
-                },
+                }
                 OptimizationActionType::OptimizeCacheUsage => {
                     // Implement cache optimization
                     self.optimize_cache_usage()?;
-                },
+                }
                 OptimizationActionType::PreemptiveCpuOptimization => {
                     // Implement preemptive CPU optimization
                     self.preemptive_cpu_optimization()?;
-                },
+                }
                 OptimizationActionType::PreemptiveMemoryOptimization => {
                     // Implement preemptive memory optimization
                     self.preemptive_memory_optimization()?;
-                },
+                }
             }
         }
 
@@ -515,7 +582,9 @@ impl OptimizationEngine {
         #[cfg(feature = "parallel")]
         {
             let current_threads = crate::parallel_ops::get_num_threads();
-            let max_threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
+            let max_threads = std::thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(1);
             let new_threads = ((current_threads as f64) * 1.2) as usize;
             crate::parallel_ops::set_num_threads(new_threads.min(max_threads));
         }
@@ -548,7 +617,10 @@ impl OptimizationEngine {
 
     fn adapt_strategy(&mut self, performance_score: f64) -> CoreResult<()> {
         // Update strategy effectiveness
-        let current_effectiveness = self.strategy_effectiveness.entry(self.current_strategy).or_insert(0.5);
+        let current_effectiveness = self
+            .strategy_effectiveness
+            .entry(self.current_strategy)
+            .or_insert(0.5);
         *current_effectiveness = (*current_effectiveness * 0.9) + (performance_score * 0.1);
 
         // Consider switching strategy if current one is not effective
@@ -569,7 +641,7 @@ impl OptimizationEngine {
         // Analyze optimization history
         if self.optimization_history.len() >= 10 {
             let recent_actions: Vec<_> = self.optimization_history.iter().rev().take(10).collect();
-            
+
             // Check for repeated actions (might indicate ineffective optimization)
             let action_counts = self.count_action_types(&recent_actions);
             for (action_type, count) in action_counts {
@@ -577,7 +649,8 @@ impl OptimizationEngine {
                     recommendations.push(OptimizationRecommendation {
                         category: RecommendationCategory::Optimization,
                         title: format!("Frequent {:?} actions detected", action_type),
-                        description: "Consider investigating root cause of performance issues".to_string(),
+                        description: "Consider investigating root cause of performance issues"
+                            .to_string(),
                         priority: RecommendationPriority::High,
                         estimated_impact: ImpactLevel::Medium,
                     });
@@ -591,7 +664,10 @@ impl OptimizationEngine {
                 recommendations.push(OptimizationRecommendation {
                     category: RecommendationCategory::Strategy,
                     title: "Current optimization strategy showing low effectiveness".to_string(),
-                    description: format!("Consider switching from {:?} strategy", self.current_strategy),
+                    description: format!(
+                        "Consider switching from {:?} strategy",
+                        self.current_strategy
+                    ),
                     priority: RecommendationPriority::Medium,
                     estimated_impact: ImpactLevel::High,
                 });
@@ -601,7 +677,10 @@ impl OptimizationEngine {
         Ok(recommendations)
     }
 
-    fn count_action_types(&self, actions: &[&OptimizationAction]) -> HashMap<OptimizationActionType, usize> {
+    fn count_action_types(
+        &self,
+        actions: &[&OptimizationAction],
+    ) -> HashMap<OptimizationActionType, usize> {
         let mut counts = HashMap::new();
         for action in actions {
             for action_type in &action.actions {
@@ -631,7 +710,10 @@ impl PredictionEngine {
         })
     }
 
-    pub fn update_predictions(&mut self, historical_data: &[ComprehensivePerformanceMetrics]) -> CoreResult<()> {
+    pub fn update_predictions(
+        &mut self,
+        historical_data: &[ComprehensivePerformanceMetrics],
+    ) -> CoreResult<()> {
         if historical_data.len() < 10 {
             return Ok(()); // Need at least 10 data points for predictions
         }
@@ -640,7 +722,8 @@ impl PredictionEngine {
         self.update_time_series_models(historical_data)?;
 
         // Analyze correlations
-        self.correlation_analyzer.analyze_correlations(historical_data)?;
+        self.correlation_analyzer
+            .analyze_correlations(historical_data)?;
 
         // Detect patterns
         self.pattern_detector.detect_patterns(historical_data)?;
@@ -648,20 +731,32 @@ impl PredictionEngine {
         Ok(())
     }
 
-    fn update_time_series_models(&mut self, data: &[ComprehensivePerformanceMetrics]) -> CoreResult<()> {
+    fn update_time_series_models(
+        &mut self,
+        data: &[ComprehensivePerformanceMetrics],
+    ) -> CoreResult<()> {
         // Extract CPU utilization time series
         let cpu_data: Vec<f64> = data.iter().map(|m| m.cpu_utilization).collect();
-        let cpu_model = self.time_series_models.entry("cpu".to_string()).or_default();
+        let cpu_model = self
+            .time_series_models
+            .entry("cpu".to_string())
+            .or_default();
         cpu_model.update(cpu_data)?;
 
         // Extract memory utilization time series
         let memory_data: Vec<f64> = data.iter().map(|m| m.memory_utilization).collect();
-        let memory_model = self.time_series_models.entry("memory".to_string()).or_default();
+        let memory_model = self
+            .time_series_models
+            .entry("memory".to_string())
+            .or_default();
         memory_model.update(memory_data)?;
 
         // Extract throughput time series
         let throughput_data: Vec<f64> = data.iter().map(|m| m.operations_per_second).collect();
-        let throughput_model = self.time_series_models.entry("throughput".to_string()).or_default();
+        let throughput_model = self
+            .time_series_models
+            .entry("throughput".to_string())
+            .or_default();
         throughput_model.update(throughput_data)?;
 
         Ok(())
@@ -672,11 +767,15 @@ impl PredictionEngine {
             .map(|model| model.predict_next(5)) // Predict next 5 time steps
             .unwrap_or_else(|| vec![0.5; 5]);
 
-        let memory_prediction = self.time_series_models.get("memory")
+        let memory_prediction = self
+            .time_series_models
+            .get("memory")
             .map(|model| model.predict_next(5))
             .unwrap_or_else(|| vec![0.5; 5]);
 
-        let throughput_prediction = self.time_series_models.get("throughput")
+        let throughput_prediction = self
+            .time_series_models
+            .get("throughput")
             .map(|model| model.predict_next(5))
             .unwrap_or_else(|| vec![1000.0; 5]);
 
@@ -763,7 +862,10 @@ impl AlertingSystem {
         ]
     }
 
-    pub fn check_and_trigger_alerts(&mut self, metrics: &ComprehensivePerformanceMetrics) -> CoreResult<()> {
+    pub fn check_and_trigger_alerts(
+        &mut self,
+        metrics: &ComprehensivePerformanceMetrics,
+    ) -> CoreResult<()> {
         // Collect rules that need to trigger alerts to avoid borrowing conflicts
         let mut rules_to_trigger = Vec::new();
         for rule in &self.alert_rules {
@@ -783,11 +885,19 @@ impl AlertingSystem {
         Ok(())
     }
 
-    fn evaluate_rule(&self, rule: &AlertRule, metrics: &ComprehensivePerformanceMetrics) -> CoreResult<bool> {
+    fn evaluate_rule(
+        &self,
+        rule: &AlertRule,
+        metrics: &ComprehensivePerformanceMetrics,
+    ) -> CoreResult<bool> {
         match &rule.condition {
-            AlertCondition::Threshold { metric, operator, value } => {
+            AlertCondition::Threshold {
+                metric,
+                operator,
+                value,
+            } => {
                 let metric_value = self.get_metric_value(metric, metrics)?;
-                
+
                 let condition_met = match operator {
                     ComparisonOperator::GreaterThan => metric_value > *value,
                     ComparisonOperator::LessThan => metric_value < *value,
@@ -795,17 +905,25 @@ impl AlertingSystem {
                 };
 
                 Ok(condition_met)
-            },
-            AlertCondition::RateOfChange { metric, threshold, timeframe: _ } => {
+            }
+            AlertCondition::RateOfChange {
+                metric,
+                threshold,
+                timeframe: _,
+            } => {
                 // Simplified rate of change calculation
                 let current_value = self.get_metric_value(metric, metrics)?;
                 // Would need historical data for proper rate calculation
                 Ok(current_value.abs() > *threshold)
-            },
+            }
         }
     }
 
-    fn get_metric_value(&self, metric: &str, metrics: &ComprehensivePerformanceMetrics) -> CoreResult<f64> {
+    fn get_metric_value(
+        &self,
+        metric: &str,
+        metrics: &ComprehensivePerformanceMetrics,
+    ) -> CoreResult<f64> {
         match metric {
             "cpu_utilization" => Ok(metrics.cpu_utilization),
             "memory_utilization" => Ok(metrics.memory_utilization),
@@ -820,14 +938,28 @@ impl AlertingSystem {
         }
     }
 
-    fn trigger_alert(&mut self, rule: &AlertRule, _metrics: &ComprehensivePerformanceMetrics) -> CoreResult<()> {
+    fn trigger_alert(
+        &mut self,
+        rule: &AlertRule,
+        _metrics: &ComprehensivePerformanceMetrics,
+    ) -> CoreResult<()> {
         // Check if alert is already active
-        if self.active_alerts.iter().any(|alert| alert.rule_name == rule.name) {
+        if self
+            .active_alerts
+            .iter()
+            .any(|alert| alert.rule_name == rule.name)
+        {
             return Ok(());
         }
 
         let alert = PerformanceAlert {
-            id: format!("alert_{}", SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis()),
+            id: format!(
+                "alert_{}",
+                SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis()
+            ),
             rule_name: rule.name.clone(),
             severity: rule.severity,
             message: format!("Alert triggered: {}", rule.name),
@@ -852,11 +984,17 @@ impl AlertingSystem {
         Ok(())
     }
 
-    fn clean_up_resolved_alerts(&mut self, metrics: &ComprehensivePerformanceMetrics) -> CoreResult<()> {
+    fn clean_up_resolved_alerts(
+        &mut self,
+        metrics: &ComprehensivePerformanceMetrics,
+    ) -> CoreResult<()> {
         let mut resolved_alerts = Vec::new();
 
         // Collect rules and alert info to avoid borrowing conflicts
-        let rule_evaluations: Vec<(usize, bool)> = self.active_alerts.iter().enumerate()
+        let rule_evaluations: Vec<(usize, bool)> = self
+            .active_alerts
+            .iter()
+            .enumerate()
             .map(|(index, alert)| {
                 if let Some(rule) = self.alert_rules.iter().find(|r| r.name == alert.rule_name) {
                     let is_resolved = match self.evaluate_rule(rule, metrics) {
@@ -931,11 +1069,13 @@ impl MetricsCollector {
 
     pub fn collect_comprehensive_metrics(&mut self) -> CoreResult<ComprehensivePerformanceMetrics> {
         let now = Instant::now();
-        
+
         // Rate limiting
         if let Some(last_time) = self.last_collection_time {
             if now.duration_since(last_time) < self.collection_interval {
-                return Err(CoreError::InvalidState(ErrorContext::new("Collection rate limit exceeded".to_string())));
+                return Err(CoreError::InvalidState(ErrorContext::new(
+                    "Collection rate limit exceeded".to_string(),
+                )));
             }
         }
 
@@ -1096,7 +1236,7 @@ impl PerformanceTrend {
 
     pub fn add_data_point(&mut self, value: f64, timestamp: Instant) {
         self.data_points.push_back((value, timestamp));
-        
+
         // Keep only recent data points
         while self.data_points.len() > 100 {
             self.data_points.pop_front();
@@ -1115,9 +1255,15 @@ impl PerformanceTrend {
         let n = self.data_points.len() as f64;
         let sum_x: f64 = (0..self.data_points.len()).map(|i| i as f64).sum();
         let sum_y: f64 = self.data_points.iter().map(|(value, _)| *value).sum();
-        let sum_xy: f64 = self.data_points.iter().enumerate()
-            .map(|(i, (value, _))| i as f64 * value).sum();
-        let sum_x_squared: f64 = (0..self.data_points.len()).map(|i| (i as f64).powi(2)).sum();
+        let sum_xy: f64 = self
+            .data_points
+            .iter()
+            .enumerate()
+            .map(|(i, (value, _))| i as f64 * value)
+            .sum();
+        let sum_x_squared: f64 = (0..self.data_points.len())
+            .map(|i| (i as f64).powi(2))
+            .sum();
 
         self.slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x_squared - sum_x.powi(2));
 
@@ -1148,11 +1294,14 @@ impl AnomalyDetector {
     pub fn new() -> CoreResult<Self> {
         Ok(Self {
             detection_window: Duration::from_secs(300), // 5 minutes
-            sensitivity: 2.0, // 2 standard deviations
+            sensitivity: 2.0,                           // 2 standard deviations
         })
     }
 
-    pub fn detect_anomalies(&self, metrics: &ComprehensivePerformanceMetrics) -> CoreResult<Option<Vec<PerformanceAnomaly>>> {
+    pub fn detect_anomalies(
+        &self,
+        metrics: &ComprehensivePerformanceMetrics,
+    ) -> CoreResult<Option<Vec<PerformanceAnomaly>>> {
         let mut anomalies = Vec::new();
 
         // CPU anomaly detection
@@ -1251,11 +1400,17 @@ impl PerformanceLearningModel {
         })
     }
 
-    pub fn update_with_metrics(&mut self, metrics: &ComprehensivePerformanceMetrics) -> CoreResult<()> {
+    pub fn update_with_metrics(
+        &mut self,
+        metrics: &ComprehensivePerformanceMetrics,
+    ) -> CoreResult<()> {
         // Simple learning logic - in a real implementation this would be more sophisticated
         let pattern = PerformancePattern {
             cpu_range: (metrics.cpu_utilization - 0.1, metrics.cpu_utilization + 0.1),
-            memory_range: (metrics.memory_utilization - 0.1, metrics.memory_utilization + 0.1),
+            memory_range: (
+                metrics.memory_utilization - 0.1,
+                metrics.memory_utilization + 0.1,
+            ),
             expected_throughput: metrics.operations_per_second,
             confidence: 0.7,
         };
@@ -1402,7 +1557,8 @@ impl TimeSeriesModel {
         // Simple trend calculation
         let recent_data: Vec<_> = self.data.iter().rev().take(10).cloned().collect();
         if recent_data.len() >= 2 {
-            self.trend = (recent_data[0] - recent_data[recent_data.len() - 1]) / recent_data.len() as f64;
+            self.trend =
+                (recent_data[0] - recent_data[recent_data.len() - 1]) / recent_data.len() as f64;
         }
 
         Ok(())
@@ -1443,7 +1599,10 @@ impl CorrelationAnalyzer {
         }
     }
 
-    pub fn analyze_correlations(&mut self, data: &[ComprehensivePerformanceMetrics]) -> CoreResult<()> {
+    pub fn analyze_correlations(
+        &mut self,
+        data: &[ComprehensivePerformanceMetrics],
+    ) -> CoreResult<()> {
         if data.len() < 10 {
             return Ok(());
         }
@@ -1452,13 +1611,19 @@ impl CorrelationAnalyzer {
         let cpu_data: Vec<f64> = data.iter().map(|m| m.cpu_utilization).collect();
         let throughput_data: Vec<f64> = data.iter().map(|m| m.operations_per_second).collect();
         let cpu_throughput_correlation = self.calculate_correlation(&cpu_data, &throughput_data);
-        self.correlations.insert(("cpu".to_string(), "throughput".to_string()), cpu_throughput_correlation);
+        self.correlations.insert(
+            ("cpu".to_string(), "throughput".to_string()),
+            cpu_throughput_correlation,
+        );
 
         // Calculate correlation between memory and latency
         let memory_data: Vec<f64> = data.iter().map(|m| m.memory_utilization).collect();
         let latency_data: Vec<f64> = data.iter().map(|m| m.average_latency_ms).collect();
         let memory_latency_correlation = self.calculate_correlation(&memory_data, &latency_data);
-        self.correlations.insert(("memory".to_string(), "latency".to_string()), memory_latency_correlation);
+        self.correlations.insert(
+            ("memory".to_string(), "latency".to_string()),
+            memory_latency_correlation,
+        );
 
         Ok(())
     }
@@ -1472,7 +1637,9 @@ impl CorrelationAnalyzer {
         let mean_x = x.iter().sum::<f64>() / n;
         let mean_y = y.iter().sum::<f64>() / n;
 
-        let numerator: f64 = x.iter().zip(y.iter())
+        let numerator: f64 = x
+            .iter()
+            .zip(y.iter())
             .map(|(xi, yi)| (xi - mean_x) * (yi - mean_y))
             .sum();
 
@@ -1540,10 +1707,10 @@ impl PatternDetector {
             }
 
             let first_half = &data[0..period];
-            let second_half = &data[period..2*period];
-            
+            let second_half = &data[period..2 * period];
+
             let correlation = self.calculate_simple_correlation(first_half, second_half);
-            
+
             if correlation > best_correlation && correlation > 0.7 {
                 best_correlation = correlation;
                 best_period = Some(period);
@@ -1561,7 +1728,9 @@ impl PatternDetector {
         let mean_x = x.iter().sum::<f64>() / x.len() as f64;
         let mean_y = y.iter().sum::<f64>() / y.len() as f64;
 
-        let numerator: f64 = x.iter().zip(y.iter())
+        let numerator: f64 = x
+            .iter()
+            .zip(y.iter())
             .map(|(xi, yi)| (xi - mean_x) * (yi - mean_y))
             .sum();
 
@@ -1672,15 +1841,15 @@ impl NotificationChannel {
             NotificationChannelType::Email => {
                 // Send email notification
                 println!("EMAIL ALERT: {} - {:?}", alert_name, severity);
-            },
+            }
             NotificationChannelType::Slack => {
                 // Send Slack notification
                 println!("SLACK ALERT: {} - {:?}", alert_name, severity);
-            },
+            }
             NotificationChannelType::Webhook => {
                 // Send webhook notification
                 println!("WEBHOOK ALERT: {} - {:?}", alert_name, severity);
-            },
+            }
         }
 
         Ok(())
@@ -1721,7 +1890,7 @@ mod tests {
     fn test_metrics_collection() {
         let mut collector = MetricsCollector::new().unwrap();
         let metrics = collector.collect_comprehensive_metrics().unwrap();
-        
+
         assert!(metrics.cpu_utilization >= 0.0);
         assert!(metrics.memory_utilization >= 0.0);
     }
@@ -1753,7 +1922,7 @@ mod tests {
         let mut model = TimeSeriesModel::new();
         let data = vec![0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
         model.update(data).unwrap();
-        
+
         let predictions = model.predict_next(3);
         assert_eq!(predictions.len(), 3);
     }
@@ -1761,7 +1930,7 @@ mod tests {
     #[test]
     fn test_correlation_analysis() {
         let mut analyzer = CorrelationAnalyzer::new();
-        
+
         // Create test data
         let mut test_data = Vec::new();
         for i in 0..20 {

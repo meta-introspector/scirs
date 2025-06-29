@@ -166,7 +166,7 @@ impl LinearDiscriminantAnalysis {
         }
 
         // Compute class statistics
-        let (class_means, class_priors, class_counts) =
+        let (class_means, class_priors, _class_counts) =
             self.compute_class_statistics(x, y, &unique_classes)?;
 
         // Compute within-class and between-class scatter matrices

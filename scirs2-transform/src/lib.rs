@@ -88,7 +88,7 @@ pub mod monitoring;
 // Re-export important types and functions
 pub use decomposition::{DictionaryLearning, NMF};
 pub use encoding::{
-    BinaryEncoder, EncodedOutput, FrequencyEncoder, OneHotEncoder, OrdinalEncoder, SparseMatrix, 
+    BinaryEncoder, EncodedOutput, FrequencyEncoder, OneHotEncoder, OrdinalEncoder, SparseMatrix,
     TargetEncoder, WOEEncoder,
 };
 pub use error::{Result, TransformError};

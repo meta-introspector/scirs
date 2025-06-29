@@ -59,12 +59,12 @@ impl DerivationSession {
             difficulty_level: difficulty,
         }
     }
-    
+
     fn progress_percentage(&self) -> f64 {
         let completed = self.completed_steps.iter().filter(|&&x| x).count();
         (completed as f64 / self.steps.len() as f64) * 100.0
     }
-    
+
     fn is_complete(&self) -> bool {
         self.completed_steps.iter().all(|&x| x)
     }
@@ -73,20 +73,20 @@ impl DerivationSession {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("📚 Guided Derivation Studio for Special Functions");
     println!("================================================\n");
-    
+
     println!("🎯 Master mathematical derivations through guided exploration!");
     println!("Each derivation is broken down into digestible steps with hints and validation.\n");
-    
+
     loop {
         display_derivation_menu();
         let choice = get_user_input("Choose a derivation (1-8, or 'q' to quit): ")?;
-        
+
         if choice.to_lowercase() == "q" {
             println!("👋 Thank you for using the Guided Derivation Studio!");
             println!("Keep exploring the beautiful mathematics of special functions!");
             break;
         }
-        
+
         match choice.parse::<u32>() {
             Ok(1) => gamma_half_derivation()?,
             Ok(2) => stirling_approximation_derivation()?,
@@ -99,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             _ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
-    
+
     Ok(())
 }
 
@@ -119,7 +119,7 @@ fn display_derivation_menu() {
 fn gamma_half_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 Derivation: Γ(1/2) = √π");
     println!("===========================\n");
-    
+
     let steps = vec![
         DerivationStep {
             description: "Start with the gamma function definition".to_string(),
@@ -142,7 +142,7 @@ fn gamma_half_derivation() -> Result<(), Box<dyn std::error::Error>> {
             ],
             difficulty_level: 1,
         },
-        
+
         DerivationStep {
             description: "Apply the substitution t = u²".to_string(),
             mathematical_content: "Let t = u², then dt = 2u du\nΓ(1/2) = ∫₀^∞ (u²)^(-1/2) e^(-u²) · 2u du = ∫₀^∞ u^(-1) e^(-u²) · 2u du = 2∫₀^∞ e^(-u²) du".to_string(),
@@ -165,7 +165,7 @@ fn gamma_half_derivation() -> Result<(), Box<dyn std::error::Error>> {
             ],
             difficulty_level: 2,
         },
-        
+
         DerivationStep {
             description: "Recognize the Gaussian integral".to_string(),
             mathematical_content: "We know that ∫_{-∞}^∞ e^(-u²) du = √π (the famous Gaussian integral)\nBy symmetry: ∫₀^∞ e^(-u²) du = (1/2)√π".to_string(),
@@ -189,7 +189,7 @@ fn gamma_half_derivation() -> Result<(), Box<dyn std::error::Error>> {
             ],
             difficulty_level: 2,
         },
-        
+
         DerivationStep {
             description: "Complete the calculation".to_string(),
             mathematical_content: "Therefore: Γ(1/2) = 2 · (1/2)√π = √π ✓\n\nThis beautiful result connects the gamma function to π!".to_string(),
@@ -211,7 +211,7 @@ fn gamma_half_derivation() -> Result<(), Box<dyn std::error::Error>> {
             difficulty_level: 1,
         },
     ];
-    
+
     let session = DerivationSession::new("Γ(1/2) = √π".to_string(), steps, 1);
     run_derivation_session(session)
 }
@@ -219,7 +219,7 @@ fn gamma_half_derivation() -> Result<(), Box<dyn std::error::Error>> {
 fn stirling_approximation_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Derivation: Stirling's Approximation");
     println!("=======================================\n");
-    
+
     let steps = vec![
         DerivationStep {
             description: "Express ln Γ(z) using the integral representation".to_string(),
@@ -243,7 +243,7 @@ fn stirling_approximation_derivation() -> Result<(), Box<dyn std::error::Error>>
             ],
             difficulty_level: 3,
         },
-        
+
         DerivationStep {
             description: "Find the saddle point (maximum of the exponent)".to_string(),
             mathematical_content: "To find the maximum of f(t) = (z-1)ln t - t:\nf'(t) = (z-1)/t - 1 = 0\n\nSolving: (z-1)/t = 1 ⟹ t₀ = z-1\n\nSecond derivative: f''(t₀) = -(z-1)/t₀² = -1/(z-1)".to_string(),
@@ -265,7 +265,7 @@ fn stirling_approximation_derivation() -> Result<(), Box<dyn std::error::Error>>
             ],
             difficulty_level: 3,
         },
-        
+
         DerivationStep {
             description: "Apply the method of steepest descent".to_string(),
             mathematical_content: "Expand around t₀: f(t) ≈ f(t₀) + (1/2)f''(t₀)(t-t₀)²\n\nf(t₀) = (z-1)ln(z-1) - (z-1)\nf''(t₀) = -1/(z-1)\n\nThe integral becomes: ∫ e^(f(t₀)) e^(-1/2 · 1/(z-1) · (t-t₀)²) dt".to_string(),
@@ -288,7 +288,7 @@ fn stirling_approximation_derivation() -> Result<(), Box<dyn std::error::Error>>
             ],
             difficulty_level: 4,
         },
-        
+
         DerivationStep {
             description: "Evaluate the Gaussian integral and derive Stirling's formula".to_string(),
             mathematical_content: "∫_{-∞}^∞ e^(-1/2 · 1/(z-1) · u²) du = √(2π(z-1))\n\nTherefore: Γ(z) ≈ e^((z-1)ln(z-1) - (z-1)) √(2π(z-1))\n= √(2π(z-1)) ((z-1)/e)^(z-1)\n\nFor large z: Γ(z) ≈ √(2π/z) (z/e)^z".to_string(),
@@ -312,7 +312,7 @@ fn stirling_approximation_derivation() -> Result<(), Box<dyn std::error::Error>>
             difficulty_level: 4,
         },
     ];
-    
+
     let session = DerivationSession::new("Stirling's Approximation".to_string(), steps, 3);
     run_derivation_session(session)
 }
@@ -320,7 +320,7 @@ fn stirling_approximation_derivation() -> Result<(), Box<dyn std::error::Error>>
 fn bessel_generating_function_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 Derivation: Bessel Function Generating Function");
     println!("=================================================\n");
-    
+
     let steps = vec![
         DerivationStep {
             description: "Start with the exponential generating function".to_string(),
@@ -344,7 +344,7 @@ fn bessel_generating_function_derivation() -> Result<(), Box<dyn std::error::Err
             ],
             difficulty_level: 3,
         },
-        
+
         DerivationStep {
             description: "Expand the exponential function".to_string(),
             mathematical_content: "G(x,t) = exp(x/2 · (t - 1/t)) = exp(xt/2) · exp(-x/(2t))\n\n= [Σ_{m=0}^∞ (xt/2)^m/m!] · [Σ_{k=0}^∞ (-x/(2t))^k/k!]\n\n= [Σ_{m=0}^∞ (x/2)^m t^m/m!] · [Σ_{k=0}^∞ (-1)^k (x/2)^k t^(-k)/k!]".to_string(),
@@ -367,7 +367,7 @@ fn bessel_generating_function_derivation() -> Result<(), Box<dyn std::error::Err
             ],
             difficulty_level: 4,
         },
-        
+
         DerivationStep {
             description: "Collect coefficients of t^n".to_string(),
             mathematical_content: "Coefficient of t^n:\nΣ_{m} (x/2)^m/m! · (-1)^(m-n) (x/2)^(m-n)/(m-n)!\n\nwhere the sum is over m ≥ max(0, n) and m-n ≥ 0.\n\nThis gives: J_n(x) = (x/2)^n Σ_{k=0}^∞ (-1)^k (x/2)^(2k)/(k!(n+k)!)".to_string(),
@@ -390,7 +390,7 @@ fn bessel_generating_function_derivation() -> Result<(), Box<dyn std::error::Err
             ],
             difficulty_level: 4,
         },
-        
+
         DerivationStep {
             description: "Verify the result and explore consequences".to_string(),
             mathematical_content: "The generating function gives us:\nexp(x/2(t - 1/t)) = Σ_{n=-∞}^∞ J_n(x) t^n\n\nConsequences:\n• J_{-n}(x) = (-1)^n J_n(x) (from t → 1/t symmetry)\n• Addition formula for Bessel functions\n• Recurrence relations".to_string(),
@@ -414,7 +414,7 @@ fn bessel_generating_function_derivation() -> Result<(), Box<dyn std::error::Err
             difficulty_level: 3,
         },
     ];
-    
+
     let session = DerivationSession::new("Bessel Generating Function".to_string(), steps, 3);
     run_derivation_session(session)
 }
@@ -422,7 +422,7 @@ fn bessel_generating_function_derivation() -> Result<(), Box<dyn std::error::Err
 fn error_function_series_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Derivation: Error Function Series Expansion");
     println!("===============================================\n");
-    
+
     let steps = vec![
         DerivationStep {
             description: "Start with the definition of the error function".to_string(),
@@ -446,7 +446,7 @@ fn error_function_series_derivation() -> Result<(), Box<dyn std::error::Error>> 
             ],
             difficulty_level: 1,
         },
-        
+
         DerivationStep {
             description: "Expand e^(-t²) as a power series".to_string(),
             mathematical_content: "e^(-t²) = Σ_{n=0}^∞ (-t²)^n/n! = Σ_{n=0}^∞ (-1)^n t^(2n)/n!\n\nThis is valid for all t ∈ ℂ (entire function).".to_string(),
@@ -469,7 +469,7 @@ fn error_function_series_derivation() -> Result<(), Box<dyn std::error::Error>> 
             ],
             difficulty_level: 2,
         },
-        
+
         DerivationStep {
             description: "Integrate term by term".to_string(),
             mathematical_content: "erf(x) = (2/√π) ∫₀ˣ [Σ_{n=0}^∞ (-1)^n t^(2n)/n!] dt\n\n= (2/√π) Σ_{n=0}^∞ (-1)^n/n! ∫₀ˣ t^(2n) dt\n\n= (2/√π) Σ_{n=0}^∞ (-1)^n/n! · x^(2n+1)/(2n+1)".to_string(),
@@ -492,7 +492,7 @@ fn error_function_series_derivation() -> Result<(), Box<dyn std::error::Error>> 
             ],
             difficulty_level: 2,
         },
-        
+
         DerivationStep {
             description: "Write the final series and verify".to_string(),
             mathematical_content: "erf(x) = (2/√π) Σ_{n=0}^∞ (-1)^n x^(2n+1)/(n!(2n+1))\n\nExpanded:\nerf(x) = (2/√π)[x - x³/3 + x⁵/(5·2!) - x⁷/(7·3!) + ...]\n\nVerification: erf'(x) = (2/√π)e^(-x²) ✓".to_string(),
@@ -516,7 +516,7 @@ fn error_function_series_derivation() -> Result<(), Box<dyn std::error::Error>> 
             difficulty_level: 2,
         },
     ];
-    
+
     let session = DerivationSession::new("Error Function Series".to_string(), steps, 1);
     run_derivation_session(session)
 }
@@ -524,7 +524,7 @@ fn error_function_series_derivation() -> Result<(), Box<dyn std::error::Error>> 
 fn legendre_orthogonality_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📐 Derivation: Legendre Polynomial Orthogonality");
     println!("================================================\n");
-    
+
     let steps = vec![
         DerivationStep {
             description: "Start with Legendre's differential equation".to_string(),
@@ -548,7 +548,7 @@ fn legendre_orthogonality_derivation() -> Result<(), Box<dyn std::error::Error>>
             ],
             difficulty_level: 4,
         },
-        
+
         DerivationStep {
             description: "Apply the orthogonality theorem for Sturm-Liouville problems".to_string(),
             mathematical_content: "For distinct eigenvalues λ_m ≠ λ_n, the eigenfunctions satisfy:\n\n∫_{-1}^1 P_m(x) P_n(x) w(x) dx = 0\n\nwhere w(x) = 1 for Legendre polynomials.\n\nSince λ_m = m(m+1) ≠ n(n+1) = λ_n for m ≠ n, we have orthogonality.".to_string(),
@@ -571,7 +571,7 @@ fn legendre_orthogonality_derivation() -> Result<(), Box<dyn std::error::Error>>
             ],
             difficulty_level: 4,
         },
-        
+
         DerivationStep {
             description: "Calculate the normalization integral".to_string(),
             mathematical_content: "For the diagonal case m = n:\n\n∫_{-1}^1 [P_n(x)]² dx = ?\n\nUsing Rodrigues' formula: P_n(x) = (1/2ⁿn!) dⁿ/dxⁿ[(x²-1)ⁿ]\n\nBy repeated integration by parts:\n∫_{-1}^1 [P_n(x)]² dx = 2/(2n+1)".to_string(),
@@ -594,7 +594,7 @@ fn legendre_orthogonality_derivation() -> Result<(), Box<dyn std::error::Error>>
             ],
             difficulty_level: 5,
         },
-        
+
         DerivationStep {
             description: "State the complete orthogonality relation".to_string(),
             mathematical_content: "The complete orthogonality relation for Legendre polynomials is:\n\n∫_{-1}^1 P_m(x) P_n(x) dx = (2/(2n+1)) δ_{mn}\n\nwhere δ_{mn} is the Kronecker delta.\n\nThis makes {P_n(x)} an orthogonal basis for L²[-1,1].".to_string(),
@@ -618,7 +618,7 @@ fn legendre_orthogonality_derivation() -> Result<(), Box<dyn std::error::Error>>
             difficulty_level: 3,
         },
     ];
-    
+
     let session = DerivationSession::new("Legendre Orthogonality".to_string(), steps, 4);
     run_derivation_session(session)
 }
@@ -626,7 +626,7 @@ fn legendre_orthogonality_derivation() -> Result<(), Box<dyn std::error::Error>>
 fn hypergeometric_integral_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔢 Derivation: Hypergeometric Integral Representation");
     println!("====================================================\n");
-    
+
     let steps = vec![
         DerivationStep {
             description: "Start with the beta function integral".to_string(),
@@ -650,7 +650,7 @@ fn hypergeometric_integral_derivation() -> Result<(), Box<dyn std::error::Error>
             ],
             difficulty_level: 4,
         },
-        
+
         DerivationStep {
             description: "Expand (1-zt)^(-a) using the binomial series".to_string(),
             mathematical_content: "(1-zt)^(-a) = Σ_{n=0}^∞ (a)_n (zt)^n/n!\n\nwhere (a)_n = a(a+1)...(a+n-1) is the Pochhammer symbol.\n\nSubstituting:\n∫₀¹ t^(b-1)(1-t)^(c-b-1)(1-zt)^(-a) dt = Σ_{n=0}^∞ (a)_n z^n/n! ∫₀¹ t^(b+n-1)(1-t)^(c-b-1) dt".to_string(),
@@ -673,7 +673,7 @@ fn hypergeometric_integral_derivation() -> Result<(), Box<dyn std::error::Error>
             ],
             difficulty_level: 4,
         },
-        
+
         DerivationStep {
             description: "Evaluate the beta function integrals".to_string(),
             mathematical_content: "Each integral is a beta function:\n∫₀¹ t^(b+n-1)(1-t)^(c-b-1) dt = B(b+n, c-b) = Γ(b+n)Γ(c-b)/Γ(c+n)\n\nUsing the identity Γ(z+n) = (z)_n Γ(z):\nΓ(b+n) = (b)_n Γ(b)\nΓ(c+n) = (c)_n Γ(c)\n\nTherefore: B(b+n, c-b) = (b)_n Γ(b) Γ(c-b)/[(c)_n Γ(c)]".to_string(),
@@ -696,7 +696,7 @@ fn hypergeometric_integral_derivation() -> Result<(), Box<dyn std::error::Error>
             ],
             difficulty_level: 5,
         },
-        
+
         DerivationStep {
             description: "Complete the derivation".to_string(),
             mathematical_content: "Putting everything together:\n\n₂F₁(a,b;c;z) = Σ_{n=0}^∞ (a)_n (b)_n z^n/[(c)_n n!]\n\n= (Γ(c)/[Γ(b)Γ(c-b)]) Σ_{n=0}^∞ (a)_n z^n/n! · (b)_n Γ(b) Γ(c-b)/[(c)_n Γ(c)]\n\n= (Γ(c)/[Γ(b)Γ(c-b)]) ∫₀¹ t^(b-1)(1-t)^(c-b-1)(1-zt)^(-a) dt ✓\n\nThis is Euler's integral representation!".to_string(),
@@ -720,7 +720,7 @@ fn hypergeometric_integral_derivation() -> Result<(), Box<dyn std::error::Error>
             difficulty_level: 4,
         },
     ];
-    
+
     let session = DerivationSession::new("Hypergeometric Integral".to_string(), steps, 4);
     run_derivation_session(session)
 }
@@ -728,9 +728,9 @@ fn hypergeometric_integral_derivation() -> Result<(), Box<dyn std::error::Error>
 fn spherical_harmonics_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌍 Expert Derivation: Spherical Harmonics from Laplace Equation");
     println!("===============================================================\n");
-    
+
     println!("⚠️ Expert Level: This derivation requires advanced knowledge of PDEs and complex analysis.");
-    
+
     let steps = vec![
         DerivationStep {
             description: "Start with Laplace's equation in spherical coordinates".to_string(),
@@ -754,7 +754,7 @@ fn spherical_harmonics_derivation() -> Result<(), Box<dyn std::error::Error>> {
             ],
             difficulty_level: 5,
         },
-        
+
         DerivationStep {
             description: "Separate variables and derive the angular equation".to_string(),
             mathematical_content: "Substituting Ψ = R(r)Y(θ,φ) and dividing by RY:\n\n(1/R)d/dr[r²dR/dr] = -(1/Y)[(1/sin θ)∂/∂θ(sin θ ∂Y/∂θ) + (1/sin²θ)∂²Y/∂φ²]\n\nSince LHS depends only on r and RHS only on (θ,φ), both equal a constant ℓ(ℓ+1):\n\n(1/sin θ)∂/∂θ(sin θ ∂Y/∂θ) + (1/sin²θ)∂²Y/∂φ² + ℓ(ℓ+1)Y = 0".to_string(),
@@ -777,7 +777,7 @@ fn spherical_harmonics_derivation() -> Result<(), Box<dyn std::error::Error>> {
             ],
             difficulty_level: 5,
         },
-        
+
         DerivationStep {
             description: "Further separate θ and φ variables".to_string(),
             mathematical_content: "Let Y(θ,φ) = Θ(θ)Φ(φ). The φ equation gives:\n\nd²Φ/dφ² = -m²Φ\n\nSolution: Φ(φ) = e^(imφ)\n\nPeriodicity requires Φ(φ+2π) = Φ(φ), so m ∈ ℤ.\n\nThe θ equation becomes:\n(1/sin θ)d/dθ[sin θ dΘ/dθ] + [ℓ(ℓ+1) - m²/sin²θ]Θ = 0".to_string(),
@@ -800,7 +800,7 @@ fn spherical_harmonics_derivation() -> Result<(), Box<dyn std::error::Error>> {
             ],
             difficulty_level: 4,
         },
-        
+
         DerivationStep {
             description: "Solve the associated Legendre equation".to_string(),
             mathematical_content: "Substituting x = cos θ transforms the θ equation to:\n\n(1-x²)d²Θ/dx² - 2x dΘ/dx + [ℓ(ℓ+1) - m²/(1-x²)]Θ = 0\n\nFor solutions finite at x = ±1, we need:\n• ℓ ∈ {0,1,2,...} (non-negative integers)\n• |m| ≤ ℓ\n\nSolutions: Θ(θ) = P_ℓ^m(cos θ) (associated Legendre polynomials)".to_string(),
@@ -823,7 +823,7 @@ fn spherical_harmonics_derivation() -> Result<(), Box<dyn std::error::Error>> {
             ],
             difficulty_level: 5,
         },
-        
+
         DerivationStep {
             description: "Construct the spherical harmonics and normalize".to_string(),
             mathematical_content: "The spherical harmonics are:\n\nY_ℓ^m(θ,φ) = N_ℓ^m P_ℓ^m(cos θ) e^(imφ)\n\nNormalization: ∫₀^(2π) ∫₀^π |Y_ℓ^m|² sin θ dθ dφ = 1\n\nThis gives: N_ℓ^m = √[(2ℓ+1)/(4π) · (ℓ-m)!/(ℓ+m)!]\n\nFinal result:\nY_ℓ^m(θ,φ) = √[(2ℓ+1)/(4π) · (ℓ-m)!/(ℓ+m)!] P_ℓ^m(cos θ) e^(imφ)".to_string(),
@@ -847,7 +847,7 @@ fn spherical_harmonics_derivation() -> Result<(), Box<dyn std::error::Error>> {
             difficulty_level: 4,
         },
     ];
-    
+
     let session = DerivationSession::new("Spherical Harmonics".to_string(), steps, 5);
     run_derivation_session(session)
 }
@@ -855,9 +855,9 @@ fn spherical_harmonics_derivation() -> Result<(), Box<dyn std::error::Error>> {
 fn wright_function_asymptotic_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧮 Expert Derivation: Wright Function Asymptotic Behavior");
     println!("=========================================================\n");
-    
+
     println!("⚠️ Expert Level: Advanced complex analysis and asymptotic methods required.");
-    
+
     let steps = vec![
         DerivationStep {
             description: "Start with the Mellin transform representation".to_string(),
@@ -881,7 +881,7 @@ fn wright_function_asymptotic_derivation() -> Result<(), Box<dyn std::error::Err
             ],
             difficulty_level: 5,
         },
-        
+
         DerivationStep {
             description: "Find the saddle point".to_string(),
             mathematical_content: "The exponent in the integrand is:\nf(s) = ln Γ(-s) + ln Γ(β+αs) + s ln(-z)\n\nSaddle point condition: f'(s₀) = 0\n-ψ(-s₀) + α ψ(β+αs₀) + ln(-z) = 0\n\nwhere ψ(z) = Γ'(z)/Γ(z) is the digamma function.\n\nFor large |z|: s₀ ≈ (z/α)^(1/α)/α (leading approximation)".to_string(),
@@ -904,7 +904,7 @@ fn wright_function_asymptotic_derivation() -> Result<(), Box<dyn std::error::Err
             ],
             difficulty_level: 5,
         },
-        
+
         DerivationStep {
             description: "Apply the saddle-point approximation".to_string(),
             mathematical_content: "Near the saddle point s₀:\nf(s) ≈ f(s₀) + (1/2)f''(s₀)(s-s₀)²\n\nThe integral becomes:\nΦ(α,β;z) ≈ (1/2πi) e^(f(s₀)) ∫ e^((1/2)f''(s₀)(s-s₀)²) ds\n\nEvaluating the Gaussian integral:\nΦ(α,β;z) ≈ e^(f(s₀)) / √(2π|f''(s₀)|)".to_string(),
@@ -927,7 +927,7 @@ fn wright_function_asymptotic_derivation() -> Result<(), Box<dyn std::error::Err
             ],
             difficulty_level: 5,
         },
-        
+
         DerivationStep {
             description: "Derive the final asymptotic formula".to_string(),
             mathematical_content: "Computing f(s₀) with s₀ ≈ (z/α)^(1/α)/α:\n\nf(s₀) ≈ (1/α)(z/α)^(1/α) + lower order terms\n\nThis gives the asymptotic formula:\n\nΦ(α,β;z) ∼ (1/√(2πα)) z^((β-1)/(2α)) exp((1/α)(z/α)^(1/α))\n\nfor large |z| and α > 0.\n\nThis shows exponential growth faster than any polynomial!".to_string(),
@@ -951,29 +951,33 @@ fn wright_function_asymptotic_derivation() -> Result<(), Box<dyn std::error::Err
             difficulty_level: 5,
         },
     ];
-    
+
     let session = DerivationSession::new("Wright Function Asymptotics".to_string(), steps, 5);
     run_derivation_session(session)
 }
 
-fn run_derivation_session(mut session: DerivationSession) -> Result<(), Box<dyn std::error::Error>> {
+fn run_derivation_session(
+    mut session: DerivationSession,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Starting derivation: {}", session.title);
     println!("Difficulty level: {}/5", session.difficulty_level);
     println!("Total steps: {}\n", session.steps.len());
-    
+
     while !session.is_complete() {
         display_session_status(&session);
-        
+
         if session.current_step < session.steps.len() {
             let step = &session.steps[session.current_step].clone();
-            
-            println!("📖 Step {} of {}: {}", 
-                    session.current_step + 1, 
-                    session.steps.len(), 
-                    step.description);
+
+            println!(
+                "📖 Step {} of {}: {}",
+                session.current_step + 1,
+                session.steps.len(),
+                step.description
+            );
             println!("\n📝 Mathematical Content:");
             println!("{}", step.mathematical_content);
-            
+
             // Interactive component
             println!("\n🎯 Choose an action:");
             println!("1. 💡 Get a hint");
@@ -981,9 +985,9 @@ fn run_derivation_session(mut session: DerivationSession) -> Result<(), Box<dyn 
             println!("3. ❓ Answer validation questions");
             println!("4. ✅ Mark step as understood and continue");
             println!("5. 📊 Show progress and summary");
-            
+
             let choice = get_user_input("Your choice (1-5): ")?;
-            
+
             match choice.parse::<u32>() {
                 Ok(1) => show_hints(&step, &mut session),
                 Ok(2) => show_alternatives(&step),
@@ -992,7 +996,7 @@ fn run_derivation_session(mut session: DerivationSession) -> Result<(), Box<dyn 
                     session.completed_steps[session.current_step] = true;
                     session.current_step += 1;
                     println!("✅ Step completed! Moving to next step...\n");
-                },
+                }
                 Ok(5) => show_session_progress(&session),
                 _ => println!("❌ Invalid choice. Please try again."),
             }
@@ -1000,48 +1004,60 @@ fn run_derivation_session(mut session: DerivationSession) -> Result<(), Box<dyn 
             break;
         }
     }
-    
+
     // Session completion
     if session.is_complete() {
-        println!("\n🎉 Congratulations! You've completed the derivation: {}", session.title);
+        println!(
+            "\n🎉 Congratulations! You've completed the derivation: {}",
+            session.title
+        );
         let duration = session.start_time.elapsed();
-        println!("⏱️ Time taken: {:.1} minutes", duration.as_secs_f64() / 60.0);
+        println!(
+            "⏱️ Time taken: {:.1} minutes",
+            duration.as_secs_f64() / 60.0
+        );
         println!("💡 Hints used: {}", session.hints_used);
-        
+
         // Final summary
         println!("\n📚 What you've learned:");
         println!("• Mathematical rigor in step-by-step derivations");
         println!("• Connection between different mathematical concepts");
         println!("• Alternative approaches to the same problem");
         println!("• Applications and significance of the result");
-        
+
         let difficulty_bonus = session.difficulty_level * 10;
         let time_bonus = if duration.as_secs() < 300 { 20 } else { 0 }; // 5-minute bonus
         let hint_penalty = session.hints_used * 5;
         let total_score = (100 + difficulty_bonus + time_bonus).saturating_sub(hint_penalty);
-        
+
         println!("\n🏆 Session Score: {} points", total_score);
         println!("  Base score: 100");
         println!("  Difficulty bonus: +{}", difficulty_bonus);
-        if time_bonus > 0 { println!("  Speed bonus: +{}", time_bonus); }
-        if hint_penalty > 0 { println!("  Hint penalty: -{}", hint_penalty); }
+        if time_bonus > 0 {
+            println!("  Speed bonus: +{}", time_bonus);
+        }
+        if hint_penalty > 0 {
+            println!("  Hint penalty: -{}", hint_penalty);
+        }
     }
-    
+
     Ok(())
 }
 
 fn display_session_status(session: &DerivationSession) {
-    println!("📊 Progress: {:.1}% ({}/{} steps completed)", 
-             session.progress_percentage(),
-             session.completed_steps.iter().filter(|&&x| x).count(),
-             session.steps.len());
-    
+    println!(
+        "📊 Progress: {:.1}% ({}/{} steps completed)",
+        session.progress_percentage(),
+        session.completed_steps.iter().filter(|&&x| x).count(),
+        session.steps.len()
+    );
+
     // Progress bar
     let completed = session.completed_steps.iter().filter(|&&x| x).count();
     let total = session.steps.len();
     let bar_length = 20;
     let filled = (completed * bar_length) / total;
-    
+
     print!("Progress: [");
     for i in 0..bar_length {
         if i < filled {
@@ -1077,26 +1093,25 @@ fn run_validation_questions(step: &DerivationStep) -> Result<(), Box<dyn std::er
         println!("ℹ️ No validation questions for this step.");
         return Ok(());
     }
-    
+
     println!("\n❓ Validation Questions:");
-    
+
     for (i, question) in step.validation_questions.iter().enumerate() {
         println!("\nQuestion {}: {}", i + 1, question.question);
-        
+
         for (j, option) in question.options.iter().enumerate() {
             println!("  {}. {}", (b'a' + j as u8) as char, option);
         }
-        
+
         let answer = get_user_input("Your answer: ")?;
-        let answer_index = answer.to_lowercase().chars().next()
-            .and_then(|c| {
-                if c >= 'a' && c <= 'z' {
-                    Some((c as u8 - b'a') as usize)
-                } else {
-                    None
-                }
-            });
-        
+        let answer_index = answer.to_lowercase().chars().next().and_then(|c| {
+            if c >= 'a' && c <= 'z' {
+                Some((c as u8 - b'a') as usize)
+            } else {
+                None
+            }
+        });
+
         if let Some(idx) = answer_index {
             if idx == question.correct_answer {
                 println!("✅ Correct! {}", question.explanation);
@@ -1107,7 +1122,7 @@ fn run_validation_questions(step: &DerivationStep) -> Result<(), Box<dyn std::er
             println!("❌ Invalid answer format. {}", question.explanation);
         }
     }
-    
+
     Ok(())
 }
 
@@ -1116,21 +1131,36 @@ fn show_session_progress(session: &DerivationSession) {
     println!("=========================");
     println!("Derivation: {}", session.title);
     println!("Difficulty: {}/5", session.difficulty_level);
-    println!("Time elapsed: {:.1} minutes", session.start_time.elapsed().as_secs_f64() / 60.0);
+    println!(
+        "Time elapsed: {:.1} minutes",
+        session.start_time.elapsed().as_secs_f64() / 60.0
+    );
     println!("Hints used: {}", session.hints_used);
     println!("Progress: {:.1}%", session.progress_percentage());
-    
+
     println!("\nStep Status:");
     for (i, completed) in session.completed_steps.iter().enumerate() {
-        let status = if *completed { "✅" } else if i == session.current_step { "▶️" } else { "⏳" };
-        println!("  Step {}: {} {}", i + 1, status, session.steps[i].description);
+        let status = if *completed {
+            "✅"
+        } else if i == session.current_step {
+            "▶️"
+        } else {
+            "⏳"
+        };
+        println!(
+            "  Step {}: {} {}",
+            i + 1,
+            status,
+            session.steps[i].description
+        );
     }
-    
+
     if !session.is_complete() {
-        let remaining = session.steps.len() - session.completed_steps.iter().filter(|&&x| x).count();
+        let remaining =
+            session.steps.len() - session.completed_steps.iter().filter(|&&x| x).count();
         println!("\n{} steps remaining.", remaining);
     }
-    
+
     println!();
 }
 

@@ -6,33 +6,25 @@
 use std::sync::Mutex;
 
 // Submodules for advanced parallel processing
-pub mod work_stealing;
 pub mod thread_pools;
+pub mod work_stealing;
 
 // Re-export submodule types
-pub use work_stealing::{
-    WorkStealingScheduler, WorkItem, SchedulerStats, StealingStrategy, 
-    LoadBalancingParams, WorkPriority, MatrixOperationType,
-    WorkloadCharacteristics, WorkComplexity
-};
 pub use thread_pools::{
-    ThreadPoolManager, ThreadPoolConfig, ThreadPoolProfile, ThreadPoolStats,
-    AffinityStrategy, OperationType, ScopedThreadPool, get_global_manager,
-    DecompositionType, IterativeSolverType,
+    get_global_manager, AffinityStrategy, DecompositionType, IterativeSolverType, OperationType,
+    ScopedThreadPool, ThreadPoolConfig, ThreadPoolManager, ThreadPoolProfile, ThreadPoolStats,
+};
+pub use work_stealing::{
+    LoadBalancingParams, MatrixOperationType, SchedulerStats, StealingStrategy, WorkComplexity,
+    WorkItem, WorkPriority, WorkStealingScheduler, WorkloadCharacteristics,
 };
 
 // Re-export matrix operations
 pub use work_stealing::matrix_ops::{
-    parallel_matvec_work_stealing,
-    parallel_gemm_work_stealing, 
-    parallel_cholesky_work_stealing,
-    parallel_qr_work_stealing,
+    parallel_band_solve, parallel_block_gemm, parallel_cholesky_work_stealing,
+    parallel_gemm_work_stealing, parallel_hessenberg_reduction, parallel_lu_work_stealing,
+    parallel_matvec_work_stealing, parallel_power_iteration, parallel_qr_work_stealing,
     parallel_svd_work_stealing,
-    parallel_lu_work_stealing,
-    parallel_power_iteration,
-    parallel_hessenberg_reduction,
-    parallel_block_gemm,
-    parallel_band_solve,
 };
 
 /// Global worker configuration

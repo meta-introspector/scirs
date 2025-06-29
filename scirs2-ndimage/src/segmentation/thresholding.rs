@@ -273,7 +273,8 @@ where
 
                         // Gaussian weight
                         let sigma = safe_usize_to_float(radius)? / safe_f64_to_float(2.0)?;
-                        let weight = (-dist * dist / (safe_f64_to_float(2.0)? * sigma * sigma)).exp();
+                        let weight =
+                            (-dist * dist / (safe_f64_to_float(2.0)? * sigma * sigma)).exp();
 
                         weighted_sum += val * weight;
                         weight_sum += weight;

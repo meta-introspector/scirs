@@ -418,13 +418,13 @@ pub struct LearnedOptimizerMetrics {
 pub struct AdvancedNeuralOptimizerFactory<A: Float> {
     /// Available optimizer types
     available_types: Vec<NeuralOptimizerType>,
-    
+
     /// Optimizer registry
     optimizer_registry: HashMap<String, Box<dyn NeuralOptimizerBuilder<A>>>,
-    
+
     /// Performance database
     performance_db: OptimizerPerformanceDatabase<A>,
-    
+
     /// Auto-selection criteria
     auto_selection: AutoSelectionCriteria<A>,
 }
@@ -432,11 +432,14 @@ pub struct AdvancedNeuralOptimizerFactory<A: Float> {
 /// Neural optimizer builder trait
 pub trait NeuralOptimizerBuilder<A: Float> {
     /// Build the neural optimizer
-    fn build(&self, config: &LearnedOptimizerConfig) -> Result<Box<dyn NeuralOptimizer<A>>, OptimizerError>;
-    
+    fn build(
+        &self,
+        config: &LearnedOptimizerConfig,
+    ) -> Result<Box<dyn NeuralOptimizer<A>>, OptimizerError>;
+
     /// Get optimizer metadata
     fn metadata(&self) -> NeuralOptimizerMetadata;
-    
+
     /// Estimate resource requirements
     fn estimate_resources(&self, config: &LearnedOptimizerConfig) -> ResourceEstimate;
 }
@@ -445,19 +448,19 @@ pub trait NeuralOptimizerBuilder<A: Float> {
 pub trait NeuralOptimizer<A: Float> {
     /// Perform optimization step
     fn step(&mut self, gradients: &Array1<A>) -> Result<Array1<A>, OptimizerError>;
-    
+
     /// Update meta-parameters
     fn meta_update(&mut self, meta_gradients: &Array1<A>) -> Result<(), OptimizerError>;
-    
+
     /// Adapt to new task
     fn adapt_to_task(&mut self, task_context: &TaskContext<A>) -> Result<(), OptimizerError>;
-    
+
     /// Get current state
     fn get_state(&self) -> OptimizerState<A>;
-    
+
     /// Set state
     fn set_state(&mut self, state: OptimizerState<A>) -> Result<(), OptimizerError>;
-    
+
     /// Get performance metrics
     fn get_metrics(&self) -> NeuralOptimizerMetrics<A>;
 }
@@ -551,19 +554,19 @@ pub struct ResourceEstimate {
 pub struct TaskContext<A: Float> {
     /// Task identifier
     pub task_id: String,
-    
+
     /// Task type
     pub task_type: TaskType,
-    
+
     /// Problem dimensions
     pub problem_dimensions: ProblemDimensions,
-    
+
     /// Task-specific features
     pub features: HashMap<String, A>,
-    
+
     /// Historical performance
     pub historical_performance: Vec<f64>,
-    
+
     /// Task constraints
     pub constraints: TaskConstraints<A>,
 }
@@ -595,13 +598,13 @@ pub struct ProblemDimensions {
 pub struct TaskConstraints<A: Float> {
     /// Time budget
     pub time_budget: Option<std::time::Duration>,
-    
+
     /// Memory budget
     pub memory_budget: Option<usize>,
-    
+
     /// Accuracy threshold
     pub accuracy_threshold: Option<A>,
-    
+
     /// Resource constraints
     pub resource_constraints: HashMap<String, A>,
 }
@@ -611,16 +614,16 @@ pub struct TaskConstraints<A: Float> {
 pub struct OptimizerState<A: Float> {
     /// Internal parameters
     pub parameters: HashMap<String, Array1<A>>,
-    
+
     /// Hidden states
     pub hidden_states: HashMap<String, Array2<A>>,
-    
+
     /// Memory buffers
     pub memory_buffers: HashMap<String, Array2<A>>,
-    
+
     /// Step count
     pub step_count: usize,
-    
+
     /// State metadata
     pub metadata: StateMetadata,
 }
@@ -639,13 +642,13 @@ pub struct StateMetadata {
 pub struct NeuralOptimizerMetrics<A: Float> {
     /// Performance metrics
     pub performance: PerformanceMetrics<A>,
-    
+
     /// Efficiency metrics
     pub efficiency: EfficiencyMetrics<A>,
-    
+
     /// Robustness metrics
     pub robustness: RobustnessMetrics<A>,
-    
+
     /// Interpretability metrics
     pub interpretability: InterpretabilityMetrics<A>,
 }
@@ -695,13 +698,13 @@ pub struct InterpretabilityMetrics<A: Float> {
 pub struct OptimizerPerformanceDatabase<A: Float> {
     /// Performance records
     performance_records: HashMap<String, Vec<PerformanceRecord<A>>>,
-    
+
     /// Benchmark results
     benchmark_results: HashMap<String, BenchmarkResults<A>>,
-    
+
     /// Meta-analysis results
     meta_analysis: HashMap<String, MetaAnalysisResults<A>>,
-    
+
     /// Database statistics
     statistics: DatabaseStatistics,
 }
@@ -711,16 +714,16 @@ pub struct OptimizerPerformanceDatabase<A: Float> {
 pub struct PerformanceRecord<A: Float> {
     /// Optimizer configuration
     pub config: LearnedOptimizerConfig,
-    
+
     /// Task context
     pub task_context: TaskContext<A>,
-    
+
     /// Performance metrics
     pub metrics: NeuralOptimizerMetrics<A>,
-    
+
     /// Timestamp
     pub timestamp: std::time::SystemTime,
-    
+
     /// Validation status
     pub validation_status: ValidationStatus,
 }
@@ -739,13 +742,13 @@ pub enum ValidationStatus {
 pub struct BenchmarkResults<A: Float> {
     /// Benchmark suite
     pub benchmark_suite: String,
-    
+
     /// Individual results
     pub individual_results: Vec<BenchmarkResult<A>>,
-    
+
     /// Aggregate statistics
     pub aggregate_stats: AggregateStatistics<A>,
-    
+
     /// Ranking information
     pub ranking: RankingInformation,
 }
@@ -755,16 +758,16 @@ pub struct BenchmarkResults<A: Float> {
 pub struct BenchmarkResult<A: Float> {
     /// Test name
     pub test_name: String,
-    
+
     /// Score
     pub score: A,
-    
+
     /// Relative performance
     pub relative_performance: A,
-    
+
     /// Confidence interval
     pub confidence_interval: (A, A),
-    
+
     /// Test metadata
     pub metadata: TestMetadata,
 }
@@ -831,13 +834,13 @@ pub enum RankingTrend {
 pub struct MetaAnalysisResults<A: Float> {
     /// Effect sizes
     pub effect_sizes: HashMap<String, A>,
-    
+
     /// Statistical significance
     pub significance_tests: HashMap<String, StatisticalTest<A>>,
-    
+
     /// Moderator analysis
     pub moderator_analysis: ModeratorAnalysis<A>,
-    
+
     /// Publication bias assessment
     pub publication_bias: PublicationBiasAssessment<A>,
 }
@@ -857,13 +860,13 @@ pub struct StatisticalTest<A: Float> {
 pub struct ModeratorAnalysis<A: Float> {
     /// Categorical moderators
     pub categorical_moderators: HashMap<String, Vec<A>>,
-    
+
     /// Continuous moderators
     pub continuous_moderators: HashMap<String, A>,
-    
+
     /// Interaction effects
     pub interaction_effects: HashMap<String, A>,
-    
+
     /// Explained variance
     pub explained_variance: A,
 }
@@ -873,13 +876,13 @@ pub struct ModeratorAnalysis<A: Float> {
 pub struct PublicationBiasAssessment<A: Float> {
     /// Funnel plot asymmetry
     pub funnel_plot_asymmetry: A,
-    
+
     /// Egger's test
     pub eggers_test: StatisticalTest<A>,
-    
+
     /// Trim and fill analysis
     pub trim_and_fill: TrimAndFillResults<A>,
-    
+
     /// File drawer number
     pub file_drawer_number: usize,
 }
@@ -908,16 +911,16 @@ pub struct DatabaseStatistics {
 pub struct AutoSelectionCriteria<A: Float> {
     /// Primary objectives
     pub primary_objectives: Vec<OptimizationObjective>,
-    
+
     /// Secondary objectives
     pub secondary_objectives: Vec<OptimizationObjective>,
-    
+
     /// Constraints
     pub constraints: Vec<OptimizationConstraint<A>>,
-    
+
     /// Preferences
     pub preferences: UserPreferences<A>,
-    
+
     /// Risk tolerance
     pub risk_tolerance: RiskTolerance,
 }
@@ -957,9 +960,9 @@ pub enum ConstraintType {
 /// Constraint priorities
 #[derive(Debug, Clone)]
 pub enum ConstraintPriority {
-    Hard,      // Must be satisfied
-    Soft,      // Preferred but not required
-    Flexible,  // Can be relaxed if necessary
+    Hard,     // Must be satisfied
+    Soft,     // Preferred but not required
+    Flexible, // Can be relaxed if necessary
 }
 
 /// User preferences
@@ -967,16 +970,16 @@ pub enum ConstraintPriority {
 pub struct UserPreferences<A: Float> {
     /// Preferred optimizer families
     pub preferred_families: Vec<NeuralOptimizerType>,
-    
+
     /// Avoided optimizer families
     pub avoided_families: Vec<NeuralOptimizerType>,
-    
+
     /// Complexity preference
     pub complexity_preference: ComplexityPreference,
-    
+
     /// Performance vs efficiency tradeoff
     pub performance_efficiency_tradeoff: A,
-    
+
     /// Novelty preference
     pub novelty_preference: NoveltyPreference,
 }
@@ -993,10 +996,10 @@ pub enum ComplexityPreference {
 /// Novelty preferences
 #[derive(Debug, Clone)]
 pub enum NoveltyPreference {
-    Conservative,  // Prefer well-tested optimizers
-    Moderate,      // Balance between tested and novel
-    Innovative,    // Prefer cutting-edge optimizers
-    Experimental,  // Willing to try experimental optimizers
+    Conservative, // Prefer well-tested optimizers
+    Moderate,     // Balance between tested and novel
+    Innovative,   // Prefer cutting-edge optimizers
+    Experimental, // Willing to try experimental optimizers
 }
 
 /// Risk tolerance levels
@@ -1025,16 +1028,12 @@ impl<A: Float> AdvancedNeuralOptimizerFactory<A> {
             auto_selection: AutoSelectionCriteria::default(),
         }
     }
-    
+
     /// Register optimizer builder
-    pub fn register_builder(
-        &mut self, 
-        name: String, 
-        builder: Box<dyn NeuralOptimizerBuilder<A>>
-    ) {
+    pub fn register_builder(&mut self, name: String, builder: Box<dyn NeuralOptimizerBuilder<A>>) {
         self.optimizer_registry.insert(name, builder);
     }
-    
+
     /// Auto-select optimal optimizer
     pub fn auto_select_optimizer(
         &self,
@@ -1045,18 +1044,17 @@ impl<A: Float> AdvancedNeuralOptimizerFactory<A> {
         // This is a simplified placeholder
         Ok("LSTM".to_string())
     }
-    
+
     /// Create optimizer
     pub fn create_optimizer(
         &self,
         optimizer_name: &str,
         config: &LearnedOptimizerConfig,
     ) -> Result<Box<dyn NeuralOptimizer<A>>, OptimizerError> {
-        let builder = self.optimizer_registry.get(optimizer_name)
-            .ok_or_else(|| OptimizerError::InvalidConfig(
-                format!("Unknown optimizer: {}", optimizer_name)
-            ))?;
-        
+        let builder = self.optimizer_registry.get(optimizer_name).ok_or_else(|| {
+            OptimizerError::InvalidConfig(format!("Unknown optimizer: {}", optimizer_name))
+        })?;
+
         builder.build(config)
     }
 }

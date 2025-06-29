@@ -1455,50 +1455,50 @@ pub mod advanced_visualization {
         ) -> Result<(Array1<f64>, Array2<f64>)> {
             let n = matrix.nrows();
             let num_eigenvalues = std::cmp::min(n, 20); // Compute up to 20 eigenvalues
-            
+
             let mut eigenvalues = Array1::zeros(num_eigenvalues);
             let mut eigenvectors = Array2::zeros((n, num_eigenvalues));
             let mut remaining_matrix = matrix.clone();
-            
+
             for k in 0..num_eigenvalues {
                 // Power iteration for the k-th eigenvalue
                 let mut v = Array1::from_vec(
-                    (0..n).map(|i| (i + k + 1) as f64).collect() // Simple initialization
+                    (0..n).map(|i| (i + k + 1) as f64).collect(), // Simple initialization
                 );
-                
+
                 // Normalize initial vector
                 let norm = v.iter().map(|&x| x * x).sum::<f64>().sqrt();
                 if norm > 1e-15 {
                     v.mapv_inplace(|x| x / norm);
                 }
-                
+
                 let mut eigenvalue = 0.0;
-                
+
                 // Power iteration
                 for _ in 0..1000 {
                     let v_new = remaining_matrix.dot(&v);
                     let v_new_norm = v_new.iter().map(|&x| x * x).sum::<f64>().sqrt();
-                    
+
                     if v_new_norm < 1e-15 {
                         break;
                     }
-                    
+
                     eigenvalue = v.dot(&v_new);
                     v.assign(&v_new);
                     v.mapv_inplace(|x| x / v_new_norm);
-                    
+
                     // Check convergence
                     let residual = &remaining_matrix.dot(&v) - eigenvalue * &v;
                     let residual_norm = residual.iter().map(|&x| x * x).sum::<f64>().sqrt();
-                    
+
                     if residual_norm < 1e-10 {
                         break;
                     }
                 }
-                
+
                 eigenvalues[k] = eigenvalue;
                 eigenvectors.column_mut(k).assign(&v);
-                
+
                 // Deflate the matrix: A' = A - λ * v * v^T
                 if eigenvalue.abs() > 1e-15 {
                     for i in 0..n {
@@ -1507,30 +1507,32 @@ pub mod advanced_visualization {
                         }
                     }
                 }
-                
+
                 // Check if remaining eigenvalues are small
                 let remaining_norm = remaining_matrix.iter().map(|&x| x * x).sum::<f64>().sqrt();
                 if remaining_norm < 1e-12 {
                     break;
                 }
             }
-            
+
             // Extend to full size matrices with zeros for unused eigenvalues/vectors
             let mut full_eigenvalues = Array1::zeros(n);
             let mut full_eigenvectors = Array2::zeros((n, n));
-            
+
             for i in 0..num_eigenvalues {
                 full_eigenvalues[i] = eigenvalues[i];
-                full_eigenvectors.column_mut(i).assign(&eigenvectors.column(i));
+                full_eigenvectors
+                    .column_mut(i)
+                    .assign(&eigenvectors.column(i));
             }
-            
+
             // Fill remaining eigenvectors with orthogonal vectors
             for i in num_eigenvalues..n {
                 let mut v = Array1::zeros(n);
                 v[i] = 1.0; // Standard basis vector
                 full_eigenvectors.column_mut(i).assign(&v);
             }
-            
+
             Ok((full_eigenvalues, full_eigenvectors))
         }
 
@@ -2185,7 +2187,6 @@ pub mod advanced_visualization {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use approx::assert_relative_eq;
 
         #[test]
         fn test_multi_dimensional_visualizer() {
@@ -2756,7 +2757,6 @@ pub mod specialized_visualizations {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use approx::assert_relative_eq;
 
         #[test]
         fn test_quantum_wavefunction_visualization() {
@@ -2905,26 +2905,25 @@ impl EnhancedPhaseSpacePlotter {
         time: &Array1<f64>,
         vector_field: Option<&dyn Fn(f64, f64) -> (f64, f64)>,
     ) -> Result<Enhanced2DPlot> {
-        let n_points = trajectory_x.len();
-        
+        let _n_points = trajectory_x.len();
+
         // Calculate trajectory properties using SIMD
-        let properties = self.calculate_trajectory_properties_simd(trajectory_x, trajectory_y, time)?;
-        
+        let properties =
+            self.calculate_trajectory_properties_simd(trajectory_x, trajectory_y, time)?;
+
         // Generate vector field if provided
         let vector_field_data = if let Some(field_fn) = vector_field {
-            Some(self.generate_vector_field_simd(
-                trajectory_x, trajectory_y, field_fn
-            )?)
+            Some(self.generate_vector_field_simd(trajectory_x, trajectory_y, field_fn)?)
         } else {
             None
         };
-        
+
         // Calculate colors based on velocity using SIMD
         let colors = self.calculate_velocity_colors_simd(trajectory_x, trajectory_y, time)?;
-        
+
         // Create plot segments for smooth rendering
         let segments = self.create_plot_segments_simd(trajectory_x, trajectory_y, &colors)?;
-        
+
         Ok(Enhanced2DPlot {
             trajectory_x: trajectory_x.clone(),
             trajectory_y: trajectory_y.clone(),
@@ -2949,23 +2948,20 @@ impl EnhancedPhaseSpacePlotter {
         trajectory_z: &Array1<f64>,
         time: &Array1<f64>,
     ) -> Result<Enhanced3DPlot> {
-        let n_points = trajectory_x.len();
-        
+        let _n_points = trajectory_x.len();
+
         // Calculate 3D trajectory properties using SIMD
-        let properties = self.calculate_3d_properties_simd(
-            trajectory_x, trajectory_y, trajectory_z, time
-        )?;
-        
+        let properties =
+            self.calculate_3d_properties_simd(trajectory_x, trajectory_y, trajectory_z, time)?;
+
         // Calculate colors based on curvature using SIMD
-        let colors = self.calculate_curvature_colors_simd(
-            trajectory_x, trajectory_y, trajectory_z, time
-        )?;
-        
+        let colors =
+            self.calculate_curvature_colors_simd(trajectory_x, trajectory_y, trajectory_z, time)?;
+
         // Create surface projections for better visualization
-        let projections = self.create_surface_projections_simd(
-            trajectory_x, trajectory_y, trajectory_z
-        )?;
-        
+        let projections =
+            self.create_surface_projections_simd(trajectory_x, trajectory_y, trajectory_z)?;
+
         Ok(Enhanced3DPlot {
             trajectory_x: trajectory_x.clone(),
             trajectory_y: trajectory_y.clone(),
@@ -2990,65 +2986,67 @@ impl EnhancedPhaseSpacePlotter {
         time: &Array1<f64>,
     ) -> Result<TrajectoryProperties> {
         let n = x.len();
-        
+
         if n < 2 {
-            return Err(IntegrateError::InvalidInput("Need at least 2 points".to_string()));
+            return Err(IntegrateError::InvalidInput(
+                "Need at least 2 points".to_string(),
+            ));
         }
-        
+
         // Calculate velocities using SIMD central differences
         let mut vx = Array1::zeros(n);
         let mut vy = Array1::zeros(n);
-        
+
         // Central differences for interior points
-        for i in 1..n-1 {
-            vx[i] = (x[i+1] - x[i-1]) / (time[i+1] - time[i-1]);
-            vy[i] = (y[i+1] - y[i-1]) / (time[i+1] - time[i-1]);
+        for i in 1..n - 1 {
+            vx[i] = (x[i + 1] - x[i - 1]) / (time[i + 1] - time[i - 1]);
+            vy[i] = (y[i + 1] - y[i - 1]) / (time[i + 1] - time[i - 1]);
         }
-        
+
         // Forward/backward differences for endpoints
         vx[0] = (x[1] - x[0]) / (time[1] - time[0]);
         vy[0] = (y[1] - y[0]) / (time[1] - time[0]);
-        vx[n-1] = (x[n-1] - x[n-2]) / (time[n-1] - time[n-2]);
-        vy[n-1] = (y[n-1] - y[n-2]) / (time[n-1] - time[n-2]);
-        
+        vx[n - 1] = (x[n - 1] - x[n - 2]) / (time[n - 1] - time[n - 2]);
+        vy[n - 1] = (y[n - 1] - y[n - 2]) / (time[n - 1] - time[n - 2]);
+
         // Calculate speed using SIMD
         let vx_sq = f64::simd_mul(&vx.view(), &vx.view());
         let vy_sq = f64::simd_mul(&vy.view(), &vy.view());
         let speed_sq = f64::simd_add(&vx_sq.view(), &vy_sq.view());
         let speed = speed_sq.mapv(|x| x.sqrt());
-        
+
         // Calculate acceleration using SIMD
         let mut ax = Array1::zeros(n);
         let mut ay = Array1::zeros(n);
-        
-        for i in 1..n-1 {
-            ax[i] = (vx[i+1] - vx[i-1]) / (time[i+1] - time[i-1]);
-            ay[i] = (vy[i+1] - vy[i-1]) / (time[i+1] - time[i-1]);
+
+        for i in 1..n - 1 {
+            ax[i] = (vx[i + 1] - vx[i - 1]) / (time[i + 1] - time[i - 1]);
+            ay[i] = (vy[i + 1] - vy[i - 1]) / (time[i + 1] - time[i - 1]);
         }
-        
+
         ax[0] = (vx[1] - vx[0]) / (time[1] - time[0]);
         ay[0] = (vy[1] - vy[0]) / (time[1] - time[0]);
-        ax[n-1] = (vx[n-1] - vx[n-2]) / (time[n-1] - time[n-2]);
-        ay[n-1] = (vy[n-1] - vy[n-2]) / (time[n-1] - time[n-2]);
-        
+        ax[n - 1] = (vx[n - 1] - vx[n - 2]) / (time[n - 1] - time[n - 2]);
+        ay[n - 1] = (vy[n - 1] - vy[n - 2]) / (time[n - 1] - time[n - 2]);
+
         // Calculate total distance using SIMD
-        let mut distances = Array1::zeros(n-1);
-        for i in 0..n-1 {
-            let dx = x[i+1] - x[i];
-            let dy = y[i+1] - y[i];
-            distances[i] = (dx*dx + dy*dy).sqrt();
+        let mut distances = Array1::zeros(n - 1);
+        for i in 0..n - 1 {
+            let dx = x[i + 1] - x[i];
+            let dy = y[i + 1] - y[i];
+            distances[i] = (dx * dx + dy * dy).sqrt();
         }
         let total_distance = distances.sum();
-        
+
         // Find critical points (where velocity magnitude is minimal)
         let critical_points = self.find_critical_points_simd(&speed)?;
-        
+
         // Calculate trajectory bounds using SIMD
         let x_min = x.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let x_max = x.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let y_min = y.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let y_max = y.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        
+
         Ok(TrajectoryProperties {
             velocity_x: vx,
             velocity_y: vy,
@@ -3070,40 +3068,43 @@ impl EnhancedPhaseSpacePlotter {
         time: &Array1<f64>,
     ) -> Result<Trajectory3DProperties> {
         let n = x.len();
-        
+
         // Calculate velocities using SIMD
         let mut vx = Array1::zeros(n);
         let mut vy = Array1::zeros(n);
         let mut vz = Array1::zeros(n);
-        
-        for i in 1..n-1 {
-            let dt = time[i+1] - time[i-1];
-            vx[i] = (x[i+1] - x[i-1]) / dt;
-            vy[i] = (y[i+1] - y[i-1]) / dt;
-            vz[i] = (z[i+1] - z[i-1]) / dt;
+
+        for i in 1..n - 1 {
+            let dt = time[i + 1] - time[i - 1];
+            vx[i] = (x[i + 1] - x[i - 1]) / dt;
+            vy[i] = (y[i + 1] - y[i - 1]) / dt;
+            vz[i] = (z[i + 1] - z[i - 1]) / dt;
         }
-        
+
         // Endpoints
         vx[0] = (x[1] - x[0]) / (time[1] - time[0]);
         vy[0] = (y[1] - y[0]) / (time[1] - time[0]);
         vz[0] = (z[1] - z[0]) / (time[1] - time[0]);
-        vx[n-1] = (x[n-1] - x[n-2]) / (time[n-1] - time[n-2]);
-        vy[n-1] = (y[n-1] - y[n-2]) / (time[n-1] - time[n-2]);
-        vz[n-1] = (z[n-1] - z[n-2]) / (time[n-1] - time[n-2]);
-        
+        vx[n - 1] = (x[n - 1] - x[n - 2]) / (time[n - 1] - time[n - 2]);
+        vy[n - 1] = (y[n - 1] - y[n - 2]) / (time[n - 1] - time[n - 2]);
+        vz[n - 1] = (z[n - 1] - z[n - 2]) / (time[n - 1] - time[n - 2]);
+
         // Calculate speed using SIMD
         let vx_sq = f64::simd_mul(&vx.view(), &vx.view());
         let vy_sq = f64::simd_mul(&vy.view(), &vy.view());
         let vz_sq = f64::simd_mul(&vz.view(), &vz.view());
-        let speed_sq = f64::simd_add(&vx_sq.view(), &f64::simd_add(&vy_sq.view(), &vz_sq.view()).view());
+        let speed_sq = f64::simd_add(
+            &vx_sq.view(),
+            &f64::simd_add(&vy_sq.view(), &vz_sq.view()).view(),
+        );
         let speed = speed_sq.mapv(|x| x.sqrt());
-        
+
         // Calculate curvature using SIMD
         let curvature = self.calculate_curvature_3d_simd(&vx, &vy, &vz, time)?;
-        
+
         // Calculate torsion using SIMD
         let torsion = self.calculate_torsion_simd(x, y, z, time)?;
-        
+
         Ok(Trajectory3DProperties {
             velocity_x: vx,
             velocity_y: vy,
@@ -3124,30 +3125,31 @@ impl EnhancedPhaseSpacePlotter {
     ) -> Result<Array1<f64>> {
         let n = vx.len();
         let mut curvature = Array1::zeros(n);
-        
-        for i in 1..n-1 {
-            let dt = time[i+1] - time[i-1];
-            
+
+        for i in 1..n - 1 {
+            let dt = time[i + 1] - time[i - 1];
+
             // Calculate acceleration
-            let ax = (vx[i+1] - vx[i-1]) / dt;
-            let ay = (vy[i+1] - vy[i-1]) / dt;
-            let az = (vz[i+1] - vz[i-1]) / dt;
-            
+            let ax = (vx[i + 1] - vx[i - 1]) / dt;
+            let ay = (vy[i + 1] - vy[i - 1]) / dt;
+            let az = (vz[i + 1] - vz[i - 1]) / dt;
+
             // Cross product v × a
             let cross_x = vy[i] * az - vz[i] * ay;
             let cross_y = vz[i] * ax - vx[i] * az;
             let cross_z = vx[i] * ay - vy[i] * ax;
-            
-            let cross_magnitude = (cross_x*cross_x + cross_y*cross_y + cross_z*cross_z).sqrt();
-            let velocity_magnitude = (vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i]).sqrt();
-            
+
+            let cross_magnitude =
+                (cross_x * cross_x + cross_y * cross_y + cross_z * cross_z).sqrt();
+            let velocity_magnitude = (vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]).sqrt();
+
             curvature[i] = if velocity_magnitude > 1e-12 {
                 cross_magnitude / (velocity_magnitude.powi(3))
             } else {
                 0.0
             };
         }
-        
+
         Ok(curvature)
     }
 
@@ -3161,40 +3163,41 @@ impl EnhancedPhaseSpacePlotter {
     ) -> Result<Array1<f64>> {
         let n = x.len();
         let mut torsion = Array1::zeros(n);
-        
-        for i in 2..n-2 {
+
+        for i in 2..n - 2 {
             // Calculate first, second, and third derivatives
-            let dt = time[i+1] - time[i-1];
+            let dt = time[i + 1] - time[i - 1];
             let dt2 = dt * dt;
-            
+
             // First derivatives (velocity)
-            let vx = (x[i+1] - x[i-1]) / dt;
-            let vy = (y[i+1] - y[i-1]) / dt;
-            let vz = (z[i+1] - z[i-1]) / dt;
-            
+            let vx = (x[i + 1] - x[i - 1]) / dt;
+            let vy = (y[i + 1] - y[i - 1]) / dt;
+            let vz = (z[i + 1] - z[i - 1]) / dt;
+
             // Second derivatives (acceleration)
-            let ax = (x[i+1] - 2.0*x[i] + x[i-1]) / dt2;
-            let ay = (y[i+1] - 2.0*y[i] + y[i-1]) / dt2;
-            let az = (z[i+1] - 2.0*z[i] + z[i-1]) / dt2;
-            
+            let ax = (x[i + 1] - 2.0 * x[i] + x[i - 1]) / dt2;
+            let ay = (y[i + 1] - 2.0 * y[i] + y[i - 1]) / dt2;
+            let az = (z[i + 1] - 2.0 * z[i] + z[i - 1]) / dt2;
+
             // Third derivatives (jerk)
-            let jx = ((x[i+2] - x[i+1]) - (x[i] - x[i-1])) / dt2;
-            let jy = ((y[i+2] - y[i+1]) - (y[i] - y[i-1])) / dt2;
-            let jz = ((z[i+2] - z[i+1]) - (z[i] - z[i-1])) / dt2;
-            
+            let jx = ((x[i + 2] - x[i + 1]) - (x[i] - x[i - 1])) / dt2;
+            let jy = ((y[i + 2] - y[i + 1]) - (y[i] - y[i - 1])) / dt2;
+            let jz = ((z[i + 2] - z[i + 1]) - (z[i] - z[i - 1])) / dt2;
+
             // Cross products
             let cross_va_x = vy * az - vz * ay;
             let cross_va_y = vz * ax - vx * az;
             let cross_va_z = vx * ay - vy * ax;
-            
-            let cross_magnitude_sq = cross_va_x*cross_va_x + cross_va_y*cross_va_y + cross_va_z*cross_va_z;
-            
+
+            let cross_magnitude_sq =
+                cross_va_x * cross_va_x + cross_va_y * cross_va_y + cross_va_z * cross_va_z;
+
             if cross_magnitude_sq > 1e-12 {
-                let scalar_triple = cross_va_x*jx + cross_va_y*jy + cross_va_z*jz;
+                let scalar_triple = cross_va_x * jx + cross_va_y * jy + cross_va_z * jz;
                 torsion[i] = scalar_triple / cross_magnitude_sq;
             }
         }
-        
+
         Ok(torsion)
     }
 
@@ -3210,37 +3213,37 @@ impl EnhancedPhaseSpacePlotter {
         let x_max = x.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let y_min = y.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let y_max = y.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        
+
         // Expand bounds slightly
         let dx = (x_max - x_min) * 0.1;
         let dy = (y_max - y_min) * 0.1;
         let x_range = (x_min - dx, x_max + dx);
         let y_range = (y_min - dy, y_max + dy);
-        
+
         // Generate grid
         let grid_resolution = (self.resolution / 4).max(10); // Coarser grid for vector field
         let mut grid_x = Array2::zeros((grid_resolution, grid_resolution));
         let mut grid_y = Array2::zeros((grid_resolution, grid_resolution));
         let mut vector_u = Array2::zeros((grid_resolution, grid_resolution));
         let mut vector_v = Array2::zeros((grid_resolution, grid_resolution));
-        
+
         let dx_grid = (x_range.1 - x_range.0) / (grid_resolution - 1) as f64;
         let dy_grid = (y_range.1 - y_range.0) / (grid_resolution - 1) as f64;
-        
+
         for i in 0..grid_resolution {
             for j in 0..grid_resolution {
                 let x_pos = x_range.0 + i as f64 * dx_grid;
                 let y_pos = y_range.0 + j as f64 * dy_grid;
-                
+
                 grid_x[[i, j]] = x_pos;
                 grid_y[[i, j]] = y_pos;
-                
+
                 let (u, v) = field_fn(x_pos, y_pos);
                 vector_u[[i, j]] = u;
                 vector_v[[i, j]] = v;
             }
         }
-        
+
         Ok(VectorField {
             grid_x,
             grid_y,
@@ -3258,34 +3261,34 @@ impl EnhancedPhaseSpacePlotter {
     ) -> Result<Array1<f64>> {
         let n = x.len();
         let mut colors = Array1::zeros(n);
-        
+
         // Calculate velocity magnitudes
-        for i in 1..n-1 {
-            let dt = time[i+1] - time[i-1];
-            let vx = (x[i+1] - x[i-1]) / dt;
-            let vy = (y[i+1] - y[i-1]) / dt;
-            colors[i] = (vx*vx + vy*vy).sqrt();
+        for i in 1..n - 1 {
+            let dt = time[i + 1] - time[i - 1];
+            let vx = (x[i + 1] - x[i - 1]) / dt;
+            let vy = (y[i + 1] - y[i - 1]) / dt;
+            colors[i] = (vx * vx + vy * vy).sqrt();
         }
-        
+
         // Handle endpoints
         colors[0] = colors[1];
-        colors[n-1] = colors[n-2];
-        
+        colors[n - 1] = colors[n - 2];
+
         // Normalize colors to [0, 1] range using SIMD
         let max_color = colors.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let min_color = colors.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        
+
         if (max_color - min_color).abs() > 1e-12 {
             let range = max_color - min_color;
             let min_array = Array1::from_elem(n, min_color);
             let range_array = Array1::from_elem(n, range);
-            
+
             colors = f64::simd_div(
                 &f64::simd_sub(&colors.view(), &min_array.view()).view(),
-                &range_array.view()
+                &range_array.view(),
             );
         }
-        
+
         Ok(colors)
     }
 
@@ -3299,54 +3302,55 @@ impl EnhancedPhaseSpacePlotter {
     ) -> Result<Array1<f64>> {
         let n = x.len();
         let mut colors = Array1::zeros(n);
-        
+
         // Calculate curvature at each point
-        for i in 2..n-2 {
-            let dt = time[i+1] - time[i-1];
-            
+        for i in 2..n - 2 {
+            let dt = time[i + 1] - time[i - 1];
+
             // First derivatives
-            let vx = (x[i+1] - x[i-1]) / dt;
-            let vy = (y[i+1] - y[i-1]) / dt;
-            let vz = (z[i+1] - z[i-1]) / dt;
-            
+            let vx = (x[i + 1] - x[i - 1]) / dt;
+            let vy = (y[i + 1] - y[i - 1]) / dt;
+            let vz = (z[i + 1] - z[i - 1]) / dt;
+
             // Second derivatives
-            let ax = (x[i+2] - 2.0*x[i] + x[i-2]) / (dt*dt);
-            let ay = (y[i+2] - 2.0*y[i] + y[i-2]) / (dt*dt);
-            let az = (z[i+2] - 2.0*z[i] + z[i-2]) / (dt*dt);
-            
+            let ax = (x[i + 2] - 2.0 * x[i] + x[i - 2]) / (dt * dt);
+            let ay = (y[i + 2] - 2.0 * y[i] + y[i - 2]) / (dt * dt);
+            let az = (z[i + 2] - 2.0 * z[i] + z[i - 2]) / (dt * dt);
+
             // Curvature calculation
             let cross_x = vy * az - vz * ay;
             let cross_y = vz * ax - vx * az;
             let cross_z = vx * ay - vy * ax;
-            let cross_magnitude = (cross_x*cross_x + cross_y*cross_y + cross_z*cross_z).sqrt();
-            let velocity_magnitude = (vx*vx + vy*vy + vz*vz).sqrt();
-            
+            let cross_magnitude =
+                (cross_x * cross_x + cross_y * cross_y + cross_z * cross_z).sqrt();
+            let velocity_magnitude = (vx * vx + vy * vy + vz * vz).sqrt();
+
             colors[i] = if velocity_magnitude > 1e-12 {
                 cross_magnitude / (velocity_magnitude.powi(3))
             } else {
                 0.0
             };
         }
-        
+
         // Handle endpoints
         for i in 0..2 {
             colors[i] = colors[2];
         }
-        for i in n-2..n {
-            colors[i] = colors[n-3];
+        for i in n - 2..n {
+            colors[i] = colors[n - 3];
         }
-        
+
         // Normalize colors
         let max_color = colors.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let min_color = colors.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        
+
         if (max_color - min_color).abs() > 1e-12 {
             let range = max_color - min_color;
             for i in 0..n {
                 colors[i] = (colors[i] - min_color) / range;
             }
         }
-        
+
         Ok(colors)
     }
 
@@ -3354,14 +3358,14 @@ impl EnhancedPhaseSpacePlotter {
     fn find_critical_points_simd(&self, speed: &Array1<f64>) -> Result<Vec<usize>> {
         let n = speed.len();
         let mut critical_points = Vec::new();
-        
+
         // Find local minima in speed
-        for i in 1..n-1 {
-            if speed[i] < speed[i-1] && speed[i] < speed[i+1] {
+        for i in 1..n - 1 {
+            if speed[i] < speed[i - 1] && speed[i] < speed[i + 1] {
                 critical_points.push(i);
             }
         }
-        
+
         Ok(critical_points)
     }
 
@@ -3374,16 +3378,16 @@ impl EnhancedPhaseSpacePlotter {
     ) -> Result<Vec<PlotSegment>> {
         let n = x.len();
         let mut segments = Vec::with_capacity(n - 1);
-        
-        for i in 0..n-1 {
+
+        for i in 0..n - 1 {
             segments.push(PlotSegment {
                 start: (x[i], y[i]),
-                end: (x[i+1], y[i+1]),
-                color: (colors[i] + colors[i+1]) / 2.0,
+                end: (x[i + 1], y[i + 1]),
+                color: (colors[i] + colors[i + 1]) / 2.0,
                 width: 1.0 + colors[i] * 2.0, // Variable line width based on color
             });
         }
-        
+
         Ok(segments)
     }
 
@@ -3405,7 +3409,7 @@ impl EnhancedPhaseSpacePlotter {
     pub fn apply_colormap_simd(&self, values: &Array1<f64>) -> Result<Array2<f64>> {
         let n = values.len();
         let mut colors = Array2::zeros((n, 3)); // RGB colors
-        
+
         match self.color_params.colormap {
             ColormapType::Viridis => {
                 for (i, &val) in values.iter().enumerate() {
@@ -3414,7 +3418,7 @@ impl EnhancedPhaseSpacePlotter {
                     colors[[i, 1]] = g;
                     colors[[i, 2]] = b;
                 }
-            },
+            }
             ColormapType::Plasma => {
                 for (i, &val) in values.iter().enumerate() {
                     let (r, g, b) = self.plasma_colormap(val);
@@ -3422,7 +3426,7 @@ impl EnhancedPhaseSpacePlotter {
                     colors[[i, 1]] = g;
                     colors[[i, 2]] = b;
                 }
-            },
+            }
             ColormapType::Jet => {
                 for (i, &val) in values.iter().enumerate() {
                     let (r, g, b) = self.jet_colormap(val);
@@ -3430,14 +3434,14 @@ impl EnhancedPhaseSpacePlotter {
                     colors[[i, 1]] = g;
                     colors[[i, 2]] = b;
                 }
-            },
+            }
             ColormapType::Gray => {
                 for (i, &val) in values.iter().enumerate() {
                     colors[[i, 0]] = val;
                     colors[[i, 1]] = val;
                     colors[[i, 2]] = val;
                 }
-            },
+            }
             ColormapType::HSV => {
                 for (i, &val) in values.iter().enumerate() {
                     let (r, g, b) = self.hsv_to_rgb(val * 360.0, 1.0, 1.0);
@@ -3445,27 +3449,27 @@ impl EnhancedPhaseSpacePlotter {
                     colors[[i, 1]] = g;
                     colors[[i, 2]] = b;
                 }
-            },
+            }
         }
-        
+
         Ok(colors)
     }
 
     /// Viridis colormap implementation
     fn viridis_colormap(&self, t: f64) -> (f64, f64, f64) {
         let t = t.clamp(0.0, 1.0);
-        let r = 0.267 + t * (0.005 - 0.267) + t*t * (0.329 - 0.005) + t*t*t * (0.984 - 0.329);
-        let g = 0.005 + t * (0.333 - 0.005) + t*t * (0.624 - 0.333) + t*t*t * (0.906 - 0.624);
-        let b = 0.329 + t * (0.624 - 0.329) + t*t * (0.906 - 0.624) + t*t*t * (0.145 - 0.906);
+        let r = 0.267 + t * (0.005 - 0.267) + t * t * (0.329 - 0.005) + t * t * t * (0.984 - 0.329);
+        let g = 0.005 + t * (0.333 - 0.005) + t * t * (0.624 - 0.333) + t * t * t * (0.906 - 0.624);
+        let b = 0.329 + t * (0.624 - 0.329) + t * t * (0.906 - 0.624) + t * t * t * (0.145 - 0.906);
         (r, g, b)
     }
 
     /// Plasma colormap implementation
     fn plasma_colormap(&self, t: f64) -> (f64, f64, f64) {
         let t = t.clamp(0.0, 1.0);
-        let r = 0.050 + t * (0.513 - 0.050) + t*t * (0.925 - 0.513) + t*t*t * (0.941 - 0.925);
-        let g = 0.030 + t * (0.078 - 0.030) + t*t * (0.416 - 0.078) + t*t*t * (0.980 - 0.416);
-        let b = 0.528 + t * (0.718 - 0.528) + t*t * (0.277 - 0.718) + t*t*t * (0.054 - 0.277);
+        let r = 0.050 + t * (0.513 - 0.050) + t * t * (0.925 - 0.513) + t * t * t * (0.941 - 0.925);
+        let g = 0.030 + t * (0.078 - 0.030) + t * t * (0.416 - 0.078) + t * t * t * (0.980 - 0.416);
+        let b = 0.528 + t * (0.718 - 0.528) + t * t * (0.277 - 0.718) + t * t * t * (0.054 - 0.277);
         (r, g, b)
     }
 
@@ -3479,7 +3483,7 @@ impl EnhancedPhaseSpacePlotter {
         } else {
             1.0 - (t - 0.66) / 0.34
         };
-        
+
         let g = if t < 0.125 {
             0.0
         } else if t < 0.375 {
@@ -3489,7 +3493,7 @@ impl EnhancedPhaseSpacePlotter {
         } else {
             1.0 - (t - 0.64) / 0.36
         };
-        
+
         let b = if t < 0.11 {
             (t + 0.39) / 0.5
         } else if t < 0.34 {
@@ -3499,7 +3503,7 @@ impl EnhancedPhaseSpacePlotter {
         } else {
             0.0
         };
-        
+
         (r, g, b)
     }
 
@@ -3509,7 +3513,7 @@ impl EnhancedPhaseSpacePlotter {
         let c = v * s;
         let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
         let m = v - c;
-        
+
         let (r1, g1, b1) = if h < 60.0 {
             (c, x, 0.0)
         } else if h < 120.0 {
@@ -3523,7 +3527,7 @@ impl EnhancedPhaseSpacePlotter {
         } else {
             (c, 0.0, x)
         };
-        
+
         (r1 + m, g1 + m, b1 + m)
     }
 }
@@ -3616,16 +3620,16 @@ mod enhanced_visualization_tests {
     #[test]
     fn test_2d_phase_space_plotting() {
         let plotter = EnhancedPhaseSpacePlotter::new(50);
-        
+
         // Create simple trajectory
         let n = 100;
         let time: Array1<f64> = Array1::range(0.0, 10.0, 10.0 / n as f64);
         let x: Array1<f64> = time.mapv(|t| t.cos());
         let y: Array1<f64> = time.mapv(|t| t.sin());
-        
+
         let plot = plotter.plot_2d_phase_space_simd(&x, &y, &time, None);
         assert!(plot.is_ok());
-        
+
         let plot = plot.unwrap();
         assert_eq!(plot.trajectory_x.len(), n);
         assert_eq!(plot.trajectory_y.len(), n);
@@ -3635,17 +3639,17 @@ mod enhanced_visualization_tests {
     #[test]
     fn test_3d_phase_space_plotting() {
         let plotter = EnhancedPhaseSpacePlotter::new(50);
-        
+
         // Create simple 3D trajectory
         let n = 100;
         let time: Array1<f64> = Array1::range(0.0, 10.0, 10.0 / n as f64);
         let x: Array1<f64> = time.mapv(|t| t.cos());
         let y: Array1<f64> = time.mapv(|t| t.sin());
         let z: Array1<f64> = time.mapv(|t| t * 0.1);
-        
+
         let plot = plotter.plot_3d_phase_space_simd(&x, &y, &z, &time);
         assert!(plot.is_ok());
-        
+
         let plot = plot.unwrap();
         assert_eq!(plot.trajectory_x.len(), n);
         assert_eq!(plot.trajectory_y.len(), n);
@@ -3656,13 +3660,13 @@ mod enhanced_visualization_tests {
     fn test_colormap_application() {
         let plotter = EnhancedPhaseSpacePlotter::new(50);
         let values = Array1::range(0.0, 1.0, 0.01);
-        
+
         let colors = plotter.apply_colormap_simd(&values);
         assert!(colors.is_ok());
-        
+
         let colors = colors.unwrap();
         assert_eq!(colors.dim(), (values.len(), 3));
-        
+
         // Check that colors are in valid range [0, 1]
         for i in 0..colors.nrows() {
             for j in 0..3 {
@@ -3674,20 +3678,24 @@ mod enhanced_visualization_tests {
     #[test]
     fn test_trajectory_properties() {
         let plotter = EnhancedPhaseSpacePlotter::new(50);
-        
+
         // Simple circular trajectory
         let n = 100;
-        let time: Array1<f64> = Array1::range(0.0, 2.0 * std::f64::consts::PI, 2.0 * std::f64::consts::PI / n as f64);
+        let time: Array1<f64> = Array1::range(
+            0.0,
+            2.0 * std::f64::consts::PI,
+            2.0 * std::f64::consts::PI / n as f64,
+        );
         let x: Array1<f64> = time.mapv(|t| t.cos());
         let y: Array1<f64> = time.mapv(|t| t.sin());
-        
+
         let properties = plotter.calculate_trajectory_properties_simd(&x, &y, &time);
         assert!(properties.is_ok());
-        
+
         let properties = properties.unwrap();
         assert_eq!(properties.speed.len(), n);
         assert!(properties.total_distance > 0.0);
-        
+
         // For circular motion, speed should be approximately constant
         let speed_variance = properties.speed.var(0.0);
         assert!(speed_variance < 0.1); // Should be low for circular motion

@@ -101,23 +101,23 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for FeatureAlignme
         // Backward pass through the alignment layer (Dense -> LayerNorm)
         // First, get the intermediate output from the projection
         let proj_output = self.projection.forward(input)?;
-        
+
         // Backward through LayerNorm
         let grad_proj = self.norm.backward(&proj_output, grad_output)?;
-        
+
         // Backward through Dense projection
         let grad_input = self.projection.backward(input, &grad_proj)?;
-        
+
         Ok(grad_input)
     }
 
     fn update(&mut self, learning_rate: F) -> Result<()> {
         // Update the Dense projection layer
         self.projection.update(learning_rate)?;
-        
+
         // Update the LayerNorm layer
         self.norm.update(learning_rate)?;
-        
+
         Ok(())
     }
 
@@ -280,7 +280,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for CrossModalAtte
         // one input, we cannot properly implement backward for the general case.
         // This would require a custom backward method that takes both query and context.
         // For now, we return a gradient with the same shape as the expected query input.
-        
+
         // Create a gradient tensor with appropriate shape
         // This is a simplified implementation - a proper implementation would need
         // to propagate gradients through the attention mechanism
@@ -293,7 +293,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for CrossModalAtte
         self.key_proj.update(learning_rate)?;
         self.value_proj.update(learning_rate)?;
         self.output_proj.update(learning_rate)?;
-        
+
         Ok(())
     }
 
@@ -389,7 +389,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for FiLMModule<F> 
         // one input, we cannot properly implement backward for the general case.
         // This would require a custom backward method that takes both inputs.
         // For now, we return a gradient with the same shape as the expected feature input.
-        
+
         // Create a gradient tensor with appropriate shape
         // This is a simplified implementation - a proper implementation would need
         // to propagate gradients through the FiLM operation (gamma * features + beta)
@@ -400,7 +400,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for FiLMModule<F> 
         // Update gamma and beta projection layers
         self.gamma_proj.update(learning_rate)?;
         self.beta_proj.update(learning_rate)?;
-        
+
         Ok(())
     }
 
@@ -506,7 +506,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BilinearFusion
         // one input, we cannot properly implement backward for the general case.
         // This would require a custom backward method that takes both feature inputs.
         // For now, we return a gradient with the same shape as the expected input.
-        
+
         // Create a gradient tensor with appropriate shape
         // This is a simplified implementation - a proper implementation would need
         // to propagate gradients through the bilinear interaction (proj_a * proj_b)
@@ -518,7 +518,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BilinearFusion
         self.proj_a.update(learning_rate)?;
         self.proj_b.update(learning_rate)?;
         self.low_rank_proj.update(learning_rate)?;
-        
+
         Ok(())
     }
 
@@ -916,7 +916,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for FeatureFusion<
         // This would require a custom backward method that takes multiple inputs
         // and understands the specific fusion strategy being used.
         // For now, we return a gradient with the same shape as the expected input.
-        
+
         // Create a gradient tensor with appropriate shape
         // This is a simplified implementation - a proper implementation would need
         // to propagate gradients backward through the entire fusion pipeline:

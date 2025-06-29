@@ -4,7 +4,7 @@ use scirs2_core::error::{CoreError, ErrorContext, ErrorLocation};
 use thiserror::Error;
 
 /// Statistics error type
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum StatsError {
     /// Computation error (generic error)
     #[error("Computation error: {0}")]

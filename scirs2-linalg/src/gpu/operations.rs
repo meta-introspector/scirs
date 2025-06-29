@@ -64,11 +64,11 @@ where
 {
     fn gpu_matvec(
         &self,
-        ctx: &dyn GpuContext,
+        _ctx: &dyn GpuContext,
         a: &ArrayView2<T>,
         x: &ArrayView1<T>,
     ) -> LinalgResult<Array1<T>> {
-        let (m, n) = a.dim();
+        let (_m, n) = a.dim();
 
         if n != x.len() {
             return Err(LinalgError::ShapeError(format!(
@@ -85,7 +85,7 @@ where
 
     fn gpu_matmul(
         &self,
-        ctx: &dyn GpuContext,
+        _ctx: &dyn GpuContext,
         a: &ArrayView2<T>,
         b: &ArrayView2<T>,
     ) -> LinalgResult<Array2<T>> {
@@ -105,7 +105,7 @@ where
 
     fn gpu_dot(
         &self,
-        ctx: &dyn GpuContext,
+        _ctx: &dyn GpuContext,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
     ) -> LinalgResult<T> {
@@ -121,14 +121,14 @@ where
         Ok(self.cpu_dot(x, y))
     }
 
-    fn gpu_norm(&self, ctx: &dyn GpuContext, x: &ArrayView1<T>) -> LinalgResult<T> {
+    fn gpu_norm(&self, _ctx: &dyn GpuContext, x: &ArrayView1<T>) -> LinalgResult<T> {
         // For now, fall back to CPU implementation
         Ok(self.cpu_norm(x))
     }
 
     fn gpu_elementwise_add(
         &self,
-        ctx: &dyn GpuContext,
+        _ctx: &dyn GpuContext,
         a: &ArrayView2<T>,
         b: &ArrayView2<T>,
     ) -> LinalgResult<Array2<T>> {
@@ -146,7 +146,7 @@ where
 
     fn gpu_elementwise_mul(
         &self,
-        ctx: &dyn GpuContext,
+        _ctx: &dyn GpuContext,
         a: &ArrayView2<T>,
         b: &ArrayView2<T>,
     ) -> LinalgResult<Array2<T>> {
@@ -342,7 +342,7 @@ impl GpuPerformanceProfiler {
     pub fn record(&mut self, operation: &str, time_seconds: f64) {
         self.measurements
             .entry(operation.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(time_seconds);
     }
 

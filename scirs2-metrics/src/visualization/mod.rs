@@ -68,6 +68,7 @@
 //! ```
 
 // Re-export submodules
+pub mod advanced_interactive;
 pub mod backends;
 pub mod calibration;
 pub mod confusion_matrix;
@@ -78,6 +79,12 @@ pub mod precision_recall;
 pub mod roc_curve;
 
 // Re-export common functionality
+pub use advanced_interactive::{
+    CollaborationConfig, CollaborationManager, DashboardConfig, DashboardState, DataSource,
+    EventResponse, EventSystem, ExportConfig, InteractionConfig, InteractiveDashboard,
+    InteractiveWidget, LayoutConfig, LayoutManager, RealtimeConfig, RenderingEngine, ThemeConfig,
+    UpdateManager, WidgetConfig, WidgetEvent, WidgetType,
+};
 pub use backends::PlottingBackend;
 pub use calibration::CalibrationVisualizer;
 pub use confusion_matrix::ConfusionMatrixVisualizer;

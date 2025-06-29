@@ -3,10 +3,10 @@
 //! This module provides communication protocols for distributed computing,
 //! including message passing, synchronization, and coordination mechanisms.
 
-use crate::error::{CoreResult, CoreError, ErrorContext};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, mpsc};
 use std::net::SocketAddr;
+use std::sync::{mpsc, Arc, Mutex};
 
 /// Message types for distributed communication
 #[derive(Debug, Clone)]
@@ -20,7 +20,10 @@ pub enum DistributedMessage {
     /// Coordination message
     Coordination { message_type: String, data: Vec<u8> },
     /// Synchronization barrier
-    Barrier { barrier_id: String, node_count: usize },
+    Barrier {
+        barrier_id: String,
+        node_count: usize,
+    },
 }
 
 /// Communication endpoint for a node
@@ -36,7 +39,7 @@ impl CommunicationEndpoint {
     /// Create a new communication endpoint
     pub fn new(node_id: String, address: SocketAddr) -> Self {
         let (sender, receiver) = mpsc::channel();
-        
+
         Self {
             node_id,
             address,
@@ -48,10 +51,12 @@ impl CommunicationEndpoint {
 
     /// Send a message to another node
     pub fn send_message(&self, message: DistributedMessage) -> CoreResult<()> {
-        self.sender.send(message)
-            .map_err(|e| CoreError::CommunicationError(
-                ErrorContext::new(format!("Failed to send message: {}", e))
-            ))?;
+        self.sender.send(message).map_err(|e| {
+            CoreError::CommunicationError(ErrorContext::new(format!(
+                "Failed to send message: {}",
+                e
+            )))
+        })?;
         Ok(())
     }
 
@@ -60,60 +65,63 @@ impl CommunicationEndpoint {
     where
         H: MessageHandler + Send + Sync + 'static,
     {
-        let mut handlers = self.message_handlers.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire handlers lock".to_string())
-            ))?;
+        let mut handlers = self.message_handlers.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire handlers lock".to_string(),
+            ))
+        })?;
         handlers.insert(message_type, Box::new(handler));
         Ok(())
     }
 
     /// Process incoming messages
     pub fn process_messages(&self) -> CoreResult<()> {
-        let receiver = self.receiver.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire receiver lock".to_string())
-            ))?;
+        let receiver = self.receiver.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire receiver lock".to_string(),
+            ))
+        })?;
 
         while let Ok(message) = receiver.try_recv() {
             self.handle_message(message)?;
         }
-        
+
         Ok(())
     }
 
     fn handle_message(&self, message: DistributedMessage) -> CoreResult<()> {
-        let handlers = self.message_handlers.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire handlers lock".to_string())
-            ))?;
+        let handlers = self.message_handlers.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire handlers lock".to_string(),
+            ))
+        })?;
 
         match &message {
             DistributedMessage::TaskAssignment { .. } => {
                 if let Some(handler) = handlers.get("task_assignment") {
                     handler.handle(&message)?;
                 }
-            },
+            }
             DistributedMessage::Result { .. } => {
                 if let Some(handler) = handlers.get("result") {
                     handler.handle(&message)?;
                 }
-            },
+            }
             DistributedMessage::Heartbeat { .. } => {
                 if let Some(handler) = handlers.get("heartbeat") {
                     handler.handle(&message)?;
                 }
-            },
+            }
             DistributedMessage::Coordination { message_type, .. } => {
                 if let Some(handler) = handlers.get(message_type) {
                     handler.handle(&message)?;
                 }
-            },
+            }
             DistributedMessage::Barrier { .. } => {
                 if let Some(handler) = handlers.get("barrier") {
                     handler.handle(&message)?;
                 }
-            },
+            }
         }
 
         Ok(())
@@ -192,9 +200,10 @@ impl CommunicationManager {
         if let Some(endpoint) = self.endpoints.get(node_id) {
             endpoint.send_message(message)?;
         } else {
-            return Err(CoreError::InvalidArgument(
-                ErrorContext::new(format!("Unknown node: {}", node_id))
-            ));
+            return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
+                "Unknown node: {}",
+                node_id
+            ))));
         }
         Ok(())
     }
@@ -222,7 +231,7 @@ mod tests {
     fn test_communication_endpoint_creation() {
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let endpoint = CommunicationEndpoint::new("node1".to_string(), address);
-        
+
         assert_eq!(endpoint.node_id(), "node1");
         assert_eq!(endpoint.address(), address);
     }
@@ -230,11 +239,11 @@ mod tests {
     #[test]
     fn test_heartbeat_handler() {
         let handler = HeartbeatHandler::new("node1".to_string());
-        let message = DistributedMessage::Heartbeat { 
-            node_id: "node2".to_string(), 
-            timestamp: 123456789 
+        let message = DistributedMessage::Heartbeat {
+            node_id: "node2".to_string(),
+            timestamp: 123456789,
         };
-        
+
         assert!(handler.handle(&message).is_ok());
     }
 
@@ -242,11 +251,11 @@ mod tests {
     fn test_communication_manager() {
         let mut manager = CommunicationManager::new("local_node".to_string());
         assert_eq!(manager.local_node_id(), "local_node");
-        
+
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let endpoint = CommunicationEndpoint::new("node1".to_string(), address);
         manager.add_endpoint(endpoint);
-        
+
         assert!(manager.endpoints.contains_key("node1"));
     }
 }

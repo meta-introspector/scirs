@@ -10,9 +10,10 @@
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2, Array3, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2_core::validation::check_positive;
 use scirs2_core::validation::{check_finite, check_shape};
 use std::sync::Arc;
 
@@ -1121,7 +1122,7 @@ fn simd_convolution_accumulate(
         for i in 0..signal_len {
             let end_idx = (i + filter_len).min(output.len());
             let available_len = end_idx - i;
-            
+
             if available_len >= 4 {
                 // Vectorized computation
                 let signal_chunk = signal.slice(s![0..available_len]);
@@ -1566,7 +1567,7 @@ pub fn adaptive_wavelet_denoising(
             estimate_noise_std_from_subbands(&finest_level.0, &finest_level.1, &finest_level.2)?
         } else {
             return Err(SignalError::ComputationError(
-                "No detail coefficients available for noise estimation".to_string()
+                "No detail coefficients available for noise estimation".to_string(),
             ));
         }
     };
@@ -1606,18 +1607,18 @@ pub enum DenoisingMethod {
 /// Estimate noise standard deviation from subband coefficients
 fn estimate_noise_std_from_subbands(
     detail_h: &Array2<f64>,
-    detail_v: &Array2<f64>, 
-    detail_d: &Array2<f64>
+    detail_v: &Array2<f64>,
+    detail_d: &Array2<f64>,
 ) -> SignalResult<f64> {
     // Use HH subband (diagonal details) for noise estimation as it's least correlated with signal
     let mut coeffs: Vec<f64> = detail_d.iter().cloned().collect();
-    
+
     if coeffs.is_empty() {
         return Err(SignalError::ComputationError(
-            "No coefficients available for noise estimation".to_string()
+            "No coefficients available for noise estimation".to_string(),
         ));
     }
-    
+
     coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let median = coeffs[coeffs.len() / 2];
@@ -1847,23 +1848,26 @@ fn patch_distance(patch1: &[f64], patch2: &[f64]) -> f64 {
 }
 
 /// Enhanced content-aware boundary padding
-pub fn enhanced_boundary_padding(
-    data: &[f64],
-    pad_length: usize,
-    mode: BoundaryMode,
-) -> Vec<f64> {
+pub fn enhanced_boundary_padding(data: &[f64], pad_length: usize, mode: BoundaryMode) -> Vec<f64> {
     match mode {
-        BoundaryMode::ContentAware => content_aware_padding(data, pad_length).unwrap_or_else(|_| {
-            // Fallback to symmetric if content-aware fails
-            apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Symmetric).unwrap_or_default()
-        }),
-        BoundaryMode::MirrorCorrect => mirror_correct_padding(data, pad_length).unwrap_or_else(|_| {
-            // Fallback to symmetric if mirror correct fails
-            apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Symmetric).unwrap_or_default()
-        }),
+        BoundaryMode::ContentAware => {
+            content_aware_padding(data, pad_length).unwrap_or_else(|_| {
+                // Fallback to symmetric if content-aware fails
+                apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Symmetric)
+                    .unwrap_or_default()
+            })
+        }
+        BoundaryMode::MirrorCorrect => {
+            mirror_correct_padding(data, pad_length).unwrap_or_else(|_| {
+                // Fallback to symmetric if mirror correct fails
+                apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Symmetric)
+                    .unwrap_or_default()
+            })
+        }
         BoundaryMode::Extrapolate => extrapolate_padding(data, pad_length).unwrap_or_else(|_| {
             // Fallback to smooth if extrapolate fails
-            apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Smooth).unwrap_or_default()
+            apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Smooth)
+                .unwrap_or_default()
         }),
         _ => {
             // Use existing implementation for other modes
@@ -2186,12 +2190,12 @@ fn analyze_and_select_boundary_mode(
     filters: &WaveletFilters,
 ) -> SignalResult<BoundaryMode> {
     let (rows, cols) = data.dim();
-    
+
     // Check edge characteristics
     let edge_variance = calculate_edge_variance(data);
     let smoothness = calculate_smoothness(data);
     let periodicity = estimate_periodicity(data);
-    
+
     // Select boundary mode based on characteristics
     if periodicity > 0.8 {
         Ok(BoundaryMode::Periodic)
@@ -2207,19 +2211,19 @@ fn analyze_and_select_boundary_mode(
 /// Calculate edge variance to determine image characteristics
 fn calculate_edge_variance(data: &Array2<f64>) -> f64 {
     let (rows, cols) = data.dim();
-    
+
     // Extract edges
     let top_edge = data.row(0);
     let bottom_edge = data.row(rows - 1);
     let left_edge = data.column(0);
     let right_edge = data.column(cols - 1);
-    
+
     // Calculate variances
     let top_var = top_edge.var(0.0);
     let bottom_var = bottom_edge.var(0.0);
     let left_var = left_edge.var(0.0);
     let right_var = right_edge.var(0.0);
-    
+
     // Return average edge variance
     (top_var + bottom_var + left_var + right_var) / 4.0
 }
@@ -2227,32 +2231,33 @@ fn calculate_edge_variance(data: &Array2<f64>) -> f64 {
 /// Calculate smoothness metric for the image
 fn calculate_smoothness(data: &Array2<f64>) -> f64 {
     let (rows, cols) = data.dim();
-    
+
     if rows < 3 || cols < 3 {
         return 0.5; // Default for small images
     }
-    
+
     // Calculate Laplacian to measure smoothness
     let mut total_laplacian = 0.0;
     let mut count = 0;
-    
+
     for i in 1..(rows - 1) {
         for j in 1..(cols - 1) {
-            let laplacian = data[[i - 1, j]] + data[[i + 1, j]] + data[[i, j - 1]] 
-                + data[[i, j + 1]] - 4.0 * data[[i, j]];
+            let laplacian =
+                data[[i - 1, j]] + data[[i + 1, j]] + data[[i, j - 1]] + data[[i, j + 1]]
+                    - 4.0 * data[[i, j]];
             total_laplacian += laplacian.abs();
             count += 1;
         }
     }
-    
+
     let avg_laplacian = total_laplacian / count as f64;
-    let data_range = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max) 
+    let data_range = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
         - data.iter().cloned().fold(f64::INFINITY, f64::min);
-    
+
     if data_range < 1e-12 {
         return 1.0; // Constant image is very smooth
     }
-    
+
     // Normalize by data range and invert (higher value = smoother)
     1.0 / (1.0 + avg_laplacian / data_range)
 }
@@ -2260,36 +2265,36 @@ fn calculate_smoothness(data: &Array2<f64>) -> f64 {
 /// Estimate periodicity of the image
 fn estimate_periodicity(data: &Array2<f64>) -> f64 {
     let (rows, cols) = data.dim();
-    
+
     // Simple correlation-based periodicity detection
     let min_dim = rows.min(cols);
     if min_dim < 4 {
         return 0.0;
     }
-    
+
     let half_rows = rows / 2;
     let half_cols = cols / 2;
-    
+
     // Compare first half with second half
     let mut correlation = 0.0;
     let mut norm1 = 0.0;
     let mut norm2 = 0.0;
-    
+
     for i in 0..half_rows {
         for j in 0..half_cols {
             let val1 = data[[i, j]];
             let val2 = data[[i + half_rows, j + half_cols]];
-            
+
             correlation += val1 * val2;
             norm1 += val1 * val1;
             norm2 += val2 * val2;
         }
     }
-    
+
     if norm1 < 1e-12 || norm2 < 1e-12 {
         return 0.0;
     }
-    
+
     (correlation / (norm1 * norm2).sqrt()).abs()
 }
 
@@ -2303,52 +2308,66 @@ fn validate_dwt2d_result_enhanced(
     let (orig_rows, orig_cols) = original_shape;
     let approx_rows = result.approx.nrows();
     let approx_cols = result.approx.ncols();
-    
+
     // Expected dimensions (with downsampling)
     let expected_rows = (orig_rows + 1) / 2;
     let expected_cols = (orig_cols + 1) / 2;
-    
+
     if approx_rows != expected_rows || approx_cols != expected_cols {
         return Err(SignalError::ComputationError(format!(
             "Dimension mismatch: expected {}x{}, got {}x{}",
             expected_rows, expected_cols, approx_rows, approx_cols
         )));
     }
-    
+
     // Check all subbands have same dimensions
-    if result.detail_h.dim() != (approx_rows, approx_cols) ||
-       result.detail_v.dim() != (approx_rows, approx_cols) ||
-       result.detail_d.dim() != (approx_rows, approx_cols) {
+    if result.detail_h.dim() != (approx_rows, approx_cols)
+        || result.detail_v.dim() != (approx_rows, approx_cols)
+        || result.detail_d.dim() != (approx_rows, approx_cols)
+    {
         return Err(SignalError::ComputationError(
-            "Subband dimension mismatch".to_string()
+            "Subband dimension mismatch".to_string(),
         ));
     }
-    
+
     // Check for finite values
-    for subband in [&result.approx, &result.detail_h, &result.detail_v, &result.detail_d] {
+    for subband in [
+        &result.approx,
+        &result.detail_h,
+        &result.detail_v,
+        &result.detail_d,
+    ] {
         for &val in subband.iter() {
             if !val.is_finite() {
                 return Err(SignalError::ComputationError(
-                    "Non-finite values in wavelet coefficients".to_string()
+                    "Non-finite values in wavelet coefficients".to_string(),
                 ));
             }
         }
     }
-    
+
     // Additional validation based on tolerance
     if config.tolerance > 0.0 {
         // Check for reasonable coefficient magnitudes
-        let max_coeff = [&result.approx, &result.detail_h, &result.detail_v, &result.detail_d]
-            .iter()
-            .flat_map(|subband| subband.iter())
-            .cloned()
-            .fold(f64::NEG_INFINITY, f64::max);
-        
+        let max_coeff = [
+            &result.approx,
+            &result.detail_h,
+            &result.detail_v,
+            &result.detail_d,
+        ]
+        .iter()
+        .flat_map(|subband| subband.iter())
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max);
+
         if max_coeff > 1e12 {
-            eprintln!("Warning: Very large coefficient detected: {:.2e}", max_coeff);
+            eprintln!(
+                "Warning: Very large coefficient detected: {:.2e}",
+                max_coeff
+            );
         }
     }
-    
+
     Ok(())
 }
 

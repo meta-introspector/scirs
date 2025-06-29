@@ -86,15 +86,13 @@ pub enum TaskType {
 }
 
 /// Resource requirements for tasks
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResourceRequirements {
     pub cpu_cores: Option<usize>,
     pub memory_gb: Option<f64>,
     pub gpu: Option<GpuRequirement>,
     pub disk_space_gb: Option<f64>,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GpuRequirement {
@@ -271,7 +269,9 @@ impl WorkflowBuilder {
         let mut rec_stack = HashSet::new();
 
         for task in &self.workflow.tasks {
-            if !visited.contains(&task.id) && self.has_cycle_dfs(&task.id, &mut visited, &mut rec_stack) {
+            if !visited.contains(&task.id)
+                && self.has_cycle_dfs(&task.id, &mut visited, &mut rec_stack)
+            {
                 return true;
             }
         }
@@ -463,9 +463,10 @@ impl WorkflowExecutor {
 
             // Find tasks that can be executed (all dependencies met)
             for task_id in &remaining_tasks {
-                let can_execute = workflow.dependencies.get(task_id).is_none_or(|deps| {
-                    deps.iter().all(|dep| executed_tasks.contains(dep))
-                });
+                let can_execute = workflow
+                    .dependencies
+                    .get(task_id)
+                    .is_none_or(|deps| deps.iter().all(|dep| executed_tasks.contains(dep)));
 
                 if can_execute {
                     tasks_to_execute.push(task_id.clone());
@@ -1645,10 +1646,7 @@ pub mod versioning {
             description: impl Into<String>,
         ) -> String {
             let workflow_id = workflow.id.clone();
-            let versions = self
-                .versions
-                .entry(workflow_id.clone())
-                .or_default();
+            let versions = self.versions.entry(workflow_id.clone()).or_default();
 
             let version_number = versions.len() + 1;
             let version = format!("v{}.0.0", version_number);

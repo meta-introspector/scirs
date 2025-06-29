@@ -4,6 +4,10 @@
 //! and sparse systems of linear equations. It's closely related to LSQR but
 //! can be more stable for ill-conditioned problems.
 
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};
@@ -26,7 +30,7 @@ pub struct LSMROptions {
     /// Whether to store residual history
     pub store_residual_history: bool,
     /// Local reorthogonalization parameter
-    pub localSize: usize,
+    pub local_size: usize,
 }
 
 impl Default for LSMROptions {
@@ -38,7 +42,7 @@ impl Default for LSMROptions {
             conlim: 1e8,
             calc_var: false,
             store_residual_history: true,
-            localSize: 0,
+            local_size: 0,
         }
     }
 }

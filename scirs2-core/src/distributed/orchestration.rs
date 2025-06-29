@@ -3,11 +3,11 @@
 //! This module provides orchestration capabilities for managing distributed
 //! workflows, task coordination, and resource allocation across cluster nodes.
 
-use crate::error::{CoreResult, CoreError, ErrorContext};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use std::collections::{HashMap, VecDeque};
+use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use std::net::SocketAddr;
 
 /// Task status in the orchestration system
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,9 +17,15 @@ pub enum TaskStatus {
     /// Task has been assigned to a node
     Assigned { node_id: String },
     /// Task is currently running
-    Running { node_id: String, started_at: Instant },
+    Running {
+        node_id: String,
+        started_at: Instant,
+    },
     /// Task completed successfully
-    Completed { node_id: String, completed_at: Instant },
+    Completed {
+        node_id: String,
+        completed_at: Instant,
+    },
     /// Task failed with an error
     Failed { node_id: String, error: String },
     /// Task was cancelled
@@ -113,7 +119,7 @@ impl Task {
             match &self.status {
                 TaskStatus::Running { started_at, .. } => {
                     Instant::now().duration_since(*started_at) > timeout
-                },
+                }
                 _ => false,
             }
         } else {
@@ -170,10 +176,11 @@ impl Workflow {
 
     /// Get tasks that are ready to execute (dependencies satisfied)
     pub fn get_ready_tasks(&self) -> Vec<&Task> {
-        self.tasks.values()
+        self.tasks
+            .values()
             .filter(|task| {
-                matches!(task.status, TaskStatus::Pending) &&
-                self.are_dependencies_satisfied(&task.id)
+                matches!(task.status, TaskStatus::Pending)
+                    && self.are_dependencies_satisfied(&task.id)
             })
             .collect()
     }
@@ -194,14 +201,19 @@ impl Workflow {
 
     /// Check if workflow is complete
     pub fn is_complete(&self) -> bool {
-        self.tasks.values().all(|task| 
-            matches!(task.status, TaskStatus::Completed { .. } | TaskStatus::Failed { .. } | TaskStatus::Cancelled)
-        )
+        self.tasks.values().all(|task| {
+            matches!(
+                task.status,
+                TaskStatus::Completed { .. } | TaskStatus::Failed { .. } | TaskStatus::Cancelled
+            )
+        })
     }
 
     /// Check if workflow has failed
     pub fn has_failed(&self) -> bool {
-        self.tasks.values().any(|task| matches!(task.status, TaskStatus::Failed { .. }))
+        self.tasks
+            .values()
+            .any(|task| matches!(task.status, TaskStatus::Failed { .. }))
     }
 }
 
@@ -269,10 +281,11 @@ impl OrchestrationEngine {
 
     /// Register a node with the orchestrator
     pub fn register_node(&self, node: OrchestratorNode) -> CoreResult<()> {
-        let mut nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
+        let mut nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
         nodes.insert(node.node_id.clone(), node);
         Ok(())
     }
@@ -280,16 +293,18 @@ impl OrchestrationEngine {
     /// Submit a workflow for execution
     pub fn submit_workflow(&self, workflow: Workflow) -> CoreResult<()> {
         let workflow_id = workflow.id.clone();
-        
-        let mut workflows = self.workflows.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire workflows lock".to_string())
-            ))?;
-        
-        let mut task_queue = self.task_queue.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire task queue lock".to_string())
-            ))?;
+
+        let mut workflows = self.workflows.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire workflows lock".to_string(),
+            ))
+        })?;
+
+        let mut task_queue = self.task_queue.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire task queue lock".to_string(),
+            ))
+        })?;
 
         // Add ready tasks to the queue
         for task in workflow.get_ready_tasks() {
@@ -303,38 +318,42 @@ impl OrchestrationEngine {
     /// Submit a single task for execution
     pub fn submit_task(&self, task: Task) -> CoreResult<()> {
         let task_id = task.id.clone();
-        
+
         // Create a single-task workflow
         let mut workflow = Workflow::new(
             format!("workflow_{}", task_id),
-            format!("Single task workflow for {}", task.name)
+            format!("Single task workflow for {}", task.name),
         );
         workflow.add_task(task);
-        
+
         self.submit_workflow(workflow)
     }
 
     /// Process the task queue and assign tasks to available nodes
     pub fn process_task_queue(&self) -> CoreResult<()> {
-        let mut task_queue = self.task_queue.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire task queue lock".to_string())
-            ))?;
-        
-        let mut nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
-        
-        let mut workflows = self.workflows.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire workflows lock".to_string())
-            ))?;
-        
-        let mut running_tasks = self.running_tasks.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire running tasks lock".to_string())
-            ))?;
+        let mut task_queue = self.task_queue.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire task queue lock".to_string(),
+            ))
+        })?;
+
+        let mut nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
+
+        let mut workflows = self.workflows.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire workflows lock".to_string(),
+            ))
+        })?;
+
+        let mut running_tasks = self.running_tasks.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire running tasks lock".to_string(),
+            ))
+        })?;
 
         // Process tasks in priority order
         let mut tasks_to_assign = Vec::new();
@@ -344,14 +363,19 @@ impl OrchestrationEngine {
 
         // Sort by priority
         tasks_to_assign.sort_by(|a, b| {
-            let priority_a = self.get_task_priority(a, &workflows).unwrap_or(TaskPriority::Low);
-            let priority_b = self.get_task_priority(b, &workflows).unwrap_or(TaskPriority::Low);
+            let priority_a = self
+                .get_task_priority(a, &workflows)
+                .unwrap_or(TaskPriority::Low);
+            let priority_b = self
+                .get_task_priority(b, &workflows)
+                .unwrap_or(TaskPriority::Low);
             priority_b.cmp(&priority_a) // Higher priority first
         });
 
         for task_id in tasks_to_assign {
             // Find an available node
-            if let Some(available_node) = nodes.values_mut()
+            if let Some(available_node) = nodes
+                .values_mut()
                 .filter(|node| node.can_accept_task() && node.is_responsive(self.node_timeout))
                 .min_by_key(|node| node.current_load)
             {
@@ -361,7 +385,7 @@ impl OrchestrationEngine {
                         node_id: available_node.node_id.clone(),
                         started_at: Instant::now(),
                     };
-                    
+
                     available_node.current_load += 1;
                     running_tasks.insert(task_id, (available_node.node_id.clone(), Instant::now()));
                 } else {
@@ -377,7 +401,11 @@ impl OrchestrationEngine {
         Ok(())
     }
 
-    fn get_task_priority(&self, task_id: &str, workflows: &HashMap<String, Workflow>) -> Option<TaskPriority> {
+    fn get_task_priority(
+        &self,
+        task_id: &str,
+        workflows: &HashMap<String, Workflow>,
+    ) -> Option<TaskPriority> {
         for workflow in workflows.values() {
             if let Some(task) = workflow.tasks.get(task_id) {
                 return Some(task.priority);
@@ -386,7 +414,11 @@ impl OrchestrationEngine {
         None
     }
 
-    fn find_task_mut<'a>(&self, task_id: &str, workflows: &'a mut HashMap<String, Workflow>) -> Option<&'a mut Task> {
+    fn find_task_mut<'a>(
+        &self,
+        task_id: &str,
+        workflows: &'a mut HashMap<String, Workflow>,
+    ) -> Option<&'a mut Task> {
         for workflow in workflows.values_mut() {
             if let Some(task) = workflow.tasks.get_mut(task_id) {
                 return Some(task);
@@ -397,20 +429,23 @@ impl OrchestrationEngine {
 
     /// Mark a task as completed
     pub fn complete_task(&self, task_id: &str, node_id: &str) -> CoreResult<()> {
-        let mut workflows = self.workflows.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire workflows lock".to_string())
-            ))?;
-        
-        let mut nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
-        
-        let mut running_tasks = self.running_tasks.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire running tasks lock".to_string())
-            ))?;
+        let mut workflows = self.workflows.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire workflows lock".to_string(),
+            ))
+        })?;
+
+        let mut nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
+
+        let mut running_tasks = self.running_tasks.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire running tasks lock".to_string(),
+            ))
+        })?;
 
         // Update task status
         if let Some(task) = self.find_task_mut(task_id, &mut workflows) {
@@ -435,10 +470,11 @@ impl OrchestrationEngine {
     }
 
     fn queue_ready_tasks(&self, workflows: &HashMap<String, Workflow>) -> CoreResult<()> {
-        let mut task_queue = self.task_queue.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire task queue lock".to_string())
-            ))?;
+        let mut task_queue = self.task_queue.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire task queue lock".to_string(),
+            ))
+        })?;
 
         for workflow in workflows.values() {
             for task in workflow.get_ready_tasks() {
@@ -453,37 +489,53 @@ impl OrchestrationEngine {
 
     /// Get orchestration statistics
     pub fn get_statistics(&self) -> CoreResult<OrchestrationStats> {
-        let workflows = self.workflows.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire workflows lock".to_string())
-            ))?;
-        
-        let nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
-        
-        let task_queue = self.task_queue.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire task queue lock".to_string())
-            ))?;
-        
-        let running_tasks = self.running_tasks.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire running tasks lock".to_string())
-            ))?;
+        let workflows = self.workflows.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire workflows lock".to_string(),
+            ))
+        })?;
+
+        let nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
+
+        let task_queue = self.task_queue.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire task queue lock".to_string(),
+            ))
+        })?;
+
+        let running_tasks = self.running_tasks.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire running tasks lock".to_string(),
+            ))
+        })?;
 
         let total_workflows = workflows.len();
-        let pending_workflows = workflows.values().filter(|w| matches!(w.status, WorkflowStatus::Pending)).count();
-        let running_workflows = workflows.values().filter(|w| matches!(w.status, WorkflowStatus::Running)).count();
-        let completed_workflows = workflows.values().filter(|w| matches!(w.status, WorkflowStatus::Completed)).count();
+        let pending_workflows = workflows
+            .values()
+            .filter(|w| matches!(w.status, WorkflowStatus::Pending))
+            .count();
+        let running_workflows = workflows
+            .values()
+            .filter(|w| matches!(w.status, WorkflowStatus::Running))
+            .count();
+        let completed_workflows = workflows
+            .values()
+            .filter(|w| matches!(w.status, WorkflowStatus::Completed))
+            .count();
 
         let total_tasks: usize = workflows.values().map(|w| w.tasks.len()).sum();
         let pending_tasks = task_queue.len();
         let running_tasks_count = running_tasks.len();
 
         let total_nodes = nodes.len();
-        let active_nodes = nodes.values().filter(|n| n.is_responsive(self.node_timeout)).count();
+        let active_nodes = nodes
+            .values()
+            .filter(|n| n.is_responsive(self.node_timeout))
+            .count();
         let total_capacity: usize = nodes.values().map(|n| n.capacity).sum();
         let current_load: usize = nodes.values().map(|n| n.current_load).sum();
 
@@ -555,7 +607,7 @@ mod tests {
         let task = Task::new("task1".to_string(), "Test Task".to_string(), vec![1, 2, 3])
             .with_priority(TaskPriority::High)
             .with_timeout(Duration::from_secs(60));
-        
+
         assert_eq!(task.id, "task1");
         assert_eq!(task.priority, TaskPriority::High);
         assert_eq!(task.timeout, Some(Duration::from_secs(60)));
@@ -566,11 +618,11 @@ mod tests {
     fn test_workflow_creation() {
         let mut workflow = Workflow::new("wf1".to_string(), "Test Workflow".to_string());
         let task = Task::new("task1".to_string(), "Test Task".to_string(), vec![1, 2, 3]);
-        
+
         workflow.add_task(task);
         assert_eq!(workflow.tasks.len(), 1);
         assert_eq!(workflow.execution_order.len(), 1);
-        
+
         let ready_tasks = workflow.get_ready_tasks();
         assert_eq!(ready_tasks.len(), 1);
     }
@@ -579,10 +631,10 @@ mod tests {
     fn test_orchestrator_node() {
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let mut node = OrchestratorNode::new("node1".to_string(), address, 10);
-        
+
         assert!(node.can_accept_task());
         assert!(node.is_responsive(Duration::from_secs(30)));
-        
+
         node.current_load = 10;
         assert!(!node.can_accept_task());
     }
@@ -590,15 +642,15 @@ mod tests {
     #[test]
     fn test_orchestration_engine() {
         let engine = OrchestrationEngine::new();
-        
+
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let node = OrchestratorNode::new("node1".to_string(), address, 5);
-        
+
         assert!(engine.register_node(node).is_ok());
-        
+
         let task = Task::new("task1".to_string(), "Test Task".to_string(), vec![1, 2, 3]);
         assert!(engine.submit_task(task).is_ok());
-        
+
         let stats = engine.get_statistics().unwrap();
         assert_eq!(stats.total_nodes, 1);
         assert_eq!(stats.total_workflows, 1);
@@ -619,7 +671,7 @@ mod tests {
             total_capacity: 100,
             current_load: 75,
         };
-        
+
         assert_eq!(stats.capacity_utilization(), 75.0);
         assert_eq!(stats.node_availability(), 80.0);
     }

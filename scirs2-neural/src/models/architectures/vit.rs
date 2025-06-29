@@ -167,7 +167,6 @@ struct TransformerEncoderBlock<F: Float + Debug + ScalarOperand + Clone + Send +
     mlp_dropout: Dropout<F>,
 }
 
-
 impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> TransformerEncoderBlock<F> {
     /// Create a new transformer encoder block
     pub fn new(

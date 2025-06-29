@@ -17,6 +17,9 @@ pub struct Experience {
     pub info: Option<std::collections::HashMap<String, f32>>,
 }
 
+/// Simple replay buffer (alias for ReplayBuffer for compatibility)
+pub type SimpleReplayBuffer = ReplayBuffer;
+
 /// Standard replay buffer
 pub struct ReplayBuffer {
     buffer: VecDeque<Experience>,
@@ -95,7 +98,7 @@ impl ReplayBuffer {
             )));
         }
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let indices: Vec<usize> = (0..self.buffer.len())
             .collect::<Vec<_>>()
             .choose_multiple(&mut rng, batch_size)
@@ -277,7 +280,7 @@ impl PrioritizedReplayBuffer {
     fn sample_indices(&self, probs: &[f32], batch_size: usize) -> Result<Vec<usize>> {
         use rand::prelude::*;
         use rand_distr::weighted::WeightedIndex;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let dist = WeightedIndex::new(probs).map_err(|e| {
             crate::error::NeuralError::InvalidArgument(format!("Invalid weights: {}", e))

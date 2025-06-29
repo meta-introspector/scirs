@@ -384,7 +384,10 @@ impl IrregularGrid {
     }
 
     /// Create the right-hand side vector incorporating ghost point contributions
-    pub fn create_rhs_vector(&self, source_function: Option<&dyn Fn(f64, f64) -> f64>) -> PDEResult<Array1<f64>> {
+    pub fn create_rhs_vector(
+        &self,
+        source_function: Option<&dyn Fn(f64, f64) -> f64>,
+    ) -> PDEResult<Array1<f64>> {
         let n_interior = self.count_interior_points();
         let mut rhs = Array1::zeros(n_interior);
 
@@ -392,7 +395,9 @@ impl IrregularGrid {
             for i in 0..self.nx {
                 let point = &self.points[[j, i]];
 
-                if point.point_type == PointType::Interior || point.point_type == PointType::Boundary {
+                if point.point_type == PointType::Interior
+                    || point.point_type == PointType::Boundary
+                {
                     let row_idx = point.solution_index as usize;
                     let (x, y) = point.coords;
 
@@ -418,7 +423,9 @@ impl IrregularGrid {
 
                             if neighbor.point_type == PointType::Ghost {
                                 // Add ghost point contribution to RHS
-                                if let Some(ghost_value) = self.get_ghost_value(ni as usize, nj as usize) {
+                                if let Some(ghost_value) =
+                                    self.get_ghost_value(ni as usize, nj as usize)
+                                {
                                     rhs[row_idx] -= coeff * ghost_value;
                                 }
                             }
@@ -520,7 +527,7 @@ impl IrregularGrid {
         };
 
         let mut converged = false;
-        
+
         for iteration in 0..max_iterations {
             let old_solution = solution.clone();
 
@@ -553,9 +560,10 @@ impl IrregularGrid {
         }
 
         if !converged {
-            return Err(PDEError::ComputationError(
-                format!("Failed to converge after {} iterations", max_iterations),
-            ));
+            return Err(PDEError::ComputationError(format!(
+                "Failed to converge after {} iterations",
+                max_iterations
+            )));
         }
 
         // Final ghost point update
@@ -576,7 +584,9 @@ impl IrregularStencils {
         derivative_order: usize,
     ) -> PDEResult<Vec<(usize, usize, f64)>> {
         if neighbor_points.is_empty() {
-            return Err(PDEError::InvalidGrid("No neighbor points provided".to_string()));
+            return Err(PDEError::InvalidGrid(
+                "No neighbor points provided".to_string(),
+            ));
         }
 
         let mut stencil_coefficients = Vec::new();
@@ -589,49 +599,76 @@ impl IrregularStencils {
                     let (nx, ny) = neighbor.coords;
                     let dx = nx - cx;
                     let dy = ny - cy;
-                    
+
                     // Simple first-order finite difference coefficients
                     if dx.abs() > dy.abs() {
                         // Primarily x-direction derivative
                         let coeff = if dx > 0.0 { 1.0 / dx } else { -1.0 / dx.abs() };
-                        stencil_coefficients.push((neighbor.grid_indices.0, neighbor.grid_indices.1, coeff));
+                        stencil_coefficients.push((
+                            neighbor.grid_indices.0,
+                            neighbor.grid_indices.1,
+                            coeff,
+                        ));
                     } else if dy.abs() > 1e-10 {
                         // Primarily y-direction derivative
                         let coeff = if dy > 0.0 { 1.0 / dy } else { -1.0 / dy.abs() };
-                        stencil_coefficients.push((neighbor.grid_indices.0, neighbor.grid_indices.1, coeff));
+                        stencil_coefficients.push((
+                            neighbor.grid_indices.0,
+                            neighbor.grid_indices.1,
+                            coeff,
+                        ));
                     }
                 }
-                
+
                 // Add center point coefficient
                 let center_coeff = -stencil_coefficients.iter().map(|(_, _, c)| c).sum::<f64>();
-                stencil_coefficients.push((center_point.grid_indices.0, center_point.grid_indices.1, center_coeff));
+                stencil_coefficients.push((
+                    center_point.grid_indices.0,
+                    center_point.grid_indices.1,
+                    center_coeff,
+                ));
             }
-            
+
             2 => {
                 // Second derivative: use three-point stencils when possible
                 if neighbor_points.len() >= 2 {
                     // Find the two closest neighbors in the primary direction
                     let mut sorted_neighbors: Vec<_> = neighbor_points.iter().collect();
                     sorted_neighbors.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-                    
+
                     if sorted_neighbors.len() >= 2 {
                         let h1 = sorted_neighbors[0].1;
                         let h2 = sorted_neighbors[1].1;
-                        
+
                         // Three-point finite difference for second derivative
                         let c0 = 2.0 / (h1 * h2 * (h1 + h2));
                         let c1 = -2.0 / (h1 * h2);
                         let c2 = 2.0 / (h2 * h1 * (h1 + h2));
-                        
-                        stencil_coefficients.push((center_point.grid_indices.0, center_point.grid_indices.1, c1));
-                        stencil_coefficients.push((sorted_neighbors[0].0.grid_indices.0, sorted_neighbors[0].0.grid_indices.1, c0));
-                        stencil_coefficients.push((sorted_neighbors[1].0.grid_indices.0, sorted_neighbors[1].0.grid_indices.1, c2));
+
+                        stencil_coefficients.push((
+                            center_point.grid_indices.0,
+                            center_point.grid_indices.1,
+                            c1,
+                        ));
+                        stencil_coefficients.push((
+                            sorted_neighbors[0].0.grid_indices.0,
+                            sorted_neighbors[0].0.grid_indices.1,
+                            c0,
+                        ));
+                        stencil_coefficients.push((
+                            sorted_neighbors[1].0.grid_indices.0,
+                            sorted_neighbors[1].0.grid_indices.1,
+                            c2,
+                        ));
                     }
                 }
             }
-            
+
             _ => {
-                return Err(PDEError::InvalidParameter(format!("Unsupported derivative order: {}", derivative_order)));
+                return Err(PDEError::InvalidParameter(format!(
+                    "Unsupported derivative order: {}",
+                    derivative_order
+                )));
             }
         }
 
@@ -645,12 +682,14 @@ impl IrregularStencils {
         derivative_type: DerivativeType,
     ) -> PDEResult<Vec<f64>> {
         if neighbors.is_empty() {
-            return Err(PDEError::InvalidGrid("No neighbor points provided for least squares stencil".to_string()));
+            return Err(PDEError::InvalidGrid(
+                "No neighbor points provided for least squares stencil".to_string(),
+            ));
         }
 
         let n = neighbors.len();
         let (cx, cy) = center;
-        
+
         // Build the constraint matrix for least squares problem
         // We want to find coefficients c_i such that sum(c_i * p_i(x_j)) approximates the derivative
         let mut constraint_matrix = Array2::<f64>::zeros((n, n));
@@ -659,7 +698,7 @@ impl IrregularStencils {
         for (i, &((x, y), _)) in neighbors.iter().enumerate() {
             let dx = x - cx;
             let dy = y - cy;
-            
+
             match derivative_type {
                 DerivativeType::FirstX => {
                     // ∂u/∂x: we want sum(c_i * u_i) ≈ ∂u/∂x
@@ -667,31 +706,31 @@ impl IrregularStencils {
                     constraint_matrix[[i, i]] = 1.0;
                     rhs[i] = dx; // Coefficient of ∂u/∂x in Taylor expansion
                 }
-                
+
                 DerivativeType::FirstY => {
                     // ∂u/∂y: similar to FirstX but for y-direction
                     constraint_matrix[[i, i]] = 1.0;
                     rhs[i] = dy; // Coefficient of ∂u/∂y in Taylor expansion
                 }
-                
+
                 DerivativeType::SecondX => {
                     // ∂²u/∂x²: coefficient is dx²/2
                     constraint_matrix[[i, i]] = 1.0;
                     rhs[i] = dx * dx / 2.0;
                 }
-                
+
                 DerivativeType::SecondY => {
                     // ∂²u/∂y²: coefficient is dy²/2
                     constraint_matrix[[i, i]] = 1.0;
                     rhs[i] = dy * dy / 2.0;
                 }
-                
+
                 DerivativeType::Mixed => {
                     // ∂²u/∂x∂y: coefficient is dx*dy
                     constraint_matrix[[i, i]] = 1.0;
                     rhs[i] = dx * dy;
                 }
-                
+
                 DerivativeType::Laplacian => {
                     // ∇²u = ∂²u/∂x² + ∂²u/∂y²
                     constraint_matrix[[i, i]] = 1.0;
@@ -704,10 +743,10 @@ impl IrregularStencils {
         // Using normal equations: A^T * A * c = A^T * b
         let ata = constraint_matrix.t().dot(&constraint_matrix);
         let atb = constraint_matrix.t().dot(&rhs);
-        
+
         // Solve the linear system (simplified approach using direct inversion for small systems)
         let coefficients = solve_small_linear_system(&ata, &atb)?;
-        
+
         Ok(coefficients.to_vec())
     }
 }
@@ -716,9 +755,11 @@ impl IrregularStencils {
 fn solve_small_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f64>> {
     let n = a.nrows();
     if n != a.ncols() || n != b.len() {
-        return Err(PDEError::ComputationError("Inconsistent matrix dimensions".to_string()));
+        return Err(PDEError::ComputationError(
+            "Inconsistent matrix dimensions".to_string(),
+        ));
     }
-    
+
     // For small systems (n <= 3), use direct methods
     match n {
         1 => {
@@ -727,19 +768,21 @@ fn solve_small_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Arra
             }
             Ok(Array1::from_vec(vec![b[0] / a[[0, 0]]]))
         }
-        
+
         2 => {
             // 2x2 system using Cramer's rule
             let det = a[[0, 0]] * a[[1, 1]] - a[[0, 1]] * a[[1, 0]];
             if det.abs() < 1e-14 {
-                return Err(PDEError::ComputationError("Singular 2x2 matrix".to_string()));
+                return Err(PDEError::ComputationError(
+                    "Singular 2x2 matrix".to_string(),
+                ));
             }
-            
+
             let x0 = (b[0] * a[[1, 1]] - b[1] * a[[0, 1]]) / det;
             let x1 = (a[[0, 0]] * b[1] - a[[1, 0]] * b[0]) / det;
             Ok(Array1::from_vec(vec![x0, x1]))
         }
-        
+
         _ => {
             // For larger systems, use Gaussian elimination with partial pivoting
             gaussian_elimination(a, b)
@@ -751,7 +794,7 @@ fn solve_small_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Arra
 fn gaussian_elimination(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f64>> {
     let n = a.nrows();
     let mut aug = Array2::<f64>::zeros((n, n + 1));
-    
+
     // Create augmented matrix
     for i in 0..n {
         for j in 0..n {
@@ -759,7 +802,7 @@ fn gaussian_elimination(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f6
         }
         aug[[i, n]] = b[i];
     }
-    
+
     // Forward elimination with partial pivoting
     for k in 0..n {
         // Find pivot
@@ -769,7 +812,7 @@ fn gaussian_elimination(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f6
                 max_row = i;
             }
         }
-        
+
         // Swap rows if needed
         if max_row != k {
             for j in 0..=n {
@@ -778,12 +821,14 @@ fn gaussian_elimination(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f6
                 aug[[max_row, j]] = temp;
             }
         }
-        
+
         // Check for singularity
         if aug[[k, k]].abs() < 1e-14 {
-            return Err(PDEError::ComputationError("Singular matrix in Gaussian elimination".to_string()));
+            return Err(PDEError::ComputationError(
+                "Singular matrix in Gaussian elimination".to_string(),
+            ));
         }
-        
+
         // Eliminate
         for i in (k + 1)..n {
             let factor = aug[[i, k]] / aug[[k, k]];
@@ -792,7 +837,7 @@ fn gaussian_elimination(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f6
             }
         }
     }
-    
+
     // Back substitution
     let mut x = Array1::<f64>::zeros(n);
     for i in (0..n).rev() {
@@ -802,7 +847,7 @@ fn gaussian_elimination(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f6
         }
         x[i] /= aug[[i, i]];
     }
-    
+
     Ok(x)
 }
 
@@ -840,55 +885,60 @@ impl ImmersedBoundary {
     ) -> PDEResult<Vec<((usize, usize), f64)>> {
         let (px, py) = immersed_point.coords;
         let (gi, gj) = immersed_point.grid_indices;
-        
+
         // Find the closest point on the boundary curve
         let closest_boundary_point = self.find_closest_boundary_point(px, py)?;
         let (bx, by) = closest_boundary_point;
-        
+
         // Get the normal vector at the boundary point
         let (_nx, _ny) = (self.normal_function)(bx, by);
-        
+
         // Find neighboring grid points for interpolation
         let neighbor_radius = 2; // Search within 2 grid points
         let mut interpolation_points = Vec::new();
-        
+
         for di in -(neighbor_radius as i32)..=(neighbor_radius as i32) {
             for dj in -(neighbor_radius as i32)..=(neighbor_radius as i32) {
                 let ni = gi as i32 + di;
                 let nj = gj as i32 + dj;
-                
+
                 if ni >= 0 && ni < grid.nx as i32 && nj >= 0 && nj < grid.ny as i32 {
                     let ni_usize = ni as usize;
                     let nj_usize = nj as usize;
-                    
+
                     let neighbor = &grid.points[[ni_usize, nj_usize]];
-                    
+
                     // Only use interior and boundary points for interpolation
-                    if neighbor.point_type == PointType::Interior || neighbor.point_type == PointType::Boundary {
+                    if neighbor.point_type == PointType::Interior
+                        || neighbor.point_type == PointType::Boundary
+                    {
                         let (gx, gy) = neighbor.coords;
                         let distance = ((gx - px).powi(2) + (gy - py).powi(2)).sqrt();
-                        
-                        if distance > 1e-12 { // Avoid division by zero
+
+                        if distance > 1e-12 {
+                            // Avoid division by zero
                             interpolation_points.push(((ni_usize, nj_usize), distance, (gx, gy)));
                         }
                     }
                 }
             }
         }
-        
+
         if interpolation_points.is_empty() {
-            return Err(PDEError::ComputationError("No valid interpolation points found".to_string()));
+            return Err(PDEError::ComputationError(
+                "No valid interpolation points found".to_string(),
+            ));
         }
-        
+
         // Sort by distance and select closest points
         interpolation_points.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
         let num_points = std::cmp::min(interpolation_points.len(), 6); // Use up to 6 points
         interpolation_points.truncate(num_points);
-        
+
         // Compute interpolation weights using inverse distance weighting
         let mut weights = Vec::new();
         let mut total_weight = 0.0;
-        
+
         for &((ni, nj), distance, (_gx, _gy)) in &interpolation_points {
             // Use radial basis function weighting
             let weight = if distance < 1e-12 {
@@ -897,20 +947,22 @@ impl ImmersedBoundary {
                 // Inverse distance squared weighting
                 1.0 / (distance * distance)
             };
-            
+
             weights.push(((ni, nj), weight));
             total_weight += weight;
         }
-        
+
         // Normalize weights
         if total_weight > 1e-12 {
             for (_, weight) in &mut weights {
                 *weight /= total_weight;
             }
         } else {
-            return Err(PDEError::ComputationError("Total weight is zero in interpolation".to_string()));
+            return Err(PDEError::ComputationError(
+                "Total weight is zero in interpolation".to_string(),
+            ));
         }
-        
+
         // Apply boundary condition correction
         // For Dirichlet boundary conditions, adjust weights to enforce the boundary value
         if let Some(boundary_distance) = immersed_point.boundary_distance {
@@ -918,38 +970,38 @@ impl ImmersedBoundary {
                 // Point is very close to boundary, apply strong boundary enforcement
                 let boundary_weight = 0.8; // Strong enforcement factor
                 let interior_weight = 1.0 - boundary_weight;
-                
+
                 for (_, weight) in &mut weights {
                     *weight *= interior_weight;
                 }
-                
+
                 // Add a virtual boundary contribution (this would be handled by the boundary condition)
                 // For now, just adjust the existing weights
             }
         }
-        
+
         Ok(weights)
     }
-    
+
     /// Find the closest point on the boundary curve to a given point
     fn find_closest_boundary_point(&self, px: f64, py: f64) -> PDEResult<(f64, f64)> {
         // Use a simple search along the parameterized boundary curve
         let mut min_distance = f64::INFINITY;
         let mut closest_point = (0.0, 0.0);
-        
+
         // Sample the boundary curve at multiple parameter values
         let num_samples = 100;
         for i in 0..num_samples {
             let t = i as f64 / (num_samples - 1) as f64; // Parameter from 0 to 1
             let (bx, by) = (self.boundary_curve)(t);
-            
+
             let distance = ((bx - px).powi(2) + (by - py).powi(2)).sqrt();
             if distance < min_distance {
                 min_distance = distance;
                 closest_point = (bx, by);
             }
         }
-        
+
         Ok(closest_point)
     }
 }
@@ -1065,7 +1117,7 @@ mod tests {
         assert_eq!(grid.ghost_values.len(), 0);
     }
 
-    #[test] 
+    #[test]
     fn test_pde_solving_with_ghost_points() {
         let domain_func = Box::new(|x: f64, y: f64| -> bool {
             x * x + y * y <= 0.8 * 0.8 // Circle with radius 0.8
@@ -1091,13 +1143,16 @@ mod tests {
 
         // Verify solution properties
         assert_eq!(solution.len(), grid.count_interior_points());
-        
+
         // For this problem, all solution values should be positive (maximum principle)
         for &value in solution.iter() {
             assert!(value >= 0.0, "Solution values should be non-negative");
         }
 
         // Ghost values should be stored after solving
-        assert!(!grid.ghost_values.is_empty(), "Ghost values should be stored after solving");
+        assert!(
+            !grid.ghost_values.is_empty(),
+            "Ghost values should be stored after solving"
+        );
     }
 }

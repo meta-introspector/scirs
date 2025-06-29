@@ -1,6 +1,6 @@
 //! GPU memory management utilities
 
-use super::{GpuBuffer, GpuContext};
+use super::{GpuBuffer, GpuContext, GpuContextAlloc};
 use crate::error::LinalgResult;
 
 /// Memory allocation strategies for GPU operations
@@ -23,7 +23,7 @@ pub struct MemoryPool<T> {
     total_allocated: usize,
 }
 
-impl<T: Clone + Send + Sync + 'static> MemoryPool<T> {
+impl<T: Clone + Send + Sync + Copy + 'static> MemoryPool<T> {
     /// Create a new memory pool
     pub fn new(max_pool_size: usize) -> Self {
         Self {
@@ -34,9 +34,9 @@ impl<T: Clone + Send + Sync + 'static> MemoryPool<T> {
     }
 
     /// Get a buffer from the pool or allocate a new one
-    pub fn get_buffer(
+    pub fn get_buffer<C: GpuContextAlloc>(
         &mut self,
-        context: &dyn GpuContext,
+        context: &C,
         size: usize,
     ) -> LinalgResult<Box<dyn GpuBuffer<T>>> {
         // Try to find a buffer of suitable size in the pool
@@ -106,6 +106,12 @@ pub struct MemoryBandwidthProfiler {
     measurements: Vec<f64>, // GB/s measurements
 }
 
+impl Default for MemoryBandwidthProfiler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MemoryBandwidthProfiler {
     /// Create a new bandwidth profiler
     pub fn new() -> Self {
@@ -115,19 +121,19 @@ impl MemoryBandwidthProfiler {
     }
 
     /// Measure memory bandwidth for a given transfer size
-    pub fn measure_bandwidth<T>(
+    pub fn measure_bandwidth<T, C: GpuContextAlloc>(
         &mut self,
-        context: &dyn GpuContext,
+        context: &C,
         transfer_size: usize,
     ) -> LinalgResult<f64>
     where
-        T: Clone + Send + Sync + Default + 'static,
+        T: Clone + Send + Sync + Default + Copy + 'static,
     {
-        let start_time = std::time::Instant::now();
+        let _start_time = std::time::Instant::now();
 
         // Allocate buffers
         let mut buffer1 = context.allocate_buffer::<T>(transfer_size)?;
-        let mut buffer2 = context.allocate_buffer::<T>(transfer_size)?;
+        let _buffer2 = context.allocate_buffer::<T>(transfer_size)?;
 
         // Create test data
         let test_data: Vec<T> = (0..transfer_size).map(|_| T::default()).collect();
@@ -173,6 +179,12 @@ impl MemoryBandwidthProfiler {
 pub struct MemoryOptimizer {
     usage_history: Vec<usize>,
     peak_usage: usize,
+}
+
+impl Default for MemoryOptimizer {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MemoryOptimizer {
@@ -304,7 +316,7 @@ mod tests {
         optimizer.record_usage(1500);
 
         let efficiency = optimizer.efficiency_score(10000);
-        assert!(efficiency >= 0.0 && efficiency <= 100.0);
+        assert!((0.0..=100.0).contains(&efficiency));
 
         let suggestions = optimizer.get_suggestions(10000);
         // Should have some suggestions for this usage pattern

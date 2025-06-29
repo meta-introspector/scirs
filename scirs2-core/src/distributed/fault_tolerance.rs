@@ -3,11 +3,11 @@
 //! This module provides fault detection, recovery, and resilience mechanisms
 //! for distributed computing environments.
 
-use crate::error::{CoreResult, CoreError, ErrorContext};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use std::collections::HashMap;
+use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use std::net::SocketAddr;
 
 /// Node health status
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,11 +28,20 @@ pub enum NodeHealth {
 #[derive(Debug, Clone)]
 pub enum FaultDetectionStrategy {
     /// Heartbeat-based detection
-    Heartbeat { interval: Duration, timeout: Duration },
+    Heartbeat {
+        interval: Duration,
+        timeout: Duration,
+    },
     /// Ping-based detection
-    Ping { interval: Duration, timeout: Duration },
+    Ping {
+        interval: Duration,
+        timeout: Duration,
+    },
     /// Application-level health checks
-    HealthCheck { interval: Duration, endpoint: String },
+    HealthCheck {
+        interval: Duration,
+        endpoint: String,
+    },
 }
 
 /// Recovery strategy for failed nodes
@@ -114,39 +123,44 @@ impl FaultToleranceManager {
 
     /// Register a node for monitoring
     pub fn register_node(&self, node_info: NodeInfo) -> CoreResult<()> {
-        let mut nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
+        let mut nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
         nodes.insert(node_info.node_id.clone(), node_info);
         Ok(())
     }
 
     /// Update node health status
     pub fn update_node_health(&self, node_id: &str, health: NodeHealth) -> CoreResult<()> {
-        let mut nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
-        
+        let mut nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
+
         if let Some(node) = nodes.get_mut(node_id) {
             node.update_health(health);
         } else {
-            return Err(CoreError::InvalidArgument(
-                ErrorContext::new(format!("Unknown node: {}", node_id))
-            ));
+            return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
+                "Unknown node: {}",
+                node_id
+            ))));
         }
         Ok(())
     }
 
     /// Get all healthy nodes
     pub fn get_healthy_nodes(&self) -> CoreResult<Vec<NodeInfo>> {
-        let nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
-        
-        Ok(nodes.values()
+        let nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
+
+        Ok(nodes
+            .values()
             .filter(|node| node.is_healthy())
             .cloned()
             .collect())
@@ -154,12 +168,14 @@ impl FaultToleranceManager {
 
     /// Get all failed nodes
     pub fn get_failed_nodes(&self) -> CoreResult<Vec<NodeInfo>> {
-        let nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
-        
-        Ok(nodes.values()
+        let nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
+
+        Ok(nodes
+            .values()
             .filter(|node| node.has_failed())
             .cloned()
             .collect())
@@ -167,11 +183,12 @@ impl FaultToleranceManager {
 
     /// Detect failed nodes based on timeout
     pub fn detect_failures(&self) -> CoreResult<Vec<String>> {
-        let nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
-        
+        let nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
+
         let now = Instant::now();
         let mut failed_nodes = Vec::new();
 
@@ -192,25 +209,26 @@ impl FaultToleranceManager {
 
     /// Initiate recovery for failed nodes
     pub fn initiate_recovery(&self, node_id: &str) -> CoreResult<()> {
-        let nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
-        
+        let nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
+
         if let Some(node) = nodes.get(node_id) {
             match &node.recovery_strategy {
                 RecoveryStrategy::Restart => {
                     self.restart_node(node_id)?;
-                },
+                }
                 RecoveryStrategy::Migrate => {
                     self.migrate_tasks(node_id)?;
-                },
+                }
                 RecoveryStrategy::Replace { standby_address } => {
                     self.replace_node(node_id, *standby_address)?;
-                },
+                }
                 RecoveryStrategy::Manual => {
                     println!("Manual intervention required for node: {}", node_id);
-                },
+                }
             }
         }
 
@@ -231,33 +249,38 @@ impl FaultToleranceManager {
 
     fn replace_node(&self, node_id: &str, standby_address: SocketAddr) -> CoreResult<()> {
         // In a real implementation, this would activate standby node
-        println!("Replacing node {} with standby at {}", node_id, standby_address);
+        println!(
+            "Replacing node {} with standby at {}",
+            node_id, standby_address
+        );
         Ok(())
     }
 
     /// Check if the cluster has sufficient healthy nodes
     pub fn is_cluster_healthy(&self) -> CoreResult<bool> {
-        let nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
-        
+        let nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
+
         let healthy_count = nodes.values().filter(|node| node.is_healthy()).count();
         let total_count = nodes.len();
-        
+
         // Require at least 50% of nodes to be healthy
         Ok(healthy_count * 2 >= total_count)
     }
 
     /// Get cluster health summary
     pub fn get_cluster_health_summary(&self) -> CoreResult<ClusterHealthSummary> {
-        let nodes = self.nodes.lock()
-            .map_err(|_| CoreError::InvalidState(
-                ErrorContext::new("Failed to acquire nodes lock".to_string())
-            ))?;
-        
+        let nodes = self.nodes.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire nodes lock".to_string(),
+            ))
+        })?;
+
         let mut summary = ClusterHealthSummary::default();
-        
+
         for node in nodes.values() {
             match node.health {
                 NodeHealth::Healthy => summary.healthy_count += 1,
@@ -267,7 +290,7 @@ impl FaultToleranceManager {
                 NodeHealth::Recovering => summary.recovering_count += 1,
             }
         }
-        
+
         summary.total_count = nodes.len();
         Ok(summary)
     }
@@ -306,7 +329,7 @@ pub fn initialize_fault_tolerance() -> CoreResult<()> {
             interval: Duration::from_secs(30),
             timeout: Duration::from_secs(60),
         },
-        3
+        3,
     );
     Ok(())
 }
@@ -320,7 +343,7 @@ mod tests {
     fn test_node_info_creation() {
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let node = NodeInfo::new("node1".to_string(), address);
-        
+
         assert_eq!(node.node_id, "node1");
         assert_eq!(node.address, address);
         assert_eq!(node.health, NodeHealth::Healthy);
@@ -332,7 +355,7 @@ mod tests {
     fn test_node_health_update() {
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let mut node = NodeInfo::new("node1".to_string(), address);
-        
+
         node.update_health(NodeHealth::Failed);
         assert_eq!(node.health, NodeHealth::Failed);
         assert_eq!(node.failure_count, 1);
@@ -346,13 +369,15 @@ mod tests {
             timeout: Duration::from_secs(60),
         };
         let manager = FaultToleranceManager::new(strategy, 3);
-        
+
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let node = NodeInfo::new("node1".to_string(), address);
-        
+
         assert!(manager.register_node(node).is_ok());
-        assert!(manager.update_node_health("node1", NodeHealth::Failed).is_ok());
-        
+        assert!(manager
+            .update_node_health("node1", NodeHealth::Failed)
+            .is_ok());
+
         let failed_nodes = manager.get_failed_nodes().unwrap();
         assert_eq!(failed_nodes.len(), 1);
         assert_eq!(failed_nodes[0].node_id, "node1");
@@ -360,11 +385,13 @@ mod tests {
 
     #[test]
     fn test_cluster_health_summary() {
-        let mut summary = ClusterHealthSummary::default();
-        summary.total_count = 10;
-        summary.healthy_count = 8;
-        summary.failed_count = 2;
-        
+        let summary = ClusterHealthSummary {
+            total_count: 10,
+            healthy_count: 8,
+            failed_count: 2,
+            ..Default::default()
+        };
+
         assert_eq!(summary.health_percentage(), 80.0);
         assert!(summary.is_healthy());
     }

@@ -47,7 +47,9 @@ impl<F: Float + ScalarOperand + Debug> Adagrad<F> {
     /// * `learning_rate` - The learning rate for parameter updates
     pub fn new(learning_rate: F) -> Result<Self> {
         let epsilon = F::from(1e-10).ok_or_else(|| {
-            NeuralError::InvalidArgument("Failed to convert 1e-10 to the appropriate floating point type".to_string())
+            NeuralError::InvalidArgument(
+                "Failed to convert 1e-10 to the appropriate floating point type".to_string(),
+            )
         })?;
 
         Ok(Self {

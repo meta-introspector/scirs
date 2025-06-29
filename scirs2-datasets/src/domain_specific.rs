@@ -79,9 +79,14 @@ pub mod astronomy {
 
     impl StellarDatasets {
         pub fn new() -> Result<Self> {
+            let cache_dir = dirs::cache_dir()
+                .ok_or_else(|| {
+                    DatasetsError::Other("Could not determine cache directory".to_string())
+                })?
+                .join("scirs2-datasets");
             Ok(Self {
                 client: ExternalClient::new()?,
-                cache: DatasetCache::new()?,
+                cache: DatasetCache::new(cache_dir),
             })
         }
 
@@ -106,7 +111,7 @@ pub mod astronomy {
         }
 
         fn load_synthetic_stellar_data(&self, catalog: &str, n_stars: usize) -> Result<Dataset> {
-            use rand::rng;
+            use rand::{rng, Rng};
             use rand_distr::{Distribution, Normal};
 
             let mut rng = rng();
@@ -116,8 +121,8 @@ pub mod astronomy {
             let mut spectral_classes = Vec::with_capacity(n_stars);
 
             // Distributions for stellar parameters
-            let ra_dist = rand_distr::Uniform::new(0.0, 360.0);
-            let dec_dist = rand_distr::Uniform::new(-90.0, 90.0);
+            let ra_dist = rand_distr::Uniform::new(0.0, 360.0).unwrap();
+            let dec_dist = rand_distr::Uniform::new(-90.0, 90.0).unwrap();
             let magnitude_dist = Normal::new(8.0, 3.0).unwrap();
             let color_dist = Normal::new(0.5, 0.3).unwrap();
             let parallax_dist = Normal::new(10.0, 5.0).unwrap();
@@ -134,7 +139,7 @@ pub mod astronomy {
                 // Color index (B-V)
                 data.push(color_dist.sample(&mut rng));
                 // Parallax (mas)
-                data.push(parallax_dist.sample(&mut rng).max(0.1));
+                data.push((parallax_dist.sample(&mut rng) as f64).max(0.1f64));
                 // Proper motion RA (mas/yr)
                 data.push(proper_motion_dist.sample(&mut rng));
                 // Proper motion Dec (mas/yr)
@@ -183,15 +188,26 @@ pub mod astronomy {
                     "K".to_string(),
                     "M".to_string(),
                 ]),
+                feature_descriptions: Some(vec![
+                    "Right Ascension (degrees)".to_string(),
+                    "Declination (degrees)".to_string(),
+                    "Apparent magnitude (visual)".to_string(),
+                    "B-V color index".to_string(),
+                    "Parallax (arcseconds)".to_string(),
+                    "Proper motion RA (mas/year)".to_string(),
+                    "Proper motion Dec (mas/year)".to_string(),
+                    "Radial velocity (km/s)".to_string(),
+                ]),
                 description: Some(format!(
                     "Synthetic {} stellar catalog with {} stars",
                     catalog, n_stars
                 )),
+                metadata: std::collections::HashMap::new(),
             })
         }
 
         fn load_synthetic_exoplanet_data(&self, n_planets: usize) -> Result<Dataset> {
-            use rand::rng;
+            use rand::{rng, Rng};
             use rand_distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rng();
@@ -216,7 +232,7 @@ pub mod astronomy {
                 // Planet mass (Earth masses)
                 data.push(mass_dist.sample(&mut rng));
                 // Stellar mass (Solar masses)
-                data.push(stellar_mass_dist.sample(&mut rng).max(0.1));
+                data.push((stellar_mass_dist.sample(&mut rng) as f64).max(0.1f64));
                 // Stellar temperature (K)
                 data.push(stellar_temp_dist.sample(&mut rng));
                 // Stellar metallicity [Fe/H]
@@ -257,15 +273,24 @@ pub mod astronomy {
                     "Neptune".to_string(),
                     "Jupiter".to_string(),
                 ]),
+                feature_descriptions: Some(vec![
+                    "Orbital period (days)".to_string(),
+                    "Planet radius (Earth radii)".to_string(),
+                    "Planet mass (Earth masses)".to_string(),
+                    "Stellar mass (Solar masses)".to_string(),
+                    "Stellar temperature (K)".to_string(),
+                    "Stellar metallicity [Fe/H]".to_string(),
+                ]),
                 description: Some(format!(
                     "Synthetic exoplanet catalog with {} planets",
                     n_planets
                 )),
+                metadata: std::collections::HashMap::new(),
             })
         }
 
         fn load_synthetic_supernova_data(&self, n_supernovae: usize) -> Result<Dataset> {
-            use rand::rng;
+            use rand::{rng, Rng};
             use rand_distr::{Distribution, Normal};
 
             let mut rng = rng();
@@ -278,7 +303,7 @@ pub mod astronomy {
             let type_probs = [0.7, 0.15, 0.10, 0.05]; // Ia, Ib/c, II-P, II-L
 
             for _ in 0..n_supernovae {
-                let sn_type = rng.gen_range(0..4);
+                let sn_type = rng.random_range(0..4);
 
                 let (peak_mag, decline_rate, color_evolution, host_mass) = match sn_type {
                     0 => (-19.3, 1.1, 0.2, 10.5), // Type Ia
@@ -302,17 +327,17 @@ pub mod astronomy {
                 // Host galaxy mass (log M_sun)
                 data.push(host_mass + host_noise.sample(&mut rng));
                 // Redshift
-                data.push(rng.gen_range(0.01..0.3));
+                data.push(rng.random_range(0.01..0.3));
                 // Duration (days)
-                data.push(rng.gen_range(20.0..200.0));
+                data.push(rng.random_range(20.0..200.0));
                 // Stretch factor
-                data.push(rng.gen_range(0.7..1.3));
+                data.push(rng.random_range(0.7..1.3));
                 // Color excess E(B-V)
-                data.push(rng.gen_range(0.0..0.5));
+                data.push(rng.random_range(0.0..0.5));
                 // Discovery magnitude
-                data.push(rng.gen_range(15.0..22.0));
+                data.push(rng.random_range(15.0..22.0));
                 // Galactic latitude
-                data.push(rng.gen_range(-90.0..90.0));
+                data.push(rng.random_range(-90.0..90.0));
 
                 sn_types.push(sn_type as f64);
             }
@@ -343,10 +368,23 @@ pub mod astronomy {
                     "Type II-P".to_string(),
                     "Type II-L".to_string(),
                 ]),
+                feature_descriptions: Some(vec![
+                    "Peak apparent magnitude".to_string(),
+                    "Magnitude decline rate (mag/day)".to_string(),
+                    "Maximum color index".to_string(),
+                    "Host galaxy stellar mass (log10 M_sun)".to_string(),
+                    "Cosmological redshift".to_string(),
+                    "Light curve duration (days)".to_string(),
+                    "Light curve stretch factor".to_string(),
+                    "Host galaxy color excess E(B-V)".to_string(),
+                    "Discovery magnitude".to_string(),
+                    "Galactic latitude (degrees)".to_string(),
+                ]),
                 description: Some(format!(
                     "Synthetic supernova catalog with {} events",
                     n_supernovae
                 )),
+                metadata: std::collections::HashMap::new(),
             })
         }
     }
@@ -364,9 +402,14 @@ pub mod genomics {
 
     impl GenomicsDatasets {
         pub fn new() -> Result<Self> {
+            let cache_dir = dirs::cache_dir()
+                .ok_or_else(|| {
+                    DatasetsError::Other("Could not determine cache directory".to_string())
+                })?
+                .join("scirs2-datasets");
             Ok(Self {
                 client: ExternalClient::new()?,
-                cache: DatasetCache::new()?,
+                cache: DatasetCache::new(cache_dir),
             })
         }
 
@@ -403,7 +446,7 @@ pub mod genomics {
                     // Add noise
                     let noise = Normal::new(1.0, 0.2).unwrap().sample(&mut rng);
 
-                    let expression = base_expr * gene_effect * noise;
+                    let expression: f64 = base_expr * gene_effect * noise;
                     data.push(expression.ln()); // Log-transform
                 }
 
@@ -422,7 +465,7 @@ pub mod genomics {
             Ok(Dataset {
                 data: data_array,
                 target: Some(target),
-                feature_names: Some(feature_names),
+                feature_names: Some(feature_names.clone()),
                 target_names: Some(vec![
                     "Control".to_string(),
                     "Treatment_A".to_string(),
@@ -430,10 +473,14 @@ pub mod genomics {
                     "Disease_X".to_string(),
                     "Disease_Y".to_string(),
                 ]),
+                feature_descriptions: Some(
+                    feature_names.iter().map(|name| format!("Expression level of {}", name)).collect()
+                ),
                 description: Some(format!(
                     "Synthetic gene expression data: {} samples × {} genes",
                     n_samples, n_genes
                 )),
+                metadata: std::collections::HashMap::new(),
             })
         }
 
@@ -443,7 +490,7 @@ pub mod genomics {
             n_sequences: usize,
             sequence_length: usize,
         ) -> Result<Dataset> {
-            use rand::rng;
+            use rand::{rng, Rng};
 
             let mut rng = rng();
             let nucleotides = ['A', 'T', 'G', 'C'];
@@ -493,7 +540,7 @@ pub mod genomics {
                         }
                         _ => {
                             // Random sequences
-                            nucleotides[rng.gen_range(0..4)]
+                            nucleotides[rng.random_range(0..4)]
                         }
                     };
 
@@ -523,16 +570,20 @@ pub mod genomics {
             Ok(Dataset {
                 data: data_array,
                 target: Some(target),
-                feature_names: Some(kmers),
+                feature_names: Some(kmers.clone()),
                 target_names: Some(vec![
                     "GC-rich".to_string(),
                     "AT-rich".to_string(),
                     "Random".to_string(),
                 ]),
+                feature_descriptions: Some(
+                    kmers.iter().map(|kmer| format!("Frequency of {}-mer: {}", k, kmer)).collect()
+                ),
                 description: Some(format!(
                     "DNA sequences: {} seqs × {}-mer features",
                     n_sequences, k
                 )),
+                metadata: std::collections::HashMap::new(),
             })
         }
 
@@ -602,9 +653,14 @@ pub mod climate {
 
     impl ClimateDatasets {
         pub fn new() -> Result<Self> {
+            let cache_dir = dirs::cache_dir()
+                .ok_or_else(|| {
+                    DatasetsError::Other("Could not determine cache directory".to_string())
+                })?
+                .join("scirs2-datasets");
             Ok(Self {
                 client: ExternalClient::new()?,
-                cache: DatasetCache::new()?,
+                cache: DatasetCache::new(cache_dir),
             })
         }
 
@@ -614,7 +670,7 @@ pub mod climate {
             n_stations: usize,
             n_years: usize,
         ) -> Result<Dataset> {
-            use rand::rng;
+            use rand::{rng, Rng};
             use rand_distr::{Distribution, Normal};
 
             let mut rng = rng();
@@ -666,7 +722,7 @@ pub mod climate {
 
                     let precip = if rng.random::<f64>() < 0.3 {
                         // 30% chance of precipitation
-                        rng.gen_range(0.0..20.0) * seasonal_precip_factor
+                        rng.random_range(0.0..20.0) * seasonal_precip_factor
                     } else {
                         0.0
                     };
@@ -686,7 +742,7 @@ pub mod climate {
 
                 // Generate additional climate variables
                 let avg_humidity = humidity + Normal::new(0.0, 5.0).unwrap().sample(&mut rng);
-                let wind_speed = rng.gen_range(2.0..15.0);
+                let wind_speed = rng.random_range(2.0..15.0);
 
                 data.extend(vec![
                     mean_temp,
@@ -725,16 +781,27 @@ pub mod climate {
                     "Desert".to_string(),
                     "Arctic".to_string(),
                 ]),
+                feature_descriptions: Some(vec![
+                    "Mean annual temperature (°C)".to_string(),
+                    "Temperature range (max-min, °C)".to_string(),
+                    "Total annual precipitation (mm)".to_string(),
+                    "Number of precipitation days per year".to_string(),
+                    "Average humidity (%)".to_string(),
+                    "Average wind speed (m/s)".to_string(),
+                    "Latitude proxy (normalized)".to_string(),
+                    "Average daily precipitation (mm/day)".to_string(),
+                ]),
                 description: Some(format!(
                     "Climate data: {} stations × {} years",
                     n_stations, n_years
                 )),
+                metadata: std::collections::HashMap::new(),
             })
         }
 
         /// Load atmospheric chemistry data
         pub fn load_atmospheric_chemistry(&self, n_measurements: usize) -> Result<Dataset> {
-            use rand::rng;
+            use rand::{rng, Rng};
             use rand_distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rng();
@@ -744,13 +811,13 @@ pub mod climate {
 
             for _ in 0..n_measurements {
                 // Generate correlated atmospheric measurements
-                let base_pollution = rng.gen_range(0.0..1.0);
+                let base_pollution = rng.random_range(0.0..1.0);
 
                 // Major pollutants (concentrations in µg/m³)
-                let pm25 = LogNormal::new(2.0 + base_pollution, 0.5)
+                let pm25: f64 = LogNormal::new(2.0 + base_pollution, 0.5)
                     .unwrap()
                     .sample(&mut rng);
-                let pm10 = pm25 * rng.gen_range(1.5..2.5);
+                let pm10 = pm25 * rng.random_range(1.5..2.5);
                 let no2 = LogNormal::new(3.0 + base_pollution * 0.5, 0.3)
                     .unwrap()
                     .sample(&mut rng);
@@ -766,13 +833,13 @@ pub mod climate {
 
                 // Meteorological factors
                 let temperature = Normal::new(20.0, 10.0).unwrap().sample(&mut rng);
-                let humidity = rng.gen_range(30.0..90.0);
-                let wind_speed = rng.gen_range(0.5..12.0);
+                let humidity = rng.random_range(30.0..90.0);
+                let wind_speed = rng.random_range(0.5..12.0);
                 let pressure = Normal::new(1013.0, 15.0).unwrap().sample(&mut rng);
 
                 // Derived measurements
                 let visibility = (50.0 - pm25.ln() * 5.0).max(1.0);
-                let uv_index = rng.gen_range(0.0..12.0);
+                let uv_index = rng.random_range(0.0..12.0);
 
                 data.extend(vec![
                     pm25,
@@ -817,10 +884,25 @@ pub mod climate {
                     "uv_index".to_string(),
                 ]),
                 target_names: None,
+                feature_descriptions: Some(vec![
+                    "PM2.5 concentration (µg/m³)".to_string(),
+                    "PM10 concentration (µg/m³)".to_string(),
+                    "NO2 concentration (µg/m³)".to_string(),
+                    "SO2 concentration (µg/m³)".to_string(),
+                    "O3 concentration (µg/m³)".to_string(),
+                    "CO concentration (µg/m³)".to_string(),
+                    "Temperature (°C)".to_string(),
+                    "Relative humidity (%)".to_string(),
+                    "Wind speed (m/s)".to_string(),
+                    "Atmospheric pressure (hPa)".to_string(),
+                    "Visibility (km)".to_string(),
+                    "UV index".to_string(),
+                ]),
                 description: Some(format!(
                     "Atmospheric chemistry measurements: {} samples",
                     n_measurements
                 )),
+                metadata: std::collections::HashMap::new(),
             })
         }
 

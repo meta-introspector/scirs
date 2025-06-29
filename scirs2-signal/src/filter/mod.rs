@@ -106,7 +106,11 @@ pub use specialized::{
 
 // Re-export parallel filter functions
 pub use parallel::{
-    parallel_convolve, parallel_convolve2d, parallel_filtfilt, parallel_savgol_filter,
+    parallel_batch_filter, parallel_bilateral_filter, parallel_cic_filter, parallel_convolve,
+    parallel_convolve2d, parallel_decimate_filter, parallel_filtfilt, parallel_fir_filter_bank,
+    parallel_iir_filter_bank, parallel_median_filter, parallel_morphological_filter,
+    parallel_rank_order_filter, parallel_savgol_filter, MorphologicalOperation,
+    ParallelFilterConfig, ParallelFilterType,
 };
 
 #[cfg(test)]

@@ -57,11 +57,7 @@ where
         }
 
         // Wavelet decomposition with SIMD optimization
-        let decomp = ultra_simd_wavelet_decomposition(
-            current.view(),
-            &low_pass,
-            &high_pass,
-        )?;
+        let decomp = ultra_simd_wavelet_decomposition(current.view(), &low_pass, &high_pass)?;
 
         pyramid.add_level(decomp);
 
@@ -89,9 +85,7 @@ pub struct WaveletLevel<T> {
 
 impl<T> WaveletPyramid<T> {
     pub fn new() -> Self {
-        Self {
-            levels: Vec::new(),
-        }
+        Self { levels: Vec::new() }
     }
 
     pub fn add_level(&mut self, level: WaveletLevel<T>) {
@@ -322,9 +316,20 @@ where
             let half = safe_f64_to_float(0.5)?;
             let quarter = safe_f64_to_float(0.25)?;
 
-            let low_pass = vec![-quarter * sqrt2_inv, half * sqrt2_inv, 
-                               safe_f64_to_float(1.5)? * sqrt2_inv, half * sqrt2_inv, -quarter * sqrt2_inv];
-            let high_pass = vec![T::zero(), -half * sqrt2_inv, sqrt2_inv, -half * sqrt2_inv, T::zero()];
+            let low_pass = vec![
+                -quarter * sqrt2_inv,
+                half * sqrt2_inv,
+                safe_f64_to_float(1.5)? * sqrt2_inv,
+                half * sqrt2_inv,
+                -quarter * sqrt2_inv,
+            ];
+            let high_pass = vec![
+                T::zero(),
+                -half * sqrt2_inv,
+                sqrt2_inv,
+                -half * sqrt2_inv,
+                T::zero(),
+            ];
             Ok((low_pass, high_pass))
         }
     }
@@ -357,7 +362,7 @@ where
     // Process each scale
     for (scale_idx, (&radius, &n_points)) in radii.iter().zip(sample_points.iter()).enumerate() {
         let scale_lbp = ultra_simd_lbp_single_scale(&input, radius, n_points)?;
-        
+
         // Combine multi-scale results (simple weighted sum)
         let weight = 1u32 << scale_idx; // Powers of 2 for different scales
         for ((y, x), &lbp_val) in scale_lbp.indexed_iter() {
@@ -485,15 +490,14 @@ where
 }
 
 /// SIMD-optimized Gaussian smoothing
-fn ultra_simd_gaussian_smooth<T>(
-    input: &ArrayView2<T>,
-    sigma: T,
-) -> NdimageResult<Array2<T>>
+fn ultra_simd_gaussian_smooth<T>(input: &ArrayView2<T>, sigma: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
     // Generate 1D Gaussian kernel
-    let radius = (safe_f64_to_float::<T>(3.0)? * sigma).to_usize().unwrap_or(3);
+    let radius = (safe_f64_to_float::<T>(3.0)? * sigma)
+        .to_usize()
+        .unwrap_or(3);
     let kernel_size = 2 * radius + 1;
     let kernel = generate_gaussian_kernel_1d(sigma, kernel_size)?;
 
@@ -514,7 +518,8 @@ where
     let radius = (size / 2) as isize;
     let sigma_sq = sigma * sigma;
     let two_sigma_sq = safe_f64_to_float(2.0)? * sigma_sq;
-    let norm_factor = (safe_f64_to_float(2.0)? * safe_f64_to_float(std::f64::consts::PI)? * sigma_sq).sqrt();
+    let norm_factor =
+        (safe_f64_to_float(2.0)? * safe_f64_to_float(std::f64::consts::PI)? * sigma_sq).sqrt();
 
     let mut sum = T::zero();
 
@@ -536,9 +541,7 @@ where
 }
 
 /// Multi-directional gradient computation
-fn ultra_simd_multi_directional_gradients<T>(
-    input: &ArrayView2<T>,
-) -> NdimageResult<Vec<Array2<T>>>
+fn ultra_simd_multi_directional_gradients<T>(input: &ArrayView2<T>) -> NdimageResult<Vec<Array2<T>>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
@@ -549,22 +552,46 @@ where
     let kernels = [
         // Horizontal
         vec![vec![-1.0, 0.0, 1.0]],
-        // Vertical  
+        // Vertical
         vec![vec![-1.0], vec![0.0], vec![1.0]],
         // Diagonal 1
-        vec![vec![-1.0, 0.0, 0.0], vec![0.0, 0.0, 0.0], vec![0.0, 0.0, 1.0]],
+        vec![
+            vec![-1.0, 0.0, 0.0],
+            vec![0.0, 0.0, 0.0],
+            vec![0.0, 0.0, 1.0],
+        ],
         // Diagonal 2
-        vec![vec![0.0, 0.0, 1.0], vec![0.0, 0.0, 0.0], vec![-1.0, 0.0, 0.0]],
+        vec![
+            vec![0.0, 0.0, 1.0],
+            vec![0.0, 0.0, 0.0],
+            vec![-1.0, 0.0, 0.0],
+        ],
         // Additional directions for better edge detection
-        vec![vec![-1.0, -1.0, 0.0], vec![0.0, 0.0, 0.0], vec![0.0, 1.0, 1.0]],
-        vec![vec![0.0, -1.0, -1.0], vec![0.0, 0.0, 0.0], vec![1.0, 1.0, 0.0]],
-        vec![vec![-1.0, 0.0, 1.0], vec![-1.0, 0.0, 1.0], vec![-1.0, 0.0, 1.0]],
-        vec![vec![-1.0, -1.0, -1.0], vec![0.0, 0.0, 0.0], vec![1.0, 1.0, 1.0]],
+        vec![
+            vec![-1.0, -1.0, 0.0],
+            vec![0.0, 0.0, 0.0],
+            vec![0.0, 1.0, 1.0],
+        ],
+        vec![
+            vec![0.0, -1.0, -1.0],
+            vec![0.0, 0.0, 0.0],
+            vec![1.0, 1.0, 0.0],
+        ],
+        vec![
+            vec![-1.0, 0.0, 1.0],
+            vec![-1.0, 0.0, 1.0],
+            vec![-1.0, 0.0, 1.0],
+        ],
+        vec![
+            vec![-1.0, -1.0, -1.0],
+            vec![0.0, 0.0, 0.0],
+            vec![1.0, 1.0, 1.0],
+        ],
     ];
 
     for kernel_2d in &kernels {
         let mut gradient = Array2::zeros((height, width));
-        
+
         // Apply 2D convolution (simplified for demonstration)
         for y in 1..height - 1 {
             for x in 1..width - 1 {
@@ -580,7 +607,7 @@ where
                 gradient[[y, x]] = sum;
             }
         }
-        
+
         gradients.push(gradient);
     }
 
@@ -737,15 +764,11 @@ mod tests {
     #[test]
     fn test_ultra_simd_wavelet_pyramid() {
         let input = Array2::ones((64, 64));
-        
-        let pyramid = ultra_simd_wavelet_pyramid(
-            input.view(), 
-            3, 
-            WaveletType::Haar
-        ).unwrap();
-        
+
+        let pyramid = ultra_simd_wavelet_pyramid(input.view(), 3, WaveletType::Haar).unwrap();
+
         assert!(pyramid.levels.len() <= 3);
-        
+
         // Each level should have 4 components
         for level in &pyramid.levels {
             assert_eq!(level.ll.ndim(), 2);
@@ -757,40 +780,28 @@ mod tests {
 
     #[test]
     fn test_ultra_simd_multi_scale_lbp() {
-        let input = Array2::from_shape_fn((32, 32), |(i, j)| {
-            ((i + j) % 3) as f64
-        });
-        
+        let input = Array2::from_shape_fn((32, 32), |(i, j)| ((i + j) % 3) as f64);
+
         let radii = [1, 2, 3];
         let sample_points = [8, 16, 24];
-        
-        let result = ultra_simd_multi_scale_lbp(
-            input.view(),
-            &radii,
-            &sample_points,
-        ).unwrap();
-        
+
+        let result = ultra_simd_multi_scale_lbp(input.view(), &radii, &sample_points).unwrap();
+
         assert_eq!(result.shape(), input.shape());
-        
+
         // Should have non-zero LBP codes
         assert!(result.iter().any(|&x| x > 0));
     }
 
     #[test]
     fn test_ultra_simd_advanced_edge_detection() {
-        let input = Array2::from_shape_fn((64, 64), |(i, j)| {
-            if i > 30 && i < 34 { 1.0 } else { 0.0 }
-        });
-        
-        let result = ultra_simd_advanced_edge_detection(
-            input.view(),
-            1.0,
-            0.1,
-            0.3,
-        ).unwrap();
-        
+        let input =
+            Array2::from_shape_fn((64, 64), |(i, j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
+
+        let result = ultra_simd_advanced_edge_detection(input.view(), 1.0, 0.1, 0.3).unwrap();
+
         assert_eq!(result.shape(), input.shape());
-        
+
         // Should detect edges around the step function
         assert!(result.iter().any(|&x| x > 0.0));
     }
@@ -798,10 +809,10 @@ mod tests {
     #[test]
     fn test_generate_wavelet_filters() {
         let (low, high) = generate_wavelet_filters::<f64>(WaveletType::Haar).unwrap();
-        
+
         assert_eq!(low.len(), 2);
         assert_eq!(high.len(), 2);
-        
+
         // Check orthogonality condition
         let dot_product: f64 = low.iter().zip(high.iter()).map(|(a, b)| a * b).sum();
         assert!((dot_product).abs() < 1e-10);
@@ -813,7 +824,7 @@ mod tests {
         let uniform_code = 0b00001111u32; // 2 transitions
         let result = lbp_to_uniform_pattern(uniform_code, 8);
         assert_eq!(result, 4); // 4 ones
-        
+
         // Test non-uniform pattern
         let non_uniform_code = 0b01010101u32; // 8 transitions
         let result = lbp_to_uniform_pattern(non_uniform_code, 8);

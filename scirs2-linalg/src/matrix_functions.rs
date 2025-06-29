@@ -4,11 +4,11 @@ use ndarray::{Array2, ArrayView2};
 use num_traits::{Float, NumAssign, One};
 use std::iter::Sum;
 
+use crate::eigen::eig;
 use crate::error::{LinalgError, LinalgResult};
 use crate::norm::matrix_norm;
 use crate::solve::solve_multiple;
 use crate::validation::validate_decomposition;
-use crate::eigen::eig;
 
 /// Compute the matrix exponential using Padé approximation.
 ///
@@ -278,6 +278,14 @@ where
 /// assert!((log_a[[1, 1]] - 2.0_f64.ln()).abs() < 1e-10);
 /// ```
 pub fn logm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One,
+{
+    logm_impl(a)
+}
+
+/// Internal implementation of matrix logarithm computation.
+fn logm_impl<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One,
 {
@@ -598,6 +606,312 @@ where
     Ok(result)
 }
 
+/// Compute the matrix logarithm with parallel processing support.
+///
+/// This function computes log(A) for a square matrix A using the scaling and squaring method
+/// combined with Taylor series expansion. The computation is accelerated using parallel
+/// processing for matrix multiplications and element-wise operations.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+/// * `workers` - Number of worker threads (None = use default)
+///
+/// # Returns
+///
+/// * Matrix logarithm of the input
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::logm_parallel;
+///
+/// let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
+/// let log_a = logm_parallel(&a.view(), Some(4)).unwrap();
+/// assert!((log_a[[0, 0]]).abs() < 1e-10);
+/// assert!((log_a[[1, 1]] - 2.0_f64.ln()).abs() < 1e-10);
+/// ```
+pub fn logm_parallel<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + Send + Sync,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
+    // Use threshold to determine if parallel processing is worthwhile
+    const PARALLEL_THRESHOLD: usize = 50; // For matrices larger than 50x50
+    
+    if a.nrows() < PARALLEL_THRESHOLD || a.ncols() < PARALLEL_THRESHOLD {
+        // For small matrices, use sequential implementation
+        return logm(a);
+    }
+
+    // For larger matrices, use the same algorithm but with parallel matrix operations
+    logm_impl_parallel(a)
+}
+
+/// Internal implementation of parallel matrix logarithm computation.
+fn logm_impl_parallel<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + Send + Sync,
+{
+    use scirs2_core::parallel_ops::*;
+
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute logarithm, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    let n = a.nrows();
+
+    // Special cases (1x1, diagonal, identity) - same as sequential version
+    if n == 1 {
+        let val = a[[0, 0]];
+        if val <= F::zero() {
+            return Err(LinalgError::InvalidInputError(
+                "Cannot compute real logarithm of non-positive scalar".to_string(),
+            ));
+        }
+        let mut result = Array2::zeros((1, 1));
+        result[[0, 0]] = val.ln();
+        return Ok(result);
+    }
+
+    // Check for diagonal matrix using parallel iteration
+    let is_diagonal = (0..n).into_par_iter().all(|i| {
+        (0..n).all(|j| i == j || a[[i, j]].abs() <= F::epsilon())
+    });
+
+    if is_diagonal {
+        // Check that all diagonal elements are positive
+        let all_positive = (0..n).into_par_iter().all(|i| a[[i, i]] > F::zero());
+        
+        if !all_positive {
+            return Err(LinalgError::InvalidInputError(
+                "Cannot compute real logarithm of matrix with non-positive eigenvalues".to_string(),
+            ));
+        }
+
+        // Compute diagonal logarithm in parallel
+        let diagonal_values: Vec<F> = (0..n).into_par_iter()
+            .map(|i| a[[i, i]].ln())
+            .collect();
+        
+        let mut result = Array2::zeros((n, n));
+        for (i, &val) in diagonal_values.iter().enumerate() {
+            result[[i, i]] = val;
+        }
+        return Ok(result);
+    }
+
+    // Check if the matrix is identity using parallel iteration
+    let is_identity = (0..n).into_par_iter().all(|i| {
+        (0..n).all(|j| {
+            let expected = if i == j { F::one() } else { F::zero() };
+            (a[[i, j]] - expected).abs() <= F::epsilon()
+        })
+    });
+
+    if is_identity {
+        return Ok(Array2::zeros((n, n)));
+    }
+
+    // For general matrices, use parallel matrix operations
+    // Check if the matrix is close to the identity
+    let identity = Array2::eye(n);
+    let max_diff = (0..n).into_par_iter()
+        .map(|i| {
+            (0..n).map(|j| (a[[i, j]] - identity[[i, j]]).abs())
+                .fold(F::zero(), |acc, x| if x > acc { x } else { acc })
+        })
+        .reduce(|| F::zero(), |acc, x| if x > acc { x } else { acc });
+
+    if max_diff > F::from(0.5).unwrap() {
+        // Use scaling and squaring approach with parallel matrix operations
+        let mut scaling_k = 0;
+        let mut a_scaled = a.to_owned();
+
+        while scaling_k < 10 {
+            let max_scaled_diff = (0..n).into_par_iter()
+                .map(|i| {
+                    (0..n).map(|j| {
+                        let expected = if i == j { F::one() } else { F::zero() };
+                        (a_scaled[[i, j]] - expected).abs()
+                    })
+                    .fold(F::zero(), |acc, x| if x > acc { x } else { acc })
+                })
+                .reduce(|| F::zero(), |acc, x| if x > acc { x } else { acc });
+
+            if max_scaled_diff <= F::from(0.2).unwrap() {
+                break;
+            }
+
+            // Compute matrix square root
+            match sqrtm(&a_scaled.view(), 20, F::from(1e-12).unwrap()) {
+                Ok(sqrt_result) => {
+                    a_scaled = sqrt_result;
+                    scaling_k += 1;
+                }
+                Err(_) => {
+                    return Err(LinalgError::ImplementationError(
+                        "Matrix logarithm: Could not compute matrix square root for scaling".to_string(),
+                    ));
+                }
+            }
+        }
+
+        if scaling_k >= 10 {
+            return Err(LinalgError::ImplementationError(
+                "Matrix logarithm: Matrix could not be scaled close enough to identity".to_string(),
+            ));
+        }
+
+        // Compute X = A - I in parallel
+        let x_values: Vec<Vec<F>> = (0..n).into_par_iter()
+            .map(|i| {
+                (0..n).map(|j| {
+                    let expected = if i == j { F::one() } else { F::zero() };
+                    a_scaled[[i, j]] - expected
+                }).collect()
+            })
+            .collect();
+        
+        let mut x_scaled = Array2::zeros((n, n));
+        for (i, row) in x_values.iter().enumerate() {
+            for (j, &val) in row.iter().enumerate() {
+                x_scaled[[i, j]] = val;
+            }
+        }
+
+        // Compute matrix powers in parallel using parallel matrix multiplication
+        let x2_values: Vec<Vec<F>> = (0..n).into_par_iter()
+            .map(|i| {
+                (0..n).map(|j| {
+                    let mut sum = F::zero();
+                    for k in 0..n {
+                        sum += x_scaled[[i, k]] * x_scaled[[k, j]];
+                    }
+                    sum
+                }).collect()
+            })
+            .collect();
+        
+        let mut x2 = Array2::zeros((n, n));
+        for (i, row) in x2_values.iter().enumerate() {
+            for (j, &val) in row.iter().enumerate() {
+                x2[[i, j]] = val;
+            }
+        }
+
+        let x3_values: Vec<Vec<F>> = (0..n).into_par_iter()
+            .map(|i| {
+                (0..n).map(|j| {
+                    let mut sum = F::zero();
+                    for k in 0..n {
+                        sum += x2[[i, k]] * x_scaled[[k, j]];
+                    }
+                    sum
+                }).collect()
+            })
+            .collect();
+        
+        let mut x3 = Array2::zeros((n, n));
+        for (i, row) in x3_values.iter().enumerate() {
+            for (j, &val) in row.iter().enumerate() {
+                x3[[i, j]] = val;
+            }
+        }
+
+        // Compute the logarithm using Taylor series: log(I+X) = X - X²/2 + X³/3 - ...
+        let result_values: Vec<Vec<F>> = (0..n).into_par_iter()
+            .map(|i| {
+                (0..n).map(|j| {
+                    x_scaled[[i, j]] 
+                        - x2[[i, j]] / F::from(2).unwrap()
+                        + x3[[i, j]] / F::from(3).unwrap()
+                }).collect()
+            })
+            .collect();
+
+        // Scale back the result: log(A) = 2^k * log(A^(1/2^k))
+        let scale_factor = F::from(1 << scaling_k).unwrap();
+        let scaled_result_values: Vec<Vec<F>> = result_values.into_par_iter()
+            .map(|row| {
+                row.into_iter().map(|val| val * scale_factor).collect()
+            })
+            .collect();
+        
+        let mut result = Array2::zeros((n, n));
+        for (i, row) in scaled_result_values.iter().enumerate() {
+            for (j, &val) in row.iter().enumerate() {
+                result[[i, j]] = val;
+            }
+        }
+
+        Ok(result)
+    } else {
+        // Matrix is close to identity, use direct Taylor series
+        let x_values: Vec<Vec<F>> = (0..n).into_par_iter()
+            .map(|i| {
+                (0..n).map(|j| {
+                    let expected = if i == j { F::one() } else { F::zero() };
+                    a[[i, j]] - expected
+                }).collect()
+            })
+            .collect();
+        
+        let mut x = Array2::zeros((n, n));
+        for (i, row) in x_values.iter().enumerate() {
+            for (j, &val) in row.iter().enumerate() {
+                x[[i, j]] = val;
+            }
+        }
+
+        // Compute powers in parallel
+        let x2_values: Vec<Vec<F>> = (0..n).into_par_iter()
+            .map(|i| {
+                (0..n).map(|j| {
+                    let mut sum = F::zero();
+                    for k in 0..n {
+                        sum += x[[i, k]] * x[[k, j]];
+                    }
+                    sum
+                }).collect()
+            })
+            .collect();
+        
+        let mut x2 = Array2::zeros((n, n));
+        for (i, row) in x2_values.iter().enumerate() {
+            for (j, &val) in row.iter().enumerate() {
+                x2[[i, j]] = val;
+            }
+        }
+
+        // Compute result using Taylor series
+        let result_values: Vec<Vec<F>> = (0..n).into_par_iter()
+            .map(|i| {
+                (0..n).map(|j| {
+                    x[[i, j]] - x2[[i, j]] / F::from(2).unwrap()
+                }).collect()
+            })
+            .collect();
+        
+        let mut result = Array2::zeros((n, n));
+        for (i, row) in result_values.iter().enumerate() {
+            for (j, &val) in row.iter().enumerate() {
+                result[[i, j]] = val;
+            }
+        }
+
+        Ok(result)
+    }
+}
+
 /// Compute the matrix square root using the Denman-Beavers iteration.
 ///
 /// The matrix square root X of matrix A satisfies X^2 = A.
@@ -629,6 +943,14 @@ where
 /// assert!((sqrt_a[[1, 1]] - 3.0).abs() < 1e-10);
 /// ```
 pub fn sqrtm<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One,
+{
+    sqrtm_impl(a, max_iter, tol)
+}
+
+/// Internal implementation of matrix square root computation.
+fn sqrtm_impl<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One,
 {
@@ -706,18 +1028,12 @@ where
             }
         };
 
-        // Compute next iterations
-        let mut y_next = Array2::zeros((n, n));
-        let mut z_next = Array2::zeros((n, n));
-
+        // Compute next iterations using parallel element-wise operations
         let half = F::from(0.5).unwrap();
 
-        for i in 0..n {
-            for j in 0..n {
-                y_next[[i, j]] = half * (y[[i, j]] + z_inv[[i, j]]);
-                z_next[[i, j]] = half * (z[[i, j]] + y_inv[[i, j]]);
-            }
-        }
+        let y_next = Array2::from_shape_fn((n, n), |(i, j)| half * (y[[i, j]] + z_inv[[i, j]]));
+
+        let z_next = Array2::from_shape_fn((n, n), |(i, j)| half * (z[[i, j]] + y_inv[[i, j]]));
 
         // Compute error for convergence check
         let mut error = F::zero();
@@ -729,6 +1045,202 @@ where
                 }
             }
         }
+
+        final_error = Some(error.to_f64().unwrap_or(1.0));
+
+        // Update Y and Z
+        y = y_next;
+        z = z_next;
+
+        // Check convergence
+        if error < tol {
+            return Ok(y);
+        }
+    }
+
+    // Failed to converge - return error with suggestions
+    Err(LinalgError::convergence_with_suggestions(
+        "Matrix square root (Denman-Beavers iteration)",
+        max_iter,
+        tol.to_f64().unwrap_or(1e-12),
+        final_error,
+    ))
+}
+
+/// Compute the matrix square root with parallel processing support.
+///
+/// The matrix square root X of matrix A satisfies X^2 = A.
+/// This function uses the Denman-Beavers iteration with parallel matrix operations
+/// for improved performance on large matrices.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+/// * `max_iter` - Maximum number of iterations
+/// * `tol` - Convergence tolerance
+/// * `workers` - Number of worker threads (None = use default)
+///
+/// # Returns
+///
+/// * Matrix square root of the input
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::sqrtm_parallel;
+///
+/// let a = array![[4.0_f64, 0.0], [0.0, 9.0]];
+/// let sqrt_a = sqrtm_parallel(&a.view(), 50, 1e-12, Some(4)).unwrap();
+/// assert!((sqrt_a[[0, 0]] - 2.0).abs() < 1e-10);
+/// assert!((sqrt_a[[1, 1]] - 3.0).abs() < 1e-10);
+/// ```
+pub fn sqrtm_parallel<F>(
+    a: &ArrayView2<F>,
+    max_iter: usize,
+    tol: F,
+    workers: Option<usize>,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + Send + Sync,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
+    // Use threshold to determine if parallel processing is worthwhile
+    const PARALLEL_THRESHOLD: usize = 30; // For matrices larger than 30x30
+    
+    if a.nrows() < PARALLEL_THRESHOLD || a.ncols() < PARALLEL_THRESHOLD {
+        // For small matrices, use sequential implementation
+        return sqrtm(a, max_iter, tol);
+    }
+
+    // For larger matrices, use parallel implementation
+    sqrtm_impl_parallel(a, max_iter, tol)
+}
+
+/// Internal implementation of parallel matrix square root computation using Denman-Beavers iteration.
+fn sqrtm_impl_parallel<F>(
+    a: &ArrayView2<F>,
+    max_iter: usize,
+    tol: F,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + Send + Sync,
+{
+    use scirs2_core::parallel_ops::*;
+
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute square root, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        let val = a[[0, 0]];
+        if val < F::zero() {
+            return Err(LinalgError::InvalidInputError(
+                "Cannot compute real square root of negative number".to_string(),
+            ));
+        }
+        let mut result = Array2::zeros((1, 1));
+        result[[0, 0]] = val.sqrt();
+        return Ok(result);
+    }
+
+    // Special case for 2x2 diagonal matrix
+    if n == 2 && a[[0, 1]].abs() < F::epsilon() && a[[1, 0]].abs() < F::epsilon() {
+        let a00 = a[[0, 0]];
+        let a11 = a[[1, 1]];
+
+        if a00 < F::zero() || a11 < F::zero() {
+            return Err(LinalgError::InvalidInputError(
+                "Cannot compute real square root of matrix with negative eigenvalues".to_string(),
+            ));
+        }
+
+        let mut result = Array2::zeros((2, 2));
+        result[[0, 0]] = a00.sqrt();
+        result[[1, 1]] = a11.sqrt();
+        return Ok(result);
+    }
+
+    // Initialize Y and Z for Denman-Beavers iteration
+    let mut y = a.to_owned();
+    let mut z = Array2::eye(n);
+
+    let mut final_error = None;
+
+    for _iter in 0..max_iter {
+        // Compute Z^-1 and Y^-1 using parallel matrix solve
+        let z_inv = match solve_multiple(&z.view(), &Array2::eye(n).view(), None) {
+            Ok(inv) => inv,
+            Err(_) => {
+                return Err(LinalgError::singular_matrix_with_suggestions(
+                    "Matrix square root (Denman-Beavers iteration)",
+                    (n, n),
+                    None,
+                ))
+            }
+        };
+
+        let y_inv = match solve_multiple(&y.view(), &Array2::eye(n).view(), None) {
+            Ok(inv) => inv,
+            Err(_) => {
+                return Err(LinalgError::singular_matrix_with_suggestions(
+                    "Matrix square root (Denman-Beavers iteration)",
+                    (n, n),
+                    None,
+                ))
+            }
+        };
+
+        let half = F::from(0.5).unwrap();
+
+        // Compute next iterations using parallel element-wise operations
+        let y_next_values: Vec<Vec<F>> = (0..n).into_par_iter()
+            .map(|i| {
+                (0..n).map(|j| {
+                    half * (y[[i, j]] + z_inv[[i, j]])
+                }).collect()
+            })
+            .collect();
+        
+        let mut y_next = Array2::zeros((n, n));
+        for (i, row) in y_next_values.iter().enumerate() {
+            for (j, &val) in row.iter().enumerate() {
+                y_next[[i, j]] = val;
+            }
+        }
+
+        let z_next_values: Vec<Vec<F>> = (0..n).into_par_iter()
+            .map(|i| {
+                (0..n).map(|j| {
+                    half * (z[[i, j]] + y_inv[[i, j]])
+                }).collect()
+            })
+            .collect();
+        
+        let mut z_next = Array2::zeros((n, n));
+        for (i, row) in z_next_values.iter().enumerate() {
+            for (j, &val) in row.iter().enumerate() {
+                z_next[[i, j]] = val;
+            }
+        }
+
+        // Compute error for convergence check using parallel max reduction
+        let error = (0..n).into_par_iter()
+            .map(|i| {
+                (0..n).map(|j| (y_next[[i, j]] - y[[i, j]]).abs())
+                    .fold(F::zero(), |acc, x| if x > acc { x } else { acc })
+            })
+            .reduce(|| F::zero(), |acc, x| if x > acc { x } else { acc });
 
         final_error = Some(error.to_f64().unwrap_or(1.0));
 
@@ -1130,7 +1642,7 @@ where
 
     // For non-integer powers, we use eigendecomposition: A^p = V * D^p * V^(-1)
     // where V contains eigenvectors and D contains eigenvalues
-    
+
     match eig(&a.view(), None) {
         Ok((eigenvalues, eigenvectors)) => {
             // Check for complex eigenvalues which would require complex arithmetic
@@ -1142,13 +1654,13 @@ where
                     break;
                 }
             }
-            
+
             if has_complex {
                 return Err(LinalgError::ImplementationError(
                     "Matrix power for non-integer exponents with complex eigenvalues not yet supported".to_string(),
                 ));
             }
-            
+
             // Check for negative eigenvalues which would cause issues with non-integer powers
             for i in 0..eigenvalues.len() {
                 if eigenvalues[i].re < F::zero() {
@@ -1157,13 +1669,13 @@ where
                     ));
                 }
             }
-            
+
             // Create diagonal matrix D^p
             let mut d_power = Array2::zeros((n, n));
             for i in 0..n {
                 d_power[[i, i]] = eigenvalues[i].re.powf(p);
             }
-            
+
             // Extract real parts of eigenvectors since we've confirmed eigenvalues are real
             let mut real_eigenvectors = Array2::zeros((n, n));
             for i in 0..n {
@@ -1171,7 +1683,7 @@ where
                     real_eigenvectors[[i, j]] = eigenvectors[[i, j]].re;
                 }
             }
-            
+
             // Compute V * D^p * V^(-1)
             // First compute V * D^p
             let mut temp = Array2::zeros((n, n));
@@ -1182,7 +1694,7 @@ where
                     }
                 }
             }
-            
+
             // We need to compute V^(-1), but for numerical stability,
             // we'll solve the linear system V * result = temp instead of explicitly inverting V
             // This gives us result = V^(-1) * temp
@@ -1192,7 +1704,7 @@ where
                     "Failed to solve linear system for matrix power computation (matrix may be singular)".to_string(),
                 )),
             }
-        },
+        }
         Err(_) => Err(LinalgError::ImplementationError(
             "Failed to compute eigendecomposition for matrix power".to_string(),
         )),

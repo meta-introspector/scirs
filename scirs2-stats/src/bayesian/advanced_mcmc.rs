@@ -6,18 +6,18 @@
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast};
-use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
-use scirs2_core::{validation::*, simd_ops::SimdUnifiedOps, parallel_ops::*};
+use rand::{Rng, SeedableRng};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 
 /// Trait for defining log probability density functions
 pub trait LogDensity {
     /// Compute log probability density at given point
     fn log_density(&self, theta: &ArrayView1<f64>) -> Result<f64>;
-    
+
     /// Compute gradient of log density (if available)
     fn gradient(&self, theta: &ArrayView1<f64>) -> Result<Option<Array1<f64>>>;
-    
+
     /// Number of dimensions
     fn ndim(&self) -> usize;
 }
@@ -49,7 +49,7 @@ impl HamiltonianMonteCarlo {
     pub fn new(step_size: f64, n_steps: usize) -> Result<Self> {
         check_positive(step_size, "step_size")?;
         check_positive(n_steps, "n_steps")?;
-        
+
         Ok(Self {
             step_size,
             n_steps,
@@ -60,26 +60,26 @@ impl HamiltonianMonteCarlo {
             adaptation_window: 1000,
         })
     }
-    
+
     /// Set mass matrix
     pub fn with_mass_matrix(mut self, mass_matrix: Array2<f64>) -> Result<Self> {
         check_array_finite(&mass_matrix, "mass_matrix")?;
         self.mass_matrix = Some(mass_matrix);
         Ok(self)
     }
-    
+
     /// Set random seed
     pub fn with_seed(mut self, seed: u64) -> Self {
         self.seed = Some(seed);
         self
     }
-    
+
     /// Disable step size adaptation
     pub fn without_adaptation(mut self) -> Self {
         self.adapt_step_size = false;
         self
     }
-    
+
     /// Sample from the target distribution
     pub fn sample<D: LogDensity>(
         &self,
@@ -89,7 +89,7 @@ impl HamiltonianMonteCarlo {
     ) -> Result<HMCResult> {
         check_positive(n_samples, "n_samples")?;
         check_array_finite(&initial_state, "initial_state")?;
-        
+
         if initial_state.len() != target.ndim() {
             return Err(StatsError::DimensionMismatch(format!(
                 "initial_state length ({}) must match target dimension ({})",
@@ -97,67 +97,71 @@ impl HamiltonianMonteCarlo {
                 target.ndim()
             )));
         }
-        
+
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => SeedableRng::from_entropy(),
         };
-        
+
         let ndim = target.ndim();
         let mut samples = Array2::zeros((n_samples, ndim));
         let mut log_probs = Array1::zeros(n_samples);
         let mut accepted = Array1::from_elem(n_samples, false);
-        
+
         // Initialize mass matrix if not provided
-        let mass_matrix = self.mass_matrix.clone()
+        let mass_matrix = self
+            .mass_matrix
+            .clone()
             .unwrap_or_else(|| Array2::eye(ndim));
         let mass_matrix_inv = self.invert_mass_matrix(&mass_matrix)?;
-        
+
         let mut current_state = initial_state.to_owned();
         let mut current_log_prob = target.log_density(&current_state.view())?;
-        
+
         let mut step_size = self.step_size;
         let mut n_accepted = 0;
-        
+
         for i in 0..n_samples {
             // Generate momentum
             let momentum = self.sample_momentum(&mass_matrix, &mut rng)?;
-            
+
             // Hamiltonian dynamics
-            let (proposed_state, proposed_momentum, proposed_log_prob) = 
-                self.leapfrog_integration(
+            let (proposed_state, proposed_momentum, proposed_log_prob) = self
+                .leapfrog_integration(
                     &current_state,
                     &momentum,
                     target,
                     &mass_matrix_inv,
                     step_size,
                 )?;
-            
+
             // Metropolis acceptance
-            let current_energy = -current_log_prob + 0.5 * self.kinetic_energy(&momentum, &mass_matrix_inv)?;
-            let proposed_energy = -proposed_log_prob + 0.5 * self.kinetic_energy(&proposed_momentum, &mass_matrix_inv)?;
-            
+            let current_energy =
+                -current_log_prob + 0.5 * self.kinetic_energy(&momentum, &mass_matrix_inv)?;
+            let proposed_energy = -proposed_log_prob
+                + 0.5 * self.kinetic_energy(&proposed_momentum, &mass_matrix_inv)?;
+
             let accept_prob = (-proposed_energy + current_energy).exp().min(1.0);
             let accept = rng.gen::<f64>() < accept_prob;
-            
+
             if accept {
                 current_state = proposed_state;
                 current_log_prob = proposed_log_prob;
                 n_accepted += 1;
                 accepted[i] = true;
             }
-            
+
             samples.row_mut(i).assign(&current_state);
             log_probs[i] = current_log_prob;
-            
+
             // Adapt step size
             if self.adapt_step_size && i < self.adaptation_window {
                 step_size = self.adapt_step_size_simple(step_size, accept, self.target_acceptance);
             }
         }
-        
+
         let acceptance_rate = n_accepted as f64 / n_samples as f64;
-        
+
         Ok(HMCResult {
             samples,
             log_probabilities: log_probs,
@@ -168,28 +172,32 @@ impl HamiltonianMonteCarlo {
             ndim,
         })
     }
-    
+
     /// Sample momentum from multivariate normal
-    fn sample_momentum<R: Rng>(&self, mass_matrix: &Array2<f64>, rng: &mut R) -> Result<Array1<f64>> {
+    fn sample_momentum<R: Rng>(
+        &self,
+        mass_matrix: &Array2<f64>,
+        rng: &mut R,
+    ) -> Result<Array1<f64>> {
         let ndim = mass_matrix.nrows();
         let mut momentum = Array1::zeros(ndim);
-        
+
         // Sample from N(0, mass_matrix)
         for i in 0..ndim {
             momentum[i] = rng.gen::<f64>() * 2.0 - 1.0; // Simplified - should use proper normal sampling
         }
-        
+
         // Transform by Cholesky factor of mass matrix (simplified)
         let scaled_momentum = mass_matrix.dot(&momentum);
         Ok(scaled_momentum)
     }
-    
+
     /// Compute kinetic energy
     fn kinetic_energy(&self, momentum: &Array1<f64>, mass_matrix_inv: &Array2<f64>) -> Result<f64> {
         let kinetic = 0.5 * momentum.dot(&mass_matrix_inv.dot(momentum));
         Ok(kinetic)
     }
-    
+
     /// Leapfrog integration for Hamiltonian dynamics
     fn leapfrog_integration<D: LogDensity>(
         &self,
@@ -201,7 +209,7 @@ impl HamiltonianMonteCarlo {
     ) -> Result<(Array1<f64>, Array1<f64>, f64)> {
         let mut position = initial_position.clone();
         let mut momentum = initial_momentum.clone();
-        
+
         // Half step for momentum
         if let Some(grad) = target.gradient(&position.view())? {
             momentum = &momentum + &(step_size * 0.5 * &grad);
@@ -210,31 +218,31 @@ impl HamiltonianMonteCarlo {
                 "Gradient required for HMC but not available".to_string(),
             ));
         }
-        
+
         // Full steps
         for _ in 0..self.n_steps {
             // Full step for position
             position = &position + &(step_size * &mass_matrix_inv.dot(&momentum));
-            
+
             // Full step for momentum (except last)
             if let Some(grad) = target.gradient(&position.view())? {
                 momentum = &momentum + &(step_size * &grad);
             }
         }
-        
+
         // Final half step for momentum
         if let Some(grad) = target.gradient(&position.view())? {
             momentum = &momentum + &(step_size * 0.5 * &grad);
         }
-        
+
         // Negate momentum for reversibility
         momentum = -momentum;
-        
+
         let final_log_prob = target.log_density(&position.view())?;
-        
+
         Ok((position, momentum, final_log_prob))
     }
-    
+
     /// Invert mass matrix (simplified)
     fn invert_mass_matrix(&self, mass_matrix: &Array2<f64>) -> Result<Array2<f64>> {
         // Simplified inversion - in practice use proper matrix inversion
@@ -256,12 +264,17 @@ impl HamiltonianMonteCarlo {
             ))
         }
     }
-    
+
     /// Simple step size adaptation
-    fn adapt_step_size_simple(&self, current_step_size: f64, accepted: bool, target_rate: f64) -> f64 {
+    fn adapt_step_size_simple(
+        &self,
+        current_step_size: f64,
+        accepted: bool,
+        target_rate: f64,
+    ) -> f64 {
         let acceptance_rate = if accepted { 1.0 } else { 0.0 };
         let adaptation_rate = 0.01;
-        
+
         if acceptance_rate > target_rate {
             current_step_size * (1.0 + adaptation_rate)
         } else {
@@ -324,19 +337,19 @@ impl NoUTurnSampler {
             seed: None,
         }
     }
-    
+
     /// Set initial step size
     pub fn with_step_size(mut self, step_size: f64) -> Self {
         self.initial_step_size = step_size;
         self
     }
-    
+
     /// Set maximum tree depth
     pub fn with_max_depth(mut self, depth: usize) -> Self {
         self.max_tree_depth = depth;
         self
     }
-    
+
     /// Sample using NUTS algorithm
     pub fn sample<D: LogDensity>(
         &self,
@@ -346,52 +359,47 @@ impl NoUTurnSampler {
     ) -> Result<NUTSResult> {
         check_positive(n_samples, "n_samples")?;
         check_array_finite(&initial_state, "initial_state")?;
-        
+
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => SeedableRng::from_entropy(),
         };
-        
+
         let ndim = target.ndim();
         let mut samples = Array2::zeros((n_samples, ndim));
         let mut log_probs = Array1::zeros(n_samples);
         let mut tree_sizes = Array1::zeros(n_samples);
-        
+
         let mut current_state = initial_state.to_owned();
         let mut current_log_prob = target.log_density(&current_state.view())?;
-        
+
         let mut step_size = self.initial_step_size;
         let mut step_size_bar = self.initial_step_size;
         let mut h_bar = 0.0;
-        
+
         for i in 0..n_samples {
             // Sample momentum
             let momentum = self.sample_momentum(ndim, &mut rng);
-            
+
             // Build tree and sample
-            let (new_state, new_log_prob, tree_size) = self.build_tree(
-                &current_state,
-                &momentum,
-                target,
-                step_size,
-                &mut rng,
-            )?;
-            
+            let (new_state, new_log_prob, tree_size) =
+                self.build_tree(&current_state, &momentum, target, step_size, &mut rng)?;
+
             current_state = new_state;
             current_log_prob = new_log_prob;
-            
+
             samples.row_mut(i).assign(&current_state);
             log_probs[i] = current_log_prob;
             tree_sizes[i] = tree_size as f64;
-            
+
             // Adapt step size using dual averaging
             if i < n_samples / 2 {
                 let acceptance_prob = 1.0; // Simplified - should track actual acceptance
                 h_bar = (1.0 - 1.0 / (i as f64 + self.t0)) * h_bar
                     + (self.target_acceptance - acceptance_prob) / (i as f64 + self.t0);
-                
+
                 step_size = self.initial_step_size * (-h_bar).exp();
-                
+
                 let eta = (i as f64 + 1.0).powf(-self.kappa);
                 step_size_bar = (-eta * h_bar).exp() * (i as f64 + 1.0).powf(-self.kappa)
                     + (1.0 - (i as f64 + 1.0).powf(-self.kappa)) * step_size_bar;
@@ -399,7 +407,7 @@ impl NoUTurnSampler {
                 step_size = step_size_bar;
             }
         }
-        
+
         Ok(NUTSResult {
             samples,
             log_probabilities: log_probs,
@@ -409,7 +417,7 @@ impl NoUTurnSampler {
             ndim,
         })
     }
-    
+
     /// Sample momentum from standard normal
     fn sample_momentum<R: Rng>(&self, ndim: usize, rng: &mut R) -> Array1<f64> {
         let mut momentum = Array1::zeros(ndim);
@@ -421,7 +429,7 @@ impl NoUTurnSampler {
         }
         momentum
     }
-    
+
     /// Build binary tree for NUTS
     fn build_tree<D: LogDensity, R: Rng>(
         &self,
@@ -433,14 +441,14 @@ impl NoUTurnSampler {
     ) -> Result<(Array1<f64>, f64, usize)> {
         // Simplified tree building - this is a basic implementation
         // A full NUTS implementation would be much more complex
-        
+
         let mut current_pos = position.clone();
         let mut current_mom = momentum.clone();
         let current_log_prob = target.log_density(&current_pos.view())?;
-        
+
         // Take a few leapfrog steps (simplified)
         let n_steps = 2_usize.pow(rng.gen_range(1..=self.max_tree_depth.min(4)));
-        
+
         for _ in 0..n_steps {
             // Simplified leapfrog step
             if let Some(grad) = target.gradient(&current_pos.view())? {
@@ -451,9 +459,9 @@ impl NoUTurnSampler {
                 }
             }
         }
-        
+
         let new_log_prob = target.log_density(&current_pos.view())?;
-        
+
         Ok((current_pos, new_log_prob, n_steps))
     }
 }
@@ -503,13 +511,13 @@ impl AdaptiveMetropolis {
             seed: None,
         }
     }
-    
+
     /// Set initial covariance matrix
     pub fn with_covariance(mut self, cov: Array2<f64>) -> Self {
         self.initial_covariance = Some(cov);
         self
     }
-    
+
     /// Sample using adaptive Metropolis
     pub fn sample<D: LogDensity>(
         &self,
@@ -519,54 +527,56 @@ impl AdaptiveMetropolis {
     ) -> Result<AdaptiveMetropolisResult> {
         check_positive(n_samples, "n_samples")?;
         check_array_finite(&initial_state, "initial_state")?;
-        
+
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => SeedableRng::from_entropy(),
         };
-        
+
         let ndim = target.ndim();
         let mut samples = Array2::zeros((n_samples, ndim));
         let mut log_probs = Array1::zeros(n_samples);
         let mut accepted = Array1::from_elem(n_samples, false);
-        
+
         let mut current_state = initial_state.to_owned();
         let mut current_log_prob = target.log_density(&current_state.view())?;
-        
+
         // Initialize covariance
-        let mut covariance = self.initial_covariance.clone()
+        let mut covariance = self
+            .initial_covariance
+            .clone()
             .unwrap_or_else(|| Array2::eye(ndim));
-        
+
         let mut sample_mean = Array1::zeros(ndim);
         let mut sample_cov = Array2::zeros((ndim, ndim));
         let mut n_adapted = 0;
         let mut n_accepted = 0;
-        
+
         for i in 0..n_samples {
             // Generate proposal
             let proposal = self.generate_proposal(&current_state, &covariance, &mut rng)?;
             let proposal_log_prob = target.log_density(&proposal.view())?;
-            
+
             // Metropolis acceptance
             let log_accept_prob = proposal_log_prob - current_log_prob;
             let accept = log_accept_prob.exp() > rng.gen::<f64>();
-            
+
             if accept {
                 current_state = proposal;
                 current_log_prob = proposal_log_prob;
                 n_accepted += 1;
                 accepted[i] = true;
             }
-            
+
             samples.row_mut(i).assign(&current_state);
             log_probs[i] = current_log_prob;
-            
+
             // Update adaptation statistics
             if i >= self.adaptation_start {
                 n_adapted += 1;
                 let delta = &current_state - &sample_mean;
                 sample_mean = &sample_mean + &delta / (n_adapted as f64);
-                
+
                 // Update sample covariance (Welford's algorithm)
                 let delta2 = &current_state - &sample_mean;
                 for j in 0..ndim {
@@ -574,11 +584,12 @@ impl AdaptiveMetropolis {
                         sample_cov[[j, k]] += delta[j] * delta2[k];
                     }
                 }
-                
+
                 // Update proposal covariance
                 if n_adapted > 1 {
-                    covariance = &sample_cov / (n_adapted - 1) as f64 * self.scale_factor / ndim as f64;
-                    
+                    covariance =
+                        &sample_cov / (n_adapted - 1) as f64 * self.scale_factor / ndim as f64;
+
                     // Add small diagonal term for numerical stability
                     for j in 0..ndim {
                         covariance[[j, j]] += self.epsilon;
@@ -586,9 +597,9 @@ impl AdaptiveMetropolis {
                 }
             }
         }
-        
+
         let acceptance_rate = n_accepted as f64 / n_samples as f64;
-        
+
         Ok(AdaptiveMetropolisResult {
             samples,
             log_probabilities: log_probs,
@@ -599,7 +610,7 @@ impl AdaptiveMetropolis {
             ndim,
         })
     }
-    
+
     /// Generate proposal using multivariate normal
     fn generate_proposal<R: Rng>(
         &self,
@@ -608,7 +619,7 @@ impl AdaptiveMetropolis {
         rng: &mut R,
     ) -> Result<Array1<f64>> {
         let ndim = current.len();
-        
+
         // Sample from N(0, I)
         let mut z = Array1::zeros(ndim);
         for i in 0..ndim {
@@ -616,14 +627,14 @@ impl AdaptiveMetropolis {
             let u2: f64 = rng.gen();
             z[i] = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
         }
-        
+
         // Transform to N(current, covariance) using Cholesky decomposition
         // Simplified: assume diagonal covariance for now
         let mut proposal = current.clone();
         for i in 0..ndim {
             proposal[i] += z[i] * covariance[[i, i]].sqrt();
         }
-        
+
         Ok(proposal)
     }
 }
@@ -668,7 +679,7 @@ impl ParallelTempering {
     pub fn new(temperatures: Array1<f64>, step_size: f64) -> Result<Self> {
         check_array_finite(&temperatures, "temperatures")?;
         check_positive(step_size, "step_size")?;
-        
+
         for &temp in temperatures.iter() {
             if temp <= 0.0 {
                 return Err(StatsError::InvalidArgument(
@@ -676,7 +687,7 @@ impl ParallelTempering {
                 ));
             }
         }
-        
+
         Ok(Self {
             temperatures,
             step_size,
@@ -684,7 +695,7 @@ impl ParallelTempering {
             seed: None,
         })
     }
-    
+
     /// Sample using parallel tempering
     pub fn sample<D: LogDensity + Send + Sync>(
         &self,
@@ -694,10 +705,10 @@ impl ParallelTempering {
     ) -> Result<ParallelTemperingResult> {
         check_positive(n_samples, "n_samples")?;
         check_array_finite(&initial_states, "initial_states")?;
-        
+
         let n_chains = self.temperatures.len();
         let ndim = target.ndim();
-        
+
         if initial_states.nrows() != n_chains || initial_states.ncols() != ndim {
             return Err(StatsError::DimensionMismatch(format!(
                 "initial_states shape ({}, {}) must match (n_chains={}, ndim={})",
@@ -707,28 +718,29 @@ impl ParallelTempering {
                 ndim
             )));
         }
-        
+
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => SeedableRng::from_entropy(),
         };
-        
+
         // Initialize chains
         let mut chain_samples = vec![Array2::zeros((n_samples, ndim)); n_chains];
         let mut chain_log_probs = vec![Array1::zeros(n_samples); n_chains];
-        let mut current_states: Vec<Array1<f64>> = initial_states.rows()
+        let mut current_states: Vec<Array1<f64>> = initial_states
+            .rows()
             .into_iter()
             .map(|row| row.to_owned())
             .collect();
-        
+
         let mut current_log_probs = vec![0.0; n_chains];
         for (i, state) in current_states.iter().enumerate() {
             current_log_probs[i] = target.log_density(&state.view())?;
         }
-        
+
         let mut n_swaps_attempted = 0;
         let mut n_swaps_accepted = 0;
-        
+
         for sample_idx in 0..n_samples {
             // Update each chain with Metropolis step
             for chain_idx in 0..n_chains {
@@ -740,29 +752,31 @@ impl ParallelTempering {
                     temp,
                     &mut rng,
                 )?;
-                
+
                 current_states[chain_idx] = new_state;
                 current_log_probs[chain_idx] = new_log_prob;
-                
-                chain_samples[chain_idx].row_mut(sample_idx).assign(&current_states[chain_idx]);
+
+                chain_samples[chain_idx]
+                    .row_mut(sample_idx)
+                    .assign(&current_states[chain_idx]);
                 chain_log_probs[chain_idx][sample_idx] = current_log_probs[chain_idx];
             }
-            
+
             // Attempt swaps between adjacent temperatures
             if sample_idx % self.swap_interval == 0 && n_chains > 1 {
                 for i in 0..n_chains - 1 {
                     n_swaps_attempted += 1;
-                    
+
                     let temp_i = self.temperatures[i];
                     let temp_j = self.temperatures[i + 1];
                     let log_prob_i = current_log_probs[i];
                     let log_prob_j = current_log_probs[i + 1];
-                    
+
                     // Compute swap probability
                     let beta_i = 1.0 / temp_i;
                     let beta_j = 1.0 / temp_j;
                     let log_swap_prob = (beta_i - beta_j) * (log_prob_j - log_prob_i);
-                    
+
                     if log_swap_prob.exp() > rng.gen::<f64>() {
                         // Accept swap
                         current_states.swap(i, i + 1);
@@ -772,13 +786,13 @@ impl ParallelTempering {
                 }
             }
         }
-        
+
         let swap_acceptance_rate = if n_swaps_attempted > 0 {
             n_swaps_accepted as f64 / n_swaps_attempted as f64
         } else {
             0.0
         };
-        
+
         Ok(ParallelTemperingResult {
             chain_samples,
             chain_log_probabilities: chain_log_probs,
@@ -789,7 +803,7 @@ impl ParallelTempering {
             ndim,
         })
     }
-    
+
     /// Single Metropolis step for a tempered chain
     fn metropolis_step<D: LogDensity, R: Rng>(
         &self,
@@ -802,19 +816,19 @@ impl ParallelTempering {
         // Simple random walk proposal
         let ndim = current.len();
         let mut proposal = current.clone();
-        
+
         for i in 0..ndim {
             let u1: f64 = rng.gen();
             let u2: f64 = rng.gen();
             let normal_sample = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             proposal[i] += self.step_size * normal_sample;
         }
-        
+
         let proposal_log_prob = target.log_density(&proposal.view())?;
-        
+
         // Tempered acceptance probability
         let log_accept_prob = (proposal_log_prob - current_log_prob) / temperature;
-        
+
         if log_accept_prob.exp() > rng.gen::<f64>() {
             Ok((proposal, proposal_log_prob))
         } else {
@@ -848,7 +862,7 @@ impl ParallelTemperingResult {
         // Find chain with temperature closest to 1.0
         let mut min_diff = f64::INFINITY;
         let mut cold_idx = 0;
-        
+
         for (i, &temp) in self.temperatures.iter().enumerate() {
             let diff = (temp - 1.0).abs();
             if diff < min_diff {
@@ -856,7 +870,7 @@ impl ParallelTemperingResult {
                 cold_idx = i;
             }
         }
-        
+
         Ok(&self.chain_samples[cold_idx])
     }
 }
@@ -873,11 +887,11 @@ impl MultivariateNormal {
     pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
         check_array_finite(&mean, "mean")?;
         check_array_finite(&covariance, "covariance")?;
-        
+
         // Simplified precision computation (should use proper matrix inversion)
         let precision = Array2::eye(mean.len()); // Placeholder
         let log_det_precision = 0.0; // Placeholder
-        
+
         Ok(Self {
             mean,
             precision,
@@ -890,17 +904,17 @@ impl LogDensity for MultivariateNormal {
     fn log_density(&self, theta: &ArrayView1<f64>) -> Result<f64> {
         let diff = theta - &self.mean;
         let quad_form = diff.dot(&self.precision.dot(&diff));
-        let log_prob = -0.5 * quad_form + 0.5 * self.log_det_precision 
+        let log_prob = -0.5 * quad_form + 0.5 * self.log_det_precision
             - 0.5 * self.mean.len() as f64 * (2.0 * std::f64::consts::PI).ln();
         Ok(log_prob)
     }
-    
+
     fn gradient(&self, theta: &ArrayView1<f64>) -> Result<Option<Array1<f64>>> {
         let diff = theta - &self.mean;
         let grad = -self.precision.dot(&diff);
         Ok(Some(grad))
     }
-    
+
     fn ndim(&self) -> usize {
         self.mean.len()
     }

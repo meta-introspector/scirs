@@ -1250,10 +1250,323 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
 
             Ok(output)
         }
-        _ => Err(SignalError::NotImplemented(
-            "Model simulation not implemented for this type".to_string(),
-        )),
+        SystemModel::ARMAX { a, b, c, delay } => {
+            let n = input.len();
+            let mut output = Array1::zeros(n);
+            let mut noise = Array1::zeros(n);
+            
+            // Generate white noise for simulation (in practice, this would be estimated)
+            use rand::prelude::*;
+            let mut rng = rand::rng();
+            for i in 0..n {
+                noise[i] = rng.random_range(-1.0..1.0) * 0.1; // Small noise
+            }
+
+            for t in (*delay + b.len().max(c.len())).max(a.len())..n {
+                // AR part
+                for i in 0..a.len() {
+                    output[t] -= a[i] * output[t - i - 1];
+                }
+
+                // X part
+                for i in 0..b.len() {
+                    if t >= *delay + i {
+                        output[t] += b[i] * input[t - delay - i];
+                    }
+                }
+
+                // MA part
+                for i in 0..c.len() {
+                    if t >= i {
+                        output[t] += c[i] * noise[t - i];
+                    }
+                }
+            }
+
+            Ok(output)
+        }
+        SystemModel::OE { b, f, delay } => {
+            let n = input.len();
+            let mut output = Array1::zeros(n);
+            let mut filtered_input = Array1::zeros(n);
+
+            // Apply B(q)/F(q) transfer function to input
+            for t in (*delay + b.len()).max(f.len())..n {
+                // B part (numerator)
+                for i in 0..b.len() {
+                    if t >= *delay + i {
+                        filtered_input[t] += b[i] * input[t - delay - i];
+                    }
+                }
+
+                // F part (denominator feedback)
+                for i in 0..f.len() {
+                    if i > 0 && t >= i {
+                        filtered_input[t] -= f[i] * filtered_input[t - i];
+                    }
+                }
+                
+                output[t] = filtered_input[t];
+            }
+
+            Ok(output)
+        }
+        SystemModel::BJ { b, c, d, f, delay } => {
+            let n = input.len();
+            let mut output = Array1::zeros(n);
+            let mut filtered_input = Array1::zeros(n);
+            let mut noise = Array1::zeros(n);
+            let mut filtered_noise = Array1::zeros(n);
+            
+            // Generate white noise for simulation
+            use rand::prelude::*;
+            let mut rng = rand::rng();
+            for i in 0..n {
+                noise[i] = rng.random_range(-1.0..1.0) * 0.1;
+            }
+
+            for t in (*delay + b.len()).max(f.len()).max(c.len()).max(d.len())..n {
+                // B(q)/F(q) part for input
+                for i in 0..b.len() {
+                    if t >= *delay + i {
+                        filtered_input[t] += b[i] * input[t - delay - i];
+                    }
+                }
+                for i in 1..f.len() {
+                    if t >= i {
+                        filtered_input[t] -= f[i] * filtered_input[t - i];
+                    }
+                }
+
+                // C(q)/D(q) part for noise
+                for i in 0..c.len() {
+                    if t >= i {
+                        filtered_noise[t] += c[i] * noise[t - i];
+                    }
+                }
+                for i in 1..d.len() {
+                    if t >= i {
+                        filtered_noise[t] -= d[i] * filtered_noise[t - i];
+                    }
+                }
+
+                output[t] = filtered_input[t] + filtered_noise[t];
+            }
+
+            Ok(output)
+        }
+        SystemModel::HammersteinWiener { linear, input_nonlinearity, output_nonlinearity } => {
+            let n = input.len();
+            
+            // Apply input nonlinearity
+            let mut nonlinear_input = Array1::zeros(n);
+            for i in 0..n {
+                nonlinear_input[i] = apply_nonlinear_function(input[i], input_nonlinearity)?;
+            }
+
+            // Apply linear system
+            let linear_output = simulate_model(linear, &nonlinear_input)?;
+
+            // Apply output nonlinearity
+            let mut output = Array1::zeros(n);
+            for i in 0..n {
+                output[i] = apply_nonlinear_function(linear_output[i], output_nonlinearity)?;
+            }
+
+            Ok(output)
+        }
+        SystemModel::TransferFunction(tf) => {
+            // Convert transfer function to state space and simulate
+            let ss = transfer_function_to_state_space(tf)?;
+            simulate_state_space(&ss, input)
+        }
+        SystemModel::StateSpace(ss) => {
+            simulate_state_space(ss, input)
+        }
     }
+}
+
+/// Apply nonlinear function
+fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResult<f64> {
+    match func {
+        NonlinearFunction::Polynomial(coeffs) => {
+            let mut result = 0.0;
+            for (i, &coeff) in coeffs.iter().enumerate() {
+                result += coeff * input.powi(i as i32);
+            }
+            Ok(result)
+        }
+        NonlinearFunction::PiecewiseLinear { breakpoints, slopes } => {
+            if breakpoints.len() != slopes.len() + 1 {
+                return Err(SignalError::ValueError(
+                    "Breakpoints and slopes length mismatch".to_string(),
+                ));
+            }
+
+            // Find the appropriate segment
+            for i in 0..breakpoints.len() - 1 {
+                if input >= breakpoints[i] && input < breakpoints[i + 1] {
+                    let x0 = breakpoints[i];
+                    let y0 = if i == 0 { 0.0 } else { 
+                        // Calculate y0 based on previous segments
+                        let mut y = 0.0;
+                        for j in 0..i {
+                            y += slopes[j] * (breakpoints[j + 1] - breakpoints[j]);
+                        }
+                        y
+                    };
+                    return Ok(y0 + slopes[i] * (input - x0));
+                }
+            }
+
+            // Handle boundary cases
+            if input < breakpoints[0] {
+                Ok(slopes[0] * (input - breakpoints[0]))
+            } else {
+                let last_idx = slopes.len() - 1;
+                let last_break = breakpoints[last_idx];
+                Ok(slopes[last_idx] * (input - last_break))
+            }
+        }
+        NonlinearFunction::Sigmoid { scale, offset } => {
+            Ok(1.0 / (1.0 + (-scale * (input - offset)).exp()))
+        }
+        NonlinearFunction::DeadZone { threshold } => {
+            if input.abs() <= *threshold {
+                Ok(0.0)
+            } else if input > *threshold {
+                Ok(input - threshold)
+            } else {
+                Ok(input + threshold)
+            }
+        }
+        NonlinearFunction::Saturation { lower, upper } => {
+            Ok(input.max(*lower).min(*upper))
+        }
+        NonlinearFunction::Custom(name) => {
+            // For now, implement some common custom functions
+            match name.as_str() {
+                "tanh" => Ok(input.tanh()),
+                "relu" => Ok(input.max(0.0)),
+                "leaky_relu" => Ok(if input > 0.0 { input } else { 0.01 * input }),
+                "identity" => Ok(input),
+                _ => Err(SignalError::NotImplemented(
+                    format!("Custom function '{}' not implemented", name),
+                )),
+            }
+        }
+    }
+}
+
+/// Convert transfer function to state space representation
+fn transfer_function_to_state_space(tf: &TransferFunction) -> SignalResult<StateSpace> {
+    let num = &tf.numerator;
+    let den = &tf.denominator;
+    
+    if den.is_empty() || den[0] == 0.0 {
+        return Err(SignalError::ValueError(
+            "Invalid denominator in transfer function".to_string(),
+        ));
+    }
+
+    let n = den.len() - 1; // Order of the system
+    if n == 0 {
+        // Static gain case
+        let gain = if num.is_empty() { 0.0 } else { num[0] / den[0] };
+        return Ok(StateSpace {
+            a: Array2::zeros((0, 0)),
+            b: Array2::zeros((0, 1)),
+            c: Array2::zeros((1, 0)),
+            d: Array2::from_elem((1, 1), gain),
+        });
+    }
+
+    // Normalize denominator
+    let d0 = den[0];
+    let norm_den: Vec<f64> = den.iter().map(|&x| x / d0).collect();
+    let norm_num: Vec<f64> = num.iter().map(|&x| x / d0).collect();
+
+    // Create state-space matrices in controllable canonical form
+    let mut a = Array2::zeros((n, n));
+    let mut b = Array2::zeros((n, 1));
+    let mut c = Array2::zeros((1, n));
+    let mut d = Array2::zeros((1, 1));
+
+    // A matrix (companion form)
+    for i in 0..n - 1 {
+        a[[i + 1, i]] = 1.0;
+    }
+    for i in 0..n {
+        a[[0, n - 1 - i]] = -norm_den[i + 1];
+    }
+
+    // B matrix
+    b[[0, 0]] = 1.0;
+
+    // C matrix
+    if norm_num.len() > n {
+        d[[0, 0]] = norm_num[0];
+        for i in 0..n {
+            if i + 1 < norm_num.len() {
+                c[[0, n - 1 - i]] = norm_num[i + 1] - norm_num[0] * norm_den[i + 1];
+            } else {
+                c[[0, n - 1 - i]] = -norm_num[0] * norm_den[i + 1];
+            }
+        }
+    } else {
+        d[[0, 0]] = 0.0;
+        for i in 0..n {
+            if i < norm_num.len() {
+                c[[0, n - 1 - i]] = norm_num[i];
+            }
+        }
+    }
+
+    Ok(StateSpace { a, b, c, d })
+}
+
+/// Simulate state space system
+fn simulate_state_space(ss: &StateSpace, input: &Array1<f64>) -> SignalResult<Array1<f64>> {
+    let n_states = ss.a.nrows();
+    let n_inputs = ss.b.ncols();
+    let n_outputs = ss.c.nrows();
+    let n_samples = input.len();
+
+    if n_inputs != 1 {
+        return Err(SignalError::ValueError(
+            "Only single-input systems supported".to_string(),
+        ));
+    }
+
+    if n_outputs != 1 {
+        return Err(SignalError::ValueError(
+            "Only single-output systems supported".to_string(),
+        ));
+    }
+
+    let mut x = Array1::zeros(n_states); // State vector
+    let mut output = Array1::zeros(n_samples);
+
+    for k in 0..n_samples {
+        // Output equation: y = C*x + D*u
+        let mut y = ss.d[[0, 0]] * input[k];
+        for i in 0..n_states {
+            y += ss.c[[0, i]] * x[i];
+        }
+        output[k] = y;
+
+        // State equation: x_next = A*x + B*u
+        let mut x_next = Array1::zeros(n_states);
+        for i in 0..n_states {
+            x_next[i] = ss.b[[i, 0]] * input[k];
+            for j in 0..n_states {
+                x_next[i] += ss.a[[i, j]] * x[j];
+            }
+        }
+        x = x_next;
+    }
+
+    Ok(output)
 }
 
 /// Get number of model parameters
@@ -1263,7 +1576,9 @@ fn get_model_parameters(model: &SystemModel) -> usize {
         SystemModel::ARMAX { a, b, c, .. } => a.len() + b.len() + c.len(),
         SystemModel::OE { b, f, .. } => b.len() + f.len(),
         SystemModel::BJ { b, c, d, f, .. } => b.len() + c.len() + d.len() + f.len(),
-        _ => 0,
+        SystemModel::HammersteinWiener { linear, .. } => get_model_parameters(linear),
+        SystemModel::TransferFunction(tf) => tf.numerator.len() + tf.denominator.len(),
+        SystemModel::StateSpace(ss) => ss.a.len() + ss.b.len() + ss.c.len() + ss.d.len(),
     }
 }
 
@@ -2567,7 +2882,8 @@ fn identify_arx_model(
         cv_fit: None,
         aic,
         bic,
-        fpe: residual_variance * (n_data as f64 + n_params as f64) / (n_data as f64 - n_params as f64),
+        fpe: residual_variance * (n_data as f64 + n_params as f64)
+            / (n_data as f64 - n_params as f64),
         residual_analysis: ResidualAnalysis {
             autocorrelation: Array1::zeros(10),
             cross_correlation: Array1::zeros(10),

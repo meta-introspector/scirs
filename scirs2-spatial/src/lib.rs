@@ -567,7 +567,8 @@ pub use generic_traits::{
 
 pub mod generic_algorithms;
 pub use generic_algorithms::{
-    GenericConvexHull, GenericDistanceMatrix, GenericKDTree, GenericKMeans, KMeansResult,
+    DBSCANResult, GMMResult, GenericConvexHull, GenericDBSCAN, GenericDistanceMatrix, GenericGMM,
+    GenericKDTree, GenericKMeans, KMeansResult,
 };
 
 #[cfg(test)]

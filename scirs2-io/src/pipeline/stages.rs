@@ -76,8 +76,7 @@ impl PipelineStage for FileReadStage {
                         Box::new(value) as Box<dyn Any + Send + Sync>
                     }
                     "txt" | "text" => {
-                        let data =
-                            std::fs::read_to_string(&self.path).map_err(IoError::Io)?;
+                        let data = std::fs::read_to_string(&self.path).map_err(IoError::Io)?;
                         Box::new(data) as Box<dyn Any + Send + Sync>
                     }
                     _ => {

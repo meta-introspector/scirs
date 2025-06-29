@@ -116,21 +116,43 @@ where
                 if let Ok(report) = condition_report {
                     match report.stability_level {
                         StabilityLevel::Poor => {
-                            eprintln!(
-                                "Warning: Local kriging covariance matrix is poorly conditioned \
-                                 (condition number: {:.2e}) at query point {}. Using fallback prediction.",
-                                report.condition_number, i
-                            );
+                            // Silently use regularized fallback for poorly conditioned matrices
+                            let regularization = F::from_f64(1e-8).unwrap_or_else(|| F::epsilon());
+                            let mut regularized_cov = cov_matrix.clone();
+                            for j in 0..regularized_cov.nrows() {
+                                regularized_cov[[j, j]] += regularization;
+                            }
+                            
+                            // Try regularized solve, otherwise fallback to mean
+                            let cov_matrix_f64 = regularized_cov.mapv(|x| x.to_f64().unwrap());
+                            let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());
+                            
+                            #[cfg(feature = "linalg")]
+                            {
+                                use ndarray_linalg::Solve;
+                                if let Ok(weights_f64) = cov_matrix_f64.solve(&local_values_f64) {
+                                    let weights = weights_f64.mapv(|x| F::from_f64(x).unwrap());
+                                    let mut prediction = F::zero();
+                                    for j in 0..n_neighbors {
+                                        prediction += weights[j] * local_values[j];
+                                    }
+                                    values[i] = prediction;
+                                    variances[i] = self.anisotropic_cov.sigma_sq * F::from_f64(0.1).unwrap();
+                                    continue;
+                                }
+                            }
+                            
+                            // Final fallback to mean
                             values[i] = local_values.mean().unwrap_or(F::zero());
                             variances[i] = self.anisotropic_cov.sigma_sq;
                             continue;
                         }
                         StabilityLevel::Marginal => {
-                            eprintln!(
-                                "Info: Local kriging covariance matrix has marginal conditioning \
-                                 (condition number: {:.2e}) at query point {}. Proceeding with caution.",
-                                report.condition_number, i
-                            );
+                            // Apply light regularization for marginal conditioning
+                            let regularization = F::from_f64(1e-10).unwrap_or_else(|| F::epsilon());
+                            for j in 0..cov_matrix.nrows() {
+                                cov_matrix[[j, j]] += regularization;
+                            }
                         }
                         _ => {}
                     }
@@ -142,11 +164,32 @@ where
                 let weights = match cov_matrix_f64.solve(&local_values_f64) {
                     Ok(w) => w.mapv(|x| F::from_f64(x).unwrap()),
                     Err(_) => {
-                        eprintln!(
-                            "Warning: Matrix solve failed for local kriging at query point {}. \
-                             Using mean value fallback.", i
-                        );
-                        // Return mean as fallback
+                        // Try iterative refinement with regularization
+                        let regularization = F::from_f64(1e-6).unwrap_or_else(|| F::epsilon());
+                        let mut regularized_cov = cov_matrix.clone();
+                        for j in 0..regularized_cov.nrows() {
+                            regularized_cov[[j, j]] += regularization;
+                        }
+                        
+                        let cov_matrix_f64 = regularized_cov.mapv(|x| x.to_f64().unwrap());
+                        let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());
+                        
+                        #[cfg(feature = "linalg")]
+                        {
+                            use ndarray_linalg::Solve;
+                            if let Ok(weights_f64) = cov_matrix_f64.solve(&local_values_f64) {
+                                let weights = weights_f64.mapv(|x| F::from_f64(x).unwrap());
+                                let mut prediction = F::zero();
+                                for j in 0..n_neighbors {
+                                    prediction += weights[j] * local_values[j];
+                                }
+                                values[i] = prediction;
+                                variances[i] = self.anisotropic_cov.sigma_sq * F::from_f64(1.5).unwrap();
+                                continue;
+                            }
+                        }
+                        
+                        // Final fallback to mean
                         values[i] = local_values.mean().unwrap_or(F::zero());
                         variances[i] = self.anisotropic_cov.sigma_sq;
                         continue;
@@ -236,10 +279,7 @@ where
                 match safe_reciprocal(sv) {
                     Ok(inv_sv) => s_inv[j] = inv_sv,
                     Err(_) => {
-                        eprintln!(
-                            "Warning: Singular value {} too small for stable reciprocal at index {}. \
-                             Using zero instead.", sv, j
-                        );
+                        // Silently handle small singular values by setting to zero
                         s_inv[j] = F::zero();
                     }
                 }

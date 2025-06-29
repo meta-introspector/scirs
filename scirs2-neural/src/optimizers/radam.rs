@@ -65,7 +65,9 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
     pub fn new(learning_rate: F, beta1: F, beta2: F, epsilon: F, weight_decay: F) -> Result<Self> {
         // Calculate rho_inf (used in the rectification term)
         let two = F::from(2.0).ok_or_else(|| {
-            NeuralError::InvalidArgument("Failed to convert 2.0 to the appropriate floating point type".to_string())
+            NeuralError::InvalidArgument(
+                "Failed to convert 2.0 to the appropriate floating point type".to_string(),
+            )
         })?;
         let rho_inf = two / (F::one() - beta2) - F::one();
 
@@ -89,25 +91,27 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
     /// * `learning_rate` - The learning rate for parameter updates
     pub fn default_with_lr(learning_rate: F) -> Result<Self> {
         let beta1 = F::from(0.9).ok_or_else(|| {
-            NeuralError::InvalidArgument("Failed to convert 0.9 to the appropriate floating point type".to_string())
+            NeuralError::InvalidArgument(
+                "Failed to convert 0.9 to the appropriate floating point type".to_string(),
+            )
         })?;
         let beta2 = F::from(0.999).ok_or_else(|| {
-            NeuralError::InvalidArgument("Failed to convert 0.999 to the appropriate floating point type".to_string())
+            NeuralError::InvalidArgument(
+                "Failed to convert 0.999 to the appropriate floating point type".to_string(),
+            )
         })?;
         let epsilon = F::from(1e-8).ok_or_else(|| {
-            NeuralError::InvalidArgument("Failed to convert 1e-8 to the appropriate floating point type".to_string())
+            NeuralError::InvalidArgument(
+                "Failed to convert 1e-8 to the appropriate floating point type".to_string(),
+            )
         })?;
         let weight_decay = F::from(0.0).ok_or_else(|| {
-            NeuralError::InvalidArgument("Failed to convert 0.0 to the appropriate floating point type".to_string())
+            NeuralError::InvalidArgument(
+                "Failed to convert 0.0 to the appropriate floating point type".to_string(),
+            )
         })?;
 
-        Self::new(
-            learning_rate,
-            beta1,
-            beta2,
-            epsilon,
-            weight_decay,
-        )
+        Self::new(learning_rate, beta1, beta2, epsilon, weight_decay)
     }
 
     /// Gets the beta1 parameter

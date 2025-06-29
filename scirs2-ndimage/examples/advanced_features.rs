@@ -265,34 +265,43 @@ fn demo_ultra_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
     println!("Running ultra-SIMD wavelet pyramid...");
     let pyramid = ultra_simd_wavelet_pyramid(
         image.view(),
-        3,                   // levels
-        WaveletType::Haar,   // wavelet type
+        3,                 // levels
+        WaveletType::Haar, // wavelet type
     )?;
-    println!("Wavelet pyramid completed with {} levels", pyramid.levels.len());
-    
+    println!(
+        "Wavelet pyramid completed with {} levels",
+        pyramid.levels.len()
+    );
+
     // Print information about each level
     for (i, level) in pyramid.levels.iter().enumerate() {
-        println!("  Level {}: LL {}x{}, LH {}x{}, HL {}x{}, HH {}x{}", 
-                 i,
-                 level.ll.nrows(), level.ll.ncols(),
-                 level.lh.nrows(), level.lh.ncols(),
-                 level.hl.nrows(), level.hl.ncols(),
-                 level.hh.nrows(), level.hh.ncols());
+        println!(
+            "  Level {}: LL {}x{}, LH {}x{}, HL {}x{}, HH {}x{}",
+            i,
+            level.ll.nrows(),
+            level.ll.ncols(),
+            level.lh.nrows(),
+            level.lh.ncols(),
+            level.hl.nrows(),
+            level.hl.ncols(),
+            level.hh.nrows(),
+            level.hh.ncols()
+        );
     }
 
     // 2. Multi-scale Local Binary Patterns
     println!("Running ultra-SIMD multi-scale LBP...");
     let radii = [1, 2, 3];
     let sample_points = [8, 16, 24];
-    
-    let lbp_result = ultra_simd_multi_scale_lbp(
-        image.view(),
-        &radii,
-        &sample_points,
-    )?;
-    
-    println!("Multi-scale LBP completed: {}x{}", lbp_result.nrows(), lbp_result.ncols());
-    
+
+    let lbp_result = ultra_simd_multi_scale_lbp(image.view(), &radii, &sample_points)?;
+
+    println!(
+        "Multi-scale LBP completed: {}x{}",
+        lbp_result.nrows(),
+        lbp_result.ncols()
+    );
+
     // Print some statistics about the LBP codes
     let max_code = lbp_result.iter().max().unwrap_or(&0);
     let min_code = lbp_result.iter().min().unwrap_or(&0);
@@ -302,24 +311,34 @@ fn demo_ultra_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
         codes.dedup();
         codes.len()
     };
-    println!("  LBP code range: {} to {}, {} unique patterns", min_code, max_code, unique_codes);
+    println!(
+        "  LBP code range: {} to {}, {} unique patterns",
+        min_code, max_code, unique_codes
+    );
 
     // 3. Advanced edge detection
     println!("Running ultra-SIMD advanced edge detection...");
     let edges = ultra_simd_advanced_edge_detection(
         image.view(),
-        1.0,  // sigma for Gaussian smoothing
-        0.1,  // low threshold factor
-        0.3,  // high threshold factor
+        1.0, // sigma for Gaussian smoothing
+        0.1, // low threshold factor
+        0.3, // high threshold factor
     )?;
-    
-    println!("Advanced edge detection completed: {}x{}", edges.nrows(), edges.ncols());
-    
+
+    println!(
+        "Advanced edge detection completed: {}x{}",
+        edges.nrows(),
+        edges.ncols()
+    );
+
     // Print edge statistics
     let edge_pixels = edges.iter().filter(|&&x| x > 0.0).count();
     let total_pixels = edges.len();
     let edge_percentage = (edge_pixels as f64 / total_pixels as f64) * 100.0;
-    println!("  Detected edges: {} pixels ({:.2}% of image)", edge_pixels, edge_percentage);
+    println!(
+        "  Detected edges: {} pixels ({:.2}% of image)",
+        edge_pixels, edge_percentage
+    );
 
     // 4. Compare with different wavelet types
     println!("Comparing wavelet types...");
@@ -329,7 +348,7 @@ fn demo_ultra_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
     ] {
         let pyramid = ultra_simd_wavelet_pyramid(
             image.view(),
-            2,  // levels
+            2, // levels
             wavelet_type,
         )?;
         println!("  {}: {} levels generated", name, pyramid.levels.len());

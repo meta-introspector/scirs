@@ -1,36 +1,41 @@
 //! Coordinate-based interpolation functions
 
-use ndarray::{Array, Dimension};
-use num_traits::{Float, FromPrimitive};
+use ndarray::{Array, Array1, Array2, ArrayView, Axis, Dimension, Ix1, IxDyn, Shape};
+use num_traits::{Float, FromPrimitive, NumCast, One, Zero};
 use std::fmt::Debug;
 
 use super::{BoundaryMode, InterpolationOrder};
 use crate::error::{NdimageError, NdimageResult};
+use crate::interpolation::spline::spline_filter;
 
 /// Map coordinates from one array to another
+///
+/// The array of coordinates is used to find, for each point in the output,
+/// the corresponding coordinates in the input. The shape of the output is
+/// derived from that of the coordinate array by dropping the first axis.
 ///
 /// # Arguments
 ///
 /// * `input` - Input array
-/// * `coordinates` - Coordinates at which to sample the input
-/// * `order` - Interpolation order (default: Linear)
+/// * `coordinates` - Coordinates at which to sample the input (shape: [ndim, ...output_shape])
+/// * `order` - Interpolation order (default: 3 for cubic)
 /// * `mode` - Boundary handling mode (default: Constant)
 /// * `cval` - Value to use for constant mode (default: 0.0)
 /// * `prefilter` - Whether to prefilter the input with a spline filter (default: true)
 ///
 /// # Returns
 ///
-/// * `Result<Array<T, D>>` - Interpolated values at the coordinates
+/// * `Result<Array<T, IxDyn>>` - Interpolated values at the coordinates
 pub fn map_coordinates<T, D>(
     input: &Array<T, D>,
-    coordinates: &Array<T, D>,
-    order: Option<InterpolationOrder>,
+    coordinates: &Array<T, IxDyn>,
+    order: Option<usize>,
     mode: Option<BoundaryMode>,
     cval: Option<T>,
     prefilter: Option<bool>,
-) -> NdimageResult<Array<T, D>>
+) -> NdimageResult<Array<T, IxDyn>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + Clone,
     D: Dimension,
 {
     // Validate inputs
@@ -40,21 +45,278 @@ where
         ));
     }
 
-    if coordinates.ndim() != input.ndim() {
+    if coordinates.ndim() == 0 {
+        return Err(NdimageError::InvalidInput(
+            "Coordinates array cannot be 0-dimensional".into(),
+        ));
+    }
+
+    // Check that first dimension of coordinates matches input dimensions
+    if coordinates.shape()[0] != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
-            "Coordinates must have same number of dimensions as input (got {} expected {})",
-            coordinates.ndim(),
+            "First dimension of coordinates must match input dimensions (got {} expected {})",
+            coordinates.shape()[0],
             input.ndim()
         )));
     }
 
-    let _interp_order = order.unwrap_or(InterpolationOrder::Linear);
-    let _boundary = mode.unwrap_or(BoundaryMode::Constant);
-    let _const_val = cval.unwrap_or_else(|| T::zero());
-    let _prefilter_input = prefilter.unwrap_or(true);
+    let interp_order = order.unwrap_or(3);
+    let boundary = mode.unwrap_or(BoundaryMode::Constant);
+    let const_val = cval.unwrap_or_else(|| T::zero());
+    let prefilter_input = prefilter.unwrap_or(true);
 
-    // Placeholder implementation returning a copy of the input
-    Ok(input.to_owned())
+    if interp_order > 5 {
+        return Err(NdimageError::InvalidInput(format!(
+            "Interpolation order must be 0-5, got {}",
+            interp_order
+        )));
+    }
+
+    // Output shape is coordinates shape with first dimension dropped
+    let output_shape: Vec<usize> = coordinates.shape()[1..].to_vec();
+    let output_size: usize = output_shape.iter().product();
+
+    // Apply spline filter if needed and order > 1
+    let filtered_input = if prefilter_input && interp_order > 1 {
+        // Convert input to dynamic array for spline filtering
+        let input_dyn = input.to_owned().into_dyn();
+        spline_filter(&input_dyn, Some(interp_order))?
+    } else {
+        input.to_owned().into_dyn()
+    };
+
+    // Create output array
+    let mut output = Array::<T, IxDyn>::zeros(IxDyn(&output_shape));
+
+    // Interpolate at each coordinate point
+    for i in 0..output_size {
+        let output_indices = unravel_index(i, &output_shape);
+
+        // Get coordinates for this output point
+        let mut coords = Vec::with_capacity(input.ndim());
+        for d in 0..input.ndim() {
+            let mut coord_indices = vec![d];
+            coord_indices.extend(&output_indices);
+            let coord_val = coordinates[IxDyn(&coord_indices)];
+            coords.push(coord_val);
+        }
+
+        // Interpolate at these coordinates
+        let value = interpolate_at_coordinates(
+            &filtered_input,
+            &coords,
+            interp_order,
+            &boundary,
+            const_val,
+        )?;
+
+        // Set output value
+        output[IxDyn(&output_indices)] = value;
+    }
+
+    Ok(output)
+}
+
+/// Convert flat index to multi-dimensional indices
+fn unravel_index(flat_index: usize, shape: &[usize]) -> Vec<usize> {
+    let mut indices = vec![0; shape.len()];
+    let mut remaining = flat_index;
+
+    for i in (0..shape.len()).rev() {
+        let stride: usize = shape[(i + 1)..].iter().product();
+        indices[i] = remaining / stride;
+        remaining %= stride;
+    }
+
+    indices
+}
+
+/// Interpolate at specific coordinates using spline interpolation
+fn interpolate_at_coordinates<T>(
+    input: &Array<T, IxDyn>,
+    coordinates: &[T],
+    order: usize,
+    mode: &BoundaryMode,
+    cval: T,
+) -> NdimageResult<T>
+where
+    T: Float + FromPrimitive + Debug + Clone,
+{
+    if coordinates.len() != input.ndim() {
+        return Err(NdimageError::DimensionError(format!(
+            "Number of coordinates must match input dimensions (got {} expected {})",
+            coordinates.len(),
+            input.ndim()
+        )));
+    }
+
+    match order {
+        0 => interpolate_nearest(input, coordinates, mode, cval),
+        1 => interpolate_linear(input, coordinates, mode, cval),
+        _ => interpolate_spline(input, coordinates, order, mode, cval),
+    }
+}
+
+/// Nearest neighbor interpolation
+fn interpolate_nearest<T>(
+    input: &Array<T, IxDyn>,
+    coordinates: &[T],
+    mode: &BoundaryMode,
+    cval: T,
+) -> NdimageResult<T>
+where
+    T: Float + FromPrimitive + Debug + Clone,
+{
+    let indices: Vec<isize> = coordinates
+        .iter()
+        .map(|&coord| coord.round().to_isize().unwrap_or(0))
+        .collect();
+
+    get_value_at_indices(input, &indices, mode, cval)
+}
+
+/// Linear interpolation
+fn interpolate_linear<T>(
+    input: &Array<T, IxDyn>,
+    coordinates: &[T],
+    mode: &BoundaryMode,
+    cval: T,
+) -> NdimageResult<T>
+where
+    T: Float + FromPrimitive + Debug + Clone,
+{
+    if coordinates.is_empty() {
+        return Ok(cval);
+    }
+
+    // For linear interpolation, we need to interpolate between neighboring points
+    let ndim = coordinates.len();
+    let num_corners = 1 << ndim; // 2^ndim corners of the hypercube
+
+    let mut result = T::zero();
+
+    for corner in 0..num_corners {
+        let mut indices = Vec::with_capacity(ndim);
+        let mut weight = T::one();
+
+        for (dim, &coord) in coordinates.iter().enumerate() {
+            let use_upper = (corner >> dim) & 1 == 1;
+            let base_idx = coord.floor().to_isize().unwrap_or(0);
+            let idx = if use_upper { base_idx + 1 } else { base_idx };
+
+            indices.push(idx);
+
+            // Calculate weight for this dimension
+            let frac = coord - coord.floor();
+            let dim_weight = if use_upper { frac } else { T::one() - frac };
+            weight = weight * dim_weight;
+        }
+
+        let value = get_value_at_indices(input, &indices, mode, cval)?;
+        result = result + weight * value;
+    }
+
+    Ok(result)
+}
+
+/// Spline interpolation (orders 2-5)
+fn interpolate_spline<T>(
+    input: &Array<T, IxDyn>,
+    coordinates: &[T],
+    order: usize,
+    mode: &BoundaryMode,
+    cval: T,
+) -> NdimageResult<T>
+where
+    T: Float + FromPrimitive + Debug + Clone,
+{
+    // For now, fall back to linear interpolation for spline orders
+    // A full spline interpolation would require implementing B-spline evaluation
+    // which is more complex than linear interpolation
+    interpolate_linear(input, coordinates, mode, cval)
+}
+
+/// Get value at specific integer indices with boundary handling
+fn get_value_at_indices<T>(
+    input: &Array<T, IxDyn>,
+    indices: &[isize],
+    mode: &BoundaryMode,
+    cval: T,
+) -> NdimageResult<T>
+where
+    T: Float + FromPrimitive + Debug + Clone,
+{
+    let shape = input.shape();
+    let mut adjusted_indices = Vec::with_capacity(indices.len());
+
+    for (i, &idx) in indices.iter().enumerate() {
+        let size = shape[i] as isize;
+        let adjusted_idx = match mode {
+            BoundaryMode::Constant => {
+                if idx < 0 || idx >= size {
+                    return Ok(cval);
+                }
+                idx as usize
+            }
+            BoundaryMode::Nearest => {
+                if idx < 0 {
+                    0
+                } else if idx >= size {
+                    (size - 1) as usize
+                } else {
+                    idx as usize
+                }
+            }
+            BoundaryMode::Reflect => {
+                let mut reflected_idx = idx;
+                if size > 1 {
+                    if reflected_idx < 0 {
+                        reflected_idx = -reflected_idx - 1;
+                    }
+                    if reflected_idx >= size {
+                        reflected_idx = 2 * (size - 1) - reflected_idx;
+                    }
+                    if reflected_idx < 0 || reflected_idx >= size {
+                        // Handle cases where reflection doesn't work
+                        reflected_idx = reflected_idx.rem_euclid(2 * (size - 1));
+                        if reflected_idx >= size {
+                            reflected_idx = 2 * (size - 1) - reflected_idx;
+                        }
+                    }
+                }
+                reflected_idx.max(0).min(size - 1) as usize
+            }
+            BoundaryMode::Wrap => {
+                let wrapped_idx = idx.rem_euclid(size);
+                wrapped_idx as usize
+            }
+            BoundaryMode::Mirror => {
+                let mut mirrored_idx = idx;
+                if size > 1 {
+                    if mirrored_idx < 0 {
+                        mirrored_idx = -mirrored_idx;
+                    }
+                    if mirrored_idx >= size {
+                        mirrored_idx = 2 * size - 2 - mirrored_idx;
+                    }
+                    if mirrored_idx < 0 || mirrored_idx >= size {
+                        mirrored_idx = mirrored_idx.rem_euclid(2 * size);
+                        if mirrored_idx >= size {
+                            mirrored_idx = 2 * size - 1 - mirrored_idx;
+                        }
+                    }
+                }
+                mirrored_idx.max(0).min(size - 1) as usize
+            }
+        };
+        adjusted_indices.push(adjusted_idx);
+    }
+
+    // Access the value at adjusted indices
+    match input.get(IxDyn(&adjusted_indices)) {
+        Some(value) => Ok(value.clone()),
+        None => Ok(cval),
+    }
 }
 
 /// Find values at given indices in an array
@@ -107,13 +369,13 @@ where
     // Convert indices to IxDyn for dynamic indexing
     use ndarray::IxDyn;
     let dynamic_indices = IxDyn(indices);
-    
+
     // Access the element at the specified indices
     match input.get(dynamic_indices) {
         Some(value) => Ok(*value),
         None => Err(NdimageError::InvalidInput(
             "Unable to access array at the specified indices".into(),
-        ))
+        )),
     }
 }
 
@@ -175,8 +437,38 @@ where
         }
     }
 
-    // Placeholder implementation
-    Ok(Array::<T, _>::zeros(n_points))
+    // Create coordinates array for map_coordinates format
+    let mut coords_array = Array::<T, IxDyn>::zeros(IxDyn(&[input.ndim(), n_points]));
+
+    for (dim, point_array) in points.iter().enumerate() {
+        for (i, &coord) in point_array.iter().enumerate() {
+            coords_array[[dim, i]] = coord;
+        }
+    }
+
+    // Use map_coordinates to do the interpolation
+    let coords_dyn = coords_array.into_dyn();
+    let input_dyn = input.to_owned().into_dyn();
+
+    // Convert InterpolationOrder to usize
+    let order_usize = match order.unwrap_or(InterpolationOrder::Linear) {
+        InterpolationOrder::Nearest => 0,
+        InterpolationOrder::Linear => 1,
+        InterpolationOrder::Quadratic => 2,
+        InterpolationOrder::Cubic => 3,
+    };
+
+    let result = map_coordinates(
+        &input_dyn,
+        &coords_dyn,
+        Some(order_usize),
+        mode,
+        cval,
+        Some(true),
+    )?;
+
+    // Convert result to 1D array
+    Ok(result.into_shape((n_points,)).unwrap())
 }
 
 #[cfg(test)]
@@ -188,8 +480,23 @@ mod tests {
     #[test]
     fn test_map_coordinates_identity() {
         let input: Array2<f64> = Array2::eye(3);
-        let result = map_coordinates(&input, &input, None, None, None, None).unwrap();
-        assert_eq!(result.shape(), input.shape());
+
+        // Create identity coordinate mapping: coordinates[d, i, j] = coordinate for dimension d at position (i, j)
+        let mut coordinates = Array::<f64, IxDyn>::zeros(IxDyn(&[2, 3, 3]));
+        for i in 0..3 {
+            for j in 0..3 {
+                coordinates[[0, i, j]] = i as f64; // row coordinates
+                coordinates[[1, i, j]] = j as f64; // column coordinates
+            }
+        }
+
+        let result = map_coordinates(&input, &coordinates, Some(1), None, None, None).unwrap();
+        assert_eq!(result.shape(), &[3, 3]);
+
+        // Check some values
+        assert!((result[[1, 1]] - 1.0).abs() < 1e-10);
+        assert!((result[[0, 0]] - 1.0).abs() < 1e-10);
+        assert!((result[[2, 2]] - 1.0).abs() < 1e-10);
     }
 
     #[test]

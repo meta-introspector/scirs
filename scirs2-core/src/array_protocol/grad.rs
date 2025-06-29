@@ -1269,7 +1269,10 @@ fn multiply_by_scalar(a: &dyn ArrayProtocol, scalar: f64) -> CoreResult<Box<dyn 
 }
 
 /// Subtract one array from another, returning a new array.
-fn subtract_arrays(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
+fn subtract_arrays(
+    a: &dyn ArrayProtocol,
+    b: &dyn ArrayProtocol,
+) -> CoreResult<Box<dyn ArrayProtocol>> {
     // Perform element-wise subtraction and return a new array
     if let (Some(a_wrapper), Some(b_array)) = (
         a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),

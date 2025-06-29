@@ -50,7 +50,7 @@ impl SearchAlgorithm for RandomSearch {
         let mut rng = if let Some(seed) = self.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_rng(&mut rand::thread_rng()).unwrap()
+            StdRng::from_rng(&mut rand::rng()).unwrap()
         };
 
         let mut proposals = Vec::with_capacity(n_proposals);
@@ -136,7 +136,7 @@ impl SearchAlgorithm for EvolutionarySearch {
         n_proposals: usize,
     ) -> Result<Vec<Arc<dyn ArchitectureEncoding>>> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Initialize population if empty
         if self.population.is_empty() {
@@ -275,7 +275,7 @@ impl ReinforcementSearch {
     /// Initialize the controller network
     fn initialize_controller(&mut self) -> Result<()> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let embedding_dim = 32;
         let vocab_size = 50; // Number of possible architecture choices
@@ -391,7 +391,7 @@ impl ReinforcementSearch {
         let probs = exp_logits.mapv(|x| x / sum_exp);
 
         // Sample from distribution
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let random_val: f32 = rng.gen();
         let mut cumsum = 0.0;
         let mut selected_token = 0;
@@ -467,7 +467,7 @@ impl SearchAlgorithm for ReinforcementSearch {
             } else {
                 // Fallback to random generation
                 use rand::prelude::*;
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 let encoding = crate::nas::architecture_encoding::GraphEncoding::random(&mut rng)?;
                 Arc::new(encoding) as Arc<dyn ArchitectureEncoding>
             };
@@ -514,7 +514,7 @@ impl ReinforcementSearch {
     /// Convert sequence to architecture encoding
     fn sequence_to_encoding(&self, sequence: &[usize]) -> Result<Arc<dyn ArchitectureEncoding>> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Convert sequence tokens to layer types
         let mut layers = Vec::new();
@@ -621,7 +621,7 @@ impl DifferentiableSearch {
     /// Apply Gumbel softmax for continuous relaxation
     fn gumbel_softmax(&self, logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Add Gumbel noise
         let gumbel_noise: Array1<f32> = Array1::from_shape_fn(logits.len(), |_| {
@@ -845,7 +845,7 @@ impl SearchAlgorithm for BayesianOptimization {
         n_proposals: usize,
     ) -> Result<Vec<Arc<dyn ArchitectureEncoding>>> {
         use rand::prelude::*;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // If not enough initial points, do random search
         if history.len() < self.n_initial_points {
@@ -904,7 +904,7 @@ mod tests {
 
     fn create_dummy_result() -> SearchResult {
         let encoding =
-            crate::nas::architecture_encoding::SequentialEncoding::random(&mut rand::thread_rng())
+            crate::nas::architecture_encoding::SequentialEncoding::random(&mut rand::rng())
                 .unwrap();
 
         let mut metrics = EvaluationMetrics::new();

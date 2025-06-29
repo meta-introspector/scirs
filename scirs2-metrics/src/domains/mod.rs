@@ -11,6 +11,8 @@
 //! - **Time Series**: Forecasting, anomaly detection, trend analysis metrics
 //! - **Recommendation Systems**: Ranking, relevance, diversity metrics
 //! - **Anomaly Detection**: Detection accuracy, false alarm rates, distribution metrics
+//! - **Audio Processing**: Speech recognition, music analysis, sound event detection metrics
+//! - **Graph Neural Networks**: Node/edge/graph classification, community detection, graph generation metrics
 //!
 //! # Examples
 //!
@@ -66,8 +68,10 @@ use crate::error::{MetricsError, Result};
 use std::collections::HashMap;
 
 pub mod anomaly_detection;
+pub mod audio_processing;
 pub mod computer_vision;
 pub mod generative_ai;
+pub mod graph_neural_networks;
 pub mod nlp;
 pub mod recommender;
 pub mod time_series;
@@ -189,6 +193,8 @@ pub struct DomainSuite {
     rec_metrics: recommender::RecommenderSuite,
     ad_metrics: anomaly_detection::AnomalyDetectionSuite,
     gen_ai_metrics: generative_ai::GenerativeAISuite<f64>,
+    audio_metrics: audio_processing::AudioProcessingMetrics,
+    gnn_metrics: graph_neural_networks::GraphNeuralNetworkMetrics,
 }
 
 impl DomainSuite {
@@ -201,6 +207,8 @@ impl DomainSuite {
             rec_metrics: recommender::RecommenderSuite::new(),
             ad_metrics: anomaly_detection::AnomalyDetectionSuite::new(),
             gen_ai_metrics: generative_ai::GenerativeAISuite::new(),
+            audio_metrics: audio_processing::AudioProcessingMetrics::new(),
+            gnn_metrics: graph_neural_networks::GraphNeuralNetworkMetrics::new(),
         }
     }
 
@@ -234,6 +242,16 @@ impl DomainSuite {
         &self.gen_ai_metrics
     }
 
+    /// Get audio processing metrics
+    pub fn audio_processing(&self) -> &audio_processing::AudioProcessingMetrics {
+        &self.audio_metrics
+    }
+
+    /// Get graph neural network metrics
+    pub fn graph_neural_networks(&self) -> &graph_neural_networks::GraphNeuralNetworkMetrics {
+        &self.gnn_metrics
+    }
+
     /// List all available domains
     pub fn available_domains(&self) -> Vec<&'static str> {
         vec![
@@ -243,6 +261,8 @@ impl DomainSuite {
             self.rec_metrics.domain_name(),
             self.ad_metrics.domain_name(),
             self.gen_ai_metrics.domain_name(),
+            self.audio_metrics.domain_name(),
+            self.gnn_metrics.domain_name(),
         ]
     }
 }
@@ -284,12 +304,14 @@ mod tests {
         let suite = create_domain_suite();
         let domains = suite.available_domains();
 
-        assert_eq!(domains.len(), 6);
+        assert_eq!(domains.len(), 8);
         assert!(domains.contains(&"Computer Vision"));
         assert!(domains.contains(&"Natural Language Processing"));
         assert!(domains.contains(&"Time Series"));
         assert!(domains.contains(&"Recommender Systems"));
         assert!(domains.contains(&"Anomaly Detection"));
         assert!(domains.contains(&"Generative AI & Deep Learning"));
+        assert!(domains.contains(&"Audio Processing"));
+        assert!(domains.contains(&"Graph Neural Networks"));
     }
 }

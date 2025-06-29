@@ -8,18 +8,9 @@ pub mod advanced_optimization;
 
 /// Re-export key performance types and functions
 pub use advanced_optimization::{
-    AdvancedPerformanceOptimizer,
-    SimdCapabilities,
-    SimdInstructionSet,
-    CacheInfo,
-    PerformanceProfile,
-    OptimizationSettings,
-    WorkloadType,
-    PerformanceRecommendation,
-    cache_aware_matrix_multiply,
-    simd_ops,
-    prefetch,
-    profiling,
+    cache_aware_matrix_multiply, prefetch, profiling, simd_ops, AdvancedPerformanceOptimizer,
+    CacheInfo, OptimizationSettings, PerformanceProfile, PerformanceRecommendation,
+    SimdCapabilities, SimdInstructionSet, WorkloadType,
 };
 
 /// Initialize the global performance optimizer
@@ -35,15 +26,21 @@ pub fn get_system_performance_recommendations() -> Vec<String> {
     let mut recommendations = Vec::new();
 
     if profile.simd_capabilities.avx2 {
-        recommendations.push("AVX2 instruction set detected - enable advanced SIMD optimizations".to_string());
+        recommendations
+            .push("AVX2 instruction set detected - enable advanced SIMD optimizations".to_string());
     }
-    
+
     if profile.cpu_cores > 8 {
-        recommendations.push(format!("High core count ({}) detected - consider parallel algorithms", profile.cpu_cores));
+        recommendations.push(format!(
+            "High core count ({}) detected - consider parallel algorithms",
+            profile.cpu_cores
+        ));
     }
-    
+
     if profile.cache_info.l3_cache_size > 16 * 1024 * 1024 {
-        recommendations.push("Large L3 cache detected - enable cache-aware blocking for large matrices".to_string());
+        recommendations.push(
+            "Large L3 cache detected - enable cache-aware blocking for large matrices".to_string(),
+        );
     }
 
     recommendations

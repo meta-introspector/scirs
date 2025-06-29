@@ -263,7 +263,9 @@ impl MLPipeline {
             target: dataset.target.clone(),
             feature_names: dataset.feature_names.clone(),
             target_names: dataset.target_names.clone(),
+            feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some("Transformed dataset".to_string()),
+            metadata: dataset.metadata.clone(),
         })
     }
 
@@ -346,10 +348,10 @@ impl MLPipeline {
         // Simplified balancing implementation
         // In a full implementation, you'd use the actual balancing utilities
         match strategy {
-            BalancingStrategy::RandomUnderSample { random_state } => {
+            BalancingStrategy::RandomUndersample { random_state } => {
                 self.random_undersample(dataset, *random_state)
             }
-            BalancingStrategy::RandomOverSample { random_state } => {
+            BalancingStrategy::RandomOversample { random_state } => {
                 self.random_oversample(dataset, *random_state)
             }
             _ => Ok(dataset.clone()), // Placeholder for other strategies
@@ -399,7 +401,9 @@ impl MLPipeline {
             target: Some(balanced_target),
             feature_names: dataset.feature_names.clone(),
             target_names: dataset.target_names.clone(),
+            feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some("Undersampled dataset".to_string()),
+            metadata: dataset.metadata.clone(),
         })
     }
 
@@ -437,7 +441,9 @@ impl MLPipeline {
             target: dataset.target.clone(),
             feature_names: dataset.feature_names.clone(),
             target_names: dataset.target_names.clone(),
+            feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some("Scaled dataset".to_string()),
+            metadata: dataset.metadata.clone(),
         })
     }
 
@@ -672,7 +678,7 @@ pub mod convenience {
         }
 
         if balance {
-            config.balancing_strategy = Some(BalancingStrategy::RandomUnderSample {
+            config.balancing_strategy = Some(BalancingStrategy::RandomUndersample {
                 random_state: Some(42),
             });
         }

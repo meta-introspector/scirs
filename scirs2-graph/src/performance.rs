@@ -323,14 +323,22 @@ pub mod simd_ops {
     #[allow(dead_code)]
     pub fn simd_cosine_similarity(a: &[f64], b: &[f64]) -> f64 {
         assert_eq!(a.len(), b.len());
-        f64::simd_cosine_similarity(a, b)
+        let a_view = ndarray::ArrayView1::from(a);
+        let b_view = ndarray::ArrayView1::from(b);
+        let dot_product = f64::simd_dot(&a_view, &b_view);
+        let norm_a = f64::simd_norm(&a_view);
+        let norm_b = f64::simd_norm(&b_view);
+        dot_product / (norm_a * norm_b)
     }
 
     /// SIMD-optimized euclidean distance
     #[allow(dead_code)]
     pub fn simd_euclidean_distance(a: &[f64], b: &[f64]) -> f64 {
         assert_eq!(a.len(), b.len());
-        f64::simd_euclidean_distance(a, b)
+        let a_view = ndarray::ArrayView1::from(a);
+        let b_view = ndarray::ArrayView1::from(b);
+        let diff = f64::simd_sub(&a_view, &b_view);
+        f64::simd_norm(&diff.view())
     }
 
     /// SIMD-optimized batch centrality computation
@@ -344,8 +352,14 @@ pub mod simd_ops {
         assert_eq!(centralities.len(), weights.len());
 
         // Multiply contributions by weights and add to centralities
-        let weighted_contribs = f64::simd_multiply(contributions, weights);
-        f64::simd_add_assign(centralities, &weighted_contribs);
+        let contrib_view = ndarray::ArrayView1::from(contributions);
+        let weights_view = ndarray::ArrayView1::from(weights);
+        let weighted_contribs = f64::simd_mul(&contrib_view, &weights_view);
+        
+        // Manual add-assign since there's no direct simd_add_assign
+        for (c, w) in centralities.iter_mut().zip(weighted_contribs.iter()) {
+            *c += *w;
+        }
     }
 
     /// SIMD-optimized matrix-vector multiplication for PageRank-style algorithms
@@ -371,7 +385,9 @@ pub mod simd_ops {
             let x_vals: Vec<f64> = row_indices.iter().map(|&j| x[j]).collect();
 
             // SIMD dot product for this row
-            *y_i = f64::simd_dot_product(row_values, &x_vals);
+            let row_view = ndarray::ArrayView1::from(row_values);
+            let x_view = ndarray::ArrayView1::from(&x_vals);
+            *y_i = f64::simd_dot(&row_view, &x_view);
         }
     }
 

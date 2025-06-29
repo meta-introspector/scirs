@@ -83,7 +83,9 @@
 
 // Re-export submodules
 pub mod distributed;
+pub mod distributed_advanced;
 pub mod gpu_acceleration;
+pub mod gpu_kernels;
 pub mod hardware;
 pub mod memory;
 pub mod numeric;
@@ -94,7 +96,18 @@ pub mod simd_gpu;
 pub use distributed::{
     DistributedConfig, DistributedMetricsBuilder, DistributedMetricsCoordinator,
 };
-pub use gpu_acceleration::{GpuAccelConfig, GpuMetricsComputer, GpuInfo, BenchmarkResults};
+pub use distributed_advanced::{
+    AdvancedClusterConfig, AdvancedDistributedCoordinator, AutoScalingConfig, ClusterState,
+    ConsensusAlgorithm, ConsensusConfig, DistributedTask, FaultToleranceConfig, LocalityConfig,
+    NodeInfo, NodeRole, NodeStatus, OptimizationConfig, ResourceRequirements, ShardingConfig,
+    ShardingStrategy, TaskPriority, TaskType,
+};
+pub use gpu_acceleration::{BenchmarkResults, GpuAccelConfig, GpuInfo, GpuMetricsComputer};
+pub use gpu_kernels::{
+    AdvancedGpuComputer, BatchSettings, CudaContext, ErrorHandling, GpuApi, GpuComputeConfig,
+    GpuComputeResults, GpuPerformanceStats, KernelMetrics, KernelOptimization, MemoryStrategy,
+    OpenClContext, TransferMetrics, VectorizationLevel,
+};
 pub use hardware::{
     HardwareAccelConfig, HardwareAcceleratedMatrix, HardwareCapabilities, SimdDistanceMetrics,
     SimdStatistics, VectorWidth,
@@ -102,4 +115,4 @@ pub use hardware::{
 pub use memory::{ChunkedMetrics, StreamingMetric};
 pub use numeric::{StableMetric, StableMetrics};
 pub use parallel::ParallelConfig;
-pub use simd_gpu::{SimdMetrics};
+pub use simd_gpu::SimdMetrics;

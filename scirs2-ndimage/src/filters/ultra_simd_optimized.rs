@@ -440,8 +440,7 @@ where
     let mut sum = T::zero();
 
     for i in 0..size {
-        let x = T::from_isize(i as isize - half as isize)
-            .unwrap_or_else(|| T::zero());
+        let x = T::from_isize(i as isize - half as isize).unwrap_or_else(|| T::zero());
         let val = (-x * x / sigma_sq_2).exp();
         kernel[i] = val;
         sum = sum + val;
@@ -486,8 +485,8 @@ where
                     + input[(input_y + 1, input_x)]
                     + input[(input_y + 1, input_x + 1)];
 
-                samples[i] = sum / T::from_f64(4.0)
-                    .unwrap_or_else(|| T::one() + T::one() + T::one() + T::one());
+                samples[i] = sum
+                    / T::from_f64(4.0).unwrap_or_else(|| T::one() + T::one() + T::one() + T::one());
             }
 
             // Store results
@@ -505,8 +504,8 @@ where
                 + input[(input_y, input_x + 1)]
                 + input[(input_y + 1, input_x)]
                 + input[(input_y + 1, input_x + 1)];
-            output[[y, x]] = sum / T::from_f64(4.0)
-                .unwrap_or_else(|| T::one() + T::one() + T::one() + T::one());
+            output[[y, x]] =
+                sum / T::from_f64(4.0).unwrap_or_else(|| T::one() + T::one() + T::one() + T::one());
         }
     }
 }
@@ -607,8 +606,7 @@ fn ultra_simd_correlation_row<T>(
                 .iter()
                 .copied()
                 .fold(T::zero(), |sum, x| sum + x)
-                / T::from_usize(image_patch.len())
-                    .unwrap_or_else(|| T::one());
+                / T::from_usize(image_patch.len()).unwrap_or_else(|| T::one());
             let patch_std = compute_patch_std(&image_patch, patch_mean);
 
             // Compute correlation using SIMD
@@ -618,8 +616,9 @@ fn ultra_simd_correlation_row<T>(
                 let products = T::simd_mul(&patch_centered, template_centered);
                 let sum_products = products.iter().copied().fold(T::zero(), |sum, x| sum + x);
                 sum_products
-                    / (patch_std * template_std * T::from_usize(patch_centered.len())
-                        .unwrap_or_else(|| T::one()))
+                    / (patch_std
+                        * template_std
+                        * T::from_usize(patch_centered.len()).unwrap_or_else(|| T::one()))
             } else {
                 T::zero()
             };
@@ -650,8 +649,7 @@ fn ultra_simd_correlation_row<T>(
             .iter()
             .copied()
             .fold(T::zero(), |sum, x| sum + x)
-            / T::from_usize(image_patch.len())
-                .unwrap_or_else(|| T::one());
+            / T::from_usize(image_patch.len()).unwrap_or_else(|| T::one());
         let patch_std = compute_patch_std(&image_patch, patch_mean);
 
         // Compute correlation
@@ -660,8 +658,10 @@ fn ultra_simd_correlation_row<T>(
             for ((&patch_val, &tmpl_val)) in image_patch.iter().zip(template_centered.iter()) {
                 sum_products = sum_products + (patch_val - patch_mean) * tmpl_val;
             }
-            sum_products / (patch_std * template_std * T::from_usize(image_patch.len())
-                .unwrap_or_else(|| T::one()))
+            sum_products
+                / (patch_std
+                    * template_std
+                    * T::from_usize(image_patch.len()).unwrap_or_else(|| T::one()))
         } else {
             T::zero()
         };
@@ -679,8 +679,7 @@ where
         .iter()
         .map(|&x| (x - mean) * (x - mean))
         .fold(T::zero(), |sum, x| sum + x)
-        / T::from_usize(data.len())
-            .unwrap_or_else(|| T::one());
+        / T::from_usize(data.len()).unwrap_or_else(|| T::one());
     variance.sqrt()
 }
 
@@ -693,8 +692,7 @@ where
         .iter()
         .map(|&x| (x - mean) * (x - mean))
         .fold(T::zero(), |sum, x| sum + x)
-        / T::from_usize(patch.len())
-            .unwrap_or_else(|| T::one());
+        / T::from_usize(patch.len()).unwrap_or_else(|| T::one());
     variance.sqrt()
 }
 
@@ -736,9 +734,8 @@ mod tests {
         let kernel_h = vec![0.25, 0.5, 0.25];
         let kernel_v = vec![0.25, 0.5, 0.25];
 
-        let result =
-            ultra_simd_separable_convolution_2d(input.view(), &kernel_h, &kernel_v)
-                .expect("ultra_simd_separable_convolution_2d should succeed for test");
+        let result = ultra_simd_separable_convolution_2d(input.view(), &kernel_h, &kernel_v)
+            .expect("ultra_simd_separable_convolution_2d should succeed for test");
         assert_eq!(result.shape(), input.shape());
     }
 

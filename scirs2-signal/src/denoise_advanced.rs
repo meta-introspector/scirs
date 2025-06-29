@@ -455,7 +455,7 @@ pub fn wavelet_packet_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
 ) -> SignalResult<Vec<f64>> {
-    use crate::wpt::{wp_decompose, reconstruct_from_nodes};
+    use crate::wpt::{reconstruct_from_nodes, wp_decompose};
 
     // Decompose using wavelet packets
     let tree = wp_decompose(signal, config.wavelet, config.level, None)?;

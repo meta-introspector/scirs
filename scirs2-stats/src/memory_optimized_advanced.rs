@@ -5,8 +5,8 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast, Zero, One};
-use scirs2_core::{simd_ops::SimdUnifiedOps, parallel_ops::*, validation::*};
+use num_traits::{Float, NumCast, One, Zero};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
@@ -64,28 +64,33 @@ impl AdaptiveMemoryManager {
     /// Get optimal chunk size based on current memory usage and data size
     pub fn get_optimal_chunk_size(&self, data_size: usize, element_size: usize) -> usize {
         let current_usage = *self.current_usage.lock().unwrap();
-        let available_memory = self.constraints.max_memory_bytes.saturating_sub(current_usage);
-        
+        let available_memory = self
+            .constraints
+            .max_memory_bytes
+            .saturating_sub(current_usage);
+
         // Use at most 80% of available memory for chunk processing
         let max_chunk_memory = available_memory * 4 / 5;
         let max_chunk_elements = max_chunk_memory / element_size;
-        
+
         // Prefer power-of-2 sizes for cache efficiency
-        let optimal_size = max_chunk_elements.min(data_size).min(self.constraints.chunk_size);
+        let optimal_size = max_chunk_elements
+            .min(data_size)
+            .min(self.constraints.chunk_size);
         optimal_size.next_power_of_two() / 2 // Round down to nearest power of 2
     }
 
     /// Record memory usage for an operation
     pub fn record_operation(&self, metrics: OperationMetrics) {
         let mut history = self.operation_history.lock().unwrap();
-        
+
         // Keep only recent operations
         if history.len() >= 100 {
             history.pop_front();
         }
-        
-        history.push_back(metrics);
-        
+
+        history.push_back(metrics.clone());
+
         // Update peak usage
         let mut peak = self.peak_usage.lock().unwrap();
         *peak = (*peak).max(metrics.memory_used);
@@ -96,7 +101,7 @@ impl AdaptiveMemoryManager {
         let current_usage = *self.current_usage.lock().unwrap();
         let peak_usage = *self.peak_usage.lock().unwrap();
         let history = self.operation_history.lock().unwrap();
-        
+
         let avg_memory_per_op = if !history.is_empty() {
             history.iter().map(|m| m.memory_used).sum::<usize>() / history.len()
         } else {
@@ -136,27 +141,36 @@ pub fn corrcoef_memory_aware<F>(
     manager: &mut AdaptiveMemoryManager,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Debug,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + std::iter::Sum<F>
+        + std::fmt::Debug,
 {
     let start_time = std::time::Instant::now();
-    
+
     check_array_finite_2d(data, "data")?;
-    
+
     let (n_obs, n_vars) = data.dim();
     let element_size = std::mem::size_of::<F>();
-    
+
     // Estimate memory requirements
     let matrix_memory = n_vars * n_vars * element_size;
     let temp_memory = n_obs * element_size * 2; // For column pairs
     let total_estimated = matrix_memory + temp_memory;
-    
+
     let mut corr_matrix = Array2::<F>::zeros((n_vars, n_vars));
-    
+
     // Set diagonal to 1.0
     for i in 0..n_vars {
         corr_matrix[[i, i]] = F::one();
     }
-    
+
     if total_estimated <= manager.constraints.max_memory_bytes {
         // Can fit in memory - use standard approach
         corr_matrix = compute_correlation_matrix_standard(data, method)?;
@@ -165,7 +179,7 @@ where
         let block_size = manager.get_optimal_chunk_size(n_vars, element_size * n_vars);
         corr_matrix = compute_correlation_matrix_blocked(data, method, block_size)?;
     }
-    
+
     // Record metrics
     let metrics = OperationMetrics {
         operation_type: format!("corrcoef_memory_aware_{}", method),
@@ -174,7 +188,7 @@ where
         chunk_size_used: n_vars,
     };
     manager.record_operation(metrics);
-    
+
     Ok(corr_matrix)
 }
 
@@ -189,15 +203,15 @@ where
 {
     let (m, n) = a.dim();
     let (n2, p) = b.dim();
-    
+
     if n != n2 {
         return Err(StatsError::DimensionMismatch(
             "Matrix dimensions don't match for multiplication".to_string(),
         ));
     }
-    
+
     let mut result = Array2::<F>::zeros((m, p));
-    
+
     if m <= threshold && n <= threshold && p <= threshold {
         // Base case: use standard multiplication
         for i in 0..m {
@@ -212,23 +226,27 @@ where
     } else {
         // Recursive case: divide matrices
         let mid_m = m / 2;
-        let mid_n = n / 2;
-        let mid_p = p / 2;
-        
+        let _mid_n = n / 2;
+        let _mid_p = p / 2;
+
         // This is a simplified version - full implementation would handle
         // all matrix subdivisions recursively
         if m > threshold {
             let a_top = a.slice(ndarray::s![..mid_m, ..]);
             let a_bottom = a.slice(ndarray::s![mid_m.., ..]);
-            
+
             let result_top = cache_oblivious_matrix_mult(&a_top, b, threshold)?;
             let result_bottom = cache_oblivious_matrix_mult(&a_bottom, b, threshold)?;
-            
-            result.slice_mut(ndarray::s![..mid_m, ..]).assign(&result_top);
-            result.slice_mut(ndarray::s![mid_m.., ..]).assign(&result_bottom);
+
+            result
+                .slice_mut(ndarray::s![..mid_m, ..])
+                .assign(&result_top);
+            result
+                .slice_mut(ndarray::s![mid_m.., ..])
+                .assign(&result_bottom);
         }
     }
-    
+
     Ok(result)
 }
 
@@ -241,16 +259,16 @@ where
     F: Float + NumCast + Zero + One + Copy + 'a,
 {
     let start_time = std::time::Instant::now();
-    
+
     let mut n_vars = 0;
     let mut total_obs = 0;
     let mut sum_x = Array1::<F>::zeros(0);
     let mut sum_x2 = Array2::<F>::zeros((0, 0));
     let mut initialized = false;
-    
+
     for chunk in data_chunks {
         let (chunk_obs, chunk_vars) = chunk.dim();
-        
+
         if !initialized {
             n_vars = chunk_vars;
             sum_x = Array1::<F>::zeros(n_vars);
@@ -261,18 +279,18 @@ where
                 "All chunks must have the same number of variables".to_string(),
             ));
         }
-        
+
         total_obs += chunk_obs;
-        
+
         // Update sums
         for i in 0..chunk_obs {
             let row = chunk.row(i);
-            
+
             // Update sum_x
             for j in 0..n_vars {
                 sum_x[j] = sum_x[j] + row[j];
             }
-            
+
             // Update sum_x2 (cross products)
             for j in 0..n_vars {
                 for k in j..n_vars {
@@ -285,17 +303,15 @@ where
             }
         }
     }
-    
+
     if total_obs == 0 {
-        return Err(StatsError::InvalidArgument(
-            "No data provided".to_string(),
-        ));
+        return Err(StatsError::InvalidArgument("No data provided".to_string()));
     }
-    
+
     // Compute covariance matrix
     let mut cov_matrix = Array2::<F>::zeros((n_vars, n_vars));
     let n_f = F::from(total_obs).unwrap();
-    
+
     for i in 0..n_vars {
         for j in 0..n_vars {
             let mean_i = sum_x[i] / n_f;
@@ -304,7 +320,7 @@ where
             cov_matrix[[i, j]] = cov;
         }
     }
-    
+
     // Record metrics
     let memory_used = (n_vars * n_vars + n_vars) * std::mem::size_of::<F>();
     let metrics = OperationMetrics {
@@ -314,7 +330,7 @@ where
         chunk_size_used: n_vars,
     };
     manager.record_operation(metrics);
-    
+
     Ok(cov_matrix)
 }
 
@@ -328,20 +344,20 @@ where
     F: Float + NumCast + Zero + One + Copy + Send + Sync + std::fmt::Debug,
 {
     let start_time = std::time::Instant::now();
-    
+
     let (n_obs, n_vars) = data.dim();
     let n_components = n_components.unwrap_or(n_vars.min(n_obs));
-    
+
     // Center the data using streaming mean
     let mut means = Array1::<F>::zeros(n_vars);
     for i in 0..n_vars {
         let column = data.column(i);
         means[i] = column.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n_obs).unwrap();
     }
-    
+
     // Estimate memory for centered data
     let centered_data_memory = n_obs * n_vars * std::mem::size_of::<F>();
-    
+
     if centered_data_memory <= manager.constraints.max_memory_bytes / 2 {
         // Can afford to store centered data
         let mut centered_data = Array2::<F>::zeros((n_obs, n_vars));
@@ -350,23 +366,24 @@ where
                 centered_data[[i, j]] = data[[i, j]] - means[j];
             }
         }
-        
+
         // Compute covariance matrix
         let cov_matrix = compute_covariance_from_centered(&centered_data.view())?;
-        
+
         // Eigendecomposition (simplified - would use proper linear algebra library)
-        let (eigenvalues, eigenvectors) = compute_eigendecomposition(&cov_matrix.view(), n_components)?;
-        
+        let (eigenvalues, eigenvectors) =
+            compute_eigendecomposition(&cov_matrix.view(), n_components)?;
+
         // Transform data
         let transformed = matrix_multiply(&centered_data.view(), &eigenvectors.view())?;
-        
+
         let result = PCAResult {
             components: eigenvectors,
             explained_variance: eigenvalues,
             transformed_data: transformed,
             mean: means,
         };
-        
+
         let metrics = OperationMetrics {
             operation_type: "pca_memory_efficient".to_string(),
             memory_used: centered_data_memory,
@@ -374,7 +391,7 @@ where
             chunk_size_used: n_vars,
         };
         manager.record_operation(metrics);
-        
+
         Ok(result)
     } else {
         // Use incremental PCA for very large datasets
@@ -413,39 +430,44 @@ where
 {
     let (_, n_vars) = data.dim();
     let mut corr_matrix = Array2::<F>::zeros((n_vars, n_vars));
-    
+
     // Set diagonal
     for i in 0..n_vars {
         corr_matrix[[i, i]] = F::one();
     }
-    
+
     // Process in blocks
     for i_block in (0..n_vars).step_by(block_size) {
         let i_end = (i_block + block_size).min(n_vars);
-        
+
         for j_block in (i_block..n_vars).step_by(block_size) {
             let j_end = (j_block + block_size).min(n_vars);
-            
+
             // Compute correlations for this block
             for i in i_block..i_end {
                 for j in j_block.max(i + 1)..j_end {
                     let col_i = data.column(i);
                     let col_j = data.column(j);
-                    
+
                     let corr = match method {
                         "pearson" => crate::pearson_r(&col_i, &col_j)?,
                         "spearman" => crate::spearman_r(&col_i, &col_j)?,
                         "kendall" => crate::kendall_tau(&col_i, &col_j, "b")?,
-                        _ => return Err(StatsError::InvalidArgument(format!("Unknown method: {}", method))),
+                        _ => {
+                            return Err(StatsError::InvalidArgument(format!(
+                                "Unknown method: {}",
+                                method
+                            )))
+                        }
                     };
-                    
+
                     corr_matrix[[i, j]] = corr;
                     corr_matrix[[j, i]] = corr;
                 }
             }
         }
     }
-    
+
     Ok(corr_matrix)
 }
 
@@ -456,7 +478,7 @@ where
     let (n_obs, n_vars) = data.dim();
     let mut cov_matrix = Array2::<F>::zeros((n_vars, n_vars));
     let n_f = F::from(n_obs - 1).unwrap(); // Sample covariance
-    
+
     for i in 0..n_vars {
         for j in i..n_vars {
             let mut cov = F::zero();
@@ -468,7 +490,7 @@ where
             cov_matrix[[j, i]] = cov;
         }
     }
-    
+
     Ok(cov_matrix)
 }
 
@@ -481,20 +503,21 @@ where
 {
     let n = matrix.dim().0;
     let n_components = n_components.min(n);
-    
+
     // Power iteration method for top eigenvalues/eigenvectors
     // This is a simplified implementation - in practice would use LAPACK
     let mut eigenvalues = Array1::<F>::zeros(n_components);
     let mut eigenvectors = Array2::<F>::zeros((n, n_components));
-    
+
     for k in 0..n_components {
         // Initialize random vector
         let mut v = Array1::<F>::ones(n);
-        
+
         // Power iteration
-        for _ in 0..100 { // Max iterations
+        for _ in 0..100 {
+            // Max iterations
             let mut new_v = Array1::<F>::zeros(n);
-            
+
             // Matrix-vector multiplication
             for i in 0..n {
                 let mut sum = F::zero();
@@ -503,32 +526,32 @@ where
                 }
                 new_v[i] = sum;
             }
-            
+
             // Orthogonalize against previous eigenvectors
             for prev_k in 0..k {
                 let mut dot_product = F::zero();
                 for i in 0..n {
                     dot_product = dot_product + new_v[i] * eigenvectors[[i, prev_k]];
                 }
-                
+
                 for i in 0..n {
                     new_v[i] = new_v[i] - dot_product * eigenvectors[[i, prev_k]];
                 }
             }
-            
+
             // Normalize
             let mut norm = F::zero();
             for i in 0..n {
                 norm = norm + new_v[i] * new_v[i];
             }
             norm = norm.sqrt();
-            
+
             if norm > F::epsilon() {
                 for i in 0..n {
                     new_v[i] = new_v[i] / norm;
                 }
             }
-            
+
             // Check convergence
             let mut converged = true;
             for i in 0..n {
@@ -537,14 +560,14 @@ where
                     break;
                 }
             }
-            
+
             v = new_v;
-            
+
             if converged {
                 break;
             }
         }
-        
+
         // Compute eigenvalue
         let mut eigenvalue = F::zero();
         for i in 0..n {
@@ -554,13 +577,13 @@ where
             }
             eigenvalue = eigenvalue + v[i] * sum;
         }
-        
+
         eigenvalues[k] = eigenvalue;
         for i in 0..n {
             eigenvectors[[i, k]] = v[i];
         }
     }
-    
+
     Ok((eigenvalues, eigenvectors))
 }
 
@@ -570,13 +593,15 @@ where
 {
     let (m, n) = a.dim();
     let (n2, p) = b.dim();
-    
+
     if n != n2 {
-        return Err(StatsError::DimensionMismatch("Matrix dimensions don't match".to_string()));
+        return Err(StatsError::DimensionMismatch(
+            "Matrix dimensions don't match".to_string(),
+        ));
     }
-    
+
     let mut result = Array2::<F>::zeros((m, p));
-    
+
     for i in 0..m {
         for j in 0..p {
             let mut sum = F::zero();
@@ -586,7 +611,7 @@ where
             result[[i, j]] = sum;
         }
     }
-    
+
     Ok(result)
 }
 
@@ -601,24 +626,24 @@ where
 {
     let (n_obs, n_vars) = data.dim();
     let n_components = n_components.min(n_vars);
-    
+
     // Batch size for incremental processing
     let batch_size = manager.get_optimal_chunk_size(n_obs, std::mem::size_of::<F>() * n_vars);
-    
+
     // Initialize components with random orthogonal matrix
     let mut components = Array2::<F>::zeros((n_vars, n_components));
     for i in 0..n_components {
         components[[i % n_vars, i]] = F::one();
     }
-    
+
     let mut explained_variance = Array1::<F>::zeros(n_components);
-    let mut n_samples_seen = 0;
-    
+    let mut _n_samples_seen = 0;
+
     // Process data in batches
     for batch_start in (0..n_obs).step_by(batch_size) {
         let batch_end = (batch_start + batch_size).min(n_obs);
         let batch = data.slice(ndarray::s![batch_start..batch_end, ..]);
-        
+
         // Center the batch
         let mut centered_batch = Array2::<F>::zeros(batch.dim());
         for i in 0..batch.nrows() {
@@ -626,11 +651,11 @@ where
                 centered_batch[[i, j]] = batch[[i, j]] - means[j];
             }
         }
-        
+
         // Update components using simplified incremental update
         for k in 0..n_components {
-            let mut component = components.column(k).to_owned();
-            
+            let component = components.column(k).to_owned();
+
             // Project batch onto current component
             let mut projections = Array1::<F>::zeros(batch.nrows());
             for i in 0..batch.nrows() {
@@ -640,7 +665,7 @@ where
                 }
                 projections[i] = projection;
             }
-            
+
             // Update component direction
             let mut new_component = Array1::<F>::zeros(n_vars);
             for j in 0..n_vars {
@@ -650,28 +675,31 @@ where
                 }
                 new_component[j] = sum;
             }
-            
+
             // Normalize
             let mut norm = F::zero();
             for j in 0..n_vars {
                 norm = norm + new_component[j] * new_component[j];
             }
             norm = norm.sqrt();
-            
+
             if norm > F::epsilon() {
                 for j in 0..n_vars {
                     components[[j, k]] = new_component[j] / norm;
                 }
-                
+
                 // Update explained variance
-                let variance = projections.iter().map(|&x| x * x).fold(F::zero(), |acc, x| acc + x);
+                let variance = projections
+                    .iter()
+                    .map(|&x| x * x)
+                    .fold(F::zero(), |acc, x| acc + x);
                 explained_variance[k] = variance / F::from(batch.nrows()).unwrap();
             }
         }
-        
-        n_samples_seen += batch.nrows();
+
+        _n_samples_seen += batch.nrows();
     }
-    
+
     // Transform the data
     let mut transformed_data = Array2::<F>::zeros((n_obs, n_components));
     for i in 0..n_obs {
@@ -684,7 +712,7 @@ where
             transformed_data[[i, k]] = projection;
         }
     }
-    
+
     Ok(PCAResult {
         components,
         explained_variance,
@@ -701,7 +729,8 @@ where
     for &val in arr.iter() {
         if !val.is_finite() {
             return Err(StatsError::InvalidArgument(format!(
-                "{} contains non-finite values", name
+                "{} contains non-finite values",
+                name
             )));
         }
     }
@@ -717,18 +746,18 @@ mod tests {
     fn test_adaptive_memory_manager() {
         let constraints = MemoryConstraints::default();
         let mut manager = AdaptiveMemoryManager::new(constraints);
-        
+
         let chunk_size = manager.get_optimal_chunk_size(1000, 8);
         assert!(chunk_size > 0);
         assert!(chunk_size <= 1000);
-        
+
         let metrics = OperationMetrics {
             operation_type: "test".to_string(),
             memory_used: 1024,
             processing_time: std::time::Duration::from_millis(10),
             chunk_size_used: chunk_size,
         };
-        
+
         manager.record_operation(metrics);
         let stats = manager.get_statistics();
         assert_eq!(stats.operations_completed, 1);
@@ -738,9 +767,9 @@ mod tests {
     fn test_cache_oblivious_matrix_mult() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
-        
+
         let result = cache_oblivious_matrix_mult(&a.view(), &b.view(), 2).unwrap();
-        
+
         // Expected: [[19, 22], [43, 50]]
         assert!((result[[0, 0]] - 19.0).abs() < 1e-10);
         assert!((result[[0, 1]] - 22.0).abs() < 1e-10);

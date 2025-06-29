@@ -332,7 +332,7 @@ where
     T: SimdUnifiedOps,
 {
     let (height, width) = input.dim();
-    
+
     // Pre-calculate constants
     let eight = safe_f64_to_float(8.0)?;
     let four = safe_f64_to_float(4.0)?;
@@ -382,7 +382,7 @@ where
     let (height, width) = input.dim();
     let input_ptr = input as *const ArrayView2<T>;
     let mode_clone = mode.clone();
-    
+
     // Pre-calculate constants outside the parallel closure
     let eight = safe_f64_to_float(8.0)?;
     let four = safe_f64_to_float(4.0)?;
@@ -467,7 +467,9 @@ where
             NdimageError::ComputationError("Failed to get contiguous slice from grad_y".into())
         })?;
         let mag_flat = magnitude.as_slice_mut().ok_or_else(|| {
-            NdimageError::ComputationError("Failed to get mutable contiguous slice from magnitude".into())
+            NdimageError::ComputationError(
+                "Failed to get mutable contiguous slice from magnitude".into(),
+            )
         })?;
 
         T::simd_magnitude(gx_flat, gy_flat, mag_flat);

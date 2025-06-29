@@ -249,8 +249,8 @@ impl CudaContext {
             }
         }
 
-        // Get device properties 
-        let (compute_capability, max_threads_per_block, max_shared_memory) = 
+        // Get device properties
+        let (compute_capability, max_threads_per_block, max_shared_memory) =
             Self::get_device_properties(device_id)?;
 
         Ok(Self {
@@ -270,32 +270,35 @@ impl CudaContext {
             1 => (8, 0), // Assume Ampere architecture for second device
             _ => (7, 0), // Default to Volta for others
         };
-        
+
         let max_threads_per_block = match compute_capability {
             (8, _) => 1024, // Ampere
             (7, _) => 1024, // Turing/Volta
             _ => 512,       // Older architectures
         };
-        
+
         let max_shared_memory = match compute_capability {
-            (8, _) => 99328,  // Ampere: 96KB + 3KB
-            (7, 5) => 65536,  // Turing: 64KB
-            (7, _) => 49152,  // Volta: 48KB
-            _ => 32768,       // Older: 32KB
+            (8, _) => 99328, // Ampere: 96KB + 3KB
+            (7, 5) => 65536, // Turing: 64KB
+            (7, _) => 49152, // Volta: 48KB
+            _ => 32768,      // Older: 32KB
         };
-        
+
         Ok((compute_capability, max_threads_per_block, max_shared_memory))
     }
 
     /// Get optimal kernel compilation options based on compute capability
     fn get_compilation_options(&self) -> NdimageResult<Vec<CString>> {
-        let arch_option = format!("--gpu-architecture=compute_{}{}", 
-                                 self.compute_capability.0, 
-                                 self.compute_capability.1);
-        
+        let arch_option = format!(
+            "--gpu-architecture=compute_{}{}",
+            self.compute_capability.0, self.compute_capability.1
+        );
+
         let mut options = vec![
             CString::new(arch_option).map_err(|_| {
-                NdimageError::ComputationError("Failed to create compute architecture option".into())
+                NdimageError::ComputationError(
+                    "Failed to create compute architecture option".into(),
+                )
             })?,
             CString::new("--fmad=true").map_err(|_| {
                 NdimageError::ComputationError("Failed to create fmad option".into())
@@ -435,7 +438,9 @@ impl CudaContext {
             // Cache the compiled kernel
             {
                 let mut cache = KERNEL_CACHE.lock().map_err(|_| {
-                    NdimageError::ComputationError("Failed to acquire kernel cache lock for insertion".into())
+                    NdimageError::ComputationError(
+                        "Failed to acquire kernel cache lock for insertion".into(),
+                    )
                 })?;
                 cache.insert(
                     kernel_name.to_string(),
@@ -742,7 +747,7 @@ impl CudaMemoryManager {
     /// Return a buffer to the pool for reuse
     pub fn deallocate_buffer(&mut self, ptr: *mut c_void, size: usize) -> NdimageResult<()> {
         let pool = self.buffer_pools.entry(size).or_insert_with(Vec::new);
-        
+
         if pool.len() < self.max_pool_size {
             pool.push(ptr);
         } else {
@@ -764,7 +769,8 @@ impl CudaMemoryManager {
 
     /// Get memory usage statistics
     pub fn get_memory_stats(&self) -> (usize, usize) {
-        let pooled_memory: usize = self.buffer_pools
+        let pooled_memory: usize = self
+            .buffer_pools
             .iter()
             .map(|(size, pool)| size * pool.len())
             .sum();
@@ -837,11 +843,16 @@ impl AdvancedCudaExecutor {
 
     /// Get execution statistics
     pub fn get_execution_stats(&self) -> NdimageResult<(u64, f64, u64, f64)> {
-        let stats = self.execution_stats.lock().map_err(|_| {
-            NdimageError::ComputationError("Failed to acquire stats lock".into())
-        })?;
-        Ok((stats.kernel_launches, stats.total_execution_time, 
-            stats.memory_transfers, stats.total_transfer_time))
+        let stats = self
+            .execution_stats
+            .lock()
+            .map_err(|_| NdimageError::ComputationError("Failed to acquire stats lock".into()))?;
+        Ok((
+            stats.kernel_launches,
+            stats.total_execution_time,
+            stats.memory_transfers,
+            stats.total_transfer_time,
+        ))
     }
 
     /// Get memory usage statistics
@@ -857,10 +868,10 @@ impl AdvancedCudaExecutor {
         let mut memory_manager = self.memory_manager.lock().map_err(|_| {
             NdimageError::ComputationError("Failed to acquire memory manager lock".into())
         })?;
-        
+
         let byte_size = size * std::mem::size_of::<T>();
         let device_ptr = memory_manager.allocate_buffer(byte_size)?;
-        
+
         Ok(CudaManagedBuffer {
             device_ptr,
             size,
@@ -933,45 +944,45 @@ impl<T> CudaManagedBuffer<T> {
 /// Convert OpenCL-style kernel to CUDA syntax
 fn convert_opencl_to_cuda(source: &str) -> String {
     let mut cuda_source = source.to_string();
-    
+
     // Handle kernel declaration
     cuda_source = cuda_source.replace("__kernel", "extern \"C\" __global__");
-    
+
     // Handle address space qualifiers
     cuda_source = cuda_source.replace("__global ", "");
     cuda_source = cuda_source.replace("__local", "__shared__");
     cuda_source = cuda_source.replace("__constant", "__constant__");
-    
+
     // Handle work item functions
     cuda_source = cuda_source.replace("get_global_id(0)", "blockIdx.x * blockDim.x + threadIdx.x");
     cuda_source = cuda_source.replace("get_global_id(1)", "blockIdx.y * blockDim.y + threadIdx.y");
     cuda_source = cuda_source.replace("get_global_id(2)", "blockIdx.z * blockDim.z + threadIdx.z");
-    
+
     cuda_source = cuda_source.replace("get_local_id(0)", "threadIdx.x");
     cuda_source = cuda_source.replace("get_local_id(1)", "threadIdx.y");
     cuda_source = cuda_source.replace("get_local_id(2)", "threadIdx.z");
-    
+
     cuda_source = cuda_source.replace("get_group_id(0)", "blockIdx.x");
     cuda_source = cuda_source.replace("get_group_id(1)", "blockIdx.y");
     cuda_source = cuda_source.replace("get_group_id(2)", "blockIdx.z");
-    
+
     cuda_source = cuda_source.replace("get_local_size(0)", "blockDim.x");
     cuda_source = cuda_source.replace("get_local_size(1)", "blockDim.y");
     cuda_source = cuda_source.replace("get_local_size(2)", "blockDim.z");
-    
+
     cuda_source = cuda_source.replace("get_global_size(0)", "gridDim.x * blockDim.x");
     cuda_source = cuda_source.replace("get_global_size(1)", "gridDim.y * blockDim.y");
     cuda_source = cuda_source.replace("get_global_size(2)", "gridDim.z * blockDim.z");
-    
+
     // Handle synchronization
     cuda_source = cuda_source.replace("barrier(CLK_LOCAL_MEM_FENCE)", "__syncthreads()");
     cuda_source = cuda_source.replace("barrier(CLK_GLOBAL_MEM_FENCE)", "__threadfence()");
-    
+
     // Handle math functions - some have different names in CUDA
     cuda_source = cuda_source.replace("clamp(", "fminf(fmaxf(");
     cuda_source = cuda_source.replace("mix(", "lerp(");
     cuda_source = cuda_source.replace("mad(", "fmaf(");
-    
+
     // Handle atomic operations
     cuda_source = cuda_source.replace("atomic_add(", "atomicAdd(");
     cuda_source = cuda_source.replace("atomic_sub(", "atomicSub(");
@@ -982,7 +993,7 @@ fn convert_opencl_to_cuda(source: &str) -> String {
     cuda_source = cuda_source.replace("atomic_and(", "atomicAnd(");
     cuda_source = cuda_source.replace("atomic_or(", "atomicOr(");
     cuda_source = cuda_source.replace("atomic_xor(", "atomicXor(");
-    
+
     // Add common CUDA includes if not present
     if !cuda_source.contains("#include") {
         cuda_source = format!(
@@ -990,7 +1001,7 @@ fn convert_opencl_to_cuda(source: &str) -> String {
             cuda_source
         );
     }
-    
+
     cuda_source
 }
 
@@ -1013,17 +1024,22 @@ fn calculate_launch_config_advanced(
     let block_size = match dimensions {
         1 => {
             // For 1D, use power-of-2 block sizes for better occupancy
-            let optimal_size = if work_size[0] < 128 { 64 } 
-                              else if work_size[0] < 512 { 128 }
-                              else if work_size[0] < 2048 { 256 }
-                              else { 512 };
+            let optimal_size = if work_size[0] < 128 {
+                64
+            } else if work_size[0] < 512 {
+                128
+            } else if work_size[0] < 2048 {
+                256
+            } else {
+                512
+            };
             (optimal_size.min(max_threads_per_block), 1, 1)
         }
         2 => {
             // For 2D, balance between x and y dimensions
             let total_threads = max_threads_per_block.min(1024);
             let aspect_ratio = work_size[0] as f64 / work_size[1] as f64;
-            
+
             let (bx, by) = if aspect_ratio > 2.0 {
                 (32, total_threads / 32) // Wide images
             } else if aspect_ratio < 0.5 {
@@ -1039,7 +1055,7 @@ fn calculate_launch_config_advanced(
         3 => {
             // For 3D, distribute threads more evenly
             let total_threads = max_threads_per_block.min(512); // Use fewer threads for 3D
-            let cube_root = (total_threads as f64).powf(1.0/3.0) as usize;
+            let cube_root = (total_threads as f64).powf(1.0 / 3.0) as usize;
             let optimal_dim = 1 << (cube_root as f64).log2().floor() as usize;
             let remaining = total_threads / (optimal_dim * optimal_dim);
             (optimal_dim, optimal_dim, remaining.max(1))
@@ -1050,34 +1066,41 @@ fn calculate_launch_config_advanced(
     // Calculate grid size ensuring we don't exceed device limits
     let grid_size = match dimensions {
         1 => {
-            let blocks = ((work_size[0] + block_size.0 - 1) / block_size.0)
-                .min(max_grid_size.0 as usize);
+            let blocks =
+                ((work_size[0] + block_size.0 - 1) / block_size.0).min(max_grid_size.0 as usize);
             (blocks as u32, 1, 1)
         }
         2 => {
-            let blocks_x = ((work_size[0] + block_size.0 - 1) / block_size.0)
-                .min(max_grid_size.0 as usize);
-            let blocks_y = ((work_size[1] + block_size.1 - 1) / block_size.1)
-                .min(max_grid_size.1 as usize);
+            let blocks_x =
+                ((work_size[0] + block_size.0 - 1) / block_size.0).min(max_grid_size.0 as usize);
+            let blocks_y =
+                ((work_size[1] + block_size.1 - 1) / block_size.1).min(max_grid_size.1 as usize);
             (blocks_x as u32, blocks_y as u32, 1)
         }
         3 => {
-            let blocks_x = ((work_size[0] + block_size.0 - 1) / block_size.0)
-                .min(max_grid_size.0 as usize);
-            let blocks_y = ((work_size[1] + block_size.1 - 1) / block_size.1)
-                .min(max_grid_size.1 as usize);
-            let blocks_z = ((work_size[2] + block_size.2 - 1) / block_size.2)
-                .min(max_grid_size.2 as usize);
+            let blocks_x =
+                ((work_size[0] + block_size.0 - 1) / block_size.0).min(max_grid_size.0 as usize);
+            let blocks_y =
+                ((work_size[1] + block_size.1 - 1) / block_size.1).min(max_grid_size.1 as usize);
+            let blocks_z =
+                ((work_size[2] + block_size.2 - 1) / block_size.2).min(max_grid_size.2 as usize);
             (blocks_x as u32, blocks_y as u32, blocks_z as u32)
         }
         _ => {
-            let blocks = ((work_size[0] + block_size.0 - 1) / block_size.0)
-                .min(max_grid_size.0 as usize);
+            let blocks =
+                ((work_size[0] + block_size.0 - 1) / block_size.0).min(max_grid_size.0 as usize);
             (blocks as u32, 1, 1)
         }
     };
 
-    (grid_size, (block_size.0 as u32, block_size.1 as u32, block_size.2 as u32))
+    (
+        grid_size,
+        (
+            block_size.0 as u32,
+            block_size.1 as u32,
+            block_size.2 as u32,
+        ),
+    )
 }
 
 #[cfg(test)]

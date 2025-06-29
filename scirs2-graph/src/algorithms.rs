@@ -41,13 +41,14 @@ pub use coloring::*;
 pub use community::{
     // Standardized community detection algorithms - stable for 1.0
     fluid_communities_result,
-    greedy_modularity_optimization,
+    greedy_modularity_optimization_result,
     hierarchical_communities_result,
     infomap_communities,
     label_propagation_result,
     louvain_communities_result,
     modularity,
-    modularity_optimization,
+    modularity_optimization_result,
+    parallel_louvain_communities_result,
     // Standardized result types - stable for 1.0
     CommunityResult,
     CommunityStructure,
@@ -78,6 +79,24 @@ pub use community::fluid_communities;
     note = "Use `hierarchical_communities_result` instead"
 )]
 pub use community::hierarchical_communities;
+
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `modularity_optimization_result` instead"
+)]
+pub use community::modularity_optimization;
+
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `greedy_modularity_optimization_result` instead"
+)]
+pub use community::greedy_modularity_optimization;
+
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `parallel_louvain_communities_result` instead"
+)]
+pub use community::parallel_louvain_communities;
 pub use connectivity::*;
 pub use decomposition::*;
 pub use flow::{dinic_max_flow, minimum_cut, push_relabel_max_flow};

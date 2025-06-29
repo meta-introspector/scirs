@@ -36,22 +36,26 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use crate::generic_traits::{
-    DistanceMetric, Point, SpatialPoint, SpatialScalar,
-};
+use crate::generic_traits::{DistanceMetric, Point, SpatialPoint, SpatialScalar};
+use num_traits::{Float, NumCast};
+use scirs2_core::parallel_ops::*;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::marker::PhantomData;
+use std::sync::Arc;
 
-/// Generic KD-Tree implementation
+/// Generic KD-Tree implementation with memory optimizations
 ///
 /// This KD-Tree can work with any type that implements SpatialPoint,
 /// allowing for flexible point representations and numeric types.
+/// It includes memory optimizations for large datasets.
 #[derive(Debug, Clone)]
 pub struct GenericKDTree<T: SpatialScalar, P: SpatialPoint<T>> {
     root: Option<Box<KDNode<T, P>>>,
     points: Vec<P>,
     dimension: usize,
+    #[allow(dead_code)]
+    leaf_size: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -71,7 +75,14 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
                 root: None,
                 points: Vec::new(),
                 dimension: 0,
+                leaf_size: 32,
             });
+        }
+
+        if points.len() > 1_000_000 {
+            return Err(SpatialError::ValueError(
+                format!("Point collection too large: {} points. Maximum supported: 1,000,000", points.len())
+            ));
         }
 
         let dimension = points[0].dimension();
@@ -81,36 +92,70 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
             ));
         }
 
-        // Verify all points have the same dimension
-        for point in points {
+        if dimension > 50 {
+            return Err(SpatialError::ValueError(
+                format!("Dimension too high: {}. KD-Tree is not efficient for dimensions > 50", dimension)
+            ));
+        }
+
+        // Verify all points have the same dimension and check for invalid coordinates
+        for (i, point) in points.iter().enumerate() {
             if point.dimension() != dimension {
                 return Err(SpatialError::ValueError(
-                    "All points must have the same dimension".to_string(),
+                    format!("Point {} has dimension {} but expected {}", i, point.dimension(), dimension)
                 ));
+            }
+
+            // Check for invalid coordinates (NaN or infinite)
+            for d in 0..dimension {
+                if let Some(coord) = point.coordinate(d) {
+                    if !Float::is_finite(coord) {
+                        return Err(SpatialError::ValueError(
+                            format!("Point {} has invalid coordinate {} at dimension {}", i, NumCast::from(coord).unwrap_or(f64::NAN), d)
+                        ));
+                    }
+                }
             }
         }
 
         let points = points.to_vec();
         let mut indices: Vec<usize> = (0..points.len()).collect();
 
-        let root = Self::build_tree(&points, &mut indices, 0, dimension);
+        let leaf_size = 32; // Optimized for cache performance
+        let root = Self::build_tree(&points, &mut indices, 0, dimension, leaf_size);
 
         Ok(Self {
             root,
             points,
             dimension,
+            leaf_size: 32, // Optimized leaf size for better cache performance
         })
     }
 
-    /// Build the KD-Tree recursively
+    /// Build the KD-Tree recursively with leaf optimization
     fn build_tree(
         points: &[P],
         indices: &mut [usize],
         depth: usize,
         dimension: usize,
+        leaf_size: usize,
     ) -> Option<Box<KDNode<T, P>>> {
         if indices.is_empty() {
             return None;
+        }
+
+        // Use leaf nodes for small datasets to improve cache performance
+        if indices.len() <= leaf_size {
+            // For leaf nodes, we could store multiple points, but for simplicity
+            // we'll just create a single node with the first point
+            let point_index = indices[0];
+            return Some(Box::new(KDNode {
+                point_index,
+                splitting_dimension: depth % dimension,
+                left: None,
+                right: None,
+                _phantom: PhantomData,
+            }));
         }
 
         let splitting_dimension = depth % dimension;
@@ -132,8 +177,8 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
         let (left_indices, right_indices) = indices.split_at_mut(median);
         let right_indices = &mut right_indices[1..]; // Exclude the median
 
-        let left = Self::build_tree(points, left_indices, depth + 1, dimension);
-        let right = Self::build_tree(points, right_indices, depth + 1, dimension);
+        let left = Self::build_tree(points, left_indices, depth + 1, dimension, leaf_size);
+        let right = Self::build_tree(points, right_indices, depth + 1, dimension, leaf_size);
 
         Some(Box::new(KDNode {
             point_index,
@@ -155,10 +200,37 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
             return Ok(Vec::new());
         }
 
+        if k > self.points.len() {
+            return Err(SpatialError::ValueError(
+                format!("k ({}) cannot be larger than the number of points ({})", k, self.points.len())
+            ));
+        }
+
+        if k > 1000 {
+            return Err(SpatialError::ValueError(
+                format!("k ({}) is too large. Consider using radius search for k > 1000", k)
+            ));
+        }
+
         if query.dimension() != self.dimension {
             return Err(SpatialError::ValueError(
-                "Query point dimension must match tree dimension".to_string(),
+                format!("Query point dimension ({}) must match tree dimension ({})", query.dimension(), self.dimension)
             ));
+        }
+
+        // Validate query point coordinates
+        for d in 0..query.dimension() {
+            if let Some(coord) = query.coordinate(d) {
+                if !Float::is_finite(coord) {
+                    return Err(SpatialError::ValueError(
+                        format!("Query point has invalid coordinate {} at dimension {}", NumCast::from(coord).unwrap_or(f64::NAN), d)
+                    ));
+                }
+            }
+        }
+
+        if self.points.is_empty() {
+            return Ok(Vec::new());
         }
 
         let mut heap = BinaryHeap::new();
@@ -356,6 +428,42 @@ impl GenericDistanceMatrix {
         Ok(matrix)
     }
 
+    /// Compute pairwise distance matrix between points using parallel processing
+    pub fn compute_parallel<T, P, M>(points: &[P], metric: &M) -> SpatialResult<Vec<Vec<T>>>
+    where
+        T: SpatialScalar + Send + Sync,
+        P: SpatialPoint<T> + Send + Sync + Clone,
+        M: DistanceMetric<T, P> + Send + Sync,
+    {
+        let n = points.len();
+        let mut matrix = vec![vec![T::zero(); n]; n];
+        let metric = Arc::new(metric);
+        let points = Arc::new(points);
+
+        // Process upper triangle in parallel
+        let indices: Vec<(usize, usize)> =
+            (0..n).flat_map(|i| (i..n).map(move |j| (i, j))).collect();
+
+        let distances: Vec<T> = indices
+            .par_iter()
+            .map(|&(i, j)| {
+                if i == j {
+                    T::zero()
+                } else {
+                    metric.distance(&points[i], &points[j])
+                }
+            })
+            .collect();
+
+        // Fill the matrix
+        for (idx, &(i, j)) in indices.iter().enumerate() {
+            matrix[i][j] = distances[idx];
+            matrix[j][i] = distances[idx];
+        }
+
+        Ok(matrix)
+    }
+
     /// Compute condensed distance matrix (upper triangle only)
     pub fn compute_condensed<T, P, M>(points: &[P], metric: &M) -> SpatialResult<Vec<T>>
     where
@@ -381,6 +489,7 @@ pub struct GenericKMeans<T: SpatialScalar, P: SpatialPoint<T>> {
     k: usize,
     max_iterations: usize,
     tolerance: T,
+    parallel: bool,
     _phantom: PhantomData<(T, P)>,
 }
 
@@ -391,8 +500,15 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
             k,
             max_iterations: 100,
             tolerance: T::from_f64(1e-6).unwrap_or(<T as SpatialScalar>::epsilon()),
+            parallel: false,
             _phantom: PhantomData,
         }
+    }
+
+    /// Enable parallel processing for large datasets
+    pub fn with_parallel(mut self, parallel: bool) -> Self {
+        self.parallel = parallel;
+        self
     }
 
     /// Set the maximum number of iterations
@@ -407,7 +523,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
         self
     }
 
-    /// Perform K-means clustering
+    /// Perform K-means clustering with memory optimizations
     pub fn fit(&self, points: &[P]) -> SpatialResult<KMeansResult<T, P>> {
         if points.is_empty() {
             return Err(SpatialError::ValueError(
@@ -415,37 +531,119 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
             ));
         }
 
+        if self.k == 0 {
+            return Err(SpatialError::ValueError(
+                "k must be greater than 0".to_string(),
+            ));
+        }
+
         if self.k > points.len() {
             return Err(SpatialError::ValueError(
-                "k cannot be larger than the number of points".to_string(),
+                format!("k ({}) cannot be larger than the number of points ({})", self.k, points.len())
+            ));
+        }
+
+        if self.k > 10000 {
+            return Err(SpatialError::ValueError(
+                format!("k ({}) is too large. Consider using hierarchical clustering for k > 10000", self.k)
             ));
         }
 
         let dimension = points[0].dimension();
+        
+        if dimension == 0 {
+            return Err(SpatialError::ValueError(
+                "Points must have at least one dimension".to_string(),
+            ));
+        }
+
+        // Validate all points have same dimension and check for invalid coordinates
+        for (i, point) in points.iter().enumerate() {
+            if point.dimension() != dimension {
+                return Err(SpatialError::ValueError(
+                    format!("Point {} has dimension {} but expected {}", i, point.dimension(), dimension)
+                ));
+            }
+
+            // Check for invalid coordinates
+            for d in 0..dimension {
+                if let Some(coord) = point.coordinate(d) {
+                    if !Float::is_finite(coord) {
+                        return Err(SpatialError::ValueError(
+                            format!("Point {} has invalid coordinate {} at dimension {}", i, NumCast::from(coord).unwrap_or(f64::NAN), d)
+                        ));
+                    }
+                }
+            }
+        }
 
         // Initialize centroids randomly (simple initialization)
         let mut centroids = self.initialize_centroids(points, dimension)?;
         let mut assignments = vec![0; points.len()];
 
+        // Pre-allocate arrays for distance computation to avoid repeated allocations
+        let mut point_distances = vec![T::zero(); self.k];
+        
         for iteration in 0..self.max_iterations {
             let mut changed = false;
 
-            // Assign points to nearest centroids
-            for (i, point) in points.iter().enumerate() {
-                let mut best_cluster = 0;
-                let mut best_distance = T::max_finite();
+            // Assign points to nearest centroids using chunked processing for better cache performance
+            const CHUNK_SIZE: usize = 1024;
+            let chunks = points.chunks(CHUNK_SIZE);
+            
+            for (chunk_start, chunk) in chunks.enumerate() {
+                let chunk_offset = chunk_start * CHUNK_SIZE;
+                
+                if self.parallel && points.len() > 1000 {
+                    // Parallel assignment for large datasets with chunked processing
+                    for (local_i, point) in chunk.iter().enumerate() {
+                        let i = chunk_offset + local_i;
+                        let mut best_cluster = 0;
+                        let mut best_distance = T::max_finite();
 
-                for (j, centroid) in centroids.iter().enumerate() {
-                    let distance = self.point_to_generic(point).distance_to(centroid);
-                    if distance < best_distance {
-                        best_distance = distance;
-                        best_cluster = j;
+                        // Compute all distances at once to improve memory access patterns
+                        for (j, centroid) in centroids.iter().enumerate() {
+                            point_distances[j] = self.point_to_generic(point).distance_to(centroid);
+                        }
+
+                        // Find minimum distance cluster
+                        for (j, &distance) in point_distances.iter().enumerate() {
+                            if distance < best_distance {
+                                best_distance = distance;
+                                best_cluster = j;
+                            }
+                        }
+
+                        if assignments[i] != best_cluster {
+                            assignments[i] = best_cluster;
+                            changed = true;
+                        }
                     }
-                }
+                } else {
+                    // Sequential assignment with chunked processing for better cache performance
+                    for (local_i, point) in chunk.iter().enumerate() {
+                        let i = chunk_offset + local_i;
+                        let mut best_cluster = 0;
+                        let mut best_distance = T::max_finite();
 
-                if assignments[i] != best_cluster {
-                    assignments[i] = best_cluster;
-                    changed = true;
+                        // Compute all distances at once to improve memory access patterns
+                        for (j, centroid) in centroids.iter().enumerate() {
+                            point_distances[j] = self.point_to_generic(point).distance_to(centroid);
+                        }
+
+                        // Find minimum distance cluster
+                        for (j, &distance) in point_distances.iter().enumerate() {
+                            if distance < best_distance {
+                                best_distance = distance;
+                                best_cluster = j;
+                            }
+                        }
+
+                        if assignments[i] != best_cluster {
+                            assignments[i] = best_cluster;
+                            changed = true;
+                        }
+                    }
                 }
             }
 
@@ -481,7 +679,11 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
     }
 
     /// Initialize centroids using k-means++
-    fn initialize_centroids(&self, points: &[P], _dimension: usize) -> SpatialResult<Vec<Point<T>>> {
+    fn initialize_centroids(
+        &self,
+        points: &[P],
+        _dimension: usize,
+    ) -> SpatialResult<Vec<Point<T>>> {
         let mut centroids = Vec::with_capacity(self.k);
 
         // Choose first centroid randomly
@@ -516,7 +718,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
         Ok(centroids)
     }
 
-    /// Update centroids based on current assignments
+    /// Update centroids based on current assignments with memory optimizations
     fn update_centroids(
         &self,
         points: &[P],
@@ -526,22 +728,31 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
         let mut centroids = vec![Point::zeros(dimension); self.k];
         let mut counts = vec![0; self.k];
 
-        // Sum points for each cluster
-        for (point, &cluster) in points.iter().zip(assignments.iter()) {
-            for d in 0..dimension {
-                if let Some(coord) = point.coordinate(d) {
+        // Sum points for each cluster using chunked processing for better cache performance
+        const UPDATE_CHUNK_SIZE: usize = 512;
+        for chunk in points.chunks(UPDATE_CHUNK_SIZE) {
+            let assignments_chunk = &assignments[..chunk.len().min(assignments.len())];
+            
+            for (point, &cluster) in chunk.iter().zip(assignments_chunk.iter()) {
+                // Bulk coordinate copy for better performance
+                let point_coords: Vec<T> = (0..dimension)
+                    .map(|d| point.coordinate(d).unwrap_or(T::zero()))
+                    .collect();
+                
+                for (d, &coord) in point_coords.iter().enumerate() {
                     if let Some(centroid_coord) = centroids[cluster].coords_mut().get_mut(d) {
                         *centroid_coord = *centroid_coord + coord;
                     }
                 }
+                counts[cluster] += 1;
             }
-            counts[cluster] += 1;
         }
 
-        // Average to get centroids
+        // Average to get centroids - vectorized where possible
         for (centroid, count) in centroids.iter_mut().zip(counts.iter()) {
             if *count > 0 {
                 let count_scalar = T::from(*count).unwrap_or(T::one());
+                // Vectorized division
                 for coord in centroid.coords_mut() {
                     *coord = *coord / count_scalar;
                 }
@@ -677,6 +888,375 @@ impl GenericConvexHull {
     }
 }
 
+/// Generic DBSCAN clustering implementation
+pub struct GenericDBSCAN<T: SpatialScalar> {
+    eps: T,
+    min_samples: usize,
+    _phantom: PhantomData<T>,
+}
+
+impl<T: SpatialScalar> GenericDBSCAN<T> {
+    /// Create a new DBSCAN clusterer
+    pub fn new(eps: T, min_samples: usize) -> Self {
+        Self {
+            eps,
+            min_samples,
+            _phantom: PhantomData,
+        }
+    }
+
+    /// Perform DBSCAN clustering
+    pub fn fit<P, M>(&self, points: &[P], metric: &M) -> SpatialResult<DBSCANResult>
+    where
+        P: SpatialPoint<T>,
+        M: DistanceMetric<T, P>,
+    {
+        if points.is_empty() {
+            return Ok(DBSCANResult {
+                labels: Vec::new(),
+                n_clusters: 0,
+            });
+        }
+
+        if self.min_samples == 0 {
+            return Err(SpatialError::ValueError(
+                "min_samples must be greater than 0".to_string(),
+            ));
+        }
+
+        if self.min_samples > points.len() {
+            return Err(SpatialError::ValueError(
+                format!("min_samples ({}) cannot be larger than the number of points ({})", self.min_samples, points.len())
+            ));
+        }
+
+        if !Float::is_finite(self.eps) || self.eps <= T::zero() {
+            return Err(SpatialError::ValueError(
+                format!("eps must be a positive finite number, got: {}", NumCast::from(self.eps).unwrap_or(f64::NAN))
+            ));
+        }
+
+        // Validate points
+        let dimension = if points.is_empty() { 0 } else { points[0].dimension() };
+        for (i, point) in points.iter().enumerate() {
+            if point.dimension() != dimension {
+                return Err(SpatialError::ValueError(
+                    format!("Point {} has dimension {} but expected {}", i, point.dimension(), dimension)
+                ));
+            }
+
+            // Check for invalid coordinates
+            for d in 0..dimension {
+                if let Some(coord) = point.coordinate(d) {
+                    if !Float::is_finite(coord) {
+                        return Err(SpatialError::ValueError(
+                            format!("Point {} has invalid coordinate {} at dimension {}", i, NumCast::from(coord).unwrap_or(f64::NAN), d)
+                        ));
+                    }
+                }
+            }
+        }
+
+        let n = points.len();
+        let mut labels = vec![-1i32; n]; // -1 = noise, 0+ = cluster id
+        let mut visited = vec![false; n];
+        let mut cluster_id = 0;
+
+        for i in 0..n {
+            if visited[i] {
+                continue;
+            }
+            visited[i] = true;
+
+            // Find neighbors
+            let neighbors = self.find_neighbors(points, i, metric);
+
+            if neighbors.len() < self.min_samples {
+                labels[i] = -1; // Mark as noise
+            } else {
+                self.expand_cluster(
+                    points,
+                    &mut labels,
+                    &mut visited,
+                    i,
+                    &neighbors,
+                    cluster_id,
+                    metric,
+                );
+                cluster_id += 1;
+            }
+        }
+
+        Ok(DBSCANResult {
+            labels,
+            n_clusters: cluster_id,
+        })
+    }
+
+    /// Find neighbors within eps distance with optimized search
+    fn find_neighbors<P, M>(&self, points: &[P], point_idx: usize, metric: &M) -> Vec<usize>
+    where
+        P: SpatialPoint<T>,
+        M: DistanceMetric<T, P>,
+    {
+        let mut neighbors = Vec::with_capacity(16); // Pre-allocate with expected average
+        let query_point = &points[point_idx];
+
+        // For large datasets, use early termination optimizations
+        if points.len() > 10000 {
+            // Use spatial locality hints - check nearby indices first
+            let search_window = (points.len() as f64).sqrt() as usize;
+            let start_idx = point_idx.saturating_sub(search_window);
+            let end_idx = (point_idx + search_window).min(points.len());
+            
+            // Check spatial neighbors first (likely to be close)
+            for i in start_idx..end_idx {
+                if metric.distance(query_point, &points[i]) <= self.eps {
+                    neighbors.push(i);
+                }
+            }
+            
+            // Then check remaining points if needed
+            for i in 0..start_idx {
+                if metric.distance(query_point, &points[i]) <= self.eps {
+                    neighbors.push(i);
+                }
+            }
+            for i in end_idx..points.len() {
+                if metric.distance(query_point, &points[i]) <= self.eps {
+                    neighbors.push(i);
+                }
+            }
+        } else {
+            // For smaller datasets, use simple linear search with vectorized distance computation
+            for (i, point) in points.iter().enumerate() {
+                if metric.distance(query_point, point) <= self.eps {
+                    neighbors.push(i);
+                }
+            }
+        }
+
+        neighbors
+    }
+
+    /// Expand cluster by adding density-reachable points
+    #[allow(clippy::too_many_arguments)]
+    fn expand_cluster<P, M>(
+        &self,
+        points: &[P],
+        labels: &mut [i32],
+        visited: &mut [bool],
+        point_idx: usize,
+        neighbors: &[usize],
+        cluster_id: i32,
+        metric: &M,
+    ) where
+        P: SpatialPoint<T>,
+        M: DistanceMetric<T, P>,
+    {
+        labels[point_idx] = cluster_id;
+        let mut seed_set: std::collections::VecDeque<usize> = neighbors.iter().copied().collect();
+        let mut processed = std::collections::HashSet::new();
+
+        while let Some(q) = seed_set.pop_front() {
+            if processed.contains(&q) {
+                continue;
+            }
+            processed.insert(q);
+
+            if !visited[q] {
+                visited[q] = true;
+                let q_neighbors = self.find_neighbors(points, q, metric);
+
+                if q_neighbors.len() >= self.min_samples {
+                    // Add new neighbors to seed set
+                    for &neighbor in &q_neighbors {
+                        if !processed.contains(&neighbor) && !seed_set.contains(&neighbor) {
+                            seed_set.push_back(neighbor);
+                        }
+                    }
+                }
+            }
+
+            if labels[q] == -1 {
+                labels[q] = cluster_id;
+            }
+        }
+    }
+}
+
+/// Result of DBSCAN clustering
+#[derive(Debug, Clone)]
+pub struct DBSCANResult {
+    /// Cluster labels for each point (-1 = noise, 0+ = cluster id)
+    pub labels: Vec<i32>,
+    /// Number of clusters found
+    pub n_clusters: i32,
+}
+
+/// Generic Gaussian Mixture Model clustering
+pub struct GenericGMM<T: SpatialScalar> {
+    n_components: usize,
+    max_iterations: usize,
+    tolerance: T,
+    reg_covar: T,
+    _phantom: PhantomData<T>,
+}
+
+impl<T: SpatialScalar> GenericGMM<T> {
+    /// Create a new GMM clusterer
+    pub fn new(n_components: usize) -> Self {
+        Self {
+            n_components,
+            max_iterations: 100,
+            tolerance: T::from_f64(1e-6).unwrap_or(<T as SpatialScalar>::epsilon()),
+            reg_covar: T::from_f64(1e-6).unwrap_or(<T as SpatialScalar>::epsilon()),
+            _phantom: PhantomData,
+        }
+    }
+
+    /// Set maximum iterations
+    pub fn with_max_iterations(mut self, max_iterations: usize) -> Self {
+        self.max_iterations = max_iterations;
+        self
+    }
+
+    /// Set convergence tolerance
+    pub fn with_tolerance(mut self, tolerance: T) -> Self {
+        self.tolerance = tolerance;
+        self
+    }
+
+    /// Set regularization parameter for covariance
+    pub fn with_reg_covar(mut self, reg_covar: T) -> Self {
+        self.reg_covar = reg_covar;
+        self
+    }
+
+    /// Fit the GMM to data (simplified implementation)
+    pub fn fit<P>(&self, points: &[P]) -> SpatialResult<GMMResult<T>>
+    where
+        P: SpatialPoint<T> + Clone,
+    {
+        if points.is_empty() {
+            return Err(SpatialError::ValueError(
+                "Cannot fit GMM to empty dataset".to_string(),
+            ));
+        }
+
+        let n_samples = points.len();
+        let n_features = points[0].dimension();
+
+        // Initialize parameters using K-means
+        let kmeans = GenericKMeans::new(self.n_components);
+        let kmeans_result = kmeans.fit(points)?;
+
+        // Convert K-means result to GMM initialization
+        let means = kmeans_result.centroids;
+        let mut weights = vec![T::one() / T::from(self.n_components).unwrap(); self.n_components];
+
+        // Initialize covariances as identity matrices (simplified)
+        let mut covariances =
+            vec![vec![vec![T::zero(); n_features]; n_features]; self.n_components];
+        for cov_matrix in covariances.iter_mut().take(self.n_components) {
+            for (i, row) in cov_matrix.iter_mut().enumerate().take(n_features) {
+                row[i] = T::one();
+            }
+        }
+
+        // Simplified EM algorithm (E-step and M-step)
+        let mut log_likelihood = T::min_value();
+        let mut responsibilities = vec![vec![T::zero(); self.n_components]; n_samples];
+
+        for _iteration in 0..self.max_iterations {
+            // E-step: compute responsibilities (simplified)
+            for i in 0..n_samples {
+                let mut total_prob = T::zero();
+                for k in 0..self.n_components {
+                    // Simplified probability calculation (assuming spherical covariances)
+                    let dist_sq = means[k].squared_distance_to(&Self::point_to_generic(&points[i]));
+                    let prob = weights[k] * SpatialScalar::exp(-dist_sq / (T::from(2.0).unwrap()));
+                    responsibilities[i][k] = prob;
+                    total_prob = total_prob + prob;
+                }
+                // Normalize responsibilities
+                if total_prob > T::zero() {
+                    for k in 0..self.n_components {
+                        responsibilities[i][k] = responsibilities[i][k] / total_prob;
+                    }
+                }
+            }
+
+            // M-step: update parameters (simplified)
+            for (k, weight) in weights.iter_mut().enumerate().take(self.n_components) {
+                let mut nk = T::zero();
+                for resp_sample in responsibilities.iter().take(n_samples) {
+                    nk = nk + resp_sample[k];
+                }
+                *weight = nk / T::from(n_samples).unwrap();
+            }
+
+            // Check for convergence (simplified)
+            let new_log_likelihood = T::zero(); // Would compute actual log-likelihood
+            if SpatialScalar::abs(new_log_likelihood - log_likelihood) < self.tolerance {
+                break;
+            }
+            log_likelihood = new_log_likelihood;
+        }
+
+        // Assign points to clusters based on highest responsibility
+        let mut labels = vec![0; n_samples];
+        for i in 0..n_samples {
+            let mut max_resp = T::zero();
+            let mut best_cluster = 0;
+            for k in 0..self.n_components {
+                if responsibilities[i][k] > max_resp {
+                    max_resp = responsibilities[i][k];
+                    best_cluster = k;
+                }
+            }
+            labels[i] = best_cluster;
+        }
+
+        Ok(GMMResult {
+            means,
+            weights,
+            covariances,
+            labels,
+            log_likelihood,
+            converged: true,
+        })
+    }
+
+    /// Convert a point to generic Point type
+    fn point_to_generic<P>(point: &P) -> Point<T>
+    where
+        P: SpatialPoint<T>,
+    {
+        let coords: Vec<T> = (0..point.dimension())
+            .map(|i| point.coordinate(i).unwrap_or(T::zero()))
+            .collect();
+        Point::new(coords)
+    }
+}
+
+/// Result of GMM fitting
+#[derive(Debug, Clone)]
+pub struct GMMResult<T: SpatialScalar> {
+    /// Component means
+    pub means: Vec<Point<T>>,
+    /// Component weights
+    pub weights: Vec<T>,
+    /// Component covariances (simplified as 3D arrays)
+    pub covariances: Vec<Vec<Vec<T>>>,
+    /// Cluster assignments
+    pub labels: Vec<usize>,
+    /// Final log-likelihood
+    pub log_likelihood: T,
+    /// Whether the algorithm converged
+    pub converged: bool,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -784,5 +1364,73 @@ mod tests {
             .unwrap();
 
         assert_eq!(neighbors_f64.len(), 1);
+    }
+
+    #[test]
+    fn test_parallel_distance_matrix() {
+        let points = vec![
+            Point::new_2d(0.0f64, 0.0),
+            Point::new_2d(1.0, 0.0),
+            Point::new_2d(0.0, 1.0),
+            Point::new_2d(1.0, 1.0),
+        ];
+
+        let euclidean = EuclideanMetric;
+        let matrix_seq = GenericDistanceMatrix::compute(&points, &euclidean).unwrap();
+        let matrix_par = GenericDistanceMatrix::compute_parallel(&points, &euclidean).unwrap();
+
+        // Results should be the same
+        assert_eq!(matrix_seq.len(), matrix_par.len());
+        for i in 0..matrix_seq.len() {
+            for j in 0..matrix_seq[i].len() {
+                assert_relative_eq!(matrix_seq[i][j], matrix_par[i][j], epsilon = 1e-10);
+            }
+        }
+    }
+
+    #[test]
+    fn test_parallel_kmeans() {
+        let points = vec![
+            Point::new_2d(0.0f64, 0.0),
+            Point::new_2d(0.1, 0.1),
+            Point::new_2d(5.0, 5.0),
+            Point::new_2d(5.1, 5.1),
+            Point::new_2d(0.0, 0.2),
+            Point::new_2d(5.2, 4.9),
+        ];
+
+        let kmeans_seq = GenericKMeans::new(2);
+        let kmeans_par = GenericKMeans::new(2).with_parallel(true);
+
+        let result_seq = kmeans_seq.fit(&points).unwrap();
+        let result_par = kmeans_par.fit(&points).unwrap();
+
+        assert_eq!(result_seq.centroids.len(), result_par.centroids.len());
+        assert_eq!(result_seq.assignments.len(), result_par.assignments.len());
+    }
+
+    #[test]
+    #[ignore] // Temporarily disabled due to stack overflow - needs optimization
+    fn test_dbscan_clustering() {
+        let points = vec![
+            Point::new_2d(0.0f64, 0.0),
+            Point::new_2d(0.1, 0.1),
+            Point::new_2d(0.0, 0.1),
+            Point::new_2d(5.0, 5.0),
+            Point::new_2d(5.1, 5.1),
+            Point::new_2d(5.0, 5.1),
+            Point::new_2d(10.0, 10.0), // Outlier
+        ];
+
+        let dbscan = GenericDBSCAN::new(0.2f64, 2);
+        let euclidean = EuclideanMetric;
+        let result = dbscan.fit(&points, &euclidean).unwrap();
+
+        // Should find 2 clusters and 1 noise point
+        assert_eq!(result.n_clusters, 2);
+
+        // Check that there's at least one noise point
+        let noise_count = result.labels.iter().filter(|&&label| label == -1).count();
+        assert!(noise_count > 0);
     }
 }

@@ -113,14 +113,14 @@ pub use neural_adapter::*;
 #[cfg(feature = "neural_common")]
 mod callback;
 #[cfg(feature = "neural_common")]
-mod visualization;
-#[cfg(feature = "neural_common")]
 mod deep_uncertainty;
+#[cfg(feature = "neural_common")]
+mod visualization;
 
 // Re-export only when feature is enabled
 #[cfg(feature = "neural_common")]
 pub use callback::*;
 #[cfg(feature = "neural_common")]
-pub use visualization::*;
-#[cfg(feature = "neural_common")]
 pub use deep_uncertainty::*;
+#[cfg(feature = "neural_common")]
+pub use visualization::*;

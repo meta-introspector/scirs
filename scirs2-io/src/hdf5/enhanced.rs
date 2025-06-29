@@ -757,3 +757,625 @@ mod tests {
         assert!(config.buffer_size > 0);
     }
 }
+
+//
+// Advanced HDF5 Enhancements
+//
+
+use std::collections::BTreeMap;
+
+/// Scientific metadata attribute types
+#[derive(Debug, Clone)]
+pub enum AttributeValue {
+    /// String attribute
+    String(String),
+    /// Integer attribute
+    Integer(i64),
+    /// Float attribute
+    Float(f64),
+    /// Array of floats
+    FloatArray(Vec<f64>),
+    /// Array of integers
+    IntArray(Vec<i64>),
+    /// Array of strings
+    StringArray(Vec<String>),
+    /// Boolean attribute
+    Boolean(bool),
+}
+
+/// Scientific metadata container
+#[derive(Debug, Clone)]
+pub struct ScientificMetadata {
+    /// Standard attributes
+    pub attributes: BTreeMap<String, AttributeValue>,
+    /// Units for data
+    pub units: Option<String>,
+    /// Scale factor for data
+    pub scale_factor: Option<f64>,
+    /// Add offset for data
+    pub add_offset: Option<f64>,
+    /// Fill value for missing data
+    pub fill_value: Option<f64>,
+    /// Valid range for data
+    pub valid_range: Option<(f64, f64)>,
+    /// Calibration information
+    pub calibration: Option<CalibrationInfo>,
+    /// Provenance information
+    pub provenance: Option<ProvenanceInfo>,
+}
+
+/// Calibration information for scientific instruments
+#[derive(Debug, Clone)]
+pub struct CalibrationInfo {
+    /// Calibration date
+    pub date: String,
+    /// Calibration method
+    pub method: String,
+    /// Calibration parameters
+    pub parameters: BTreeMap<String, f64>,
+    /// Accuracy estimate
+    pub accuracy: Option<f64>,
+    /// Precision estimate
+    pub precision: Option<f64>,
+}
+
+/// Data provenance information
+#[derive(Debug, Clone)]
+pub struct ProvenanceInfo {
+    /// Data source
+    pub source: String,
+    /// Processing history
+    pub processing_history: Vec<String>,
+    /// Creation time
+    pub creation_time: String,
+    /// Creator information
+    pub creator: String,
+    /// Software version
+    pub software_version: String,
+    /// Input files used
+    pub input_files: Vec<String>,
+}
+
+impl Default for ScientificMetadata {
+    fn default() -> Self {
+        Self {
+            attributes: BTreeMap::new(),
+            units: None,
+            scale_factor: None,
+            add_offset: None,
+            fill_value: None,
+            valid_range: None,
+            calibration: None,
+            provenance: None,
+        }
+    }
+}
+
+impl ScientificMetadata {
+    /// Create new scientific metadata
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Add a string attribute
+    pub fn add_string_attr<S: Into<String>>(mut self, name: S, value: S) -> Self {
+        self.attributes
+            .insert(name.into(), AttributeValue::String(value.into()));
+        self
+    }
+
+    /// Add a numeric attribute
+    pub fn add_float_attr<S: Into<String>>(mut self, name: S, value: f64) -> Self {
+        self.attributes
+            .insert(name.into(), AttributeValue::Float(value));
+        self
+    }
+
+    /// Add units
+    pub fn with_units<S: Into<String>>(mut self, units: S) -> Self {
+        self.units = Some(units.into());
+        self
+    }
+
+    /// Add scale factor and offset
+    pub fn with_scaling(mut self, scale_factor: f64, add_offset: f64) -> Self {
+        self.scale_factor = Some(scale_factor);
+        self.add_offset = Some(add_offset);
+        self
+    }
+
+    /// Add valid range
+    pub fn with_valid_range(mut self, min: f64, max: f64) -> Self {
+        self.valid_range = Some((min, max));
+        self
+    }
+
+    /// Add provenance information
+    pub fn with_provenance(mut self, provenance: ProvenanceInfo) -> Self {
+        self.provenance = Some(provenance);
+        self
+    }
+}
+
+/// Performance monitoring for HDF5 operations
+#[derive(Debug, Clone)]
+pub struct HDF5PerformanceMonitor {
+    /// Operation timings
+    pub timings: BTreeMap<String, Vec<f64>>,
+    /// Data transfer statistics
+    pub transfer_stats: TransferStats,
+    /// Memory usage statistics
+    pub memory_stats: MemoryStats,
+    /// Compression efficiency
+    pub compression_efficiency: Vec<CompressionStats>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct TransferStats {
+    /// Total bytes read
+    pub bytes_read: usize,
+    /// Total bytes written
+    pub bytes_written: usize,
+    /// Read operations count
+    pub read_operations: usize,
+    /// Write operations count
+    pub write_operations: usize,
+    /// Average read speed (bytes/sec)
+    pub avg_read_speed: f64,
+    /// Average write speed (bytes/sec)
+    pub avg_write_speed: f64,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct MemoryStats {
+    /// Peak memory usage
+    pub peak_memory_bytes: usize,
+    /// Current memory usage
+    pub current_memory_bytes: usize,
+    /// Memory allocations count
+    pub allocation_count: usize,
+    /// Memory deallocations count
+    pub deallocation_count: usize,
+}
+
+impl Default for HDF5PerformanceMonitor {
+    fn default() -> Self {
+        Self {
+            timings: BTreeMap::new(),
+            transfer_stats: TransferStats::default(),
+            memory_stats: MemoryStats::default(),
+            compression_efficiency: Vec::new(),
+        }
+    }
+}
+
+impl HDF5PerformanceMonitor {
+    /// Create a new performance monitor
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Record an operation timing
+    pub fn record_timing(&mut self, operation: &str, duration_ms: f64) {
+        self.timings
+            .entry(operation.to_string())
+            .or_insert_with(Vec::new)
+            .push(duration_ms);
+    }
+
+    /// Record data transfer
+    pub fn record_read(&mut self, bytes: usize, duration_ms: f64) {
+        self.transfer_stats.bytes_read += bytes;
+        self.transfer_stats.read_operations += 1;
+
+        if duration_ms > 0.0 {
+            let speed = bytes as f64 / (duration_ms / 1000.0);
+            let total_ops = self.transfer_stats.read_operations as f64;
+            self.transfer_stats.avg_read_speed =
+                (self.transfer_stats.avg_read_speed * (total_ops - 1.0) + speed) / total_ops;
+        }
+    }
+
+    /// Record data write
+    pub fn record_write(&mut self, bytes: usize, duration_ms: f64) {
+        self.transfer_stats.bytes_written += bytes;
+        self.transfer_stats.write_operations += 1;
+
+        if duration_ms > 0.0 {
+            let speed = bytes as f64 / (duration_ms / 1000.0);
+            let total_ops = self.transfer_stats.write_operations as f64;
+            self.transfer_stats.avg_write_speed =
+                (self.transfer_stats.avg_write_speed * (total_ops - 1.0) + speed) / total_ops;
+        }
+    }
+
+    /// Get average timing for an operation
+    pub fn avg_timing(&self, operation: &str) -> Option<f64> {
+        self.timings
+            .get(operation)
+            .map(|times| times.iter().sum::<f64>() / times.len() as f64)
+    }
+
+    /// Get performance summary
+    pub fn get_summary(&self) -> PerformanceSummary {
+        let mut operation_averages = BTreeMap::new();
+
+        for (op, times) in &self.timings {
+            let avg = times.iter().sum::<f64>() / times.len() as f64;
+            operation_averages.insert(op.clone(), avg);
+        }
+
+        PerformanceSummary {
+            operation_averages,
+            total_bytes_transferred: self.transfer_stats.bytes_read
+                + self.transfer_stats.bytes_written,
+            avg_read_speed_mbps: self.transfer_stats.avg_read_speed / 1_000_000.0,
+            avg_write_speed_mbps: self.transfer_stats.avg_write_speed / 1_000_000.0,
+            peak_memory_mb: self.memory_stats.peak_memory_bytes as f64 / 1_000_000.0,
+            compression_ratio: self
+                .compression_efficiency
+                .iter()
+                .map(|c| c.compression_ratio)
+                .fold(0.0, |acc, x| acc + x)
+                / self.compression_efficiency.len().max(1) as f64,
+        }
+    }
+}
+
+/// Performance summary report
+#[derive(Debug, Clone)]
+pub struct PerformanceSummary {
+    /// Average timing for each operation type
+    pub operation_averages: BTreeMap<String, f64>,
+    /// Total bytes transferred
+    pub total_bytes_transferred: usize,
+    /// Average read speed in MB/s
+    pub avg_read_speed_mbps: f64,
+    /// Average write speed in MB/s  
+    pub avg_write_speed_mbps: f64,
+    /// Peak memory usage in MB
+    pub peak_memory_mb: f64,
+    /// Average compression ratio
+    pub compression_ratio: f64,
+}
+
+/// Data layout optimization recommendations
+#[derive(Debug, Clone)]
+pub enum LayoutOptimization {
+    /// Row-major layout (C-style)
+    RowMajor,
+    /// Column-major layout (Fortran-style)
+    ColumnMajor,
+    /// Chunked layout with specific chunk sizes
+    Chunked(Vec<usize>),
+    /// Tiled layout for 2D data
+    Tiled {
+        tile_width: usize,
+        tile_height: usize,
+    },
+    /// Strip layout for 1D-like access patterns
+    Striped { strip_size: usize },
+}
+
+/// Access pattern analysis
+#[derive(Debug, Clone)]
+pub struct AccessPatternAnalyzer {
+    /// Recorded access patterns
+    access_patterns: Vec<AccessPattern>,
+    /// Current analysis results
+    recommendations: Vec<LayoutOptimization>,
+}
+
+#[derive(Debug, Clone)]
+pub struct AccessPattern {
+    /// Operation type (read/write)
+    pub operation: String,
+    /// Accessed region (start, size for each dimension)
+    pub region: Vec<(usize, usize)>,
+    /// Frequency of this access pattern
+    pub frequency: usize,
+    /// Timestamp
+    pub timestamp: std::time::Instant,
+}
+
+impl AccessPatternAnalyzer {
+    /// Create a new access pattern analyzer
+    pub fn new() -> Self {
+        Self {
+            access_patterns: Vec::new(),
+            recommendations: Vec::new(),
+        }
+    }
+
+    /// Record an access pattern
+    pub fn record_access(&mut self, operation: String, region: Vec<(usize, usize)>) {
+        // Check if this pattern already exists
+        for pattern in &mut self.access_patterns {
+            if pattern.operation == operation && pattern.region == region {
+                pattern.frequency += 1;
+                pattern.timestamp = std::time::Instant::now();
+                return;
+            }
+        }
+
+        // Add new pattern
+        self.access_patterns.push(AccessPattern {
+            operation,
+            region,
+            frequency: 1,
+            timestamp: std::time::Instant::now(),
+        });
+    }
+
+    /// Analyze patterns and generate recommendations
+    pub fn analyze(&mut self) -> &Vec<LayoutOptimization> {
+        self.recommendations.clear();
+
+        if self.access_patterns.is_empty() {
+            return &self.recommendations;
+        }
+
+        // Analyze most frequent patterns
+        let mut pattern_analysis = BTreeMap::new();
+
+        for pattern in &self.access_patterns {
+            let key = format!("{:?}", pattern.region);
+            let entry = pattern_analysis
+                .entry(key)
+                .or_insert((0, pattern.region.clone()));
+            entry.0 += pattern.frequency;
+        }
+
+        // Find the most common access pattern
+        if let Some((_, (_, most_common_region))) =
+            pattern_analysis.iter().max_by_key(|(_, (freq, _))| *freq)
+        {
+            // Generate recommendations based on access patterns
+            if most_common_region.len() == 1 {
+                // 1D data - recommend striped layout
+                let optimal_strip = most_common_region[0].1.max(1024);
+                self.recommendations.push(LayoutOptimization::Striped {
+                    strip_size: optimal_strip,
+                });
+            } else if most_common_region.len() == 2 {
+                // 2D data - analyze access patterns
+                let (_row_access, row_size) = most_common_region[0];
+                let (_col_access, col_size) = most_common_region[1];
+
+                if row_size > col_size * 10 {
+                    // Row-wise access pattern
+                    self.recommendations.push(LayoutOptimization::RowMajor);
+                } else if col_size > row_size * 10 {
+                    // Column-wise access pattern
+                    self.recommendations.push(LayoutOptimization::ColumnMajor);
+                } else {
+                    // Mixed access - recommend tiled layout
+                    let tile_width = col_size.max(64).min(512);
+                    let tile_height = row_size.max(64).min(512);
+                    self.recommendations.push(LayoutOptimization::Tiled {
+                        tile_width,
+                        tile_height,
+                    });
+                }
+            } else {
+                // Multi-dimensional data - recommend chunked layout
+                let optimal_chunks: Vec<usize> = most_common_region
+                    .iter()
+                    .map(|(_, size)| size.max(&64).min(&1024))
+                    .cloned()
+                    .collect();
+                self.recommendations
+                    .push(LayoutOptimization::Chunked(optimal_chunks));
+            }
+        }
+
+        &self.recommendations
+    }
+
+    /// Get access pattern statistics
+    pub fn get_statistics(&self) -> AccessPatternStats {
+        let total_accesses = self.access_patterns.iter().map(|p| p.frequency).sum();
+        let unique_patterns = self.access_patterns.len();
+
+        let read_count = self
+            .access_patterns
+            .iter()
+            .filter(|p| p.operation.contains("read"))
+            .map(|p| p.frequency)
+            .sum();
+
+        let write_count = total_accesses - read_count;
+
+        AccessPatternStats {
+            total_accesses,
+            unique_patterns,
+            read_count,
+            write_count,
+            most_frequent_pattern: self
+                .access_patterns
+                .iter()
+                .max_by_key(|p| p.frequency)
+                .map(|p| p.region.clone()),
+        }
+    }
+}
+
+impl Default for AccessPatternAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Access pattern statistics
+#[derive(Debug, Clone)]
+pub struct AccessPatternStats {
+    /// Total number of accesses recorded
+    pub total_accesses: usize,
+    /// Number of unique access patterns
+    pub unique_patterns: usize,
+    /// Number of read operations
+    pub read_count: usize,
+    /// Number of write operations
+    pub write_count: usize,
+    /// Most frequently accessed region
+    pub most_frequent_pattern: Option<Vec<(usize, usize)>>,
+}
+
+/// Enhanced HDF5 file with full monitoring and optimization
+pub struct OptimizedHDF5File {
+    /// Base enhanced file
+    pub base_file: EnhancedHDF5File,
+    /// Performance monitor
+    pub performance_monitor: Arc<Mutex<HDF5PerformanceMonitor>>,
+    /// Access pattern analyzer
+    pub access_analyzer: Arc<Mutex<AccessPatternAnalyzer>>,
+    /// Metadata cache
+    pub metadata_cache: Arc<RwLock<BTreeMap<String, ScientificMetadata>>>,
+}
+
+impl OptimizedHDF5File {
+    /// Create a new optimized HDF5 file
+    pub fn create<P: AsRef<Path>>(
+        path: P,
+        parallel_config: Option<ParallelConfig>,
+    ) -> Result<Self> {
+        let base_file = EnhancedHDF5File::create(path, parallel_config)?;
+
+        Ok(Self {
+            base_file,
+            performance_monitor: Arc::new(Mutex::new(HDF5PerformanceMonitor::new())),
+            access_analyzer: Arc::new(Mutex::new(AccessPatternAnalyzer::new())),
+            metadata_cache: Arc::new(RwLock::new(BTreeMap::new())),
+        })
+    }
+
+    /// Open an optimized HDF5 file
+    pub fn open<P: AsRef<Path>>(
+        path: P,
+        mode: FileMode,
+        parallel_config: Option<ParallelConfig>,
+    ) -> Result<Self> {
+        let base_file = EnhancedHDF5File::open(path, mode, parallel_config)?;
+
+        Ok(Self {
+            base_file,
+            performance_monitor: Arc::new(Mutex::new(HDF5PerformanceMonitor::new())),
+            access_analyzer: Arc::new(Mutex::new(AccessPatternAnalyzer::new())),
+            metadata_cache: Arc::new(RwLock::new(BTreeMap::new())),
+        })
+    }
+
+    /// Add scientific metadata to a dataset
+    pub fn add_scientific_metadata(
+        &mut self,
+        dataset_path: &str,
+        metadata: ScientificMetadata,
+    ) -> Result<()> {
+        // Cache the metadata
+        {
+            let mut cache = self.metadata_cache.write().unwrap();
+            cache.insert(dataset_path.to_string(), metadata.clone());
+        }
+
+        // In a real implementation, this would write the metadata as HDF5 attributes
+        // For now, we just cache it for retrieval
+        Ok(())
+    }
+
+    /// Get scientific metadata for a dataset
+    pub fn get_scientific_metadata(&self, dataset_path: &str) -> Option<ScientificMetadata> {
+        let cache = self.metadata_cache.read().unwrap();
+        cache.get(dataset_path).cloned()
+    }
+
+    /// Get performance report
+    pub fn get_performance_report(&self) -> PerformanceSummary {
+        let monitor = self.performance_monitor.lock().unwrap();
+        monitor.get_summary()
+    }
+
+    /// Get layout optimization recommendations
+    pub fn get_layout_recommendations(&self) -> Vec<LayoutOptimization> {
+        let mut analyzer = self.access_analyzer.lock().unwrap();
+        analyzer.analyze().clone()
+    }
+
+    /// Record a data access for optimization analysis
+    pub fn record_access(&self, operation: &str, region: Vec<(usize, usize)>) {
+        let mut analyzer = self.access_analyzer.lock().unwrap();
+        analyzer.record_access(operation.to_string(), region);
+    }
+
+    /// Get access pattern statistics
+    pub fn get_access_statistics(&self) -> AccessPatternStats {
+        let analyzer = self.access_analyzer.lock().unwrap();
+        analyzer.get_statistics()
+    }
+
+    /// Benchmark a specific operation
+    pub fn benchmark_operation<F, R>(&self, operation_name: &str, operation: F) -> Result<R>
+    where
+        F: FnOnce() -> Result<R>,
+    {
+        let start_time = Instant::now();
+        let result = operation()?;
+        let duration = start_time.elapsed().as_secs_f64() * 1000.0;
+
+        {
+            let mut monitor = self.performance_monitor.lock().unwrap();
+            monitor.record_timing(operation_name, duration);
+        }
+
+        Ok(result)
+    }
+}
+
+#[cfg(test)]
+mod enhanced_tests {
+    use super::*;
+
+    #[test]
+    fn test_scientific_metadata() {
+        let metadata = ScientificMetadata::new()
+            .add_string_attr("instrument", "spectrometer")
+            .add_float_attr("wavelength", 550.0)
+            .with_units("nanometers")
+            .with_scaling(1.0, 0.0)
+            .with_valid_range(0.0, 1000.0);
+
+        assert_eq!(metadata.units, Some("nanometers".to_string()));
+        assert_eq!(metadata.scale_factor, Some(1.0));
+        assert_eq!(metadata.valid_range, Some((0.0, 1000.0)));
+    }
+
+    #[test]
+    fn test_performance_monitor() {
+        let mut monitor = HDF5PerformanceMonitor::new();
+
+        monitor.record_timing("read", 10.0);
+        monitor.record_timing("read", 20.0);
+        monitor.record_read(1024, 10.0);
+
+        assert_eq!(monitor.avg_timing("read"), Some(15.0));
+        assert_eq!(monitor.transfer_stats.bytes_read, 1024);
+        assert_eq!(monitor.transfer_stats.read_operations, 1);
+    }
+
+    #[test]
+    fn test_access_pattern_analyzer() {
+        let mut analyzer = AccessPatternAnalyzer::new();
+
+        // Record some access patterns
+        analyzer.record_access("read".to_string(), vec![(0, 100), (0, 50)]);
+        analyzer.record_access("read".to_string(), vec![(0, 100), (0, 50)]);
+        analyzer.record_access("write".to_string(), vec![(100, 100), (50, 50)]);
+
+        let stats = analyzer.get_statistics();
+        assert_eq!(stats.total_accesses, 3);
+        assert_eq!(stats.unique_patterns, 2);
+        assert_eq!(stats.read_count, 2);
+
+        let recommendations = analyzer.analyze();
+        assert!(!recommendations.is_empty());
+    }
+}

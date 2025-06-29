@@ -4,12 +4,12 @@
 //! operations using scirs2-core's unified optimization framework.
 
 use crate::error::{StatsError, StatsResult};
-use crate::{pearson_r, spearman_r, kendall_tau};
+use crate::{kendall_tau, pearson_r, spearman_r};
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast, Zero, One};
+use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
     parallel_ops::*,
-    simd_ops::{SimdUnifiedOps, AutoOptimizer},
+    simd_ops::{AutoOptimizer, SimdUnifiedOps},
     validation::*,
 };
 use std::sync::{Arc, Mutex};
@@ -30,8 +30,8 @@ pub struct ParallelCorrelationConfig {
 impl Default for ParallelCorrelationConfig {
     fn default() -> Self {
         Self {
-            min_parallel_size: 50,    // 50x50 matrix threshold
-            chunk_size: None,         // Auto-determine
+            min_parallel_size: 50, // 50x50 matrix threshold
+            chunk_size: None,      // Auto-determine
             use_simd: true,
             work_stealing: true,
         }
@@ -77,11 +77,20 @@ pub fn corrcoef_parallel_enhanced<F>(
     config: &ParallelCorrelationConfig,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Debug,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + std::iter::Sum<F>
+        + std::fmt::Debug,
 {
     // Validate inputs
     check_array_finite_2d(data, "data")?;
-    
+
     match method {
         "pearson" | "spearman" | "kendall" => {}
         _ => {
@@ -93,7 +102,7 @@ where
     }
 
     let (n_obs, n_vars) = data.dim();
-    
+
     if n_obs == 0 || n_vars == 0 {
         return Err(StatsError::InvalidArgument(
             "Data array cannot be empty".to_string(),
@@ -102,7 +111,7 @@ where
 
     // Initialize correlation matrix
     let mut corr_mat = Array2::<F>::zeros((n_vars, n_vars));
-    
+
     // Set diagonal elements to 1
     for i in 0..n_vars {
         corr_mat[[i, i]] = F::one();
@@ -121,18 +130,20 @@ where
 
     if use_parallel {
         // Parallel processing with result collection
-        let chunk_size = config.chunk_size.unwrap_or(std::cmp::max(1, pairs.len() / 4));
-        
+        let chunk_size = config
+            .chunk_size
+            .unwrap_or(std::cmp::max(1, pairs.len() / 4));
+
         // Process pairs in parallel and collect results
         let results = Arc::new(Mutex::new(Vec::new()));
-        
+
         pairs.chunks(chunk_size).for_each(|chunk| {
             let mut local_results = Vec::new();
-            
+
             for &(i, j) in chunk {
                 let var_i = data.slice(s![.., i]);
                 let var_j = data.slice(s![.., j]);
-                
+
                 let corr = match method {
                     "pearson" => {
                         if config.use_simd {
@@ -146,43 +157,38 @@ where
                                 Err(_) => continue,
                             }
                         }
+                    }
+                    "spearman" => match spearman_r(&var_i, &var_j) {
+                        Ok(val) => val,
+                        Err(_) => continue,
                     },
-                    "spearman" => {
-                        match spearman_r(&var_i, &var_j) {
-                            Ok(val) => val,
-                            Err(_) => continue,
-                        }
-                    },
-                    "kendall" => {
-                        match kendall_tau(&var_i, &var_j, "b") {
-                            Ok(val) => val,
-                            Err(_) => continue,
-                        }
+                    "kendall" => match kendall_tau(&var_i, &var_j, "b") {
+                        Ok(val) => val,
+                        Err(_) => continue,
                     },
                     _ => unreachable!(),
                 };
-                
+
                 local_results.push((i, j, corr));
             }
-            
+
             let mut global_results = results.lock().unwrap();
             global_results.extend(local_results);
         });
-        
+
         let all_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
-        
+
         // Write results back to matrix
         for (i, j, corr) in all_results {
             corr_mat[[i, j]] = corr;
             corr_mat[[j, i]] = corr; // Symmetric
         }
-        
     } else {
         // Sequential processing for smaller matrices
         for (i, j) in pairs {
             let var_i = data.slice(s![.., i]);
             let var_j = data.slice(s![.., j]);
-            
+
             let corr = match method {
                 "pearson" => {
                     if config.use_simd {
@@ -190,12 +196,12 @@ where
                     } else {
                         pearson_r(&var_i, &var_j)?
                     }
-                },
+                }
                 "spearman" => spearman_r(&var_i, &var_j)?,
                 "kendall" => kendall_tau(&var_i, &var_j, "b")?,
                 _ => unreachable!(),
             };
-            
+
             corr_mat[[i, j]] = corr;
             corr_mat[[j, i]] = corr; // Symmetric
         }
@@ -246,21 +252,21 @@ where
         // Create arrays with means for SIMD subtraction
         let mean_x_array = Array1::from_elem(n, mean_x);
         let mean_y_array = Array1::from_elem(n, mean_y);
-        
+
         // Compute deviations
         let x_dev = F::simd_sub(&x.view(), &mean_x_array.view());
         let y_dev = F::simd_sub(&y.view(), &mean_y_array.view());
-        
+
         // Compute products and squares
         let xy_prod = F::simd_mul(&x_dev.view(), &y_dev.view());
         let x_sq = F::simd_mul(&x_dev.view(), &x_dev.view());
         let y_sq = F::simd_mul(&y_dev.view(), &y_dev.view());
-        
+
         // Sum the results
         let sum_xy = F::simd_sum(&xy_prod.view());
         let sum_x2 = F::simd_sum(&x_sq.view());
         let sum_y2 = F::simd_sum(&y_sq.view());
-        
+
         (sum_xy, sum_x2, sum_y2)
     } else {
         // Scalar fallback
@@ -276,7 +282,7 @@ where
             sum_x2 = sum_x2 + x_dev * x_dev;
             sum_y2 = sum_y2 + y_dev * y_dev;
         }
-        
+
         (sum_xy, sum_x2, sum_y2)
     };
 
@@ -316,13 +322,22 @@ where
 /// # Returns
 ///
 /// * Vector of correlation coefficients in the same order as input pairs
-pub fn batch_correlations_parallel<F>(
-    pairs: &[(ArrayView1<F>, ArrayView1<F>)],
+pub fn batch_correlations_parallel<'a, F>(
+    pairs: &[(ArrayView1<'a, F>, ArrayView1<'a, F>)],
     method: &str,
     config: &ParallelCorrelationConfig,
 ) -> StatsResult<Vec<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Debug,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + std::iter::Sum<F>
+        + std::fmt::Debug,
 {
     if pairs.is_empty() {
         return Ok(Vec::new());
@@ -345,14 +360,14 @@ where
     if use_parallel {
         // Parallel processing with chunking
         let chunk_size = config.chunk_size.unwrap_or(std::cmp::max(1, n_pairs / 4));
-        
+
         let results = Arc::new(Mutex::new(Vec::new()));
         let error_occurred = Arc::new(Mutex::new(false));
-        
+
         pairs.chunks(chunk_size).for_each(|chunk| {
             let mut local_results = Vec::new();
             let mut has_error = false;
-            
+
             for (x, y) in chunk {
                 let corr = match method {
                     "pearson" => {
@@ -361,12 +376,12 @@ where
                         } else {
                             pearson_r(x, y)
                         }
-                    },
+                    }
                     "spearman" => spearman_r(x, y),
                     "kendall" => kendall_tau(x, y, "b"),
                     _ => unreachable!(),
                 };
-                
+
                 match corr {
                     Ok(val) => local_results.push(val),
                     Err(_) => {
@@ -375,26 +390,26 @@ where
                     }
                 }
             }
-            
+
             if has_error {
                 *error_occurred.lock().unwrap() = true;
             } else {
                 results.lock().unwrap().extend(local_results);
             }
         });
-        
+
         if *error_occurred.lock().unwrap() {
             return Err(StatsError::InvalidArgument(
-                "Error occurred during batch correlation computation".to_string()
+                "Error occurred during batch correlation computation".to_string(),
             ));
         }
-        
+
         let final_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
         Ok(final_results)
     } else {
         // Sequential processing
         let mut results = Vec::with_capacity(n_pairs);
-        
+
         for (x, y) in pairs {
             let corr = match method {
                 "pearson" => {
@@ -403,14 +418,14 @@ where
                     } else {
                         pearson_r(x, y)?
                     }
-                },
+                }
                 "spearman" => spearman_r(x, y)?,
                 "kendall" => kendall_tau(x, y, "b")?,
                 _ => unreachable!(),
             };
             results.push(corr);
         }
-        
+
         Ok(results)
     }
 }
@@ -427,11 +442,20 @@ pub fn rolling_correlation_parallel<F>(
     config: &ParallelCorrelationConfig,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Debug,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + std::iter::Sum<F>
+        + std::fmt::Debug,
 {
     check_same_shape(&[x.len(), y.len()], "x and y")?;
     check_positive(window_size, "window_size")?;
-    
+
     if window_size > x.len() {
         return Err(StatsError::InvalidArgument(
             "Window size cannot be larger than data length".to_string(),
@@ -440,7 +464,7 @@ where
 
     let n_windows = x.len() - window_size + 1;
     let mut results = Array1::zeros(n_windows);
-    
+
     // Generate window pairs
     let window_pairs: Vec<_> = (0..n_windows)
         .map(|i| {
@@ -452,7 +476,7 @@ where
 
     // Compute correlations in parallel
     let correlations = batch_correlations_parallel(&window_pairs, method, config)?;
-    
+
     // Copy results
     for (i, corr) in correlations.into_iter().enumerate() {
         results[i] = corr;
@@ -470,7 +494,8 @@ where
     for &val in arr.iter() {
         if !val.is_finite() {
             return Err(StatsError::InvalidArgument(format!(
-                "{} contains non-finite values", name
+                "{} contains non-finite values",
+                name
             )));
         }
     }
@@ -480,8 +505,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use crate::corrcoef;
+    use ndarray::array;
 
     #[test]
     fn test_corrcoef_parallel_enhanced_consistency() {
@@ -499,9 +524,14 @@ mod tests {
 
         for i in 0..3 {
             for j in 0..3 {
-                assert!((parallel_result[[i, j]] - sequential_result[[i, j]]).abs() < 1e-10,
-                    "Mismatch at [{}, {}]: parallel {} vs sequential {}", 
-                    i, j, parallel_result[[i, j]], sequential_result[[i, j]]);
+                assert!(
+                    (parallel_result[[i, j]] - sequential_result[[i, j]]).abs() < 1e-10,
+                    "Mismatch at [{}, {}]: parallel {} vs sequential {}",
+                    i,
+                    j,
+                    parallel_result[[i, j]],
+                    sequential_result[[i, j]]
+                );
             }
         }
     }
@@ -526,24 +556,25 @@ mod tests {
 
         let pairs = vec![(x1.view(), y1.view()), (x2.view(), y2.view())];
         let config = ParallelCorrelationConfig::default();
-        
+
         let results = batch_correlations_parallel(&pairs, "pearson", &config).unwrap();
-        
+
         assert_eq!(results.len(), 2);
         assert!((results[0] - (-1.0)).abs() < 1e-10); // Perfect negative correlation
-        assert!((results[1] - 1.0).abs() < 1e-10);    // Perfect positive correlation
+        assert!((results[1] - 1.0).abs() < 1e-10); // Perfect positive correlation
     }
 
     #[test]
     fn test_rolling_correlation_parallel() {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let y = array![10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
-        
+
         let config = ParallelCorrelationConfig::default();
-        let rolling_corrs = rolling_correlation_parallel(&x.view(), &y.view(), 3, "pearson", &config).unwrap();
-        
+        let rolling_corrs =
+            rolling_correlation_parallel(&x.view(), &y.view(), 3, "pearson", &config).unwrap();
+
         assert_eq!(rolling_corrs.len(), 8); // 10 - 3 + 1
-        
+
         // All rolling correlations should be negative (x increases, y decreases)
         for corr in rolling_corrs.iter() {
             assert!(*corr < 0.0);

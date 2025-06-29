@@ -7,7 +7,7 @@ use crate::csc_array::CscArray;
 use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
-use ndarray::{Array1, ArrayView1, ArrayViewMut1};
+use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -32,14 +32,14 @@ impl Default for SimdOptions {
     fn default() -> Self {
         // Detect platform capabilities and optimize accordingly
         let _capabilities = PlatformCapabilities::detect();
-        
+
         // Use conservative defaults since we don't have access to specific SIMD detection methods
         let optimal_chunk_size = 8; // Conservative default that works well for most platforms
 
         Self {
             min_simd_size: optimal_chunk_size,
             chunk_size: optimal_chunk_size,
-            use_parallel: true, // Assume multi-core systems
+            use_parallel: true,       // Assume multi-core systems
             parallel_threshold: 8000, // Conservative threshold
         }
     }
@@ -99,90 +99,114 @@ where
     let mut y = Array1::zeros(rows);
 
     // Get CSR matrix data
-    let (row_indices, col_indices, values) = matrix.find();
-    let row_ptr = matrix.indptr();
-    
-    // Use parallel processing for large matrices
+    let (_row_indices, col_indices, values) = matrix.find();
+    let row_ptr = matrix.get_indptr();
+
+    // Enhanced SIMD processing with optimized implementations
     if options.use_parallel && rows >= options.parallel_threshold {
-        parallel_for(0..rows, |row_start, row_end| {
-            for i in row_start..row_end {
+        // Parallel SIMD processing implementation
+        let chunk_size = (rows + 3) / 4; // Divide into 4 chunks for good load balancing
+        let row_chunks: Vec<_> = (0..rows).collect::<Vec<_>>()
+            .chunks(chunk_size)
+            .map(|chunk| chunk.to_vec())
+            .collect();
+
+        let results: Vec<_> = parallel_map(&row_chunks, |row_chunk| {
+            let mut local_y = vec![T::zero(); row_chunk.len()];
+            
+            for (local_idx, &i) in row_chunk.iter().enumerate() {
                 let start = row_ptr[i];
                 let end = row_ptr[i + 1];
                 let row_length = end - start;
-                
+
                 if row_length >= options.min_simd_size {
-                    // Use SIMD for long rows
+                    // Enhanced SIMD processing for longer rows
                     let mut sum = T::zero();
                     let mut j = start;
-                    
-                    // SIMD processing in chunks
+
+                    // Process in SIMD chunks
                     while j + options.chunk_size <= end {
-                        let chunk_indices = &col_indices[j..j + options.chunk_size];
-                        let chunk_values = &values[j..j + options.chunk_size];
+                        // Gather values for SIMD processing
+                        let mut values_chunk = vec![T::zero(); options.chunk_size];
+                        let mut x_vals_chunk = vec![T::zero(); options.chunk_size];
                         
-                        // Gather x values and multiply with SIMD
-                        let mut x_vals = vec![T::zero(); options.chunk_size];
-                        for (idx, &col) in chunk_indices.iter().enumerate() {
-                            x_vals[idx] = x[col];
+                        for (idx, k) in (j..j + options.chunk_size).enumerate() {
+                            values_chunk[idx] = values[k];
+                            x_vals_chunk[idx] = x[col_indices[k]];
                         }
-                        
-                        let dot_product = T::simd_dot(chunk_values, &x_vals);
+
+                        // Use SIMD dot product
+                        let values_view = ArrayView1::from(&values_chunk);
+                        let x_vals_view = ArrayView1::from(&x_vals_chunk);
+                        let dot_product = T::simd_dot(&values_view, &x_vals_view);
                         sum = sum + dot_product;
                         j += options.chunk_size;
                     }
-                    
-                    // Handle remaining elements
+
+                    // Handle remaining elements with scalar operations
                     for k in j..end {
                         sum = sum + values[k] * x[col_indices[k]];
                     }
-                    
-                    y[i] = sum;
+
+                    local_y[local_idx] = sum;
                 } else {
-                    // Use scalar for short rows
+                    // Use scalar processing for shorter rows
                     let mut sum = T::zero();
                     for k in start..end {
                         sum = sum + values[k] * x[col_indices[k]];
                     }
-                    y[i] = sum;
+                    local_y[local_idx] = sum;
                 }
             }
+            
+            (row_chunk.clone(), local_y)
         });
+
+        // Merge results back into y
+        for (row_chunk, local_y) in results {
+            for (local_idx, &global_idx) in row_chunk.iter().enumerate() {
+                y[global_idx] = local_y[local_idx];
+            }
+        }
     } else {
-        // Sequential processing with SIMD acceleration
+        // Sequential processing with enhanced SIMD acceleration
         for i in 0..rows {
             let start = row_ptr[i];
             let end = row_ptr[i + 1];
             let row_length = end - start;
-            
+
             if row_length >= options.min_simd_size {
-                // Use SIMD for long rows
+                // Enhanced SIMD implementation for longer rows
                 let mut sum = T::zero();
                 let mut j = start;
-                
-                // SIMD processing in chunks
+
+                // Process in SIMD-friendly chunks
                 while j + options.chunk_size <= end {
-                    let chunk_indices = &col_indices[j..j + options.chunk_size];
-                    let chunk_values = &values[j..j + options.chunk_size];
+                    // Prepare data for SIMD operations
+                    let mut values_chunk = vec![T::zero(); options.chunk_size];
+                    let mut x_vals_chunk = vec![T::zero(); options.chunk_size];
                     
-                    // Gather x values and multiply with SIMD
-                    let mut x_vals = vec![T::zero(); options.chunk_size];
-                    for (idx, &col) in chunk_indices.iter().enumerate() {
-                        x_vals[idx] = x[col];
+                    for (idx, k) in (j..j + options.chunk_size).enumerate() {
+                        values_chunk[idx] = values[k];
+                        x_vals_chunk[idx] = x[col_indices[k]];
                     }
-                    
-                    let dot_product = T::simd_dot(chunk_values, &x_vals);
-                    sum = sum + dot_product;
+
+                    // Use SIMD operations from scirs2-core
+                    let values_view = ArrayView1::from(&values_chunk);
+                    let x_vals_view = ArrayView1::from(&x_vals_chunk);
+                    let chunk_sum = T::simd_dot(&values_view, &x_vals_view);
+                    sum = sum + chunk_sum;
                     j += options.chunk_size;
                 }
-                
+
                 // Handle remaining elements
                 for k in j..end {
                     sum = sum + values[k] * x[col_indices[k]];
                 }
-                
+
                 y[i] = sum;
             } else {
-                // Use scalar for short rows
+                // Scalar implementation for shorter rows
                 let mut sum = T::zero();
                 for k in start..end {
                     sum = sum + values[k] * x[col_indices[k]];
@@ -243,31 +267,118 @@ where
     // Convert both to CSR format for efficient element-wise operations
     let a_csr = a.to_csr()?;
     let b_csr = b.to_csr()?;
-    
+
     // Get matrix data
-    let (a_rows, a_cols, a_values) = a_csr.find();
-    let (b_rows, b_cols, b_values) = b_csr.find();
+    let (_a_rows, _a_cols, a_values) = a_csr.find();
+    let (_b_rows, _b_cols, b_values) = b_csr.find();
 
     // For sparse element-wise operations, we need to handle the union of non-zero patterns
     // This is a more complex operation that requires merging the sparsity patterns
-    
+
     if a_values.len() >= opts.min_simd_size && b_values.len() >= opts.min_simd_size {
         // Use SIMD-accelerated operations for large matrices
         let result = match op {
-            ElementwiseOp::Add => simd_sparse_binary_op(&a_csr, &b_csr, &opts, |x, y| x + y)?,
-            ElementwiseOp::Sub => simd_sparse_binary_op(&a_csr, &b_csr, &opts, |x, y| x - y)?,
-            ElementwiseOp::Mul => simd_sparse_binary_op(&a_csr, &b_csr, &opts, |x, y| x * y)?,
-            ElementwiseOp::Div => simd_sparse_binary_op(&a_csr, &b_csr, &opts, |x, y| x / y)?,
+            ElementwiseOp::Add => {
+                // Try to downcast to CsrArray, otherwise use fallback
+                if let (Some(a_csr_concrete), Some(b_csr_concrete)) = (
+                    a_csr.as_any().downcast_ref::<CsrArray<T>>(),
+                    b_csr.as_any().downcast_ref::<CsrArray<T>>(),
+                ) {
+                    simd_sparse_binary_op(a_csr_concrete, b_csr_concrete, &opts, |x, y| x + y)?
+                } else {
+                    // Fallback to basic add operation
+                    return a_csr.add(&*b_csr).and_then(|boxed| {
+                        boxed
+                            .as_any()
+                            .downcast_ref::<CsrArray<T>>()
+                            .map(|csr| csr.clone())
+                            .ok_or_else(|| {
+                                SparseError::ValueError(
+                                    "Failed to convert result to CsrArray".to_string(),
+                                )
+                            })
+                    });
+                }
+            }
+            ElementwiseOp::Sub => {
+                if let (Some(a_csr_concrete), Some(b_csr_concrete)) = (
+                    a_csr.as_any().downcast_ref::<CsrArray<T>>(),
+                    b_csr.as_any().downcast_ref::<CsrArray<T>>(),
+                ) {
+                    simd_sparse_binary_op(a_csr_concrete, b_csr_concrete, &opts, |x, y| x - y)?
+                } else {
+                    return a_csr.sub(&*b_csr).and_then(|boxed| {
+                        boxed
+                            .as_any()
+                            .downcast_ref::<CsrArray<T>>()
+                            .map(|csr| csr.clone())
+                            .ok_or_else(|| {
+                                SparseError::ValueError(
+                                    "Failed to convert result to CsrArray".to_string(),
+                                )
+                            })
+                    });
+                }
+            }
+            ElementwiseOp::Mul => {
+                if let (Some(a_csr_concrete), Some(b_csr_concrete)) = (
+                    a_csr.as_any().downcast_ref::<CsrArray<T>>(),
+                    b_csr.as_any().downcast_ref::<CsrArray<T>>(),
+                ) {
+                    simd_sparse_binary_op(a_csr_concrete, b_csr_concrete, &opts, |x, y| x * y)?
+                } else {
+                    return a_csr.mul(&*b_csr).and_then(|boxed| {
+                        boxed
+                            .as_any()
+                            .downcast_ref::<CsrArray<T>>()
+                            .map(|csr| csr.clone())
+                            .ok_or_else(|| {
+                                SparseError::ValueError(
+                                    "Failed to convert result to CsrArray".to_string(),
+                                )
+                            })
+                    });
+                }
+            }
+            ElementwiseOp::Div => {
+                if let (Some(a_csr_concrete), Some(b_csr_concrete)) = (
+                    a_csr.as_any().downcast_ref::<CsrArray<T>>(),
+                    b_csr.as_any().downcast_ref::<CsrArray<T>>(),
+                ) {
+                    simd_sparse_binary_op(a_csr_concrete, b_csr_concrete, &opts, |x, y| x / y)?
+                } else {
+                    return a_csr.div(&*b_csr).and_then(|boxed| {
+                        boxed
+                            .as_any()
+                            .downcast_ref::<CsrArray<T>>()
+                            .map(|csr| csr.clone())
+                            .ok_or_else(|| {
+                                SparseError::ValueError(
+                                    "Failed to convert result to CsrArray".to_string(),
+                                )
+                            })
+                    });
+                }
+            }
         };
         Ok(result)
     } else {
         // Fall back to built-in operations for small matrices
-        match op {
-            ElementwiseOp::Add => a_csr.add(&b_csr),
-            ElementwiseOp::Sub => a_csr.sub(&b_csr),
-            ElementwiseOp::Mul => a_csr.mul(&b_csr),
-            ElementwiseOp::Div => a_csr.div(&b_csr),
-        }
+        let result_box = match op {
+            ElementwiseOp::Add => a_csr.add(&*b_csr)?,
+            ElementwiseOp::Sub => a_csr.sub(&*b_csr)?,
+            ElementwiseOp::Mul => a_csr.mul(&*b_csr)?,
+            ElementwiseOp::Div => a_csr.div(&*b_csr)?,
+        };
+
+        // Convert the result back to CsrArray
+        result_box
+            .as_any()
+            .downcast_ref::<CsrArray<T>>()
+            .map(|csr| csr.clone())
+            .ok_or_else(|| {
+                SparseError::ValueError("Failed to convert result to CsrArray".to_string())
+            })
     }
 }
 
@@ -290,32 +401,32 @@ where
     // Get sparse data
     let (a_row_indices, a_col_indices, a_values) = a.find();
     let (b_row_indices, b_col_indices, b_values) = b.find();
-    
+
     // Create index maps for efficient lookup
     use std::collections::HashMap;
     let mut a_map = HashMap::new();
     let mut b_map = HashMap::new();
-    
+
     for (i, (&row, &col)) in a_row_indices.iter().zip(a_col_indices.iter()).enumerate() {
         a_map.insert((row, col), a_values[i]);
     }
-    
+
     for (i, (&row, &col)) in b_row_indices.iter().zip(b_col_indices.iter()).enumerate() {
         b_map.insert((row, col), b_values[i]);
     }
 
     // Process all non-zero positions (union of both patterns)
     let mut all_positions = std::collections::BTreeSet::new();
-    for (&pos, _) in &a_map {
+    for &pos in a_map.keys() {
         all_positions.insert(pos);
     }
-    for (&pos, _) in &b_map {
+    for &pos in b_map.keys() {
         all_positions.insert(pos);
     }
 
     // Convert positions to vectors for SIMD processing
     let positions: Vec<_> = all_positions.into_iter().collect();
-    
+
     if options.use_parallel && positions.len() >= options.parallel_threshold {
         // Parallel processing with SIMD
         let chunks: Vec<_> = positions.chunks(options.chunk_size).collect();
@@ -323,22 +434,22 @@ where
             let mut local_rows = Vec::new();
             let mut local_cols = Vec::new();
             let mut local_values = Vec::new();
-            
-            for &(row, col) in chunk {
+
+            for &(row, col) in *chunk {
                 let a_val = a_map.get(&(row, col)).copied().unwrap_or(T::zero());
                 let b_val = b_map.get(&(row, col)).copied().unwrap_or(T::zero());
                 let result_val = op(a_val, b_val);
-                
+
                 if !result_val.is_zero() {
                     local_rows.push(row);
                     local_cols.push(col);
                     local_values.push(result_val);
                 }
             }
-            
+
             (local_rows, local_cols, local_values)
         });
-        
+
         // Merge results
         for (mut local_rows, mut local_cols, mut local_values) in results {
             result_rows.append(&mut local_rows);
@@ -351,7 +462,7 @@ where
             let a_val = a_map.get(&(row, col)).copied().unwrap_or(T::zero());
             let b_val = b_map.get(&(row, col)).copied().unwrap_or(T::zero());
             let result_val = op(a_val, b_val);
-            
+
             if !result_val.is_zero() {
                 result_rows.push(row);
                 result_cols.push(col);
@@ -360,7 +471,13 @@ where
         }
     }
 
-    CsrArray::from_triplets(&result_rows, &result_cols, &result_values, (rows, cols), false)
+    CsrArray::from_triplets(
+        &result_rows,
+        &result_cols,
+        &result_values,
+        (rows, cols),
+        false,
+    )
 }
 
 /// Advanced SIMD-accelerated transpose operation
@@ -384,40 +501,56 @@ where
     let opts = options.unwrap_or_default();
     let (rows, cols) = matrix.shape();
     let (row_indices, col_indices, values) = matrix.find();
-    
+
     if opts.use_parallel && values.len() >= opts.parallel_threshold {
         // Parallel transpose with SIMD acceleration
-        let chunks: Vec<_> = (0..values.len()).collect::<Vec<_>>().chunks(opts.chunk_size).map(|chunk| chunk.to_vec()).collect();
-        
+        let chunks: Vec<_> = (0..values.len())
+            .collect::<Vec<_>>()
+            .chunks(opts.chunk_size)
+            .map(|chunk| chunk.to_vec())
+            .collect();
+
         let transposed_triplets: Vec<_> = parallel_map(&chunks, |chunk| {
             let mut local_rows = Vec::new();
             let mut local_cols = Vec::new();
             let mut local_values = Vec::new();
-            
+
             for &idx in chunk {
                 local_rows.push(col_indices[idx]);
                 local_cols.push(row_indices[idx]);
                 local_values.push(values[idx]);
             }
-            
+
             (local_rows, local_cols, local_values)
         });
-        
+
         // Merge results
         let mut result_rows = Vec::new();
         let mut result_cols = Vec::new();
         let mut result_values = Vec::new();
-        
+
         for (mut local_rows, mut local_cols, mut local_values) in transposed_triplets {
             result_rows.append(&mut local_rows);
             result_cols.append(&mut local_cols);
             result_values.append(&mut local_values);
         }
-        
-        CsrArray::from_triplets(&result_rows, &result_cols, &result_values, (cols, rows), false)
+
+        CsrArray::from_triplets(
+            &result_rows,
+            &result_cols,
+            &result_values,
+            (cols, rows),
+            false,
+        )
     } else {
         // Sequential transpose
-        CsrArray::from_triplets(&col_indices, &row_indices, &values, (cols, rows), false)
+        CsrArray::from_triplets(
+            col_indices.as_slice().unwrap(),
+            row_indices.as_slice().unwrap(),
+            values.as_slice().unwrap(),
+            (cols, rows),
+            false,
+        )
     }
 }
 
@@ -433,7 +566,7 @@ where
 ///
 /// Result of A * B
 pub fn simd_sparse_matmul<T, S1, S2>(
-    a: &S1, 
+    a: &S1,
     b: &S2,
     options: Option<SimdOptions>,
 ) -> SparseResult<CsrArray<T>>
@@ -450,62 +583,85 @@ where
     }
 
     let opts = options.unwrap_or_default();
-    
+
     // Convert to CSR format for optimized multiplication
     let a_csr = a.to_csr()?;
     let b_csc = b.to_csc()?; // CSC is better for column access in matrix multiplication
-    
-    let (a_rows, a_cols) = a_csr.shape();
-    let (b_rows, b_cols) = b_csc.shape();
-    
+
+    let (a_rows, _a_cols) = a_csr.shape();
+    let (_b_rows, b_cols) = b_csc.shape();
+
     // Result matrix will be a_rows x b_cols
     let mut result_rows = Vec::new();
     let mut result_cols = Vec::new();
     let mut result_values = Vec::new();
-    
-    // Get matrix data
-    let a_indptr = a_csr.indptr();
+
+    // Get matrix data - try to downcast to get indptr
+    let a_indptr = if let Some(a_concrete) = a_csr.as_any().downcast_ref::<CsrArray<T>>() {
+        a_concrete.get_indptr() // Direct method returns &Array1<usize>
+    } else {
+        return Err(SparseError::ValueError(
+            "Matrix A must be CSR format".to_string(),
+        ));
+    };
     let (_, a_col_indices, a_values) = a_csr.find();
-    let b_indptr = b_csc.indptr();
+
+    let b_indptr = if let Some(b_concrete) = b_csc.as_any().downcast_ref::<CscArray<T>>() {
+        b_concrete.get_indptr() // Direct method returns &Array1<usize>
+    } else {
+        return Err(SparseError::ValueError(
+            "Matrix B must be CSC format".to_string(),
+        ));
+    };
     let (_, b_row_indices, b_values) = b_csc.find();
-    
+
     if opts.use_parallel && a_rows >= opts.parallel_threshold {
         // Parallel sparse matrix multiplication
-        let chunks: Vec<_> = (0..a_rows).collect::<Vec<_>>().chunks(opts.chunk_size).map(|chunk| chunk.to_vec()).collect();
+        let chunks: Vec<_> = (0..a_rows)
+            .collect::<Vec<_>>()
+            .chunks(opts.chunk_size)
+            .map(|chunk| chunk.to_vec())
+            .collect();
         let results: Vec<_> = parallel_map(&chunks, |row_chunk| {
             let mut local_rows = Vec::new();
             let mut local_cols = Vec::new();
             let mut local_values = Vec::new();
-            
+
             for &i in row_chunk {
                 let a_start = a_indptr[i];
                 let a_end = a_indptr[i + 1];
-                
+
                 // Process each column of B
                 for j in 0..b_cols {
                     let b_start = b_indptr[j];
                     let b_end = b_indptr[j + 1];
-                    
+
                     // Compute dot product of A[i,:] and B[:,j]
                     let mut sum = T::zero();
                     let mut a_idx = a_start;
                     let mut b_idx = b_start;
-                    
+
                     // Use SIMD for longer rows/columns
-                    if (a_end - a_start) >= opts.min_simd_size && (b_end - b_start) >= opts.min_simd_size {
+                    if (a_end - a_start) >= opts.min_simd_size
+                        && (b_end - b_start) >= opts.min_simd_size
+                    {
                         // SIMD-accelerated sparse dot product
                         while a_idx < a_end && b_idx < b_end {
                             let a_col = a_col_indices[a_idx];
                             let b_row = b_row_indices[b_idx];
-                            
-                            if a_col == b_row {
-                                sum = sum + a_values[a_idx] * b_values[b_idx];
-                                a_idx += 1;
-                                b_idx += 1;
-                            } else if a_col < b_row {
-                                a_idx += 1;
-                            } else {
-                                b_idx += 1;
+
+                            match a_col.cmp(&b_row) {
+                                std::cmp::Ordering::Equal => {
+                                    sum = sum + a_values[a_idx] * b_values[b_idx];
+                                    a_idx += 1;
+                                    b_idx += 1;
+                                }
+                                std::cmp::Ordering::Less => {
+                                    a_idx += 1;
+                                }
+                                std::cmp::Ordering::Greater => {
+                                    b_idx += 1;
+                                }
                             }
                         }
                     } else {
@@ -513,19 +669,23 @@ where
                         while a_idx < a_end && b_idx < b_end {
                             let a_col = a_col_indices[a_idx];
                             let b_row = b_row_indices[b_idx];
-                            
-                            if a_col == b_row {
-                                sum = sum + a_values[a_idx] * b_values[b_idx];
-                                a_idx += 1;
-                                b_idx += 1;
-                            } else if a_col < b_row {
-                                a_idx += 1;
-                            } else {
-                                b_idx += 1;
+
+                            match a_col.cmp(&b_row) {
+                                std::cmp::Ordering::Equal => {
+                                    sum = sum + a_values[a_idx] * b_values[b_idx];
+                                    a_idx += 1;
+                                    b_idx += 1;
+                                }
+                                std::cmp::Ordering::Less => {
+                                    a_idx += 1;
+                                }
+                                std::cmp::Ordering::Greater => {
+                                    b_idx += 1;
+                                }
                             }
                         }
                     }
-                    
+
                     if !sum.is_zero() {
                         local_rows.push(i);
                         local_cols.push(j);
@@ -533,10 +693,10 @@ where
                     }
                 }
             }
-            
+
             (local_rows, local_cols, local_values)
         });
-        
+
         // Merge results
         for (mut local_rows, mut local_cols, mut local_values) in results {
             result_rows.append(&mut local_rows);
@@ -548,31 +708,35 @@ where
         for i in 0..a_rows {
             let a_start = a_indptr[i];
             let a_end = a_indptr[i + 1];
-            
+
             for j in 0..b_cols {
                 let b_start = b_indptr[j];
                 let b_end = b_indptr[j + 1];
-                
+
                 // Compute dot product of A[i,:] and B[:,j]
                 let mut sum = T::zero();
                 let mut a_idx = a_start;
                 let mut b_idx = b_start;
-                
+
                 while a_idx < a_end && b_idx < b_end {
                     let a_col = a_col_indices[a_idx];
                     let b_row = b_row_indices[b_idx];
-                    
-                    if a_col == b_row {
-                        sum = sum + a_values[a_idx] * b_values[b_idx];
-                        a_idx += 1;
-                        b_idx += 1;
-                    } else if a_col < b_row {
-                        a_idx += 1;
-                    } else {
-                        b_idx += 1;
+
+                    match a_col.cmp(&b_row) {
+                        std::cmp::Ordering::Equal => {
+                            sum = sum + a_values[a_idx] * b_values[b_idx];
+                            a_idx += 1;
+                            b_idx += 1;
+                        }
+                        std::cmp::Ordering::Less => {
+                            a_idx += 1;
+                        }
+                        std::cmp::Ordering::Greater => {
+                            b_idx += 1;
+                        }
                     }
                 }
-                
+
                 if !sum.is_zero() {
                     result_rows.push(i);
                     result_cols.push(j);
@@ -581,8 +745,14 @@ where
             }
         }
     }
-    
-    CsrArray::from_triplets(&result_rows, &result_cols, &result_values, (a_rows, b_cols), false)
+
+    CsrArray::from_triplets(
+        &result_rows,
+        &result_cols,
+        &result_values,
+        (a_rows, b_cols),
+        false,
+    )
 }
 
 /// Advanced SIMD-accelerated norm computation
@@ -609,30 +779,40 @@ where
 {
     let opts = options.unwrap_or_default();
     let (_, _, values) = matrix.find();
-    
+
     match norm_type {
         "fro" | "frobenius" => {
             // Frobenius norm: sqrt(sum of squares)
             if opts.use_parallel && values.len() >= opts.parallel_threshold {
-                let chunks: Vec<_> = values.chunks(opts.chunk_size).collect();
+                let chunks: Vec<_> = values.as_slice().unwrap().chunks(opts.chunk_size).collect();
                 let partial_sums: Vec<T> = parallel_map(&chunks, |chunk| {
-                    T::simd_dot(chunk, chunk)
+                    let chunk_view = ArrayView1::from(chunk);
+                    T::simd_dot(&chunk_view, &chunk_view)
                 });
-                Ok(partial_sums.iter().copied().fold(T::zero(), |acc, x| acc + x).sqrt())
+                Ok(partial_sums
+                    .iter()
+                    .copied()
+                    .fold(T::zero(), |acc, x| acc + x)
+                    .sqrt())
             } else {
-                let sum_squares = T::simd_dot(&values, &values);
+                let values_view = values.view();
+                let sum_squares = T::simd_dot(&values_view, &values_view);
                 Ok(sum_squares.sqrt())
             }
-        },
+        }
         "1" => {
             // 1-norm: maximum absolute column sum
-            let (rows, cols) = matrix.shape();
-            let (row_indices, col_indices, values) = matrix.find();
-            
+            let (_rows, cols) = matrix.shape();
+            let (_row_indices, col_indices, values) = matrix.find();
+
             let mut column_sums = vec![T::zero(); cols];
-            
+
             if opts.use_parallel && values.len() >= opts.parallel_threshold {
-                let chunks: Vec<_> = (0..values.len()).collect::<Vec<_>>().chunks(opts.chunk_size).map(|chunk| chunk.to_vec()).collect();
+                let chunks: Vec<_> = (0..values.len())
+                    .collect::<Vec<_>>()
+                    .chunks(opts.chunk_size)
+                    .map(|chunk| chunk.to_vec())
+                    .collect();
                 let partial_sums: Vec<Vec<T>> = parallel_map(&chunks, |chunk| {
                     let mut local_sums = vec![T::zero(); cols];
                     for &idx in chunk {
@@ -642,7 +822,7 @@ where
                     }
                     local_sums
                 });
-                
+
                 // Merge partial sums
                 for partial_sum in partial_sums {
                     for j in 0..cols {
@@ -654,18 +834,25 @@ where
                     column_sums[col] = column_sums[col] + values[i].abs();
                 }
             }
-            
-            Ok(column_sums.iter().copied().fold(T::zero(), |acc, x| if x > acc { x } else { acc }))
-        },
+
+            Ok(column_sums
+                .iter()
+                .copied()
+                .fold(T::zero(), |acc, x| if x > acc { x } else { acc }))
+        }
         "inf" | "infinity" => {
             // Infinity norm: maximum absolute row sum
-            let (rows, cols) = matrix.shape();
-            let (row_indices, col_indices, values) = matrix.find();
-            
+            let (rows, _cols) = matrix.shape();
+            let (row_indices, _col_indices, values) = matrix.find();
+
             let mut row_sums = vec![T::zero(); rows];
-            
+
             if opts.use_parallel && values.len() >= opts.parallel_threshold {
-                let chunks: Vec<_> = (0..values.len()).collect::<Vec<_>>().chunks(opts.chunk_size).map(|chunk| chunk.to_vec()).collect();
+                let chunks: Vec<_> = (0..values.len())
+                    .collect::<Vec<_>>()
+                    .chunks(opts.chunk_size)
+                    .map(|chunk| chunk.to_vec())
+                    .collect();
                 let partial_sums: Vec<Vec<T>> = parallel_map(&chunks, |chunk| {
                     let mut local_sums = vec![T::zero(); rows];
                     for &idx in chunk {
@@ -675,7 +862,7 @@ where
                     }
                     local_sums
                 });
-                
+
                 // Merge partial sums
                 for partial_sum in partial_sums {
                     for i in 0..rows {
@@ -687,10 +874,16 @@ where
                     row_sums[row] = row_sums[row] + values[i].abs();
                 }
             }
-            
-            Ok(row_sums.iter().copied().fold(T::zero(), |acc, x| if x > acc { x } else { acc }))
-        },
-        _ => Err(SparseError::ValueError(format!("Unknown norm type: {}", norm_type)))
+
+            Ok(row_sums
+                .iter()
+                .copied()
+                .fold(T::zero(), |acc, x| if x > acc { x } else { acc }))
+        }
+        _ => Err(SparseError::ValueError(format!(
+            "Unknown norm type: {}",
+            norm_type
+        ))),
     }
 }
 
@@ -719,29 +912,35 @@ where
     let opts = options.unwrap_or_default();
     let (rows, cols) = matrix.shape();
     let (row_indices, col_indices, values) = matrix.find();
-    
+
     let scaled_values = if opts.use_parallel && values.len() >= opts.parallel_threshold {
         // Parallel scaling with SIMD
-        let chunks: Vec<_> = values.chunks(opts.chunk_size).collect();
+        let chunks: Vec<_> = values.as_slice().unwrap().chunks(opts.chunk_size).collect();
         let scaled_chunks: Vec<Vec<T>> = parallel_map(&chunks, |chunk| {
-            let scalar_vec = vec![scalar; chunk.len()];
+            let _scalar_vec = vec![scalar; chunk.len()];
             let mut result = vec![T::zero(); chunk.len()];
-            
+
             // Use SIMD multiplication
             for i in 0..chunk.len() {
                 result[i] = chunk[i] * scalar;
             }
             result
         });
-        
+
         // Flatten results
         scaled_chunks.into_iter().flatten().collect()
     } else {
         // Sequential scaling
-        values.iter().map(|&val| val * scalar).collect()
+        values.iter().map(|&val| val * scalar).collect::<Vec<T>>()
     };
-    
-    CsrArray::from_triplets(&row_indices, &col_indices, &scaled_values, (rows, cols), false)
+
+    CsrArray::from_triplets(
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        &scaled_values,
+        (rows, cols),
+        false,
+    )
 }
 
 /// Memory-efficient SIMD sparse matrix addition with accumulation patterns
@@ -764,22 +963,22 @@ pub fn simd_sparse_linear_combination<T, S>(
 ) -> SparseResult<CsrArray<T>>
 where
     T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
-    S: SparseArray<T>,
+    S: SparseArray<T> + Sync,
 {
     if matrices.is_empty() {
         return Err(SparseError::ValueError("No matrices provided".to_string()));
     }
-    
+
     if matrices.len() != coefficients.len() {
         return Err(SparseError::DimensionMismatch {
             expected: matrices.len(),
             found: coefficients.len(),
         });
     }
-    
+
     let opts = options.unwrap_or_default();
     let (rows, cols) = matrices[0].shape();
-    
+
     // Verify all matrices have the same shape
     for matrix in matrices.iter() {
         if matrix.shape() != (rows, cols) {
@@ -789,29 +988,31 @@ where
             });
         }
     }
-    
+
     // Use hash map to accumulate values at each position
     use std::collections::HashMap;
     let mut accumulator = HashMap::new();
-    
+
     if opts.use_parallel && matrices.len() >= 4 {
         // Parallel processing for multiple matrices
         let results: Vec<HashMap<(usize, usize), T>> = parallel_map(matrices, |matrix| {
             let mut local_accumulator = HashMap::new();
             let (row_indices, col_indices, values) = matrix.find();
-            
+
             for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
-                *local_accumulator.entry((i, j)).or_insert(T::zero()) += values[k];
+                let entry = local_accumulator.entry((i, j)).or_insert(T::zero());
+                *entry = *entry + values[k];
             }
-            
+
             local_accumulator
         });
-        
+
         // Merge results with coefficients
         for (idx, local_acc) in results.into_iter().enumerate() {
             let coeff = coefficients[idx];
             for ((i, j), val) in local_acc {
-                *accumulator.entry((i, j)).or_insert(T::zero()) += coeff * val;
+                let entry = accumulator.entry((i, j)).or_insert(T::zero());
+                *entry = *entry + coeff * val;
             }
         }
     } else {
@@ -819,18 +1020,19 @@ where
         for (idx, matrix) in matrices.iter().enumerate() {
             let coeff = coefficients[idx];
             let (row_indices, col_indices, values) = matrix.find();
-            
+
             for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
-                *accumulator.entry((i, j)).or_insert(T::zero()) += coeff * values[k];
+                let entry = accumulator.entry((i, j)).or_insert(T::zero());
+                *entry = *entry + coeff * values[k];
             }
         }
     }
-    
+
     // Convert accumulator to triplet format
     let mut result_rows = Vec::new();
     let mut result_cols = Vec::new();
     let mut result_values = Vec::new();
-    
+
     for ((i, j), val) in accumulator {
         if !val.is_zero() {
             result_rows.push(i);
@@ -838,8 +1040,14 @@ where
             result_values.push(val);
         }
     }
-    
-    CsrArray::from_triplets(&result_rows, &result_cols, &result_values, (rows, cols), false)
+
+    CsrArray::from_triplets(
+        &result_rows,
+        &result_cols,
+        &result_values,
+        (rows, cols),
+        false,
+    )
 }
 
 /// Convenience function for backward compatibility

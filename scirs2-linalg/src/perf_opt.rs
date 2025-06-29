@@ -177,35 +177,32 @@ where
         .flat_map(|i| (0..n).step_by(block_size).map(move |j| (i, j)))
         .collect();
 
-    // Process blocks in parallel and collect results
-    let results: Vec<_> = block_indices
-        .par_iter()
-        .map(|&(ii, jj)| {
-            let i_end = cmp::min(ii + block_size, m);
-            let j_end = cmp::min(jj + block_size, n);
+    // Process blocks in parallel and collect results using scirs2-core parallel operations
+    let results: Vec<_> = parallel_map(&block_indices, |&(ii, jj)| {
+        let i_end = cmp::min(ii + block_size, m);
+        let j_end = cmp::min(jj + block_size, n);
 
-            // Create local accumulator for this block
-            let mut local_c = Array2::zeros((i_end - ii, j_end - jj));
+        // Create local accumulator for this block
+        let mut local_c = Array2::zeros((i_end - ii, j_end - jj));
 
-            // Compute block multiplication
-            for kk in (0..k).step_by(block_size) {
-                let k_end = cmp::min(kk + block_size, k);
+        // Compute block multiplication
+        for kk in (0..k).step_by(block_size) {
+            let k_end = cmp::min(kk + block_size, k);
 
-                for (i_local, i) in (0..(i_end - ii)).zip(ii..i_end) {
-                    for (j_local, j) in (0..(j_end - jj)).zip(jj..j_end) {
-                        let mut sum = local_c[[i_local, j_local]];
-                        for ki in kk..k_end {
-                            sum += a[[i, ki]] * b[[ki, j]];
-                        }
-                        local_c[[i_local, j_local]] = sum;
+            for (i_local, i) in (0..(i_end - ii)).zip(ii..i_end) {
+                for (j_local, j) in (0..(j_end - jj)).zip(jj..j_end) {
+                    let mut sum = local_c[[i_local, j_local]];
+                    for ki in kk..k_end {
+                        sum += a[[i, ki]] * b[[ki, j]];
                     }
+                    local_c[[i_local, j_local]] = sum;
                 }
             }
+        }
 
-            // Return the block and its position
-            ((ii, jj), local_c)
-        })
-        .collect();
+        // Return the block and its position
+        ((ii, jj), local_c)
+    });
 
     // Write results back to the main matrix
     for ((ii, jj), local_c) in results {
@@ -311,20 +308,19 @@ where
     let mut result = Array2::zeros((m, n));
 
     if m > config.parallel_threshold {
-        // Parallel computation for large matrices
-        result
-            .axis_iter_mut(Axis(0))
-            .into_par_iter()
-            .enumerate()
-            .for_each(|(i, mut row)| {
-                for j in 0..n {
-                    let mut sum = F::zero();
-                    for k in 0..a.ncols() {
-                        sum += a[[i, k]] * x[[k, j]];
-                    }
-                    row[j] = sum;
+        // Parallel computation for large matrices using scirs2-core parallel operations
+        let rows: Vec<_> = result.axis_iter_mut(Axis(0)).enumerate().collect();
+
+        // Use Rayon's parallel iterator for proper parallel execution
+        rows.into_par_iter().for_each(|(i, mut row)| {
+            for j in 0..n {
+                let mut sum = F::zero();
+                for k in 0..a.ncols() {
+                    sum += a[[i, k]] * x[[k, j]];
                 }
-            });
+                row[j] = sum;
+            }
+        });
     } else {
         // Serial computation for smaller matrices
         for i in 0..m {

@@ -68,7 +68,7 @@ impl ExternalClient {
 
     /// Create a new external client with custom configuration
     pub fn with_config(config: ExternalConfig) -> Result<Self> {
-        let cache = DatasetCache::new()?;
+        let cache = DatasetCache::new(crate::cache::get_cache_dir()?);
 
         #[cfg(feature = "download")]
         let client = {
@@ -103,7 +103,7 @@ impl ExternalClient {
         // Check cache first
         if self.config.use_cache {
             let cache_key = format!("external_{}", blake3::hash(url.as_bytes()).to_hex());
-            if let Ok(cached_data) = self.cache.get(&cache_key) {
+            if let Ok(cached_data) = self.cache.read_cached(&cache_key) {
                 return self.parse_cached_data(&cached_data);
             }
         }
@@ -155,7 +155,7 @@ impl ExternalClient {
         // Check cache first
         if self.config.use_cache {
             let cache_key = format!("external_{}", blake3::hash(url.as_bytes()).to_hex());
-            if let Ok(cached_data) = self.cache.get(&cache_key) {
+            if let Ok(cached_data) = self.cache.read_cached(&cache_key) {
                 return self.parse_cached_data(&cached_data);
             }
         }

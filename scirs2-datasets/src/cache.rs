@@ -203,20 +203,20 @@ impl CacheKey {
     pub fn new(name: &str, config: &crate::real_world::RealWorldConfig) -> Self {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         config.use_cache.hash(&mut hasher);
         config.download_if_missing.hash(&mut hasher);
         config.return_preprocessed.hash(&mut hasher);
         config.subset.hash(&mut hasher);
         config.random_state.hash(&mut hasher);
-        
+
         Self {
             name: name.to_string(),
             config_hash: format!("{:x}", hasher.finish()),
         }
     }
-    
+
     /// Get the cache key as a string
     pub fn as_string(&self) -> String {
         format!("{}_{}", self.name, self.config_hash)

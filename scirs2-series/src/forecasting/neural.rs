@@ -306,10 +306,10 @@ impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
                     // Forward pass (simplified LSTM as feedforward)
                     let h1 = self.input_layer.as_ref().unwrap().forward(&input);
                     let h1_activated = simple_nn::apply_activation(&h1, "tanh");
-                    
+
                     let h2 = self.hidden_layer.as_ref().unwrap().forward(&h1_activated);
                     let h2_activated = simple_nn::apply_activation(&h2, "tanh");
-                    
+
                     let output = self.output_layer.as_ref().unwrap().forward(&h2_activated);
 
                     // Calculate loss (MSE)
@@ -346,7 +346,8 @@ impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
         if let Some(ref mut layer) = self.input_layer {
             for i in 0..layer.weights.nrows() {
                 for j in 0..layer.weights.ncols() {
-                    let perturbation = F::from((i + j) as f64 * 0.0001).unwrap() - F::from(0.00005).unwrap();
+                    let perturbation =
+                        F::from((i + j) as f64 * 0.0001).unwrap() - F::from(0.00005).unwrap();
                     layer.weights[[i, j]] = layer.weights[[i, j]] + adjustment * perturbation;
                 }
             }
@@ -403,10 +404,10 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
             // Forward pass through the network
             let h1 = self.input_layer.as_ref().unwrap().forward(&current_window);
             let h1_activated = simple_nn::apply_activation(&h1, "tanh");
-            
+
             let h2 = self.hidden_layer.as_ref().unwrap().forward(&h1_activated);
             let h2_activated = simple_nn::apply_activation(&h2, "tanh");
-            
+
             let output = self.output_layer.as_ref().unwrap().forward(&h2_activated);
 
             // Take the first prediction
@@ -421,7 +422,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
             current_window[window_len - 1] = next_pred;
         }
 
-        // Create forecast result (note: this is normalized data, 
+        // Create forecast result (note: this is normalized data,
         // in practice you'd want to denormalize)
         let dummy_ci = Array1::zeros(predictions.len());
         Ok(ForecastResult {
@@ -437,7 +438,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
         confidence_level: f64,
     ) -> Result<ForecastResult<F>> {
         let base_forecast = self.predict(steps)?;
-        
+
         // Simple uncertainty estimation based on training loss
         let uncertainty = if let Some(last_loss) = self.loss_history.last() {
             last_loss.sqrt() * F::from(2.0).unwrap() // Simple heuristic
@@ -526,10 +527,10 @@ impl<F: Float + Debug + FromPrimitive> TransformerForecaster<F> {
         }
 
         let epochs = self.config.base.epochs.min(50);
-        
+
         for _epoch in 0..epochs {
             let mut epoch_loss = F::zero();
-            
+
             for i in 0..x_train.nrows() {
                 let input = x_train.row(i).to_owned();
                 let target = y_train.row(i).to_owned();
@@ -537,10 +538,14 @@ impl<F: Float + Debug + FromPrimitive> TransformerForecaster<F> {
                 // Simplified transformer forward pass
                 let attention_out = self.attention_layer.as_ref().unwrap().forward(&input);
                 let attention_activated = simple_nn::apply_activation(&attention_out, "relu");
-                
-                let ff_out = self.feedforward_layer.as_ref().unwrap().forward(&attention_activated);
+
+                let ff_out = self
+                    .feedforward_layer
+                    .as_ref()
+                    .unwrap()
+                    .forward(&attention_activated);
                 let ff_activated = simple_nn::apply_activation(&ff_out, "relu");
-                
+
                 let output = self.output_layer.as_ref().unwrap().forward(&ff_activated);
 
                 // Calculate loss
@@ -608,12 +613,20 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for TransformerForeca
 
         for step in 0..steps {
             // Forward pass through simplified transformer
-            let attention_out = self.attention_layer.as_ref().unwrap().forward(&current_window);
+            let attention_out = self
+                .attention_layer
+                .as_ref()
+                .unwrap()
+                .forward(&current_window);
             let attention_activated = simple_nn::apply_activation(&attention_out, "relu");
-            
-            let ff_out = self.feedforward_layer.as_ref().unwrap().forward(&attention_activated);
+
+            let ff_out = self
+                .feedforward_layer
+                .as_ref()
+                .unwrap()
+                .forward(&attention_activated);
             let ff_activated = simple_nn::apply_activation(&ff_out, "relu");
-            
+
             let output = self.output_layer.as_ref().unwrap().forward(&ff_activated);
 
             // Take the first prediction
@@ -642,7 +655,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for TransformerForeca
         confidence_level: f64,
     ) -> Result<ForecastResult<F>> {
         let base_forecast = self.predict(steps)?;
-        
+
         // Simple uncertainty estimation
         let uncertainty = if let Some(last_loss) = self.loss_history.last() {
             last_loss.sqrt() * F::from(1.5).unwrap()
@@ -722,7 +735,8 @@ impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
 
         // Create stack layers (simplified N-BEATS blocks)
         for _ in 0..self.config.num_stacks {
-            self.stack_layers.push(simple_nn::DenseLayer::new(window_size, layer_width));
+            self.stack_layers
+                .push(simple_nn::DenseLayer::new(window_size, layer_width));
         }
 
         // Decomposition layers for interpretable architecture
@@ -730,7 +744,7 @@ impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
             self.trend_layer = Some(simple_nn::DenseLayer::new(layer_width, output_size));
             self.seasonality_layer = Some(simple_nn::DenseLayer::new(layer_width, output_size));
         }
-        
+
         self.residual_layer = Some(simple_nn::DenseLayer::new(layer_width, output_size));
     }
 
@@ -741,10 +755,10 @@ impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
         }
 
         let epochs = self.config.base.epochs.min(30); // Reduced for N-BEATS complexity
-        
+
         for _epoch in 0..epochs {
             let mut epoch_loss = F::zero();
-            
+
             for i in 0..x_train.nrows() {
                 let input = x_train.row(i).to_owned();
                 let target = y_train.row(i).to_owned();
@@ -757,11 +771,12 @@ impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
                     let stack_out = stack_layer.forward(&current_input);
                     let activated = simple_nn::apply_activation(&stack_out, "relu");
                     stack_outputs.push(activated.clone());
-                    
+
                     // Residual connection (simplified)
                     if current_input.len() == activated.len() {
                         for j in 0..current_input.len() {
-                            current_input[j] = current_input[j] + activated[j] * F::from(0.1).unwrap();
+                            current_input[j] =
+                                current_input[j] + activated[j] * F::from(0.1).unwrap();
                         }
                     }
                 }
@@ -770,16 +785,20 @@ impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
                 let final_output = if let Some(last_stack) = stack_outputs.last() {
                     self.residual_layer.as_ref().unwrap().forward(last_stack)
                 } else {
-                    self.residual_layer.as_ref().unwrap().forward(&current_input)
+                    self.residual_layer
+                        .as_ref()
+                        .unwrap()
+                        .forward(&current_input)
                 };
 
                 // Add decomposition components if interpretable architecture
                 let output = if !self.config.generic_architecture {
-                    if let (Some(trend_layer), Some(season_layer)) = 
-                        (&self.trend_layer, &self.seasonality_layer) {
+                    if let (Some(trend_layer), Some(season_layer)) =
+                        (&self.trend_layer, &self.seasonality_layer)
+                    {
                         let trend = trend_layer.forward(stack_outputs.last().unwrap());
                         let seasonal = season_layer.forward(stack_outputs.last().unwrap());
-                        
+
                         let mut combined = final_output;
                         for j in 0..combined.len() {
                             combined[j] = combined[j] + trend[j] + seasonal[j];
@@ -864,7 +883,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
                 let stack_out = stack_layer.forward(&current_input);
                 let activated = simple_nn::apply_activation(&stack_out, "relu");
                 stack_outputs.push(activated.clone());
-                
+
                 // Residual connection (simplified)
                 if current_input.len() == activated.len() {
                     for j in 0..current_input.len() {
@@ -877,16 +896,20 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
             let final_output = if let Some(last_stack) = stack_outputs.last() {
                 self.residual_layer.as_ref().unwrap().forward(last_stack)
             } else {
-                self.residual_layer.as_ref().unwrap().forward(&current_window)
+                self.residual_layer
+                    .as_ref()
+                    .unwrap()
+                    .forward(&current_window)
             };
 
             // Add decomposition components if interpretable architecture
             let output = if !self.config.generic_architecture {
-                if let (Some(trend_layer), Some(season_layer)) = 
-                    (&self.trend_layer, &self.seasonality_layer) {
+                if let (Some(trend_layer), Some(season_layer)) =
+                    (&self.trend_layer, &self.seasonality_layer)
+                {
                     let trend = trend_layer.forward(stack_outputs.last().unwrap());
                     let seasonal = season_layer.forward(stack_outputs.last().unwrap());
-                    
+
                     let mut combined = final_output;
                     for j in 0..combined.len() {
                         combined[j] = combined[j] + trend[j] + seasonal[j];
@@ -925,7 +948,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
         confidence_level: f64,
     ) -> Result<ForecastResult<F>> {
         let base_forecast = self.predict(steps)?;
-        
+
         // Simple uncertainty estimation for N-BEATS
         let uncertainty = if let Some(last_loss) = self.loss_history.last() {
             last_loss.sqrt() * F::from(1.2).unwrap()
@@ -1159,65 +1182,73 @@ mod tests {
     fn test_simple_neural_network_training() {
         // Test that neural forecasters can actually train on simple data
         let data = Array1::from_vec((0..50).map(|i| (i as f64 * 0.1).sin()).collect());
-        
+
         let mut lstm = LSTMForecaster::<f64>::with_default_config();
         let result = lstm.fit(&data);
-        
+
         // Should succeed now instead of returning NotImplemented
         assert!(result.is_ok(), "LSTM training should succeed");
         assert!(lstm.trained, "LSTM should be marked as trained");
-        assert!(!lstm.loss_history.is_empty(), "Loss history should not be empty");
+        assert!(
+            !lstm.loss_history.is_empty(),
+            "Loss history should not be empty"
+        );
     }
 
     #[test]
     fn test_neural_prediction() {
         let data = Array1::from_vec((0..50).map(|i| (i as f64 * 0.1).sin()).collect());
-        
+
         let mut transformer = TransformerForecaster::<f64>::with_default_config();
         transformer.fit(&data).unwrap();
-        
+
         let forecast = transformer.predict(5);
         assert!(forecast.is_ok(), "Transformer prediction should succeed");
-        
+
         let result = forecast.unwrap();
         assert_eq!(result.forecast.len(), 5, "Should predict 5 steps");
     }
 
-    #[test] 
+    #[test]
     fn test_uncertainty_prediction() {
         let data = Array1::from_vec((0..50).map(|i| (i as f64 * 0.1).sin()).collect());
-        
+
         let mut nbeats = NBeatsForecaster::<f64>::with_default_config();
         nbeats.fit(&data).unwrap();
-        
+
         let forecast = nbeats.predict_with_uncertainty(3, 0.95);
-        assert!(forecast.is_ok(), "N-BEATS uncertainty prediction should succeed");
-        
+        assert!(
+            forecast.is_ok(),
+            "N-BEATS uncertainty prediction should succeed"
+        );
+
         let result = forecast.unwrap();
         assert_eq!(result.forecast.len(), 3);
         // Check that confidence intervals are not all zeros (indicating they were computed)
-        assert!(result.lower_ci.iter().any(|&x| x != 0.0) || result.upper_ci.iter().any(|&x| x != 0.0));
+        assert!(
+            result.lower_ci.iter().any(|&x| x != 0.0) || result.upper_ci.iter().any(|&x| x != 0.0)
+        );
     }
 }
 
 /// Advanced neural forecasting models and techniques
 pub mod advanced {
     use super::*;
-    use ndarray::{Array1, Array2, Axis};
+    use ndarray::{Array1, Array2};
     use num_traits::{Float, FromPrimitive};
-    use std::collections::{VecDeque, HashMap};
-    
+    use std::collections::{HashMap, VecDeque};
+
     /// Stack types for N-BEATS
     #[derive(Debug, Clone)]
     pub enum StackType {
         Trend,
-        Seasonality,  
+        Seasonality,
         Generic,
     }
 
     /// Multi-scale neural forecasting that combines multiple time horizons
     #[derive(Debug)]
-    pub struct MultiScaleNeuralForecaster<F: Float + Debug> {
+    pub struct MultiScaleNeuralForecaster<F: Float + Debug + FromPrimitive> {
         /// Short-term forecaster (hourly/daily patterns)
         short_term: LSTMForecaster<F>,
         /// Medium-term forecaster (weekly/monthly patterns)
@@ -1362,12 +1393,12 @@ pub mod advanced {
             let validation_size = (data.len() as f64 * 0.2) as usize;
             if validation_size < self.config.forecast_horizon * 3 {
                 // Use equal weights if not enough validation data
-                self.combination_weights = Some(Array1::from_elem(3, F::from(1.0/3.0).unwrap()));
+                self.combination_weights = Some(Array1::from_elem(3, F::from(1.0 / 3.0).unwrap()));
                 return Ok(());
             }
 
             let train_end = data.len() - validation_size;
-            let validation_data = data.slice(s![train_end..]).to_owned();
+            let _validation_data = data.slice(s![train_end..]).to_owned();
 
             // Generate predictions from each model
             let mut short_predictions = Vec::new();
@@ -1378,7 +1409,7 @@ pub mod advanced {
             let step_size = self.config.forecast_horizon;
             for i in (0..validation_size - self.config.forecast_horizon).step_by(step_size) {
                 let window_end = train_end + i;
-                let current_data = data.slice(s![..window_end]).to_owned();
+                let _current_data = data.slice(s![..window_end]).to_owned();
 
                 // Get predictions from each model
                 if let Ok(short_pred) = self.short_term.predict(self.config.forecast_horizon) {
@@ -1401,7 +1432,7 @@ pub mod advanced {
             }
 
             // Optimize weights using simple grid search
-            let mut best_weights = Array1::from_elem(3, F::from(1.0/3.0).unwrap());
+            let mut best_weights = Array1::from_elem(3, F::from(1.0 / 3.0).unwrap());
             let mut best_error = F::infinity();
 
             // Grid search over possible weight combinations
@@ -1410,8 +1441,14 @@ pub mod advanced {
                     let w3 = F::one() - w1 - w2;
                     if w3 >= F::zero() && w3 <= F::one() {
                         let weights = Array1::from_vec(vec![w1, w2, w3]);
-                        let error = self.evaluate_weights(&weights, &short_predictions, &medium_predictions, &long_predictions, &targets);
-                        
+                        let error = self.evaluate_weights(
+                            &weights,
+                            &short_predictions,
+                            &medium_predictions,
+                            &long_predictions,
+                            &targets,
+                        );
+
                         if error < best_error {
                             best_error = error;
                             best_weights = weights;
@@ -1436,20 +1473,25 @@ pub mod advanced {
             let mut total_error = F::zero();
             let mut count = 0;
 
-            let min_len = short_predictions.len().min(medium_predictions.len()).min(long_predictions.len()).min(targets.len());
+            let min_len = short_predictions
+                .len()
+                .min(medium_predictions.len())
+                .min(long_predictions.len())
+                .min(targets.len());
 
             for i in 0..min_len {
-                if short_predictions[i].len() == targets[i].len() &&
-                   medium_predictions[i].len() == targets[i].len() &&
-                   long_predictions[i].len() == targets[i].len() {
-                    
+                if short_predictions[i].len() == targets[i].len()
+                    && medium_predictions[i].len() == targets[i].len()
+                    && long_predictions[i].len() == targets[i].len()
+                {
                     // Combine predictions using weights
-                    let combined = &short_predictions[i] * weights[0] +
-                                  &medium_predictions[i] * weights[1] +
-                                  &long_predictions[i] * weights[2];
+                    let combined = &short_predictions[i] * weights[0]
+                        + &medium_predictions[i] * weights[1]
+                        + &long_predictions[i] * weights[2];
 
                     // Calculate MSE
-                    for (j, (&pred, &actual)) in combined.iter().zip(targets[i].iter()).enumerate() {
+                    for (j, (&pred, &actual)) in combined.iter().zip(targets[i].iter()).enumerate()
+                    {
                         let error = pred - actual;
                         total_error = total_error + error * error;
                         count += 1;
@@ -1479,18 +1521,22 @@ pub mod advanced {
 
             // Combine predictions using learned weights
             let weights = self.combination_weights.as_ref().unwrap();
-            let combined_forecast = &short_pred.forecast * weights[0] +
-                                  &medium_pred.forecast * weights[1] +
-                                  &long_pred.forecast * weights[2];
+            let combined_forecast = &short_pred.forecast * weights[0]
+                + &medium_pred.forecast * weights[1]
+                + &long_pred.forecast * weights[2];
 
             // Combine confidence intervals (conservative approach)
-            let combined_lower = short_pred.lower_ci.iter()
+            let combined_lower = short_pred
+                .lower_ci
+                .iter()
                 .zip(medium_pred.lower_ci.iter())
                 .zip(long_pred.lower_ci.iter())
                 .map(|((&s, &m), &l)| s.min(m).min(l))
                 .collect();
 
-            let combined_upper = short_pred.upper_ci.iter()
+            let combined_upper = short_pred
+                .upper_ci
+                .iter()
                 .zip(medium_pred.upper_ci.iter())
                 .zip(long_pred.upper_ci.iter())
                 .map(|((&s, &m), &l)| s.max(m).max(l))
@@ -1511,7 +1557,7 @@ pub mod advanced {
 
     /// Online neural forecaster that can update incrementally
     #[derive(Debug)]
-    pub struct OnlineNeuralForecaster<F: Float + Debug> {
+    pub struct OnlineNeuralForecaster<F: Float + Debug + FromPrimitive> {
         /// Base neural model
         base_model: LSTMForecaster<F>,
         /// Recent data buffer
@@ -1587,8 +1633,9 @@ pub mod advanced {
             self.observation_count += 1;
 
             // Check if we need to retrain
-            if self.data_buffer.len() >= self.config.initial_window &&
-               self.observation_count % self.config.update_frequency == 0 {
+            if self.data_buffer.len() >= self.config.initial_window
+                && self.observation_count % self.config.update_frequency == 0
+            {
                 let current_data: Array1<F> = Array1::from_iter(self.data_buffer.iter().cloned());
                 self.base_model.fit(&current_data)?;
             }
@@ -1678,20 +1725,24 @@ pub mod advanced {
             self.initialize_weights();
 
             // Create training windows
-            let (x_train, y_train) = utils::create_sliding_windows(data, self.config.lookback_window, self.config.forecast_horizon)?;
+            let (x_train, y_train) = utils::create_sliding_windows(
+                data,
+                self.config.lookback_window,
+                self.config.forecast_horizon,
+            )?;
 
             // Simple training loop (simplified)
-            for epoch in 0..self.config.epochs {
+            for _epoch in 0..self.config.epochs {
                 let mut epoch_loss = F::zero();
                 let mut batch_count = 0;
 
                 for i in 0..x_train.nrows() {
                     let input = x_train.row(i).to_owned();
                     let target = y_train.row(i).to_owned();
-                    
+
                     // Forward pass with attention
                     let prediction = self.forward_with_attention(&input)?;
-                    
+
                     // Calculate loss (MSE)
                     let loss = self.calculate_loss(&prediction, &target);
                     epoch_loss = epoch_loss + loss;
@@ -1709,7 +1760,8 @@ pub mod advanced {
                 // Early stopping check
                 if let Some(patience) = self.config.early_stopping_patience {
                     if self.loss_history.len() > patience {
-                        let recent_losses = &self.loss_history[self.loss_history.len() - patience..];
+                        let recent_losses =
+                            &self.loss_history[self.loss_history.len() - patience..];
                         let is_improving = recent_losses.windows(2).any(|w| w[1] < w[0]);
                         if !is_improving {
                             break;
@@ -1748,15 +1800,16 @@ pub mod advanced {
             let value = weights.attention_value.dot(input);
 
             // Attention weights (simplified softmax)
-            let attention_scores = Array1::from_iter(query.iter().zip(key.iter()).map(|(&q, &k)| {
-                (q * k).exp()
-            }));
+            let attention_scores =
+                Array1::from_iter(query.iter().zip(key.iter()).map(|(&q, &k)| (q * k).exp()));
             let sum_scores = attention_scores.sum();
             let attention_weights = attention_scores / sum_scores;
 
             // Store attention weights for interpretability
-            self.attention_weights = Some(Array2::from_shape_vec((1, attention_weights.len()), 
-                attention_weights.to_vec()).unwrap());
+            self.attention_weights = Some(
+                Array2::from_shape_vec((1, attention_weights.len()), attention_weights.to_vec())
+                    .unwrap(),
+            );
 
             // Apply attention to values
             let attended_values = value * &attention_weights;
@@ -1805,7 +1858,9 @@ pub mod advanced {
                 });
             }
 
-            let input = data.slice(s![data.len() - self.config.lookback_window..]).to_owned();
+            let input = data
+                .slice(s![data.len() - self.config.lookback_window..])
+                .to_owned();
             let mut forecaster = self.clone();
             let prediction = forecaster.forward_with_attention(&input)?;
 
@@ -2020,7 +2075,7 @@ pub mod advanced {
             // Convert errors to weights (inverse of error)
             let mut weights = Array1::zeros(self.forecasters.len());
             let mut total_weight = F::zero();
-            
+
             for (i, &error) in validation_errors.iter().enumerate() {
                 let weight = if error > F::zero() {
                     F::one() / (error + F::epsilon())
@@ -2048,7 +2103,7 @@ pub mod advanced {
             // then learn linear combination weights
             let n_folds = 3;
             let fold_size = data.len() / n_folds;
-            
+
             let mut meta_features = Array2::zeros((0, self.forecasters.len()));
             let mut meta_targets = Array1::zeros(0);
 
@@ -2067,13 +2122,13 @@ pub mod advanced {
                         train_indices.push(i);
                     }
                 }
-                
+
                 if train_indices.len() < 50 {
                     continue; // Skip if insufficient data
                 }
 
                 let train_data = Array1::from_iter(train_indices.iter().map(|&i| data[i]));
-                
+
                 // Train models on fold
                 for forecaster in &mut self.forecasters {
                     let _ = forecaster.fit(&train_data);
@@ -2083,7 +2138,7 @@ pub mod advanced {
                 let val_size = val_end - val_start;
                 if val_size > 0 {
                     let mut fold_predictions = Array2::zeros((val_size, self.forecasters.len()));
-                    
+
                     for (i, forecaster) in self.forecasters.iter().enumerate() {
                         if let Ok(result) = forecaster.predict(val_size) {
                             for j in 0..val_size.min(result.forecast.len()) {
@@ -2095,11 +2150,12 @@ pub mod advanced {
                     // Add to meta-features
                     let current_meta_size = meta_features.nrows();
                     let new_meta_size = current_meta_size + val_size;
-                    
+
                     // Resize meta_features and meta_targets
-                    let mut new_meta_features = Array2::zeros((new_meta_size, self.forecasters.len()));
+                    let mut new_meta_features =
+                        Array2::zeros((new_meta_size, self.forecasters.len()));
                     let mut new_meta_targets = Array1::zeros(new_meta_size);
-                    
+
                     // Copy existing data
                     for i in 0..current_meta_size {
                         for j in 0..self.forecasters.len() {
@@ -2107,17 +2163,18 @@ pub mod advanced {
                         }
                         new_meta_targets[i] = meta_targets[i];
                     }
-                    
+
                     // Add new data
                     for i in 0..val_size {
                         for j in 0..self.forecasters.len() {
-                            new_meta_features[[current_meta_size + i, j]] = fold_predictions[[i, j]];
+                            new_meta_features[[current_meta_size + i, j]] =
+                                fold_predictions[[i, j]];
                         }
                         if val_start + i < data.len() {
                             new_meta_targets[current_meta_size + i] = data[val_start + i];
                         }
                     }
-                    
+
                     meta_features = new_meta_features;
                     meta_targets = new_meta_targets;
                 }
@@ -2139,18 +2196,22 @@ pub mod advanced {
         fn solve_least_squares(&self, X: &Array2<F>, y: &Array1<F>) -> Result<Array1<F>> {
             let n_features = X.ncols();
             let mut weights = Array1::zeros(n_features);
-            
+
             // Simple approach: solve each feature independently
             for j in 0..n_features {
                 let mut num = F::zero();
                 let mut den = F::zero();
-                
+
                 for i in 0..X.nrows() {
                     num = num + X[[i, j]] * y[i];
                     den = den + X[[i, j]] * X[[i, j]];
                 }
-                
-                weights[j] = if den > F::zero() { num / den } else { F::zero() };
+
+                weights[j] = if den > F::zero() {
+                    num / den
+                } else {
+                    F::zero()
+                };
             }
 
             // Normalize weights to sum to 1
@@ -2189,7 +2250,7 @@ pub mod advanced {
 
             for (i, forecaster) in self.forecasters.iter_mut().enumerate() {
                 forecaster.fit(&train_data)?;
-                
+
                 let forecast_horizon = validation_size.min(10);
                 if let Ok(result) = forecaster.predict(forecast_horizon) {
                     let actual = validation_data.slice(s![..forecast_horizon]);
@@ -2199,7 +2260,7 @@ pub mod advanced {
                         mse = mse + error * error;
                     }
                     mse = mse / F::from(forecast_horizon).unwrap();
-                    
+
                     if mse < best_error {
                         best_error = mse;
                         best_model_idx = i;
@@ -2281,30 +2342,42 @@ pub mod advanced {
         Bool(bool),
     }
 
-    impl<F: Float + Debug + Clone + FromPrimitive> NeuralAutoML<F> {
+    impl<F: Float + Debug + Clone + FromPrimitive + 'static> NeuralAutoML<F> {
         /// Create new AutoML system
         pub fn new(search_strategy: SearchStrategy, max_evaluations: usize) -> Self {
             let mut search_space = HashMap::new();
-            
+
             // Define default search space
-            search_space.insert("learning_rate".to_string(), 
-                ParameterRange::FloatRange { 
-                    min: F::from(0.0001).unwrap(), 
-                    max: F::from(0.1).unwrap() 
-                });
-            search_space.insert("hidden_size".to_string(), 
-                ParameterRange::IntRange { min: 16, max: 256 });
-            search_space.insert("num_layers".to_string(), 
-                ParameterRange::IntRange { min: 1, max: 4 });
-            search_space.insert("dropout".to_string(), 
-                ParameterRange::FloatRange { 
-                    min: F::from(0.0).unwrap(), 
-                    max: F::from(0.5).unwrap() 
-                });
-            search_space.insert("batch_size".to_string(), 
-                ParameterRange::IntRange { min: 16, max: 128 });
-            search_space.insert("epochs".to_string(), 
-                ParameterRange::IntRange { min: 10, max: 100 });
+            search_space.insert(
+                "learning_rate".to_string(),
+                ParameterRange::FloatRange {
+                    min: F::from(0.0001).unwrap(),
+                    max: F::from(0.1).unwrap(),
+                },
+            );
+            search_space.insert(
+                "hidden_size".to_string(),
+                ParameterRange::IntRange { min: 16, max: 256 },
+            );
+            search_space.insert(
+                "num_layers".to_string(),
+                ParameterRange::IntRange { min: 1, max: 4 },
+            );
+            search_space.insert(
+                "dropout".to_string(),
+                ParameterRange::FloatRange {
+                    min: F::from(0.0).unwrap(),
+                    max: F::from(0.5).unwrap(),
+                },
+            );
+            search_space.insert(
+                "batch_size".to_string(),
+                ParameterRange::IntRange { min: 16, max: 128 },
+            );
+            search_space.insert(
+                "epochs".to_string(),
+                ParameterRange::IntRange { min: 10, max: 100 },
+            );
 
             Self {
                 search_space,
@@ -2329,16 +2402,16 @@ pub mod advanced {
             while self.evaluations < self.max_evaluations {
                 // Generate candidate configuration
                 let (params, model_type) = self.generate_candidate()?;
-                
+
                 // Evaluate configuration
                 let score = self.evaluate_config(&params, &model_type, data)?;
-                
+
                 if score < best_score {
                     best_score = score;
                     best_params = params;
                     best_model_type = model_type;
                 }
-                
+
                 self.evaluations += 1;
             }
 
@@ -2355,7 +2428,7 @@ pub mod advanced {
         /// Generate candidate configuration
         fn generate_candidate(&self) -> Result<(HashMap<String, ParameterValue<F>>, String)> {
             let mut params = HashMap::new();
-            
+
             // Sample from search space based on strategy
             match self.search_strategy {
                 SearchStrategy::Random => {
@@ -2406,9 +2479,7 @@ pub mod advanced {
                     let idx = self.evaluations % options.len();
                     ParameterValue::String(options[idx].clone())
                 }
-                ParameterRange::Boolean => {
-                    ParameterValue::Bool(self.evaluations % 2 == 0)
-                }
+                ParameterRange::Boolean => ParameterValue::Bool(self.evaluations % 2 == 0),
             }
         }
 
@@ -2519,7 +2590,12 @@ pub mod advanced {
         }
 
         /// Helper to get float parameter
-        fn get_float_param(&self, params: &HashMap<String, ParameterValue<F>>, name: &str, default: f64) -> F {
+        fn get_float_param(
+            &self,
+            params: &HashMap<String, ParameterValue<F>>,
+            name: &str,
+            default: f64,
+        ) -> F {
             match params.get(name) {
                 Some(ParameterValue::Float(f)) => *f,
                 _ => F::from(default).unwrap(),
@@ -2527,7 +2603,12 @@ pub mod advanced {
         }
 
         /// Helper to get int parameter
-        fn get_int_param(&self, params: &HashMap<String, ParameterValue<F>>, name: &str, default: usize) -> usize {
+        fn get_int_param(
+            &self,
+            params: &HashMap<String, ParameterValue<F>>,
+            name: &str,
+            default: usize,
+        ) -> usize {
             match params.get(name) {
                 Some(ParameterValue::Int(i)) => *i,
                 _ => default,
@@ -2547,15 +2628,13 @@ pub mod advanced {
         #[test]
         fn test_multiscale_forecaster() {
             let mut forecaster = MultiScaleNeuralForecaster::<f64>::with_default_config();
-            
+
             // Generate synthetic data with multiple patterns
-            let data: Array1<f64> = Array1::from_iter(
-                (0..200).map(|i| {
-                    let t = i as f64;
-                    // Combine short, medium, and long-term patterns
-                    (t * 0.01).sin() + (t * 0.001).sin() + (t * 0.0001).sin() + 0.1 * (t / 100.0)
-                })
-            );
+            let data: Array1<f64> = Array1::from_iter((0..200).map(|i| {
+                let t = i as f64;
+                // Combine short, medium, and long-term patterns
+                (t * 0.01).sin() + (t * 0.001).sin() + (t * 0.0001).sin() + 0.1 * (t / 100.0)
+            }));
 
             let result = forecaster.fit(&data);
             assert!(result.is_ok(), "Multi-scale training should succeed");
@@ -2563,7 +2642,7 @@ pub mod advanced {
 
             let prediction = forecaster.predict(5);
             assert!(prediction.is_ok(), "Multi-scale prediction should succeed");
-            
+
             let forecast = prediction.unwrap();
             assert_eq!(forecast.forecast.len(), 5);
 
@@ -2614,7 +2693,7 @@ pub mod advanced {
 
             // Check that attention weights are computed
             assert!(forecaster.get_attention_weights().is_some());
-            
+
             // Check that loss history is recorded
             assert!(!forecaster.get_loss_history().is_empty());
         }

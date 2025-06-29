@@ -292,14 +292,14 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         let mut gain_scores = HashMap::new();
-        
+
         for (feature_idx, feature_name) in feature_names.iter().enumerate() {
             let total_gain = tree_splits
                 .iter()
                 .filter(|split| split.feature_idx == feature_idx)
                 .map(|split| split.gain)
                 .sum();
-            
+
             gain_scores.insert(feature_name.clone(), total_gain);
         }
 
@@ -325,13 +325,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
 
         // Generate perturbed samples around the instance
         let perturbed_samples = self.generate_lime_samples(x_instance, x_background, n_samples)?;
-        
+
         // Compute model predictions for perturbed samples
         let predictions = model(&perturbed_samples.view());
-        
+
         // Fit linear model to approximate local behavior
         let feature_weights = self.fit_linear_approximation(&perturbed_samples, &predictions)?;
-        
+
         for (feature_idx, feature_name) in feature_names.iter().enumerate() {
             if feature_idx < feature_weights.len() {
                 lime_scores.insert(feature_name.clone(), feature_weights[feature_idx]);
@@ -354,16 +354,17 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         let mut ig_scores = HashMap::new();
-        
+
         // Generate interpolated path from baseline to instance
-        let interpolated_samples = self.generate_interpolated_path(x_baseline, x_instance, n_steps)?;
-        
+        let interpolated_samples =
+            self.generate_interpolated_path(x_baseline, x_instance, n_steps)?;
+
         // Compute gradients along the path (simplified numerical gradients)
         let gradients = self.compute_numerical_gradients(model, &interpolated_samples)?;
-        
+
         // Integrate gradients
         let integrated_grads = self.integrate_gradients(&gradients, x_instance, x_baseline)?;
-        
+
         for (feature_idx, feature_name) in feature_names.iter().enumerate() {
             if feature_idx < integrated_grads.len() {
                 ig_scores.insert(feature_name.clone(), integrated_grads[feature_idx]);
@@ -409,14 +410,14 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     fn fisher_yates_shuffle(&self, values: &mut [F]) -> Result<()> {
         let seed = self.random_seed.unwrap_or(42);
         let mut rng_state = seed;
-        
+
         for i in (1..values.len()).rev() {
             // Linear congruential generator for reproducible randomness
             rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
             let j = (rng_state as usize) % (i + 1);
             values.swap(i, j);
         }
-        
+
         Ok(())
     }
 
@@ -440,7 +441,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         // Sample coalition subsets
         for _ in 0..self.n_shap_background {
             let coalition = self.sample_coalition(n_features, feature_idx)?;
-            
+
             // Compute marginal contribution
             let contribution = self.compute_marginal_contribution(
                 model,
@@ -450,7 +451,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
                 &coalition,
                 feature_idx,
             )?;
-            
+
             total_contribution = total_contribution + contribution;
             sample_count += 1;
         }
@@ -463,14 +464,14 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         let mut coalition = vec![false; n_features];
         let seed = self.random_seed.unwrap_or(42);
         let mut rng_state = seed;
-        
+
         for i in 0..n_features {
             if i != target_feature {
                 rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
                 coalition[i] = (rng_state % 2) == 0;
             }
         }
-        
+
         Ok(coalition)
     }
 
@@ -491,25 +492,27 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         // Create coalition with feature
         let mut coalition_with = coalition.to_vec();
         coalition_with[feature_idx] = true;
-        
+
         // Create coalition without feature
         let coalition_without = coalition.to_vec();
-        
+
         // Generate samples for both coalitions
         let x_with = self.generate_coalition_sample(x_test, x_background, &coalition_with)?;
         let x_without = self.generate_coalition_sample(x_test, x_background, &coalition_without)?;
-        
+
         // Compute model outputs
         let pred_with = model(&x_with.view());
         let pred_without = model(&x_without.view());
-        
+
         // Compute marginal contribution
-        let contribution = if let (Some(&first_with), Some(&first_without)) = (pred_with.first(), pred_without.first()) {
+        let contribution = if let (Some(&first_with), Some(&first_without)) =
+            (pred_with.first(), pred_without.first())
+        {
             first_with - first_without
         } else {
             F::zero()
         };
-        
+
         Ok(contribution)
     }
 
@@ -521,7 +524,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         coalition: &[bool],
     ) -> Result<Array2<F>> {
         let mut sample = x_test.clone();
-        
+
         for (feature_idx, &in_coalition) in coalition.iter().enumerate() {
             if !in_coalition && feature_idx < x_background.ncols() {
                 // Replace with background value
@@ -531,7 +534,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
                 }
             }
         }
-        
+
         Ok(sample)
     }
 
@@ -544,14 +547,14 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     ) -> Result<Array2<F>> {
         let n_features = x_instance.len();
         let mut samples = Array2::zeros((n_samples, n_features));
-        
+
         let seed = self.random_seed.unwrap_or(42);
         let mut rng_state = seed;
-        
+
         for i in 0..n_samples {
             for j in 0..n_features {
                 rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
-                
+
                 if (rng_state % 2) == 0 {
                     // Use original feature value
                     samples[[i, j]] = x_instance[j];
@@ -562,7 +565,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
                 }
             }
         }
-        
+
         Ok(samples)
     }
 
@@ -574,15 +577,16 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     ) -> Result<Vec<F>> {
         let n_features = x_samples.ncols();
         let mut weights = vec![F::zero(); n_features];
-        
+
         // Simplified linear regression using normal equations
         // In practice, this would use proper linear algebra
         for feature_idx in 0..n_features {
             let feature_values: Vec<F> = x_samples.column(feature_idx).to_vec();
-            let correlation = self.compute_correlation_vec(&feature_values, &y_predictions.to_vec())?;
+            let correlation =
+                self.compute_correlation_vec(&feature_values, &y_predictions.to_vec())?;
             weights[feature_idx] = correlation;
         }
-        
+
         Ok(weights)
     }
 
@@ -595,49 +599,46 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     ) -> Result<Array2<F>> {
         let n_features = x_baseline.len();
         let mut path = Array2::zeros((n_steps, n_features));
-        
+
         for step in 0..n_steps {
             let alpha = F::from(step).unwrap() / F::from(n_steps - 1).unwrap();
-            
+
             for feature_idx in 0..n_features {
-                path[[step, feature_idx]] = x_baseline[feature_idx] + alpha * (x_instance[feature_idx] - x_baseline[feature_idx]);
+                path[[step, feature_idx]] = x_baseline[feature_idx]
+                    + alpha * (x_instance[feature_idx] - x_baseline[feature_idx]);
             }
         }
-        
+
         Ok(path)
     }
 
     /// Compute numerical gradients
-    fn compute_numerical_gradients<M>(
-        &self,
-        model: &M,
-        x_samples: &Array2<F>,
-    ) -> Result<Array2<F>>
+    fn compute_numerical_gradients<M>(&self, model: &M, x_samples: &Array2<F>) -> Result<Array2<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         let n_samples = x_samples.nrows();
         let n_features = x_samples.ncols();
         let mut gradients = Array2::zeros((n_samples, n_features));
-        
+
         let epsilon = F::from(1e-6).unwrap();
-        
+
         for sample_idx in 0..n_samples {
             for feature_idx in 0..n_features {
                 let mut x_plus = x_samples.row(sample_idx).to_owned();
                 let mut x_minus = x_samples.row(sample_idx).to_owned();
-                
+
                 x_plus[feature_idx] = x_plus[feature_idx] + epsilon;
                 x_minus[feature_idx] = x_minus[feature_idx] - epsilon;
-                
+
                 let pred_plus = model(&x_plus.view().insert_axis(Axis(0)));
                 let pred_minus = model(&x_minus.view().insert_axis(Axis(0)));
-                
+
                 let gradient = (pred_plus[0] - pred_minus[0]) / (F::from(2.0).unwrap() * epsilon);
                 gradients[[sample_idx, feature_idx]] = gradient;
             }
         }
-        
+
         Ok(gradients)
     }
 
@@ -650,13 +651,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     ) -> Result<Vec<F>> {
         let n_features = x_instance.len();
         let mut integrated = vec![F::zero(); n_features];
-        
+
         for feature_idx in 0..n_features {
             let feature_diff = x_instance[feature_idx] - x_baseline[feature_idx];
             let avg_gradient = gradients.column(feature_idx).mean().unwrap_or(F::zero());
             integrated[feature_idx] = feature_diff * avg_gradient;
         }
-        
+
         Ok(integrated)
     }
 
@@ -667,22 +668,22 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
                 "Vectors must have the same length".to_string(),
             ));
         }
-        
+
         let n = F::from(x.len()).unwrap();
         let mean_x = x.iter().cloned().sum::<F>() / n;
         let mean_y = y.iter().cloned().sum::<F>() / n;
-        
+
         let numerator: F = x
             .iter()
             .zip(y.iter())
             .map(|(&xi, &yi)| (xi - mean_x) * (yi - mean_y))
             .sum();
-        
+
         let sum_sq_x: F = x.iter().map(|&xi| (xi - mean_x) * (xi - mean_x)).sum();
         let sum_sq_y: F = y.iter().map(|&yi| (yi - mean_y) * (yi - mean_y)).sum();
-        
+
         let denominator = (sum_sq_x * sum_sq_y).sqrt();
-        
+
         if denominator == F::zero() {
             Ok(F::zero())
         } else {
@@ -776,23 +777,12 @@ where
     S: Fn(&Array1<F>, &Array1<F>) -> F + Copy,
 {
     // Permutation importance (always computed)
-    let permutation_importance = calculator.permutation_importance(
-        model,
-        x_test,
-        y_test,
-        score_fn,
-        feature_names,
-    )?;
+    let permutation_importance =
+        calculator.permutation_importance(model, x_test, y_test, score_fn, feature_names)?;
 
     // SHAP values (if background data provided)
     let shap_values = if let Some(bg_data) = x_background {
-        Some(calculator.shap_importance(
-            model,
-            x_test,
-            bg_data,
-            score_fn,
-            feature_names,
-        )?)
+        Some(calculator.shap_importance(model, x_test, bg_data, score_fn, feature_names)?)
     } else {
         None
     };
@@ -834,12 +824,7 @@ where
 
     // Gain-based importance (if tree splits provided)
     let gain_importance = if let Some(splits) = tree_splits {
-        Some(calculator.gain_importance(
-            model,
-            x_test,
-            feature_names,
-            splits,
-        )?)
+        Some(calculator.gain_importance(model, x_test, feature_names, splits)?)
     } else {
         None
     };
@@ -891,33 +876,33 @@ fn compute_mutual_information_improved<F: Float + num_traits::FromPrimitive + st
 
     // Improved mutual information with histogram-based estimation
     let n_bins = 10.min(x.len() / 5).max(2); // Adaptive number of bins
-    
+
     // Create bins for both variables
     let x_bins = create_bins(x, n_bins)?;
     let y_bins = create_bins(&y.view(), n_bins)?;
-    
+
     // Compute joint and marginal histograms
     let joint_hist = compute_joint_histogram::<F>(&x_bins, &y_bins, n_bins)?;
     let x_hist: Vec<F> = compute_marginal_histogram(&x_bins, n_bins)?;
     let y_hist: Vec<F> = compute_marginal_histogram(&y_bins, n_bins)?;
-    
+
     // Compute mutual information
     let mut mi = F::zero();
     let n_total = F::from(x.len()).unwrap();
-    
+
     for i in 0..n_bins {
         for j in 0..n_bins {
             let p_xy: F = joint_hist[(i, j)] / n_total;
             let p_x = x_hist[i] / n_total;
             let p_y = y_hist[j] / n_total;
-            
+
             if p_xy > F::zero() && p_x > F::zero() && p_y > F::zero() {
                 let ratio: F = p_xy / (p_x * p_y);
                 mi = mi + p_xy * ratio.ln();
             }
         }
     }
-    
+
     Ok(mi.max(F::zero()))
 }
 
@@ -928,13 +913,13 @@ fn create_bins<F: Float + num_traits::FromPrimitive>(
 ) -> Result<Vec<usize>> {
     let min_val = values.iter().cloned().fold(F::infinity(), F::min);
     let max_val = values.iter().cloned().fold(F::neg_infinity(), F::max);
-    
+
     if min_val == max_val {
         return Ok(vec![0; values.len()]);
     }
-    
+
     let bin_width = (max_val - min_val) / F::from(n_bins).unwrap();
-    
+
     let bins: Vec<usize> = values
         .iter()
         .map(|&val| {
@@ -942,7 +927,7 @@ fn create_bins<F: Float + num_traits::FromPrimitive>(
             bin_idx.min(n_bins - 1)
         })
         .collect();
-    
+
     Ok(bins)
 }
 
@@ -953,11 +938,11 @@ fn compute_joint_histogram<F: Float + num_traits::FromPrimitive>(
     n_bins: usize,
 ) -> Result<ndarray::Array2<F>> {
     let mut hist = ndarray::Array2::zeros((n_bins, n_bins));
-    
+
     for (&x_bin, &y_bin) in x_bins.iter().zip(y_bins.iter()) {
         hist[(x_bin, y_bin)] = hist[(x_bin, y_bin)] + F::one();
     }
-    
+
     Ok(hist)
 }
 
@@ -967,11 +952,11 @@ fn compute_marginal_histogram<F: Float + num_traits::FromPrimitive>(
     n_bins: usize,
 ) -> Result<Vec<F>> {
     let mut hist = vec![F::zero(); n_bins];
-    
+
     for &bin_idx in bins {
         hist[bin_idx] = hist[bin_idx] + F::one();
     }
-    
+
     Ok(hist)
 }
 
@@ -1133,10 +1118,10 @@ mod tests {
         // but contain the same elements
         let mut sorted_original = original;
         sorted_original.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         let mut sorted_shuffled = values;
         sorted_shuffled.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         assert_eq!(sorted_original, sorted_shuffled);
     }
 
@@ -1153,18 +1138,17 @@ mod tests {
         // Mock model that returns sum of features
         let model = |x: &ArrayView2<f64>| x.map_axis(Axis(1), |row| row.sum());
         let score_fn = |y_true: &Array1<f64>, y_pred: &Array1<f64>| {
-            y_true.iter().zip(y_pred.iter())
+            y_true
+                .iter()
+                .zip(y_pred.iter())
                 .map(|(t, p)| (t - p).abs())
-                .sum::<f64>() / y_true.len() as f64
+                .sum::<f64>()
+                / y_true.len() as f64
         };
 
-        let shap_values = calculator.shap_importance(
-            &model,
-            &x_test,
-            &x_background,
-            score_fn,
-            &feature_names,
-        ).unwrap();
+        let shap_values = calculator
+            .shap_importance(&model, &x_test, &x_background, score_fn, &feature_names)
+            .unwrap();
 
         assert_eq!(shap_values.len(), 2);
         assert!(shap_values.contains_key("feature1"));
@@ -1180,19 +1164,24 @@ mod tests {
 
         let model = |x: &ArrayView2<f64>| x.map_axis(Axis(1), |row| row.sum());
         let score_fn = |y_true: &Array1<f64>, y_pred: &Array1<f64>| {
-            y_true.iter().zip(y_pred.iter())
+            y_true
+                .iter()
+                .zip(y_pred.iter())
                 .map(|(t, p)| (t - p).abs())
-                .sum::<f64>() / y_true.len() as f64
+                .sum::<f64>()
+                / y_true.len() as f64
         };
 
-        let lime_scores = calculator.lime_importance(
-            &model,
-            &x_instance.view(),
-            &x_background,
-            score_fn,
-            &feature_names,
-            20,
-        ).unwrap();
+        let lime_scores = calculator
+            .lime_importance(
+                &model,
+                &x_instance.view(),
+                &x_background,
+                score_fn,
+                &feature_names,
+                20,
+            )
+            .unwrap();
 
         assert_eq!(lime_scores.len(), 2);
         assert!(lime_scores.contains_key("feature1"));
@@ -1208,13 +1197,15 @@ mod tests {
 
         let model = |x: &ArrayView2<f64>| x.map_axis(Axis(1), |row| row.sum());
 
-        let ig_scores = calculator.integrated_gradients_importance(
-            &model,
-            &x_instance.view(),
-            &x_baseline.view(),
-            &feature_names,
-            10,
-        ).unwrap();
+        let ig_scores = calculator
+            .integrated_gradients_importance(
+                &model,
+                &x_instance.view(),
+                &x_baseline.view(),
+                &feature_names,
+                10,
+            )
+            .unwrap();
 
         assert_eq!(ig_scores.len(), 2);
         assert!(ig_scores.contains_key("feature1"));
@@ -1226,7 +1217,7 @@ mod tests {
         let calculator = FeatureImportanceCalculator::<f64>::new();
         let x_test = array![[1.0, 2.0], [3.0, 4.0]];
         let feature_names = vec!["feature1".to_string(), "feature2".to_string()];
-        
+
         let tree_splits = vec![
             TreeSplit {
                 feature_idx: 0,
@@ -1250,12 +1241,9 @@ mod tests {
 
         let model = |x: &ArrayView2<f64>| x.map_axis(Axis(1), |row| row.sum());
 
-        let gain_scores = calculator.gain_importance(
-            &model,
-            &x_test,
-            &feature_names,
-            &tree_splits,
-        ).unwrap();
+        let gain_scores = calculator
+            .gain_importance(&model, &x_test, &feature_names, &tree_splits)
+            .unwrap();
 
         assert_eq!(gain_scores.len(), 2);
         assert_eq!(gain_scores["feature1"], 0.7); // 0.5 + 0.2
@@ -1277,9 +1265,12 @@ mod tests {
 
         let model = |x: &ArrayView2<f64>| x.map_axis(Axis(1), |row| row.sum());
         let score_fn = |y_true: &Array1<f64>, y_pred: &Array1<f64>| {
-            y_true.iter().zip(y_pred.iter())
+            y_true
+                .iter()
+                .zip(y_pred.iter())
                 .map(|(t, p)| (t - p).abs())
-                .sum::<f64>() / y_true.len() as f64
+                .sum::<f64>()
+                / y_true.len() as f64
         };
 
         let results = comprehensive_feature_importance(
@@ -1291,7 +1282,8 @@ mod tests {
             score_fn,
             &feature_names,
             None,
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(results.permutation_importance.len(), 2);
         assert!(results.shap_values.is_some());
@@ -1307,7 +1299,7 @@ mod tests {
         let y = array![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0];
 
         let mi = compute_mutual_information_improved(&x.view(), &y).unwrap();
-        
+
         // For perfectly correlated data, MI should be high
         assert!(mi > 0.0);
     }
@@ -1316,7 +1308,7 @@ mod tests {
     fn test_bin_creation() {
         let values = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let bins = create_bins(&values.view(), 3).unwrap();
-        
+
         assert_eq!(bins.len(), 5);
         // All bin indices should be within range
         assert!(bins.iter().all(|&bin| bin < 3));

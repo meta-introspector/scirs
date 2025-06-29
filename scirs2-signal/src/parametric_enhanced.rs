@@ -1083,8 +1083,15 @@ fn adaptive_window_size(signal: &Array1<f64>, ar_order: usize) -> SignalResult<u
     Ok(window_size.max(min_window).min(max_window))
 }
 
+/// Simple AR result structure for window quality assessment
+#[derive(Debug, Clone)]
+pub struct ArResult {
+    pub coefficients: Array1<f64>,
+    pub variance: f64,
+}
+
 /// Assess the quality of a window-based AR estimate
-fn assess_window_quality(ar_result: &crate::parametric::ArResult, window_data: &[f64]) -> f64 {
+fn assess_window_quality(ar_result: &ArResult, window_data: &[f64]) -> f64 {
     let n = window_data.len();
     let p = ar_result.coefficients.len();
 

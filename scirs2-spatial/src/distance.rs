@@ -1606,9 +1606,9 @@ mod tests {
 
         let dist = braycurtis(point1, point2);
         // Sum of differences: |1-2| + |2-3| + |3-4| = 3
-        // Sum of totals: (1+2) + (2+3) + (3+4) = 18
-        // Distance: 3/18 = 1/6 ≈ 0.1667
-        assert_relative_eq!(dist, 1.0 / 6.0, epsilon = 1e-6);
+        // Sum of absolute sums: |1+2| + |2+3| + |3+4| = 3 + 5 + 7 = 15
+        // Distance: 3/15 = 1/5 = 0.2
+        assert_relative_eq!(dist, 0.2, epsilon = 1e-6);
 
         // Test identical vectors (should be 0)
         let point3 = &[1.0, 2.0, 3.0];

@@ -79,7 +79,10 @@ pub struct CloudClient {
 impl CloudClient {
     /// Create a new cloud client
     pub fn new(config: CloudConfig) -> Result<Self> {
-        let cache = DatasetCache::new()?;
+        let cache_dir = dirs::cache_dir()
+            .ok_or_else(|| DatasetsError::Other("Could not determine cache directory".to_string()))?
+            .join("scirs2-datasets");
+        let cache = DatasetCache::new(cache_dir);
         let external_client = ExternalClient::new()?;
 
         Ok(Self {
@@ -93,7 +96,7 @@ impl CloudClient {
     pub fn load_dataset(&self, key: &str) -> Result<Dataset> {
         // Check cache first
         let cache_key = format!("cloud_{}_{}", self.config.bucket, key);
-        if let Ok(cached_data) = self.cache.get(&cache_key) {
+        if let Ok(cached_data) = self.cache.read_cached(&cache_key) {
             return self.parse_cached_data(&cached_data);
         }
 
@@ -109,7 +112,7 @@ impl CloudClient {
 
         // Cache the result
         if let Ok(serialized) = serde_json::to_vec(&dataset) {
-            let _ = self.cache.put(&cache_key, &serialized);
+            let _ = self.cache.write_cached(&cache_key, &serialized);
         }
 
         Ok(dataset)

@@ -4,9 +4,12 @@
 //! including skewness and kurtosis, using scirs2-core's unified SIMD operations.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{ArrayBase, ArrayView1, Data, Ix1, Array1};
-use num_traits::{Float, NumCast, Zero, One};
-use scirs2_core::{simd_ops::{SimdUnifiedOps, AutoOptimizer}, validation::*};
+use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1};
+use num_traits::{Float, NumCast, One, Zero};
+use scirs2_core::{
+    simd_ops::{AutoOptimizer, SimdUnifiedOps},
+    validation::*,
+};
 
 /// SIMD-optimized skewness calculation
 ///
@@ -37,7 +40,7 @@ where
     D: Data<Elem = F>,
 {
     check_array_finite(x, "x")?;
-    
+
     if x.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Empty array provided".to_string(),
@@ -108,7 +111,7 @@ where
     D: Data<Elem = F>,
 {
     check_array_finite(x, "x")?;
-    
+
     if x.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Empty array provided".to_string(),
@@ -158,9 +161,10 @@ where
         let n1 = n_f - F::one();
         let n2 = n_f - F::from(2.0).unwrap();
         let n3 = n_f - F::from(3.0).unwrap();
-        
+
         // For sample kurtosis: k = ((n+1)*k - 3*(n-1)) * (n-1) / ((n-2)*(n-3)) + 3
-        k = ((n_f + F::one()) * k - F::from(3.0).unwrap() * n1) * n1 / (n2 * n3) + F::from(3.0).unwrap();
+        k = ((n_f + F::one()) * k - F::from(3.0).unwrap() * n1) * n1 / (n2 * n3)
+            + F::from(3.0).unwrap();
     }
 
     // Apply Fisher's definition (excess kurtosis)
@@ -190,7 +194,7 @@ where
     D: Data<Elem = F>,
 {
     check_array_finite(x, "x")?;
-    
+
     if x.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Empty array provided".to_string(),
@@ -247,16 +251,16 @@ where
 ///
 /// * Vector of computed moments in the same order as requested
 pub fn moments_batch_simd<F, D>(
-    x: &ArrayBase<D, Ix1>, 
-    moments: &[usize], 
-    center: bool
+    x: &ArrayBase<D, Ix1>,
+    moments: &[usize],
+    center: bool,
 ) -> StatsResult<Vec<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync,
     D: Data<Elem = F>,
 {
     check_array_finite(x, "x")?;
-    
+
     if x.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Empty array provided".to_string(),
@@ -318,20 +322,20 @@ where
 {
     // Create mean array for SIMD subtraction
     let mean_array = Array1::from_elem(n, mean);
-    
+
     // Compute deviations: x - mean
     let deviations = F::simd_sub(&x.view(), &mean_array.view());
-    
+
     // Compute squared deviations
     let sq_deviations = F::simd_mul(&deviations.view(), &deviations.view());
-    
+
     // Compute cubed deviations
     let cubed_deviations = F::simd_mul(&sq_deviations.view(), &deviations.view());
-    
+
     // Sum the moments
     let sum_sq_dev = F::simd_sum(&sq_deviations.view());
     let sum_cubed_dev = F::simd_sum(&cubed_deviations.view());
-    
+
     (sum_sq_dev, sum_cubed_dev)
 }
 
@@ -360,20 +364,20 @@ where
 {
     // Create mean array for SIMD subtraction
     let mean_array = Array1::from_elem(n, mean);
-    
+
     // Compute deviations: x - mean
     let deviations = F::simd_sub(&x.view(), &mean_array.view());
-    
+
     // Compute squared deviations
     let sq_deviations = F::simd_mul(&deviations.view(), &deviations.view());
-    
+
     // Compute fourth power deviations
     let fourth_deviations = F::simd_mul(&sq_deviations.view(), &sq_deviations.view());
-    
+
     // Sum the moments
     let sum_sq_dev = F::simd_sum(&sq_deviations.view());
     let sum_fourth_dev = F::simd_sum(&fourth_deviations.view());
-    
+
     (sum_sq_dev, sum_fourth_dev)
 }
 
@@ -402,10 +406,10 @@ where
 {
     let n = x.len();
     let mean_array = Array1::from_elem(n, mean);
-    
+
     // Compute deviations
     let deviations = F::simd_sub(&x.view(), &mean_array.view());
-    
+
     // Compute power of deviations
     match order {
         1 => F::simd_sum(&deviations.view()),
@@ -488,41 +492,46 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::descriptive::{kurtosis, moment, skew};
     use ndarray::array;
-    use crate::descriptive::{skew, kurtosis, moment};
 
     #[test]
     fn test_skewness_simd_consistency() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-        
+
         let simd_result = skewness_simd(&data.view(), false).unwrap();
         let scalar_result = skew(&data.view(), false).unwrap();
-        
+
         assert!((simd_result - scalar_result).abs() < 1e-10);
     }
 
     #[test]
     fn test_kurtosis_simd_consistency() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-        
+
         let simd_result = kurtosis_simd(&data.view(), true, false).unwrap();
         let scalar_result = kurtosis(&data.view(), true, false).unwrap();
-        
+
         assert!((simd_result - scalar_result).abs() < 1e-10);
     }
 
     #[test]
     fn test_moment_simd_consistency() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-        
+
         for order in 1..=4 {
             for center in [true, false] {
                 let simd_result = moment_simd(&data.view(), order, center).unwrap();
                 let scalar_result = moment(&data.view(), order, center).unwrap();
-                
-                assert!((simd_result - scalar_result).abs() < 1e-10,
-                    "Mismatch for order {} center {}: SIMD {} vs Scalar {}", 
-                    order, center, simd_result, scalar_result);
+
+                assert!(
+                    (simd_result - scalar_result).abs() < 1e-10,
+                    "Mismatch for order {} center {}: SIMD {} vs Scalar {}",
+                    order,
+                    center,
+                    simd_result,
+                    scalar_result
+                );
             }
         }
     }
@@ -531,9 +540,9 @@ mod tests {
     fn test_moments_batch_simd() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let orders = vec![1, 2, 3, 4];
-        
+
         let batch_results = moments_batch_simd(&data.view(), &orders, true).unwrap();
-        
+
         for (i, &order) in orders.iter().enumerate() {
             let individual_result = moment_simd(&data.view(), order, true).unwrap();
             assert!((batch_results[i] - individual_result).abs() < 1e-10);

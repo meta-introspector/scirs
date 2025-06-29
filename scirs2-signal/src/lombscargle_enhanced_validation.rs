@@ -14,7 +14,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
 use crate::lombscargle_validation::{
-    validate_analytical_cases, validate_numerical_stability, ValidationResult,
+    validate_analytical_cases, ValidationResult,
 };
 use ndarray::{Array1, Array2};
 use num_traits::Float;

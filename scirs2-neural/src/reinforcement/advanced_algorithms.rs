@@ -250,7 +250,7 @@ impl TD3 {
     /// Sample noise for exploration or target smoothing
     fn sample_noise(&self, size: usize, std: f32) -> Array1<f32> {
         use rand_distr::{Distribution, Normal};
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let normal = Normal::new(0.0, std).unwrap();
 
         Array1::from_shape_fn(size, |_| normal.sample(&mut rng))

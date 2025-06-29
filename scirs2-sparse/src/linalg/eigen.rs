@@ -3,6 +3,10 @@
 // This module provides specialized eigenpair (eigenvalue and eigenvector)
 // solvers for sparse matrices, with optimizations for symmetric matrices.
 
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use crate::sym_csr::SymCsrMatrix;
@@ -143,9 +147,9 @@ where
         + Sub<Output = T>
         + Mul<Output = T>
         + Div<Output = T>
-        + std::iter::Sum 
-        + scirs2_core::simd_ops::SimdUnifiedOps 
-        + Send 
+        + std::iter::Sum
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
         + Sync,
 {
     let (n, _) = matrix.shape();
@@ -311,6 +315,7 @@ where
 /// println!("Final residuals: {:?}", result.residuals);
 /// assert!(result.converged);
 /// ```
+#[allow(unused_assignments)]
 pub fn lanczos<T>(
     matrix: &SymCsrMatrix<T>,
     options: &LanczosOptions,
@@ -324,9 +329,9 @@ where
         + Sub<Output = T>
         + Mul<Output = T>
         + Div<Output = T>
-        + std::iter::Sum 
-        + scirs2_core::simd_ops::SimdUnifiedOps 
-        + Send 
+        + std::iter::Sum
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
         + Sync,
 {
     let (n, _) = matrix.shape();
@@ -414,7 +419,7 @@ where
         w = sym_csr_matvec(matrix, &v_next.view())?;
 
         // Full reorthogonalization (for numerical stability)
-        for (j, v_j) in v_vectors.iter().enumerate() {
+        for v_j in v_vectors.iter() {
             let proj = v_j
                 .iter()
                 .zip(w.iter())
@@ -458,7 +463,7 @@ where
 
         // Update beta for next iteration
         if iter < options.max_iter && alpha.len() < subspace_size {
-            let beta_j = beta_j_next;
+            let _beta_j = beta_j_next;
         }
     }
 
@@ -639,7 +644,7 @@ where
                 s = f / r;
                 c = g / r;
 
-                let h = g * p;
+                let _h = g * p;
                 p = s * (d[i] - d[i + 1]) + c * b;
                 d[i + 1] = d[i + 1] + p;
                 g = c * s - b;
@@ -698,6 +703,7 @@ where
 }
 
 /// Solves a small (n ≤ 3) symmetric tridiagonal eigenvalue problem.
+#[allow(unused_assignments)]
 fn solve_small_tridiagonal<T>(
     alpha: &[T],
     beta: &[T],
@@ -1122,9 +1128,9 @@ where
         + Mul<Output = T>
         + Div<Output = T>
         + 'static
-        + std::iter::Sum 
-        + scirs2_core::simd_ops::SimdUnifiedOps 
-        + Send 
+        + std::iter::Sum
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
         + Sync,
     S: SparseArray<T>,
 {
@@ -1188,9 +1194,9 @@ where
         + Sub<Output = T>
         + Mul<Output = T>
         + Div<Output = T>
-        + std::iter::Sum 
-        + scirs2_core::simd_ops::SimdUnifiedOps 
-        + Send 
+        + std::iter::Sum
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
         + Sync,
 {
     let opts = options.unwrap_or_default();
@@ -1223,9 +1229,9 @@ where
         + Sub<Output = T>
         + Mul<Output = T>
         + Div<Output = T>
-        + std::iter::Sum 
-        + scirs2_core::simd_ops::SimdUnifiedOps 
-        + Send 
+        + std::iter::Sum
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
         + Sync,
 {
     let n = matrix.shape().0;
@@ -1347,9 +1353,9 @@ where
         + Mul<Output = T>
         + Div<Output = T>
         + 'static
-        + std::iter::Sum 
-        + scirs2_core::simd_ops::SimdUnifiedOps 
-        + Send 
+        + std::iter::Sum
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
         + Sync,
     S: SparseArray<T>,
 {

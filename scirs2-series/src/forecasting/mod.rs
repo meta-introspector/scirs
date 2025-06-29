@@ -1551,7 +1551,7 @@ pub mod ensemble {
     use ndarray::Array1;
     use num_traits::{Float, FromPrimitive};
     use std::fmt::Debug;
-    
+
     /// Configuration for ensemble forecasting
     #[derive(Debug, Clone)]
     pub struct EnsembleConfig {
@@ -1630,7 +1630,9 @@ pub mod ensemble {
 
         if config.use_exp_smoothing {
             let params = super::ExpSmoothingParams::default();
-            if let Ok(forecast) = super::exponential_smoothing_forecast(data, &params, config.horizon) {
+            if let Ok(forecast) =
+                super::exponential_smoothing_forecast(data, &params, config.horizon)
+            {
                 individual_forecasts.push(forecast.forecast);
                 model_names.push("ExponentialSmoothing".to_string());
             }
@@ -1670,14 +1672,15 @@ pub mod ensemble {
         }
 
         // Determine weights
-        let weights = if config.weights.is_empty() || config.weights.len() != individual_forecasts.len() {
-            // Equal weights
-            vec![1.0 / individual_forecasts.len() as f64; individual_forecasts.len()]
-        } else {
-            // Normalize provided weights
-            let sum: f64 = config.weights.iter().sum();
-            config.weights.iter().map(|w| w / sum).collect()
-        };
+        let weights =
+            if config.weights.is_empty() || config.weights.len() != individual_forecasts.len() {
+                // Equal weights
+                vec![1.0 / individual_forecasts.len() as f64; individual_forecasts.len()]
+            } else {
+                // Normalize provided weights
+                let sum: f64 = config.weights.iter().sum();
+                config.weights.iter().map(|w| w / sum).collect()
+            };
 
         // Combine forecasts using weighted average
         let mut ensemble_forecast = Array1::zeros(config.horizon);
@@ -1712,7 +1715,7 @@ pub mod ensemble {
                 variance = variance / F::from_usize(count).unwrap();
                 let std_dev = variance.sqrt();
                 let margin = std_dev * F::from_f64(1.96).unwrap(); // 95% CI
-                
+
                 lower_ci[j] = mean - margin;
                 upper_ci[j] = mean + margin;
             } else {
@@ -1759,7 +1762,9 @@ pub mod ensemble {
         // Generate and evaluate forecasts from different models
         if config.use_moving_average {
             let window = std::cmp::min(12, train_data.len() / 2);
-            if let Ok(forecast) = super::moving_average_forecast(&train_data, window, config.horizon) {
+            if let Ok(forecast) =
+                super::moving_average_forecast(&train_data, window, config.horizon)
+            {
                 let error = calculate_mse(&forecast.forecast, &validation_data);
                 individual_forecasts.push(forecast.forecast);
                 model_names.push("MovingAverage".to_string());
@@ -1769,7 +1774,9 @@ pub mod ensemble {
 
         if config.use_exp_smoothing {
             let params = super::ExpSmoothingParams::default();
-            if let Ok(forecast) = super::exponential_smoothing_forecast(&train_data, &params, config.horizon) {
+            if let Ok(forecast) =
+                super::exponential_smoothing_forecast(&train_data, &params, config.horizon)
+            {
                 let error = calculate_mse(&forecast.forecast, &validation_data);
                 individual_forecasts.push(forecast.forecast);
                 model_names.push("ExponentialSmoothing".to_string());
@@ -1785,7 +1792,8 @@ pub mod ensemble {
                 seasonal_period: Some(12),
                 ..Default::default()
             };
-            if let Ok(forecast) = super::holt_winters_forecast(&train_data, &params, config.horizon) {
+            if let Ok(forecast) = super::holt_winters_forecast(&train_data, &params, config.horizon)
+            {
                 let error = calculate_mse(&forecast.forecast, &validation_data);
                 individual_forecasts.push(forecast.forecast);
                 model_names.push("HoltWinters".to_string());
@@ -1826,7 +1834,7 @@ pub mod ensemble {
 
         // Generate final forecasts on full data
         let mut final_forecasts = Vec::new();
-        
+
         if config.use_moving_average && model_names.contains(&"MovingAverage".to_string()) {
             let window = std::cmp::min(12, data.len() / 2);
             if let Ok(forecast) = super::moving_average_forecast(data, window, config.horizon) {
@@ -1836,7 +1844,9 @@ pub mod ensemble {
 
         if config.use_exp_smoothing && model_names.contains(&"ExponentialSmoothing".to_string()) {
             let params = super::ExpSmoothingParams::default();
-            if let Ok(forecast) = super::exponential_smoothing_forecast(data, &params, config.horizon) {
+            if let Ok(forecast) =
+                super::exponential_smoothing_forecast(data, &params, config.horizon)
+            {
                 final_forecasts.push(forecast.forecast);
             }
         }
@@ -1900,7 +1910,7 @@ pub mod ensemble {
                 variance = variance / F::from_usize(count).unwrap();
                 let std_dev = variance.sqrt();
                 let margin = std_dev * F::from_f64(1.96).unwrap();
-                
+
                 lower_ci[j] = mean - margin;
                 upper_ci[j] = mean + margin;
             } else {
@@ -1938,39 +1948,59 @@ pub mod ensemble {
         // Use cross-validation approach for stacking
         let cv_folds = 3;
         let fold_size = data.len() / cv_folds;
-        
+
         let mut all_predictions = Vec::new();
         let mut all_targets = Vec::new();
         let mut model_names = Vec::new();
 
         // Collect model names first
-        if config.use_moving_average { model_names.push("MovingAverage".to_string()); }
-        if config.use_exp_smoothing { model_names.push("ExponentialSmoothing".to_string()); }
-        if config.use_holt_winters { model_names.push("HoltWinters".to_string()); }
-        if config.use_arima { model_names.push("ARIMA".to_string()); }
+        if config.use_moving_average {
+            model_names.push("MovingAverage".to_string());
+        }
+        if config.use_exp_smoothing {
+            model_names.push("ExponentialSmoothing".to_string());
+        }
+        if config.use_holt_winters {
+            model_names.push("HoltWinters".to_string());
+        }
+        if config.use_arima {
+            model_names.push("ARIMA".to_string());
+        }
 
         // Cross-validation to generate out-of-sample predictions
         for fold in 0..cv_folds {
             let test_start = fold * fold_size;
-            let test_end = if fold == cv_folds - 1 { data.len() } else { (fold + 1) * fold_size };
-            
-            if test_start >= data.len() - 1 { continue; }
-            
+            let test_end = if fold == cv_folds - 1 {
+                data.len()
+            } else {
+                (fold + 1) * fold_size
+            };
+
+            if test_start >= data.len() - 1 {
+                continue;
+            }
+
             let train_data = if test_start == 0 {
                 data.slice(ndarray::s![test_end..]).to_owned()
             } else {
                 let mut train_part1 = data.slice(ndarray::s![..test_start]).to_owned();
                 let train_part2 = data.slice(ndarray::s![test_end..]).to_owned();
                 let mut combined = Array1::zeros(train_part1.len() + train_part2.len());
-                combined.slice_mut(ndarray::s![..train_part1.len()]).assign(&train_part1);
-                combined.slice_mut(ndarray::s![train_part1.len()..]).assign(&train_part2);
+                combined
+                    .slice_mut(ndarray::s![..train_part1.len()])
+                    .assign(&train_part1);
+                combined
+                    .slice_mut(ndarray::s![train_part1.len()..])
+                    .assign(&train_part2);
                 combined
             };
 
             let test_data = data.slice(ndarray::s![test_start..test_end]).to_owned();
             let horizon = test_data.len();
 
-            if train_data.len() < 10 { continue; }
+            if train_data.len() < 10 {
+                continue;
+            }
 
             let mut fold_predictions = Vec::new();
 
@@ -1986,7 +2016,9 @@ pub mod ensemble {
 
             if config.use_exp_smoothing {
                 let params = super::ExpSmoothingParams::default();
-                if let Ok(forecast) = super::exponential_smoothing_forecast(&train_data, &params, horizon) {
+                if let Ok(forecast) =
+                    super::exponential_smoothing_forecast(&train_data, &params, horizon)
+                {
                     fold_predictions.push(forecast.forecast);
                 } else {
                     fold_predictions.push(Array1::zeros(horizon));
@@ -2055,7 +2087,7 @@ pub mod ensemble {
             // Simple linear regression to find optimal weights
             if X.len() > num_models && X.iter().all(|row| row.len() == num_models) {
                 weights = solve_linear_regression(&X, &y);
-                
+
                 // Ensure weights are non-negative and sum to 1
                 let mut sum = weights.iter().sum::<f64>();
                 if sum <= 0.0 {
@@ -2078,7 +2110,7 @@ pub mod ensemble {
 
         // Generate final forecasts using learned weights
         let mut final_forecasts = Vec::new();
-        
+
         if config.use_moving_average {
             let window = std::cmp::min(12, data.len() / 2);
             if let Ok(forecast) = super::moving_average_forecast(data, window, config.horizon) {
@@ -2088,7 +2120,9 @@ pub mod ensemble {
 
         if config.use_exp_smoothing {
             let params = super::ExpSmoothingParams::default();
-            if let Ok(forecast) = super::exponential_smoothing_forecast(data, &params, config.horizon) {
+            if let Ok(forecast) =
+                super::exponential_smoothing_forecast(data, &params, config.horizon)
+            {
                 final_forecasts.push(forecast.forecast);
             }
         }
@@ -2152,7 +2186,7 @@ pub mod ensemble {
                 variance = variance / F::from_usize(count).unwrap();
                 let std_dev = variance.sqrt();
                 let margin = std_dev * F::from_f64(1.96).unwrap();
-                
+
                 lower_ci[j] = mean - margin;
                 upper_ci[j] = mean + margin;
             } else {
@@ -2191,7 +2225,7 @@ pub mod ensemble {
     fn solve_linear_regression(X: &[Vec<f64>], y: &[f64]) -> Vec<f64> {
         let n = X.len();
         let m = if n > 0 { X[0].len() } else { 0 };
-        
+
         if n == 0 || m == 0 || n != y.len() {
             return vec![1.0 / m.max(1) as f64; m.max(1)];
         }
@@ -2204,26 +2238,26 @@ pub mod ensemble {
 
         for _ in 0..iterations {
             let mut gradients = vec![0.0; m];
-            
+
             for i in 0..n {
                 let mut prediction = 0.0;
                 for j in 0..m {
                     prediction += weights[j] * X[i][j];
                 }
-                
+
                 let error = prediction - y[i];
-                
+
                 for j in 0..m {
                     gradients[j] += (2.0 / n as f64) * error * X[i][j];
                 }
             }
-            
+
             // Update weights
             for j in 0..m {
                 weights[j] -= learning_rate * gradients[j];
                 weights[j] = weights[j].max(0.0); // Non-negative constraint
             }
-            
+
             // Normalize weights
             let sum: f64 = weights.iter().sum();
             if sum > 0.0 {

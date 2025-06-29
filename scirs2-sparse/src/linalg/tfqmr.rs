@@ -4,6 +4,10 @@
 //! without requiring the transpose of the coefficient matrix. It's related to
 //! BiCGSTAB but uses a different update strategy.
 
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};

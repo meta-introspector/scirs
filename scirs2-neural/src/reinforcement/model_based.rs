@@ -183,7 +183,7 @@ impl MPC {
     /// Sample a random action sequence
     fn sample_action_sequence(&self) -> Result<Vec<Array1<f32>>> {
         use rand_distr::{Distribution, Uniform};
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut sequence = Vec::with_capacity(self.horizon);
 
         for _ in 0..self.horizon {
@@ -361,7 +361,7 @@ impl ModelBuffer {
 
     fn sample(&self, batch_size: usize) -> Result<ModelBatch> {
         use rand::seq::SliceRandom;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let indices: Vec<usize> = (0..self.len())
             .collect::<Vec<_>>()
