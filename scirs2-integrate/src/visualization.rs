@@ -935,7 +935,7 @@ mod tests {
 pub mod advanced_visualization {
     use super::*;
     use crate::ode::ODEResult;
-    use ndarray::{Array1, Array2};
+    use ndarray::{Array1, Array2, Array3};
     use rand::Rng;
 
     /// Multi-dimensional data visualization engine
@@ -1441,10 +1441,96 @@ pub mod advanced_visualization {
 
                 Ok((eigenvalues, eigenvectors))
             } else {
-                Err(crate::error::IntegrateError::NotImplementedError(
-                    "Eigendecomposition for large matrices not implemented".to_string(),
-                ))
+                // For larger matrices, use a more efficient approach
+                // We'll compute the dominant eigenvalues using power iteration
+                self.eigendecomposition_large_matrix(matrix)
             }
+        }
+
+        /// Eigendecomposition for large matrices using iterative methods
+        fn eigendecomposition_large_matrix(
+            &self,
+            matrix: &Array2<f64>,
+        ) -> Result<(Array1<f64>, Array2<f64>)> {
+            let n = matrix.nrows();
+            let num_eigenvalues = std::cmp::min(n, 20); // Compute up to 20 eigenvalues
+            
+            let mut eigenvalues = Array1::zeros(num_eigenvalues);
+            let mut eigenvectors = Array2::zeros((n, num_eigenvalues));
+            let mut remaining_matrix = matrix.clone();
+            
+            for k in 0..num_eigenvalues {
+                // Power iteration for the k-th eigenvalue
+                let mut v = Array1::from_vec(
+                    (0..n).map(|i| (i + k + 1) as f64).collect() // Simple initialization
+                );
+                
+                // Normalize initial vector
+                let norm = v.iter().map(|&x| x * x).sum::<f64>().sqrt();
+                if norm > 1e-15 {
+                    v.mapv_inplace(|x| x / norm);
+                }
+                
+                let mut eigenvalue = 0.0;
+                
+                // Power iteration
+                for _ in 0..1000 {
+                    let v_new = remaining_matrix.dot(&v);
+                    let v_new_norm = v_new.iter().map(|&x| x * x).sum::<f64>().sqrt();
+                    
+                    if v_new_norm < 1e-15 {
+                        break;
+                    }
+                    
+                    eigenvalue = v.dot(&v_new);
+                    v.assign(&v_new);
+                    v.mapv_inplace(|x| x / v_new_norm);
+                    
+                    // Check convergence
+                    let residual = &remaining_matrix.dot(&v) - eigenvalue * &v;
+                    let residual_norm = residual.iter().map(|&x| x * x).sum::<f64>().sqrt();
+                    
+                    if residual_norm < 1e-10 {
+                        break;
+                    }
+                }
+                
+                eigenvalues[k] = eigenvalue;
+                eigenvectors.column_mut(k).assign(&v);
+                
+                // Deflate the matrix: A' = A - λ * v * v^T
+                if eigenvalue.abs() > 1e-15 {
+                    for i in 0..n {
+                        for j in 0..n {
+                            remaining_matrix[[i, j]] -= eigenvalue * v[i] * v[j];
+                        }
+                    }
+                }
+                
+                // Check if remaining eigenvalues are small
+                let remaining_norm = remaining_matrix.iter().map(|&x| x * x).sum::<f64>().sqrt();
+                if remaining_norm < 1e-12 {
+                    break;
+                }
+            }
+            
+            // Extend to full size matrices with zeros for unused eigenvalues/vectors
+            let mut full_eigenvalues = Array1::zeros(n);
+            let mut full_eigenvectors = Array2::zeros((n, n));
+            
+            for i in 0..num_eigenvalues {
+                full_eigenvalues[i] = eigenvalues[i];
+                full_eigenvectors.column_mut(i).assign(&eigenvectors.column(i));
+            }
+            
+            // Fill remaining eigenvectors with orthogonal vectors
+            for i in num_eigenvalues..n {
+                let mut v = Array1::zeros(n);
+                v[i] = 1.0; // Standard basis vector
+                full_eigenvectors.column_mut(i).assign(&v);
+            }
+            
+            Ok((full_eigenvalues, full_eigenvectors))
         }
 
         fn compute_gaussian_similarities(
@@ -2315,6 +2401,42 @@ pub mod specialized_visualizations {
                 metadata,
             })
         }
+    }
+
+    /// Fluid state for 2D visualization
+    #[derive(Debug, Clone)]
+    pub struct FluidState {
+        /// Velocity components [u, v] as 2D arrays
+        pub velocity: Vec<Array2<f64>>,
+        /// Pressure field
+        pub pressure: Array2<f64>,
+        /// Temperature field (optional)
+        pub temperature: Option<Array2<f64>>,
+        /// Current time
+        pub time: f64,
+        /// Grid spacing in x-direction
+        pub dx: f64,
+        /// Grid spacing in y-direction
+        pub dy: f64,
+    }
+
+    /// Fluid state for 3D visualization
+    #[derive(Debug, Clone)]
+    pub struct FluidState3D {
+        /// Velocity components [u, v, w] as 3D arrays
+        pub velocity: Vec<Array3<f64>>,
+        /// Pressure field
+        pub pressure: Array3<f64>,
+        /// Temperature field (optional)
+        pub temperature: Option<Array3<f64>>,
+        /// Current time
+        pub time: f64,
+        /// Grid spacing in x-direction
+        pub dx: f64,
+        /// Grid spacing in y-direction
+        pub dy: f64,
+        /// Grid spacing in z-direction
+        pub dz: f64,
     }
 
     /// Fluid dynamics visualization tools

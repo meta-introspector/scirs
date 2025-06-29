@@ -3,10 +3,10 @@
 //! This module provides tools for benchmarking dataset operations against scikit-learn
 //! and other reference implementations to measure performance improvements.
 
-use crate::error::{DatasetsError, Result};
 use crate::generators::*;
 use crate::loaders::{load_csv, load_csv_parallel, CsvConfig, StreamingConfig};
-use crate::toy::*;
+use crate::sample::load_wine;
+use crate::toy::{load_diabetes, *};
 use crate::utils::Dataset;
 use std::collections::HashMap;
 use std::path::Path;
@@ -347,7 +347,7 @@ impl BenchmarkRunner {
 
         // Benchmark wine dataset
         let wine_params = HashMap::from([("dataset".to_string(), "wine".to_string())]);
-        let wine_result = self.run_benchmark("load_wine", wine_params, || match load_wine() {
+        let wine_result = self.run_benchmark("load_wine", wine_params, || match load_wine(false) {
             Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
             Err(e) => Err(format!("Failed to load wine: {}", e)),
         });

@@ -320,7 +320,7 @@ impl EnhancedImageProcessor {
         // Process image in rows for better cache locality and SIMD efficiency
         for y in 0..height {
             // Extract row data for SIMD processing
-            let row_size = width * 3;
+            let _row_size = width * 3;
             let mut r_values = vec![0f32; width];
             let mut g_values = vec![0f32; width];
             let mut b_values = vec![0f32; width];
@@ -339,9 +339,9 @@ impl EnhancedImageProcessor {
 
             // Use SIMD operations for luminance calculation
             // First multiply each channel by its coefficient
-            let mut r_weighted = vec![0f32; width];
-            let mut g_weighted = vec![0f32; width];
-            let mut b_weighted = vec![0f32; width];
+            let _r_weighted = vec![0f32; width];
+            let _g_weighted = vec![0f32; width];
+            let _b_weighted = vec![0f32; width];
 
             let r_values_view = ArrayView1::from(&r_values);
             let g_values_view = ArrayView1::from(&g_values);

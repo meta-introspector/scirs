@@ -14,7 +14,6 @@ use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-#[cfg(feature = "parallel")]
 /// Stress test configuration
 #[derive(Debug, Clone)]
 pub struct StressTestConfig {

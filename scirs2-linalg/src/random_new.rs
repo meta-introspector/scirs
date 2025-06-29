@@ -54,6 +54,14 @@ use scirs2_core::validation::{check_in_bounds, check_positive, check_probability
 use crate::decomposition::qr;
 // Temporarily removing validation imports to fix compilation
 
+/// Helper function to create an RNG with optional seed
+fn create_rng(seed: Option<u64>) -> Random {
+    match seed {
+        Some(s) => Random::with_seed(s),
+        None => Random::default(),
+    }
+}
+
 // Helper macro to handle both seeded and unseeded RNG creation
 macro_rules! with_rng {
     ($seed:expr, $body:expr) => {

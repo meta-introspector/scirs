@@ -4,7 +4,7 @@
 //! research and practice. These datasets come from various domains including finance,
 //! healthcare, natural language processing, computer vision, and more.
 
-use crate::cache::{CacheKey, CacheManager};
+use crate::cache::CacheManager;
 use crate::error::{DatasetsError, Result};
 use crate::registry::{DatasetMetadata, DatasetRegistry};
 use crate::utils::Dataset;
@@ -53,7 +53,7 @@ impl RealWorldDatasets {
     /// Create a new real-world datasets manager
     pub fn new(config: RealWorldConfig) -> Result<Self> {
         let cache = CacheManager::new()?;
-        let registry = DatasetRegistry::new()?;
+        let registry = DatasetRegistry::new();
 
         Ok(Self {
             cache,
@@ -245,11 +245,7 @@ impl RealWorldDatasets {
             ..Default::default()
         };
 
-        let dataset = Dataset {
-            data,
-            target: Some(target),
-            metadata,
-        };
+        let dataset = Dataset::from_metadata(data, Some(target), metadata);
 
         if self.config.use_cache {
             self.cache.put(&cache_key, &dataset)?;
@@ -291,11 +287,7 @@ impl RealWorldDatasets {
             ..Default::default()
         };
 
-        let dataset = Dataset {
-            data,
-            target: Some(target),
-            metadata,
-        };
+        let dataset = Dataset::from_metadata(data, Some(target), metadata);
 
         if self.config.use_cache {
             self.cache.put(&cache_key, &dataset)?;
@@ -320,11 +312,7 @@ impl RealWorldDatasets {
             ..Default::default()
         };
 
-        Ok(Dataset {
-            data,
-            target: Some(target),
-            metadata,
-        })
+        Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 }
 
@@ -356,11 +344,7 @@ impl RealWorldDatasets {
             ..Default::default()
         };
 
-        Ok(Dataset {
-            data,
-            target: Some(target),
-            metadata,
-        })
+        Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 
     /// Load Wine Quality dataset (Red Wine)
@@ -391,11 +375,7 @@ impl RealWorldDatasets {
             ..Default::default()
         };
 
-        Ok(Dataset {
-            data,
-            target: Some(target),
-            metadata,
-        })
+        Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 
     /// Load Energy Efficiency dataset
@@ -423,11 +403,7 @@ impl RealWorldDatasets {
             ..Default::default()
         };
 
-        Ok(Dataset {
-            data,
-            target: Some(target),
-            metadata,
-        })
+        Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 }
 
@@ -449,11 +425,7 @@ impl RealWorldDatasets {
             ..Default::default()
         };
 
-        Ok(Dataset {
-            data,
-            target,
-            metadata,
-        })
+        Ok(Dataset::from_metadata(data, target, metadata))
     }
 
     /// Load Bitcoin Prices dataset
@@ -479,11 +451,7 @@ impl RealWorldDatasets {
             ..Default::default()
         };
 
-        Ok(Dataset {
-            data,
-            target,
-            metadata,
-        })
+        Ok(Dataset::from_metadata(data, target, metadata))
     }
 }
 
@@ -520,11 +488,7 @@ impl RealWorldDatasets {
             ..Default::default()
         };
 
-        Ok(Dataset {
-            data,
-            target: Some(target),
-            metadata,
-        })
+        Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 
     /// Load Diabetes Readmission dataset
@@ -546,11 +510,7 @@ impl RealWorldDatasets {
             ..Default::default()
         };
 
-        Ok(Dataset {
-            data,
-            target: Some(target),
-            metadata,
-        })
+        Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 }
 
@@ -584,7 +544,7 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             for j in 0..n_features {
-                data[[i, j]] = rng.gen_range(0.0..1.0);
+                data[[i, j]] = rng.random_range(0.0..1.0);
             }
             // Simple rule: if sum of first 3 features > 1.5, then positive class
             target[i] = if data.row(i).iter().take(3).sum::<f64>() > 1.5 {
@@ -610,19 +570,19 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             // Pclass (1, 2, 3)
-            data[[i, 0]] = rng.gen_range(1.0..4.0).floor();
+            data[[i, 0]] = rng.random_range(1.0..4.0).floor();
             // Sex (0=female, 1=male)
             data[[i, 1]] = if rng.gen_bool(0.5) { 0.0 } else { 1.0 };
             // Age
-            data[[i, 2]] = rng.gen_range(1.0..80.0);
+            data[[i, 2]] = rng.random_range(1.0..80.0);
             // SibSp
-            data[[i, 3]] = rng.gen_range(0.0..6.0).floor();
+            data[[i, 3]] = rng.random_range(0.0..6.0).floor();
             // Parch
-            data[[i, 4]] = rng.gen_range(0.0..4.0).floor();
+            data[[i, 4]] = rng.random_range(0.0..4.0).floor();
             // Fare
-            data[[i, 5]] = rng.gen_range(0.0..512.0);
+            data[[i, 5]] = rng.random_range(0.0..512.0);
             // Embarked (0, 1, 2)
-            data[[i, 6]] = rng.gen_range(0.0..3.0).floor();
+            data[[i, 6]] = rng.random_range(0.0..3.0).floor();
 
             // Survival rule: higher class, female, younger = higher survival
             let survival_score = (4.0 - data[[i, 0]]) * 0.3 + // class
@@ -648,7 +608,7 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             for j in 0..n_features {
-                data[[i, j]] = rng.gen_range(0.0..1.0);
+                data[[i, j]] = rng.random_range(0.0..1.0);
             }
             // Credit scoring rule
             let score = data.row(i).iter().sum::<f64>() / n_features as f64;
@@ -671,21 +631,21 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             // Median income (0-15)
-            data[[i, 0]] = rng.gen_range(0.5..15.0);
+            data[[i, 0]] = rng.random_range(0.5..15.0);
             // House age (1-52)
-            data[[i, 1]] = rng.gen_range(1.0..52.0);
+            data[[i, 1]] = rng.random_range(1.0..52.0);
             // Average rooms (3-20)
-            data[[i, 2]] = rng.gen_range(3.0..20.0);
+            data[[i, 2]] = rng.random_range(3.0..20.0);
             // Average bedrooms (0.8-6)
-            data[[i, 3]] = rng.gen_range(0.8..6.0);
+            data[[i, 3]] = rng.random_range(0.8..6.0);
             // Population (3-35682)
-            data[[i, 4]] = rng.gen_range(3.0..35682.0);
+            data[[i, 4]] = rng.random_range(3.0..35682.0);
             // Average occupancy (0.7-1243)
-            data[[i, 5]] = rng.gen_range(0.7..1243.0);
+            data[[i, 5]] = rng.random_range(0.7..1243.0);
             // Latitude (32-42)
-            data[[i, 6]] = rng.gen_range(32.0..42.0);
+            data[[i, 6]] = rng.random_range(32.0..42.0);
             // Longitude (-124 to -114)
-            data[[i, 7]] = rng.gen_range(-124.0..-114.0);
+            data[[i, 7]] = rng.random_range(-124.0..-114.0);
 
             // House value based on income, rooms, and location
             let house_value = data[[i, 0]] * 50000.0 + // income effect
@@ -711,24 +671,24 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             // Wine quality features with realistic ranges
-            data[[i, 0]] = rng.gen_range(4.6..15.9); // fixed acidity
-            data[[i, 1]] = rng.gen_range(0.12..1.58); // volatile acidity
-            data[[i, 2]] = rng.gen_range(0.0..1.0); // citric acid
-            data[[i, 3]] = rng.gen_range(0.9..15.5); // residual sugar
-            data[[i, 4]] = rng.gen_range(0.012..0.611); // chlorides
-            data[[i, 5]] = rng.gen_range(1.0..72.0); // free sulfur dioxide
-            data[[i, 6]] = rng.gen_range(6.0..289.0); // total sulfur dioxide
-            data[[i, 7]] = rng.gen_range(0.99007..1.00369); // density
-            data[[i, 8]] = rng.gen_range(2.74..4.01); // pH
-            data[[i, 9]] = rng.gen_range(0.33..2.0); // sulphates
-            data[[i, 10]] = rng.gen_range(8.4..14.9); // alcohol
+            data[[i, 0]] = rng.random_range(4.6..15.9); // fixed acidity
+            data[[i, 1]] = rng.random_range(0.12..1.58); // volatile acidity
+            data[[i, 2]] = rng.random_range(0.0..1.0); // citric acid
+            data[[i, 3]] = rng.random_range(0.9..15.5); // residual sugar
+            data[[i, 4]] = rng.random_range(0.012..0.611); // chlorides
+            data[[i, 5]] = rng.random_range(1.0..72.0); // free sulfur dioxide
+            data[[i, 6]] = rng.random_range(6.0..289.0); // total sulfur dioxide
+            data[[i, 7]] = rng.random_range(0.99007..1.00369); // density
+            data[[i, 8]] = rng.random_range(2.74..4.01); // pH
+            data[[i, 9]] = rng.random_range(0.33..2.0); // sulphates
+            data[[i, 10]] = rng.random_range(8.4..14.9); // alcohol
 
             // Quality score (3-8) based on features
             let quality = 3.0 +
                         (data[[i, 10]] - 8.0) * 0.5 + // alcohol
                         (1.0 - data[[i, 1]]) * 2.0 + // volatile acidity (lower is better)
                         data[[i, 2]] * 2.0 + // citric acid
-                        rng.gen_range(-0.5..0.5); // noise
+                        rng.random_range(-0.5..0.5); // noise
 
             target[i] = quality.max(3.0).min(8.0);
         }
@@ -749,7 +709,7 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             for j in 0..n_features {
-                data[[i, j]] = rng.gen_range(0.0..1.0);
+                data[[i, j]] = rng.random_range(0.0..1.0);
             }
 
             // Energy efficiency score
@@ -790,12 +750,12 @@ impl RealWorldDatasets {
 
         for i in 0..n_timesteps {
             // Simulate price movement
-            let change = rng.gen_range(-0.05..0.05);
+            let change = rng.random_range(-0.05..0.05);
             price *= 1.0 + change;
 
-            let high = price * (1.0 + rng.gen_range(0.0..0.02));
-            let low = price * (1.0 - rng.gen_range(0.0..0.02));
-            let volume = rng.gen_range(1000000.0..10000000.0);
+            let high = price * (1.0 + rng.random_range(0.0..0.02));
+            let low = price * (1.0 - rng.random_range(0.0..0.02));
+            let volume = rng.random_range(1000000.0..10000000.0);
 
             data[[i, 0]] = price; // open
             data[[i, 1]] = high;
@@ -821,19 +781,19 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             // Age
-            data[[i, 0]] = rng.gen_range(29.0..77.0);
+            data[[i, 0]] = rng.random_range(29.0..77.0);
             // Sex (0=female, 1=male)
             data[[i, 1]] = if rng.gen_bool(0.68) { 1.0 } else { 0.0 };
             // Chest pain type (0-3)
-            data[[i, 2]] = rng.gen_range(0.0..4.0).floor();
+            data[[i, 2]] = rng.random_range(0.0..4.0).floor();
             // Resting blood pressure
-            data[[i, 3]] = rng.gen_range(94.0..200.0);
+            data[[i, 3]] = rng.random_range(94.0..200.0);
             // Cholesterol
-            data[[i, 4]] = rng.gen_range(126.0..564.0);
+            data[[i, 4]] = rng.random_range(126.0..564.0);
 
             // Fill other features
             for j in 5..n_features {
-                data[[i, j]] = rng.gen_range(0.0..1.0);
+                data[[i, j]] = rng.random_range(0.0..1.0);
             }
 
             // Heart disease prediction based on risk factors
@@ -861,7 +821,7 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             for j in 0..n_features {
-                data[[i, j]] = rng.gen_range(0.0..1.0);
+                data[[i, j]] = rng.random_range(0.0..1.0);
             }
 
             // Readmission prediction

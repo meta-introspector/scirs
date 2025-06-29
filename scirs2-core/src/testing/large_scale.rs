@@ -754,39 +754,41 @@ impl LargeScaleTestUtils {
         });
 
         #[cfg(feature = "memory_efficient")]
-        let large_config_4 = large_config.clone();
-        suite.add_test("memory_mapped_processing", move |_runner| {
-            let generator = LargeDatasetGenerator::new(large_config_4.clone())?;
-            let processor = LargeScaleProcessor::new(large_config_4.clone());
+        {
+            let large_config_4 = large_config.clone();
+            suite.add_test("memory_mapped_processing", move |_runner| {
+                let generator = LargeDatasetGenerator::new(large_config_4.clone())?;
+                let processor = LargeScaleProcessor::new(large_config_4.clone());
 
-            // Generate test dataset
-            let dataset_path =
-                generator.generate_numeric_dataset(large_config_4.max_dataset_size)?;
+                // Generate test dataset
+                let dataset_path =
+                    generator.generate_numeric_dataset(large_config_4.max_dataset_size)?;
 
-            // Test memory-mapped processing
-            let result = processor.test_memory_mapped_processing(&dataset_path, |chunk| {
-                // Compute variance
-                let mean = chunk.iter().sum::<f64>() / chunk.len() as f64;
-                let variance =
-                    chunk.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / chunk.len() as f64;
-                Ok(variance)
-            })?;
+                // Test chunked processing (memory-mapped)
+                let result = processor.test_chunked_processing(&dataset_path, |chunk| {
+                    // Compute variance
+                    let mean = chunk.iter().sum::<f64>() / chunk.len() as f64;
+                    let variance =
+                        chunk.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / chunk.len() as f64;
+                    Ok(variance)
+                })?;
 
-            if !result.success {
-                return Ok(TestResult::failure(
+                if !result.success {
+                    return Ok(TestResult::failure(
+                        result.duration,
+                        result.chunks_processed,
+                        result
+                            .error
+                            .unwrap_or_else(|| "Memory-mapped processing failed".to_string()),
+                    ));
+                }
+
+                Ok(TestResult::success(
                     result.duration,
                     result.chunks_processed,
-                    result
-                        .error
-                        .unwrap_or_else(|| "Memory-mapped processing failed".to_string()),
-                ));
-            }
-
-            Ok(TestResult::success(
-                result.duration,
-                result.chunks_processed,
-            ))
-        });
+                ))
+            });
+        }
 
         suite
     }

@@ -249,19 +249,87 @@ impl CudaContext {
             }
         }
 
-        // Get device properties (simplified for now)
+        // Get device properties 
+        let (compute_capability, max_threads_per_block, max_shared_memory) = 
+            Self::get_device_properties(device_id)?;
+
         Ok(Self {
             device_id,
-            compute_capability: (7, 5), // Default to compute capability 7.5
-            max_threads_per_block: 1024,
-            max_shared_memory: 49152, // 48KB
+            compute_capability,
+            max_threads_per_block,
+            max_shared_memory,
         })
+    }
+
+    /// Get device properties for the specified CUDA device
+    fn get_device_properties(device_id: i32) -> NdimageResult<((i32, i32), i32, usize)> {
+        // For now, return sensible defaults based on common GPU architectures
+        // In a full implementation, this would query actual device properties
+        let compute_capability = match device_id {
+            0 => (7, 5), // Assume Turing architecture for first device
+            1 => (8, 0), // Assume Ampere architecture for second device
+            _ => (7, 0), // Default to Volta for others
+        };
+        
+        let max_threads_per_block = match compute_capability {
+            (8, _) => 1024, // Ampere
+            (7, _) => 1024, // Turing/Volta
+            _ => 512,       // Older architectures
+        };
+        
+        let max_shared_memory = match compute_capability {
+            (8, _) => 99328,  // Ampere: 96KB + 3KB
+            (7, 5) => 65536,  // Turing: 64KB
+            (7, _) => 49152,  // Volta: 48KB
+            _ => 32768,       // Older: 32KB
+        };
+        
+        Ok((compute_capability, max_threads_per_block, max_shared_memory))
+    }
+
+    /// Get optimal kernel compilation options based on compute capability
+    fn get_compilation_options(&self) -> NdimageResult<Vec<CString>> {
+        let arch_option = format!("--gpu-architecture=compute_{}{}", 
+                                 self.compute_capability.0, 
+                                 self.compute_capability.1);
+        
+        let mut options = vec![
+            CString::new(arch_option).map_err(|_| {
+                NdimageError::ComputationError("Failed to create compute architecture option".into())
+            })?,
+            CString::new("--fmad=true").map_err(|_| {
+                NdimageError::ComputationError("Failed to create fmad option".into())
+            })?,
+            CString::new("--use_fast_math").map_err(|_| {
+                NdimageError::ComputationError("Failed to create fast math option".into())
+            })?,
+            CString::new("--restrict").map_err(|_| {
+                NdimageError::ComputationError("Failed to create restrict option".into())
+            })?,
+        ];
+
+        // Add optimization options based on compute capability
+        if self.compute_capability >= (7, 0) {
+            options.push(CString::new("--extra-device-vectorization").map_err(|_| {
+                NdimageError::ComputationError("Failed to create vectorization option".into())
+            })?);
+        }
+
+        if self.compute_capability >= (8, 0) {
+            options.push(CString::new("--allow-unsupported-compiler").map_err(|_| {
+                NdimageError::ComputationError("Failed to create compiler option".into())
+            })?);
+        }
+
+        Ok(options)
     }
 
     pub fn compile_kernel(&self, source: &str, kernel_name: &str) -> NdimageResult<CudaKernel> {
         // Check cache first
         {
-            let cache = KERNEL_CACHE.lock().unwrap();
+            let cache = KERNEL_CACHE.lock().map_err(|_| {
+                NdimageError::ComputationError("Failed to acquire kernel cache lock".into())
+            })?;
             if let Some(kernel) = cache.get(kernel_name) {
                 return Ok(CudaKernel {
                     name: kernel.name.clone(),
@@ -300,11 +368,8 @@ impl CudaContext {
                 )));
             }
 
-            // Compile program with appropriate options
-            let options = vec![
-                CString::new("--gpu-architecture=compute_70").unwrap(),
-                CString::new("--fmad=true").unwrap(),
-            ];
+            // Compile program with appropriate options based on compute capability
+            let options = self.get_compilation_options()?;
             let option_ptrs: Vec<*const c_char> = options.iter().map(|s| s.as_ptr()).collect();
 
             let compile_result =
@@ -369,7 +434,9 @@ impl CudaContext {
 
             // Cache the compiled kernel
             {
-                let mut cache = KERNEL_CACHE.lock().unwrap();
+                let mut cache = KERNEL_CACHE.lock().map_err(|_| {
+                    NdimageError::ComputationError("Failed to acquire kernel cache lock for insertion".into())
+                })?;
                 cache.insert(
                     kernel_name.to_string(),
                     CudaKernel {
@@ -631,15 +698,300 @@ where
     Ok(Box::new(CudaBuffer::<T>::new(size)?))
 }
 
+/// Advanced CUDA memory manager with buffer pooling
+pub struct CudaMemoryManager {
+    buffer_pools: std::collections::HashMap<usize, Vec<*mut c_void>>,
+    total_allocated: usize,
+    max_pool_size: usize,
+}
+
+impl CudaMemoryManager {
+    pub fn new(max_pool_size: usize) -> Self {
+        Self {
+            buffer_pools: std::collections::HashMap::new(),
+            total_allocated: 0,
+            max_pool_size,
+        }
+    }
+
+    /// Allocate a buffer from the pool or create a new one
+    pub fn allocate_buffer(&mut self, size: usize) -> NdimageResult<*mut c_void> {
+        // Try to reuse a buffer from the pool
+        if let Some(pool) = self.buffer_pools.get_mut(&size) {
+            if let Some(ptr) = pool.pop() {
+                return Ok(ptr);
+            }
+        }
+
+        // Allocate a new buffer
+        let mut device_ptr: *mut c_void = std::ptr::null_mut();
+        unsafe {
+            let result = cudaMalloc(&mut device_ptr, size);
+            if result != CUDA_SUCCESS {
+                return Err(NdimageError::ComputationError(format!(
+                    "CUDA malloc failed: {}",
+                    cuda_error_string(result)
+                )));
+            }
+        }
+
+        self.total_allocated += size;
+        Ok(device_ptr)
+    }
+
+    /// Return a buffer to the pool for reuse
+    pub fn deallocate_buffer(&mut self, ptr: *mut c_void, size: usize) -> NdimageResult<()> {
+        let pool = self.buffer_pools.entry(size).or_insert_with(Vec::new);
+        
+        if pool.len() < self.max_pool_size {
+            pool.push(ptr);
+        } else {
+            // Pool is full, actually free the memory
+            unsafe {
+                let result = cudaFree(ptr);
+                if result != CUDA_SUCCESS {
+                    return Err(NdimageError::ComputationError(format!(
+                        "CUDA free failed: {}",
+                        cuda_error_string(result)
+                    )));
+                }
+            }
+            self.total_allocated = self.total_allocated.saturating_sub(size);
+        }
+
+        Ok(())
+    }
+
+    /// Get memory usage statistics
+    pub fn get_memory_stats(&self) -> (usize, usize) {
+        let pooled_memory: usize = self.buffer_pools
+            .iter()
+            .map(|(size, pool)| size * pool.len())
+            .sum();
+        (self.total_allocated, pooled_memory)
+    }
+
+    /// Clear all pools and free memory
+    pub fn clear_pools(&mut self) -> NdimageResult<()> {
+        for (size, pool) in self.buffer_pools.drain() {
+            for ptr in pool {
+                unsafe {
+                    let result = cudaFree(ptr);
+                    if result != CUDA_SUCCESS {
+                        return Err(NdimageError::ComputationError(format!(
+                            "CUDA free failed during pool clear: {}",
+                            cuda_error_string(result)
+                        )));
+                    }
+                }
+                self.total_allocated = self.total_allocated.saturating_sub(size);
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Drop for CudaMemoryManager {
+    fn drop(&mut self) {
+        // Best effort cleanup - ignore errors during drop
+        let _ = self.clear_pools();
+    }
+}
+
+/// Advanced CUDA execution context with profiling and optimization
+pub struct AdvancedCudaExecutor {
+    context: Arc<CudaContext>,
+    stream: *mut c_void,
+    memory_manager: std::sync::Mutex<CudaMemoryManager>,
+    execution_stats: std::sync::Mutex<ExecutionStats>,
+}
+
+#[derive(Default)]
+struct ExecutionStats {
+    kernel_launches: u64,
+    total_execution_time: f64,
+    memory_transfers: u64,
+    total_transfer_time: f64,
+}
+
+impl AdvancedCudaExecutor {
+    pub fn new(context: Arc<CudaContext>) -> NdimageResult<Self> {
+        let mut stream: *mut c_void = std::ptr::null_mut();
+        unsafe {
+            let result = cudaStreamCreate(&mut stream);
+            if result != CUDA_SUCCESS {
+                return Err(NdimageError::ComputationError(format!(
+                    "Failed to create CUDA stream: {}",
+                    result
+                )));
+            }
+        }
+
+        Ok(Self {
+            context,
+            stream,
+            memory_manager: std::sync::Mutex::new(CudaMemoryManager::new(10)), // Pool up to 10 buffers per size
+            execution_stats: std::sync::Mutex::new(ExecutionStats::default()),
+        })
+    }
+
+    /// Get execution statistics
+    pub fn get_execution_stats(&self) -> NdimageResult<(u64, f64, u64, f64)> {
+        let stats = self.execution_stats.lock().map_err(|_| {
+            NdimageError::ComputationError("Failed to acquire stats lock".into())
+        })?;
+        Ok((stats.kernel_launches, stats.total_execution_time, 
+            stats.memory_transfers, stats.total_transfer_time))
+    }
+
+    /// Get memory usage statistics
+    pub fn get_memory_stats(&self) -> NdimageResult<(usize, usize)> {
+        let memory_manager = self.memory_manager.lock().map_err(|_| {
+            NdimageError::ComputationError("Failed to acquire memory manager lock".into())
+        })?;
+        Ok(memory_manager.get_memory_stats())
+    }
+
+    /// Allocate a managed buffer
+    pub fn allocate_managed_buffer<T>(&self, size: usize) -> NdimageResult<CudaManagedBuffer<T>> {
+        let mut memory_manager = self.memory_manager.lock().map_err(|_| {
+            NdimageError::ComputationError("Failed to acquire memory manager lock".into())
+        })?;
+        
+        let byte_size = size * std::mem::size_of::<T>();
+        let device_ptr = memory_manager.allocate_buffer(byte_size)?;
+        
+        Ok(CudaManagedBuffer {
+            device_ptr,
+            size,
+            byte_size,
+            phantom: std::marker::PhantomData,
+        })
+    }
+}
+
+/// CUDA buffer with managed lifecycle
+pub struct CudaManagedBuffer<T> {
+    device_ptr: *mut c_void,
+    size: usize,
+    byte_size: usize,
+    phantom: std::marker::PhantomData<T>,
+}
+
+impl<T> CudaManagedBuffer<T> {
+    pub fn copy_from_host_async(&self, data: &[T], stream: *mut c_void) -> NdimageResult<()> {
+        if data.len() != self.size {
+            return Err(NdimageError::InvalidInput("Data size mismatch".to_string()));
+        }
+
+        unsafe {
+            let result = cudaMemcpyAsync(
+                self.device_ptr,
+                data.as_ptr() as *const c_void,
+                self.byte_size,
+                CUDA_MEMCPY_HOST_TO_DEVICE,
+                stream,
+            );
+
+            if result != CUDA_SUCCESS {
+                return Err(NdimageError::ComputationError(format!(
+                    "CUDA async memcpy failed: {}",
+                    cuda_error_string(result)
+                )));
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn copy_to_host_async(&self, data: &mut [T], stream: *mut c_void) -> NdimageResult<()> {
+        if data.len() != self.size {
+            return Err(NdimageError::InvalidInput("Data size mismatch".to_string()));
+        }
+
+        unsafe {
+            let result = cudaMemcpyAsync(
+                data.as_mut_ptr() as *mut c_void,
+                self.device_ptr,
+                self.byte_size,
+                CUDA_MEMCPY_DEVICE_TO_HOST,
+                stream,
+            );
+
+            if result != CUDA_SUCCESS {
+                return Err(NdimageError::ComputationError(format!(
+                    "CUDA async memcpy failed: {}",
+                    cuda_error_string(result)
+                )));
+            }
+        }
+
+        Ok(())
+    }
+}
+
 /// Convert OpenCL-style kernel to CUDA syntax
 fn convert_opencl_to_cuda(source: &str) -> String {
-    source
-        .replace("__kernel", "extern \"C\" __global__")
-        .replace("__global", "")
-        .replace("get_global_id(0)", "blockIdx.x * blockDim.x + threadIdx.x")
-        .replace("get_global_id(1)", "blockIdx.y * blockDim.y + threadIdx.y")
-        .replace("get_global_id(2)", "blockIdx.z * blockDim.z + threadIdx.z")
-        .replace("clamp(", "min(max(")
+    let mut cuda_source = source.to_string();
+    
+    // Handle kernel declaration
+    cuda_source = cuda_source.replace("__kernel", "extern \"C\" __global__");
+    
+    // Handle address space qualifiers
+    cuda_source = cuda_source.replace("__global ", "");
+    cuda_source = cuda_source.replace("__local", "__shared__");
+    cuda_source = cuda_source.replace("__constant", "__constant__");
+    
+    // Handle work item functions
+    cuda_source = cuda_source.replace("get_global_id(0)", "blockIdx.x * blockDim.x + threadIdx.x");
+    cuda_source = cuda_source.replace("get_global_id(1)", "blockIdx.y * blockDim.y + threadIdx.y");
+    cuda_source = cuda_source.replace("get_global_id(2)", "blockIdx.z * blockDim.z + threadIdx.z");
+    
+    cuda_source = cuda_source.replace("get_local_id(0)", "threadIdx.x");
+    cuda_source = cuda_source.replace("get_local_id(1)", "threadIdx.y");
+    cuda_source = cuda_source.replace("get_local_id(2)", "threadIdx.z");
+    
+    cuda_source = cuda_source.replace("get_group_id(0)", "blockIdx.x");
+    cuda_source = cuda_source.replace("get_group_id(1)", "blockIdx.y");
+    cuda_source = cuda_source.replace("get_group_id(2)", "blockIdx.z");
+    
+    cuda_source = cuda_source.replace("get_local_size(0)", "blockDim.x");
+    cuda_source = cuda_source.replace("get_local_size(1)", "blockDim.y");
+    cuda_source = cuda_source.replace("get_local_size(2)", "blockDim.z");
+    
+    cuda_source = cuda_source.replace("get_global_size(0)", "gridDim.x * blockDim.x");
+    cuda_source = cuda_source.replace("get_global_size(1)", "gridDim.y * blockDim.y");
+    cuda_source = cuda_source.replace("get_global_size(2)", "gridDim.z * blockDim.z");
+    
+    // Handle synchronization
+    cuda_source = cuda_source.replace("barrier(CLK_LOCAL_MEM_FENCE)", "__syncthreads()");
+    cuda_source = cuda_source.replace("barrier(CLK_GLOBAL_MEM_FENCE)", "__threadfence()");
+    
+    // Handle math functions - some have different names in CUDA
+    cuda_source = cuda_source.replace("clamp(", "fminf(fmaxf(");
+    cuda_source = cuda_source.replace("mix(", "lerp(");
+    cuda_source = cuda_source.replace("mad(", "fmaf(");
+    
+    // Handle atomic operations
+    cuda_source = cuda_source.replace("atomic_add(", "atomicAdd(");
+    cuda_source = cuda_source.replace("atomic_sub(", "atomicSub(");
+    cuda_source = cuda_source.replace("atomic_inc(", "atomicInc(");
+    cuda_source = cuda_source.replace("atomic_dec(", "atomicDec(");
+    cuda_source = cuda_source.replace("atomic_min(", "atomicMin(");
+    cuda_source = cuda_source.replace("atomic_max(", "atomicMax(");
+    cuda_source = cuda_source.replace("atomic_and(", "atomicAnd(");
+    cuda_source = cuda_source.replace("atomic_or(", "atomicOr(");
+    cuda_source = cuda_source.replace("atomic_xor(", "atomicXor(");
+    
+    // Add common CUDA includes if not present
+    if !cuda_source.contains("#include") {
+        cuda_source = format!(
+            "#include <cuda_runtime.h>\n#include <device_launch_parameters.h>\n\n{}",
+            cuda_source
+        );
+    }
+    
+    cuda_source
 }
 
 /// Calculate optimal grid and block dimensions for kernel launch
@@ -647,36 +999,85 @@ fn calculate_launch_config(
     work_size: &[usize],
     dimensions: usize,
 ) -> ((u32, u32, u32), (u32, u32, u32)) {
+    calculate_launch_config_advanced(work_size, dimensions, 1024, (65535, 65535, 65535))
+}
+
+/// Advanced launch configuration calculation with device constraints
+fn calculate_launch_config_advanced(
+    work_size: &[usize],
+    dimensions: usize,
+    max_threads_per_block: usize,
+    max_grid_size: (u32, u32, u32),
+) -> ((u32, u32, u32), (u32, u32, u32)) {
+    // Determine optimal block size based on dimensionality and constraints
     let block_size = match dimensions {
-        1 => (256, 1, 1),
-        2 => (16, 16, 1),
-        3 => (8, 8, 4),
-        _ => (256, 1, 1),
+        1 => {
+            // For 1D, use power-of-2 block sizes for better occupancy
+            let optimal_size = if work_size[0] < 128 { 64 } 
+                              else if work_size[0] < 512 { 128 }
+                              else if work_size[0] < 2048 { 256 }
+                              else { 512 };
+            (optimal_size.min(max_threads_per_block), 1, 1)
+        }
+        2 => {
+            // For 2D, balance between x and y dimensions
+            let total_threads = max_threads_per_block.min(1024);
+            let aspect_ratio = work_size[0] as f64 / work_size[1] as f64;
+            
+            let (bx, by) = if aspect_ratio > 2.0 {
+                (32, total_threads / 32) // Wide images
+            } else if aspect_ratio < 0.5 {
+                (total_threads / 32, 32) // Tall images
+            } else {
+                // Square-ish images - use square blocks
+                let sqrt_threads = (total_threads as f64).sqrt() as usize;
+                let power_of_2 = 1 << (sqrt_threads as f64).log2().floor() as usize;
+                (power_of_2, total_threads / power_of_2)
+            };
+            (bx, by, 1)
+        }
+        3 => {
+            // For 3D, distribute threads more evenly
+            let total_threads = max_threads_per_block.min(512); // Use fewer threads for 3D
+            let cube_root = (total_threads as f64).powf(1.0/3.0) as usize;
+            let optimal_dim = 1 << (cube_root as f64).log2().floor() as usize;
+            let remaining = total_threads / (optimal_dim * optimal_dim);
+            (optimal_dim, optimal_dim, remaining.max(1))
+        }
+        _ => (256, 1, 1), // Default fallback
     };
 
+    // Calculate grid size ensuring we don't exceed device limits
     let grid_size = match dimensions {
         1 => {
-            let blocks = (work_size[0] + block_size.0 as usize - 1) / block_size.0 as usize;
+            let blocks = ((work_size[0] + block_size.0 - 1) / block_size.0)
+                .min(max_grid_size.0 as usize);
             (blocks as u32, 1, 1)
         }
         2 => {
-            let blocks_x = (work_size[0] + block_size.0 as usize - 1) / block_size.0 as usize;
-            let blocks_y = (work_size[1] + block_size.1 as usize - 1) / block_size.1 as usize;
+            let blocks_x = ((work_size[0] + block_size.0 - 1) / block_size.0)
+                .min(max_grid_size.0 as usize);
+            let blocks_y = ((work_size[1] + block_size.1 - 1) / block_size.1)
+                .min(max_grid_size.1 as usize);
             (blocks_x as u32, blocks_y as u32, 1)
         }
         3 => {
-            let blocks_x = (work_size[0] + block_size.0 as usize - 1) / block_size.0 as usize;
-            let blocks_y = (work_size[1] + block_size.1 as usize - 1) / block_size.1 as usize;
-            let blocks_z = (work_size[2] + block_size.2 as usize - 1) / block_size.2 as usize;
+            let blocks_x = ((work_size[0] + block_size.0 - 1) / block_size.0)
+                .min(max_grid_size.0 as usize);
+            let blocks_y = ((work_size[1] + block_size.1 - 1) / block_size.1)
+                .min(max_grid_size.1 as usize);
+            let blocks_z = ((work_size[2] + block_size.2 - 1) / block_size.2)
+                .min(max_grid_size.2 as usize);
             (blocks_x as u32, blocks_y as u32, blocks_z as u32)
         }
         _ => {
-            let blocks = (work_size[0] + block_size.0 as usize - 1) / block_size.0 as usize;
+            let blocks = ((work_size[0] + block_size.0 - 1) / block_size.0)
+                .min(max_grid_size.0 as usize);
             (blocks as u32, 1, 1)
         }
     };
 
-    (grid_size, block_size)
+    (grid_size, (block_size.0 as u32, block_size.1 as u32, block_size.2 as u32))
 }
 
 #[cfg(test)]

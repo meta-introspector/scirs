@@ -6,7 +6,7 @@
 
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
-use ndarray::{Array1, ArrayView1, ArrayView2};
+use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
 

@@ -42,6 +42,8 @@ pub enum IoError {
     ConfigError(String),
     /// Network error
     NetworkError(String),
+    /// Database error
+    DatabaseError(String),
     /// Other error
     Other(String),
 }
@@ -69,6 +71,7 @@ impl fmt::Display for IoError {
             IoError::IntegrityError(msg) => write!(f, "Integrity error: {}", msg),
             IoError::ConfigError(msg) => write!(f, "Configuration error: {}", msg),
             IoError::NetworkError(msg) => write!(f, "Network error: {}", msg),
+            IoError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
             IoError::Other(msg) => write!(f, "Error: {}", msg),
         }
     }
@@ -99,6 +102,7 @@ impl Clone for IoError {
             IoError::IntegrityError(msg) => IoError::IntegrityError(msg.clone()),
             IoError::ConfigError(msg) => IoError::ConfigError(msg.clone()),
             IoError::NetworkError(msg) => IoError::NetworkError(msg.clone()),
+            IoError::DatabaseError(msg) => IoError::DatabaseError(msg.clone()),
             IoError::Other(msg) => IoError::Other(msg.clone()),
         }
     }

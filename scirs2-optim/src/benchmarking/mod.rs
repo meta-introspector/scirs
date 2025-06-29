@@ -1,9 +1,12 @@
 //! Benchmarking and evaluation tools for optimizers
 //!
 //! This module provides tools for analyzing optimizer performance, gradient flow,
-//! and visualization of optimization behavior.
+//! and visualization of optimization behavior, including cross-framework comparisons
+//! with PyTorch and TensorFlow optimizers.
 
 use crate::error::{OptimError, Result};
+
+pub mod cross_framework;
 use ndarray::{Array, Array1, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::VecDeque;

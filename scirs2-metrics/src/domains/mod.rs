@@ -67,6 +67,7 @@ use std::collections::HashMap;
 
 pub mod anomaly_detection;
 pub mod computer_vision;
+pub mod generative_ai;
 pub mod nlp;
 pub mod recommender;
 pub mod time_series;
@@ -187,6 +188,7 @@ pub struct DomainSuite {
     ts_metrics: time_series::TimeSeriesSuite,
     rec_metrics: recommender::RecommenderSuite,
     ad_metrics: anomaly_detection::AnomalyDetectionSuite,
+    gen_ai_metrics: generative_ai::GenerativeAISuite<f64>,
 }
 
 impl DomainSuite {
@@ -198,6 +200,7 @@ impl DomainSuite {
             ts_metrics: time_series::TimeSeriesSuite::new(),
             rec_metrics: recommender::RecommenderSuite::new(),
             ad_metrics: anomaly_detection::AnomalyDetectionSuite::new(),
+            gen_ai_metrics: generative_ai::GenerativeAISuite::new(),
         }
     }
 
@@ -226,6 +229,11 @@ impl DomainSuite {
         &self.ad_metrics
     }
 
+    /// Get generative AI metrics
+    pub fn generative_ai(&self) -> &generative_ai::GenerativeAISuite<f64> {
+        &self.gen_ai_metrics
+    }
+
     /// List all available domains
     pub fn available_domains(&self) -> Vec<&'static str> {
         vec![
@@ -234,6 +242,7 @@ impl DomainSuite {
             self.ts_metrics.domain_name(),
             self.rec_metrics.domain_name(),
             self.ad_metrics.domain_name(),
+            self.gen_ai_metrics.domain_name(),
         ]
     }
 }
@@ -275,11 +284,12 @@ mod tests {
         let suite = create_domain_suite();
         let domains = suite.available_domains();
 
-        assert_eq!(domains.len(), 5);
+        assert_eq!(domains.len(), 6);
         assert!(domains.contains(&"Computer Vision"));
         assert!(domains.contains(&"Natural Language Processing"));
         assert!(domains.contains(&"Time Series"));
         assert!(domains.contains(&"Recommender Systems"));
         assert!(domains.contains(&"Anomaly Detection"));
+        assert!(domains.contains(&"Generative AI & Deep Learning"));
     }
 }

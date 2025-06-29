@@ -181,11 +181,167 @@ pub fn batch_matmul<F: Float + Debug + Send + Sync + 'static>(
             Ok(Tensor::new(result_data, false))
         }
     } else {
-        // For arbitrary batch dimensions, return a more helpful error
-        Err(scirs2_autograd::error::AutogradError::OperationError(
-            "Batch matrix multiplication for >3D tensors not yet implemented in autodiff"
-                .to_string(),
-        ))
+        // General case for arbitrary batch dimensions (>3D tensors)
+        let a_shape = a.shape();
+        let b_shape = b.shape();
+        
+        // Get matrix dimensions (last 2 dimensions)
+        let n = a_shape[a_shape.len() - 2];
+        let m = a_shape[a_shape.len() - 1];
+        let p = b_shape[b_shape.len() - 1];
+        
+        // Calculate total batch size by multiplying all batch dimensions
+        let batch_dims = &a_shape[..a_shape.len() - 2];
+        let total_batch_size: usize = batch_dims.iter().product();
+        
+        // Reshape tensors to 3D for easier processing
+        let a_reshaped = a.data.clone().into_shape((total_batch_size, n, m))
+            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                format!("Failed to reshape A to ({}, {}, {})", total_batch_size, n, m)
+            ))?;
+        let b_reshaped = b.data.clone().into_shape((total_batch_size, m, p))
+            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                format!("Failed to reshape B to ({}, {}, {})", total_batch_size, m, p)
+            ))?;
+        
+        // Perform batch matrix multiplication
+        let mut result_reshaped = Array::zeros((total_batch_size, n, p));
+        
+        for batch_idx in 0..total_batch_size {
+            for i in 0..n {
+                for j in 0..p {
+                    let mut sum = F::zero();
+                    for k in 0..m {
+                        sum = sum + a_reshaped[[batch_idx, i, k]] * b_reshaped[[batch_idx, k, j]];
+                    }
+                    result_reshaped[[batch_idx, i, j]] = sum;
+                }
+            }
+        }
+        
+        // Calculate result shape by combining batch dimensions with matrix result dimensions
+        let mut result_shape = batch_dims.to_vec();
+        result_shape.push(n);
+        result_shape.push(p);
+        
+        // Reshape result back to original batch dimensions
+        let result_data = result_reshaped.into_shape(result_shape.as_slice())
+            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                format!("Failed to reshape result to {:?}", result_shape)
+            ))?.into_dyn();
+        
+        let requires_grad = a.requires_grad || b.requires_grad;
+        
+        if requires_grad {
+            // Store data for gradient computation
+            let a_data = a.data.clone();
+            let b_data = b.data.clone();
+            let a_shape_clone = a_shape.clone();
+            let b_shape_clone = b_shape.clone();
+            let result_shape_clone = result_shape.clone();
+            
+            // Backward function for the first tensor
+            let backward_a = if a.requires_grad {
+                Some(Box::new(
+                    move |grad: Array<F, IxDyn>| -> AutogradResult<Array<F, IxDyn>> {
+                        // Reshape gradient and b for computation
+                        let grad_reshaped = grad.clone().into_shape((total_batch_size, n, p))
+                            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                                "Failed to reshape gradient for backward_a".to_string()
+                            ))?;
+                        let b_reshaped = b_data.clone().into_shape((total_batch_size, m, p))
+                            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                                "Failed to reshape B for backward_a".to_string()
+                            ))?;
+                        
+                        let mut grad_a_reshaped = Array::zeros((total_batch_size, n, m));
+                        
+                        // Compute gradient: dL/dA = dL/dC @ B^T
+                        for batch_idx in 0..total_batch_size {
+                            for i in 0..n {
+                                for k in 0..m {
+                                    let mut sum = F::zero();
+                                    for j in 0..p {
+                                        sum = sum + grad_reshaped[[batch_idx, i, j]] * b_reshaped[[batch_idx, k, j]];
+                                    }
+                                    grad_a_reshaped[[batch_idx, i, k]] = sum;
+                                }
+                            }
+                        }
+                        
+                        // Reshape back to original A shape
+                        let grad_a = grad_a_reshaped.into_shape(a_shape_clone.as_slice())
+                            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                                "Failed to reshape gradient A back to original shape".to_string()
+                            ))?;
+                        
+                        Ok(grad_a.into_dyn())
+                    },
+                )
+                    as Box<
+                        dyn Fn(Array<F, IxDyn>) -> AutogradResult<Array<F, IxDyn>> + Send + Sync,
+                    >)
+            } else {
+                None
+            };
+            
+            // Backward function for the second tensor
+            let backward_b = if b.requires_grad {
+                Some(Box::new(
+                    move |grad: Array<F, IxDyn>| -> AutogradResult<Array<F, IxDyn>> {
+                        // Reshape gradient and a for computation
+                        let grad_reshaped = grad.clone().into_shape((total_batch_size, n, p))
+                            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                                "Failed to reshape gradient for backward_b".to_string()
+                            ))?;
+                        let a_reshaped = a_data.clone().into_shape((total_batch_size, n, m))
+                            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                                "Failed to reshape A for backward_b".to_string()
+                            ))?;
+                        
+                        let mut grad_b_reshaped = Array::zeros((total_batch_size, m, p));
+                        
+                        // Compute gradient: dL/dB = A^T @ dL/dC
+                        for batch_idx in 0..total_batch_size {
+                            for k in 0..m {
+                                for j in 0..p {
+                                    let mut sum = F::zero();
+                                    for i in 0..n {
+                                        sum = sum + a_reshaped[[batch_idx, i, k]] * grad_reshaped[[batch_idx, i, j]];
+                                    }
+                                    grad_b_reshaped[[batch_idx, k, j]] = sum;
+                                }
+                            }
+                        }
+                        
+                        // Reshape back to original B shape
+                        let grad_b = grad_b_reshaped.into_shape(b_shape_clone.as_slice())
+                            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                                "Failed to reshape gradient B back to original shape".to_string()
+                            ))?;
+                        
+                        Ok(grad_b.into_dyn())
+                    },
+                )
+                    as Box<
+                        dyn Fn(Array<F, IxDyn>) -> AutogradResult<Array<F, IxDyn>> + Send + Sync,
+                    >)
+            } else {
+                None
+            };
+            
+            let node = Node::new(
+                scirs2_autograd::graph::OpType::Activation("batch_matmul_nd".to_string()),
+                vec![a, b],
+                vec![backward_a, backward_b],
+            );
+            
+            let mut result = Tensor::new(result_data, requires_grad);
+            result.node = Some(node);
+            Ok(result)
+        } else {
+            Ok(Tensor::new(result_data, false))
+        }
     }
 }
 

@@ -94,6 +94,12 @@ pub struct PipelineContext {
     pub config: PipelineConfig,
 }
 
+impl Default for PipelineContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PipelineContext {
     pub fn new() -> Self {
         Self {
@@ -191,6 +197,12 @@ pub struct PipelineStats {
     pub errors: usize,
 }
 
+impl Default for PipelineStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PipelineStats {
     pub fn new() -> Self {
         Self {
@@ -213,6 +225,12 @@ pub struct Pipeline<I, O> {
     _input: PhantomData<I>,
     /// Output type marker
     _output: PhantomData<O>,
+}
+
+impl<I, O> Default for Pipeline<I, O> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<I, O> Pipeline<I, O> {
@@ -485,12 +503,12 @@ impl<I, O> Pipeline<I, O> {
         let json = serde_json::to_string_pretty(&serialized)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
-        std::fs::write(path, json).map_err(|e| IoError::Io(e))
+        std::fs::write(path, json).map_err(IoError::Io)
     }
 
     /// Load pipeline configuration from a file
     pub fn load_config(path: impl AsRef<Path>) -> Result<SerializedPipeline> {
-        let content = std::fs::read_to_string(path).map_err(|e| IoError::Io(e))?;
+        let content = std::fs::read_to_string(path).map_err(IoError::Io)?;
 
         serde_json::from_str(&content).map_err(|e| IoError::SerializationError(e.to_string()))
     }

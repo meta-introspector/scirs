@@ -58,6 +58,8 @@ pub struct ChunkedArrayReader {
     chunk_size: usize,
     current_row: usize,
     dtype_size: usize,
+    /// Reusable buffer for reading data to reduce allocations
+    buffer_pool: Vec<u8>,
 }
 
 impl ChunkedArrayReader {
@@ -67,16 +69,20 @@ impl ChunkedArrayReader {
             TransformError::TransformationError(format!("Failed to open file: {}", e))
         })?;
 
+        // Pre-allocate buffer pool for maximum chunk size
+        let max_chunk_bytes = chunk_size * shape.1 * std::mem::size_of::<f64>();
+        
         Ok(ChunkedArrayReader {
             file: BufReader::new(file),
             shape,
             chunk_size,
             current_row: 0,
             dtype_size: std::mem::size_of::<f64>(),
+            buffer_pool: vec![0u8; max_chunk_bytes],
         })
     }
 
-    /// Read the next chunk of data
+    /// Read the next chunk of data with optimized bulk reading and buffer reuse
     pub fn read_chunk(&mut self) -> Result<Option<Array2<f64>>> {
         if self.current_row >= self.shape.0 {
             return Ok(None);
@@ -85,16 +91,31 @@ impl ChunkedArrayReader {
         let rows_to_read = (self.chunk_size).min(self.shape.0 - self.current_row);
         let mut chunk = Array2::zeros((rows_to_read, self.shape.1));
 
-        // Read data row by row
-        for i in 0..rows_to_read {
-            for j in 0..self.shape.1 {
-                let mut bytes = vec![0u8; self.dtype_size];
-                self.file.read_exact(&mut bytes).map_err(|e| {
-                    TransformError::TransformationError(format!("Failed to read data: {}", e))
-                })?;
+        // Use pre-allocated buffer to avoid allocation overhead
+        let total_elements = rows_to_read * self.shape.1;
+        let total_bytes = total_elements * self.dtype_size;
+        
+        // Ensure buffer is large enough (it should be from constructor)
+        if self.buffer_pool.len() < total_bytes {
+            return Err(TransformError::TransformationError(
+                "Buffer pool too small for chunk".to_string()
+            ));
+        }
+        
+        // Read into pre-allocated buffer
+        self.file.read_exact(&mut self.buffer_pool[..total_bytes]).map_err(|e| {
+            TransformError::TransformationError(format!("Failed to read data: {}", e))
+        })?;
 
-                chunk[[i, j]] = f64::from_le_bytes(bytes.try_into().unwrap());
-            }
+        // Convert bytes to f64 values efficiently using chunks iterator
+        for (element_idx, f64_bytes) in self.buffer_pool[..total_bytes].chunks_exact(8).enumerate() {
+            let i = element_idx / self.shape.1;
+            let j = element_idx % self.shape.1;
+            
+            // Convert 8 bytes to f64 safely
+            let mut bytes_array = [0u8; 8];
+            bytes_array.copy_from_slice(f64_bytes);
+            chunk[[i, j]] = f64::from_le_bytes(bytes_array);
         }
 
         self.current_row += rows_to_read;
@@ -130,6 +151,8 @@ pub struct ChunkedArrayWriter {
     shape: (usize, usize),
     rows_written: usize,
     path: String,
+    /// Reusable buffer for writing data to reduce allocations
+    write_buffer: Vec<u8>,
 }
 
 impl ChunkedArrayWriter {
@@ -140,15 +163,20 @@ impl ChunkedArrayWriter {
             TransformError::TransformationError(format!("Failed to create file: {}", e))
         })?;
 
+        // Pre-allocate write buffer for typical chunk sizes (e.g., 1000 rows)
+        let typical_chunk_size = 1000_usize.min(shape.0);
+        let buffer_capacity = typical_chunk_size * shape.1 * std::mem::size_of::<f64>();
+
         Ok(ChunkedArrayWriter {
             file: BufWriter::new(file),
             shape,
             rows_written: 0,
             path: path_str,
+            write_buffer: Vec::with_capacity(buffer_capacity),
         })
     }
 
-    /// Write a chunk of data
+    /// Write a chunk of data with optimized bulk writing
     pub fn write_chunk(&mut self, chunk: &Array2<f64>) -> Result<()> {
         if chunk.shape()[1] != self.shape.1 {
             return Err(TransformError::InvalidInput(format!(
@@ -164,15 +192,26 @@ impl ChunkedArrayWriter {
             ));
         }
 
-        // Write data row by row
+        // Optimize bulk writing by batching bytes
+        let total_elements = chunk.shape()[0] * chunk.shape()[1];
+        let total_bytes = total_elements * std::mem::size_of::<f64>();
+        
+        // Ensure buffer has enough capacity
+        self.write_buffer.clear();
+        self.write_buffer.reserve(total_bytes);
+
+        // Convert all f64 values to bytes in batch
         for i in 0..chunk.shape()[0] {
             for j in 0..chunk.shape()[1] {
                 let bytes = chunk[[i, j]].to_le_bytes();
-                self.file.write_all(&bytes).map_err(|e| {
-                    TransformError::TransformationError(format!("Failed to write data: {}", e))
-                })?;
+                self.write_buffer.extend_from_slice(&bytes);
             }
         }
+
+        // Write all bytes at once
+        self.file.write_all(&self.write_buffer).map_err(|e| {
+            TransformError::TransformationError(format!("Failed to write data: {}", e))
+        })?;
 
         self.rows_written += chunk.shape()[0];
         Ok(())
@@ -282,7 +321,7 @@ impl OutOfCoreNormalizer {
 
         let mut reservoirs: Vec<Vec<f64>> = vec![Vec::with_capacity(RESERVOIR_SIZE); n_features];
         let mut count = 0;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // First pass: build reservoirs using reservoir sampling
         for chunk_result in chunks {

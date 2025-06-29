@@ -114,7 +114,7 @@ impl FastaReader {
     /// Open a FASTA file for reading
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path.as_ref())
-            .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
         Ok(Self {
             reader: BufReader::new(file),
             line_buffer: String::new(),
@@ -194,7 +194,7 @@ pub struct FastaRecordIterator<'a> {
     reader: &'a mut FastaReader,
 }
 
-impl<'a> Iterator for FastaRecordIterator<'a> {
+impl Iterator for FastaRecordIterator<'_> {
     type Item = Result<FastaRecord>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -259,18 +259,15 @@ impl FastaWriter {
 
 /// FASTQ quality encoding
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum QualityEncoding {
     /// Sanger/Illumina 1.8+ (Phred+33)
+    #[default]
     Sanger,
     /// Illumina 1.3-1.7 (Phred+64)
     Illumina,
 }
 
-impl Default for QualityEncoding {
-    fn default() -> Self {
-        QualityEncoding::Sanger
-    }
-}
 
 /// FASTQ sequence record
 #[derive(Debug, Clone, PartialEq)]
@@ -390,7 +387,7 @@ impl FastqReader {
     /// Open a FASTQ file for reading
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path.as_ref())
-            .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
         Ok(Self {
             reader: BufReader::new(file),
             encoding: QualityEncoding::default(),
@@ -401,7 +398,7 @@ impl FastqReader {
     /// Open a FASTQ file with specific quality encoding
     pub fn open_with_encoding<P: AsRef<Path>>(path: P, encoding: QualityEncoding) -> Result<Self> {
         let file = File::open(path.as_ref())
-            .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
         Ok(Self {
             reader: BufReader::new(file),
             encoding,
@@ -487,7 +484,7 @@ pub struct FastqRecordIterator<'a> {
     reader: &'a mut FastqReader,
 }
 
-impl<'a> Iterator for FastqRecordIterator<'a> {
+impl Iterator for FastqRecordIterator<'_> {
     type Item = Result<FastqRecord>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -590,7 +587,7 @@ impl FastqWriter {
 /// Count sequences in a FASTA file
 pub fn count_fasta_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
     let file = File::open(path.as_ref())
-        .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+        .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
     let reader = BufReader::new(file);
 
     let count = reader
@@ -605,7 +602,7 @@ pub fn count_fasta_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
 /// Count sequences in a FASTQ file
 pub fn count_fastq_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
     let file = File::open(path.as_ref())
-        .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+        .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
     let reader = BufReader::new(file);
 
     let line_count = reader.lines().count();
@@ -919,7 +916,7 @@ pub mod analysis {
             for (pos, &score) in scores.iter().enumerate() {
                 position_scores
                     .entry(pos)
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(score);
             }
         }

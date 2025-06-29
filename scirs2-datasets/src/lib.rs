@@ -155,7 +155,7 @@ pub use external::{
 };
 pub use ml_integration::{
     convenience::{create_experiment, cv_split, prepare_for_ml, train_test_split},
-    CrossValidationResults, DataSplit, MLExperiment, MLPipeline, MLPipelineConfig, ScalingMethod,
+    CrossValidationResults, DataSplit, MLExperiment, MLPipeline, MLPipelineConfig, ScalingMethod as MLScalingMethod,
 };
 
 pub use cache::{
@@ -186,7 +186,7 @@ pub use real_world::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic, RealWorldConfig, RealWorldDatasets,
 };
-pub use registry::*;
+pub use registry::{DatasetMetadata, DatasetRegistry, get_registry, load_dataset_by_name};
 pub use sample::*;
 pub use streaming::{
     stream_classification, stream_csv, stream_regression, DataChunk, StreamConfig, StreamProcessor,

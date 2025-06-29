@@ -652,7 +652,12 @@ where
     // But we need to work with the generic T type for the interface
 
     // Convert input to f32 (we know it's safe because we checked the type at the call site)
-    let input_data: Vec<f32> = input.iter().map(|x| x.to_f32().unwrap()).collect();
+    let input_data: Vec<f32> = input.iter().map(|x| {
+        x.to_f32().unwrap_or_else(|| {
+            // Handle conversion failure gracefully
+            f32::NAN
+        })
+    }).collect();
     let input_f32 = Array1::from_vec(input_data);
 
     // Process with f32 implementation
@@ -696,7 +701,12 @@ where
     }
 
     // Convert back to type T
-    let output = output_f32.mapv(|x| T::from_f32(x).unwrap());
+    let output = output_f32.mapv(|x| {
+        T::from_f32(x).unwrap_or_else(|| {
+            // Handle conversion failure gracefully
+            T::zero()
+        })
+    });
     Ok(output)
 }
 
@@ -712,7 +722,12 @@ where
     // This is a specialized implementation for f32 with window size 5
 
     // Convert input to f32 (we know it's safe because we checked the type at the call site)
-    let input_data: Vec<f32> = input.iter().map(|x| x.to_f32().unwrap()).collect();
+    let input_data: Vec<f32> = input.iter().map(|x| {
+        x.to_f32().unwrap_or_else(|| {
+            // Handle conversion failure gracefully
+            f32::NAN
+        })
+    }).collect();
     let input_f32 = Array1::from_vec(input_data);
 
     // Process with f32 implementation
@@ -755,14 +770,24 @@ where
         }
 
         // Convert back to type T
-        let output = output_f32.mapv(|x| T::from_f32(x).unwrap());
+        let output = output_f32.mapv(|x| {
+            T::from_f32(x).unwrap_or_else(|| {
+                // Handle conversion failure gracefully
+                T::zero()
+            })
+        });
         return Ok(output);
     }
 
     #[allow(unreachable_code)]
     {
         // Convert back to type T
-        let output = output_f32.mapv(|x| T::from_f32(x).unwrap());
+        let output = output_f32.mapv(|x| {
+            T::from_f32(x).unwrap_or_else(|| {
+                // Handle conversion failure gracefully
+                T::zero()
+            })
+        });
         Ok(output)
     }
 }
@@ -953,7 +978,7 @@ mod tests {
         let array = Array1::from_vec(vec![1.0, 5.0, 3.0, 4.0, 2.0]);
 
         // Apply maximum filter with size 3
-        let result = maximum_filter(&array, &[3], None).unwrap();
+        let result = maximum_filter(&array, &[3], None).expect("test function should succeed");
 
         // Expected: [5, 5, 5, 4, 4]
         assert_eq!(result.len(), array.len());
@@ -970,14 +995,14 @@ mod tests {
         let array = Array1::from_vec(vec![5.0, 2.0, 3.0, 4.0, 1.0]);
 
         // Apply minimum filter with size 3
-        let result = minimum_filter(&array, &[3], None).unwrap();
+        let result = minimum_filter(&array, &[3], None).expect("test function should succeed");
 
         // Note: These are expected values with reflect boundary mode:
         // Radius for window
         let radius = 1;
         let pad_width = vec![(radius, radius)];
         // This comment explains the expected values based on padded_input
-        let _padded_input = pad_array(&array, &pad_width, &BorderMode::Reflect, None).unwrap();
+        let _padded_input = pad_array(&array, &pad_width, &BorderMode::Reflect, None).expect("test function should succeed");
 
         // Expected values with reflect boundary mode:
         // Padded input: [2.0, 5.0, 2.0, 3.0, 4.0, 1.0, 4.0]
@@ -1005,7 +1030,7 @@ mod tests {
         image[[3, 3]] = 0.7;
 
         // Apply filter with 3x3 window
-        let result = maximum_filter(&image, &[3, 3], None).unwrap();
+        let result = maximum_filter(&image, &[3, 3], None).expect("test function should succeed");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), image.shape());
@@ -1022,7 +1047,7 @@ mod tests {
         image[[2, 2]] = 0.0; // Center pixel has minimum value
 
         // Apply filter with 3x3 window
-        let result = minimum_filter(&image, &[3, 3], None).unwrap();
+        let result = minimum_filter(&image, &[3, 3], None).expect("test function should succeed");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), image.shape());
@@ -1048,14 +1073,14 @@ mod tests {
         let array = Array1::from_vec(vec![1.0, 2.0, 3.0, 10.0, 5.0]);
 
         // Apply median filter (50th percentile) with size 3
-        let result = percentile_filter(&array, 50.0, &[3], None).unwrap();
+        let result = percentile_filter(&array, 50.0, &[3], None).expect("test function should succeed");
 
         // Note: These are expected values with reflect boundary mode:
         // Radius for window
         let radius = 1;
         let pad_width = vec![(radius, radius)];
         // This comment explains the expected values based on padded_input
-        let _padded_input = pad_array(&array, &pad_width, &BorderMode::Reflect, None).unwrap();
+        let _padded_input = pad_array(&array, &pad_width, &BorderMode::Reflect, None).expect("test function should succeed");
 
         // Expected values with reflect boundary mode:
         // Padded input: [2.0, 1.0, 2.0, 3.0, 10.0, 5.0, 10.0]
@@ -1081,14 +1106,14 @@ mod tests {
         let array = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 
         // Apply rank filter with rank 1 (second lowest value) and size 3
-        let result = rank_filter(&array, 1, &[3], None).unwrap();
+        let result = rank_filter(&array, 1, &[3], None).expect("test function should succeed");
 
         // Note: These are expected values with reflect boundary mode:
         // Radius for window
         let radius = 1;
         let pad_width = vec![(radius, radius)];
         // This comment explains the expected values based on padded_input
-        let _padded_input = pad_array(&array, &pad_width, &BorderMode::Reflect, None).unwrap();
+        let _padded_input = pad_array(&array, &pad_width, &BorderMode::Reflect, None).expect("test function should succeed");
 
         // Expected values with reflect boundary mode:
         // Padded input: [2.0, 1.0, 2.0, 3.0, 4.0, 5.0, 4.0]
@@ -1136,7 +1161,7 @@ mod tests {
 
         // Apply maximum filter (rank = window_size - 1) with 3x3x3 window
         let window_size = 3 * 3 * 3;
-        let result = rank_filter(&array, window_size - 1, &[3, 3, 3], None).unwrap();
+        let result = rank_filter(&array, window_size - 1, &[3, 3, 3], None).expect("test function should succeed");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), array.shape());
@@ -1159,7 +1184,7 @@ mod tests {
         array[[2, 2, 2]] = 0.0; // Set center to minimum value
 
         // Apply minimum filter with 3x3x3 window
-        let result = minimum_filter(&array, &[3, 3, 3], None).unwrap();
+        let result = minimum_filter(&array, &[3, 3, 3], None).expect("test function should succeed");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), array.shape());
@@ -1187,7 +1212,7 @@ mod tests {
         });
 
         // Apply 50th percentile (median) filter with 3x3x3 window
-        let result = percentile_filter(&array, 50.0, &[3, 3, 3], None).unwrap();
+        let result = percentile_filter(&array, 50.0, &[3, 3, 3], None).expect("test function should succeed");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), array.shape());

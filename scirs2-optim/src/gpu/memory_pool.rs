@@ -960,6 +960,141 @@ impl CudaMemoryPool {
             ))
         }
     }
+
+    /// Generate comprehensive memory pool analytics report
+    pub fn generate_memory_analytics_report(&self) -> String {
+        let stats = &self.stats;
+        let analytics = self.get_allocation_analytics();
+        let pressure = self.get_memory_pressure();
+
+        format!(
+            "Memory Pool Analytics Report\n\
+             ============================\n\
+             \n\
+             Memory Usage:\n\
+               Total Allocated: {:.2} MB\n\
+               Current Used: {:.2} MB\n\
+               Peak Usage: {:.2} MB\n\
+               Utilization: {:.1}%\n\
+             \n\
+             Allocation Performance:\n\
+               Total Allocations: {}\n\
+               Cache Hit Rate: {:.1}%\n\
+               Average Latency: {:.2} μs\n\
+               Average Size: {:.2} KB\n\
+             \n\
+             Memory Efficiency:\n\
+               Memory Efficiency: {:.1}%\n\
+               Fragmentation Ratio: {:.3}\n\
+               Memory Pressure: {:.1}%\n\
+             \n\
+             Batch Buffers:\n\
+               Active Buffers: {}\n\
+               Total Buffer Memory: {:.2} MB\n\
+             \n\
+             Allocation Strategy: {:?}\n\
+             Defragmentation: {}\n\
+             Auto Cleanup: {}\n",
+            stats.total_allocated as f64 / (1024.0 * 1024.0),
+            stats.current_used as f64 / (1024.0 * 1024.0),
+            stats.peak_usage as f64 / (1024.0 * 1024.0),
+            if self.max_pool_size > 0 {
+                100.0 * stats.current_used as f64 / self.max_pool_size as f64
+            } else {
+                0.0
+            },
+            analytics.total_allocations,
+            analytics.cache_hit_rate * 100.0,
+            analytics.average_latency_us,
+            analytics.average_allocation_size as f64 / 1024.0,
+            analytics.memory_efficiency * 100.0,
+            analytics.fragmentation_ratio,
+            pressure * 100.0,
+            self.batch_buffers.iter().filter(|b| b.in_use).count(),
+            self.batch_buffers.iter().map(|b| b.size).sum::<usize>() as f64 / (1024.0 * 1024.0),
+            self.allocation_strategy,
+            if self.enable_defrag { "Enabled" } else { "Disabled" },
+            if self.pressure_monitor.auto_cleanup { "Enabled" } else { "Disabled" }
+        )
+    }
+
+    /// Export detailed metrics for external monitoring systems
+    pub fn export_metrics_json(&self) -> String {
+        let stats = &self.stats;
+        let analytics = self.get_allocation_analytics();
+        let pressure_history: Vec<_> = self.pressure_monitor.pressure_history
+            .iter()
+            .map(|reading| {
+                format!(
+                    "{{\"timestamp\":\"{:?}\",\"pressure\":{:.3},\"available\":{},\"allocated\":{}}}",
+                    reading.timestamp, reading.pressure, reading.available_memory, reading.allocated_memory
+                )
+            })
+            .collect();
+
+        format!(
+            "{{\
+                \"memory_stats\": {{\
+                    \"total_allocated\": {},\
+                    \"current_used\": {},\
+                    \"peak_usage\": {},\
+                    \"allocation_count\": {},\
+                    \"deallocation_count\": {},\
+                    \"cache_hits\": {},\
+                    \"cache_misses\": {}\
+                }},\
+                \"analytics\": {{\
+                    \"total_allocations\": {},\
+                    \"cache_hit_rate\": {:.3},\
+                    \"average_latency_us\": {:.2},\
+                    \"average_allocation_size\": {},\
+                    \"memory_efficiency\": {:.3},\
+                    \"fragmentation_ratio\": {:.3}\
+                }},\
+                \"pressure_monitor\": {{\
+                    \"current_pressure\": {:.3},\
+                    \"threshold\": {:.3},\
+                    \"auto_cleanup\": {},\
+                    \"pressure_history\": [{}]\
+                }},\
+                \"batch_buffers\": {{\
+                    \"total_buffers\": {},\
+                    \"active_buffers\": {},\
+                    \"total_memory\": {}\
+                }},\
+                \"configuration\": {{\
+                    \"max_pool_size\": {},\
+                    \"allocation_strategy\": \"{:?}\",\
+                    \"defragmentation_enabled\": {},\
+                    \"monitoring_enabled\": {}\
+                }}\
+            }}",
+            stats.total_allocated,
+            stats.current_used,
+            stats.peak_usage,
+            stats.allocation_count,
+            stats.deallocation_count,
+            stats.cache_hits,
+            stats.cache_misses,
+            analytics.total_allocations,
+            analytics.cache_hit_rate,
+            analytics.average_latency_us,
+            analytics.average_allocation_size,
+            analytics.memory_efficiency,
+            analytics.fragmentation_ratio,
+            self.pressure_monitor.current_pressure,
+            self.pressure_monitor.pressure_threshold,
+            self.pressure_monitor.auto_cleanup,
+            pressure_history.join(","),
+            self.batch_buffers.len(),
+            self.batch_buffers.iter().filter(|b| b.in_use).count(),
+            self.batch_buffers.iter().map(|b| b.size).sum::<usize>(),
+            self.max_pool_size,
+            self.allocation_strategy,
+            self.enable_defrag,
+            self.pressure_monitor.enable_monitoring
+        )
+    }
 }
 
 /// Thread-safe memory pool wrapper

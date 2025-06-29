@@ -114,7 +114,7 @@ impl NMF {
     /// Initialize matrices with random non-negative values
     fn random_initialization(&self, v: &Array2<f64>) -> (Array2<f64>, Array2<f64>) {
         let (n_samples, n_features) = (v.shape()[0], v.shape()[1]);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let scale = (v.mean().unwrap() / self.n_components as f64).sqrt();
 
@@ -392,13 +392,19 @@ impl NMF {
         S: Data,
         S::Elem: Float + NumCast,
     {
-        // Convert to f64 and check non-negativity
-        let v = x.mapv(|x| {
-            let val = num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0);
+        // Validate non-negativity before conversion
+        for elem in x.iter() {
+            let val = num_traits::cast::<S::Elem, f64>(*elem).unwrap_or(0.0);
             if val < 0.0 {
-                panic!("NMF requires non-negative input data");
+                return Err(TransformError::InvalidInput(
+                    "NMF requires non-negative input data".to_string()
+                ));
             }
-            val
+        }
+
+        // Convert to f64
+        let v = x.mapv(|x| {
+            num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0)
         });
 
         let (n_samples, n_features) = (v.shape()[0], v.shape()[1]);
@@ -471,19 +477,26 @@ impl NMF {
             ));
         }
 
-        let v = x.mapv(|x| {
-            let val = num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0);
+        // Validate non-negativity before conversion
+        for elem in x.iter() {
+            let val = num_traits::cast::<S::Elem, f64>(*elem).unwrap_or(0.0);
             if val < 0.0 {
-                panic!("NMF requires non-negative input data");
+                return Err(TransformError::InvalidInput(
+                    "NMF requires non-negative input data".to_string()
+                ));
             }
-            val
+        }
+
+        // Convert to f64
+        let v = x.mapv(|x| {
+            num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0)
         });
 
         let h = self.components.as_ref().unwrap();
         let n_samples = v.shape()[0];
 
         // Initialize W randomly
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let scale = (v.mean().unwrap() / self.n_components as f64).sqrt();
         let mut w = Array2::zeros((n_samples, self.n_components));

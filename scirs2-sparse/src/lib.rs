@@ -234,11 +234,11 @@ pub use sym_ops::{
     sym_coo_matvec, sym_csr_matvec, sym_csr_quadratic_form, sym_csr_rank1_update, sym_csr_trace,
 };
 
-// GPU-accelerated operations
-pub mod gpu_ops;
-pub use gpu_ops::{
-    gpu_sparse_matvec, gpu_sym_sparse_matvec, GpuMemoryManager, GpuOptions, GpuProfiler,
-};
+// GPU-accelerated operations (temporarily disabled due to missing features)
+// pub mod gpu_ops;
+// pub use gpu_ops::{
+//     gpu_sparse_matvec, gpu_sym_sparse_matvec, GpuMemoryManager, GpuOptions, GpuProfiler,
+// };
 
 // SIMD-accelerated operations
 pub mod simd_ops;

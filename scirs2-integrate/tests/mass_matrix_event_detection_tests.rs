@@ -13,12 +13,7 @@ use scirs2_integrate::ode::{
 
 /// Test event detection with a constant mass matrix
 #[test]
-#[allow(unreachable_code)]
 fn test_constant_mass_with_events() -> IntegrateResult<()> {
-    // Mark this test as ignored for now due to implementation issues
-    // The integration with mass matrices + event detection is failing
-    // in the Newton iteration of the Radau method
-    return Ok(());
 
     // Simple oscillator with a non-identity mass matrix
     // [2 0] [x'] = [    v    ]
@@ -187,10 +182,7 @@ fn test_constant_mass_with_events() -> IntegrateResult<()> {
 
 /// Test event detection with a time-dependent mass matrix
 #[test]
-#[allow(unreachable_code)]
 fn test_time_dependent_mass_with_events() -> IntegrateResult<()> {
-    // TODO: Fix mass matrix + event detection integration issues
-    return Ok(());
 
     // Oscillator with a time-dependent mass: m(t) = 1 + 0.5·sin(t)
     // [m(t) 0] [x'] = [    v    ]
@@ -286,10 +278,7 @@ fn test_time_dependent_mass_with_events() -> IntegrateResult<()> {
 
 /// Test event detection with a state-dependent mass matrix and terminal event
 #[test]
-#[allow(unreachable_code)]
 fn test_state_dependent_mass_with_terminal_event() -> IntegrateResult<()> {
-    // TODO: Fix mass matrix + event detection integration issues
-    return Ok(());
 
     // Nonlinear pendulum with state-dependent effective mass
     // The effective mass increases with angle due to the nonlinear term

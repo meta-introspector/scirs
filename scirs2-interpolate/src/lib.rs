@@ -250,6 +250,7 @@ pub use constrained::{
 pub use extrapolation::{
     make_adaptive_extrapolator,
     make_autoregressive_extrapolator,
+    make_boundary_preserving_extrapolator,
     // Advanced extrapolation convenience functions
     make_confidence_extrapolator,
     make_cubic_extrapolator,
@@ -257,20 +258,25 @@ pub use extrapolation::{
     make_exponential_extrapolator,
     make_linear_extrapolator,
     make_periodic_extrapolator,
+    make_physics_informed_extrapolator,
     make_reflection_extrapolator,
+    make_smart_adaptive_extrapolator,
     ARFittingMethod,
     AdaptiveExtrapolationConfig,
     AdaptiveSelectionCriterion,
     // Advanced extrapolation
     AdvancedExtrapolator,
     AutoregressiveExtrapolationConfig,
+    BoundaryType,
     ConfidenceExtrapolationConfig,
     ConfidenceExtrapolationResult,
+    DataCharacteristics,
     EnsembleCombinationStrategy,
     EnsembleExtrapolationConfig,
     ExtrapolationMethod,
     ExtrapolationParameters,
     Extrapolator,
+    PhysicsLaw,
 };
 pub use fast_bspline::{
     make_cached_fast_bspline_evaluator, make_fast_bspline_evaluator,
@@ -329,8 +335,9 @@ pub use neural_enhanced::{
     NeuralEnhancedInterpolator, NeuralTrainingConfig, TrainingStats,
 };
 pub use numerical_stability::{
-    analyze_interpolation_edge_cases, apply_tikhonov_regularization, assess_matrix_condition,
-    check_safe_division, early_numerical_warning_system, machine_epsilon, safe_reciprocal,
+    analyze_interpolation_edge_cases, apply_tikhonov_regularization, assess_enhanced_matrix_condition,
+    assess_matrix_condition, check_safe_division, compute_adaptive_regularization,
+    early_numerical_warning_system, enhanced_matrix_multiply, machine_epsilon, safe_reciprocal,
     solve_with_stability_monitoring, BoundaryAnalysis, ConditionReport, EdgeCaseAnalysis,
     StabilityDiagnostics, StabilityLevel,
 };

@@ -472,7 +472,6 @@ impl TransformationMonitor {
         x: &ArrayView1<f64>,
         y: &ArrayView1<f64>,
     ) -> Result<(f64, f64)> {
-        // Simplified KS test implementation
         let mut x_sorted = x.to_vec();
         let mut y_sorted = y.to_vec();
         x_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -481,26 +480,49 @@ impl TransformationMonitor {
         let n1 = x_sorted.len() as f64;
         let n2 = y_sorted.len() as f64;
 
+        // Create combined sorted array for precise CDF calculation
+        let mut combined: Vec<(f64, i32)> = Vec::new();
+        for val in &x_sorted {
+            combined.push((*val, 1)); // Mark as from first sample
+        }
+        for val in &y_sorted {
+            combined.push((*val, 2)); // Mark as from second sample
+        }
+        combined.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+
+        let mut cdf1 = 0.0;
+        let mut cdf2 = 0.0;
         let mut max_diff = 0.0;
-        let mut i = 0;
-        let mut j = 0;
 
-        while i < x_sorted.len() && j < y_sorted.len() {
-            let cdf1 = (i + 1) as f64 / n1;
-            let cdf2 = (j + 1) as f64 / n2;
-            max_diff = max_diff.max((cdf1 - cdf2).abs());
-
-            if x_sorted[i] <= y_sorted[j] {
-                i += 1;
+        for (_, sample_id) in combined {
+            if sample_id == 1 {
+                cdf1 += 1.0 / n1;
             } else {
-                j += 1;
+                cdf2 += 1.0 / n2;
             }
+            max_diff = max_diff.max((cdf1 - cdf2).abs());
         }
 
         let statistic = max_diff;
-        let sqrt_term = ((n1 + n2) / (n1 * n2)).sqrt();
-        let critical_value = 1.36 * sqrt_term; // For α = 0.05
-        let p_value = 2.0 * (-2.0 * statistic.powi(2) * n1 * n2 / (n1 + n2)).exp();
+        
+        // More accurate p-value calculation using the asymptotic distribution
+        let effective_n = (n1 * n2) / (n1 + n2);
+        let lambda = statistic * effective_n.sqrt();
+        
+        // Kolmogorov distribution approximation for p-value
+        let p_value = if lambda < 0.27 {
+            1.0
+        } else if lambda < 1.0 {
+            2.0 * (-2.0 * lambda * lambda).exp()
+        } else {
+            // Series expansion for large lambda
+            let mut sum = 0.0;
+            for k in 1..=10 {
+                let k_f = k as f64;
+                sum += (-1.0_f64).powi(k - 1) * (-2.0 * k_f * k_f * lambda * lambda).exp();
+            }
+            2.0 * sum
+        };
 
         Ok((statistic, p_value.max(0.0).min(1.0)))
     }
@@ -765,7 +787,7 @@ impl TransformationMonitor {
         (-diff * diff / (2.0 * bandwidth * bandwidth)).exp()
     }
 
-    /// Complement of chi-square CDF (approximate)
+    /// Complement of chi-square CDF using improved approximations
     fn chi_square_cdf_complement(&self, x: f64, df: f64) -> f64 {
         if x <= 0.0 {
             return 1.0;
@@ -774,25 +796,59 @@ impl TransformationMonitor {
             return 0.0;
         }
 
-        // Simple approximation using gamma function properties
-        // For large df, chi-square approaches normal distribution
+        // For large df, use Wilson-Hilferty transformation (normal approximation)
         if df >= 30.0 {
-            let z = ((2.0 * x).sqrt() - (2.0 * df - 1.0).sqrt()).abs();
+            let h = 2.0 / (9.0 * df);
+            let z = ((x / df).powf(1.0 / 3.0) - (1.0 - h)) / h.sqrt();
             return 0.5 * (1.0 - self.erf(z / 2.0_f64.sqrt()));
         }
 
-        // For smaller df, use a rough approximation
-        let ratio = x / df;
-        if ratio > 3.0 {
-            0.001 // Very small p-value
-        } else if ratio > 2.0 {
-            0.01
-        } else if ratio > 1.5 {
-            0.05
-        } else if ratio > 1.0 {
-            0.1
+        // For moderate df, use incomplete gamma function approximation
+        // P(X > x) = 1 - P(X <= x) = 1 - gamma_cdf(x/2, df/2)
+        let alpha = df / 2.0;
+        let x_half = x / 2.0;
+        
+        // Use series expansion for gamma CDF
+        if x_half < alpha + 1.0 {
+            // Use series when x is relatively small compared to alpha
+            let mut term = x_half.powf(alpha) * (-x_half).exp();
+            let mut sum = term;
+            
+            for k in 1..=50 {
+                term *= x_half / (alpha + k as f64);
+                sum += term;
+                if term / sum < 1e-10 {
+                    break;
+                }
+            }
+            
+            let gamma_cdf = sum / self.gamma(alpha);
+            1.0 - gamma_cdf.min(1.0)
         } else {
-            0.5
+            // Use continued fraction when x is large
+            let a = alpha;
+            let b = x_half + 1.0 - a;
+            let c = 1e30;
+            let mut d = 1.0 / b;
+            let mut h = d;
+            
+            for i in 1..=100 {
+                let an = -i as f64 * (i as f64 - a);
+                let b = b + 2.0;
+                d = an * d + b;
+                if d.abs() < 1e-30 { d = 1e-30; }
+                let c = b + an / c;
+                if c.abs() < 1e-30 { c = 1e-30; }
+                d = 1.0 / d;
+                let del = d * c;
+                h *= del;
+                if (del - 1.0).abs() < 1e-10 {
+                    break;
+                }
+            }
+            
+            let gamma_cf = (-x_half).exp() * x_half.powf(a) * h / self.gamma(a);
+            gamma_cf.max(0.0).min(1.0)
         }
     }
 
@@ -813,6 +869,37 @@ impl TransformationMonitor {
         let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * (-x * x).exp();
 
         sign * y
+    }
+
+    /// Gamma function using Lanczos approximation
+    fn gamma(&self, z: f64) -> f64 {
+        if z < 0.5 {
+            // Use reflection formula: Γ(z)Γ(1-z) = π/sin(πz)
+            std::f64::consts::PI / (std::f64::consts::PI * z).sin() / self.gamma(1.0 - z)
+        } else {
+            // Lanczos approximation coefficients
+            let g = 7.0;
+            let c = [
+                0.99999999999980993,
+                676.5203681218851,
+                -1259.1392167224028,
+                771.32342877765313,
+                -176.61502916214059,
+                12.507343278686905,
+                -0.13857109526572012,
+                9.9843695780195716e-6,
+                1.5056327351493116e-7,
+            ];
+
+            let z = z - 1.0;
+            let mut x = c[0];
+            for i in 1..c.len() {
+                x += c[i] / (z + i as f64);
+            }
+
+            let t = z + g + 0.5;
+            (2.0 * std::f64::consts::PI).sqrt() * t.powf(z + 0.5) * (-t).exp() * x
+        }
     }
 
     fn check_performance_alerts(&mut self, metrics: &PerformanceMetrics) -> Result<Vec<AlertType>> {

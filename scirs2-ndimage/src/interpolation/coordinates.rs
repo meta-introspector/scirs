@@ -103,21 +103,18 @@ where
         }
     }
 
-    // For now, create a specialized implementation for testing
-    // In a full implementation, we would use proper array indexing
-
-    // Handle 2D case directly for test
-    if input.ndim() == 2 && indices.len() == 2 {
-        // Use dynamic-to-static conversion for known dimensions
-        if let Ok(arr_2d) = input.clone().into_dimensionality::<ndarray::Ix2>() {
-            return Ok(arr_2d[[indices[0], indices[1]]]);
-        }
+    // Use proper n-dimensional array indexing
+    // Convert indices to IxDyn for dynamic indexing
+    use ndarray::IxDyn;
+    let dynamic_indices = IxDyn(indices);
+    
+    // Access the element at the specified indices
+    match input.get(dynamic_indices) {
+        Some(value) => Ok(*value),
+        None => Err(NdimageError::InvalidInput(
+            "Unable to access array at the specified indices".into(),
+        ))
     }
-
-    // Fallback to placeholder
-    Err(NdimageError::InvalidInput(
-        "Not implemented for general dimensions".into(),
-    ))
 }
 
 /// Find values at arbitrarily-spaced points in an n-dimensional grid

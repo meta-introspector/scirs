@@ -7,6 +7,32 @@ use std::fmt::Debug;
 use super::BoundaryMode;
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion from usize to float
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
+    T::from_usize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+    })
+}
+
+/// Helper function for safe conversion from f64 to float
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
+/// Helper function for safe conversion from float to usize
+fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
+    value.to_usize().ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert float value to usize"
+        ))
+    })
+}
+
 /// Handle out-of-bounds coordinates according to the boundary mode
 ///
 /// # Arguments
@@ -23,7 +49,7 @@ where
     T: Float + FromPrimitive + Debug,
 {
     // Convert size to T for calculations
-    let size_t = T::from_usize(size).unwrap();
+    let size_t = safe_usize_to_float(size)?;
 
     // Handle within-bounds case
     if coord >= T::zero() && coord < size_t {
@@ -79,7 +105,7 @@ where
     T: Float + FromPrimitive + Debug,
 {
     let x_floor = x.floor();
-    let x_int = x_floor.to_usize().unwrap();
+    let x_int = safe_float_to_usize(x_floor).unwrap_or(0); // Use 0 as fallback for interpolation
     let t = x - x_floor;
 
     (x_int, x_int + 1, t)
@@ -99,18 +125,19 @@ where
     T: Float + FromPrimitive + Debug,
 {
     let x_floor = x.floor();
-    let x_int = x_floor.to_usize().unwrap();
+    let x_int = safe_float_to_usize(x_floor).unwrap_or(0); // Use 0 as fallback for interpolation
     let t = x - x_floor;
 
     // Catmull-Rom cubic interpolation weights
     let t2 = t * t;
     let t3 = t2 * t;
 
-    let half = T::from_f64(0.5).unwrap();
-    let two = T::from_f64(2.0).unwrap();
-    let three = T::from_f64(3.0).unwrap();
-    let four = T::from_f64(4.0).unwrap();
-    let five = T::from_f64(5.0).unwrap();
+    // Pre-calculate constants with safe conversions
+    let half = T::from_f64(0.5).unwrap_or_else(|| T::one() / (T::one() + T::one()));
+    let two = T::from_f64(2.0).unwrap_or_else(|| T::one() + T::one());
+    let three = T::from_f64(3.0).unwrap_or_else(|| two + T::one());
+    let four = T::from_f64(4.0).unwrap_or_else(|| two + two);
+    let five = T::from_f64(5.0).unwrap_or_else(|| four + T::one());
 
     let w0 = half * (-t3 + two * t2 - t);
     let w1 = half * (three * t3 - five * t2 + two);
@@ -131,16 +158,19 @@ mod tests {
 
     #[test]
     fn test_handle_boundary_within_bounds() {
-        let result = handle_boundary(1.5, 10, BoundaryMode::Nearest).unwrap();
+        let result = handle_boundary(1.5, 10, BoundaryMode::Nearest)
+            .expect("handle_boundary should succeed for test");
         assert_eq!(result, 1.5);
     }
 
     #[test]
     fn test_handle_boundary_nearest() {
-        let result = handle_boundary(-2.0, 10, BoundaryMode::Nearest).unwrap();
+        let result = handle_boundary(-2.0, 10, BoundaryMode::Nearest)
+            .expect("handle_boundary should succeed for test");
         assert_eq!(result, 0.0);
 
-        let result = handle_boundary(15.0, 10, BoundaryMode::Nearest).unwrap();
+        let result = handle_boundary(15.0, 10, BoundaryMode::Nearest)
+            .expect("handle_boundary should succeed for test");
         assert_eq!(result, 9.0);
     }
 

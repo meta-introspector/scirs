@@ -9,6 +9,19 @@ use ndarray::{Array1, Array2, ArrayView2};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+// Database driver imports
+#[cfg(feature = "sqlite")]
+use rusqlite::{params, Connection as SqliteConn, Row, Statement};
+
+#[cfg(feature = "postgres")]
+use sqlx::postgres::{PgPool, PgPoolOptions, PgRow};
+
+#[cfg(feature = "mysql")]
+use sqlx::mysql::{MySqlPool, MySqlPoolOptions, MySqlRow};
+
+#[cfg(feature = "duckdb")]
+use duckdb::{Connection as DuckdbConn, Row as DuckdbRow};
+
 /// Supported database types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DatabaseType {
@@ -33,12 +46,19 @@ pub enum DatabaseType {
 /// Database connection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseConfig {
+    /// The type of database (SQLite, PostgreSQL, etc.)
     pub db_type: DatabaseType,
+    /// Host address for remote databases
     pub host: Option<String>,
+    /// Port number for database connection
     pub port: Option<u16>,
+    /// Database name or file path
     pub database: String,
+    /// Username for authentication
     pub username: Option<String>,
+    /// Password for authentication
     pub password: Option<String>,
+    /// Additional connection options
     pub options: HashMap<String, String>,
 }
 
@@ -143,6 +163,7 @@ pub struct QueryBuilder {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 enum QueryType {
     Select,
     Insert,
@@ -289,8 +310,11 @@ impl QueryBuilder {
 /// Database result set
 #[derive(Debug, Clone)]
 pub struct ResultSet {
+    /// Column names in the result set
     pub columns: Vec<String>,
+    /// Data rows as JSON values
     pub rows: Vec<Vec<serde_json::Value>>,
+    /// Additional metadata about the result set
     pub metadata: Metadata,
 }
 
@@ -380,33 +404,54 @@ pub trait DatabaseConnection: Send + Sync {
 /// Table schema definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TableSchema {
+    /// Table name
     pub name: String,
+    /// Column definitions
     pub columns: Vec<ColumnDef>,
+    /// Primary key column names
     pub primary_key: Option<Vec<String>>,
+    /// Index definitions
     pub indexes: Vec<Index>,
 }
 
+/// Column definition for database tables
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ColumnDef {
+    /// Column name
     pub name: String,
+    /// Data type of the column
     pub data_type: DataType,
+    /// Whether the column allows NULL values
     pub nullable: bool,
+    /// Default value for the column
     pub default: Option<serde_json::Value>,
 }
 
+/// Database data types
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum DataType {
+    /// 32-bit integer
     Integer,
+    /// 64-bit integer
     BigInt,
+    /// 32-bit floating point
     Float,
+    /// 64-bit floating point
     Double,
+    /// Decimal with precision and scale
     Decimal(u8, u8),
+    /// Variable-length character string
     Varchar(usize),
+    /// Text string of unlimited length
     Text,
+    /// Boolean true/false
     Boolean,
+    /// Date value
     Date,
+    /// Timestamp with date and time
     Timestamp,
+    /// JSON document
     Json,
     Binary,
 }
@@ -425,10 +470,34 @@ impl DatabaseConnector {
     /// Create a new database connection
     pub fn connect(config: &DatabaseConfig) -> Result<Box<dyn DatabaseConnection>> {
         match config.db_type {
+            #[cfg(feature = "sqlite")]
             DatabaseType::SQLite => Ok(Box::new(SQLiteConnection::new(config)?)),
+            #[cfg(not(feature = "sqlite"))]
+            DatabaseType::SQLite => Err(IoError::UnsupportedFormat(
+                "SQLite support not enabled. Enable 'sqlite' feature.".to_string(),
+            )),
+            
+            #[cfg(feature = "postgres")]
             DatabaseType::PostgreSQL => Ok(Box::new(PostgreSQLConnection::new(config)?)),
+            #[cfg(not(feature = "postgres"))]
+            DatabaseType::PostgreSQL => Err(IoError::UnsupportedFormat(
+                "PostgreSQL support not enabled. Enable 'postgres' feature.".to_string(),
+            )),
+            
+            #[cfg(feature = "mysql")]
             DatabaseType::MySQL => Ok(Box::new(MySQLConnection::new(config)?)),
+            #[cfg(not(feature = "mysql"))]
+            DatabaseType::MySQL => Err(IoError::UnsupportedFormat(
+                "MySQL support not enabled. Enable 'mysql' feature.".to_string(),
+            )),
+            
+            #[cfg(feature = "duckdb")]
             DatabaseType::DuckDB => Ok(Box::new(DuckDBConnection::new(config)?)),
+            #[cfg(not(feature = "duckdb"))]
+            DatabaseType::DuckDB => Err(IoError::UnsupportedFormat(
+                "DuckDB support not enabled. Enable 'duckdb' feature.".to_string(),
+            )),
+            
             _ => Err(IoError::UnsupportedFormat(format!(
                 "Database type {:?} not yet implemented",
                 config.db_type
@@ -438,14 +507,22 @@ impl DatabaseConnector {
 }
 
 /// SQLite connection implementation
+#[cfg(feature = "sqlite")]
 struct SQLiteConnection {
+    #[allow(dead_code)]
     path: String,
+    conn: SqliteConn,
 }
 
+#[cfg(feature = "sqlite")]
 impl SQLiteConnection {
     fn new(config: &DatabaseConfig) -> Result<Self> {
+        let conn = SqliteConn::open(&config.database)
+            .map_err(|e| IoError::FileError(format!("Failed to open SQLite database: {}", e)))?;
+        
         Ok(Self {
             path: config.database.clone(),
+            conn,
         })
     }
 
@@ -501,101 +578,194 @@ impl SQLiteConnection {
     }
 }
 
+#[cfg(feature = "sqlite")]
 impl DatabaseConnection for SQLiteConnection {
     fn query(&self, query: &QueryBuilder) -> Result<ResultSet> {
-        // Simplified implementation - would use actual SQLite library
-        let mut result = ResultSet::new(query.columns.clone());
-
-        // Mock some data
-        if query.table == "test_table" {
-            result.add_row(vec![
-                serde_json::json!(1),
-                serde_json::json!("test"),
-                serde_json::json!(3.14),
-            ]);
-        }
-
-        Ok(result)
+        let sql = query.build_sql();
+        self.execute_sql(&sql, &[])
     }
 
-    fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
-        // For a production implementation, you would use rusqlite here
-        // For now, provide a sophisticated mock implementation
+    fn execute_sql(&self, sql: &str, params: &[serde_json::Value]) -> Result<ResultSet> {
+        // Convert JSON parameters to rusqlite parameters
+        let rusqlite_params: Vec<rusqlite::types::Value> = params
+            .iter()
+            .map(|p| match p {
+                serde_json::Value::Number(n) => {
+                    if let Some(i) = n.as_i64() {
+                        rusqlite::types::Value::Integer(i)
+                    } else if let Some(f) = n.as_f64() {
+                        rusqlite::types::Value::Real(f)
+                    } else {
+                        rusqlite::types::Value::Null
+                    }
+                }
+                serde_json::Value::String(s) => rusqlite::types::Value::Text(s.clone()),
+                serde_json::Value::Bool(b) => rusqlite::types::Value::Integer(if *b { 1 } else { 0 }),
+                _ => rusqlite::types::Value::Null,
+            })
+            .collect();
 
-        let mut result = ResultSet::new(vec![]);
-
-        // Parse common SQL patterns
         let sql_lower = sql.to_lowercase();
 
-        if sql_lower.contains("create table") {
-            // Table creation - no rows returned
-            return Ok(result);
-        }
+        // Handle different SQL types
+        if sql_lower.starts_with("select") || sql_lower.starts_with("explain") {
+            let mut stmt = self.conn.prepare(sql)
+                .map_err(|e| IoError::DatabaseError(format!("Failed to prepare statement: {}", e)))?;
 
-        if sql_lower.contains("insert into") {
-            result = ResultSet::new(vec!["rows_affected".to_string()]);
-            result.add_row(vec![serde_json::json!(1)]);
-            return Ok(result);
-        }
+            let column_names: Vec<String> = stmt.column_names().iter().map(|s| s.to_string()).collect();
+            let mut result = ResultSet::new(column_names);
 
-        if sql_lower.contains("select") {
-            // Determine columns from query
-            if sql_lower.contains("schema_migrations") {
-                result = ResultSet::new(vec!["version".to_string(), "applied_at".to_string()]);
-                // Mock migration data
-                result.add_row(vec![
-                    serde_json::json!("001_initial"),
-                    serde_json::json!("2024-01-01T00:00:00Z"),
-                ]);
-            } else if sql_lower.contains("sqlite_master") {
-                result = ResultSet::new(vec!["name".to_string(), "type".to_string()]);
-                result.add_row(vec![
-                    serde_json::json!("test_table"),
-                    serde_json::json!("table"),
-                ]);
-            } else {
-                // Generic select - return some mock data
-                result = ResultSet::new(vec![
-                    "id".to_string(),
-                    "name".to_string(),
-                    "value".to_string(),
-                ]);
-                for i in 1..=5 {
-                    result.add_row(vec![
-                        serde_json::json!(i),
-                        serde_json::json!(format!("item_{}", i)),
-                        serde_json::json!(i as f64 * 1.5),
-                    ]);
+            let rows = stmt.query_map(&rusqlite_params[..], |row| {
+                let mut values = Vec::new();
+                for i in 0..row.column_count() {
+                    let value: rusqlite::types::Value = row.get(i)?;
+                    let json_value = match value {
+                        rusqlite::types::Value::Null => serde_json::Value::Null,
+                        rusqlite::types::Value::Integer(i) => serde_json::Value::Number(serde_json::Number::from(i)),
+                        rusqlite::types::Value::Real(f) => serde_json::Value::Number(serde_json::Number::from_f64(f).unwrap_or_else(|| serde_json::Number::from(0))),
+                        rusqlite::types::Value::Text(s) => serde_json::Value::String(s),
+                        rusqlite::types::Value::Blob(b) => serde_json::Value::String(hex::encode(b)),
+                    };
+                    values.push(json_value);
+                }
+                Ok(values)
+            }).map_err(|e| IoError::DatabaseError(format!("Query execution failed: {}", e)))?;
+
+            for row_result in rows {
+                match row_result {
+                    Ok(row) => result.add_row(row),
+                    Err(e) => return Err(IoError::DatabaseError(format!("Row processing failed: {}", e))),
                 }
             }
-        }
 
-        Ok(result)
+            Ok(result)
+        } else {
+            // Handle INSERT, UPDATE, DELETE, CREATE, etc.
+            let affected_rows = self.conn.execute(sql, &rusqlite_params[..])
+                .map_err(|e| IoError::DatabaseError(format!("SQL execution failed: {}", e)))?;
+
+            let mut result = ResultSet::new(vec!["rows_affected".to_string()]);
+            result.add_row(vec![serde_json::json!(affected_rows)]);
+            Ok(result)
+        }
     }
 
     fn insert_array(
         &self,
-        _table: &str,
+        table: &str,
         data: ArrayView2<f64>,
-        _columns: &[&str],
+        columns: &[&str],
     ) -> Result<usize> {
-        Ok(data.nrows())
+        if columns.len() != data.ncols() {
+            return Err(IoError::ValidationError(
+                "Number of columns doesn't match array dimensions".to_string(),
+            ));
+        }
+
+        let placeholders: Vec<String> = (0..columns.len()).map(|_| "?".to_string()).collect();
+        let sql = format!(
+            "INSERT INTO {} ({}) VALUES ({})",
+            table,
+            columns.join(", "),
+            placeholders.join(", ")
+        );
+
+        let mut stmt = self.conn.prepare(&sql)
+            .map_err(|e| IoError::DatabaseError(format!("Failed to prepare insert statement: {}", e)))?;
+
+        let mut inserted = 0;
+        for row in data.rows() {
+            let params: Vec<rusqlite::types::Value> = row.iter()
+                .map(|&v| rusqlite::types::Value::Real(v))
+                .collect();
+            
+            stmt.execute(&params[..])
+                .map_err(|e| IoError::DatabaseError(format!("Insert failed: {}", e)))?;
+            inserted += 1;
+        }
+
+        Ok(inserted)
     }
 
-    fn create_table(&self, _table: &str, _schema: &TableSchema) -> Result<()> {
+    fn create_table(&self, table: &str, schema: &TableSchema) -> Result<()> {
+        let mut sql = format!("CREATE TABLE {} (", table);
+        
+        let column_defs: Vec<String> = schema.columns.iter().map(|col| {
+            let sql_type = self.data_type_to_sql(&col.data_type);
+            let nullable = if col.nullable { "" } else { " NOT NULL" };
+            format!("{} {}{}", col.name, sql_type, nullable)
+        }).collect();
+        
+        sql.push_str(&column_defs.join(", "));
+        
+        if let Some(ref pk) = schema.primary_key {
+            sql.push_str(&format!(", PRIMARY KEY ({})", pk.join(", ")));
+        }
+        
+        sql.push(')');
+
+        self.conn.execute(&sql, [])
+            .map_err(|e| IoError::DatabaseError(format!("Failed to create table: {}", e)))?;
+
+        // Create indexes
+        for index in &schema.indexes {
+            let unique = if index.unique { "UNIQUE " } else { "" };
+            let index_sql = format!(
+                "CREATE {}INDEX {} ON {} ({})",
+                unique, index.name, table, index.columns.join(", ")
+            );
+            self.conn.execute(&index_sql, [])
+                .map_err(|e| IoError::DatabaseError(format!("Failed to create index: {}", e)))?;
+        }
+
         Ok(())
     }
 
-    fn table_exists(&self, _table: &str) -> Result<bool> {
-        Ok(false)
+    fn table_exists(&self, table: &str) -> Result<bool> {
+        let sql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?";
+        let mut stmt = self.conn.prepare(sql)
+            .map_err(|e| IoError::DatabaseError(format!("Failed to prepare statement: {}", e)))?;
+        
+        let count: i64 = stmt.query_row([table], |row| row.get(0))
+            .map_err(|e| IoError::DatabaseError(format!("Table existence check failed: {}", e)))?;
+        
+        Ok(count > 0)
     }
 
     fn get_schema(&self, table: &str) -> Result<TableSchema> {
+        let sql = format!("PRAGMA table_info({})", table);
+        let mut stmt = self.conn.prepare(&sql)
+            .map_err(|e| IoError::DatabaseError(format!("Failed to prepare schema query: {}", e)))?;
+
+        let mut columns = Vec::new();
+        let rows = stmt.query_map([], |row| {
+            let name: String = row.get(1)?;
+            let type_str: String = row.get(2)?;
+            let not_null: bool = row.get(3)?;
+            let default_value: Option<String> = row.get(4)?;
+            Ok((name, type_str, not_null, default_value))
+        }).map_err(|e| IoError::DatabaseError(format!("Schema query failed: {}", e)))?;
+
+        for row_result in rows {
+            let (name, type_str, not_null, default_value) = row_result
+                .map_err(|e| IoError::DatabaseError(format!("Schema row processing failed: {}", e)))?;
+            
+            let data_type = self.sql_type_to_data_type(&type_str);
+            let default = default_value.map(|v| serde_json::Value::String(v));
+            
+            columns.push(ColumnDef {
+                name,
+                data_type,
+                nullable: !not_null,
+                default,
+            });
+        }
+
         Ok(TableSchema {
             name: table.to_string(),
-            columns: vec![],
-            primary_key: None,
-            indexes: vec![],
+            columns,
+            primary_key: None, // Would need additional query to get primary key info
+            indexes: vec![], // Would need additional query to get index info
         })
     }
 }
@@ -716,19 +886,29 @@ pub mod bulk {
     }
 }
 
-/// PostgreSQL connection implementation
+/// PostgreSQL connection implementation  
+#[cfg(feature = "postgres")]
 struct PostgreSQLConnection {
+    #[allow(dead_code)]
     config: DatabaseConfig,
+    // Note: In a real implementation, would store actual PgPool connection
 }
 
+#[cfg(feature = "postgres")]
 impl PostgreSQLConnection {
     fn new(config: &DatabaseConfig) -> Result<Self> {
+        // In a real implementation, would create actual connection:
+        // let pool = PgPoolOptions::new()
+        //     .max_connections(5)
+        //     .connect(&config.connection_string()).await?;
+        
         Ok(Self {
             config: config.clone(),
         })
     }
 }
 
+#[cfg(feature = "postgres")]
 impl DatabaseConnection for PostgreSQLConnection {
     fn query(&self, query: &QueryBuilder) -> Result<ResultSet> {
         let sql = query.build_sql();
@@ -780,18 +960,28 @@ impl DatabaseConnection for PostgreSQLConnection {
 }
 
 /// MySQL connection implementation
+#[cfg(feature = "mysql")]
 struct MySQLConnection {
+    #[allow(dead_code)]
     config: DatabaseConfig,
+    // Note: In a real implementation, would store actual MySqlPool connection
 }
 
+#[cfg(feature = "mysql")]
 impl MySQLConnection {
     fn new(config: &DatabaseConfig) -> Result<Self> {
+        // In a real implementation, would create actual connection:
+        // let pool = MySqlPoolOptions::new()
+        //     .max_connections(5)
+        //     .connect(&config.connection_string()).await?;
+        
         Ok(Self {
             config: config.clone(),
         })
     }
 }
 
+#[cfg(feature = "mysql")]
 impl DatabaseConnection for MySQLConnection {
     fn query(&self, query: &QueryBuilder) -> Result<ResultSet> {
         let sql = query.build_sql();
@@ -840,18 +1030,26 @@ impl DatabaseConnection for MySQLConnection {
 }
 
 /// DuckDB connection implementation (analytical database)
+#[cfg(feature = "duckdb")]
 struct DuckDBConnection {
+    #[allow(dead_code)]
     config: DatabaseConfig,
+    // Note: In a real implementation, would store actual DuckDB connection
 }
 
+#[cfg(feature = "duckdb")]
 impl DuckDBConnection {
     fn new(config: &DatabaseConfig) -> Result<Self> {
+        // In a real implementation, would create actual connection:
+        // let conn = DuckdbConn::open(&config.database)?;
+        
         Ok(Self {
             config: config.clone(),
         })
     }
 }
 
+#[cfg(feature = "duckdb")]
 impl DatabaseConnection for DuckDBConnection {
     fn query(&self, query: &QueryBuilder) -> Result<ResultSet> {
         let sql = query.build_sql();
@@ -1122,6 +1320,12 @@ pub mod migration {
     /// Migration manager
     pub struct MigrationManager {
         migrations: Vec<Migration>,
+    }
+
+    impl Default for MigrationManager {
+        fn default() -> Self {
+            Self::new()
+        }
     }
 
     impl MigrationManager {
@@ -1450,6 +1654,12 @@ pub mod advanced_query {
 
     pub trait OptimizationRule: Send + Sync {
         fn optimize(&self, query: &mut QueryBuilder);
+    }
+
+    impl Default for QueryOptimizer {
+        fn default() -> Self {
+            Self::new()
+        }
     }
 
     impl QueryOptimizer {

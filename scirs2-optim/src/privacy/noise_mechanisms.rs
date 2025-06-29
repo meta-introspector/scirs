@@ -5,7 +5,7 @@
 //! tree aggregation and truncated noise.
 
 use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
-use ndarray_rand::rand_distr::{Distribution, Normal};
+use ndarray_rand::rand_distr::{Distribution, Exp, Normal};
 use num_traits::Float;
 use rand::Rng;
 use std::marker::PhantomData;
@@ -263,11 +263,18 @@ where
         let scale = Self::compute_noise_scale(sensitivity, epsilon)?;
         let scale_f64 = scale.to_f64().unwrap_or(1.0);
 
-        let laplace = Laplace::new(0.0, scale_f64)
-            .map_err(|_| OptimizerError::InvalidConfig("Invalid noise parameters".to_string()))?;
+        // Implement Laplace distribution using transformation method
+        // If U is uniform on [0,1], then Laplace(μ, b) = μ - b*sgn(U-0.5)*ln(1-2|U-0.5|)
+        let uniform = rand::distributions::Uniform::new(0.0, 1.0);
 
         data.mapv_inplace(|x| {
-            let noise = T::from(laplace.sample(&mut *self.rng)).unwrap();
+            let u: f64 = uniform.sample(&mut *self.rng);
+            let laplace_sample = if u < 0.5 {
+                scale_f64 * (2.0 * u).ln()
+            } else {
+                -scale_f64 * (2.0 * (1.0 - u)).ln()
+            };
+            let noise = T::from(laplace_sample).unwrap();
             x + noise
         });
 

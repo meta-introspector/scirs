@@ -103,10 +103,10 @@ pub use algorithms::{
     eulerian_type,
     floyd_warshall,
     floyd_warshall_digraph,
-    fluid_communities,
+    fluid_communities_result,
     greedy_coloring,
     greedy_modularity_optimization,
-    hierarchical_communities,
+    hierarchical_communities_result,
     infomap_communities,
     is_bipartite,
     jaccard_similarity,
@@ -193,6 +193,19 @@ pub use algorithms::louvain_communities;
     note = "Use `label_propagation_result` instead"
 )]
 pub use algorithms::label_propagation;
+
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `fluid_communities_result` instead"
+)]
+pub use algorithms::fluid_communities;
+
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `hierarchical_communities_result` instead"
+)]
+pub use algorithms::hierarchical_communities;
+
 // Attribute system - stable for 1.0
 stable!("graph_attributes", "0.1.0-beta.1");
 pub use attributes::{

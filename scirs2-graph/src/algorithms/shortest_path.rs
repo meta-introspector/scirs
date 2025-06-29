@@ -679,7 +679,7 @@ where
     let mut candidates = std::collections::BinaryHeap::new();
 
     // Find the shortest path first
-    match shortest_path(graph, start, goal) {
+    match dijkstra_path(graph, start, goal) {
         Ok(Some(path)) => {
             let weight: f64 = path.total_weight.into();
             paths.push((weight, path.nodes));

@@ -1316,7 +1316,7 @@ impl From<SpectralResult> for PDESolution<f64> {
 // These are temporary placeholders for the missing FFT functions
 // In a real implementation, these would use a proper FFT library
 
-/// Perform a Fast Fourier Transform (FFT) on a real-valued array
+/// Perform a Fast Fourier Transform (FFT) on a real-valued array using Cooley-Tukey algorithm
 ///
 /// # Arguments
 /// * `x` - The input array
@@ -1324,22 +1324,103 @@ impl From<SpectralResult> for PDESolution<f64> {
 /// # Returns
 /// * A complex-valued array containing the FFT result
 fn fft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
-    // This is a stub implementation
-    // In a real implementation, this would use a proper FFT algorithm
     let n = x.len();
-    let mut result = Array1::zeros(n);
+    
+    // Convert to complex array
+    let mut input: Vec<num_complex::Complex<f64>> = x.iter()
+        .map(|&val| num_complex::Complex::new(val, 0.0))
+        .collect();
+    
+    // Perform FFT
+    fft_complex(&mut input);
+    
+    // Convert back to Array1
+    Array1::from_vec(input)
+}
 
-    for k in 0..n {
-        let mut sum = num_complex::Complex::new(0.0, 0.0);
-        for j in 0..n {
-            let angle = -2.0 * PI * (j as f64) * (k as f64) / (n as f64);
-            let factor = num_complex::Complex::new(angle.cos(), angle.sin());
-            sum += factor * x[j];
-        }
-        result[k] = sum;
+/// Cooley-Tukey FFT algorithm for complex input (in-place)
+fn fft_complex(x: &mut [num_complex::Complex<f64>]) {
+    let n = x.len();
+    
+    if n <= 1 {
+        return;
     }
+    
+    // For power-of-2 lengths, use radix-2 FFT
+    if n.is_power_of_two() {
+        fft_radix2(x);
+    } else {
+        // Fall back to mixed-radix or DFT for non-power-of-2
+        fft_mixed_radix(x);
+    }
+}
 
-    result
+/// Radix-2 Cooley-Tukey FFT for power-of-2 lengths
+fn fft_radix2(x: &mut [num_complex::Complex<f64>]) {
+    let n = x.len();
+    
+    if n <= 1 {
+        return;
+    }
+    
+    // Bit-reversal permutation
+    let mut j = 0;
+    for i in 1..n {
+        let mut bit = n >> 1;
+        while j & bit != 0 {
+            j ^= bit;
+            bit >>= 1;
+        }
+        j ^= bit;
+        
+        if j > i {
+            x.swap(i, j);
+        }
+    }
+    
+    // Cooley-Tukey FFT
+    let mut length = 2;
+    while length <= n {
+        let angle = -2.0 * PI / (length as f64);
+        let wlen = num_complex::Complex::new(angle.cos(), angle.sin());
+        
+        for i in (0..n).step_by(length) {
+            let mut w = num_complex::Complex::new(1.0, 0.0);
+            
+            for j in 0..length / 2 {
+                let u = x[i + j];
+                let v = x[i + j + length / 2] * w;
+                
+                x[i + j] = u + v;
+                x[i + j + length / 2] = u - v;
+                
+                w *= wlen;
+            }
+        }
+        
+        length <<= 1;
+    }
+}
+
+/// Mixed-radix FFT for non-power-of-2 lengths
+fn fft_mixed_radix(x: &mut [num_complex::Complex<f64>]) {
+    let n = x.len();
+    
+    // Simple DFT for small sizes or non-power-of-2
+    if n < 32 || !n.is_power_of_two() {
+        let input = x.to_vec();
+        for k in 0..n {
+            let mut sum = num_complex::Complex::new(0.0, 0.0);
+            for j in 0..n {
+                let angle = -2.0 * PI * (j as f64) * (k as f64) / (n as f64);
+                let factor = num_complex::Complex::new(angle.cos(), angle.sin());
+                sum += factor * input[j];
+            }
+            x[k] = sum;
+        }
+    } else {
+        fft_radix2(x);
+    }
 }
 
 /// Perform an Inverse Fast Fourier Transform (IFFT) on a complex-valued array
@@ -1350,22 +1431,24 @@ fn fft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
 /// # Returns
 /// * A complex-valued array containing the IFFT result
 fn ifft(x: &Array1<num_complex::Complex<f64>>) -> Array1<num_complex::Complex<f64>> {
-    // This is a stub implementation
-    // In a real implementation, this would use a proper IFFT algorithm
     let n = x.len();
-    let mut result = Array1::zeros(n);
-
-    for k in 0..n {
-        let mut sum = num_complex::Complex::new(0.0, 0.0);
-        for j in 0..n {
-            let angle = 2.0 * PI * (j as f64) * (k as f64) / (n as f64);
-            let factor = num_complex::Complex::new(angle.cos(), angle.sin());
-            sum += factor * x[j];
-        }
-        result[k] = sum / (n as f64);
+    let mut input: Vec<num_complex::Complex<f64>> = x.to_vec();
+    
+    // Take complex conjugate
+    for val in &mut input {
+        *val = val.conj();
     }
-
-    result
+    
+    // Perform FFT
+    fft_complex(&mut input);
+    
+    // Take complex conjugate and scale by 1/n
+    let scale = 1.0 / (n as f64);
+    for val in &mut input {
+        *val = val.conj() * scale;
+    }
+    
+    Array1::from_vec(input)
 }
 
 /// Perform a Real Fast Fourier Transform (RFFT) on a real-valued array
@@ -1374,33 +1457,70 @@ fn ifft(x: &Array1<num_complex::Complex<f64>>) -> Array1<num_complex::Complex<f6
 /// * `x` - The input array
 ///
 /// # Returns
-/// * A complex-valued array containing the RFFT result
+/// * A complex-valued array containing the RFFT result (only positive frequencies)
 fn rfft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
-    // For simplicity, use the regular FFT
-    fft(x)
+    let n = x.len();
+    let full_fft = fft(x);
+    
+    // For real input, the FFT is symmetric: X[n-k] = X[k]^*
+    // We only need the first n/2 + 1 components
+    let rfft_size = n / 2 + 1;
+    let mut result = Array1::zeros(rfft_size);
+    
+    for i in 0..rfft_size {
+        result[i] = full_fft[i];
+    }
+    
+    result
 }
 
 /// Perform an Inverse Real Fast Fourier Transform (IRFFT) on a complex-valued array
 ///
 /// # Arguments
-/// * `x` - The input array
+/// * `x` - The input array (RFFT coefficients)
+/// * `n` - The desired output length (must be even for proper reconstruction)
+///
+/// # Returns
+/// * A real-valued array containing the IRFFT result
+fn irfft_with_size(x: &Array1<num_complex::Complex<f64>>, n: usize) -> Array1<f64> {
+    // Reconstruct the full complex spectrum using Hermitian symmetry
+    let mut full_spectrum = Array1::zeros(n);
+    let rfft_size = x.len();
+    
+    // Copy the positive frequencies
+    for i in 0..rfft_size {
+        full_spectrum[i] = x[i];
+    }
+    
+    // Fill in the negative frequencies using Hermitian symmetry: X[n-k] = X[k]^*
+    for i in 1..n/2 {
+        full_spectrum[n - i] = x[i].conj();
+    }
+    
+    // Perform IFFT
+    let complex_result = ifft(&full_spectrum);
+    
+    // Extract real parts (imaginary parts should be negligible for real input)
+    let mut result = Array1::zeros(n);
+    for i in 0..n {
+        result[i] = complex_result[i].re;
+    }
+    
+    result
+}
+
+/// Perform an Inverse Real Fast Fourier Transform (IRFFT) on a complex-valued array
+///
+/// # Arguments
+/// * `x` - The input array (RFFT coefficients)
 ///
 /// # Returns
 /// * A real-valued array containing the IRFFT result
 fn irfft(x: &Array1<num_complex::Complex<f64>>) -> Array1<f64> {
-    // This is a stub implementation
-    // In a real implementation, this would use a proper IRFFT algorithm
-    let complex_result = ifft(x);
-
-    // Extract real parts
-    let n = complex_result.len();
-    let mut result = Array1::zeros(n);
-
-    for i in 0..n {
-        result[i] = complex_result[i].re;
-    }
-
-    result
+    // Infer the output size from the input size
+    // For RFFT output of size k, the original input was size 2*(k-1)
+    let n = 2 * (x.len() - 1);
+    irfft_with_size(x, n)
 }
 
 // Import spectral element module

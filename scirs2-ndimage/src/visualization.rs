@@ -13,6 +13,23 @@ use std::fmt::{Debug, Write};
 use crate::analysis::{ImageQualityMetrics, TextureMetrics};
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion from usize to float
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
+    T::from_usize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+    })
+}
+
+/// Helper function for safe conversion from f64 to float
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
 /// Color map types for visualization
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ColorMap {
@@ -190,7 +207,7 @@ where
     // Create histogram bins
     let mut histogram = vec![0usize; config.num_bins];
     let range = max_val - min_val;
-    let bin_size = range / T::from_usize(config.num_bins).unwrap();
+    let bin_size = range / safe_usize_to_float(config.num_bins)?;
 
     for &value in data.iter() {
         let normalized = (value - min_val) / bin_size;
@@ -210,7 +227,7 @@ where
 
             for (i, &count) in histogram.iter().enumerate() {
                 let height_percent = (count as f64 / max_count as f64) * 100.0;
-                let bin_start = min_val + T::from_usize(i).unwrap() * bin_size;
+                let bin_start = min_val + safe_usize_to_float(i)? * bin_size;
                 let bin_end = bin_start + bin_size;
 
                 writeln!(
@@ -238,7 +255,7 @@ where
             for (i, &count) in histogram.iter().enumerate() {
                 let bar_length = (count as f64 / max_count as f64 * 50.0) as usize;
                 let bin_center =
-                    min_val + (T::from_usize(i).unwrap() + T::from_f64(0.5).unwrap()) * bin_size;
+                    min_val + (safe_usize_to_float(i)? + safe_f64_to_float(0.5)?) * bin_size;
 
                 writeln!(
                     &mut plot,
@@ -261,7 +278,7 @@ where
             for (i, &count) in histogram.iter().enumerate() {
                 let bar_length = (count as f64 / max_count as f64 * 50.0) as usize;
                 let bin_center =
-                    min_val + (T::from_usize(i).unwrap() + T::from_f64(0.5).unwrap()) * bin_size;
+                    min_val + (safe_usize_to_float(i)? + safe_f64_to_float(0.5)?) * bin_size;
 
                 writeln!(
                     &mut plot,
@@ -325,12 +342,12 @@ where
                 let mut path_data = String::new();
 
                 for (i, (&x, &y)) in x_data.iter().zip(y_data.iter()).enumerate() {
-                    let px = ((x - x_min) / x_range * T::from_usize(config.width - 100).unwrap()
-                        + T::from_f64(50.0).unwrap())
+                    let px = ((x - x_min) / x_range * safe_usize_to_float(config.width - 100)?
+                        + safe_f64_to_float(50.0)?)
                     .to_f64()
                     .unwrap_or(0.0);
                     let py = (config.height as f64 - 50.0)
-                        - ((y - y_min) / y_range * T::from_usize(config.height - 100).unwrap())
+                        - ((y - y_min) / y_range * safe_usize_to_float(config.height - 100)?)
                             .to_f64()
                             .unwrap_or(0.0);
 
@@ -1297,7 +1314,7 @@ where
     let mut levels = Vec::new();
     for i in 0..num_levels {
         let t = i as f64 / (num_levels - 1) as f64;
-        let level = min_val + (max_val - min_val) * T::from_f64(t).unwrap();
+        let level = min_val + (max_val - min_val) * safe_f64_to_float(t)?;
         levels.push(level);
     }
 
@@ -1325,7 +1342,7 @@ where
                 for i in 0..height - 1 {
                     for j in 0..width - 1 {
                         let val = data[[i, j]];
-                        let threshold = (max_val - min_val) * T::from_f64(0.02).unwrap(); // 2% tolerance
+                        let threshold = (max_val - min_val) * safe_f64_to_float(0.02)?; // 2% tolerance
 
                         if (val - level).abs() < threshold {
                             let x = (j as f64 / width as f64) * config.width as f64;
@@ -1817,7 +1834,8 @@ mod tests {
             ..PlotConfig::default()
         };
 
-        let plot = plot_histogram(&data.view(), &config).unwrap();
+        let plot = plot_histogram(&data.view(), &config)
+            .expect("plot_histogram should succeed for test");
         assert!(plot.contains("Image Analysis Plot"));
     }
 
@@ -1830,7 +1848,8 @@ mod tests {
             ..PlotConfig::default()
         };
 
-        let plot = plot_profile(&x_data.view(), &y_data.view(), &config).unwrap();
+        let plot = plot_profile(&x_data.view(), &y_data.view(), &config)
+            .expect("plot_profile should succeed for test");
         assert!(plot.contains("Image Analysis Plot"));
     }
 
@@ -1842,7 +1861,8 @@ mod tests {
             ..ReportConfig::default()
         };
 
-        let report = generate_report(&image.view(), None, None, &config).unwrap();
+        let report = generate_report(&image.view(), None, None, &config)
+            .expect("generate_report should succeed for test");
         assert!(report.contains("Image Analysis Report"));
         assert!(report.contains("Image Information"));
     }

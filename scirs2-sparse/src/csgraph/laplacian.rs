@@ -8,7 +8,7 @@ use super::{num_vertices, validate_graph};
 use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
-use crate::{eigsh, EigenResult, EigenvalueMethod};
+use crate::{eigsh, EigenvalueMethod};
 use ndarray::Array1;
 use num_traits::Float;
 use std::fmt::Debug;

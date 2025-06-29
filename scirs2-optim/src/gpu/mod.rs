@@ -17,6 +17,8 @@ pub mod lamb_gpu;
 pub mod memory_pool;
 pub mod mixed_precision;
 pub mod multi_gpu;
+pub mod multi_gpu_sync;
+pub mod multi_gpu_example;
 pub mod rmsprop_gpu;
 pub mod rocm_backend;
 pub mod sgd_gpu;

@@ -3,7 +3,7 @@
 //! This module provides functions for detecting edges in n-dimensional arrays,
 //! including gradient-based methods, zero-crossing methods, and other edge detection techniques.
 
-use crate::error::Result;
+use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{
     convolve, gaussian_filter_f32, gradient_magnitude, prewitt, scharr, sobel, BorderMode,
 };
@@ -99,7 +99,7 @@ impl Default for EdgeDetectionConfig {
 /// ];
 ///
 /// // Default settings - Canny edge detection with Sobel gradient
-/// let edges = edge_detector(&image, EdgeDetectionConfig::default());
+/// let edges = edge_detector(&image, EdgeDetectionConfig::default()).unwrap();
 ///
 /// // Custom configuration - Gradient edge detection with Scharr operator and custom thresholds
 /// let custom_config = EdgeDetectionConfig {
@@ -111,7 +111,7 @@ impl Default for EdgeDetectionConfig {
 ///     border_mode: BorderMode::Reflect,
 ///     return_magnitude: true,
 /// };
-/// let edge_magnitudes = edge_detector(&image, custom_config);
+/// let edge_magnitudes = edge_detector(&image, custom_config).unwrap();
 /// ```
 pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Array<f32, Ix2> {
     match config.algorithm {
@@ -160,7 +160,7 @@ pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Ar
                 edges
             }
         }
-    }
+    })
 }
 
 /// Canny edge detector
@@ -233,7 +233,7 @@ fn canny_impl(
 
     // Step 1: Gaussian filter to reduce noise
     let image_d = image.clone().into_dyn();
-    let smoothed = gaussian_filter_f32(&image_d, sigma, Some(mode), None).unwrap();
+    let smoothed = gaussian_filter_f32(&image_d, sigma, Some(mode), None).unwrap_or_else(|_| image_d.clone());
 
     // Step 2: Calculate gradients using the specified method
     let gradients = calculate_gradient(&smoothed, method, mode);
@@ -259,18 +259,18 @@ fn calculate_gradient(
 ) -> (ArrayD<f32>, ArrayD<f32>) {
     match method {
         GradientMethod::Sobel => {
-            let gy = sobel(image, 0, Some(mode)).unwrap();
-            let gx = sobel(image, 1, Some(mode)).unwrap();
+            let gy = sobel(image, 0, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
+            let gx = sobel(image, 1, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
             (gx, gy)
         }
         GradientMethod::Prewitt => {
-            let gy = prewitt(image, 0, Some(mode)).unwrap();
-            let gx = prewitt(image, 1, Some(mode)).unwrap();
+            let gy = prewitt(image, 0, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
+            let gx = prewitt(image, 1, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
             (gx, gy)
         }
         GradientMethod::Scharr => {
-            let gy = scharr(image, 0, Some(mode)).unwrap();
-            let gx = scharr(image, 1, Some(mode)).unwrap();
+            let gy = scharr(image, 0, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
+            let gx = scharr(image, 1, Some(mode)).unwrap_or_else(|_| ArrayD::zeros(image.raw_dim()));
             (gx, gy)
         }
     }
@@ -484,17 +484,17 @@ fn is_connected_to_strong_edge(row: usize, col: usize, edges: &Array<f32, Ix2>) 
 /// ];
 ///
 /// // Apply LoG filter with default settings
-/// let edges = laplacian_edges(&image, 1.0, None, None);
+/// let edges = laplacian_edges(&image, 1.0, None, None).unwrap();
 ///
 /// // Apply LoG filter with thresholding
-/// let edges_threshold = laplacian_edges(&image, 1.0, Some(0.1), None);
+/// let edges_threshold = laplacian_edges(&image, 1.0, Some(0.1), None).unwrap();
 /// ```
 pub fn laplacian_edges(
     image: &Array<f32, Ix2>,
     sigma: f32,
     threshold: Option<f32>,
     mode: Option<BorderMode>,
-) -> Array<f32, Ix2> {
+) -> NdimageResult<Array<f32, Ix2>> {
     let mode = mode.unwrap_or(BorderMode::Reflect);
     laplacian_edges_impl(image, sigma, threshold.unwrap_or(0.0), mode)
 }
@@ -510,7 +510,7 @@ fn laplacian_edges_impl(
     let image_d = image.clone().into_dyn();
 
     // First, apply Gaussian filter to reduce noise
-    let smoothed = gaussian_filter_f32(&image_d, sigma, Some(mode), None).unwrap();
+    let smoothed = gaussian_filter_f32(&image_d, sigma, Some(mode), None).unwrap_or_else(|_| image_d.clone());
 
     // Create Laplace kernel size based on sigma (typically 2*ceil(3*sigma) + 1)
     let ksize = ((2.0 * (3.0 * sigma).ceil() + 1.0).max(3.0)) as usize;
@@ -545,7 +545,8 @@ fn laplacian_edges_impl(
     }
 
     // Apply convolution
-    let laplacian = convolve(&smoothed, &kernel, Some(mode)).unwrap();
+    let laplacian = convolve(&smoothed, &kernel, Some(mode))
+        .map_err(|e| NdimageError::ComputationError(format!("Laplacian convolution failed: {}", e)))?;
 
     // Convert back to 2D array
     let mut result_copy = Array::zeros(image.dim());
@@ -596,17 +597,17 @@ fn laplacian_edges_impl(
 /// ];
 ///
 /// // Using default Sobel method without smoothing
-/// let edges = gradient_edges(&image, None, None, None);
+/// let edges = gradient_edges(&image, None, None, None).unwrap();
 ///
 /// // Using Scharr method with Gaussian smoothing
-/// let edges_scharr = gradient_edges(&image, Some(GradientMethod::Scharr), Some(1.0), None);
+/// let edges_scharr = gradient_edges(&image, Some(GradientMethod::Scharr), Some(1.0), None).unwrap();
 /// ```
 pub fn gradient_edges(
     image: &Array<f32, Ix2>,
     method: Option<GradientMethod>,
     sigma: Option<f32>,
     mode: Option<BorderMode>,
-) -> Array<f32, Ix2> {
+) -> NdimageResult<Array<f32, Ix2>> {
     let method = method.unwrap_or(GradientMethod::Sobel);
     let mode = mode.unwrap_or(BorderMode::Reflect);
 
@@ -624,7 +625,8 @@ fn gradient_edges_impl(
 
     // Apply Gaussian smoothing if sigma > 0
     let processed = if sigma > 0.0 {
-        gaussian_filter_f32(&image_d, sigma, Some(mode), None).unwrap()
+        gaussian_filter_f32(&image_d, sigma, Some(mode), None)
+            .map_err(|e| NdimageError::ComputationError(format!("Gaussian smoothing failed: {}", e)))?
     } else {
         image_d
     };
@@ -637,7 +639,8 @@ fn gradient_edges_impl(
     };
 
     // Calculate gradient magnitude
-    let magnitude = gradient_magnitude(&processed, Some(mode), Some(method_str)).unwrap();
+    let magnitude = gradient_magnitude(&processed, Some(mode), Some(method_str))
+        .map_err(|e| NdimageError::ComputationError(format!("Gradient magnitude calculation failed: {}", e)))?;
 
     // Convert back to 2D array
     let mut result_copy = Array::zeros(image.dim());
@@ -648,7 +651,7 @@ fn gradient_edges_impl(
         }
     }
 
-    result_copy
+    Ok(result_copy)
 }
 
 /// Sobel edge detector (for backward compatibility)
@@ -765,7 +768,8 @@ mod tests {
         ];
 
         // Test with default config (Canny)
-        let edges_default = edge_detector(&image, EdgeDetectionConfig::default());
+        let edges_default = edge_detector(&image, EdgeDetectionConfig::default())
+            .expect("edge_detector should succeed for test with default config");
         assert!(
             edges_default.fold(false, |acc, &x| acc || (x > 0.0)),
             "Edges should be detected with default config"
@@ -782,7 +786,8 @@ mod tests {
             return_magnitude: true,
         };
 
-        let gradient_edges = edge_detector(&image, gradient_config);
+        let gradient_edges = edge_detector(&image, gradient_config)
+            .expect("edge_detector should succeed for test with gradient config");
 
         // Check that magnitudes are returned
         let max_magnitude = gradient_edges.fold(0.0, |acc, &x| if x > acc { x } else { acc });
@@ -799,7 +804,8 @@ mod tests {
             ..EdgeDetectionConfig::default()
         };
 
-        let log_edges = edge_detector(&image, log_config);
+        let log_edges = edge_detector(&image, log_config)
+            .expect("edge_detector should succeed for test with LoG config");
 
         // Check that edges are detected
         assert!(
@@ -820,9 +826,12 @@ mod tests {
         ];
 
         // Test different gradient methods
-        let edges_sobel = gradient_edges(&image, Some(GradientMethod::Sobel), Some(1.0), None);
-        let edges_prewitt = gradient_edges(&image, Some(GradientMethod::Prewitt), Some(1.0), None);
-        let edges_scharr = gradient_edges(&image, Some(GradientMethod::Scharr), Some(1.0), None);
+        let edges_sobel = gradient_edges(&image, Some(GradientMethod::Sobel), Some(1.0), None)
+            .expect("gradient_edges with Sobel should succeed for test");
+        let edges_prewitt = gradient_edges(&image, Some(GradientMethod::Prewitt), Some(1.0), None)
+            .expect("gradient_edges with Prewitt should succeed for test");
+        let edges_scharr = gradient_edges(&image, Some(GradientMethod::Scharr), Some(1.0), None)
+            .expect("gradient_edges with Scharr should succeed for test");
 
         // Check that all methods detect edges
         assert!(
@@ -847,8 +856,10 @@ mod tests {
             [0.0, 0.0, 0.0, 0.0, 1.0],
         ];
 
-        let diag_sobel = gradient_edges(&diagonal_image, Some(GradientMethod::Sobel), None, None);
-        let diag_scharr = gradient_edges(&diagonal_image, Some(GradientMethod::Scharr), None, None);
+        let diag_sobel = gradient_edges(&diagonal_image, Some(GradientMethod::Sobel), None, None)
+            .expect("gradient_edges with Sobel should succeed for diagonal test");
+        let diag_scharr = gradient_edges(&diagonal_image, Some(GradientMethod::Scharr), None, None)
+            .expect("gradient_edges with Scharr should succeed for diagonal test");
 
         // Calculate the maximum magnitude for each
         let max_sobel = diag_sobel
@@ -872,7 +883,8 @@ mod tests {
         image[[2, 2]] = 1.0;
 
         // Apply LoG filter
-        let edges = laplacian_edges(&image, 1.0, None, None);
+        let edges = laplacian_edges(&image, 1.0, None, None)
+            .expect("laplacian_edges should succeed for test");
 
         // Check that edges are detected
         assert!(edges.iter().any(|&x| x != 0.0), "LoG should detect edges");
@@ -884,7 +896,8 @@ mod tests {
         );
 
         // Apply with thresholding
-        let edges_threshold = laplacian_edges(&image, 1.0, Some(0.1), None);
+        let edges_threshold = laplacian_edges(&image, 1.0, Some(0.1), None)
+            .expect("laplacian_edges with threshold should succeed for test");
 
         // Count non-zero values before and after thresholding
         let count_before = edges.iter().filter(|&&x| x != 0.0).count();

@@ -583,6 +583,340 @@ impl BifurcationAnalyzer {
         None
     }
 
+    /// Enhanced bifurcation detection using multiple criteria and numerical test functions
+    fn enhanced_bifurcation_detection(
+        &self,
+        prev_eigenvalues: &[Complex64],
+        curr_eigenvalues: &[Complex64],
+        prev_jacobian: &Array2<f64>,
+        curr_jacobian: &Array2<f64>,
+        tolerance: f64,
+    ) -> Option<BifurcationType> {
+        // Use eigenvalue tracking for more robust detection
+        let eigenvalue_pairs = self.track_eigenvalues(prev_eigenvalues, curr_eigenvalues, tolerance);
+        
+        // Test function approach for bifurcation detection
+        if let Some(bif_type) = self.test_function_bifurcation_detection(
+            &eigenvalue_pairs,
+            prev_jacobian,
+            curr_jacobian,
+            tolerance,
+        ) {
+            return Some(bif_type);
+        }
+        
+        // Check for cusp bifurcation
+        if let Some(bif_type) = self.detect_cusp_bifurcation(
+            prev_eigenvalues,
+            curr_eigenvalues,
+            prev_jacobian,
+            curr_jacobian,
+            tolerance,
+        ) {
+            return Some(bif_type);
+        }
+        
+        // Check for Bogdanov-Takens bifurcation
+        if let Some(bif_type) = self.detect_bogdanov_takens_bifurcation(
+            prev_eigenvalues,
+            curr_eigenvalues,
+            prev_jacobian,
+            curr_jacobian,
+            tolerance,
+        ) {
+            return Some(bif_type);
+        }
+        
+        None
+    }
+
+    /// Track eigenvalues across parameter changes to avoid spurious detections
+    fn track_eigenvalues(
+        &self,
+        prev_eigenvalues: &[Complex64],
+        curr_eigenvalues: &[Complex64],
+        tolerance: f64,
+    ) -> Vec<(Complex64, Complex64)> {
+        let mut pairs = Vec::new();
+        let mut used_curr = vec![false; curr_eigenvalues.len()];
+        
+        // For each previous eigenvalue, find the closest current eigenvalue
+        for &prev_eig in prev_eigenvalues {
+            let mut best_match = 0;
+            let mut best_distance = f64::INFINITY;
+            
+            for (j, &curr_eig) in curr_eigenvalues.iter().enumerate() {
+                if !used_curr[j] {
+                    let distance = (prev_eig - curr_eig).norm();
+                    if distance < best_distance {
+                        best_distance = distance;
+                        best_match = j;
+                    }
+                }
+            }
+            
+            // Only pair if the distance is reasonable
+            if best_distance < tolerance * 100.0 {
+                pairs.push((prev_eig, curr_eigenvalues[best_match]));
+                used_curr[best_match] = true;
+            }
+        }
+        
+        pairs
+    }
+
+    /// Test function approach for bifurcation detection
+    fn test_function_bifurcation_detection(
+        &self,
+        eigenvalue_pairs: &[(Complex64, Complex64)],
+        prev_jacobian: &Array2<f64>,
+        curr_jacobian: &Array2<f64>,
+        tolerance: f64,
+    ) -> Option<BifurcationType> {
+        // Test function 1: det(J) for fold bifurcations
+        let prev_det = self.compute_determinant(prev_jacobian);
+        let curr_det = self.compute_determinant(curr_jacobian);
+        
+        if prev_det * curr_det < 0.0 && prev_det.abs() > tolerance && curr_det.abs() > tolerance {
+            // Additional verification: check if exactly one eigenvalue crosses zero
+            let zero_crossings = eigenvalue_pairs
+                .iter()
+                .filter(|(prev, curr)| {
+                    prev.re * curr.re < 0.0 
+                    && prev.im.abs() < tolerance 
+                    && curr.im.abs() < tolerance
+                })
+                .count();
+                
+            if zero_crossings == 1 {
+                return Some(BifurcationType::Fold);
+            }
+        }
+        
+        // Test function 2: tr(J) for transcritical bifurcations (in certain contexts)
+        let prev_trace = self.compute_trace(prev_jacobian);
+        let curr_trace = self.compute_trace(curr_jacobian);
+        
+        // Check for trace sign change combined with one zero eigenvalue
+        if prev_trace * curr_trace < 0.0 {
+            let has_zero_eigenvalue = eigenvalue_pairs
+                .iter()
+                .any(|(prev, curr)| prev.norm() < tolerance || curr.norm() < tolerance);
+                
+            if has_zero_eigenvalue {
+                return Some(BifurcationType::Transcritical);
+            }
+        }
+        
+        // Test function 3: Real parts of complex conjugate pairs for Hopf bifurcations
+        for (prev, curr) in eigenvalue_pairs {
+            if prev.im.abs() > tolerance && curr.im.abs() > tolerance {
+                // Check if real part crosses zero
+                if prev.re * curr.re < 0.0 {
+                    // Verify it's part of a complex conjugate pair
+                    let has_conjugate = eigenvalue_pairs
+                        .iter()
+                        .any(|(p, c)| {
+                            (p.conj() - *prev).norm() < tolerance 
+                            && (c.conj() - *curr).norm() < tolerance
+                        });
+                        
+                    if has_conjugate {
+                        return Some(BifurcationType::Hopf);
+                    }
+                }
+            }
+        }
+        
+        None
+    }
+
+    /// Detect cusp bifurcation (higher-order fold bifurcation)
+    fn detect_cusp_bifurcation(
+        &self,
+        prev_eigenvalues: &[Complex64],
+        curr_eigenvalues: &[Complex64],
+        prev_jacobian: &Array2<f64>,
+        curr_jacobian: &Array2<f64>,
+        tolerance: f64,
+    ) -> Option<BifurcationType> {
+        // Cusp bifurcation occurs when:
+        // 1. det(J) = 0 (fold condition)
+        // 2. The first non-zero derivative of det(J) is the third derivative
+        
+        let prev_det = self.compute_determinant(prev_jacobian);
+        let curr_det = self.compute_determinant(curr_jacobian);
+        
+        // Check if determinant passes through zero
+        if prev_det * curr_det < 0.0 {
+            // Estimate higher-order derivatives numerically
+            let det_derivative_estimate = curr_det - prev_det;
+            
+            // For a cusp, the determinant should have a very flat crossing
+            // (small first derivative but non-zero higher derivatives)
+            if det_derivative_estimate.abs() < tolerance * 10.0 {
+                // Additional check: multiple eigenvalues near zero
+                let near_zero_eigenvalues = curr_eigenvalues
+                    .iter()
+                    .filter(|eig| eig.norm() < tolerance * 10.0)
+                    .count();
+                    
+                if near_zero_eigenvalues >= 2 {
+                    // This could be a cusp or higher-order bifurcation
+                    // For now, classify as unknown but could be enhanced
+                    return Some(BifurcationType::Unknown);
+                }
+            }
+        }
+        
+        None
+    }
+
+    /// Detect Bogdanov-Takens bifurcation (double zero eigenvalue)
+    fn detect_bogdanov_takens_bifurcation(
+        &self,
+        prev_eigenvalues: &[Complex64],
+        curr_eigenvalues: &[Complex64],
+        prev_jacobian: &Array2<f64>,
+        curr_jacobian: &Array2<f64>,
+        tolerance: f64,
+    ) -> Option<BifurcationType> {
+        // Bogdanov-Takens bifurcation has:
+        // 1. Two zero eigenvalues
+        // 2. The Jacobian has rank n-2
+        
+        let curr_zero_eigenvalues = curr_eigenvalues
+            .iter()
+            .filter(|eig| eig.norm() < tolerance)
+            .count();
+            
+        if curr_zero_eigenvalues >= 2 {
+            // Check the rank of the Jacobian
+            let rank = self.estimate_matrix_rank(curr_jacobian, tolerance);
+            let expected_rank = curr_jacobian.nrows().saturating_sub(2);
+            
+            if rank <= expected_rank {
+                // Additional verification: check nullspace dimension
+                let det = self.compute_determinant(curr_jacobian);
+                if det.abs() < tolerance {
+                    return Some(BifurcationType::Unknown); // Could classify as BT bifurcation
+                }
+            }
+        }
+        
+        None
+    }
+
+    /// Compute determinant of a matrix using LU decomposition
+    fn compute_determinant(&self, matrix: &Array2<f64>) -> f64 {
+        let n = matrix.nrows();
+        if n != matrix.ncols() {
+            return 0.0; // Not square
+        }
+        
+        let mut lu = matrix.clone();
+        let mut determinant = 1.0;
+        
+        // LU decomposition with partial pivoting
+        for k in 0..n {
+            // Find pivot
+            let mut max_val = lu[[k, k]].abs();
+            let mut max_idx = k;
+            
+            for i in (k + 1)..n {
+                if lu[[i, k]].abs() > max_val {
+                    max_val = lu[[i, k]].abs();
+                    max_idx = i;
+                }
+            }
+            
+            // Swap rows if needed
+            if max_idx != k {
+                for j in 0..n {
+                    let temp = lu[[k, j]];
+                    lu[[k, j]] = lu[[max_idx, j]];
+                    lu[[max_idx, j]] = temp;
+                }
+                determinant *= -1.0; // Row swap changes sign
+            }
+            
+            // Check for singular matrix
+            if lu[[k, k]].abs() < 1e-14 {
+                return 0.0;
+            }
+            
+            determinant *= lu[[k, k]];
+            
+            // Eliminate
+            for i in (k + 1)..n {
+                let factor = lu[[i, k]] / lu[[k, k]];
+                for j in (k + 1)..n {
+                    lu[[i, j]] -= factor * lu[[k, j]];
+                }
+            }
+        }
+        
+        determinant
+    }
+
+    /// Compute trace of a matrix
+    fn compute_trace(&self, matrix: &Array2<f64>) -> f64 {
+        let n = std::cmp::min(matrix.nrows(), matrix.ncols());
+        (0..n).map(|i| matrix[[i, i]]).sum()
+    }
+
+    /// Estimate the rank of a matrix using SVD-like approach
+    fn estimate_matrix_rank(&self, matrix: &Array2<f64>, tolerance: f64) -> usize {
+        // Simplified rank estimation using QR decomposition
+        let (m, n) = matrix.dim();
+        let mut a = matrix.clone();
+        let mut rank = 0;
+        
+        for k in 0..std::cmp::min(m, n) {
+            // Find the column with maximum norm
+            let mut max_norm = 0.0;
+            let mut max_col = k;
+            
+            for j in k..n {
+                let col_norm: f64 = (k..m).map(|i| a[[i, j]].powi(2)).sum::<f64>().sqrt();
+                if col_norm > max_norm {
+                    max_norm = col_norm;
+                    max_col = j;
+                }
+            }
+            
+            // If maximum norm is below tolerance, we've found the rank
+            if max_norm < tolerance {
+                break;
+            }
+            
+            // Swap columns
+            if max_col != k {
+                for i in 0..m {
+                    let temp = a[[i, k]];
+                    a[[i, k]] = a[[i, max_col]];
+                    a[[i, max_col]] = temp;
+                }
+            }
+            
+            rank += 1;
+            
+            // Normalize and orthogonalize
+            for i in k..m {
+                a[[i, k]] /= max_norm;
+            }
+            
+            for j in (k + 1)..n {
+                let dot_product: f64 = (k..m).map(|i| a[[i, k]] * a[[i, j]]).sum();
+                for i in k..m {
+                    a[[i, j]] -= dot_product * a[[i, k]];
+                }
+            }
+        }
+        
+        rank
+    }
+
     /// Advanced continuation method with predictor-corrector
     pub fn predictor_corrector_continuation<F>(
         &self,
@@ -1082,11 +1416,174 @@ impl StabilityAnalyzer {
                 ])
             }
         } else {
-            // For higher dimensions, use power iteration or other methods
-            Err(IntegrateError::NotImplementedError(
-                "Eigenvalue computation for matrices larger than 2x2 not implemented".to_string(),
-            ))
+            // For higher dimensions, use the QR algorithm
+            self.eigenvalues_qr_algorithm(matrix)
         }
+    }
+
+    /// Compute eigenvalues using QR algorithm for larger matrices
+    fn eigenvalues_qr_algorithm(&self, matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+        let n = matrix.nrows();
+        let mut a = matrix.clone();
+        let max_iterations = 100;
+        let tolerance = 1e-10;
+
+        // First, reduce to upper Hessenberg form for better convergence
+        a = self.reduce_to_hessenberg(&a)?;
+
+        // Apply QR iterations
+        for _ in 0..max_iterations {
+            let (q, r) = self.qr_decomposition_real(&a)?;
+            a = r.dot(&q);
+
+            // Check convergence by examining sub-diagonal elements
+            let mut converged = true;
+            for i in 1..n {
+                if a[[i, i - 1]].abs() > tolerance {
+                    converged = false;
+                    break;
+                }
+            }
+
+            if converged {
+                break;
+            }
+        }
+
+        // Extract eigenvalues from the diagonal
+        let mut eigenvalues = Vec::new();
+        let mut i = 0;
+        while i < n {
+            if i == n - 1 || a[[i + 1, i]].abs() < tolerance {
+                // Real eigenvalue
+                eigenvalues.push(Complex64::new(a[[i, i]], 0.0));
+                i += 1;
+            } else {
+                // Complex conjugate pair
+                let trace = a[[i, i]] + a[[i + 1, i + 1]];
+                let det = a[[i, i]] * a[[i + 1, i + 1]] - a[[i, i + 1]] * a[[i + 1, i]];
+                let discriminant = trace * trace - 4.0 * det;
+
+                if discriminant >= 0.0 {
+                    let sqrt_disc = discriminant.sqrt();
+                    eigenvalues.push(Complex64::new((trace + sqrt_disc) / 2.0, 0.0));
+                    eigenvalues.push(Complex64::new((trace - sqrt_disc) / 2.0, 0.0));
+                } else {
+                    let real_part = trace / 2.0;
+                    let imag_part = (-discriminant).sqrt() / 2.0;
+                    eigenvalues.push(Complex64::new(real_part, imag_part));
+                    eigenvalues.push(Complex64::new(real_part, -imag_part));
+                }
+                i += 2;
+            }
+        }
+
+        Ok(eigenvalues)
+    }
+
+    /// Reduce matrix to upper Hessenberg form using Householder reflections
+    fn reduce_to_hessenberg(&self, matrix: &Array2<f64>) -> Result<Array2<f64>> {
+        let n = matrix.nrows();
+        let mut h = matrix.clone();
+
+        for k in 0..(n - 2) {
+            // Extract the column below the diagonal
+            let mut x = Array1::<f64>::zeros(n - k - 1);
+            for i in 0..(n - k - 1) {
+                x[i] = h[[k + 1 + i, k]];
+            }
+
+            if x.iter().map(|&v| v * v).sum::<f64>().sqrt() > 1e-15 {
+                // Compute Householder vector
+                let alpha = if x[0] >= 0.0 {
+                    -x.iter().map(|&v| v * v).sum::<f64>().sqrt()
+                } else {
+                    x.iter().map(|&v| v * v).sum::<f64>().sqrt()
+                };
+
+                let mut v = x.clone();
+                v[0] -= alpha;
+                let v_norm = v.iter().map(|&vi| vi * vi).sum::<f64>().sqrt();
+
+                if v_norm > 1e-15 {
+                    v.mapv_inplace(|vi| vi / v_norm);
+
+                    // Apply Householder reflection: H = I - 2*v*v^T
+                    // H * A
+                    for j in k..n {
+                        let dot_product: f64 = (0..(n - k - 1))
+                            .map(|i| v[i] * h[[k + 1 + i, j]])
+                            .sum();
+                        for i in 0..(n - k - 1) {
+                            h[[k + 1 + i, j]] -= 2.0 * v[i] * dot_product;
+                        }
+                    }
+
+                    // A * H
+                    for i in 0..n {
+                        let dot_product: f64 = (0..(n - k - 1))
+                            .map(|j| h[[i, k + 1 + j]] * v[j])
+                            .sum();
+                        for j in 0..(n - k - 1) {
+                            h[[i, k + 1 + j]] -= 2.0 * v[j] * dot_product;
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(h)
+    }
+
+    /// QR decomposition for real matrices
+    fn qr_decomposition_real(&self, matrix: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
+        let (m, n) = matrix.dim();
+        let mut q = Array2::<f64>::eye(m);
+        let mut r = matrix.clone();
+
+        for k in 0..std::cmp::min(m - 1, n) {
+            // Extract column k from row k onwards
+            let mut x = Array1::<f64>::zeros(m - k);
+            for i in 0..(m - k) {
+                x[i] = r[[k + i, k]];
+            }
+
+            // Compute Householder vector
+            let norm_x = x.iter().map(|&v| v * v).sum::<f64>().sqrt();
+            if norm_x > 1e-15 {
+                let alpha = if x[0] >= 0.0 { -norm_x } else { norm_x };
+                
+                let mut v = x.clone();
+                v[0] -= alpha;
+                let v_norm = v.iter().map(|&vi| vi * vi).sum::<f64>().sqrt();
+
+                if v_norm > 1e-15 {
+                    v.mapv_inplace(|vi| vi / v_norm);
+
+                    // Apply Householder reflection to R
+                    for j in k..n {
+                        let dot_product: f64 = (0..(m - k))
+                            .map(|i| v[i] * r[[k + i, j]])
+                            .sum();
+                        for i in 0..(m - k) {
+                            r[[k + i, j]] -= 2.0 * v[i] * dot_product;
+                        }
+                    }
+
+                    // Apply Householder reflection to Q
+                    for i in 0..m {
+                        let dot_product: f64 = (0..(m - k))
+                            .map(|j| q[[i, k + j]] * v[j])
+                            .sum();
+                        for j in 0..(m - k) {
+                            q[[i, k + j]] -= 2.0 * v[j] * dot_product;
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok((q, r))
     }
 
     /// Compute eigenvectors (simplified)
@@ -1132,28 +1629,700 @@ impl StabilityAnalyzer {
         }
     }
 
-    /// Find periodic orbits (simplified implementation)
+    /// Find periodic orbits using multiple detection methods
     fn find_periodic_orbits<F>(
         &self,
-        _system: &F,
-        _domain: &[(f64, f64)],
+        system: &F,
+        domain: &[(f64, f64)],
     ) -> Result<Vec<PeriodicOrbit>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
-        // Placeholder for periodic orbit detection
-        // Would use methods like Poincaré sections, shooting methods, etc.
-        Ok(vec![])
+        let mut periodic_orbits = Vec::new();
+        
+        // Method 1: Shooting method for periodic orbits
+        if let Ok(shooting_orbits) = self.shooting_method_periodic_orbits(system, domain) {
+            periodic_orbits.extend(shooting_orbits);
+        }
+        
+        // Method 2: Return map analysis
+        if let Ok(return_map_orbits) = self.return_map_periodic_orbits(system, domain) {
+            periodic_orbits.extend(return_map_orbits);
+        }
+        
+        // Method 3: Fourier analysis of trajectories
+        if let Ok(fourier_orbits) = self.fourier_analysis_periodic_orbits(system, domain) {
+            periodic_orbits.extend(fourier_orbits);
+        }
+        
+        // Remove duplicates based on spatial proximity
+        let filtered_orbits = self.remove_duplicate_periodic_orbits(periodic_orbits);
+        
+        Ok(filtered_orbits)
     }
 
-    /// Compute Lyapunov exponents
-    fn compute_lyapunov_exponents<F>(&self, _system: &F) -> Result<Option<Array1<f64>>>
+    /// Use shooting method to find periodic orbits
+    fn shooting_method_periodic_orbits<F>(
+        &self,
+        system: &F,
+        domain: &[(f64, f64)],
+    ) -> Result<Vec<PeriodicOrbit>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
-        // Placeholder for Lyapunov exponent computation
-        // Would integrate the variational equation
-        Ok(None)
+        let mut periodic_orbits = Vec::new();
+        
+        if self.dimension != 2 {
+            return Ok(periodic_orbits); // Shooting method implementation for 2D systems only
+        }
+        
+        // Generate initial guesses for periodic orbits
+        let n_guesses = 20;
+        let mut initial_points = Vec::new();
+        self.generate_grid_points(domain, n_guesses, &mut initial_points);
+        
+        // Try different periods
+        let periods = vec![
+            std::f64::consts::PI,     // π
+            2.0 * std::f64::consts::PI, // 2π
+            std::f64::consts::PI / 2.0, // π/2
+            4.0 * std::f64::consts::PI, // 4π
+        ];
+        
+        for initial_point in &initial_points {
+            for &period in &periods {
+                if let Ok(orbit) = self.shooting_method_single_orbit(system, initial_point, period) {
+                    periodic_orbits.push(orbit);
+                }
+            }
+        }
+        
+        Ok(periodic_orbits)
+    }
+
+    /// Single orbit detection using shooting method
+    fn shooting_method_single_orbit<F>(
+        &self,
+        system: &F,
+        initial_guess: &Array1<f64>,
+        period: f64,
+    ) -> Result<PeriodicOrbit>
+    where
+        F: Fn(&Array1<f64>) -> Array1<f64>,
+    {
+        let max_iterations = 50;
+        let tolerance = 1e-8;
+        let dt = period / 100.0; // Integration step size
+        
+        let mut current_guess = initial_guess.clone();
+        
+        // Newton iteration for shooting method
+        for _iter in 0..max_iterations {
+            // Integrate forward for one period
+            let final_state = self.integrate_trajectory_period(system, &current_guess, period, dt)?;
+            
+            // Compute the shooting function: F(x0) = x(T) - x0
+            let shooting_residual = &final_state - &current_guess;
+            let residual_norm = shooting_residual.iter().map(|&x| x * x).sum::<f64>().sqrt();
+            
+            if residual_norm < tolerance {
+                // Found a periodic orbit
+                let floquet_multipliers = self.compute_floquet_multipliers(system, &current_guess, period)?;
+                let stability = self.classify_periodic_orbit_stability(&floquet_multipliers);
+                
+                return Ok(PeriodicOrbit {
+                    representative_point: current_guess,
+                    period,
+                    stability,
+                    floquet_multipliers,
+                });
+            }
+            
+            // Compute Jacobian of the flow map
+            let flow_jacobian = self.compute_flow_jacobian(system, &current_guess, period, dt)?;
+            
+            // Newton step: solve (∂F/∂x0) * Δx0 = -F(x0)
+            let identity = Array2::<f64>::eye(self.dimension);
+            let shooting_jacobian = &flow_jacobian - &identity;
+            
+            // Solve the linear system
+            let newton_step = self.solve_linear_system_for_shooting(&shooting_jacobian, &(-&shooting_residual))?;
+            current_guess += &newton_step;
+        }
+        
+        Err(IntegrateError::ConvergenceError(
+            "Shooting method did not converge to periodic orbit".to_string()
+        ))
+    }
+
+    /// Integrate trajectory for a specified period
+    fn integrate_trajectory_period<F>(
+        &self,
+        system: &F,
+        initial_state: &Array1<f64>,
+        period: f64,
+        dt: f64,
+    ) -> Result<Array1<f64>>
+    where
+        F: Fn(&Array1<f64>) -> Array1<f64>,
+    {
+        let n_steps = (period / dt) as usize;
+        let mut state = initial_state.clone();
+        
+        // Fourth-order Runge-Kutta integration
+        for _ in 0..n_steps {
+            let k1 = system(&state);
+            let k2 = system(&(&state + &(&k1 * (dt / 2.0))));
+            let k3 = system(&(&state + &(&k2 * (dt / 2.0))));
+            let k4 = system(&(&state + &(&k3 * dt)));
+            
+            state += &((&k1 + &k2 * 2.0 + &k3 * 2.0 + &k4) * (dt / 6.0));
+        }
+        
+        Ok(state)
+    }
+
+    /// Compute flow map Jacobian using finite differences
+    fn compute_flow_jacobian<F>(
+        &self,
+        system: &F,
+        initial_state: &Array1<f64>,
+        period: f64,
+        dt: f64,
+    ) -> Result<Array2<f64>>
+    where
+        F: Fn(&Array1<f64>) -> Array1<f64>,
+    {
+        let h = 1e-8;
+        let n = initial_state.len();
+        let mut jacobian = Array2::<f64>::zeros((n, n));
+        
+        // Base trajectory
+        let base_final = self.integrate_trajectory_period(system, initial_state, period, dt)?;
+        
+        // Perturb each component and compute finite differences
+        for j in 0..n {
+            let mut perturbed_initial = initial_state.clone();
+            perturbed_initial[j] += h;
+            
+            let perturbed_final = self.integrate_trajectory_period(system, &perturbed_initial, period, dt)?;
+            
+            for i in 0..n {
+                jacobian[[i, j]] = (perturbed_final[i] - base_final[i]) / h;
+            }
+        }
+        
+        Ok(jacobian)
+    }
+
+    /// Compute Floquet multipliers for periodic orbit stability analysis
+    fn compute_floquet_multipliers<F>(
+        &self,
+        system: &F,
+        representative_point: &Array1<f64>,
+        period: f64,
+    ) -> Result<Vec<Complex64>>
+    where
+        F: Fn(&Array1<f64>) -> Array1<f64>,
+    {
+        let dt = period / 100.0;
+        let flow_jacobian = self.compute_flow_jacobian(system, representative_point, period, dt)?;
+        
+        // Compute eigenvalues of the flow map Jacobian (Floquet multipliers)
+        let multipliers = self.compute_real_eigenvalues(&flow_jacobian)?;
+        
+        Ok(multipliers)
+    }
+
+    /// Classify periodic orbit stability based on Floquet multipliers
+    fn classify_periodic_orbit_stability(&self, floquet_multipliers: &[Complex64]) -> StabilityType {
+        // For periodic orbits, stability is determined by Floquet multipliers
+        // Stable if all multipliers have |λ| < 1
+        // Unstable if any multiplier has |λ| > 1
+        
+        let max_magnitude = floquet_multipliers
+            .iter()
+            .map(|m| m.norm())
+            .fold(0.0, f64::max);
+        
+        if max_magnitude < 1.0 - 1e-10 {
+            StabilityType::Stable
+        } else if max_magnitude > 1.0 + 1e-10 {
+            StabilityType::Unstable
+        } else {
+            // One or more multipliers on unit circle
+            let on_unit_circle = floquet_multipliers
+                .iter()
+                .any(|m| (m.norm() - 1.0).abs() < 1e-10);
+                
+            if on_unit_circle {
+                StabilityType::Center
+            } else {
+                StabilityType::Degenerate
+            }
+        }
+    }
+
+    /// Return map analysis for periodic orbit detection
+    fn return_map_periodic_orbits<F>(
+        &self,
+        system: &F,
+        domain: &[(f64, f64)],
+    ) -> Result<Vec<PeriodicOrbit>>
+    where
+        F: Fn(&Array1<f64>) -> Array1<f64>,
+    {
+        let mut periodic_orbits = Vec::new();
+        
+        if self.dimension != 2 {
+            return Ok(periodic_orbits); // Return map analysis for 2D systems only
+        }
+        
+        // Define a Poincaré section (e.g., x = 0)
+        let section_plane = Array1::from_vec(vec![1.0, 0.0]); // Normal to x-axis
+        let section_point = Array1::zeros(2); // Origin
+        
+        // Generate several trajectories and find their intersections with the Poincaré section
+        let n_trajectories = 10;
+        let mut initial_points = Vec::new();
+        self.generate_grid_points(domain, n_trajectories, &mut initial_points);
+        
+        for initial_point in &initial_points {
+            if let Ok(return_points) = self.compute_poincare_return_map(system, initial_point, &section_plane, &section_point) {
+                // Analyze return points for periodicity
+                if let Ok(orbit) = self.analyze_return_map_for_periodicity(&return_points) {
+                    periodic_orbits.push(orbit);
+                }
+            }
+        }
+        
+        Ok(periodic_orbits)
+    }
+
+    /// Compute Poincaré return map
+    fn compute_poincare_return_map<F>(
+        &self,
+        system: &F,
+        initial_point: &Array1<f64>,
+        section_normal: &Array1<f64>,
+        section_point: &Array1<f64>,
+    ) -> Result<Vec<Array1<f64>>>
+    where
+        F: Fn(&Array1<f64>) -> Array1<f64>,
+    {
+        let mut return_points = Vec::new();
+        let dt = 0.01;
+        let max_time = 50.0;
+        let n_steps = (max_time / dt) as usize;
+        
+        let mut state = initial_point.clone();
+        let mut prev_distance = self.distance_to_section(&state, section_normal, section_point);
+        
+        for _ in 0..n_steps {
+            // Integrate one step
+            let derivative = system(&state);
+            state += &(derivative * dt);
+            
+            // Check for section crossing
+            let curr_distance = self.distance_to_section(&state, section_normal, section_point);
+            
+            if prev_distance * curr_distance < 0.0 {
+                // Crossed the section, refine the crossing point
+                if let Ok(crossing_point) = self.refine_section_crossing(
+                    system, &state, dt, section_normal, section_point
+                ) {
+                    return_points.push(crossing_point);
+                    
+                    if return_points.len() > 20 {
+                        break; // Collect enough return points
+                    }
+                }
+            }
+            
+            prev_distance = curr_distance;
+        }
+        
+        Ok(return_points)
+    }
+
+    /// Distance from point to Poincaré section
+    fn distance_to_section(
+        &self,
+        point: &Array1<f64>,
+        section_normal: &Array1<f64>,
+        section_point: &Array1<f64>,
+    ) -> f64 {
+        let relative_pos = point - section_point;
+        relative_pos.dot(section_normal)
+    }
+
+    /// Refine section crossing using bisection
+    fn refine_section_crossing<F>(
+        &self,
+        system: &F,
+        current_state: &Array1<f64>,
+        dt: f64,
+        section_normal: &Array1<f64>,
+        section_point: &Array1<f64>,
+    ) -> Result<Array1<f64>>
+    where
+        F: Fn(&Array1<f64>) -> Array1<f64>,
+    {
+        // Simple bisection refinement
+        let derivative = system(current_state);
+        let prev_state = current_state - &(derivative * dt);
+        
+        let mut left = prev_state;
+        let mut right = current_state.clone();
+        
+        for _ in 0..10 {
+            let mid = (&left + &right) * 0.5;
+            let mid_distance = self.distance_to_section(&mid, section_normal, section_point);
+            
+            if mid_distance.abs() < 1e-10 {
+                return Ok(mid);
+            }
+            
+            let left_distance = self.distance_to_section(&left, section_normal, section_point);
+            
+            if left_distance * mid_distance < 0.0 {
+                right = mid;
+            } else {
+                left = mid;
+            }
+        }
+        
+        Ok((&left + &right) * 0.5)
+    }
+
+    /// Analyze return map for periodicity
+    fn analyze_return_map_for_periodicity(
+        &self,
+        return_points: &[Array1<f64>],
+    ) -> Result<PeriodicOrbit> {
+        if return_points.len() < 3 {
+            return Err(IntegrateError::ComputationError(
+                "Insufficient return points for periodicity analysis".to_string()
+            ));
+        }
+        
+        let tolerance = 1e-6;
+        
+        // Look for approximate returns
+        for period in 1..std::cmp::min(return_points.len() / 2, 10) {
+            let mut is_periodic = true;
+            let mut max_error = 0.0;
+            
+            for i in 0..(return_points.len() - period) {
+                let error = (&return_points[i] - &return_points[i + period])
+                    .iter()
+                    .map(|&x| x * x)
+                    .sum::<f64>()
+                    .sqrt();
+                    
+                max_error = max_error.max(error);
+                
+                if error > tolerance {
+                    is_periodic = false;
+                    break;
+                }
+            }
+            
+            if is_periodic {
+                // Estimate the period in time (rough approximation)
+                let estimated_period = period as f64 * 2.0 * std::f64::consts::PI;
+                
+                return Ok(PeriodicOrbit {
+                    representative_point: return_points[0].clone(),
+                    period: estimated_period,
+                    stability: StabilityType::Stable, // Would need proper analysis
+                    floquet_multipliers: vec![],      // Would need computation
+                });
+            }
+        }
+        
+        Err(IntegrateError::ComputationError(
+            "No periodic behavior detected in return map".to_string()
+        ))
+    }
+
+    /// Fourier analysis for periodic orbit detection
+    fn fourier_analysis_periodic_orbits<F>(
+        &self,
+        system: &F,
+        domain: &[(f64, f64)],
+    ) -> Result<Vec<PeriodicOrbit>>
+    where
+        F: Fn(&Array1<f64>) -> Array1<f64>,
+    {
+        let mut periodic_orbits = Vec::new();
+        
+        // Generate initial points
+        let n_trajectories = 5;
+        let mut initial_points = Vec::new();
+        self.generate_grid_points(domain, n_trajectories, &mut initial_points);
+        
+        for initial_point in &initial_points {
+            if let Ok(orbit) = self.fourier_analysis_single_trajectory(system, initial_point) {
+                periodic_orbits.push(orbit);
+            }
+        }
+        
+        Ok(periodic_orbits)
+    }
+
+    /// Fourier analysis of a single trajectory
+    fn fourier_analysis_single_trajectory<F>(
+        &self,
+        system: &F,
+        initial_point: &Array1<f64>,
+    ) -> Result<PeriodicOrbit>
+    where
+        F: Fn(&Array1<f64>) -> Array1<f64>,
+    {
+        let dt = 0.01;
+        let total_time = 20.0;
+        let n_steps = (total_time / dt) as usize;
+        
+        // Integrate trajectory
+        let mut trajectory = Vec::new();
+        let mut state = initial_point.clone();
+        
+        for _ in 0..n_steps {
+            trajectory.push(state.clone());
+            let derivative = system(&state);
+            state += &(derivative * dt);
+        }
+        
+        // Simple frequency analysis (detect dominant frequency)
+        if let Ok(dominant_period) = self.detect_dominant_period(&trajectory, dt) {
+            if dominant_period > 0.0 && dominant_period < total_time {
+                return Ok(PeriodicOrbit {
+                    representative_point: initial_point.clone(),
+                    period: dominant_period,
+                    stability: StabilityType::Stable, // Would need proper analysis
+                    floquet_multipliers: vec![],      // Would need computation
+                });
+            }
+        }
+        
+        Err(IntegrateError::ComputationError(
+            "No periodic behavior detected via Fourier analysis".to_string()
+        ))
+    }
+
+    /// Detect dominant period using autocorrelation
+    fn detect_dominant_period(&self, trajectory: &[Array1<f64>], dt: f64) -> Result<f64> {
+        if trajectory.len() < 100 {
+            return Err(IntegrateError::ComputationError(
+                "Trajectory too short for period detection".to_string()
+            ));
+        }
+        
+        // Use first component for period detection
+        let signal: Vec<f64> = trajectory.iter().map(|state| state[0]).collect();
+        
+        // Autocorrelation approach
+        let max_lag = std::cmp::min(signal.len() / 4, 500);
+        let mut autocorr = vec![0.0; max_lag];
+        
+        let mean = signal.iter().sum::<f64>() / signal.len() as f64;
+        let variance = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64;
+        
+        if variance < 1e-12 {
+            return Err(IntegrateError::ComputationError(
+                "Signal has zero variance".to_string()
+            ));
+        }
+        
+        for lag in 1..max_lag {
+            let mut correlation = 0.0;
+            let count = signal.len() - lag;
+            
+            for i in 0..count {
+                correlation += (signal[i] - mean) * (signal[i + lag] - mean);
+            }
+            
+            autocorr[lag] = correlation / (count as f64 * variance);
+        }
+        
+        // Find the first significant peak after lag = 0
+        let mut max_corr = 0.0;
+        let mut period_lag = 0;
+        
+        for lag in 10..max_lag {
+            if autocorr[lag] > max_corr && autocorr[lag] > 0.5 {
+                // Check if this is a local maximum
+                if lag > 0 && lag < max_lag - 1 {
+                    if autocorr[lag] > autocorr[lag - 1] && autocorr[lag] > autocorr[lag + 1] {
+                        max_corr = autocorr[lag];
+                        period_lag = lag;
+                    }
+                }
+            }
+        }
+        
+        if period_lag > 0 {
+            Ok(period_lag as f64 * dt)
+        } else {
+            Err(IntegrateError::ComputationError(
+                "No dominant period detected".to_string()
+            ))
+        }
+    }
+
+    /// Remove duplicate periodic orbits based on spatial proximity
+    fn remove_duplicate_periodic_orbits(&self, orbits: Vec<PeriodicOrbit>) -> Vec<PeriodicOrbit> {
+        let mut filtered = Vec::new();
+        let tolerance = 1e-4;
+        
+        for orbit in orbits {
+            let mut is_duplicate = false;
+            
+            for existing in &filtered {
+                let distance = (&orbit.representative_point - &existing.representative_point)
+                    .iter()
+                    .map(|&x| x * x)
+                    .sum::<f64>()
+                    .sqrt();
+                    
+                let period_diff = (orbit.period - existing.period).abs();
+                
+                if distance < tolerance && period_diff < tolerance {
+                    is_duplicate = true;
+                    break;
+                }
+            }
+            
+            if !is_duplicate {
+                filtered.push(orbit);
+            }
+        }
+        
+        filtered
+    }
+
+    /// Solve linear system for shooting method
+    fn solve_linear_system_for_shooting(
+        &self,
+        matrix: &Array2<f64>,
+        rhs: &Array1<f64>,
+    ) -> Result<Array1<f64>> {
+        let n = matrix.nrows();
+        if n != matrix.ncols() || n != rhs.len() {
+            return Err(IntegrateError::ComputationError(
+                "Inconsistent matrix dimensions in shooting method".to_string()
+            ));
+        }
+        
+        let mut augmented = Array2::<f64>::zeros((n, n + 1));
+        for i in 0..n {
+            for j in 0..n {
+                augmented[[i, j]] = matrix[[i, j]];
+            }
+            augmented[[i, n]] = rhs[i];
+        }
+        
+        // Gaussian elimination
+        for k in 0..n {
+            // Find pivot
+            let mut max_row = k;
+            for i in (k + 1)..n {
+                if augmented[[i, k]].abs() > augmented[[max_row, k]].abs() {
+                    max_row = i;
+                }
+            }
+            
+            // Swap rows
+            if max_row != k {
+                for j in k..=n {
+                    let temp = augmented[[k, j]];
+                    augmented[[k, j]] = augmented[[max_row, j]];
+                    augmented[[max_row, j]] = temp;
+                }
+            }
+            
+            // Check for singularity
+            if augmented[[k, k]].abs() < 1e-14 {
+                return Err(IntegrateError::ComputationError(
+                    "Singular matrix in shooting method".to_string()
+                ));
+            }
+            
+            // Eliminate
+            for i in (k + 1)..n {
+                let factor = augmented[[i, k]] / augmented[[k, k]];
+                for j in k..=n {
+                    augmented[[i, j]] -= factor * augmented[[k, j]];
+                }
+            }
+        }
+        
+        // Back substitution
+        let mut solution = Array1::<f64>::zeros(n);
+        for i in (0..n).rev() {
+            solution[i] = augmented[[i, n]];
+            for j in (i + 1)..n {
+                solution[i] -= augmented[[i, j]] * solution[j];
+            }
+            solution[i] /= augmented[[i, i]];
+        }
+        
+        Ok(solution)
+    }
+
+    /// Compute Lyapunov exponents
+    fn compute_lyapunov_exponents<F>(&self, system: &F) -> Result<Option<Array1<f64>>>
+    where
+        F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync + Clone,
+    {
+        // For systems with dimension 1-10, compute Lyapunov exponents
+        if self.dimension == 0 || self.dimension > 10 {
+            return Ok(None);
+        }
+
+        // Create initial state in the center of the domain 
+        // (we'd ideally use an attractor, but this is a reasonable default)
+        let initial_state = Array1::zeros(self.dimension);
+
+        // Use adaptive time step based on system dimension
+        let dt = match self.dimension {
+            1 => 0.01,
+            2 => 0.005,
+            3 => 0.002,
+            4..=6 => 0.001,
+            _ => 0.0005,
+        };
+
+        // Calculate number of exponents to compute (typically all for small systems)
+        let n_exponents = if self.dimension <= 4 {
+            self.dimension
+        } else {
+            // For higher dimensions, compute only the largest few exponents
+            std::cmp::min(4, self.dimension)
+        };
+
+        let calculator = LyapunovCalculator::new(n_exponents, dt);
+        
+        // Use integration time that scales with system complexity
+        let integration_time = self.integration_time * (self.dimension as f64).sqrt();
+
+        // Clone the system function to satisfy trait bounds
+        let system_clone = system.clone();
+        let system_wrapper = move |state: &Array1<f64>| system_clone(state);
+
+        match calculator.calculate_lyapunov_exponents(system_wrapper, &initial_state, integration_time) {
+            Ok(exponents) => {
+                // Filter out numerical artifacts (very small exponents close to machine precision)
+                let filtered_exponents = exponents.mapv(|x| if x.abs() < 1e-12 { 0.0 } else { x });
+                Ok(Some(filtered_exponents))
+            }
+            Err(e) => {
+                // If Lyapunov computation fails, it's not critical - return None
+                eprintln!("Warning: Lyapunov exponent computation failed: {:?}", e);
+                Ok(None)
+            }
+        }
     }
 
     /// Analyze basins of attraction for 2D systems
@@ -1699,6 +2868,186 @@ pub mod advanced_analysis {
             }
 
             Ok((q, r))
+        }
+
+        /// Calculate largest Lyapunov exponent using Wolf's algorithm
+        pub fn calculate_largest_lyapunov_exponent<F>(
+            &self,
+            system: F,
+            initial_state: &Array1<f64>,
+            total_time: f64,
+            min_separation: f64,
+            max_separation: f64,
+        ) -> Result<f64>
+        where
+            F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync,
+        {
+            let n_steps = (total_time / self.dt) as usize;
+            let dim = initial_state.len();
+
+            // Initialize reference trajectory
+            let mut reference_state = initial_state.clone();
+
+            // Initialize nearby trajectory with small perturbation
+            let mut nearby_state = initial_state.clone();
+            nearby_state[0] += self.perturbation_magnitude;
+
+            let mut lyapunov_sum = 0.0;
+            let mut n_rescales = 0;
+
+            for _step in 0..n_steps {
+                // Evolve both trajectories
+                let ref_derivative = system(&reference_state);
+                let nearby_derivative = system(&nearby_state);
+
+                reference_state += &(ref_derivative * self.dt);
+                nearby_state += &(nearby_derivative * self.dt);
+
+                // Calculate separation
+                let separation_vector = &nearby_state - &reference_state;
+                let separation = separation_vector.iter().map(|&x| x * x).sum::<f64>().sqrt();
+
+                // Check if rescaling is needed
+                if separation > max_separation || separation < min_separation {
+                    if separation > 1e-15 {
+                        // Add to Lyapunov sum
+                        lyapunov_sum += separation.ln();
+                        n_rescales += 1;
+
+                        // Rescale the separation vector
+                        let scale_factor = self.perturbation_magnitude / separation;
+                        nearby_state = &reference_state + &(separation_vector * scale_factor);
+                    }
+                }
+            }
+
+            if n_rescales > 0 {
+                Ok(lyapunov_sum / total_time)
+            } else {
+                Ok(0.0) // No chaos detected
+            }
+        }
+
+        /// Estimate Lyapunov exponent from time series using delay embedding
+        pub fn estimate_lyapunov_from_timeseries(
+            &self,
+            time_series: &Array1<f64>,
+            embedding_dimension: usize,
+            delay: usize,
+        ) -> Result<f64> {
+            let n = time_series.len();
+            if n < embedding_dimension * delay + 1 {
+                return Err(IntegrateError::ValueError(
+                    "Time series too short for embedding".to_string(),
+                ));
+            }
+
+            // Create delay embedding
+            let n_vectors = n - embedding_dimension * delay;
+            let mut embedded_vectors = Vec::new();
+
+            for i in 0..n_vectors {
+                let mut vector = Array1::zeros(embedding_dimension);
+                for j in 0..embedding_dimension {
+                    vector[j] = time_series[i + j * delay];
+                }
+                embedded_vectors.push(vector);
+            }
+
+            // Calculate nearest neighbor distances and their evolution
+            let mut lyapunov_sum = 0.0;
+            let mut count = 0;
+            let min_time_separation = 2 * delay; // Avoid temporal correlations
+
+            for i in 0..embedded_vectors.len() - 1 {
+                // Find nearest neighbor with sufficient time separation
+                let mut min_distance = f64::INFINITY;
+                let mut nearest_index = None;
+
+                for j in 0..embedded_vectors.len() - 1 {
+                    if (j as i32 - i as i32).abs() >= min_time_separation as i32 {
+                        let distance = self.euclidean_distance_arrays(&embedded_vectors[i], &embedded_vectors[j]);
+                        if distance < min_distance && distance > 1e-12 {
+                            min_distance = distance;
+                            nearest_index = Some(j);
+                        }
+                    }
+                }
+
+                if let Some(j) = nearest_index {
+                    // Calculate distance after one time step
+                    if i + 1 < embedded_vectors.len() && j + 1 < embedded_vectors.len() {
+                        let initial_distance = min_distance;
+                        let final_distance = self.euclidean_distance_arrays(&embedded_vectors[i + 1], &embedded_vectors[j + 1]);
+
+                        if final_distance > 1e-12 && initial_distance > 1e-12 {
+                            lyapunov_sum += (final_distance / initial_distance).ln();
+                            count += 1;
+                        }
+                    }
+                }
+            }
+
+            if count > 0 {
+                Ok(lyapunov_sum / (count as f64))
+            } else {
+                Ok(0.0)
+            }
+        }
+
+        /// Helper function for distance calculation between arrays
+        fn euclidean_distance_arrays(&self, a: &Array1<f64>, b: &Array1<f64>) -> f64 {
+            (a - b).iter().map(|&x| x * x).sum::<f64>().sqrt()
+        }
+
+        /// Calculate Lyapunov spectrum with error estimates
+        pub fn calculate_lyapunov_spectrum_with_errors<F>(
+            &self,
+            system: F,
+            initial_state: &Array1<f64>,
+            total_time: f64,
+            n_trials: usize,
+        ) -> Result<(Array1<f64>, Array1<f64>)>
+        where
+            F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync + Clone,
+        {
+            let dim = initial_state.len();
+            let n_exponents = self.n_exponents.min(dim);
+            
+            let mut all_exponents = Array2::zeros((n_trials, n_exponents));
+            
+            // Calculate Lyapunov exponents multiple times with slightly different initial conditions
+            use rand::Rng;
+            let mut rng = rand::rng();
+            
+            for trial in 0..n_trials {
+                // Add small random perturbation to initial state
+                let mut perturbed_initial = initial_state.clone();
+                for i in 0..dim {
+                    perturbed_initial[i] += (rng.random::<f64>() - 0.5) * 1e-6;
+                }
+                
+                let exponents = self.calculate_lyapunov_exponents(system.clone(), &perturbed_initial, total_time)?;
+                
+                for i in 0..n_exponents {
+                    all_exponents[[trial, i]] = exponents[i];
+                }
+            }
+            
+            // Calculate mean and standard deviation
+            let mut means = Array1::zeros(n_exponents);
+            let mut std_devs = Array1::zeros(n_exponents);
+            
+            for i in 0..n_exponents {
+                let column = all_exponents.column(i);
+                let mean = column.sum() / n_trials as f64;
+                let variance = column.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n_trials as f64;
+                
+                means[i] = mean;
+                std_devs[i] = variance.sqrt();
+            }
+            
+            Ok((means, std_devs))
         }
     }
 

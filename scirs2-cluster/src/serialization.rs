@@ -169,11 +169,114 @@ impl HierarchicalModel {
             return Ok("();".to_string());
         }
 
+        // Validate linkage matrix before processing
+        self.validate_linkage_matrix()?;
+
         // Build the tree structure
         self.build_newick_recursive(n_nodes + self.n_observations - 1, &mut newick)?;
 
         newick.push_str(";");
         Ok(newick)
+    }
+
+    /// Export dendrogram to Newick format with custom formatting options
+    pub fn to_newick_with_options(&self, include_distances: bool, precision: usize) -> Result<String> {
+        let mut newick = String::new();
+        let n_nodes = self.linkage.nrows();
+
+        if n_nodes == 0 {
+            return Ok("();".to_string());
+        }
+
+        self.validate_linkage_matrix()?;
+        self.build_newick_recursive_formatted(
+            n_nodes + self.n_observations - 1, 
+            &mut newick, 
+            include_distances,
+            precision
+        )?;
+
+        newick.push_str(";");
+        Ok(newick)
+    }
+
+    /// Validate linkage matrix for consistency
+    fn validate_linkage_matrix(&self) -> Result<()> {
+        let n_nodes = self.linkage.nrows();
+        
+        for i in 0..n_nodes {
+            let left = self.linkage[[i, 0]] as usize;
+            let right = self.linkage[[i, 1]] as usize;
+            let distance = self.linkage[[i, 2]];
+            
+            // Check that node indices are valid
+            if left >= self.n_observations + i || right >= self.n_observations + i {
+                return Err(ClusteringError::InvalidInput(format!(
+                    "Invalid node indices in linkage matrix at row {}: left={}, right={}",
+                    i, left, right
+                )));
+            }
+            
+            // Check that distance is non-negative
+            if distance < 0.0 {
+                return Err(ClusteringError::InvalidInput(format!(
+                    "Negative distance in linkage matrix at row {}: {}",
+                    i, distance
+                )));
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// Build Newick string recursively with formatting options
+    fn build_newick_recursive_formatted(
+        &self, 
+        node_idx: usize, 
+        newick: &mut String, 
+        include_distances: bool,
+        precision: usize
+    ) -> Result<()> {
+        if node_idx < self.n_observations {
+            // Leaf node
+            if let Some(ref labels) = self.labels {
+                newick.push_str(&labels[node_idx]);
+            } else {
+                newick.push_str(&node_idx.to_string());
+            }
+        } else {
+            // Internal node
+            let row_idx = node_idx - self.n_observations;
+            if row_idx >= self.linkage.nrows() {
+                return Err(ClusteringError::InvalidInput(
+                    "Invalid node index".to_string(),
+                ));
+            }
+
+            let left = self.linkage[[row_idx, 0]] as usize;
+            let right = self.linkage[[row_idx, 1]] as usize;
+            let distance = self.linkage[[row_idx, 2]];
+
+            newick.push('(');
+            self.build_newick_recursive_formatted(left, newick, include_distances, precision)?;
+            
+            if include_distances {
+                newick.push(':');
+                newick.push_str(&format!("{:.precision$}", distance / 2.0, precision = precision));
+            }
+            
+            newick.push(',');
+            self.build_newick_recursive_formatted(right, newick, include_distances, precision)?;
+            
+            if include_distances {
+                newick.push(':');
+                newick.push_str(&format!("{:.precision$}", distance / 2.0, precision = precision));
+            }
+            
+            newick.push(')');
+        }
+
+        Ok(())
     }
 
     fn build_newick_recursive(&self, node_idx: usize, newick: &mut String) -> Result<()> {
@@ -261,6 +364,106 @@ impl HierarchicalModel {
                 "children": [left_child, right_child]
             }))
         }
+    }
+
+    /// Export dendrogram to GraphML format for network analysis tools
+    pub fn to_graphml(&self) -> Result<String> {
+        let mut graphml = String::new();
+        
+        // XML header and GraphML namespace
+        graphml.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        graphml.push_str("<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\" ");
+        graphml.push_str("xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ");
+        graphml.push_str("xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns ");
+        graphml.push_str("http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\">\n");
+        
+        // Define attributes
+        graphml.push_str("  <key id=\"label\" for=\"node\" attr.name=\"label\" attr.type=\"string\"/>\n");
+        graphml.push_str("  <key id=\"distance\" for=\"edge\" attr.name=\"distance\" attr.type=\"double\"/>\n");
+        graphml.push_str("  <key id=\"type\" for=\"node\" attr.name=\"type\" attr.type=\"string\"/>\n");
+        
+        graphml.push_str("  <graph id=\"dendrogram\" edgedefault=\"undirected\">\n");
+        
+        // Add nodes (leaves and internal nodes)
+        for i in 0..self.n_observations {
+            let label = if let Some(ref labels) = self.labels {
+                labels[i].clone()
+            } else {
+                format!("leaf_{}", i)
+            };
+            
+            graphml.push_str(&format!("    <node id=\"{}\">\n", i));
+            graphml.push_str(&format!("      <data key=\"label\">{}</data>\n", label));
+            graphml.push_str("      <data key=\"type\">leaf</data>\n");
+            graphml.push_str("    </node>\n");
+        }
+        
+        // Add internal nodes and edges
+        for i in 0..self.linkage.nrows() {
+            let internal_id = self.n_observations + i;
+            let left = self.linkage[[i, 0]] as usize;
+            let right = self.linkage[[i, 1]] as usize;
+            let distance = self.linkage[[i, 2]];
+            
+            // Internal node
+            graphml.push_str(&format!("    <node id=\"{}\">\n", internal_id));
+            graphml.push_str(&format!("      <data key=\"label\">internal_{}</data>\n", i));
+            graphml.push_str("      <data key=\"type\">internal</data>\n");
+            graphml.push_str("    </node>\n");
+            
+            // Edges
+            graphml.push_str(&format!("    <edge source=\"{}\" target=\"{}\">\n", internal_id, left));
+            graphml.push_str(&format!("      <data key=\"distance\">{}</data>\n", distance));
+            graphml.push_str("    </edge>\n");
+            
+            graphml.push_str(&format!("    <edge source=\"{}\" target=\"{}\">\n", internal_id, right));
+            graphml.push_str(&format!("      <data key=\"distance\">{}</data>\n", distance));
+            graphml.push_str("    </edge>\n");
+        }
+        
+        graphml.push_str("  </graph>\n");
+        graphml.push_str("</graphml>\n");
+        
+        Ok(graphml)
+    }
+
+    /// Export dendrogram to DOT format for Graphviz
+    pub fn to_dot(&self) -> Result<String> {
+        let mut dot = String::new();
+        
+        dot.push_str("graph dendrogram {\n");
+        dot.push_str("  rankdir=TB;\n");
+        dot.push_str("  node [shape=circle];\n");
+        
+        // Add leaf nodes with special styling
+        for i in 0..self.n_observations {
+            let label = if let Some(ref labels) = self.labels {
+                labels[i].clone()
+            } else {
+                format!("L{}", i)
+            };
+            
+            dot.push_str(&format!("  {} [label=\"{}\" shape=box style=filled fillcolor=lightblue];\n", i, label));
+        }
+        
+        // Add internal nodes and edges
+        for i in 0..self.linkage.nrows() {
+            let internal_id = self.n_observations + i;
+            let left = self.linkage[[i, 0]] as usize;
+            let right = self.linkage[[i, 1]] as usize;
+            let distance = self.linkage[[i, 2]];
+            
+            // Internal node
+            dot.push_str(&format!("  {} [label=\"{:.3}\" style=filled fillcolor=lightcoral];\n", internal_id, distance));
+            
+            // Edges with distance labels
+            dot.push_str(&format!("  {} -- {} [label=\"{:.3}\"];\n", internal_id, left, distance));
+            dot.push_str(&format!("  {} -- {} [label=\"{:.3}\"];\n", internal_id, right, distance));
+        }
+        
+        dot.push_str("}\n");
+        
+        Ok(dot)
     }
 }
 
@@ -1336,8 +1539,198 @@ pub mod compatibility {
             "model_type": metadata.model_type,
             "created_at": metadata.created_at,
             "parameters": metadata.parameters,
-            "model_data": model_json
+            "model_data": model_json,
+            "feature_names_in_": null,
+            "n_features_in_": metadata.n_features,
+            "_estimator_type": "clusterer"
         }))
+    }
+
+    /// Convert to SciPy hierarchical clustering format
+    pub fn to_scipy_linkage_format(linkage_matrix: &Array2<f64>) -> Result<serde_json::Value> {
+        use serde_json::json;
+        
+        // Convert linkage matrix to SciPy format
+        let linkage_data: Vec<Vec<f64>> = linkage_matrix
+            .rows()
+            .into_iter()
+            .map(|row| row.to_vec())
+            .collect();
+        
+        Ok(json!({
+            "linkage": linkage_data,
+            "format": "scipy_linkage",
+            "version": "1.9.0",
+            "encoding": "utf-8"
+        }))
+    }
+
+    /// Create scikit-learn compatible parameter grid for hyperparameter tuning
+    pub fn create_sklearn_param_grid(algorithm: &str) -> Result<serde_json::Value> {
+        use serde_json::json;
+        
+        match algorithm {
+            "kmeans" => Ok(json!({
+                "n_clusters": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+                "init": ["k-means++", "random"],
+                "max_iter": [100, 200, 300],
+                "tol": [1e-4, 1e-5, 1e-6],
+                "random_state": [42]
+            })),
+            "dbscan" => Ok(json!({
+                "eps": [0.1, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0],
+                "min_samples": [3, 5, 10, 15, 20],
+                "metric": ["euclidean", "manhattan", "cosine"]
+            })),
+            "agglomerative" => Ok(json!({
+                "n_clusters": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+                "linkage": ["ward", "complete", "average", "single"],
+                "metric": ["euclidean", "manhattan", "cosine"]
+            })),
+            _ => Err(ClusteringError::InvalidInput(format!(
+                "Unknown algorithm for parameter grid: {}",
+                algorithm
+            )))
+        }
+    }
+
+    /// Convert ndarray to NumPy-compatible format
+    pub fn to_numpy_format(array: &Array2<f64>) -> Result<serde_json::Value> {
+        use serde_json::json;
+        
+        let shape = array.shape();
+        let data: Vec<f64> = array.iter().cloned().collect();
+        
+        Ok(json!({
+            "data": data,
+            "shape": [shape[0], shape[1]],
+            "dtype": "float64",
+            "fortran_order": false,
+            "version": [1, 0]
+        }))
+    }
+
+    /// Convert from NumPy-compatible format
+    pub fn from_numpy_format(numpy_data: &serde_json::Value) -> Result<Array2<f64>> {
+        let data: Vec<f64> = numpy_data["data"]
+            .as_array()
+            .ok_or_else(|| ClusteringError::InvalidInput("Missing data field".to_string()))?
+            .iter()
+            .map(|v| v.as_f64().unwrap_or(0.0))
+            .collect();
+        
+        let shape = numpy_data["shape"]
+            .as_array()
+            .ok_or_else(|| ClusteringError::InvalidInput("Missing shape field".to_string()))?;
+        
+        let nrows = shape[0].as_u64().unwrap_or(0) as usize;
+        let ncols = shape[1].as_u64().unwrap_or(0) as usize;
+        
+        Array2::from_shape_vec((nrows, ncols), data)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Shape mismatch: {}", e)))
+    }
+
+    /// Create pandas DataFrame-compatible format for clustering results
+    pub fn to_pandas_format(
+        data: &Array2<f64>,
+        labels: &Array1<i32>,
+        feature_names: Option<&[String]>
+    ) -> Result<serde_json::Value> {
+        use serde_json::json;
+        
+        let n_samples = data.nrows();
+        let n_features = data.ncols();
+        
+        if labels.len() != n_samples {
+            return Err(ClusteringError::InvalidInput(
+                "Data and labels must have the same number of samples".to_string()
+            ));
+        }
+        
+        let mut df_data = std::collections::HashMap::new();
+        
+        // Add feature columns
+        for (i, col) in data.columns().into_iter().enumerate() {
+            let col_name = if let Some(names) = feature_names {
+                names.get(i).cloned().unwrap_or_else(|| format!("feature_{}", i))
+            } else {
+                format!("feature_{}", i)
+            };
+            
+            let col_data: Vec<f64> = col.iter().cloned().collect();
+            df_data.insert(col_name, json!(col_data));
+        }
+        
+        // Add cluster labels
+        let label_data: Vec<i32> = labels.iter().cloned().collect();
+        df_data.insert("cluster".to_string(), json!(label_data));
+        
+        Ok(json!({
+            "data": df_data,
+            "index": (0..n_samples).collect::<Vec<_>>(),
+            "columns": {
+                let mut cols: Vec<String> = (0..n_features).map(|i| {
+                    if let Some(names) = feature_names {
+                        names.get(i).cloned().unwrap_or_else(|| format!("feature_{}", i))
+                    } else {
+                        format!("feature_{}", i)
+                    }
+                }).collect();
+                cols.push("cluster".to_string());
+                cols
+            }
+        }))
+    }
+
+    /// Convert clustering results to R-compatible format
+    pub fn to_r_format(
+        linkage: Option<&Array2<f64>>,
+        labels: Option<&Array1<i32>>,
+        centers: Option<&Array2<f64>>
+    ) -> Result<serde_json::Value> {
+        use serde_json::json;
+        
+        let mut r_data = json!({});
+        
+        if let Some(linkage_matrix) = linkage {
+            // R's hclust format
+            let merge_matrix: Vec<Vec<i32>> = linkage_matrix
+                .rows()
+                .into_iter()
+                .map(|row| vec![row[0] as i32, row[1] as i32])
+                .collect();
+            
+            let height: Vec<f64> = linkage_matrix
+                .rows()
+                .into_iter()
+                .map(|row| row[2])
+                .collect();
+            
+            r_data["hclust"] = json!({
+                "merge": merge_matrix,
+                "height": height,
+                "order": (1..=linkage_matrix.nrows() + 1).collect::<Vec<_>>(),
+                "labels": null,
+                "method": "unknown",
+                "call": "scirs2::hierarchical_clustering",
+                "dist.method": "euclidean"
+            });
+        }
+        
+        if let Some(cluster_labels) = labels {
+            r_data["clusters"] = json!(cluster_labels.iter().cloned().collect::<Vec<_>>());
+        }
+        
+        if let Some(cluster_centers) = centers {
+            let centers_data: Vec<Vec<f64>> = cluster_centers
+                .rows()
+                .into_iter()
+                .map(|row| row.to_vec())
+                .collect();
+            r_data["centers"] = json!(centers_data);
+        }
+        
+        Ok(r_data)
     }
 
     /// Import from scikit-learn compatible format
@@ -2184,8 +2577,54 @@ pub mod compression {
                     })
                 }
                 CompressionAlgorithm::None => Ok(data.to_vec()),
+                
+                #[cfg(feature = "lz4_compression")]
+                CompressionAlgorithm::Lz4 => {
+                    use lz4::block::{compress, CompressionMode};
+                    let mode = match config.level {
+                        0..=3 => CompressionMode::FAST(config.level as i32),
+                        4..=9 => CompressionMode::HIGHCOMPRESSION(config.level as i32),
+                        _ => CompressionMode::FAST(1),
+                    };
+                    
+                    compress(data, Some(mode), true).map_err(|e| {
+                        ClusteringError::InvalidInput(format!("LZ4 compression failed: {}", e))
+                    })
+                }
+                
+                #[cfg(feature = "zstd_compression")]
+                CompressionAlgorithm::Zstd => {
+                    zstd::stream::encode_all(std::io::Cursor::new(data), config.level as i32)
+                        .map_err(|e| {
+                            ClusteringError::InvalidInput(format!("Zstd compression failed: {}", e))
+                        })
+                }
+                
+                #[cfg(feature = "bzip2_compression")]
+                CompressionAlgorithm::Bzip2 => {
+                    use bzip2::write::BzEncoder;
+                    use bzip2::Compression as BzCompression;
+                    
+                    let compression_level = match config.level {
+                        0..=9 => BzCompression::new(config.level),
+                        _ => BzCompression::new(6), // Default level
+                    };
+                    
+                    let mut encoder = BzEncoder::new(Vec::new(), compression_level);
+                    encoder.write_all(data).map_err(|e| {
+                        ClusteringError::InvalidInput(format!("Bzip2 compression failed: {}", e))
+                    })?;
+                    encoder.finish().map_err(|e| {
+                        ClusteringError::InvalidInput(format!(
+                            "Bzip2 compression finalization failed: {}",
+                            e
+                        ))
+                    })
+                }
+                
+                // Fallback for algorithms not available in current build
                 _ => {
-                    // For other algorithms, fall back to gzip for now
+                    // Always fall back to gzip for unknown algorithms
                     let mut encoder = GzEncoder::new(Vec::new(), Compression::new(config.level));
                     encoder.write_all(data).map_err(|e| {
                         ClusteringError::InvalidInput(format!("Compression failed: {}", e))
@@ -2212,6 +2651,37 @@ pub mod compression {
                     Ok(decompressed)
                 }
                 "None" => Ok(data.to_vec()),
+                
+                #[cfg(feature = "lz4_compression")]
+                "Lz4" => {
+                    use lz4::block::decompress;
+                    // LZ4 requires knowing the original size, so we need to store it
+                    // For now, we'll use a large buffer and hope it's enough
+                    decompress(data, None).map_err(|e| {
+                        ClusteringError::InvalidInput(format!("LZ4 decompression failed: {}", e))
+                    })
+                }
+                
+                #[cfg(feature = "zstd_compression")]
+                "Zstd" => {
+                    zstd::stream::decode_all(std::io::Cursor::new(data)).map_err(|e| {
+                        ClusteringError::InvalidInput(format!("Zstd decompression failed: {}", e))
+                    })
+                }
+                
+                #[cfg(feature = "bzip2_compression")]
+                "Bzip2" => {
+                    use bzip2::read::BzDecoder;
+                    
+                    let mut decoder = BzDecoder::new(data);
+                    let mut decompressed = Vec::new();
+                    decoder.read_to_end(&mut decompressed).map_err(|e| {
+                        ClusteringError::InvalidInput(format!("Bzip2 decompression failed: {}", e))
+                    })?;
+                    Ok(decompressed)
+                }
+                
+                // Fallback for unknown algorithms - always use gzip
                 _ => {
                     // Default to gzip for unknown algorithms
                     let mut decoder = GzDecoder::new(data);

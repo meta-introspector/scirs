@@ -46,7 +46,10 @@ where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
-        + Div<Output = T>,
+        + Div<Output = T>
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
+        + Sync,
 {
     // Create data for identity matrix
     let mut data = Vec::with_capacity(n);
@@ -142,7 +145,10 @@ where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
-        + Div<Output = T>,
+        + Div<Output = T>
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
+        + Sync,
 {
     let n = diag.len();
 
@@ -312,7 +318,10 @@ where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
-        + Div<Output = T>,
+        + Div<Output = T>
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
+        + Sync,
 {
     if diagonals.is_empty() {
         return Err(crate::error::SparseError::ValueError(
@@ -443,7 +452,10 @@ where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
-        + Div<Output = T>,
+        + Div<Output = T>
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
+        + Sync,
 {
     if !(0.0..=1.0).contains(&density) {
         return Err(crate::error::SparseError::ValueError(

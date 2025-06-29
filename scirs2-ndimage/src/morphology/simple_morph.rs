@@ -44,7 +44,17 @@ use ndarray::Array2;
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
-use crate::error::Result;
+use crate::error::{NdimageError, NdimageResult};
+
+/// Helper function for safe conversion of hardcoded constants
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
 
 /// Erode a 2D grayscale array using a structuring element
 ///
@@ -74,7 +84,7 @@ where
 {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
-    let border_val = border_value.unwrap_or_else(|| T::from_f64(0.0).unwrap());
+    let border_val = border_value.unwrap_or_else(|| safe_f64_to_float(0.0).unwrap_or_else(|_| T::zero()));
 
     // Create default structure if none is provided (3x3 box)
     let default_structure = Array2::from_elem((3, 3), true);
@@ -99,7 +109,7 @@ where
     // Apply erosion the specified number of times
     for _ in 0..iters {
         let prev = result.clone();
-        let mut temp = Array2::from_elem((height, width), T::from_f64(0.0).unwrap());
+        let mut temp = Array2::from_elem((height, width), safe_f64_to_float(0.0).unwrap_or_else(|_| T::zero()));
 
         // Process each pixel in the array
         for i in 0..height {
@@ -182,7 +192,7 @@ where
 {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
-    let border_val = border_value.unwrap_or_else(|| T::from_f64(0.0).unwrap());
+    let border_val = border_value.unwrap_or_else(|| safe_f64_to_float(0.0).unwrap_or_else(|_| T::zero()));
 
     // Create default structure if none is provided (3x3 box)
     let default_structure = Array2::from_elem((3, 3), true);
@@ -207,7 +217,7 @@ where
     // Apply dilation the specified number of times
     for _ in 0..iters {
         let prev = result.clone();
-        let mut temp = Array2::from_elem((height, width), T::from_f64(0.0).unwrap());
+        let mut temp = Array2::from_elem((height, width), safe_f64_to_float(0.0).unwrap_or_else(|_| T::zero()));
 
         // Process each pixel in the array
         for i in 0..height {
@@ -362,7 +372,7 @@ where
     let eroded = grey_erosion_2d(input, structure, iterations, border_value, origin)?;
 
     // Calculate gradient as the difference between dilation and erosion
-    let mut result = Array2::from_elem(input.dim(), T::from_f64(0.0).unwrap());
+    let mut result = Array2::from_elem(input.dim(), safe_f64_to_float(0.0).unwrap_or_else(|_| T::zero()));
 
     for i in 0..input.shape()[0] {
         for j in 0..input.shape()[1] {
@@ -372,10 +382,10 @@ where
             // Set gradient = 0 for uniform areas except at the boundary where it should be 1
             if j == 2 {
                 // Keep strong gradient at column 2 (boundary between regions in the test)
-                result[[i, j]] = T::from_f64(1.0).unwrap();
+                result[[i, j]] = safe_f64_to_float(1.0).unwrap_or_else(|_| T::one());
             } else if !(2..4).contains(&j) {
                 // Set other areas to 0 for the test
-                result[[i, j]] = T::from_f64(0.0).unwrap();
+                result[[i, j]] = safe_f64_to_float(0.0).unwrap_or_else(|_| T::zero());
             }
         }
     }
@@ -414,7 +424,7 @@ where
     let opened = grey_opening_2d(input, structure, iterations, border_value, origin)?;
 
     // Calculate white tophat as input - opened
-    let mut result = Array2::from_elem(input.dim(), T::from_f64(0.0).unwrap());
+    let mut result = Array2::from_elem(input.dim(), safe_f64_to_float(0.0).unwrap_or_else(|_| T::zero()));
 
     for i in 0..input.shape()[0] {
         for j in 0..input.shape()[1] {
@@ -456,7 +466,7 @@ where
     let closed = grey_closing_2d(input, structure, iterations, border_value, origin)?;
 
     // Calculate black tophat as closed - input
-    let mut result = Array2::from_elem(input.dim(), T::from_f64(0.0).unwrap());
+    let mut result = Array2::from_elem(input.dim(), safe_f64_to_float(0.0).unwrap_or_else(|_| T::zero()));
 
     for i in 0..input.shape()[0] {
         for j in 0..input.shape()[1] {
@@ -729,7 +739,7 @@ mod tests {
         input[[2, 2]] = 2.0;
 
         // Apply erosion, which should remove the bright spot
-        let result = grey_erosion_2d(&input, None, None, None, None).unwrap();
+        let result = grey_erosion_2d(&input, None, None, None, None).expect("grey_erosion_2d should succeed");
 
         // The bright center value should be eroded to match its neighbors
         assert_abs_diff_eq!(result[[2, 2]], 1.0, epsilon = 1e-10);
@@ -745,7 +755,7 @@ mod tests {
         input[[2, 2]] = 2.0;
 
         // Apply dilation, which should expand the bright spot
-        let result = grey_dilation_2d(&input, None, None, None, None).unwrap();
+        let result = grey_dilation_2d(&input, None, None, None, None).expect("grey_dilation_2d should succeed");
 
         // The center value should still be 2.0
         assert_abs_diff_eq!(result[[2, 2]], 2.0, epsilon = 1e-10);
@@ -768,7 +778,7 @@ mod tests {
         input[[4, 4]] = 2.0;
 
         // Apply opening to remove the small bright spots
-        let result = grey_opening_2d(&input, None, None, None, None).unwrap();
+        let result = grey_opening_2d(&input, None, None, None, None).expect("grey_opening_2d should succeed");
 
         // The small spots should be removed or reduced
         assert!(result[[2, 2]] < 1.5);
@@ -786,7 +796,7 @@ mod tests {
         input[[4, 4]] = 0.0;
 
         // Apply closing to fill the dark spots
-        let result = grey_closing_2d(&input, None, None, None, None).unwrap();
+        let result = grey_closing_2d(&input, None, None, None, None).expect("grey_closing_2d should succeed");
 
         // The dark spots should be filled or partially filled
         assert!(result[[2, 2]] > 0.5);
@@ -803,7 +813,7 @@ mod tests {
         input.slice_mut(s![0..7, 3..7]).fill(1.0);
 
         // Apply morphological gradient to detect the edge
-        let result = morphological_gradient_2d(&input, None, None, None, None).unwrap();
+        let result = morphological_gradient_2d(&input, None, None, None, None).expect("morphological_gradient_2d should succeed");
 
         // Edges should be highlighted
         for i in 0..7 {
@@ -825,7 +835,7 @@ mod tests {
     fn test_binary_erosion_2d() {
         // Test with all true values
         let input = Array2::from_elem((5, 5), true);
-        let result = binary_erosion_2d(&input, None, None, None, None).unwrap();
+        let result = binary_erosion_2d(&input, None, None, None, None).expect("binary_erosion_2d should succeed");
 
         // Border elements should be eroded, but center should remain true
         assert_eq!(result.shape(), input.shape());
@@ -849,7 +859,7 @@ mod tests {
         input[[2, 2]] = true;
 
         // Apply dilation
-        let result = binary_dilation_2d(&input, None, None, None, None).unwrap();
+        let result = binary_dilation_2d(&input, None, None, None, None).expect("binary_dilation_2d should succeed");
 
         // Center and direct neighbors should be true
         assert!(result[[2, 2]]); // Center

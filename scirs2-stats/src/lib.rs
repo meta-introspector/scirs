@@ -396,6 +396,7 @@ mod quantile_simd;
 mod simd_enhanced_advanced;
 mod simd_enhanced_v3;
 mod simd_enhanced_v4;
+mod simd_enhanced_v5;
 mod simd_optimized_v2;
 pub use descriptive::*;
 pub use descriptive_simd::{descriptive_stats_simd, mean_simd, std_simd, variance_simd};
@@ -453,6 +454,12 @@ pub use simd_enhanced_v4::{
     exponential_moving_average_simd, outlier_detection_zscore_simd, quantiles_batch_simd,
     robust_statistics_simd as robust_stats_v4_simd, sliding_window_stats_simd,
     ComprehensiveStats, RobustStats, SlidingWindowStats,
+};
+pub use simd_enhanced_v5::{
+    bootstrap_confidence_interval_simd, kernel_density_estimation_simd, matrix_statistics_simd,
+    rolling_statistics_simd, AdaptiveMetropolisResult, BootstrapResult, BootstrapStatistic,
+    HMCResult, KernelType, MatrixOperation, MatrixStatsResult, NUTSResult, ParallelTemperingResult,
+    RollingStatistic, RollingStatsResult,
 };
 
 // MCMC module

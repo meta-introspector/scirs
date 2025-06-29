@@ -14,6 +14,30 @@ use scirs2_core::simd::{simd_add_f32, simd_add_f64, simd_scalar_mul_f32, simd_sc
 use super::{pad_array, BorderMode};
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion of hardcoded constants
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
+/// Helper function for safe i32 conversion
+fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
+    T::from_i32(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
+    })
+}
+
+/// Helper function for safe float to usize conversion
+fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
+    value.to_usize().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert float to usize".to_string())
+    })
+}
+
 /// Apply a bilateral filter to preserve edges while smoothing
 ///
 /// The bilateral filter is an edge-preserving smoothing filter that considers
@@ -82,10 +106,8 @@ where
         .map_err(|_| NdimageError::DimensionError("Failed to convert to 1D array".into()))?;
 
     // Calculate kernel radius based on spatial sigma
-    let radius = (sigma_spatial * T::from(3.0).unwrap())
-        .ceil()
-        .to_usize()
-        .unwrap_or(3);
+    let three = safe_f64_to_float(3.0)?;
+    let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
     let kernel_size = 2 * radius + 1;
 
     // Create output array
@@ -97,14 +119,15 @@ where
 
     // Precompute spatial weights
     let mut spatial_weights = Array1::zeros(kernel_size);
-    let two_sigma_spatial_sq = T::from(2.0).unwrap() * sigma_spatial * sigma_spatial;
+    let two = safe_f64_to_float(2.0)?;
+    let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
 
     for k in 0..kernel_size {
-        let dist = T::from((k as i32) - (radius as i32)).unwrap();
+        let dist = safe_i32_to_float((k as i32) - (radius as i32))?;
         spatial_weights[k] = (-dist * dist / two_sigma_spatial_sq).exp();
     }
 
-    let two_sigma_color_sq = T::from(2.0).unwrap() * sigma_color * sigma_color;
+    let two_sigma_color_sq = two * sigma_color * sigma_color;
 
     // Apply bilateral filter to each position
     for i in 0..input_1d.len() {
@@ -157,10 +180,8 @@ where
     let (rows, cols) = input_2d.dim();
 
     // Calculate kernel radius based on spatial sigma
-    let radius = (sigma_spatial * T::from(3.0).unwrap())
-        .ceil()
-        .to_usize()
-        .unwrap_or(3);
+    let three = safe_f64_to_float(3.0)?;
+    let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
     let kernel_size = 2 * radius + 1;
 
     // Create output array
@@ -172,18 +193,19 @@ where
 
     // Precompute spatial weights
     let mut spatial_weights = Array2::zeros((kernel_size, kernel_size));
-    let two_sigma_spatial_sq = T::from(2.0).unwrap() * sigma_spatial * sigma_spatial;
+    let two = safe_f64_to_float(2.0)?;
+    let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
 
     for dy in 0..kernel_size {
         for dx in 0..kernel_size {
-            let y_dist = T::from((dy as i32) - (radius as i32)).unwrap();
-            let x_dist = T::from((dx as i32) - (radius as i32)).unwrap();
+            let y_dist = safe_i32_to_float((dy as i32) - (radius as i32))?;
+            let x_dist = safe_i32_to_float((dx as i32) - (radius as i32))?;
             let spatial_dist_sq = y_dist * y_dist + x_dist * x_dist;
             spatial_weights[[dy, dx]] = (-spatial_dist_sq / two_sigma_spatial_sq).exp();
         }
     }
 
-    let two_sigma_color_sq = T::from(2.0).unwrap() * sigma_color * sigma_color;
+    let two_sigma_color_sq = two * sigma_color * sigma_color;
 
     // Apply bilateral filter to each position
     for i in 0..rows {
@@ -236,10 +258,8 @@ where
     D: Dimension,
 {
     // Calculate kernel radius based on spatial sigma
-    let radius = (sigma_spatial * T::from(3.0).unwrap())
-        .ceil()
-        .to_usize()
-        .unwrap_or(3);
+    let three = safe_f64_to_float(3.0)?;
+    let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
 
     // Convert to dynamic dimension for easier processing
     let input_dyn = input.clone().into_dyn();
@@ -249,8 +269,9 @@ where
     let pad_width: Vec<(usize, usize)> = (0..input.ndim()).map(|_| (radius, radius)).collect();
     let padded_input = pad_array(&input_dyn, &pad_width, mode, None)?;
 
-    let two_sigma_spatial_sq = T::from(2.0).unwrap() * sigma_spatial * sigma_spatial;
-    let two_sigma_color_sq = T::from(2.0).unwrap() * sigma_color * sigma_color;
+    let two = safe_f64_to_float(2.0)?;
+    let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
+    let two_sigma_color_sq = two * sigma_color * sigma_color;
 
     // Process each position in the output array
     for (idx, output_val) in output_dyn.indexed_iter_mut() {
@@ -275,10 +296,10 @@ where
             let neighbor_value = padded_input[&IxDyn(&neighbor_idx)];
 
             // Calculate spatial weight
-            let spatial_dist_sq = neighbor_offset.iter().fold(T::zero(), |acc, &offset| {
-                let dist = T::from(offset).unwrap();
-                acc + dist * dist
-            });
+            let spatial_dist_sq = neighbor_offset.iter().try_fold(T::zero(), |acc, &offset| {
+                let dist = safe_i32_to_float(offset)?;
+                Ok(acc + dist * dist)
+            })?;
             let spatial_weight = (-spatial_dist_sq / two_sigma_spatial_sq).exp();
 
             // Calculate color weight
@@ -747,7 +768,7 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, 1.0, 1.0, 5.0, 5.0, 5.0]);
 
         // Apply bilateral filter
-        let result = bilateral_filter(&signal, 1.0, 1.0, None).unwrap();
+        let result = bilateral_filter(&signal, 1.0, 1.0, None).expect("bilateral_filter should succeed for 1D test");
 
         // Check that result has same shape
         assert_eq!(result.shape(), signal.shape());
@@ -771,7 +792,7 @@ mod tests {
         }
 
         // Apply bilateral filter
-        let result = bilateral_filter(&image, 1.0, 1.0, None).unwrap();
+        let result = bilateral_filter(&image, 1.0, 1.0, None).expect("bilateral_filter should succeed for 2D test");
 
         // Check that result has same shape
         assert_eq!(result.shape(), image.shape());
@@ -788,7 +809,7 @@ mod tests {
         let image = Array2::from_elem((5, 5), 3.0);
 
         // Apply bilateral filter
-        let result = bilateral_filter(&image, 1.0, 1.0, None).unwrap();
+        let result = bilateral_filter(&image, 1.0, 1.0, None).expect("bilateral_filter should succeed for uniform region test");
 
         // Should remain approximately constant
         for &val in result.iter() {
@@ -803,7 +824,7 @@ mod tests {
         signal[5] = 10.0; // Single outlier
 
         // Apply bilateral filter with appropriate parameters
-        let result = bilateral_filter(&signal, 1.0, 2.0, None).unwrap();
+        let result = bilateral_filter(&signal, 1.0, 2.0, None).expect("bilateral_filter should succeed for noise suppression test");
 
         // The outlier should be reduced but not completely smoothed
         assert!(result[5] > 2.0); // Still elevated
@@ -833,8 +854,8 @@ mod tests {
         // Test SIMD version produces similar results to regular version
         let signal = Array1::from_vec(vec![1.0f32, 1.0, 1.0, 5.0, 5.0, 5.0]);
 
-        let regular_result = bilateral_filter(&signal, 1.0, 1.0, None).unwrap();
-        let simd_result = bilateral_filter_simd_f32(&signal, 1.0, 1.0, None).unwrap();
+        let regular_result = bilateral_filter(&signal, 1.0, 1.0, None).expect("bilateral_filter should succeed for SIMD f32 test");
+        let simd_result = bilateral_filter_simd_f32(&signal, 1.0, 1.0, None).expect("bilateral_filter_simd_f32 should succeed");
 
         // Results should be very close
         for i in 0..signal.len() {
@@ -848,8 +869,8 @@ mod tests {
         // Test SIMD version produces similar results to regular version
         let signal = Array1::from_vec(vec![1.0f64, 1.0, 1.0, 5.0, 5.0, 5.0]);
 
-        let regular_result = bilateral_filter(&signal, 1.0, 1.0, None).unwrap();
-        let simd_result = bilateral_filter_simd_f64(&signal, 1.0, 1.0, None).unwrap();
+        let regular_result = bilateral_filter(&signal, 1.0, 1.0, None).expect("bilateral_filter should succeed for SIMD f64 test");
+        let simd_result = bilateral_filter_simd_f64(&signal, 1.0, 1.0, None).expect("bilateral_filter_simd_f64 should succeed");
 
         // Results should be very close
         for i in 0..signal.len() {
@@ -871,8 +892,8 @@ mod tests {
             }
         }
 
-        let regular_result = bilateral_filter(&image, 1.0, 1.0, None).unwrap();
-        let simd_result = bilateral_filter_simd_f32(&image, 1.0, 1.0, None).unwrap();
+        let regular_result = bilateral_filter(&image, 1.0, 1.0, None).expect("bilateral_filter should succeed for 2D SIMD test");
+        let simd_result = bilateral_filter_simd_f32(&image, 1.0, 1.0, None).expect("bilateral_filter_simd_f32 should succeed for 2D test");
 
         // Results should be very close
         for i in 0..5 {

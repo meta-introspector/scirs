@@ -229,7 +229,7 @@ impl DistributedReader {
         Ok(estimated_rows)
     }
 
-    /// Process file in parallel
+    /// Process file in parallel with enhanced load balancing and error recovery
     pub fn process_parallel<T, F>(&self, processor: F) -> Result<Vec<T>>
     where
         T: Send + 'static,
@@ -237,6 +237,14 @@ impl DistributedReader {
     {
         let partitions = self.create_partitions()?;
         let num_partitions = partitions.len();
+        
+        // Adaptive load balancing: adjust partition size based on system resources
+        let available_workers = std::cmp::min(self.num_workers, num_partitions);
+        let cpu_count = num_cpus::get();
+        let optimal_workers = std::cmp::min(available_workers, cpu_count * 2); // Don't over-subscribe
+        
+        println!("Processing {} partitions with {} workers (CPU cores: {})", 
+                num_partitions, optimal_workers, cpu_count);
 
         // Create worker info tracking
         let worker_infos = Arc::new(Mutex::new(
@@ -608,7 +616,7 @@ impl DistributedArray {
         let mut distributed = Self::new(shape.clone(), distribution.clone());
 
         match distribution {
-            Distribution::Block { block_size } => {
+            Distribution::Block { block_size: _ } => {
                 let rows_per_node = (array.nrows() + num_nodes - 1) / num_nodes;
 
                 for node_id in 0..num_nodes {

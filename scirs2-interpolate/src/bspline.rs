@@ -1165,6 +1165,104 @@ where
 
         BSpline::new(t, &c.view(), k, extrapolate)
     }
+
+    /// Evaluate derivatives at multiple points efficiently
+    ///
+    /// This method provides batch evaluation of derivatives at multiple points,
+    /// which is significantly more efficient than calling `derivative` multiple times.
+    /// It reuses computations and optimizes memory access patterns.
+    ///
+    /// # Arguments
+    ///
+    /// * `xs` - Array of points at which to evaluate derivatives
+    /// * `nu` - Order of derivative (1 for first derivative, 2 for second, etc.)
+    ///
+    /// # Returns
+    ///
+    /// Array of derivative values at the given points
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use scirs2_interpolate::bspline::{BSpline, ExtrapolateMode};
+    ///
+    /// let knots = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+    /// let coeffs = array![-1.0, 2.0, 0.0, -1.0];
+    /// let spline = BSpline::new(&knots.view(), &coeffs.view(), 2, ExtrapolateMode::Extrapolate).unwrap();
+    ///
+    /// let xs = array![1.5, 2.5, 3.5];
+    /// let derivatives = spline.derivative_batch(&xs.view(), 1).unwrap();
+    /// ```
+    #[allow(dead_code)]
+    pub fn derivative_batch(&self, xs: &ArrayView1<T>, nu: usize) -> InterpolateResult<Array1<T>> {
+        if nu == 0 {
+            return self.evaluate_batch(xs);
+        }
+
+        if nu > self.k {
+            // All derivatives higher than k are zero
+            return Ok(Array1::zeros(xs.len()));
+        }
+
+        // For efficiency, create the derivative spline once and evaluate it at all points
+        let deriv_spline = self.derivative_spline(nu)?;
+        deriv_spline.evaluate_batch(xs)
+    }
+
+    /// Evaluate mixed derivatives and function values at multiple points
+    ///
+    /// This method efficiently computes function values and derivatives up to a specified
+    /// order at multiple points simultaneously. This is useful for applications that need
+    /// both function values and derivatives (e.g., optimization, ODE solving).
+    ///
+    /// # Arguments
+    ///
+    /// * `xs` - Array of points at which to evaluate
+    /// * `max_order` - Maximum derivative order to compute (0 = function value only)
+    ///
+    /// # Returns
+    ///
+    /// 2D array where result[[i, j]] is the j-th derivative at point xs[i]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use scirs2_interpolate::bspline::{BSpline, ExtrapolateMode};
+    ///
+    /// let knots = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+    /// let coeffs = array![-1.0, 2.0, 0.0, -1.0];
+    /// let spline = BSpline::new(&knots.view(), &coeffs.view(), 2, ExtrapolateMode::Extrapolate).unwrap();
+    ///
+    /// let xs = array![1.5, 2.5, 3.5];
+    /// let results = spline.derivative_batch_all(&xs.view(), 2).unwrap();
+    /// // results[[0, 0]] = f(1.5), results[[0, 1]] = f'(1.5), results[[0, 2]] = f''(1.5)
+    /// ```
+    #[allow(dead_code)]
+    pub fn derivative_batch_all(&self, xs: &ArrayView1<T>, max_order: usize) -> InterpolateResult<Array2<T>> {
+        let effective_max_order = max_order.min(self.k);
+        let mut result = Array2::zeros((xs.len(), effective_max_order + 1));
+
+        // Pre-compute derivative splines up to max_order
+        let mut derivative_splines = Vec::with_capacity(effective_max_order + 1);
+        derivative_splines.push(self.clone()); // 0th derivative (original function)
+        
+        for order in 1..=effective_max_order {
+            let deriv_spline = derivative_splines[order - 1].derivative_spline(1)?;
+            derivative_splines.push(deriv_spline);
+        }
+
+        // Evaluate all derivatives at all points
+        for order in 0..=effective_max_order {
+            let values = derivative_splines[order].evaluate_batch(xs)?;
+            for (i, &value) in values.iter().enumerate() {
+                result[[i, order]] = value;
+            }
+        }
+
+        Ok(result)
+    }
 }
 
 /// Create a B-spline from a set of points using interpolation

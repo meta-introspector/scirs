@@ -11,6 +11,56 @@ use rand::distr::Uniform;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 
+/// Enforce bounds using reflection method for better exploration
+fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f64) -> f64 {
+    if val >= lb && val <= ub {
+        // Value is within bounds
+        val
+    } else if val < lb {
+        // Reflect around lower bound
+        let excess = lb - val;
+        let range = ub - lb;
+        if excess <= range {
+            lb + excess
+        } else {
+            // If reflection goes beyond upper bound, use random value in range
+            rng.gen_range(lb..=ub)
+        }
+    } else {
+        // val > ub, reflect around upper bound
+        let excess = val - ub;
+        let range = ub - lb;
+        if excess <= range {
+            ub - excess
+        } else {
+            // If reflection goes beyond lower bound, use random value in range
+            rng.gen_range(lb..=ub)
+        }
+    }
+}
+
+/// Validate bounds to ensure they are properly specified
+fn validate_bounds(bounds: &[(f64, f64)]) -> Result<(), OptimizeError> {
+    for (i, &(lb, ub)) in bounds.iter().enumerate() {
+        if !lb.is_finite() || !ub.is_finite() {
+            return Err(OptimizeError::InvalidInput(format!(
+                "Bounds must be finite values. Variable {}: bounds = ({}, {})", i, lb, ub
+            )));
+        }
+        if lb >= ub {
+            return Err(OptimizeError::InvalidInput(format!(
+                "Lower bound must be less than upper bound. Variable {}: lb = {}, ub = {}", i, lb, ub
+            )));
+        }
+        if (ub - lb) < 1e-12 {
+            return Err(OptimizeError::InvalidInput(format!(
+                "Bounds range is too small. Variable {}: range = {}", i, ub - lb
+            )));
+        }
+    }
+    Ok(())
+}
+
 /// Options for Basin-hopping algorithm
 #[derive(Debug, Clone)]
 pub struct BasinHoppingOptions {
@@ -120,22 +170,23 @@ where
             })
         });
 
-        // Default take step is random displacement
+        // Default take step is random displacement with reflection-based bounds enforcement
         let take_step = take_step.unwrap_or_else(|| {
             let stepsize = options.stepsize;
             let bounds = options.bounds.clone();
-            let mut rng = rng.clone();
+            let seed = options.seed.unwrap_or_else(rand::random);
             Box::new(move |x: &Array1<f64>| {
+                let mut local_rng = StdRng::seed_from_u64(seed + x.len() as u64);
                 let mut x_new = x.clone();
                 for i in 0..x.len() {
                     let uniform = Uniform::new(-stepsize, stepsize).unwrap();
-                    x_new[i] += rng.sample(uniform);
+                    x_new[i] += local_rng.sample(uniform);
 
-                    // Apply bounds if specified
+                    // Apply bounds if specified using reflection method
                     if let Some(ref bounds) = bounds {
                         if i < bounds.len() {
                             let (lb, ub) = bounds[i];
-                            x_new[i] = x_new[i].max(lb).min(ub);
+                            x_new[i] = enforce_bounds_with_reflection(&mut local_rng, x_new[i], lb, ub);
                         }
                     }
                 }
@@ -143,12 +194,12 @@ where
             })
         });
 
-        // Apply bounds to initial x0 if specified
+        // Apply bounds to initial x0 if specified using reflection method
         let mut x0_bounded = x0.clone();
         if let Some(ref bounds) = options.bounds {
             for (i, &(lb, ub)) in bounds.iter().enumerate() {
                 if i < x0_bounded.len() {
-                    x0_bounded[i] = x0_bounded[i].max(lb).min(ub);
+                    x0_bounded[i] = enforce_bounds_with_reflection(&mut rng, x0_bounded[i], lb, ub);
                 }
             }
         }
@@ -282,6 +333,11 @@ where
     F: Fn(&ArrayView1<f64>) -> f64 + Clone,
 {
     let options = options.unwrap_or_default();
+
+    // Validate bounds if provided
+    if let Some(ref bounds) = options.bounds {
+        validate_bounds(bounds)?;
+    }
 
     let mut solver = BasinHopping::new(func, x0, options, accept_test, take_step);
     Ok(solver.run())

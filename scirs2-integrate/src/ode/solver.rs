@@ -454,6 +454,12 @@ where
     let mut base_options = options.base_options.clone();
     base_options.dense_output = true;
 
+    // Check if mass matrix is present and handle accordingly
+    if let Some(mass_matrix) = &base_options.mass_matrix {
+        // Use specialized mass matrix + event detection solver
+        return solve_ivp_with_events_and_mass(f, t_span, y0, event_funcs, options, mass_matrix.clone());
+    }
+
     // First, solve the IVP using the standard solver
     let base_result = solve_ivp(f.clone(), t_span, y0.clone(), Some(base_options))?;
 
@@ -646,31 +652,134 @@ where
 ///
 /// This function integrates event detection directly into the Radau method
 /// for mass matrix systems, providing proper handling of both features together.
-#[allow(dead_code)]
 fn solve_ivp_with_events_radau_mass<F, Func, EventFunc>(
-    _f: Func,
-    _t_span: [F; 2],
-    _y0: Array1<F>,
-    _event_funcs: Vec<EventFunc>,
-    _options: ODEOptionsWithEvents<F>,
-    _mass_matrix: MassMatrix<F>,
+    f: Func,
+    t_span: [F; 2],
+    y0: Array1<F>,
+    event_funcs: Vec<EventFunc>,
+    options: ODEOptionsWithEvents<F>,
+    mass_matrix: MassMatrix<F>,
 ) -> IntegrateResult<ODEResultWithEvents<F>>
 where
     F: IntegrateFloat + std::iter::Sum,
     Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone + 'static,
     EventFunc: Fn(F, ArrayView1<F>) -> F,
 {
-    // For now, use the transformation approach since implementing
-    // event detection directly in the Radau method would require
-    // significant modifications to the radau_method_with_mass function
-
-    // TODO: This is a placeholder - for a complete implementation,
-    // we would need to modify the Radau method to check for events
-    // at each step during integration rather than post-processing
-
-    Err(IntegrateError::NotImplementedError(
-        "Direct Radau+mass matrix+event detection is not yet fully implemented. \
-        Use transformation approach for constant/time-dependent mass matrices."
-            .to_string(),
+    use crate::ode::methods::radau_mass::radau_method_with_mass;
+    use crate::ode::utils::events::{EventHandler, EventAction};
+    
+    // Create event handler
+    let mut event_handler = EventHandler::new(options.event_specs.clone());
+    
+    // Initialize storage
+    let mut all_t = vec![t_span[0]];
+    let mut all_y = vec![y0.clone()];
+    let _all_dy: Vec<Array1<F>> = Vec::new();
+    
+    let mut current_t = t_span[0];
+    let mut current_y = y0.clone();
+    let t_end = t_span[1];
+    
+    // Statistics tracking
+    let mut total_n_eval = 0;
+    let mut total_n_jac = 0;
+    let mut total_n_lu = 0;
+    let mut total_n_steps = 0;
+    let mut total_n_accepted = 0;
+    let mut total_n_rejected = 0;
+    
+    // Initialize event handler
+    event_handler.initialize(current_t, &current_y, &event_funcs)?;
+    
+    // Integration parameters
+    let max_step_size = (t_end - current_t) / F::from_f64(100.0).unwrap(); // Start with reasonable step size
+    
+    while current_t < t_end {
+        // Calculate next integration target
+        let next_t = (current_t + max_step_size).min(t_end);
+        
+        // Integrate one step using Radau with mass matrix
+        let step_result = radau_method_with_mass(
+            f.clone(),
+            [current_t, next_t],
+            current_y.clone(),
+            mass_matrix.clone(),
+            options.base_options.clone(),
+        )?;
+        
+        // Update statistics
+        total_n_eval += step_result.n_eval;
+        total_n_jac += step_result.n_jac;
+        total_n_lu += step_result.n_lu;
+        total_n_steps += step_result.n_steps;
+        total_n_accepted += step_result.n_accepted;
+        total_n_rejected += step_result.n_rejected;
+        
+        // Collect all time points and states from this step (excluding the initial point)
+        for i in 1..step_result.t.len() {
+            let step_t = step_result.t[i];
+            let step_y = &step_result.y[i];
+            
+            // Check for events at this time point
+            let action = event_handler.check_events(step_t, step_y, None, &event_funcs)?;
+            
+            // Add this point to our results
+            all_t.push(step_t);
+            all_y.push(step_y.clone());
+            
+            // If an event triggered a stop, break
+            if action == EventAction::Stop {
+                current_t = step_t;
+                current_y = step_y.clone();
+                
+                // Build final result
+                let base_result = ODEResult {
+                    t: all_t,
+                    y: all_y,
+                    success: true,
+                    message: Some("Integration stopped due to event".to_string()),
+                    n_eval: total_n_eval,
+                    n_steps: total_n_steps,
+                    n_accepted: total_n_accepted,
+                    n_rejected: total_n_rejected,
+                    n_lu: total_n_lu,
+                    n_jac: total_n_jac,
+                    method: ODEMethod::Radau,
+                };
+                
+                return Ok(ODEResultWithEvents::new(
+                    base_result,
+                    event_handler.record,
+                    None, // No dense output for now
+                    true, // Event termination
+                ));
+            }
+        }
+        
+        // Update current state
+        current_t = step_result.t.last().copied().unwrap_or(current_t);
+        current_y = step_result.y.last().cloned().unwrap_or(current_y);
+    }
+    
+    // Build final result for completed integration
+    let base_result = ODEResult {
+        t: all_t,
+        y: all_y,
+        success: current_t >= t_end,
+        message: Some("Integration completed successfully".to_string()),
+        n_eval: total_n_eval,
+        n_steps: total_n_steps,
+        n_accepted: total_n_accepted,
+        n_rejected: total_n_rejected,
+        n_lu: total_n_lu,
+        n_jac: total_n_jac,
+        method: ODEMethod::Radau,
+    };
+    
+    Ok(ODEResultWithEvents::new(
+        base_result,
+        event_handler.record,
+        None, // No dense output for now
+        false, // No event termination
     ))
 }

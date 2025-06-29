@@ -8,6 +8,30 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
+
+/// Helper function for safe conversion of hardcoded constants
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
+/// Helper function for safe float to f64 conversion
+fn safe_float_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
+    value.to_f64().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert float to f64".to_string())
+    })
+}
+
+/// Helper function for safe usize conversion
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
+    T::from_usize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+    })
+}
 use crate::filters::{gaussian_filter, median_filter, uniform_filter, BorderMode};
 use crate::interpolation::{rotate, zoom, InterpolationOrder};
 use crate::measurements::{center_of_mass, label, moments};
@@ -146,7 +170,8 @@ pub mod medical {
         let top_hat = image.to_owned() - opened;
 
         // Enhance contrast
-        let enhanced = image.to_owned() + top_hat * T::from(2.0).unwrap();
+        let two = safe_f64_to_float(2.0)?;
+        let enhanced = image.to_owned() + top_hat * two;
 
         Ok(enhanced)
     }
@@ -163,7 +188,7 @@ pub mod medical {
         let mut nodules = Vec::new();
 
         // Threshold to segment lung tissue
-        let threshold = T::from(-500.0).unwrap(); // Typical HU value for lung tissue
+        let threshold = safe_f64_to_float(-500.0)?; // Typical HU value for lung tissue
         let lung_mask = ct_slice.mapv(|x| x > threshold);
 
         // Apply morphological operations to clean up
@@ -220,7 +245,7 @@ pub mod medical {
                     mean_intensity: ct_slice
                         .indexed_iter()
                         .filter(|((y, x), _)| component_mask[[*y, *x]])
-                        .map(|(_, &val)| val.to_f64().unwrap())
+                        .map(|(_, &val)| safe_float_to_f64(val).unwrap_or(0.0))
                         .sum::<f64>()
                         / size as f64,
                 });
@@ -430,14 +455,14 @@ pub mod satellite {
                         let sum: T = (0..num_bands)
                             .map(|k| sharpened[[i, j, k]])
                             .fold(T::zero(), |a, b| a + b);
-                        intensity[[i, j]] = sum / T::from(num_bands).unwrap();
+                        intensity[[i, j]] = sum / safe_usize_to_float(num_bands)?;
                     }
                 }
 
                 // Replace intensity with pan
                 for i in 0..pan_h {
                     for j in 0..pan_w {
-                        let ratio = if intensity[[i, j]] > T::from(1e-10).unwrap() {
+                        let ratio = if intensity[[i, j]] > safe_f64_to_float(1e-10)? {
                             pan_image[[i, j]] / intensity[[i, j]]
                         } else {
                             T::one()
@@ -483,7 +508,7 @@ pub mod satellite {
                     // Apply Brovey transform
                     for i in 0..pan_h {
                         for j in 0..pan_w {
-                            if sum_upsampled[[i, j]] > T::from(1e-10).unwrap() {
+                            if sum_upsampled[[i, j]] > safe_f64_to_float(1e-10)? {
                                 sharpened[[i, j, band]] =
                                     upsampled[[i, j]] * pan_image[[i, j]] / sum_upsampled[[i, j]];
                             } else {
@@ -558,9 +583,12 @@ pub mod microscopy {
                 image,
                 21,
                 crate::segmentation::AdaptiveMethod::Gaussian,
-                T::from(5.0).unwrap(),
+                safe_f64_to_float(5.0)?,
             )?,
-            ThresholdMethod::Fixed(thresh) => image.mapv(|x| x > T::from(thresh).unwrap()),
+            ThresholdMethod::Fixed(thresh) => {
+                let thresh_t = safe_f64_to_float(thresh)?;
+                image.mapv(|x| x > thresh_t)
+            }
         };
 
         // Morphological cleanup
@@ -628,7 +656,7 @@ pub mod microscopy {
                     mean_intensity: image
                         .indexed_iter()
                         .filter(|((y, x), _)| mask[[*y, *x]])
-                        .map(|(_, &val)| val.to_f64().unwrap())
+                        .map(|(_, &val)| safe_float_to_f64(val).unwrap_or(0.0))
                         .sum::<f64>()
                         / area as f64,
                 });
@@ -747,16 +775,16 @@ pub mod microscopy {
             let val2 = channel2[[y, x]];
 
             if mask1[[y, x]] {
-                sum1 += val1.to_f64().unwrap();
+                sum1 += safe_float_to_f64(val1).unwrap_or(0.0);
                 if mask2[[y, x]] {
-                    m1 += val1.to_f64().unwrap();
+                    m1 += safe_float_to_f64(val1).unwrap_or(0.0);
                 }
             }
 
             if mask2[[y, x]] {
-                sum2 += val2.to_f64().unwrap();
+                sum2 += safe_float_to_f64(val2).unwrap_or(0.0);
                 if mask1[[y, x]] {
-                    m2 += val2.to_f64().unwrap();
+                    m2 += safe_float_to_f64(val2).unwrap_or(0.0);
                 }
             }
         }
@@ -765,8 +793,8 @@ pub mod microscopy {
         let manders_m2 = if sum2 > 0.0 { m2 / sum2 } else { 0.0 };
 
         // Compute Pearson correlation
-        let mean1 = channel1.mean().unwrap_or(T::zero()).to_f64().unwrap();
-        let mean2 = channel2.mean().unwrap_or(T::zero()).to_f64().unwrap();
+        let mean1 = safe_float_to_f64(channel1.mean().unwrap_or(T::zero())).unwrap_or(0.0);
+        let mean2 = safe_float_to_f64(channel2.mean().unwrap_or(T::zero())).unwrap_or(0.0);
 
         let mut cov = 0.0;
         let mut var1 = 0.0;
@@ -774,8 +802,8 @@ pub mod microscopy {
 
         for ((y, x), &val1) in channel1.indexed_iter() {
             if mask1[[y, x]] || mask2[[y, x]] {
-                let v1 = val1.to_f64().unwrap() - mean1;
-                let v2 = channel2[[y, x]].to_f64().unwrap() - mean2;
+                let v1 = safe_float_to_f64(val1).unwrap_or(0.0) - mean1;
+                let v2 = safe_float_to_f64(channel2[[y, x]]).unwrap_or(0.0) - mean2;
 
                 cov += v1 * v2;
                 var1 += v1 * v1;
@@ -820,7 +848,7 @@ mod tests {
 
         let nir = arr2(&[[0.5, 0.6, 0.7], [0.6, 0.7, 0.8], [0.7, 0.8, 0.9]]);
 
-        let ndvi = satellite::compute_ndvi(&red.view(), &nir.view()).unwrap();
+        let ndvi = satellite::compute_ndvi(&red.view(), &nir.view()).expect("compute_ndvi should succeed");
 
         // Check NDVI values are in expected range
         for &val in ndvi.iter() {
@@ -848,7 +876,7 @@ mod tests {
             }
         }
 
-        let vesselness = medical::frangi_vesselness(&image.view(), None).unwrap();
+        let vesselness = medical::frangi_vesselness(&image.view(), None).expect("frangi_vesselness should succeed");
 
         // Check that vessel regions have high response
         assert!(vesselness[[25, 25]] > 0.0);
@@ -876,7 +904,7 @@ mod tests {
             }
         }
 
-        let (labels, cells) = microscopy::segment_cells(&image.view(), None).unwrap();
+        let (labels, cells) = microscopy::segment_cells(&image.view(), None).expect("segment_cells should succeed");
 
         assert_eq!(cells.len(), 4); // Should detect 4 cells
         assert!(labels.max() == Some(&4));

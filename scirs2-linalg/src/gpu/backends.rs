@@ -4,7 +4,7 @@
 //! CUDA, OpenCL, ROCm, and others. Each backend provides a consistent
 //! interface for GPU-accelerated linear algebra operations.
 
-use super::{GpuBackend, GpuBuffer, GpuContext, GpuDeviceInfo, GpuDeviceType};
+use super::{GpuBackend, GpuBuffer, GpuContext, GpuContextAlloc, GpuDeviceInfo, GpuDeviceType};
 use crate::error::{LinalgError, LinalgResult};
 use std::collections::HashMap;
 
@@ -229,13 +229,6 @@ impl GpuContext for CpuFallbackContext {
         &self.device_info
     }
 
-    fn allocate_buffer<T: Clone + Send + Sync>(
-        &self,
-        size: usize,
-    ) -> LinalgResult<Box<dyn GpuBuffer<T>>> {
-        Ok(Box::new(CpuBuffer::new(size)))
-    }
-
     fn synchronize(&self) -> LinalgResult<()> {
         // CPU operations are always synchronous
         Ok(())
@@ -244,6 +237,15 @@ impl GpuContext for CpuFallbackContext {
     fn available_memory(&self) -> LinalgResult<usize> {
         // Return a reasonable estimate for available system memory
         Ok(self.device_info.total_memory / 2)
+    }
+}
+
+impl GpuContextAlloc for CpuFallbackContext {
+    fn allocate_buffer<T: Clone + Send + Sync>(
+        &self,
+        size: usize,
+    ) -> LinalgResult<Box<dyn GpuBuffer<T>>> {
+        Ok(Box::new(CpuBuffer::new(size)))
     }
 }
 

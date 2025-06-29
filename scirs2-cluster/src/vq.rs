@@ -40,7 +40,7 @@ mod kmeans2;
 mod minibatch_kmeans;
 mod parallel_kmeans;
 mod weighted_kmeans;
-pub use distance_metrics::{
+pub use self::distance_metrics::{
     create_metric, ChebyshevDistance, CorrelationDistance, CosineDistance,
     DistanceMetric as VQDistanceMetric, EuclideanDistance, MahalanobisDistance, ManhattanDistance,
     MetricType, MinkowskiDistance,

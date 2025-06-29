@@ -191,6 +191,38 @@ pub fn fetch_data(
     Ok(cache_path)
 }
 
+/// Cache key for dataset caching with configuration-aware hashing
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+pub struct CacheKey {
+    name: String,
+    config_hash: String,
+}
+
+impl CacheKey {
+    /// Create a new cache key from dataset name and configuration
+    pub fn new(name: &str, config: &crate::real_world::RealWorldConfig) -> Self {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        
+        let mut hasher = DefaultHasher::new();
+        config.use_cache.hash(&mut hasher);
+        config.download_if_missing.hash(&mut hasher);
+        config.return_preprocessed.hash(&mut hasher);
+        config.subset.hash(&mut hasher);
+        config.random_state.hash(&mut hasher);
+        
+        Self {
+            name: name.to_string(),
+            config_hash: format!("{:x}", hasher.finish()),
+        }
+    }
+    
+    /// Get the cache key as a string
+    pub fn as_string(&self) -> String {
+        format!("{}_{}", self.name, self.config_hash)
+    }
+}
+
 /// File path wrapper for hashing
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct FileCacheKey(String);
@@ -655,17 +687,48 @@ pub fn download_data(_url: &str, _force_download: bool) -> Result<Vec<u8>> {
 }
 
 /// Cache management utilities
-#[derive(Default)]
 pub struct CacheManager {
     cache: DatasetCache,
 }
 
 impl CacheManager {
+    /// Create a new cache manager with default settings
+    pub fn new() -> Result<Self> {
+        let cache_dir = get_cache_dir()?;
+        Ok(Self {
+            cache: DatasetCache::with_config(cache_dir, DEFAULT_CACHE_SIZE, DEFAULT_CACHE_TTL),
+        })
+    }
+
     /// Create a new cache manager with custom settings
-    pub fn new(cache_dir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
+    pub fn with_config(cache_dir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
         Self {
             cache: DatasetCache::with_config(cache_dir, cache_size, ttl_seconds),
         }
+    }
+
+    /// Get a dataset from cache using CacheKey
+    pub fn get(&self, key: &CacheKey) -> Result<Option<crate::utils::Dataset>> {
+        let name = key.as_string();
+        if self.cache.is_cached(&name) {
+            // For now, return None since we need to implement proper Dataset deserialization
+            // This is a placeholder that will need proper implementation
+            Ok(None)
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Put a dataset into cache using CacheKey
+    pub fn put(&self, key: &CacheKey, dataset: &crate::utils::Dataset) -> Result<()> {
+        let name = key.as_string();
+        // For now, this is a placeholder that will need proper Dataset serialization
+        // We would serialize the dataset to bytes and store it
+        // This is a simplified implementation
+        let serialized = serde_json::to_vec(dataset).map_err(|e| {
+            DatasetsError::CacheError(format!("Failed to serialize dataset: {}", e))
+        })?;
+        self.cache.write_cached(&name, &serialized)
     }
 
     /// Create a cache manager with comprehensive configuration
@@ -1534,7 +1597,7 @@ mod tests {
     #[test]
     fn test_batch_operations_creation() {
         let temp_dir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::new(temp_dir.path().to_path_buf(), 10, 3600);
+        let cache_manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager)
             .with_parallel(false)
             .with_retry_config(2, std::time::Duration::from_millis(500));
@@ -1546,7 +1609,7 @@ mod tests {
     #[test]
     fn test_selective_cleanup() {
         let temp_dir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::new(temp_dir.path().to_path_buf(), 10, 3600);
+        let cache_manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager);
 
         // Create some test files
@@ -1579,7 +1642,7 @@ mod tests {
     #[test]
     fn test_batch_process() {
         let temp_dir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::new(temp_dir.path().to_path_buf(), 10, 3600);
+        let cache_manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager).with_parallel(false);
 
         // Create test files
@@ -1615,7 +1678,7 @@ mod tests {
     #[test]
     fn test_get_cache_statistics() {
         let temp_dir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::new(temp_dir.path().to_path_buf(), 10, 3600);
+        let cache_manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager);
 
         // Start with empty cache

@@ -7,7 +7,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
 use scirs2_linalg::prelude::*;
-use scirs2_linalg::specialized::block_tridiagonal_lu;
+use scirs2_linalg::specialized::{block_tridiagonal_lu, BlockDiagonalMatrix, solve_block_diagonal, block_diagonal_determinant};
 use scirs2_linalg::structured::{
     circulant_determinant, circulant_eigenvalues, circulant_inverse_fft, circulant_matvec_direct,
     circulant_matvec_fft, hankel_determinant, hankel_matvec, hankel_matvec_fft, hankel_svd,
@@ -513,7 +513,7 @@ fn bench_banded_operations(c: &mut Criterion) {
                             black_box(size), // ncols
                         ).unwrap();
                         // Use solve as placeholder since matvec doesn't exist
-                        banded.solve(black_box(&v.view())).unwrap_or_else(|_| v.clone())
+                        banded.solve(black_box(&v.view())).unwrap_or_else(|_| (*v).clone())
                     })
                 },
             );
@@ -531,7 +531,7 @@ fn bench_banded_operations(c: &mut Criterion) {
                             black_box(size), // nrows
                             black_box(size), // ncols
                         ).unwrap();
-                        banded.solve(black_box(&rhs.view())).unwrap_or_else(|_| rhs.clone())
+                        banded.solve(black_box(&rhs.view())).unwrap_or_else(|_| (*rhs).clone())
                     })
                 },
             );
@@ -584,7 +584,7 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
                 |b, blocks| {
                     b.iter(|| {
                         let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
-                        BlockDiagonalMatrix::new(black_box(block_views)).unwrap()
+                        BlockDiagonalMatrix::from_views(black_box(block_views)).unwrap()
                     })
                 },
             );
@@ -599,9 +599,9 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
                 |b, (blocks, v)| {
                     b.iter(|| {
                         let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
-                        let block_diag = BlockDiagonalMatrix::new(black_box(block_views)).unwrap();
+                        let _block_diag = BlockDiagonalMatrix::from_views(black_box(block_views)).unwrap();
                         // Use placeholder - just return the input vector since matvec doesn't exist yet
-                        v.clone()
+                        (*v).clone()
                     })
                 },
             );
@@ -616,7 +616,7 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
                 |b, (blocks, rhs)| {
                     b.iter(|| {
                         let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
-                        let block_diag = BlockDiagonalMatrix::new(black_box(block_views));
+                        let block_diag = BlockDiagonalMatrix::from_views(black_box(block_views)).unwrap();
                         solve_block_diagonal(&block_diag, black_box(&rhs.view()))
                     })
                 },
@@ -633,7 +633,7 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
                     |b, blocks| {
                         b.iter(|| {
                             let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
-                            let block_diag = BlockDiagonalMatrix::new(black_box(block_views));
+                            let block_diag = BlockDiagonalMatrix::from_views(black_box(block_views)).unwrap();
                             block_diagonal_determinant(&block_diag)
                         })
                     },
@@ -651,7 +651,7 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
                     |b, blocks| {
                         b.iter(|| {
                             let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
-                            let block_diag = BlockDiagonalMatrix::new(black_box(block_views)).unwrap();
+                            let block_diag = BlockDiagonalMatrix::from_views(black_box(block_views)).unwrap();
                             // Use placeholder - just return the matrix creation since inverse doesn't exist yet
                             block_diag
                         })
@@ -710,13 +710,13 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
                     b.iter(|| {
                         let diag_cloned: Vec<_> = diag.iter().map(|b| b.clone()).collect();
                         let off_diag_cloned: Vec<_> = off_diag.iter().map(|b| b.clone()).collect();
-                        let block_tridiag = BlockTridiagonalMatrix::new(
+                        let _block_tridiag = BlockTridiagonalMatrix::new(
                             black_box(off_diag_cloned.clone()),
                             black_box(diag_cloned),
                             black_box(off_diag_cloned),
                         ).unwrap();
                         // Use placeholder - just return the input vector since matvec doesn't exist
-                        v.clone()
+                        (*v).clone()
                     })
                 },
             );
@@ -728,7 +728,7 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
                     total_size,
                 ),
                 &(&diagonal_blocks, &off_diagonal_blocks, &rhs),
-                |b, (diag, off_diag, rhs)| {
+                |b, (diag, off_diag, _rhs)| {
                     b.iter(|| {
                         let diag_cloned: Vec<_> = diag.iter().map(|b| b.clone()).collect();
                         let off_diag_cloned: Vec<_> = off_diag.iter().map(|b| b.clone()).collect();

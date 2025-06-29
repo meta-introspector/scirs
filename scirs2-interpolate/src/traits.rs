@@ -78,6 +78,68 @@ pub trait Interpolator<T: InterpolationFloat> {
             "Derivative evaluation not implemented for this interpolator".to_string(),
         ))
     }
+
+    /// Evaluate with options for advanced control
+    fn evaluate_with_options(
+        &self,
+        query_points: &ArrayView2<T>,
+        options: &EvaluationOptions,
+    ) -> crate::InterpolateResult<BatchEvaluationResult<T>> {
+        let _ = options;
+        let values = self.evaluate(query_points)?;
+        Ok(BatchEvaluationResult {
+            values,
+            uncertainties: None,
+            out_of_bounds: Vec::new(),
+        })
+    }
+
+    /// Get the spatial dimension of the interpolator
+    fn dimension(&self) -> usize;
+
+    /// Get the number of data points used to construct this interpolator
+    fn len(&self) -> usize;
+
+    /// Check if the interpolator is empty (no data points)
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+/// Advanced interpolator interface for methods with uncertainty quantification
+pub trait UncertaintyInterpolator<T: InterpolationFloat>: Interpolator<T> {
+    /// Evaluate with uncertainty estimates
+    fn evaluate_with_uncertainty(
+        &self,
+        query_points: &ArrayView2<T>,
+    ) -> crate::InterpolateResult<(Vec<T>, Vec<T>)>;
+
+    /// Evaluate confidence intervals at specified levels
+    fn evaluate_confidence_intervals(
+        &self,
+        query_points: &ArrayView2<T>,
+        confidence_levels: &[T],
+    ) -> crate::InterpolateResult<Vec<(T, Vec<(T, T)>)>>;
+}
+
+/// Adaptive interpolator interface for methods that can refine their approximation
+pub trait AdaptiveInterpolator<T: InterpolationFloat>: Interpolator<T> {
+    /// Add new data points to refine the interpolation
+    fn add_points(
+        &mut self,
+        new_points: &ArrayView2<T>,
+        new_values: &ArrayView1<T>,
+    ) -> crate::InterpolateResult<()>;
+
+    /// Remove data points from the interpolation
+    fn remove_points(&mut self, indices: &[usize]) -> crate::InterpolateResult<()>;
+
+    /// Update the interpolation with new data
+    fn update(
+        &mut self,
+        points: &ArrayView2<T>,
+        values: &ArrayView1<T>,
+    ) -> crate::InterpolateResult<()>;
 }
 
 /// Configuration trait for interpolation methods
@@ -144,6 +206,110 @@ pub struct BatchEvaluationResult<T: InterpolationFloat> {
     pub out_of_bounds: Vec<usize>,
 }
 
+/// Spline-specific interface for methods that support derivatives and integrals
+pub trait SplineInterpolator<T: InterpolationFloat>: Interpolator<T> {
+    /// Evaluate the nth derivative at query points
+    fn derivative(&self, query_points: &ArrayView2<T>, order: usize) -> crate::InterpolateResult<Vec<T>>;
+
+    /// Evaluate the definite integral over specified bounds
+    fn integrate(&self, bounds: &[(T, T)]) -> crate::InterpolateResult<Vec<T>>;
+
+    /// Get the antiderivative as a new spline
+    fn antiderivative(&self) -> crate::InterpolateResult<Box<dyn SplineInterpolator<T>>>;
+
+    /// Find roots of the spline within given bounds
+    fn find_roots(&self, bounds: &[(T, T)], tolerance: T) -> crate::InterpolateResult<Vec<T>>;
+
+    /// Find extrema (local minima and maxima) within given bounds
+    fn find_extrema(&self, bounds: &[(T, T)], tolerance: T) -> crate::InterpolateResult<Vec<(T, T, ExtremaType)>>;
+}
+
+/// Type of extrema for spline analysis
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ExtremaType {
+    /// Local minimum
+    Minimum,
+    /// Local maximum
+    Maximum,
+    /// Inflection point
+    InflectionPoint,
+}
+
+/// Performance monitoring interface for interpolation methods
+pub trait PerformanceMonitoring {
+    /// Get timing statistics for the last operation
+    fn get_timing_stats(&self) -> Option<TimingStats>;
+
+    /// Get memory usage statistics
+    fn get_memory_stats(&self) -> Option<MemoryStats>;
+
+    /// Enable or disable performance monitoring
+    fn set_monitoring_enabled(&mut self, enabled: bool);
+
+    /// Reset performance counters
+    fn reset_stats(&mut self);
+}
+
+/// Timing statistics for performance monitoring
+#[derive(Debug, Clone)]
+pub struct TimingStats {
+    /// Time spent in construction (microseconds)
+    pub construction_time_us: u64,
+    /// Time spent in evaluation (microseconds)
+    pub evaluation_time_us: u64,
+    /// Number of evaluations performed
+    pub evaluation_count: u64,
+    /// Average time per evaluation (microseconds)
+    pub avg_evaluation_time_us: f64,
+}
+
+/// Memory usage statistics
+#[derive(Debug, Clone)]
+pub struct MemoryStats {
+    /// Memory used by the interpolator (bytes)
+    pub interpolator_memory_bytes: usize,
+    /// Memory used by cached data (bytes)  
+    pub cache_memory_bytes: usize,
+    /// Total allocations
+    pub total_allocations: usize,
+    /// Peak memory usage (bytes)
+    pub peak_memory_bytes: usize,
+}
+
+/// Serialization support for interpolators
+pub trait SerializableInterpolator<T: InterpolationFloat> {
+    /// Serialize the interpolator to bytes
+    fn serialize(&self) -> crate::InterpolateResult<Vec<u8>>;
+
+    /// Deserialize the interpolator from bytes
+    fn deserialize(data: &[u8]) -> crate::InterpolateResult<Self>
+    where
+        Self: Sized;
+
+    /// Get the serialization format version
+    fn serialization_version(&self) -> u32;
+}
+
+/// Parallel evaluation support for interpolators
+pub trait ParallelInterpolator<T: InterpolationFloat>: Interpolator<T> + Sync + Send {
+    /// Evaluate at query points using parallel execution
+    fn evaluate_parallel(
+        &self,
+        query_points: &ArrayView2<T>,
+        num_threads: Option<usize>,
+    ) -> crate::InterpolateResult<Vec<T>>;
+
+    /// Check if this interpolator supports parallel evaluation
+    fn supports_parallel(&self) -> bool {
+        true
+    }
+
+    /// Get the recommended number of threads for this interpolator
+    fn recommended_thread_count(&self, query_size: usize) -> usize {
+        (query_size / 1000).max(1).min(num_cpus::get())
+    }
+}
+
 /// Common validation utilities
 pub mod validation {
     use super::*;
@@ -181,5 +347,34 @@ pub mod validation {
             )));
         }
         Ok(())
+    }
+
+    /// Validate that query points are within valid bounds (if bounds checking is enabled)
+    pub fn validate_query_bounds<T: InterpolationFloat>(
+        query_points: &ArrayView2<T>,
+        bounds: &[(T, T)],
+        options: &EvaluationOptions,
+    ) -> crate::InterpolateResult<Vec<usize>> {
+        if !options.validate_bounds {
+            return Ok(Vec::new());
+        }
+
+        let mut out_of_bounds = Vec::new();
+        
+        for (row_idx, point) in query_points.outer_iter().enumerate() {
+            for (dim_idx, (&coord, &(min_bound, max_bound))) in point.iter().zip(bounds.iter()).enumerate() {
+                if coord < min_bound || coord > max_bound {
+                    out_of_bounds.push(row_idx);
+                    break;
+                }
+            }
+        }
+
+        Ok(out_of_bounds)
+    }
+
+    /// Validate interpolator configuration parameters
+    pub fn validate_config<C: InterpolationConfig>(config: &C) -> crate::InterpolateResult<()> {
+        config.validate()
     }
 }

@@ -15,11 +15,13 @@
 //! for large matrices with special structure.
 
 mod banded;
+mod block_diagonal;
 mod block_tridiagonal;
 mod symmetric;
 mod tridiagonal;
 
 pub use self::banded::*;
+pub use self::block_diagonal::*;
 pub use self::block_tridiagonal::*;
 pub use self::symmetric::*;
 pub use self::tridiagonal::*;

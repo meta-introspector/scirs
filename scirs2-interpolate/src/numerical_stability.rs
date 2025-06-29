@@ -450,12 +450,219 @@ where
         });
     }
 
+    // Validate regularization parameter
+    if regularization < F::zero() {
+        return Err(InterpolateError::InvalidInput {
+            message: "Regularization parameter must be non-negative".to_string(),
+        });
+    }
+
     // Add regularization to diagonal
     for i in 0..n {
         matrix[[i, i]] += regularization;
     }
 
     Ok(())
+}
+
+/// Apply adaptive regularization based on matrix characteristics
+pub fn apply_adaptive_regularization<F>(
+    matrix: &mut Array2<F>,
+    condition_report: &ConditionReport<F>,
+) -> InterpolateResult<F>
+where
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
+{
+    let regularization = match condition_report.stability_level {
+        StabilityLevel::Excellent | StabilityLevel::Good => F::zero(),
+        StabilityLevel::Marginal => {
+            // Use moderate regularization
+            let base_reg = machine_epsilon::<F>() * F::from_f64(1e8).unwrap_or(F::from(100000000));
+            base_reg * condition_report.condition_number.sqrt()
+        }
+        StabilityLevel::Poor => {
+            // Use stronger regularization
+            condition_report.recommended_regularization.unwrap_or_else(|| {
+                machine_epsilon::<F>() * F::from_f64(1e12).unwrap_or(F::from(1000000000000))
+            })
+        }
+    };
+
+    if regularization > F::zero() {
+        apply_tikhonov_regularization(matrix, regularization)?;
+    }
+
+    Ok(regularization)
+}
+
+/// Enhanced edge case detection for numerical stability
+pub fn detect_edge_cases<F>(
+    matrix: &ArrayView2<F>,
+    rhs: Option<&ArrayView1<F>>,
+) -> EdgeCaseReport<F>
+where
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
+{
+    let mut report = EdgeCaseReport::default();
+    let n = matrix.nrows();
+    
+    // Check for extreme values
+    let mut min_val = F::infinity();
+    let mut max_val = F::neg_infinity();
+    let mut zero_count = 0;
+    let mut inf_count = 0;
+    let mut nan_count = 0;
+    
+    for &val in matrix.iter() {
+        if val.is_nan() {
+            nan_count += 1;
+        } else if val.is_infinite() {
+            inf_count += 1;
+        } else if val == F::zero() {
+            zero_count += 1;
+        } else {
+            min_val = min_val.min(val.abs());
+            max_val = max_val.max(val.abs());
+        }
+    }
+    
+    report.has_nan_values = nan_count > 0;
+    report.has_infinite_values = inf_count > 0;
+    report.has_extreme_values = if !min_val.is_infinite() && !max_val.is_infinite() {
+        let dynamic_range = max_val / min_val;
+        dynamic_range > F::from_f64(1e15).unwrap_or(F::from(1e15 as f32).unwrap_or(F::from(1000000000000000)))
+    } else {
+        false
+    };
+    
+    // Check matrix structure
+    report.is_diagonal_dominant = check_diagonal_dominance(matrix);
+    report.zero_diagonal_count = count_zero_diagonal_elements(matrix);
+    report.sparsity_ratio = (zero_count as f64) / (n * n) as f64;
+    
+    // Check RHS if provided
+    if let Some(rhs_vec) = rhs {
+        report.rhs_has_extreme_values = rhs_vec.iter().any(|&x| 
+            x.is_nan() || x.is_infinite() || 
+            x.abs() > F::from_f64(1e100).unwrap_or(F::from(1e100 as f32).unwrap_or(F::max_value()))
+        );
+    }
+    
+    report
+}
+
+/// Check if matrix is diagonally dominant
+fn check_diagonal_dominance<F>(matrix: &ArrayView2<F>) -> bool
+where
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
+{
+    let n = matrix.nrows();
+    for i in 0..n {
+        let diagonal = matrix[[i, i]].abs();
+        let off_diagonal_sum: F = (0..n)
+            .filter(|&j| j != i)
+            .map(|j| matrix[[i, j]].abs())
+            .fold(F::zero(), |acc, x| acc + x);
+        
+        if diagonal <= off_diagonal_sum {
+            return false;
+        }
+    }
+    true
+}
+
+/// Count zero elements on the diagonal
+fn count_zero_diagonal_elements<F>(matrix: &ArrayView2<F>) -> usize
+where
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
+{
+    let n = matrix.nrows();
+    let zero_threshold = machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or(F::from(1000000));
+    
+    (0..n)
+        .filter(|&i| matrix[[i, i]].abs() < zero_threshold)
+        .count()
+}
+
+/// Report on edge cases and numerical issues
+#[derive(Debug, Clone, Default)]
+pub struct EdgeCaseReport<F>
+where
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
+{
+    /// Whether matrix contains NaN values
+    pub has_nan_values: bool,
+    /// Whether matrix contains infinite values
+    pub has_infinite_values: bool,
+    /// Whether matrix has extreme dynamic range
+    pub has_extreme_values: bool,
+    /// Whether matrix is diagonally dominant
+    pub is_diagonal_dominant: bool,
+    /// Number of zero diagonal elements
+    pub zero_diagonal_count: usize,
+    /// Ratio of zero elements to total elements
+    pub sparsity_ratio: f64,
+    /// Whether RHS vector has extreme values
+    pub rhs_has_extreme_values: bool,
+}
+
+/// Enhanced solve with comprehensive stability monitoring and edge case detection
+pub fn solve_with_enhanced_monitoring<F>(
+    matrix: &Array2<F>,
+    rhs: &Array1<F>,
+) -> InterpolateResult<(Array1<F>, EnhancedStabilityReport<F>)>
+where
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + AddAssign
+        + SubAssign
+        + std::fmt::LowerExp
+        + 'static,
+{
+    // Perform comprehensive edge case detection
+    let edge_case_report = detect_edge_cases(&matrix.view(), Some(&rhs.view()));
+    
+    // Early exit for severe issues
+    if edge_case_report.has_nan_values || edge_case_report.has_infinite_values {
+        return Err(InterpolateError::NumericalError(
+            "Matrix or RHS contains NaN or infinite values".to_string(),
+        ));
+    }
+    
+    // Assess matrix condition
+    let condition_report = assess_matrix_condition(&matrix.view())?;
+    
+    // Create enhanced report
+    let mut enhanced_report = EnhancedStabilityReport {
+        condition_report: condition_report.clone(),
+        edge_case_report,
+        applied_regularization: F::zero(),
+        solve_strategy: SolveStrategy::Direct,
+        convergence_info: None,
+    };
+    
+    // Determine solving strategy based on stability assessment
+    let solution = if enhanced_report.edge_case_report.has_extreme_values || 
+                     matches!(condition_report.stability_level, StabilityLevel::Poor) {
+        enhanced_report.solve_strategy = SolveStrategy::RegularizedIterative;
+        
+        let mut working_matrix = matrix.clone();
+        let regularization = apply_adaptive_regularization(&mut working_matrix, &condition_report)?;
+        enhanced_report.applied_regularization = regularization;
+        
+        // Try iterative refinement for better accuracy
+        solve_with_iterative_refinement(&working_matrix, rhs, &mut enhanced_report)?
+    } else if enhanced_report.edge_case_report.zero_diagonal_count > 0 {
+        enhanced_report.solve_strategy = SolveStrategy::PivotedLU;
+        solve_system(matrix, rhs)?
+    } else {
+        enhanced_report.solve_strategy = SolveStrategy::Direct;
+        solve_system(matrix, rhs)?
+    };
+    
+    Ok((solution, enhanced_report))
 }
 
 /// Monitor and report numerical issues during matrix solve
@@ -473,33 +680,116 @@ where
         + std::fmt::LowerExp
         + 'static,
 {
-    // Assess matrix condition first
-    let condition_report = assess_matrix_condition(&matrix.view())?;
+    let (solution, enhanced_report) = solve_with_enhanced_monitoring(matrix, rhs)?;
+    Ok((solution, enhanced_report.condition_report))
+}
 
-    // Warn about poor conditioning
-    if matches!(condition_report.stability_level, StabilityLevel::Poor) {
-        eprintln!(
-            "Warning: Matrix is poorly conditioned (condition number: {:.2e}). \
-             Consider regularization parameter: {:?}",
-            condition_report.condition_number, condition_report.recommended_regularization
-        );
-    }
-
-    // Attempt solve with regularization if recommended
-    let solution = if let Some(reg) = condition_report.recommended_regularization {
-        let mut regularized_matrix = matrix.clone();
-        apply_tikhonov_regularization(&mut regularized_matrix, reg)?;
-
-        // Try solve with regularized matrix
-        solve_system(&regularized_matrix, rhs).or_else(|_| {
-            eprintln!("Warning: Regularized solve failed, falling back to original matrix");
-            solve_system(matrix, rhs)
-        })?
-    } else {
-        solve_system(matrix, rhs)?
+/// Solve linear system with iterative refinement for enhanced accuracy
+fn solve_with_iterative_refinement<F>(
+    matrix: &Array2<F>,
+    rhs: &Array1<F>,
+    report: &mut EnhancedStabilityReport<F>,
+) -> InterpolateResult<Array1<F>>
+where
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + AddAssign
+        + SubAssign
+        + std::fmt::LowerExp
+        + 'static,
+{
+    let mut solution = solve_system(matrix, rhs)?;
+    let max_iterations = 5;
+    let tolerance = machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or(F::from(1000000));
+    
+    let mut convergence_info = ConvergenceInfo {
+        iterations: 0,
+        final_residual: F::infinity(),
+        converged: false,
     };
+    
+    for iteration in 0..max_iterations {
+        // Compute residual: r = b - A*x
+        let mut residual = rhs.clone();
+        for i in 0..matrix.nrows() {
+            let mut ax_i = F::zero();
+            for j in 0..matrix.ncols() {
+                ax_i += matrix[[i, j]] * solution[j];
+            }
+            residual[i] -= ax_i;
+        }
+        
+        // Compute residual norm
+        let residual_norm = residual.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        convergence_info.final_residual = residual_norm;
+        convergence_info.iterations = iteration + 1;
+        
+        // Check convergence
+        if residual_norm < tolerance {
+            convergence_info.converged = true;
+            break;
+        }
+        
+        // Solve for correction: A * delta_x = residual
+        if let Ok(correction) = solve_system(matrix, &residual) {
+            // Update solution: x = x + delta_x
+            for i in 0..solution.len() {
+                solution[i] += correction[i];
+            }
+        } else {
+            break; // Stop if correction solve fails
+        }
+    }
+    
+    report.convergence_info = Some(convergence_info);
+    Ok(solution)
+}
 
-    Ok((solution, condition_report))
+/// Enhanced stability report with comprehensive diagnostics
+#[derive(Debug, Clone)]
+pub struct EnhancedStabilityReport<F>
+where
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
+{
+    /// Basic condition assessment
+    pub condition_report: ConditionReport<F>,
+    /// Edge case detection results
+    pub edge_case_report: EdgeCaseReport<F>,
+    /// Applied regularization amount
+    pub applied_regularization: F,
+    /// Solving strategy used
+    pub solve_strategy: SolveStrategy,
+    /// Convergence information for iterative methods
+    pub convergence_info: Option<ConvergenceInfo<F>>,
+}
+
+/// Strategy used for solving the linear system
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SolveStrategy {
+    /// Direct solving without modifications
+    Direct,
+    /// LU factorization with pivoting
+    PivotedLU,
+    /// Regularized system with iterative refinement
+    RegularizedIterative,
+    /// Specialized method for structured matrices
+    Structured,
+}
+
+/// Information about iterative convergence
+#[derive(Debug, Clone)]
+pub struct ConvergenceInfo<F>
+where
+    F: Float + FromPrimitive + Debug + Display,
+{
+    /// Number of iterations performed
+    pub iterations: usize,
+    /// Final residual norm
+    pub final_residual: F,
+    /// Whether the method converged
+    pub converged: bool,
 }
 
 /// Internal function to solve linear system
@@ -1098,4 +1388,179 @@ mod tests {
         assert_eq!(classify_stability(1e15_f64), StabilityLevel::Marginal);
         assert_eq!(classify_stability(1e17_f64), StabilityLevel::Poor);
     }
+
+    #[test]
+    fn test_enhanced_stability() {
+        // Test enhanced matrix conditioning
+        let matrix = Array2::from_shape_vec((2, 2), vec![1e-15, 0.0, 0.0, 1.0]).unwrap();
+        let assessment = assess_enhanced_matrix_condition(&matrix.view());
+        assert!(assessment.is_ok());
+        
+        // Test adaptive regularization
+        let regularization = compute_adaptive_regularization(1e-10_f64, 1e15_f64);
+        assert!(regularization > 0.0);
+    }
+}
+
+/// Enhanced matrix condition assessment with improved diagnostics
+pub fn assess_enhanced_matrix_condition<F>(matrix: &ArrayView2<F>) -> InterpolateResult<ConditionReport<F>>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
+{
+    let mut report = assess_matrix_condition(matrix)?;
+    
+    // Enhanced diagnostics for better stability assessment
+    let enhanced_diagnostics = compute_enhanced_diagnostics(matrix)?;
+    
+    // Update recommendation based on enhanced analysis
+    if enhanced_diagnostics.has_tiny_eigenvalues {
+        report.recommended_regularization = Some(
+            enhanced_diagnostics.suggested_regularization.unwrap_or_else(|| {
+                machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or_else(|| F::from(1000000))
+            })
+        );
+    }
+    
+    // More conservative stability classification for interpolation
+    if enhanced_diagnostics.interpolation_risky {
+        report.stability_level = match report.stability_level {
+            StabilityLevel::Excellent => StabilityLevel::Good,
+            StabilityLevel::Good => StabilityLevel::Marginal,
+            StabilityLevel::Marginal => StabilityLevel::Poor,
+            StabilityLevel::Poor => StabilityLevel::Poor,
+        };
+    }
+    
+    Ok(report)
+}
+
+/// Enhanced diagnostic information for interpolation stability
+#[derive(Debug, Clone)]
+struct EnhancedDiagnostics<F: Float> {
+    has_tiny_eigenvalues: bool,
+    interpolation_risky: bool,
+    suggested_regularization: Option<F>,
+}
+
+/// Compute enhanced diagnostics for matrix stability in interpolation context
+fn compute_enhanced_diagnostics<F>(matrix: &ArrayView2<F>) -> InterpolateResult<EnhancedDiagnostics<F>>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
+{
+    let n = matrix.nrows();
+    let eps = machine_epsilon::<F>();
+    
+    // Check for very small diagonal elements (indicator of instability)
+    let mut has_tiny_eigenvalues = false;
+    let mut min_diagonal = F::infinity();
+    let mut max_diagonal = F::zero();
+    
+    for i in 0..n {
+        let diag_val = matrix[[i, i]].abs();
+        min_diagonal = min_diagonal.min(diag_val);
+        max_diagonal = max_diagonal.max(diag_val);
+        
+        if diag_val < eps * F::from_f64(1e6).unwrap_or_else(|| F::from(1000000)) {
+            has_tiny_eigenvalues = true;
+        }
+    }
+    
+    // Check if interpolation is risky based on conditioning
+    let diagonal_ratio = if min_diagonal > F::zero() {
+        max_diagonal / min_diagonal
+    } else {
+        F::infinity()
+    };
+    
+    let interpolation_risky = diagonal_ratio > F::from_f64(1e12).unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000)));
+    
+    // Suggest adaptive regularization
+    let suggested_regularization = if has_tiny_eigenvalues || interpolation_risky {
+        Some(compute_adaptive_regularization(min_diagonal, diagonal_ratio))
+    } else {
+        None
+    };
+    
+    Ok(EnhancedDiagnostics {
+        has_tiny_eigenvalues,
+        interpolation_risky,
+        suggested_regularization,
+    })
+}
+
+/// Compute adaptive regularization parameter based on matrix characteristics
+pub fn compute_adaptive_regularization<F>(min_value: F, condition_estimate: F) -> F
+where
+    F: Float + FromPrimitive + Debug + Display,
+{
+    let eps = machine_epsilon::<F>();
+    
+    // Base regularization on machine epsilon and minimum value
+    let base_reg = eps.sqrt() * min_value.max(eps);
+    
+    // Scale by condition number estimate
+    let condition_factor = if condition_estimate > F::from_f64(1e15).unwrap_or_else(|| F::from(1e15 as f32).unwrap_or_else(|| F::from(1000000000000000))) {
+        F::from_f64(1000.0).unwrap_or_else(|| F::from(1000))
+    } else if condition_estimate > F::from_f64(1e12).unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000))) {
+        F::from_f64(100.0).unwrap_or_else(|| F::from(100))
+    } else if condition_estimate > F::from_f64(1e8).unwrap_or_else(|| F::from(1e8 as f32).unwrap_or_else(|| F::from(100000000))) {
+        F::from_f64(10.0).unwrap_or_else(|| F::from(10))
+    } else {
+        F::one()
+    };
+    
+    base_reg * condition_factor
+}
+
+/// Perform matrix operations with enhanced stability monitoring
+pub fn enhanced_matrix_multiply<F>(
+    a: &ArrayView2<F>,
+    b: &ArrayView2<F>,
+) -> InterpolateResult<Array2<F>>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Copy,
+{
+    if a.ncols() != b.nrows() {
+        return Err(InterpolateError::shape_mismatch(
+            format!("({}, {})", a.nrows(), b.ncols()),
+            format!("({}, {}) x ({}, {})", a.nrows(), a.ncols(), b.nrows(), b.ncols()),
+            "matrix multiplication",
+        ));
+    }
+    
+    let (m, n, k) = (a.nrows(), b.ncols(), a.ncols());
+    let mut result = Array2::zeros((m, n));
+    
+    // Check for potential overflow before computation
+    let max_a = a.iter().map(|&x| x.abs()).fold(F::zero(), |acc, x| acc.max(x));
+    let max_b = b.iter().map(|&x| x.abs()).fold(F::zero(), |acc, x| acc.max(x));
+    let max_product = max_a * max_b * F::from_usize(k).unwrap_or_else(|| F::from(k as f64).unwrap_or(F::one()));
+    
+    if max_product > F::max_value() / F::from_f64(2.0).unwrap_or_else(|| F::from(2)) {
+        return Err(InterpolateError::NumericalError(
+            "Potential overflow in matrix multiplication".to_string()
+        ));
+    }
+    
+    // Perform multiplication with overflow checking
+    for i in 0..m {
+        for j in 0..n {
+            let mut sum = F::zero();
+            for k_idx in 0..k {
+                let product = a[[i, k_idx]] * b[[k_idx, j]];
+                
+                // Check for overflow in accumulation
+                if sum.is_finite() && product.is_finite() && (sum + product).is_infinite() {
+                    return Err(InterpolateError::NumericalError(
+                        format!("Overflow in matrix multiplication at ({}, {})", i, j)
+                    ));
+                }
+                
+                sum += product;
+            }
+            result[[i, j]] = sum;
+        }
+    }
+    
+    Ok(result)
 }

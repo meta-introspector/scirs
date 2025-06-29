@@ -8,13 +8,17 @@
 pub mod classification;
 pub mod cleansing;
 pub mod distance;
+pub mod domain_processors;
 pub mod embeddings;
 pub mod enhanced_vectorize;
 pub mod error;
+pub mod huggingface_compat;
 pub mod information_extraction;
 pub mod ml_integration;
 pub mod ml_sentiment;
+pub mod model_registry;
 pub mod multilingual;
+pub mod neural_architectures;
 pub mod parallel;
 pub mod pos_tagging;
 pub mod preprocess;
@@ -33,6 +37,7 @@ pub mod token_filter;
 pub mod tokenize;
 pub mod topic_coherence;
 pub mod topic_modeling;
+pub mod transformer;
 pub mod utils;
 pub mod vectorize;
 pub mod vocabulary;
@@ -48,9 +53,19 @@ pub use cleansing::{
     replace_urls, strip_html_tags, AdvancedTextCleaner,
 };
 pub use distance::{cosine_similarity, jaccard_similarity, levenshtein_distance};
+pub use domain_processors::{
+    Domain, DomainProcessorConfig, FinancialTextProcessor, LegalTextProcessor, MedicalTextProcessor, 
+    ProcessedDomainText, ScientificTextProcessor, UnifiedDomainProcessor,
+};
 pub use embeddings::{Word2Vec, Word2VecAlgorithm, Word2VecConfig};
 pub use enhanced_vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer};
 pub use error::{Result, TextError};
+pub use huggingface_compat::{
+    ClassificationResult, FeatureExtractionPipeline, FillMaskPipeline, FillMaskResult, 
+    FormatConverter, HfConfig, HfEncodedInput, HfHub, HfModelAdapter, HfPipeline, 
+    HfTokenizer, HfTokenizerConfig, QuestionAnsweringPipeline, QuestionAnsweringResult,
+    TextClassificationPipeline, ZeroShotClassificationPipeline,
+};
 pub use information_extraction::{
     Entity, EntityType, ExtractedInformation, InformationExtractionPipeline, KeyPhraseExtractor,
     PatternExtractor, Relation, RelationExtractor, RuleBasedNER,
@@ -61,9 +76,17 @@ pub use ml_integration::{
 pub use ml_sentiment::{
     ClassMetrics, EvaluationMetrics, MLSentimentAnalyzer, MLSentimentConfig, TrainingMetrics,
 };
+pub use model_registry::{
+    ModelMetadata, ModelRegistry, ModelType, PrebuiltModels, RegistrableModel, SerializableModelData,
+};
 pub use multilingual::{
     Language, LanguageDetectionResult, LanguageDetector, MultilingualProcessor, ProcessedText,
     StopWords,
+};
+pub use neural_architectures::{
+    ActivationFunction, AdditiveAttention, BiLSTM, CNNLSTMHybrid, Conv1D, CrossAttention, 
+    GRUCell, LSTMCell, MaxPool1D, MultiScaleCNN, PositionwiseFeedForward, ResidualBlock1D, 
+    SelfAttention, TextCNN,
 };
 pub use parallel::{
     ParallelCorpusProcessor, ParallelTextProcessor, ParallelTokenizer, ParallelVectorizer,
@@ -115,6 +138,10 @@ pub use tokenize::{
 pub use topic_coherence::{TopicCoherence, TopicDiversity};
 pub use topic_modeling::{
     LatentDirichletAllocation, LdaBuilder, LdaConfig, LdaLearningMethod, Topic,
+};
+pub use transformer::{
+    FeedForward, LayerNorm, MultiHeadAttention, PositionalEncoding, TokenEmbedding,
+    TransformerConfig, TransformerEncoder, TransformerEncoderLayer, TransformerModel,
 };
 pub use vectorize::{CountVectorizer, TfidfVectorizer, Vectorizer};
 pub use vocabulary::Vocabulary;

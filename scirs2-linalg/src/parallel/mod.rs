@@ -5,6 +5,24 @@
 
 use std::sync::Mutex;
 
+// Submodules for advanced parallel processing
+pub mod work_stealing;
+pub mod thread_pools;
+
+// Re-export submodule types
+pub use work_stealing::{WorkStealingScheduler, WorkItem, SchedulerStats};
+pub use thread_pools::{
+    ThreadPoolManager, ThreadPoolConfig, ThreadPoolProfile, ThreadPoolStats,
+    AffinityStrategy, OperationType, ScopedThreadPool, get_global_manager,
+};
+
+// Re-export matrix operations
+pub use work_stealing::matrix_ops::{
+    parallel_matvec_work_stealing,
+    parallel_gemm_work_stealing, 
+    parallel_cholesky_work_stealing,
+};
+
 /// Global worker configuration
 static GLOBAL_WORKERS: Mutex<Option<usize>> = Mutex::new(None);
 

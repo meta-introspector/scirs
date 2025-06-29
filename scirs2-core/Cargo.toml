@@ -485,3 +485,8 @@ required-features = ["arbitrary-precision"]
 name = "advanced_parallel_processing"
 path = "examples/advanced_parallel_processing.rs"
 required-features = ["parallel"]
+
+[[example]]
+name = "ecosystem_integration_demo"
+path = "examples/ecosystem_integration_demo.rs"
+required-features = ["testing", "parallel", "random"]

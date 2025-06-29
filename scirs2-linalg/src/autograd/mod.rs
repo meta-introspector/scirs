@@ -122,7 +122,7 @@ pub mod helpers {
         ctx: &'g ag::Context<'g, F>,
     ) -> ag::Tensor<'g, F> {
         // Extract diagonal values from tensor
-        let diag_array = ag::tensor_ops::tensor_to_ndarray(diagonal);
+        let diag_array = ag::integration::tensor_conversion::to_ndarray(diagonal).unwrap();
         let n = diag_array.len();
 
         let mut matrix_data = vec![F::zero(); n * n];
@@ -160,7 +160,7 @@ pub mod helpers {
 
         if n == 2 {
             // 2x2 determinant: ad - bc
-            let mat_array = ag::tensor_ops::tensor_to_ndarray(matrix);
+            let mat_array = ag::integration::tensor_conversion::to_ndarray(matrix).unwrap();
             let a = ag::tensor_ops::convert_to_tensor(
                 ag::ndarray::Array2::from_elem((1, 1), mat_array[[0, 0]]),
                 ctx,
@@ -197,7 +197,7 @@ pub mod helpers {
         ctx: &'g ag::Context<'g, F>,
     ) -> ag::Tensor<'g, F> {
         // Initialize x as zeros
-        let b_array = ag::tensor_ops::tensor_to_ndarray(b);
+        let b_array = ag::integration::tensor_conversion::to_ndarray(b).unwrap();
         let n = b_array.len();
         let mut x = ag::tensor_ops::convert_to_tensor(ag::ndarray::Array2::zeros((n, 1)), ctx);
 

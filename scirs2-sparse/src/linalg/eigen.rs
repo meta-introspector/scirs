@@ -143,7 +143,10 @@ where
         + Sub<Output = T>
         + Mul<Output = T>
         + Div<Output = T>
-        + std::iter::Sum,
+        + std::iter::Sum 
+        + scirs2_core::simd_ops::SimdUnifiedOps 
+        + Send 
+        + Sync,
 {
     let (n, _) = matrix.shape();
 
@@ -321,7 +324,10 @@ where
         + Sub<Output = T>
         + Mul<Output = T>
         + Div<Output = T>
-        + std::iter::Sum,
+        + std::iter::Sum 
+        + scirs2_core::simd_ops::SimdUnifiedOps 
+        + Send 
+        + Sync,
 {
     let (n, _) = matrix.shape();
 
@@ -1116,7 +1122,10 @@ where
         + Mul<Output = T>
         + Div<Output = T>
         + 'static
-        + std::iter::Sum,
+        + std::iter::Sum 
+        + scirs2_core::simd_ops::SimdUnifiedOps 
+        + Send 
+        + Sync,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
@@ -1179,7 +1188,10 @@ where
         + Sub<Output = T>
         + Mul<Output = T>
         + Div<Output = T>
-        + std::iter::Sum,
+        + std::iter::Sum 
+        + scirs2_core::simd_ops::SimdUnifiedOps 
+        + Send 
+        + Sync,
 {
     let opts = options.unwrap_or_default();
     let k = k.unwrap_or(opts.num_eigenvalues);
@@ -1211,7 +1223,10 @@ where
         + Sub<Output = T>
         + Mul<Output = T>
         + Div<Output = T>
-        + std::iter::Sum,
+        + std::iter::Sum 
+        + scirs2_core::simd_ops::SimdUnifiedOps 
+        + Send 
+        + Sync,
 {
     let n = matrix.shape().0;
     let max_subspace_size = options.max_subspace_size.min(n);
@@ -1332,7 +1347,10 @@ where
         + Mul<Output = T>
         + Div<Output = T>
         + 'static
-        + std::iter::Sum,
+        + std::iter::Sum 
+        + scirs2_core::simd_ops::SimdUnifiedOps 
+        + Send 
+        + Sync,
     S: SparseArray<T>,
 {
     let n = matrix.shape().0;

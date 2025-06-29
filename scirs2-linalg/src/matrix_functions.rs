@@ -8,6 +8,7 @@ use crate::error::{LinalgError, LinalgResult};
 use crate::norm::matrix_norm;
 use crate::solve::solve_multiple;
 use crate::validation::validate_decomposition;
+use crate::eigen::eig;
 
 /// Compute the matrix exponential using Padé approximation.
 ///
@@ -1046,7 +1047,7 @@ where
 /// ```
 pub fn matrix_power<F>(a: &ArrayView2<F>, p: F) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -1127,12 +1128,75 @@ where
         return Ok(result);
     }
 
-    // For non-integer powers, we need to use eigendecomposition
-    // A^p = V D^p V^-1
-    // This is a placeholder - would be implemented using full eigenvalue decomposition
-    Err(LinalgError::ImplementationError(
-        "Matrix power for non-integer exponents is not yet fully implemented".to_string(),
-    ))
+    // For non-integer powers, we use eigendecomposition: A^p = V * D^p * V^(-1)
+    // where V contains eigenvectors and D contains eigenvalues
+    
+    match eig(&a.view(), None) {
+        Ok((eigenvalues, eigenvectors)) => {
+            // Check for complex eigenvalues which would require complex arithmetic
+            // For simplicity, we handle only real eigenvalues for now
+            let mut has_complex = false;
+            for i in 0..eigenvalues.len() {
+                if eigenvalues[i].im.abs() > F::epsilon() {
+                    has_complex = true;
+                    break;
+                }
+            }
+            
+            if has_complex {
+                return Err(LinalgError::ImplementationError(
+                    "Matrix power for non-integer exponents with complex eigenvalues not yet supported".to_string(),
+                ));
+            }
+            
+            // Check for negative eigenvalues which would cause issues with non-integer powers
+            for i in 0..eigenvalues.len() {
+                if eigenvalues[i].re < F::zero() {
+                    return Err(LinalgError::ImplementationError(
+                        "Matrix power for non-integer exponents with negative eigenvalues not supported".to_string(),
+                    ));
+                }
+            }
+            
+            // Create diagonal matrix D^p
+            let mut d_power = Array2::zeros((n, n));
+            for i in 0..n {
+                d_power[[i, i]] = eigenvalues[i].re.powf(p);
+            }
+            
+            // Extract real parts of eigenvectors since we've confirmed eigenvalues are real
+            let mut real_eigenvectors = Array2::zeros((n, n));
+            for i in 0..n {
+                for j in 0..n {
+                    real_eigenvectors[[i, j]] = eigenvectors[[i, j]].re;
+                }
+            }
+            
+            // Compute V * D^p * V^(-1)
+            // First compute V * D^p
+            let mut temp = Array2::zeros((n, n));
+            for i in 0..n {
+                for j in 0..n {
+                    for k in 0..n {
+                        temp[[i, j]] += real_eigenvectors[[i, k]] * d_power[[k, j]];
+                    }
+                }
+            }
+            
+            // We need to compute V^(-1), but for numerical stability,
+            // we'll solve the linear system V * result = temp instead of explicitly inverting V
+            // This gives us result = V^(-1) * temp
+            match solve_multiple(&real_eigenvectors.view(), &temp.view(), None) {
+                Ok(result) => Ok(result),
+                Err(_) => Err(LinalgError::ImplementationError(
+                    "Failed to solve linear system for matrix power computation (matrix may be singular)".to_string(),
+                )),
+            }
+        },
+        Err(_) => Err(LinalgError::ImplementationError(
+            "Failed to compute eigendecomposition for matrix power".to_string(),
+        )),
+    }
 }
 
 /// Advanced matrix softmax function for machine learning applications

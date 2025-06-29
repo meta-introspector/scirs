@@ -800,7 +800,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
                 for i in 0..src_len {
                     let src_idx = src_start[0] + i;
                     let dst_idx = dst_start[0] + i;
-                    result[[dst_idx]] = chunk_data[src_idx].clone();
+                    result[[dst_idx]] = chunk_data[src_idx];
                 }
             }
             2 => {
@@ -808,7 +808,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
                     for j in 0..(src_end[1] - src_start[1]) {
                         let src_idx = (src_start[0] + i) * chunk_shape[1] + (src_start[1] + j);
                         let dst_idx = [dst_start[0] + i, dst_start[1] + j];
-                        result[&dst_idx[..]] = chunk_data[src_idx].clone();
+                        result[&dst_idx[..]] = chunk_data[src_idx];
                     }
                 }
             }
@@ -979,7 +979,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
                 for i in 0..len {
                     let chunk_idx = chunk_local_start[0] + i;
                     let source_idx = [source_local_start[0] + i];
-                    chunk_data[chunk_idx] = source_data[&source_idx[..]].clone();
+                    chunk_data[chunk_idx] = source_data[&source_idx[..]];
                 }
             }
             2 => {
@@ -988,7 +988,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
                         let chunk_idx = (chunk_local_start[0] + i) * chunk_shape[1]
                             + (chunk_local_start[1] + j);
                         let source_idx = [source_local_start[0] + i, source_local_start[1] + j];
-                        chunk_data[chunk_idx] = source_data[&source_idx[..]].clone();
+                        chunk_data[chunk_idx] = source_data[&source_idx[..]];
                     }
                 }
             }
@@ -1078,10 +1078,10 @@ impl<T: ScientificNumber + Ord + Clone> OutOfCoreSorter<T> {
     /// Merge sorted chunks into output
     pub fn merge<W: Write>(self, output: &mut W) -> Result<()> {
         // K-way merge of sorted chunks
-        let mut readers: Vec<_> = self
+        let readers: Vec<_> = self
             .chunk_files
             .iter()
-            .map(|path| File::open(path))
+            .map(File::open)
             .collect::<std::io::Result<_>>()
             .map_err(|e| IoError::ParseError(format!("Failed to open chunk file: {}", e)))?;
 
@@ -1092,7 +1092,7 @@ impl<T: ScientificNumber + Ord + Clone> OutOfCoreSorter<T> {
         // Create readers with buffering
         let mut buffered_readers: Vec<_> = readers
             .into_iter()
-            .map(|file| BufReader::new(file))
+            .map(BufReader::new)
             .collect();
 
         // Priority queue for k-way merge (min-heap using Reverse)
@@ -1261,7 +1261,7 @@ impl<'a, T: ScientificNumber + Clone> SlidingWindow<'a, T> {
     }
 }
 
-impl<'a, T: ScientificNumber + Clone> Iterator for SlidingWindow<'a, T> {
+impl<T: ScientificNumber + Clone> Iterator for SlidingWindow<'_, T> {
     type Item = Result<Array<T, IxDyn>>;
 
     fn next(&mut self) -> Option<Self::Item> {

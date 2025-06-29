@@ -1593,7 +1593,8 @@ mod tests {
     fn test_binary_erosion() {
         // Test with all true values
         let input = Array2::from_elem((5, 5), true);
-        let result = binary_erosion(&input, None, None, None, None, None, None).unwrap();
+        let result = binary_erosion(&input, None, None, None, None, None, None)
+            .expect("binary_erosion should succeed for test");
 
         // Border elements should be eroded, but center should remain true
         assert_eq!(result.shape(), input.shape());
@@ -1616,7 +1617,8 @@ mod tests {
         let input = Array2::from_elem((5, 5), true);
 
         // Apply erosion with 2 iterations
-        let result = binary_erosion(&input, None, Some(2), None, None, None, None).unwrap();
+        let result = binary_erosion(&input, None, Some(2), None, None, None, None)
+            .expect("binary_erosion with iterations should succeed for test");
 
         // Only the very center should remain true after 2 iterations
         assert!(result[[2, 2]]);
@@ -1635,7 +1637,8 @@ mod tests {
         input[[2, 2]] = true;
 
         // Apply dilation
-        let result = binary_dilation(&input, None, None, None, None, None, None).unwrap();
+        let result = binary_dilation(&input, None, None, None, None, None, None)
+            .expect("binary_dilation should succeed for test");
 
         // Center and direct neighbors should be true
         assert!(result[[2, 2]]); // Center
@@ -1674,7 +1677,8 @@ mod tests {
         input[[6, 6]] = true;
 
         // Apply opening
-        let result = binary_opening(&input, None, None, None, None, None, None).unwrap();
+        let result = binary_opening(&input, None, None, None, None, None, None)
+            .expect("binary_opening should succeed for test");
 
         // The larger feature should survive
         assert!(result[[5, 5]]);
@@ -1702,7 +1706,8 @@ mod tests {
         input[[3, 3]] = true;
 
         // Apply closing
-        let result = binary_closing(&input, None, None, None, None, None, None).unwrap();
+        let result = binary_closing(&input, None, None, None, None, None, None)
+            .expect("binary_closing should succeed for test");
 
         // The hole should be filled
         assert!(result[[2, 2]]);
@@ -1733,7 +1738,8 @@ mod tests {
         }
 
         // Apply erosion with default structure
-        let result = binary_erosion(&input, None, None, None, None, None, None).unwrap();
+        let result = binary_erosion(&input, None, None, None, None, None, None)
+            .expect("binary_erosion 3D should succeed for test");
 
         // Only the center should remain true after erosion
         assert!(result[[1, 1, 1]]);
@@ -1756,7 +1762,8 @@ mod tests {
         input[[1, 1, 1]] = true;
 
         // Apply dilation with default structure
-        let result = binary_dilation(&input, None, None, None, None, None, None).unwrap();
+        let result = binary_dilation(&input, None, None, None, None, None, None)
+            .expect("binary_dilation 3D should succeed for test");
 
         // Center should remain true
         assert!(result[[1, 1, 1]]);

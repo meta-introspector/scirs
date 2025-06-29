@@ -293,7 +293,7 @@ impl UMAP {
             // Sample edges for this epoch
             for _ in 0..n_edges {
                 // Sample an edge
-                let edge_idx = rng.gen_range(0..n_edges);
+                let edge_idx = rng.random_range(0..n_edges);
                 let (i, j) = edges[edge_idx];
 
                 // Compute distance in embedding space
@@ -317,7 +317,7 @@ impl UMAP {
                 }
 
                 // Repulsive force - sample a negative edge
-                let k = rng.gen_range(0..n_samples);
+                let k = rng.random_range(0..n_samples);
                 if k != i && k != j {
                     let mut neg_dist_sq = 0.0;
                     for d in 0..self.n_components {

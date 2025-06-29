@@ -133,8 +133,9 @@ pub mod streaming_stft;
 pub mod swt;
 pub mod swt2d;
 pub mod sysid;
-// pub mod sysid_advanced; // Disabled - requires ndarray-linalg
+pub mod sysid_advanced;
 pub mod sysid_enhanced;
+pub mod sysid_robust_enhancements;
 pub mod tv;
 pub mod waveforms;
 pub mod wavelet_vis;
@@ -425,6 +426,11 @@ pub use sysid::{
     identify_arma_model, n4sid_identification, validate_model, FreqResponseMethod,
     FreqResponseResult, ModelValidation, ParametricResult, RecursiveLeastSquares, SysIdConfig,
     TfEstimationMethod, TfEstimationResult,
+};
+pub use sysid_robust_enhancements::{
+    analyze_model_stability, enhanced_cross_validation, estimate_signal_noise_ratio_advanced,
+    robust_least_squares, CrossValidationResults, EnhancedModelValidation, PredictionIntervals,
+    RobustSysIdConfig, RobustnessMetrics, StabilityAnalysis,
 };
 
 // Synchrosqueezed wavelet transform functions

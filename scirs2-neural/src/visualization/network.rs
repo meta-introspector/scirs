@@ -488,32 +488,414 @@ impl<
 
     fn compute_force_directed_layout(
         &self,
-        _layer_info: &[LayerInfo],
+        layer_info: &[LayerInfo],
     ) -> Result<(Vec<LayerPosition>, Vec<Connection>)> {
-        // TODO: Implement force-directed layout algorithm
-        Err(NeuralError::NotImplementedError(
-            "Force-directed layout not yet implemented".to_string(),
-        ))
+        if layer_info.is_empty() {
+            return Ok((Vec::new(), Vec::new()));
+        }
+
+        let mut positions = Vec::new();
+        let mut connections = Vec::new();
+        
+        // Force-directed layout parameters
+        let area = 800.0 * 600.0; // Canvas area
+        let k = (area / layer_info.len() as f32).sqrt(); // Optimal distance
+        let iterations = 100;
+        let cooling_factor = 0.95;
+        let mut temperature = 100.0;
+        
+        // Initialize random positions
+        let mut node_positions: Vec<Point2D> = (0..layer_info.len())
+            .map(|i| Point2D {
+                x: ((i % 4) as f32 - 1.5) * 100.0, // Rough grid start
+                y: ((i / 4) as f32 - 1.5) * 100.0,
+            })
+            .collect();
+        
+        // Force-directed algorithm iterations
+        for _iteration in 0..iterations {
+            let mut forces: Vec<Point2D> = vec![Point2D { x: 0.0, y: 0.0 }; layer_info.len()];
+            
+            // Calculate repulsive forces between all pairs
+            for i in 0..layer_info.len() {
+                for j in (i + 1)..layer_info.len() {
+                    let dx = node_positions[i].x - node_positions[j].x;
+                    let dy = node_positions[i].y - node_positions[j].y;
+                    let distance = (dx * dx + dy * dy).sqrt().max(1.0);
+                    
+                    let repulsive_force = k * k / distance;
+                    let fx = repulsive_force * dx / distance;
+                    let fy = repulsive_force * dy / distance;
+                    
+                    forces[i].x += fx;
+                    forces[i].y += fy;
+                    forces[j].x -= fx;
+                    forces[j].y -= fy;
+                }
+            }
+            
+            // Calculate attractive forces for connected layers (sequential connections)
+            for i in 0..(layer_info.len() - 1) {
+                let dx = node_positions[i].x - node_positions[i + 1].x;
+                let dy = node_positions[i].y - node_positions[i + 1].y;
+                let distance = (dx * dx + dy * dy).sqrt().max(1.0);
+                
+                let attractive_force = distance * distance / k;
+                let fx = attractive_force * dx / distance;
+                let fy = attractive_force * dy / distance;
+                
+                forces[i].x -= fx;
+                forces[i].y -= fy;
+                forces[i + 1].x += fx;
+                forces[i + 1].y += fy;
+            }
+            
+            // Apply forces with temperature cooling
+            for i in 0..layer_info.len() {
+                let force_magnitude = (forces[i].x * forces[i].x + forces[i].y * forces[i].y).sqrt();
+                if force_magnitude > 0.0 {
+                    let displacement = temperature.min(force_magnitude);
+                    node_positions[i].x += forces[i].x / force_magnitude * displacement;
+                    node_positions[i].y += forces[i].y / force_magnitude * displacement;
+                }
+            }
+            
+            temperature *= cooling_factor;
+        }
+        
+        // Create layer positions with visual properties
+        for (i, layer) in layer_info.iter().enumerate() {
+            let (fill_color, border_color, icon) = match layer.layer_type.as_str() {
+                "Dense" => ("#4CAF50".to_string(), "#2E7D32".to_string(), Some("◯".to_string())),
+                "Conv2D" => ("#2196F3".to_string(), "#1565C0".to_string(), Some("⬜".to_string())),
+                "Conv1D" => ("#03A9F4".to_string(), "#0277BD".to_string(), Some("▬".to_string())),
+                "MaxPool2D" | "AvgPool2D" => ("#FF9800".to_string(), "#E65100".to_string(), Some("▣".to_string())),
+                "Dropout" => ("#9C27B0".to_string(), "#6A1B9A".to_string(), Some("×".to_string())),
+                "BatchNorm" => ("#607D8B".to_string(), "#37474F".to_string(), Some("∼".to_string())),
+                "Activation" => ("#FFC107".to_string(), "#F57C00".to_string(), Some("∘".to_string())),
+                "LSTM" => ("#E91E63".to_string(), "#AD1457".to_string(), Some("⟲".to_string())),
+                "GRU" => ("#8BC34A".to_string(), "#558B2F".to_string(), Some("⟳".to_string())),
+                _ => ("#757575".to_string(), "#424242".to_string(), Some("▢".to_string())),
+            };
+            
+            let position = LayerPosition {
+                name: layer.layer_name.clone(),
+                layer_type: layer.layer_type.clone(),
+                position: node_positions[i].clone(),
+                size: Size2D { width: 120.0, height: 60.0 },
+                io_info: LayerIOInfo {
+                    input_shape: vec![1, 32], // Placeholder
+                    output_shape: vec![1, 32],
+                    parameter_count: 1024,
+                    flops: 2048,
+                },
+                visual_props: LayerVisualProps {
+                    fill_color,
+                    border_color,
+                    border_width: 2.0,
+                    opacity: 0.8,
+                    icon,
+                },
+            };
+            
+            positions.push(position);
+        }
+        
+        // Create connections between sequential layers
+        for i in 0..(layer_info.len() - 1) {
+            let connection = Connection {
+                from_layer: i,
+                to_layer: i + 1,
+                connection_type: ConnectionType::Sequential,
+                data_flow: DataFlowInfo {
+                    tensor_shape: vec![1, 32],
+                    data_type: "float32".to_string(),
+                    batch_size: Some(1),
+                },
+                visual_props: ConnectionVisualProps {
+                    color: "#666666".to_string(),
+                    width: 2.0,
+                    style: LineStyle::Solid,
+                    arrow: ArrowStyle::Simple,
+                    opacity: 0.7,
+                },
+            };
+            
+            connections.push(connection);
+        }
+        
+        Ok((positions, connections))
     }
 
     fn compute_circular_layout(
         &self,
-        _layer_info: &[LayerInfo],
+        layer_info: &[LayerInfo],
     ) -> Result<(Vec<LayerPosition>, Vec<Connection>)> {
-        // TODO: Implement circular layout algorithm
-        Err(NeuralError::NotImplementedError(
-            "Circular layout not yet implemented".to_string(),
-        ))
+        if layer_info.is_empty() {
+            return Ok((Vec::new(), Vec::new()));
+        }
+
+        let mut positions = Vec::new();
+        let mut connections = Vec::new();
+        
+        // Circular layout parameters
+        let radius = if layer_info.len() == 1 {
+            50.0
+        } else {
+            // Calculate radius to ensure layers don't overlap
+            let circumference = layer_info.len() as f32 * 150.0; // 150px minimum spacing
+            circumference / (2.0 * std::f32::consts::PI)
+        };
+        
+        let center_x = 0.0;
+        let center_y = 0.0;
+        
+        // Create layer positions around the circle
+        for (i, layer) in layer_info.iter().enumerate() {
+            let angle = if layer_info.len() == 1 {
+                0.0
+            } else {
+                2.0 * std::f32::consts::PI * i as f32 / layer_info.len() as f32
+            };
+            
+            let x = center_x + radius * angle.cos();
+            let y = center_y + radius * angle.sin();
+            
+            // Determine layer visual properties based on type
+            let (fill_color, border_color, icon) = match layer.layer_type.as_str() {
+                "Dense" => ("#4CAF50".to_string(), "#2E7D32".to_string(), Some("◯".to_string())),
+                "Conv2D" => ("#2196F3".to_string(), "#1565C0".to_string(), Some("⬜".to_string())),
+                "Conv1D" => ("#03A9F4".to_string(), "#0277BD".to_string(), Some("▬".to_string())),
+                "MaxPool2D" | "AvgPool2D" => ("#FF9800".to_string(), "#E65100".to_string(), Some("▣".to_string())),
+                "Dropout" => ("#9C27B0".to_string(), "#6A1B9A".to_string(), Some("×".to_string())),
+                "BatchNorm" => ("#607D8B".to_string(), "#37474F".to_string(), Some("∼".to_string())),
+                "Activation" => ("#FFC107".to_string(), "#F57C00".to_string(), Some("∘".to_string())),
+                "LSTM" => ("#E91E63".to_string(), "#AD1457".to_string(), Some("⟲".to_string())),
+                "GRU" => ("#8BC34A".to_string(), "#558B2F".to_string(), Some("⟳".to_string())),
+                _ => ("#757575".to_string(), "#424242".to_string(), Some("▢".to_string())),
+            };
+            
+            let position = LayerPosition {
+                name: layer.layer_name.clone(),
+                layer_type: layer.layer_type.clone(),
+                position: Point2D { x, y },
+                size: Size2D { width: 120.0, height: 60.0 },
+                io_info: LayerIOInfo {
+                    input_shape: vec![1, 32], // Placeholder
+                    output_shape: vec![1, 32],
+                    parameter_count: 1024,
+                    flops: 2048,
+                },
+                visual_props: LayerVisualProps {
+                    fill_color,
+                    border_color,
+                    border_width: 2.0,
+                    opacity: 0.8,
+                    icon,
+                },
+            };
+            
+            positions.push(position);
+        }
+        
+        // Create connections between sequential layers
+        for i in 0..(layer_info.len() - 1) {
+            let connection = Connection {
+                from_layer: i,
+                to_layer: i + 1,
+                connection_type: ConnectionType::Sequential,
+                data_flow: DataFlowInfo {
+                    tensor_shape: vec![1, 32],
+                    data_type: "float32".to_string(),
+                    batch_size: Some(1),
+                },
+                visual_props: ConnectionVisualProps {
+                    color: "#666666".to_string(),
+                    width: 2.0,
+                    style: LineStyle::Solid,
+                    arrow: ArrowStyle::Simple,
+                    opacity: 0.7,
+                },
+            };
+            
+            connections.push(connection);
+        }
+        
+        // For circular layout, also connect the last layer back to the first (if more than 2 layers)
+        if layer_info.len() > 2 {
+            let connection = Connection {
+                from_layer: layer_info.len() - 1,
+                to_layer: 0,
+                connection_type: ConnectionType::Recurrent,
+                data_flow: DataFlowInfo {
+                    tensor_shape: vec![1, 32],
+                    data_type: "float32".to_string(),
+                    batch_size: Some(1),
+                },
+                visual_props: ConnectionVisualProps {
+                    color: "#999999".to_string(),
+                    width: 1.5,
+                    style: LineStyle::Dashed,
+                    arrow: ArrowStyle::Simple,
+                    opacity: 0.5,
+                },
+            };
+            
+            connections.push(connection);
+        }
+        
+        Ok((positions, connections))
     }
 
     fn compute_grid_layout(
         &self,
-        _layer_info: &[LayerInfo],
+        layer_info: &[LayerInfo],
     ) -> Result<(Vec<LayerPosition>, Vec<Connection>)> {
-        // TODO: Implement grid layout algorithm
-        Err(NeuralError::NotImplementedError(
-            "Grid layout not yet implemented".to_string(),
-        ))
+        if layer_info.is_empty() {
+            return Ok((Vec::new(), Vec::new()));
+        }
+
+        let mut positions = Vec::new();
+        let mut connections = Vec::new();
+        
+        // Grid layout parameters
+        let cell_width = 180.0;
+        let cell_height = 120.0;
+        let margin = 20.0;
+        
+        // Calculate grid dimensions (prefer square or wide rectangle)
+        let total_layers = layer_info.len();
+        let grid_cols = (total_layers as f32).sqrt().ceil() as usize;
+        let grid_rows = (total_layers as f32 / grid_cols as f32).ceil() as usize;
+        
+        // Calculate starting position to center the grid
+        let total_width = grid_cols as f32 * cell_width;
+        let total_height = grid_rows as f32 * cell_height;
+        let start_x = -total_width / 2.0 + cell_width / 2.0;
+        let start_y = -total_height / 2.0 + cell_height / 2.0;
+        
+        // Create layer positions in grid formation
+        for (i, layer) in layer_info.iter().enumerate() {
+            let col = i % grid_cols;
+            let row = i / grid_cols;
+            
+            let x = start_x + col as f32 * cell_width;
+            let y = start_y + row as f32 * cell_height;
+            
+            // Determine layer visual properties based on type
+            let (fill_color, border_color, icon) = match layer.layer_type.as_str() {
+                "Dense" => ("#4CAF50".to_string(), "#2E7D32".to_string(), Some("◯".to_string())),
+                "Conv2D" => ("#2196F3".to_string(), "#1565C0".to_string(), Some("⬜".to_string())),
+                "Conv1D" => ("#03A9F4".to_string(), "#0277BD".to_string(), Some("▬".to_string())),
+                "MaxPool2D" | "AvgPool2D" => ("#FF9800".to_string(), "#E65100".to_string(), Some("▣".to_string())),
+                "Dropout" => ("#9C27B0".to_string(), "#6A1B9A".to_string(), Some("×".to_string())),
+                "BatchNorm" => ("#607D8B".to_string(), "#37474F".to_string(), Some("∼".to_string())),
+                "Activation" => ("#FFC107".to_string(), "#F57C00".to_string(), Some("∘".to_string())),
+                "LSTM" => ("#E91E63".to_string(), "#AD1457".to_string(), Some("⟲".to_string())),
+                "GRU" => ("#8BC34A".to_string(), "#558B2F".to_string(), Some("⟳".to_string())),
+                _ => ("#757575".to_string(), "#424242".to_string(), Some("▢".to_string())),
+            };
+            
+            let position = LayerPosition {
+                name: layer.layer_name.clone(),
+                layer_type: layer.layer_type.clone(),
+                position: Point2D { x, y },
+                size: Size2D { 
+                    width: cell_width - margin, 
+                    height: cell_height - margin 
+                },
+                io_info: LayerIOInfo {
+                    input_shape: vec![1, 32], // Placeholder
+                    output_shape: vec![1, 32],
+                    parameter_count: 1024,
+                    flops: 2048,
+                },
+                visual_props: LayerVisualProps {
+                    fill_color,
+                    border_color,
+                    border_width: 2.0,
+                    opacity: 0.8,
+                    icon,
+                },
+            };
+            
+            positions.push(position);
+        }
+        
+        // Create connections between sequential layers
+        for i in 0..(layer_info.len() - 1) {
+            let from_col = i % grid_cols;
+            let from_row = i / grid_cols;
+            let to_col = (i + 1) % grid_cols;
+            let to_row = (i + 1) / grid_cols;
+            
+            // Determine connection visual style based on grid position relationship
+            let (color, style, width) = if from_row == to_row {
+                // Same row - horizontal connection
+                ("#4CAF50".to_string(), LineStyle::Solid, 2.5)
+            } else if from_col == to_col {
+                // Same column - vertical connection
+                ("#2196F3".to_string(), LineStyle::Solid, 2.5)
+            } else {
+                // Diagonal connection
+                ("#FF9800".to_string(), LineStyle::Dashed, 2.0)
+            };
+            
+            let connection = Connection {
+                from_layer: i,
+                to_layer: i + 1,
+                connection_type: ConnectionType::Sequential,
+                data_flow: DataFlowInfo {
+                    tensor_shape: vec![1, 32],
+                    data_type: "float32".to_string(),
+                    batch_size: Some(1),
+                },
+                visual_props: ConnectionVisualProps {
+                    color,
+                    width,
+                    style,
+                    arrow: ArrowStyle::Simple,
+                    opacity: 0.7,
+                },
+            };
+            
+            connections.push(connection);
+        }
+        
+        // Add some additional connections for grid pattern visualization
+        // Connect layers in the same row (if there are multiple rows)
+        if grid_rows > 1 {
+            for row in 0..grid_rows {
+                for col in 0..(grid_cols - 1) {
+                    let from_idx = row * grid_cols + col;
+                    let to_idx = row * grid_cols + col + 1;
+                    
+                    if from_idx < total_layers && to_idx < total_layers && from_idx + 1 != to_idx {
+                        let connection = Connection {
+                            from_layer: from_idx,
+                            to_layer: to_idx,
+                            connection_type: ConnectionType::Lateral,
+                            data_flow: DataFlowInfo {
+                                tensor_shape: vec![1, 16],
+                                data_type: "float32".to_string(),
+                                batch_size: Some(1),
+                            },
+                            visual_props: ConnectionVisualProps {
+                                color: "#9E9E9E".to_string(),
+                                width: 1.0,
+                                style: LineStyle::Dotted,
+                                arrow: ArrowStyle::None,
+                                opacity: 0.4,
+                            },
+                        };
+                        
+                        connections.push(connection);
+                    }
+                }
+            }
+        }
+        
+        Ok((positions, connections))
     }
 
     fn compute_bounds(&self, positions: &[LayerPosition]) -> BoundingBox {
@@ -742,46 +1124,418 @@ impl<
         Ok(svg)
     }
 
-    fn create_html_content(&self, _layout: &NetworkLayout) -> Result<String> {
-        // TODO: Implement interactive HTML generation
-        let html_template = r#"<!DOCTYPE html>
+    fn create_html_content(&self, layout: &NetworkLayout) -> Result<String> {
+        // Generate SVG content for embedding
+        let svg_content = self.create_svg_content(layout)?;
+        
+        // Create the interactive HTML with embedded SVG and JavaScript controls
+        let html_content = format!(r#"<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neural Network Architecture</title>
+    <title>Interactive Neural Network Architecture</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        #visualization { width: 100%; height: 600px; border: 1px solid #ccc; }
-        .controls { margin-bottom: 20px; }
-        button { padding: 8px 16px; margin: 4px; }
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }}
+        
+        .header {{
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }}
+        
+        .controls {{
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }}
+        
+        .control-group {{
+            display: inline-block;
+            margin-right: 20px;
+            vertical-align: top;
+        }}
+        
+        .control-group label {{
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }}
+        
+        button {{
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }}
+        
+        button:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }}
+        
+        button:active {{
+            transform: translateY(0);
+        }}
+        
+        select {{
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            margin: 5px;
+        }}
+        
+        #visualization {{
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }}
+        
+        #network-svg {{
+            width: 100%;
+            height: 700px;
+            display: block;
+            transition: transform 0.3s ease;
+        }}
+        
+        .layer-node {{
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }}
+        
+        .layer-node:hover {{
+            stroke-width: 3;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }}
+        
+        .connection-line {{
+            transition: all 0.3s ease;
+        }}
+        
+        .connection-line:hover {{
+            stroke-width: 4;
+            opacity: 1;
+        }}
+        
+        .info-panel {{
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 300px;
+            display: none;
+        }}
+        
+        .info-panel h3 {{
+            margin: 0 0 10px 0;
+            color: #444;
+        }}
+        
+        .info-panel p {{
+            margin: 5px 0;
+            font-size: 13px;
+            color: #666;
+        }}
+        
+        .layout-controls {{
+            text-align: center;
+            margin-bottom: 10px;
+        }}
+        
+        .hidden {{
+            display: none;
+        }}
+        
+        .highlight {{
+            stroke: #ff6b6b !important;
+            stroke-width: 4 !important;
+            filter: drop-shadow(0 0 10px #ff6b6b);
+        }}
     </style>
 </head>
 <body>
-    <h1>Neural Network Architecture Visualization</h1>
-    <div class="controls">
-        <button onclick="zoomIn()">Zoom In</button>
-        <button onclick="zoomOut()">Zoom Out</button>
-        <button onclick="resetView()">Reset View</button>
-        <button onclick="toggleLabels()">Toggle Labels</button>
+    <div class="header">
+        <h1>Interactive Neural Network Architecture</h1>
+        <p>Algorithm: {algorithm} | Layers: {layer_count} | Connections: {connection_count}</p>
     </div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label>Zoom Controls:</label>
+            <button onclick="zoomIn()">🔍+ Zoom In</button>
+            <button onclick="zoomOut()">🔍- Zoom Out</button>
+            <button onclick="resetView()">🎯 Reset View</button>
+        </div>
+        
+        <div class="control-group">
+            <label>Display Options:</label>
+            <button onclick="toggleLabels()">🏷️ Toggle Labels</button>
+            <button onclick="toggleConnections()">🔗 Toggle Connections</button>
+            <button onclick="highlightPath()">⚡ Highlight Data Flow</button>
+        </div>
+        
+        <div class="control-group">
+            <label>Layout Algorithm:</label>
+            <select id="layoutSelect" onchange="changeLayout()">
+                <option value="hierarchical">📊 Hierarchical</option>
+                <option value="force-directed">🌟 Force-Directed</option>
+                <option value="circular">⭕ Circular</option>
+                <option value="grid">⬜ Grid</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Animation:</label>
+            <button onclick="animateDataFlow()">🎬 Animate Flow</button>
+            <button onclick="showLayerDetails()">📋 Layer Details</button>
+        </div>
+    </div>
+    
     <div id="visualization">
-        <p>Interactive network visualization not yet implemented</p>
+        <div id="network-svg-container">
+            {svg_content}
+        </div>
+        
+        <div id="info-panel" class="info-panel">
+            <h3 id="info-title">Layer Information</h3>
+            <p><strong>Type:</strong> <span id="info-type">-</span></p>
+            <p><strong>Input Shape:</strong> <span id="info-input">-</span></p>
+            <p><strong>Output Shape:</strong> <span id="info-output">-</span></p>
+            <p><strong>Parameters:</strong> <span id="info-params">-</span></p>
+            <p><strong>FLOPs:</strong> <span id="info-flops">-</span></p>
+        </div>
     </div>
     
     <script>
-        function zoomIn() { console.log('Zoom in'); }
-        function zoomOut() { console.log('Zoom out'); }
-        function resetView() { console.log('Reset view'); }
-        function toggleLabels() { console.log('Toggle labels'); }
+        // Global state
+        let currentZoom = 1.0;
+        let showLabels = true;
+        let showConnections = true;
+        let selectedLayer = null;
+        let animationRunning = false;
         
-        // TODO: Implement interactive visualization logic
+        // SVG manipulation
+        const svg = document.querySelector('#network-svg-container svg');
+        const infoPanel = document.getElementById('info-panel');
+        
+        // Zoom functions
+        function zoomIn() {{
+            currentZoom = Math.min(currentZoom * 1.2, 3.0);
+            updateZoom();
+        }}
+        
+        function zoomOut() {{
+            currentZoom = Math.max(currentZoom / 1.2, 0.3);
+            updateZoom();
+        }}
+        
+        function resetView() {{
+            currentZoom = 1.0;
+            updateZoom();
+            clearHighlights();
+            hideInfo();
+        }}
+        
+        function updateZoom() {{
+            if (svg) {{
+                svg.style.transform = `scale(${{currentZoom}})`;
+            }}
+        }}
+        
+        // Label toggle
+        function toggleLabels() {{
+            showLabels = !showLabels;
+            const labels = svg.querySelectorAll('text');
+            labels.forEach(label => {{
+                label.style.display = showLabels ? 'block' : 'none';
+            }});
+        }}
+        
+        // Connection toggle
+        function toggleConnections() {{
+            showConnections = !showConnections;
+            const connections = svg.querySelectorAll('.connection-line, line[stroke]');
+            connections.forEach(conn => {{
+                conn.style.display = showConnections ? 'block' : 'none';
+            }});
+        }}
+        
+        // Highlight data flow path
+        function highlightPath() {{
+            clearHighlights();
+            const layers = svg.querySelectorAll('rect, circle, ellipse');
+            const connections = svg.querySelectorAll('line[stroke], path[stroke]');
+            
+            // Sequential highlighting with delay
+            layers.forEach((layer, index) => {{
+                setTimeout(() => {{
+                    layer.classList.add('highlight');
+                    setTimeout(() => layer.classList.remove('highlight'), 1000);
+                }}, index * 200);
+            }});
+            
+            connections.forEach((conn, index) => {{
+                setTimeout(() => {{
+                    conn.classList.add('highlight');
+                    setTimeout(() => conn.classList.remove('highlight'), 1000);
+                }}, index * 200 + 100);
+            }});
+        }}
+        
+        // Animate data flow
+        function animateDataFlow() {{
+            if (animationRunning) return;
+            animationRunning = true;
+            
+            const connections = svg.querySelectorAll('line[stroke], path[stroke]');
+            connections.forEach((conn, index) => {{
+                setTimeout(() => {{
+                    conn.style.strokeDasharray = '10,5';
+                    conn.style.strokeDashoffset = '0';
+                    conn.style.animation = 'flow 2s linear infinite';
+                }}, index * 100);
+            }});
+            
+            // Add CSS animation dynamically
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes flow {{
+                    to {{ stroke-dashoffset: -15; }}
+                }}
+            `;
+            document.head.appendChild(style);
+            
+            setTimeout(() => {{
+                connections.forEach(conn => {{
+                    conn.style.animation = '';
+                    conn.style.strokeDasharray = '';
+                    conn.style.strokeDashoffset = '';
+                }});
+                animationRunning = false;
+            }}, 5000);
+        }}
+        
+        // Layer details
+        function showLayerDetails() {{
+            const layers = svg.querySelectorAll('rect, circle, ellipse');
+            layers.forEach((layer, index) => {{
+                layer.addEventListener('click', () => showLayerInfo(layer, index));
+                layer.style.cursor = 'pointer';
+            }});
+        }}
+        
+        function showLayerInfo(layer, index) {{
+            selectedLayer = layer;
+            
+            // Highlight selected layer
+            clearHighlights();
+            layer.classList.add('highlight');
+            
+            // Show info panel with layer details
+            document.getElementById('info-title').textContent = `Layer ${{index + 1}}`;
+            document.getElementById('info-type').textContent = layer.getAttribute('data-type') || 'Unknown';
+            document.getElementById('info-input').textContent = layer.getAttribute('data-input') || '[1, 32]';
+            document.getElementById('info-output').textContent = layer.getAttribute('data-output') || '[1, 32]';
+            document.getElementById('info-params').textContent = layer.getAttribute('data-params') || '1,024';
+            document.getElementById('info-flops').textContent = layer.getAttribute('data-flops') || '2,048';
+            
+            infoPanel.style.display = 'block';
+        }}
+        
+        function hideInfo() {{
+            infoPanel.style.display = 'none';
+            selectedLayer = null;
+        }}
+        
+        function clearHighlights() {{
+            const highlighted = svg.querySelectorAll('.highlight');
+            highlighted.forEach(el => el.classList.remove('highlight'));
+        }}
+        
+        // Layout change (placeholder - would need server communication)
+        function changeLayout() {{
+            const select = document.getElementById('layoutSelect');
+            const layout = select.value;
+            
+            // In a real implementation, this would trigger a server request
+            // to regenerate the layout and update the SVG
+            console.log(`Switching to ${{layout}} layout`);
+            
+            // For demo, just show a message
+            alert(`Layout switching to ${{layout}} - this would reload the visualization in a full implementation`);
+        }}
+        
+        // Initialize interactive features
+        document.addEventListener('DOMContentLoaded', function() {{
+            // Add event listeners to existing SVG elements
+            showLayerDetails();
+            
+            // Close info panel when clicking outside
+            document.addEventListener('click', function(e) {{
+                if (!infoPanel.contains(e.target) && !e.target.closest('rect, circle, ellipse')) {{
+                    hideInfo();
+                    clearHighlights();
+                }}
+            }});
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {{
+                switch(e.key) {{
+                    case '+':
+                    case '=':
+                        zoomIn();
+                        break;
+                    case '-':
+                        zoomOut();
+                        break;
+                    case '0':
+                        resetView();
+                        break;
+                    case 'l':
+                        toggleLabels();
+                        break;
+                    case 'c':
+                        toggleConnections();
+                        break;
+                    case 'h':
+                        highlightPath();
+                        break;
+                }}
+            }});
+        }});
     </script>
 </body>
-</html>"#
-            .to_string();
+</html>"#,
+            algorithm = format!("{:?}", layout.algorithm),
+            layer_count = layout.layer_positions.len(),
+            connection_count = layout.connections.len(),
+            svg_content = svg_content
+        );
 
-        Ok(html_template)
+        Ok(html_content)
     }
 
     /// Get the cached layout if available

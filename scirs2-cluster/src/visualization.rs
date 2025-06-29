@@ -477,25 +477,440 @@ fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
     Ok(projected)
 }
 
-/// Simplified t-SNE implementation (placeholder)
+/// t-SNE implementation for 2D visualization
 fn apply_tsne_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
-    // For now, fall back to PCA
-    // In a full implementation, this would include the t-SNE algorithm
-    apply_pca_2d(data)
+    let n_samples = data.nrows();
+    let n_features = data.ncols();
+    
+    if n_samples < 4 {
+        // Fall back to PCA for very small datasets
+        return apply_pca_2d(data);
+    }
+
+    // t-SNE parameters
+    let perplexity = (n_samples as f64 / 4.0).min(30.0).max(5.0);
+    let learning_rate = 200.0;
+    let n_iter = 1000;
+    let early_exaggeration = 12.0;
+    let early_exaggeration_iter = 250;
+
+    // Step 1: Compute pairwise squared distances in high-dimensional space
+    let distances_sq = compute_pairwise_distances_squared(data);
+    
+    // Step 2: Compute conditional probabilities P_j|i
+    let p_conditional = compute_conditional_probabilities(&distances_sq, perplexity)?;
+    
+    // Step 3: Compute joint probabilities P_ij = (P_j|i + P_i|j) / (2n)
+    let p_joint = compute_joint_probabilities(&p_conditional);
+    
+    // Step 4: Initialize low-dimensional embedding randomly
+    let mut y = Array2::random((n_samples, 2), rand_distr::StandardNormal);
+    y *= 1e-4; // Small random initialization
+    
+    // Step 5: Gradient descent optimization
+    let mut momentum = Array2::zeros((n_samples, 2));
+    let momentum_factor = 0.5;
+    let final_momentum = 0.8;
+    
+    for iter in 0..n_iter {
+        // Compute Q matrix (probabilities in low-dimensional space)
+        let q_matrix = compute_low_dim_probabilities(&y);
+        
+        // Apply early exaggeration
+        let current_p = if iter < early_exaggeration_iter {
+            &p_joint * early_exaggeration
+        } else {
+            p_joint.clone()
+        };
+        
+        // Compute gradient
+        let gradient = compute_tsne_gradient(&current_p, &q_matrix, &y);
+        
+        // Update momentum
+        let current_momentum = if iter < early_exaggeration_iter {
+            momentum_factor
+        } else {
+            final_momentum
+        };
+        
+        momentum = momentum * current_momentum - &gradient * learning_rate;
+        y = y + &momentum;
+        
+        // Center the embedding
+        let mean = y.mean_axis(Axis(0)).unwrap();
+        y = y - &mean;
+        
+        // Early stopping based on gradient norm
+        if iter > 50 && iter % 50 == 0 {
+            let grad_norm = gradient.mapv(|x| x * x).sum().sqrt();
+            if grad_norm < 1e-7 {
+                break;
+            }
+        }
+    }
+    
+    Ok(y)
 }
 
-/// Simplified UMAP implementation (placeholder)
+/// UMAP implementation for 2D visualization 
 fn apply_umap_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
-    // For now, fall back to PCA
-    // In a full implementation, this would include the UMAP algorithm
-    apply_pca_2d(data)
+    let n_samples = data.nrows();
+    let n_features = data.ncols();
+    
+    if n_samples < 4 {
+        return apply_pca_2d(data);
+    }
+
+    // UMAP parameters
+    let n_neighbors = (n_samples as f64).sqrt().floor() as usize + 1;
+    let n_neighbors = n_neighbors.min(n_samples - 1).max(2);
+    let min_dist = 0.1;
+    let spread = 1.0;
+    let n_epochs = 200;
+    let learning_rate = 1.0;
+
+    // Step 1: Find k-nearest neighbors
+    let distances = compute_pairwise_distances(data);
+    let neighbors = find_k_nearest_neighbors(&distances, n_neighbors);
+    
+    // Step 2: Compute local connectivity (σ values)
+    let sigmas = compute_local_connectivity(&distances, &neighbors);
+    
+    // Step 3: Compute high-dimensional graph weights
+    let weights = compute_umap_weights(&distances, &neighbors, &sigmas);
+    
+    // Step 4: Initialize low-dimensional embedding
+    let mut embedding = if n_features >= 2 {
+        // Initialize with first two principal components
+        apply_pca_2d(data)?
+    } else {
+        Array2::random((n_samples, 2), rand_distr::Uniform::new(-10.0, 10.0))
+    };
+    
+    // Normalize initial embedding
+    let embedding_std = embedding.std_axis(Axis(0), 0.0);
+    for j in 0..2 {
+        if embedding_std[j] > 0.0 {
+            for i in 0..n_samples {
+                embedding[[i, j]] /= embedding_std[j];
+            }
+        }
+    }
+    
+    // Step 5: Optimize embedding with SGD
+    for epoch in 0..n_epochs {
+        let alpha = learning_rate * (1.0 - epoch as f64 / n_epochs as f64);
+        
+        for i in 0..n_samples {
+            for &j in &neighbors[i] {
+                if i != j {
+                    let weight = weights[[i, j]];
+                    if weight > 0.0 {
+                        // Attractive force
+                        let diff = embedding.row(j) - embedding.row(i);
+                        let dist_sq = diff.mapv(|x| x * x).sum();
+                        let dist = (dist_sq + 1e-7).sqrt();
+                        
+                        let grad_coeff = -2.0 * weight / (1.0 + dist_sq);
+                        let grad = diff * grad_coeff;
+                        
+                        embedding.row_mut(i).scaled_add(-alpha, &grad);
+                        embedding.row_mut(j).scaled_add(alpha, &grad);
+                    }
+                }
+            }
+            
+            // Sample negative examples
+            for _ in 0..5 {
+                let j = rand::random::<usize>() % n_samples;
+                if i != j {
+                    let diff = embedding.row(j) - embedding.row(i);
+                    let dist_sq = diff.mapv(|x| x * x).sum();
+                    
+                    // Repulsive force
+                    if dist_sq < spread * spread {
+                        let grad_coeff = 2.0 / ((0.001 + dist_sq) * (1.0 + dist_sq));
+                        let grad = diff * grad_coeff;
+                        
+                        embedding.row_mut(i).scaled_add(-alpha, &grad);
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(embedding)
 }
 
-/// Simplified MDS implementation (placeholder)
+/// Classical MDS (Multidimensional Scaling) implementation
 fn apply_mds_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
-    // For now, fall back to PCA
-    // In a full implementation, this would include classical MDS
-    apply_pca_2d(data)
+    let n_samples = data.nrows();
+    
+    if n_samples < 3 {
+        return apply_pca_2d(data);
+    }
+
+    // Step 1: Compute pairwise squared distances
+    let distances_sq = compute_pairwise_distances_squared(data);
+    
+    // Step 2: Apply double centering to get Gram matrix
+    // B = -0.5 * H * D^2 * H where H = I - (1/n) * 1 * 1^T
+    let mut b_matrix = Array2::zeros((n_samples, n_samples));
+    
+    // Compute row means
+    let row_means: Array1<f64> = distances_sq.mean_axis(Axis(1)).unwrap();
+    
+    // Compute overall mean
+    let overall_mean = distances_sq.mean().unwrap();
+    
+    // Apply double centering
+    for i in 0..n_samples {
+        for j in 0..n_samples {
+            b_matrix[[i, j]] = -0.5 * (distances_sq[[i, j]] - row_means[i] - row_means[j] + overall_mean);
+        }
+    }
+    
+    // Step 3: Eigenvalue decomposition of Gram matrix
+    let (eigenvectors, eigenvalues) = compute_top_eigenvectors(&b_matrix, 2)?;
+    
+    // Step 4: Construct 2D embedding
+    let mut embedding = Array2::zeros((n_samples, 2));
+    for i in 0..n_samples {
+        for j in 0..2 {
+            if eigenvalues[j] > 0.0 {
+                embedding[[i, j]] = eigenvectors[[i, j]] * eigenvalues[j].sqrt();
+            }
+        }
+    }
+    
+    Ok(embedding)
+}
+
+/// Compute pairwise squared Euclidean distances
+fn compute_pairwise_distances_squared(data: &Array2<f64>) -> Array2<f64> {
+    let n_samples = data.nrows();
+    let mut distances = Array2::zeros((n_samples, n_samples));
+    
+    for i in 0..n_samples {
+        for j in i..n_samples {
+            let mut dist_sq = 0.0;
+            for k in 0..data.ncols() {
+                let diff = data[[i, k]] - data[[j, k]];
+                dist_sq += diff * diff;
+            }
+            distances[[i, j]] = dist_sq;
+            distances[[j, i]] = dist_sq;
+        }
+    }
+    
+    distances
+}
+
+/// Compute pairwise Euclidean distances
+fn compute_pairwise_distances(data: &Array2<f64>) -> Array2<f64> {
+    let distances_sq = compute_pairwise_distances_squared(data);
+    distances_sq.mapv(|x| x.sqrt())
+}
+
+/// Compute conditional probabilities for t-SNE
+fn compute_conditional_probabilities(distances_sq: &Array2<f64>, perplexity: f64) -> Result<Array2<f64>> {
+    let n_samples = distances_sq.nrows();
+    let mut p_conditional = Array2::zeros((n_samples, n_samples));
+    let target_entropy = perplexity.ln();
+    
+    for i in 0..n_samples {
+        // Binary search for optimal sigma
+        let mut sigma = 1.0;
+        let mut sigma_min = 1e-20;
+        let mut sigma_max = 1e20;
+        
+        for _ in 0..50 { // Max 50 iterations for binary search
+            // Compute probabilities with current sigma
+            let mut prob_sum = 0.0;
+            let mut entropy = 0.0;
+            
+            for j in 0..n_samples {
+                if i != j {
+                    let prob = (-distances_sq[[i, j]] / (2.0 * sigma * sigma)).exp();
+                    p_conditional[[i, j]] = prob;
+                    prob_sum += prob;
+                }
+            }
+            
+            // Normalize probabilities
+            if prob_sum > 0.0 {
+                for j in 0..n_samples {
+                    if i != j {
+                        p_conditional[[i, j]] /= prob_sum;
+                        if p_conditional[[i, j]] > 1e-12 {
+                            entropy -= p_conditional[[i, j]] * p_conditional[[i, j]].ln();
+                        }
+                    }
+                }
+            }
+            
+            // Check convergence
+            let entropy_diff = entropy - target_entropy;
+            if entropy_diff.abs() < 1e-5 {
+                break;
+            }
+            
+            // Update sigma bounds
+            if entropy_diff > 0.0 {
+                sigma_min = sigma;
+                sigma = if sigma_max == 1e20 { sigma * 2.0 } else { (sigma + sigma_max) / 2.0 };
+            } else {
+                sigma_max = sigma;
+                sigma = (sigma + sigma_min) / 2.0;
+            }
+        }
+    }
+    
+    Ok(p_conditional)
+}
+
+/// Compute joint probabilities for t-SNE
+fn compute_joint_probabilities(p_conditional: &Array2<f64>) -> Array2<f64> {
+    let n_samples = p_conditional.nrows();
+    let mut p_joint = Array2::zeros((n_samples, n_samples));
+    
+    for i in 0..n_samples {
+        for j in 0..n_samples {
+            if i != j {
+                p_joint[[i, j]] = (p_conditional[[i, j]] + p_conditional[[j, i]]) / (2.0 * n_samples as f64);
+            }
+        }
+    }
+    
+    p_joint
+}
+
+/// Compute probabilities in low-dimensional space for t-SNE
+fn compute_low_dim_probabilities(y: &Array2<f64>) -> Array2<f64> {
+    let n_samples = y.nrows();
+    let mut q_matrix = Array2::zeros((n_samples, n_samples));
+    let mut sum_q = 0.0;
+    
+    // Compute pairwise probabilities using Student t-distribution
+    for i in 0..n_samples {
+        for j in i + 1..n_samples {
+            let mut dist_sq = 0.0;
+            for k in 0..2 {
+                let diff = y[[i, k]] - y[[j, k]];
+                dist_sq += diff * diff;
+            }
+            
+            let q_val = 1.0 / (1.0 + dist_sq);
+            q_matrix[[i, j]] = q_val;
+            q_matrix[[j, i]] = q_val;
+            sum_q += 2.0 * q_val;
+        }
+    }
+    
+    // Normalize
+    if sum_q > 0.0 {
+        q_matrix /= sum_q;
+    }
+    
+    // Add small constant to avoid numerical issues
+    q_matrix.mapv_inplace(|x| (x + 1e-12).max(1e-12));
+    
+    q_matrix
+}
+
+/// Compute gradient for t-SNE optimization
+fn compute_tsne_gradient(p_matrix: &Array2<f64>, q_matrix: &Array2<f64>, y: &Array2<f64>) -> Array2<f64> {
+    let n_samples = y.nrows();
+    let mut gradient = Array2::zeros((n_samples, 2));
+    
+    for i in 0..n_samples {
+        for j in 0..n_samples {
+            if i != j {
+                let p_ij = p_matrix[[i, j]];
+                let q_ij = q_matrix[[i, j]];
+                
+                let mut dist_sq = 0.0;
+                for k in 0..2 {
+                    let diff = y[[i, k]] - y[[j, k]];
+                    dist_sq += diff * diff;
+                }
+                
+                let multiplier = 4.0 * (p_ij - q_ij) / (1.0 + dist_sq);
+                
+                for k in 0..2 {
+                    let diff = y[[i, k]] - y[[j, k]];
+                    gradient[[i, k]] += multiplier * diff;
+                }
+            }
+        }
+    }
+    
+    gradient
+}
+
+/// Find k-nearest neighbors for UMAP
+fn find_k_nearest_neighbors(distances: &Array2<f64>, k: usize) -> Vec<Vec<usize>> {
+    let n_samples = distances.nrows();
+    let mut neighbors = Vec::with_capacity(n_samples);
+    
+    for i in 0..n_samples {
+        let mut indices_distances: Vec<(usize, f64)> = (0..n_samples)
+            .filter(|&j| i != j)
+            .map(|j| (j, distances[[i, j]]))
+            .collect();
+        
+        // Sort by distance and take k nearest
+        indices_distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        let nearest_k: Vec<usize> = indices_distances.into_iter()
+            .take(k)
+            .map(|(idx, _)| idx)
+            .collect();
+        
+        neighbors.push(nearest_k);
+    }
+    
+    neighbors
+}
+
+/// Compute local connectivity for UMAP
+fn compute_local_connectivity(distances: &Array2<f64>, neighbors: &[Vec<usize>]) -> Vec<f64> {
+    let n_samples = distances.nrows();
+    let mut sigmas = vec![1.0; n_samples];
+    
+    for i in 0..n_samples {
+        if !neighbors[i].is_empty() {
+            // Use distance to nearest neighbor as a starting point
+            let nearest_dist = distances[[i, neighbors[i][0]]];
+            sigmas[i] = nearest_dist.max(1e-3);
+        }
+    }
+    
+    sigmas
+}
+
+/// Compute UMAP edge weights
+fn compute_umap_weights(distances: &Array2<f64>, neighbors: &[Vec<usize>], sigmas: &[f64]) -> Array2<f64> {
+    let n_samples = distances.nrows();
+    let mut weights = Array2::zeros((n_samples, n_samples));
+    
+    for i in 0..n_samples {
+        for &j in &neighbors[i] {
+            let dist = distances[[i, j]];
+            let weight = (-((dist - sigmas[i]).max(0.0) / sigmas[i])).exp();
+            weights[[i, j]] = weight;
+        }
+    }
+    
+    // Symmetrize weights
+    for i in 0..n_samples {
+        for j in 0..n_samples {
+            let symmetric_weight = weights[[i, j]] + weights[[j, i]] - weights[[i, j]] * weights[[j, i]];
+            weights[[i, j]] = symmetric_weight;
+            weights[[j, i]] = symmetric_weight;
+        }
+    }
+    
+    weights
 }
 
 /// Compute top k eigenvectors using power iteration

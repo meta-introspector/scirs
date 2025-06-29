@@ -274,6 +274,7 @@ impl FloatGenerator {
     }
 
     /// Create a generator with seed
+    #[allow(unused_variables)]
     pub fn with_seed(min_value: f64, max_value: f64, seed: u64) -> Self {
         Self {
             #[cfg(feature = "random")]

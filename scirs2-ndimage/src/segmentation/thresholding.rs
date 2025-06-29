@@ -4,7 +4,24 @@
 
 use crate::error::{NdimageError, NdimageResult};
 use ndarray::{Array, Dimension, Ix2};
-use num_traits::{Float, NumAssign};
+use num_traits::{Float, FromPrimitive, NumAssign};
+
+/// Helper function for safe conversion from usize to float
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
+    T::from_usize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+    })
+}
+
+/// Helper function for safe conversion from f64 to float
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
 
 /// Apply a threshold to an image to create a binary image
 ///
@@ -100,7 +117,7 @@ where
 
     // Calculate histogram
     let mut hist = vec![0; nbins];
-    let bin_width = (max_val - min_val) / T::from(nbins).unwrap();
+    let bin_width = (max_val - min_val) / safe_usize_to_float(nbins)?;
 
     for &val in image.iter() {
         let bin = ((val - min_val) / bin_width).to_usize().unwrap_or(0);
@@ -122,9 +139,9 @@ where
     let mut cum_val = vec![T::zero(); nbins];
     for i in 0..nbins {
         if i > 0 {
-            cum_val[i] = cum_val[i - 1] + T::from(i * hist[i]).unwrap();
+            cum_val[i] = cum_val[i - 1] + safe_usize_to_float(i * hist[i])?;
         } else {
-            cum_val[i] = T::from(i * hist[i]).unwrap();
+            cum_val[i] = safe_usize_to_float(i * hist[i])?
         }
     }
 
@@ -141,12 +158,12 @@ where
             continue;
         }
 
-        let bg_mean = cum_val[i] / T::from(bg_pixels).unwrap();
-        let fg_mean = (cum_val[nbins - 1] - cum_val[i]) / T::from(fg_pixels).unwrap();
+        let bg_mean = cum_val[i] / safe_usize_to_float(bg_pixels)?;
+        let fg_mean = (cum_val[nbins - 1] - cum_val[i]) / safe_usize_to_float(fg_pixels)?;
 
         // Calculate inter-class variance
         let variance =
-            T::from(bg_pixels * fg_pixels).unwrap() * (bg_mean - fg_mean) * (bg_mean - fg_mean);
+            safe_usize_to_float(bg_pixels * fg_pixels)? * (bg_mean - fg_mean) * (bg_mean - fg_mean);
 
         // Update threshold if variance is higher
         if variance > max_var {
@@ -156,7 +173,7 @@ where
     }
 
     // Convert threshold index back to intensity value
-    let threshold = min_val + T::from(threshold_idx).unwrap() * bin_width;
+    let threshold = min_val + safe_usize_to_float(threshold_idx)? * bin_width;
 
     // Create binary image using the threshold
     let binary = threshold_binary(image, threshold)?;
@@ -238,7 +255,7 @@ where
                 AdaptiveMethod::Mean => {
                     // Simple mean of neighborhood
                     let sum = neighborhood.iter().fold(T::zero(), |acc, &x| acc + x);
-                    sum / T::from(neighborhood.len()).unwrap() - c
+                    sum / safe_usize_to_float(neighborhood.len())? - c
                 }
                 AdaptiveMethod::Gaussian => {
                     // Gaussian weighted mean
@@ -250,16 +267,13 @@ where
                     let mut weight_sum = T::zero();
 
                     for (idx, &val) in neighborhood.indexed_iter() {
-                        let dist = T::from(
-                            (idx.0 as isize - center_row as isize).pow(2)
-                                + (idx.1 as isize - center_col as isize).pow(2),
-                        )
-                        .unwrap()
-                        .sqrt();
+                        let dist_sq = (idx.0 as isize - center_row as isize).pow(2)
+                            + (idx.1 as isize - center_col as isize).pow(2);
+                        let dist = safe_usize_to_float(dist_sq as usize)?.sqrt();
 
                         // Gaussian weight
-                        let sigma = T::from(radius).unwrap() / T::from(2.0).unwrap();
-                        let weight = (-dist * dist / (T::from(2.0).unwrap() * sigma * sigma)).exp();
+                        let sigma = safe_usize_to_float(radius)? / safe_f64_to_float(2.0)?;
+                        let weight = (-dist * dist / (safe_f64_to_float(2.0)? * sigma * sigma)).exp();
 
                         weighted_sum += val * weight;
                         weight_sum += weight;

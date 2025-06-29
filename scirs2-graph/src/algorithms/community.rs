@@ -357,11 +357,8 @@ where
 ///
 /// # Space Complexity
 /// O(n) for storing labels and temporary data structures.
-#[deprecated(
-    since = "0.1.0-beta.2",
-    note = "Use `label_propagation_result` instead"
-)]
-pub fn label_propagation<N, E, Ix>(graph: &Graph<N, E, Ix>, max_iter: usize) -> HashMap<N, usize>
+/// Internal implementation of label propagation algorithm
+fn label_propagation_internal<N, E, Ix>(graph: &Graph<N, E, Ix>, max_iterations: usize) -> HashMap<N, usize>
 where
     N: Node + Clone + Hash + Eq,
     E: EdgeWeight,
@@ -386,7 +383,7 @@ where
     let mut changed = true;
     let mut iterations = 0;
 
-    while changed && iterations < max_iter {
+    while changed && iterations < max_iterations {
         changed = false;
         iterations += 1;
 
@@ -440,6 +437,33 @@ where
         .collect()
 }
 
+/// Label propagation algorithm for community detection (legacy API)
+///
+/// **Note**: This function is deprecated in favor of `label_propagation_result`.
+/// It will be removed in version 2.0.
+///
+/// Each node adopts the label that most of its neighbors have, with ties broken randomly.
+/// Returns a mapping from nodes to community labels.
+///
+/// # Time Complexity
+/// O(k * m) where k is the number of iterations (typically small) and m is
+/// the number of edges. The algorithm often converges in 5-10 iterations.
+///
+/// # Space Complexity
+/// O(n) for storing labels and temporary data structures.
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `label_propagation_result` instead"
+)]
+pub fn label_propagation<N, E, Ix>(graph: &Graph<N, E, Ix>, max_iterations: usize) -> HashMap<N, usize>
+where
+    N: Node + Clone + Hash + Eq,
+    E: EdgeWeight,
+    Ix: IndexType,
+{
+    label_propagation_internal(graph, max_iterations)
+}
+
 /// Label propagation algorithm with standardized CommunityResult return type
 ///
 /// This function provides the same functionality as `label_propagation` but returns
@@ -448,7 +472,7 @@ where
 ///
 /// # Arguments
 /// * `graph` - The graph to analyze  
-/// * `max_iter` - Maximum number of iterations (default: 100)
+/// * `max_iterations` - Maximum number of iterations (default: 100)
 ///
 /// # Returns
 /// * A `CommunityResult` with comprehensive community information
@@ -468,14 +492,14 @@ where
 /// ```
 pub fn label_propagation_result<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
-    max_iter: usize,
+    max_iterations: usize,
 ) -> CommunityResult<N>
 where
     N: Node + Clone + Hash + Eq,
     E: EdgeWeight,
     Ix: IndexType,
 {
-    let node_communities = label_propagation(graph, max_iter);
+    let node_communities = label_propagation_internal(graph, max_iterations);
     CommunityResult::from_node_map(node_communities)
 }
 
@@ -1166,7 +1190,10 @@ where
     code_length
 }
 
-/// Fluid communities algorithm
+/// Fluid communities algorithm (legacy API)
+///
+/// **Note**: This function is deprecated in favor of `fluid_communities_result`.
+/// It will be removed in version 2.0.
 ///
 /// Fluid communities is a density-based algorithm where communities are formed
 /// by propagating "fluids" through the network. Each community starts with a seed
@@ -1179,6 +1206,10 @@ where
 ///
 /// # Returns
 /// * A community structure with node assignments and modularity
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `fluid_communities_result` instead"
+)]
 pub fn fluid_communities<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     num_communities: usize,
@@ -1305,7 +1336,10 @@ where
     }
 }
 
-/// Hierarchical community structure using agglomerative clustering
+/// Hierarchical community structure using agglomerative clustering (legacy API)
+///
+/// **Note**: This function is deprecated in favor of `hierarchical_communities_result`.
+/// It will be removed in version 2.0.
 ///
 /// This algorithm starts with each node as its own community and iteratively
 /// merges communities to maximize modularity. It builds a dendrogram-like
@@ -1317,6 +1351,10 @@ where
 ///
 /// # Returns
 /// * A vector of community structures at different hierarchy levels
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `hierarchical_communities_result` instead"
+)]
 pub fn hierarchical_communities<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     linkage: &str,
@@ -1572,6 +1610,98 @@ where
     } else {
         0.0
     }
+}
+
+/// Fluid communities algorithm with standardized CommunityResult return type
+///
+/// This function provides the same functionality as `fluid_communities` but returns
+/// a standardized `CommunityResult` type that provides multiple ways to access
+/// the community structure.
+///
+/// Fluid communities is a density-based algorithm where communities are formed
+/// by propagating "fluids" through the network. Each community starts with a seed
+/// node and expands by including neighboring nodes based on density.
+///
+/// # Arguments
+/// * `graph` - The graph to analyze
+/// * `num_communities` - Target number of communities to find  
+/// * `max_iterations` - Maximum number of iterations
+///
+/// # Returns
+/// * A `CommunityResult` with comprehensive community information
+///
+/// # Example
+/// ```rust
+/// use scirs2_graph::{Graph, fluid_communities_result};
+///
+/// let mut graph = Graph::new();
+/// // ... add nodes and edges ...
+/// let result = fluid_communities_result(&graph, 5, 100);
+///
+/// println!("Found {} communities", result.num_communities);
+/// for (i, community) in result.communities.iter().enumerate() {
+///     println!("Community {}: {} members", i, community.len());
+/// }
+/// ```
+pub fn fluid_communities_result<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    num_communities: usize,
+    max_iterations: usize,
+) -> CommunityResult<N>
+where
+    N: Node + Clone + Hash + Eq,
+    E: EdgeWeight + Into<f64> + Copy,
+    Ix: IndexType,
+{
+    #[allow(deprecated)]
+    let structure = fluid_communities(graph, num_communities, max_iterations);
+    CommunityResult::from_community_structure(structure)
+}
+
+/// Hierarchical community structure with standardized CommunityResult return type
+///
+/// This function provides the same functionality as `hierarchical_communities` but returns
+/// a vector of standardized `CommunityResult` types that provide multiple ways to access
+/// the community structure at each hierarchy level.
+///
+/// This algorithm starts with each node as its own community and iteratively
+/// merges communities to maximize modularity. It builds a dendrogram-like
+/// structure showing the hierarchy of communities.
+///
+/// # Arguments
+/// * `graph` - The graph to analyze
+/// * `linkage` - Linkage criterion ("single", "complete", "average")
+///
+/// # Returns
+/// * A vector of `CommunityResult`s representing different hierarchy levels
+///
+/// # Example
+/// ```rust
+/// use scirs2_graph::{Graph, hierarchical_communities_result};
+///
+/// let mut graph = Graph::new();
+/// // ... add nodes and edges ...
+/// let results = hierarchical_communities_result(&graph, "average");
+///
+/// for (level, result) in results.iter().enumerate() {
+///     println!("Level {}: {} communities", level, result.num_communities);
+/// }
+/// ```
+pub fn hierarchical_communities_result<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    linkage: &str,
+) -> Vec<CommunityResult<N>>
+where
+    N: Node + Clone + Hash + Eq,
+    E: EdgeWeight + Into<f64> + Copy,
+    Ix: IndexType,
+{
+    #[allow(deprecated)]
+    let structures = hierarchical_communities(graph, linkage);
+    structures
+        .into_iter()
+        .map(CommunityResult::from_community_structure)
+        .collect()
 }
 
 #[cfg(test)]

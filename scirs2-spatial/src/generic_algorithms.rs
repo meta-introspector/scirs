@@ -39,7 +39,6 @@ use crate::error::{SpatialError, SpatialResult};
 use crate::generic_traits::{
     DistanceMetric, Point, SpatialPoint, SpatialScalar,
 };
-use num_traits::Zero;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::marker::PhantomData;
@@ -225,11 +224,11 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
         }
 
         // Check if we need to search the other child
-        let dimension_distance = (query_coord - point_coord).abs();
+        let dimension_distance = SpatialScalar::abs(query_coord - point_coord);
         let should_search_other = heap.len() < k
             || heap
                 .peek()
-                .map_or(true, |top| dimension_distance < top.distance);
+                .is_none_or(|top| dimension_distance < top.distance);
 
         if should_search_other {
             if let Some(ref child) = second_child {
@@ -282,7 +281,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
         let point_coord = point
             .coordinate(node.splitting_dimension)
             .unwrap_or(T::zero());
-        let dimension_distance = (query_coord - point_coord).abs();
+        let _dimension_distance = SpatialScalar::abs(query_coord - point_coord);
 
         // Search left child
         if let Some(ref left) = node.left {
@@ -317,7 +316,7 @@ impl<T: SpatialScalar> Eq for KNNItem<T> {}
 
 impl<T: SpatialScalar> PartialOrd for KNNItem<T> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.distance.partial_cmp(&other.distance)
+        Some(self.cmp(other))
     }
 }
 
@@ -391,7 +390,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
         Self {
             k,
             max_iterations: 100,
-            tolerance: T::from_f64(1e-6).unwrap_or(T::epsilon()),
+            tolerance: T::from_f64(1e-6).unwrap_or(<T as SpatialScalar>::epsilon()),
             _phantom: PhantomData,
         }
     }
@@ -437,7 +436,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
                 let mut best_distance = T::max_finite();
 
                 for (j, centroid) in centroids.iter().enumerate() {
-                    let distance = point.distance_to(centroid);
+                    let distance = self.point_to_generic(point).distance_to(centroid);
                     if distance < best_distance {
                         best_distance = distance;
                         best_cluster = j;
@@ -482,7 +481,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
     }
 
     /// Initialize centroids using k-means++
-    fn initialize_centroids(&self, points: &[P], dimension: usize) -> SpatialResult<Vec<Point<T>>> {
+    fn initialize_centroids(&self, points: &[P], _dimension: usize) -> SpatialResult<Vec<Point<T>>> {
         let mut centroids = Vec::with_capacity(self.k);
 
         // Choose first centroid randomly
@@ -495,7 +494,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
             for point in points {
                 let min_distance = centroids
                     .iter()
-                    .map(|centroid| point.distance_to(centroid))
+                    .map(|centroid| self.point_to_generic(point).distance_to(centroid))
                     .fold(
                         T::max_finite(),
                         |acc, dist| if dist < acc { dist } else { acc },
@@ -664,7 +663,7 @@ impl GenericConvexHull {
             point.coordinate(0).unwrap_or(T::zero()) - start.coordinate(0).unwrap_or(T::zero());
         let dy =
             point.coordinate(1).unwrap_or(T::zero()) - start.coordinate(1).unwrap_or(T::zero());
-        dy.atan2(dx)
+        SpatialScalar::atan2(dy, dx)
     }
 
     /// Calculate cross product for 2D points
@@ -681,7 +680,7 @@ impl GenericConvexHull {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::generic_traits::{EuclideanMetric, ManhattanMetric, Point};
+    use crate::generic_traits::{EuclideanMetric, Point};
     use approx::assert_relative_eq;
 
     #[test]

@@ -1,7 +1,7 @@
 //! GPU memory management utilities
 
 use super::{GpuBuffer, GpuContext};
-use crate::error::{LinalgError, LinalgResult};
+use crate::error::LinalgResult;
 
 /// Memory allocation strategies for GPU operations
 #[derive(Debug, Clone, Copy)]

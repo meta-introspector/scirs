@@ -68,7 +68,7 @@ pub struct HttpClient {
 impl HttpClient {
     /// Create a new HTTP client with the given configuration
     pub fn new(config: NetworkConfig) -> Self {
-        let mut client = Self {
+        let client = Self {
             config,
             #[cfg(feature = "reqwest")]
             client: None,

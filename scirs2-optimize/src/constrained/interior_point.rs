@@ -3,7 +3,7 @@
 //! This module implements primal-dual interior point methods for solving
 //! constrained optimization problems with equality and inequality constraints.
 
-use super::{Constraint, ConstraintFn};
+use super::{Constraint, ConstraintFn, ConstraintKind};
 use crate::error::OptimizeError;
 use crate::unconstrained::OptimizeResult;
 use ndarray::{Array1, Array2, ArrayView1};
@@ -921,6 +921,7 @@ where
 }
 
 /// Compute gradient using finite differences
+#[allow(dead_code)]
 fn finite_diff_gradient<F>(fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
@@ -941,6 +942,40 @@ where
     grad
 }
 
+/// Compute Jacobian using finite differences for multiple constraint functions
+#[allow(dead_code)]
+fn finite_diff_jacobian(
+    constraint_fns: &[ConstraintFn], 
+    x: &ArrayView1<f64>, 
+    eps: f64
+) -> Array2<f64> {
+    let n = x.len();
+    let m = constraint_fns.len();
+    let mut jac = Array2::zeros((m, n));
+    let x_slice = x.as_slice().unwrap();
+    
+    // Evaluate constraints at current point
+    let f0: Vec<f64> = constraint_fns.iter().map(|f| f(x_slice)).collect();
+    
+    let mut x_pert = x.to_owned();
+    
+    for j in 0..n {
+        let h = eps * (1.0 + x[j].abs());
+        x_pert[j] = x[j] + h;
+        let x_pert_slice = x_pert.as_slice().unwrap();
+        
+        // Evaluate constraints at perturbed point
+        for i in 0..m {
+            let f_plus = constraint_fns[i](x_pert_slice);
+            jac[[i, j]] = (f_plus - f0[i]) / h;
+        }
+        
+        x_pert[j] = x[j]; // Reset
+    }
+    
+    jac
+}
+
 /// Minimize a function subject to constraints using interior point method
 /// with constraint conversion from general format
 pub fn minimize_interior_point_constrained<F>(
@@ -952,14 +987,24 @@ pub fn minimize_interior_point_constrained<F>(
 where
     F: Fn(&[f64]) -> f64 + Clone,
 {
-    // For now, use a simplified implementation without constraints
-    // This avoids the complex lifetime issues with boxed closures
-
     let options = options.unwrap_or_default();
     let n = x0.len();
 
-    // Create solver with no constraints for now
-    let mut solver = InteriorPointSolver::new(n, 0, 0, &options);
+    // Separate constraints by type
+    let eq_constraints: Vec<_> = constraints
+        .iter()
+        .filter(|c| c.kind == ConstraintKind::Equality && !c.is_bounds())
+        .collect();
+    let ineq_constraints: Vec<_> = constraints
+        .iter()
+        .filter(|c| c.kind == ConstraintKind::Inequality && !c.is_bounds())
+        .collect();
+
+    let m_eq = eq_constraints.len();
+    let m_ineq = ineq_constraints.len();
+
+    // Create solver with proper constraint counts
+    let mut solver = InteriorPointSolver::new(n, m_eq, m_ineq, &options);
 
     // Prepare function and gradient
     let func_clone = func.clone();
@@ -969,20 +1014,66 @@ where
         finite_diff_gradient(&mut fun_fd, x, 1e-8)
     };
 
-    // Solve without constraints (simplified for now)
+    // Prepare constraint functions and Jacobians if needed
+    let mut eq_con_mut: Option<Box<dyn FnMut(&ArrayView1<f64>) -> Array1<f64>>> = if m_eq > 0 {
+        let eq_fns: Vec<ConstraintFn> = eq_constraints.iter().map(|c| c.fun).collect();
+        Some(Box::new(move |x: &ArrayView1<f64>| -> Array1<f64> {
+            let x_slice = x.as_slice().unwrap();
+            Array1::from_vec(eq_fns.iter().map(|f| f(x_slice)).collect())
+        }))
+    } else {
+        None
+    };
+
+    let mut eq_jac_mut: Option<Box<dyn FnMut(&ArrayView1<f64>) -> Array2<f64>>> = if m_eq > 0 {
+        let eq_fns: Vec<ConstraintFn> = eq_constraints.iter().map(|c| c.fun).collect();
+        Some(Box::new(move |x: &ArrayView1<f64>| -> Array2<f64> {
+            let eps = 1e-8;
+            finite_diff_jacobian(&eq_fns, x, eps)
+        }))
+    } else {
+        None
+    };
+
+    let mut ineq_con_mut: Option<Box<dyn FnMut(&ArrayView1<f64>) -> Array1<f64>>> = if m_ineq > 0 {
+        let ineq_fns: Vec<ConstraintFn> = ineq_constraints.iter().map(|c| c.fun).collect();
+        Some(Box::new(move |x: &ArrayView1<f64>| -> Array1<f64> {
+            let x_slice = x.as_slice().unwrap();
+            Array1::from_vec(ineq_fns.iter().map(|f| f(x_slice)).collect())
+        }))
+    } else {
+        None
+    };
+
+    let mut ineq_jac_mut: Option<Box<dyn FnMut(&ArrayView1<f64>) -> Array2<f64>>> = if m_ineq > 0 {
+        let ineq_fns: Vec<ConstraintFn> = ineq_constraints.iter().map(|c| c.fun).collect();
+        Some(Box::new(move |x: &ArrayView1<f64>| -> Array2<f64> {
+            let eps = 1e-8;
+            finite_diff_jacobian(&ineq_fns, x, eps)
+        }))
+    } else {
+        None
+    };
+
+    // Solve with constraints
     let result = solver.solve(
         &mut fun_mut,
         &mut grad_mut,
-        None::<&mut dyn FnMut(&ArrayView1<f64>) -> Array1<f64>>,
-        None::<&mut dyn FnMut(&ArrayView1<f64>) -> Array2<f64>>,
-        None::<&mut dyn FnMut(&ArrayView1<f64>) -> Array1<f64>>,
-        None::<&mut dyn FnMut(&ArrayView1<f64>) -> Array2<f64>>,
+        eq_con_mut.as_mut().map(|f| f.as_mut()),
+        eq_jac_mut.as_mut().map(|f| f.as_mut()),
+        ineq_con_mut.as_mut().map(|f| f.as_mut()),
+        ineq_jac_mut.as_mut().map(|f| f.as_mut()),
         &x0,
     )?;
 
-    // TODO: Add proper constraint handling in future versions
-    if !constraints.is_empty() {
-        eprintln!("Warning: Constraint handling not fully implemented yet");
+    // Handle bounds constraints separately if present
+    let bounds_constraints: Vec<_> = constraints
+        .iter()
+        .filter(|c| c.is_bounds())
+        .collect();
+    
+    if !bounds_constraints.is_empty() {
+        eprintln!("Warning: Box constraints (bounds) are not yet fully integrated with interior point method");
     }
 
     Ok(OptimizeResult {

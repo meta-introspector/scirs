@@ -461,7 +461,7 @@ pub struct Shapefile {
 
 impl Shapefile {
     /// Open a shapefile
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
         // Simplified implementation
         // In reality, would read .shp, .shx, .dbf files
 
@@ -545,8 +545,8 @@ impl GeoJson {
     /// Read GeoJSON from file
     pub fn read<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path.as_ref())
-            .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
-        let reader = BufReader::new(file);
+            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+        let _reader = BufReader::new(file);
 
         // Simplified - would use serde_json to parse
         Ok(Self {
@@ -558,7 +558,7 @@ impl GeoJson {
 
     /// Write GeoJSON to file
     pub fn write<P: AsRef<Path>>(&self, path: P) -> Result<()> {
-        let file = File::create(path.as_ref())
+        let _file = File::create(path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
 
         // Simplified - would use serde_json to serialize

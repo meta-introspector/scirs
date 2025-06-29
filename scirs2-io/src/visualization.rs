@@ -163,6 +163,12 @@ impl Default for SeriesStyle {
     }
 }
 
+impl Default for VisualizationBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VisualizationBuilder {
     /// Create a new visualization builder
     pub fn new() -> Self {
@@ -304,9 +310,9 @@ impl VisualizationExporter for PlotlyExporter {
         path: &Path,
     ) -> Result<()> {
         let json_str = self.to_string(data, config, _metadata)?;
-        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(json_str.as_bytes())
-            .map_err(|e| IoError::Io(e))?;
+            .map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -415,9 +421,9 @@ impl VisualizationExporter for MatplotlibExporter {
         path: &Path,
     ) -> Result<()> {
         let script = self.to_string(data, config, _metadata)?;
-        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(script.as_bytes())
-            .map_err(|e| IoError::Io(e))?;
+            .map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -500,9 +506,9 @@ impl VisualizationExporter for GnuplotExporter {
         path: &Path,
     ) -> Result<()> {
         let script = self.to_string(data, config, _metadata)?;
-        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(script.as_bytes())
-            .map_err(|e| IoError::Io(e))?;
+            .map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -590,9 +596,9 @@ impl VisualizationExporter for VegaLiteExporter {
         path: &Path,
     ) -> Result<()> {
         let spec = self.to_string(data, config, _metadata)?;
-        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(spec.as_bytes())
-            .map_err(|e| IoError::Io(e))?;
+            .map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -882,6 +888,12 @@ impl Default for Plot3DConfig {
     }
 }
 
+impl Default for Visualization3DBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Visualization3DBuilder {
     pub fn new() -> Self {
         Self {
@@ -1043,9 +1055,9 @@ impl DashboardBuilder {
     /// Export dashboard as HTML
     pub fn export_html(self, path: impl AsRef<Path>) -> Result<()> {
         let html = self.generate_html()?;
-        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(html.as_bytes())
-            .map_err(|e| IoError::Io(e))?;
+            .map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -1129,9 +1141,9 @@ impl VisualizationExporter for D3Exporter {
         path: &Path,
     ) -> Result<()> {
         let html = self.to_string(data, config, _metadata)?;
-        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(html.as_bytes())
-            .map_err(|e| IoError::Io(e))?;
+            .map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -1200,9 +1212,9 @@ impl VisualizationExporter for BokehExporter {
         path: &Path,
     ) -> Result<()> {
         let json = self.to_string(data, config, _metadata)?;
-        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(json.as_bytes())
-            .map_err(|e| IoError::Io(e))?;
+            .map_err(IoError::Io)?;
         Ok(())
     }
 
@@ -1311,9 +1323,9 @@ impl Visualization3DExporter for Plotly3DExporter {
         let json_str = serde_json::to_string_pretty(&plot_data)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
-        let mut file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(json_str.as_bytes())
-            .map_err(|e| IoError::Io(e))?;
+            .map_err(IoError::Io)?;
         Ok(())
     }
 }

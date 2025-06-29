@@ -615,6 +615,396 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
     }
 }
 
+/// Advanced stability assessment methods
+pub mod advanced {
+    use super::*;
+    use crate::metrics::{silhouette_score, mutual_info_score};
+    use crate::ensemble::{EnsembleClusterer, EnsembleConfig};
+
+    /// Cross-validation based stability assessment
+    ///
+    /// This method uses k-fold cross-validation to assess clustering stability
+    /// by training on different subsets and testing on held-out data.
+    pub struct CrossValidationStability<F: Float> {
+        config: StabilityConfig,
+        n_folds: usize,
+        _phantom: std::marker::PhantomData<F>,
+    }
+
+    impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
+        CrossValidationStability<F>
+    {
+        /// Create a new cross-validation stability assessor
+        pub fn new(config: StabilityConfig, n_folds: usize) -> Self {
+            Self {
+                config,
+                n_folds,
+                _phantom: std::marker::PhantomData,
+            }
+        }
+
+        /// Assess clustering stability using cross-validation
+        pub fn assess_stability(
+            &self,
+            data: ArrayView2<F>,
+            k: usize,
+        ) -> Result<StabilityResult<F>> {
+            let n_samples = data.shape()[0];
+            let fold_size = n_samples / self.n_folds;
+            let mut stability_scores = Vec::new();
+            let mut bootstrap_matrix = Array2::zeros((self.n_folds, self.n_folds));
+
+            // Perform k-fold cross-validation
+            for fold in 0..self.n_folds {
+                let start_idx = fold * fold_size;
+                let end_idx = if fold == self.n_folds - 1 {
+                    n_samples
+                } else {
+                    (fold + 1) * fold_size
+                };
+
+                // Create training set (excluding current fold)
+                let mut train_indices = Vec::new();
+                for i in 0..n_samples {
+                    if i < start_idx || i >= end_idx {
+                        train_indices.push(i);
+                    }
+                }
+
+                // Create training data
+                let train_data = Array2::from_shape_fn(
+                    (train_indices.len(), data.shape()[1]),
+                    |(i, j)| data[[train_indices[i], j]]
+                );
+
+                // Run clustering on training data
+                let (train_centroids, train_labels) = kmeans2(
+                    train_data.view(),
+                    k,
+                    100,     // max_iter
+                    F::from(1e-6).unwrap(), // tol
+                    Some(42), // seed
+                )?;
+
+                // Assign test data to nearest centroids
+                let test_labels = Array1::from_shape_fn(end_idx - start_idx, |i| {
+                    let test_point = data.row(start_idx + i);
+                    let mut min_dist = F::infinity();
+                    let mut closest_cluster = 0;
+
+                    for (cluster_id, centroid) in train_centroids.outer_iter().enumerate() {
+                        let dist = test_point
+                            .iter()
+                            .zip(centroid.iter())
+                            .map(|(a, b)| (*a - *b) * (*a - *b))
+                            .sum::<F>()
+                            .sqrt();
+
+                        if dist < min_dist {
+                            min_dist = dist;
+                            closest_cluster = cluster_id;
+                        }
+                    }
+                    closest_cluster
+                });
+
+                // Calculate stability score for this fold
+                let stability = self.calculate_fold_stability(&test_labels, k)?;
+                stability_scores.push(stability);
+            }
+
+            // Calculate mean and standard deviation
+            let mean_stability = stability_scores.iter().sum::<F>() / F::from(stability_scores.len()).unwrap();
+            let variance = stability_scores
+                .iter()
+                .map(|&s| (s - mean_stability) * (s - mean_stability))
+                .sum::<F>() / F::from(stability_scores.len()).unwrap();
+            let std_stability = variance.sqrt();
+
+            Ok(StabilityResult {
+                stability_scores,
+                consensus_labels: None,
+                optimal_k: None,
+                mean_stability,
+                std_stability,
+                bootstrap_matrix,
+            })
+        }
+
+        fn calculate_fold_stability(&self, labels: &Array1<usize>, k: usize) -> Result<F> {
+            // Calculate intra-cluster cohesion
+            let mut cluster_cohesion = F::zero();
+            let mut total_pairs = 0;
+
+            for cluster_id in 0..k {
+                let cluster_members: Vec<_> = labels
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, &label)| label == cluster_id)
+                    .map(|(idx, _)| idx)
+                    .collect();
+
+                let cluster_size = cluster_members.len();
+                if cluster_size > 1 {
+                    let pairs = cluster_size * (cluster_size - 1) / 2;
+                    cluster_cohesion = cluster_cohesion + F::from(pairs).unwrap();
+                    total_pairs += pairs;
+                }
+            }
+
+            if total_pairs == 0 {
+                Ok(F::zero())
+            } else {
+                Ok(cluster_cohesion / F::from(total_pairs).unwrap())
+            }
+        }
+    }
+
+    /// Perturbation-based stability assessment
+    ///
+    /// This method assesses stability by introducing controlled perturbations
+    /// to the data and measuring how much the clustering results change.
+    pub struct PerturbationStability<F: Float> {
+        config: StabilityConfig,
+        perturbation_types: Vec<PerturbationType>,
+        _phantom: std::marker::PhantomData<F>,
+    }
+
+    /// Types of perturbations for stability testing
+    #[derive(Debug, Clone)]
+    pub enum PerturbationType {
+        /// Add Gaussian noise
+        GaussianNoise { std_dev: f64 },
+        /// Remove random samples
+        SampleRemoval { removal_rate: f64 },
+        /// Add random features
+        FeatureNoise { noise_level: f64 },
+        /// Outlier injection
+        OutlierInjection { outlier_rate: f64, outlier_magnitude: f64 },
+    }
+
+    impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
+        PerturbationStability<F>
+    {
+        /// Create a new perturbation stability assessor
+        pub fn new(config: StabilityConfig, perturbation_types: Vec<PerturbationType>) -> Self {
+            Self {
+                config,
+                perturbation_types,
+                _phantom: std::marker::PhantomData,
+            }
+        }
+
+        /// Assess clustering stability under perturbations
+        pub fn assess_stability(
+            &self,
+            data: ArrayView2<F>,
+            k: usize,
+        ) -> Result<StabilityResult<F>> {
+            let mut all_stability_scores = Vec::new();
+            let mut rng = rand::thread_rng();
+
+            // Get baseline clustering
+            let (baseline_centroids, baseline_labels) = kmeans2(
+                data,
+                k,
+                100,     // max_iter
+                F::from(1e-6).unwrap(), // tol
+                Some(42), // seed
+            )?;
+
+            // Test each perturbation type
+            for perturbation in &self.perturbation_types {
+                let mut perturbation_scores = Vec::new();
+
+                for _ in 0..self.config.n_bootstrap {
+                    // Apply perturbation
+                    let perturbed_data = self.apply_perturbation(data, perturbation, &mut rng)?;
+
+                    // Run clustering on perturbed data
+                    let (_, perturbed_labels) = kmeans2(
+                        perturbed_data.view(),
+                        k,
+                        100,     // max_iter
+                        F::from(1e-6).unwrap(), // tol
+                        None,    // random seed
+                    )?;
+
+                    // Calculate similarity to baseline
+                    let similarity = self.calculate_label_similarity(&baseline_labels, &perturbed_labels)?;
+                    perturbation_scores.push(similarity);
+                }
+
+                all_stability_scores.extend(perturbation_scores);
+            }
+
+            // Calculate overall statistics
+            let mean_stability = all_stability_scores.iter().sum::<F>() / F::from(all_stability_scores.len()).unwrap();
+            let variance = all_stability_scores
+                .iter()
+                .map(|&s| (s - mean_stability) * (s - mean_stability))
+                .sum::<F>() / F::from(all_stability_scores.len()).unwrap();
+            let std_stability = variance.sqrt();
+
+            let bootstrap_matrix = Array2::zeros((self.config.n_bootstrap, self.perturbation_types.len()));
+
+            Ok(StabilityResult {
+                stability_scores: all_stability_scores,
+                consensus_labels: None,
+                optimal_k: None,
+                mean_stability,
+                std_stability,
+                bootstrap_matrix,
+            })
+        }
+
+        fn apply_perturbation(
+            &self,
+            data: ArrayView2<F>,
+            perturbation: &PerturbationType,
+            rng: &mut impl Rng,
+        ) -> Result<Array2<F>> {
+            let mut perturbed = data.to_owned();
+
+            match perturbation {
+                PerturbationType::GaussianNoise { std_dev } => {
+                    for elem in perturbed.iter_mut() {
+                        let noise = rng.gen::<f64>() * std_dev;
+                        *elem = *elem + F::from(noise).unwrap();
+                    }
+                }
+                PerturbationType::SampleRemoval { removal_rate } => {
+                    let n_samples = data.shape()[0];
+                    let n_remove = (n_samples as f64 * removal_rate) as usize;
+                    let mut indices: Vec<_> = (0..n_samples).collect();
+                    indices.shuffle(rng);
+                    indices.truncate(n_samples - n_remove);
+                    indices.sort();
+
+                    let mut new_data = Array2::zeros((indices.len(), data.shape()[1]));
+                    for (new_i, &old_i) in indices.iter().enumerate() {
+                        new_data.row_mut(new_i).assign(&data.row(old_i));
+                    }
+                    perturbed = new_data;
+                }
+                PerturbationType::FeatureNoise { noise_level } => {
+                    for elem in perturbed.iter_mut() {
+                        let noise = (rng.gen::<f64>() - 0.5) * 2.0 * noise_level;
+                        *elem = *elem + F::from(noise).unwrap();
+                    }
+                }
+                PerturbationType::OutlierInjection { outlier_rate, outlier_magnitude } => {
+                    let n_samples = data.shape()[0];
+                    let n_outliers = (n_samples as f64 * outlier_rate) as usize;
+                    
+                    for _ in 0..n_outliers {
+                        let sample_idx = rng.gen_range(0..n_samples);
+                        let feature_idx = rng.gen_range(0..data.shape()[1]);
+                        let outlier_value = rng.gen::<f64>() * outlier_magnitude;
+                        perturbed[[sample_idx, feature_idx]] = F::from(outlier_value).unwrap();
+                    }
+                }
+            }
+
+            Ok(perturbed)
+        }
+
+        fn calculate_label_similarity(
+            &self,
+            labels1: &Array1<usize>,
+            labels2: &Array1<usize>,
+        ) -> Result<F> {
+            if labels1.len() != labels2.len() {
+                return Ok(F::zero());
+            }
+
+            // Convert to i32 for ARI calculation
+            let labels1_i32: Array1<i32> = labels1.mapv(|x| x as i32);
+            let labels2_i32: Array1<i32> = labels2.mapv(|x| x as i32);
+
+            // Use adjusted rand index as similarity measure
+            let ari: f64 = adjusted_rand_index(labels1_i32.view(), labels2_i32.view())?;
+            Ok(F::from(ari).unwrap())
+        }
+    }
+
+    /// Multi-scale stability assessment
+    ///
+    /// This method assesses stability across different data scales and resolutions
+    /// to understand how clustering behaves at different granularities.
+    pub struct MultiScaleStability<F: Float> {
+        config: StabilityConfig,
+        scale_factors: Vec<f64>,
+        _phantom: std::marker::PhantomData<F>,
+    }
+
+    impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
+        MultiScaleStability<F>
+    {
+        /// Create a new multi-scale stability assessor
+        pub fn new(config: StabilityConfig, scale_factors: Vec<f64>) -> Self {
+            Self {
+                config,
+                scale_factors,
+                _phantom: std::marker::PhantomData,
+            }
+        }
+
+        /// Assess clustering stability across multiple scales
+        pub fn assess_stability(
+            &self,
+            data: ArrayView2<F>,
+            k_range: (usize, usize),
+        ) -> Result<Vec<StabilityResult<F>>> {
+            let mut results = Vec::new();
+
+            for &scale_factor in &self.scale_factors {
+                // Scale the data
+                let scaled_data = data.mapv(|x| x * F::from(scale_factor).unwrap());
+
+                // Assess stability at this scale for different k values
+                for k in k_range.0..=k_range.1 {
+                    let validator = BootstrapValidator::new(self.config.clone());
+                    let stability_result = validator.assess_kmeans_stability(scaled_data.view(), k)?;
+                    results.push(stability_result);
+                }
+            }
+
+            Ok(results)
+        }
+
+        /// Find the most stable scale and cluster count combination
+        pub fn find_optimal_scale_and_k(
+            &self,
+            data: ArrayView2<F>,
+            k_range: (usize, usize),
+        ) -> Result<(f64, usize, F)> {
+            let results = self.assess_stability(data, k_range)?;
+            
+            let mut best_scale = self.scale_factors[0];
+            let mut best_k = k_range.0;
+            let mut best_stability = F::neg_infinity();
+
+            let mut result_idx = 0;
+            for &scale_factor in &self.scale_factors {
+                for k in k_range.0..=k_range.1 {
+                    if result_idx < results.len() {
+                        let stability = results[result_idx].mean_stability;
+                        if stability > best_stability {
+                            best_stability = stability;
+                            best_scale = scale_factor;
+                            best_k = k;
+                        }
+                        result_idx += 1;
+                    }
+                }
+            }
+
+            Ok((best_scale, best_k, best_stability))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -97,7 +97,7 @@ impl DictionaryLearning {
         let n_features = x.shape()[1];
         let n_samples = x.shape()[0];
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut dictionary = Array2::zeros((self.n_components, n_features));
 

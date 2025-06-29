@@ -7,7 +7,7 @@ use crate::data::Dataset;
 use crate::error::{Error, Result};
 use crate::layers::Layer;
 
-use ndarray::{Array, Axis, Ix2, IxDyn, ScalarOperand};
+use ndarray::{Array, Axis, Ix2, IxDyn, ScalarOperand, s, Slice};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -222,24 +222,113 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
             ));
         }
 
-        // Get dimensions
+        // Get dimensions from first batch to determine output structure
         let first_pred = &all_predictions[0];
         let first_target = &all_targets[0];
+        
+        // Calculate total samples across all batches
+        let total_samples: usize = all_predictions.iter()
+            .map(|pred| pred.shape()[0])
+            .sum();
+        
+        // Create combined arrays with proper dimensions
+        let mut combined_shape_pred = first_pred.shape().to_vec();
+        combined_shape_pred[0] = total_samples;
+        let mut combined_shape_target = first_target.shape().to_vec();
+        combined_shape_target[0] = total_samples;
+        
+        let mut combined_preds = Array::<F, _>::zeros(IxDyn(&combined_shape_pred));
+        let mut combined_targets = Array::<F, _>::zeros(IxDyn(&combined_shape_target));
 
-        // Create combined arrays
-        let mut combined_preds = Array::<F, _>::zeros(first_pred.raw_dim());
-        let mut combined_targets = Array::<F, _>::zeros(first_target.raw_dim());
-
-        // Resize to include all batches
-        combined_preds
-            .slice_axis_mut(Axis(0), ndarray::Slice::from(0..0))
-            .assign(&first_pred.slice_axis(Axis(0), ndarray::Slice::from(0..0)));
-        combined_targets
-            .slice_axis_mut(Axis(0), ndarray::Slice::from(0..0))
-            .assign(&first_target.slice_axis(Axis(0), ndarray::Slice::from(0..0)));
-
-        // TODO: Implement proper concatenation of predictions and targets
-        // This is a simplification that won't work for all cases
+        // Concatenate all batch predictions and targets
+        let mut sample_offset = 0;
+        
+        for (pred_batch, target_batch) in all_predictions.iter().zip(all_targets.iter()) {
+            let batch_size = pred_batch.shape()[0];
+            
+            // Validate batch dimensions match expected structure
+            if pred_batch.shape().len() != first_pred.shape().len() ||
+               target_batch.shape().len() != first_target.shape().len() {
+                return Err(Error::ValidationError(
+                    "Inconsistent batch dimensions across samples".to_string(),
+                ));
+            }
+            
+            // Verify non-batch dimensions match
+            for dim_idx in 1..pred_batch.shape().len() {
+                if pred_batch.shape()[dim_idx] != first_pred.shape()[dim_idx] {
+                    return Err(Error::ValidationError(
+                        format!("Prediction dimension {} mismatch in batch", dim_idx),
+                    ));
+                }
+            }
+            
+            for dim_idx in 1..target_batch.shape().len() {
+                if target_batch.shape()[dim_idx] != first_target.shape()[dim_idx] {
+                    return Err(Error::ValidationError(
+                        format!("Target dimension {} mismatch in batch", dim_idx),
+                    ));
+                }
+            }
+            
+            // Copy batch data to combined arrays
+            let pred_slice_range = sample_offset..(sample_offset + batch_size);
+            let target_slice_range = sample_offset..(sample_offset + batch_size);
+            
+            // Handle different dimensionalities properly
+            match (pred_batch.ndim(), target_batch.ndim()) {
+                (1, 1) => {
+                    // 1D case: regression or binary classification
+                    combined_preds.slice_mut(s![pred_slice_range, ..])
+                        .assign(&pred_batch.view());
+                    combined_targets.slice_mut(s![target_slice_range, ..])
+                        .assign(&target_batch.view());
+                },
+                (2, 1) => {
+                    // 2D predictions, 1D targets: multi-class classification
+                    combined_preds.slice_mut(s![pred_slice_range, ..])
+                        .assign(&pred_batch.view());
+                    combined_targets.slice_mut(s![target_slice_range])
+                        .assign(&target_batch.view());
+                },
+                (2, 2) => {
+                    // 2D both: multi-class with one-hot targets or sequence tasks
+                    combined_preds.slice_mut(s![pred_slice_range, ..])
+                        .assign(&pred_batch.view());
+                    combined_targets.slice_mut(s![target_slice_range, ..])
+                        .assign(&target_batch.view());
+                },
+                (pred_ndim, target_ndim) => {
+                    // Higher dimensional cases: use axis-based concatenation
+                    if pred_ndim >= 3 {
+                        // For 3D+ tensors (e.g., sequence data, image data)
+                        let pred_slice = combined_preds.slice_axis_mut(
+                            Axis(0), 
+                            Slice::from(sample_offset..(sample_offset + batch_size))
+                        );
+                        pred_slice.assign(&pred_batch.view());
+                    }
+                    
+                    if target_ndim >= 3 {
+                        // For 3D+ tensors
+                        let target_slice = combined_targets.slice_axis_mut(
+                            Axis(0), 
+                            Slice::from(sample_offset..(sample_offset + batch_size))
+                        );
+                        target_slice.assign(&target_batch.view());
+                    }
+                }
+            }
+            
+            sample_offset += batch_size;
+        }
+        
+        // Verify concatenation completed successfully
+        if sample_offset != total_samples {
+            return Err(Error::ValidationError(
+                format!("Concatenation error: expected {} samples, got {}", total_samples, sample_offset),
+            ));
+        }
 
         // Extract prediction classes and probabilities for classification tasks
         let classes = if first_pred.ndim() > 1 && first_pred.shape()[1] > 1 {

@@ -997,11 +997,1045 @@ pub mod natural_gradients {
         /// Use conjugate gradient for matrix inversion
         pub use_conjugate_gradient: bool,
 
-        /// CG iteration limit
-        pub cg_max_iterations: usize,
+        /// Maximum CG iterations
+        pub max_cg_iterations: usize,
 
-        /// CG tolerance
+        /// CG convergence tolerance
         pub cg_tolerance: T,
+    }
+
+    impl<T: Float> Default for NaturalGradientConfig<T> {
+        fn default() -> Self {
+            Self {
+                learning_rate: T::from(0.001).unwrap(),
+                fisher_damping: T::from(0.001).unwrap(),
+                fisher_update_freq: 10,
+                use_empirical_fisher: true,
+                max_rank: Some(100),
+                adaptive_damping: true,
+                use_conjugate_gradient: true,
+                max_cg_iterations: 100,
+                cg_tolerance: T::from(1e-6).unwrap(),
+            }
+        }
+    }
+}
+
+/// Advanced K-FAC enhancements for production-scale optimization
+pub mod advanced_kfac {
+    use super::*;
+    use std::sync::{Arc, Mutex};
+    use std::collections::BTreeMap;
+
+    /// Distributed K-FAC optimizer for large-scale training
+    #[derive(Debug)]
+    pub struct DistributedKFAC<T: Float> {
+        /// Base K-FAC optimizer
+        base_kfac: KFACOptimizer<T>,
+
+        /// Distributed configuration
+        dist_config: DistributedKFACConfig,
+
+        /// Communication backend for gradient synchronization
+        comm_backend: Option<Arc<dyn CommunicationBackend>>,
+
+        /// Block-wise decomposition for memory efficiency
+        block_decomposition: BlockDecomposition<T>,
+
+        /// GPU acceleration integration
+        gpu_acceleration: Option<KFACGpuAcceleration>,
+
+        /// Advanced conditioning and monitoring
+        conditioning: AdvancedConditioning<T>,
+
+        /// Second-order momentum state
+        momentum_state: SecondOrderMomentum<T>,
+    }
+
+    /// Configuration for distributed K-FAC
+    #[derive(Debug, Clone)]
+    pub struct DistributedKFACConfig {
+        /// Number of distributed workers
+        pub num_workers: usize,
+
+        /// Current worker rank
+        pub worker_rank: usize,
+
+        /// Communication pattern for gradient averaging
+        pub comm_pattern: CommunicationPattern,
+
+        /// Enable asynchronous updates
+        pub async_updates: bool,
+
+        /// Gradient compression for communication
+        pub gradient_compression: CompressionConfig,
+
+        /// Enable hierarchical communication
+        pub hierarchical_comm: bool,
+
+        /// Block size for block-wise K-FAC
+        pub block_size: usize,
+
+        /// Enable overlap computation and communication
+        pub overlap_comm_compute: bool,
+    }
+
+    /// Communication patterns for distributed training
+    #[derive(Debug, Clone, Copy)]
+    pub enum CommunicationPattern {
+        AllReduce,
+        ParameterServer,
+        Ring,
+        Tree,
+        Butterfly,
+    }
+
+    /// Gradient compression configuration
+    #[derive(Debug, Clone)]
+    pub struct CompressionConfig {
+        /// Enable compression
+        pub enabled: bool,
+
+        /// Compression method
+        pub method: CompressionMethod,
+
+        /// Compression ratio (0.0 to 1.0)
+        pub ratio: f64,
+
+        /// Error feedback for compressed gradients
+        pub error_feedback: bool,
+    }
+
+    /// Compression methods for gradients
+    #[derive(Debug, Clone, Copy)]
+    pub enum CompressionMethod {
+        TopK,
+        Quantization,
+        SignSGD,
+        PowerSGD,
+        LayerAdaptive,
+    }
+
+    /// Communication backend trait
+    pub trait CommunicationBackend: Send + Sync + std::fmt::Debug {
+        fn all_reduce(&self, data: &mut [f32]) -> Result<()>;
+        fn broadcast(&self, data: &mut [f32], root: usize) -> Result<()>;
+        fn gather(&self, send_data: &[f32], recv_data: &mut [f32], root: usize) -> Result<()>;
+        fn scatter(&self, send_data: &[f32], recv_data: &mut [f32], root: usize) -> Result<()>;
+        fn barrier(&self) -> Result<()>;
+    }
+
+    /// Block-wise decomposition for memory-efficient K-FAC
+    #[derive(Debug)]
+    pub struct BlockDecomposition<T: Float> {
+        /// Block states for each layer
+        blocks: HashMap<String, Vec<BlockState<T>>>,
+
+        /// Block size configuration
+        block_size: usize,
+
+        /// Overlap factor for block boundaries
+        overlap_factor: f64,
+
+        /// Block scheduling strategy
+        scheduling: BlockScheduling,
+    }
+
+    /// Individual block state within a layer
+    #[derive(Debug, Clone)]
+    pub struct BlockState<T: Float> {
+        /// Block index within layer
+        pub block_id: usize,
+
+        /// Block dimensions
+        pub rows: std::ops::Range<usize>,
+        pub cols: std::ops::Range<usize>,
+
+        /// Block-specific covariance matrices
+        pub a_cov_block: Array2<T>,
+        pub g_cov_block: Array2<T>,
+
+        /// Block-specific inverses
+        pub a_cov_inv_block: Option<Array2<T>>,
+        pub g_cov_inv_block: Option<Array2<T>>,
+
+        /// Block update frequency
+        pub update_freq: usize,
+        pub last_update: usize,
+
+        /// Block-specific damping
+        pub damping: T,
+    }
+
+    /// Block scheduling strategies
+    #[derive(Debug, Clone, Copy)]
+    pub enum BlockScheduling {
+        Sequential,
+        Random,
+        PriorityBased,
+        AdaptiveRound,
+        LoadBalanced,
+    }
+
+    /// GPU acceleration for K-FAC operations
+    #[derive(Debug)]
+    pub struct KFACGpuAcceleration {
+        /// GPU device context
+        device_id: usize,
+
+        /// Tensor core optimization enabled
+        tensor_cores_enabled: bool,
+
+        /// Mixed precision configuration
+        mixed_precision: MixedPrecisionConfig,
+
+        /// Memory pool for GPU operations
+        memory_pool: GpuMemoryPool,
+
+        /// Stream manager for overlapping operations
+        stream_manager: KFACStreamManager,
+    }
+
+    /// Mixed precision configuration for K-FAC
+    #[derive(Debug, Clone)]
+    pub struct MixedPrecisionConfig {
+        /// Use FP16 for covariance computation
+        pub fp16_covariance: bool,
+
+        /// Use FP32 for matrix inversion (higher precision)
+        pub fp32_inversion: bool,
+
+        /// Gradient scaling factor
+        pub gradient_scale: f32,
+
+        /// Enable automatic loss scaling
+        pub auto_scaling: bool,
+    }
+
+    /// GPU memory pool for K-FAC operations
+    #[derive(Debug)]
+    pub struct GpuMemoryPool {
+        /// Allocated memory blocks
+        blocks: Vec<GpuMemoryBlock>,
+
+        /// Free memory tracking
+        free_memory: usize,
+
+        /// Memory alignment requirements
+        alignment: usize,
+    }
+
+    /// GPU memory block descriptor
+    #[derive(Debug)]
+    pub struct GpuMemoryBlock {
+        /// Block size in bytes
+        size: usize,
+
+        /// Device pointer
+        ptr: *mut std::ffi::c_void,
+
+        /// Block usage status
+        in_use: bool,
+    }
+
+    /// Stream manager for GPU operations
+    #[derive(Debug)]
+    pub struct KFACStreamManager {
+        /// CUDA streams for different operations
+        covariance_stream: usize,
+        inversion_stream: usize,
+        update_stream: usize,
+
+        /// Stream synchronization events
+        sync_events: Vec<usize>,
+    }
+
+    /// Advanced numerical conditioning and monitoring
+    #[derive(Debug)]
+    pub struct AdvancedConditioning<T: Float> {
+        /// Eigenvalue tracking for each layer
+        eigenvalue_trackers: HashMap<String, EigenvalueTracker<T>>,
+
+        /// Condition number monitoring
+        condition_monitors: HashMap<String, ConditionMonitor<T>>,
+
+        /// Adaptive preconditioning strategies
+        preconditioning: AdaptivePreconditioning<T>,
+
+        /// Numerical stability analysis
+        stability_analyzer: StabilityAnalyzer<T>,
+    }
+
+    /// Eigenvalue tracking for matrix conditioning
+    #[derive(Debug)]
+    pub struct EigenvalueTracker<T: Float> {
+        /// Historical eigenvalues
+        eigenvalue_history: VecDeque<Vec<T>>,
+
+        /// Spectral radius tracking
+        spectral_radius: VecDeque<T>,
+
+        /// Eigenvalue decay rates
+        decay_rates: Option<Vec<T>>,
+
+        /// Power iteration state for dominant eigenvalue
+        power_iteration_state: PowerIterationState<T>,
+
+        /// Lanczos algorithm state for spectrum estimation
+        lanczos_state: Option<LanczosState<T>>,
+    }
+
+    /// Power iteration state for eigenvalue computation
+    #[derive(Debug)]
+    pub struct PowerIterationState<T: Float> {
+        /// Current eigenvector estimate
+        pub vector: Array1<T>,
+
+        /// Current eigenvalue estimate
+        pub value: T,
+
+        /// Iteration count
+        pub iterations: usize,
+
+        /// Convergence tolerance
+        pub tolerance: T,
+    }
+
+    /// Lanczos algorithm state for spectrum estimation
+    #[derive(Debug)]
+    pub struct LanczosState<T: Float> {
+        /// Tridiagonal matrix from Lanczos procedure
+        pub tridiag_alpha: Vec<T>,
+        pub tridiag_beta: Vec<T>,
+
+        /// Lanczos vectors
+        pub vectors: Vec<Array1<T>>,
+
+        /// Current iteration
+        pub iteration: usize,
+
+        /// Maximum iterations
+        pub max_iterations: usize,
+    }
+
+    /// Condition number monitoring
+    #[derive(Debug)]
+    pub struct ConditionMonitor<T: Float> {
+        /// Condition number history
+        condition_history: VecDeque<T>,
+
+        /// Threshold for poor conditioning
+        condition_threshold: T,
+
+        /// Automatic remediation strategies
+        auto_remediation: bool,
+
+        /// Remediation actions taken
+        remediation_log: Vec<RemediationAction>,
+    }
+
+    /// Remediation actions for poor conditioning
+    #[derive(Debug, Clone)]
+    pub enum RemediationAction {
+        IncreaseDamping { old_damping: f64, new_damping: f64 },
+        SwitchToRegularizedInverse,
+        ResetCovariance,
+        ApplySpectralShift { shift: f64 },
+        ReduceUpdateFrequency,
+    }
+
+    /// Adaptive preconditioning strategies
+    #[derive(Debug)]
+    pub struct AdaptivePreconditioning<T: Float> {
+        /// Preconditioning method selection
+        method_selector: PreconditioningSelector<T>,
+
+        /// Method-specific configurations
+        method_configs: HashMap<PreconditioningMethod, PreconditioningConfig<T>>,
+
+        /// Performance tracking for each method
+        performance_tracker: MethodPerformanceTracker<T>,
+    }
+
+    /// Preconditioning method types
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    pub enum PreconditioningMethod {
+        Standard,
+        BlockDiagonal,
+        LowRank,
+        Hierarchical,
+        Sketched,
+        Randomized,
+    }
+
+    /// Method selection logic
+    #[derive(Debug)]
+    pub struct PreconditioningSelector<T: Float> {
+        /// Selection criteria
+        criteria: SelectionCriteria<T>,
+
+        /// Method transition rules
+        transition_rules: Vec<TransitionRule<T>>,
+
+        /// Current method for each layer
+        current_methods: HashMap<String, PreconditioningMethod>,
+    }
+
+    /// Selection criteria for preconditioning methods
+    #[derive(Debug)]
+    pub struct SelectionCriteria<T: Float> {
+        /// Matrix size thresholds
+        pub size_thresholds: BTreeMap<usize, PreconditioningMethod>,
+
+        /// Condition number thresholds
+        pub condition_thresholds: BTreeMap<OrderedFloat<T>, PreconditioningMethod>,
+
+        /// Memory usage constraints
+        pub memory_constraints: MemoryConstraints,
+
+        /// Performance requirements
+        pub performance_requirements: PerformanceRequirements<T>,
+    }
+
+    /// Method transition rules
+    #[derive(Debug)]
+    pub struct TransitionRule<T: Float> {
+        /// Source method
+        pub from_method: PreconditioningMethod,
+
+        /// Target method
+        pub to_method: PreconditioningMethod,
+
+        /// Trigger condition
+        pub trigger: TransitionTrigger<T>,
+
+        /// Hysteresis to prevent oscillation
+        pub hysteresis: T,
+    }
+
+    /// Triggers for method transitions
+    #[derive(Debug)]
+    pub enum TransitionTrigger<T: Float> {
+        ConditionNumber(T),
+        MemoryUsage(usize),
+        ComputeTime(std::time::Duration),
+        ConvergenceRate(T),
+        Composite(Vec<TransitionTrigger<T>>),
+    }
+
+    /// Memory constraints for method selection
+    #[derive(Debug, Clone)]
+    pub struct MemoryConstraints {
+        /// Maximum memory per layer (bytes)
+        pub max_memory_per_layer: usize,
+
+        /// Total memory budget (bytes)
+        pub total_memory_budget: usize,
+
+        /// Memory efficiency threshold
+        pub efficiency_threshold: f64,
+    }
+
+    /// Performance requirements
+    #[derive(Debug, Clone)]
+    pub struct PerformanceRequirements<T: Float> {
+        /// Maximum compute time per update
+        pub max_update_time: std::time::Duration,
+
+        /// Target convergence rate
+        pub target_convergence_rate: T,
+
+        /// Accuracy tolerance
+        pub accuracy_tolerance: T,
+    }
+
+    /// Performance tracking for preconditioning methods
+    #[derive(Debug)]
+    pub struct MethodPerformanceTracker<T: Float> {
+        /// Performance metrics per method
+        metrics: HashMap<PreconditioningMethod, PerformanceMetrics<T>>,
+
+        /// Historical performance data
+        history: HashMap<PreconditioningMethod, VecDeque<PerformanceSnapshot<T>>>,
+    }
+
+    /// Performance metrics for a preconditioning method
+    #[derive(Debug, Clone)]
+    pub struct PerformanceMetrics<T: Float> {
+        /// Average update time
+        pub avg_update_time: std::time::Duration,
+
+        /// Average convergence rate
+        pub avg_convergence_rate: T,
+
+        /// Memory usage
+        pub memory_usage: usize,
+
+        /// Numerical stability score
+        pub stability_score: T,
+
+        /// Success rate (updates without numerical issues)
+        pub success_rate: f64,
+    }
+
+    /// Performance snapshot at a specific time
+    #[derive(Debug, Clone)]
+    pub struct PerformanceSnapshot<T: Float> {
+        /// Timestamp
+        pub timestamp: std::time::Instant,
+
+        /// Metrics at this time
+        pub metrics: PerformanceMetrics<T>,
+
+        /// Context information
+        pub context: PerformanceContext,
+    }
+
+    /// Context information for performance snapshots
+    #[derive(Debug, Clone)]
+    pub struct PerformanceContext {
+        /// Layer size
+        pub layer_size: (usize, usize),
+
+        /// Batch size
+        pub batch_size: usize,
+
+        /// Current condition number
+        pub condition_number: f64,
+
+        /// Memory pressure
+        pub memory_pressure: f64,
+    }
+
+    /// Numerical stability analysis
+    #[derive(Debug)]
+    pub struct StabilityAnalyzer<T: Float> {
+        /// Stability metrics tracking
+        stability_metrics: StabilityMetrics<T>,
+
+        /// Error accumulation tracking
+        error_tracking: ErrorTracking<T>,
+
+        /// Stability thresholds
+        thresholds: StabilityThresholds<T>,
+
+        /// Automatic stabilization methods
+        auto_stabilization: AutoStabilization<T>,
+    }
+
+    /// Comprehensive stability metrics
+    #[derive(Debug)]
+    pub struct StabilityMetrics<T: Float> {
+        /// Numerical error estimates
+        pub numerical_errors: Vec<T>,
+
+        /// Matrix conditioning indicators
+        pub conditioning_indicators: ConditioningIndicators<T>,
+
+        /// Convergence stability
+        pub convergence_stability: ConvergenceStability<T>,
+
+        /// Update magnitude tracking
+        pub update_magnitudes: VecDeque<T>,
+    }
+
+    /// Matrix conditioning indicators
+    #[derive(Debug)]
+    pub struct ConditioningIndicators<T: Float> {
+        /// Condition number trends
+        pub condition_trends: VecDeque<T>,
+
+        /// Eigenvalue spread
+        pub eigenvalue_spread: T,
+
+        /// Rank deficiency indicators
+        pub rank_indicators: RankIndicators<T>,
+
+        /// Symmetry preservation
+        pub symmetry_preservation: T,
+    }
+
+    /// Rank deficiency indicators
+    #[derive(Debug)]
+    pub struct RankIndicators<T: Float> {
+        /// Effective rank estimate
+        pub effective_rank: usize,
+
+        /// Numerical rank
+        pub numerical_rank: usize,
+
+        /// Null space dimension estimate
+        pub null_space_dim: usize,
+
+        /// Small singular values
+        pub small_singular_values: Vec<T>,
+    }
+
+    /// Convergence stability tracking
+    #[derive(Debug)]
+    pub struct ConvergenceStability<T: Float> {
+        /// Convergence rate history
+        pub rate_history: VecDeque<T>,
+
+        /// Oscillation detection
+        pub oscillation_detector: OscillationDetector<T>,
+
+        /// Plateau detection
+        pub plateau_detector: PlateauDetector<T>,
+
+        /// Divergence indicators
+        pub divergence_indicators: DivergenceIndicators<T>,
+    }
+
+    /// Oscillation detection in convergence
+    #[derive(Debug)]
+    pub struct OscillationDetector<T: Float> {
+        /// Recent values for oscillation analysis
+        pub recent_values: VecDeque<T>,
+
+        /// Oscillation frequency estimate
+        pub frequency_estimate: Option<f64>,
+
+        /// Oscillation amplitude
+        pub amplitude: T,
+
+        /// Detection threshold
+        pub threshold: T,
+    }
+
+    /// Plateau detection in convergence
+    #[derive(Debug)]
+    pub struct PlateauDetector<T: Float> {
+        /// Minimum improvement threshold
+        pub min_improvement: T,
+
+        /// Plateau duration threshold
+        pub duration_threshold: usize,
+
+        /// Current plateau length
+        pub current_plateau_length: usize,
+
+        /// Plateau status
+        pub in_plateau: bool,
+    }
+
+    /// Divergence indicators
+    #[derive(Debug)]
+    pub struct DivergenceIndicators<T: Float> {
+        /// Gradient explosion detection
+        pub gradient_explosion: bool,
+
+        /// Parameter drift detection
+        pub parameter_drift: T,
+
+        /// Loss explosion indicators
+        pub loss_explosion: bool,
+
+        /// Update magnitude explosion
+        pub update_explosion: bool,
+    }
+
+    /// Error accumulation tracking
+    #[derive(Debug)]
+    pub struct ErrorTracking<T: Float> {
+        /// Floating point error accumulation
+        pub fp_error_accumulation: T,
+
+        /// Roundoff error estimates
+        pub roundoff_errors: VecDeque<T>,
+
+        /// Catastrophic cancellation detection
+        pub cancellation_detector: CancellationDetector<T>,
+
+        /// Error propagation analysis
+        pub error_propagation: ErrorPropagation<T>,
+    }
+
+    /// Catastrophic cancellation detection
+    #[derive(Debug)]
+    pub struct CancellationDetector<T: Float> {
+        /// Significant bit loss tracking
+        pub bit_loss: Vec<usize>,
+
+        /// Cancellation events
+        pub cancellation_events: Vec<CancellationEvent>,
+
+        /// Detection sensitivity
+        pub sensitivity: T,
+    }
+
+    /// Cancellation event record
+    #[derive(Debug)]
+    pub struct CancellationEvent {
+        /// Timestamp of event
+        pub timestamp: std::time::Instant,
+
+        /// Operation that caused cancellation
+        pub operation: String,
+
+        /// Severity level
+        pub severity: CancellationSeverity,
+
+        /// Bits lost
+        pub bits_lost: usize,
+    }
+
+    /// Severity levels for cancellation events
+    #[derive(Debug, Clone, Copy)]
+    pub enum CancellationSeverity {
+        Minor,
+        Moderate,
+        Severe,
+        Critical,
+    }
+
+    /// Error propagation analysis
+    #[derive(Debug)]
+    pub struct ErrorPropagation<T: Float> {
+        /// Error sensitivity to input perturbations
+        pub input_sensitivity: T,
+
+        /// Error amplification factors
+        pub amplification_factors: Vec<T>,
+
+        /// Error correlation tracking
+        pub error_correlations: HashMap<String, T>,
+    }
+
+    /// Stability thresholds for automated intervention
+    #[derive(Debug)]
+    pub struct StabilityThresholds<T: Float> {
+        /// Maximum acceptable condition number
+        pub max_condition_number: T,
+
+        /// Minimum eigenvalue threshold
+        pub min_eigenvalue: T,
+
+        /// Maximum update magnitude
+        pub max_update_magnitude: T,
+
+        /// Error tolerance
+        pub error_tolerance: T,
+    }
+
+    /// Automatic stabilization methods
+    #[derive(Debug)]
+    pub struct AutoStabilization<T: Float> {
+        /// Enabled stabilization techniques
+        pub enabled_techniques: Vec<StabilizationTechnique>,
+
+        /// Intervention history
+        pub intervention_history: Vec<StabilizationIntervention<T>>,
+
+        /// Adaptive thresholds
+        pub adaptive_thresholds: bool,
+    }
+
+    /// Available stabilization techniques
+    #[derive(Debug, Clone, Copy)]
+    pub enum StabilizationTechnique {
+        AdaptiveDamping,
+        SpectralShift,
+        GradientClipping,
+        CovarianceReset,
+        PrecisionUpgrade,
+        RegularizationAdjustment,
+    }
+
+    /// Record of stabilization intervention
+    #[derive(Debug)]
+    pub struct StabilizationIntervention<T: Float> {
+        /// Timestamp
+        pub timestamp: std::time::Instant,
+
+        /// Technique applied
+        pub technique: StabilizationTechnique,
+
+        /// Parameters before intervention
+        pub before_params: InterventionParams<T>,
+
+        /// Parameters after intervention
+        pub after_params: InterventionParams<T>,
+
+        /// Effectiveness measure
+        pub effectiveness: T,
+    }
+
+    /// Parameters for intervention tracking
+    #[derive(Debug, Clone)]
+    pub struct InterventionParams<T: Float> {
+        /// Condition number
+        pub condition_number: T,
+
+        /// Minimum eigenvalue
+        pub min_eigenvalue: T,
+
+        /// Damping parameter
+        pub damping: T,
+
+        /// Update magnitude
+        pub update_magnitude: T,
+    }
+
+    /// Second-order momentum for enhanced K-FAC convergence
+    #[derive(Debug)]
+    pub struct SecondOrderMomentum<T: Float> {
+        /// Layer-wise momentum states
+        layer_momentum: HashMap<String, LayerMomentumState<T>>,
+
+        /// Momentum configuration
+        config: MomentumConfig<T>,
+
+        /// Adaptive momentum scheduling
+        adaptive_scheduling: AdaptiveMomentumScheduling<T>,
+
+        /// Momentum effectiveness tracking
+        effectiveness_tracker: MomentumEffectivenessTracker<T>,
+    }
+
+    /// Momentum state for individual layers
+    #[derive(Debug)]
+    pub struct LayerMomentumState<T: Float> {
+        /// First-order momentum for gradients
+        pub gradient_momentum: Option<Array2<T>>,
+
+        /// Second-order momentum for curvature
+        pub curvature_momentum: Option<(Array2<T>, Array2<T>)>,
+
+        /// Velocity for accelerated updates
+        pub velocity: Option<Array2<T>>,
+
+        /// Momentum decay factors
+        pub decay_factors: MomentumDecayFactors<T>,
+
+        /// Bias correction terms
+        pub bias_correction: BiasCorrectionTerms<T>,
+    }
+
+    /// Momentum decay factors
+    #[derive(Debug, Clone)]
+    pub struct MomentumDecayFactors<T: Float> {
+        /// First-order decay (β₁)
+        pub beta1: T,
+
+        /// Second-order decay (β₂)
+        pub beta2: T,
+
+        /// Curvature momentum decay
+        pub curvature_decay: T,
+
+        /// Adaptive decay adjustment
+        pub adaptive_decay: bool,
+    }
+
+    /// Bias correction terms for momentum
+    #[derive(Debug, Clone)]
+    pub struct BiasCorrectionTerms<T: Float> {
+        /// First-order bias correction
+        pub bias_correction_1: T,
+
+        /// Second-order bias correction
+        pub bias_correction_2: T,
+
+        /// Curvature bias correction
+        pub curvature_bias_correction: T,
+    }
+
+    /// Momentum configuration
+    #[derive(Debug, Clone)]
+    pub struct MomentumConfig<T: Float> {
+        /// Enable first-order momentum
+        pub enable_first_order: bool,
+
+        /// Enable second-order momentum
+        pub enable_second_order: bool,
+
+        /// Enable curvature momentum
+        pub enable_curvature_momentum: bool,
+
+        /// Base momentum parameters
+        pub base_beta1: T,
+        pub base_beta2: T,
+
+        /// Warmup schedule
+        pub warmup_steps: usize,
+
+        /// Momentum annealing
+        pub annealing_schedule: AnnealingSchedule<T>,
+
+        /// Layer-specific momentum adaptation
+        pub layer_adaptation: bool,
+    }
+
+    /// Momentum annealing schedule
+    #[derive(Debug, Clone)]
+    pub enum AnnealingSchedule<T: Float> {
+        Constant,
+        Linear(T, T),
+        Exponential(T),
+        Cosine(T),
+        Adaptive,
+    }
+
+    /// Adaptive momentum scheduling
+    #[derive(Debug)]
+    pub struct AdaptiveMomentumScheduling<T: Float> {
+        /// Layer-specific schedules
+        layer_schedules: HashMap<String, LayerMomentumSchedule<T>>,
+
+        /// Global momentum trends
+        global_trends: MomentumTrends<T>,
+
+        /// Scheduling strategy
+        strategy: MomentumSchedulingStrategy,
+    }
+
+    /// Layer-specific momentum schedule
+    #[derive(Debug)]
+    pub struct LayerMomentumSchedule<T: Float> {
+        /// Current momentum parameters
+        pub current_params: MomentumParams<T>,
+
+        /// Parameter history
+        pub param_history: VecDeque<MomentumParams<T>>,
+
+        /// Effectiveness history
+        pub effectiveness_history: VecDeque<T>,
+
+        /// Adaptation rate
+        pub adaptation_rate: T,
+    }
+
+    /// Momentum parameters for a layer
+    #[derive(Debug, Clone)]
+    pub struct MomentumParams<T: Float> {
+        pub beta1: T,
+        pub beta2: T,
+        pub curvature_momentum: T,
+        pub step: usize,
+    }
+
+    /// Global momentum trends
+    #[derive(Debug)]
+    pub struct MomentumTrends<T: Float> {
+        /// Average momentum effectiveness
+        pub avg_effectiveness: T,
+
+        /// Trend direction
+        pub trend_direction: TrendDirection,
+
+        /// Trend magnitude
+        pub trend_magnitude: T,
+
+        /// Stability indicator
+        pub stability: T,
+    }
+
+    /// Trend direction for momentum adaptation
+    #[derive(Debug, Clone, Copy)]
+    pub enum TrendDirection {
+        Increasing,
+        Decreasing,
+        Stable,
+        Oscillating,
+    }
+
+    /// Momentum scheduling strategies
+    #[derive(Debug, Clone, Copy)]
+    pub enum MomentumSchedulingStrategy {
+        Static,
+        LayerAdaptive,
+        GlobalAdaptive,
+        HybridAdaptive,
+        PerformanceBased,
+    }
+
+    /// Momentum effectiveness tracking
+    #[derive(Debug)]
+    pub struct MomentumEffectivenessTracker<T: Float> {
+        /// Layer effectiveness scores
+        layer_scores: HashMap<String, EffectivenessScore<T>>,
+
+        /// Global effectiveness metrics
+        global_metrics: GlobalEffectivenessMetrics<T>,
+
+        /// Effectiveness comparison baselines
+        baselines: EffectivenessBaselines<T>,
+    }
+
+    /// Effectiveness score for momentum
+    #[derive(Debug)]
+    pub struct EffectivenessScore<T: Float> {
+        /// Convergence acceleration
+        pub convergence_acceleration: T,
+
+        /// Stability improvement
+        pub stability_improvement: T,
+
+        /// Memory efficiency
+        pub memory_efficiency: T,
+
+        /// Computational overhead
+        pub computational_overhead: T,
+
+        /// Overall score
+        pub overall_score: T,
+    }
+
+    /// Global effectiveness metrics
+    #[derive(Debug)]
+    pub struct GlobalEffectivenessMetrics<T: Float> {
+        /// Total convergence improvement
+        pub total_convergence_improvement: T,
+
+        /// Average per-layer improvement
+        pub avg_layer_improvement: T,
+
+        /// Variance in effectiveness
+        pub effectiveness_variance: T,
+
+        /// Momentum overhead ratio
+        pub overhead_ratio: T,
+    }
+
+    /// Baselines for effectiveness comparison
+    #[derive(Debug)]
+    pub struct EffectivenessBaselines<T: Float> {
+        /// No momentum baseline
+        pub no_momentum: T,
+
+        /// First-order only baseline
+        pub first_order_only: T,
+
+        /// Standard K-FAC baseline
+        pub standard_kfac: T,
+    }
+
+    // Helper types for ordered comparisons
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct OrderedFloat<T: Float>(T);
+
+    impl<T: Float> Eq for OrderedFloat<T> {}
+    impl<T: Float> Ord for OrderedFloat<T> {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            self.partial_cmp(other).unwrap_or(std::cmp::Ordering::Equal)
+        }
+    }
+
+    /// Preconditioning configuration for different methods
+    #[derive(Debug, Clone)]
+    pub struct PreconditioningConfig<T: Float> {
+        /// Method-specific parameters
+        pub parameters: HashMap<String, T>,
+
+        /// Numerical tolerances
+        pub tolerances: HashMap<String, T>,
+
+        /// Update frequencies
+        pub update_frequencies: HashMap<String, usize>,
+
+        /// Memory budgets
+        pub memory_budgets: HashMap<String, usize>,
     }
 
     impl<T: Float> Default for NaturalGradientConfig<T> {
@@ -1014,7 +2048,7 @@ pub mod natural_gradients {
                 max_rank: Some(100),
                 adaptive_damping: true,
                 use_conjugate_gradient: true,
-                cg_max_iterations: 50,
+                max_cg_iterations: 50,
                 cg_tolerance: T::from(1e-6).unwrap(),
             }
         }
@@ -1597,6 +2631,600 @@ pub mod natural_gradients {
                 fisher_update_time_us: 0,
                 nat_grad_compute_time_us: 0,
                 fisher_memory_bytes: 0,
+            }
+        }
+    }
+
+    /// Concrete communication backend implementation for testing/local use
+    #[derive(Debug)]
+    pub struct LocalCommunicationBackend {
+        num_workers: usize,
+        worker_rank: usize,
+    }
+
+    impl LocalCommunicationBackend {
+        pub fn new(num_workers: usize, worker_rank: usize) -> Self {
+            Self { num_workers, worker_rank }
+        }
+    }
+
+    impl CommunicationBackend for LocalCommunicationBackend {
+        fn all_reduce(&self, data: &mut [f32]) -> Result<()> {
+            // For local backend, just divide by number of workers (simulated averaging)
+            let scale = 1.0 / self.num_workers as f32;
+            for value in data.iter_mut() {
+                *value *= scale;
+            }
+            Ok(())
+        }
+
+        fn broadcast(&self, data: &mut [f32], root: usize) -> Result<()> {
+            // No-op for single node
+            if root != self.worker_rank {
+                // In real implementation, would receive data from root
+                for value in data.iter_mut() {
+                    *value = 0.0; // Placeholder
+                }
+            }
+            Ok(())
+        }
+
+        fn gather(&self, send_data: &[f32], recv_data: &mut [f32], root: usize) -> Result<()> {
+            if self.worker_rank == root {
+                // Copy own data to beginning of receive buffer
+                let chunk_size = send_data.len();
+                recv_data[..chunk_size].copy_from_slice(send_data);
+                // In real implementation, would receive from other workers
+            }
+            Ok(())
+        }
+
+        fn scatter(&self, send_data: &[f32], recv_data: &mut [f32], root: usize) -> Result<()> {
+            if self.worker_rank == root {
+                // Send data to self (copy chunk for this worker)
+                let chunk_size = recv_data.len();
+                let start = self.worker_rank * chunk_size;
+                recv_data.copy_from_slice(&send_data[start..start + chunk_size]);
+            }
+            Ok(())
+        }
+
+        fn barrier(&self) -> Result<()> {
+            // No-op for single process
+            Ok(())
+        }
+    }
+
+    /// Basic implementations for missing components
+    
+    impl<T: Float> DistributedKFAC<T> {
+        pub fn new(
+            base_config: KFACConfig<T>,
+            dist_config: DistributedKFACConfig,
+        ) -> Result<Self> {
+            let base_kfac = KFACOptimizer::new(base_config);
+            let comm_backend = Some(Arc::new(LocalCommunicationBackend::new(
+                dist_config.num_workers,
+                dist_config.worker_rank,
+            )));
+
+            Ok(Self {
+                base_kfac,
+                dist_config,
+                comm_backend,
+                block_decomposition: BlockDecomposition::new(dist_config.block_size),
+                gpu_acceleration: None,
+                conditioning: AdvancedConditioning::new(),
+                momentum_state: SecondOrderMomentum::new(MomentumConfig::default()),
+            })
+        }
+
+        pub fn step_distributed(
+            &mut self,
+            layer_name: &str,
+            local_gradients: &Array2<T>,
+            local_activations: &Array2<T>,
+        ) -> Result<Array2<T>> {
+            // 1. Compute local K-FAC updates
+            let local_update = self.base_kfac.apply_update(layer_name, local_gradients)?;
+
+            // 2. All-reduce gradients across workers
+            if let Some(ref comm) = self.comm_backend {
+                // Convert to f32 for communication (in practice would handle T generically)
+                let mut grad_data: Vec<f32> = local_gradients.iter()
+                    .map(|&x| x.to_f64().unwrap_or(0.0) as f32)
+                    .collect();
+                
+                comm.all_reduce(&mut grad_data)?;
+                
+                // Convert back and apply distributed update
+                // (Implementation details would depend on communication backend)
+            }
+
+            // 3. Apply block-wise decomposition if enabled
+            if self.dist_config.block_size > 0 {
+                self.block_decomposition.apply_block_update(layer_name, &local_update)
+            } else {
+                Ok(local_update)
+            }
+        }
+    }
+
+    /// Placeholder type alias for the main KFAC optimizer (for compatibility)
+    pub type KFACOptimizer<T> = KFAC<T>;
+
+    impl<T: Float> BlockDecomposition<T> {
+        pub fn new(block_size: usize) -> Self {
+            Self {
+                blocks: HashMap::new(),
+                block_size,
+                overlap_factor: 0.1,
+                scheduling: BlockScheduling::Sequential,
+            }
+        }
+
+        pub fn apply_block_update(
+            &mut self,
+            layer_name: &str,
+            update: &Array2<T>,
+        ) -> Result<Array2<T>> {
+            // Simple block-wise application (in practice would be more sophisticated)
+            if self.block_size >= update.nrows() && self.block_size >= update.ncols() {
+                // No blocking needed
+                return Ok(update.clone());
+            }
+
+            let mut result = update.clone();
+            
+            // Apply blocks sequentially
+            let num_row_blocks = (update.nrows() + self.block_size - 1) / self.block_size;
+            let num_col_blocks = (update.ncols() + self.block_size - 1) / self.block_size;
+
+            for i in 0..num_row_blocks {
+                for j in 0..num_col_blocks {
+                    let row_start = i * self.block_size;
+                    let row_end = ((i + 1) * self.block_size).min(update.nrows());
+                    let col_start = j * self.block_size;
+                    let col_end = ((j + 1) * self.block_size).min(update.ncols());
+
+                    // Process block
+                    let mut block = result.slice_mut(ndarray::s![
+                        row_start..row_end, 
+                        col_start..col_end
+                    ]);
+                    
+                    // Apply block-specific processing (placeholder)
+                    block.mapv_inplace(|x| x * T::from(0.99).unwrap());
+                }
+            }
+
+            Ok(result)
+        }
+    }
+
+    impl<T: Float> AdvancedConditioning<T> {
+        pub fn new() -> Self {
+            Self {
+                eigenvalue_trackers: HashMap::new(),
+                condition_monitors: HashMap::new(),
+                preconditioning: AdaptivePreconditioning::new(),
+                stability_analyzer: StabilityAnalyzer::new(),
+            }
+        }
+
+        pub fn monitor_layer(&mut self, layer_name: &str, matrix: &Array2<T>) -> Result<()> {
+            // Initialize trackers if not present
+            if !self.eigenvalue_trackers.contains_key(layer_name) {
+                self.eigenvalue_trackers.insert(
+                    layer_name.to_string(),
+                    EigenvalueTracker::new(matrix.nrows()),
+                );
+            }
+
+            if !self.condition_monitors.contains_key(layer_name) {
+                self.condition_monitors.insert(
+                    layer_name.to_string(),
+                    ConditionMonitor::new(),
+                );
+            }
+
+            // Update monitoring
+            let tracker = self.eigenvalue_trackers.get_mut(layer_name).unwrap();
+            let monitor = self.condition_monitors.get_mut(layer_name).unwrap();
+
+            tracker.update(matrix)?;
+            monitor.update(matrix)?;
+
+            Ok(())
+        }
+    }
+
+    impl<T: Float> EigenvalueTracker<T> {
+        pub fn new(size: usize) -> Self {
+            Self {
+                eigenvalue_history: VecDeque::with_capacity(100),
+                spectral_radius: VecDeque::with_capacity(100),
+                decay_rates: None,
+                power_iteration_state: PowerIterationState::new(size),
+                lanczos_state: None,
+            }
+        }
+
+        pub fn update(&mut self, matrix: &Array2<T>) -> Result<()> {
+            // Simplified eigenvalue estimation using power iteration
+            let eigenvalue = self.power_iteration_state.estimate_dominant_eigenvalue(matrix)?;
+            
+            // Store eigenvalue
+            let mut eigenvals = vec![eigenvalue];
+            if self.eigenvalue_history.len() > 0 {
+                if let Some(last_eigenvals) = self.eigenvalue_history.back() {
+                    eigenvals = last_eigenvals.clone();
+                    eigenvals[0] = eigenvalue; // Update dominant eigenvalue
+                }
+            }
+
+            self.eigenvalue_history.push_back(eigenvals);
+            if self.eigenvalue_history.len() > 100 {
+                self.eigenvalue_history.pop_front();
+            }
+
+            self.spectral_radius.push_back(eigenvalue);
+            if self.spectral_radius.len() > 100 {
+                self.spectral_radius.pop_front();
+            }
+
+            Ok(())
+        }
+    }
+
+    impl<T: Float> PowerIterationState<T> {
+        pub fn new(size: usize) -> Self {
+            Self {
+                vector: Array1::ones(size),
+                value: T::one(),
+                iterations: 0,
+                tolerance: T::from(1e-8).unwrap(),
+            }
+        }
+
+        pub fn estimate_dominant_eigenvalue(&mut self, matrix: &Array2<T>) -> Result<T> {
+            let max_iterations = 50;
+            
+            for _ in 0..max_iterations {
+                let new_vector = matrix.dot(&self.vector);
+                let norm = new_vector.iter().map(|&x| x * x).sum::<T>().sqrt();
+                
+                if norm < T::from(1e-12).unwrap() {
+                    break;
+                }
+                
+                self.vector = new_vector / norm;
+                let new_value = self.vector.dot(&matrix.dot(&self.vector));
+                
+                if (new_value - self.value).abs() < self.tolerance {
+                    break;
+                }
+                
+                self.value = new_value;
+                self.iterations += 1;
+            }
+
+            Ok(self.value)
+        }
+    }
+
+    impl<T: Float> ConditionMonitor<T> {
+        pub fn new() -> Self {
+            Self {
+                condition_history: VecDeque::with_capacity(100),
+                condition_threshold: T::from(1e8).unwrap(),
+                auto_remediation: true,
+                remediation_log: Vec::new(),
+            }
+        }
+
+        pub fn update(&mut self, matrix: &Array2<T>) -> Result<()> {
+            // Estimate condition number using diagonal elements
+            let mut min_diag = T::infinity();
+            let mut max_diag = T::zero();
+
+            for i in 0..matrix.nrows() {
+                let diag = matrix[[i, i]];
+                min_diag = min_diag.min(diag);
+                max_diag = max_diag.max(diag);
+            }
+
+            let condition_number = if min_diag > T::zero() {
+                max_diag / min_diag
+            } else {
+                T::infinity()
+            };
+
+            self.condition_history.push_back(condition_number);
+            if self.condition_history.len() > 100 {
+                self.condition_history.pop_front();
+            }
+
+            // Check if remediation is needed
+            if self.auto_remediation && condition_number > self.condition_threshold {
+                self.apply_remediation(condition_number)?;
+            }
+
+            Ok(())
+        }
+
+        fn apply_remediation(&mut self, condition_number: T) -> Result<()> {
+            // Simple remediation: log the need for increased damping
+            let action = RemediationAction::IncreaseDamping {
+                old_damping: 0.001,
+                new_damping: 0.01,
+            };
+            
+            self.remediation_log.push(action);
+            Ok(())
+        }
+    }
+
+    impl<T: Float> AdaptivePreconditioning<T> {
+        pub fn new() -> Self {
+            Self {
+                method_selector: PreconditioningSelector::new(),
+                method_configs: HashMap::new(),
+                performance_tracker: MethodPerformanceTracker::new(),
+            }
+        }
+    }
+
+    impl<T: Float> PreconditioningSelector<T> {
+        pub fn new() -> Self {
+            let mut size_thresholds = BTreeMap::new();
+            size_thresholds.insert(100, PreconditioningMethod::Standard);
+            size_thresholds.insert(1000, PreconditioningMethod::BlockDiagonal);
+            size_thresholds.insert(10000, PreconditioningMethod::LowRank);
+
+            let criteria = SelectionCriteria {
+                size_thresholds,
+                condition_thresholds: BTreeMap::new(),
+                memory_constraints: MemoryConstraints {
+                    max_memory_per_layer: 1_000_000_000, // 1GB
+                    total_memory_budget: 10_000_000_000, // 10GB
+                    efficiency_threshold: 0.8,
+                },
+                performance_requirements: PerformanceRequirements {
+                    max_update_time: std::time::Duration::from_millis(100),
+                    target_convergence_rate: T::from(0.01).unwrap(),
+                    accuracy_tolerance: T::from(1e-6).unwrap(),
+                },
+            };
+
+            Self {
+                criteria,
+                transition_rules: Vec::new(),
+                current_methods: HashMap::new(),
+            }
+        }
+    }
+
+    impl<T: Float> MethodPerformanceTracker<T> {
+        pub fn new() -> Self {
+            Self {
+                metrics: HashMap::new(),
+                history: HashMap::new(),
+            }
+        }
+    }
+
+    impl<T: Float> StabilityAnalyzer<T> {
+        pub fn new() -> Self {
+            Self {
+                stability_metrics: StabilityMetrics::new(),
+                error_tracking: ErrorTracking::new(),
+                thresholds: StabilityThresholds::default(),
+                auto_stabilization: AutoStabilization::new(),
+            }
+        }
+    }
+
+    impl<T: Float> StabilityMetrics<T> {
+        pub fn new() -> Self {
+            Self {
+                numerical_errors: Vec::new(),
+                conditioning_indicators: ConditioningIndicators::new(),
+                convergence_stability: ConvergenceStability::new(),
+                update_magnitudes: VecDeque::with_capacity(1000),
+            }
+        }
+    }
+
+    impl<T: Float> ConditioningIndicators<T> {
+        pub fn new() -> Self {
+            Self {
+                condition_trends: VecDeque::with_capacity(100),
+                eigenvalue_spread: T::one(),
+                rank_indicators: RankIndicators::new(),
+                symmetry_preservation: T::one(),
+            }
+        }
+    }
+
+    impl<T: Float> RankIndicators<T> {
+        pub fn new() -> Self {
+            Self {
+                effective_rank: 0,
+                numerical_rank: 0,
+                null_space_dim: 0,
+                small_singular_values: Vec::new(),
+            }
+        }
+    }
+
+    impl<T: Float> ConvergenceStability<T> {
+        pub fn new() -> Self {
+            Self {
+                rate_history: VecDeque::with_capacity(100),
+                oscillation_detector: OscillationDetector::new(),
+                plateau_detector: PlateauDetector {
+                    min_improvement: T::from(1e-6).unwrap(),
+                    duration_threshold: 20,
+                    current_plateau_length: 0,
+                    in_plateau: false,
+                },
+                divergence_indicators: DivergenceIndicators::new(),
+            }
+        }
+    }
+
+    impl<T: Float> OscillationDetector<T> {
+        pub fn new() -> Self {
+            Self {
+                recent_values: VecDeque::with_capacity(50),
+                frequency_estimate: None,
+                amplitude: T::zero(),
+                threshold: T::from(0.1).unwrap(),
+            }
+        }
+    }
+
+    impl<T: Float> DivergenceIndicators<T> {
+        pub fn new() -> Self {
+            Self {
+                gradient_explosion: false,
+                parameter_drift: T::zero(),
+                loss_explosion: false,
+                update_explosion: false,
+            }
+        }
+    }
+
+    impl<T: Float> ErrorTracking<T> {
+        pub fn new() -> Self {
+            Self {
+                fp_error_accumulation: T::zero(),
+                roundoff_errors: VecDeque::with_capacity(100),
+                cancellation_detector: CancellationDetector::new(),
+                error_propagation: ErrorPropagation::new(),
+            }
+        }
+    }
+
+    impl<T: Float> CancellationDetector<T> {
+        pub fn new() -> Self {
+            Self {
+                bit_loss: Vec::new(),
+                cancellation_events: Vec::new(),
+                sensitivity: T::from(1e-10).unwrap(),
+            }
+        }
+    }
+
+    impl<T: Float> ErrorPropagation<T> {
+        pub fn new() -> Self {
+            Self {
+                input_sensitivity: T::one(),
+                amplification_factors: Vec::new(),
+                error_correlations: HashMap::new(),
+            }
+        }
+    }
+
+    impl<T: Float> Default for StabilityThresholds<T> {
+        fn default() -> Self {
+            Self {
+                max_condition_number: T::from(1e12).unwrap(),
+                min_eigenvalue: T::from(1e-8).unwrap(),
+                max_update_magnitude: T::from(10.0).unwrap(),
+                error_tolerance: T::from(1e-6).unwrap(),
+            }
+        }
+    }
+
+    impl<T: Float> AutoStabilization<T> {
+        pub fn new() -> Self {
+            Self {
+                enabled_techniques: vec![
+                    StabilizationTechnique::AdaptiveDamping,
+                    StabilizationTechnique::GradientClipping,
+                ],
+                intervention_history: Vec::new(),
+                adaptive_thresholds: true,
+            }
+        }
+    }
+
+    impl<T: Float> SecondOrderMomentum<T> {
+        pub fn new(config: MomentumConfig<T>) -> Self {
+            Self {
+                layer_momentum: HashMap::new(),
+                config,
+                adaptive_scheduling: AdaptiveMomentumScheduling::new(),
+                effectiveness_tracker: MomentumEffectivenessTracker::new(),
+            }
+        }
+    }
+
+    impl<T: Float> Default for MomentumConfig<T> {
+        fn default() -> Self {
+            Self {
+                enable_first_order: true,
+                enable_second_order: true,
+                enable_curvature_momentum: false,
+                base_beta1: T::from(0.9).unwrap(),
+                base_beta2: T::from(0.999).unwrap(),
+                warmup_steps: 1000,
+                annealing_schedule: AnnealingSchedule::Constant,
+                layer_adaptation: true,
+            }
+        }
+    }
+
+    impl<T: Float> AdaptiveMomentumScheduling<T> {
+        pub fn new() -> Self {
+            Self {
+                layer_schedules: HashMap::new(),
+                global_trends: MomentumTrends::new(),
+                strategy: MomentumSchedulingStrategy::LayerAdaptive,
+            }
+        }
+    }
+
+    impl<T: Float> MomentumTrends<T> {
+        pub fn new() -> Self {
+            Self {
+                avg_effectiveness: T::from(0.5).unwrap(),
+                trend_direction: TrendDirection::Stable,
+                trend_magnitude: T::zero(),
+                stability: T::one(),
+            }
+        }
+    }
+
+    impl<T: Float> MomentumEffectivenessTracker<T> {
+        pub fn new() -> Self {
+            Self {
+                layer_scores: HashMap::new(),
+                global_metrics: GlobalEffectivenessMetrics::new(),
+                baselines: EffectivenessBaselines::new(),
+            }
+        }
+    }
+
+    impl<T: Float> GlobalEffectivenessMetrics<T> {
+        pub fn new() -> Self {
+            Self {
+                total_convergence_improvement: T::zero(),
+                avg_layer_improvement: T::zero(),
+                effectiveness_variance: T::zero(),
+                overhead_ratio: T::from(0.1).unwrap(),
+            }
+        }
+    }
+
+    impl<T: Float> EffectivenessBaselines<T> {
+        pub fn new() -> Self {
+            Self {
+                no_momentum: T::zero(),
+                first_order_only: T::from(0.1).unwrap(),
+                standard_kfac: T::from(0.5).unwrap(),
             }
         }
     }

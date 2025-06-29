@@ -22,7 +22,7 @@ mod tests {
         // Known reference values from SciPy ndimage.gaussian_filter(input, sigma=1.0)
         // These values were computed with SciPy version 1.11.0
         let expected_center = 5.0; // Due to symmetry, center should remain close to 5
-        let result = gaussian_filter(&input, 1.0, None, None).unwrap();
+        let result = gaussian_filter(&input, 1.0, None, None).expect("gaussian_filter should succeed for SciPy reference test");
 
         // Center pixel should be close to original due to symmetry
         assert_abs_diff_eq!(result[[1, 1]], expected_center, epsilon = 0.5);
@@ -46,7 +46,7 @@ mod tests {
             [11.0, 12.0, 13.0, 14.0, 15.0]
         ];
 
-        let result = median_filter(&input, &[3, 3], None).unwrap();
+        let result = median_filter(&input, &[3, 3], None).expect("median_filter should succeed for SciPy reference test");
 
         // The outlier at (1,1) should be replaced by the median of its neighborhood
         // Neighborhood values: [1,2,3,6,100,8,11,12,13] -> median = 8
@@ -68,8 +68,8 @@ mod tests {
         ];
 
         // Test erosion followed by dilation (opening)
-        let eroded = binary_erosion(&input, None, None, None, None, None, None).unwrap();
-        let opened = binary_dilation(&eroded, None, None, None, None, None, None).unwrap();
+        let eroded = binary_erosion(&input, None, None, None, None, None, None).expect("binary_erosion should succeed for morphological test");
+        let opened = binary_dilation(&eroded, None, None, None, None, None, None).expect("binary_dilation should succeed for opening test");
 
         // Opening should result in smaller or equal region
         let input_sum: usize = input.iter().map(|&x| if x { 1 } else { 0 }).sum();
@@ -80,8 +80,8 @@ mod tests {
         );
 
         // Test dilation followed by erosion (closing)
-        let dilated = binary_dilation(&input, None, None, None, None, None, None).unwrap();
-        let closed = binary_erosion(&dilated, None, None, None, None, None, None).unwrap();
+        let dilated = binary_dilation(&input, None, None, None, None, None, None).expect("binary_dilation should succeed for closing test");
+        let closed = binary_erosion(&dilated, None, None, None, None, None, None).expect("binary_erosion should succeed for closing test");
 
         // Closing should result in larger or equal region
         let closed_sum: usize = closed.iter().map(|&x| if x { 1 } else { 0 }).sum();
@@ -105,7 +105,7 @@ mod tests {
             }
         });
 
-        let centroid = center_of_mass(&symmetric).unwrap();
+        let centroid = center_of_mass(&symmetric).expect("center_of_mass should succeed for symmetric object");
         assert_abs_diff_eq!(centroid[0], 5.0, epsilon = 0.1);
         assert_abs_diff_eq!(centroid[1], 5.0, epsilon = 0.1);
 
@@ -113,7 +113,7 @@ mod tests {
         let mut offset_test = Array2::zeros((10, 10));
         offset_test[[3, 7]] = 1.0;
 
-        let offset_centroid = center_of_mass(&offset_test).unwrap();
+        let offset_centroid = center_of_mass(&offset_test).expect("center_of_mass should succeed for offset test");
         assert_abs_diff_eq!(offset_centroid[0], 3.0, epsilon = 1e-10);
         assert_abs_diff_eq!(offset_centroid[1], 7.0, epsilon = 1e-10);
     }
@@ -123,7 +123,7 @@ mod tests {
     fn test_uniform_filter_properties() {
         // Uniform filter on constant array should preserve values
         let constant = Array2::from_elem((5, 5), 42.0);
-        let result = uniform_filter(&constant, &[3, 3], None, None).unwrap();
+        let result = uniform_filter(&constant, &[3, 3], None, None).expect("uniform_filter should succeed for constant array test");
 
         for &val in result.iter() {
             assert_abs_diff_eq!(val, 42.0, epsilon = 1e-10);
@@ -137,9 +137,9 @@ mod tests {
         let b = 3.0;
         let combined = &x * a + &y * b;
 
-        let filter_combined = uniform_filter(&combined, &[3, 3], None, None).unwrap();
-        let filter_x = uniform_filter(&x, &[3, 3], None, None).unwrap();
-        let filter_y = uniform_filter(&y, &[3, 3], None, None).unwrap();
+        let filter_combined = uniform_filter(&combined, &[3, 3], None, None).expect("uniform_filter should succeed for combined array");
+        let filter_x = uniform_filter(&x, &[3, 3], None, None).expect("uniform_filter should succeed for x array");
+        let filter_y = uniform_filter(&y, &[3, 3], None, None).expect("uniform_filter should succeed for y array");
         let linear_combination = &filter_x * a + &filter_y * b;
 
         // Should be approximately equal (within numerical precision)
@@ -155,8 +155,8 @@ mod tests {
         let input = Array2::from_shape_fn((5, 5), |(i, j)| (i * 5 + j) as f64);
 
         // Test minimum filter (0th percentile)
-        let min_result = minimum_filter(&input, &[3, 3], None, None).unwrap();
-        let max_result = maximum_filter(&input, &[3, 3], None, None).unwrap();
+        let min_result = minimum_filter(&input, &[3, 3], None, None).expect("minimum_filter should succeed for rank test");
+        let max_result = maximum_filter(&input, &[3, 3], None, None).expect("maximum_filter should succeed for rank test");
 
         // Minimum should be <= original values
         for (orig, min_val) in input.iter().zip(min_result.iter()) {
@@ -182,7 +182,7 @@ mod tests {
         // Identity transformation should preserve array
         let identity = array![[1.0, 0.0], [0.0, 1.0]];
         let result =
-            affine_transform(&input, &identity, None, None, None, None, None, None).unwrap();
+            affine_transform(&input, &identity, None, None, None, None, None, None).expect("affine_transform should succeed for identity transformation");
 
         for (orig, trans) in input.iter().zip(result.iter()) {
             assert_abs_diff_eq!(*orig, *trans, epsilon = 1e-6);
@@ -202,7 +202,7 @@ mod tests {
             None,
             None,
         )
-        .unwrap();
+        .expect("affine_transform should succeed for translation test");
 
         // Shape should be preserved
         assert_eq!(translated.shape(), input.shape());
@@ -215,7 +215,7 @@ mod tests {
         let input = Array2::from_shape_fn((10, 10), |(i, j)| i as f64 + j as f64);
 
         // Zoom by factor of 2 with linear interpolation
-        let zoomed = zoom(&input, &[2.0, 2.0], None, None, None, None).unwrap();
+        let zoomed = zoom(&input, &[2.0, 2.0], None, None, None, None).expect("zoom should succeed for interpolation accuracy test");
 
         // Result should be larger
         assert!(zoomed.nrows() > input.nrows());
@@ -241,9 +241,9 @@ mod tests {
 
         let labels = array![[1, 1, 2, 2], [1, 1, 2, 2], [3, 3, 4, 4], [3, 3, 4, 4]];
 
-        let sums = sum_labels(&values, &labels, None).unwrap();
-        let means = mean_labels(&values, &labels, None).unwrap();
-        let counts = count_labels(&labels, None).unwrap();
+        let sums = sum_labels(&values, &labels, None).expect("sum_labels should succeed for analytical test");
+        let means = mean_labels(&values, &labels, None).expect("mean_labels should succeed for analytical test");
+        let counts = count_labels(&labels, None).expect("count_labels should succeed for analytical test");
 
         // Each region has 4 pixels
         assert_eq!(counts[0], 4); // Region 1
@@ -272,13 +272,13 @@ mod tests {
         let volume_3d = Array3::from_shape_fn((8, 8, 5), |(i, j, _k)| (i + j) as f64);
 
         // Apply Gaussian filter to 2D slice
-        let filtered_2d = gaussian_filter(&slice_2d, 1.0, None, None).unwrap();
+        let filtered_2d = gaussian_filter(&slice_2d, 1.0, None, None).expect("gaussian_filter should succeed for 2D slice");
 
         // Apply Gaussian filter to each slice of 3D volume
         let mut consistent = true;
         for k in 0..5 {
             let slice = volume_3d.slice(ndarray::s![.., .., k]).to_owned();
-            let filtered_slice = gaussian_filter(&slice, 1.0, None, None).unwrap();
+            let filtered_slice = gaussian_filter(&slice, 1.0, None, None).expect("gaussian_filter should succeed for 3D slice");
 
             // Compare with 2D result
             for ((i, j), &val_2d) in filtered_2d.indexed_iter() {
@@ -301,18 +301,18 @@ mod tests {
     fn test_numerical_stability() {
         // Test with very small values
         let small_values = Array2::from_elem((5, 5), 1e-10);
-        let result_small = gaussian_filter(&small_values, 1.0, None, None).unwrap();
+        let result_small = gaussian_filter(&small_values, 1.0, None, None).expect("gaussian_filter should succeed for small values");
         assert!(result_small.iter().all(|&x| x.is_finite()));
 
         // Test with very large values
         let large_values = Array2::from_elem((5, 5), 1e10);
-        let result_large = gaussian_filter(&large_values, 1.0, None, None).unwrap();
+        let result_large = gaussian_filter(&large_values, 1.0, None, None).expect("gaussian_filter should succeed for large values");
         assert!(result_large.iter().all(|&x| x.is_finite()));
 
         // Test with mixed scale values
         let mixed =
             Array2::from_shape_fn((5, 5), |(i, j)| if (i + j) % 2 == 0 { 1e-5 } else { 1e5 });
-        let result_mixed = gaussian_filter(&mixed, 1.0, None, None).unwrap();
+        let result_mixed = gaussian_filter(&mixed, 1.0, None, None).expect("gaussian_filter should succeed for mixed scale values");
         assert!(result_mixed.iter().all(|&x| x.is_finite()));
     }
 }

@@ -433,7 +433,7 @@ pub mod stats_simd {
 
     /// Quantile calculation using SIMD-accelerated sorting
     pub fn quantile_simd(data: &ArrayView1<f64>, q: f64) -> f64 {
-        if data.is_empty() || q < 0.0 || q > 1.0 {
+        if data.is_empty() || !(0.0..=1.0).contains(&q) {
             return f64::NAN;
         }
 
@@ -556,7 +556,7 @@ impl SimdIoAccelerator {
     where
         T: Copy + Send + Sync,
     {
-        arrays.par_iter().map(|arr| processor(arr)).collect()
+        arrays.par_iter().map(processor).collect()
     }
 }
 

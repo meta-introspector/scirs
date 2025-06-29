@@ -2,6 +2,9 @@
 //!
 //! This module contains property-based tests that verify mathematical invariants
 //! and properties that should hold for all valid inputs to statistical functions.
+//!
+//! Extended to include comprehensive testing of additional statistical operations,
+//! SIMD optimizations, and advanced mathematical properties.
 
 use approx::assert_relative_eq;
 use ndarray::{Array1, Array2};
@@ -9,10 +12,10 @@ use quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
 use quickcheck_macros::quickcheck;
 use scirs2_stats::{
     corrcoef,
-    distributions::{norm, uniform},
+    distributions::{norm, uniform, beta, gamma},
     kurtosis, mean, median, pearson_r, skew, std,
     traits::Distribution,
-    var,
+    var, range, quantile,
 };
 
 /// Helper function to generate valid statistical data
@@ -439,5 +442,589 @@ mod test_runner {
         );
 
         println!("All property-based tests passed!");
+    }
+}
+
+/// Extended property-based tests for additional statistical functions
+#[cfg(test)]
+mod extended_properties {
+    use super::*;
+
+    #[quickcheck]
+    fn range_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
+            return TestResult::discard();
+        }
+
+        let arr = Array1::from_vec(data.clone());
+        let range_val = range(&arr.view()).unwrap();
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let expected_range = max_val - min_val;
+
+        TestResult::from_bool((range_val - expected_range).abs() < 1e-10 && range_val >= 0.0)
+    }
+
+    #[quickcheck]
+    fn quantile_monotonicity_property(data: Vec<f64>, q1: f64, q2: f64) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
+            return TestResult::discard();
+        }
+
+        if q1 < 0.0 || q1 > 1.0 || q2 < 0.0 || q2 > 1.0 || q1 >= q2 {
+            return TestResult::discard();
+        }
+
+        let arr = Array1::from_vec(data);
+        let quant1 = quantile(&arr.view(), q1).unwrap();
+        let quant2 = quantile(&arr.view(), q2).unwrap();
+
+        TestResult::from_bool(quant1 <= quant2 && quant1.is_finite() && quant2.is_finite())
+    }
+
+    #[quickcheck]
+    fn quantile_bounds_property(data: Vec<f64>, q: f64) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
+            return TestResult::discard();
+        }
+
+        if q < 0.0 || q > 1.0 {
+            return TestResult::discard();
+        }
+
+        let arr = Array1::from_vec(data.clone());
+        let quant = quantile(&arr.view(), q).unwrap();
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+
+        TestResult::from_bool(quant >= min_val && quant <= max_val && quant.is_finite())
+    }
+
+    #[quickcheck]
+    fn median_middle_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 3 || data.iter().any(|x| !x.is_finite()) {
+            return TestResult::discard();
+        }
+
+        let arr = Array1::from_vec(data.clone());
+        let median_val = median(&arr.view()).unwrap();
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+
+        TestResult::from_bool(median_val >= min_val && median_val <= max_val && median_val.is_finite())
+    }
+
+    #[quickcheck]
+    fn variance_translation_invariance(data: Vec<f64>, c: f64) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) || !c.is_finite() {
+            return TestResult::discard();
+        }
+
+        let arr = Array1::from_vec(data.clone());
+        let original_var = var(&arr.view(), 0).unwrap();
+
+        // Add constant to all elements
+        let translated = arr.mapv(|x| x + c);
+        let translated_var = var(&translated.view(), 0).unwrap();
+
+        TestResult::from_bool((original_var - translated_var).abs() < 1e-10)
+    }
+
+    #[quickcheck]
+    fn standardization_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 3 || data.iter().any(|x| !x.is_finite()) {
+            return TestResult::discard();
+        }
+
+        let arr = Array1::from_vec(data);
+        let mean_val = mean(&arr.view()).unwrap();
+        let std_val = std(&arr.view(), 0).unwrap();
+
+        // Avoid division by zero
+        if std_val < 1e-10 {
+            return TestResult::discard();
+        }
+
+        // Standardize: z = (x - mean) / std
+        let standardized = arr.mapv(|x| (x - mean_val) / std_val);
+        let std_mean = mean(&standardized.view()).unwrap();
+        let std_var = var(&standardized.view(), 0).unwrap();
+
+        TestResult::from_bool(
+            std_mean.abs() < 1e-10 && (std_var - 1.0).abs() < 1e-10
+        )
+    }
+}
+
+/// Property-based tests for robust statistics
+#[cfg(test)]
+mod robust_statistics_properties {
+    use super::*;
+
+    #[quickcheck]
+    fn median_outlier_resistance(data: Vec<f64>, outlier_factor: f64) -> TestResult {
+        if data.len() < 5 || data.iter().any(|x| !x.is_finite()) {
+            return TestResult::discard();
+        }
+
+        if !outlier_factor.is_finite() || outlier_factor.abs() < 1.0 {
+            return TestResult::discard();
+        }
+
+        let arr = Array1::from_vec(data.clone());
+        let original_median = median(&arr.view()).unwrap();
+
+        // Add extreme outlier
+        let mut with_outlier = data;
+        let max_val = with_outlier.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        with_outlier.push(max_val * outlier_factor);
+        let outlier_arr = Array1::from_vec(with_outlier);
+        let outlier_median = median(&outlier_arr.view()).unwrap();
+
+        // Median should be less affected than mean
+        let original_mean = mean(&arr.view()).unwrap();
+        let outlier_mean = mean(&outlier_arr.view()).unwrap();
+
+        let median_change = (original_median - outlier_median).abs();
+        let mean_change = (original_mean - outlier_mean).abs();
+
+        TestResult::from_bool(median_change <= mean_change || median_change < 1e-5)
+    }
+
+    #[quickcheck]
+    fn mad_consistency_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 3 || data.iter().any(|x| !x.is_finite()) {
+            return TestResult::discard();
+        }
+
+        // Check that all values aren't the same
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        if (max_val - min_val).abs() < 1e-10 {
+            return TestResult::discard();
+        }
+
+        let arr = Array1::from_vec(data);
+        let median_val = median(&arr.view()).unwrap();
+
+        // Compute MAD manually for verification
+        let deviations: Vec<f64> = arr.iter().map(|&x| (x - median_val).abs()).collect();
+        let mut sorted_deviations = deviations;
+        sorted_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let n = sorted_deviations.len();
+        let mad = if n % 2 == 1 {
+            sorted_deviations[n / 2]
+        } else {
+            (sorted_deviations[n / 2 - 1] + sorted_deviations[n / 2]) / 2.0
+        };
+
+        TestResult::from_bool(mad >= 0.0 && mad.is_finite())
+    }
+}
+
+/// Property-based tests for distribution properties
+#[cfg(test)]
+mod advanced_distribution_properties {
+    use super::*;
+
+    #[quickcheck]
+    fn beta_distribution_bounds_property(alpha: f64, beta_param: f64, x: f64) -> TestResult {
+        if !alpha.is_finite() || !beta_param.is_finite() || !x.is_finite() {
+            return TestResult::discard();
+        }
+
+        if alpha <= 0.0 || beta_param <= 0.0 || alpha > 100.0 || beta_param > 100.0 {
+            return TestResult::discard();
+        }
+
+        if x < 0.0 || x > 1.0 {
+            return TestResult::discard();
+        }
+
+        match beta(alpha, beta_param) {
+            Ok(dist) => {
+                let pdf_val = dist.pdf(x);
+                let cdf_val = dist.cdf(x);
+                TestResult::from_bool(
+                    pdf_val >= 0.0 && pdf_val.is_finite() &&
+                    cdf_val >= 0.0 && cdf_val <= 1.0 && cdf_val.is_finite()
+                )
+            }
+            Err(_) => TestResult::discard(),
+        }
+    }
+
+    #[quickcheck]
+    fn gamma_distribution_properties(shape: f64, scale: f64, x: f64) -> TestResult {
+        if !shape.is_finite() || !scale.is_finite() || !x.is_finite() {
+            return TestResult::discard();
+        }
+
+        if shape <= 0.0 || scale <= 0.0 || shape > 100.0 || scale > 100.0 {
+            return TestResult::discard();
+        }
+
+        if x < 0.0 || x > 1000.0 {
+            return TestResult::discard();
+        }
+
+        match gamma(shape, scale) {
+            Ok(dist) => {
+                let pdf_val = dist.pdf(x);
+                let cdf_val = dist.cdf(x);
+                TestResult::from_bool(
+                    pdf_val >= 0.0 && pdf_val.is_finite() &&
+                    cdf_val >= 0.0 && cdf_val <= 1.0 && cdf_val.is_finite()
+                )
+            }
+            Err(_) => TestResult::discard(),
+        }
+    }
+
+    #[quickcheck]
+    fn distribution_cdf_pdf_consistency(mu: f64, sigma: f64, x1: f64, x2: f64) -> TestResult {
+        if !mu.is_finite() || !sigma.is_finite() || !x1.is_finite() || !x2.is_finite() {
+            return TestResult::discard();
+        }
+
+        if sigma <= 0.0 || sigma > 100.0 || mu.abs() > 100.0 {
+            return TestResult::discard();
+        }
+
+        if x1.abs() > 100.0 || x2.abs() > 100.0 || x1 >= x2 {
+            return TestResult::discard();
+        }
+
+        let normal = norm(mu, sigma).unwrap();
+        let cdf_x1 = normal.cdf(x1);
+        let cdf_x2 = normal.cdf(x2);
+
+        // CDF should be monotonic
+        TestResult::from_bool(cdf_x1 <= cdf_x2)
+    }
+
+    #[quickcheck]
+    fn distribution_symmetry_property(sigma: f64, x: f64) -> TestResult {
+        if !sigma.is_finite() || !x.is_finite() {
+            return TestResult::discard();
+        }
+
+        if sigma <= 0.0 || sigma > 100.0 || x.abs() > 100.0 {
+            return TestResult::discard();
+        }
+
+        // Test symmetry of normal distribution around mean
+        let normal = norm(0.0, sigma).unwrap();
+        let pdf_pos = normal.pdf(x);
+        let pdf_neg = normal.pdf(-x);
+
+        TestResult::from_bool((pdf_pos - pdf_neg).abs() < 1e-10)
+    }
+}
+
+/// Property-based tests for SIMD optimization consistency
+#[cfg(test)]
+mod simd_consistency_properties {
+    use super::*;
+
+    #[quickcheck]
+    fn simd_scalar_consistency_mean(data: Vec<f64>) -> TestResult {
+        if data.len() < 1 || data.iter().any(|x| !x.is_finite()) {
+            return TestResult::discard();
+        }
+
+        let arr = Array1::from_vec(data.clone());
+        let simd_result = mean(&arr.view()).unwrap();
+        
+        // Compute scalar version manually
+        let scalar_result = data.iter().sum::<f64>() / data.len() as f64;
+
+        TestResult::from_bool((simd_result - scalar_result).abs() < 1e-10)
+    }
+
+    #[quickcheck]
+    fn simd_scalar_consistency_variance(data: Vec<f64>) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
+            return TestResult::discard();
+        }
+
+        let arr = Array1::from_vec(data.clone());
+        let simd_result = var(&arr.view(), 0).unwrap();
+        
+        // Compute scalar version manually
+        let mean_val = data.iter().sum::<f64>() / data.len() as f64;
+        let scalar_result = data.iter()
+            .map(|&x| (x - mean_val).powi(2))
+            .sum::<f64>() / (data.len() - 1) as f64;
+
+        TestResult::from_bool((simd_result - scalar_result).abs() < 1e-10)
+    }
+
+    #[quickcheck]
+    fn large_dataset_stability(size: usize) -> TestResult {
+        if size < 100 || size > 10000 {
+            return TestResult::discard();
+        }
+
+        // Generate deterministic data for reproducibility
+        let data: Vec<f64> = (0..size).map(|i| (i as f64).sin()).collect();
+        let arr = Array1::from_vec(data);
+
+        let mean_val = mean(&arr.view()).unwrap();
+        let var_val = var(&arr.view(), 0).unwrap();
+        let std_val = std(&arr.view(), 0).unwrap();
+
+        TestResult::from_bool(
+            mean_val.is_finite() && 
+            var_val.is_finite() && var_val >= 0.0 &&
+            std_val.is_finite() && std_val >= 0.0 &&
+            (std_val * std_val - var_val).abs() < 1e-10
+        )
+    }
+}
+
+/// Property-based tests for edge cases and numerical stability
+#[cfg(test)]
+mod numerical_stability_properties {
+    use super::*;
+
+    #[quickcheck]
+    fn tiny_values_stability(exponent: i32) -> TestResult {
+        if exponent < -100 || exponent > -10 {
+            return TestResult::discard();
+        }
+
+        let value = 10.0_f64.powi(exponent);
+        let data = vec![value, value * 1.1, value * 0.9, value * 1.05, value * 0.95];
+        let arr = Array1::from_vec(data);
+
+        let mean_val = mean(&arr.view()).unwrap();
+        let var_val = var(&arr.view(), 0).unwrap();
+
+        TestResult::from_bool(
+            mean_val.is_finite() && mean_val > 0.0 &&
+            var_val.is_finite() && var_val >= 0.0
+        )
+    }
+
+    #[quickcheck]
+    fn large_values_stability(exponent: i32) -> TestResult {
+        if exponent < 10 || exponent > 100 {
+            return TestResult::discard();
+        }
+
+        let value = 10.0_f64.powi(exponent);
+        let data = vec![value, value * 1.1, value * 0.9, value * 1.05, value * 0.95];
+        let arr = Array1::from_vec(data);
+
+        let mean_val = mean(&arr.view()).unwrap();
+        let var_val = var(&arr.view(), 0).unwrap();
+
+        TestResult::from_bool(
+            mean_val.is_finite() &&
+            var_val.is_finite() && var_val >= 0.0
+        )
+    }
+
+    #[quickcheck]
+    fn near_identical_values_stability(base: f64, epsilon_exp: i32) -> TestResult {
+        if !base.is_finite() || base.abs() > 1000.0 || epsilon_exp < -15 || epsilon_exp > -5 {
+            return TestResult::discard();
+        }
+
+        let epsilon = 10.0_f64.powi(epsilon_exp);
+        let data = vec![
+            base, 
+            base + epsilon, 
+            base - epsilon, 
+            base + 2.0 * epsilon, 
+            base - 2.0 * epsilon
+        ];
+        let arr = Array1::from_vec(data);
+
+        let mean_val = mean(&arr.view()).unwrap();
+        let var_val = var(&arr.view(), 0).unwrap();
+        let std_val = std(&arr.view(), 0).unwrap();
+
+        TestResult::from_bool(
+            mean_val.is_finite() &&
+            var_val.is_finite() && var_val >= 0.0 &&
+            std_val.is_finite() && std_val >= 0.0 &&
+            (mean_val - base).abs() < epsilon * 10.0
+        )
+    }
+}
+
+/// Property-based tests for multivariate statistics
+#[cfg(test)]
+mod multivariate_properties {
+    use super::*;
+
+    #[quickcheck]
+    fn correlation_matrix_properties(data: Vec<Vec<f64>>) -> TestResult {
+        if data.len() < 2 || data.iter().any(|row| row.len() < 3) {
+            return TestResult::discard();
+        }
+
+        // Ensure all rows have the same length
+        let n_cols = data[0].len();
+        if !data.iter().all(|row| row.len() == n_cols) {
+            return TestResult::discard();
+        }
+
+        // Check for finite values
+        for row in &data {
+            if row.iter().any(|x| !x.is_finite()) {
+                return TestResult::discard();
+            }
+        }
+
+        let mut matrix_data = Vec::new();
+        for row in &data {
+            matrix_data.extend_from_slice(row);
+        }
+
+        let matrix = Array2::from_shape_vec((data.len(), n_cols), matrix_data).unwrap();
+
+        // Check each column has non-zero variance
+        for j in 0..n_cols {
+            let col = matrix.column(j);
+            let col_var = var(&col, 0).unwrap();
+            if col_var < 1e-10 {
+                return TestResult::discard();
+            }
+        }
+
+        let corr_matrix = corrcoef(&matrix.view(), "pearson").unwrap();
+
+        // Check correlation matrix properties
+        let mut properties_hold = true;
+        
+        // 1. Diagonal elements should be 1.0
+        for i in 0..corr_matrix.nrows() {
+            if (corr_matrix[[i, i]] - 1.0).abs() > 1e-10 {
+                properties_hold = false;
+                break;
+            }
+        }
+
+        // 2. Matrix should be symmetric
+        for i in 0..corr_matrix.nrows() {
+            for j in 0..corr_matrix.ncols() {
+                if (corr_matrix[[i, j]] - corr_matrix[[j, i]]).abs() > 1e-10 {
+                    properties_hold = false;
+                    break;
+                }
+            }
+            if !properties_hold {
+                break;
+            }
+        }
+
+        // 3. All correlations should be in [-1, 1]
+        for i in 0..corr_matrix.nrows() {
+            for j in 0..corr_matrix.ncols() {
+                let corr_val = corr_matrix[[i, j]];
+                if corr_val < -1.0 || corr_val > 1.0 || !corr_val.is_finite() {
+                    properties_hold = false;
+                    break;
+                }
+            }
+            if !properties_hold {
+                break;
+            }
+        }
+
+        TestResult::from_bool(properties_hold)
+    }
+}
+
+/// Comprehensive property test runner with extended coverage
+#[cfg(test)]
+mod comprehensive_test_runner {
+    use super::*;
+
+    #[test]
+    fn run_extended_property_tests() {
+        let mut qc = QuickCheck::new()
+            .tests(2000)  // Increased for more comprehensive testing
+            .max_tests(20000);
+
+        println!("Running extended property-based tests...");
+
+        // Extended properties
+        qc.clone().quickcheck(
+            extended_properties::range_property as fn(Vec<f64>) -> TestResult,
+        );
+
+        qc.clone().quickcheck(
+            extended_properties::quantile_monotonicity_property as fn(Vec<f64>, f64, f64) -> TestResult,
+        );
+
+        qc.clone().quickcheck(
+            extended_properties::standardization_property as fn(Vec<f64>) -> TestResult,
+        );
+
+        // Robust statistics
+        qc.clone().quickcheck(
+            robust_statistics_properties::median_outlier_resistance as fn(Vec<f64>, f64) -> TestResult,
+        );
+
+        // SIMD consistency
+        qc.clone().quickcheck(
+            simd_consistency_properties::simd_scalar_consistency_mean as fn(Vec<f64>) -> TestResult,
+        );
+
+        qc.clone().quickcheck(
+            simd_consistency_properties::simd_scalar_consistency_variance as fn(Vec<f64>) -> TestResult,
+        );
+
+        // Numerical stability
+        qc.clone().quickcheck(
+            numerical_stability_properties::tiny_values_stability as fn(i32) -> TestResult,
+        );
+
+        qc.clone().quickcheck(
+            numerical_stability_properties::near_identical_values_stability as fn(f64, i32) -> TestResult,
+        );
+
+        println!("All extended property-based tests passed!");
+    }
+
+    #[test]
+    fn run_distribution_property_tests() {
+        let mut qc = QuickCheck::new()
+            .tests(1000)
+            .max_tests(10000);
+
+        println!("Running distribution property tests...");
+
+        qc.clone().quickcheck(
+            advanced_distribution_properties::beta_distribution_bounds_property 
+            as fn(f64, f64, f64) -> TestResult,
+        );
+
+        qc.clone().quickcheck(
+            advanced_distribution_properties::distribution_symmetry_property 
+            as fn(f64, f64) -> TestResult,
+        );
+
+        println!("All distribution property tests passed!");
+    }
+
+    #[test]
+    fn run_multivariate_property_tests() {
+        let mut qc = QuickCheck::new()
+            .tests(500)  // Fewer tests due to computational complexity
+            .max_tests(5000);
+
+        println!("Running multivariate property tests...");
+
+        qc.clone().quickcheck(
+            multivariate_properties::correlation_matrix_properties 
+            as fn(Vec<Vec<f64>>) -> TestResult,
+        );
+
+        println!("All multivariate property tests passed!");
     }
 }

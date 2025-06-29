@@ -271,7 +271,8 @@ mod tests {
         let array = Array1::from_vec(vec![1.0, 2.0, 3.0, 100.0, 5.0]);
 
         // Apply median filter with size 3
-        let result = median_filter(&array, &[3], None).unwrap();
+        let result = median_filter(&array, &[3], None)
+            .expect("median_filter should succeed for test");
 
         // Check dimensions
         assert_eq!(result.shape(), array.shape());
@@ -287,7 +288,8 @@ mod tests {
         image[[2, 2]] = 100.0; // Center pixel is an outlier
 
         // Apply filter
-        let result = median_filter(&image, &[3, 3], None).unwrap();
+        let result = median_filter(&image, &[3, 3], None)
+            .expect("median_filter should succeed for test");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), image.shape());
@@ -302,7 +304,8 @@ mod tests {
         let array = Array1::from_vec(vec![1.0, 0.0, 1.0, 0.0, 100.0, 1.0, 0.0, 1.0, 0.0]);
 
         // Apply median filter with size 3
-        let result = median_filter(&array, &[3], None).unwrap();
+        let result = median_filter(&array, &[3], None)
+            .expect("median_filter should succeed for test");
 
         // Check that noise is reduced
         assert_eq!(result[4], 1.0); // [0, 1, 100] -> median = 1
@@ -326,7 +329,8 @@ mod tests {
         let array = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 
         // Apply median filter with an even size (should still work, using the middle-right value)
-        let result = median_filter(&array, &[4], None).unwrap();
+        let result = median_filter(&array, &[4], None)
+            .expect("median_filter should succeed for test");
 
         // Should still have the same dimensions
         assert_eq!(result.shape(), array.shape());
@@ -353,7 +357,8 @@ mod tests {
         cube[[1, 1, 1]] = 100.0; // Center voxel is an outlier
 
         // Apply median filter with size [3, 3, 3]
-        let result = median_filter(&cube, &[3, 3, 3], None).unwrap();
+        let result = median_filter(&cube, &[3, 3, 3], None)
+            .expect("median_filter should succeed for test");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), cube.shape());
@@ -370,7 +375,8 @@ mod tests {
         noise_cube[[2, 3, 1]] = 50.0;
 
         // Apply median filter
-        let filtered = median_filter(&noise_cube, &[3, 3, 3], None).unwrap();
+        let filtered = median_filter(&noise_cube, &[3, 3, 3], None)
+            .expect("median_filter should succeed for test");
 
         // Check that outliers are removed or reduced
         assert!(filtered[[1, 2, 3]].abs() < 100.0);

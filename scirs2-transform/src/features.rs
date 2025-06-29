@@ -577,6 +577,270 @@ where
 /// * `Result<Array2<f64>>` - The transformed array
 ///
 /// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_transform::features::power_transform;
+///
+/// let data = array![[1.0, 2.0, 3.0],
+///                   [4.0, 5.0, 6.0],
+///                   [7.0, 8.0, 9.0]];
+///                   
+/// let transformed = power_transform(&data, "yeo-johnson", true).unwrap();
+/// ```
+pub fn power_transform<S>(
+    array: &ArrayBase<S, Ix2>,
+    method: &str,
+    standardize: bool,
+) -> Result<Array2<f64>>
+where
+    S: Data,
+    S::Elem: Float + NumCast,
+{
+    let array_f64 = array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
+
+    if !array_f64.is_standard_layout() {
+        return Err(TransformError::InvalidInput(
+            "Input array must be in standard memory layout".to_string(),
+        ));
+    }
+
+    if method != "box-cox" && method != "yeo-johnson" {
+        return Err(TransformError::InvalidInput(format!(
+            "Unknown method: {}. Supported methods are 'box-cox' and 'yeo-johnson'",
+            method
+        )));
+    }
+
+    let shape = array_f64.shape();
+    let n_samples = shape[0];
+    let n_features = shape[1];
+
+    let mut transformed = Array2::zeros((n_samples, n_features));
+
+    // For each feature, find the optimal lambda and apply the transformation
+    for j in 0..n_features {
+        let feature = array_f64.column(j).to_vec();
+
+        // Maximum likelihood estimation of lambda
+        let lambda = estimate_optimal_lambda(&feature, method)?;
+
+        // Apply the transformation
+        for i in 0..n_samples {
+            let x = array_f64[[i, j]];
+            
+            let transformed_value = match method {
+                "box-cox" => {
+                    if lambda.abs() < 1e-10 {
+                        x.ln()
+                    } else {
+                        (x.powf(lambda) - 1.0) / lambda
+                    }
+                }
+                "yeo-johnson" => {
+                    if x >= 0.0 {
+                        if lambda.abs() < 1e-10 {
+                            x.ln_1p()
+                        } else {
+                            ((1.0 + x).powf(lambda) - 1.0) / lambda
+                        }
+                    } else {
+                        if (2.0 - lambda).abs() < 1e-10 {
+                            -((-x + 1.0).ln())
+                        } else {
+                            -((-x + 1.0).powf(2.0 - lambda) - 1.0) / (2.0 - lambda)
+                        }
+                    }
+                }
+                _ => unreachable!() // Already validated above
+            };
+            
+            transformed[[i, j]] = transformed_value;
+        }
+    }
+
+    // Optionally standardize the transformed data
+    if standardize {
+        for j in 0..n_features {
+            let mut column_data: Vec<f64> = transformed.column(j).to_vec();
+            let mean = column_data.iter().sum::<f64>() / column_data.len() as f64;
+            let variance = column_data.iter()
+                .map(|x| (x - mean).powi(2))
+                .sum::<f64>() / column_data.len() as f64;
+            let std_dev = variance.sqrt();
+            
+            if std_dev > 1e-10 {
+                for i in 0..n_samples {
+                    transformed[[i, j]] = (transformed[[i, j]] - mean) / std_dev;
+                }
+            }
+        }
+    }
+
+    Ok(transformed)
+}
+
+/// Estimate optimal lambda parameter using maximum likelihood estimation
+fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
+    if data.is_empty() {
+        return Err(TransformError::InvalidInput("Empty data for lambda estimation".to_string()));
+    }
+    
+    // Check data constraints based on transformation method
+    if method == "box-cox" {
+        // Box-Cox requires all positive values
+        if data.iter().any(|&x| x <= 0.0) {
+            return Err(TransformError::InvalidInput(
+                "Box-Cox transformation requires all positive values".to_string()
+            ));
+        }
+    }
+    
+    // Define search range for lambda
+    let lambda_range = if method == "box-cox" {
+        vec![-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0]
+    } else {
+        vec![-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0]
+    };
+    
+    let mut best_lambda = 0.0;
+    let mut best_log_likelihood = f64::NEG_INFINITY;
+    
+    // Grid search for optimal lambda
+    for &lambda in &lambda_range {
+        let log_likelihood = compute_log_likelihood(data, lambda, method)?;
+        
+        if log_likelihood > best_log_likelihood {
+            best_log_likelihood = log_likelihood;
+            best_lambda = lambda;
+        }
+    }
+    
+    // Refine with golden section search around the best point
+    let tolerance = 1e-6;
+    let refined_lambda = golden_section_search(
+        data, 
+        method,
+        best_lambda - 0.5,
+        best_lambda + 0.5,
+        tolerance
+    )?;
+    
+    Ok(refined_lambda)
+}
+
+/// Compute log-likelihood for given lambda parameter
+fn compute_log_likelihood(data: &[f64], lambda: f64, method: &str) -> Result<f64> {
+    let n = data.len() as f64;
+    let mut transformed_data = Vec::with_capacity(data.len());
+    let mut jacobian_sum = 0.0;
+    
+    // Apply transformation and compute Jacobian
+    for &x in data {
+        let (y, jacobian) = match method {
+            "box-cox" => {
+                if x <= 0.0 {
+                    return Ok(f64::NEG_INFINITY); // Invalid for Box-Cox
+                }
+                let y = if lambda.abs() < 1e-10 {
+                    x.ln()
+                } else {
+                    (x.powf(lambda) - 1.0) / lambda
+                };
+                let jacobian = x.ln();
+                (y, jacobian)
+            }
+            "yeo-johnson" => {
+                let (y, jacobian) = if x >= 0.0 {
+                    if lambda.abs() < 1e-10 {
+                        (x.ln_1p(), (1.0 + x).ln())
+                    } else {
+                        let y = ((1.0 + x).powf(lambda) - 1.0) / lambda;
+                        let jacobian = (1.0 + x).ln();
+                        (y, jacobian)
+                    }
+                } else {
+                    if (2.0 - lambda).abs() < 1e-10 {
+                        (-((-x + 1.0).ln()), -(1.0 - x).ln())
+                    } else {
+                        let y = -((-x + 1.0).powf(2.0 - lambda) - 1.0) / (2.0 - lambda);
+                        let jacobian = -(1.0 - x).ln();
+                        (y, jacobian)
+                    }
+                };
+                (y, jacobian)
+            }
+            _ => return Err(TransformError::InvalidInput(format!("Unknown method: {}", method)))
+        };
+        
+        if !y.is_finite() {
+            return Ok(f64::NEG_INFINITY);
+        }
+        
+        transformed_data.push(y);
+        jacobian_sum += jacobian;
+    }
+    
+    // Compute sample variance of transformed data
+    let mean = transformed_data.iter().sum::<f64>() / n;
+    let variance = transformed_data.iter()
+        .map(|y| (y - mean).powi(2))
+        .sum::<f64>() / n;
+    
+    if variance <= 0.0 {
+        return Ok(f64::NEG_INFINITY);
+    }
+    
+    // Log-likelihood calculation
+    let log_likelihood = -0.5 * n * (2.0 * std::f64::consts::PI).ln()
+        - 0.5 * n * variance.ln()
+        - 0.5 * n
+        + (lambda - 1.0) * jacobian_sum;
+    
+    Ok(log_likelihood)
+}
+
+/// Golden section search for optimal lambda
+fn golden_section_search(
+    data: &[f64],
+    method: &str,
+    mut a: f64,
+    mut b: f64,
+    tolerance: f64,
+) -> Result<f64> {
+    let phi = (1.0 + 5.0_f64.sqrt()) / 2.0; // Golden ratio
+    let resphi = 2.0 - phi;
+    
+    // Initial points
+    let mut x1 = a + resphi * (b - a);
+    let mut x2 = a + (1.0 - resphi) * (b - a);
+    
+    let mut f1 = compute_log_likelihood(data, x1, method)?;
+    let mut f2 = compute_log_likelihood(data, x2, method)?;
+    
+    for _ in 0..100 { // Maximum iterations
+        if (b - a).abs() < tolerance {
+            break;
+        }
+        
+        if f1 > f2 {
+            b = x2;
+            x2 = x1;
+            f2 = f1;
+            x1 = a + resphi * (b - a);
+            f1 = compute_log_likelihood(data, x1, method)?;
+        } else {
+            a = x1;
+            x1 = x2;
+            f1 = f2;
+            x2 = a + (1.0 - resphi) * (b - a);
+            f2 = compute_log_likelihood(data, x2, method)?;
+        }
+    }
+    
+    Ok((a + b) / 2.0)
+}
+
 /// ```
 /// use ndarray::array;
 /// use scirs2_transform::features::power_transform;
@@ -627,18 +891,10 @@ where
 
     // For each feature, find the optimal lambda and apply the transformation
     for j in 0..n_features {
-        // Feature data (unused in this simplified implementation)
-        let _feature = array_f64.column(j).to_vec();
+        let feature = array_f64.column(j).to_vec();
 
-        // Simplified estimation of lambda
-        // In practice, you would use maximum likelihood estimation
-        let lambda = if method == "yeo-johnson" {
-            // For Yeo-Johnson, lambda = 1 is a reasonable default
-            1.0
-        } else {
-            // For Box-Cox, lambda = 0 (log transform) is a reasonable default
-            0.0
-        };
+        // Maximum likelihood estimation of lambda
+        let lambda = estimate_optimal_lambda(&feature, method)?;
 
         // Apply the transformation
         for i in 0..n_samples {

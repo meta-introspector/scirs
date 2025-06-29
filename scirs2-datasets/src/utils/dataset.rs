@@ -96,6 +96,35 @@ impl Dataset {
         }
     }
 
+    /// Create a new dataset with the given data, target, and metadata
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The feature matrix (n_samples, n_features)
+    /// * `target` - Optional target values (n_samples,)
+    /// * `metadata` - Dataset metadata information
+    ///
+    /// # Returns
+    ///
+    /// A new Dataset instance with metadata applied
+    pub fn from_metadata(data: Array2<f64>, target: Option<Array1<f64>>, metadata: crate::registry::DatasetMetadata) -> Self {
+        let mut dataset_metadata = HashMap::new();
+        dataset_metadata.insert("name".to_string(), metadata.name);
+        dataset_metadata.insert("task_type".to_string(), metadata.task_type);
+        dataset_metadata.insert("n_samples".to_string(), metadata.n_samples.to_string());
+        dataset_metadata.insert("n_features".to_string(), metadata.n_features.to_string());
+
+        Dataset {
+            data,
+            target,
+            target_names: metadata.target_names,
+            feature_names: None,
+            feature_descriptions: None,
+            description: Some(metadata.description),
+            metadata: dataset_metadata,
+        }
+    }
+
     /// Add target names to the dataset (builder pattern)
     ///
     /// # Arguments

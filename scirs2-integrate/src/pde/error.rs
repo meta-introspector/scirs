@@ -27,6 +27,15 @@ pub enum PDEError {
     /// Error with spectral method computation
     SpectralError(String),
 
+    /// Error with grid specification or configuration
+    InvalidGrid(String),
+
+    /// Error with parameter specification
+    InvalidParameter(String),
+
+    /// General computation error
+    ComputationError(String),
+
     /// Underlying ODE solver error during method of lines integration
     ODEError(IntegrateError),
 
@@ -44,6 +53,9 @@ impl fmt::Display for PDEError {
             PDEError::FiniteDifferenceError(msg) => write!(f, "Finite difference error: {}", msg),
             PDEError::FiniteElementError(msg) => write!(f, "Finite element error: {}", msg),
             PDEError::SpectralError(msg) => write!(f, "Spectral method error: {}", msg),
+            PDEError::InvalidGrid(msg) => write!(f, "Invalid grid error: {}", msg),
+            PDEError::InvalidParameter(msg) => write!(f, "Invalid parameter error: {}", msg),
+            PDEError::ComputationError(msg) => write!(f, "Computation error: {}", msg),
             PDEError::ODEError(err) => write!(f, "ODE solver error: {}", err),
             PDEError::Other(msg) => write!(f, "PDE error: {}", msg),
         }

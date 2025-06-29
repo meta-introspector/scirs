@@ -205,7 +205,7 @@ impl DeepWalk {
         let n_nodes = adjacency.shape()[0];
         let mut walks = Vec::with_capacity(n_nodes * self.n_walks);
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Build neighbor lists for efficient sampling
         let mut neighbors: Vec<Vec<usize>> = vec![Vec::new(); n_nodes];
@@ -246,7 +246,7 @@ impl DeepWalk {
 
     /// Train embeddings using Skip-gram with negative sampling
     fn train_embeddings(&self, walks: &[Vec<usize>], n_nodes: usize) -> Array2<f64> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Initialize embeddings randomly
         let mut embeddings = Array2::zeros((n_nodes, self.embedding_dim));
@@ -569,7 +569,7 @@ impl GraphAutoencoder {
             )));
         }
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Initialize weights
         let mut encoder_weights = Vec::new();

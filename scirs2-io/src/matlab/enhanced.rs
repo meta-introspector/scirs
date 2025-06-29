@@ -679,7 +679,7 @@ pub fn create_complex_array(real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatT
     }
 
     // Create a complex array by combining real and imaginary parts
-    let complex_array =
+    let _complex_array =
         ArrayD::from_shape_fn(real.raw_dim(), |idx| Complex64::new(real[&idx], imag[&idx]));
 
     // For now, store as a struct with real and imag fields

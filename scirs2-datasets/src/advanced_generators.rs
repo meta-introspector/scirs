@@ -6,8 +6,7 @@
 
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
-use ndarray::{Array1, Array2, Array3, ArrayView1, Axis};
-use std::collections::HashMap;
+use ndarray::{Array1, Array2, Axis};
 
 /// Configuration for adversarial example generation
 #[derive(Debug, Clone)]
@@ -239,15 +238,22 @@ impl AdvancedGenerator {
         };
 
         let mut metadata = base_dataset.metadata.clone();
-        metadata.description = format!(
+        let old_description = metadata.get("description").cloned().unwrap_or_default();
+        let old_name = metadata.get("name").cloned().unwrap_or_default();
+        
+        metadata.insert("description".to_string(), format!(
             "Adversarial examples generated using {:?}",
             config.attack_method
-        );
-        metadata.name = format!("{} (Adversarial)", metadata.name);
+        ));
+        metadata.insert("name".to_string(), format!("{} (Adversarial)", old_name));
 
         Ok(Dataset {
             data: clipped_data,
             target: adversarial_target,
+            target_names: base_dataset.target_names.clone(),
+            feature_names: base_dataset.feature_names.clone(),
+            feature_descriptions: base_dataset.feature_descriptions.clone(),
+            description: base_dataset.description.clone(),
             metadata,
         })
     }
@@ -306,11 +312,7 @@ impl AdvancedGenerator {
             ..Default::default()
         };
 
-        Ok(Dataset {
-            data: shuffled_data,
-            target: Some(shuffled_target),
-            metadata,
-        })
+        Ok(Dataset::from_metadata(shuffled_data, Some(shuffled_target), metadata))
     }
 
     /// Generate multi-task learning dataset
@@ -364,11 +366,7 @@ impl AdvancedGenerator {
                 ..Default::default()
             };
 
-            task_datasets.push(Dataset {
-                data: task_data,
-                target: Some(task_target),
-                metadata: task_metadata,
-            });
+            task_datasets.push(Dataset::from_metadata(task_data, Some(task_target), task_metadata));
         }
 
         Ok(MultiTaskDataset {
@@ -505,15 +503,19 @@ impl AdvancedGenerator {
             )?;
 
             let mut metadata = task_dataset.metadata.clone();
-            metadata.name = format!("Continual Learning Task {}", task_id);
-            metadata.description = format!(
+            metadata.insert("name".to_string(), format!("Continual Learning Task {}", task_id));
+            metadata.insert("description".to_string(), format!(
                 "Task {} with concept drift strength {:.2}",
                 task_id, concept_drift_strength
-            );
+            ));
 
             task_datasets.push(Dataset {
                 data: task_dataset.data,
                 target: task_dataset.target,
+                target_names: task_dataset.target_names,
+                feature_names: task_dataset.feature_names,
+                feature_descriptions: task_dataset.feature_descriptions,
+                description: task_dataset.description,
                 metadata,
             });
         }
@@ -800,11 +802,16 @@ impl AdvancedGenerator {
         let shifted_data = &base_dataset.data + &shift.mean_shift;
 
         let mut metadata = base_dataset.metadata.clone();
-        metadata.description = format!("{} (Domain Shifted)", metadata.description);
+        let old_description = metadata.get("description").cloned().unwrap_or_default();
+        metadata.insert("description".to_string(), format!("{} (Domain Shifted)", old_description));
 
         Ok(Dataset {
             data: shifted_data,
             target: base_dataset.target.clone(),
+            target_names: base_dataset.target_names.clone(),
+            feature_names: base_dataset.feature_names.clone(),
+            feature_descriptions: base_dataset.feature_descriptions.clone(),
+            description: base_dataset.description.clone(),
             metadata,
         })
     }

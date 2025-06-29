@@ -308,7 +308,7 @@ pub use visualization::export::{
 // Re-export distributed clustering capabilities
 pub use distributed::{
     ConvergenceMetrics, DataPartition, DistributedConfig, DistributedHierarchical,
-    DistributedKMeans, LinkageMethod, LoadBalancingStrategy, LocalDendrogram, PartitioningStrategy,
+    DistributedKMeans, LinkageMethod, LocalDendrogram, PartitioningStrategy,
     WorkerStatistics,
 };
 

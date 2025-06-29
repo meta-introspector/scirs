@@ -217,13 +217,13 @@ impl MLFrameworkConverter for PyTorchConverter {
             "config": model.config,
         });
 
-        let file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let file = File::create(path).map_err(IoError::Io)?;
         serde_json::to_writer_pretty(file, &model_dict)
             .map_err(|e| IoError::SerializationError(e.to_string()))
     }
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
-        let file = File::open(path).map_err(|e| IoError::Io(e))?;
+        let file = File::open(path).map_err(IoError::Io)?;
         let model_dict: serde_json::Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
@@ -251,13 +251,13 @@ impl MLFrameworkConverter for PyTorchConverter {
 
     fn save_tensor(&self, tensor: &MLTensor, path: &Path) -> Result<()> {
         let tensor_dict = tensor_to_python_dict(tensor)?;
-        let file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let file = File::create(path).map_err(IoError::Io)?;
         serde_json::to_writer_pretty(file, &tensor_dict)
             .map_err(|e| IoError::SerializationError(e.to_string()))
     }
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
-        let file = File::open(path).map_err(|e| IoError::Io(e))?;
+        let file = File::open(path).map_err(IoError::Io)?;
         let tensor_dict: serde_json::Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
         python_dict_to_tensor(&tensor_dict)
@@ -288,13 +288,13 @@ impl MLFrameworkConverter for ONNXConverter {
             "metadata": model.metadata,
         });
 
-        let file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let file = File::create(path).map_err(IoError::Io)?;
         serde_json::to_writer_pretty(file, &onnx_model)
             .map_err(|e| IoError::SerializationError(e.to_string()))
     }
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
-        let file = File::open(path).map_err(|e| IoError::Io(e))?;
+        let file = File::open(path).map_err(IoError::Io)?;
         let onnx_model: serde_json::Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
@@ -372,13 +372,13 @@ impl MLFrameworkConverter for ONNXConverter {
             "data": tensor.data.as_slice().unwrap().to_vec(),
         });
 
-        let file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let file = File::create(path).map_err(IoError::Io)?;
         serde_json::to_writer_pretty(file, &tensor_data)
             .map_err(|e| IoError::SerializationError(e.to_string()))
     }
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
-        let file = File::open(path).map_err(|e| IoError::Io(e))?;
+        let file = File::open(path).map_err(IoError::Io)?;
         let tensor_data: serde_json::Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
@@ -424,13 +424,13 @@ impl MLFrameworkConverter for SafeTensorsConverter {
             "metadata": model.metadata,
         });
 
-        let file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let file = File::create(path).map_err(IoError::Io)?;
         serde_json::to_writer(file, &safetensors)
             .map_err(|e| IoError::SerializationError(e.to_string()))
     }
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
-        let file = File::open(path).map_err(|e| IoError::Io(e))?;
+        let file = File::open(path).map_err(IoError::Io)?;
         let safetensors: serde_json::Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
@@ -468,13 +468,13 @@ impl MLFrameworkConverter for SafeTensorsConverter {
             "data": tensor.data.as_slice().unwrap().to_vec(),
         });
 
-        let file = File::create(path).map_err(|e| IoError::Io(e))?;
+        let file = File::create(path).map_err(IoError::Io)?;
         serde_json::to_writer(file, &tensor_data)
             .map_err(|e| IoError::SerializationError(e.to_string()))
     }
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
-        let file = File::open(path).map_err(|e| IoError::Io(e))?;
+        let file = File::open(path).map_err(IoError::Io)?;
         let tensor_data: serde_json::Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
@@ -870,6 +870,12 @@ pub mod optimization {
         techniques: Vec<OptimizationTechnique>,
     }
 
+    impl Default for ModelOptimizer {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl ModelOptimizer {
         pub fn new() -> Self {
             Self {
@@ -951,7 +957,7 @@ pub mod batch_processing {
         {
             let results: Result<Vec<Vec<MLTensor>>> = data
                 .par_chunks(self.batch_size)
-                .map(|batch| process_fn(batch))
+                .map(process_fn)
                 .collect();
 
             results.map(|chunks| chunks.into_iter().flatten().collect())
@@ -1176,12 +1182,12 @@ pub mod pytorch_enhanced {
                 }
             }
 
-            std::fs::write(path, buffer).map_err(|e| IoError::Io(e))
+            std::fs::write(path, buffer).map_err(IoError::Io)
         }
 
         /// Load tensor from PyTorch .pt format
         pub fn load_pt_file(path: &Path) -> Result<HashMap<String, MLTensor>> {
-            let data = std::fs::read(path).map_err(|e| IoError::Io(e))?;
+            let data = std::fs::read(path).map_err(IoError::Io)?;
             let mut cursor = Cursor::new(data);
             let mut tensors = HashMap::new();
 
@@ -1261,7 +1267,7 @@ pub mod tensorflow_enhanced {
             // Create SavedModel directory structure
             let model_dir = path.join("saved_model");
             let variables_dir = model_dir.join("variables");
-            std::fs::create_dir_all(&variables_dir).map_err(|e| IoError::Io(e))?;
+            std::fs::create_dir_all(&variables_dir).map_err(IoError::Io)?;
 
             // Write saved_model.pb (simplified)
             let model_proto = serde_json::json!({
@@ -1280,14 +1286,14 @@ pub mod tensorflow_enhanced {
 
             let pb_path = model_dir.join("saved_model.pb");
             std::fs::write(pb_path, serde_json::to_vec(&model_proto).unwrap())
-                .map_err(|e| IoError::Io(e))?;
+                .map_err(IoError::Io)?;
 
             // Write variables
             for (name, tensor) in &model.weights {
                 let var_path = variables_dir.join(format!("{}.data", name));
                 let data = tensor.data.as_slice().unwrap();
                 let bytes: Vec<u8> = data.iter().flat_map(|f| f.to_le_bytes()).collect();
-                std::fs::write(var_path, bytes).map_err(|e| IoError::Io(e))?;
+                std::fs::write(var_path, bytes).map_err(IoError::Io)?;
             }
 
             Ok(())

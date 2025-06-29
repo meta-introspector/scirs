@@ -30,6 +30,7 @@ tempfile = { workspace = true }
 # rayon = { workspace = true }  # Now use scirs2-core parallel abstractions
 num_cpus = { workspace = true }
 memmap2 = { workspace = true }
+chrono = { workspace = true }
 
 # Feature-gated dependencies
 tokenizers = { workspace = true, optional = true }

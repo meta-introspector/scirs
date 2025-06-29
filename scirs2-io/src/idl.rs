@@ -92,6 +92,7 @@ enum RecordType {
 /// IDL data type codes
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[allow(dead_code)]
 enum TypeCode {
     Undefined = 0,
     Byte = 1,
@@ -181,7 +182,7 @@ impl IdlReader {
                         }
                         RecordType::HeapData => {
                             // Store heap data for later reference
-                            if let Some(data) = data {
+                            if let Some(_data) = data {
                                 // In a real implementation, we'd parse the heap index
                                 // For now, just store it
                             }
@@ -211,7 +212,7 @@ impl IdlReader {
         let rec_type = self.read_u32()? as u8;
         let next_offset = self.read_u32()?;
         let _unknown = self.read_u32()?;
-        let flags = self.read_u32()?;
+        let _flags = self.read_u32()?;
 
         let record_type = match rec_type {
             0 => RecordType::Timestamp,
@@ -255,7 +256,7 @@ impl IdlReader {
     /// Read variable data
     fn read_variable_data(&mut self) -> Result<IdlType> {
         let type_code = self.read_u32()? as u8;
-        let flags = self.read_u32()?;
+        let _flags = self.read_u32()?;
 
         match type_code {
             1 => self.read_byte_array(),
@@ -504,7 +505,7 @@ impl IdlReader {
     fn read_structure(&mut self) -> Result<IdlType> {
         // Read structure header
         let _flags = self.read_u32()?; // Structure flags
-        let struct_def_id = self.read_u32()?; // Structure definition ID
+        let _struct_def_id = self.read_u32()?; // Structure definition ID
         let nfields = self.read_u32()? as usize; // Number of fields
         let _nbytes = self.read_u32()?; // Number of bytes in structure data
 

@@ -6,11 +6,13 @@
 //! - Hierarchical models
 //! - Variational inference
 
+mod advanced_mcmc;
 mod conjugate;
 mod hierarchical;
 mod regression;
 mod variational;
 
+pub use advanced_mcmc::*;
 pub use conjugate::*;
 pub use hierarchical::*;
 pub use regression::*;

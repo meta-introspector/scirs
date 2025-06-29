@@ -424,9 +424,9 @@ impl<F: Float> FunctionOperator<F> {
     }
 
     /// Create a matrix-free operator from a function
-    pub fn from_function<F_MV>(shape: (usize, usize), matvec_fn: F_MV) -> Self
+    pub fn from_function<FMv>(shape: (usize, usize), matvec_fn: FMv) -> Self
     where
-        F_MV: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
+        FMv: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
     {
         Self::new(shape, matvec_fn, None::<fn(&[F]) -> SparseResult<Vec<F>>>)
     }
@@ -513,29 +513,32 @@ impl<F: Float> LinearOperator<F> for InverseOperator<F> {
     }
 }
 
+
 /// Utility functions for operator composition
-impl<F: Float + NumAssign> LinearOperator<F> {
-    /// Add two operators: self + other
-    pub fn add_op(
-        self: Box<Self>,
-        other: Box<dyn LinearOperator<F>>,
-    ) -> SparseResult<Box<dyn LinearOperator<F>>> {
-        Ok(Box::new(SumOperator::new(self, other)?))
-    }
 
-    /// Multiply two operators: self * other  
-    pub fn mul_op(
-        self: Box<Self>,
-        other: Box<dyn LinearOperator<F>>,
-    ) -> SparseResult<Box<dyn LinearOperator<F>>> {
-        Ok(Box::new(ProductOperator::new(self, other)?))
-    }
+/// Add two operators: left + right
+pub fn add_operators<F: Float + NumAssign>(
+    left: Box<dyn LinearOperator<F>>,
+    right: Box<dyn LinearOperator<F>>,
+) -> SparseResult<Box<dyn LinearOperator<F>>> {
+    Ok(Box::new(SumOperator::new(left, right)?))
+}
 
-    /// Scale an operator: alpha * self
-    pub fn scale(self: Box<Self>, alpha: F) -> Box<dyn LinearOperator<F>> {
-        let scaled_identity = Box::new(ScaledIdentityOperator::new(self.shape().0, alpha));
-        Box::new(ProductOperator::new(scaled_identity, self).unwrap())
-    }
+/// Multiply two operators: left * right  
+pub fn multiply_operators<F: Float + NumAssign>(
+    left: Box<dyn LinearOperator<F>>,
+    right: Box<dyn LinearOperator<F>>,
+) -> SparseResult<Box<dyn LinearOperator<F>>> {
+    Ok(Box::new(ProductOperator::new(left, right)?))
+}
+
+/// Scale an operator: alpha * operator
+pub fn scale_operator<F: Float + NumAssign>(
+    operator: Box<dyn LinearOperator<F>>,
+    alpha: F,
+) -> Box<dyn LinearOperator<F>> {
+    let scaled_identity = Box::new(ScaledIdentityOperator::new(operator.shape().0, alpha));
+    Box::new(ProductOperator::new(scaled_identity, operator).unwrap())
 }
 
 #[cfg(test)]

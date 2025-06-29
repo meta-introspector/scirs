@@ -35,7 +35,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// use scirs2_ndimage::filters::gaussian_filter;
 ///
 /// let data = array![1.0, 5.0, 2.0, 8.0, 3.0];
-/// let smoothed = gaussian_filter(&data, 0.8, None, None).unwrap();
+/// let smoothed = gaussian_filter(&data, 0.8, None, None)?;
 /// // Result will be smoother with reduced sharp transitions
 /// ```
 ///
@@ -49,10 +49,10 @@ use scirs2_core::{parallel_ops, CoreError};
 /// });
 ///
 /// // Light smoothing with reflective boundaries
-/// let smooth1 = gaussian_filter(&image, 1.0, Some(BorderMode::Reflect), None).unwrap();
+/// let smooth1 = gaussian_filter(&image, 1.0, Some(BorderMode::Reflect), None)?;
 ///
 /// // Heavy smoothing with constant boundaries  
-/// let smooth2 = gaussian_filter(&image, 3.0, Some(BorderMode::Constant), None).unwrap();
+/// let smooth2 = gaussian_filter(&image, 3.0, Some(BorderMode::Constant), None)?;
 /// ```
 ///
 /// ## 3D volume smoothing
@@ -64,7 +64,7 @@ use scirs2_core::{parallel_ops, CoreError};
 ///     (i + j + k) as f64
 /// });
 ///
-/// let smoothed_volume = gaussian_filter(&volume, 2.0, None, None).unwrap();
+/// let smoothed_volume = gaussian_filter(&volume, 2.0, None, None)?;
 /// assert_eq!(smoothed_volume.shape(), volume.shape());
 /// ```
 ///
@@ -297,7 +297,9 @@ where
                 for i in 0..array2d.shape()[0] {
                     // Extract row
                     let row_view = array2d.row(i).to_owned();
-                    let row_1d = row_view.as_slice().unwrap();
+                    let row_1d = row_view.as_slice().ok_or_else(|| {
+                        NdimageError::ComputationError("Failed to get contiguous slice from row".into())
+                    })?;
                     // Create a 1D array from the slice
                     let row_array = Array1::from_vec(row_1d.to_vec());
 
@@ -315,7 +317,9 @@ where
                 for j in 0..array2d.shape()[1] {
                     // Extract column
                     let col_view = array2d.column(j).to_owned();
-                    let col_1d = col_view.as_slice().unwrap();
+                    let col_1d = col_view.as_slice().ok_or_else(|| {
+                        NdimageError::ComputationError("Failed to get contiguous slice from column".into())
+                    })?;
                     // Create a 1D array from the slice
                     let col_array = Array1::from_vec(col_1d.to_vec());
 
@@ -901,7 +905,8 @@ mod tests {
     fn test_gaussian_kernel1d() {
         let sigma = 1.0;
         let truncate = 4.0;
-        let kernel = gaussian_kernel1d_f64(sigma, truncate).unwrap();
+        let kernel = gaussian_kernel1d_f64(sigma, truncate)
+            .expect("gaussian_kernel1d_f64 should succeed for test");
 
         // Check kernel properties
         assert_eq!(kernel.len(), 9); // 2*4 + 1 = 9
@@ -919,7 +924,8 @@ mod tests {
 
         // Apply Gaussian filter
         let sigma = 1.0;
-        let result = gaussian_filter1d_f64(&input, sigma, None, None).unwrap();
+        let result = gaussian_filter1d_f64(&input, sigma, None, None)
+            .expect("gaussian_filter1d_f64 should succeed for test");
 
         // Check that result is smoothed
         assert!(result[5] < 1.0); // Peak should be reduced
@@ -941,7 +947,8 @@ mod tests {
 
         // Apply Gaussian filter with constant border mode to avoid edge effects
         let sigma = 1.0;
-        let result = gaussian_filter(&input, sigma, Some(BorderMode::Constant), None).unwrap();
+        let result = gaussian_filter(&input, sigma, Some(BorderMode::Constant), None)
+            .expect("gaussian_filter should succeed for test");
 
         // Check that result is smoothed
         assert!(result[[3, 3]] < 1.0); // Peak should be reduced
@@ -966,7 +973,8 @@ mod tests {
 
         // Apply Gaussian filter
         let sigma = 1.0;
-        let result = gaussian_filter(&input, sigma, Some(BorderMode::Reflect), None).unwrap();
+        let result = gaussian_filter(&input, sigma, Some(BorderMode::Reflect), None)
+            .expect("gaussian_filter should succeed for test");
 
         // Check that result is smoothed
         assert!(result[[2, 2, 2]] > 0.0); // Peak should have a value
@@ -989,7 +997,8 @@ mod tests {
         // Check that applying filter with very small sigma doesn't change the input much
         let small_sigma = 0.1;
         let small_result =
-            gaussian_filter(&input, small_sigma, Some(BorderMode::Reflect), None).unwrap();
+            gaussian_filter(&input, small_sigma, Some(BorderMode::Reflect), None)
+                .expect("gaussian_filter should succeed for test");
         println!(
             "Gaussian 3D filter (small sigma) center value: {}",
             small_result[[2, 2, 2]]

@@ -155,8 +155,25 @@ where
             nfev: 0,
         };
 
+        // Validate bounds
+        solver.validate_bounds();
         solver.init_population();
         solver
+    }
+
+    /// Validate that bounds are properly specified
+    fn validate_bounds(&self) {
+        for (i, &(lb, ub)) in self.bounds.iter().enumerate() {
+            if !lb.is_finite() || !ub.is_finite() {
+                panic!("Bounds must be finite values. Variable {}: bounds = ({}, {})", i, lb, ub);
+            }
+            if lb >= ub {
+                panic!("Lower bound must be less than upper bound. Variable {}: lb = {}, ub = {}", i, lb, ub);
+            }
+            if (ub - lb) < 1e-12 {
+                panic!("Bounds range is too small. Variable {}: range = {}", i, ub - lb);
+            }
+        }
     }
 
     /// Initialize the population
@@ -260,10 +277,34 @@ where
         self.init_random(); // Fallback to random for now
     }
 
-    /// Ensure bounds for a parameter
-    fn ensure_bounds(&self, idx: usize, val: f64) -> f64 {
+    /// Ensure bounds for a parameter using reflection method
+    fn ensure_bounds(&mut self, idx: usize, val: f64) -> f64 {
         let (lb, ub) = self.bounds[idx];
-        val.max(lb).min(ub)
+        
+        if val >= lb && val <= ub {
+            // Value is within bounds
+            val
+        } else if val < lb {
+            // Reflect around lower bound
+            let excess = lb - val;
+            let range = ub - lb;
+            if excess <= range {
+                lb + excess
+            } else {
+                // If reflection goes beyond upper bound, use random value in range
+                self.rng.gen_range(lb..=ub)
+            }
+        } else {
+            // val > ub, reflect around upper bound
+            let excess = val - ub;
+            let range = ub - lb;
+            if excess <= range {
+                ub - excess
+            } else {
+                // If reflection goes beyond lower bound, use random value in range
+                self.rng.gen_range(lb..=ub)
+            }
+        }
     }
 
     /// Create mutant vector using differential evolution
@@ -274,7 +315,7 @@ where
         // Select indices for mutation
         let mut indices: Vec<usize> = Vec::with_capacity(5);
         while indices.len() < 5 {
-            let idx = self.rng.random_range(0..popsize);
+            let idx = self.rng.gen_range(0..popsize);
             if idx != candidate_idx && !indices.contains(&idx) {
                 indices.push(idx);
             }
@@ -284,7 +325,7 @@ where
             self.options.mutation.0
         } else {
             self.rng
-                .random_range(self.options.mutation.0..self.options.mutation.1)
+                .gen_range(self.options.mutation.0..self.options.mutation.1)
         };
 
         match self.strategy {
@@ -366,7 +407,7 @@ where
             | Strategy::Rand2Bin
             | Strategy::CurrentToBest1Bin => {
                 // Binomial crossover
-                let randn = self.rng.random_range(0..self.ndim);
+                let randn = self.rng.gen_range(0..self.ndim);
                 for i in 0..self.ndim {
                     if i == randn || self.rng.random::<f64>() < self.options.recombination {
                         trial[i] = mutant[i];
@@ -379,7 +420,7 @@ where
             | Strategy::Rand2Exp
             | Strategy::CurrentToBest1Exp => {
                 // Exponential crossover
-                let randn = self.rng.random_range(0..self.ndim);
+                let randn = self.rng.gen_range(0..self.ndim);
                 let mut i = randn;
                 loop {
                     trial[i] = mutant[i];

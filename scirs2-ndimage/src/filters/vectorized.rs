@@ -16,6 +16,37 @@ use std::fmt::Debug;
 use super::{boundary_optimized::*, BorderMode};
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion of hardcoded constants
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
+/// Helper function for safe i32 conversion
+fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
+    T::from_i32(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
+    })
+}
+
+/// Helper function for safe float to usize conversion
+fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
+    value.to_usize().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert float to usize".to_string())
+    })
+}
+
+/// Helper function for safe float to f64 conversion
+fn safe_float_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
+    value.to_f64().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert float to f64".to_string())
+    })
+}
+
 /// Batch processing configuration
 #[derive(Debug, Clone)]
 pub struct BatchConfig {
@@ -62,10 +93,8 @@ where
     let (batch_size, height, width) = batch.dim();
 
     // Create Gaussian kernel once for all images
-    let kernel_size = (T::from_f64(6.0).unwrap() * sigma)
-        .ceil()
-        .to_usize()
-        .unwrap();
+    let six = safe_f64_to_float(6.0)?;
+    let kernel_size = safe_float_to_usize((six * sigma).ceil())?;
     let kernel_size = kernel_size | 1; // Ensure odd size
     let kernel = create_gaussian_kernel_2d(sigma, kernel_size)?;
 
@@ -280,7 +309,7 @@ where
     let (batch_size, height, width) = batch.dim();
 
     // Create Sobel kernels
-    let (kernel_x, kernel_y) = create_sobel_kernels();
+    let (kernel_x, kernel_y) = create_sobel_kernels()?;
 
     let process_fn = |img: &Array2<T>| -> NdimageResult<Array2<T>> {
         match axis {
@@ -395,7 +424,7 @@ where
 {
     let mut kernel = Array2::zeros((size, size));
     let center = (size / 2) as f64;
-    let sigma_f64 = sigma.to_f64().unwrap();
+    let sigma_f64 = safe_float_to_f64(sigma)?;
     let two_sigma_sq = 2.0 * sigma_f64 * sigma_f64;
 
     let mut sum = 0.0;
@@ -406,55 +435,60 @@ where
             let y = j as f64 - center;
             let dist_sq = x * x + y * y;
             let val = (-dist_sq / two_sigma_sq).exp();
-            kernel[[i, j]] = T::from_f64(val).unwrap();
+            kernel[[i, j]] = safe_f64_to_float(val)?;
             sum += val;
         }
     }
 
     // Normalize
-    let sum_t = T::from_f64(sum).unwrap();
+    let sum_t = safe_f64_to_float(sum)?;
     kernel.mapv_inplace(|v| v / sum_t);
 
     Ok(kernel)
 }
 
-fn create_sobel_kernels<T>() -> (Array2<T>, Array2<T>)
+fn create_sobel_kernels<T>() -> NdimageResult<(Array2<T>, Array2<T>)>
 where
     T: Float + FromPrimitive,
 {
+    let neg_one = safe_i32_to_float(-1)?;
+    let one = safe_i32_to_float(1)?;
+    let neg_two = safe_i32_to_float(-2)?;
+    let two = safe_i32_to_float(2)?;
+    
     let kernel_x = Array2::from_shape_vec(
         (3, 3),
         vec![
-            T::from_i32(-1).unwrap(),
+            neg_one,
             T::zero(),
-            T::from_i32(1).unwrap(),
-            T::from_i32(-2).unwrap(),
+            one,
+            neg_two,
             T::zero(),
-            T::from_i32(2).unwrap(),
-            T::from_i32(-1).unwrap(),
+            two,
+            neg_one,
             T::zero(),
-            T::from_i32(1).unwrap(),
+            one,
         ],
     )
-    .unwrap();
+    .map_err(|e| NdimageError::ComputationError(format!("Failed to create Sobel X kernel: {}", e)))?;
 
     let kernel_y = Array2::from_shape_vec(
         (3, 3),
         vec![
-            T::from_i32(-1).unwrap(),
-            T::from_i32(-2).unwrap(),
-            T::from_i32(-1).unwrap(),
+            neg_one,
+            neg_two,
+            neg_one,
             T::zero(),
             T::zero(),
             T::zero(),
-            T::from_i32(1).unwrap(),
-            T::from_i32(2).unwrap(),
-            T::from_i32(1).unwrap(),
+            one,
+            two,
+            one,
         ],
     )
-    .unwrap();
+    .map_err(|e| NdimageError::ComputationError(format!("Failed to create Sobel Y kernel: {}", e)))?;
 
-    (kernel_x, kernel_y)
+    Ok((kernel_x, kernel_y))
 }
 
 #[cfg(test)]
@@ -472,7 +506,7 @@ mod tests {
         ]);
 
         let result =
-            gaussian_filter_batch(&batch, 1.0, BorderMode::Constant, Some(0.0), None).unwrap();
+            gaussian_filter_batch(&batch, 1.0, BorderMode::Constant, Some(0.0), None).expect("gaussian_filter_batch should succeed");
 
         assert_eq!(result.shape(), batch.shape());
 
@@ -492,7 +526,7 @@ mod tests {
     fn test_convolve_batch() {
         let batch = arr3(&[[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]]);
 
-        let kernel = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0]).unwrap();
+        let kernel = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0]).expect("kernel creation should succeed");
 
         let config = BatchConfig {
             num_threads: Some(1), // Force sequential for deterministic test
@@ -506,7 +540,7 @@ mod tests {
             Some(0.0),
             Some(config),
         )
-        .unwrap();
+        .expect("convolve_batch should succeed");
 
         assert_eq!(result.shape(), batch.shape());
 

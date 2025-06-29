@@ -5,11 +5,35 @@
 //! method for Euclidean distance transforms.
 
 use ndarray::{Array, Array1, Array2, ArrayView2, Dimension, Ix2, IxDyn};
-use num_traits::Float;
+use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
+
+/// Helper function for safe conversion from usize to float
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
+    T::from_usize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+    })
+}
+
+/// Helper function for safe conversion from i32 to float
+fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
+    T::from_i32(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
+    })
+}
+
+/// Helper function for safe conversion from f64 to float
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
 
 /// Compute the squared Euclidean distance transform using the Felzenszwalb & Huttenlocher algorithm
 ///
@@ -139,8 +163,8 @@ where
     z[1] = inf;
 
     for q in 1..n {
-        let q_t = T::from_usize(q).unwrap();
-        let mut s = compute_intersection(f, v[k], q, spacing);
+        let q_t = safe_usize_to_float(q).unwrap_or_else(|_| T::zero());
+        let mut s = compute_intersection_safe(f, v[k], q, spacing).unwrap_or_else(|_| T::zero());
 
         while s <= z[k] {
             k = k.saturating_sub(1);
@@ -149,7 +173,7 @@ where
                 z[1] = inf;
                 break;
             }
-            s = compute_intersection(f, v[k], q, spacing);
+            s = compute_intersection_safe(f, v[k], q, spacing).unwrap_or_else(|_| T::zero());
         }
 
         k += 1;
@@ -163,11 +187,11 @@ where
     k = 0;
 
     for q in 0..n {
-        let q_t = T::from_usize(q).unwrap();
+        let q_t = safe_usize_to_float(q).unwrap_or_else(|_| T::zero());
         while z[k + 1] < q_t {
             k += 1;
         }
-        let v_k = T::from_usize(v[k]).unwrap();
+        let v_k = safe_usize_to_float(v[k]).unwrap_or_else(|_| T::zero());
         let diff = (q_t - v_k) * spacing;
         dt[q] = diff * diff + f[v[k]];
     }
@@ -176,16 +200,17 @@ where
 }
 
 /// Compute intersection point of two parabolas
-fn compute_intersection<T>(f: &Array1<T>, p: usize, q: usize, spacing: T) -> T
+fn compute_intersection_safe<T>(f: &Array1<T>, p: usize, q: usize, spacing: T) -> NdimageResult<T>
 where
     T: Float + FromPrimitive,
 {
-    let p_t = T::from_usize(p).unwrap();
-    let q_t = T::from_usize(q).unwrap();
+    let p_t = safe_usize_to_float(p)?;
+    let q_t = safe_usize_to_float(q)?;
     let spacing_sq = spacing * spacing;
 
-    ((q_t * q_t - p_t * p_t) * spacing_sq + f[q] - f[p])
-        / (T::from_f64(2.0).unwrap() * (q_t - p_t) * spacing_sq)
+    let two = safe_f64_to_float(2.0)?;
+    Ok(((q_t * q_t - p_t * p_t) * spacing_sq + f[q] - f[p])
+        / (two * (q_t - p_t) * spacing_sq))
 }
 
 /// Compute the Euclidean distance transform (not squared)
@@ -257,11 +282,12 @@ where
 
                                 if !input[[ni_u, nj_u]] {
                                     // Check if this is the nearest background pixel
-                                    let dx = T::from_i32(di).unwrap();
-                                    let dy = T::from_i32(dj).unwrap();
+                                    let dx = safe_i32_to_float(di).unwrap_or_else(|_| T::zero());
+                                    let dy = safe_i32_to_float(dj).unwrap_or_else(|_| T::zero());
                                     let dist = (dx * dx + dy * dy).sqrt();
 
-                                    if (dist - target_dist).abs() < T::from_f64(0.1).unwrap() {
+                                    let tolerance = safe_f64_to_float(0.1).unwrap_or_else(|_| T::one());
+                                    if (dist - target_dist).abs() < tolerance {
                                         indices[[0, i, j]] = ni;
                                         indices[[1, i, j]] = nj;
                                         found = true;
@@ -444,7 +470,8 @@ mod tests {
         // Simple test case with a single background pixel
         let input = array![[true, true, true], [true, false, true], [true, true, true]];
 
-        let dt = euclidean_distance_transform(&input, None).unwrap();
+        let dt = euclidean_distance_transform(&input, None)
+            .expect("euclidean_distance_transform should succeed for test");
 
         // Center should be 0 (background)
         assert_eq!(dt[[1, 1]], 0.0);
@@ -467,7 +494,8 @@ mod tests {
     fn test_cityblock_distance_transform() {
         let input = array![[true, true, true], [true, false, true], [true, true, true]];
 
-        let dt = cityblock_distance_transform(&input, None).unwrap();
+        let dt = cityblock_distance_transform(&input, None)
+            .expect("cityblock_distance_transform should succeed for test");
 
         // Center should be 0 (background)
         assert_eq!(dt[[1, 1]], 0.0);
@@ -489,7 +517,8 @@ mod tests {
     fn test_chessboard_distance_transform() {
         let input = array![[true, true, true], [true, false, true], [true, true, true]];
 
-        let dt = chessboard_distance_transform(&input).unwrap();
+        let dt = chessboard_distance_transform(&input)
+            .expect("chessboard_distance_transform should succeed for test");
 
         // Center should be 0 (background)
         assert_eq!(dt[[1, 1]], 0.0);
@@ -511,7 +540,8 @@ mod tests {
         // Non-uniform sampling
         let sampling = vec![2.0, 1.0]; // Different spacing in y and x
 
-        let dt = euclidean_distance_transform(&input, Some(&sampling)).unwrap();
+        let dt = euclidean_distance_transform(&input, Some(&sampling))
+            .expect("euclidean_distance_transform should succeed for test with sampling");
 
         // Center should be 0
         assert_eq!(dt[[1, 1]], 0.0);

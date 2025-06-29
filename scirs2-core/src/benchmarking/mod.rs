@@ -7,9 +7,18 @@
 //! - Automated performance monitoring
 //! - Statistical analysis of benchmark results
 //! - Hardware-specific optimization verification
+//! - Cross-module performance benchmarking for 1.0 release validation
 
+pub mod cross_module;
 pub mod performance;
 pub mod regression;
+
+// Re-export commonly used cross-module types
+pub use cross_module::{
+    create_default_benchmark_suite, run_quick_benchmarks,
+    BenchmarkSuiteResult as CrossModuleBenchmarkSuiteResult, CrossModuleBenchConfig,
+    CrossModuleBenchmarkRunner, PerformanceMeasurement as CrossModulePerformanceMeasurement,
+};
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
 use std::collections::HashMap;

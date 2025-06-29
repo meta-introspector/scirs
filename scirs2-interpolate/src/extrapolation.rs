@@ -1,5 +1,5 @@
-use ndarray::{Array1, ArrayView1};
-use num_traits::Float;
+use ndarray::Array1;
+use num_traits::{Float, FromPrimitive};
 
 use crate::error::{InterpolateError, InterpolateResult};
 
@@ -1839,4 +1839,192 @@ mod tests {
         let result_near_upper = extrapolator.extrapolate(upper_bound + 1e-6).unwrap();
         assert_abs_diff_eq!(result_near_upper, upper_value, epsilon = 1e-3)
     }
+
+    #[test]
+    fn test_physics_informed_extrapolation() {
+        // Test physics-informed extrapolation with conservation laws
+        let extrapolator = make_physics_informed_extrapolator(
+            0.0, 1.0,  // domain bounds
+            0.0, 1.0,  // boundary values
+            1.0, 1.0,  // boundary derivatives
+            PhysicsLaw::MassConservation,
+        );
+        
+        let result = extrapolator.extrapolate(-0.5).unwrap();
+        assert!(result.is_finite());
+        assert!(result >= 0.0); // Mass conservation - no negative values
+    }
+}
+
+/// Physics-informed extrapolation respecting conservation laws
+pub fn make_physics_informed_extrapolator<T: Float + FromPrimitive>(
+    lower_bound: T,
+    upper_bound: T,
+    lower_value: T,
+    upper_value: T,
+    lower_derivative: T,
+    upper_derivative: T,
+    physics_law: PhysicsLaw,
+) -> AdvancedExtrapolator<T> {
+    let mut extrapolator = AdvancedExtrapolator::new(
+        lower_bound,
+        upper_bound,
+        lower_value,
+        upper_value,
+        lower_derivative,
+        upper_derivative,
+    );
+
+    // Configure physics-based constraints
+    match physics_law {
+        PhysicsLaw::MassConservation => {
+            // Ensure non-negative extrapolation for mass quantities
+            extrapolator.lower_method = ExtrapolationMethod::Exponential;
+            extrapolator.upper_method = ExtrapolationMethod::Linear;
+            extrapolator.parameters.exponential_rate = T::from_f64(-0.1).unwrap(); // Decay rate
+        }
+        PhysicsLaw::EnergyConservation => {
+            // Energy-conserving polynomial extrapolation
+            extrapolator.lower_method = ExtrapolationMethod::Quadratic;
+            extrapolator.upper_method = ExtrapolationMethod::Quadratic;
+        }
+        PhysicsLaw::MomentumConservation => {
+            // Linear momentum conservation
+            extrapolator.lower_method = ExtrapolationMethod::Linear;
+            extrapolator.upper_method = ExtrapolationMethod::Linear;
+        }
+    }
+
+    extrapolator
+}
+
+/// Physics laws for informed extrapolation
+#[derive(Debug, Clone, Copy)]
+pub enum PhysicsLaw {
+    /// Mass conservation (non-negative, decay to zero)
+    MassConservation,
+    /// Energy conservation (quadratic behavior)
+    EnergyConservation,
+    /// Momentum conservation (linear behavior)
+    MomentumConservation,
+}
+
+/// Boundary condition preserving extrapolation
+pub fn make_boundary_preserving_extrapolator<T: Float + FromPrimitive>(
+    lower_bound: T,
+    upper_bound: T,
+    lower_value: T,
+    upper_value: T,
+    lower_derivative: T,
+    upper_derivative: T,
+    boundary_type: BoundaryType,
+) -> AdvancedExtrapolator<T> {
+    let mut extrapolator = AdvancedExtrapolator::new(
+        lower_bound,
+        upper_bound,
+        lower_value,
+        upper_value,
+        lower_derivative,
+        upper_derivative,
+    );
+
+    match boundary_type {
+        BoundaryType::Dirichlet => {
+            // Fixed value boundaries - use cubic for smooth transition
+            extrapolator.lower_method = ExtrapolationMethod::Cubic;
+            extrapolator.upper_method = ExtrapolationMethod::Cubic;
+        }
+        BoundaryType::Neumann => {
+            // Fixed derivative boundaries - use quadratic
+            extrapolator.lower_method = ExtrapolationMethod::Quadratic;
+            extrapolator.upper_method = ExtrapolationMethod::Quadratic;
+        }
+        BoundaryType::Robin => {
+            // Mixed boundaries - use linear combination
+            extrapolator.lower_method = ExtrapolationMethod::Linear;
+            extrapolator.upper_method = ExtrapolationMethod::Linear;
+        }
+        BoundaryType::Absorbing => {
+            // Absorbing boundaries - exponential decay
+            extrapolator.lower_method = ExtrapolationMethod::Exponential;
+            extrapolator.upper_method = ExtrapolationMethod::Exponential;
+            extrapolator.parameters.exponential_rate = T::from_f64(-1.0).unwrap();
+        }
+    }
+
+    extrapolator
+}
+
+/// Boundary condition types for physics-informed extrapolation
+#[derive(Debug, Clone, Copy)]
+pub enum BoundaryType {
+    /// Fixed value at boundary (Dirichlet)
+    Dirichlet,
+    /// Fixed derivative at boundary (Neumann)
+    Neumann,
+    /// Linear combination of value and derivative (Robin)
+    Robin,
+    /// Absorbing boundary with exponential decay
+    Absorbing,
+}
+
+/// Adaptive extrapolation that selects method based on local data characteristics
+pub fn make_smart_adaptive_extrapolator<T: Float + FromPrimitive>(
+    lower_bound: T,
+    upper_bound: T,
+    lower_value: T,
+    upper_value: T,
+    lower_derivative: T,
+    upper_derivative: T,
+    data_characteristics: &DataCharacteristics<T>,
+) -> AdvancedExtrapolator<T> {
+    let mut extrapolator = AdvancedExtrapolator::new(
+        lower_bound,
+        upper_bound,
+        lower_value,
+        upper_value,
+        lower_derivative,
+        upper_derivative,
+    );
+
+    // Select extrapolation method based on data analysis
+    if data_characteristics.is_periodic {
+        extrapolator.lower_method = ExtrapolationMethod::Periodic;
+        extrapolator.upper_method = ExtrapolationMethod::Periodic;
+        extrapolator.parameters.period = data_characteristics.estimated_period.unwrap_or_else(|| T::from_f64(2.0 * std::f64::consts::PI).unwrap());
+    } else if data_characteristics.is_monotonic {
+        if data_characteristics.is_exponential_like {
+            extrapolator.lower_method = ExtrapolationMethod::Exponential;
+            extrapolator.upper_method = ExtrapolationMethod::Exponential;
+        } else {
+            extrapolator.lower_method = ExtrapolationMethod::Linear;
+            extrapolator.upper_method = ExtrapolationMethod::Linear;
+        }
+    } else if data_characteristics.is_oscillatory {
+        extrapolator.lower_method = ExtrapolationMethod::Sinusoidal;
+        extrapolator.upper_method = ExtrapolationMethod::Sinusoidal;
+    } else {
+        // Default to quadratic for smooth data
+        extrapolator.lower_method = ExtrapolationMethod::Quadratic;
+        extrapolator.upper_method = ExtrapolationMethod::Quadratic;
+    }
+
+    extrapolator
+}
+
+/// Data characteristics for adaptive extrapolation
+#[derive(Debug, Clone)]
+pub struct DataCharacteristics<T: Float> {
+    /// Whether the data appears periodic
+    pub is_periodic: bool,
+    /// Estimated period if periodic
+    pub estimated_period: Option<T>,
+    /// Whether the data is monotonic
+    pub is_monotonic: bool,
+    /// Whether the data follows exponential-like growth/decay
+    pub is_exponential_like: bool,
+    /// Whether the data is oscillatory
+    pub is_oscillatory: bool,
+    /// Characteristic scale of the data
+    pub characteristic_scale: T,
 }

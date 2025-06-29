@@ -151,7 +151,7 @@ impl Metadata {
     ) {
         self.extensions
             .entry(format.to_string())
-            .or_insert_with(IndexMap::new)
+            .or_default()
             .insert(key.into(), value.into());
     }
 
@@ -169,7 +169,7 @@ impl Metadata {
             let ext = self
                 .extensions
                 .entry(format.clone())
-                .or_insert_with(IndexMap::new);
+                .or_default();
             for (key, value) in ext_data {
                 ext.insert(key.clone(), value.clone());
             }
@@ -198,7 +198,7 @@ impl Metadata {
     /// Load metadata from a file
     pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
         let path = path.as_ref();
-        let content = std::fs::read_to_string(path).map_err(|e| IoError::Io(e))?;
+        let content = std::fs::read_to_string(path).map_err(IoError::Io)?;
 
         let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
 
@@ -235,7 +235,7 @@ impl Metadata {
         };
 
         let content = self.to_format(format)?;
-        std::fs::write(path, content).map_err(|e| IoError::Io(e))
+        std::fs::write(path, content).map_err(IoError::Io)
     }
 
     /// Add processing history entry
@@ -340,6 +340,12 @@ pub enum MetadataConstraint {
     MaxValue(String, f64),
     Pattern(String, String),
     OneOf(String, Vec<MetadataValue>),
+}
+
+impl Default for MetadataSchema {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MetadataSchema {
@@ -466,6 +472,12 @@ impl MetadataSchema {
 pub struct MetadataTransformer {
     mappings: HashMap<String, String>,
     transformations: HashMap<String, Box<dyn Fn(&MetadataValue) -> MetadataValue>>,
+}
+
+impl Default for MetadataTransformer {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MetadataTransformer {
@@ -644,6 +656,12 @@ pub struct MetadataIndex {
     date_index: HashMap<String, Vec<(String, DateTime<Utc>)>>,
 }
 
+impl Default for MetadataIndex {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MetadataIndex {
     pub fn new() -> Self {
         Self {
@@ -667,26 +685,26 @@ impl MetadataIndex {
                 for token in s.to_lowercase().split_whitespace() {
                     self.text_index
                         .entry(format!("{}:{}", key, token))
-                        .or_insert_with(HashSet::new)
+                        .or_default()
                         .insert(id.to_string());
                 }
             }
             MetadataValue::Integer(i) => {
                 self.numeric_index
                     .entry(key.to_string())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push((id.to_string(), *i as f64));
             }
             MetadataValue::Float(f) => {
                 self.numeric_index
                     .entry(key.to_string())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push((id.to_string(), *f));
             }
             MetadataValue::DateTime(dt) => {
                 self.date_index
                     .entry(key.to_string())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push((id.to_string(), *dt));
             }
             MetadataValue::Array(arr) => {
@@ -992,6 +1010,12 @@ pub struct MetadataReferenceResolver {
     references: Arc<RwLock<HashMap<String, HashSet<String>>>>,
 }
 
+impl Default for MetadataReferenceResolver {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MetadataReferenceResolver {
     pub fn new() -> Self {
         Self {
@@ -1110,6 +1134,12 @@ pub struct ProvenanceEntry {
     pub previous_hash: Option<String>,
     pub data_hash: String,
     pub metadata_snapshot: Option<Metadata>,
+}
+
+impl Default for MetadataProvenance {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MetadataProvenance {
@@ -1298,6 +1328,12 @@ pub struct MetadataExtractor {
     extractors: HashMap<String, Box<dyn Fn(&Path) -> Result<Metadata> + Send + Sync>>,
 }
 
+impl Default for MetadataExtractor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MetadataExtractor {
     pub fn new() -> Self {
         let mut extractor = Self {
@@ -1366,7 +1402,7 @@ impl MetadataExtractor {
         self.register(
             "netcdf",
             Box::new(|path| {
-                let mut metadata = Metadata::new();
+                let metadata = Metadata::new();
 
                 // Extract NetCDF global attributes
                 // This would use the netcdf module in a real implementation

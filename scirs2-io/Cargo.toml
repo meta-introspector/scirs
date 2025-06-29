@@ -56,6 +56,12 @@ uuid = { workspace = true, features = ["v4", "serde"] }
 urlencoding = { workspace = true }
 crossbeam-channel = { workspace = true }
 cron = "0.12"
+# Database drivers
+rusqlite = { version = "0.31", optional = true }
+sqlx = { version = "0.7", optional = true, features = ["runtime-tokio-rustls", "postgres", "mysql", "sqlite"] }
+duckdb = { version = "0.10", optional = true }
+mongodb = { version = "2.8", optional = true }
+redis = { version = "0.24", optional = true }
 
 [dev-dependencies]
 tokio-test = { workspace = true }
@@ -73,7 +79,15 @@ google-cloud-storage = []
 azure-storage-blobs = []
 gpu = []
 exif = []
-all = ["csv", "compression", "validation", "hdf5", "async", "reqwest", "aws-sdk-s3", "google-cloud-storage", "azure-storage-blobs", "gpu", "exif"]
+# Database features
+sqlite = ["dep:rusqlite"]
+postgres = ["dep:sqlx", "async"]
+mysql = ["dep:sqlx", "async"]
+duckdb = ["dep:duckdb"]
+mongodb = ["dep:mongodb", "async"]
+redis = ["dep:redis"]
+database = ["sqlite", "postgres", "mysql", "duckdb"]
+all = ["csv", "compression", "validation", "hdf5", "async", "reqwest", "aws-sdk-s3", "google-cloud-storage", "azure-storage-blobs", "gpu", "exif", "database", "mongodb", "redis"]
 
 [[example]]
 name = "hdf5_example"

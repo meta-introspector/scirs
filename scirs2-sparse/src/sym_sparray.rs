@@ -84,7 +84,7 @@ where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
-        + Div<Output = T>,
+        + Div<Output = T> + scirs2_core::simd_ops::SimdUnifiedOps + Send + Sync,
 {
     fn nnz_stored(&self) -> usize {
         self.inner().nnz_stored()
@@ -169,7 +169,7 @@ where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
-        + Div<Output = T>,
+        + Div<Output = T> + scirs2_core::simd_ops::SimdUnifiedOps + Send + Sync,
 {
     fn nnz_stored(&self) -> usize {
         self.inner().nnz_stored()
@@ -255,7 +255,7 @@ where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
-        + Div<Output = T>,
+        + Div<Output = T> + scirs2_core::simd_ops::SimdUnifiedOps + Send + Sync,
 {
     fn to_coo(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
         let coo_array = <Self as SymSparseArray<T>>::to_coo(self)?;
@@ -626,7 +626,7 @@ where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
-        + Div<Output = T>,
+        + Div<Output = T> + scirs2_core::simd_ops::SimdUnifiedOps + Send + Sync,
 {
     fn to_coo(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
         let coo_array = <Self as SymSparseArray<T>>::to_coo(self)?;

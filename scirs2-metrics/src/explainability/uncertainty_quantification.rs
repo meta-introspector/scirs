@@ -4,6 +4,7 @@ use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::Float;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 
 /// Uncertainty quantification analyzer
 pub struct UncertaintyQuantifier<F: Float> {
@@ -22,6 +23,170 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Random number generator types
+#[derive(Debug, Clone)]
+pub enum RandomNumberGenerator {
+    /// Linear Congruential Generator (fast, basic quality)
+    Lcg,
+    /// Xorshift (good balance of speed and quality)
+    Xorshift,
+    /// Permuted Congruential Generator (high quality)
+    Pcg,
+    /// ChaCha (cryptographically secure)
+    ChaCha,
+}
+
+/// Trait for random number generators
+pub trait RandomNumberGeneratorTrait {
+    fn uniform_01<F: Float + num_traits::FromPrimitive>(&mut self) -> F;
+    fn normal<F: Float + num_traits::FromPrimitive>(&mut self) -> F;
+    fn seed(&mut self, seed: u64);
+}
+
+/// Linear Congruential Generator implementation
+pub struct LcgRng {
+    state: u64,
+}
+
+impl LcgRng {
+    pub fn new(seed: u64) -> Self {
+        Self { state: seed }
+    }
+}
+
+impl RandomNumberGeneratorTrait for LcgRng {
+    fn uniform_01<F: Float + num_traits::FromPrimitive>(&mut self) -> F {
+        self.state = self.state.wrapping_mul(1103515245).wrapping_add(12345);
+        F::from((self.state >> 16) as f64 / (1u64 << 32) as f64).unwrap()
+    }
+    
+    fn normal<F: Float + num_traits::FromPrimitive>(&mut self) -> F {
+        // Box-Muller transform
+        let u1 = self.uniform_01::<F>();
+        let u2 = self.uniform_01::<F>();
+        
+        (-F::from(2.0).unwrap() * u1.ln()).sqrt() 
+            * (F::from(2.0 * PI).unwrap() * u2).cos()
+    }
+    
+    fn seed(&mut self, seed: u64) {
+        self.state = seed;
+    }
+}
+
+/// Xorshift random number generator
+pub struct XorshiftRng {
+    state: u64,
+}
+
+impl XorshiftRng {
+    pub fn new(seed: u64) -> Self {
+        Self { state: seed.max(1) } // Ensure non-zero state
+    }
+}
+
+impl RandomNumberGeneratorTrait for XorshiftRng {
+    fn uniform_01<F: Float + num_traits::FromPrimitive>(&mut self) -> F {
+        self.state ^= self.state << 13;
+        self.state ^= self.state >> 7;
+        self.state ^= self.state << 17;
+        F::from(self.state as f64 / u64::MAX as f64).unwrap()
+    }
+    
+    fn normal<F: Float + num_traits::FromPrimitive>(&mut self) -> F {
+        let u1 = self.uniform_01::<F>();
+        let u2 = self.uniform_01::<F>();
+        
+        (-F::from(2.0).unwrap() * u1.ln()).sqrt() 
+            * (F::from(2.0 * PI).unwrap() * u2).cos()
+    }
+    
+    fn seed(&mut self, seed: u64) {
+        self.state = seed.max(1);
+    }
+}
+
+/// PCG random number generator
+pub struct PcgRng {
+    state: u64,
+    inc: u64,
+}
+
+impl PcgRng {
+    pub fn new(seed: u64) -> Self {
+        Self { 
+            state: seed,
+            inc: 721347520444481703u64,
+        }
+    }
+}
+
+impl RandomNumberGeneratorTrait for PcgRng {
+    fn uniform_01<F: Float + num_traits::FromPrimitive>(&mut self) -> F {
+        let oldstate = self.state;
+        self.state = oldstate.wrapping_mul(6364136223846793005u64).wrapping_add(self.inc);
+        let xorshifted = ((oldstate >> 18) ^ oldstate) >> 27;
+        let rot = oldstate >> 59;
+        let result = (xorshifted >> rot) | (xorshifted << ((-rot as i32) & 31));
+        F::from(result as f64 / u32::MAX as f64).unwrap()
+    }
+    
+    fn normal<F: Float + num_traits::FromPrimitive>(&mut self) -> F {
+        let u1 = self.uniform_01::<F>();
+        let u2 = self.uniform_01::<F>();
+        
+        (-F::from(2.0).unwrap() * u1.ln()).sqrt() 
+            * (F::from(2.0 * PI).unwrap() * u2).cos()
+    }
+    
+    fn seed(&mut self, seed: u64) {
+        self.state = seed;
+    }
+}
+
+/// ChaCha random number generator (simplified)
+pub struct ChaChaRng {
+    state: [u32; 16],
+    counter: u64,
+}
+
+impl ChaChaRng {
+    pub fn new(seed: u64) -> Self {
+        let mut state = [0u32; 16];
+        state[0] = seed as u32;
+        state[1] = (seed >> 32) as u32;
+        Self { state, counter: 0 }
+    }
+}
+
+impl RandomNumberGeneratorTrait for ChaChaRng {
+    fn uniform_01<F: Float + num_traits::FromPrimitive>(&mut self) -> F {
+        // Simplified ChaCha implementation
+        self.counter = self.counter.wrapping_add(1);
+        let mut x = self.state[0].wrapping_add(self.counter as u32);
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        self.state[0] = x;
+        
+        F::from(x as f64 / u32::MAX as f64).unwrap()
+    }
+    
+    fn normal<F: Float + num_traits::FromPrimitive>(&mut self) -> F {
+        let u1 = self.uniform_01::<F>();
+        let u2 = self.uniform_01::<F>();
+        
+        (-F::from(2.0).unwrap() * u1.ln()).sqrt() 
+            * (F::from(2.0 * PI).unwrap() * u2).cos()
+    }
+    
+    fn seed(&mut self, seed: u64) {
+        self.state[0] = seed as u32;
+        self.state[1] = (seed >> 32) as u32;
+        self.counter = 0;
     }
 }
 
@@ -840,6 +1005,237 @@ pub struct OODScores<F: Float> {
     pub density_scores: Array1<F>,
 }
 
+/// Advanced uncertainty analysis results
+#[derive(Debug, Clone)]
+pub struct AdvancedUncertaintyAnalysis<F: Float> {
+    /// Epistemic uncertainty (model uncertainty)
+    pub epistemic_uncertainty: EpistemicUncertainty<F>,
+    /// Aleatoric uncertainty (data uncertainty)
+    pub aleatoric_uncertainty: AleatoricUncertainty<F>,
+    /// Prediction intervals
+    pub prediction_intervals: PredictionIntervals<F>,
+    /// Calibration metrics (if labels available)
+    pub calibration_metrics: Option<CalibrationMetrics<F>>,
+    /// Confidence scores
+    pub confidence_scores: ConfidenceScores<F>,
+    /// Out-of-distribution detection scores
+    pub ood_scores: OODScores<F>,
+    /// Conformal prediction results
+    pub conformal_prediction: Option<ConformalPrediction<F>>,
+    /// Bayesian uncertainty estimation
+    pub bayesian_uncertainty: Option<BayesianUncertainty<F>>,
+    /// Temperature scaling results
+    pub temperature_scaling: Option<TemperatureScaling<F>>,
+    /// Deep ensemble uncertainty
+    pub deep_ensemble_uncertainty: DeepEnsembleUncertainty<F>,
+    /// Sample size
+    pub sample_size: usize,
+}
+
+/// Conformal prediction results
+#[derive(Debug, Clone)]
+pub struct ConformalPrediction<F: Float> {
+    /// Prediction sets for each test sample
+    pub prediction_sets: Vec<PredictionSet<F>>,
+    /// Coverage probability
+    pub coverage_probability: F,
+    /// Average set size
+    pub average_set_size: F,
+    /// Conditional coverage by groups
+    pub conditional_coverage: HashMap<String, F>,
+}
+
+/// Prediction set for conformal prediction
+#[derive(Debug, Clone)]
+pub struct PredictionSet<F: Float> {
+    /// Lower bound
+    pub lower: F,
+    /// Upper bound
+    pub upper: F,
+    /// Set size
+    pub size: F,
+    /// Contains true value (if known)
+    pub contains_truth: Option<bool>,
+}
+
+/// Bayesian uncertainty estimation
+#[derive(Debug, Clone)]
+pub struct BayesianUncertainty<F: Float> {
+    /// Posterior mean predictions
+    pub posterior_mean: Array1<F>,
+    /// Posterior variance
+    pub posterior_variance: Array1<F>,
+    /// Credible intervals
+    pub credible_intervals: Array2<F>, // [n_samples, 2] for lower/upper bounds
+    /// Model evidence (marginal likelihood)
+    pub model_evidence: F,
+    /// MCMC effective sample size
+    pub effective_sample_size: F,
+    /// R-hat convergence diagnostic
+    pub r_hat: F,
+}
+
+/// Temperature scaling results
+#[derive(Debug, Clone)]
+pub struct TemperatureScaling<F: Float> {
+    /// Optimal temperature parameter
+    pub temperature: F,
+    /// Calibrated predictions
+    pub calibrated_predictions: Array1<F>,
+    /// Before calibration error
+    pub before_calibration_error: F,
+    /// After calibration error
+    pub after_calibration_error: F,
+    /// Calibration improvement
+    pub improvement: F,
+}
+
+/// Deep ensemble uncertainty
+#[derive(Debug, Clone)]
+pub struct DeepEnsembleUncertainty<F: Float> {
+    /// Individual model predictions
+    pub individual_predictions: Array2<F>, // [n_models, n_samples]
+    /// Ensemble mean
+    pub ensemble_mean: Array1<F>,
+    /// Ensemble variance
+    pub ensemble_variance: Array1<F>,
+    /// Model disagreement
+    pub model_disagreement: Array1<F>,
+    /// Diversity scores
+    pub diversity_scores: Array1<F>,
+}
+
+// Additional convenience functions for uncertainty quantification
+
+/// Compute entropy of probability distribution
+pub fn compute_entropy<F: Float + num_traits::FromPrimitive>(probabilities: &Array1<F>) -> F {
+    let mut entropy = F::zero();
+    let eps = F::from(1e-15).unwrap();
+    
+    for &p in probabilities.iter() {
+        if p > eps {
+            entropy = entropy - p * p.ln();
+        }
+    }
+    
+    entropy
+}
+
+/// Compute KL divergence between two distributions
+pub fn compute_kl_divergence<F: Float + num_traits::FromPrimitive>(
+    p: &Array1<F>, 
+    q: &Array1<F>
+) -> Result<F> {
+    if p.len() != q.len() {
+        return Err(MetricsError::InvalidInput(
+            "Distributions must have same length".to_string()
+        ));
+    }
+    
+    let mut kl_div = F::zero();
+    let eps = F::from(1e-15).unwrap();
+    
+    for (&pi, &qi) in p.iter().zip(q.iter()) {
+        if pi > eps && qi > eps {
+            kl_div = kl_div + pi * (pi / qi).ln();
+        }
+    }
+    
+    Ok(kl_div)
+}
+
+/// Compute Jensen-Shannon divergence
+pub fn compute_js_divergence<F: Float + num_traits::FromPrimitive>(
+    p: &Array1<F>, 
+    q: &Array1<F>
+) -> Result<F> {
+    let m = (p + q) / F::from(2.0).unwrap();
+    let kl_pm = compute_kl_divergence(p, &m)?;
+    let kl_qm = compute_kl_divergence(q, &m)?;
+    
+    Ok((kl_pm + kl_qm) / F::from(2.0).unwrap())
+}
+
+/// Compute Wasserstein distance (simplified 1D version)
+pub fn compute_wasserstein_distance<F: Float + num_traits::FromPrimitive>(
+    samples1: &Array1<F>,
+    samples2: &Array1<F>,
+) -> F {
+    let mut s1 = samples1.to_vec();
+    let mut s2 = samples2.to_vec();
+    
+    s1.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    s2.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    
+    let min_len = s1.len().min(s2.len());
+    let mut distance = F::zero();
+    
+    for i in 0..min_len {
+        distance = distance + (s1[i] - s2[i]).abs();
+    }
+    
+    distance / F::from(min_len).unwrap()
+}
+
+/// Compute maximum mean discrepancy (simplified)
+pub fn compute_mmd<F: Float + num_traits::FromPrimitive>(
+    samples1: &Array2<F>,
+    samples2: &Array2<F>,
+    gamma: F,
+) -> Result<F> {
+    if samples1.ncols() != samples2.ncols() {
+        return Err(MetricsError::InvalidInput(
+            "Samples must have same dimensionality".to_string()
+        ));
+    }
+    
+    let n1 = samples1.nrows();
+    let n2 = samples2.nrows();
+    
+    // Compute kernel means
+    let mut k11 = F::zero();
+    let mut k22 = F::zero();
+    let mut k12 = F::zero();
+    
+    // K(X, X)
+    for i in 0..n1 {
+        for j in 0..n1 {
+            let dist_sq = samples1.row(i).iter()
+                .zip(samples1.row(j).iter())
+                .map(|(&xi, &xj)| (xi - xj) * (xi - xj))
+                .sum::<F>();
+            k11 = k11 + (-gamma * dist_sq).exp();
+        }
+    }
+    k11 = k11 / F::from(n1 * n1).unwrap();
+    
+    // K(Y, Y)
+    for i in 0..n2 {
+        for j in 0..n2 {
+            let dist_sq = samples2.row(i).iter()
+                .zip(samples2.row(j).iter())
+                .map(|(&yi, &yj)| (yi - yj) * (yi - yj))
+                .sum::<F>();
+            k22 = k22 + (-gamma * dist_sq).exp();
+        }
+    }
+    k22 = k22 / F::from(n2 * n2).unwrap();
+    
+    // K(X, Y)
+    for i in 0..n1 {
+        for j in 0..n2 {
+            let dist_sq = samples1.row(i).iter()
+                .zip(samples2.row(j).iter())
+                .map(|(&xi, &yj)| (xi - yj) * (xi - yj))
+                .sum::<F>();
+            k12 = k12 + (-gamma * dist_sq).exp();
+        }
+    }
+    k12 = k12 / F::from(n1 * n2).unwrap();
+    
+    Ok(k11 + k22 - F::from(2.0).unwrap() * k12)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -988,5 +1384,101 @@ mod tests {
         assert!(analysis.calibration_metrics.is_some());
         assert_eq!(analysis.epistemic_uncertainty.mean_predictions.len(), 2);
         assert_eq!(analysis.prediction_intervals.lower_bound.len(), 2);
+    }
+    
+    #[test]
+    fn test_random_number_generators() {
+        let mut lcg = LcgRng::new(42);
+        let mut xorshift = XorshiftRng::new(42);
+        let mut pcg = PcgRng::new(42);
+        let mut chacha = ChaChaRng::new(42);
+        
+        // Test uniform generation
+        let lcg_val = lcg.uniform_01::<f64>();
+        let xorshift_val = xorshift.uniform_01::<f64>();
+        let pcg_val = pcg.uniform_01::<f64>();
+        let chacha_val = chacha.uniform_01::<f64>();
+        
+        assert!(lcg_val >= 0.0 && lcg_val <= 1.0);
+        assert!(xorshift_val >= 0.0 && xorshift_val <= 1.0);
+        assert!(pcg_val >= 0.0 && pcg_val <= 1.0);
+        assert!(chacha_val >= 0.0 && chacha_val <= 1.0);
+        
+        // Test normal generation
+        let lcg_normal = lcg.normal::<f64>();
+        let xorshift_normal = xorshift.normal::<f64>();
+        let pcg_normal = pcg.normal::<f64>();
+        let chacha_normal = chacha.normal::<f64>();
+        
+        assert!(lcg_normal.is_finite());
+        assert!(xorshift_normal.is_finite());
+        assert!(pcg_normal.is_finite());
+        assert!(chacha_normal.is_finite());
+    }
+    
+    #[test]
+    fn test_advanced_uncertainty_quantifier() {
+        let quantifier = UncertaintyQuantifier::<f64>::new()
+            .with_rng_type(RandomNumberGenerator::Pcg)
+            .with_conformal_calibration(50)
+            .with_bayesian(true)
+            .with_mcmc(100, 20)
+            .with_temperature_scaling(true)
+            .with_simd(true);
+        
+        assert_eq!(quantifier.n_conformal_calibration, 50);
+        assert!(quantifier.enable_bayesian);
+        assert_eq!(quantifier.n_mcmc_samples, 100);
+        assert_eq!(quantifier.mcmc_burn_in, 20);
+        assert!(quantifier.enable_temperature_scaling);
+        assert!(quantifier.enable_simd);
+    }
+    
+    #[test]
+    fn test_entropy_computation() {
+        let probs = array![0.1, 0.2, 0.3, 0.4];
+        let entropy = compute_entropy(&probs);
+        assert!(entropy > 0.0);
+        
+        // Uniform distribution should have maximum entropy
+        let uniform_probs = array![0.25, 0.25, 0.25, 0.25];
+        let uniform_entropy = compute_entropy(&uniform_probs);
+        assert!(uniform_entropy > entropy);
+    }
+    
+    #[test]
+    fn test_kl_divergence() {
+        let p = array![0.5, 0.3, 0.2];
+        let q = array![0.4, 0.4, 0.2];
+        
+        let kl_div = compute_kl_divergence(&p, &q).unwrap();
+        assert!(kl_div >= 0.0);
+        
+        // KL divergence should be 0 for identical distributions
+        let kl_self = compute_kl_divergence(&p, &p).unwrap();
+        assert!(kl_self.abs() < 1e-10);
+    }
+    
+    #[test]
+    fn test_js_divergence() {
+        let p = array![0.5, 0.3, 0.2];
+        let q = array![0.4, 0.4, 0.2];
+        
+        let js_div = compute_js_divergence(&p, &q).unwrap();
+        assert!(js_div >= 0.0);
+        
+        // JS divergence should be 0 for identical distributions
+        let js_self = compute_js_divergence(&p, &p).unwrap();
+        assert!(js_self.abs() < 1e-10);
+    }
+    
+    #[test]
+    fn test_wasserstein_distance() {
+        let samples1 = array![1.0, 2.0, 3.0, 4.0, 5.0];
+        let samples2 = array![1.1, 2.1, 3.1, 4.1, 5.1];
+        
+        let wasserstein = compute_wasserstein_distance(&samples1, &samples2);
+        assert!(wasserstein >= 0.0);
+        assert!((wasserstein - 0.1).abs() < 1e-10);
     }
 }

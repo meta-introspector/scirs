@@ -43,17 +43,17 @@ impl PipelineStage for FileReadStage {
                 Box::new(data) as Box<dyn Any + Send + Sync>
             }
             FileFormat::Json => {
-                let file = File::open(&self.path).map_err(|e| IoError::Io(e))?;
+                let file = File::open(&self.path).map_err(IoError::Io)?;
                 let value: serde_json::Value = serde_json::from_reader(file)
                     .map_err(|e| IoError::SerializationError(e.to_string()))?;
                 Box::new(value) as Box<dyn Any + Send + Sync>
             }
             FileFormat::Binary => {
-                let data = std::fs::read(&self.path).map_err(|e| IoError::Io(e))?;
+                let data = std::fs::read(&self.path).map_err(IoError::Io)?;
                 Box::new(data) as Box<dyn Any + Send + Sync>
             }
             FileFormat::Text => {
-                let data = std::fs::read_to_string(&self.path).map_err(|e| IoError::Io(e))?;
+                let data = std::fs::read_to_string(&self.path).map_err(IoError::Io)?;
                 Box::new(data) as Box<dyn Any + Send + Sync>
             }
             FileFormat::Auto => {
@@ -70,19 +70,19 @@ impl PipelineStage for FileReadStage {
                         Box::new(data) as Box<dyn Any + Send + Sync>
                     }
                     "json" => {
-                        let file = File::open(&self.path).map_err(|e| IoError::Io(e))?;
+                        let file = File::open(&self.path).map_err(IoError::Io)?;
                         let value: serde_json::Value = serde_json::from_reader(file)
                             .map_err(|e| IoError::SerializationError(e.to_string()))?;
                         Box::new(value) as Box<dyn Any + Send + Sync>
                     }
                     "txt" | "text" => {
                         let data =
-                            std::fs::read_to_string(&self.path).map_err(|e| IoError::Io(e))?;
+                            std::fs::read_to_string(&self.path).map_err(IoError::Io)?;
                         Box::new(data) as Box<dyn Any + Send + Sync>
                     }
                     _ => {
                         // Default to binary for unknown extensions
-                        let data = std::fs::read(&self.path).map_err(|e| IoError::Io(e))?;
+                        let data = std::fs::read(&self.path).map_err(IoError::Io)?;
                         Box::new(data) as Box<dyn Any + Send + Sync>
                     }
                 }
@@ -133,19 +133,19 @@ impl PipelineStage for FileWriteStage {
             }
             FileFormat::Json => {
                 if let Some(value) = input.data.downcast_ref::<serde_json::Value>() {
-                    let file = File::create(&self.path).map_err(|e| IoError::Io(e))?;
+                    let file = File::create(&self.path).map_err(IoError::Io)?;
                     serde_json::to_writer_pretty(file, value)
                         .map_err(|e| IoError::SerializationError(e.to_string()))?;
                 }
             }
             FileFormat::Binary => {
                 if let Some(data) = input.data.downcast_ref::<Vec<u8>>() {
-                    std::fs::write(&self.path, data).map_err(|e| IoError::Io(e))?;
+                    std::fs::write(&self.path, data).map_err(IoError::Io)?;
                 }
             }
             FileFormat::Text => {
                 if let Some(data) = input.data.downcast_ref::<String>() {
-                    std::fs::write(&self.path, data).map_err(|e| IoError::Io(e))?;
+                    std::fs::write(&self.path, data).map_err(IoError::Io)?;
                 }
             }
             FileFormat::Auto => {
@@ -164,20 +164,20 @@ impl PipelineStage for FileWriteStage {
                     }
                     "json" => {
                         if let Some(value) = input.data.downcast_ref::<serde_json::Value>() {
-                            let file = File::create(&self.path).map_err(|e| IoError::Io(e))?;
+                            let file = File::create(&self.path).map_err(IoError::Io)?;
                             serde_json::to_writer_pretty(file, value)
                                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
                         }
                     }
                     "txt" | "text" => {
                         if let Some(data) = input.data.downcast_ref::<String>() {
-                            std::fs::write(&self.path, data).map_err(|e| IoError::Io(e))?;
+                            std::fs::write(&self.path, data).map_err(IoError::Io)?;
                         }
                     }
                     _ => {
                         // Default to binary for unknown extensions
                         if let Some(data) = input.data.downcast_ref::<Vec<u8>>() {
-                            std::fs::write(&self.path, data).map_err(|e| IoError::Io(e))?;
+                            std::fs::write(&self.path, data).map_err(IoError::Io)?;
                         }
                     }
                 }
@@ -204,6 +204,12 @@ pub struct ValidationStage {
 pub trait Validator: Send + Sync {
     fn validate(&self, data: &dyn Any) -> Result<()>;
     fn name(&self) -> &str;
+}
+
+impl Default for ValidationStage {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ValidationStage {
@@ -422,7 +428,7 @@ impl PipelineStage for CacheStage {
         mut input: PipelineData<Box<dyn Any + Send + Sync>>,
     ) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
         // Create cache directory if needed
-        std::fs::create_dir_all(&self.cache_dir).map_err(|e| IoError::Io(e))?;
+        std::fs::create_dir_all(&self.cache_dir).map_err(IoError::Io)?;
 
         let cache_path = self.cache_dir.join(format!("{}.cache", self.cache_key));
 
@@ -449,7 +455,7 @@ impl PipelineStage for CacheStage {
             self.cache_key,
             chrono::Utc::now()
         );
-        std::fs::write(&cache_path, cache_marker).map_err(|e| IoError::Io(e))?;
+        std::fs::write(&cache_path, cache_marker).map_err(IoError::Io)?;
 
         // Update metadata
         input.metadata.set("cache_hit", false);

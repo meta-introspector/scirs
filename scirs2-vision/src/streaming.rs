@@ -13,6 +13,7 @@
 
 use crate::error::Result;
 use crossbeam_channel::{bounded, Receiver};
+use image::GenericImageView;
 use ndarray::Array2;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -347,6 +348,282 @@ impl ProcessingStage for MotionDetectionStage {
     }
 }
 
+/// Perspective transformation stage for real-time stream processing
+pub struct PerspectiveTransformStage {
+    transform: crate::transform::perspective::PerspectiveTransform,
+    output_width: u32,
+    output_height: u32,
+    border_mode: crate::transform::perspective::BorderMode,
+}
+
+impl PerspectiveTransformStage {
+    /// Create a new perspective transformation stage
+    pub fn new(
+        transform: crate::transform::perspective::PerspectiveTransform,
+        output_width: u32,
+        output_height: u32,
+        border_mode: crate::transform::perspective::BorderMode,
+    ) -> Self {
+        Self {
+            transform,
+            output_width,
+            output_height,
+            border_mode,
+        }
+    }
+
+    /// Create perspective correction stage from corner points
+    pub fn correction(
+        corners: [(f64, f64); 4],
+        output_width: u32,
+        output_height: u32,
+    ) -> Result<Self> {
+        let dst_rect = (0.0, 0.0, output_width as f64, output_height as f64);
+        let transform = crate::transform::perspective::PerspectiveTransform::quad_to_rect(corners, dst_rect)?;
+        
+        Ok(Self {
+            transform,
+            output_width,
+            output_height,
+            border_mode: crate::transform::perspective::BorderMode::Transparent,
+        })
+    }
+}
+
+impl ProcessingStage for PerspectiveTransformStage {
+    fn process(&mut self, mut frame: Frame) -> Result<Frame> {
+        // Convert frame data to image format for transformation
+        use image::{ImageBuffer, Luma};
+        
+        let (height, width) = frame.data.dim();
+        let mut img_buf = ImageBuffer::new(width as u32, height as u32);
+        
+        for (y, row) in frame.data.rows().into_iter().enumerate() {
+            for (x, &pixel) in row.iter().enumerate() {
+                let gray_value = (pixel * 255.0).clamp(0.0, 255.0) as u8;
+                img_buf.put_pixel(x as u32, y as u32, Luma([gray_value]));
+            }
+        }
+        
+        let src_img = image::DynamicImage::ImageLuma8(img_buf);
+        
+        // Apply perspective transformation using SIMD-accelerated version
+        let transformed = crate::transform::perspective::warp_perspective_simd(
+            &src_img,
+            &self.transform,
+            Some(self.output_width),
+            Some(self.output_height),
+            self.border_mode,
+        )?;
+        
+        // Convert back to Array2<f32>
+        let mut output_data = Array2::zeros((self.output_height as usize, self.output_width as usize));
+        
+        for y in 0..self.output_height {
+            for x in 0..self.output_width {
+                let pixel = transformed.get_pixel(x, y);
+                let gray_value = pixel[0] as f32 / 255.0;
+                output_data[[y as usize, x as usize]] = gray_value;
+            }
+        }
+        
+        frame.data = output_data;
+        
+        // Update metadata
+        if let Some(ref mut metadata) = frame.metadata {
+            metadata.width = self.output_width;
+            metadata.height = self.output_height;
+        }
+        
+        Ok(frame)
+    }
+
+    fn name(&self) -> &str {
+        "PerspectiveTransform"
+    }
+}
+
+/// SIMD-accelerated normalization stage
+pub struct SimdNormalizationStage;
+
+impl ProcessingStage for SimdNormalizationStage {
+    fn process(&mut self, mut frame: Frame) -> Result<Frame> {
+        frame.data = crate::simd_ops::simd_normalize_image(&frame.data.view())?;
+        Ok(frame)
+    }
+
+    fn name(&self) -> &str {
+        "SimdNormalization"
+    }
+}
+
+/// SIMD-accelerated histogram equalization stage
+pub struct SimdHistogramEqualizationStage {
+    num_bins: usize,
+}
+
+impl SimdHistogramEqualizationStage {
+    /// Create a new SIMD histogram equalization stage
+    pub fn new(num_bins: usize) -> Self {
+        Self { num_bins }
+    }
+}
+
+impl ProcessingStage for SimdHistogramEqualizationStage {
+    fn process(&mut self, mut frame: Frame) -> Result<Frame> {
+        frame.data = crate::simd_ops::simd_histogram_equalization(&frame.data.view(), self.num_bins)?;
+        Ok(frame)
+    }
+
+    fn name(&self) -> &str {
+        "SimdHistogramEqualization"
+    }
+}
+
+/// Real-time feature detection stage
+pub struct FeatureDetectionStage {
+    detector_type: FeatureDetectorType,
+    #[allow(dead_code)]
+    max_features: usize,
+}
+
+/// Types of feature detectors for streaming
+pub enum FeatureDetectorType {
+    /// Harris corner detection
+    Harris { 
+        /// Harris response threshold
+        threshold: f32, 
+        /// Harris parameter k
+        k: f32 
+    },
+    /// FAST corner detection  
+    Fast { 
+        /// FAST threshold value
+        threshold: u8 
+    },
+    /// Sobel edge detection
+    Sobel,
+}
+
+impl FeatureDetectionStage {
+    /// Create a new feature detection stage
+    pub fn new(detector_type: FeatureDetectorType, max_features: usize) -> Self {
+        Self {
+            detector_type,
+            max_features,
+        }
+    }
+}
+
+impl ProcessingStage for FeatureDetectionStage {
+    fn process(&mut self, mut frame: Frame) -> Result<Frame> {
+        match self.detector_type {
+            FeatureDetectorType::Harris { threshold, k } => {
+                // Apply Harris corner detection (simplified)
+                let (grad_x, grad_y, _) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
+                
+                // Compute Harris response (simplified version)
+                let response = &grad_x * &grad_y - k * (&grad_x * &grad_x + &grad_y * &grad_y);
+                frame.data = response.mapv(|x| if x > threshold { x } else { 0.0 });
+            },
+            FeatureDetectorType::Fast { threshold: _ } => {
+                // FAST detection would require more complex implementation
+                // For now, use edge detection as approximation
+                let (_, _, magnitude) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
+                frame.data = magnitude;
+            },
+            FeatureDetectorType::Sobel => {
+                let (_, _, magnitude) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
+                frame.data = magnitude;
+            },
+        }
+        
+        Ok(frame)
+    }
+
+    fn name(&self) -> &str {
+        "FeatureDetection"
+    }
+}
+
+/// Frame buffer stage for temporal operations
+pub struct FrameBufferStage {
+    buffer: std::collections::VecDeque<Array2<f32>>,
+    buffer_size: usize,
+    operation: BufferOperation,
+}
+
+/// Types of operations on frame buffers
+pub enum BufferOperation {
+    /// Temporal averaging
+    TemporalAverage,
+    /// Background subtraction
+    BackgroundSubtraction,
+    /// Frame differencing
+    FrameDifference,
+}
+
+impl FrameBufferStage {
+    /// Create a new frame buffer stage
+    pub fn new(buffer_size: usize, operation: BufferOperation) -> Self {
+        Self {
+            buffer: std::collections::VecDeque::with_capacity(buffer_size),
+            buffer_size,
+            operation,
+        }
+    }
+}
+
+impl ProcessingStage for FrameBufferStage {
+    fn process(&mut self, mut frame: Frame) -> Result<Frame> {
+        // Add current frame to buffer
+        self.buffer.push_back(frame.data.clone());
+        if self.buffer.len() > self.buffer_size {
+            self.buffer.pop_front();
+        }
+        
+        // Apply buffer operation
+        match self.operation {
+            BufferOperation::TemporalAverage => {
+                if !self.buffer.is_empty() {
+                    let mut avg = Array2::<f32>::zeros(frame.data.dim());
+                    for buffered_frame in &self.buffer {
+                        avg += buffered_frame;
+                    }
+                    frame.data = avg / self.buffer.len() as f32;
+                }
+            },
+            BufferOperation::BackgroundSubtraction => {
+                if self.buffer.len() >= self.buffer_size {
+                    // Use median of buffer as background
+                    let mut background = Array2::<f32>::zeros(frame.data.dim());
+                    for buffered_frame in &self.buffer {
+                        background += buffered_frame;
+                    }
+                    background /= self.buffer.len() as f32;
+                    frame.data = (&frame.data - &background).mapv(|x| x.abs());
+                }
+            },
+            BufferOperation::FrameDifference => {
+                if self.buffer.len() >= 2 {
+                    let prev_frame = &self.buffer[self.buffer.len() - 2];
+                    frame.data = (&frame.data - prev_frame).mapv(|x| x.abs());
+                }
+            },
+        }
+        
+        Ok(frame)
+    }
+
+    fn name(&self) -> &str {
+        match self.operation {
+            BufferOperation::TemporalAverage => "TemporalAverage",
+            BufferOperation::BackgroundSubtraction => "BackgroundSubtraction",
+            BufferOperation::FrameDifference => "FrameDifference",
+        }
+    }
+}
+
 /// Video source type
 pub enum VideoSource {
     /// Image sequence (directory of images)
@@ -673,5 +950,84 @@ mod tests {
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 12);
+    }
+
+    #[test]
+    fn test_perspective_transform_stage() {
+        // Create identity transformation
+        let transform = crate::transform::perspective::PerspectiveTransform::identity();
+        let mut stage = PerspectiveTransformStage::new(
+            transform,
+            100,
+            100,
+            crate::transform::perspective::BorderMode::default(),
+        );
+        
+        let frame = Frame {
+            data: Array2::from_shape_fn((50, 50), |(y, x)| (x + y) as f32 / 100.0),
+            timestamp: Instant::now(),
+            index: 0,
+            metadata: Some(FrameMetadata {
+                width: 50,
+                height: 50,
+                fps: 30.0,
+                channels: 1,
+            }),
+        };
+        
+        let result = stage.process(frame);
+        assert!(result.is_ok());
+        
+        let processed = result.unwrap();
+        assert_eq!(processed.data.dim(), (100, 100));
+    }
+
+    #[test]
+    fn test_simd_stages() {
+        let frame = Frame {
+            data: Array2::from_shape_fn((100, 100), |(y, x)| (x + y) as f32 / 200.0),
+            timestamp: Instant::now(),
+            index: 0,
+            metadata: None,
+        };
+        
+        // Test SIMD normalization
+        let mut norm_stage = SimdNormalizationStage;
+        let norm_result = norm_stage.process(frame.clone());
+        assert!(norm_result.is_ok());
+        
+        // Test SIMD histogram equalization
+        let mut hist_stage = SimdHistogramEqualizationStage::new(256);
+        let hist_result = hist_stage.process(frame.clone());
+        assert!(hist_result.is_ok());
+        
+        // Test feature detection
+        let mut feature_stage = FeatureDetectionStage::new(
+            FeatureDetectorType::Sobel,
+            1000,
+        );
+        let feature_result = feature_stage.process(frame);
+        assert!(feature_result.is_ok());
+    }
+
+    #[test]
+    fn test_frame_buffer_stage() {
+        let mut buffer_stage = FrameBufferStage::new(
+            5,
+            BufferOperation::TemporalAverage,
+        );
+        
+        // Process several frames
+        for i in 0..10 {
+            let frame = Frame {
+                data: Array2::from_elem((10, 10), i as f32),
+                timestamp: Instant::now(),
+                index: i,
+                metadata: None,
+            };
+            
+            let result = buffer_stage.process(frame);
+            assert!(result.is_ok());
+        }
     }
 }

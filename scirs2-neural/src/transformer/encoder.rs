@@ -281,7 +281,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Feed
     fn backward(
         &self,
         input: &Array<F, IxDyn>,
-        _grad_output: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Retrieve cached values
         let input_ref = self.input_cache.borrow();
@@ -293,13 +293,122 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Feed
             ));
         }
 
-        // In a real implementation, we would compute gradient updates for all parameters
-        // For simplicity, this is just a placeholder that returns the gradient of the input
+        let cached_input = input_ref.as_ref().unwrap();
+        let cached_hidden = hidden_ref.as_ref().unwrap();
 
-        // Create a placeholder gradient for the input
-        let grad_input = Array::zeros(input.dim());
+        // Get input dimensions
+        let input_shape = input.shape();
+        let ndim = input.ndim();
+        let batch_dims: Vec<usize> = input_shape[..ndim - 1].to_vec();
+        let batch_size: usize = batch_dims.iter().product();
 
-        // Return gradient with respect to input
+        // Reshape cached values to 2D
+        let cached_input_2d = cached_input
+            .clone()
+            .into_shape_with_order((batch_size, self.d_model))
+            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape cached input: {}", e)))?;
+
+        let cached_hidden_2d = cached_hidden
+            .clone()
+            .into_shape_with_order((batch_size, self.d_ff))
+            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape cached hidden: {}", e)))?;
+
+        // Reshape grad_output to 2D
+        let grad_output_2d = grad_output
+            .clone()
+            .into_shape_with_order((batch_size, self.d_model))
+            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape grad_output: {}", e)))?;
+
+        // Backward through second linear layer: grad_output -> grad_hidden
+        let mut grad_hidden = Array::<F, _>::zeros((batch_size, self.d_ff));
+        for i in 0..batch_size {
+            for k in 0..self.d_ff {
+                let mut sum = F::zero();
+                for j in 0..self.d_model {
+                    sum = sum + grad_output_2d[[i, j]] * self.w2[[k, j]];
+                }
+                grad_hidden[[i, k]] = sum;
+            }
+        }
+
+        // Compute gradients for w2 and b2
+        let mut grad_w2 = Array::<F, _>::zeros(self.w2.dim());
+        for k in 0..self.d_ff {
+            for j in 0..self.d_model {
+                let mut sum = F::zero();
+                for i in 0..batch_size {
+                    sum = sum + cached_hidden_2d[[i, k]] * grad_output_2d[[i, j]];
+                }
+                grad_w2[[k, j]] = sum;
+            }
+        }
+
+        let mut grad_b2 = Array::<F, _>::zeros(self.b2.dim());
+        for j in 0..self.d_model {
+            let mut sum = F::zero();
+            for i in 0..batch_size {
+                sum = sum + grad_output_2d[[i, j]];
+            }
+            grad_b2[[j]] = sum;
+        }
+
+        // Backward through ReLU activation
+        for i in 0..batch_size {
+            for k in 0..self.d_ff {
+                if cached_hidden_2d[[i, k]] <= F::zero() {
+                    grad_hidden[[i, k]] = F::zero();
+                }
+            }
+        }
+
+        // Backward through first linear layer: grad_hidden -> grad_input
+        let mut grad_input_2d = Array::<F, _>::zeros((batch_size, self.d_model));
+        for i in 0..batch_size {
+            for k in 0..self.d_model {
+                let mut sum = F::zero();
+                for j in 0..self.d_ff {
+                    sum = sum + grad_hidden[[i, j]] * self.w1[[k, j]];
+                }
+                grad_input_2d[[i, k]] = sum;
+            }
+        }
+
+        // Compute gradients for w1 and b1
+        let mut grad_w1 = Array::<F, _>::zeros(self.w1.dim());
+        for k in 0..self.d_model {
+            for j in 0..self.d_ff {
+                let mut sum = F::zero();
+                for i in 0..batch_size {
+                    sum = sum + cached_input_2d[[i, k]] * grad_hidden[[i, j]];
+                }
+                grad_w1[[k, j]] = sum;
+            }
+        }
+
+        let mut grad_b1 = Array::<F, _>::zeros(self.b1.dim());
+        for j in 0..self.d_ff {
+            let mut sum = F::zero();
+            for i in 0..batch_size {
+                sum = sum + grad_hidden[[i, j]];
+            }
+            grad_b1[[j]] = sum;
+        }
+
+        // Store computed gradients
+        // Note: We need to modify the struct to make gradients mutable
+        // For now, we'll store gradients in the existing gradient arrays
+        // In a more complete implementation, these would be handled by the optimizer
+        let mut self_mut = unsafe { &mut *(self as *const Self as *mut Self) };
+        self_mut.dw1 = grad_w1.into_dyn();
+        self_mut.db1 = grad_b1.into_dyn();
+        self_mut.dw2 = grad_w2.into_dyn();
+        self_mut.db2 = grad_b2.into_dyn();
+
+        // Reshape grad_input back to original shape
+        let grad_input = grad_input_2d
+            .into_shape_with_order(input_shape)
+            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape grad_input: {}", e)))?;
+
         Ok(grad_input)
     }
 

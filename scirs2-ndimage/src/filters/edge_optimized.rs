@@ -13,6 +13,16 @@ use std::sync::Arc;
 use super::BorderMode;
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion from f64 to float
+fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
+    T::from_f64(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!(
+            "Failed to convert constant {} to float type",
+            value
+        ))
+    })
+}
+
 /// Optimized Sobel filter for detecting edges in 2D arrays
 ///
 /// This implementation provides significant performance improvements over the basic version:
@@ -53,21 +63,16 @@ where
     let mut output = Array2::zeros((height, width));
 
     // Define Sobel kernels
-    let (k1, k2, k3) = if axis == 0 {
-        // Y-derivative (vertical edges)
-        (T::one(), T::from(2).unwrap(), T::one())
-    } else {
-        // X-derivative (horizontal edges)
-        (T::one(), T::from(2).unwrap(), T::one())
-    };
+    let k2 = safe_f64_to_float(2.0)?;
+    let (k1, k3) = (T::one(), T::one());
 
     // Determine if we should use parallel processing
     let use_parallel = height * width > 10_000;
 
     if use_parallel {
-        sobel_parallel(input, &mut output, axis, k1, k2, k3, &border_mode);
+        sobel_parallel(input, &mut output, axis, k1, k2, k3, &border_mode)?;
     } else {
-        sobel_sequential(input, &mut output, axis, k1, k2, k3, &border_mode);
+        sobel_sequential(input, &mut output, axis, k1, k2, k3, &border_mode)?;
     }
 
     Ok(output)
@@ -82,7 +87,8 @@ fn sobel_sequential<T>(
     k2: T,
     k3: T,
     mode: &BorderMode,
-) where
+) -> NdimageResult<()>
+where
     T: Float + FromPrimitive + Debug + Send + Sync + 'static,
     T: SimdUnifiedOps,
 {
@@ -117,6 +123,7 @@ fn sobel_sequential<T>(
             output[[i, j]] = val;
         }
     }
+    Ok(())
 }
 
 /// Parallel Sobel implementation
@@ -128,7 +135,8 @@ fn sobel_parallel<T>(
     k2: T,
     k3: T,
     mode: &BorderMode,
-) where
+) -> NdimageResult<()>
+where
     T: Float + FromPrimitive + Debug + Send + Sync + 'static,
 {
     let (height, width) = input.dim();
@@ -202,6 +210,7 @@ fn sobel_parallel<T>(
                 row[j] = val;
             }
         });
+    Ok(())
 }
 
 /// Get pixel value with border handling
@@ -303,9 +312,9 @@ where
     let use_parallel = height * width > 10_000;
 
     if use_parallel {
-        laplace_parallel(input, &mut output, use_diagonal, &border_mode);
+        laplace_parallel(input, &mut output, use_diagonal, &border_mode)?;
     } else {
-        laplace_sequential(input, &mut output, use_diagonal, &border_mode);
+        laplace_sequential(input, &mut output, use_diagonal, &border_mode)?;
     }
 
     Ok(output)
@@ -317,11 +326,16 @@ fn laplace_sequential<T>(
     output: &mut Array2<T>,
     use_diagonal: bool,
     mode: &BorderMode,
-) where
+) -> NdimageResult<()>
+where
     T: Float + FromPrimitive + Debug + Send + Sync + 'static,
     T: SimdUnifiedOps,
 {
     let (height, width) = input.dim();
+    
+    // Pre-calculate constants
+    let eight = safe_f64_to_float(8.0)?;
+    let four = safe_f64_to_float(4.0)?;
 
     for i in 0..height {
         for j in 0..width {
@@ -333,7 +347,7 @@ fn laplace_sequential<T>(
                 for di in -1..=1 {
                     for dj in -1..=1 {
                         if di == 0 && dj == 0 {
-                            sum = sum + center * T::from(8).unwrap();
+                            sum = sum + center * eight;
                         } else {
                             sum = sum
                                 - get_pixel_value(input, i as isize + di, j as isize + dj, mode);
@@ -343,7 +357,7 @@ fn laplace_sequential<T>(
                 output[[i, j]] = sum;
             } else {
                 // 4-connected Laplacian: cross neighbors = -1, center = 4
-                let sum = center * T::from(4).unwrap()
+                let sum = center * four
                     - get_pixel_value(input, i as isize - 1, j as isize, mode)
                     - get_pixel_value(input, i as isize + 1, j as isize, mode)
                     - get_pixel_value(input, i as isize, j as isize - 1, mode)
@@ -352,6 +366,7 @@ fn laplace_sequential<T>(
             }
         }
     }
+    Ok(())
 }
 
 /// Parallel Laplacian implementation
@@ -360,12 +375,17 @@ fn laplace_parallel<T>(
     output: &mut Array2<T>,
     use_diagonal: bool,
     mode: &BorderMode,
-) where
+) -> NdimageResult<()>
+where
     T: Float + FromPrimitive + Debug + Send + Sync + 'static,
 {
     let (height, width) = input.dim();
     let input_ptr = input as *const ArrayView2<T>;
     let mode_clone = mode.clone();
+    
+    // Pre-calculate constants outside the parallel closure
+    let eight = safe_f64_to_float(8.0)?;
+    let four = safe_f64_to_float(4.0)?;
 
     output
         .axis_iter_mut(Axis(0))
@@ -383,7 +403,7 @@ fn laplace_parallel<T>(
                     for di in -1..=1 {
                         for dj in -1..=1 {
                             if di == 0 && dj == 0 {
-                                sum = sum + center * T::from(8).unwrap();
+                                sum = sum + center * eight;
                             } else {
                                 sum = sum
                                     - get_pixel_value(
@@ -398,7 +418,7 @@ fn laplace_parallel<T>(
                     row[j] = sum;
                 } else {
                     // 4-connected Laplacian
-                    let sum = center * T::from(4).unwrap()
+                    let sum = center * four
                         - get_pixel_value(input_ref, i as isize - 1, j as isize, &mode_clone)
                         - get_pixel_value(input_ref, i as isize + 1, j as isize, &mode_clone)
                         - get_pixel_value(input_ref, i as isize, j as isize - 1, &mode_clone)
@@ -407,6 +427,7 @@ fn laplace_parallel<T>(
                 }
             }
         });
+    Ok(())
 }
 
 /// Compute gradient magnitude from x and y gradients
@@ -439,9 +460,15 @@ where
     // Use SIMD operations for magnitude calculation
     if height * width > 1000 && T::simd_available() {
         // Process using SIMD
-        let gx_flat = grad_x.as_slice().unwrap();
-        let gy_flat = grad_y.as_slice().unwrap();
-        let mag_flat = magnitude.as_slice_mut().unwrap();
+        let gx_flat = grad_x.as_slice().ok_or_else(|| {
+            NdimageError::ComputationError("Failed to get contiguous slice from grad_x".into())
+        })?;
+        let gy_flat = grad_y.as_slice().ok_or_else(|| {
+            NdimageError::ComputationError("Failed to get contiguous slice from grad_y".into())
+        })?;
+        let mag_flat = magnitude.as_slice_mut().ok_or_else(|| {
+            NdimageError::ComputationError("Failed to get mutable contiguous slice from magnitude".into())
+        })?;
 
         T::simd_magnitude(gx_flat, gy_flat, mag_flat);
     } else {
@@ -472,7 +499,8 @@ mod tests {
         ];
 
         // Test x-gradient
-        let grad_x = sobel_2d_optimized(&input.view(), 1, None).unwrap();
+        let grad_x = sobel_2d_optimized(&input.view(), 1, None)
+            .expect("sobel_2d_optimized should succeed for test");
 
         // Edges should be detected at the boundaries of the square
         assert!(grad_x[[1, 0]].abs() > 0.0);
@@ -484,7 +512,8 @@ mod tests {
         let input = array![[0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]];
 
         // Test 4-connected Laplacian
-        let result = laplace_2d_optimized(&input.view(), false, None).unwrap();
+        let result = laplace_2d_optimized(&input.view(), false, None)
+            .expect("laplace_2d_optimized should succeed for test");
 
         // Center should have high response
         assert!(result[[1, 1]].abs() > 0.0);
@@ -495,7 +524,8 @@ mod tests {
         let grad_x = array![[1.0, 0.0], [0.0, 1.0]];
         let grad_y = array![[0.0, 1.0], [1.0, 0.0]];
 
-        let magnitude = gradient_magnitude_optimized(&grad_x.view(), &grad_y.view()).unwrap();
+        let magnitude = gradient_magnitude_optimized(&grad_x.view(), &grad_y.view())
+            .expect("gradient_magnitude_optimized should succeed for test");
 
         // All values should be sqrt(2)
         let expected = 2.0_f64.sqrt();

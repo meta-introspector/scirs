@@ -487,7 +487,7 @@ pub fn load_animation<P: AsRef<Path>>(path: P) -> Result<AnimationData> {
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 pub fn read_exif_metadata<P: AsRef<Path>>(path: P) -> Result<Option<ExifMetadata>> {
-    let path = path.as_ref();
+    let _path = path.as_ref();
 
     // Try to read EXIF data using the `exif` crate
     #[cfg(feature = "exif")]

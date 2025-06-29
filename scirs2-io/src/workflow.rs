@@ -87,6 +87,7 @@ pub enum TaskType {
 
 /// Resource requirements for tasks
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct ResourceRequirements {
     pub cpu_cores: Option<usize>,
     pub memory_gb: Option<f64>,
@@ -94,16 +95,6 @@ pub struct ResourceRequirements {
     pub disk_space_gb: Option<f64>,
 }
 
-impl Default for ResourceRequirements {
-    fn default() -> Self {
-        Self {
-            cpu_cores: None,
-            memory_gb: None,
-            gpu: None,
-            disk_space_gb: None,
-        }
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GpuRequirement {
@@ -212,7 +203,7 @@ impl WorkflowBuilder {
         self.workflow
             .dependencies
             .entry(task_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(depends_on);
 
         self
@@ -280,10 +271,8 @@ impl WorkflowBuilder {
         let mut rec_stack = HashSet::new();
 
         for task in &self.workflow.tasks {
-            if !visited.contains(&task.id) {
-                if self.has_cycle_dfs(&task.id, &mut visited, &mut rec_stack) {
-                    return true;
-                }
+            if !visited.contains(&task.id) && self.has_cycle_dfs(&task.id, &mut visited, &mut rec_stack) {
+                return true;
             }
         }
 
@@ -474,7 +463,7 @@ impl WorkflowExecutor {
 
             // Find tasks that can be executed (all dependencies met)
             for task_id in &remaining_tasks {
-                let can_execute = workflow.dependencies.get(task_id).map_or(true, |deps| {
+                let can_execute = workflow.dependencies.get(task_id).is_none_or(|deps| {
                     deps.iter().all(|dep| executed_tasks.contains(dep))
                 });
 
@@ -989,7 +978,7 @@ pub mod scheduling {
             // Skip weekends if business days only
             if complex.business_days_only {
                 while next_run.weekday().num_days_from_monday() >= 5 {
-                    next_run = next_run + Duration::days(1);
+                    next_run += Duration::days(1);
                 }
             }
 
@@ -1069,7 +1058,7 @@ pub mod engines {
             dag_code.push_str("from airflow.operators.python import PythonOperator\n");
             dag_code.push_str("from datetime import datetime, timedelta\n\n");
 
-            dag_code.push_str(&format!("dag = DAG(\n"));
+            dag_code.push_str(&"dag = DAG(\n".to_string());
             dag_code.push_str(&format!("    '{}',\n", workflow.id));
             dag_code.push_str(&format!(
                 "    description='{}',\n",
@@ -1177,7 +1166,7 @@ pub mod engines {
                 to_execute.retain(|task_id| {
                     let deps = workflow.dependencies.get(*task_id);
                     let can_execute =
-                        deps.map_or(true, |d| d.iter().all(|dep| executed.contains(dep)));
+                        deps.is_none_or(|d| d.iter().all(|dep| executed.contains(dep)));
 
                     if can_execute {
                         flow_code.push_str(&format!("    {}()\n", task_id));
@@ -1328,6 +1317,12 @@ pub mod dynamic {
             count_param: String,
             task_template: Task,
         },
+    }
+
+    impl Default for DynamicWorkflowGenerator {
+        fn default() -> Self {
+            Self::new()
+        }
     }
 
     impl DynamicWorkflowGenerator {
@@ -1629,6 +1624,12 @@ pub mod versioning {
         pub parent_version: Option<String>,
     }
 
+    impl Default for WorkflowVersionControl {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl WorkflowVersionControl {
         pub fn new() -> Self {
             Self {
@@ -1647,7 +1648,7 @@ pub mod versioning {
             let versions = self
                 .versions
                 .entry(workflow_id.clone())
-                .or_insert_with(Vec::new);
+                .or_default();
 
             let version_number = versions.len() + 1;
             let version = format!("v{}.0.0", version_number);
@@ -1950,7 +1951,7 @@ pub mod visualization {
                 ));
             }
 
-            dot.push_str("\n");
+            dot.push('\n');
 
             // Add edges
             for (task_id, deps) in &workflow.dependencies {

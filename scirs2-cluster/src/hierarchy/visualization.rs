@@ -74,6 +74,173 @@ pub struct DendrogramConfig<F: Float> {
     pub font_size: f32,
     /// Whether to truncate the dendrogram at a certain level
     pub truncate_mode: Option<TruncateMode>,
+    /// Advanced styling options
+    pub styling: DendrogramStyling,
+}
+
+/// Advanced styling options for dendrograms
+#[derive(Debug, Clone)]
+pub struct DendrogramStyling {
+    /// Background color
+    pub background_color: String,
+    /// Branch style (solid, dashed, dotted)
+    pub branch_style: BranchStyle,
+    /// Node marker style
+    pub node_markers: NodeMarkerStyle,
+    /// Label styling
+    pub label_style: LabelStyle,
+    /// Grid options
+    pub grid: Option<GridStyle>,
+    /// Shadow effects
+    pub shadows: bool,
+    /// Border around the plot
+    pub border: Option<BorderStyle>,
+}
+
+/// Branch styling options
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BranchStyle {
+    Solid,
+    Dashed,
+    Dotted,
+    DashDot,
+}
+
+/// Node marker styling
+#[derive(Debug, Clone)]
+pub struct NodeMarkerStyle {
+    /// Show markers at internal nodes
+    pub show_internal_nodes: bool,
+    /// Show markers at leaf nodes
+    pub show_leaf_nodes: bool,
+    /// Marker shape
+    pub marker_shape: MarkerShape,
+    /// Marker size
+    pub marker_size: f32,
+    /// Marker color
+    pub marker_color: String,
+}
+
+/// Available marker shapes
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MarkerShape {
+    Circle,
+    Square,
+    Triangle,
+    Diamond,
+    Cross,
+}
+
+/// Label styling options
+#[derive(Debug, Clone)]
+pub struct LabelStyle {
+    /// Label font family
+    pub font_family: String,
+    /// Label font weight
+    pub font_weight: FontWeight,
+    /// Label color
+    pub color: String,
+    /// Label rotation angle in degrees
+    pub rotation: f32,
+    /// Label background
+    pub background: Option<String>,
+    /// Label padding
+    pub padding: f32,
+}
+
+/// Font weight options
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FontWeight {
+    Normal,
+    Bold,
+    Light,
+}
+
+/// Grid styling options
+#[derive(Debug, Clone)]
+pub struct GridStyle {
+    /// Show horizontal grid lines
+    pub show_horizontal: bool,
+    /// Show vertical grid lines
+    pub show_vertical: bool,
+    /// Grid line color
+    pub color: String,
+    /// Grid line width
+    pub line_width: f32,
+    /// Grid line style
+    pub style: BranchStyle,
+}
+
+/// Border styling options
+#[derive(Debug, Clone)]
+pub struct BorderStyle {
+    /// Border color
+    pub color: String,
+    /// Border width
+    pub width: f32,
+    /// Border radius
+    pub radius: f32,
+}
+
+impl Default for DendrogramStyling {
+    fn default() -> Self {
+        Self {
+            background_color: "#ffffff".to_string(),
+            branch_style: BranchStyle::Solid,
+            node_markers: NodeMarkerStyle::default(),
+            label_style: LabelStyle::default(),
+            grid: None,
+            shadows: false,
+            border: None,
+        }
+    }
+}
+
+impl Default for NodeMarkerStyle {
+    fn default() -> Self {
+        Self {
+            show_internal_nodes: false,
+            show_leaf_nodes: true,
+            marker_shape: MarkerShape::Circle,
+            marker_size: 4.0,
+            marker_color: "#333333".to_string(),
+        }
+    }
+}
+
+impl Default for LabelStyle {
+    fn default() -> Self {
+        Self {
+            font_family: "Arial, sans-serif".to_string(),
+            font_weight: FontWeight::Normal,
+            color: "#000000".to_string(),
+            rotation: 0.0,
+            background: None,
+            padding: 2.0,
+        }
+    }
+}
+
+impl Default for GridStyle {
+    fn default() -> Self {
+        Self {
+            show_horizontal: true,
+            show_vertical: false,
+            color: "#e0e0e0".to_string(),
+            line_width: 0.5,
+            style: BranchStyle::Solid,
+        }
+    }
+}
+
+impl Default for BorderStyle {
+    fn default() -> Self {
+        Self {
+            color: "#cccccc".to_string(),
+            width: 1.0,
+            radius: 0.0,
+        }
+    }
 }
 
 /// Dendrogram orientation options
@@ -111,6 +278,7 @@ impl<F: Float + FromPrimitive> Default for DendrogramConfig<F> {
             line_width: 1.0,
             font_size: 10.0,
             truncate_mode: None,
+            styling: DendrogramStyling::default(),
         }
     }
 }
@@ -128,6 +296,8 @@ pub struct DendrogramPlot<F: Float> {
     pub legend: Vec<LegendEntry>,
     /// Plot bounds (min_x, max_x, min_y, max_y)
     pub bounds: (F, F, F, F),
+    /// Configuration used to create this plot
+    pub config: DendrogramConfig<F>,
 }
 
 /// Represents a branch in the dendrogram
@@ -224,6 +394,7 @@ pub fn create_dendrogram_plot<F: Float + FromPrimitive + PartialOrd + Debug>(
         colors,
         legend,
         bounds,
+        config,
     })
 }
 
@@ -811,6 +982,35 @@ mod tests {
         assert_eq!(bounds.1, 4.0); // max_x
         assert_eq!(bounds.2, -1.0); // min_y
         assert_eq!(bounds.3, 4.0); // max_y
+    }
+}
+
+/// Tree node representation for Newick export
+#[derive(Debug, Clone)]
+enum TreeNode {
+    Leaf {
+        id: usize,
+        label: String,
+    },
+    Internal {
+        id: usize,
+        left: Box<TreeNode>,
+        right: Box<TreeNode>,
+        distance: f64,
+    },
+}
+
+impl TreeNode {
+    /// Convert tree node to Newick format string
+    fn to_newick(&self) -> String {
+        match self {
+            TreeNode::Leaf { label, .. } => label.clone(),
+            TreeNode::Internal { left, right, distance, .. } => {
+                format!("({}:{},{}:{})", 
+                    left.to_newick(), distance,
+                    right.to_newick(), distance)
+            }
+        }
     }
 }
 
@@ -1441,6 +1641,8 @@ pub mod export {
         Dot,
         /// CSV coordinates for external plotting
         Csv,
+        /// Newick tree format
+        Newick,
     }
 
     /// Export dendrogram to various formats
@@ -1454,23 +1656,130 @@ pub mod export {
             VisualizationFormat::Json => export_to_json(plot),
             VisualizationFormat::Dot => export_to_dot(plot),
             VisualizationFormat::Csv => export_to_csv(plot),
+            VisualizationFormat::Newick => {
+                Err(ClusteringError::InvalidInput(
+                    "Newick export requires linkage matrix. Use export_dendrogram_newick instead.".to_string()
+                ))
+            }
         }
+    }
+
+    /// Export dendrogram to Newick format
+    pub fn export_dendrogram_newick<F: Float + FromPrimitive + Debug>(
+        linkage_matrix: &ArrayView2<F>,
+        labels: Option<&[String]>,
+    ) -> Result<String> {
+        export_to_newick(linkage_matrix, labels)
     }
 
     /// Export to SVG format
     fn export_to_svg<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
+        let config = &plot.config;
         let mut svg = String::new();
         let (min_x, max_x, min_y, max_y) = plot.bounds;
 
+        // Calculate viewport dimensions with padding
+        let padding = 50.0;
+        let width = (max_x - min_x).to_f64().unwrap() + 2.0 * padding;
+        let height = (max_y - min_y).to_f64().unwrap() + 2.0 * padding;
+
+        // Start SVG with enhanced styling
         svg.push_str(&format!(
             "<svg width=\"800\" height=\"600\" viewBox=\"{} {} {} {}\" xmlns=\"http://www.w3.org/2000/svg\">\n",
-            min_x.to_f64().unwrap(),
-            min_y.to_f64().unwrap(),
-            (max_x - min_x).to_f64().unwrap(),
-            (max_y - min_y).to_f64().unwrap()
+            min_x.to_f64().unwrap() - padding,
+            min_y.to_f64().unwrap() - padding,
+            width,
+            height
         ));
 
-        // Add branches
+        // Add styles
+        svg.push_str("<defs>\n");
+        
+        // Add shadow filter if enabled
+        if config.styling.shadows {
+            svg.push_str(r#"
+                <filter id="drop-shadow">
+                    <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+                </filter>
+            "#);
+        }
+        
+        svg.push_str("</defs>\n");
+
+        // Add background
+        svg.push_str(&format!(
+            "<rect width=\"100%\" height=\"100%\" fill=\"{}\"/>\n",
+            config.styling.background_color
+        ));
+
+        // Add border if specified
+        if let Some(ref border) = config.styling.border {
+            svg.push_str(&format!(
+                "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"none\" stroke=\"{}\" stroke-width=\"{}\" rx=\"{}\"/>\n",
+                min_x.to_f64().unwrap() - padding + border.width as f64,
+                min_y.to_f64().unwrap() - padding + border.width as f64,
+                width - 2.0 * border.width as f64,
+                height - 2.0 * border.width as f64,
+                border.color,
+                border.width,
+                border.radius
+            ));
+        }
+
+        // Add grid if specified
+        if let Some(ref grid) = config.styling.grid {
+            let grid_style = match grid.style {
+                BranchStyle::Solid => "solid",
+                BranchStyle::Dashed => "dashed",
+                BranchStyle::Dotted => "dotted",
+                BranchStyle::DashDot => "dash-dot",
+            };
+
+            if grid.show_horizontal {
+                // Add horizontal grid lines
+                let grid_spacing = (max_y - min_y).to_f64().unwrap() / 10.0;
+                for i in 1..10 {
+                    let y = min_y.to_f64().unwrap() + i as f64 * grid_spacing;
+                    svg.push_str(&format!(
+                        "<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" stroke=\"{}\" stroke-width=\"{}\" stroke-dasharray=\"{}\"/>\n",
+                        min_x.to_f64().unwrap(),
+                        y,
+                        max_x.to_f64().unwrap(),
+                        y,
+                        grid.color,
+                        grid.line_width,
+                        if grid_style == "dashed" { "5,5" } else if grid_style == "dotted" { "2,2" } else { "none" }
+                    ));
+                }
+            }
+
+            if grid.show_vertical {
+                // Add vertical grid lines
+                let grid_spacing = (max_x - min_x).to_f64().unwrap() / 10.0;
+                for i in 1..10 {
+                    let x = min_x.to_f64().unwrap() + i as f64 * grid_spacing;
+                    svg.push_str(&format!(
+                        "<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" stroke=\"{}\" stroke-width=\"{}\" stroke-dasharray=\"{}\"/>\n",
+                        x,
+                        min_y.to_f64().unwrap(),
+                        x,
+                        max_y.to_f64().unwrap(),
+                        grid.color,
+                        grid.line_width,
+                        if grid_style == "dashed" { "5,5" } else if grid_style == "dotted" { "2,2" } else { "none" }
+                    ));
+                }
+            }
+        }
+
+        // Add branches with enhanced styling
+        let branch_style = match config.styling.branch_style {
+            BranchStyle::Solid => "none",
+            BranchStyle::Dashed => "10,5",
+            BranchStyle::Dotted => "3,3",
+            BranchStyle::DashDot => "10,5,3,5",
+        };
+
         for (i, branch) in plot.branches.iter().enumerate() {
             let color = if i < plot.colors.len() {
                 &plot.colors[i]
@@ -1478,21 +1787,95 @@ pub mod export {
                 "#000000"
             };
 
+            let shadow_filter = if config.styling.shadows { 
+                " filter=\"url(#drop-shadow)\"" 
+            } else { 
+                "" 
+            };
+
             svg.push_str(&format!(
-                "<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" stroke=\"{}\" stroke-width=\"1\"/>\n",
+                "<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" stroke=\"{}\" stroke-width=\"{}\" stroke-dasharray=\"{}\"{}/>\n",
                 branch.start.0.to_f64().unwrap(),
                 branch.start.1.to_f64().unwrap(),
                 branch.end.0.to_f64().unwrap(),
                 branch.end.1.to_f64().unwrap(),
-                color
+                color,
+                config.line_width,
+                branch_style,
+                shadow_filter
             ));
         }
 
-        // Add leaves
+        // Add node markers
+        if config.styling.node_markers.show_leaf_nodes {
+            for leaf in &plot.leaves {
+                let marker_svg = match config.styling.node_markers.marker_shape {
+                    MarkerShape::Circle => format!(
+                        "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" fill=\"{}\"/>\n",
+                        leaf.position.0,
+                        leaf.position.1,
+                        config.styling.node_markers.marker_size / 2.0,
+                        config.styling.node_markers.marker_color
+                    ),
+                    MarkerShape::Square => format!(
+                        "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"{}\"/>\n",
+                        leaf.position.0 - config.styling.node_markers.marker_size / 2.0,
+                        leaf.position.1 - config.styling.node_markers.marker_size / 2.0,
+                        config.styling.node_markers.marker_size,
+                        config.styling.node_markers.marker_size,
+                        config.styling.node_markers.marker_color
+                    ),
+                    _ => format!(
+                        "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" fill=\"{}\"/>\n",
+                        leaf.position.0,
+                        leaf.position.1,
+                        config.styling.node_markers.marker_size / 2.0,
+                        config.styling.node_markers.marker_color
+                    ),
+                };
+                svg.push_str(&marker_svg);
+            }
+        }
+
+        // Add leaves with enhanced label styling
         for leaf in &plot.leaves {
+            let font_weight = match config.styling.label_style.font_weight {
+                FontWeight::Normal => "normal",
+                FontWeight::Bold => "bold",
+                FontWeight::Light => "300",
+            };
+
+            let transform = if config.styling.label_style.rotation != 0.0 {
+                format!(" transform=\"rotate({}, {}, {})\"", 
+                    config.styling.label_style.rotation,
+                    leaf.position.0,
+                    leaf.position.1)
+            } else {
+                String::new()
+            };
+
+            // Add label background if specified
+            if let Some(ref bg_color) = config.styling.label_style.background {
+                svg.push_str(&format!(
+                    "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"{}\" rx=\"2\"/>\n",
+                    leaf.position.0 - config.styling.label_style.padding * 3.0,
+                    leaf.position.1 - config.font_size / 2.0 - config.styling.label_style.padding,
+                    config.styling.label_style.padding * 6.0,
+                    config.font_size + 2.0 * config.styling.label_style.padding,
+                    bg_color
+                ));
+            }
+
             svg.push_str(&format!(
-                "<text x=\"{}\" y=\"{}\" font-size=\"10\" text-anchor=\"middle\">{}</text>\n",
-                leaf.position.0, leaf.position.1, leaf.label
+                "<text x=\"{}\" y=\"{}\" font-size=\"{}\" font-family=\"{}\" font-weight=\"{}\" fill=\"{}\" text-anchor=\"middle\"{}>{}</text>\n",
+                leaf.position.0,
+                leaf.position.1,
+                config.font_size,
+                config.styling.label_style.font_family,
+                font_weight,
+                config.styling.label_style.color,
+                transform,
+                leaf.label
             ));
         }
 
@@ -1508,6 +1891,53 @@ pub mod export {
     }
 
     /// Export to JSON format
+    /// Export dendrogram to Newick format
+    fn export_to_newick<F: Float + FromPrimitive + Debug>(
+        linkage_matrix: &ArrayView2<F>,
+        labels: Option<&[String]>,
+    ) -> Result<String> {
+        let n_samples = linkage_matrix.shape()[0] + 1;
+        
+        // Build tree structure from linkage matrix
+        let mut tree_nodes = Vec::new();
+        
+        // Create leaf nodes
+        for i in 0..n_samples {
+            let label = if let Some(labels) = labels {
+                labels.get(i).cloned().unwrap_or_else(|| format!("node_{}", i))
+            } else {
+                format!("node_{}", i)
+            };
+            tree_nodes.push(TreeNode::Leaf { id: i, label });
+        }
+        
+        // Create internal nodes from linkage matrix
+        for (merge_idx, row) in linkage_matrix.outer_iter().enumerate() {
+            let left_id = row[0].to_usize().unwrap();
+            let right_id = row[1].to_usize().unwrap();
+            let distance = row[2].to_f64().unwrap_or(0.0);
+            
+            let left_child = tree_nodes[left_id].clone();
+            let right_child = tree_nodes[right_id].clone();
+            
+            let internal_node = TreeNode::Internal {
+                id: n_samples + merge_idx,
+                left: Box::new(left_child),
+                right: Box::new(right_child),
+                distance,
+            };
+            
+            tree_nodes.push(internal_node);
+        }
+        
+        // The root is the last node created
+        let root = &tree_nodes[tree_nodes.len() - 1];
+        
+        // Convert to Newick format
+        let newick = format!("{};", root.to_newick());
+        Ok(newick)
+    }
+
     fn export_to_json<F: Float + FromPrimitive + Debug>(
         plot: &DendrogramPlot<F>,
     ) -> Result<String> {

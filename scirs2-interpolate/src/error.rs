@@ -207,4 +207,129 @@ impl InterpolateError {
             method, required, provided
         ))
     }
+
+    /// Create an actionable parameter error with suggestions
+    pub fn invalid_parameter_with_suggestion<T: std::fmt::Display>(
+        parameter: impl Into<String>,
+        value: T,
+        context: impl Into<String>,
+        suggestion: impl Into<String>,
+    ) -> Self {
+        Self::InvalidParameter {
+            parameter: parameter.into(),
+            expected: suggestion.into(),
+            actual: value.to_string(),
+            context: context.into(),
+        }
+    }
+
+    /// Create an actionable domain error with recovery suggestions
+    pub fn out_of_domain_with_suggestion<T: std::fmt::Display>(
+        point: T,
+        min: T,
+        max: T,
+        context: impl Into<String>,
+        suggestion: impl Into<String>,
+    ) -> Self {
+        let context_str = context.into();
+        let suggestion_str = suggestion.into();
+        Self::OutOfDomain {
+            point: point.to_string(),
+            min: min.to_string(),
+            max: max.to_string(),
+            context: format!("{} - Suggestion: {}", context_str, suggestion_str),
+        }
+    }
+
+    /// Create a numerical stability error with actionable advice
+    pub fn numerical_instability_with_advice(
+        context: &str,
+        details: &str,
+        advice: &str,
+    ) -> Self {
+        Self::NumericalError(format!(
+            "Numerical instability in {}: {} - ADVICE: {}",
+            context, details, advice
+        ))
+    }
+
+    /// Create a convergence failure with actionable recommendations
+    pub fn convergence_failure_with_advice(
+        method: &str,
+        iterations: usize,
+        advice: &str,
+    ) -> Self {
+        Self::ComputationError(format!(
+            "{} failed to converge after {} iterations - RECOMMENDATION: {}",
+            method, iterations, advice
+        ))
+    }
+
+    /// Create a matrix conditioning error with specific recommendations
+    pub fn matrix_conditioning_error(
+        condition_number: f64,
+        context: &str,
+        recommended_regularization: Option<f64>,
+    ) -> Self {
+        let advice = if let Some(reg) = recommended_regularization {
+            format!(
+                "Matrix is ill-conditioned (condition number: {:.2e}). Try regularization parameter ≥ {:.2e}",
+                condition_number, reg
+            )
+        } else {
+            format!(
+                "Matrix is ill-conditioned (condition number: {:.2e}). Consider data preprocessing or regularization",
+                condition_number
+            )
+        };
+
+        Self::LinalgError(format!(
+            "{}: {} - SOLUTION: {}",
+            context, 
+            if condition_number > 1e16 { "Severe numerical instability" } else { "Poor numerical conditioning" },
+            advice
+        ))
+    }
+
+    /// Create a data quality error with preprocessing suggestions
+    pub fn data_quality_error(
+        issue: &str,
+        context: &str,
+        preprocessing_advice: &str,
+    ) -> Self {
+        Self::InvalidInput {
+            message: format!(
+                "{} detected in {}: {} - DATA PREPROCESSING: {}",
+                issue, context, "Data may be unsuitable for interpolation", preprocessing_advice
+            ),
+        }
+    }
+
+    /// Create a method selection error with alternative suggestions
+    pub fn method_selection_error(
+        attempted_method: &str,
+        data_characteristics: &str,
+        recommended_alternatives: &[&str],
+    ) -> Self {
+        let alternatives = recommended_alternatives.join(", ");
+        Self::UnsupportedOperation(format!(
+            "{} is not suitable for data with {}: {} - ALTERNATIVES: Try {}",
+            attempted_method,
+            data_characteristics,
+            "Consider using a different interpolation method",
+            alternatives
+        ))
+    }
+
+    /// Create a performance warning with optimization suggestions
+    pub fn performance_warning(
+        operation: &str,
+        data_size: usize,
+        optimization_advice: &str,
+    ) -> Self {
+        Self::ComputationError(format!(
+            "{} may be slow for {} data points - OPTIMIZATION: {}",
+            operation, data_size, optimization_advice
+        ))
+    }
 }

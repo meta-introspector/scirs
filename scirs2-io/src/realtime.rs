@@ -51,12 +51,14 @@ use crate::error::{IoError, Result};
 use futures::{SinkExt, Stream, StreamExt};
 use ndarray::{Array1, Array2, ArrayD, ArrayView1, IxDyn};
 use scirs2_core::numeric::ScientificNumber;
+use serde_json;
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::{broadcast, mpsc, RwLock};
 use tokio::time::{interval, sleep};
+use url;
 
 /// Streaming protocol types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -199,30 +201,46 @@ impl StreamClient {
         }
     }
 
-    /// Connect to the stream
+    /// Connect to the stream with enhanced error handling and retry logic
     pub async fn connect(&mut self) -> Result<()> {
         let mut attempts = 0;
         let mut delay = self.config.backoff.initial_delay;
+        let start_time = Instant::now();
 
         loop {
             attempts += 1;
             self.metrics.write().await.connection_attempts += 1;
+
+            // Add timeout for total connection time (5 minutes max)
+            if start_time.elapsed() > Duration::from_secs(300) {
+                return Err(IoError::TimeoutError(
+                    "Connection timeout: exceeded maximum connection time of 5 minutes".to_string()
+                ));
+            }
 
             match self.create_connection().await {
                 Ok(mut conn) => match conn.connect().await {
                     Ok(()) => {
                         self.connection = Some(conn);
                         self.metrics.write().await.successful_connections += 1;
+                        
+                        // Log successful connection for debugging
+                        if attempts > 1 {
+                            println!("Successfully connected after {} attempts in {:.2}s", 
+                                   attempts, start_time.elapsed().as_secs_f64());
+                        }
                         return Ok(());
                     }
                     Err(e)
                         if self.config.reconnect && attempts < self.config.backoff.max_retries =>
                     {
-                        eprintln!("Connection failed (attempt {}): {}", attempts, e);
+                        eprintln!("Connection failed (attempt {}/{}): {}", 
+                                attempts, self.config.backoff.max_retries, e);
                         sleep(delay).await;
-                        delay = (delay.as_secs_f64() * self.config.backoff.multiplier)
-                            .min(self.config.backoff.max_delay.as_secs_f64());
-                        delay = Duration::from_secs_f64(delay.as_secs_f64());
+                        delay = Duration::from_secs_f64(
+                            (delay.as_secs_f64() * self.config.backoff.multiplier)
+                                .min(self.config.backoff.max_delay.as_secs_f64())
+                        );
                     }
                     Err(e) => return Err(e),
                 },
@@ -481,6 +499,7 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
 /// WebSocket connection implementation
 struct WebSocketConnection {
     config: StreamConfig,
+    ws_stream: Option<tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>>,
     connected: bool,
 }
 
@@ -488,6 +507,7 @@ impl WebSocketConnection {
     fn new(config: &StreamConfig) -> Self {
         Self {
             config: config.clone(),
+            ws_stream: None,
             connected: false,
         }
     }
@@ -496,24 +516,94 @@ impl WebSocketConnection {
 #[async_trait::async_trait]
 impl StreamConnection for WebSocketConnection {
     async fn connect(&mut self) -> Result<()> {
-        // Simplified - would use actual WebSocket library
+        use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
+        
+        let url = url::Url::parse(&self.config.endpoint)
+            .map_err(|e| IoError::ParseError(format!("Invalid WebSocket URL: {}", e)))?;
+        
+        let (ws_stream, _response) = tokio::time::timeout(
+            self.config.timeout,
+            connect_async(url)
+        ).await
+            .map_err(|_| IoError::TimeoutError("WebSocket connection timeout".to_string()))?
+            .map_err(|e| IoError::NetworkError(format!("WebSocket connection failed: {}", e)))?;
+        
+        self.ws_stream = Some(ws_stream);
         self.connected = true;
         Ok(())
     }
 
     async fn receive(&mut self) -> Result<Vec<u8>> {
-        if !self.connected {
+        use tokio_tungstenite::tungstenite::protocol::Message;
+        use futures::SinkExt;
+        
+        if !self.connected || self.ws_stream.is_none() {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
-        // Simplified - would receive actual data
-        Ok(vec![0u8; 100])
+        
+        if let Some(ws_stream) = &mut self.ws_stream {
+            match tokio::time::timeout(self.config.timeout, ws_stream.next()).await {
+                Ok(Some(msg_result)) => {
+                    match msg_result.map_err(|e| IoError::NetworkError(format!("WebSocket receive error: {}", e)))? {
+                        Message::Binary(data) => Ok(data),
+                        Message::Text(text) => Ok(text.into_bytes()),
+                        Message::Close(_) => {
+                            self.connected = false;
+                            Err(IoError::NetworkError("WebSocket connection closed by peer".to_string()))
+                        }
+                        Message::Ping(data) => {
+                            // Respond to ping with pong
+                            let _ = ws_stream.send(Message::Pong(data.clone())).await;
+                            Ok(data)
+                        }
+                        Message::Pong(_) => {
+                            // Pong received, request next message
+                            self.receive().await
+                        }
+                        Message::Frame(_) => {
+                            Err(IoError::ParseError("Unexpected frame message".to_string()))
+                        }
+                    }
+                }
+                Ok(None) => {
+                    self.connected = false;
+                    Err(IoError::NetworkError("WebSocket stream ended".to_string()))
+                }
+                Err(_) => {
+                    Err(IoError::TimeoutError("WebSocket receive timeout".to_string()))
+                }
+            }
+        } else {
+            Err(IoError::ParseError("WebSocket stream not initialized".to_string()))
+        }
     }
 
-    async fn send(&mut self, _data: &[u8]) -> Result<()> {
-        if !self.connected {
+    async fn send(&mut self, data: &[u8]) -> Result<()> {
+        use tokio_tungstenite::tungstenite::protocol::Message;
+        use futures::SinkExt;
+        
+        if !self.connected || self.ws_stream.is_none() {
             return Err(IoError::FileError("Not connected".to_string()));
         }
-        Ok(())
+        
+        if let Some(ws_stream) = &mut self.ws_stream {
+            let message = match self.config.format {
+                DataFormat::Binary => Message::Binary(data.to_vec()),
+                DataFormat::Json => Message::Text(
+                    String::from_utf8(data.to_vec())
+                        .map_err(|e| IoError::ParseError(format!("Invalid UTF-8 for JSON: {}", e)))?
+                ),
+                _ => Message::Binary(data.to_vec()),
+            };
+            
+            tokio::time::timeout(self.config.timeout, ws_stream.send(message)).await
+                .map_err(|_| IoError::TimeoutError("WebSocket send timeout".to_string()))?
+                .map_err(|e| IoError::NetworkError(format!("WebSocket send error: {}", e)))?;
+            
+            Ok(())
+        } else {
+            Err(IoError::ParseError("WebSocket stream not initialized".to_string()))
+        }
     }
 
     fn is_connected(&self) -> bool {
@@ -521,6 +611,14 @@ impl StreamConnection for WebSocketConnection {
     }
 
     async fn close(&mut self) -> Result<()> {
+        use tokio_tungstenite::tungstenite::protocol::Message;
+        use futures::SinkExt;
+        
+        if let Some(ws_stream) = &mut self.ws_stream {
+            let _ = ws_stream.send(Message::Close(None)).await;
+            let _ = ws_stream.close().await;
+        }
+        self.ws_stream = None;
         self.connected = false;
         Ok(())
     }
@@ -529,6 +627,7 @@ impl StreamConnection for WebSocketConnection {
 /// TCP connection implementation
 struct TcpConnection {
     config: StreamConfig,
+    stream: Option<tokio::net::TcpStream>,
     connected: bool,
 }
 
@@ -536,6 +635,7 @@ impl TcpConnection {
     fn new(config: &StreamConfig) -> Self {
         Self {
             config: config.clone(),
+            stream: None,
             connected: false,
         }
     }
@@ -544,23 +644,77 @@ impl TcpConnection {
 #[async_trait::async_trait]
 impl StreamConnection for TcpConnection {
     async fn connect(&mut self) -> Result<()> {
-        // Simplified - would use actual TCP connection
+        use tokio::net::TcpStream;
+        
+        // Parse endpoint address
+        let addr = self.config.endpoint.parse::<std::net::SocketAddr>()
+            .map_err(|e| IoError::ParseError(format!("Invalid TCP address: {}", e)))?;
+        
+        let stream = tokio::time::timeout(
+            self.config.timeout,
+            TcpStream::connect(addr)
+        ).await
+            .map_err(|_| IoError::TimeoutError("TCP connection timeout".to_string()))?
+            .map_err(|e| IoError::NetworkError(format!("TCP connection failed: {}", e)))?;
+        
+        self.stream = Some(stream);
         self.connected = true;
         Ok(())
     }
 
     async fn receive(&mut self) -> Result<Vec<u8>> {
-        if !self.connected {
+        use tokio::io::{AsyncReadExt, BufReader};
+        
+        if !self.connected || self.stream.is_none() {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
-        Ok(vec![0u8; 100])
+        
+        if let Some(stream) = &mut self.stream {
+            let mut buffer = vec![0u8; self.config.buffer_size];
+            
+            match tokio::time::timeout(self.config.timeout, stream.read(&mut buffer)).await {
+                Ok(Ok(bytes_read)) => {
+                    if bytes_read == 0 {
+                        self.connected = false;
+                        return Err(IoError::NetworkError("TCP connection closed by peer".to_string()));
+                    }
+                    buffer.truncate(bytes_read);
+                    Ok(buffer)
+                }
+                Ok(Err(e)) => {
+                    self.connected = false;
+                    Err(IoError::NetworkError(format!("TCP read error: {}", e)))
+                }
+                Err(_) => {
+                    Err(IoError::TimeoutError("TCP receive timeout".to_string()))
+                }
+            }
+        } else {
+            Err(IoError::ParseError("TCP stream not initialized".to_string()))
+        }
     }
 
-    async fn send(&mut self, _data: &[u8]) -> Result<()> {
-        if !self.connected {
+    async fn send(&mut self, data: &[u8]) -> Result<()> {
+        use tokio::io::AsyncWriteExt;
+        
+        if !self.connected || self.stream.is_none() {
             return Err(IoError::FileError("Not connected".to_string()));
         }
-        Ok(())
+        
+        if let Some(stream) = &mut self.stream {
+            tokio::time::timeout(self.config.timeout, stream.write_all(data)).await
+                .map_err(|_| IoError::TimeoutError("TCP send timeout".to_string()))?
+                .map_err(|e| IoError::NetworkError(format!("TCP write error: {}", e)))?;
+            
+            // Ensure data is flushed
+            tokio::time::timeout(self.config.timeout, stream.flush()).await
+                .map_err(|_| IoError::TimeoutError("TCP flush timeout".to_string()))?
+                .map_err(|e| IoError::NetworkError(format!("TCP flush error: {}", e)))?;
+            
+            Ok(())
+        } else {
+            Err(IoError::ParseError("TCP stream not initialized".to_string()))
+        }
     }
 
     fn is_connected(&self) -> bool {
@@ -568,6 +722,11 @@ impl StreamConnection for TcpConnection {
     }
 
     async fn close(&mut self) -> Result<()> {
+        use tokio::io::AsyncWriteExt;
+        
+        if let Some(mut stream) = self.stream.take() {
+            let _ = stream.shutdown().await;
+        }
         self.connected = false;
         Ok(())
     }
@@ -693,17 +852,33 @@ impl StreamConnection for GrpcStreamConnection {
 /// MQTT connection implementation
 struct MqttConnection {
     config: StreamConfig,
+    client_id: String,
+    topic: String, 
+    qos: u8,
     connected: bool,
-    topic: String,
     message_queue: Arc<Mutex<VecDeque<Vec<u8>>>>,
+    // In real implementation, would hold MQTT client handle
+    // client: Option<rumqttc::AsyncClient>,
+    // eventloop: Option<rumqttc::EventLoop>,
 }
 
 impl MqttConnection {
     fn new(config: &StreamConfig) -> Self {
+        // Generate unique client ID
+        let client_id = format!(
+            "scirs2-io-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        
         Self {
             config: config.clone(),
+            client_id,
+            topic: "scirs2/data".to_string(),
+            qos: 1, // At least once delivery
             connected: false,
-            topic: "sensors/data".to_string(),
             message_queue: Arc::new(Mutex::new(VecDeque::new())),
         }
     }
@@ -712,7 +887,47 @@ impl MqttConnection {
 #[async_trait::async_trait]
 impl StreamConnection for MqttConnection {
     async fn connect(&mut self) -> Result<()> {
-        // In real implementation, would connect to MQTT broker
+        // Parse broker URL from endpoint
+        // Format: mqtt://[username:password@]host:port[/topic]
+        let url = url::Url::parse(&self.config.endpoint)
+            .map_err(|e| IoError::ParseError(format!("Invalid MQTT URL: {}", e)))?;
+        
+        let host = url.host_str()
+            .ok_or_else(|| IoError::ParseError("MQTT URL missing host".to_string()))?;
+        let port = url.port().unwrap_or(1883);
+        
+        // Extract topic from path if provided
+        if !url.path().is_empty() && url.path() != "/" {
+            self.topic = url.path().trim_start_matches('/').to_string();
+        }
+        
+        // In real implementation, would use rumqttc or similar MQTT client
+        /*
+        let mut mqttoptions = rumqttc::MqttOptions::new(&self.client_id, host, port);
+        
+        if let Some(password) = url.password() {
+            let username = url.username();
+            if !username.is_empty() {
+                mqttoptions.set_credentials(username, password);
+            }
+        }
+        
+        mqttoptions.set_keep_alive(Duration::from_secs(60));
+        mqttoptions.set_connection_timeout(self.config.timeout);
+        
+        let (client, mut eventloop) = rumqttc::AsyncClient::new(mqttoptions, 10);
+        
+        // Connect and subscribe
+        client.connect().await.map_err(|e| IoError::NetworkError(format!("MQTT connect error: {}", e)))?;
+        client.subscribe(&self.topic, rumqttc::QoS::AtLeastOnce).await
+            .map_err(|e| IoError::NetworkError(format!("MQTT subscribe error: {}", e)))?;
+        
+        self.client = Some(client);
+        self.eventloop = Some(eventloop);
+        */
+        
+        // Placeholder implementation
+        tokio::time::sleep(Duration::from_millis(100)).await; // Simulate connection time
         self.connected = true;
         Ok(())
     }
@@ -722,21 +937,54 @@ impl StreamConnection for MqttConnection {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
 
-        // In real implementation, would receive from subscribed topics
+        // In real implementation, would poll the event loop for incoming messages
+        /*
+        if let Some(eventloop) = &mut self.eventloop {
+            match tokio::time::timeout(self.config.timeout, eventloop.poll()).await {
+                Ok(Ok(event)) => {
+                    match event {
+                        rumqttc::Event::Incoming(rumqttc::Packet::Publish(publish)) => {
+                            return Ok(publish.payload.to_vec());
+                        }
+                        _ => {
+                            // Handle other events (connection, ping, etc.)
+                        }
+                    }
+                }
+                Ok(Err(e)) => {
+                    return Err(IoError::NetworkError(format!("MQTT receive error: {}", e)));
+                }
+                Err(_) => {
+                    return Err(IoError::TimeoutError("MQTT receive timeout".to_string()));
+                }
+            }
+        }
+        */
+        
+        // Check local message queue first
         if let Ok(mut queue) = self.message_queue.lock() {
             if let Some(message) = queue.pop_front() {
                 return Ok(message);
             }
         }
 
-        // Simulate incoming message
-        let payload = format!("{{\"topic\": \"{}\", \"timestamp\": {}, \"payload\": {{\"temp\": 23.5, \"humidity\": 65.2}}}}",
-                             self.topic,
-                             std::time::SystemTime::now()
-                                 .duration_since(std::time::UNIX_EPOCH)
-                                 .unwrap()
-                                 .as_millis());
-        Ok(payload.into_bytes())
+        // Simulate realistic MQTT message with proper JSON structure
+        let sensor_data = serde_json::json!({
+            "client_id": self.client_id,
+            "topic": self.topic,
+            "timestamp": std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis() as u64,
+            "qos": self.qos,
+            "payload": {
+                "temperature": 23.5 + (rand::random::<f64>() - 0.5) * 10.0,
+                "humidity": 65.2 + (rand::random::<f64>() - 0.5) * 20.0,
+                "pressure": 1013.25 + (rand::random::<f64>() - 0.5) * 50.0
+            }
+        });
+        
+        Ok(sensor_data.to_string().into_bytes())
     }
 
     async fn send(&mut self, data: &[u8]) -> Result<()> {
@@ -745,7 +993,25 @@ impl StreamConnection for MqttConnection {
         }
 
         // In real implementation, would publish to MQTT topic
-        let _payload_size = data.len();
+        /*
+        if let Some(client) = &self.client {
+            let qos = match self.qos {
+                0 => rumqttc::QoS::AtMostOnce,
+                1 => rumqttc::QoS::AtLeastOnce,
+                2 => rumqttc::QoS::ExactlyOnce,
+                _ => rumqttc::QoS::AtLeastOnce,
+            };
+            
+            client.publish(&self.topic, qos, false, data).await
+                .map_err(|e| IoError::NetworkError(format!("MQTT publish error: {}", e)))?;
+        }
+        */
+        
+        // Placeholder: Add to local queue for testing
+        if let Ok(mut queue) = self.message_queue.lock() {
+            queue.push_back(data.to_vec());
+        }
+        
         Ok(())
     }
 
@@ -754,6 +1020,15 @@ impl StreamConnection for MqttConnection {
     }
 
     async fn close(&mut self) -> Result<()> {
+        // In real implementation, would disconnect client
+        /*
+        if let Some(client) = &self.client {
+            client.disconnect().await.map_err(|e| IoError::NetworkError(format!("MQTT disconnect error: {}", e)))?;
+        }
+        self.client = None;
+        self.eventloop = None;
+        */
+        
         self.connected = false;
         Ok(())
     }
@@ -762,6 +1037,8 @@ impl StreamConnection for MqttConnection {
 /// UDP connection implementation
 struct UdpConnection {
     config: StreamConfig,
+    socket: Option<tokio::net::UdpSocket>,
+    remote_addr: Option<std::net::SocketAddr>,
     connected: bool,
     packet_counter: Arc<Mutex<u64>>,
 }
@@ -770,6 +1047,8 @@ impl UdpConnection {
     fn new(config: &StreamConfig) -> Self {
         Self {
             config: config.clone(),
+            socket: None,
+            remote_addr: None,
             connected: false,
             packet_counter: Arc::new(Mutex::new(0)),
         }
@@ -779,43 +1058,92 @@ impl UdpConnection {
 #[async_trait::async_trait]
 impl StreamConnection for UdpConnection {
     async fn connect(&mut self) -> Result<()> {
-        // UDP is connectionless, but we can bind a socket
+        use tokio::net::UdpSocket;
+        
+        // Parse remote address from endpoint
+        let remote_addr = self.config.endpoint.parse::<std::net::SocketAddr>()
+            .map_err(|e| IoError::ParseError(format!("Invalid UDP address: {}", e)))?;
+        
+        // Bind to a local address (let OS choose port)
+        let local_addr = if remote_addr.is_ipv4() {
+            "0.0.0.0:0"
+        } else {
+            "[::]:0"
+        };
+        
+        let socket = UdpSocket::bind(local_addr).await
+            .map_err(|e| IoError::NetworkError(format!("UDP bind failed: {}", e)))?;
+        
+        // Optionally connect to remote address for more efficient sends
+        socket.connect(remote_addr).await
+            .map_err(|e| IoError::NetworkError(format!("UDP connect failed: {}", e)))?;
+        
+        self.socket = Some(socket);
+        self.remote_addr = Some(remote_addr);
         self.connected = true;
         Ok(())
     }
 
     async fn receive(&mut self) -> Result<Vec<u8>> {
-        if !self.connected {
+        if !self.connected || self.socket.is_none() {
             return Err(IoError::ParseError("Not connected".to_string()));
         }
-
-        // In real implementation, would receive UDP packets
-        if let Ok(mut counter) = self.packet_counter.lock() {
-            *counter += 1;
-            let packet_data = format!(
-                "UDP packet {}: {{\"data\": [{}]}}",
-                *counter,
-                (0..10)
-                    .map(|i| format!("{:.2}", (*counter as f64 + i as f64) * 0.1))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            );
-            Ok(packet_data.into_bytes())
+        
+        if let Some(socket) = &self.socket {
+            let mut buffer = vec![0u8; self.config.buffer_size];
+            
+            match tokio::time::timeout(self.config.timeout, socket.recv(&mut buffer)).await {
+                Ok(Ok(bytes_received)) => {
+                    if let Ok(mut counter) = self.packet_counter.lock() {
+                        *counter += 1;
+                    }
+                    
+                    buffer.truncate(bytes_received);
+                    Ok(buffer)
+                }
+                Ok(Err(e)) => {
+                    Err(IoError::NetworkError(format!("UDP receive error: {}", e)))
+                }
+                Err(_) => {
+                    Err(IoError::TimeoutError("UDP receive timeout".to_string()))
+                }
+            }
         } else {
-            Err(IoError::ParseError(
-                "Failed to access packet counter".to_string(),
-            ))
+            Err(IoError::ParseError("UDP socket not initialized".to_string()))
         }
     }
 
     async fn send(&mut self, data: &[u8]) -> Result<()> {
-        if !self.connected {
+        if !self.connected || self.socket.is_none() {
             return Err(IoError::FileError("Not connected".to_string()));
         }
-
-        // In real implementation, would send UDP packet
-        let _packet_size = data.len();
-        Ok(())
+        
+        if let Some(socket) = &self.socket {
+            match tokio::time::timeout(self.config.timeout, socket.send(data)).await {
+                Ok(Ok(bytes_sent)) => {
+                    if bytes_sent != data.len() {
+                        return Err(IoError::NetworkError(format!(
+                            "UDP partial send: {} of {} bytes",
+                            bytes_sent, data.len()
+                        )));
+                    }
+                    
+                    if let Ok(mut counter) = self.packet_counter.lock() {
+                        *counter += 1;
+                    }
+                    
+                    Ok(())
+                }
+                Ok(Err(e)) => {
+                    Err(IoError::NetworkError(format!("UDP send error: {}", e)))
+                }
+                Err(_) => {
+                    Err(IoError::TimeoutError("UDP send timeout".to_string()))
+                }
+            }
+        } else {
+            Err(IoError::ParseError("UDP socket not initialized".to_string()))
+        }
     }
 
     fn is_connected(&self) -> bool {
@@ -823,6 +1151,8 @@ impl StreamConnection for UdpConnection {
     }
 
     async fn close(&mut self) -> Result<()> {
+        self.socket = None;
+        self.remote_addr = None;
         self.connected = false;
         Ok(())
     }

@@ -92,7 +92,9 @@ impl QRNGEngine for RandomGenerator {
 pub struct Sobol {
     dim: usize,
     seed: u64,
-    curr_index: usize,
+    curr_index: u64,
+    direction_numbers: Vec<Vec<u64>>,
+    last_point: Vec<u64>,
 }
 
 impl Sobol {
@@ -100,40 +102,146 @@ impl Sobol {
     pub fn new(dim: usize, seed: Option<u64>) -> Self {
         let seed = seed.unwrap_or_else(random::<u64>);
 
-        Self {
+        let mut sobol = Self {
             dim,
             seed,
             curr_index: 0,
+            direction_numbers: Vec::new(),
+            last_point: vec![0; dim],
+        };
+        
+        sobol.initialize_direction_numbers();
+        sobol
+    }
+
+    /// Initialize direction numbers for Sobol sequence
+    fn initialize_direction_numbers(&mut self) {
+        self.direction_numbers = vec![Vec::new(); self.dim];
+        
+        // First dimension uses powers of 2
+        self.direction_numbers[0] = (0..64).map(|i| 1u64 << (63 - i)).collect();
+        
+        // For higher dimensions, use primitive polynomials and initial direction numbers
+        // This is a simplified set for up to 10 dimensions
+        let primitive_polynomials = vec![
+            0, // dimension 0 (not used)
+            0, // dimension 1 (powers of 2)
+            3, // x + 1
+            7, // x^2 + x + 1  
+            11, // x^3 + x + 1
+            13, // x^3 + x^2 + 1
+            19, // x^4 + x + 1
+            25, // x^4 + x^3 + 1
+            37, // x^5 + x^2 + 1
+            41, // x^5 + x^3 + 1
+            55, // x^5 + x^4 + x^2 + x + 1
+        ];
+        
+        let initial_numbers = vec![
+            vec![], // dimension 0
+            vec![], // dimension 1 (powers of 2)
+            vec![1],
+            vec![1, 1],
+            vec![1, 3, 1],
+            vec![1, 1, 3],
+            vec![1, 3, 3, 9],
+            vec![1, 1, 5, 5],
+            vec![1, 3, 1, 13],
+            vec![1, 1, 5, 5, 17],
+            vec![1, 3, 5, 5, 5],
+        ];
+        
+        for d in 1..std::cmp::min(self.dim, primitive_polynomials.len()) {
+            let poly = primitive_polynomials[d];
+            let init_nums = &initial_numbers[d];
+            
+            self.direction_numbers[d] = vec![0; 64];
+            
+            // Set initial direction numbers
+            for (i, &num) in init_nums.iter().enumerate() {
+                self.direction_numbers[d][i] = (num as u64) << (63 - i);
+            }
+            
+            // Generate remaining direction numbers using recurrence relation
+            let degree = self.bit_length(poly) - 1;
+            for i in degree..64 {
+                let mut value = self.direction_numbers[d][i - degree];
+                
+                // Apply primitive polynomial recurrence
+                let mut poly_temp = poly;
+                for j in 1..degree {
+                    if poly_temp & 1 == 1 {
+                        value ^= self.direction_numbers[d][i - j];
+                    }
+                    poly_temp >>= 1;
+                }
+                
+                self.direction_numbers[d][i] = value;
+            }
+        }
+        
+        // For dimensions beyond our predefined set, use van der Corput sequences
+        for d in primitive_polynomials.len()..self.dim {
+            self.direction_numbers[d] = (0..64).map(|i| {
+                let base = 2 + (d - primitive_polynomials.len()) as u64;
+                self.van_der_corput_direction_number(i, base)
+            }).collect();
+        }
+    }
+    
+    /// Calculate bit length of a number
+    fn bit_length(&self, mut n: u64) -> usize {
+        let mut length = 0;
+        while n > 0 {
+            length += 1;
+            n >>= 1;
+        }
+        length
+    }
+    
+    /// Generate van der Corput direction number as fallback
+    fn van_der_corput_direction_number(&self, i: usize, base: u64) -> u64 {
+        if i == 0 {
+            1u64 << 63
+        } else {
+            let mut value = 0u64;
+            let mut n = i + 1;
+            let mut denom = base;
+            
+            while n > 0 && denom <= (1u64 << 63) {
+                value |= ((n % base as usize) as u64) << (64 - self.bit_length(denom));
+                n /= base as usize;
+                denom *= base;
+            }
+            
+            value
         }
     }
 
-    /// Generate a Sobol sequence point
-    ///
-    /// This is a simple implementation that doesn't use the sobol crate,
-    /// but provides a reasonable approximation of a Sobol sequence for
-    /// demonstration purposes.
+    /// Generate a Sobol sequence point using proper Sobol algorithm
     fn generate_point(&mut self) -> Vec<f64> {
-        // Simple Van der Corput sequence as basis
-        let mut result = vec![0.0; self.dim];
-
-        // Basic bit-reversal sequence for each dimension
-        for (d, res) in result.iter_mut().enumerate().take(self.dim) {
-            let mut i = self.curr_index;
-            let mut f = 1.0;
-
-            // Use different base for each dimension
-            // Prime number + offset based on dimension and seed
-            let base = (d as f64 * 2.0 + 3.0 + (self.seed % 11) as f64) as usize;
-
-            while i > 0 {
-                f /= base as f64;
-                *res += f * (i % base) as f64;
-                i /= base;
+        if self.curr_index == 0 {
+            self.curr_index = 1;
+            return vec![0.0; self.dim];
+        }
+        
+        // Find rightmost zero bit in Gray code representation
+        let gray_code_index = self.curr_index ^ (self.curr_index >> 1);
+        let rightmost_zero = (!gray_code_index).trailing_zeros() as usize;
+        
+        // Update the Sobol point
+        for d in 0..self.dim {
+            if rightmost_zero < self.direction_numbers[d].len() {
+                self.last_point[d] ^= self.direction_numbers[d][rightmost_zero];
             }
         }
-
+        
         self.curr_index += 1;
-        result
+        
+        // Convert to floating point
+        self.last_point.iter()
+            .map(|&x| (x as f64) / (1u64 << 64) as f64)
+            .collect()
     }
 }
 

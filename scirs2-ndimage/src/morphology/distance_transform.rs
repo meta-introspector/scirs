@@ -502,8 +502,8 @@ where
 ///                    [false, true, true, false, false]];
 ///
 /// // Convert to IxDyn for the function call
-/// let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
-/// let distances = distance_transform_edt(&input_dyn, None, true, false).0.unwrap();
+/// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
+/// let distances = distance_transform_edt(&input_dyn, None, true, false).0?;
 /// ```
 pub fn distance_transform_edt<D>(
     input: &Array<bool, D>,
@@ -567,8 +567,8 @@ where
 ///                    [false, true, true, false, false]];
 ///
 /// // Convert to IxDyn for the function call
-/// let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
-/// let distances = distance_transform_cdt(&input_dyn, "cityblock", true, false).0.unwrap();
+/// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
+/// let distances = distance_transform_cdt(&input_dyn, "cityblock", true, false).0?;
 /// ```
 pub fn distance_transform_cdt<D>(
     input: &Array<bool, D>,
@@ -716,8 +716,8 @@ where
 ///                    [false, true, true, false, false]];
 ///
 /// // Convert to IxDyn for the function call
-/// let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
-/// let distances = distance_transform_bf(&input_dyn, "euclidean", None, true, false).0.unwrap();
+/// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
+/// let distances = distance_transform_bf(&input_dyn, "euclidean", None, true, false).0?;
 /// ```
 pub fn distance_transform_bf<D>(
     input: &Array<bool, D>,
@@ -879,7 +879,8 @@ mod tests {
         ];
 
         // Calculate the Euclidean distance transform
-        let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+        let input_dyn = input.clone().into_dimensionality::<IxDyn>()
+            .expect("into_dimensionality should succeed for test");
         let (distances_option, _) = distance_transform_edt(&input_dyn, None, true, false);
         let distances = distances_option
             .expect("Expected distances")
@@ -912,7 +913,8 @@ mod tests {
         ];
 
         // Calculate the City Block distance transform
-        let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+        let input_dyn = input.clone().into_dimensionality::<IxDyn>()
+            .expect("into_dimensionality should succeed for test");
         let (distances_option, _) = distance_transform_cdt(&input_dyn, "cityblock", true, false);
         let distances = distances_option
             .expect("Expected distances")
@@ -944,7 +946,8 @@ mod tests {
             [false, true, true, false, false]
         ];
 
-        let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+        let input_dyn = input.clone().into_dimensionality::<IxDyn>()
+            .expect("into_dimensionality should succeed for test");
         let sampling = vec![1.0, 1.0];
 
         // Get results from both algorithms
@@ -983,7 +986,8 @@ mod tests {
         ];
 
         // Calculate the distance transform with different metrics
-        let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+        let input_dyn = input.clone().into_dimensionality::<IxDyn>()
+            .expect("into_dimensionality should succeed for test");
 
         let (euclidean_option, _) =
             distance_transform_bf(&input_dyn, "euclidean", None, true, false);

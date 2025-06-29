@@ -11,11 +11,15 @@ use std::time::{Duration, Instant};
 
 pub mod adaptive_streaming;
 pub mod concept_drift;
+pub mod enhanced_adaptive_lr;
 pub mod low_latency;
 pub mod streaming_metrics;
 
 // Re-export key types for convenience
 pub use concept_drift::{ConceptDriftDetector, DriftDetectorConfig, DriftEvent, DriftStatus};
+pub use enhanced_adaptive_lr::{
+    AdaptiveLRConfig, AdaptationStatistics, EnhancedAdaptiveLRController,
+};
 pub use low_latency::{LowLatencyConfig, LowLatencyMetrics, LowLatencyOptimizer};
 pub use streaming_metrics::{MetricsSample, MetricsSummary, StreamingMetricsCollector};
 

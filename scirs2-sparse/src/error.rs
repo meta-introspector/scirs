@@ -65,6 +65,10 @@ pub enum SparseError {
     #[error("Iterative solver failure: {0}")]
     IterativeSolverFailure(String),
 
+    /// Convergence error for iterative algorithms
+    #[error("Convergence error: {0}")]
+    ConvergenceError(String),
+
     /// Index cast overflow error
     #[error("Index value {value} cannot be represented in the target type {target_type}")]
     IndexCastOverflow {

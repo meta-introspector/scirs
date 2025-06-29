@@ -187,9 +187,19 @@ where
         // Adaptive Newton tolerance based on step size and mass matrix conditioning
         let mut newton_tol = base_newton_tol * h.max(F::from_f64(1e-3).unwrap());
 
-        // For mass matrix systems, be slightly more tolerant but not excessively so
+        // For mass matrix systems, adapt tolerance based on matrix condition
         if mass_matrix.matrix_type != MassMatrixType::Identity {
-            newton_tol *= F::from_f64(10.0).unwrap(); // Moderately more relaxed
+            // Estimate condition number heuristically and adjust tolerance accordingly
+            let condition_factor = match mass_matrix.matrix_type {
+                MassMatrixType::Constant => F::from_f64(5.0).unwrap(),  // Moderate relaxation
+                MassMatrixType::TimeDependent => F::from_f64(8.0).unwrap(), // More relaxation
+                MassMatrixType::StateDependent => F::from_f64(12.0).unwrap(), // Most relaxation
+                MassMatrixType::Identity => F::one(), // No change
+            };
+            newton_tol *= condition_factor;
+            
+            // Cap the tolerance to prevent excessive relaxation
+            newton_tol = newton_tol.min(F::from_f64(1e-4).unwrap());
         }
 
         // Ensure we have a Jacobian for the first iteration
@@ -367,94 +377,96 @@ where
                 // Get Jacobian
                 let jac = jac_option.as_ref().unwrap();
 
-                // For mass matrix systems, we solve a 3-stage coupled Newton system
-                // Build the full Newton system matrix and solve it properly
-
-                // The Newton system for mass matrix problems has the form:
-                // [I - h*a11*S1   -h*a12*S1    -h*a13*S1 ] [dk1]   [r1]
-                // [-h*a21*S2     I - h*a22*S2  -h*a23*S2 ] [dk2] = [r2]
-                // [-h*a31*S3    -h*a32*S3    I - h*a33*S3] [dk3]   [r3]
+                // For mass matrix systems, solve the correct Newton system
+                // The Newton system for mass matrix DAEs has the form:
+                // [I - h*a11*M1^(-1)*J1   -h*a12*M1^(-1)*J2    -h*a13*M1^(-1)*J3 ] [dk1]   [r1]
+                // [-h*a21*M2^(-1)*J1     I - h*a22*M2^(-1)*J2  -h*a23*M2^(-1)*J3 ] [dk2] = [r2]
+                // [-h*a31*M3^(-1)*J1    -h*a32*M3^(-1)*J2    I - h*a33*M3^(-1)*J3] [dk3]   [r3]
                 //
-                // where S_i = M_i^(-1) * J_i for each stage
+                // For numerical stability, we use a block-diagonal approximation
 
-                // For stability, we'll use a simplified block-diagonal approximation
-                // This is more robust than the full coupled system but better than fixed-point
-
-                // Solve individual Newton corrections for each stage
-                // Stage 1: (I - h*a11*M1^(-1)*J) * dk1 = r1
-                let mut s1_matrix = Array2::<F>::eye(n_dim);
-                if let Some(ref m1_matrix) = m1 {
-                    // Compute M1^(-1) * J approximately (diagonal dominant approach)
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            if i == j {
-                                // Diagonal terms are most important for stability
-                                s1_matrix[[i, j]] -= h * a11 * jac[[i, j]] / m1_matrix[[i, i]];
-                            } else if jac[[i, j]].abs() > F::from_f64(1e-6).unwrap() {
-                                // Include significant off-diagonal terms with damping
-                                s1_matrix[[i, j]] -=
-                                    h * a11 * jac[[i, j]] * F::from_f64(0.1).unwrap();
+                // Helper function to compute M^(-1) * J safely
+                let compute_mass_jacobian_product = |mass_mat: &Option<Array2<F>>, jacobian: &Array2<F>| -> Array2<F> {
+                    match mass_mat {
+                        Some(m) => {
+                            // Solve M * X = J for X (i.e., X = M^(-1) * J)
+                            let mut result = Array2::<F>::zeros((n_dim, n_dim));
+                            for j in 0..n_dim {
+                                let jac_col = jacobian.column(j).to_owned();
+                                match solve_linear_system(&m.view(), &jac_col.view()) {
+                                    Ok(x_col) => {
+                                        for i in 0..n_dim {
+                                            result[[i, j]] = x_col[i];
+                                        }
+                                    }
+                                    Err(_) => {
+                                        // Fall back to diagonal approximation for ill-conditioned mass matrices
+                                        for i in 0..n_dim {
+                                            let m_ii = m[[i, i]];
+                                            if m_ii.abs() > F::from_f64(1e-12).unwrap() {
+                                                result[[i, j]] = jacobian[[i, j]] / m_ii;
+                                            } else {
+                                                // Use identity for near-singular diagonal elements
+                                                result[[i, j]] = if i == j { F::one() } else { F::zero() };
+                                            }
+                                        }
+                                    }
+                                }
                             }
+                            result
                         }
+                        None => jacobian.clone(), // Identity mass matrix
                     }
-                } else {
-                    // Identity mass matrix case
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            s1_matrix[[i, j]] -= h * a11 * jac[[i, j]];
-                        }
+                };
+
+                // Compute M^(-1) * J for each stage
+                let s1 = compute_mass_jacobian_product(&m1, jac);
+                let s2 = compute_mass_jacobian_product(&m2, jac);
+                let s3 = compute_mass_jacobian_product(&m3, jac);
+
+                // Build the Newton system matrices for each stage (diagonal approximation)
+                let mut j1_matrix = Array2::<F>::eye(n_dim);
+                let mut j2_matrix = Array2::<F>::eye(n_dim);
+                let mut j3_matrix = Array2::<F>::eye(n_dim);
+
+                for i in 0..n_dim {
+                    for j in 0..n_dim {
+                        j1_matrix[[i, j]] -= h * a11 * s1[[i, j]];
+                        j2_matrix[[i, j]] -= h * a22 * s2[[i, j]];
+                        j3_matrix[[i, j]] -= h * a33 * s3[[i, j]];
                     }
                 }
 
-                // Similar for stages 2 and 3
-                let mut s2_matrix = Array2::<F>::eye(n_dim);
-                if let Some(ref m2_matrix) = m2 {
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            if i == j {
-                                s2_matrix[[i, j]] -= h * a22 * jac[[i, j]] / m2_matrix[[i, i]];
-                            } else if jac[[i, j]].abs() > F::from_f64(1e-6).unwrap() {
-                                s2_matrix[[i, j]] -=
-                                    h * a22 * jac[[i, j]] * F::from_f64(0.1).unwrap();
+                // Solve the Newton corrections with regularization for numerical stability
+                let solve_with_regularization = |matrix: &Array2<F>, rhs: &Array1<F>| -> IntegrateResult<Array1<F>> {
+                    match solve_linear_system(&matrix.view(), &rhs.view()) {
+                        Ok(solution) => Ok(solution),
+                        Err(_) => {
+                            // Add small regularization to diagonal and retry
+                            let mut regularized = matrix.clone();
+                            let reg_param = F::from_f64(1e-8).unwrap();
+                            for i in 0..n_dim {
+                                regularized[[i, i]] += reg_param;
                             }
+                            solve_linear_system(&regularized.view(), &rhs.view())
                         }
                     }
-                } else {
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            s2_matrix[[i, j]] -= h * a22 * jac[[i, j]];
-                        }
-                    }
-                }
+                };
 
-                let mut s3_matrix = Array2::<F>::eye(n_dim);
-                if let Some(ref m3_matrix) = m3 {
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            if i == j {
-                                s3_matrix[[i, j]] -= h * a33 * jac[[i, j]] / m3_matrix[[i, i]];
-                            } else if jac[[i, j]].abs() > F::from_f64(1e-6).unwrap() {
-                                s3_matrix[[i, j]] -=
-                                    h * a33 * jac[[i, j]] * F::from_f64(0.1).unwrap();
-                            }
-                        }
-                    }
-                } else {
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            s3_matrix[[i, j]] -= h * a33 * jac[[i, j]];
-                        }
-                    }
-                }
-
-                // Solve the Newton corrections
-                let dk1 = solve_linear_system(&s1_matrix.view(), &r1.view())?;
-                let dk2 = solve_linear_system(&s2_matrix.view(), &r2.view())?;
-                let dk3 = solve_linear_system(&s3_matrix.view(), &r3.view())?;
+                let dk1 = solve_with_regularization(&j1_matrix, &r1)?;
+                let dk2 = solve_with_regularization(&j2_matrix, &r2)?;
+                let dk3 = solve_with_regularization(&j3_matrix, &r3)?;
                 n_lu += 3;
 
-                // Apply damped Newton corrections for better stability
-                let damping = F::from_f64(0.8).unwrap();
+                // Apply adaptive damping based on Newton iteration progress
+                let mut damping = F::from_f64(1.0).unwrap();
+                if newton_iterations > 5 {
+                    damping = F::from_f64(0.7).unwrap(); // More conservative damping for slow convergence
+                } else if newton_iterations > 10 {
+                    damping = F::from_f64(0.5).unwrap(); // Even more conservative
+                }
+
+                // Apply damped Newton corrections
                 k1 -= &(dk1 * damping);
                 k2 -= &(dk2 * damping);
                 k3 -= &(dk3 * damping);
@@ -498,11 +510,36 @@ where
         let y_new = y.clone() + (k1_prime * b1 + k2_prime * b2 + k3_prime * b3) * h;
         func_evals += 3;
 
-        // Estimate error using embedded method
-        // For Radau IIA, we can use the difference between the last stage and the solution
-        let error = &k3 - &y_new;
+        // Estimate error using embedded method for mass matrix systems
+        // For Radau IIA with mass matrices, we use a more sophisticated error estimate
+        let error = if mass_matrix.matrix_type == MassMatrixType::Identity {
+            // Simple difference for identity mass matrix
+            &k3 - &y_new
+        } else {
+            // For mass matrix systems, compute error in physical coordinates
+            // Error estimate based on stage differences weighted by mass matrix
+            let stage_diff = &k3 - &k2;
+            
+            // Apply mass matrix scaling to error estimate
+            match mass_matrix.evaluate(t + h, k3.view()) {
+                Some(ref m3_matrix) => {
+                    // Scale error by mass matrix characteristics
+                    let mut scaled_error = Array1::<F>::zeros(n_dim);
+                    for i in 0..n_dim {
+                        let m_ii = m3_matrix[[i, i]];
+                        if m_ii.abs() > F::from_f64(1e-12).unwrap() {
+                            scaled_error[i] = stage_diff[i] / m_ii.sqrt();
+                        } else {
+                            scaled_error[i] = stage_diff[i];
+                        }
+                    }
+                    scaled_error
+                }
+                None => stage_diff.clone(),
+            }
+        };
 
-        // Compute error norm
+        // Compute error norm with proper scaling
         let error_norm = error
             .iter()
             .zip(error_weights.iter())

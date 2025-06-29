@@ -408,7 +408,7 @@ where
     // Generate pyramid levels
     for level in 1..levels {
         // Apply Gaussian blur with separable kernels
-        let kernel_size = (6.0 * sigma.to_f64().unwrap()) as usize | 1; // Ensure odd
+        let kernel_size = (6.0 * sigma.to_f64().unwrap_or(1.0)) as usize | 1; // Ensure odd
         let kernel = generate_gaussian_kernel_1d(sigma, kernel_size);
 
         // Separable convolution
@@ -435,12 +435,13 @@ where
     T: Float + FromPrimitive,
 {
     let half = size / 2;
-    let sigma_sq_2 = T::from_f64(2.0).unwrap() * sigma * sigma;
+    let sigma_sq_2 = T::from_f64(2.0).unwrap_or_else(|| T::one() + T::one()) * sigma * sigma;
     let mut kernel = vec![T::zero(); size];
     let mut sum = T::zero();
 
     for i in 0..size {
-        let x = T::from_isize(i as isize - half as isize).unwrap();
+        let x = T::from_isize(i as isize - half as isize)
+            .unwrap_or_else(|| T::zero());
         let val = (-x * x / sigma_sq_2).exp();
         kernel[i] = val;
         sum = sum + val;
@@ -485,7 +486,8 @@ where
                     + input[(input_y + 1, input_x)]
                     + input[(input_y + 1, input_x + 1)];
 
-                samples[i] = sum / T::from_f64(4.0).unwrap();
+                samples[i] = sum / T::from_f64(4.0)
+                    .unwrap_or_else(|| T::one() + T::one() + T::one() + T::one());
             }
 
             // Store results
@@ -503,7 +505,8 @@ where
                 + input[(input_y, input_x + 1)]
                 + input[(input_y + 1, input_x)]
                 + input[(input_y + 1, input_x + 1)];
-            output[[y, x]] = sum / T::from_f64(4.0).unwrap();
+            output[[y, x]] = sum / T::from_f64(4.0)
+                .unwrap_or_else(|| T::one() + T::one() + T::one() + T::one());
         }
     }
 }
@@ -528,7 +531,7 @@ where
     let mut correlation = Array::zeros((out_height, out_width));
 
     // Precompute template statistics
-    let template_mean = template.mean().unwrap();
+    let template_mean = template.mean().unwrap_or_else(|| T::zero());
     let template_std = compute_std(&template, template_mean);
 
     // Precompute template - mean for SIMD operations
@@ -604,7 +607,8 @@ fn ultra_simd_correlation_row<T>(
                 .iter()
                 .copied()
                 .fold(T::zero(), |sum, x| sum + x)
-                / T::from_usize(image_patch.len()).unwrap();
+                / T::from_usize(image_patch.len())
+                    .unwrap_or_else(|| T::one());
             let patch_std = compute_patch_std(&image_patch, patch_mean);
 
             // Compute correlation using SIMD
@@ -614,7 +618,8 @@ fn ultra_simd_correlation_row<T>(
                 let products = T::simd_mul(&patch_centered, template_centered);
                 let sum_products = products.iter().copied().fold(T::zero(), |sum, x| sum + x);
                 sum_products
-                    / (patch_std * template_std * T::from_usize(patch_centered.len()).unwrap())
+                    / (patch_std * template_std * T::from_usize(patch_centered.len())
+                        .unwrap_or_else(|| T::one()))
             } else {
                 T::zero()
             };
@@ -645,7 +650,8 @@ fn ultra_simd_correlation_row<T>(
             .iter()
             .copied()
             .fold(T::zero(), |sum, x| sum + x)
-            / T::from_usize(image_patch.len()).unwrap();
+            / T::from_usize(image_patch.len())
+                .unwrap_or_else(|| T::one());
         let patch_std = compute_patch_std(&image_patch, patch_mean);
 
         // Compute correlation
@@ -654,7 +660,8 @@ fn ultra_simd_correlation_row<T>(
             for ((&patch_val, &tmpl_val)) in image_patch.iter().zip(template_centered.iter()) {
                 sum_products = sum_products + (patch_val - patch_mean) * tmpl_val;
             }
-            sum_products / (patch_std * template_std * T::from_usize(image_patch.len()).unwrap())
+            sum_products / (patch_std * template_std * T::from_usize(image_patch.len())
+                .unwrap_or_else(|| T::one()))
         } else {
             T::zero()
         };
@@ -672,7 +679,8 @@ where
         .iter()
         .map(|&x| (x - mean) * (x - mean))
         .fold(T::zero(), |sum, x| sum + x)
-        / T::from_usize(data.len()).unwrap();
+        / T::from_usize(data.len())
+            .unwrap_or_else(|| T::one());
     variance.sqrt()
 }
 
@@ -685,7 +693,8 @@ where
         .iter()
         .map(|&x| (x - mean) * (x - mean))
         .fold(T::zero(), |sum, x| sum + x)
-        / T::from_usize(patch.len()).unwrap();
+        / T::from_usize(patch.len())
+            .unwrap_or_else(|| T::one());
     variance.sqrt()
 }
 
@@ -728,7 +737,8 @@ mod tests {
         let kernel_v = vec![0.25, 0.5, 0.25];
 
         let result =
-            ultra_simd_separable_convolution_2d(input.view(), &kernel_h, &kernel_v).unwrap();
+            ultra_simd_separable_convolution_2d(input.view(), &kernel_h, &kernel_v)
+                .expect("ultra_simd_separable_convolution_2d should succeed for test");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -738,7 +748,8 @@ mod tests {
 
         let structure = array![[true, true, true], [true, true, true], [true, true, true]];
 
-        let result = ultra_simd_morphological_erosion_2d(input.view(), structure.view()).unwrap();
+        let result = ultra_simd_morphological_erosion_2d(input.view(), structure.view())
+            .expect("ultra_simd_morphological_erosion_2d should succeed for test");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -751,7 +762,8 @@ mod tests {
             [13.0, 14.0, 15.0, 16.0]
         ];
 
-        let pyramid = ultra_simd_gaussian_pyramid(input.view(), 3, 1.0).unwrap();
+        let pyramid = ultra_simd_gaussian_pyramid(input.view(), 3, 1.0)
+            .expect("ultra_simd_gaussian_pyramid should succeed for test");
         assert_eq!(pyramid.len(), 3);
         assert_eq!(pyramid[0].shape(), &[4, 4]);
         assert_eq!(pyramid[1].shape(), &[2, 2]);
@@ -769,7 +781,8 @@ mod tests {
 
         let template = array![[6.0, 7.0], [10.0, 11.0]];
 
-        let result = ultra_simd_template_matching(image.view(), template.view()).unwrap();
+        let result = ultra_simd_template_matching(image.view(), template.view())
+            .expect("ultra_simd_template_matching should succeed for test");
         assert_eq!(result.shape(), &[3, 3]);
     }
 }

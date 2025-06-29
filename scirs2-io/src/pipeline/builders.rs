@@ -12,6 +12,16 @@ pub struct PipelineBuilder<I, O> {
     _output: PhantomData<O>,
 }
 
+impl<I, O> Default for PipelineBuilder<I, O>
+where
+    I: 'static + Send + Sync,
+    O: 'static + Send + Sync,
+ {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<I, O> PipelineBuilder<I, O>
 where
     I: 'static + Send + Sync,

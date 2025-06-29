@@ -354,11 +354,68 @@ $$\kappa = \left|\frac{xf'(x)}{f(x)}\right|$$
 **Forward Error Analysis:** If $\tilde{f}(x)$ is a computed approximation to $f(x)$:
 $$\frac{|\tilde{f}(x) - f(x)|}{|f(x)|} \approx \kappa \cdot \epsilon_{machine}$$
 
+**Example: Gamma Function Conditioning**
+
+For the gamma function, the condition number is:
+$$\kappa_\Gamma(x) = \left|\frac{x\psi(x)}{\Gamma(x)} \cdot \Gamma(x)\right| = |x\psi(x)|$$
+
+where $\psi(x) = \Gamma'(x)/\Gamma(x)$ is the digamma function.
+
+Near integer values, $\psi(n) \approx \ln(n) - 1/n$, so $\kappa_\Gamma(n) \approx n|\ln(n) - 1/n|$.
+
+This shows that the gamma function becomes increasingly ill-conditioned for large arguments.
+
+**Stability Analysis for Bessel Functions:**
+
+For Bessel functions $J_\nu(x)$, the condition number is:
+$$\kappa_{J_\nu}(x) = \left|\frac{x J_\nu'(x)}{J_\nu(x)}\right|$$
+
+Using the recurrence relation $J_\nu'(x) = \frac{\nu}{x}J_\nu(x) - J_{\nu+1}(x)$:
+$$\kappa_{J_\nu}(x) = \left|\nu - \frac{x J_{\nu+1}(x)}{J_\nu(x)}\right|$$
+
+Near zeros of $J_\nu(x)$, this can become very large, indicating potential numerical instability.
+
 ### Series Truncation Errors
 
 For alternating series satisfying the conditions of the alternating series test, the error is bounded by the first neglected term:
 
 $$\left|\sum_{n=0}^{N} (-1)^n a_n - \sum_{n=0}^{\infty} (-1)^n a_n\right| \leq a_{N+1}$$
+
+**Advanced Error Bounds for Hypergeometric Series:**
+
+For the hypergeometric series $_1F_1(a;c;z)$, when truncated at term $N$:
+
+$$\left|_1F_1(a;c;z) - \sum_{n=0}^{N} \frac{(a)_n z^n}{(c)_n n!}\right| \leq \frac{|(a)_{N+1}||z|^{N+1}}{|(c)_{N+1}|(N+1)!} \cdot R_N(a,c,z)$$
+
+where $R_N(a,c,z)$ is a remainder factor that depends on the convergence properties.
+
+**Richardson Extrapolation for Asymptotic Series:**
+
+For asymptotic series that diverge, optimal truncation occurs at the smallest term. For Stirling's series:
+
+$$\ln\Gamma(z) = (z-\frac{1}{2})\ln z - z + \frac{1}{2}\ln(2\pi) + \sum_{k=1}^{n} \frac{B_{2k}}{2k(2k-1)z^{2k-1}} + R_n(z)$$
+
+The optimal truncation point $n^*$ satisfies $|a_{n^*}| \leq |a_{n^*+1}|$, giving an error bound of approximately $|a_{n^*}|$.
+
+### Computational Complexity Analysis
+
+**Time Complexity:**
+- Series evaluation (truncated): $O(N)$ where $N$ is the number of terms
+- Continued fraction evaluation: $O(\log \epsilon^{-1})$ for accuracy $\epsilon$
+- Asymptotic formula evaluation: $O(1)$
+
+**Space Complexity:**
+- Most implementations: $O(1)$ auxiliary space
+- Precomputed tables: $O(N)$ where $N$ is table size
+- Recursive algorithms: $O(\log N)$ stack space
+
+**Algorithmic Stability:**
+
+The choice of algorithm affects numerical stability:
+
+1. **Forward vs. Backward Recurrence:** For Bessel functions with large order, backward recurrence is more stable
+2. **Continued Fractions vs. Series:** Continued fractions often provide better stability for complex arguments
+3. **Asymptotic vs. Series:** Asymptotic expansions may be more stable for large arguments despite being divergent
 
 ---
 

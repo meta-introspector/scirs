@@ -277,7 +277,7 @@ impl FitsFile {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file_path = path.as_ref().to_string_lossy().to_string();
         let mut file =
-            File::open(path.as_ref()).map_err(|e| IoError::FileNotFound(file_path.clone()))?;
+            File::open(path.as_ref()).map_err(|_e| IoError::FileNotFound(file_path.clone()))?;
 
         let mut hdus = Vec::new();
         let mut offset = 0u64;
@@ -531,7 +531,7 @@ impl FitsFile {
         let naxis2 = hdu.header.get_i64("NAXIS2")? as usize;
 
         let mut file = File::open(&self.file_path)
-            .map_err(|e| IoError::FileNotFound(self.file_path.clone()))?;
+            .map_err(|_e| IoError::FileNotFound(self.file_path.clone()))?;
 
         file.seek(SeekFrom::Start(hdu.data_offset))
             .map_err(|e| IoError::ParseError(format!("Failed to seek to data: {}", e)))?;
@@ -914,7 +914,7 @@ impl VOTable {
     }
 
     /// Read VOTable from XML file (simplified)
-    pub fn read<P: AsRef<Path>>(path: P) -> Result<Self> {
+    pub fn read<P: AsRef<Path>>(_path: P) -> Result<Self> {
         // Simplified implementation
         // In reality, would use an XML parser
         Ok(Self::new())

@@ -318,8 +318,8 @@ impl Default for GpuKernelManager {
         let mut manager = Self::new();
 
         // Load default kernels
-        let _ = manager.load_kernel("matvec_f32", include_str!("../../../kernels/matvec_f32.cl"));
-        let _ = manager.load_kernel("matmul_f32", include_str!("../../../kernels/matmul_f32.cl"));
+        let _ = manager.load_kernel("matvec_f32", include_str!("../../kernels/matvec_f32.cl"));
+        let _ = manager.load_kernel("matmul_f32", include_str!("../../kernels/matmul_f32.cl"));
 
         manager
     }
@@ -388,7 +388,7 @@ mod tests {
         let dispatcher = GpuOperationDispatcher::<f64>::new();
         assert_eq!(dispatcher.threshold(), DEFAULT_GPU_THRESHOLD);
 
-        let mut dispatcher = GpuOperationDispatcher::with_threshold(1000);
+        let mut dispatcher = GpuOperationDispatcher::<f64>::with_threshold(1000);
         assert_eq!(dispatcher.threshold(), 1000);
 
         dispatcher.set_threshold(2000);

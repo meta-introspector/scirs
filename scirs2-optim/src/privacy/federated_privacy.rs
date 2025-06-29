@@ -3812,6 +3812,626 @@ pub mod secure_aggregation_protocols {
     }
 }
 
+/// Implementation of missing key structures for federated privacy
+
+impl<T: Float + Default + Clone + Send + Sync> StatisticalAnalyzer<T> {
+    /// Create new statistical analyzer
+    pub fn new(window_size: usize, significance_level: f64) -> Self {
+        Self {
+            window_size,
+            significance_level,
+            test_statistics: VecDeque::with_capacity(window_size),
+        }
+    }
+
+    /// Detect outliers using statistical tests
+    pub fn detect_outliers(
+        &mut self,
+        client_updates: &HashMap<String, Array1<T>>,
+        round: usize,
+    ) -> Result<Vec<OutlierDetectionResult>, OptimizerError> {
+        let mut results = Vec::new();
+
+        if client_updates.len() < 3 {
+            return Ok(results); // Need at least 3 clients for meaningful analysis
+        }
+
+        // Compute pairwise distances
+        let client_ids: Vec<_> = client_updates.keys().collect();
+        let mut distances = HashMap::new();
+
+        for (i, &client_a) in client_ids.iter().enumerate() {
+            for &client_b in client_ids.iter().skip(i + 1) {
+                let update_a = &client_updates[client_a];
+                let update_b = &client_updates[client_b];
+                
+                if update_a.len() != update_b.len() {
+                    continue;
+                }
+
+                let distance = self.compute_euclidean_distance(update_a, update_b);
+                distances.insert((client_a.clone(), client_b.clone()), distance);
+            }
+        }
+
+        // Apply statistical tests
+        for client_id in &client_ids {
+            let outlier_score = self.compute_outlier_score(client_id, &distances);
+            let is_outlier = outlier_score > self.significance_level;
+
+            results.push(OutlierDetectionResult {
+                client_id: (*client_id).clone(),
+                round,
+                is_outlier,
+                outlier_score,
+                detection_method: "Statistical Distance".to_string(),
+            });
+        }
+
+        Ok(results)
+    }
+
+    fn compute_euclidean_distance(&self, a: &Array1<T>, b: &Array1<T>) -> f64 {
+        let diff_squared: T = a.iter()
+            .zip(b.iter())
+            .map(|(&x, &y)| (x - y) * (x - y))
+            .sum();
+        diff_squared.sqrt().to_f64().unwrap_or(0.0)
+    }
+
+    fn compute_outlier_score(&self, client_id: &str, distances: &HashMap<(String, String), f64>) -> f64 {
+        let mut client_distances = Vec::new();
+
+        for ((a, b), &distance) in distances {
+            if a == client_id || b == client_id {
+                client_distances.push(distance);
+            }
+        }
+
+        if client_distances.is_empty() {
+            return 0.0;
+        }
+
+        // Z-score based outlier detection
+        let mean: f64 = client_distances.iter().sum::<f64>() / client_distances.len() as f64;
+        let variance: f64 = client_distances.iter()
+            .map(|&x| (x - mean) * (x - mean))
+            .sum::<f64>() / client_distances.len() as f64;
+        let std_dev = variance.sqrt();
+
+        if std_dev == 0.0 {
+            0.0
+        } else {
+            let max_distance = client_distances.iter().fold(0.0, |a, &b| a.max(b));
+            ((max_distance - mean) / std_dev).abs()
+        }
+    }
+}
+
+impl<T: Float + Default + Clone + Send + Sync> RobustEstimators<T> {
+    /// Create new robust estimators
+    pub fn new() -> Self {
+        Self {
+            trimmed_mean_cache: HashMap::new(),
+            median_cache: HashMap::new(),
+            krum_scores: HashMap::new(),
+        }
+    }
+
+    /// Compute trimmed mean of client updates
+    pub fn trimmed_mean(
+        &mut self,
+        client_updates: &HashMap<String, Array1<T>>,
+        trim_ratio: f64,
+    ) -> Result<Array1<T>, OptimizerError> {
+        if client_updates.is_empty() {
+            return Err(OptimizerError::InvalidConfig("No client updates provided".to_string()));
+        }
+
+        let first_update = client_updates.values().next().unwrap();
+        let dim = first_update.len();
+
+        // Verify all updates have same dimension
+        for update in client_updates.values() {
+            if update.len() != dim {
+                return Err(OptimizerError::InvalidConfig(
+                    "Client updates have different dimensions".to_string(),
+                ));
+            }
+        }
+
+        let mut result = Array1::zeros(dim);
+        let num_clients = client_updates.len();
+        let num_trim = (num_clients as f64 * trim_ratio / 2.0).floor() as usize;
+
+        // For each dimension, compute trimmed mean
+        for i in 0..dim {
+            let mut values: Vec<T> = client_updates.values().map(|update| update[i]).collect();
+            values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+            // Remove extreme values
+            let start = num_trim;
+            let end = values.len() - num_trim;
+            
+            if start >= end {
+                // If too many values trimmed, use median
+                result[i] = values[values.len() / 2];
+            } else {
+                let sum: T = values[start..end].iter().cloned().sum();
+                result[i] = sum / T::from(end - start).unwrap();
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Compute coordinate-wise median
+    pub fn coordinate_wise_median(
+        &mut self,
+        client_updates: &HashMap<String, Array1<T>>,
+    ) -> Result<Array1<T>, OptimizerError> {
+        if client_updates.is_empty() {
+            return Err(OptimizerError::InvalidConfig("No client updates provided".to_string()));
+        }
+
+        let first_update = client_updates.values().next().unwrap();
+        let dim = first_update.len();
+        let mut result = Array1::zeros(dim);
+
+        for i in 0..dim {
+            let mut values: Vec<T> = client_updates.values().map(|update| update[i]).collect();
+            values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+            result[i] = if values.len() % 2 == 0 {
+                let mid = values.len() / 2;
+                (values[mid - 1] + values[mid]) / T::from(2.0).unwrap()
+            } else {
+                values[values.len() / 2]
+            };
+        }
+
+        Ok(result)
+    }
+
+    /// Krum aggregation - select the update closest to the most others
+    pub fn krum(
+        &mut self,
+        client_updates: &HashMap<String, Array1<T>>,
+        f: usize, // number of Byzantine clients to tolerate
+    ) -> Result<Array1<T>, OptimizerError> {
+        if client_updates.len() <= 2 * f {
+            return Err(OptimizerError::InvalidConfig(
+                "Insufficient non-Byzantine clients for Krum".to_string(),
+            ));
+        }
+
+        let client_ids: Vec<_> = client_updates.keys().collect();
+        let mut scores = HashMap::new();
+
+        // Compute scores for each client
+        for &client_i in &client_ids {
+            let update_i = &client_updates[client_i];
+            let mut distances = Vec::new();
+
+            for &client_j in &client_ids {
+                if client_i != client_j {
+                    let update_j = &client_updates[client_j];
+                    let distance = self.compute_squared_distance(update_i, update_j);
+                    distances.push(distance);
+                }
+            }
+
+            // Sort distances and sum the n-f-1 smallest
+            distances.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            let score: f64 = distances.iter().take(client_ids.len() - f - 1).sum();
+            scores.insert(client_i.clone(), score);
+        }
+
+        // Find client with minimum score
+        let best_client = scores.iter()
+            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+            .map(|(client, _)| client)
+            .ok_or_else(|| OptimizerError::InvalidConfig("Failed to find best client".to_string()))?;
+
+        Ok(client_updates[best_client].clone())
+    }
+
+    fn compute_squared_distance(&self, a: &Array1<T>, b: &Array1<T>) -> f64 {
+        let distance_squared: T = a.iter()
+            .zip(b.iter())
+            .map(|(&x, &y)| (x - y) * (x - y))
+            .sum();
+        distance_squared.to_f64().unwrap_or(0.0)
+    }
+}
+
+impl UtilityEstimator {
+    /// Create new utility estimator
+    pub fn new() -> Self {
+        Self {
+            measurement_history: VecDeque::with_capacity(1000),
+            baseline_metrics: HashMap::new(),
+            degradation_threshold: 0.1,
+            measurement_interval: 10,
+        }
+    }
+
+    /// Estimate utility based on model performance
+    pub fn estimate_utility(
+        &mut self,
+        round: usize,
+        model_accuracy: f64,
+        convergence_rate: f64,
+        privacy_cost: f64,
+    ) -> Result<UtilityMeasurement, OptimizerError> {
+        let measurement = UtilityMeasurement {
+            round,
+            model_accuracy,
+            convergence_rate,
+            training_loss: 1.0 - model_accuracy, // Simple approximation
+            communication_efficiency: 1.0 / (1.0 + privacy_cost),
+            privacy_utility_tradeoff: model_accuracy / (1.0 + privacy_cost),
+            timestamp: std::time::SystemTime::now(),
+        };
+
+        self.measurement_history.push_back(measurement.clone());
+        
+        if self.measurement_history.len() > 1000 {
+            self.measurement_history.pop_front();
+        }
+
+        Ok(measurement)
+    }
+
+    /// Detect utility degradation
+    pub fn detect_degradation(&self) -> bool {
+        if self.measurement_history.len() < 2 {
+            return false;
+        }
+
+        let recent = &self.measurement_history[self.measurement_history.len() - 1];
+        let baseline = &self.measurement_history[0];
+
+        let accuracy_degradation = (baseline.model_accuracy - recent.model_accuracy) / baseline.model_accuracy;
+        accuracy_degradation > self.degradation_threshold
+    }
+
+    /// Get current utility trend
+    pub fn get_utility_trend(&self) -> f64 {
+        if self.measurement_history.len() < 10 {
+            return 0.0;
+        }
+
+        let recent_window = &self.measurement_history[self.measurement_history.len() - 5..];
+        let earlier_window = &self.measurement_history[self.measurement_history.len() - 10..self.measurement_history.len() - 5];
+
+        let recent_avg: f64 = recent_window.iter().map(|m| m.model_accuracy).sum::<f64>() / recent_window.len() as f64;
+        let earlier_avg: f64 = earlier_window.iter().map(|m| m.model_accuracy).sum::<f64>() / earlier_window.len() as f64;
+
+        (recent_avg - earlier_avg) / earlier_avg
+    }
+}
+
+impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
+    /// Create new compression engine
+    pub fn new(strategy: CompressionStrategy) -> Self {
+        Self {
+            strategy,
+            compression_history: VecDeque::with_capacity(100),
+            performance_metrics: HashMap::new(),
+            adaptive_parameters: HashMap::new(),
+        }
+    }
+
+    /// Compress gradient updates
+    pub fn compress(
+        &mut self,
+        gradients: &Array1<T>,
+        round: usize,
+    ) -> Result<CompressionResult<T>, OptimizerError> {
+        let original_size = gradients.len() * std::mem::size_of::<T>();
+        let start_time = std::time::Instant::now();
+
+        let (compressed_data, compression_ratio) = match self.strategy {
+            CompressionStrategy::None => (gradients.clone(), 1.0),
+            CompressionStrategy::Quantization { bits } => {
+                self.quantize_gradients(gradients, bits)?
+            },
+            CompressionStrategy::TopK { k } => {
+                self.top_k_sparsification(gradients, k)?
+            },
+            CompressionStrategy::RandomSparsification { sparsity_ratio } => {
+                self.random_sparsification(gradients, sparsity_ratio)?
+            },
+            _ => (gradients.clone(), 1.0), // Fallback
+        };
+
+        let compression_time = start_time.elapsed();
+        let compressed_size = (original_size as f64 * compression_ratio) as usize;
+
+        let result = CompressionResult {
+            compressed_data,
+            original_size,
+            compressed_size,
+            compression_ratio,
+            compression_time_ms: compression_time.as_millis() as u64,
+            quality_loss: self.estimate_quality_loss(compression_ratio),
+            strategy: self.strategy,
+        };
+
+        self.compression_history.push_back(CompressionInfo {
+            round,
+            compression_ratio,
+            quality_loss: result.quality_loss,
+            compression_time_ms: result.compression_time_ms,
+        });
+
+        if self.compression_history.len() > 100 {
+            self.compression_history.pop_front();
+        }
+
+        Ok(result)
+    }
+
+    fn quantize_gradients(&self, gradients: &Array1<T>, bits: u8) -> Result<(Array1<T>, f64), OptimizerError> {
+        let levels = (1 << bits) as f64;
+        let max_val = gradients.iter().cloned().fold(T::neg_infinity(), T::max);
+        let min_val = gradients.iter().cloned().fold(T::infinity(), T::min);
+        
+        let range = max_val - min_val;
+        if range == T::zero() {
+            return Ok((gradients.clone(), 1.0));
+        }
+
+        let scale = T::from(levels - 1.0).unwrap() / range;
+        let quantized = gradients.mapv(|x| {
+            let normalized = (x - min_val) * scale;
+            let quantized_level = normalized.round();
+            min_val + quantized_level / scale
+        });
+
+        let compression_ratio = bits as f64 / 32.0; // Assuming f32 original
+        Ok((quantized, compression_ratio))
+    }
+
+    fn top_k_sparsification(&self, gradients: &Array1<T>, k: usize) -> Result<(Array1<T>, f64), OptimizerError> {
+        let mut indexed_grads: Vec<(usize, T)> = gradients.iter()
+            .enumerate()
+            .map(|(i, &val)| (i, val))
+            .collect();
+
+        // Sort by absolute value, descending
+        indexed_grads.sort_by(|(_, a), (_, b)| {
+            let abs_a = if *a >= T::zero() { *a } else { T::zero() - *a };
+            let abs_b = if *b >= T::zero() { *b } else { T::zero() - *b };
+            abs_b.partial_cmp(&abs_a).unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        let mut sparse_gradients = Array1::zeros(gradients.len());
+        for (i, val) in indexed_grads.iter().take(k) {
+            sparse_gradients[*i] = *val;
+        }
+
+        let compression_ratio = k as f64 / gradients.len() as f64;
+        Ok((sparse_gradients, compression_ratio))
+    }
+
+    fn random_sparsification(&self, gradients: &Array1<T>, sparsity_ratio: f64) -> Result<(Array1<T>, f64), OptimizerError> {
+        let mut rng = rand::thread_rng();
+        let keep_probability = 1.0 - sparsity_ratio;
+        
+        let sparse_gradients = gradients.mapv(|x| {
+            if rng.gen::<f64>() < keep_probability {
+                x / T::from(keep_probability).unwrap() // Unbiased estimator
+            } else {
+                T::zero()
+            }
+        });
+
+        Ok((sparse_gradients, keep_probability))
+    }
+
+    fn estimate_quality_loss(&self, compression_ratio: f64) -> f64 {
+        // Simple heuristic: quality loss increases with compression
+        (1.0 - compression_ratio).max(0.0)
+    }
+}
+
+impl BandwidthMonitor {
+    /// Create new bandwidth monitor
+    pub fn new() -> Self {
+        Self {
+            measurements: VecDeque::with_capacity(1000),
+            current_conditions: NetworkConditions::default(),
+            measurement_interval_ms: 1000,
+            last_measurement: std::time::Instant::now(),
+        }
+    }
+
+    /// Record bandwidth measurement
+    pub fn record_measurement(
+        &mut self,
+        bytes_transmitted: u64,
+        transmission_time_ms: u64,
+        round: usize,
+    ) -> BandwidthMeasurement {
+        let bandwidth_bps = if transmission_time_ms > 0 {
+            (bytes_transmitted * 8 * 1000) / transmission_time_ms
+        } else {
+            0
+        };
+
+        let measurement = BandwidthMeasurement {
+            timestamp: std::time::SystemTime::now(),
+            bandwidth_bps,
+            latency_ms: transmission_time_ms,
+            packet_loss_rate: 0.0, // Would need additional monitoring
+            round,
+            bytes_transmitted,
+        };
+
+        self.measurements.push_back(measurement.clone());
+        
+        if self.measurements.len() > 1000 {
+            self.measurements.pop_front();
+        }
+
+        // Update current conditions
+        self.update_network_conditions();
+        
+        measurement
+    }
+
+    fn update_network_conditions(&mut self) {
+        if self.measurements.len() < 5 {
+            return;
+        }
+
+        let recent_measurements: Vec<_> = self.measurements.iter().rev().take(5).collect();
+        
+        let avg_bandwidth: f64 = recent_measurements.iter()
+            .map(|m| m.bandwidth_bps as f64)
+            .sum::<f64>() / recent_measurements.len() as f64;
+
+        let avg_latency: f64 = recent_measurements.iter()
+            .map(|m| m.latency_ms as f64)
+            .sum::<f64>() / recent_measurements.len() as f64;
+
+        self.current_conditions = NetworkConditions {
+            available_bandwidth_bps: avg_bandwidth as u64,
+            latency_ms: avg_latency as u64,
+            jitter_ms: self.calculate_jitter(&recent_measurements),
+            packet_loss_rate: 0.0, // Would need additional monitoring
+            connection_quality: self.assess_connection_quality(avg_bandwidth, avg_latency),
+            congestion_level: self.assess_congestion_level(&recent_measurements),
+        };
+    }
+
+    fn calculate_jitter(&self, measurements: &[&BandwidthMeasurement]) -> u64 {
+        if measurements.len() < 2 {
+            return 0;
+        }
+
+        let latencies: Vec<u64> = measurements.iter().map(|m| m.latency_ms).collect();
+        let avg_latency: f64 = latencies.iter().sum::<u64>() as f64 / latencies.len() as f64;
+        
+        let variance: f64 = latencies.iter()
+            .map(|&l| (l as f64 - avg_latency).powi(2))
+            .sum::<f64>() / latencies.len() as f64;
+        
+        variance.sqrt() as u64
+    }
+
+    fn assess_connection_quality(&self, bandwidth: f64, latency: f64) -> ConnectionQuality {
+        if bandwidth > 100_000_000.0 && latency < 50.0 {
+            ConnectionQuality::Excellent
+        } else if bandwidth > 50_000_000.0 && latency < 100.0 {
+            ConnectionQuality::Good
+        } else if bandwidth > 10_000_000.0 && latency < 200.0 {
+            ConnectionQuality::Fair
+        } else {
+            ConnectionQuality::Poor
+        }
+    }
+
+    fn assess_congestion_level(&self, measurements: &[&BandwidthMeasurement]) -> CongestionLevel {
+        if measurements.len() < 3 {
+            return CongestionLevel::Low;
+        }
+
+        let bandwidth_trend: Vec<i64> = measurements.windows(2)
+            .map(|pair| pair[1].bandwidth_bps as i64 - pair[0].bandwidth_bps as i64)
+            .collect();
+
+        let declining_count = bandwidth_trend.iter().filter(|&&x| x < 0).count();
+        let declining_ratio = declining_count as f64 / bandwidth_trend.len() as f64;
+
+        if declining_ratio > 0.7 {
+            CongestionLevel::High
+        } else if declining_ratio > 0.4 {
+            CongestionLevel::Medium
+        } else {
+            CongestionLevel::Low
+        }
+    }
+
+    /// Get current network conditions
+    pub fn get_current_conditions(&self) -> &NetworkConditions {
+        &self.current_conditions
+    }
+
+    /// Get bandwidth statistics
+    pub fn get_bandwidth_stats(&self) -> Option<BandwidthStats> {
+        if self.measurements.is_empty() {
+            return None;
+        }
+
+        let bandwidths: Vec<u64> = self.measurements.iter().map(|m| m.bandwidth_bps).collect();
+        let latencies: Vec<u64> = self.measurements.iter().map(|m| m.latency_ms).collect();
+
+        let avg_bandwidth = bandwidths.iter().sum::<u64>() as f64 / bandwidths.len() as f64;
+        let avg_latency = latencies.iter().sum::<u64>() as f64 / latencies.len() as f64;
+
+        let min_bandwidth = *bandwidths.iter().min().unwrap();
+        let max_bandwidth = *bandwidths.iter().max().unwrap();
+
+        Some(BandwidthStats {
+            avg_bandwidth_bps: avg_bandwidth as u64,
+            min_bandwidth_bps: min_bandwidth,
+            max_bandwidth_bps: max_bandwidth,
+            avg_latency_ms: avg_latency as u64,
+            measurement_count: self.measurements.len(),
+        })
+    }
+}
+
+/// Additional supporting types for implementations
+
+#[derive(Debug, Clone, Copy)]
+pub enum ConnectionQuality {
+    Excellent,
+    Good,
+    Fair,
+    Poor,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CongestionLevel {
+    Low,
+    Medium,
+    High,
+}
+
+#[derive(Debug, Clone)]
+pub struct BandwidthStats {
+    pub avg_bandwidth_bps: u64,
+    pub min_bandwidth_bps: u64,
+    pub max_bandwidth_bps: u64,
+    pub avg_latency_ms: u64,
+    pub measurement_count: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct CompressionInfo {
+    pub round: usize,
+    pub compression_ratio: f64,
+    pub quality_loss: f64,
+    pub compression_time_ms: u64,
+}
+
+impl Default for NetworkConditions {
+    fn default() -> Self {
+        Self {
+            available_bandwidth_bps: 100_000_000, // 100 Mbps default
+            latency_ms: 50,
+            jitter_ms: 10,
+            packet_loss_rate: 0.0,
+            connection_quality: ConnectionQuality::Good,
+            congestion_level: CongestionLevel::Low,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -6,7 +6,7 @@
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView2, ArrayViewMut2};
 use scirs2_core::gpu::{CudaContext, GpuArray, GpuBackend};
-use scirs2_core::validation::{check_positive, check_shape};
+use scirs2_core::validation::{check_positive, check_shape, check_not_empty, check_array_finite};
 
 /// GPU-accelerated Principal Component Analysis
 #[cfg(feature = "gpu")]
@@ -135,7 +135,7 @@ impl GpuPCA {
     pub fn transform(&self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
         // Validate input
         check_not_empty(x, "x")?;
-        check_finite(x, "x")?;
+        check_array_finite(x, "x")?;
         
         let components = self
             .components
@@ -251,6 +251,10 @@ pub struct GpuTSNE {
     pub max_iter: usize,
     /// CUDA context
     cuda_context: CudaContext,
+    /// Momentum for gradient updates (initialized during optimization)
+    momentum: Option<GpuArray>,
+    /// Adaptive gains for each dimension (initialized during optimization)
+    gains: Option<GpuArray>,
 }
 
 #[cfg(feature = "gpu")]
@@ -269,6 +273,8 @@ impl GpuTSNE {
             learning_rate: 200.0,
             max_iter: 1000,
             cuda_context,
+            momentum: None,
+            gains: None,
         })
     }
 
@@ -327,19 +333,106 @@ impl GpuTSNE {
     }
 
     fn compute_p_matrix(&self, gpu_distances: &GpuArray) -> Result<GpuArray> {
-        // Compute high-dimensional similarities using Gaussian kernel
-        let sigma = (2.0 * self.perplexity).sqrt();
-        let gpu_p = gpu_distances.scale(-1.0 / (2.0 * sigma * sigma))?.exp()?;
-        let gpu_p_sum = gpu_p.sum_axis(1)?;
-        gpu_p.divide_broadcast(&gpu_p_sum)
+        let n_samples = gpu_distances.shape()[0];
+        let mut gpu_p = gpu_distances.zeros_like()?;
+        
+        // Binary search for optimal sigma for each point to achieve target perplexity
+        for i in 0..n_samples {
+            let row_distances = gpu_distances.get_row(i)?;
+            let sigma = self.binary_search_sigma(&row_distances, self.perplexity)?;
+            
+            // Compute Gaussian similarities for this row
+            let neg_dist_sq = row_distances.square()?.scale(-1.0 / (2.0 * sigma * sigma))?;
+            let mut probs = neg_dist_sq.exp()?;
+            
+            // Set diagonal to zero and normalize
+            probs.set_item(i, 0.0)?;
+            let prob_sum = probs.sum()?;
+            if prob_sum > 1e-8 {
+                probs = probs.scale(1.0 / prob_sum)?;
+            }
+            
+            gpu_p.set_row(i, &probs)?;
+        }
+        
+        // Symmetrize P matrix
+        let gpu_p_t = gpu_p.transpose()?;
+        let gpu_p_sym = gpu_p.add(&gpu_p_t)?.scale(0.5)?;
+        
+        // Ensure minimum probability and normalize
+        let max_p = gpu_p_sym.max()?;
+        let min_p = (max_p * 1e-12).max(1e-12);
+        gpu_p_sym.clamp_min(min_p)?.normalize()
+    }
+    
+    fn binary_search_sigma(&self, distances: &GpuArray, target_perplexity: f64) -> Result<f64> {
+        let mut sigma_min = 1e-20;
+        let mut sigma_max = 1e3;
+        let mut sigma = 1.0;
+        let tolerance = 1e-5;
+        let max_iter = 50;
+        
+        for _ in 0..max_iter {
+            sigma = (sigma_min + sigma_max) / 2.0;
+            
+            // Compute conditional probabilities
+            let neg_dist_sq = distances.square()?.scale(-1.0 / (2.0 * sigma * sigma))?;
+            let probs = neg_dist_sq.exp()?;
+            let prob_sum = probs.sum()?;
+            
+            if prob_sum > 1e-8 {
+                let normalized_probs = probs.scale(1.0 / prob_sum)?;
+                let entropy = self.compute_entropy(&normalized_probs)?;
+                let perplexity = 2.0_f64.powf(entropy);
+                
+                if (perplexity - target_perplexity).abs() < tolerance {
+                    break;
+                }
+                
+                if perplexity > target_perplexity {
+                    sigma_max = sigma;
+                } else {
+                    sigma_min = sigma;
+                }
+            } else {
+                sigma_min = sigma;
+            }
+        }
+        
+        Ok(sigma)
+    }
+    
+    fn compute_entropy(&self, probs: &GpuArray) -> Result<f64> {
+        let log_probs = probs.log()?;
+        let entropy_terms = probs.multiply(&log_probs)?;
+        Ok(-entropy_terms.sum()?)
     }
 
     fn compute_q_matrix(&self, gpu_y: &GpuArray) -> Result<GpuArray> {
-        // Compute low-dimensional similarities using t-distribution
-        let gpu_distances = self.compute_pairwise_distances(gpu_y)?;
-        let gpu_q = (gpu_distances.square()? + 1.0)?.pow(-1.0)?;
-        let gpu_q_sum = gpu_q.sum()?;
-        gpu_q.scale(1.0)?.divide_scalar(gpu_q_sum)
+        let n_samples = gpu_y.shape()[0];
+        
+        // Compute pairwise squared distances efficiently
+        let y_norm_sq = gpu_y.norm_squared_axis(1)?;
+        let y_dot = gpu_y.matmul(&gpu_y.transpose()?)?;
+        let dist_sq = y_norm_sq.broadcast_add(&y_norm_sq.transpose()?)? - y_dot.scale(2.0)?;
+        
+        // Apply t-distribution kernel with degrees of freedom = 1
+        let gpu_q_unnorm = (dist_sq + 1.0)?.pow(-1.0)?;
+        
+        // Set diagonal to zero (self-similarities)
+        let mut gpu_q = gpu_q_unnorm.clone();
+        for i in 0..n_samples {
+            gpu_q.set_item(i * n_samples + i, 0.0)?;
+        }
+        
+        // Normalize to get probabilities
+        let q_sum = gpu_q.sum()?;
+        if q_sum > 1e-12 {
+            gpu_q.scale(1.0 / q_sum)
+        } else {
+            // Return uniform distribution if sum is too small
+            gpu_q.fill(1.0 / (n_samples * (n_samples - 1)) as f64)
+        }
     }
 
     fn compute_gradient(
@@ -348,18 +441,104 @@ impl GpuTSNE {
         gpu_q: &GpuArray,
         gpu_y: &GpuArray,
     ) -> Result<GpuArray> {
-        // Compute gradient of KL divergence
-        let gpu_pq_diff = gpu_p.subtract(gpu_q)?;
-        let gpu_y_diff = gpu_y.unsqueeze(1)?.subtract(&gpu_y.unsqueeze(0)?)?;
-        let gpu_distances = self.compute_pairwise_distances(gpu_y)?;
-        let gpu_weights = (gpu_distances.square()? + 1.0)?.pow(-1.0)?;
-
-        gpu_pq_diff
-            .unsqueeze(-1)?
-            .multiply(&gpu_y_diff)?
-            .multiply(&gpu_weights.unsqueeze(-1)?)?
-            .sum_axis(1)?
-            .scale(4.0)
+        let n_samples = gpu_y.shape()[0];
+        let n_components = gpu_y.shape()[1];
+        
+        // Compute pairwise squared distances
+        let y_norm_sq = gpu_y.norm_squared_axis(1)?;
+        let y_dot = gpu_y.matmul(&gpu_y.transpose()?)?;
+        let dist_sq = y_norm_sq.broadcast_add(&y_norm_sq.transpose()?)? - y_dot.scale(2.0)?;
+        
+        // Compute t-distribution weights (1 + ||yi - yj||^2)^(-1)
+        let t_weights = (dist_sq + 1.0)?.pow(-1.0)?;
+        
+        // Compute PQ difference matrix
+        let pq_diff = gpu_p.subtract(gpu_q)?;
+        
+        // Compute attractive and repulsive forces efficiently
+        let mut gradient = gpu_y.zeros_like()?;
+        
+        for i in 0..n_samples {
+            let yi = gpu_y.get_row(i)?;
+            let mut grad_i = vec![0.0; n_components];
+            
+            for j in 0..n_samples {
+                if i != j {
+                    let yj = gpu_y.get_row(j)?;
+                    let y_diff = yi.subtract(&yj)?;
+                    
+                    let pq_ij = pq_diff.get_item(i * n_samples + j)?;
+                    let t_ij = t_weights.get_item(i * n_samples + j)?;
+                    
+                    // Gradient contribution: 4 * (pij - qij) * (yi - yj) * (1 + ||yi - yj||^2)^(-1)
+                    let force_factor = 4.0 * pq_ij * t_ij;
+                    
+                    for k in 0..n_components {
+                        let y_diff_k = y_diff.get_item(k)?;
+                        grad_i[k] += force_factor * y_diff_k;
+                    }
+                }
+            }
+            
+            // Set the gradient for point i
+            for k in 0..n_components {
+                gradient.set_item(i * n_components + k, grad_i[k])?;
+            }
+        }
+        
+        Ok(gradient)
+    }
+    
+    /// Adaptive learning rate with momentum and gains
+    fn update_embedding_with_momentum(
+        &mut self,
+        gpu_y: &mut GpuArray,
+        gradient: &GpuArray,
+        iteration: usize,
+    ) -> Result<()> {
+        let n_samples = gpu_y.shape()[0];
+        let n_components = gpu_y.shape()[1];
+        
+        // Initialize momentum and gains if not present
+        if self.momentum.is_none() {
+            self.momentum = Some(gpu_y.zeros_like()?);
+            self.gains = Some(GpuArray::ones(gpu_y.shape())?);
+        }
+        
+        let momentum = self.momentum.as_mut().unwrap();
+        let gains = self.gains.as_mut().unwrap();
+        
+        // Adaptive learning rate
+        let learning_rate = if iteration < 250 {
+            500.0
+        } else {
+            200.0
+        };
+        
+        // Update gains (adaptive per-dimension learning rates)
+        for i in 0..n_samples * n_components {
+            let grad_i = gradient.get_item(i)?;
+            let mom_i = momentum.get_item(i)?;
+            let gain_i = gains.get_item(i)?;
+            
+            let new_gain = if grad_i * mom_i < 0.0 {
+                (gain_i + 0.2).min(50.0)  // Increase gain if gradient and momentum oppose
+            } else {
+                (gain_i * 0.8).max(0.01)  // Decrease gain if they align
+            };
+            
+            gains.set_item(i, new_gain)?;
+        }
+        
+        // Update momentum
+        let momentum_coeff = if iteration < 250 { 0.5 } else { 0.8 };
+        let scaled_grad = gradient.multiply(gains)?.scale(learning_rate)?;
+        *momentum = momentum.scale(momentum_coeff)?.subtract(&scaled_grad)?;
+        
+        // Update embedding
+        *gpu_y = gpu_y.add(momentum)?;
+        
+        Ok(())
     }
 }
 

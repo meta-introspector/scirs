@@ -580,7 +580,7 @@ impl<T: Copy + 'static> ZeroCopyStreamProcessor<T> {
                 .chunks(self.chunk_size)
                 .collect::<Vec<_>>()
                 .into_par_iter()
-                .map(|chunk| processor(chunk))
+                .map(&processor)
                 .collect();
 
             Ok(results)
@@ -588,7 +588,7 @@ impl<T: Copy + 'static> ZeroCopyStreamProcessor<T> {
             // Sequential processing for smaller datasets
             let results: Vec<R> = data_slice
                 .chunks(self.chunk_size)
-                .map(|chunk| processor(chunk))
+                .map(processor)
                 .collect();
 
             Ok(results)

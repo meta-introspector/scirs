@@ -424,7 +424,7 @@ mod tests {
 
     #[test]
     fn test_gpu_config_optimization() {
-        let data_size = 100_000;
+        let data_size = 200_000;
         let available_memory = 1_000_000;
         let config = utils::optimize_gpu_config(data_size, available_memory);
 

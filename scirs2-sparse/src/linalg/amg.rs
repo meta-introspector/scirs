@@ -177,40 +177,162 @@ where
         Ok(())
     }
 
-    /// Coarsen a single level
+    /// Coarsen a single level using Ruge-Stuben algebraic coarsening
     fn coarsen_level(
         &self,
         matrix: &CsrArray<T>,
     ) -> SparseResult<(CsrArray<T>, CsrArray<T>, CsrArray<T>)> {
-        // Classical AMG coarsening
         let (n, _) = matrix.shape();
 
-        // For simplicity, use geometric coarsening (every other point)
-        // In practice, you'd use sophisticated algebraic coarsening
-        let coarse_size = (n + 1) / 2;
-        let mut coarse_indices = Vec::new();
-        let mut fine_to_coarse = HashMap::new();
+        // Step 1: Detect strong connections
+        let strong_connections = self.detect_strong_connections(matrix)?;
 
-        // Select coarse points (simplified - use every other point)
-        for i in (0..n).step_by(2) {
-            fine_to_coarse.insert(i, coarse_indices.len());
-            coarse_indices.push(i);
+        // Step 2: Perform C/F splitting using classical Ruge-Stuben algorithm
+        let (c_points, f_points) = self.classical_cf_splitting(matrix, &strong_connections)?;
+
+        // Step 3: Build coarse point mapping
+        let mut fine_to_coarse = HashMap::new();
+        for (coarse_idx, &fine_idx) in c_points.iter().enumerate() {
+            fine_to_coarse.insert(fine_idx, coarse_idx);
         }
+
+        let coarse_size = c_points.len();
 
         // Build prolongation operator (interpolation)
         let prolongation = self.build_prolongation(matrix, &fine_to_coarse, coarse_size)?;
 
         // Build restriction operator (typically transpose of prolongation)
-        let restriction = prolongation.transpose()?;
+        let restriction_box = prolongation.transpose()?;
+        let restriction = restriction_box.as_any().downcast_ref::<CsrArray<T>>()
+            .ok_or_else(|| SparseError::ValueError("Failed to downcast restriction to CsrArray".to_string()))?
+            .clone();
 
         // Build coarse matrix: A_coarse = R * A * P
-        let temp = restriction.dot(matrix)?;
-        let coarse_matrix = temp.dot(&prolongation)?;
+        let temp_box = restriction.dot(matrix)?;
+        let temp = temp_box.as_any().downcast_ref::<CsrArray<T>>()
+            .ok_or_else(|| SparseError::ValueError("Failed to downcast temp to CsrArray".to_string()))?;
+        let coarse_matrix_box = temp.dot(&prolongation)?;
+        let coarse_matrix = coarse_matrix_box.as_any().downcast_ref::<CsrArray<T>>()
+            .ok_or_else(|| SparseError::ValueError("Failed to downcast coarse_matrix to CsrArray".to_string()))?
+            .clone();
 
         Ok((coarse_matrix, prolongation, restriction))
     }
 
-    /// Build prolongation (interpolation) operator
+    /// Detect strong connections in the matrix
+    /// A connection i -> j is strong if |a_ij| >= theta * max_k(|a_ik|) for k != i
+    fn detect_strong_connections(&self, matrix: &CsrArray<T>) -> SparseResult<Vec<Vec<usize>>> {
+        let (n, _) = matrix.shape();
+        let mut strong_connections = vec![Vec::new(); n];
+
+        for i in 0..n {
+            let row_start = matrix.get_indptr()[i];
+            let row_end = matrix.get_indptr()[i + 1];
+
+            // Find maximum off-diagonal magnitude in this row
+            let mut max_off_diag = T::zero();
+            for j in row_start..row_end {
+                let col = matrix.get_indices()[j];
+                if col != i {
+                    let val = matrix.get_data()[j].abs();
+                    if val > max_off_diag {
+                        max_off_diag = val;
+                    }
+                }
+            }
+
+            // Identify strong connections
+            let threshold = T::from(self.options.theta).unwrap() * max_off_diag;
+            for j in row_start..row_end {
+                let col = matrix.get_indices()[j];
+                if col != i {
+                    let val = matrix.get_data()[j].abs();
+                    if val >= threshold {
+                        strong_connections[i].push(col);
+                    }
+                }
+            }
+        }
+
+        Ok(strong_connections)
+    }
+
+    /// Classical Ruge-Stuben C/F splitting algorithm
+    fn classical_cf_splitting(
+        &self,
+        matrix: &CsrArray<T>,
+        strong_connections: &[Vec<usize>],
+    ) -> SparseResult<(Vec<usize>, Vec<usize>)> {
+        let (n, _) = matrix.shape();
+        
+        // Count strong connections for each point (influence measure)
+        let mut influence = vec![0; n];
+        for i in 0..n {
+            influence[i] = strong_connections[i].len();
+        }
+
+        // Track point types: 0 = undecided, 1 = C-point, 2 = F-point
+        let mut point_type = vec![0; n];
+        let mut c_points = Vec::new();
+        let mut f_points = Vec::new();
+
+        // Sort points by influence (high influence points become C-points first)
+        let mut sorted_points: Vec<usize> = (0..n).collect();
+        sorted_points.sort_by(|&a, &b| influence[b].cmp(&influence[a]));
+
+        for &i in &sorted_points {
+            if point_type[i] != 0 {
+                continue; // Already processed
+            }
+
+            // Check if this point needs to be a C-point
+            let mut needs_coarse = false;
+            
+            // If this point has strong F-point neighbors without coarse interpolatory set
+            for &j in &strong_connections[i] {
+                if point_type[j] == 2 { // F-point
+                    // Check if F-point j has a coarse interpolatory set
+                    let mut has_coarse_interp = false;
+                    for &k in &strong_connections[j] {
+                        if point_type[k] == 1 { // C-point
+                            has_coarse_interp = true;
+                            break;
+                        }
+                    }
+                    if !has_coarse_interp {
+                        needs_coarse = true;
+                        break;
+                    }
+                }
+            }
+
+            if needs_coarse || influence[i] > 2 {
+                // Make this a C-point
+                point_type[i] = 1;
+                c_points.push(i);
+                
+                // Make strongly connected neighbors F-points
+                for &j in &strong_connections[i] {
+                    if point_type[j] == 0 {
+                        point_type[j] = 2;
+                        f_points.push(j);
+                    }
+                }
+            }
+        }
+
+        // Assign remaining undecided points as F-points
+        for i in 0..n {
+            if point_type[i] == 0 {
+                point_type[i] = 2;
+                f_points.push(i);
+            }
+        }
+
+        Ok((c_points, f_points))
+    }
+
+    /// Build prolongation (interpolation) operator using algebraic interpolation
     fn build_prolongation(
         &self,
         matrix: &CsrArray<T>,
@@ -222,60 +344,125 @@ where
         let mut prolongation_indices = Vec::new();
         let mut prolongation_indptr = vec![0];
 
+        // Detect strong connections for interpolation
+        let strong_connections = self.detect_strong_connections(matrix)?;
+
         for i in 0..n {
             if let Some(&coarse_idx) = fine_to_coarse.get(&i) {
                 // Direct injection for coarse points
                 prolongation_data.push(T::one());
                 prolongation_indices.push(coarse_idx);
             } else {
-                // Interpolation for fine points
-                // Simplified: use nearest coarse neighbors
-                let nearest_coarse = self.find_nearest_coarse_point(i, fine_to_coarse);
-                if let Some(coarse_idx) = nearest_coarse {
-                    prolongation_data.push(T::one());
-                    prolongation_indices.push(coarse_idx);
-                } else {
-                    // No coarse neighbors found, use direct injection to first coarse point
+                // Algebraic interpolation for fine points
+                let interp_weights = self.compute_interpolation_weights(
+                    i, 
+                    matrix, 
+                    &strong_connections[i], 
+                    fine_to_coarse
+                )?;
+
+                if interp_weights.is_empty() {
+                    // Fallback: direct injection to first coarse point
                     prolongation_data.push(T::one());
                     prolongation_indices.push(0);
+                } else {
+                    // Add interpolation weights
+                    for (coarse_idx, weight) in interp_weights {
+                        prolongation_data.push(weight);
+                        prolongation_indices.push(coarse_idx);
+                    }
                 }
             }
             prolongation_indptr.push(prolongation_data.len());
         }
 
         CsrArray::new(
-            prolongation_data,
-            prolongation_indptr,
-            prolongation_indices,
+            prolongation_data.into(),
+            prolongation_indptr.into(),
+            prolongation_indices.into(),
             (n, coarse_size),
         )
     }
 
-    /// Find nearest coarse point (simplified implementation)
-    fn find_nearest_coarse_point(
+    /// Compute interpolation weights for a fine point using classical interpolation
+    fn compute_interpolation_weights(
         &self,
         fine_point: usize,
+        matrix: &CsrArray<T>,
+        strong_neighbors: &[usize],
         fine_to_coarse: &HashMap<usize, usize>,
-    ) -> Option<usize> {
-        // Simple approach: find the closest coarse point by index
-        let mut best_dist = usize::MAX;
-        let mut best_coarse = None;
+    ) -> SparseResult<Vec<(usize, T)>> {
+        let mut weights = Vec::new();
 
-        for (&coarse_fine_idx, &coarse_idx) in fine_to_coarse.iter() {
-            let dist = if coarse_fine_idx > fine_point {
-                coarse_fine_idx - fine_point
-            } else {
-                fine_point - coarse_fine_idx
-            };
+        // Find coarse neighbors that are strongly connected
+        let mut coarse_neighbors = Vec::new();
+        let mut coarse_weights = Vec::new();
 
-            if dist < best_dist {
-                best_dist = dist;
-                best_coarse = Some(coarse_idx);
+        for &neighbor in strong_neighbors {
+            if let Some(&coarse_idx) = fine_to_coarse.get(&neighbor) {
+                coarse_neighbors.push(neighbor);
+                coarse_weights.push(coarse_idx);
             }
         }
 
-        best_coarse
+        if coarse_neighbors.is_empty() {
+            return Ok(weights);
+        }
+
+        // Get the diagonal entry for fine point
+        let mut a_ii = T::zero();
+        let row_start = matrix.get_indptr()[fine_point];
+        let row_end = matrix.get_indptr()[fine_point + 1];
+
+        for j in row_start..row_end {
+            let col = matrix.get_indices()[j];
+            if col == fine_point {
+                a_ii = matrix.get_data()[j];
+                break;
+            }
+        }
+
+        if a_ii.is_zero() {
+            return Ok(weights);
+        }
+
+        // Compute interpolation weights using classical formula
+        // w_j = -a_ij / a_ii for coarse neighbors j
+        let mut total_weight = T::zero();
+        let mut temp_weights = Vec::new();
+
+        for &coarse_neighbor in &coarse_neighbors {
+            let mut a_ij = T::zero();
+            for j in row_start..row_end {
+                let col = matrix.get_indices()[j];
+                if col == coarse_neighbor {
+                    a_ij = matrix.get_data()[j];
+                    break;
+                }
+            }
+
+            if !a_ij.is_zero() {
+                let weight = -a_ij / a_ii;
+                temp_weights.push(weight);
+                total_weight = total_weight + weight;
+            } else {
+                temp_weights.push(T::zero());
+            }
+        }
+
+        // Normalize weights to sum to 1
+        if !total_weight.is_zero() {
+            for (i, &coarse_idx) in coarse_weights.iter().enumerate() {
+                let normalized_weight = temp_weights[i] / total_weight;
+                if !normalized_weight.is_zero() {
+                    weights.push((coarse_idx, normalized_weight));
+                }
+            }
+        }
+
+        Ok(weights)
     }
+
 
     /// Apply the AMG preconditioner
     ///
@@ -385,15 +572,15 @@ where
         let n = x.len();
 
         for i in 0..n {
-            let row_start = matrix.indptr[i];
-            let row_end = matrix.indptr[i + 1];
+            let row_start = matrix.get_indptr()[i];
+            let row_end = matrix.get_indptr()[i + 1];
 
             let mut sum = T::zero();
             let mut diag_val = T::zero();
 
             for j in row_start..row_end {
-                let col = matrix.indices[j];
-                let val = matrix.data[j];
+                let col = matrix.get_indices()[j];
+                let val = matrix.get_data()[j];
 
                 if col == i {
                     diag_val = val;
@@ -421,15 +608,15 @@ where
         let mut x_new = x.clone();
 
         for i in 0..n {
-            let row_start = matrix.indptr[i];
-            let row_end = matrix.indptr[i + 1];
+            let row_start = matrix.get_indptr()[i];
+            let row_end = matrix.get_indptr()[i + 1];
 
             let mut sum = T::zero();
             let mut diag_val = T::zero();
 
             for j in row_start..row_end {
-                let col = matrix.indices[j];
-                let val = matrix.data[j];
+                let col = matrix.get_indices()[j];
+                let val = matrix.get_data()[j];
 
                 if col == i {
                     diag_val = val;
@@ -458,15 +645,15 @@ where
         let n = x.len();
 
         for i in 0..n {
-            let row_start = matrix.indptr[i];
-            let row_end = matrix.indptr[i + 1];
+            let row_start = matrix.get_indptr()[i];
+            let row_end = matrix.get_indptr()[i + 1];
 
             let mut sum = T::zero();
             let mut diag_val = T::zero();
 
             for j in row_start..row_end {
-                let col = matrix.indices[j];
-                let val = matrix.data[j];
+                let col = matrix.get_indices()[j];
+                let val = matrix.get_data()[j];
 
                 if col == i {
                     diag_val = val;
@@ -527,9 +714,9 @@ where
     let mut result = Array1::zeros(rows);
 
     for i in 0..rows {
-        for j in matrix.indptr[i]..matrix.indptr[i + 1] {
-            let col = matrix.indices[j];
-            let val = matrix.data[j];
+        for j in matrix.get_indptr()[i]..matrix.get_indptr()[i + 1] {
+            let col = matrix.get_indices()[j];
+            let val = matrix.get_data()[j];
             result[i] = result[i] + val * x[col];
         }
     }
@@ -607,5 +794,55 @@ mod tests {
 
         // Solution should improve (move away from zero)
         assert!(x.iter().any(|&val| val.abs() > 1e-10));
+    }
+
+    #[test]
+    fn test_enhanced_amg_coarsening() {
+        // Create a larger test matrix to better test algebraic coarsening
+        let rows = vec![0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4];
+        let cols = vec![0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 3, 4, 0];
+        let data = vec![4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, 4.0, -1.0];
+        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (5, 5), false).unwrap();
+
+        let mut options = AMGOptions::default();
+        options.theta = 0.25; // Strong connection threshold
+        
+        let amg = AMGPreconditioner::new(&matrix, options).unwrap();
+
+        // Should have created a hierarchy
+        assert!(amg.num_levels() >= 1);
+        
+        // Test that it can be applied
+        let b = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0]);
+        let x = amg.apply(&b.view()).unwrap();
+        
+        // Check that the result has the right size
+        assert_eq!(x.len(), 5);
+        
+        // Check that the solution is reasonable (not all zeros)
+        assert!(x.iter().any(|&val| val.abs() > 1e-10));
+    }
+
+    #[test]
+    fn test_strong_connection_detection() {
+        let rows = vec![0, 0, 1, 1, 2, 2];
+        let cols = vec![0, 1, 0, 1, 1, 2];
+        let data = vec![4.0, -2.0, -2.0, 4.0, -2.0, 4.0];
+        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        
+        let mut options = AMGOptions::default();
+        options.theta = 0.25;
+        let amg = AMGPreconditioner::new(&matrix, options).unwrap();
+        
+        let strong_connections = amg.detect_strong_connections(&matrix).unwrap();
+        
+        // Each point should have some strong connections
+        assert!(!strong_connections[0].is_empty());
+        assert!(!strong_connections[1].is_empty());
+        
+        // Verify strong connections are bidirectional for symmetric matrix
+        if strong_connections[0].contains(&1) {
+            assert!(strong_connections[1].contains(&0));
+        }
     }
 }

@@ -6,6 +6,13 @@ use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion from usize to float
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
+    T::from_usize(value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+    })
+}
+
 /// Find the center of mass (centroid) of an array
 ///
 /// Computes the intensity-weighted centroid of an n-dimensional array.
@@ -30,7 +37,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///
 /// // Simple 1D signal with peak at position 2
 /// let signal = Array1::from_vec(vec![0.0, 1.0, 5.0, 1.0, 0.0]);
-/// let centroid = center_of_mass(&signal).unwrap();
+/// let centroid = center_of_mass(&signal)?;
 ///
 /// // Center of mass should be close to position 2 (where the peak is)
 /// assert!((centroid[0] - 2.0).abs() < 0.1);
@@ -49,7 +56,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     }
 /// }
 ///
-/// let centroid = center_of_mass(&image).unwrap();
+/// let centroid = center_of_mass(&image)?;
 /// // Centroid should be approximately at (3, 3) - center of the bright square
 /// assert!((centroid[0] - 3.0).abs() < 0.1);
 /// assert!((centroid[1] - 3.0).abs() < 0.1);
@@ -68,7 +75,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     [0.0, 0.0, 0.0, 0.0]
 /// ];
 ///
-/// let centroid = center_of_mass(&image).unwrap();
+/// let centroid = center_of_mass(&image)?;
 /// // Centroid will be shifted toward higher intensity pixels
 /// // Should be closer to (2, 2) than (1.5, 1.5) due to intensity weighting
 /// ```
@@ -88,7 +95,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     }
 /// }
 ///
-/// let centroid = center_of_mass(&volume).unwrap();
+/// let centroid = center_of_mass(&volume)?;
 /// // Centroid should be at approximately (7.5, 7.5, 7.5)
 /// assert_eq!(centroid.len(), 3); // 3D coordinates
 /// ```
@@ -107,7 +114,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     }
 /// });
 ///
-/// let centroid = center_of_mass(&binary).unwrap();
+/// let centroid = center_of_mass(&binary)?;
 /// // For a circular object centered at (25, 25), centroid should be near center
 /// assert!((centroid[0] - 25.0).abs() < 1.0);
 /// assert!((centroid[1] - 25.0).abs() < 1.0);
@@ -142,10 +149,14 @@ where
 
     if total_mass == T::zero() {
         // If total mass is zero, return center of array
-        let center: Vec<T> = shape
+        let center: Result<Vec<T>, NdimageError> = shape
             .iter()
-            .map(|&dim| T::from_usize(dim).unwrap() / (T::one() + T::one()))
+            .map(|&dim| {
+                let dim_t = safe_usize_to_float(dim)?;
+                Ok(dim_t / (T::one() + T::one()))
+            })
             .collect();
+        let center = center?;
         return Ok(center);
     }
 
@@ -160,7 +171,8 @@ where
         if value != T::zero() {
             // Add weighted coordinates
             for (dim, &coord) in idx.as_array_view().iter().enumerate() {
-                center_of_mass[dim] += T::from_usize(coord).unwrap() * value;
+                let coord_t = safe_usize_to_float(coord)?;
+                center_of_mass[dim] += coord_t * value;
             }
         }
     }
@@ -306,14 +318,16 @@ mod tests {
     #[test]
     fn test_center_of_mass() {
         let input: Array2<f64> = Array2::eye(3);
-        let com = center_of_mass(&input).unwrap();
+        let com = center_of_mass(&input)
+            .expect("center_of_mass should succeed for test");
         assert_eq!(com.len(), input.ndim());
     }
 
     #[test]
     fn test_moments_inertia_tensor() {
         let input: Array2<f64> = Array2::eye(3);
-        let tensor = moments_inertia_tensor(&input).unwrap();
+        let tensor = moments_inertia_tensor(&input)
+            .expect("moments_inertia_tensor should succeed for test");
         assert_eq!(tensor.shape(), &[input.ndim(), input.ndim()]);
     }
 
@@ -321,7 +335,8 @@ mod tests {
     fn test_moments() {
         let input: Array2<f64> = Array2::eye(3);
         let order = 2;
-        let mom = moments(&input, order).unwrap();
+        let mom = moments(&input, order)
+            .expect("moments should succeed for test");
         assert!(!mom.is_empty());
     }
 }

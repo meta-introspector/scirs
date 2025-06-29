@@ -241,7 +241,7 @@ pub trait DistanceMetric<T: SpatialScalar, P: SpatialPoint<T>> {
     fn distance(&self, p1: &P, p2: &P) -> T;
 
     /// Calculate squared distance (if applicable, for efficiency)
-    fn squared_distance(&self, p1: &P, p2: &P) -> Option<T> {
+    fn squared_distance(&self, _p1: &P, _p2: &P) -> Option<T> {
         None
     }
 
@@ -346,8 +346,11 @@ impl<T: SpatialScalar> SpatialPoint<T> for &[T] {
         Some(self)
     }
 
-    fn from_coords(coords: &[T]) -> Self {
-        coords.to_vec()
+    fn from_coords(_coords: &[T]) -> Self {
+        // This is a fundamental limitation - &[T] is a reference to existing data
+        // and cannot be created from raw coordinates without an underlying array.
+        // This implementation is not meaningful for slice references.
+        unreachable!("&[T]::from_coords() should not be called - &[T] is a reference to existing data")
     }
 }
 
@@ -550,9 +553,9 @@ pub mod utils {
         let mut sum_coords = vec![T::zero(); dim];
 
         for point in points.iter_points() {
-            for i in 0..dim {
+            for (i, sum_coord) in sum_coords.iter_mut().enumerate().take(dim) {
                 if let Some(coord) = point.coordinate(i) {
-                    sum_coords[i] = sum_coords[i] + coord;
+                    *sum_coord = *sum_coord + coord;
                 }
             }
         }
@@ -602,7 +605,7 @@ pub mod utils {
 /// Integration with ndarray
 pub mod ndarray_integration {
     use super::*;
-    use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+    use ndarray::{Array1, ArrayView1, ArrayView2, Axis};
 
     /// Implementation of SpatialPoint for ndarray ArrayView1
     impl<T: SpatialScalar> SpatialPoint<T> for ArrayView1<'_, T> {
@@ -615,7 +618,7 @@ pub mod ndarray_integration {
         }
 
         fn as_slice(&self) -> Option<&[T]> {
-            self.as_slice().ok()
+            self.as_slice()
         }
 
         fn from_coords(_coords: &[T]) -> Self {
@@ -638,7 +641,7 @@ pub mod ndarray_integration {
         }
 
         fn as_slice(&self) -> Option<&[T]> {
-            self.as_slice().ok()
+            self.as_slice()
         }
 
         fn from_coords(coords: &[T]) -> Self {
@@ -657,7 +660,7 @@ pub mod ndarray_integration {
         }
     }
 
-    impl<'a, T: SpatialScalar> SpatialArray<T, Array1<T>> for NdArray2Wrapper<'a, T> {
+    impl<T: SpatialScalar> SpatialArray<T, Array1<T>> for NdArray2Wrapper<'_, T> {
         fn len(&self) -> usize {
             self.array.nrows()
         }

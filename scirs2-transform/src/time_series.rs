@@ -248,7 +248,7 @@ impl LagFeatures {
 /// multi-resolution analysis of time series.
 #[derive(Debug, Clone)]
 pub struct WaveletFeatures {
-    /// Wavelet type: 'db1' (Haar), 'db2', 'db3', 'db4'
+    /// Wavelet type: 'db1' (Haar), 'db2', 'db4', 'db8', 'bior2.2', 'bior4.4'
     wavelet: String,
     /// Decomposition level
     level: usize,
@@ -295,19 +295,168 @@ impl WaveletFeatures {
         (approx, detail)
     }
 
-    /// Multi-level wavelet decomposition
-    fn wavelet_decompose(&self, x: &[f64]) -> Result<Vec<Vec<f64>>> {
-        if self.wavelet != "db1" && self.wavelet != "haar" {
+    /// Get wavelet filter coefficients
+    fn get_wavelet_coeffs(&self) -> Result<(Vec<f64>, Vec<f64>)> {
+        match self.wavelet.as_str() {
+            "db1" | "haar" => {
+                // Haar wavelet
+                let h = vec![1.0 / 2.0_f64.sqrt(), 1.0 / 2.0_f64.sqrt()];
+                let g = vec![1.0 / 2.0_f64.sqrt(), -1.0 / 2.0_f64.sqrt()];
+                Ok((h, g))
+            }
+            "db2" => {
+                // Daubechies-2 wavelet
+                let sqrt3 = 3.0_f64.sqrt();
+                let denom = 4.0 * 2.0_f64.sqrt();
+                let h = vec![
+                    (1.0 + sqrt3) / denom,
+                    (3.0 + sqrt3) / denom,
+                    (3.0 - sqrt3) / denom,
+                    (1.0 - sqrt3) / denom,
+                ];
+                let g = vec![h[3], -h[2], h[1], -h[0]];
+                Ok((h, g))
+            }
+            "db4" => {
+                // Daubechies-4 wavelet
+                let h = vec![
+                    -0.010597401784997,
+                    0.032883011666983,
+                    0.030841381835987,
+                    -0.187034811718881,
+                    -0.027983769416984,
+                    0.630880767929590,
+                    0.714846570552542,
+                    0.230377813308855,
+                ];
+                let mut g = Vec::with_capacity(h.len());
+                for (i, &coeff) in h.iter().enumerate() {
+                    g.push(if i % 2 == 0 { coeff } else { -coeff });
+                }
+                g.reverse();
+                Ok((h, g))
+            }
+            "db8" => {
+                // Daubechies-8 wavelet
+                let h = vec![
+                    -0.00011747678400228,
+                    0.0006754494059985,
+                    -0.0003917403729959,
+                    -0.00487035299301066,
+                    0.008746094047015655,
+                    0.013981027917015516,
+                    -0.04408825393106472,
+                    -0.01736930100202211,
+                    0.128747426620186,
+                    0.00047248457399797254,
+                    -0.2840155429624281,
+                    -0.015829105256023893,
+                    0.5853546836548691,
+                    0.6756307362980128,
+                    0.3182301045617746,
+                    0.05441584224308161,
+                ];
+                let mut g = Vec::with_capacity(h.len());
+                for (i, &coeff) in h.iter().enumerate() {
+                    g.push(if i % 2 == 0 { coeff } else { -coeff });
+                }
+                g.reverse();
+                Ok((h, g))
+            }
+            "bior2.2" => {
+                // Biorthogonal 2.2 wavelet
+                let h = vec![
+                    0.0,
+                    -0.17677669529663687,
+                    0.35355339059327373,
+                    1.0606601717798214,
+                    0.35355339059327373,
+                    -0.17677669529663687,
+                    0.0,
+                ];
+                let g = vec![
+                    0.0,
+                    0.35355339059327373,
+                    -0.7071067811865476,
+                    0.35355339059327373,
+                    0.0,
+                ];
+                Ok((h, g))
+            }
+            "bior4.4" => {
+                // Biorthogonal 4.4 wavelet
+                let h = vec![
+                    0.0,
+                    0.03314563036811941,
+                    -0.06629126073623884,
+                    -0.17677669529663687,
+                    0.4198446513295126,
+                    0.9943689110435825,
+                    0.4198446513295126,
+                    -0.17677669529663687,
+                    -0.06629126073623884,
+                    0.03314563036811941,
+                    0.0,
+                ];
+                let g = vec![
+                    0.0,
+                    -0.06453888262893856,
+                    0.04068941760955867,
+                    0.41809227322161724,
+                    -0.7884856164056651,
+                    0.41809227322161724,
+                    0.04068941760955867,
+                    -0.06453888262893856,
+                    0.0,
+                ];
+                Ok((h, g))
+            }
+            _ => Err(TransformError::InvalidInput(
+                format!("Unsupported wavelet type: {}", self.wavelet),
+            )),
+        }
+    }
+
+    /// Generic wavelet transform using filter bank
+    fn wavelet_transform(&self, x: &[f64]) -> Result<(Vec<f64>, Vec<f64>)> {
+        let (h, g) = self.get_wavelet_coeffs()?;
+        
+        if x.len() < h.len() {
             return Err(TransformError::InvalidInput(
-                "Only Haar wavelet (db1) is currently implemented".to_string(),
+                "Input signal too short for selected wavelet".to_string(),
             ));
         }
+        
+        let n = x.len();
+        let mut approx = Vec::with_capacity(n / 2);
+        let mut detail = Vec::with_capacity(n / 2);
+        
+        // Convolution with downsampling
+        for i in (0..n).step_by(2) {
+            let mut h_sum = 0.0;
+            let mut g_sum = 0.0;
+            
+            for (j, (&h_coeff, &g_coeff)) in h.iter().zip(g.iter()).enumerate() {
+                let idx = (i + j) % n; // Periodic boundary condition
+                h_sum += h_coeff * x[idx];
+                g_sum += g_coeff * x[idx];
+            }
+            
+            approx.push(h_sum);
+            detail.push(g_sum);
+        }
+        
+        Ok((approx, detail))
+    }
+
+    /// Multi-level wavelet decomposition
+    fn wavelet_decompose(&self, x: &[f64]) -> Result<Vec<Vec<f64>>> {
 
         let mut coefficients = Vec::new();
         let mut current = x.to_vec();
 
         for _ in 0..self.level {
-            let (approx, detail) = self.haar_transform(&current);
+            let (approx, detail) = self.wavelet_transform(&current)?;
             coefficients.push(detail);
             current = approx;
 

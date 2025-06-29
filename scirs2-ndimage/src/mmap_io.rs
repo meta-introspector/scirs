@@ -211,6 +211,95 @@ impl Default for MmapConfig {
     }
 }
 
+/// Load an array directly into memory from a binary file
+///
+/// This function reads binary data from a file and interprets it as an array
+/// of the specified type and shape. This is for smaller files that can fit in RAM.
+///
+/// # Arguments
+///
+/// * `path` - Path to the binary file
+/// * `shape` - Expected shape of the array
+///
+/// # Returns
+///
+/// A regular ndarray containing the loaded data
+pub fn load_regular_array<T, D, P>(
+    path: P,
+    shape: &[usize],
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
+    D: Dimension + 'static,
+    P: AsRef<Path>,
+{
+    use std::fs::File;
+    use std::io::Read;
+
+    let total_elements: usize = shape.iter().product();
+    let element_size = std::mem::size_of::<T>();
+    let expected_bytes = total_elements * element_size;
+
+    // Open and read the file
+    let mut file = File::open(path.as_ref())
+        .map_err(|e| NdimageError::IOError(format!("Failed to open file: {}", e)))?;
+
+    // Check file size
+    let file_size = file.metadata()
+        .map_err(|e| NdimageError::IOError(format!("Failed to get file metadata: {}", e)))?
+        .len() as usize;
+
+    if file_size < expected_bytes {
+        return Err(NdimageError::InvalidInput(format!(
+            "File too small: expected {} bytes, got {}",
+            expected_bytes, file_size
+        )));
+    }
+
+    // Read the binary data
+    let mut buffer = vec![0u8; expected_bytes];
+    file.read_exact(&mut buffer)
+        .map_err(|e| NdimageError::IOError(format!("Failed to read file: {}", e)))?;
+
+    // Convert bytes to the target type
+    let mut data = Vec::with_capacity(total_elements);
+    
+    if std::mem::size_of::<T>() == std::mem::size_of::<f64>() {
+        // Handle f64 case
+        for chunk in buffer.chunks_exact(8) {
+            let bytes: [u8; 8] = chunk.try_into()
+                .map_err(|_| NdimageError::ProcessingError("Invalid byte alignment".into()))?;
+            let value = f64::from_le_bytes(bytes);
+            let converted = T::from_f64(value)
+                .ok_or_else(|| NdimageError::ProcessingError("Failed to convert f64 to target type".into()))?;
+            data.push(converted);
+        }
+    } else if std::mem::size_of::<T>() == std::mem::size_of::<f32>() {
+        // Handle f32 case
+        for chunk in buffer.chunks_exact(4) {
+            let bytes: [u8; 4] = chunk.try_into()
+                .map_err(|_| NdimageError::ProcessingError("Invalid byte alignment".into()))?;
+            let value = f32::from_le_bytes(bytes);
+            let converted = T::from_f32(value)
+                .ok_or_else(|| NdimageError::ProcessingError("Failed to convert f32 to target type".into()))?;
+            data.push(converted);
+        }
+    } else {
+        return Err(NdimageError::NotImplementedError(
+            "Only f32 and f64 types are currently supported for regular array loading".into(),
+        ));
+    }
+
+    // Create the array with the specified shape
+    let raw_dim = D::from_dimension(&*shape)
+        .map_err(|_| NdimageError::DimensionError("Invalid shape for dimension type".into()))?;
+
+    let array = Array::from_shape_vec(raw_dim, data)
+        .map_err(|e| NdimageError::ProcessingError(format!("Failed to create array: {}", e)))?;
+
+    Ok(array)
+}
+
 /// Smart image loader that automatically decides between regular and memory-mapped loading
 pub fn smart_load_image<T, D, P>(
     path: P,
@@ -234,10 +323,8 @@ where
         Ok(ImageData::MemoryMapped(mmap))
     } else {
         // Load into regular array for small files
-        // This would need actual image loading implementation
-        return Err(NdimageError::Unimplemented(
-            "Regular image loading not implemented in this example".into(),
-        ));
+        let array = load_regular_array::<T, D, P>(path, shape)?;
+        Ok(ImageData::Regular(array))
     }
 }
 

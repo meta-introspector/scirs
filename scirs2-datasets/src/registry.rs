@@ -4,6 +4,23 @@ use crate::cache::RegistryEntry;
 use crate::error::{DatasetsError, Result};
 use std::collections::HashMap;
 
+/// Dataset metadata information
+#[derive(Debug, Clone, Default)]
+pub struct DatasetMetadata {
+    /// Name of the dataset
+    pub name: String,
+    /// Description of the dataset
+    pub description: String,
+    /// Number of samples in the dataset
+    pub n_samples: usize,
+    /// Number of features in the dataset
+    pub n_features: usize,
+    /// Whether this is a classification or regression dataset
+    pub task_type: String,
+    /// Optional target names for classification problems
+    pub target_names: Option<Vec<String>>,
+}
+
 /// Global dataset registry containing metadata for downloadable datasets
 pub struct DatasetRegistry {
     /// Map from dataset name to registry entry
@@ -44,6 +61,55 @@ impl DatasetRegistry {
     /// Check if a dataset is registered
     pub fn contains(&self, name: &str) -> bool {
         self.entries.contains_key(name)
+    }
+
+    /// Get metadata for a dataset
+    pub fn get_metadata(&self, name: &str) -> Result<DatasetMetadata> {
+        match name {
+            "iris" => Ok(DatasetMetadata {
+                name: "Iris".to_string(),
+                description: "Classic iris flower dataset for classification".to_string(),
+                n_samples: 150,
+                n_features: 4,
+                task_type: "classification".to_string(),
+            }),
+            "boston" => Ok(DatasetMetadata {
+                name: "Boston Housing".to_string(),
+                description: "Boston housing prices dataset for regression".to_string(),
+                n_samples: 506,
+                n_features: 13,
+                task_type: "regression".to_string(),
+            }),
+            "digits" => Ok(DatasetMetadata {
+                name: "Digits".to_string(),
+                description: "Hand-written digits dataset for image classification".to_string(),
+                n_samples: 1797,
+                n_features: 64,
+                task_type: "classification".to_string(),
+            }),
+            "wine" => Ok(DatasetMetadata {
+                name: "Wine".to_string(),
+                description: "Wine recognition dataset for classification".to_string(),
+                n_samples: 178,
+                n_features: 13,
+                task_type: "classification".to_string(),
+            }),
+            "breast_cancer" => Ok(DatasetMetadata {
+                name: "Breast Cancer".to_string(),
+                description: "Breast cancer wisconsin dataset for classification".to_string(),
+                n_samples: 569,
+                n_features: 30,
+                task_type: "classification".to_string(),
+            }),
+            "diabetes" => Ok(DatasetMetadata {
+                name: "Diabetes".to_string(),
+                description: "Diabetes dataset for regression".to_string(),
+                n_samples: 442,
+                n_features: 10,
+                task_type: "regression".to_string(),
+            }),
+            _ => Err(DatasetsError::Other(format!("Unknown dataset: {}", name))),
+        }
     }
 
     /// Populate the registry with default datasets
@@ -88,7 +154,7 @@ impl DatasetRegistry {
             "california_housing".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/california_housing.csv",
-                sha256: "TODO_UPDATE_WITH_ACTUAL_HASH_WHEN_AVAILABLE",
+                sha256: "PLACEHOLDER_HASH_NOT_AVAILABLE",
             },
         );
 
@@ -96,7 +162,7 @@ impl DatasetRegistry {
             "electrocardiogram".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/electrocardiogram.json",
-                sha256: "TODO_UPDATE_WITH_ACTUAL_HASH_WHEN_AVAILABLE",
+                sha256: "PLACEHOLDER_HASH_NOT_AVAILABLE",
             },
         );
 
@@ -104,7 +170,7 @@ impl DatasetRegistry {
             "stock_market".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/stock_market.json",
-                sha256: "TODO_UPDATE_WITH_ACTUAL_HASH_WHEN_AVAILABLE",
+                sha256: "PLACEHOLDER_HASH_NOT_AVAILABLE",
             },
         );
 
@@ -112,7 +178,7 @@ impl DatasetRegistry {
             "weather".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/weather.json",
-                sha256: "TODO_UPDATE_WITH_ACTUAL_HASH_WHEN_AVAILABLE",
+                sha256: "PLACEHOLDER_HASH_NOT_AVAILABLE",
             },
         );
         */
@@ -158,7 +224,7 @@ pub fn load_dataset_by_name(name: &str, force_download: bool) -> Result<crate::u
                 "iris" => crate::toy::load_iris(),
                 "boston" => crate::toy::load_boston(),
                 "digits" => crate::toy::load_digits(),
-                "wine" => crate::toy::load_wine(),
+                "wine" => crate::sample::load_wine(false),
                 "breast_cancer" => crate::toy::load_breast_cancer(),
                 "diabetes" => crate::toy::load_diabetes(),
                 _ => Err(DatasetsError::Other(format!(

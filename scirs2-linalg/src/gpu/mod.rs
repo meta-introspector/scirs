@@ -72,16 +72,10 @@ pub trait GpuBuffer<T>: Send + Sync {
     fn device_ptr(&self) -> *mut std::ffi::c_void;
 }
 
-/// GPU context abstraction for managing device state
+/// GPU context abstraction for managing device state (dyn compatible)
 pub trait GpuContext: Send + Sync {
     /// Get device information
     fn device_info(&self) -> &GpuDeviceInfo;
-
-    /// Allocate buffer on GPU
-    fn allocate_buffer<T: Clone + Send + Sync>(
-        &self,
-        size: usize,
-    ) -> LinalgResult<Box<dyn GpuBuffer<T>>>;
 
     /// Synchronize all operations
     fn synchronize(&self) -> LinalgResult<()>;
@@ -93,6 +87,15 @@ pub trait GpuContext: Send + Sync {
     fn total_memory(&self) -> usize {
         self.device_info().total_memory
     }
+}
+
+/// GPU context with generic operations (separate trait for dyn compatibility)
+pub trait GpuContextAlloc: GpuContext {
+    /// Allocate buffer on GPU
+    fn allocate_buffer<T: Clone + Send + Sync>(
+        &self,
+        size: usize,
+    ) -> LinalgResult<Box<dyn GpuBuffer<T>>>;
 }
 
 /// GPU linear algebra operations trait

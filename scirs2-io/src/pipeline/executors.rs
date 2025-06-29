@@ -233,7 +233,7 @@ where
 {
     fn execute(&self, pipeline: &Pipeline<I, O>, input: I) -> Result<O> {
         // Create checkpoint directory
-        std::fs::create_dir_all(&self.checkpoint_dir).map_err(|e| IoError::Io(e))?;
+        std::fs::create_dir_all(&self.checkpoint_dir).map_err(IoError::Io)?;
 
         // Execute with checkpointing logic
         // Note: This is simplified - real implementation would checkpoint at each stage
@@ -243,7 +243,7 @@ where
         let checkpoint_path = self.checkpoint_dir.join("final.checkpoint");
         let serialized =
             bincode::serialize(&result).map_err(|e| IoError::SerializationError(e.to_string()))?;
-        std::fs::write(&checkpoint_path, serialized).map_err(|e| IoError::Io(e))?;
+        std::fs::write(&checkpoint_path, serialized).map_err(IoError::Io)?;
 
         Ok(result)
     }

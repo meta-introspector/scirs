@@ -173,6 +173,12 @@ pub struct TypeConvertTransform<From, To> {
     _to: PhantomData<To>,
 }
 
+impl<From, To> Default for TypeConvertTransform<From, To> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<From, To> TypeConvertTransform<From, To> {
     pub fn new() -> Self {
         Self {
@@ -627,7 +633,7 @@ impl DataTransformer for FeatureEngineeringTransform {
                             let mut interaction_col = result.column(indices[0]).to_owned();
                             for &idx in &indices[1..] {
                                 if idx < result.ncols() {
-                                    interaction_col = interaction_col * &result.column(idx);
+                                    interaction_col *= &result.column(idx);
                                 }
                             }
                             result = ndarray::concatenate(

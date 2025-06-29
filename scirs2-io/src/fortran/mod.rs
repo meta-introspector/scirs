@@ -64,23 +64,22 @@ impl Default for EndianMode {
 
 /// Record marker size for Fortran unformatted files
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum RecordMarkerSize {
     /// 4-byte record markers (default for most compilers)
+    #[default]
     FourByte,
     /// 8-byte record markers (some compilers with large record support)
     EightByte,
 }
 
-impl Default for RecordMarkerSize {
-    fn default() -> Self {
-        RecordMarkerSize::FourByte
-    }
-}
 
 /// Fortran file access mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum AccessMode {
     /// Sequential access (default)
+    #[default]
     Sequential,
     /// Direct access with fixed record length
     Direct { record_length: usize },
@@ -88,11 +87,6 @@ pub enum AccessMode {
     Stream,
 }
 
-impl Default for AccessMode {
-    fn default() -> Self {
-        AccessMode::Sequential
-    }
-}
 
 /// Fortran data types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -165,7 +159,7 @@ impl FortranFile<BufReader<File>> {
     /// Open a Fortran unformatted file for reading
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path.as_ref())
-            .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
         let reader = BufReader::new(file);
         Ok(Self {
             reader,
@@ -177,7 +171,7 @@ impl FortranFile<BufReader<File>> {
     /// Open a Fortran unformatted file with custom configuration
     pub fn open_with_config<P: AsRef<Path>>(path: P, config: FortranConfig) -> Result<Self> {
         let file = File::open(path.as_ref())
-            .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
         let reader = BufReader::new(file);
         Ok(Self {
             reader,
@@ -690,7 +684,7 @@ pub fn read_fortran_file<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<u8>>> {
 /// Detect the endianness and record marker size of a Fortran file
 pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, RecordMarkerSize)> {
     let mut file = File::open(path.as_ref())
-        .map_err(|e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+        .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
 
     // Read first 8 bytes
     let mut buffer = [0u8; 8];

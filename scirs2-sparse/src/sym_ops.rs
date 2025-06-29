@@ -13,26 +13,8 @@ use crate::error::SparseResult;
 use crate::sym_coo::SymCooMatrix;
 use crate::sym_csr::SymCsrMatrix;
 
-// Import SIMD and parallel operations from scirs2-core
-// Temporarily disabled due to feature requirements
-// use scirs2_core::parallel_ops::*;
-// use scirs2_core::simd_ops::SimdUnifiedOps;
-
-// Placeholder trait for SIMD operations
-pub trait SimdUnifiedOps {
-    fn simd_available() -> bool {
-        false
-    }
-    fn simd_dot(_a: &ndarray::ArrayView1<Self>, _b: &ndarray::ArrayView1<Self>) -> Self
-    where
-        Self: Sized + Copy + std::ops::Add<Output = Self> + num_traits::Zero,
-    {
-        Self::zero()
-    }
-}
-
-impl SimdUnifiedOps for f32 {}
-impl SimdUnifiedOps for f64 {}
+// Import parallel operations from scirs2-core
+use scirs2_core::parallel_ops::*;
 
 /// Computes a matrix-vector product for symmetric CSR matrices.
 ///
@@ -76,7 +58,7 @@ impl SimdUnifiedOps for f64 {}
 /// ```
 pub fn sym_csr_matvec<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T>,
+    T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
 {
     let (n, _) = matrix.shape();
     if x.len() != n {
@@ -86,195 +68,69 @@ where
         });
     }
 
-    // Use scalar implementation for now (SIMD features disabled)
-    sym_csr_matvec_scalar(matrix, x)
-}
-
-/// SIMD-optimized symmetric CSR matrix-vector multiplication
-fn sym_csr_matvec_simd<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
-where
-    T: Float + Debug + Copy + Add<Output = T> + SimdUnifiedOps + Send + Sync,
-{
-    let (n, _) = matrix.shape();
-
-    // Use parallel processing for large matrices
-    const PARALLEL_THRESHOLD: usize = 1000;
-
-    if n >= PARALLEL_THRESHOLD {
-        sym_csr_matvec_parallel_simd(matrix, x)
+    let nnz = matrix.nnz();
+    
+    // Use parallel implementation for larger matrices
+    if nnz >= 1000 {
+        sym_csr_matvec_parallel(matrix, x)
     } else {
-        sym_csr_matvec_simd_sequential(matrix, x)
+        sym_csr_matvec_scalar(matrix, x)
     }
 }
 
-/// Parallel SIMD-optimized symmetric CSR matrix-vector multiplication
-fn sym_csr_matvec_parallel_simd<T>(
-    matrix: &SymCsrMatrix<T>,
-    x: &ArrayView1<T>,
-) -> SparseResult<Array1<T>>
+/// Parallel symmetric CSR matrix-vector multiplication
+fn sym_csr_matvec_parallel<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + SimdUnifiedOps + Send + Sync,
+    T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
 {
     let (n, _) = matrix.shape();
     let mut y = Array1::zeros(n);
 
     // Process rows in parallel chunks
-    const ROW_CHUNK_SIZE: usize = 32; // Process rows in chunks
-    const SIMD_CHUNK_SIZE: usize = 8; // SIMD width
+    const ROW_CHUNK_SIZE: usize = 64;
 
-    // Create mutable slice for parallel access
-    let y_slice = y.as_slice_mut().unwrap();
-
-    // Process rows in parallel
-    y_slice
-        .par_chunks_mut(ROW_CHUNK_SIZE)
-        .enumerate()
-        .for_each(|(chunk_idx, y_chunk)| {
-            let start_row = chunk_idx * ROW_CHUNK_SIZE;
+    // Use parallel iteration over rows
+    let results: Vec<_> = (0..n)
+        .step_by(ROW_CHUNK_SIZE)
+        .map(|start_row| {
             let end_row = std::cmp::min(start_row + ROW_CHUNK_SIZE, n);
-
-            for (local_row, row_i) in (start_row..end_row).enumerate() {
+            let mut local_y = Array1::zeros(n);
+            
+            for row_i in start_row..end_row {
                 let row_start = matrix.indptr[row_i];
                 let row_end = matrix.indptr[row_i + 1];
-                let row_len = row_end - row_start;
 
-                if row_len >= SIMD_CHUNK_SIZE {
-                    // Use SIMD for longer rows
-                    let mut chunk_start = row_start;
-                    while chunk_start + SIMD_CHUNK_SIZE <= row_end {
-                        let chunk_end = chunk_start + SIMD_CHUNK_SIZE;
-
-                        // Extract chunks of indices and values
-                        let indices_chunk = &matrix.indices[chunk_start..chunk_end];
-                        let values_chunk = &matrix.data[chunk_start..chunk_end];
-
-                        // Gather corresponding x values and compute dot product
-                        let mut x_vals = Vec::with_capacity(SIMD_CHUNK_SIZE);
-                        for &idx in indices_chunk {
-                            x_vals.push(x[idx]);
-                        }
-
-                        let values_view = ArrayView1::from(values_chunk);
-                        let x_view = ArrayView1::from(&x_vals);
-                        let dot_product = T::simd_dot(&values_view, &x_view);
-
-                        y_chunk[local_row] = y_chunk[local_row] + dot_product;
-
-                        chunk_start = chunk_end;
-                    }
-
-                    // Handle remaining elements in row
-                    for j in chunk_start..row_end {
-                        let col = matrix.indices[j];
-                        let val = matrix.data[j];
-                        y_chunk[local_row] = y_chunk[local_row] + val * x[col];
-                    }
-                } else {
-                    // Use scalar operations for short rows
-                    for j in row_start..row_end {
-                        let col = matrix.indices[j];
-                        let val = matrix.data[j];
-                        y_chunk[local_row] = y_chunk[local_row] + val * x[col];
+                // Compute the dot product for this row
+                let mut sum = T::zero();
+                for j in row_start..row_end {
+                    let col = matrix.indices[j];
+                    let val = matrix.data[j];
+                    
+                    sum = sum + val * x[col];
+                    
+                    // For symmetric matrices, also add the symmetric contribution
+                    // if we're below the diagonal
+                    if row_i != col {
+                        local_y[col] = local_y[col] + val * x[row_i];
                     }
                 }
+                local_y[row_i] = local_y[row_i] + sum;
             }
-        });
+            local_y
+        })
+        .collect();
 
-    // Handle the symmetric part (off-diagonal contributions)
-    // This needs to be done sequentially to avoid race conditions
-    for i in 0..n {
-        let row_start = matrix.indptr[i];
-        let row_end = matrix.indptr[i + 1];
-
-        for j in row_start..row_end {
-            let col = matrix.indices[j];
-            let val = matrix.data[j];
-
-            // If not on the diagonal, add the symmetric contribution
-            if i != col {
-                y[col] = y[col] + val * x[i];
-            }
+    // Sum up the results from all chunks
+    for local_y in results {
+        for i in 0..n {
+            y[i] = y[i] + local_y[i];
         }
     }
 
     Ok(y)
 }
 
-/// Sequential SIMD-optimized symmetric CSR matrix-vector multiplication
-fn sym_csr_matvec_simd_sequential<T>(
-    matrix: &SymCsrMatrix<T>,
-    x: &ArrayView1<T>,
-) -> SparseResult<Array1<T>>
-where
-    T: Float + Debug + Copy + Add<Output = T> + SimdUnifiedOps,
-{
-    let (n, _) = matrix.shape();
-    let mut y = Array1::zeros(n);
 
-    // Process in chunks for better SIMD utilization
-    const CHUNK_SIZE: usize = 8; // Optimize for common SIMD widths
-
-    for i in 0..n {
-        let row_start = matrix.indptr[i];
-        let row_end = matrix.indptr[i + 1];
-        let row_len = row_end - row_start;
-
-        if row_len >= CHUNK_SIZE {
-            // Use SIMD for longer rows
-            let mut chunk_start = row_start;
-            while chunk_start + CHUNK_SIZE <= row_end {
-                let chunk_end = chunk_start + CHUNK_SIZE;
-
-                // Extract chunks of indices and values
-                let indices_chunk = &matrix.indices[chunk_start..chunk_end];
-                let values_chunk = &matrix.data[chunk_start..chunk_end];
-
-                // Gather corresponding x values and compute dot product
-                let mut x_vals = Vec::with_capacity(CHUNK_SIZE);
-                for &idx in indices_chunk {
-                    x_vals.push(x[idx]);
-                }
-
-                let values_view = ArrayView1::from(values_chunk);
-                let x_view = ArrayView1::from(&x_vals);
-                let dot_product = T::simd_dot(&values_view, &x_view);
-
-                y[i] = y[i] + dot_product;
-
-                // Handle symmetric part for off-diagonal elements
-                for (k, &col) in indices_chunk.iter().enumerate() {
-                    if i != col {
-                        y[col] = y[col] + values_chunk[k] * x[i];
-                    }
-                }
-
-                chunk_start = chunk_end;
-            }
-
-            // Handle remaining elements in row
-            for j in chunk_start..row_end {
-                let col = matrix.indices[j];
-                let val = matrix.data[j];
-                y[i] = y[i] + val * x[col];
-                if i != col {
-                    y[col] = y[col] + val * x[i];
-                }
-            }
-        } else {
-            // Use scalar operations for short rows
-            for j in row_start..row_end {
-                let col = matrix.indices[j];
-                let val = matrix.data[j];
-                y[i] = y[i] + val * x[col];
-                if i != col {
-                    y[col] = y[col] + val * x[i];
-                }
-            }
-        }
-    }
-
-    Ok(y)
-}
 
 /// Scalar fallback version of symmetric CSR matrix-vector multiplication
 fn sym_csr_matvec_scalar<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
@@ -487,7 +343,7 @@ where
 /// ```
 pub fn sym_csr_quadratic_form<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<T>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T>,
+    T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + Send + Sync,
 {
     // First compute A * x
     let ax = sym_csr_matvec(matrix, x)?;

@@ -18,6 +18,11 @@ use scirs2_core::parallel_ops::parallel_map;
 use super::{pad_array, BorderMode};
 use crate::error::{NdimageError, NdimageResult};
 
+/// Helper function for safe conversion from numeric values to float
+fn safe_to_float<T: Float + FromPrimitive>(value: f64) -> T {
+    T::from(value).unwrap_or_else(|| T::zero())
+}
+
 /// Apply a generic filter to an n-dimensional array
 ///
 /// This function applies a user-defined function to every local neighborhood
@@ -52,7 +57,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// };
 ///
 /// let input = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
-/// let result = generic_filter(&input, range_func, &[3, 3], None, None).unwrap();
+/// let result = generic_filter(&input, range_func, &[3, 3], None, None)?;
 /// ```
 pub fn generic_filter<T, D, F>(
     input: &Array<T, D>,
@@ -67,7 +72,7 @@ where
     F: Fn(&[T]) -> T + Send + Sync + Clone + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
-    let constant_value = cval.unwrap_or_else(|| T::from(0.0).unwrap_or(T::from(0).unwrap()));
+    let constant_value = cval.unwrap_or_else(|| safe_to_float(0.0));
 
     // Validate inputs
     if input.ndim() == 0 {
@@ -553,7 +558,8 @@ mod tests {
     fn test_generic_filter_mean() {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let result = generic_filter(&input, filter_functions::mean, &[3, 3], None, None).unwrap();
+        let result = generic_filter(&input, filter_functions::mean, &[3, 3], None, None)
+            .expect("generic_filter should succeed for test");
 
         // Center element should be the mean of all elements
         let expected = (1.0 + 2.0 + 3.0 + 4.0 + 5.0 + 6.0 + 7.0 + 8.0 + 9.0) / 9.0;
@@ -564,7 +570,8 @@ mod tests {
     fn test_generic_filter_range() {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let result = generic_filter(&input, filter_functions::range, &[3, 3], None, None).unwrap();
+        let result = generic_filter(&input, filter_functions::range, &[3, 3], None, None)
+            .expect("generic_filter should succeed for test");
 
         // Center element should be the range of all elements (9 - 1 = 8)
         assert_abs_diff_eq!(result[[1, 1]], 8.0, epsilon = 1e-10);
@@ -574,7 +581,8 @@ mod tests {
     fn test_generic_filter_1d() {
         let input = Array1::from(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 
-        let result = generic_filter(&input, filter_functions::mean, &[3], None, None).unwrap();
+        let result = generic_filter(&input, filter_functions::mean, &[3], None, None)
+            .expect("generic_filter should succeed for test");
 
         // Should preserve shape
         assert_eq!(result.len(), input.len());
@@ -593,7 +601,8 @@ mod tests {
 
         // Test with BorderMode::Nearest
         let result =
-            generic_filter(&input, max_func, &[2, 2], Some(BorderMode::Nearest), None).unwrap();
+            generic_filter(&input, max_func, &[2, 2], Some(BorderMode::Nearest), None)
+                .expect("generic_filter should succeed for test");
 
         // Check shape preservation and that center position sees the global maximum
         assert_eq!(result.shape(), input.shape());
@@ -614,16 +623,19 @@ mod tests {
 
         // Test maximum filter
         let result =
-            generic_filter(&input, filter_functions::maximum, &[3, 3], None, None).unwrap();
+            generic_filter(&input, filter_functions::maximum, &[3, 3], None, None)
+                .expect("generic_filter should succeed for test");
         assert_abs_diff_eq!(result[[1, 1]], 9.0, epsilon = 1e-10);
 
         // Test minimum filter
         let result =
-            generic_filter(&input, filter_functions::minimum, &[3, 3], None, None).unwrap();
+            generic_filter(&input, filter_functions::minimum, &[3, 3], None, None)
+                .expect("generic_filter should succeed for test");
         assert_abs_diff_eq!(result[[1, 1]], 1.0, epsilon = 1e-10);
 
         // Test median filter
-        let result = generic_filter(&input, filter_functions::median, &[3, 3], None, None).unwrap();
+        let result = generic_filter(&input, filter_functions::median, &[3, 3], None, None)
+            .expect("generic_filter should succeed for test");
         assert_abs_diff_eq!(result[[1, 1]], 5.0, epsilon = 1e-10); // Median of [1,2,3,4,5,6,7,8,9] is 5
     }
 
@@ -634,7 +646,8 @@ mod tests {
         let input = Array2::from_shape_fn((200, 200), |(i, j)| (i * j) as f64);
 
         // Test with mean function
-        let result = generic_filter(&input, filter_functions::mean, &[3, 3], None, None).unwrap();
+        let result = generic_filter(&input, filter_functions::mean, &[3, 3], None, None)
+            .expect("generic_filter should succeed for test");
 
         // Should preserve shape
         assert_eq!(result.shape(), input.shape());

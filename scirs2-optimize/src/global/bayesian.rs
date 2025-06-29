@@ -63,6 +63,8 @@ pub struct Space {
     parameters: Vec<(String, Parameter)>,
     /// Dimensionality after transformation
     transformed_n_dims: usize,
+    /// Bounds for parameters
+    bounds: Vec<(f64, f64)>,
 }
 
 impl Space {
@@ -71,6 +73,7 @@ impl Space {
         Self {
             parameters: Vec::new(),
             transformed_n_dims: 0,
+            bounds: Vec::new(),
         }
     }
 
@@ -84,6 +87,14 @@ impl Space {
             Parameter::Integer(_, _) => 1,
             Parameter::Categorical(values) => values.len(),
         };
+
+        // Add bounds for this parameter
+        let bounds = match &parameter {
+            Parameter::Real(lower, upper) => (*lower, *upper),
+            Parameter::Integer(lower, upper) => (*lower as f64, *upper as f64),
+            Parameter::Categorical(_) => (0.0, 1.0),
+        };
+        self.bounds.push(bounds);
 
         self.parameters.push((name, parameter));
         self
@@ -111,14 +122,14 @@ impl Space {
                 match param {
                     Parameter::Real(lower, upper) => {
                         // Use random_range directly instead of Uniform distribution
-                        sample[i] = rng.random_range(*lower..*upper);
+                        sample[i] = rng.gen_range(*lower..*upper);
                     }
                     Parameter::Integer(lower, upper) => {
-                        let range = rng.random_range(*lower..=*upper);
+                        let range = rng.gen_range(*lower..=*upper);
                         sample[i] = range as f64;
                     }
                     Parameter::Categorical(values) => {
-                        let index = rng.random_range(0..values.len());
+                        let index = rng.gen_range(0..values.len());
                         sample[i] = index as f64;
                     }
                 }
@@ -483,6 +494,8 @@ pub struct BayesianOptimizer {
     best_observation: Option<Observation>,
     /// Random number generator
     rng: StdRng,
+    /// Current iteration number
+    iteration: usize,
 }
 
 impl BayesianOptimizer {
@@ -498,6 +511,7 @@ impl BayesianOptimizer {
             observations: Vec::new(),
             best_observation: None,
             rng,
+            iteration: 0,
         }
     }
 
@@ -521,7 +535,7 @@ impl BayesianOptimizer {
                     for (i, (low, high)) in self.space.bounds.iter().enumerate() {
                         // For single sample, pick random position in interval
                         let interval_size = (high - low) / n_samples as f64;
-                        let offset = self.rng.random::<f64>() * interval_size;
+                        let offset = self.rng.gen_range(0.0..1.0) * interval_size;
                         sample[i] = low + offset;
                     }
 
@@ -592,10 +606,12 @@ impl BayesianOptimizer {
                 }
             };
 
+            self.iteration += 1;
             return samples[0].clone();
         }
 
         // Otherwise, optimize the acquisition function
+        self.iteration += 1;
         self.optimize_acquisition_function()
     }
 

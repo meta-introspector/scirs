@@ -8,6 +8,13 @@
 mod silhouette;
 pub use silhouette::{silhouette_samples, silhouette_score};
 
+mod information_theoretic;
+pub use information_theoretic::{
+    adjusted_mutual_info_score, adjusted_rand_score, 
+    mutual_info_score, normalized_mutual_info_score, 
+    v_measure_score, completeness_score, homogeneity_score
+};
+
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
