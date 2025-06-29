@@ -23,7 +23,16 @@ pub use ultra_simd_optimized::{
     ultra_simd_separable_convolution_2d, ultra_simd_template_matching,
 };
 
+// Advanced SIMD extensions exports
+#[cfg(feature = "simd")]
+pub use advanced_simd_extensions::{
+    ultra_simd_advanced_edge_detection, ultra_simd_multi_scale_lbp, ultra_simd_wavelet_pyramid,
+    WaveletPyramid, WaveletType,
+};
+
 pub mod advanced;
+#[cfg(feature = "simd")]
+mod advanced_simd_extensions;
 mod bilateral;
 mod boundary_handler;
 mod boundary_optimized;

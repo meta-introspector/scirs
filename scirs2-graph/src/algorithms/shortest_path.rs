@@ -27,7 +27,7 @@ pub struct Path<N: Node, E: EdgeWeight> {
 /// Result of A* search algorithm
 #[derive(Debug, Clone)]
 pub struct AStarResult<N: Node, E: EdgeWeight> {
-    /// The path from start to goal
+    /// The path from source to target
     pub path: Vec<N>,
     /// The total cost of the path
     pub cost: E,
@@ -483,9 +483,9 @@ where
 ///
 /// # Arguments
 /// * `graph` - The graph to search
-/// * `start` - Starting node
-/// * `goal` - Goal node
-/// * `heuristic` - Heuristic function that estimates distance from a node to the goal
+/// * `source` - Source node
+/// * `target` - Target node
+/// * `heuristic` - Heuristic function that estimates distance from a node to the target
 ///
 /// # Returns
 /// * `Result<AStarResult>` - The shortest path and its cost
@@ -505,8 +505,8 @@ where
 /// optimal path.
 pub fn astar_search<N, E, Ix, H>(
     graph: &Graph<N, E, Ix>,
-    start: &N,
-    goal: &N,
+    source: &N,
+    target: &N,
     heuristic: H,
 ) -> Result<AStarResult<N, E>>
 where
@@ -515,7 +515,7 @@ where
     Ix: petgraph::graph::IndexType,
     H: Fn(&N) -> E,
 {
-    if !graph.contains_node(start) || !graph.contains_node(goal) {
+    if !graph.contains_node(source) || !graph.contains_node(target) {
         return Err(GraphError::NodeNotFound);
     }
 
@@ -523,19 +523,19 @@ where
     let mut g_score: HashMap<N, E> = HashMap::new();
     let mut came_from: HashMap<N, N> = HashMap::new();
 
-    g_score.insert(start.clone(), E::zero());
+    g_score.insert(source.clone(), E::zero());
 
     open_set.push(AStarState {
-        node: start.clone(),
+        node: source.clone(),
         cost: E::zero(),
-        heuristic: heuristic(start),
-        path: vec![start.clone()],
+        heuristic: heuristic(source),
+        path: vec![source.clone()],
     });
 
     while let Some(current_state) = open_set.pop() {
         let current = &current_state.node;
 
-        if current == goal {
+        if current == target {
             return Ok(AStarResult {
                 path: current_state.path,
                 cost: current_state.cost,
@@ -575,8 +575,8 @@ where
 /// A* search for directed graphs
 pub fn astar_search_digraph<N, E, Ix, H>(
     graph: &DiGraph<N, E, Ix>,
-    start: &N,
-    goal: &N,
+    source: &N,
+    target: &N,
     heuristic: H,
 ) -> Result<AStarResult<N, E>>
 where
@@ -585,7 +585,7 @@ where
     Ix: petgraph::graph::IndexType,
     H: Fn(&N) -> E,
 {
-    if !graph.contains_node(start) || !graph.contains_node(goal) {
+    if !graph.contains_node(source) || !graph.contains_node(target) {
         return Err(GraphError::NodeNotFound);
     }
 
@@ -593,19 +593,19 @@ where
     let mut g_score: HashMap<N, E> = HashMap::new();
     let mut came_from: HashMap<N, N> = HashMap::new();
 
-    g_score.insert(start.clone(), E::zero());
+    g_score.insert(source.clone(), E::zero());
 
     open_set.push(AStarState {
-        node: start.clone(),
+        node: source.clone(),
         cost: E::zero(),
-        heuristic: heuristic(start),
-        path: vec![start.clone()],
+        heuristic: heuristic(source),
+        path: vec![source.clone()],
     });
 
     while let Some(current_state) = open_set.pop() {
         let current = &current_state.node;
 
-        if current == goal {
+        if current == target {
             return Ok(AStarResult {
                 path: current_state.path,
                 cost: current_state.cost,
@@ -648,8 +648,8 @@ where
 /// Each path includes the total weight and the sequence of nodes.
 pub fn k_shortest_paths<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
-    start: &N,
-    goal: &N,
+    source: &N,
+    target: &N,
     k: usize,
 ) -> Result<Vec<(f64, Vec<N>)>>
 where
@@ -671,7 +671,7 @@ where
     }
 
     // Check if nodes exist
-    if !graph.contains_node(start) || !graph.contains_node(goal) {
+    if !graph.contains_node(source) || !graph.contains_node(target) {
         return Err(GraphError::NodeNotFound);
     }
 
@@ -679,7 +679,7 @@ where
     let mut candidates = std::collections::BinaryHeap::new();
 
     // Find the shortest path first
-    match dijkstra_path(graph, start, goal) {
+    match dijkstra_path(graph, source, target) {
         Ok(Some(path)) => {
             let weight: f64 = path.total_weight.into();
             paths.push((weight, path.nodes));
@@ -711,9 +711,9 @@ where
                 }
             }
 
-            // Find shortest path from spur_node to goal avoiding removed edges
+            // Find shortest path from spur_node to target avoiding removed edges
             if let Ok((spur_weight, spur_path)) =
-                shortest_path_avoiding_edges(graph, spur_node, goal, &removed_edges, root_path)
+                shortest_path_avoiding_edges(graph, spur_node, target, &removed_edges, root_path)
             {
                 // Calculate total weight of the new path
                 let mut total_weight = spur_weight;
@@ -756,8 +756,8 @@ where
 /// Helper function for k-shortest paths that finds shortest path avoiding certain edges
 fn shortest_path_avoiding_edges<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
-    start: &N,
-    goal: &N,
+    source: &N,
+    target: &N,
     avoided_edges: &[(N, N)],
     excluded_nodes: &[N],
 ) -> Result<(f64, Vec<N>)>
@@ -772,14 +772,14 @@ where
     let mut previous: HashMap<N, N> = HashMap::new();
     let mut heap = BinaryHeap::new();
 
-    distances.insert(start.clone(), 0.0);
-    heap.push((Reverse(ordered_float::OrderedFloat(0.0)), start.clone()));
+    distances.insert(source.clone(), 0.0);
+    heap.push((Reverse(ordered_float::OrderedFloat(0.0)), source.clone()));
 
     while let Some((Reverse(ordered_float::OrderedFloat(dist)), node)) = heap.pop() {
-        if &node == goal {
+        if &node == target {
             // Reconstruct path
-            let mut path = vec![goal.clone()];
-            let mut current = goal.clone();
+            let mut path = vec![target.clone()];
+            let mut current = target.clone();
 
             while let Some(prev) = previous.get(&current) {
                 path.push(prev.clone());
@@ -801,8 +801,8 @@ where
                     continue;
                 }
 
-                // Skip if this node is in excluded nodes (except start and goal)
-                if &neighbor != start && &neighbor != goal && excluded_nodes.contains(&neighbor) {
+                // Skip if this node is in excluded nodes (except source and target)
+                if &neighbor != source && &neighbor != target && excluded_nodes.contains(&neighbor) {
                     continue;
                 }
 

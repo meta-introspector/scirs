@@ -35,6 +35,39 @@ impl Default for FeatureRegistrationConfig {
     }
 }
 
+/// ORB (Oriented FAST and Rotated BRIEF) parameters
+#[derive(Debug, Clone)]
+pub struct OrbParams {
+    /// Number of pyramid levels
+    pub n_levels: usize,
+    /// Scale factor between pyramid levels
+    pub scale_factor: f32,
+    /// FAST threshold for keypoint detection
+    pub fast_threshold: u8,
+    /// Patch size for descriptor computation
+    pub patch_size: usize,
+    /// Edge threshold (pixels from border)
+    pub edge_threshold: usize,
+    /// First level in pyramid (0 = original image)
+    pub first_level: usize,
+    /// Number of points for descriptor computation
+    pub wta_k: usize,
+}
+
+impl Default for OrbParams {
+    fn default() -> Self {
+        Self {
+            n_levels: 8,
+            scale_factor: 1.2,
+            fast_threshold: 20,
+            patch_size: 31,
+            edge_threshold: 31,
+            first_level: 0,
+            wta_k: 2,
+        }
+    }
+}
+
 /// Feature detector parameters
 #[derive(Debug, Clone)]
 pub struct FeatureDetectorParams {
@@ -44,8 +77,8 @@ pub struct FeatureDetectorParams {
     pub threshold: f32,
     /// Use ORB detector (otherwise use Harris)
     pub use_orb: bool,
-    /// ORB parameters (placeholder)
-    pub orb_params: (),
+    /// ORB parameters
+    pub orb_params: OrbParams,
     /// Harris corner parameters
     pub harris_block_size: usize,
     /// Harris corner detection parameter k
@@ -58,7 +91,7 @@ impl Default for FeatureDetectorParams {
             max_features: 500,
             threshold: 0.01,
             use_orb: true,
-            orb_params: (),
+            orb_params: OrbParams::default(),
             harris_block_size: 7,
             harris_k: 0.04,
         }
@@ -183,34 +216,398 @@ fn detect_and_describe(
     image: &DynamicImage,
     params: &FeatureDetectorParams,
 ) -> Result<(Vec<Keypoint>, Vec<Vec<u8>>)> {
-    // Use Harris corner detector (ORB not available)
-    let corners = harris_corners(
-        image,
-        params.harris_block_size,
-        params.harris_k,
-        params.threshold,
-    )?;
+    if params.use_orb {
+        // Use ORB detector
+        detect_orb_features(image, params)
+    } else {
+        // Use Harris corner detector
+        let corners = harris_corners(
+            image,
+            params.harris_block_size,
+            params.harris_k,
+            params.threshold,
+        )?;
 
-    let coordinates = extract_feature_coordinates(&corners);
+        let coordinates = extract_feature_coordinates(&corners);
 
-    // Convert to keypoints
-    let keypoints: Vec<Keypoint> = coordinates
-        .iter()
-        .take(params.max_features)
-        .map(|&(x, y)| Keypoint {
-            x: x as f32,
-            y: y as f32,
-            scale: 1.0,
-            angle: 0.0,
-            response: 1.0,
-        })
-        .collect();
+        // Convert to keypoints
+        let keypoints: Vec<Keypoint> = coordinates
+            .iter()
+            .take(params.max_features)
+            .map(|&(x, y)| Keypoint {
+                x: x as f32,
+                y: y as f32,
+                scale: 1.0,
+                angle: 0.0,
+                response: 1.0,
+            })
+            .collect();
 
-    // Generate simple descriptors for Harris corners
+        // Generate simple descriptors for Harris corners
+        let gray = image.to_luma8();
+        let descriptors = generate_simple_descriptors(&gray, &keypoints)?;
+
+        Ok((keypoints, descriptors))
+    }
+}
+
+/// Detect ORB features using FAST keypoint detection and BRIEF descriptors
+fn detect_orb_features(
+    image: &DynamicImage,
+    params: &FeatureDetectorParams,
+) -> Result<(Vec<Keypoint>, Vec<Vec<u8>>)> {
     let gray = image.to_luma8();
-    let descriptors = generate_simple_descriptors(&gray, &keypoints)?;
+    let (_width, _height) = gray.dimensions();
 
-    Ok((keypoints, descriptors))
+    // Build image pyramid
+    let pyramid = build_orb_pyramid(&gray, &params.orb_params)?;
+    
+    let mut all_keypoints = Vec::new();
+    
+    // Detect FAST keypoints at each pyramid level
+    for (level, level_image) in pyramid.iter().enumerate() {
+        let scale = params.orb_params.scale_factor.powi(level as i32);
+        let features_per_level = params.max_features / params.orb_params.n_levels;
+        
+        let level_keypoints = detect_fast_keypoints(
+            level_image,
+            params.orb_params.fast_threshold,
+            features_per_level,
+            scale,
+            level,
+        )?;
+        
+        all_keypoints.extend(level_keypoints);
+    }
+
+    // Limit total number of keypoints
+    all_keypoints.sort_by(|a, b| b.response.partial_cmp(&a.response).unwrap());
+    all_keypoints.truncate(params.max_features);
+    
+    // Compute orientation for each keypoint
+    let keypoints_with_orientation = compute_orb_orientations(&gray, &all_keypoints)?;
+    
+    // Compute BRIEF descriptors
+    let descriptors = compute_orb_descriptors(&gray, &keypoints_with_orientation, &params.orb_params)?;
+    
+    Ok((keypoints_with_orientation, descriptors))
+}
+
+/// Build ORB image pyramid
+fn build_orb_pyramid(image: &image::GrayImage, params: &OrbParams) -> Result<Vec<image::GrayImage>> {
+    let mut pyramid = Vec::new();
+    let current_image = image.clone();
+    
+    for level in 0..params.n_levels {
+        if level == 0 {
+            pyramid.push(current_image.clone());
+        } else {
+            // Scale down image
+            let scale = params.scale_factor.powi(level as i32);
+            let new_width = ((image.width() as f32 / scale) as u32).max(50);
+            let new_height = ((image.height() as f32 / scale) as u32).max(50);
+            
+            if new_width < 50 || new_height < 50 {
+                break;
+            }
+            
+            let resized = image::imageops::resize(
+                image,
+                new_width,
+                new_height,
+                image::imageops::FilterType::Lanczos3,
+            );
+            
+            pyramid.push(resized);
+        }
+    }
+    
+    Ok(pyramid)
+}
+
+/// Detect FAST keypoints in an image
+fn detect_fast_keypoints(
+    image: &image::GrayImage,
+    threshold: u8,
+    max_features: usize,
+    scale: f32,
+    _level: usize,
+) -> Result<Vec<Keypoint>> {
+    let (width, height) = image.dimensions();
+    let mut keypoints = Vec::new();
+    
+    // FAST keypoint detection using circle of 16 pixels
+    let circle_offsets = [
+        (0, -3), (1, -3), (2, -2), (3, -1), (3, 0), (3, 1),
+        (2, 2), (1, 3), (0, 3), (-1, 3), (-2, 2), (-3, 1),
+        (-3, 0), (-3, -1), (-2, -2), (-1, -3),
+    ];
+    
+    for y in 3..(height - 3) {
+        for x in 3..(width - 3) {
+            let center_intensity = image.get_pixel(x, y)[0];
+            
+            // Check if point is a corner using FAST criterion
+            if is_fast_corner(image, x, y, center_intensity, threshold, &circle_offsets) {
+                let response = compute_fast_response(image, x, y, &circle_offsets);
+                
+                keypoints.push(Keypoint {
+                    x: (x as f32) * scale,
+                    y: (y as f32) * scale,
+                    scale,
+                    angle: 0.0, // Will be computed later
+                    response,
+                });
+            }
+        }
+    }
+    
+    // Apply non-maximum suppression
+    let suppressed = non_maximum_suppression(&keypoints, 7.0)?;
+    
+    // Sort by response and limit features
+    let mut sorted_keypoints = suppressed;
+    sorted_keypoints.sort_by(|a, b| b.response.partial_cmp(&a.response).unwrap());
+    sorted_keypoints.truncate(max_features);
+    
+    Ok(sorted_keypoints)
+}
+
+/// Check if a pixel is a FAST corner
+fn is_fast_corner(
+    image: &image::GrayImage,
+    x: u32,
+    y: u32,
+    center_intensity: u8,
+    threshold: u8,
+    circle_offsets: &[(i32, i32)],
+) -> bool {
+    let mut _brighter_count = 0;
+    let mut _darker_count = 0;
+    let mut consecutive_brighter = 0;
+    let mut consecutive_darker = 0;
+    let mut max_consecutive_brighter = 0;
+    let mut max_consecutive_darker = 0;
+    
+    for &(dx, dy) in circle_offsets {
+        let px = (x as i32 + dx) as u32;
+        let py = (y as i32 + dy) as u32;
+        
+        let pixel_intensity = image.get_pixel(px, py)[0];
+        let diff = pixel_intensity as i32 - center_intensity as i32;
+        
+        if diff > threshold as i32 {
+            _brighter_count += 1;
+            consecutive_brighter += 1;
+            consecutive_darker = 0;
+            max_consecutive_brighter = max_consecutive_brighter.max(consecutive_brighter);
+        } else if diff < -(threshold as i32) {
+            _darker_count += 1;
+            consecutive_darker += 1;
+            consecutive_brighter = 0;
+            max_consecutive_darker = max_consecutive_darker.max(consecutive_darker);
+        } else {
+            consecutive_brighter = 0;
+            consecutive_darker = 0;
+        }
+    }
+    
+    // Need at least 9 consecutive pixels that are all brighter or all darker
+    max_consecutive_brighter >= 9 || max_consecutive_darker >= 9
+}
+
+/// Compute FAST corner response
+fn compute_fast_response(
+    image: &image::GrayImage,
+    x: u32,
+    y: u32,
+    circle_offsets: &[(i32, i32)],
+) -> f32 {
+    let center_intensity = image.get_pixel(x, y)[0] as f32;
+    let mut total_diff = 0.0;
+    
+    for &(dx, dy) in circle_offsets {
+        let px = (x as i32 + dx) as u32;
+        let py = (y as i32 + dy) as u32;
+        
+        let pixel_intensity = image.get_pixel(px, py)[0] as f32;
+        total_diff += (pixel_intensity - center_intensity).abs();
+    }
+    
+    total_diff / circle_offsets.len() as f32
+}
+
+/// Apply non-maximum suppression to keypoints
+fn non_maximum_suppression(keypoints: &[Keypoint], radius: f32) -> Result<Vec<Keypoint>> {
+    let mut suppressed: Vec<Keypoint> = Vec::new();
+    let radius_sq = radius * radius;
+    
+    let mut sorted_keypoints = keypoints.to_vec();
+    sorted_keypoints.sort_by(|a, b| b.response.partial_cmp(&a.response).unwrap());
+    
+    for keypoint in sorted_keypoints {
+        let mut is_local_maximum = true;
+        
+        for existing in &suppressed {
+            let dx = keypoint.x - existing.x;
+            let dy = keypoint.y - existing.y;
+            let dist_sq = dx * dx + dy * dy;
+            
+            if dist_sq < radius_sq && existing.response >= keypoint.response {
+                is_local_maximum = false;
+                break;
+            }
+        }
+        
+        if is_local_maximum {
+            suppressed.push(keypoint);
+        }
+    }
+    
+    Ok(suppressed)
+}
+
+/// Compute orientations for ORB keypoints using intensity centroid
+fn compute_orb_orientations(image: &image::GrayImage, keypoints: &[Keypoint]) -> Result<Vec<Keypoint>> {
+    let mut oriented_keypoints = Vec::new();
+    let (width, height) = image.dimensions();
+    
+    for keypoint in keypoints {
+        let patch_radius = 15; // Radius for orientation computation
+        let x = keypoint.x as u32;
+        let y = keypoint.y as u32;
+        
+        if x < patch_radius || y < patch_radius || 
+           x >= width - patch_radius || y >= height - patch_radius {
+            // Skip keypoints too close to borders
+            continue;
+        }
+        
+        // Compute intensity centroid
+        let mut m01 = 0.0;
+        let mut m10 = 0.0;
+        
+        for dy in -(patch_radius as i32)..=(patch_radius as i32) {
+            for dx in -(patch_radius as i32)..=(patch_radius as i32) {
+                let px = (x as i32 + dx) as u32;
+                let py = (y as i32 + dy) as u32;
+                
+                let intensity = image.get_pixel(px, py)[0] as f32;
+                m01 += dy as f32 * intensity;
+                m10 += dx as f32 * intensity;
+            }
+        }
+        
+        // Compute orientation
+        let angle = m01.atan2(m10);
+        
+        let mut oriented_keypoint = keypoint.clone();
+        oriented_keypoint.angle = angle;
+        oriented_keypoints.push(oriented_keypoint);
+    }
+    
+    Ok(oriented_keypoints)
+}
+
+/// Compute ORB descriptors using oriented BRIEF
+fn compute_orb_descriptors(
+    image: &image::GrayImage,
+    keypoints: &[Keypoint],
+    params: &OrbParams,
+) -> Result<Vec<Vec<u8>>> {
+    let mut descriptors = Vec::new();
+    let _descriptor_length = 32; // 256 bits = 32 bytes
+    
+    // Pre-computed sampling pattern for BRIEF
+    let sampling_pattern = generate_brief_sampling_pattern(params.patch_size);
+    
+    for keypoint in keypoints {
+        let descriptor = compute_brief_descriptor(image, keypoint, &sampling_pattern)?;
+        descriptors.push(descriptor);
+    }
+    
+    Ok(descriptors)
+}
+
+/// Generate sampling pattern for BRIEF descriptor
+fn generate_brief_sampling_pattern(patch_size: usize) -> Vec<((i32, i32), (i32, i32))> {
+    let mut pattern = Vec::new();
+    let half_patch = (patch_size / 2) as i32;
+    let descriptor_bits = 256;
+    
+    // Use a deterministic pattern for reproducibility
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+    
+    let mut hasher = DefaultHasher::new();
+    42u64.hash(&mut hasher); // Seed for reproducibility
+    let mut rng_state = hasher.finish();
+    
+    for _ in 0..descriptor_bits {
+        // Simple linear congruential generator for reproducible randomness
+        rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
+        let x1 = ((rng_state >> 16) % (2 * half_patch as u64)) as i32 - half_patch;
+        
+        rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
+        let y1 = ((rng_state >> 16) % (2 * half_patch as u64)) as i32 - half_patch;
+        
+        rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
+        let x2 = ((rng_state >> 16) % (2 * half_patch as u64)) as i32 - half_patch;
+        
+        rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
+        let y2 = ((rng_state >> 16) % (2 * half_patch as u64)) as i32 - half_patch;
+        
+        pattern.push(((x1, y1), (x2, y2)));
+    }
+    
+    pattern
+}
+
+/// Type alias for BRIEF sampling pattern to reduce complexity
+type SamplingPattern = [((i32, i32), (i32, i32))];
+
+/// Compute BRIEF descriptor for a keypoint
+fn compute_brief_descriptor(
+    image: &image::GrayImage,
+    keypoint: &Keypoint,
+    sampling_pattern: &SamplingPattern,
+) -> Result<Vec<u8>> {
+    let (width, height) = image.dimensions();
+    let x = keypoint.x as u32;
+    let y = keypoint.y as u32;
+    let angle = keypoint.angle;
+    
+    let cos_angle = angle.cos();
+    let sin_angle = angle.sin();
+    
+    let mut descriptor = vec![0u8; 32]; // 256 bits = 32 bytes
+    
+    for (bit_idx, &((x1, y1), (x2, y2))) in sampling_pattern.iter().enumerate() {
+        // Rotate sampling points according to keypoint orientation
+        let rx1 = (x1 as f32 * cos_angle - y1 as f32 * sin_angle) as i32;
+        let ry1 = (x1 as f32 * sin_angle + y1 as f32 * cos_angle) as i32;
+        let rx2 = (x2 as f32 * cos_angle - y2 as f32 * sin_angle) as i32;
+        let ry2 = (x2 as f32 * sin_angle + y2 as f32 * cos_angle) as i32;
+        
+        let px1 = (x as i32 + rx1) as u32;
+        let py1 = (y as i32 + ry1) as u32;
+        let px2 = (x as i32 + rx2) as u32;
+        let py2 = (y as i32 + ry2) as u32;
+        
+        // Check bounds
+        if px1 < width && py1 < height && px2 < width && py2 < height {
+            let intensity1 = image.get_pixel(px1, py1)[0];
+            let intensity2 = image.get_pixel(px2, py2)[0];
+            
+            if intensity1 < intensity2 {
+                let byte_idx = bit_idx / 8;
+                let bit_idx = bit_idx % 8;
+                descriptor[byte_idx] |= 1 << bit_idx;
+            }
+        }
+    }
+    
+    Ok(descriptor)
 }
 
 /// Simple keypoint structure

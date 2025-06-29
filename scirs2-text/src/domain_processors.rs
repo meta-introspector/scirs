@@ -58,6 +58,10 @@ pub struct DomainProcessorConfig {
     pub extract_entities: bool,
     /// Whether to handle citations and references
     pub handle_citations: bool,
+    /// Whether to remove HTML/XML tags
+    pub remove_html: bool,
+    /// Whether to clean whitespace
+    pub clean_whitespace: bool,
     /// Custom stop words for the domain
     pub custom_stop_words: HashSet<String>,
     /// Domain-specific regex patterns
@@ -72,6 +76,8 @@ impl Default for DomainProcessorConfig {
             normalize_abbreviations: true,
             extract_entities: true,
             handle_citations: true,
+            remove_html: true,
+            clean_whitespace: true,
             custom_stop_words: HashSet::new(),
             custom_patterns: HashMap::new(),
         }
@@ -489,7 +495,7 @@ impl MedicalTextProcessor {
         // Expand medical abbreviations
         if self.config.normalize_abbreviations {
             for (abbrev, expansion) in &self.abbreviations {
-                let pattern = format(r"\b{}\b", regex::escape(abbrev));
+                let pattern = format!(r"\b{}\b", regex::escape(abbrev));
                 processed_text = Regex::new(&pattern)
                     .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?
                     .replace_all(&processed_text, expansion)
@@ -706,6 +712,494 @@ impl FinancialTextProcessor {
     }
 }
 
+/// Patent text processor for patent documents
+pub struct PatentTextProcessor {
+    config: DomainProcessorConfig,
+}
+
+impl PatentTextProcessor {
+    /// Create new patent text processor
+    pub fn new(config: DomainProcessorConfig) -> Self {
+        Self { config }
+    }
+    
+    /// Process patent text with domain-specific extraction
+    pub fn process(&self, text: &str) -> Result<ProcessedDomainText> {
+        let mut processed_text = text.to_string();
+        let mut entities = Vec::new();
+        let mut metadata = HashMap::new();
+        
+        // Extract patent numbers (US patents, EP patents, etc.)
+        let patent_numbers = self.extract_patent_numbers(&processed_text)?;
+        entities.extend(patent_numbers.into_iter().map(|number| Entity {
+            text: number.clone(),
+            entity_type: EntityType::Custom("patent_number".to_string()),
+            confidence: 0.95,
+            start_pos: 0, // TODO: implement proper position tracking
+            end_pos: number.len(),
+        }));
+        
+        // Extract claim numbers and references
+        let claim_refs = self.extract_claim_references(&processed_text)?;
+        entities.extend(claim_refs.into_iter().map(|claim| Entity {
+            text: claim.clone(),
+            entity_type: EntityType::Custom("claim_reference".to_string()),
+            confidence: 0.9,
+            start_pos: 0,
+            end_pos: claim.len(),
+        }));
+        
+        // Extract technical terms and classifications
+        let classifications = self.extract_patent_classifications(&processed_text)?;
+        entities.extend(classifications.into_iter().map(|class| Entity {
+            text: class.clone(),
+            entity_type: EntityType::Custom("patent_classification".to_string()),
+            confidence: 0.85,
+            start_pos: 0,
+            end_pos: class.len(),
+        }));
+        
+        // Normalize patent-specific text
+        if self.config.normalize_abbreviations {
+            processed_text = self.normalize_patent_text(processed_text)?;
+        }
+        
+        metadata.insert("patent_entities_count".to_string(), entities.len().to_string());
+        metadata.insert("processing_domain".to_string(), "patent".to_string());
+        
+        Ok(ProcessedDomainText {
+            original_text: text.to_string(),
+            processed_text,
+            domain: Domain::Patent,
+            entities,
+            metadata,
+        })
+    }
+    
+    fn extract_patent_numbers(&self, text: &str) -> Result<Vec<String>> {
+        let mut patent_numbers = Vec::new();
+        
+        // US patent pattern (e.g., US1234567A1, US1234567B2)
+        let us_pattern = Regex::new(r"\bUS\d{7,10}[AB]\d?\b")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in us_pattern.find_iter(text) {
+            patent_numbers.push(mat.as_str().to_string());
+        }
+        
+        // European patent pattern (e.g., EP1234567A1)
+        let ep_pattern = Regex::new(r"\bEP\d{7}[AB]\d?\b")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in ep_pattern.find_iter(text) {
+            patent_numbers.push(mat.as_str().to_string());
+        }
+        
+        // International application numbers (e.g., WO2021/123456)
+        let wo_pattern = Regex::new(r"\bWO\d{4}/\d{6}\b")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in wo_pattern.find_iter(text) {
+            patent_numbers.push(mat.as_str().to_string());
+        }
+        
+        Ok(patent_numbers)
+    }
+    
+    fn extract_claim_references(&self, text: &str) -> Result<Vec<String>> {
+        let mut claims = Vec::new();
+        
+        // Claim references (e.g., "claim 1", "claims 1-5", "dependent claim 3")
+        let claim_pattern = Regex::new(r"\b(?:claim|claims)\s+\d+(?:-\d+)?\b")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in claim_pattern.find_iter(text) {
+            claims.push(mat.as_str().to_string());
+        }
+        
+        Ok(claims)
+    }
+    
+    fn extract_patent_classifications(&self, text: &str) -> Result<Vec<String>> {
+        let mut classifications = Vec::new();
+        
+        // IPC classifications (e.g., H04L29/06, A61B5/00)
+        let ipc_pattern = Regex::new(r"\b[A-H]\d{2}[A-Z]\d{1,3}/\d{2,6}\b")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in ipc_pattern.find_iter(text) {
+            classifications.push(mat.as_str().to_string());
+        }
+        
+        // CPC classifications
+        let cpc_pattern = Regex::new(r"\b[A-H]\d{2}[A-Z]\d{1,3}/\d{2,6}[A-Z]\d*\b")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in cpc_pattern.find_iter(text) {
+            classifications.push(mat.as_str().to_string());
+        }
+        
+        Ok(classifications)
+    }
+    
+    fn normalize_patent_text(&self, text: String) -> Result<String> {
+        let mut normalized = text;
+        
+        // Normalize common patent abbreviations
+        normalized = normalized.replace("fig.", "figure");
+        normalized = normalized.replace("Fig.", "Figure");
+        normalized = normalized.replace("para.", "paragraph");
+        normalized = normalized.replace("ref.", "reference");
+        
+        Ok(normalized)
+    }
+}
+
+/// News text processor for journalism and news content
+pub struct NewsTextProcessor {
+    config: DomainProcessorConfig,
+}
+
+impl NewsTextProcessor {
+    /// Create new news text processor
+    pub fn new(config: DomainProcessorConfig) -> Self {
+        Self { config }
+    }
+    
+    /// Process news text with domain-specific extraction
+    pub fn process(&self, text: &str) -> Result<ProcessedDomainText> {
+        let mut processed_text = text.to_string();
+        let mut entities = Vec::new();
+        let mut metadata = HashMap::new();
+        
+        // Extract named entities (people, organizations, locations)
+        let people = self.extract_person_names(&processed_text)?;
+        entities.extend(people.into_iter().map(|name| Entity {
+            text: name.clone(),
+            entity_type: EntityType::Person,
+            confidence: 0.85,
+            start_pos: 0,
+            end_pos: name.len(),
+        }));
+        
+        // Extract organizations and institutions
+        let orgs = self.extract_organizations(&processed_text)?;
+        entities.extend(orgs.into_iter().map(|org| Entity {
+            text: org.clone(),
+            entity_type: EntityType::Organization,
+            confidence: 0.8,
+            start_pos: 0,
+            end_pos: org.len(),
+        }));
+        
+        // Extract dates and time references
+        let dates = self.extract_dates(&processed_text)?;
+        entities.extend(dates.into_iter().map(|date| Entity {
+            text: date.clone(),
+            entity_type: EntityType::Date,
+            confidence: 0.9,
+            start_pos: 0,
+            end_pos: date.len(),
+        }));
+        
+        // Extract quotes and attributions
+        let quotes = self.extract_quotes(&processed_text)?;
+        entities.extend(quotes.into_iter().map(|quote| Entity {
+            text: quote.clone(),
+            entity_type: EntityType::Custom("quote".to_string()),
+            confidence: 0.75,
+            start_pos: 0,
+            end_pos: quote.len(),
+        }));
+        
+        // Clean and normalize news text
+        if self.config.remove_html {
+            processed_text = self.clean_news_formatting(processed_text)?;
+        }
+        
+        metadata.insert("news_entities_count".to_string(), entities.len().to_string());
+        metadata.insert("processing_domain".to_string(), "news".to_string());
+        
+        Ok(ProcessedDomainText {
+            original_text: text.to_string(),
+            processed_text,
+            domain: Domain::News,
+            entities,
+            metadata,
+        })
+    }
+    
+    fn extract_person_names(&self, text: &str) -> Result<Vec<String>> {
+        let mut names = Vec::new();
+        
+        // Simple pattern for person names (Title + Name pattern)
+        let name_pattern = Regex::new(r"\b(?:Mr\.|Ms\.|Mrs\.|Dr\.|Prof\.|President|Senator|Rep\.|Gov\.)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in name_pattern.find_iter(text) {
+            names.push(mat.as_str().to_string());
+        }
+        
+        // Quoted speaker pattern (e.g., "John Smith said")
+        let speaker_pattern = Regex::new(r"[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:said|stated|reported|announced|declared)")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in speaker_pattern.find_iter(text) {
+            let speaker = mat.as_str().split_whitespace().take_while(|w| w.chars().next().map_or(false, |c| c.is_uppercase())).collect::<Vec<_>>().join(" ");
+            if !speaker.is_empty() {
+                names.push(speaker);
+            }
+        }
+        
+        Ok(names)
+    }
+    
+    fn extract_organizations(&self, text: &str) -> Result<Vec<String>> {
+        let mut orgs = Vec::new();
+        
+        // Common organization patterns
+        let org_suffixes = ["Inc\\.", "Corp\\.", "LLC", "Ltd\\.", "Co\\.", "University", "Hospital", "Department", "Ministry", "Agency"];
+        for suffix in org_suffixes {
+            let pattern = format!(r"\b[A-Z][A-Za-z\s&]+{}", suffix);
+            let regex = Regex::new(&pattern)
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            for mat in regex.find_iter(text) {
+                orgs.push(mat.as_str().to_string());
+            }
+        }
+        
+        // Government agencies and departments
+        let gov_pattern = Regex::new(r"\b(?:FBI|CIA|NASA|FDA|EPA|IRS|Pentagon|White House|Congress|Senate|House of Representatives)\b")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in gov_pattern.find_iter(text) {
+            orgs.push(mat.as_str().to_string());
+        }
+        
+        Ok(orgs)
+    }
+    
+    fn extract_dates(&self, text: &str) -> Result<Vec<String>> {
+        let mut dates = Vec::new();
+        
+        // Various date formats
+        let date_patterns = [
+            r"\b\d{1,2}/\d{1,2}/\d{4}\b",           // MM/dd/yyyy
+            r"\b\d{4}-\d{2}-\d{2}\b",               // yyyy-mm-dd
+            r"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b",
+            r"\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b",
+            r"\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b",
+            r"\byesterday\b|\btoday\b|\btomorrow\b",
+        ];
+        
+        for pattern in date_patterns {
+            let regex = Regex::new(pattern)
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            for mat in regex.find_iter(text) {
+                dates.push(mat.as_str().to_string());
+            }
+        }
+        
+        Ok(dates)
+    }
+    
+    fn extract_quotes(&self, text: &str) -> Result<Vec<String>> {
+        let mut quotes = Vec::new();
+        
+        // Direct quotes in quotation marks
+        let quote_pattern = Regex::new(r#""([^"]{10,200})""#)
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for cap in quote_pattern.captures_iter(text) {
+            if let Some(quote) = cap.get(1) {
+                quotes.push(quote.as_str().to_string());
+            }
+        }
+        
+        Ok(quotes)
+    }
+    
+    fn clean_news_formatting(&self, text: String) -> Result<String> {
+        let mut cleaned = text;
+        
+        // Remove bylines and datelines
+        let byline_pattern = Regex::new(r"^By\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s*\n")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        cleaned = byline_pattern.replace_all(&cleaned, "").to_string();
+        
+        // Remove wire service tags (AP, Reuters, etc.)
+        let wire_pattern = Regex::new(r"\b(?:AP|Reuters|Bloomberg|CNN|BBC)\s*[-–]?\s*")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        cleaned = wire_pattern.replace_all(&cleaned, "").to_string();
+        
+        Ok(cleaned)
+    }
+}
+
+/// Social media text processor for social media content
+pub struct SocialMediaTextProcessor {
+    config: DomainProcessorConfig,
+}
+
+impl SocialMediaTextProcessor {
+    /// Create new social media text processor
+    pub fn new(config: DomainProcessorConfig) -> Self {
+        Self { config }
+    }
+    
+    /// Process social media text with domain-specific extraction
+    pub fn process(&self, text: &str) -> Result<ProcessedDomainText> {
+        let mut processed_text = text.to_string();
+        let mut entities = Vec::new();
+        let mut metadata = HashMap::new();
+        
+        // Extract hashtags
+        let hashtags = self.extract_hashtags(&processed_text)?;
+        entities.extend(hashtags.into_iter().map(|tag| Entity {
+            text: tag.clone(),
+            entity_type: EntityType::Custom("hashtag".to_string()),
+            confidence: 0.95,
+            start_pos: 0,
+            end_pos: tag.len(),
+        }));
+        
+        // Extract mentions (@username)
+        let mentions = self.extract_mentions(&processed_text)?;
+        entities.extend(mentions.into_iter().map(|mention| Entity {
+            text: mention.clone(),
+            entity_type: EntityType::Custom("mention".to_string()),
+            confidence: 0.9,
+            start_pos: 0,
+            end_pos: mention.len(),
+        }));
+        
+        // Extract URLs
+        let urls = self.extract_urls(&processed_text)?;
+        entities.extend(urls.into_iter().map(|url| Entity {
+            text: url.clone(),
+            entity_type: EntityType::Custom("url".to_string()),
+            confidence: 0.85,
+            start_pos: 0,
+            end_pos: url.len(),
+        }));
+        
+        // Extract emojis and emoticons
+        let emojis = self.extract_emojis(&processed_text)?;
+        entities.extend(emojis.into_iter().map(|emoji| Entity {
+            text: emoji.clone(),
+            entity_type: EntityType::Custom("emoji".to_string()),
+            confidence: 0.8,
+            start_pos: 0,
+            end_pos: emoji.len(),
+        }));
+        
+        // Clean and normalize social media text
+        if self.config.clean_whitespace {
+            processed_text = self.normalize_social_text(processed_text)?;
+        }
+        
+        metadata.insert("social_entities_count".to_string(), entities.len().to_string());
+        metadata.insert("processing_domain".to_string(), "social_media".to_string());
+        
+        Ok(ProcessedDomainText {
+            original_text: text.to_string(),
+            processed_text,
+            domain: Domain::SocialMedia,
+            entities,
+            metadata,
+        })
+    }
+    
+    fn extract_hashtags(&self, text: &str) -> Result<Vec<String>> {
+        let mut hashtags = Vec::new();
+        
+        let hashtag_pattern = Regex::new(r"#\w+")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in hashtag_pattern.find_iter(text) {
+            hashtags.push(mat.as_str().to_string());
+        }
+        
+        Ok(hashtags)
+    }
+    
+    fn extract_mentions(&self, text: &str) -> Result<Vec<String>> {
+        let mut mentions = Vec::new();
+        
+        let mention_pattern = Regex::new(r"@\w+")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in mention_pattern.find_iter(text) {
+            mentions.push(mat.as_str().to_string());
+        }
+        
+        Ok(mentions)
+    }
+    
+    fn extract_urls(&self, text: &str) -> Result<Vec<String>> {
+        let mut urls = Vec::new();
+        
+        let url_pattern = Regex::new(r"https?://\S+")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in url_pattern.find_iter(text) {
+            urls.push(mat.as_str().to_string());
+        }
+        
+        // Also extract shortened URLs
+        let short_url_pattern = Regex::new(r"\b(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly)/\S+")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        for mat in short_url_pattern.find_iter(text) {
+            urls.push(mat.as_str().to_string());
+        }
+        
+        Ok(urls)
+    }
+    
+    fn extract_emojis(&self, text: &str) -> Result<Vec<String>> {
+        let mut emojis = Vec::new();
+        
+        // Simple emoticon patterns
+        let emoticon_patterns = [
+            r":\)",      // :)
+            r":\(",      // :(
+            r":D",       // :D
+            r":P",       // :P
+            r";D",       // ;D
+            r"<3",       // <3
+            r"</3",      // </3
+            r":-\)",     // :-)
+            r":-\(",     // :-(
+            r":-D",      // :-D
+            r":-P",      // :-P
+            r";-\)",     // ;-)
+        ];
+        
+        for pattern in emoticon_patterns {
+            let regex = Regex::new(pattern)
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            for mat in regex.find_iter(text) {
+                emojis.push(mat.as_str().to_string());
+            }
+        }
+        
+        // Note: Full Unicode emoji detection would require more complex patterns
+        // This is a simplified version for common text-based emoticons
+        
+        Ok(emojis)
+    }
+    
+    fn normalize_social_text(&self, text: String) -> Result<String> {
+        let mut normalized = text;
+        
+        // Convert multiple spaces to single space
+        let space_pattern = Regex::new(r"\s+")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        normalized = space_pattern.replace_all(&normalized, " ").to_string();
+        
+        // Convert common social media abbreviations
+        normalized = normalized.replace("u", "you");
+        normalized = normalized.replace("ur", "your");
+        normalized = normalized.replace("r", "are");
+        normalized = normalized.replace("2", "to");
+        normalized = normalized.replace("4", "for");
+        
+        // Handle repeated characters (e.g., "soooo" -> "so")
+        let repeat_pattern = Regex::new(r"(.)\1{2,}")
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        normalized = repeat_pattern.replace_all(&normalized, "$1$1").to_string();
+        
+        Ok(normalized)
+    }
+}
+
 /// Result of domain-specific text processing
 #[derive(Debug, Clone)]
 pub struct ProcessedDomainText {
@@ -727,6 +1221,9 @@ pub struct UnifiedDomainProcessor {
     legal_processor: Option<LegalTextProcessor>,
     medical_processor: Option<MedicalTextProcessor>,
     financial_processor: Option<FinancialTextProcessor>,
+    patent_processor: Option<PatentTextProcessor>,
+    news_processor: Option<NewsTextProcessor>,
+    social_media_processor: Option<SocialMediaTextProcessor>,
 }
 
 impl UnifiedDomainProcessor {
@@ -737,6 +1234,9 @@ impl UnifiedDomainProcessor {
             legal_processor: None,
             medical_processor: None,
             financial_processor: None,
+            patent_processor: None,
+            news_processor: None,
+            social_media_processor: None,
         }
     }
     
@@ -762,6 +1262,24 @@ impl UnifiedDomainProcessor {
     pub fn with_financial(mut self, config: DomainProcessorConfig) -> Result<Self> {
         self.financial_processor = Some(FinancialTextProcessor::new(config)?);
         Ok(self)
+    }
+    
+    /// Add patent text processing capability
+    pub fn with_patent(mut self, config: DomainProcessorConfig) -> Self {
+        self.patent_processor = Some(PatentTextProcessor::new(config));
+        self
+    }
+    
+    /// Add news text processing capability
+    pub fn with_news(mut self, config: DomainProcessorConfig) -> Self {
+        self.news_processor = Some(NewsTextProcessor::new(config));
+        self
+    }
+    
+    /// Add social media text processing capability
+    pub fn with_social_media(mut self, config: DomainProcessorConfig) -> Self {
+        self.social_media_processor = Some(SocialMediaTextProcessor::new(config));
+        self
     }
     
     /// Process text for specified domain
@@ -795,7 +1313,27 @@ impl UnifiedDomainProcessor {
                     Err(TextError::InvalidInput("Financial processor not configured".to_string()))
                 }
             },
-            _ => Err(TextError::InvalidInput(format!("Domain {:?} not supported", domain))),
+            Domain::Patent => {
+                if let Some(processor) = &self.patent_processor {
+                    processor.process(text)
+                } else {
+                    Err(TextError::InvalidInput("Patent processor not configured".to_string()))
+                }
+            },
+            Domain::News => {
+                if let Some(processor) = &self.news_processor {
+                    processor.process(text)
+                } else {
+                    Err(TextError::InvalidInput("News processor not configured".to_string()))
+                }
+            },
+            Domain::SocialMedia => {
+                if let Some(processor) = &self.social_media_processor {
+                    processor.process(text)
+                } else {
+                    Err(TextError::InvalidInput("Social media processor not configured".to_string()))
+                }
+            },
         }
     }
     
@@ -808,6 +1346,9 @@ impl UnifiedDomainProcessor {
         let legal_keywords = ["court", "law", "contract", "plaintiff", "defendant", "statute"];
         let medical_keywords = ["patient", "diagnosis", "treatment", "symptoms", "medication", "clinical"];
         let financial_keywords = ["revenue", "profit", "investment", "stock", "market", "financial", "earnings", "portfolio"];
+        let patent_keywords = ["patent", "claim", "invention", "inventor", "application", "classification"];
+        let news_keywords = ["reported", "said", "announced", "breaking", "journalist", "according"];
+        let social_keywords = ["#", "@", "retweet", "share", "like", "follow"];
         
         let sci_score = scientific_keywords.iter()
             .map(|&keyword| text_lower.matches(keyword).count())
@@ -825,7 +1366,22 @@ impl UnifiedDomainProcessor {
             .map(|&keyword| text_lower.matches(keyword).count())
             .sum::<usize>();
         
-        let max_score = [sci_score, legal_score, medical_score, financial_score].iter().max().unwrap();
+        let patent_score = patent_keywords.iter()
+            .map(|&keyword| text_lower.matches(keyword).count())
+            .sum::<usize>();
+        
+        let news_score = news_keywords.iter()
+            .map(|&keyword| text_lower.matches(keyword).count())
+            .sum::<usize>();
+        
+        let social_score = social_keywords.iter()
+            .map(|&keyword| text_lower.matches(keyword).count())
+            .sum::<usize>();
+        
+        let max_score = [
+            sci_score, legal_score, medical_score, financial_score,
+            patent_score, news_score, social_score
+        ].iter().max().unwrap();
         
         if *max_score == 0 {
             Domain::Scientific // Default fallback
@@ -835,8 +1391,14 @@ impl UnifiedDomainProcessor {
             Domain::Legal
         } else if medical_score == *max_score {
             Domain::Medical
-        } else {
+        } else if financial_score == *max_score {
             Domain::Financial
+        } else if patent_score == *max_score {
+            Domain::Patent
+        } else if news_score == *max_score {
+            Domain::News
+        } else {
+            Domain::SocialMedia
         }
     }
 }

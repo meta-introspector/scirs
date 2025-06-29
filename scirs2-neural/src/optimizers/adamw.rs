@@ -78,18 +78,18 @@ impl<F: Float + ScalarOperand + Debug> AdamW<F> {
     ///
     /// * `learning_rate` - The learning rate for parameter updates
     pub fn default_with_lr(learning_rate: F) -> Result<Self> {
-        let beta1 = F::from(0.9).unwrap_or_else(|| {
-            panic!("Failed to convert 0.9 to the appropriate floating point type")
-        });
-        let beta2 = F::from(0.999).unwrap_or_else(|| {
-            panic!("Failed to convert 0.999 to the appropriate floating point type")
-        });
-        let epsilon = F::from(1e-8).unwrap_or_else(|| {
-            panic!("Failed to convert 1e-8 to the appropriate floating point type")
-        });
-        let weight_decay = F::from(0.01).unwrap_or_else(|| {
-            panic!("Failed to convert 0.01 to the appropriate floating point type")
-        });
+        let beta1 = F::from(0.9).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 0.9 to the appropriate floating point type".to_string())
+        })?;
+        let beta2 = F::from(0.999).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 0.999 to the appropriate floating point type".to_string())
+        })?;
+        let epsilon = F::from(1e-8).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 1e-8 to the appropriate floating point type".to_string())
+        })?;
+        let weight_decay = F::from(0.01).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 0.01 to the appropriate floating point type".to_string())
+        })?;
 
         Ok(Self::new(
             learning_rate,

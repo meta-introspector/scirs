@@ -31,6 +31,23 @@ pub enum LayerType {
         kernel_size: usize,
         stride: usize,
     },
+    Conv3D {
+        filters: usize,
+        kernel_size: (usize, usize, usize),
+        stride: (usize, usize, usize),
+    },
+    SeparableConv2D {
+        filters: usize,
+        kernel_size: (usize, usize),
+        stride: (usize, usize),
+        depth_multiplier: usize,
+    },
+    Conv2DTranspose {
+        filters: usize,
+        kernel_size: (usize, usize),
+        stride: (usize, usize),
+        padding: (usize, usize),
+    },
     MaxPool2D {
         pool_size: (usize, usize),
         stride: (usize, usize),
@@ -39,8 +56,42 @@ pub enum LayerType {
         pool_size: (usize, usize),
         stride: (usize, usize),
     },
+    MaxPool1D {
+        pool_size: usize,
+        stride: usize,
+    },
+    AvgPool1D {
+        pool_size: usize,
+        stride: usize,
+    },
+    MaxPool3D {
+        pool_size: (usize, usize, usize),
+        stride: (usize, usize, usize),
+    },
+    AvgPool3D {
+        pool_size: (usize, usize, usize),
+        stride: (usize, usize, usize),
+    },
     GlobalMaxPool2D,
     GlobalAvgPool2D,
+    GlobalMaxPool1D,
+    GlobalAvgPool1D,
+    GlobalMaxPool3D,
+    GlobalAvgPool3D,
+    UpSampling2D {
+        size: (usize, usize),
+    },
+    ZeroPadding2D {
+        padding: (usize, usize),
+    },
+    Cropping2D {
+        cropping: (usize, usize),
+    },
+    Concatenate {
+        axis: i32,
+    },
+    Add,
+    Multiply,
     Dropout(f32),
     BatchNorm,
     LayerNorm,

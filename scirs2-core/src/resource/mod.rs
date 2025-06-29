@@ -9,6 +9,7 @@
 //! - Network and storage resource detection
 //! - Dynamic optimization parameter adjustment
 
+pub mod auto_tuning;
 pub mod cpu;
 pub mod gpu;
 pub mod memory;

@@ -1197,7 +1197,7 @@ where
     #[allow(dead_code)]
     pub fn derivative_batch(&self, xs: &ArrayView1<T>, nu: usize) -> InterpolateResult<Array1<T>> {
         if nu == 0 {
-            return self.evaluate_batch(xs);
+            return self.evaluate_batch_fast(xs);
         }
 
         if nu > self.k {
@@ -1207,7 +1207,7 @@ where
 
         // For efficiency, create the derivative spline once and evaluate it at all points
         let deriv_spline = self.derivative_spline(nu)?;
-        deriv_spline.evaluate_batch(xs)
+        deriv_spline.evaluate_batch_fast(xs)
     }
 
     /// Evaluate mixed derivatives and function values at multiple points
@@ -1255,7 +1255,7 @@ where
 
         // Evaluate all derivatives at all points
         for order in 0..=effective_max_order {
-            let values = derivative_splines[order].evaluate_batch(xs)?;
+            let values = derivative_splines[order].evaluate_batch_fast(xs)?;
             for (i, &value) in values.iter().enumerate() {
                 result[[i, order]] = value;
             }

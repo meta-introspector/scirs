@@ -5,7 +5,7 @@
 
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
 use std::sync::{Arc, Mutex};
 
 /// GPU backend configuration

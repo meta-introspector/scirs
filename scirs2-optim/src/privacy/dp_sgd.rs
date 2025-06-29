@@ -199,7 +199,7 @@ struct NoiseCalibration<A: Float> {
 
 impl<O, A> DPSGDOptimizer<O, A>
 where
-    A: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
+    A: Float + Default + Clone + Send + Sync + ndarray_rand::rand_distr::uniform::SampleUniform,
     O: Optimizer<A> + Send + Sync,
 {
     /// Create a new DP-SGD optimizer

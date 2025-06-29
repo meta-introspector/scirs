@@ -107,7 +107,7 @@ where
             let mut point = Array1::zeros(self.ndim);
             for j in 0..self.ndim {
                 let (lb, ub) = self.bounds[j];
-                point[j] = self.rng.gen_range(lb..ub);
+                point[j] = self.rng.random_range(lb..ub);
             }
             points.push(point);
         }

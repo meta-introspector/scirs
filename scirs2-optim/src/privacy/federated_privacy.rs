@@ -2,7 +2,8 @@
 //!
 //! This module implements privacy-preserving algorithms specifically designed
 //! for federated learning scenarios, including secure aggregation, client-side
-//! differential privacy, and privacy amplification through federation.
+//! differential privacy, privacy amplification through federation, advanced
+//! threat modeling, and cross-silo federated learning with heterogeneous clients.
 
 use super::moment_accountant::MomentsAccountant;
 use super::noise_mechanisms::{
@@ -231,6 +232,741 @@ pub struct CommunicationPrivacyConfig {
 
     /// Traffic analysis protection
     pub traffic_analysis_protection: bool,
+    
+    /// Advanced threat modeling configuration
+    pub threat_modeling: AdvancedThreatModelingConfig,
+    
+    /// Cross-silo federated learning configuration
+    pub cross_silo_config: CrossSiloFederatedConfig,
+}
+
+/// Advanced threat modeling configuration for comprehensive security analysis
+#[derive(Debug, Clone)]
+pub struct AdvancedThreatModelingConfig {
+    /// Enable advanced threat analysis
+    pub enabled: bool,
+    
+    /// Adversarial capabilities modeling
+    pub adversarial_capabilities: AdversarialCapabilities,
+    
+    /// Attack surface analysis
+    pub attack_surface_analysis: AttackSurfaceConfig,
+    
+    /// Threat intelligence integration
+    pub threat_intelligence: ThreatIntelligenceConfig,
+    
+    /// Risk assessment framework
+    pub risk_assessment: RiskAssessmentConfig,
+    
+    /// Countermeasure effectiveness evaluation
+    pub countermeasure_evaluation: CountermeasureEvaluationConfig,
+}
+
+/// Adversarial capabilities in federated learning environments
+#[derive(Debug, Clone)]
+pub struct AdversarialCapabilities {
+    /// Computational resources available to adversary
+    pub computational_resources: ComputationalThreatLevel,
+    
+    /// Network access and control capabilities
+    pub network_capabilities: NetworkThreatCapabilities,
+    
+    /// Data access and manipulation capabilities
+    pub data_capabilities: DataThreatCapabilities,
+    
+    /// Model and algorithm knowledge
+    pub algorithmic_knowledge: AlgorithmicKnowledgeLevel,
+    
+    /// Collusion potential among malicious clients
+    pub collusion_potential: CollusionThreatLevel,
+    
+    /// Persistence and adaptability of attacks
+    pub attack_persistence: AttackPersistenceLevel,
+}
+
+/// Attack surface configuration for comprehensive analysis
+#[derive(Debug, Clone)]
+pub struct AttackSurfaceConfig {
+    /// Client-side attack vectors
+    pub client_attack_vectors: ClientAttackVectors,
+    
+    /// Server-side attack vectors
+    pub server_attack_vectors: ServerAttackVectors,
+    
+    /// Communication channel vulnerabilities
+    pub communication_vulnerabilities: CommunicationVulnerabilities,
+    
+    /// Aggregation phase vulnerabilities
+    pub aggregation_vulnerabilities: AggregationVulnerabilities,
+    
+    /// Privacy mechanism vulnerabilities
+    pub privacy_mechanism_vulnerabilities: PrivacyMechanismVulnerabilities,
+}
+
+/// Threat intelligence integration for real-time threat assessment
+#[derive(Debug, Clone)]
+pub struct ThreatIntelligenceConfig {
+    /// Enable threat intelligence feeds
+    pub enabled: bool,
+    
+    /// Real-time threat monitoring
+    pub real_time_monitoring: bool,
+    
+    /// Threat signature database
+    pub signature_database: ThreatSignatureDatabase,
+    
+    /// Anomaly detection for novel threats
+    pub anomaly_detection: AnomalyDetectionConfig,
+    
+    /// Threat correlation and analysis
+    pub threat_correlation: ThreatCorrelationConfig,
+}
+
+/// Risk assessment framework for quantitative security analysis
+#[derive(Debug, Clone)]
+pub struct RiskAssessmentConfig {
+    /// Risk assessment methodology
+    pub methodology: RiskAssessmentMethodology,
+    
+    /// Risk tolerance levels
+    pub risk_tolerance: RiskToleranceLevels,
+    
+    /// Impact assessment criteria
+    pub impact_assessment: ImpactAssessmentCriteria,
+    
+    /// Likelihood estimation methods
+    pub likelihood_estimation: LikelihoodEstimationMethods,
+    
+    /// Risk mitigation strategies
+    pub mitigation_strategies: RiskMitigationStrategies,
+}
+
+/// Effectiveness metrics for countermeasure evaluation
+#[derive(Debug, Clone)]
+pub struct EffectivenessMetrics {
+    /// Accuracy of threat detection
+    pub detection_accuracy: f64,
+    /// False positive rate
+    pub false_positive_rate: f64,
+    /// False negative rate
+    pub false_negative_rate: f64,
+    /// Response time metrics
+    pub response_times: Vec<f64>,
+}
+
+/// Cost-benefit analysis configuration
+#[derive(Debug, Clone)]
+pub struct CostBenefitAnalysisConfig {
+    /// Implementation costs
+    pub implementation_costs: Vec<f64>,
+    /// Operational costs
+    pub operational_costs: Vec<f64>,
+    /// Benefit metrics
+    pub benefits: Vec<f64>,
+    /// ROI calculation methods
+    pub roi_methods: Vec<String>,
+}
+
+/// Dynamic adaptation configuration
+#[derive(Debug, Clone)]
+pub struct DynamicAdaptationConfig {
+    /// Adaptation triggers
+    pub triggers: Vec<String>,
+    /// Adaptation strategies
+    pub strategies: Vec<String>,
+    /// Learning rate for adaptation
+    pub learning_rate: f64,
+    /// Minimum adaptation threshold
+    pub min_threshold: f64,
+}
+
+/// Countermeasure optimization configuration
+#[derive(Debug, Clone)]
+pub struct CountermeasureOptimizationConfig {
+    /// Optimization algorithms
+    pub algorithms: Vec<String>,
+    /// Target metrics
+    pub target_metrics: Vec<String>,
+    /// Constraints
+    pub constraints: Vec<String>,
+    /// Optimization frequency
+    pub frequency: String,
+}
+
+/// Countermeasure effectiveness evaluation framework
+#[derive(Debug, Clone)]
+pub struct CountermeasureEvaluationConfig {
+    /// Effectiveness metrics
+    pub effectiveness_metrics: EffectivenessMetrics,
+    
+    /// Cost-benefit analysis
+    pub cost_benefit_analysis: CostBenefitAnalysisConfig,
+    
+    /// Dynamic adaptation based on threat landscape
+    pub dynamic_adaptation: DynamicAdaptationConfig,
+    
+    /// Countermeasure optimization
+    pub optimization: CountermeasureOptimizationConfig,
+}
+
+/// Data marketplace configuration
+#[derive(Debug, Clone)]
+pub struct DataMarketplaceConfig {
+    /// Enable data marketplace
+    pub enabled: bool,
+    /// Pricing models
+    pub pricing_models: Vec<String>,
+    /// Quality metrics
+    pub quality_metrics: Vec<String>,
+    /// Access controls
+    pub access_controls: Vec<String>,
+}
+
+/// Regulatory compliance configuration
+#[derive(Debug, Clone)]
+pub struct RegulatoryComplianceConfig {
+    /// Applicable regulations
+    pub regulations: Vec<String>,
+    /// Compliance checks
+    pub compliance_checks: Vec<String>,
+    /// Reporting requirements
+    pub reporting_requirements: Vec<String>,
+    /// Audit trails
+    pub audit_trails: bool,
+}
+
+/// Audit and accountability configuration
+#[derive(Debug, Clone)]
+pub struct AuditAccountabilityConfig {
+    /// Audit logging
+    pub audit_logging: bool,
+    /// Accountability mechanisms
+    pub accountability_mechanisms: Vec<String>,
+    /// Verification methods
+    pub verification_methods: Vec<String>,
+    /// Compliance tracking
+    pub compliance_tracking: bool,
+}
+
+/// Trust establishment methods
+#[derive(Debug, Clone)]
+pub struct TrustEstablishmentMethods {
+    /// Certification authorities
+    pub certification_authorities: Vec<String>,
+    /// Reputation systems
+    pub reputation_systems: Vec<String>,
+    /// Verification protocols
+    pub verification_protocols: Vec<String>,
+}
+
+/// Trust verification mechanisms
+#[derive(Debug, Clone)]
+pub struct TrustVerificationMechanisms {
+    /// Verification methods
+    pub methods: Vec<String>,
+    /// Validation frequency
+    pub frequency: String,
+    /// Trust thresholds
+    pub thresholds: Vec<f64>,
+}
+
+/// Organization reputation system
+#[derive(Debug, Clone)]
+pub struct OrganizationReputationSystem {
+    /// Reputation metrics
+    pub metrics: Vec<String>,
+    /// Scoring algorithms
+    pub scoring_algorithms: Vec<String>,
+    /// Update frequencies
+    pub update_frequencies: Vec<String>,
+}
+
+/// Trust lifecycle management
+#[derive(Debug, Clone)]
+pub struct TrustLifecycleManagement {
+    /// Trust establishment phases
+    pub establishment_phases: Vec<String>,
+    /// Trust maintenance procedures
+    pub maintenance_procedures: Vec<String>,
+    /// Trust recovery mechanisms
+    pub recovery_mechanisms: Vec<String>,
+    /// Trust degradation triggers
+    pub degradation_triggers: Vec<String>,
+}
+
+/// Data governance configuration
+#[derive(Debug, Clone)]
+pub struct DataGovernanceConfig {
+    /// Data classification
+    pub classification: Vec<String>,
+    /// Access policies
+    pub access_policies: Vec<String>,
+    /// Quality standards
+    pub quality_standards: Vec<String>,
+    /// Retention policies  
+    pub retention_policies: Vec<String>,
+}
+
+/// Privacy agreement configuration
+#[derive(Debug, Clone)]
+pub struct PrivacyAgreementConfig {
+    /// Agreement templates
+    pub templates: Vec<String>,
+    /// Negotiation protocols
+    pub negotiation_protocols: Vec<String>,
+    /// Enforcement mechanisms
+    pub enforcement_mechanisms: Vec<String>,
+    /// Compliance monitoring
+    pub compliance_monitoring: bool,
+}
+
+/// Data classification configuration
+#[derive(Debug, Clone)]
+pub struct DataClassificationConfig {
+    /// Classification schemes
+    pub schemes: Vec<String>,
+    /// Sensitivity levels
+    pub sensitivity_levels: Vec<String>,
+    /// Labeling rules
+    pub labeling_rules: Vec<String>,
+}
+
+/// Data lineage configuration
+#[derive(Debug, Clone)]
+pub struct DataLineageConfig {
+    /// Tracking methods
+    pub tracking_methods: Vec<String>,
+    /// Provenance recording
+    pub provenance_recording: bool,
+    /// Audit trails
+    pub audit_trails: bool,
+}
+
+/// Data quality assurance configuration
+#[derive(Debug, Clone)]
+pub struct DataQualityAssuranceConfig {
+    /// Quality metrics
+    pub metrics: Vec<String>,
+    /// Validation rules
+    pub validation_rules: Vec<String>,
+    /// Monitoring frequency
+    pub monitoring_frequency: String,
+}
+
+/// Data retention policies
+#[derive(Debug, Clone)]
+pub struct DataRetentionPolicies {
+    /// Retention periods
+    pub retention_periods: Vec<String>,
+    /// Disposal methods
+    pub disposal_methods: Vec<String>,
+    /// Archive policies
+    pub archive_policies: Vec<String>,
+}
+
+/// Cross-silo federated learning configuration for enterprise scenarios
+#[derive(Debug, Clone)]
+pub struct CrossSiloFederatedConfig {
+    /// Enable cross-silo federated learning
+    pub enabled: bool,
+    
+    /// Organization trust levels and relationships
+    pub organization_trust: OrganizationTrustConfig,
+    
+    /// Data governance and compliance
+    pub data_governance: DataGovernanceConfig,
+    
+    /// Inter-organizational privacy agreements
+    pub privacy_agreements: PrivacyAgreementConfig,
+    
+    /// Federated data marketplaces
+    pub data_marketplace: DataMarketplaceConfig,
+    
+    /// Regulatory compliance framework
+    pub regulatory_compliance: RegulatoryComplianceConfig,
+    
+    /// Audit and accountability mechanisms
+    pub audit_accountability: AuditAccountabilityConfig,
+}
+
+/// Organization trust configuration for cross-silo scenarios
+#[derive(Debug, Clone)]
+pub struct OrganizationTrustConfig {
+    /// Trust establishment methods
+    pub trust_establishment: TrustEstablishmentMethods,
+    
+    /// Trust verification mechanisms
+    pub trust_verification: TrustVerificationMechanisms,
+    
+    /// Reputation systems for organizations
+    pub reputation_system: OrganizationReputationSystem,
+    
+    /// Trust degradation and recovery
+    pub trust_lifecycle: TrustLifecycleManagement,
+}
+
+/// Data governance configuration for federated environments
+#[derive(Debug, Clone)]
+pub struct DataGovernanceConfig {
+    /// Data classification and labeling
+    pub data_classification: DataClassificationConfig,
+    
+    /// Data lineage tracking
+    pub data_lineage: DataLineageConfig,
+    
+    /// Data quality assurance
+    pub quality_assurance: DataQualityAssuranceConfig,
+    
+    /// Data retention and disposal policies
+    pub retention_policies: DataRetentionPolicies,
+    
+    /// Data sovereignty requirements
+    pub sovereignty_requirements: DataSovereigntyRequirements,
+}
+
+/// Privacy agreement configuration for inter-organizational collaboration
+#[derive(Debug, Clone)]
+pub struct PrivacyAgreementConfig {
+    /// Service level agreements for privacy
+    pub privacy_sla: PrivacySLAConfig,
+    
+    /// Data sharing agreements
+    pub data_sharing_agreements: DataSharingAgreementConfig,
+    
+    /// Privacy budget allocation mechanisms
+    pub budget_allocation: PrivacyBudgetAllocationConfig,
+    
+    /// Violation detection and remediation
+    pub violation_handling: ViolationHandlingConfig,
+}
+
+// Supporting enums and types for the advanced configurations
+
+#[derive(Debug, Clone, Copy)]
+pub enum ComputationalThreatLevel {
+    Limited,      // Individual attacker with limited resources
+    Moderate,     // Small organization or group
+    Substantial,  // Large organization or nation-state
+    Unlimited,    // Theoretical unlimited computational resources
+}
+
+#[derive(Debug, Clone)]
+pub struct NetworkThreatCapabilities {
+    /// Can intercept communications
+    pub can_intercept: bool,
+    /// Can modify communications
+    pub can_modify: bool,
+    /// Can inject malicious communications
+    pub can_inject: bool,
+    /// Can perform traffic analysis
+    pub can_analyze_traffic: bool,
+    /// Can conduct timing attacks
+    pub can_timing_attack: bool,
+    /// Can perform network-level denial of service
+    pub can_dos: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct DataThreatCapabilities {
+    /// Can access training data
+    pub can_access_training_data: bool,
+    /// Can modify training data
+    pub can_modify_training_data: bool,
+    /// Can inject poisoned data
+    pub can_inject_poisoned_data: bool,
+    /// Can perform membership inference
+    pub can_membership_inference: bool,
+    /// Can extract model parameters
+    pub can_extract_parameters: bool,
+    /// Can perform gradient inversion
+    pub can_gradient_inversion: bool,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum AlgorithmicKnowledgeLevel {
+    BlackBox,     // No knowledge of algorithms
+    GrayBox,      // Partial knowledge
+    WhiteBox,     // Full algorithm knowledge
+    Adaptive,     // Can adapt based on observations
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CollusionThreatLevel {
+    None,         // No collusion
+    Limited,      // Small number of colluding clients
+    Substantial,  // Significant fraction colluding
+    Majority,     // Majority collusion attack
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum AttackPersistenceLevel {
+    OneTime,      // Single attack attempt
+    Intermittent, // Sporadic attacks
+    Persistent,   // Continuous attack pressure
+    Adaptive,     // Evolving attack strategies
+}
+
+#[derive(Debug, Clone)]
+pub struct ClientAttackVectors {
+    /// Model poisoning attacks
+    pub model_poisoning: bool,
+    /// Data poisoning attacks  
+    pub data_poisoning: bool,
+    /// Gradient manipulation
+    pub gradient_manipulation: bool,
+    /// Local model extraction
+    pub local_model_extraction: bool,
+    /// Client impersonation
+    pub client_impersonation: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct ServerAttackVectors {
+    /// Server compromise scenarios
+    pub server_compromise: bool,
+    /// Malicious aggregation
+    pub malicious_aggregation: bool,
+    /// Model backdoor injection
+    pub backdoor_injection: bool,
+    /// Privacy budget manipulation
+    pub budget_manipulation: bool,
+    /// Client discrimination
+    pub client_discrimination: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct CommunicationVulnerabilities {
+    /// Man-in-the-middle attacks
+    pub mitm_attacks: bool,
+    /// Eavesdropping vulnerabilities
+    pub eavesdropping: bool,
+    /// Replay attacks
+    pub replay_attacks: bool,
+    /// Message injection
+    pub message_injection: bool,
+    /// Communication timing analysis
+    pub timing_analysis: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct AggregationVulnerabilities {
+    /// Secure aggregation bypass
+    pub secure_aggregation_bypass: bool,
+    /// Aggregation manipulation
+    pub aggregation_manipulation: bool,
+    /// Statistical attacks on aggregation
+    pub statistical_attacks: bool,
+    /// Reconstruction attacks
+    pub reconstruction_attacks: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct PrivacyMechanismVulnerabilities {
+    /// Differential privacy parameter inference
+    pub dp_parameter_inference: bool,
+    /// Privacy budget exhaustion attacks
+    pub budget_exhaustion: bool,
+    /// Composition attack vulnerabilities
+    pub composition_attacks: bool,
+    /// Auxiliary information attacks
+    pub auxiliary_info_attacks: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct ThreatSignatureDatabase {
+    /// Known attack patterns
+    pub attack_patterns: Vec<AttackPattern>,
+    /// Threat actor profiles
+    pub threat_actors: Vec<ThreatActorProfile>,
+    /// Vulnerability signatures
+    pub vulnerability_signatures: Vec<VulnerabilitySignature>,
+}
+
+#[derive(Debug, Clone)]
+pub struct AttackPattern {
+    /// Pattern identifier
+    pub id: String,
+    /// Attack description
+    pub description: String,
+    /// Attack indicators
+    pub indicators: Vec<AttackIndicator>,
+    /// Severity level
+    pub severity: ThreatSeverity,
+    /// Mitigation recommendations
+    pub mitigations: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ThreatActorProfile {
+    /// Actor identifier
+    pub id: String,
+    /// Actor capabilities
+    pub capabilities: AdversarialCapabilities,
+    /// Known attack methods
+    pub attack_methods: Vec<String>,
+    /// Targeting preferences
+    pub targeting_preferences: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct VulnerabilitySignature {
+    /// Vulnerability identifier
+    pub id: String,
+    /// Affected components
+    pub affected_components: Vec<String>,
+    /// Exploitation indicators
+    pub exploitation_indicators: Vec<String>,
+    /// Severity score
+    pub severity_score: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct AttackIndicator {
+    /// Indicator type
+    pub indicator_type: IndicatorType,
+    /// Indicator value or pattern
+    pub value: String,
+    /// Confidence level
+    pub confidence: f64,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum IndicatorType {
+    NetworkTraffic,
+    GradientPattern,
+    ModelBehavior,
+    PerformanceAnomaly,
+    CommunicationPattern,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ThreatSeverity {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
+#[derive(Debug, Clone)]
+pub struct AnomalyDetectionConfig {
+    /// Detection algorithms
+    pub algorithms: Vec<AnomalyDetectionAlgorithm>,
+    /// Detection thresholds
+    pub thresholds: AnomalyThresholds,
+    /// Response actions
+    pub response_actions: AnomalyResponseActions,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum AnomalyDetectionAlgorithm {
+    StatisticalBaseline,
+    MachineLearningBased,
+    DeepLearningBased,
+    EnsembleMethods,
+}
+
+#[derive(Debug, Clone)]
+pub struct AnomalyThresholds {
+    /// Statistical significance threshold
+    pub statistical_threshold: f64,
+    /// Confidence threshold for ML-based detection
+    pub confidence_threshold: f64,
+    /// False positive tolerance
+    pub false_positive_rate: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct AnomalyResponseActions {
+    /// Alert generation
+    pub alert_generation: bool,
+    /// Automatic quarantine
+    pub automatic_quarantine: bool,
+    /// Enhanced monitoring
+    pub enhanced_monitoring: bool,
+    /// Incident escalation
+    pub incident_escalation: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct ThreatCorrelationConfig {
+    /// Correlation algorithms
+    pub correlation_algorithms: Vec<CorrelationAlgorithm>,
+    /// Temporal correlation window
+    pub temporal_window: std::time::Duration,
+    /// Cross-client correlation analysis
+    pub cross_client_correlation: bool,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CorrelationAlgorithm {
+    TemporalPatternMatching,
+    BehavioralProfiling,
+    GraphBasedAnalysis,
+    StatisticalCorrelation,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum RiskAssessmentMethodology {
+    QualitativeAssessment,
+    QuantitativeAssessment,
+    SemiQuantitativeAssessment,
+    ScenarioBasedAssessment,
+}
+
+#[derive(Debug, Clone)]
+pub struct RiskToleranceLevels {
+    /// Privacy risk tolerance
+    pub privacy_risk_tolerance: f64,
+    /// Security risk tolerance
+    pub security_risk_tolerance: f64,
+    /// Utility risk tolerance
+    pub utility_risk_tolerance: f64,
+    /// Operational risk tolerance
+    pub operational_risk_tolerance: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct ImpactAssessmentCriteria {
+    /// Data confidentiality impact
+    pub confidentiality_impact: ImpactLevel,
+    /// Model integrity impact
+    pub integrity_impact: ImpactLevel,
+    /// Service availability impact
+    pub availability_impact: ImpactLevel,
+    /// Regulatory compliance impact
+    pub compliance_impact: ImpactLevel,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ImpactLevel {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
+#[derive(Debug, Clone)]
+pub struct LikelihoodEstimationMethods {
+    /// Historical data analysis
+    pub historical_analysis: bool,
+    /// Expert judgment
+    pub expert_judgment: bool,
+    /// Threat modeling
+    pub threat_modeling: bool,
+    /// Simulation-based estimation
+    pub simulation_based: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct RiskMitigationStrategies {
+    /// Risk avoidance strategies
+    pub avoidance_strategies: Vec<String>,
+    /// Risk mitigation controls
+    pub mitigation_controls: Vec<String>,
+    /// Risk transfer mechanisms
+    pub transfer_mechanisms: Vec<String>,
+    /// Risk acceptance criteria
+    pub acceptance_criteria: Vec<String>,
 }
 
 /// Seed sharing methods for secure aggregation
@@ -896,7 +1632,7 @@ pub struct PersonalizationManager<T: Float> {
 }
 
 /// Adaptive privacy budget manager
-pub struct AdaptiveBudgetManager {
+pub struct AdaptiveBudgetManager<T: Float> {
     config: AdaptiveBudgetConfig,
     client_budgets: HashMap<String, AdaptiveBudget>,
     global_budget_tracker: GlobalBudgetTracker,
@@ -2980,7 +3716,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
     }
 }
 
-impl AdaptiveBudgetManager {
+impl<T: Float + std::fmt::Debug> AdaptiveBudgetManager<T> {
     #[allow(dead_code)]
     pub fn new() -> Result<Self, OptimizerError> {
         Ok(Self {
@@ -3230,7 +3966,7 @@ impl Default for CommunicationPrivacyConfig {
 /// Enhanced Secure Aggregation Protocols
 pub mod secure_aggregation_protocols {
     use super::*;
-    use rand::distributions::{Distribution, Uniform};
+    use ndarray_rand::rand::distributions::{Distribution, Uniform};
     use sha2::{Digest, Sha256};
     use std::time::Instant;
 
@@ -3691,7 +4427,7 @@ pub mod secure_aggregation_protocols {
     }
 
     #[derive(Debug, Clone)]
-    pub struct ClientSetupInfo {
+    pub struct ClientSetupInfo<T> {
         pub client_id: String,
         pub share_index: usize,
         pub polynomial_point: T,
@@ -4303,7 +5039,7 @@ impl BandwidthMonitor {
             jitter_ms: self.calculate_jitter(&recent_measurements),
             packet_loss_rate: 0.0, // Would need additional monitoring
             connection_quality: self.assess_connection_quality(avg_bandwidth, avg_latency),
-            congestion_level: self.assess_congestion_level(&recent_measurements),
+            congestion_level: self.congestion_level_to_f64(self.assess_congestion_level(&recent_measurements)),
         };
     }
 
@@ -4352,6 +5088,14 @@ impl BandwidthMonitor {
             CongestionLevel::Medium
         } else {
             CongestionLevel::Low
+        }
+    }
+
+    fn congestion_level_to_f64(&self, level: CongestionLevel) -> f64 {
+        match level {
+            CongestionLevel::Low => 0.2,
+            CongestionLevel::Medium => 0.5,
+            CongestionLevel::High => 0.8,
         }
     }
 
@@ -4427,7 +5171,7 @@ impl Default for NetworkConditions {
             jitter_ms: 10,
             packet_loss_rate: 0.0,
             connection_quality: ConnectionQuality::Good,
-            congestion_level: CongestionLevel::Low,
+            congestion_level: 0.2, // Low congestion level
         }
     }
 }

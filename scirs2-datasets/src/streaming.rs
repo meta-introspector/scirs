@@ -76,6 +76,10 @@ impl DataChunk {
         Dataset {
             data: self.data.clone(),
             target: self.target.clone(),
+            target_names: None,
+            feature_names: None,
+            feature_descriptions: None,
+            description: None,
             metadata: Default::default(),
         }
     }
@@ -352,7 +356,8 @@ impl StreamingIterator {
                 .collect();
 
             // Create data matrix
-            let data = Array2::from_shape_vec((samples_read, n_features), float_data)?;
+            let data = Array2::from_shape_vec((samples_read, n_features), float_data)
+                .map_err(|e| DatasetsError::Other(format!("Shape error: {}", e)))?;
             let sample_indices: Vec<usize> =
                 (global_sample_index..global_sample_index + samples_read).collect();
 
@@ -456,7 +461,7 @@ impl StreamingIterator {
         is_last: bool,
     ) -> Result<DataChunk> {
         if data.is_empty() {
-            return Err(DatasetsError::InvalidData("Empty chunk data".to_string()));
+            return Err(DatasetsError::InvalidFormat("Empty chunk data".to_string()));
         }
 
         let n_samples = data.len();
@@ -576,14 +581,16 @@ where
         // Send chunks to workers
         let mut results = Vec::new();
         while let Some(chunk) = iterator.next_chunk()? {
-            tx.send(Some(chunk))?;
+            tx.send(Some(chunk))
+                .map_err(|e| DatasetsError::Other(format!("Send error: {}", e))))?;
             // Note: This is a simplified implementation
             // A complete implementation would collect results properly
         }
 
         // Send end signals
         for _ in 0..self.config.num_workers {
-            tx.send(None)?;
+            tx.send(None)
+                .map_err(|e| DatasetsError::Other(format!("Send error: {}", e)))?;
         }
 
         // Wait for workers to finish
@@ -633,7 +640,7 @@ impl StreamTransformer {
             let std = chunk.data.std_axis(ndarray::Axis(0), 0.0);
 
             for mut row in chunk.data.axis_iter_mut(ndarray::Axis(0)) {
-                for (i, mut val) in row.iter_mut().enumerate() {
+                for (i, val) in row.iter_mut().enumerate() {
                     if std[i] > 0.0 {
                         *val = (*val - mean[i]) / std[i];
                     }

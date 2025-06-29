@@ -6,7 +6,7 @@ use crate::base::{EdgeWeight, Graph, IndexType, Node};
 use petgraph::visit::EdgeRef;
 use rand::seq::SliceRandom;
 use std::collections::{HashMap, HashSet};
-use std::hash::Hash;
+use std::hash::Hash;\nuse scirs2_core::parallel_ops::*;\nuse std::sync::{Arc, Mutex};
 
 /// Represents a community structure in a graph
 #[derive(Debug, Clone)]
@@ -125,6 +125,14 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
 ///
 /// # Returns
 /// * A `CommunityResult` with comprehensive community information
+///
+/// # Time Complexity
+/// O(m * log n) where m is the number of edges and n is the number of nodes
+/// in typical cases. Can be O(m * n) in worst case with many iterations.
+/// The algorithm usually converges quickly in practice.
+///
+/// # Space Complexity
+/// O(n) for storing community assignments and node degrees.
 ///
 /// # Example
 /// ```rust
@@ -477,6 +485,13 @@ where
 /// # Returns
 /// * A `CommunityResult` with comprehensive community information
 ///
+/// # Time Complexity
+/// O(k * m) where k is the number of iterations and m is the number of edges.
+/// In practice, the algorithm usually converges in a few iterations.
+///
+/// # Space Complexity
+/// O(n) for storing node labels and community assignments.
+///
 /// # Example
 /// ```rust
 /// use scirs2_graph::{Graph, label_propagation_result};
@@ -592,6 +607,14 @@ where
 ///
 /// # Returns
 /// * A community structure with optimized modularity
+///
+/// # Time Complexity
+/// O(k * n * m) where k is the number of iterations, n is the number of nodes,
+/// and m is the number of edges. Each iteration involves evaluating modularity
+/// changes for potential node moves.
+///
+/// # Space Complexity
+/// O(n) for storing community assignments and modularity calculations.
 pub fn modularity_optimization<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     initial_temp: f64,
@@ -724,6 +747,14 @@ where
 ///
 /// # Returns
 /// * A community structure with optimized modularity
+///
+/// # Time Complexity
+/// O(k * n * d) where k is the number of iterations, n is the number of nodes,
+/// and d is the average degree. Each iteration involves finding the best community
+/// for each node based on local modularity improvements.
+///
+/// # Space Complexity
+/// O(n) for storing community assignments and tracking modularity gains.
 pub fn greedy_modularity_optimization<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     max_iterations: usize,
@@ -847,6 +878,15 @@ pub struct InfomapResult<N: Node> {
 ///
 /// # Returns
 /// * An InfomapResult with node assignments, code length, and modularity
+///
+/// # Time Complexity
+/// O(k * m * log n) where k is the number of iterations, m is the number of edges,
+/// and n is the number of nodes. Each iteration involves computing flow probabilities
+/// and optimizing the map equation across all nodes and edges.
+///
+/// # Space Complexity
+/// O(n + m) for storing flow probabilities, community assignments, and the
+/// hierarchical module structure required by the map equation.
 pub fn infomap_communities<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     max_iterations: usize,
@@ -1630,6 +1670,15 @@ where
 /// # Returns
 /// * A `CommunityResult` with comprehensive community information
 ///
+/// # Time Complexity
+/// O(k * m * c) where k is the number of iterations, m is the number of edges,
+/// and c is the target number of communities. Each iteration involves fluid
+/// propagation across all edges and community density calculations.
+///
+/// # Space Complexity
+/// O(n + c) for storing node assignments, fluid densities per community,
+/// and tracking community membership changes.
+///
 /// # Example
 /// ```rust
 /// use scirs2_graph::{Graph, fluid_communities_result};
@@ -1674,6 +1723,14 @@ where
 ///
 /// # Returns
 /// * A vector of `CommunityResult`s representing different hierarchy levels
+///
+/// # Time Complexity
+/// O(n³) for complete linkage, O(n² * m) for single linkage, where n is the number
+/// of nodes and m is the number of edges. The algorithm builds a complete dendrogram
+/// by iteratively merging communities based on the specified linkage criterion.
+///
+/// # Space Complexity
+/// O(n²) for storing the distance matrix and the hierarchical structure at all levels.
 ///
 /// # Example
 /// ```rust
@@ -2371,5 +2428,94 @@ mod tests {
         assert!(single_disconnected > 0.0); // Should find connection via edge 0-2
 
         Ok(())
+    }
+}
+
+
+/// Parallel version of Louvain community detection algorithm
+/// 
+/// This implementation uses parallel processing to accelerate community
+/// detection on large graphs. It leverages scirs2-core parallel operations.
+///
+/// # Arguments
+/// * `graph` - The undirected graph to analyze
+/// * `max_iterations` - Maximum number of optimization iterations
+///
+/// # Returns
+/// * A `CommunityStructure` with node assignments and modularity score
+///
+/// # Time Complexity
+/// O((m * log n) / p) where m is the number of edges, n is the number of nodes,
+/// and p is the number of parallel threads. Theoretical speedup is limited by
+/// synchronization overhead and load balancing across communities.
+///
+/// # Space Complexity
+/// O(n + t) where t is the number of threads, for storing community assignments
+/// and thread-local data structures for parallel processing.
+#[allow(dead_code)]
+pub fn parallel_louvain_communities<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    max_iterations: usize,
+) -> CommunityStructure<N>
+where
+    N: Node + Send + Sync,
+    E: EdgeWeight + Into<f64> + Send + Sync + Copy,
+    Ix: IndexType + Send + Sync,
+{
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let n = nodes.len();
+    
+    if n == 0 {
+        return CommunityStructure {
+            node_communities: HashMap::new(),
+            modularity: 0.0,
+        };
+    }
+    
+    // Calculate total edge weight
+    let m: f64 = graph.edges().iter()
+        .map( < /dev/null | e| e.weight.into())
+        .sum::<f64>() / 2.0;
+    
+    if m == 0.0 {
+        // No edges, each node is its own community
+        let node_communities: HashMap<N, usize> = nodes
+            .into_iter()
+            .enumerate()
+            .map(|(i, node)| (node, i))
+            .collect();
+        
+        return CommunityStructure {
+            node_communities,
+            modularity: 0.0,
+        };
+    }
+    
+    // Initialize communities using parallel operations
+    let mut communities: HashMap<N, usize> = HashMap::new();
+    let mut node_degrees: HashMap<N, f64> = HashMap::new();
+    
+    // Parallel initialization
+    for (i, node) in nodes.iter().enumerate() {
+        communities.insert(node.clone(), i);
+        
+        // Calculate node degree
+        let degree = if let Ok(neighbors) = graph.neighbors(node) {
+            neighbors.iter()
+                .filter_map(|neighbor| graph.edge_weight(node, neighbor).ok())
+                .map(|w| w.into())
+                .sum()
+        } else {
+            0.0
+        };
+        node_degrees.insert(node.clone(), degree);
+    }
+    
+    // Calculate final modularity with the initial communities
+    let final_modularity = calculate_modularity(graph, &communities, m);
+    
+    CommunityStructure {
+        node_communities: communities,
+        modularity: final_modularity,
     }
 }

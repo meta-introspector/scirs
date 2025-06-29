@@ -902,8 +902,8 @@ mod tests {
         let test_point = array![1.0, 0.0, 0.0];
 
         // Verify interpolation results
-        let rotated_mid1 = interp_mid1.apply(&test_point.view());
-        let rotated_mid2 = interp_mid2.apply(&test_point.view());
+        let rotated_mid1 = interp_mid1.apply(&test_point.view()).unwrap();
+        let rotated_mid2 = interp_mid2.apply(&test_point.view()).unwrap();
 
         // At t=0.5 (between identity and 90-degree rotation), should be approximately 45 degrees
         assert_relative_eq!(rotated_mid1[0], 2.0_f64.sqrt() / 2.0, epsilon = 1e-3);
@@ -944,20 +944,20 @@ mod tests {
 
         // At t=0.0, should be identity
         let rot0 = &sample_rotations[0];
-        let rotated0 = rot0.apply(&point.view());
+        let rotated0 = rot0.apply(&point.view()).unwrap();
         assert_relative_eq!(rotated0[0], 1.0, epsilon = 1e-10);
         assert_relative_eq!(rotated0[1], 0.0, epsilon = 1e-10);
 
         // At t=0.5, should be 90-degree rotation
         let rot2 = &sample_rotations[2];
-        let rotated2 = rot2.apply(&point.view());
+        let rotated2 = rot2.apply(&point.view()).unwrap();
         assert_relative_eq!(rotated2[0], 0.0, epsilon = 1e-3);
         assert_relative_eq!(rotated2[1], 1.0, epsilon = 1e-3);
         assert_relative_eq!(rotated2[2], 0.0, epsilon = 1e-3);
 
         // At t=1.0, should be 180-degree rotation
         let rot4 = &sample_rotations[4];
-        let rotated4 = rot4.apply(&point.view());
+        let rotated4 = rot4.apply(&point.view()).unwrap();
         assert_relative_eq!(rotated4[0], -1.0, epsilon = 1e-10);
         assert_relative_eq!(rotated4[1], 0.0, epsilon = 1e-10);
         assert_relative_eq!(rotated4[2], 0.0, epsilon = 1e-10);
@@ -1040,7 +1040,7 @@ mod tests {
         let spline = RotationSpline::new(&rotations, &times).unwrap();
 
         // Angular velocity should be constant for slerp
-        let velocity = spline.angular_velocity(0.5);
+        let velocity = spline.angular_velocity(0.5).unwrap();
 
         // For a rotation from identity to 180 degrees around z-axis over 1 second,
         // the angular velocity should be approximately [0, 0, π]
@@ -1049,8 +1049,8 @@ mod tests {
         assert_relative_eq!(velocity[2], PI, epsilon = 1e-3);
 
         // Velocity should be the same at any point in the segment
-        let velocity_25 = spline.angular_velocity(0.25);
-        let velocity_75 = spline.angular_velocity(0.75);
+        let velocity_25 = spline.angular_velocity(0.25).unwrap();
+        let velocity_75 = spline.angular_velocity(0.75).unwrap();
 
         assert_relative_eq!(velocity_25[0], velocity[0], epsilon = 1e-10);
         assert_relative_eq!(velocity_25[1], velocity[1], epsilon = 1e-10);
@@ -1083,20 +1083,20 @@ mod tests {
         let test_point = array![1.0, 0.0, 0.0];
 
         // Check that endpoints match original rotations
-        let rotated_0 = rot_0.apply(&test_point.view());
-        let expected_0 = rotations[0].apply(&test_point.view());
+        let rotated_0 = rot_0.apply(&test_point.view()).unwrap();
+        let expected_0 = rotations[0].apply(&test_point.view()).unwrap();
         assert_relative_eq!(rotated_0[0], expected_0[0], epsilon = 1e-10);
         assert_relative_eq!(rotated_0[1], expected_0[1], epsilon = 1e-10);
         assert_relative_eq!(rotated_0[2], expected_0[2], epsilon = 1e-10);
 
-        let rotated_1 = rot_1.apply(&test_point.view());
-        let expected_1 = rotations[1].apply(&test_point.view());
+        let rotated_1 = rot_1.apply(&test_point.view()).unwrap();
+        let expected_1 = rotations[1].apply(&test_point.view()).unwrap();
         assert_relative_eq!(rotated_1[0], expected_1[0], epsilon = 1e-10);
         assert_relative_eq!(rotated_1[1], expected_1[1], epsilon = 1e-10);
         assert_relative_eq!(rotated_1[2], expected_1[2], epsilon = 1e-10);
 
-        let rotated_2 = rot_2.apply(&test_point.view());
-        let expected_2 = rotations[2].apply(&test_point.view());
+        let rotated_2 = rot_2.apply(&test_point.view()).unwrap();
+        let expected_2 = rotations[2].apply(&test_point.view()).unwrap();
         assert_relative_eq!(rotated_2[0], expected_2[0], epsilon = 1e-10);
         assert_relative_eq!(rotated_2[1], expected_2[1], epsilon = 1e-10);
         assert_relative_eq!(rotated_2[2], expected_2[2], epsilon = 1e-10);
@@ -1107,8 +1107,8 @@ mod tests {
         let rot_15 = spline.interpolate(1.5);
 
         // Verify that interpolated rotations are valid
-        let rotated_05 = rot_05.apply(&test_point.view());
-        let rotated_15 = rot_15.apply(&test_point.view());
+        let rotated_05 = rot_05.apply(&test_point.view()).unwrap();
+        let rotated_15 = rot_15.apply(&test_point.view()).unwrap();
 
         // Check that the results are normalized
         let norm_05 = (rotated_05.dot(&rotated_05)).sqrt();

@@ -135,6 +135,7 @@ pub use error::{InterpolateError, InterpolateResult};
 
 // Common traits and API standards
 pub mod api_standards;
+pub mod deprecation;
 pub mod traits;
 
 // Interpolation modules
@@ -161,6 +162,7 @@ pub mod interp1d;
 pub mod interp2d;
 pub mod interpnd;
 pub mod local;
+pub mod memory_monitor;
 pub mod multiscale;
 pub mod neural_enhanced;
 pub mod numerical_stability;
@@ -189,6 +191,10 @@ pub mod utils;
 pub mod voronoi;
 
 // Re-exports for convenience
+pub use deprecation::{
+    DeprecationConfig, DeprecationInfo, DeprecationLevel, FeatureRegistry,
+    configure_deprecation, init_deprecation_system, issue_deprecation_warning,
+};
 pub use adaptive_gp::{
     make_adaptive_gp, AdaptiveGPConfig, AdaptiveGaussianProcess, GPStats, KernelHyperparameters,
     KernelModel, KernelType as GPKernelType,
@@ -328,6 +334,11 @@ pub use local::mls::{MovingLeastSquares, PolynomialBasis, WeightFunction};
 pub use local::polynomial::{
     make_loess, make_robust_loess, LocalPolynomialConfig, LocalPolynomialRegression,
     RegressionResult,
+};
+pub use memory_monitor::{
+    get_all_reports, get_global_stats, get_monitor_report, start_monitoring, stop_monitoring,
+    GlobalMemoryStats, LeakIndicators, MemoryMonitor, MemoryReport, PerformanceGrade,
+    PerformanceSummary,
 };
 pub use multiscale::{make_adaptive_bspline, MultiscaleBSpline, RefinementCriterion};
 pub use neural_enhanced::{

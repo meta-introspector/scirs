@@ -1225,6 +1225,32 @@ pub struct TensorCoreMetrics {
     pub memory_bandwidth_improvement: f64,
 }
 
+/// Detailed kernel performance statistics
+#[derive(Debug, Clone)]
+pub struct KernelStatistics {
+    pub kernel_name: String,
+    pub execution_count: usize,
+    pub total_time: Duration,
+    pub avg_time: Duration,
+    pub min_time: Duration,
+    pub max_time: Duration,
+    pub std_dev: Duration,
+    pub p50_time: Duration,
+    pub p95_time: Duration,
+    pub p99_time: Duration,
+}
+
+/// Comprehensive performance report
+#[derive(Debug, Clone)]
+pub struct PerformanceReport {
+    pub total_executions: usize,
+    pub kernel_statistics: Vec<KernelStatistics>,
+    pub memory_bandwidth_utilization: f64,
+    pub compute_utilization: f64,
+    pub tensor_core_utilization: f64,
+    pub report_timestamp: std::time::SystemTime,
+}
+
 /// Configuration for adaptive kernel selection
 #[derive(Debug, Clone)]
 pub struct AdaptiveKernelConfig<T: Float> {
@@ -1372,7 +1398,7 @@ pub enum OptimizerType {
 // Implementation of new structures
 
 impl KernelProfiler {
-    /// Create new kernel profiler
+    /// Create new kernel profiler with enhanced metrics tracking
     pub fn new(config: ProfilingConfig) -> Self {
         Self {
             timing_data: Mutex::new(HashMap::new()),
@@ -1385,6 +1411,149 @@ impl KernelProfiler {
             }),
             config,
         }
+    }
+
+    /// Enhanced timing tracking with CUDA events and profiling
+    pub fn profile_kernel_execution<F, R>(&self, kernel_name: &str, operation: F) -> Result<R, OptimizerKernelError>
+    where
+        F: FnOnce() -> Result<R, OptimizerKernelError>,
+    {
+        if !self.config.detailed_profiling {
+            return operation();
+        }
+
+        let start_time = std::time::Instant::now();
+
+        // Execute the operation
+        let result = operation()?;
+
+        let execution_time = start_time.elapsed();
+
+        // Record timing data
+        self.record_execution_time(kernel_name, execution_time);
+
+        // Update performance metrics
+        self.update_performance_metrics(kernel_name, execution_time);
+
+        Ok(result)
+    }
+
+    /// Record execution time for a kernel
+    fn record_execution_time(&self, kernel_name: &str, execution_time: Duration) {
+        let mut timing_data = self.timing_data.lock().unwrap();
+        
+        let kernel_times = timing_data
+            .entry(kernel_name.to_string())
+            .or_insert_with(VecDeque::new);
+
+        // Maintain history size limit
+        if kernel_times.len() >= self.config.max_history_size {
+            kernel_times.pop_front();
+        }
+
+        kernel_times.push_back(execution_time);
+    }
+
+    /// Update aggregated performance metrics
+    fn update_performance_metrics(&self, kernel_name: &str, execution_time: Duration) {
+        let mut metrics = self.metrics.lock().unwrap();
+        
+        metrics.total_executions += 1;
+
+        // Calculate rolling average for this kernel
+        let timing_data = self.timing_data.lock().unwrap();
+        if let Some(kernel_times) = timing_data.get(kernel_name) {
+            let avg_time = kernel_times.iter().sum::<Duration>() / kernel_times.len() as u32;
+            metrics.avg_execution_times.insert(kernel_name.to_string(), avg_time);
+        }
+    }
+
+    /// Get detailed performance statistics for a specific kernel
+    pub fn get_kernel_stats(&self, kernel_name: &str) -> Option<KernelStatistics> {
+        let timing_data = self.timing_data.lock().unwrap();
+        
+        if let Some(times) = timing_data.get(kernel_name) {
+            if times.is_empty() {
+                return None;
+            }
+
+            let total_time = times.iter().sum::<Duration>();
+            let avg_time = total_time / times.len() as u32;
+            
+            let min_time = *times.iter().min().unwrap();
+            let max_time = *times.iter().max().unwrap();
+
+            // Calculate standard deviation
+            let avg_nanos = avg_time.as_nanos() as f64;
+            let variance: f64 = times
+                .iter()
+                .map(|t| {
+                    let diff = t.as_nanos() as f64 - avg_nanos;
+                    diff * diff
+                })
+                .sum::<f64>() / times.len() as f64;
+            let std_dev = Duration::from_nanos(variance.sqrt() as u64);
+
+            // Calculate percentiles
+            let mut sorted_times: Vec<Duration> = times.iter().cloned().collect();
+            sorted_times.sort();
+            
+            let p50 = sorted_times[times.len() / 2];
+            let p95 = sorted_times[(times.len() * 95) / 100];
+            let p99 = sorted_times[(times.len() * 99) / 100];
+
+            Some(KernelStatistics {
+                kernel_name: kernel_name.to_string(),
+                execution_count: times.len(),
+                total_time,
+                avg_time,
+                min_time,
+                max_time,
+                std_dev,
+                p50_time: p50,
+                p95_time: p95,
+                p99_time: p99,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Generate comprehensive performance report
+    pub fn generate_detailed_report(&self) -> PerformanceReport {
+        let timing_data = self.timing_data.lock().unwrap();
+        let metrics = self.metrics.lock().unwrap();
+
+        let mut kernel_stats = Vec::new();
+        for kernel_name in timing_data.keys() {
+            if let Some(stats) = self.get_kernel_stats(kernel_name) {
+                kernel_stats.push(stats);
+            }
+        }
+
+        // Sort by total time (most expensive first)
+        kernel_stats.sort_by(|a, b| b.total_time.cmp(&a.total_time));
+
+        PerformanceReport {
+            total_executions: metrics.total_executions,
+            kernel_statistics: kernel_stats,
+            memory_bandwidth_utilization: metrics.memory_bandwidth_utilization,
+            compute_utilization: metrics.compute_utilization,
+            tensor_core_utilization: metrics.tensor_core_utilization,
+            report_timestamp: std::time::SystemTime::now(),
+        }
+    }
+
+    /// Reset profiling data
+    pub fn reset(&self) {
+        self.timing_data.lock().unwrap().clear();
+        
+        let mut metrics = self.metrics.lock().unwrap();
+        metrics.total_executions = 0;
+        metrics.avg_execution_times.clear();
+        metrics.memory_bandwidth_utilization = 0.0;
+        metrics.compute_utilization = 0.0;
+        metrics.tensor_core_utilization = 0.0;
     }
 
     /// Start timing for a kernel
@@ -1452,49 +1621,289 @@ impl Default for TensorCoreSupport {
 }
 
 impl CudaMemoryAllocator {
-    /// Create new CUDA memory allocator
+    /// Create new CUDA memory allocator with enhanced memory management
     pub fn new(
         strategy: AllocationStrategy,
         alignment: usize,
     ) -> Result<Self, OptimizerKernelError> {
-        Ok(Self {
+        let mut allocator = Self {
             memory_pools: Mutex::new(HashMap::new()),
             total_allocated: Mutex::new(0),
             allocation_strategy: strategy,
             alignment_requirements: alignment,
-        })
+        };
+
+        // Pre-allocate memory pools for common sizes to reduce fragmentation
+        allocator.preallocate_common_sizes()?;
+        
+        Ok(allocator)
     }
 
-    /// Allocate memory with specified size
+    /// Pre-allocate memory pools for common tensor sizes
+    fn preallocate_common_sizes(&mut self) -> Result<(), OptimizerKernelError> {
+        // Common sizes for neural network layers (in elements)
+        let common_sizes = vec![
+            1024,      // Small dense layers
+            4096,      // Medium dense layers  
+            16384,     // Large dense layers
+            65536,     // Very large dense layers
+            262144,    // Embedding layers
+            1048576,   // Large embedding/conv layers
+        ];
+
+        let mut pools = self.memory_pools.lock().unwrap();
+        
+        for &size in &common_sizes {
+            let aligned_size = (size * 4 + self.alignment_requirements - 1) 
+                & !(self.alignment_requirements - 1); // Assume f32 = 4 bytes
+            
+            // Pre-allocate 4 blocks for each common size
+            let mut pool = Vec::with_capacity(4);
+            for _ in 0..4 {
+                // In a real implementation, this would use cudaMalloc
+                let ptr = std::ptr::null_mut(); // Placeholder
+                pool.push(ptr);
+            }
+            pools.insert(aligned_size, pool);
+        }
+
+        Ok(())
+    }
+
+    /// Allocate memory with specified size using chosen allocation strategy
     pub fn allocate(&self, size: usize) -> Result<*mut c_void, OptimizerKernelError> {
         let aligned_size =
             (size + self.alignment_requirements - 1) & !(self.alignment_requirements - 1);
 
+        match self.allocation_strategy {
+            AllocationStrategy::FirstFit => self.allocate_first_fit(aligned_size),
+            AllocationStrategy::BestFit => self.allocate_best_fit(aligned_size),
+            AllocationStrategy::Buddy => self.allocate_buddy(aligned_size),
+            AllocationStrategy::Pool => self.allocate_pool(aligned_size),
+        }
+    }
+
+    /// First-fit allocation strategy
+    fn allocate_first_fit(&self, size: usize) -> Result<*mut c_void, OptimizerKernelError> {
         let mut pools = self.memory_pools.lock().unwrap();
 
-        // Check if we have a suitable block in the pool
-        if let Some(pool) = pools.get_mut(&aligned_size) {
+        // Find first available pool with sufficient size
+        for (&pool_size, pool) in pools.iter_mut() {
+            if pool_size >= size && !pool.is_empty() {
+                let ptr = pool.pop().unwrap();
+                return Ok(ptr);
+            }
+        }
+
+        // No suitable block found, allocate new memory
+        self.allocate_new_block(size)
+    }
+
+    /// Best-fit allocation strategy
+    fn allocate_best_fit(&self, size: usize) -> Result<*mut c_void, OptimizerKernelError> {
+        let mut pools = self.memory_pools.lock().unwrap();
+
+        // Find the smallest suitable pool
+        let best_fit = pools
+            .iter_mut()
+            .filter(|(&pool_size, pool)| pool_size >= size && !pool.is_empty())
+            .min_by_key(|(&pool_size, _)| pool_size);
+
+        if let Some((_, pool)) = best_fit {
+            let ptr = pool.pop().unwrap();
+            return Ok(ptr);
+        }
+
+        // No suitable block found, allocate new memory
+        self.allocate_new_block(size)
+    }
+
+    /// Buddy allocation system
+    fn allocate_buddy(&self, size: usize) -> Result<*mut c_void, OptimizerKernelError> {
+        // Find the next power of 2 that can accommodate the size
+        let buddy_size = self.next_power_of_2(size);
+        
+        let mut pools = self.memory_pools.lock().unwrap();
+
+        // Try to get block of exact buddy size
+        if let Some(pool) = pools.get_mut(&buddy_size) {
             if let Some(ptr) = pool.pop() {
                 return Ok(ptr);
             }
         }
 
-        // Allocate new memory (simplified - would use CUDA malloc)
+        // Try to split a larger block
+        let mut larger_size = buddy_size * 2;
+        while larger_size <= (1 << 30) { // Max 1GB blocks
+            if let Some(pool) = pools.get_mut(&larger_size) {
+                if let Some(ptr) = pool.pop() {
+                    // Split the block and return first half
+                    let second_half = unsafe { ptr.byte_add(buddy_size) };
+                    pools.entry(buddy_size).or_insert_with(Vec::new).push(second_half);
+                    return Ok(ptr);
+                }
+            }
+            larger_size *= 2;
+        }
+
+        // No suitable block found, allocate new memory
+        self.allocate_new_block(buddy_size)
+    }
+
+    /// Pool-based allocation (original strategy)
+    fn allocate_pool(&self, size: usize) -> Result<*mut c_void, OptimizerKernelError> {
+        let mut pools = self.memory_pools.lock().unwrap();
+
+        // Check if we have a suitable block in the pool
+        if let Some(pool) = pools.get_mut(&size) {
+            if let Some(ptr) = pool.pop() {
+                return Ok(ptr);
+            }
+        }
+
+        // No suitable block found, allocate new memory
+        self.allocate_new_block(size)
+    }
+
+    /// Allocate new memory block
+    fn allocate_new_block(&self, size: usize) -> Result<*mut c_void, OptimizerKernelError> {
+        // In a real implementation, this would use cudaMalloc
         let ptr = std::ptr::null_mut(); // Placeholder
 
-        *self.total_allocated.lock().unwrap() += aligned_size;
+        *self.total_allocated.lock().unwrap() += size;
 
         Ok(ptr)
     }
 
-    /// Deallocate memory
+    /// Find next power of 2 greater than or equal to n
+    fn next_power_of_2(&self, n: usize) -> usize {
+        if n <= 1 {
+            return 1;
+        }
+        
+        let mut power = 1;
+        while power < n {
+            power <<= 1;
+        }
+        power
+    }
+
+    /// Deallocate memory with strategy-specific handling
     pub fn deallocate(&self, ptr: *mut c_void, size: usize) -> Result<(), OptimizerKernelError> {
         let aligned_size =
             (size + self.alignment_requirements - 1) & !(self.alignment_requirements - 1);
 
-        let mut pools = self.memory_pools.lock().unwrap();
-        pools.entry(aligned_size).or_insert_with(Vec::new).push(ptr);
+        match self.allocation_strategy {
+            AllocationStrategy::Buddy => self.deallocate_buddy(ptr, aligned_size),
+            _ => self.deallocate_pool(ptr, aligned_size),
+        }
+    }
 
+    /// Deallocate with buddy system coalescing
+    fn deallocate_buddy(&self, ptr: *mut c_void, size: usize) -> Result<(), OptimizerKernelError> {
+        let buddy_size = self.next_power_of_2(size);
+        let mut pools = self.memory_pools.lock().unwrap();
+
+        // Try to coalesce with buddy blocks
+        let mut current_size = buddy_size;
+        let mut current_ptr = ptr;
+
+        loop {
+            // Calculate buddy address
+            let ptr_addr = current_ptr as usize;
+            let buddy_addr = ptr_addr ^ current_size;
+            let buddy_ptr = buddy_addr as *mut c_void;
+
+            // Check if buddy exists in the pool
+            if let Some(pool) = pools.get_mut(&current_size) {
+                if let Some(pos) = pool.iter().position(|&p| p == buddy_ptr) {
+                    // Buddy found, coalesce
+                    pool.swap_remove(pos);
+                    current_size *= 2;
+                    current_ptr = if ptr_addr < buddy_addr { current_ptr } else { buddy_ptr };
+                    continue;
+                }
+            }
+
+            // No buddy found or max size reached, add to pool
+            pools.entry(current_size).or_insert_with(Vec::new).push(current_ptr);
+            break;
+        }
+
+        Ok(())
+    }
+
+    /// Simple pool-based deallocation
+    fn deallocate_pool(&self, ptr: *mut c_void, size: usize) -> Result<(), OptimizerKernelError> {
+        let mut pools = self.memory_pools.lock().unwrap();
+        pools.entry(size).or_insert_with(Vec::new).push(ptr);
+        Ok(())
+    }
+
+    /// Force memory defragmentation
+    pub fn defragment(&self) -> Result<(), OptimizerKernelError> {
+        let mut pools = self.memory_pools.lock().unwrap();
+        
+        // For buddy allocation, try to coalesce adjacent blocks
+        if matches!(self.allocation_strategy, AllocationStrategy::Buddy) {
+            self.coalesce_buddy_blocks(&mut pools)?;
+        }
+        
+        // For other strategies, compact memory pools
+        self.compact_memory_pools(&mut pools)?;
+        
+        Ok(())
+    }
+
+    /// Coalesce buddy blocks during defragmentation
+    fn coalesce_buddy_blocks(&self, pools: &mut HashMap<usize, Vec<*mut c_void>>) -> Result<(), OptimizerKernelError> {
+        let mut sizes: Vec<usize> = pools.keys().cloned().collect();
+        sizes.sort();
+
+        for &size in &sizes {
+            if let Some(mut blocks) = pools.remove(&size) {
+                blocks.sort_by_key(|&ptr| ptr as usize);
+                
+                let mut i = 0;
+                while i < blocks.len() {
+                    let ptr1 = blocks[i];
+                    let addr1 = ptr1 as usize;
+                    
+                    // Look for buddy
+                    let buddy_addr = addr1 ^ size;
+                    if let Some(j) = blocks[i+1..].iter().position(|&ptr| ptr as usize == buddy_addr) {
+                        // Found buddy, coalesce
+                        blocks.remove(i + 1 + j);
+                        blocks.remove(i);
+                        
+                        let coalesced_ptr = if addr1 < buddy_addr { ptr1 } else { buddy_addr as *mut c_void };
+                        pools.entry(size * 2).or_insert_with(Vec::new).push(coalesced_ptr);
+                        
+                        // Don't increment i since we removed elements
+                    } else {
+                        i += 1;
+                    }
+                }
+                
+                // Put remaining blocks back
+                if !blocks.is_empty() {
+                    pools.insert(size, blocks);
+                }
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// Compact memory pools by removing empty pools
+    fn compact_memory_pools(&self, pools: &mut HashMap<usize, Vec<*mut c_void>>) -> Result<(), OptimizerKernelError> {
+        pools.retain(|_, pool| !pool.is_empty());
+        
+        // Sort pools by size for better allocation locality
+        for pool in pools.values_mut() {
+            pool.sort_by_key(|&ptr| ptr as usize);
+        }
+        
         Ok(())
     }
 

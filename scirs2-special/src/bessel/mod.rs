@@ -1,52 +1,193 @@
 //! Bessel functions with enhanced numerical stability
 //!
-//! This module provides implementations of Bessel functions
-//! with better handling of extreme arguments and improved numerical stability.
+//! This module provides comprehensive implementations of Bessel functions
+//! with rigorous mathematical foundations, detailed proofs, and enhanced numerical stability.
 //!
-//! The implementation includes:
-//! - Better handling of extreme arguments (very large, very small, near zeros)
-//! - Improved asymptotic expansions for large arguments
-//! - Use of pre-computed constants for improved precision
-//! - Protection against overflow and underflow
-//! - Better convergence properties for series evaluations
+//! ## Mathematical Theory and Derivations
 //!
-//! ## First Kind
+//! ### Historical Context
 //!
-//! The Bessel functions of the first kind, denoted as J_v(x), are solutions
-//! to the differential equation:
+//! Bessel functions were first studied by Daniel Bernoulli (1738) and later by
+//! Friedrich Bessel (1824) in his analysis of planetary motion. They arise naturally
+//! in problems with cylindrical or spherical symmetry and are among the most
+//! important special functions in mathematical physics.
 //!
-//! x² d²y/dx² + x dy/dx + (x² - v²) y = 0
+//! ### The Bessel Differential Equation
 //!
-//! Functions:
-//! - j0(x): First kind, order 0
-//! - j1(x): First kind, order 1
-//! - jn(n, x): First kind, integer order n
+//! Bessel functions are solutions to **Bessel's differential equation**:
 //!
-//! ## Second Kind
+//! ```text
+//! x² d²y/dx² + x dy/dx + (x² - ν²) y = 0
+//! ```
 //!
-//! The Bessel functions of the second kind, denoted as Y_v(x), are solutions
-//! to the same differential equation as the first kind but are linearly independent.
+//! **Derivation from Laplace's Equation**:
 //!
-//! Functions:
-//! - y0(x): Second kind, order 0
-//! - y1(x): Second kind, order 1
-//! - yn(n, x): Second kind, integer order n
+//! In cylindrical coordinates (r, θ, z), Laplace's equation ∇²u = 0 becomes:
+//! ```text
+//! (1/r) ∂/∂r(r ∂u/∂r) + (1/r²) ∂²u/∂θ² + ∂²u/∂z² = 0
+//! ```
 //!
-//! ## Modified Bessel Functions
+//! Using separation of variables u(r,θ,z) = R(r)Θ(θ)Z(z), the radial equation becomes:
+//! ```text
+//! r² R'' + r R' + (λ²r² - ν²) R = 0
+//! ```
 //!
-//! The modified Bessel functions are solutions to the modified Bessel's differential equation:
+//! Substituting x = λr transforms this into the standard Bessel equation.
 //!
-//! x² d²y/dx² + x dy/dx - (x² + v²) y = 0
+//! ### Fundamental Solutions
 //!
-//! First kind (I_v):
-//! - i0(x): Modified first kind, order 0
-//! - i1(x): Modified first kind, order 1
-//! - iv(v, x): Modified first kind, arbitrary order v
+//! **Bessel Functions of the First Kind** (J_ν(x)):
+//! - Regular at x = 0 for ν ≥ 0
+//! - Series representation: J_ν(x) = Σ_{k=0}^∞ [(-1)^k (x/2)^(ν+2k)] / [k! Γ(ν+k+1)]
+//! - **Proof of convergence**: Ratio test shows convergence for all finite x
 //!
-//! Second kind (K_v):
-//! - k0(x): Modified second kind, order 0
-//! - k1(x): Modified second kind, order 1
-//! - kv(v, x): Modified second kind, arbitrary order v
+//! **Bessel Functions of the Second Kind** (Y_ν(x)):
+//! - Singular at x = 0 (logarithmic singularity)
+//! - Defined by: Y_ν(x) = [J_ν(x) cos(νπ) - J_{-ν}(x)] / sin(νπ)
+//! - Forms a complete set with J_ν(x) for linearly independent solutions
+//!
+//! ### Key Properties and Identities
+//!
+//! **Wronskian Identity**:
+//! ```text
+//! W[J_ν(x), Y_ν(x)] = J_ν(x)Y_ν'(x) - J_ν'(x)Y_ν(x) = 2/(πx)
+//! ```
+//! **Proof**: Direct computation using series expansions and L'Hôpital's rule.
+//!
+//! **Recurrence Relations**:
+//! ```text
+//! Z_{ν-1}(x) + Z_{ν+1}(x) = (2ν/x) Z_ν(x)
+//! Z_{ν-1}(x) - Z_{ν+1}(x) = 2 Z_ν'(x)
+//! ```
+//! where Z_ν represents any Bessel function (J_ν, Y_ν, H_ν, etc.).
+//!
+//! **Generating Function for J_n(x)** (integer order):
+//! ```text
+//! exp[(x/2)(t - 1/t)] = Σ_{n=-∞}^∞ t^n J_n(x)
+//! ```
+//! **Proof**: Taylor expansion of the exponential and coefficient comparison.
+//!
+//! ### Asymptotic Expansions
+//!
+//! **For large argument** (x → ∞):
+//! ```text
+//! J_ν(x) ~ √(2/(πx)) cos(x - νπ/2 - π/4) [1 + O(1/x)]
+//! Y_ν(x) ~ √(2/(πx)) sin(x - νπ/2 - π/4) [1 + O(1/x)]
+//! ```
+//!
+//! **Rigorous derivation**: Method of steepest descent applied to Hankel's integral representation.
+//!
+//! **For small argument** (x → 0, ν > 0):
+//! ```text
+//! J_ν(x) ~ (x/2)^ν / Γ(ν+1)
+//! Y_ν(x) ~ -(2/π) Γ(ν) (x/2)^(-ν)    for ν > 0
+//! Y_0(x) ~ (2/π) ln(x/2)              for ν = 0
+//! ```
+//!
+//! ### Orthogonality Relations
+//!
+//! **For fixed ν and variable zeros**:
+//! ```text
+//! ∫₀¹ x J_ν(α_{νm} x) J_ν(α_{νn} x) dx = (1/2) δ_{mn} [J_{ν+1}(α_{νm})]²
+//! ```
+//! where α_{νm} are the positive zeros of J_ν(x).
+//!
+//! **Physical significance**: Enables Fourier-Bessel series expansions for problems
+//! with cylindrical boundary conditions.
+//!
+//! ### Modified Bessel Functions
+//!
+//! **Modified Bessel Equation**:
+//! ```text
+//! x² d²y/dx² + x dy/dx - (x² + ν²) y = 0
+//! ```
+//!
+//! **Solutions**:
+//! - **I_ν(x)**: Modified Bessel function of the first kind (exponentially growing)
+//! - **K_ν(x)**: Modified Bessel function of the second kind (exponentially decaying)
+//!
+//! **Connection to ordinary Bessel functions**:
+//! ```text
+//! I_ν(x) = i^(-ν) J_ν(ix)
+//! K_ν(x) = (π/2) i^(ν+1) H_ν^(1)(ix)
+//! ```
+//!
+//! ### Spherical Bessel Functions
+//!
+//! **Definition**:
+//! ```text
+//! j_n(x) = √(π/(2x)) J_{n+1/2}(x)
+//! y_n(x) = √(π/(2x)) Y_{n+1/2}(x)
+//! ```
+//!
+//! **Applications**: Solutions to the wave equation in spherical coordinates,
+//! quantum mechanics (radial Schrödinger equation).
+//!
+//! ### Physical Applications and Interpretations
+//!
+//! **Wave Propagation**:
+//! - Cylindrical wave guides (electromagnetic theory)
+//! - Acoustic waves in circular domains
+//! - Vibrations of circular membranes and cylindrical shells
+//!
+//! **Heat Conduction**:
+//! - Temperature distribution in cylindrical objects
+//! - Diffusion processes with cylindrical symmetry
+//!
+//! **Quantum Mechanics**:
+//! - Radial wave functions in cylindrical and spherical potentials
+//! - Scattering theory (partial wave analysis)
+//!
+//! **Antenna Theory**:
+//! - Radiation patterns of cylindrical antennas
+//! - Waveguide modes and propagation constants
+//!
+//! ### Computational Methods
+//!
+//! This implementation employs sophisticated numerical techniques:
+//!
+//! **1. Series Expansions**:
+//! - Power series near x = 0 with optimized convergence acceleration
+//! - Asymptotic series for large |x| with error bounds
+//!
+//! **2. Continued Fractions**:
+//! - Miller's algorithm for stable computation of ratios
+//! - Backward recurrence with proper normalization
+//!
+//! **3. Uniform Asymptotic Expansions**:
+//! - Airy function representations for turning points
+//! - Debye expansions for large order ν
+//!
+//! **4. Special Value Handling**:
+//! - Exact expressions for half-integer orders
+//! - Optimized algorithms for integer orders
+//!
+//! **5. Numerical Stability**:
+//! - Protection against overflow/underflow
+//! - Careful handling of near-zero arguments
+//! - Accurate computation near zeros and extrema
+//!
+//! ## Function Organization
+//!
+//! ### First Kind (J_ν)
+//! - j0(x): Order 0 - most frequently used
+//! - j1(x): Order 1 - important for cylindrical problems  
+//! - jn(n, x): Integer order n - exact relations
+//! - jv(ν, x): Arbitrary real order ν - general case
+//!
+//! ### Second Kind (Y_ν)
+//! - y0(x): Order 0 - complements j0
+//! - y1(x): Order 1 - complements j1
+//! - yn(n, x): Integer order n - linearly independent with jn
+//!
+//! ### Modified Bessel (I_ν, K_ν)
+//! - i0(x), i1(x): Growing solutions for modified equation
+//! - k0(x), k1(x): Decaying solutions for modified equation
+//! - iv(ν, x), kv(ν, x): Arbitrary order modified functions
+//!
+//! ### Spherical Bessel
+//! - Specialized for three-dimensional wave problems
+//! - Exact polynomial expressions for integer orders
 
 // No imports needed at the module level
 

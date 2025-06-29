@@ -281,6 +281,26 @@ pub fn num_threads() -> usize {
     1
 }
 
+/// Alias for num_threads() for compatibility
+pub fn get_num_threads() -> usize {
+    num_threads()
+}
+
+/// Set the number of threads for parallel operations
+#[cfg(feature = "parallel")]
+pub fn set_num_threads(num_threads: usize) {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .build_global()
+        .expect("Failed to initialize thread pool");
+}
+
+/// Sequential fallback does nothing
+#[cfg(not(feature = "parallel"))]
+pub fn set_num_threads(_num_threads: usize) {
+    // No-op for sequential fallback
+}
+
 /// Parallel-aware scope helper
 #[cfg(feature = "parallel")]
 pub use rayon::scope as par_scope;

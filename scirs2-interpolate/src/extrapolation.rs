@@ -360,7 +360,7 @@ pub struct AdvancedExtrapolator<T: Float> {
     pub historical_data: Option<(Array1<T>, Array1<T>)>,
 }
 
-impl<T: Float + std::fmt::Display> AdvancedExtrapolator<T> {
+impl<T: Float + std::fmt::Display + std::default::Default> AdvancedExtrapolator<T> {
     /// Create a new advanced extrapolator
     pub fn new(base_extrapolator: Extrapolator<T>) -> Self {
         Self {
@@ -474,7 +474,7 @@ impl<T: Float + std::fmt::Display> AdvancedExtrapolator<T> {
                 standard_error,
             })
         } else {
-            Err(InterpolateError::ConfigurationError(
+            Err(InterpolateError::ComputationError(
                 "Confidence extrapolation not configured".to_string(),
             ))
         }
@@ -569,7 +569,7 @@ impl<T: Float + std::fmt::Display> AdvancedExtrapolator<T> {
                 }
             }
         } else {
-            Err(InterpolateError::ConfigurationError(
+            Err(InterpolateError::ComputationError(
                 "Ensemble extrapolation not configured".to_string(),
             ))
         }
@@ -609,7 +609,7 @@ impl<T: Float + std::fmt::Display> AdvancedExtrapolator<T> {
                 )
             })
         } else {
-            Err(InterpolateError::ConfigurationError(
+            Err(InterpolateError::ComputationError(
                 "Adaptive extrapolation not configured".to_string(),
             ))
         }
@@ -630,7 +630,7 @@ impl<T: Float + std::fmt::Display> AdvancedExtrapolator<T> {
                 self.base_extrapolator.extrapolate(x)
             }
         } else {
-            Err(InterpolateError::ConfigurationError(
+            Err(InterpolateError::ComputationError(
                 "Autoregressive extrapolation not configured".to_string(),
             ))
         }
@@ -641,7 +641,7 @@ impl<T: Float + std::fmt::Display> AdvancedExtrapolator<T> {
         &self,
         method: ExtrapolationMethod,
         x: T,
-        result: T,
+        _result: T,
     ) -> InterpolateResult<T> {
         // Simple scoring based on distance from domain and method stability
         let lower_bound = self.base_extrapolator.get_lower_bound();

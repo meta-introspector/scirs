@@ -498,7 +498,7 @@ mod tests {
     fn test_rigid_transform_identity() {
         let identity = RigidTransform::identity();
         let point = array![1.0, 2.0, 3.0];
-        let transformed = identity.apply(&point.view());
+        let transformed = identity.apply(&point.view()).unwrap();
 
         assert_relative_eq!(transformed[0], point[0], epsilon = 1e-10);
         assert_relative_eq!(transformed[1], point[1], epsilon = 1e-10);
@@ -511,7 +511,7 @@ mod tests {
         let transform = RigidTransform::from_translation(&translation.view()).unwrap();
 
         let point = array![0.0, 0.0, 0.0];
-        let transformed = transform.apply(&point.view());
+        let transformed = transform.apply(&point.view()).unwrap();
 
         assert_relative_eq!(transformed[0], translation[0], epsilon = 1e-10);
         assert_relative_eq!(transformed[1], translation[1], epsilon = 1e-10);
@@ -525,7 +525,7 @@ mod tests {
         let transform = RigidTransform::from_rotation(rotation);
 
         let point = array![1.0, 0.0, 0.0];
-        let transformed = transform.apply(&point.view());
+        let transformed = transform.apply(&point.view()).unwrap();
 
         // 90 degrees rotation around Z axis of [1, 0, 0] should give [0, 1, 0]
         assert_relative_eq!(transformed[0], 0.0, epsilon = 1e-10);
@@ -542,7 +542,7 @@ mod tests {
             RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
 
         let point = array![1.0, 0.0, 0.0];
-        let transformed = transform.apply(&point.view());
+        let transformed = transform.apply(&point.view()).unwrap();
 
         // 90 degrees rotation around Z axis of [1, 0, 0] should give [0, 1, 0]
         // Then translate by [1, 2, 3] to get [1, 3, 3]
@@ -562,7 +562,7 @@ mod tests {
         let transform = RigidTransform::from_matrix(&matrix.view()).unwrap();
 
         let point = array![1.0, 0.0, 0.0];
-        let transformed = transform.apply(&point.view());
+        let transformed = transform.apply(&point.view()).unwrap();
 
         // This matrix represents a 90-degree rotation around Z and translation by [1, 2, 3]
         // So [1, 0, 0] -> [0, 1, 0] -> [1, 3, 3]
@@ -612,12 +612,12 @@ mod tests {
         let transform =
             RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
 
-        let inverse = transform.inv();
+        let inverse = transform.inv().unwrap();
 
         // Apply transform and then its inverse to a point
         let point = array![1.0, 2.0, 3.0];
-        let transformed = transform.apply(&point.view());
-        let back = inverse.apply(&transformed.view());
+        let transformed = transform.apply(&point.view()).unwrap();
+        let back = inverse.apply(&transformed.view()).unwrap();
 
         // Should get back to the original point
         assert_relative_eq!(back[0], point[0], epsilon = 1e-10);
@@ -640,15 +640,15 @@ mod tests {
         )
         .unwrap();
 
-        let composed = t1.compose(&t2);
+        let composed = t1.compose(&t2).unwrap();
 
         // Apply the composed transform to a point
         let point = array![1.0, 0.0, 0.0];
-        let transformed = composed.apply(&point.view());
+        let transformed = composed.apply(&point.view()).unwrap();
 
         // Apply the transforms individually
-        let intermediate = t1.apply(&point.view());
-        let transformed2 = t2.apply(&intermediate.view());
+        let intermediate = t1.apply(&point.view()).unwrap();
+        let transformed2 = t2.apply(&intermediate.view()).unwrap();
 
         // The composed transform and individual transforms should produce the same result
         assert_relative_eq!(transformed[0], transformed2[0], epsilon = 1e-10);
@@ -665,7 +665,7 @@ mod tests {
 
         let points = array![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
 
-        let transformed = transform.apply_multiple(&points.view());
+        let transformed = transform.apply_multiple(&points.view()).unwrap();
 
         // Check that we get the correct transformed points
         assert_eq!(transformed.shape(), points.shape());

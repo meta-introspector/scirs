@@ -5,7 +5,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
-use crate::lombscargle_enhanced::{enhanced_lombscargle, LombScargleConfig, WindowType};
+use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
 use crate::lombscargle_simd::simd_lombscargle;
 use ndarray::{Array1, Array2};
 use num_traits::Float;
@@ -340,7 +340,7 @@ fn test_algorithm_consistency(tolerance: f64) -> SignalResult<ConsistencyResults
     let (_, psd_fast) = lombscargle(&t, &signal, None, Some("fast"), None, None, None, None)?;
 
     let config = LombScargleConfig::default();
-    let (_, psd_enhanced, _) = enhanced_lombscargle(&t, &signal, &config)?;
+    let (_, psd_enhanced, _) = lombscargle_enhanced(&t, &signal, &config)?;
 
     let impl_agreement1 = compute_agreement(&psd_standard, &psd_fast);
     let impl_agreement2 = compute_agreement(&psd_standard, &psd_enhanced);
@@ -360,9 +360,9 @@ fn test_algorithm_consistency(tolerance: f64) -> SignalResult<ConsistencyResults
         ..Default::default()
     };
 
-    let (f1, p1, _) = enhanced_lombscargle(&t, &signal, &config_os1)?;
-    let (f5, p5, _) = enhanced_lombscargle(&t, &signal, &config_os5)?;
-    let (f10, p10, _) = enhanced_lombscargle(&t, &signal, &config_os10)?;
+    let (f1, p1, _) = lombscargle_enhanced(&t, &signal, &config_os1)?;
+    let (f5, p5, _) = lombscargle_enhanced(&t, &signal, &config_os5)?;
+    let (f10, p10, _) = lombscargle_enhanced(&t, &signal, &config_os10)?;
 
     // Compare at common frequencies
     let oversample_consistency = compare_at_common_frequencies(&f1, &p1, &f5, &p5, &f10, &p10)?;
@@ -377,8 +377,8 @@ fn test_algorithm_consistency(tolerance: f64) -> SignalResult<ConsistencyResults
         ..Default::default()
     };
 
-    let (_, psd_no_window, _) = enhanced_lombscargle(&t, &signal, &config_no_window)?;
-    let (_, psd_hann, _) = enhanced_lombscargle(&t, &signal, &config_hann)?;
+    let (_, psd_no_window, _) = lombscargle_enhanced(&t, &signal, &config_no_window)?;
+    let (_, psd_hann, _) = lombscargle_enhanced(&t, &signal, &config_hann)?;
 
     // Windows should change magnitude but preserve peak locations
     let window_consistency = test_window_consistency_metric(&psd_no_window, &psd_hann)?;
@@ -522,7 +522,7 @@ fn test_phase_accuracy(t: &[f64], tolerance: f64) -> SignalResult<f64> {
 
     // Use enhanced implementation for phase extraction
     let config = LombScargleConfig::default();
-    let (freqs, _, extra) = enhanced_lombscargle(t, &signal, &config)?;
+    let (freqs, _, extra) = lombscargle_enhanced(t, &signal, &config)?;
 
     // Find peak and check phase
     // This is a simplified test - actual phase extraction would be more complex

@@ -841,6 +841,7 @@ pub mod bulk {
     pub struct BulkLoader {
         batch_size: usize,
         buffer: Vec<Vec<serde_json::Value>>,
+        #[allow(dead_code)]
         table: String,
         columns: Vec<String>,
     }
@@ -1166,6 +1167,7 @@ use tokio::sync::RwLock;
 
 /// Connection pool for database connections
 pub struct ConnectionPool {
+    #[allow(dead_code)]
     db_type: DatabaseType,
     config: DatabaseConfig,
     connections: Arc<Mutex<Vec<Box<dyn DatabaseConnection>>>>,
@@ -1206,6 +1208,7 @@ impl ConnectionPool {
 /// Pooled connection wrapper that returns connection to pool on drop
 pub struct PooledConnection {
     connection: Box<dyn DatabaseConnection>,
+    #[allow(dead_code)]
     pool: Arc<Mutex<Vec<Box<dyn DatabaseConnection>>>>,
 }
 
@@ -1590,8 +1593,11 @@ pub mod replication {
 
     /// Replicated database connection
     pub struct ReplicatedConnection {
+        #[allow(dead_code)]
         master: Box<dyn DatabaseConnection>,
+        #[allow(dead_code)]
         replicas: Vec<Box<dyn DatabaseConnection>>,
+        #[allow(dead_code)]
         mode: ReplicationMode,
         read_preference: ReadPreference,
     }
@@ -1626,6 +1632,7 @@ pub mod replication {
         }
 
         /// Get connection for read operations
+        #[allow(dead_code)]
         fn get_read_connection(&self) -> &dyn DatabaseConnection {
             match self.read_preference {
                 ReadPreference::Master => &*self.master,

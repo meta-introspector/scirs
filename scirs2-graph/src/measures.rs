@@ -907,6 +907,128 @@ where
     Ok(result)
 }
 
+/// Calculates PageRank centrality using parallel processing for large graphs
+///
+/// This parallel implementation of PageRank uses scirs2-core parallel operations
+/// to accelerate computation on large graphs. It's particularly effective when
+/// the graph has >10,000 nodes and sufficient CPU cores are available.
+///
+/// # Arguments
+/// * `graph` - The graph to analyze
+/// * `damping` - Damping parameter (typically 0.85)
+/// * `tolerance` - Convergence tolerance
+/// * `max_iterations` - Maximum number of iterations (default: 100)
+///
+/// # Returns
+/// * `Result<HashMap<N, f64>>` - PageRank values
+///
+/// # Time Complexity
+/// O((V + E) * k / p) where V is nodes, E is edges, k is iterations,
+/// and p is the number of parallel threads.
+///
+/// # Space Complexity
+/// O(V + t) where t is the number of threads for thread-local storage.
+///
+/// # Performance Notes
+/// - Best performance gain on graphs with >10,000 nodes
+/// - Requires multiple CPU cores for meaningful speedup
+/// - Memory access patterns optimized for cache efficiency
+pub fn parallel_pagerank_centrality<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    damping: f64,
+    tolerance: f64,
+    max_iterations: Option<usize>,
+) -> Result<HashMap<N, f64>>
+where
+    N: Node + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: petgraph::graph::IndexType + Send + Sync,
+{
+    use scirs2_core::parallel_ops::*;
+    use std::sync::{Arc, Mutex};
+
+    let nodes = graph.nodes();
+    let n = nodes.len();
+
+    if n == 0 {
+        return Err(GraphError::InvalidGraph("Empty graph".to_string()));
+    }
+
+    // For small graphs, use sequential implementation
+    if n < 1000 {
+        return pagerank_centrality(graph, damping, tolerance);
+    }
+
+    let max_iter = max_iterations.unwrap_or(100);
+
+    // Initialize PageRank values
+    let mut pagerank = Array1::<f64>::from_elem(n, 1.0 / n as f64);
+    
+    // Get degree of each node for normalization
+    let degrees = graph.degree_vector();
+    
+    // Pre-compute neighbor indices for efficient parallel access
+    let neighbor_lists: Vec<Vec<usize>> = (0..n)
+        .map(|i| {
+            let node_idx = petgraph::graph::NodeIndex::new(i);
+            graph.inner()
+                .neighbors(node_idx)
+                .map(|neighbor_idx| neighbor_idx.index())
+                .collect()
+        })
+        .collect();
+
+    for iteration in 0..max_iter {
+        // Parallel computation of new PageRank values
+        let new_pagerank = Arc::new(Mutex::new(Array1::<f64>::from_elem(n, (1.0 - damping) / n as f64)));
+        
+        // Use parallel iteration for PageRank calculation
+        (0..n).into_par_iter().for_each(|i| {
+            let node_degree = degrees[i] as f64;
+            if node_degree > 0.0 {
+                let contribution = damping * pagerank[i] / node_degree;
+                
+                // Distribute to all neighbors
+                let mut local_updates = Vec::new();
+                for &neighbor_i in &neighbor_lists[i] {
+                    local_updates.push((neighbor_i, contribution));
+                }
+                
+                // Apply updates atomically
+                if !local_updates.is_empty() {
+                    let mut new_pr = new_pagerank.lock().unwrap();
+                    for (neighbor_i, contrib) in local_updates {
+                        new_pr[neighbor_i] += contrib;
+                    }
+                }
+            }
+        });
+
+        let new_pagerank = Arc::try_unwrap(new_pagerank).unwrap().into_inner().unwrap();
+
+        // Parallel convergence check
+        let diff = pagerank.par_iter()
+            .zip(new_pagerank.par_iter())
+            .map(|(old, new)| (new - old).abs())
+            .sum::<f64>();
+
+        if diff < tolerance {
+            pagerank = new_pagerank;
+            break;
+        }
+
+        pagerank = new_pagerank;
+    }
+
+    // Parallel conversion to HashMap
+    let result: HashMap<N, f64> = nodes.par_iter()
+        .enumerate()
+        .map(|(i, node)| (node.clone(), pagerank[i]))
+        .collect();
+
+    Ok(result)
+}
+
 /// HITS (Hyperlink-Induced Topic Search) algorithm result
 #[derive(Debug, Clone)]
 pub struct HitsScores<N: Node> {

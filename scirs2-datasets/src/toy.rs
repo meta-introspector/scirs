@@ -391,22 +391,22 @@ pub fn load_diabetes() -> Result<Dataset> {
     
     for _ in 0..n_samples {
         // Generate correlated features (representing biomarkers)
-        let age = rng.gen::<f64>() * 0.1 - 0.05;
-        let sex = if rng.gen::<f64>() < 0.5 { -0.05 } else { 0.05 };
-        let bmi = (rng.gen::<f64>() * 0.12 - 0.06) + age * 0.3;
-        let bp = (rng.gen::<f64>() * 0.1 - 0.05) + bmi * 0.4;
-        let s1 = (rng.gen::<f64>() * 0.14 - 0.07) + bmi * 0.2;
-        let s2 = (rng.gen::<f64>() * 0.16 - 0.08) + s1 * 0.5;
-        let s3 = (rng.gen::<f64>() * 0.12 - 0.06) + age * 0.2;
-        let s4 = (rng.gen::<f64>() * 0.12 - 0.06) + s1 * 0.3;
-        let s5 = (rng.gen::<f64>() * 0.14 - 0.07) + bmi * 0.25;
-        let s6 = (rng.gen::<f64>() * 0.1 - 0.05) + s5 * 0.4;
+        let age = rng.random::<f64>() * 0.1 - 0.05;
+        let sex = if rng.random::<f64>() < 0.5 { -0.05 } else { 0.05 };
+        let bmi = (rng.random::<f64>() * 0.12 - 0.06) + age * 0.3;
+        let bp = (rng.random::<f64>() * 0.1 - 0.05) + bmi * 0.4;
+        let s1 = (rng.random::<f64>() * 0.14 - 0.07) + bmi * 0.2;
+        let s2 = (rng.random::<f64>() * 0.16 - 0.08) + s1 * 0.5;
+        let s3 = (rng.random::<f64>() * 0.12 - 0.06) + age * 0.2;
+        let s4 = (rng.random::<f64>() * 0.12 - 0.06) + s1 * 0.3;
+        let s5 = (rng.random::<f64>() * 0.14 - 0.07) + bmi * 0.25;
+        let s6 = (rng.random::<f64>() * 0.1 - 0.05) + s5 * 0.4;
         
         data.extend_from_slice(&[age, sex, bmi, bp, s1, s2, s3, s4, s5, s6]);
         
         // Generate target as a linear combination with noise
         let target = 152.0 + 938.0 * bmi + 519.0 * bp + 324.0 * s1 + 
-                     217.0 * s5 + (rng.gen::<f64>() * 40.0 - 20.0);
+                     217.0 * s5 + (rng.random::<f64>() * 40.0 - 20.0);
         targets.push(target);
     }
     

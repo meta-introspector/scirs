@@ -117,35 +117,86 @@ where
             }
         }
 
-        // Try to convert to target dimension type
-        if let Some(target_ndim) = D::NDIM {
-            if result_dims.len() != target_ndim {
-                return Err(CoreError::DimensionError(ErrorContext::new(format!(
-                    "Sliced shape has {} dimensions but target type expects {} dimensions. \
-                     Sliced shape: {:?}, source shape: {:?}",
-                    result_dims.len(),
-                    target_ndim,
-                    result_dims,
-                    source_shape
-                ))));
-            }
+        // Convert to target dimension type using a more robust approach
+        Self::convert_dims_to_target_type(&result_dims, source_shape)
+    }
+
+    /// Convert dimensions vector to target dimension type D
+    fn convert_dims_to_target_type(
+        result_dims: &[usize],
+        source_shape: &[usize],
+    ) -> CoreResult<D> {
+        let source_ndim = result_dims.len();
+        let target_ndim = D::NDIM;
+
+        // Handle dynamic dimensions (IxDyn) - always accept
+        if target_ndim.is_none() {
+            return D::from_dimension(&ndarray::IxDyn(result_dims)).ok_or_else(|| {
+                CoreError::DimensionError(ErrorContext::new(format!(
+                    "Failed to convert sliced shape {:?} to dynamic dimension type",
+                    result_dims
+                )))
+            });
         }
 
-        // Convert to target dimension type using ndarray's mechanisms
-        // Create a dummy array to get the dimension conversion working
-        let dummy_array =
-            ndarray::Array::<f64, ndarray::IxDyn>::zeros(ndarray::IxDyn(&result_dims));
-        match dummy_array.into_dimensionality::<D>() {
-            Ok(converted) => {
-                // Extract just the dimension from the converted array
-                let converted_dim = converted.raw_dim().clone();
-                Ok(converted_dim)
+        let target_ndim = target_ndim.unwrap();
+
+        // Check if dimensions match exactly
+        if source_ndim == target_ndim {
+            return D::from_dimension(&ndarray::IxDyn(result_dims)).ok_or_else(|| {
+                CoreError::DimensionError(ErrorContext::new(format!(
+                    "Failed to convert sliced shape {:?} to dimension type {} despite matching dimensions",
+                    result_dims,
+                    std::any::type_name::<D>()
+                )))
+            });
+        }
+
+        // Handle dimension mismatches
+        if source_ndim < target_ndim {
+            // Add singleton dimensions at the end
+            let mut expanded_dims = result_dims.to_vec();
+            expanded_dims.extend(std::iter::repeat_n(1, target_ndim - source_ndim));
+            
+            D::from_dimension(&ndarray::IxDyn(&expanded_dims)).ok_or_else(|| {
+                CoreError::DimensionError(ErrorContext::new(format!(
+                    "Cannot expand sliced shape {:?} to {} dimensions",
+                    result_dims, target_ndim
+                )))
+            })
+        } else {
+            // Try to remove singleton dimensions
+            let mut squeezed_dims = Vec::new();
+            let mut removed_count = 0;
+            let dims_to_remove = source_ndim - target_ndim;
+
+            for &dim_size in result_dims {
+                if dim_size == 1 && removed_count < dims_to_remove {
+                    removed_count += 1;
+                } else {
+                    squeezed_dims.push(dim_size);
+                }
             }
-            Err(_) => Err(CoreError::DimensionError(ErrorContext::new(format!(
-                "Failed to convert sliced shape {:?} to dimension type {}",
-                result_dims,
-                std::any::type_name::<D>()
-            )))),
+
+            if squeezed_dims.len() != target_ndim {
+                return Err(CoreError::DimensionError(ErrorContext::new(format!(
+                    "Sliced shape has {} dimensions but target type expects {} dimensions. \
+                     Sliced shape: {:?}, source shape: {:?}, available singleton dimensions: {}",
+                    source_ndim,
+                    target_ndim,
+                    result_dims,
+                    source_shape,
+                    result_dims.iter().filter(|&&x| x == 1).count()
+                ))));
+            }
+
+            D::from_dimension(&ndarray::IxDyn(&squeezed_dims)).ok_or_else(|| {
+                CoreError::DimensionError(ErrorContext::new(format!(
+                    "Failed to convert squeezed shape {:?} to dimension type {}",
+                    squeezed_dims,
+                    std::any::type_name::<D>()
+                )))
+            })
         }
     }
 
@@ -168,7 +219,7 @@ where
         let source_ndim = source_shape.len();
         let target_ndim = D::NDIM;
 
-        // For dynamic dimensions (IxDyn), accept any shape
+        // Handle dynamic dimensions (IxDyn) first
         if target_ndim.is_none() {
             return array.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
@@ -180,24 +231,34 @@ where
 
         let target_ndim = target_ndim.unwrap();
 
-        // Handle dimension mismatches with smart strategies
+        // Try direct conversion first for exact matches
+        if source_ndim == target_ndim {
+            return array.into_dimensionality::<D>().map_err(|_| {
+                CoreError::DimensionError(ErrorContext::new(format!(
+                    "Dimension conversion failed for {} array despite matching dimensions ({} -> {}). Source shape: {:?}, target dimension type: {}",
+                    context, source_ndim, target_ndim, source_shape, std::any::type_name::<D>()
+                )))
+            });
+        }
+
+        // Handle dimension mismatches with robust strategies
         match source_ndim.cmp(&target_ndim) {
-            std::cmp::Ordering::Equal => {
-                // Same number of dimensions - try direct conversion
-                array.into_dimensionality::<D>().map_err(|_| {
-                    CoreError::DimensionError(ErrorContext::new(format!(
-                        "Dimension conversion failed for {} array despite matching dimensions ({} -> {}). Source shape: {:?}, target dimension type: {}",
-                        context, source_ndim, target_ndim, source_shape, std::any::type_name::<D>()
-                    )))
-                })
+            std::cmp::Ordering::Less => {
+                // Fewer dimensions than target - try to expand
+                Self::try_expand_dimensions(array, context, source_ndim, target_ndim)
             }
             std::cmp::Ordering::Greater => {
-                // More dimensions than target - try to squeeze singleton dimensions
+                // More dimensions than target - try to squeeze
                 Self::try_squeeze_dimensions(array, context, source_ndim, target_ndim)
             }
-            std::cmp::Ordering::Less => {
-                // Fewer dimensions than target - try to expand with singleton dimensions
-                Self::try_expand_dimensions(array, context, source_ndim, target_ndim)
+            std::cmp::Ordering::Equal => {
+                // This case is already handled above, but for completeness
+                array.into_dimensionality::<D>().map_err(|_| {
+                    CoreError::DimensionError(ErrorContext::new(format!(
+                        "Unexpected dimension conversion failure for {} array with matching dimensions. Source shape: {:?}",
+                        context, source_shape
+                    )))
+                })
             }
         }
     }
@@ -210,12 +271,12 @@ where
         target_dims: usize,
     ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
         let source_shape = array.shape().to_vec();
-        let needed_dims = target_dims - source_dims;
+        let dims_to_add = target_dims - source_dims;
 
-        if needed_dims == 0 {
+        if dims_to_add == 0 {
             return array.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
-                    "Failed to convert {} array despite equal dimensions ",
+                    "Failed to convert {} array despite equal dimensions",
                     context
                 )))
             });
@@ -223,36 +284,33 @@ where
 
         // Create expanded shape by adding singleton dimensions at the end
         let mut expanded_shape = source_shape.clone();
-        expanded_shape.extend(std::iter::repeat_n(1, needed_dims));
+        expanded_shape.extend(std::iter::repeat_n(1, dims_to_add));
 
         // Try to reshape to expanded shape
-        match array
-            .clone()
-            .into_shape_with_order(ndarray::IxDyn(&expanded_shape))
-        {
+        match array.clone().into_shape_with_order(ndarray::IxDyn(&expanded_shape)) {
             Ok(reshaped) => reshaped.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
-                    "Failed to convert expanded {} array to target dimension type ",
+                    "Failed to convert expanded {} array to target dimension type",
                     context
                 )))
             }),
             Err(_) => {
                 // Try adding singleton dimensions at the beginning instead
-                let mut alt_shape = vec![1; needed_dims];
+                let mut alt_shape = vec![1; dims_to_add];
                 alt_shape.extend_from_slice(&source_shape);
 
                 array
                     .into_shape_with_order(ndarray::IxDyn(&alt_shape))
                     .map_err(|_| {
                         CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot reshape {} array from shape {:?} to expanded shape {:?}",
-                            context, source_shape, alt_shape
+                            "Cannot reshape {} array from shape {:?} to any expanded shape",
+                            context, source_shape
                         )))
                     })?
                     .into_dimensionality::<D>()
                     .map_err(|_| {
                         CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot expand {} array from {} to {} dimensions ",
+                            "Cannot expand {} array from {} to {} dimensions",
                             context, source_dims, target_dims
                         )))
                     })
@@ -272,9 +330,10 @@ where
         // Find and remove singleton dimensions
         let mut squeezed_shape = Vec::new();
         let mut removed_dims = 0;
+        let dims_to_remove = source_dims - target_dims;
 
         for &dim_size in &source_shape {
-            if dim_size == 1 && removed_dims < (source_dims - target_dims) {
+            if dim_size == 1 && removed_dims < dims_to_remove {
                 // Skip singleton dimension
                 removed_dims += 1;
             } else {
@@ -290,7 +349,7 @@ where
             ))));
         }
 
-        // Reshape to squeezed shape
+        // Reshape to squeezed shape and convert
         array
             .into_shape_with_order(ndarray::IxDyn(&squeezed_shape))
             .map_err(|_| {
@@ -302,7 +361,7 @@ where
             .into_dimensionality::<D>()
             .map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
-                    "Cannot squeeze {} array from {} to {} dimensions ",
+                    "Cannot convert squeezed {} array from {} to {} dimensions",
                     context, source_dims, target_dims
                 )))
             })

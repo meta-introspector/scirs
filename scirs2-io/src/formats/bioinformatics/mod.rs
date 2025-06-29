@@ -379,6 +379,7 @@ impl FastqRecord {
 /// FASTQ file reader
 pub struct FastqReader {
     reader: BufReader<File>,
+    #[allow(dead_code)]
     encoding: QualityEncoding,
     line_buffer: String,
 }

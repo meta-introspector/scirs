@@ -234,16 +234,25 @@ pub use sym_ops::{
     sym_coo_matvec, sym_csr_matvec, sym_csr_quadratic_form, sym_csr_rank1_update, sym_csr_trace,
 };
 
-// GPU-accelerated operations (temporarily disabled due to missing features)
-// pub mod gpu_ops;
-// pub use gpu_ops::{
-//     gpu_sparse_matvec, gpu_sym_sparse_matvec, GpuMemoryManager, GpuOptions, GpuProfiler,
-// };
+// GPU-accelerated operations
+pub mod gpu_ops;
+pub use gpu_ops::{
+    gpu_sparse_matvec, gpu_sym_sparse_matvec, AdvancedGpuOps, GpuKernelScheduler,
+    GpuMemoryManager, GpuOptions, GpuProfiler, OptimizedGpuOps,
+};
+
+// Memory-efficient algorithms and patterns
+pub mod memory_efficient;
+pub use memory_efficient::{
+    CacheAwareOps, MemoryPool, MemoryTracker, OutOfCoreProcessor, streaming_sparse_matvec,
+};
 
 // SIMD-accelerated operations
 pub mod simd_ops;
 pub use simd_ops::{
-    simd_csr_matvec, simd_sparse_elementwise, simd_sparse_matmul, ElementwiseOp, SimdOptions,
+    simd_csr_matvec, simd_sparse_elementwise, simd_sparse_matmul, simd_sparse_norm, 
+    simd_sparse_scale, simd_sparse_transpose, simd_sparse_linear_combination,
+    ElementwiseOp, SimdOptions,
 };
 
 // Compressed sparse graph algorithms

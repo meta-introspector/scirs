@@ -75,19 +75,19 @@ impl GpuPCA {
         let gpu_cov = if n_samples > n_features {
             // Use X^T X approach when n_features < n_samples (more efficient)
             let gpu_xt = gpu_x_centered.transpose()
-                .context("Failed to transpose data matrix on GPU")?;
+                .map_err(|e| TransformError::ComputationError(format!("Failed to transpose data matrix on GPU: {}", e)))?;
             let gpu_cov = gpu_xt.matmul(&gpu_x_centered)
-                .context("Failed to compute covariance matrix (X^T X) on GPU")?;
+                .map_err(|e| TransformError::ComputationError(format!("Failed to compute covariance matrix (X^T X) on GPU: {}", e)))?;
             gpu_cov.scale(1.0 / (n_samples - 1) as f64)
-                .context("Failed to scale covariance matrix on GPU")?
+                .map_err(|e| TransformError::ComputationError(format!("Failed to scale covariance matrix on GPU: {}", e)))?
         } else {
             // Use X X^T approach when n_samples < n_features
             let gpu_xt = gpu_x_centered.transpose()
-                .context("Failed to transpose data matrix on GPU")?;
+                .map_err(|e| TransformError::ComputationError(format!("Failed to transpose data matrix on GPU: {}", e)))?;
             let gpu_gram = gpu_x_centered.matmul(&gpu_xt)
-                .context("Failed to compute Gram matrix (X X^T) on GPU")?;
+                .map_err(|e| TransformError::ComputationError(format!("Failed to compute Gram matrix (X X^T) on GPU: {}", e)))?;
             gpu_gram.scale(1.0 / (n_samples - 1) as f64)
-                .context("Failed to scale Gram matrix on GPU")?
+                .map_err(|e| TransformError::ComputationError(format!("Failed to scale Gram matrix on GPU: {}", e)))?
         };
 
         // Compute eigendecomposition on GPU
@@ -96,19 +96,19 @@ impl GpuPCA {
         // Sort eigenvalues and eigenvectors in descending order with validation
         let (gpu_eigenvalues_sorted, gpu_eigenvectors_sorted) =
             gpu_eigenvalues.sort_with_vectors(&gpu_eigenvectors, false)
-                .context("Failed to sort eigenvalues and eigenvectors on GPU")?;
+                .map_err(|e| TransformError::ComputationError(format!("Failed to sort eigenvalues and eigenvectors on GPU: {}", e)))?;
 
         // Take top n_components with bounds checking
         let gpu_components = gpu_eigenvectors_sorted.slice((.., ..self.n_components))
-            .context("Failed to slice eigenvectors for components on GPU")?;
+            .map_err(|e| TransformError::ComputationError(format!("Failed to slice eigenvectors for components on GPU: {}", e)))?;
         let gpu_explained_var = gpu_eigenvalues_sorted.slice(..self.n_components)
-            .context("Failed to slice eigenvalues for explained variance on GPU")?;
+            .map_err(|e| TransformError::ComputationError(format!("Failed to slice eigenvalues for explained variance on GPU: {}", e)))?;
 
         // Transfer results back to host with validation
         let components_host = gpu_components.to_ndarray()
-            .context("Failed to transfer components from GPU to host")?;
+            .map_err(|e| TransformError::ComputationError(format!("Failed to transfer components from GPU to host: {}", e)))?;
         let explained_var_host = gpu_explained_var.to_ndarray()
-            .context("Failed to transfer explained variance from GPU to host")?;
+            .map_err(|e| TransformError::ComputationError(format!("Failed to transfer explained variance from GPU to host: {}", e)))?;
             
         // Validate components matrix
         if components_host.dim().0 != n_features || components_host.dim().1 != self.n_components {
@@ -155,7 +155,7 @@ impl GpuPCA {
 
         // Transfer data to GPU
         let gpu_x = GpuArray::from_ndarray(x, cuda_ctx)
-            .context("Failed to transfer transform data to GPU")?;
+            .map_err(|e| TransformError::ComputationError(format!("Failed to transfer transform data to GPU: {}", e)))?;
 
         // Center data if needed
         let gpu_x_processed = if let Some(ref mean) = self.mean {

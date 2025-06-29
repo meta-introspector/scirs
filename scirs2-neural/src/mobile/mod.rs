@@ -55,7 +55,7 @@ mod tests {
                 assert!(devices.contains(&IOSDevice::IPhone));
                 assert!(devices.contains(&IOSDevice::IPad));
             }
-            _ => panic!("Expected iOS platform"),
+            _ => unreachable!("Expected iOS platform"),
         }
     }
 
@@ -76,7 +76,7 @@ mod tests {
                 assert!(architectures.contains(&AndroidArchitecture::ARM64));
                 assert!(architectures.contains(&AndroidArchitecture::ARMv7));
             }
-            _ => panic!("Expected Android platform"),
+            _ => unreachable!("Expected Android platform"),
         }
     }
 
@@ -151,7 +151,7 @@ mod tests {
             } => {
                 assert_eq!(min_version, "12.0");
             }
-            _ => panic!("Expected iOS platform"),
+            _ => unreachable!("Expected iOS platform"),
         }
     }
 
@@ -273,7 +273,7 @@ mod tests {
             MobilePlatform::IOS { .. } => {
                 // Generator created successfully
             }
-            _ => panic!("Expected iOS platform"),
+            _ => unreachable!("Expected iOS platform"),
         }
     }
 

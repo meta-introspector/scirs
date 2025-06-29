@@ -3,6 +3,7 @@
 //! This example showcases:
 //! - GPU-accelerated operations
 //! - SIMD-optimized specialized filters
+//! - Ultra-advanced SIMD extensions (wavelets, LBP, edge detection)
 //! - Performance profiling and optimization
 //! - SciPy-compatible API
 
@@ -18,6 +19,13 @@ use scirs2_ndimage::{
         get_memory_report, OptimizationAdvisor,
     },
     scipy_compat::ndimage::{gaussian_filter, laplace, rotate, zoom},
+};
+
+// Import ultra-advanced SIMD extensions
+#[cfg(feature = "simd")]
+use scirs2_ndimage::filters::{
+    ultra_simd_advanced_edge_detection, ultra_simd_multi_scale_lbp, ultra_simd_wavelet_pyramid,
+    WaveletType,
 };
 
 fn main() -> NdimageResult<()> {
@@ -46,19 +54,26 @@ fn main() -> NdimageResult<()> {
     println!("\n--- SIMD-Optimized Filters Demo ---");
     demo_simd_filters(&test_image)?;
 
-    // 3. Demonstrate SciPy-compatible API
+    // 3. Demonstrate ultra-advanced SIMD extensions
+    #[cfg(feature = "simd")]
+    {
+        println!("\n--- Ultra-Advanced SIMD Extensions Demo ---");
+        demo_ultra_simd_extensions(&test_image)?;
+    }
+
+    // 4. Demonstrate SciPy-compatible API
     println!("\n--- SciPy-Compatible API Demo ---");
     demo_scipy_compat(&test_image)?;
 
-    // 4. Display performance analysis
+    // 5. Display performance analysis
     println!("\n--- Performance Analysis ---");
     display_performance_report();
 
-    // 5. Display memory usage
+    // 6. Display memory usage
     let memory_report = get_memory_report();
     memory_report.display();
 
-    // 6. Get optimization recommendations
+    // 7. Get optimization recommendations
     println!("\n--- Optimization Recommendations ---");
     let profiler = scirs2_ndimage::profiling::get_performance_report();
     let mut advisor = OptimizationAdvisor::new();
@@ -239,5 +254,94 @@ fn demo_scipy_compat(image: &Array2<f64>) -> NdimageResult<()> {
 
     println!("All SciPy-compatible operations completed successfully");
 
+    Ok(())
+}
+
+#[cfg(feature = "simd")]
+fn demo_ultra_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
+    println!("Demonstrating ultra-advanced SIMD extensions...");
+
+    // 1. Wavelet pyramid decomposition
+    println!("Running ultra-SIMD wavelet pyramid...");
+    let pyramid = ultra_simd_wavelet_pyramid(
+        image.view(),
+        3,                   // levels
+        WaveletType::Haar,   // wavelet type
+    )?;
+    println!("Wavelet pyramid completed with {} levels", pyramid.levels.len());
+    
+    // Print information about each level
+    for (i, level) in pyramid.levels.iter().enumerate() {
+        println!("  Level {}: LL {}x{}, LH {}x{}, HL {}x{}, HH {}x{}", 
+                 i,
+                 level.ll.nrows(), level.ll.ncols(),
+                 level.lh.nrows(), level.lh.ncols(),
+                 level.hl.nrows(), level.hl.ncols(),
+                 level.hh.nrows(), level.hh.ncols());
+    }
+
+    // 2. Multi-scale Local Binary Patterns
+    println!("Running ultra-SIMD multi-scale LBP...");
+    let radii = [1, 2, 3];
+    let sample_points = [8, 16, 24];
+    
+    let lbp_result = ultra_simd_multi_scale_lbp(
+        image.view(),
+        &radii,
+        &sample_points,
+    )?;
+    
+    println!("Multi-scale LBP completed: {}x{}", lbp_result.nrows(), lbp_result.ncols());
+    
+    // Print some statistics about the LBP codes
+    let max_code = lbp_result.iter().max().unwrap_or(&0);
+    let min_code = lbp_result.iter().min().unwrap_or(&0);
+    let unique_codes = {
+        let mut codes: Vec<_> = lbp_result.iter().collect();
+        codes.sort();
+        codes.dedup();
+        codes.len()
+    };
+    println!("  LBP code range: {} to {}, {} unique patterns", min_code, max_code, unique_codes);
+
+    // 3. Advanced edge detection
+    println!("Running ultra-SIMD advanced edge detection...");
+    let edges = ultra_simd_advanced_edge_detection(
+        image.view(),
+        1.0,  // sigma for Gaussian smoothing
+        0.1,  // low threshold factor
+        0.3,  // high threshold factor
+    )?;
+    
+    println!("Advanced edge detection completed: {}x{}", edges.nrows(), edges.ncols());
+    
+    // Print edge statistics
+    let edge_pixels = edges.iter().filter(|&&x| x > 0.0).count();
+    let total_pixels = edges.len();
+    let edge_percentage = (edge_pixels as f64 / total_pixels as f64) * 100.0;
+    println!("  Detected edges: {} pixels ({:.2}% of image)", edge_pixels, edge_percentage);
+
+    // 4. Compare with different wavelet types
+    println!("Comparing wavelet types...");
+    for (name, wavelet_type) in [
+        ("Daubechies-4", WaveletType::Daubechies4),
+        ("Biorthogonal", WaveletType::Biorthogonal),
+    ] {
+        let pyramid = ultra_simd_wavelet_pyramid(
+            image.view(),
+            2,  // levels
+            wavelet_type,
+        )?;
+        println!("  {}: {} levels generated", name, pyramid.levels.len());
+    }
+
+    println!("Ultra-advanced SIMD extensions demo completed successfully");
+
+    Ok(())
+}
+
+#[cfg(not(feature = "simd"))]
+fn demo_ultra_simd_extensions(_image: &Array2<f64>) -> NdimageResult<()> {
+    println!("Ultra-advanced SIMD extensions not available (compile with --features simd)");
     Ok(())
 }

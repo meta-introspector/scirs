@@ -88,12 +88,13 @@ pub mod hardware;
 pub mod memory;
 pub mod numeric;
 pub mod parallel;
+pub mod simd_gpu;
 
 // Re-export common functionality
 pub use distributed::{
     DistributedConfig, DistributedMetricsBuilder, DistributedMetricsCoordinator,
 };
-pub use gpu_acceleration::{GpuAccelConfig, GpuMetricsComputer};
+pub use gpu_acceleration::{GpuAccelConfig, GpuMetricsComputer, GpuInfo, BenchmarkResults};
 pub use hardware::{
     HardwareAccelConfig, HardwareAcceleratedMatrix, HardwareCapabilities, SimdDistanceMetrics,
     SimdStatistics, VectorWidth,
@@ -101,3 +102,4 @@ pub use hardware::{
 pub use memory::{ChunkedMetrics, StreamingMetric};
 pub use numeric::{StableMetric, StableMetrics};
 pub use parallel::ParallelConfig;
+pub use simd_gpu::{SimdMetrics};

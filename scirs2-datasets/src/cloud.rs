@@ -7,8 +7,6 @@
 //! - Generic S3-compatible storage
 
 use std::collections::HashMap;
-use std::io::Read;
-use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
@@ -303,7 +301,7 @@ impl CloudClient {
             _ => unreachable!(),
         };
 
-        let url_with_prefix = if let Some(prefix) = prefix {
+        let _url_with_prefix = if let Some(prefix) = prefix {
             format!("{}&prefix={}", list_url, prefix)
         } else {
             list_url
@@ -366,7 +364,7 @@ impl CloudClient {
     }
 
     #[allow(dead_code)]
-    fn upload_data(&self, key: &str, data: &[u8], content_type: &str) -> Result<()> {
+    fn upload_data(&self, key: &str, _data: &[u8], content_type: &str) -> Result<()> {
         let url = self.build_url(key)?;
 
         // For uploads, you'd need to implement PUT requests with proper authentication

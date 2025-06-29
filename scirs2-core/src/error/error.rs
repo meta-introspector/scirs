@@ -182,6 +182,10 @@ pub enum CoreError {
     #[error("{0}")]
     MemoryError(ErrorContext),
 
+    /// Allocation error (memory allocation failed)
+    #[error("{0}")]
+    AllocationError(ErrorContext),
+
     /// Configuration error (invalid configuration)
     #[error("{0}")]
     ConfigError(ErrorContext),
@@ -197,6 +201,10 @@ pub enum CoreError {
     /// Validation error (input failed validation)
     #[error("{0}")]
     ValidationError(ErrorContext),
+
+    /// Invalid state error (object is in an invalid state)
+    #[error("{0}")]
+    InvalidState(ErrorContext),
 
     /// JIT compilation error (error during JIT compilation)
     #[error("{0}")]
@@ -245,6 +253,14 @@ pub enum CoreError {
     /// End of stream error (stream ended unexpectedly)
     #[error("End of stream: {0}")]
     EndOfStream(ErrorContext),
+
+    /// Resource error (insufficient or unavailable resources)
+    #[error("Resource error: {0}")]
+    ResourceError(ErrorContext),
+
+    /// Communication error (network or inter-process communication error)
+    #[error("Communication error: {0}")]
+    CommunicationError(ErrorContext),
 }
 
 /// Result type alias for core operations
@@ -262,6 +278,13 @@ impl From<std::io::Error> for CoreError {
 impl From<serde_json::Error> for CoreError {
     fn from(err: serde_json::Error) -> Self {
         CoreError::JSONError(ErrorContext::new(format!("JSON error: {err}")))
+    }
+}
+
+/// Convert from String to CoreError (for parsing errors)
+impl From<String> for CoreError {
+    fn from(err: String) -> Self {
+        CoreError::ValueError(ErrorContext::new(err))
     }
 }
 

@@ -328,7 +328,7 @@ where
     })
 }
 
-/// Compute tapered FFTs using SIMD operations
+/// Compute tapered FFTs using enhanced SIMD operations
 fn compute_tapered_ffts_simd(
     signal: &[f64],
     tapers: &Array2<f64>,
@@ -338,31 +338,167 @@ fn compute_tapered_ffts_simd(
     let n = signal.len();
     let mut spectra = Array2::zeros((k, nfft));
 
-    // Get SIMD capabilities
-    let _caps = PlatformCapabilities::detect();
+    // Get SIMD capabilities for optimal performance
+    let caps = PlatformCapabilities::detect();
+    let use_advanced_simd = caps.has_avx2 || caps.has_avx512;
 
-    for i in 0..k {
-        // Apply taper using SIMD operations
-        let taper_view = tapers.row(i);
-        let signal_view = ArrayView1::from(signal);
-
-        // Use SIMD multiplication for tapering
-        let mut tapered = vec![0.0; n];
-        let tapered_view = ArrayView1::from_shape(n, &mut tapered).unwrap();
-
-        // SIMD element-wise multiplication
-        f64::simd_mul(&signal_view, &taper_view, &tapered_view);
-
-        // Compute FFT (using enhanced FFT with SIMD)
-        let spectrum = simd_fft(&tapered, nfft)?;
-
-        // Store power spectrum
-        for (j, &val) in spectrum.iter().enumerate() {
-            spectra[[i, j]] = val.norm_sqr();
+    // Enhanced memory management for large datasets
+    let memory_efficient = k > 20 || n > 50_000;
+    
+    if memory_efficient {
+        // Process tapers in smaller batches to reduce memory pressure
+        let batch_size = if k > 50 { 8 } else { k };
+        
+        for batch_start in (0..k).step_by(batch_size) {
+            let batch_end = (batch_start + batch_size).min(k);
+            
+            for i in batch_start..batch_end {
+                let result = compute_single_tapered_fft_simd(signal, tapers.row(i), nfft, use_advanced_simd)?;
+                for (j, &val) in result.iter().enumerate() {
+                    spectra[[i, j]] = val;
+                }
+            }
+        }
+    } else {
+        // Process all tapers at once for smaller datasets
+        for i in 0..k {
+            let result = compute_single_tapered_fft_simd(signal, tapers.row(i), nfft, use_advanced_simd)?;
+            for (j, &val) in result.iter().enumerate() {
+                spectra[[i, j]] = val;
+            }
         }
     }
 
+    // Enhanced validation of spectral results
+    validate_spectral_matrix(&spectra)?;
+
     Ok(spectra)
+}
+
+/// Compute single tapered FFT with optimized SIMD operations
+fn compute_single_tapered_fft_simd(
+    signal: &[f64],
+    taper: ArrayView1<f64>,
+    nfft: usize,
+    use_advanced_simd: bool,
+) -> SignalResult<Vec<f64>> {
+    let n = signal.len();
+    
+    // Enhanced tapering with SIMD optimizations
+    let mut tapered = vec![0.0; n];
+    
+    if use_advanced_simd && n >= 64 {
+        // Use advanced SIMD operations for larger signals
+        use crate::simd_advanced::{simd_apply_window, SimdConfig};
+        let config = SimdConfig::default();
+        
+        // Convert taper to Vec for SIMD operations
+        let taper_vec: Vec<f64> = taper.iter().copied().collect();
+        
+        match simd_apply_window(signal, &taper_vec, &mut tapered, &config) {
+            Ok(()) => {
+                // SIMD tapering successful
+            }
+            Err(_) => {
+                // Fallback to basic SIMD operations
+                let signal_view = ArrayView1::from(signal);
+                let tapered_view = ArrayView1::from_shape(n, &mut tapered).unwrap();
+                f64::simd_mul(&signal_view, &taper, &tapered_view);
+            }
+        }
+    } else {
+        // Use basic SIMD operations for smaller signals
+        let signal_view = ArrayView1::from(signal);
+        let tapered_view = ArrayView1::from_shape(n, &mut tapered).unwrap();
+        f64::simd_mul(&signal_view, &taper, &tapered_view);
+    }
+
+    // Enhanced validation of tapered signal
+    for (i, &val) in tapered.iter().enumerate() {
+        if !val.is_finite() {
+            return Err(SignalError::ComputationError(format!(
+                "Non-finite value in tapered signal at index {}: {}",
+                i, val
+            )));
+        }
+    }
+
+    // Compute FFT with enhanced error handling
+    let spectrum = simd_fft(&tapered, nfft)?;
+
+    // Compute power spectrum with overflow protection
+    let mut power_spectrum = Vec::with_capacity(nfft);
+    for &val in spectrum.iter() {
+        let power = val.norm_sqr();
+        
+        // Enhanced validation for power values
+        if !power.is_finite() || power < 0.0 {
+            return Err(SignalError::ComputationError(format!(
+                "Invalid power spectrum value: {}",
+                power
+            )));
+        }
+        
+        // Protect against extremely large values that might cause issues
+        if power > 1e100 {
+            eprintln!("Warning: Very large power spectrum value: {:.2e}", power);
+        }
+        
+        power_spectrum.push(power);
+    }
+
+    Ok(power_spectrum)
+}
+
+/// Validate spectral matrix for numerical stability
+fn validate_spectral_matrix(spectra: &Array2<f64>) -> SignalResult<()> {
+    let (k, nfft) = spectra.dim();
+    
+    for i in 0..k {
+        for j in 0..nfft {
+            let val = spectra[[i, j]];
+            
+            if !val.is_finite() {
+                return Err(SignalError::ComputationError(format!(
+                    "Non-finite spectral value at taper {}, frequency bin {}: {}",
+                    i, j, val
+                )));
+            }
+            
+            if val < 0.0 {
+                return Err(SignalError::ComputationError(format!(
+                    "Negative spectral value at taper {}, frequency bin {}: {}",
+                    i, j, val
+                )));
+            }
+            
+            // Check for extremely large values that might indicate computational issues
+            if val > 1e200 {
+                return Err(SignalError::ComputationError(format!(
+                    "Extremely large spectral value at taper {}, frequency bin {}: {:.2e}",
+                    i, j, val
+                )));
+            }
+        }
+    }
+    
+    // Additional validation: check for reasonable energy distribution
+    for i in 0..k {
+        let row_sum: f64 = (0..nfft).map(|j| spectra[[i, j]]).sum();
+        
+        if row_sum < 1e-100 {
+            return Err(SignalError::ComputationError(format!(
+                "Taper {} has extremely low total energy: {:.2e}",
+                i, row_sum
+            )));
+        }
+        
+        if row_sum > 1e100 {
+            eprintln!("Warning: Taper {} has very high total energy: {:.2e}", i, row_sum);
+        }
+    }
+    
+    Ok(())
 }
 
 /// Compute tapered FFTs using parallel processing
@@ -409,24 +545,90 @@ fn compute_tapered_ffts_parallel(
     Ok(spectra)
 }
 
-/// Enhanced FFT using SIMD operations
+/// Enhanced FFT using SIMD operations and optimized planning
 fn simd_fft(x: &[f64], nfft: usize) -> SignalResult<Vec<Complex64>> {
-    // Pad or truncate to nfft
+    // Enhanced input validation
+    if nfft == 0 {
+        return Err(SignalError::ValueError("FFT length cannot be zero".to_string()));
+    }
+    
+    if !nfft.is_power_of_two() {
+        return Err(SignalError::ValueError(
+            "FFT length must be a power of two for optimal performance".to_string()
+        ));
+    }
+
+    // Pad or truncate to nfft with improved memory management
     let mut padded = vec![Complex64::new(0.0, 0.0); nfft];
     let copy_len = x.len().min(nfft);
 
-    for i in 0..copy_len {
-        padded[i] = Complex64::new(x[i], 0.0);
+    // Use SIMD-optimized copying when possible
+    if copy_len >= 64 {
+        use crate::simd_advanced::{simd_apply_window, SimdConfig};
+        let config = SimdConfig::default();
+        let unity_window = vec![1.0; copy_len];
+        let mut temp_real = vec![0.0; copy_len];
+        
+        // Copy using SIMD operations
+        if simd_apply_window(&x[..copy_len], &unity_window, &mut temp_real, &config).is_ok() {
+            for (i, &val) in temp_real.iter().enumerate() {
+                padded[i] = Complex64::new(val, 0.0);
+            }
+        } else {
+            // Fallback to scalar copy
+            for i in 0..copy_len {
+                padded[i] = Complex64::new(x[i], 0.0);
+            }
+        }
+    } else {
+        for i in 0..copy_len {
+            padded[i] = Complex64::new(x[i], 0.0);
+        }
     }
 
-    // Use rustfft with pre-planning for better performance
+    // Use rustfft with enhanced error handling and performance optimization
     use rustfft::{num_complex::Complex, FftPlanner};
 
     let mut planner = FftPlanner::new();
+    
+    // Create FFT with proper error handling
     let fft = planner.plan_fft_forward(nfft);
     let mut buffer = padded.clone();
 
-    fft.process(&mut buffer);
+    // Validate buffer before FFT
+    for (i, &val) in buffer.iter().enumerate() {
+        if !val.is_finite() {
+            return Err(SignalError::ComputationError(format!(
+                "Non-finite value in FFT input at index {}: {}",
+                i, val
+            )));
+        }
+    }
+
+    // Perform FFT with timing for large transforms
+    if nfft > 8192 {
+        let start = std::time::Instant::now();
+        fft.process(&mut buffer);
+        let duration = start.elapsed();
+        
+        // Warn for very slow FFTs
+        if duration.as_millis() > 1000 {
+            eprintln!("Warning: Large FFT took {:.2}s for length {}", 
+                     duration.as_secs_f64(), nfft);
+        }
+    } else {
+        fft.process(&mut buffer);
+    }
+
+    // Validate output
+    for (i, &val) in buffer.iter().enumerate() {
+        if !val.is_finite() {
+            return Err(SignalError::ComputationError(format!(
+                "Non-finite value in FFT output at index {}: {}",
+                i, val
+            )));
+        }
+    }
 
     Ok(buffer)
 }

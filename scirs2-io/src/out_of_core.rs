@@ -774,7 +774,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         let mut chunk_id = 0;
         let mut multiplier = 1;
 
-        for (i, (&coord, &chunks_in_dim)) in coords.iter().zip(&chunks_per_dim).enumerate().rev() {
+        for (_i, (&coord, &chunks_in_dim)) in coords.iter().zip(&chunks_per_dim).enumerate().rev() {
             chunk_id += coord * multiplier;
             multiplier *= chunks_in_dim;
         }
@@ -791,7 +791,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         src_end: &[usize],
         result: &mut Array<T, IxDyn>,
         dst_start: &[usize],
-        dst_end: &[usize],
+        _dst_end: &[usize],
     ) -> Result<()> {
         // For simplicity, handle only 1D and 2D cases
         match chunk_shape.len() {

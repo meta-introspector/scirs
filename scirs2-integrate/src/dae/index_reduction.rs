@@ -774,7 +774,7 @@ impl<
     }
 
     /// Select dummy variables based on rank analysis
-    fn select_dummy_variables(&self, extended_jacobian: &Array2<F>) -> IntegrateResult<DummySelection> {
+    fn select_dummy_variables(&self, extended_jacobian: &Array2<F>) -> IntegrateResult<DummySelection<F>> {
         let n_diff = self.structure.n_differential;
         let n_alg = self.structure.n_algebraic;
         let total_vars = n_diff + n_alg;
@@ -822,7 +822,7 @@ impl<
     fn qr_decomposition_with_pivoting(&self, matrix: &Array2<F>) -> IntegrateResult<(Array2<F>, Array2<F>, Vec<usize>)> {
         let (m, n) = matrix.dim();
         let mut a = matrix.clone();
-        let mut q = Array2::<F>::eye(m);
+        let q = Array2::<F>::eye(m);
         let mut pivots: Vec<usize> = (0..n).collect();
         
         // Simplified QR with pivoting (Gram-Schmidt process)
@@ -909,7 +909,7 @@ impl<
         t: F,
         x: ArrayView1<F>,
         y: ArrayView1<F>,
-        f: &FFunc,
+        _f: &FFunc,
         g: &GFunc,
     ) -> IntegrateResult<DAEIndex>
     where

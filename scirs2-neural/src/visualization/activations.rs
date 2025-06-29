@@ -643,8 +643,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
 
         // Title
         svg.push_str(&format!(
-            r#"<text x="{}" y="30" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">{} Feature Maps</text>
-"#,
+            "<text x=\"{}\" y=\"30\" text-anchor=\"middle\" font-family=\"{}\" font-size=\"{}\" fill=\"#333\">{} Feature Maps</text>\n",
             width / 2, self.config.style.font.family,
             (self.config.style.font.size as f32 * self.config.style.font.title_scale) as u32,
             layer_name
@@ -679,8 +678,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
                     };
 
                     svg.push_str(&format!(
-                        r#"<rect x="{}" y="{}" width="{}" height="{}" fill="{}" stroke="#ccc" stroke-width="0.5"/>
-"#,
+                        "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"{}\" stroke=\"#ccc\" stroke-width=\"0.5\"/>\n",
                         50 + j * cell_width as usize,
                         50 + i * cell_height as usize,
                         cell_width,
@@ -775,8 +773,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
 
         // Title
         svg.push_str(&format!(
-            r#"<text x="{}" y="{}" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">Activation Histogram - {}</text>
-"#,
+            "<text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-family=\"{}\" font-size=\"{}\" fill=\"#333\">Activation Histogram - {}</text>\n",
             width / 2, margins.top / 2,
             self.config.style.font.family,
             (self.config.style.font.size as f32 * self.config.style.font.title_scale) as u32,
@@ -793,16 +790,14 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
                 let y = margins.top + (plot_height - bar_height);
 
                 svg.push_str(&format!(
-                    r#"<rect x="{}" y="{}" width="{}" height="{}" fill="#4CAF50" stroke="#45a049" stroke-width="1" opacity="0.8"/>
-"#,
+                    "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"#4CAF50\" stroke=\"#45a049\" stroke-width=\"1\" opacity=\"0.8\"/>\n",
                     x, y, bin_width.saturating_sub(1), bar_height
                 ));
 
                 // Add count label on top of bar
                 if count > 0 {
                     svg.push_str(&format!(
-                        r#"<text x="{}" y="{}" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">{}</text>
-"#,
+                        "<text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-family=\"{}\" font-size=\"{}\" fill=\"#333\">{}</text>\n",
                         x + bin_width / 2, y.saturating_sub(5),
                         self.config.style.font.family,
                         (self.config.style.font.size as f32 * self.config.style.font.label_scale) as u32,
@@ -814,16 +809,14 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
 
         // X-axis
         svg.push_str(&format!(
-            r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="#333" stroke-width="2"/>
-        "#,
+            "<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" stroke=\"#333\" stroke-width=\"2\"/>\n",
             margins.left, margins.top + plot_height,
             margins.left + plot_width, margins.top + plot_height
         ));
 
         // Y-axis
         svg.push_str(&format!(
-            r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="#333" stroke-width="2"/>
-        "#,
+            "<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" stroke=\"#333\" stroke-width=\"2\"/>\n",
             margins.left, margins.top,
             margins.left, margins.top + plot_height
         ));
@@ -844,8 +837,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
 
         // Title
         svg.push_str(&format!(
-            r#"<text x="{}" y="30" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">Activation Statistics Summary</text>
-"#,
+            "<text x=\"{}\" y=\"30\" text-anchor=\"middle\" font-family=\"{}\" font-size=\"{}\" fill=\"#333\">Activation Statistics Summary</text>\n",
             width / 2, self.config.style.font.family,
             (self.config.style.font.size as f32 * self.config.style.font.title_scale) as u32
         ));
@@ -858,15 +850,13 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
 
             // Layer name
             svg.push_str(&format!(
-                r#"<text x="50" y="{}" font-family="{}" font-size="{}" font-weight="bold" fill="#333">{}</text>
-"#,
+                "<text x=\"50\" y=\"{}\" font-family=\"{}\" font-size=\"{}\" font-weight=\"bold\" fill=\"#333\">{}</text>\n",
                 y, self.config.style.font.family, self.config.style.font.size, stat.layer_name
             ));
 
             // Statistics
             svg.push_str(&format!(
-                r#"<text x="50" y="{}" font-family="{}" font-size="{}" fill="#666">Mean: {:.4}, Std: {:.4}, Min: {:.4}, Max: {:.4}</text>
-"#,
+                "<text x=\"50\" y=\"{}\" font-family=\"{}\" font-size=\"{}\" fill=\"#666\">Mean: {:.4}, Std: {:.4}, Min: {:.4}, Max: {:.4}</text>\n",
                 y + 20, self.config.style.font.family,
                 (self.config.style.font.size as f32 * self.config.style.font.label_scale) as u32,
                 stat.mean.to_f64().unwrap_or(0.0),
@@ -876,8 +866,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
             ));
 
             svg.push_str(&format!(
-                r#"<text x="50" y="{}" font-family="{}" font-size="{}" fill="#666">Sparsity: {:.2}%, Dead Neurons: {}/{}</text>
-"#,
+                "<text x=\"50\" y=\"{}\" font-family=\"{}\" font-size=\"{}\" fill=\"#666\">Sparsity: {:.2}%, Dead Neurons: {}/{}</text>\n",
                 y + 40, self.config.style.font.family,
                 (self.config.style.font.size as f32 * self.config.style.font.label_scale) as u32,
                 stat.sparsity * 100.0, stat.dead_neurons, stat.total_neurons
@@ -931,8 +920,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
 
         // Title
         svg.push_str(&format!(
-            r#"<text x="{}" y="30" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">{} Attention Map</text>
-"#,
+            "<text x=\"{}\" y=\"30\" text-anchor=\"middle\" font-family=\"{}\" font-size=\"{}\" fill=\"#333\">{} Attention Map</text>\n",
             width / 2, self.config.style.font.family,
             (self.config.style.font.size as f32 * self.config.style.font.title_scale) as u32,
             layer_name
@@ -960,8 +948,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
                     let color = format!("rgba({}, 0, 0, {})", intensity, attention);
 
                     svg.push_str(&format!(
-                        r#"<rect x="{}" y="{}" width="{}" height="{}" fill="{}" stroke="#ccc" stroke-width="0.5"/>
-"#,
+                        "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"{}\" stroke=\"#ccc\" stroke-width=\"0.5\"/>\n",
                         50 + j * cell_width as usize,
                         50 + i * cell_height as usize,
                         cell_width,
@@ -1031,8 +1018,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
 
         // Title
         svg.push_str(&format!(
-            r#"<text x="{}" y="30" text-anchor="middle" font-family="{}" font-size="{}" fill="#333">Activation Flow Diagram</text>
-"#,
+            "<text x=\"{}\" y=\"30\" text-anchor=\"middle\" font-family=\"{}\" font-size=\"{}\" fill=\"#333\">Activation Flow Diagram</text>\n",
             width / 2, self.config.style.font.family,
             (self.config.style.font.size as f32 * self.config.style.font.title_scale) as u32
         ));
@@ -1270,7 +1256,7 @@ mod tests {
                 assert_eq!(low, 5.0);
                 assert_eq!(high, 95.0);
             }
-            _ => panic!("Expected percentile normalization"),
+            _ => unreachable!("Expected percentile normalization"),
         }
     }
 
@@ -1291,7 +1277,7 @@ mod tests {
         let custom = Colormap::Custom(vec!["#ff0000".to_string(), "#00ff00".to_string()]);
         match custom {
             Colormap::Custom(colors) => assert_eq!(colors.len(), 2),
-            _ => panic!("Expected custom colormap"),
+            _ => unreachable!("Expected custom colormap"),
         }
     }
 
@@ -1311,7 +1297,7 @@ mod tests {
 
         match &aggregations[5] {
             ChannelAggregation::Select(channels) => assert_eq!(channels.len(), 3),
-            _ => panic!("Expected select aggregation"),
+            _ => unreachable!("Expected select aggregation"),
         }
     }
 

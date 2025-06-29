@@ -1149,7 +1149,7 @@ impl VisualizationExporter for D3Exporter {
 
     fn to_string(
         &self,
-        data: &[DataSeries],
+        _data: &[DataSeries],
         config: &PlotConfig,
         _metadata: &Metadata,
     ) -> Result<String> {
@@ -1358,7 +1358,7 @@ pub mod external {
 
     impl JupyterIntegration {
         /// Generate notebook cell with visualization
-        pub fn create_cell(viz: &VisualizationBuilder) -> serde_json::Value {
+        pub fn create_cell(_viz: &VisualizationBuilder) -> serde_json::Value {
             serde_json::json!({
                 "cell_type": "code",
                 "execution_count": null,

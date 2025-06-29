@@ -362,7 +362,7 @@ pub mod validation {
         let mut out_of_bounds = Vec::new();
         
         for (row_idx, point) in query_points.outer_iter().enumerate() {
-            for (dim_idx, (&coord, &(min_bound, max_bound))) in point.iter().zip(bounds.iter()).enumerate() {
+            for (_dim_idx, (&coord, &(min_bound, max_bound))) in point.iter().zip(bounds.iter()).enumerate() {
                 if coord < min_bound || coord > max_bound {
                     out_of_bounds.push(row_idx);
                     break;

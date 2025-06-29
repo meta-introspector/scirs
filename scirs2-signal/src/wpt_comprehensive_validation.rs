@@ -823,7 +823,7 @@ fn construct_frame_matrix(
         let end_idx = ((packet_idx + 1) * packet_length).min(length);
         
         for i in start_idx..end_idx {
-            test_signal[i] = 1.0 / (end_idx - start_idx) as f64.sqrt();
+            test_signal[i] = 1.0 / ((end_idx - start_idx) as f64).sqrt();
         }
         
         // Decompose to get basis function

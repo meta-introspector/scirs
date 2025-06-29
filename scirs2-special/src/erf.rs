@@ -1,7 +1,93 @@
 //! Error function and related functions
 //!
-//! This module provides implementations of the error function (erf),
+//! This module provides comprehensive implementations of the error function (erf),
 //! complementary error function (erfc), and their inverses (erfinv, erfcinv).
+//!
+//! ## Mathematical Theory
+//!
+//! ### The Error Function
+//!
+//! The error function is a fundamental special function that arises naturally in
+//! probability theory, statistics, and the theory of partial differential equations.
+//!
+//! **Definition**:
+//! ```text
+//! erf(x) = (2/√π) ∫₀^x e^(-t²) dt
+//! ```
+//!
+//! This integral cannot be expressed in terms of elementary functions, making the
+//! error function a truly "special" function.
+//!
+//! **Fundamental Properties**:
+//!
+//! 1. **Odd function**: erf(-x) = -erf(x)
+//!    - **Proof**: Direct from definition by substitution u = -t
+//!    - **Consequence**: erf(0) = 0
+//!
+//! 2. **Asymptotic limits**:
+//!    - lim_{x→∞} erf(x) = 1
+//!    - lim_{x→-∞} erf(x) = -1
+//!    - **Proof**: The integral ∫₀^∞ e^(-t²) dt = √π/2 (Gaussian integral)
+//!
+//! 3. **Monotonicity**: erf'(x) = (2/√π) e^(-x²) > 0 for all x
+//!    - **Consequence**: erf(x) is strictly increasing
+//!
+//! 4. **Inflection points**: erf''(x) = 0 at x = ±1/√2
+//!    - **Proof**: erf''(x) = -(4x/√π) e^(-x²), zeros at x = 0 and ±∞
+//!
+//! ### Series Representations
+//!
+//! **Taylor Series** (converges for all x):
+//! ```text
+//! erf(x) = (2/√π) Σ_{n=0}^∞ [(-1)ⁿ x^(2n+1)] / [n! (2n+1)]
+//!        = (2/√π) [x - x³/3 + x⁵/(2!·5) - x⁷/(3!·7) + ...]
+//! ```
+//!
+//! **Asymptotic Series** (for large |x|):
+//! ```text
+//! erfc(x) ~ (e^(-x²))/(x√π) [1 - 1/(2x²) + 3/(4x⁴) - 15/(8x⁶) + ...]
+//! ```
+//!
+//! ### Relationship to Normal Distribution
+//!
+//! The error function is intimately connected to the cumulative distribution
+//! function (CDF) of the standard normal distribution:
+//!
+//! ```text
+//! Φ(x) = (1/2)[1 + erf(x/√2)]
+//! ```
+//!
+//! where Φ(x) is the standard normal CDF.
+//!
+//! ### Complementary Error Function
+//!
+//! **Definition**:
+//! ```text
+//! erfc(x) = 1 - erf(x) = (2/√π) ∫_x^∞ e^(-t²) dt
+//! ```
+//!
+//! **Key Properties**:
+//! - erfc(-x) = 2 - erfc(x) (not odd like erf)
+//! - erfc(0) = 1
+//! - erfc(∞) = 0, erfc(-∞) = 2
+//! - More numerically stable than 1-erf(x) for large x
+//!
+//! ### Computational Methods
+//!
+//! This implementation uses different methods depending on the input range:
+//!
+//! 1. **Direct series expansion** for small |x| (typically |x| < 2)
+//! 2. **Abramowitz & Stegun approximation** for moderate x values
+//! 3. **Asymptotic expansion** for large |x| to avoid numerical cancellation
+//! 4. **Rational approximations** for optimal balance of speed and accuracy
+//!
+//! ### Applications
+//!
+//! The error function appears in numerous fields:
+//! - **Statistics**: Normal distribution calculations
+//! - **Physics**: Diffusion processes, heat conduction
+//! - **Engineering**: Signal processing, communications theory
+//! - **Mathematics**: Solutions to the heat equation
 
 use num_traits::{Float, FromPrimitive};
 

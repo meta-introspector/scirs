@@ -39,8 +39,8 @@ where
     D: Data<Elem = F>,
 {
     if x.is_empty() {
-        return Err(crate::error::StatsError::invalid_argument(
-            "Cannot compute mean of empty array",
+        return Err(crate::error::StatsError::InvalidArgument(
+            "Cannot compute mean of empty array".to_string(),
         ));
     }
 
@@ -79,8 +79,8 @@ where
 {
     let n = x.len();
     if n <= ddof {
-        return Err(crate::error::StatsError::invalid_argument(
-            "Not enough data points for the given degrees of freedom",
+        return Err(crate::error::StatsError::InvalidArgument(
+            "Not enough data points for the given degrees of freedom".to_string(),
         ));
     }
 
@@ -149,8 +149,8 @@ where
     D: Data<Elem = F>,
 {
     if x.is_empty() {
-        return Err(crate::error::StatsError::invalid_argument(
-            "Cannot compute statistics of empty array",
+        return Err(crate::error::StatsError::InvalidArgument(
+            "Cannot compute statistics of empty array".to_string(),
         ));
     }
 
@@ -164,8 +164,8 @@ where
         let mean = sum / F::from(n).unwrap();
 
         // For min/max, we use element reduction operations
-        let min = F::simd_min_element(&x.view());
-        let max = F::simd_max_element(&x.view());
+        let min = F::simd_min(&x.view());
+        let max = F::simd_max(&x.view());
 
         // Variance calculation
         let mean_array = ndarray::Array1::from_elem(x.len(), mean);
@@ -239,7 +239,7 @@ mod tests {
 
         // Compare with non-SIMD version
         let simd_mean = mean_simd(&data.view()).unwrap();
-        let scalar_mean = crate::mean(&data.view()).unwrap();
+        let scalar_mean = crate::descriptive::mean(&data.view()).unwrap();
 
         assert_relative_eq!(simd_mean, scalar_mean, epsilon = 1e-10);
     }

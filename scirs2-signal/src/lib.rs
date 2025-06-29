@@ -124,6 +124,8 @@ pub mod robust;
 pub mod savgol;
 pub mod separation;
 pub mod simd_ops;
+pub mod simd_advanced;
+pub mod memory_optimized;
 pub mod sparse;
 pub mod spectral;
 pub mod spline;
@@ -219,6 +221,15 @@ pub use lombscargle::{
     find_peaks as find_ls_peaks, lombscargle, significance_levels, AutoFreqMethod,
 };
 pub use lombscargle_simd::{simd_lombscargle, SimdLombScargleResult, ValidationMetrics};
+pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
+pub use simd_advanced::{
+    simd_fir_filter, simd_autocorrelation, simd_cross_correlation, simd_apply_window,
+    simd_complex_fft_butterfly, benchmark_simd_operations, SimdConfig,
+};
+pub use memory_optimized::{
+    memory_optimized_fir_filter, memory_optimized_fft, memory_optimized_spectrogram,
+    MemoryConfig, MemoryOptimizedResult, MemoryOptimizedData, MemoryStats, TimingStats,
+};
 pub use median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
@@ -353,7 +364,7 @@ pub use hilbert::{envelope, hilbert, instantaneous_frequency, instantaneous_phas
 pub use detrend::{detrend, detrend_axis, detrend_poly};
 
 // Signal denoising functions
-pub use denoise::{denoise_wavelet, ThresholdMethod, ThresholdSelect};
+pub use denoise::{denoise_wavelet, ThresholdSelect};
 
 // 2D Wavelet image processing functions
 pub use dwt2d_image::{compress_image, denoise_image, detect_edges, DenoisingMethod};

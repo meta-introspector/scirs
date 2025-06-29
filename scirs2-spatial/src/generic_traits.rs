@@ -694,8 +694,8 @@ mod tests {
 
     #[test]
     fn test_spatial_scalar_traits() {
-        assert!(f32::epsilon() > 0.0);
-        assert!(f64::epsilon() > 0.0);
+        assert!(<f32 as SpatialScalar>::epsilon() > 0.0);
+        assert!(<f64 as SpatialScalar>::epsilon() > 0.0);
         assert!(f32::max_finite().is_finite());
         assert!(f64::max_finite().is_finite());
     }

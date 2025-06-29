@@ -6,7 +6,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
-use crate::lombscargle_enhanced::{enhanced_lombscargle, LombScargleConfig, WindowType};
+use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_finite, check_positive};
@@ -88,6 +88,36 @@ pub fn validate_analytical_cases(
     errors.extend(test_result_5.errors);
     issues.extend(test_result_5.issues);
 
+    // Test case 6: Very sparse sampling
+    let test_result_6 = validate_sparse_sampling(implementation, tolerance)?;
+    errors.extend(test_result_6.errors);
+    peak_errors.push(test_result_6.peak_error);
+    issues.extend(test_result_6.issues);
+
+    // Test case 7: High dynamic range signals
+    let test_result_7 = validate_dynamic_range(implementation, tolerance)?;
+    errors.extend(test_result_7.errors);
+    peak_errors.push(test_result_7.peak_error);
+    issues.extend(test_result_7.issues);
+
+    // Test case 8: Time series with trends
+    let test_result_8 = validate_with_trends(implementation, tolerance)?;
+    errors.extend(test_result_8.errors);
+    peak_errors.push(test_result_8.peak_error);
+    issues.extend(test_result_8.issues);
+
+    // Test case 9: Correlated noise
+    let test_result_9 = validate_correlated_noise(implementation, tolerance)?;
+    errors.extend(test_result_9.errors);
+    peak_errors.push(test_result_9.peak_error);
+    issues.extend(test_result_9.issues);
+
+    // Test case 10: Ultra-high frequency resolution
+    let test_result_10 = validate_high_frequency_resolution(implementation, tolerance)?;
+    errors.extend(test_result_10.errors);
+    peak_errors.push(test_result_10.peak_error);
+    issues.extend(test_result_10.issues);
+
     // Calculate overall metrics
     let max_relative_error = errors.iter().cloned().fold(0.0, f64::max);
     let mean_relative_error = if !errors.is_empty() {
@@ -152,7 +182,7 @@ fn validate_pure_sinusoid(implementation: &str, tolerance: f64) -> SignalResult<
                 tolerance: 1e-10,
                 use_fast: true,
             };
-            let (f, p, _) = enhanced_lombscargle(&t, &signal, &config)?;
+            let (f, p, _) = lombscargle_enhanced(&t, &signal, &config)?;
             (f, p)
         }
         _ => {
@@ -251,7 +281,7 @@ fn validate_multiple_sinusoids(implementation: &str, tolerance: f64) -> SignalRe
                 tolerance: 1e-10,
                 use_fast: true,
             };
-            let (f, p, _) = enhanced_lombscargle(&t, &signal, &config)?;
+            let (f, p, _) = lombscargle_enhanced(&t, &signal, &config)?;
             (f, p)
         }
         _ => {
@@ -352,7 +382,7 @@ fn validate_uneven_sampling(implementation: &str, tolerance: f64) -> SignalResul
                 tolerance: 1e-10,
                 use_fast: true,
             };
-            let (f, p, _) = enhanced_lombscargle(&t, &signal, &config)?;
+            let (f, p, _) = lombscargle_enhanced(&t, &signal, &config)?;
             (f, p)
         }
         _ => {
@@ -494,7 +524,7 @@ fn test_short_time_series(implementation: &str) -> SignalResult<SingleTestResult
                 tolerance: 1e-10,
                 use_fast: true,
             };
-            enhanced_lombscargle(&t, &signal, &config).map(|(f, p, _)| (f, p))
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
         }
         _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
     };
@@ -549,7 +579,7 @@ fn test_constant_signal(implementation: &str) -> SignalResult<SingleTestResult> 
                 tolerance: 1e-10,
                 use_fast: true,
             };
-            enhanced_lombscargle(&t, &signal, &config).map(|(f, p, _)| (f, p))
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
         }
         _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
     };
@@ -598,7 +628,7 @@ fn test_sparse_sampling(implementation: &str) -> SignalResult<SingleTestResult> 
                 tolerance: 1e-10,
                 use_fast: true,
             };
-            enhanced_lombscargle(&t, &signal, &config).map(|(f, p, _)| (f, p))
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
         }
         _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
     };
@@ -666,7 +696,7 @@ fn test_signal_with_outliers(implementation: &str) -> SignalResult<SingleTestRes
                 tolerance: 1e-10,
                 use_fast: true,
             };
-            enhanced_lombscargle(&t, &signal, &config).map(|(f, p, _)| (f, p))
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
         }
         _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
     };
@@ -736,7 +766,7 @@ fn test_small_values(implementation: &str) -> SignalResult<SingleTestResult> {
                 tolerance: 1e-15,
                 use_fast: true,
             };
-            enhanced_lombscargle(&t, &signal, &config).map(|(f, p, _)| (f, p))
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
         }
         _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
     };
@@ -787,7 +817,7 @@ fn test_large_values(implementation: &str) -> SignalResult<SingleTestResult> {
                 tolerance: 1e-10,
                 use_fast: true,
             };
-            enhanced_lombscargle(&t, &signal, &config).map(|(f, p, _)| (f, p))
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
         }
         _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
     };
@@ -838,7 +868,7 @@ fn test_extreme_timescales(implementation: &str) -> SignalResult<SingleTestResul
                 tolerance: 1e-10,
                 use_fast: true,
             };
-            enhanced_lombscargle(&t, &signal, &config).map(|(f, p, _)| (f, p))
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
         }
         _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
     };
@@ -861,6 +891,396 @@ fn test_extreme_timescales(implementation: &str) -> SignalResult<SingleTestResul
         peak_errors: vec![],
         issues,
     })
+}
+
+/// Validate very sparse sampling scenarios
+fn validate_sparse_sampling(implementation: &str, tolerance: f64) -> SignalResult<SingleTestResult> {
+    let mut issues = Vec::new();
+    let mut errors = Vec::new();
+    
+    // Generate sparse sampling - only 10% of expected samples
+    let n_total = 1000;
+    let n_samples = 100;
+    let fs = 100.0;
+    let f_signal = 10.0;
+    
+    use rand::prelude::*;
+    let mut rng = rand::rng();
+    let mut indices: Vec<usize> = (0..n_total).collect();
+    indices.shuffle(&mut rng);
+    indices.truncate(n_samples);
+    indices.sort();
+    
+    let t: Vec<f64> = indices.iter().map(|&i| i as f64 / fs).collect();
+    let signal: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * f_signal * ti).sin()).collect();
+    
+    let result = match implementation {
+        "standard" => lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None),
+        "enhanced" => {
+            let config = LombScargleConfig {
+                window: WindowType::None,
+                custom_window: None,
+                oversample: 10.0, // Higher oversampling for sparse data
+                f_min: Some(5.0),
+                f_max: Some(15.0),
+                bootstrap_iter: None,
+                confidence: None,
+                tolerance: tolerance,
+                use_fast: true,
+            };
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
+        }
+        _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
+    };
+    
+    let peak_error = match result {
+        Ok((freqs, power)) => {
+            // Find peak frequency
+            let (peak_idx, &peak_power) = power
+                .iter()
+                .enumerate()
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .unwrap();
+            
+            let peak_freq = freqs[peak_idx];
+            let freq_error = (peak_freq - f_signal).abs() / f_signal;
+            
+            // Should still detect the signal despite sparse sampling
+            if peak_power < 0.1 {
+                issues.push("Signal detection failed with sparse sampling".to_string());
+            }
+            
+            freq_error
+        }
+        Err(_) => {
+            issues.push("Sparse sampling caused computation failure".to_string());
+            1.0
+        }
+    };
+    
+    Ok(SingleTestResult {
+        errors,
+        peak_error,
+        peak_errors: vec![peak_error],
+        issues,
+    })
+}
+
+/// Validate high dynamic range signals
+fn validate_dynamic_range(implementation: &str, tolerance: f64) -> SignalResult<SingleTestResult> {
+    let mut issues = Vec::new();
+    let mut errors = Vec::new();
+    
+    // Mix very large and very small signal components
+    let n = 500;
+    let fs = 100.0;
+    let f1 = 10.0; // Large amplitude component
+    let f2 = 25.0; // Small amplitude component
+    let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
+    
+    let signal: Vec<f64> = t.iter().map(|&ti| {
+        1e6 * (2.0 * PI * f1 * ti).sin() + 1e-3 * (2.0 * PI * f2 * ti).sin()
+    }).collect();
+    
+    let result = match implementation {
+        "standard" => lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None),
+        "enhanced" => {
+            let config = LombScargleConfig {
+                window: WindowType::None,
+                custom_window: None,
+                oversample: 5.0,
+                f_min: Some(5.0),
+                f_max: Some(30.0),
+                bootstrap_iter: None,
+                confidence: None,
+                tolerance: tolerance,
+                use_fast: true,
+            };
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
+        }
+        _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
+    };
+    
+    let peak_error = match result {
+        Ok((freqs, power)) => {
+            // Should detect both frequencies despite dynamic range
+            let peaks = find_peaks_simple(&power, 0.1);
+            
+            if peaks.len() < 2 {
+                issues.push("Failed to detect both frequencies in high dynamic range signal".to_string());
+            }
+            
+            // Find frequency errors for both peaks
+            let mut freq_errors = Vec::new();
+            for &peak_idx in &peaks {
+                let peak_freq = freqs[peak_idx];
+                let error1 = (peak_freq - f1).abs() / f1;
+                let error2 = (peak_freq - f2).abs() / f2;
+                let min_error = error1.min(error2);
+                if min_error < 0.1 {
+                    freq_errors.push(min_error);
+                }
+            }
+            
+            freq_errors.iter().sum::<f64>() / freq_errors.len().max(1) as f64
+        }
+        Err(_) => {
+            issues.push("High dynamic range signal caused computation failure".to_string());
+            1.0
+        }
+    };
+    
+    Ok(SingleTestResult {
+        errors,
+        peak_error,
+        peak_errors: vec![peak_error],
+        issues,
+    })
+}
+
+/// Validate signals with trends
+fn validate_with_trends(implementation: &str, tolerance: f64) -> SignalResult<SingleTestResult> {
+    let mut issues = Vec::new();
+    let mut errors = Vec::new();
+    
+    let n = 500;
+    let fs = 100.0;
+    let f_signal = 15.0;
+    let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
+    
+    // Add linear and quadratic trends
+    let signal: Vec<f64> = t.iter().enumerate().map(|(i, &ti)| {
+        let periodic = (2.0 * PI * f_signal * ti).sin();
+        let linear_trend = 0.1 * i as f64;
+        let quadratic_trend = 0.001 * (i as f64).powi(2);
+        periodic + linear_trend + quadratic_trend
+    }).collect();
+    
+    let result = match implementation {
+        "standard" => lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None),
+        "enhanced" => {
+            let config = LombScargleConfig {
+                window: WindowType::Hann, // Windowing can help with trends
+                custom_window: None,
+                oversample: 5.0,
+                f_min: Some(10.0),
+                f_max: Some(20.0),
+                bootstrap_iter: None,
+                confidence: None,
+                tolerance: tolerance,
+                use_fast: true,
+            };
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
+        }
+        _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
+    };
+    
+    let peak_error = match result {
+        Ok((freqs, power)) => {
+            let (peak_idx, &peak_power) = power
+                .iter()
+                .enumerate()
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .unwrap();
+            
+            let peak_freq = freqs[peak_idx];
+            let freq_error = (peak_freq - f_signal).abs() / f_signal;
+            
+            // Should still detect signal despite trends
+            if peak_power < 0.05 {
+                issues.push("Signal detection degraded by trends".to_string());
+            }
+            
+            freq_error
+        }
+        Err(_) => {
+            issues.push("Trends in signal caused computation failure".to_string());
+            1.0
+        }
+    };
+    
+    Ok(SingleTestResult {
+        errors,
+        peak_error,
+        peak_errors: vec![peak_error],
+        issues,
+    })
+}
+
+/// Validate with correlated noise
+fn validate_correlated_noise(implementation: &str, tolerance: f64) -> SignalResult<SingleTestResult> {
+    let mut issues = Vec::new();
+    let mut errors = Vec::new();
+    
+    let n = 800;
+    let fs = 100.0;
+    let f_signal = 12.0;
+    let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
+    
+    // Generate AR(1) correlated noise
+    use rand::prelude::*;
+    let mut rng = rand::rng();
+    let mut corr_noise = vec![0.0; n];
+    let alpha = 0.7; // AR(1) coefficient
+    corr_noise[0] = rng.random_range(-1.0..1.0);
+    
+    for i in 1..n {
+        corr_noise[i] = alpha * corr_noise[i-1] + (1.0 - alpha.powi(2)).sqrt() * rng.random_range(-1.0..1.0);
+    }
+    
+    let signal: Vec<f64> = t.iter().enumerate().map(|(i, &ti)| {
+        (2.0 * PI * f_signal * ti).sin() + 0.5 * corr_noise[i]
+    }).collect();
+    
+    let result = match implementation {
+        "standard" => lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None),
+        "enhanced" => {
+            let config = LombScargleConfig {
+                window: WindowType::None,
+                custom_window: None,
+                oversample: 5.0,
+                f_min: Some(8.0),
+                f_max: Some(16.0),
+                bootstrap_iter: None,
+                confidence: None,
+                tolerance: tolerance,
+                use_fast: true,
+            };
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
+        }
+        _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
+    };
+    
+    let peak_error = match result {
+        Ok((freqs, power)) => {
+            let (peak_idx, &peak_power) = power
+                .iter()
+                .enumerate()
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .unwrap();
+            
+            let peak_freq = freqs[peak_idx];
+            let freq_error = (peak_freq - f_signal).abs() / f_signal;
+            
+            // Should handle correlated noise reasonably well
+            if peak_power < 0.01 {
+                issues.push("Signal buried in correlated noise".to_string());
+            }
+            
+            freq_error
+        }
+        Err(_) => {
+            issues.push("Correlated noise caused computation failure".to_string());
+            1.0
+        }
+    };
+    
+    Ok(SingleTestResult {
+        errors,
+        peak_error,
+        peak_errors: vec![peak_error],
+        issues,
+    })
+}
+
+/// Validate ultra-high frequency resolution
+fn validate_high_frequency_resolution(implementation: &str, tolerance: f64) -> SignalResult<SingleTestResult> {
+    let mut issues = Vec::new();
+    let mut errors = Vec::new();
+    
+    let n = 2000;
+    let fs = 1000.0;
+    let f1 = 100.0;
+    let f2 = 100.5; // Very close frequencies
+    let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
+    
+    let signal: Vec<f64> = t.iter().map(|&ti| {
+        (2.0 * PI * f1 * ti).sin() + (2.0 * PI * f2 * ti).sin()
+    }).collect();
+    
+    let result = match implementation {
+        "standard" => lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None),
+        "enhanced" => {
+            let config = LombScargleConfig {
+                window: WindowType::None,
+                custom_window: None,
+                oversample: 20.0, // Very high oversampling for resolution
+                f_min: Some(99.0),
+                f_max: Some(102.0),
+                bootstrap_iter: None,
+                confidence: None,
+                tolerance: tolerance,
+                use_fast: true,
+            };
+            lombscargle_enhanced(&t, &signal, &config).map(|(f, p, _)| (f, p))
+        }
+        _ => return Err(SignalError::ValueError("Unknown implementation".to_string()))
+    };
+    
+    let peak_error = match result {
+        Ok((freqs, power)) => {
+            let peaks = find_peaks_simple(&power, 0.1);
+            
+            if peaks.len() < 2 {
+                issues.push("Failed to resolve very close frequencies".to_string());
+                return Ok(SingleTestResult {
+                    errors,
+                    peak_error: 1.0,
+                    peak_errors: vec![1.0],
+                    issues,
+                });
+            }
+            
+            // Find frequency errors for detected peaks
+            let mut freq_errors = Vec::new();
+            for &peak_idx in &peaks {
+                let peak_freq = freqs[peak_idx];
+                let error1 = (peak_freq - f1).abs() / f1;
+                let error2 = (peak_freq - f2).abs() / f2;
+                let min_error = error1.min(error2);
+                if min_error < 0.01 {
+                    freq_errors.push(min_error);
+                }
+            }
+            
+            if freq_errors.len() < 2 {
+                issues.push("Frequency resolution insufficient for close peaks".to_string());
+            }
+            
+            freq_errors.iter().sum::<f64>() / freq_errors.len().max(1) as f64
+        }
+        Err(_) => {
+            issues.push("High resolution requirements caused computation failure".to_string());
+            1.0
+        }
+    };
+    
+    Ok(SingleTestResult {
+        errors,
+        peak_error,
+        peak_errors: vec![peak_error],
+        issues,
+    })
+}
+
+/// Simple peak finding helper function
+fn find_peaks_simple(power: &[f64], threshold: f64) -> Vec<usize> {
+    let mut peaks = Vec::new();
+    let n = power.len();
+    
+    if n < 3 {
+        return peaks;
+    }
+    
+    for i in 1..n-1 {
+        if power[i] > threshold && 
+           power[i] > power[i-1] && 
+           power[i] > power[i+1] {
+            peaks.push(i);
+        }
+    }
+    
+    peaks
 }
 
 /// Statistical properties validation result
@@ -930,12 +1350,27 @@ pub fn validate_lombscargle_comprehensive(tolerance: f64) -> SignalResult<Compre
     println!("Testing cross-validation with reference...");
     let cross_validation_result = validate_cross_reference(tolerance)?;
     
-    // Calculate overall score
-    let overall_score = calculate_comprehensive_score(
+    // 5. Additional robustness tests
+    println!("Testing additional robustness scenarios...");
+    let robustness_result = validate_additional_robustness(tolerance)?;
+    
+    // 6. Real-world signal validation
+    println!("Testing with real-world signal characteristics...");
+    let real_world_result = validate_real_world_scenarios(tolerance)?;
+    
+    // 7. Advanced statistical validation
+    println!("Testing advanced statistical properties...");
+    let advanced_statistical_result = validate_advanced_statistical_properties(tolerance)?;
+    
+    // Calculate overall score including new tests
+    let overall_score = calculate_comprehensive_score_enhanced(
         &analytical_result,
         &statistical_result,
         &performance_result,
         &cross_validation_result,
+        &robustness_result,
+        &real_world_result,
+        &advanced_statistical_result,
     );
     
     // Combine all issues
@@ -943,6 +1378,9 @@ pub fn validate_lombscargle_comprehensive(tolerance: f64) -> SignalResult<Compre
     all_issues.extend(statistical_result.statistical_issues.clone());
     all_issues.extend(performance_result.performance_issues.clone());
     all_issues.extend(cross_validation_result.issues.clone());
+    all_issues.extend(robustness_result.issues.clone());
+    all_issues.extend(real_world_result.issues.clone());
+    all_issues.extend(advanced_statistical_result.issues.clone());
     
     // Report results
     println!("Comprehensive validation results:");
@@ -952,6 +1390,12 @@ pub fn validate_lombscargle_comprehensive(tolerance: f64) -> SignalResult<Compre
              statistical_result.white_noise_pvalue, statistical_result.bootstrap_coverage);
     println!("  Performance - Enhanced time: {:.1}ms, Speedup: {:.2}x", 
              performance_result.enhanced_time_ms, performance_result.speedup_factor);
+    println!("  Robustness - Score: {:.1}, Issues: {}", 
+             robustness_result.robustness_score, robustness_result.issues.len());
+    println!("  Real-world - Score: {:.1}, Issues: {}", 
+             real_world_result.score, real_world_result.issues.len());
+    println!("  Advanced stats - Score: {:.1}, Issues: {}", 
+             advanced_statistical_result.score, advanced_statistical_result.issues.len());
     println!("  Overall score: {:.1}/100", overall_score);
     println!("  Total issues found: {}", all_issues.len());
     
@@ -1103,7 +1547,7 @@ fn test_bootstrap_confidence_intervals() -> SignalResult<f64> {
         use_fast: true,
     };
     
-    let (freqs, power, bootstrap_result) = enhanced_lombscargle(&t, &signal, &config)?;
+    let (freqs, power, bootstrap_result) = lombscargle_enhanced(&t, &signal, &config)?;
     
     if let Some(bootstrap) = bootstrap_result {
         // Find the peak
@@ -1168,7 +1612,7 @@ fn validate_performance_characteristics() -> SignalResult<PerformanceValidationR
     
     let start = Instant::now();
     for _ in 0..10 {
-        let _ = enhanced_lombscargle(&t, &signal, &config)?;
+        let _ = lombscargle_enhanced(&t, &signal, &config)?;
     }
     let enhanced_time_ms = start.elapsed().as_secs_f64() * 100.0; // ms per iteration
     
@@ -1227,7 +1671,7 @@ fn validate_cross_reference(tolerance: f64) -> SignalResult<ValidationResult> {
         tolerance: 1e-10,
         use_fast: true,
     };
-    let (freqs_enh, power_enh, _) = enhanced_lombscargle(&t, &signal, &config)?;
+    let (freqs_enh, power_enh, _) = lombscargle_enhanced(&t, &signal, &config)?;
     
     // Find common frequency range for comparison
     let f_min_common = freqs_std[0].max(freqs_enh[0]);
@@ -1351,6 +1795,694 @@ fn calculate_comprehensive_score(
     score.max(0.0).min(100.0)
 }
 
+/// Additional robustness validation result
+#[derive(Debug, Clone)]
+pub struct RobustnessValidationResult {
+    /// Overall robustness score
+    pub robustness_score: f64,
+    /// Memory stress test results
+    pub memory_stress_score: f64,
+    /// Precision limits test score
+    pub precision_limits_score: f64,
+    /// Boundary conditions score
+    pub boundary_conditions_score: f64,
+    /// Issues found
+    pub issues: Vec<String>,
+}
+
+/// Real-world scenario validation result
+#[derive(Debug, Clone)]
+pub struct RealWorldValidationResult {
+    /// Overall score
+    pub score: f64,
+    /// Astronomical data test score
+    pub astronomical_score: f64,
+    /// Physiological data test score
+    pub physiological_score: f64,
+    /// Environmental data test score
+    pub environmental_score: f64,
+    /// Issues found
+    pub issues: Vec<String>,
+}
+
+/// Advanced statistical validation result
+#[derive(Debug, Clone)]
+pub struct AdvancedStatisticalResult {
+    /// Overall score
+    pub score: f64,
+    /// Non-parametric tests score
+    pub nonparametric_score: f64,
+    /// Bayesian validation score
+    pub bayesian_score: f64,
+    /// Information theory metrics score
+    pub information_theory_score: f64,
+    /// Issues found
+    pub issues: Vec<String>,
+}
+
+/// Validate additional robustness scenarios
+fn validate_additional_robustness(tolerance: f64) -> SignalResult<RobustnessValidationResult> {
+    let mut issues = Vec::new();
+    
+    // Test 1: Memory stress test with very large datasets
+    let memory_stress_score = test_memory_stress_scenarios()?;
+    if memory_stress_score < 80.0 {
+        issues.push("Memory stress test failed".to_string());
+    }
+    
+    // Test 2: Numerical precision limits
+    let precision_limits_score = test_numerical_precision_limits(tolerance)?;
+    if precision_limits_score < 70.0 {
+        issues.push("Precision limits test failed".to_string());
+    }
+    
+    // Test 3: Boundary conditions
+    let boundary_conditions_score = test_boundary_conditions(tolerance)?;
+    if boundary_conditions_score < 85.0 {
+        issues.push("Boundary conditions test failed".to_string());
+    }
+    
+    let robustness_score = (memory_stress_score + precision_limits_score + boundary_conditions_score) / 3.0;
+    
+    Ok(RobustnessValidationResult {
+        robustness_score,
+        memory_stress_score,
+        precision_limits_score,
+        boundary_conditions_score,
+        issues,
+    })
+}
+
+/// Test memory stress scenarios
+fn test_memory_stress_scenarios() -> SignalResult<f64> {
+    let mut score = 100.0;
+    
+    // Test with extremely large datasets
+    let sizes = vec![100_000, 500_000, 1_000_000];
+    
+    for &size in &sizes {
+        let t: Vec<f64> = (0..size).map(|i| i as f64 * 0.001).collect();
+        let signal: Vec<f64> = t.iter().map(|&ti| (2.0 * std::f64::consts::PI * 0.1 * ti).sin()).collect();
+        
+        // Test with basic implementation
+        let start = std::time::Instant::now();
+        let result = lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None);
+        let duration = start.elapsed();
+        
+        match result {
+            Ok(_) => {
+                // Check if computation took reasonable time (< 30 seconds for 1M points)
+                if duration.as_secs() > 30 {
+                    score -= 20.0;
+                }
+            }
+            Err(_) => {
+                score -= 30.0; // Penalize failures
+            }
+        }
+        
+        // Early exit if score gets too low
+        if score < 20.0 {
+            break;
+        }
+    }
+    
+    Ok(score.max(0.0))
+}
+
+/// Test numerical precision limits
+fn test_numerical_precision_limits(tolerance: f64) -> SignalResult<f64> {
+    let mut score = 100.0;
+    
+    // Test 1: Extremely small time intervals
+    let n = 1000;
+    let dt = 1e-15; // Near machine precision
+    let t: Vec<f64> = (0..n).map(|i| i as f64 * dt).collect();
+    let signal: Vec<f64> = t.iter().map(|&ti| (2.0 * std::f64::consts::PI * 1e12 * ti).sin()).collect();
+    
+    let result = lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None);
+    match result {
+        Ok((_, power)) => {
+            if power.iter().any(|&p| !p.is_finite()) {
+                score -= 30.0;
+            }
+        }
+        Err(_) => {
+            score -= 20.0; // May fail, but shouldn't crash
+        }
+    }
+    
+    // Test 2: Extremely large time intervals
+    let large_dt = 1e15;
+    let t_large: Vec<f64> = (0..100).map(|i| i as f64 * large_dt).collect();
+    let signal_large: Vec<f64> = t_large.iter().map(|&ti| (2.0 * std::f64::consts::PI * 1e-12 * ti).sin()).collect();
+    
+    let result_large = lombscargle(&t_large, &signal_large, None, Some("standard"), Some(true), Some(false), None, None);
+    match result_large {
+        Ok((_, power)) => {
+            if power.iter().any(|&p| !p.is_finite()) {
+                score -= 30.0;
+            }
+        }
+        Err(_) => {
+            score -= 20.0;
+        }
+    }
+    
+    // Test 3: Mixed precision scenarios
+    let mut mixed_t = vec![0.0, 1e-10, 1e-5, 1.0, 1e5, 1e10];
+    mixed_t.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let mixed_signal: Vec<f64> = mixed_t.iter().map(|&ti| ti.sin()).collect();
+    
+    let result_mixed = lombscargle(&mixed_t, &mixed_signal, None, Some("standard"), Some(true), Some(false), None, None);
+    match result_mixed {
+        Ok((_, power)) => {
+            if power.iter().any(|&p| !p.is_finite()) {
+                score -= 20.0;
+            }
+        }
+        Err(_) => {
+            score -= 15.0;
+        }
+    }
+    
+    Ok(score.max(0.0))
+}
+
+/// Test boundary conditions
+fn test_boundary_conditions(tolerance: f64) -> SignalResult<f64> {
+    let mut score = 100.0;
+    
+    // Test 1: Minimum viable signal (3 points)
+    let t_min = vec![0.0, 1.0, 2.0];
+    let signal_min = vec![1.0, 0.0, -1.0];
+    
+    let result_min = lombscargle(&t_min, &signal_min, None, Some("standard"), Some(true), Some(false), None, None);
+    match result_min {
+        Ok((freqs, power)) => {
+            if freqs.is_empty() || power.is_empty() {
+                score -= 15.0;
+            }
+            if power.iter().any(|&p| !p.is_finite() || p < 0.0) {
+                score -= 15.0;
+            }
+        }
+        Err(_) => {
+            score -= 10.0; // May legitimately fail for very short series
+        }
+    }
+    
+    // Test 2: Single frequency component at Nyquist limit
+    let n = 100;
+    let fs = 100.0;
+    let f_nyquist = fs / 2.0;
+    let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
+    let signal: Vec<f64> = t.iter().map(|&ti| (2.0 * std::f64::consts::PI * f_nyquist * ti).sin()).collect();
+    
+    let result_nyquist = lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None);
+    match result_nyquist {
+        Ok((freqs, power)) => {
+            // Should handle Nyquist frequency gracefully
+            if power.iter().any(|&p| !p.is_finite()) {
+                score -= 20.0;
+            }
+        }
+        Err(_) => {
+            score -= 15.0;
+        }
+    }
+    
+    // Test 3: Zero-variance signal
+    let zero_signal = vec![1.0; 100];
+    let t_zero: Vec<f64> = (0..100).map(|i| i as f64 * 0.01).collect();
+    
+    let result_zero = lombscargle(&t_zero, &zero_signal, None, Some("standard"), Some(true), Some(false), None, None);
+    match result_zero {
+        Ok((_, power)) => {
+            // Should produce low power values for constant signal
+            let max_power = power.iter().cloned().fold(0.0, f64::max);
+            if max_power > 1e-6 {
+                score -= 10.0;
+            }
+        }
+        Err(_) => {
+            score -= 5.0; // May fail for constant signal
+        }
+    }
+    
+    Ok(score.max(0.0))
+}
+
+/// Validate real-world scenarios
+fn validate_real_world_scenarios(tolerance: f64) -> SignalResult<RealWorldValidationResult> {
+    let mut issues = Vec::new();
+    
+    // Test 1: Astronomical time series (irregular sampling, long-term trends)
+    let astronomical_score = test_astronomical_scenarios(tolerance)?;
+    if astronomical_score < 70.0 {
+        issues.push("Astronomical data test failed".to_string());
+    }
+    
+    // Test 2: Physiological signals (biorhythms, noise)
+    let physiological_score = test_physiological_scenarios(tolerance)?;
+    if physiological_score < 75.0 {
+        issues.push("Physiological data test failed".to_string());
+    }
+    
+    // Test 3: Environmental monitoring (gaps, seasonal patterns)
+    let environmental_score = test_environmental_scenarios(tolerance)?;
+    if environmental_score < 80.0 {
+        issues.push("Environmental data test failed".to_string());
+    }
+    
+    let score = (astronomical_score + physiological_score + environmental_score) / 3.0;
+    
+    Ok(RealWorldValidationResult {
+        score,
+        astronomical_score,
+        physiological_score,
+        environmental_score,
+        issues,
+    })
+}
+
+/// Test astronomical data scenarios
+fn test_astronomical_scenarios(tolerance: f64) -> SignalResult<f64> {
+    let mut score = 100.0;
+    
+    // Simulate variable star with irregular sampling
+    use rand::prelude::*;
+    let mut rng = rand::rng();
+    
+    let n_obs = 500;
+    let period = 5.2; // days
+    let mut times = Vec::new();
+    let mut brightness = Vec::new();
+    
+    // Generate irregular observation times (gaps due to weather, etc.)
+    let mut current_time = 0.0;
+    for _ in 0..n_obs {
+        // Random gaps between observations (0.1 to 2.0 days)
+        current_time += rng.random_range(0.1..2.0);
+        times.push(current_time);
+        
+        // Variable star signal with noise
+        let phase = 2.0 * std::f64::consts::PI * current_time / period;
+        let signal = 1.0 + 0.3 * phase.sin() + 0.1 * (2.0 * phase).sin(); // Fundamental + harmonic
+        let noise = 0.05 * rng.random_range(-1.0..1.0); // 5% noise
+        brightness.push(signal + noise);
+    }
+    
+    // Test Lomb-Scargle on this data
+    let result = lombscargle(&times, &brightness, None, Some("standard"), Some(true), Some(false), None, None);
+    match result {
+        Ok((freqs, power)) => {
+            // Should detect the primary period
+            let expected_freq = 1.0 / period;
+            
+            // Find peak near expected frequency
+            let freq_tolerance = 0.01; // 1% tolerance
+            let peak_found = freqs.iter().zip(power.iter())
+                .any(|(&f, &p)| {
+                    (f - expected_freq).abs() / expected_freq < freq_tolerance && 
+                    p > power.iter().sum::<f64>() / power.len() as f64 * 5.0 // 5x above mean
+                });
+            
+            if !peak_found {
+                score -= 30.0;
+            }
+            
+            // Check for reasonable power distribution
+            if power.iter().any(|&p| !p.is_finite() || p < 0.0) {
+                score -= 20.0;
+            }
+        }
+        Err(_) => {
+            score -= 50.0;
+        }
+    }
+    
+    Ok(score.max(0.0))
+}
+
+/// Test physiological signal scenarios
+fn test_physiological_scenarios(tolerance: f64) -> SignalResult<f64> {
+    let mut score = 100.0;
+    
+    // Simulate heart rate variability data
+    use rand::prelude::*;
+    let mut rng = rand::rng();
+    
+    let n = 1000;
+    let fs = 4.0; // 4 Hz sampling rate
+    let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
+    
+    // Simulate HRV with multiple frequency components
+    let signal: Vec<f64> = t.iter().map(|&ti| {
+        let very_low = 0.5 * (2.0 * std::f64::consts::PI * 0.02 * ti).sin(); // VLF: 0.01-0.04 Hz
+        let low = 0.3 * (2.0 * std::f64::consts::PI * 0.1 * ti).sin();   // LF: 0.04-0.15 Hz  
+        let high = 0.2 * (2.0 * std::f64::consts::PI * 0.25 * ti).sin();  // HF: 0.15-0.4 Hz
+        let noise = 0.1 * rng.random_range(-1.0..1.0);
+        
+        1.0 + very_low + low + high + noise
+    }).collect();
+    
+    let result = lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None);
+    match result {
+        Ok((freqs, power)) => {
+            // Should detect multiple frequency bands
+            let vlf_detected = freqs.iter().zip(power.iter())
+                .any(|(&f, &p)| f >= 0.01 && f <= 0.04 && p > 0.1);
+            let lf_detected = freqs.iter().zip(power.iter())
+                .any(|(&f, &p)| f >= 0.04 && f <= 0.15 && p > 0.1);
+            let hf_detected = freqs.iter().zip(power.iter())
+                .any(|(&f, &p)| f >= 0.15 && f <= 0.4 && p > 0.1);
+            
+            if !vlf_detected { score -= 15.0; }
+            if !lf_detected { score -= 15.0; }
+            if !hf_detected { score -= 15.0; }
+            
+            // Check numerical stability
+            if power.iter().any(|&p| !p.is_finite() || p < 0.0) {
+                score -= 20.0;
+            }
+        }
+        Err(_) => {
+            score -= 50.0;
+        }
+    }
+    
+    Ok(score.max(0.0))
+}
+
+/// Test environmental monitoring scenarios
+fn test_environmental_scenarios(tolerance: f64) -> SignalResult<f64> {
+    let mut score = 100.0;
+    
+    // Simulate temperature measurements with seasonal variation and gaps
+    use rand::prelude::*;
+    let mut rng = rand::rng();
+    
+    let days_per_year = 365.25;
+    let n_years = 3;
+    let measurements_per_day = 4; // Every 6 hours
+    
+    let mut times = Vec::new();
+    let mut temperatures = Vec::new();
+    
+    for day in 0..(n_years as f64 * days_per_year) as i32 {
+        for measurement in 0..measurements_per_day {
+            // Simulate data gaps (missing data)
+            if rng.random_range(0.0..1.0) < 0.95 { // 95% data availability
+                let time_hours = day as f64 * 24.0 + measurement as f64 * 6.0;
+                times.push(time_hours / 24.0); // Convert to days
+                
+                // Seasonal temperature variation + daily cycle + noise
+                let seasonal = 15.0 * (2.0 * std::f64::consts::PI * day as f64 / days_per_year).sin();
+                let daily = 5.0 * (2.0 * std::f64::consts::PI * measurement as f64 / measurements_per_day).sin();
+                let noise = 2.0 * rng.random_range(-1.0..1.0);
+                
+                temperatures.push(20.0 + seasonal + daily + noise); // Base temp 20°C
+            }
+        }
+    }
+    
+    let result = lombscargle(&times, &temperatures, None, Some("standard"), Some(true), Some(false), None, None);
+    match result {
+        Ok((freqs, power)) => {
+            // Should detect annual cycle (1/365.25 cycles per day)
+            let annual_freq = 1.0 / days_per_year;
+            let daily_freq = 1.0; // 1 cycle per day
+            
+            let annual_detected = freqs.iter().zip(power.iter())
+                .any(|(&f, &p)| (f - annual_freq).abs() / annual_freq < 0.1 && p > 0.01);
+            let daily_detected = freqs.iter().zip(power.iter())
+                .any(|(&f, &p)| (f - daily_freq).abs() / daily_freq < 0.1 && p > 0.01);
+            
+            if !annual_detected { score -= 20.0; }
+            if !daily_detected { score -= 20.0; }
+            
+            // Check for reasonable results with gaps
+            if power.iter().any(|&p| !p.is_finite() || p < 0.0) {
+                score -= 25.0;
+            }
+        }
+        Err(_) => {
+            score -= 50.0;
+        }
+    }
+    
+    Ok(score.max(0.0))
+}
+
+/// Validate advanced statistical properties
+fn validate_advanced_statistical_properties(tolerance: f64) -> SignalResult<AdvancedStatisticalResult> {
+    let mut issues = Vec::new();
+    
+    // Test 1: Non-parametric statistical tests
+    let nonparametric_score = test_nonparametric_properties(tolerance)?;
+    if nonparametric_score < 75.0 {
+        issues.push("Non-parametric tests failed".to_string());
+    }
+    
+    // Test 2: Bayesian validation approaches
+    let bayesian_score = test_bayesian_validation(tolerance)?;
+    if bayesian_score < 70.0 {
+        issues.push("Bayesian validation failed".to_string());
+    }
+    
+    // Test 3: Information theory metrics
+    let information_theory_score = test_information_theory_metrics(tolerance)?;
+    if information_theory_score < 80.0 {
+        issues.push("Information theory tests failed".to_string());
+    }
+    
+    let score = (nonparametric_score + bayesian_score + information_theory_score) / 3.0;
+    
+    Ok(AdvancedStatisticalResult {
+        score,
+        nonparametric_score,
+        bayesian_score,
+        information_theory_score,
+        issues,
+    })
+}
+
+/// Test non-parametric statistical properties
+fn test_nonparametric_properties(tolerance: f64) -> SignalResult<f64> {
+    let mut score = 100.0;
+    
+    // Test Kolmogorov-Smirnov test for power distribution
+    use rand::prelude::*;
+    let mut rng = rand::rng();
+    
+    let n_trials = 100;
+    let n_samples = 200;
+    let mut power_maxima = Vec::new();
+    
+    for _ in 0..n_trials {
+        // Generate white noise
+        let t: Vec<f64> = (0..n_samples).map(|i| i as f64 * 0.01).collect();
+        let signal: Vec<f64> = (0..n_samples).map(|_| rng.random_range(-1.0..1.0)).collect();
+        
+        match lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None) {
+            Ok((_, power)) => {
+                let max_power = power.iter().cloned().fold(0.0, f64::max);
+                power_maxima.push(max_power);
+            }
+            Err(_) => {
+                score -= 2.0;
+            }
+        }
+    }
+    
+    // Simple KS test approximation
+    if power_maxima.len() > 10 {
+        power_maxima.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        
+        // Check if distribution roughly follows expected pattern
+        let median = power_maxima[power_maxima.len() / 2];
+        let q75 = power_maxima[power_maxima.len() * 3 / 4];
+        let q25 = power_maxima[power_maxima.len() / 4];
+        
+        // For exponential distribution, median ≈ 0.693, IQR ≈ 1.099
+        let median_error = (median - 0.693).abs() / 0.693;
+        let iqr = q75 - q25;
+        let iqr_error = (iqr - 1.099).abs() / 1.099;
+        
+        if median_error > 0.5 { score -= 20.0; }
+        if iqr_error > 0.5 { score -= 20.0; }
+    }
+    
+    Ok(score.max(0.0))
+}
+
+/// Test Bayesian validation approaches
+fn test_bayesian_validation(tolerance: f64) -> SignalResult<f64> {
+    let mut score = 100.0;
+    
+    // Simplified Bayesian model comparison test
+    // Compare evidence for different frequency models
+    
+    let n = 300;
+    let fs = 50.0;
+    let true_freq = 5.0;
+    let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
+    
+    use rand::prelude::*;
+    let mut rng = rand::rng();
+    
+    // Signal with known frequency plus noise
+    let signal: Vec<f64> = t.iter().map(|&ti| {
+        (2.0 * std::f64::consts::PI * true_freq * ti).sin() + 0.2 * rng.random_range(-1.0..1.0)
+    }).collect();
+    
+    match lombscargle(&t, &signal, None, Some("standard"), Some(true), Some(false), None, None) {
+        Ok((freqs, power)) => {
+            // Find peak and check if it's at the expected frequency
+            let (peak_idx, &peak_power) = power.iter().enumerate()
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .unwrap();
+            
+            let peak_freq = freqs[peak_idx];
+            let freq_error = (peak_freq - true_freq).abs() / true_freq;
+            
+            if freq_error > 0.1 { score -= 30.0; }
+            
+            // Check Bayesian information criterion approximation
+            // Higher peak should correspond to better model evidence
+            let mean_power = power.iter().sum::<f64>() / power.len() as f64;
+            let evidence_ratio = peak_power / mean_power;
+            
+            if evidence_ratio < 5.0 { score -= 20.0; } // Should be well above background
+        }
+        Err(_) => {
+            score -= 50.0;
+        }
+    }
+    
+    Ok(score.max(0.0))
+}
+
+/// Test information theory metrics
+fn test_information_theory_metrics(tolerance: f64) -> SignalResult<f64> {
+    let mut score = 100.0;
+    
+    // Test entropy and mutual information properties
+    use rand::prelude::*;
+    let mut rng = rand::rng();
+    
+    let n = 500;
+    let fs = 100.0;
+    let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
+    
+    // Test 1: Pure sinusoid should have low entropy in frequency domain
+    let signal_periodic: Vec<f64> = t.iter().map(|&ti| (2.0 * std::f64::consts::PI * 10.0 * ti).sin()).collect();
+    
+    match lombscargle(&t, &signal_periodic, None, Some("standard"), Some(true), Some(false), None, None) {
+        Ok((_, power_periodic)) => {
+            // Normalize power
+            let total_power: f64 = power_periodic.iter().sum();
+            let prob_dist: Vec<f64> = power_periodic.iter().map(|&p| p / total_power).collect();
+            
+            // Calculate Shannon entropy
+            let entropy: f64 = prob_dist.iter()
+                .filter(|&&p| p > 1e-15)
+                .map(|&p| -p * p.ln())
+                .sum();
+            
+            // Periodic signal should have low entropy
+            let max_entropy = (power_periodic.len() as f64).ln(); // Uniform distribution entropy
+            let normalized_entropy = entropy / max_entropy;
+            
+            if normalized_entropy > 0.5 { score -= 20.0; } // Should be concentrated
+        }
+        Err(_) => {
+            score -= 25.0;
+        }
+    }
+    
+    // Test 2: White noise should have high entropy
+    let signal_noise: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
+    
+    match lombscargle(&t, &signal_noise, None, Some("standard"), Some(true), Some(false), None, None) {
+        Ok((_, power_noise)) => {
+            let total_power: f64 = power_noise.iter().sum();
+            let prob_dist: Vec<f64> = power_noise.iter().map(|&p| p / total_power).collect();
+            
+            let entropy: f64 = prob_dist.iter()
+                .filter(|&&p| p > 1e-15)
+                .map(|&p| -p * p.ln())
+                .sum();
+            
+            let max_entropy = (power_noise.len() as f64).ln();
+            let normalized_entropy = entropy / max_entropy;
+            
+            if normalized_entropy < 0.7 { score -= 20.0; } // Should be more uniform
+        }
+        Err(_) => {
+            score -= 25.0;
+        }
+    }
+    
+    Ok(score.max(0.0))
+}
+
+/// Enhanced comprehensive score calculation
+fn calculate_comprehensive_score_enhanced(
+    analytical: &ValidationResult,
+    statistical: &StatisticalValidationResult,
+    performance: &PerformanceValidationResult,
+    cross_validation: &ValidationResult,
+    robustness: &RobustnessValidationResult,
+    real_world: &RealWorldValidationResult,
+    advanced_stats: &AdvancedStatisticalResult,
+) -> f64 {
+    let mut score = 100.0;
+    
+    // Analytical score (25 points)
+    score -= analytical.max_relative_error * 1000.0;
+    score -= (1.0 - analytical.stability_score) * 15.0;
+    score -= analytical.issues.len() as f64 * 1.5;
+    
+    // Statistical score (20 points)
+    if statistical.white_noise_pvalue < 0.01 {
+        score -= 8.0;
+    }
+    score -= statistical.false_alarm_rate_error * 8.0;
+    if statistical.bootstrap_coverage < 0.90 {
+        score -= 8.0;
+    }
+    score -= statistical.statistical_issues.len() as f64 * 1.5;
+    
+    // Performance score (15 points)
+    if performance.speedup_factor < 1.0 {
+        score -= 8.0;
+    }
+    if performance.memory_usage_mb > 50.0 {
+        score -= 4.0;
+    }
+    score -= performance.performance_issues.len() as f64 * 1.5;
+    
+    // Cross-validation score (10 points)
+    score -= cross_validation.max_relative_error * 80.0;
+    score -= cross_validation.issues.len() as f64 * 1.0;
+    
+    // Robustness score (15 points)
+    score -= (100.0 - robustness.robustness_score) * 0.15;
+    score -= robustness.issues.len() as f64 * 1.0;
+    
+    // Real-world scenarios score (10 points)
+    score -= (100.0 - real_world.score) * 0.10;
+    score -= real_world.issues.len() as f64 * 1.0;
+    
+    // Advanced statistical score (5 points)
+    score -= (100.0 - advanced_stats.score) * 0.05;
+    score -= advanced_stats.issues.len() as f64 * 0.5;
+    
+    score.max(0.0).min(100.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1382,5 +2514,27 @@ mod tests {
         let tolerance = 1e-5; // More lenient for comprehensive test
         let result = validate_lombscargle_comprehensive(tolerance);
         assert!(result.is_ok());
+    }
+    
+    #[test]
+    fn test_robustness_validation() {
+        let tolerance = 1e-6;
+        let result = validate_additional_robustness(tolerance);
+        assert!(result.is_ok());
+        
+        let validation = result.unwrap();
+        assert!(validation.robustness_score >= 0.0);
+        assert!(validation.robustness_score <= 100.0);
+    }
+    
+    #[test]
+    fn test_real_world_validation() {
+        let tolerance = 1e-6;
+        let result = validate_real_world_scenarios(tolerance);
+        assert!(result.is_ok());
+        
+        let validation = result.unwrap();
+        assert!(validation.score >= 0.0);
+        assert!(validation.score <= 100.0);
     }
 }

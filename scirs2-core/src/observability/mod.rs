@@ -44,6 +44,7 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
+pub mod adaptive_monitoring;
 pub mod audit;
 pub mod tracing;
 

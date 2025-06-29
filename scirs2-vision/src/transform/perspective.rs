@@ -1006,20 +1006,375 @@ pub fn modulo(a: f64, b: f64) -> f64 {
 /// # Errors
 ///
 /// Returns an error if the quadrilateral detection fails
-pub fn detect_quad(src: &DynamicImage, _threshold: u8) -> Result<[(f64, f64); 4]> {
-    // This is a placeholder implementation
-    // A real implementation would use edge detection, contour finding, etc.
+pub fn detect_quad(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
+    use crate::feature::sobel_edges;
+    use crate::preprocessing::gaussian_blur;
+    use ndarray::Array2;
+    
+    // Convert to grayscale
+    let gray = src.to_luma8();
+    let (width, height) = gray.dimensions();
+    
+    // Convert to array for processing
+    let mut image_array = Array2::zeros((height as usize, width as usize));
+    for y in 0..height {
+        for x in 0..width {
+            image_array[[y as usize, x as usize]] = gray.get_pixel(x, y)[0] as f64;
+        }
+    }
+    
+    // Apply Gaussian blur for noise reduction
+    let gray_dynamic = DynamicImage::ImageLuma8(gray.clone());
+    let blurred = gaussian_blur(&gray_dynamic, 2.0)?;
+    
+    // Perform edge detection with threshold
+    let edges = sobel_edges(&blurred, 50.0)?;
+    
+    // Convert edge image to binary using threshold
+    let (edge_width, edge_height) = edges.dimensions();
+    let mut binary_edges = Array2::zeros((edge_height as usize, edge_width as usize));
+    for y in 0..edge_height {
+        for x in 0..edge_width {
+            let pixel_value = edges.get_pixel(x, y)[0];
+            binary_edges[[y as usize, x as usize]] = if pixel_value > threshold { 1.0 } else { 0.0 };
+        }
+    }
+    
+    // Find contours and approximate them to polygons
+    let contours = find_contours(&binary_edges)?;
+    
+    // Find the largest quadrilateral
+    let mut best_quad = None;
+    let mut best_area = 0.0;
+    
+    for contour in contours {
+        if let Some(quad) = approximate_polygon_to_quad(&contour) {
+            let area = calculate_quad_area(&quad);
+            if area > best_area && area > (width * height) as f64 * 0.01 { // At least 1% of image area
+                best_area = area;
+                best_quad = Some(quad);
+            }
+        }
+    }
+    
+    if let Some(quad) = best_quad {
+        // Order points clockwise from top-left
+        Ok(order_quad_points(quad))
+    } else {
+        // Fallback: return image corners with slight inset to avoid edge artifacts
+        let margin = 10.0;
+        let corners = [
+            (margin, margin),
+            (f64::from(width) - margin, margin),
+            (f64::from(width) - margin, f64::from(height) - margin),
+            (margin, f64::from(height) - margin),
+        ];
+        Ok(corners)
+    }
+}
 
-    // Simple placeholder implementation returning the image corners
-    let (width, height) = src.dimensions();
-    let corners = [
-        (0.0, 0.0),
-        (f64::from(width), 0.0),
-        (f64::from(width), f64::from(height)),
-        (0.0, f64::from(height)),
+/// Find contours in a binary edge image
+fn find_contours(binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>> {
+    let (height, width) = binary_image.dim();
+    let mut contours = Vec::new();
+    let mut visited = Array2::from_elem((height, width), false);
+    
+    // Simple contour following algorithm
+    for y in 1..height-1 {
+        for x in 1..width-1 {
+            if binary_image[[y, x]] > 0.5 && !visited[[y, x]] {
+                let contour = trace_contour(binary_image, &mut visited, x, y)?;
+                if contour.len() > 10 { // Minimum contour length
+                    contours.push(contour);
+                }
+            }
+        }
+    }
+    
+    Ok(contours)
+}
+
+/// Trace a contour starting from a given point
+fn trace_contour(
+    binary_image: &Array2<f64>,
+    visited: &mut Array2<bool>,
+    start_x: usize,
+    start_y: usize,
+) -> Result<Vec<(f64, f64)>> {
+    let mut contour = Vec::new();
+    let mut current_x = start_x;
+    let mut current_y = start_y;
+    
+    // 8-connected neighbors
+    let directions = [
+        (-1, -1), (0, -1), (1, -1),
+        (-1,  0),          (1,  0),
+        (-1,  1), (0,  1), (1,  1),
     ];
+    
+    let (height, width) = binary_image.dim();
+    
+    loop {
+        contour.push((current_x as f64, current_y as f64));
+        visited[[current_y, current_x]] = true;
+        
+        let mut found_next = false;
+        
+        // Look for next edge pixel
+        for &(dx, dy) in &directions {
+            let next_x = current_x as i32 + dx;
+            let next_y = current_y as i32 + dy;
+            
+            if next_x >= 0 && next_x < width as i32 && next_y >= 0 && next_y < height as i32 {
+                let nx = next_x as usize;
+                let ny = next_y as usize;
+                
+                if binary_image[[ny, nx]] > 0.5 && !visited[[ny, nx]] {
+                    current_x = nx;
+                    current_y = ny;
+                    found_next = true;
+                    break;
+                }
+            }
+        }
+        
+        if !found_next || contour.len() > 1000 { // Prevent infinite loops
+            break;
+        }
+    }
+    
+    Ok(contour)
+}
 
-    Ok(corners)
+/// Approximate a polygon contour to a quadrilateral using Douglas-Peucker algorithm
+fn approximate_polygon_to_quad(contour: &[(f64, f64)]) -> Option<[(f64, f64); 4]> {
+    if contour.len() < 4 {
+        return None;
+    }
+    
+    // Use progressive epsilon to find best 4-point approximation
+    let perimeter = calculate_perimeter(contour);
+    let mut epsilon = perimeter * 0.01; // Start with 1% of perimeter
+    
+    for _ in 0..10 { // Try up to 10 different epsilon values
+        let approx = douglas_peucker(contour, epsilon);
+        match approx.len().cmp(&4) {
+            std::cmp::Ordering::Equal => {
+                return Some([approx[0], approx[1], approx[2], approx[3]]);
+            }
+            std::cmp::Ordering::Greater => {
+                epsilon *= 1.5; // Increase epsilon to get fewer points
+            }
+            std::cmp::Ordering::Less => {
+                epsilon *= 0.7; // Decrease epsilon to get more points
+            }
+        }
+    }
+    
+    // If we can't get exactly 4 points, try to extract 4 corner points
+    if contour.len() >= 4 {
+        let corners = find_corner_points(contour);
+        if corners.len() == 4 {
+            return Some([corners[0], corners[1], corners[2], corners[3]]);
+        }
+    }
+    
+    None
+}
+
+/// Douglas-Peucker algorithm for polygon simplification
+fn douglas_peucker(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
+    if points.len() < 3 {
+        return points.to_vec();
+    }
+    
+    let mut result = Vec::new();
+    
+    // Find the point with maximum distance from line between first and last points
+    let start = points[0];
+    let end = points[points.len() - 1];
+    let mut max_dist = 0.0;
+    let mut max_index = 0;
+    
+    for (i, &point) in points.iter().enumerate().skip(1).take(points.len() - 2) {
+        let dist = point_to_line_distance(point, start, end);
+        if dist > max_dist {
+            max_dist = dist;
+            max_index = i;
+        }
+    }
+    
+    if max_dist > epsilon {
+        // Recursively simplify both parts
+        let left_part = douglas_peucker(&points[0..=max_index], epsilon);
+        let right_part = douglas_peucker(&points[max_index..], epsilon);
+        
+        result.extend(&left_part[0..left_part.len()-1]); // Exclude last point to avoid duplication
+        result.extend(&right_part);
+    } else {
+        result.push(start);
+        result.push(end);
+    }
+    
+    result
+}
+
+/// Calculate distance from a point to a line segment
+fn point_to_line_distance(point: (f64, f64), line_start: (f64, f64), line_end: (f64, f64)) -> f64 {
+    let (px, py) = point;
+    let (x1, y1) = line_start;
+    let (x2, y2) = line_end;
+    
+    let line_length_sq = (x2 - x1).powi(2) + (y2 - y1).powi(2);
+    
+    if line_length_sq == 0.0 {
+        // Line is actually a point
+        return ((px - x1).powi(2) + (py - y1).powi(2)).sqrt();
+    }
+    
+    // Calculate perpendicular distance
+    let numerator = ((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1).abs();
+    let denominator = line_length_sq.sqrt();
+    
+    numerator / denominator
+}
+
+/// Find corner points in a contour by detecting high curvature points
+fn find_corner_points(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    if contour.len() < 8 {
+        return contour.to_vec();
+    }
+    
+    let mut corners = Vec::new();
+    let window_size = contour.len() / 20; // Adaptive window size
+    let window_size = window_size.clamp(3, 10);
+    
+    for i in 0..contour.len() {
+        let prev_idx = (i + contour.len() - window_size) % contour.len();
+        let next_idx = (i + window_size) % contour.len();
+        
+        let curvature = calculate_curvature(contour[prev_idx], contour[i], contour[next_idx]);
+        
+        if curvature > 0.3 { // Threshold for corner detection
+            corners.push(contour[i]);
+        }
+    }
+    
+    // If we have too many corners, keep only the strongest ones
+    if corners.len() > 4 {
+        corners.sort_by(|&a, &b| {
+            let curv_a = calculate_curvature_at_point(contour, a);
+            let curv_b = calculate_curvature_at_point(contour, b);
+            curv_b.partial_cmp(&curv_a).unwrap()
+        });
+        corners.truncate(4);
+    }
+    
+    corners
+}
+
+/// Calculate curvature at three consecutive points
+fn calculate_curvature(p1: (f64, f64), p2: (f64, f64), p3: (f64, f64)) -> f64 {
+    let v1 = (p2.0 - p1.0, p2.1 - p1.1);
+    let v2 = (p3.0 - p2.0, p3.1 - p2.1);
+    
+    let dot_product = v1.0 * v2.0 + v1.1 * v2.1;
+    let mag1 = (v1.0.powi(2) + v1.1.powi(2)).sqrt();
+    let mag2 = (v2.0.powi(2) + v2.1.powi(2)).sqrt();
+    
+    if mag1 < 1e-6 || mag2 < 1e-6 {
+        return 0.0;
+    }
+    
+    let cos_angle = (dot_product / (mag1 * mag2)).clamp(-1.0, 1.0);
+    let _angle = cos_angle.acos();
+    
+    // Return curvature as 1 - cos(angle), where higher values indicate sharper turns
+    1.0 - cos_angle.abs()
+}
+
+/// Calculate curvature at a specific point in the contour
+fn calculate_curvature_at_point(contour: &[(f64, f64)], point: (f64, f64)) -> f64 {
+    // Find the closest point in the contour
+    let mut closest_idx = 0;
+    let mut min_dist = f64::INFINITY;
+    
+    for (i, &p) in contour.iter().enumerate() {
+        let dist = ((p.0 - point.0).powi(2) + (p.1 - point.1).powi(2)).sqrt();
+        if dist < min_dist {
+            min_dist = dist;
+            closest_idx = i;
+        }
+    }
+    
+    let window = 3;
+    let prev_idx = (closest_idx + contour.len() - window) % contour.len();
+    let next_idx = (closest_idx + window) % contour.len();
+    
+    calculate_curvature(contour[prev_idx], contour[closest_idx], contour[next_idx])
+}
+
+/// Calculate perimeter of a polygon
+fn calculate_perimeter(points: &[(f64, f64)]) -> f64 {
+    if points.len() < 2 {
+        return 0.0;
+    }
+    
+    let mut perimeter = 0.0;
+    for i in 0..points.len() {
+        let next_i = (i + 1) % points.len();
+        let dist = ((points[next_i].0 - points[i].0).powi(2) + (points[next_i].1 - points[i].1).powi(2)).sqrt();
+        perimeter += dist;
+    }
+    
+    perimeter
+}
+
+/// Calculate area of a quadrilateral
+fn calculate_quad_area(quad: &[(f64, f64); 4]) -> f64 {
+    // Using the shoelace formula
+    let mut area = 0.0;
+    for i in 0..4 {
+        let j = (i + 1) % 4;
+        area += quad[i].0 * quad[j].1;
+        area -= quad[j].0 * quad[i].1;
+    }
+    area.abs() / 2.0
+}
+
+/// Order quadrilateral points clockwise starting from top-left
+fn order_quad_points(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
+    let mut points = quad.to_vec();
+    
+    // Find centroid
+    let cx = points.iter().map(|p| p.0).sum::<f64>() / 4.0;
+    let cy = points.iter().map(|p| p.1).sum::<f64>() / 4.0;
+    
+    // Sort points by angle from centroid
+    points.sort_by(|a, b| {
+        let angle_a = (a.1 - cy).atan2(a.0 - cx);
+        let angle_b = (b.1 - cy).atan2(b.0 - cx);
+        angle_a.partial_cmp(&angle_b).unwrap()
+    });
+    
+    // Find the top-left point (minimum x + y)
+    let mut min_sum = f64::INFINITY;
+    let mut start_idx = 0;
+    for (i, &(x, y)) in points.iter().enumerate() {
+        let sum = x + y;
+        if sum < min_sum {
+            min_sum = sum;
+            start_idx = i;
+        }
+    }
+    
+    // Reorder to start from top-left and go clockwise
+    let mut ordered = [(0.0, 0.0); 4];
+    for i in 0..4 {
+        ordered[i] = points[(start_idx + i) % 4];
+    }
+    
+    ordered
 }
 
 /// Correct perspective distortion in an image (e.g., document scanner)

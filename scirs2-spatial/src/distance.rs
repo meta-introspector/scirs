@@ -1581,7 +1581,7 @@ mod tests {
 
         let x_b = arr2(&[[0.0, 1.0], [1.0, 1.0]]);
 
-        let dist_matrix = cdist(&x_a, &x_b, euclidean);
+        let dist_matrix = cdist(&x_a, &x_b, euclidean).unwrap();
 
         assert_eq!(dist_matrix.shape(), &[2, 2]);
 
@@ -1625,7 +1625,7 @@ mod tests {
     fn test_squareform() {
         // Test conversion from condensed to square form
         let condensed = vec![1.0, 2.0, 3.0];
-        let square = squareform(&condensed);
+        let square = squareform(&condensed).unwrap();
 
         assert_eq!(square.shape(), &[3, 3]);
         assert_relative_eq!(square[(0, 1)], 1.0, epsilon = 1e-6);
@@ -1633,7 +1633,7 @@ mod tests {
         assert_relative_eq!(square[(1, 2)], 3.0, epsilon = 1e-6);
 
         // Test conversion from square to condensed form
-        let condensed2 = squareform_to_condensed(&square);
+        let condensed2 = squareform_to_condensed(&square).unwrap();
         assert_eq!(condensed2, condensed);
     }
 }

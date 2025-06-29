@@ -65,6 +65,30 @@ pub struct LearnedOptimizerConfig {
 
     /// Enable transfer learning
     pub enable_transfer_learning: bool,
+
+    /// Advanced architecture features
+    pub use_residual_connections: bool,
+
+    /// Enable layer normalization
+    pub use_layer_normalization: bool,
+
+    /// Enable self-supervision
+    pub enable_self_supervision: bool,
+
+    /// Memory-efficient architecture
+    pub memory_efficient: bool,
+
+    /// Multi-scale processing
+    pub enable_multiscale: bool,
+
+    /// Adaptive architecture
+    pub adaptive_architecture: bool,
+
+    /// Hierarchical optimization
+    pub hierarchical_optimization: bool,
+
+    /// Dynamic architecture
+    pub dynamic_architecture: bool,
 }
 
 impl Default for LearnedOptimizerConfig {
@@ -85,6 +109,14 @@ impl Default for LearnedOptimizerConfig {
             meta_strategy: MetaOptimizationStrategy::MAML,
             pretraining_dataset_size: 10000,
             enable_transfer_learning: true,
+            use_residual_connections: true,
+            use_layer_normalization: true,
+            enable_self_supervision: false,
+            memory_efficient: true,
+            enable_multiscale: true,
+            adaptive_architecture: true,
+            hierarchical_optimization: false,
+            dynamic_architecture: false,
         }
     }
 }
@@ -102,6 +134,16 @@ pub enum NeuralOptimizerType {
     GraphNN,
     /// Hybrid architecture
     Hybrid,
+    /// Attention-based optimizer
+    AttentionBased,
+    /// Neural ODE optimizer
+    NeuralODE,
+    /// Neuroevolution optimizer
+    Neuroevolution,
+    /// Capsule network optimizer
+    CapsuleNet,
+    /// Memory-augmented optimizer
+    MemoryAugmented,
 }
 
 /// Meta-optimization strategies
@@ -117,6 +159,18 @@ pub enum MetaOptimizationStrategy {
     MetaSGD,
     /// Learned optimizer (from scratch)
     LearnedOptimizer,
+    /// Few-shot meta-learning
+    FewShot,
+    /// Continual meta-learning
+    Continual,
+    /// Task-agnostic meta-learning
+    TaskAgnostic,
+    /// Bayesian meta-learning
+    Bayesian,
+    /// Meta-learning with uncertainty
+    UncertaintyAware,
+    /// Hierarchical meta-learning
+    Hierarchical,
 }
 
 /// LSTM-based neural optimizer
@@ -358,6 +412,688 @@ pub struct LearnedOptimizerMetrics {
 
     /// Meta-gradient norm
     pub meta_gradient_norm: f64,
+}
+
+/// Advanced Neural Optimizer Factory
+pub struct AdvancedNeuralOptimizerFactory<A: Float> {
+    /// Available optimizer types
+    available_types: Vec<NeuralOptimizerType>,
+    
+    /// Optimizer registry
+    optimizer_registry: HashMap<String, Box<dyn NeuralOptimizerBuilder<A>>>,
+    
+    /// Performance database
+    performance_db: OptimizerPerformanceDatabase<A>,
+    
+    /// Auto-selection criteria
+    auto_selection: AutoSelectionCriteria<A>,
+}
+
+/// Neural optimizer builder trait
+pub trait NeuralOptimizerBuilder<A: Float> {
+    /// Build the neural optimizer
+    fn build(&self, config: &LearnedOptimizerConfig) -> Result<Box<dyn NeuralOptimizer<A>>, OptimizerError>;
+    
+    /// Get optimizer metadata
+    fn metadata(&self) -> NeuralOptimizerMetadata;
+    
+    /// Estimate resource requirements
+    fn estimate_resources(&self, config: &LearnedOptimizerConfig) -> ResourceEstimate;
+}
+
+/// Neural optimizer trait
+pub trait NeuralOptimizer<A: Float> {
+    /// Perform optimization step
+    fn step(&mut self, gradients: &Array1<A>) -> Result<Array1<A>, OptimizerError>;
+    
+    /// Update meta-parameters
+    fn meta_update(&mut self, meta_gradients: &Array1<A>) -> Result<(), OptimizerError>;
+    
+    /// Adapt to new task
+    fn adapt_to_task(&mut self, task_context: &TaskContext<A>) -> Result<(), OptimizerError>;
+    
+    /// Get current state
+    fn get_state(&self) -> OptimizerState<A>;
+    
+    /// Set state
+    fn set_state(&mut self, state: OptimizerState<A>) -> Result<(), OptimizerError>;
+    
+    /// Get performance metrics
+    fn get_metrics(&self) -> NeuralOptimizerMetrics<A>;
+}
+
+/// Neural optimizer metadata
+#[derive(Debug, Clone)]
+pub struct NeuralOptimizerMetadata {
+    pub name: String,
+    pub version: String,
+    pub description: String,
+    pub supported_domains: Vec<OptimizationDomain>,
+    pub complexity_level: ComplexityLevel,
+    pub memory_requirements: MemoryRequirements,
+    pub computational_requirements: ComputationalRequirements,
+}
+
+/// Optimization domains for neural optimizers
+#[derive(Debug, Clone)]
+pub enum OptimizationDomain {
+    /// Computer vision tasks
+    ComputerVision,
+    /// Natural language processing
+    NaturalLanguageProcessing,
+    /// Reinforcement learning
+    ReinforcementLearning,
+    /// General machine learning
+    GeneralML,
+    /// Scientific computing
+    ScientificComputing,
+    /// Recommendation systems
+    RecommendationSystems,
+    /// Time series analysis
+    TimeSeries,
+    /// Graph neural networks
+    GraphNeuralNetworks,
+}
+
+/// Resource requirements for optimization tasks
+#[derive(Debug, Clone)]
+pub struct ResourceRequirements {
+    /// Memory requirements in MB
+    pub memory_mb: usize,
+    /// CPU cores required
+    pub cpu_cores: usize,
+    /// GPU memory requirements in MB
+    pub gpu_memory_mb: Option<usize>,
+    /// Expected runtime in seconds
+    pub expected_runtime_seconds: f64,
+    /// Storage requirements in MB
+    pub storage_mb: usize,
+}
+
+/// Complexity levels
+#[derive(Debug, Clone)]
+pub enum ComplexityLevel {
+    Low,
+    Medium,
+    High,
+    VeryHigh,
+}
+
+/// Memory requirements
+#[derive(Debug, Clone)]
+pub struct MemoryRequirements {
+    pub minimum_mb: usize,
+    pub recommended_mb: usize,
+    pub maximum_mb: Option<usize>,
+    pub scales_with_input: bool,
+}
+
+/// Computational requirements
+#[derive(Debug, Clone)]
+pub struct ComputationalRequirements {
+    pub minimum_ops_per_step: usize,
+    pub gpu_acceleration: bool,
+    pub parallel_execution: bool,
+    pub real_time_capable: bool,
+}
+
+/// Resource estimate
+#[derive(Debug, Clone)]
+pub struct ResourceEstimate {
+    pub memory_mb: usize,
+    pub compute_ops: usize,
+    pub training_time_hours: f64,
+    pub inference_latency_ms: f64,
+}
+
+/// Task context for adaptation
+#[derive(Debug)]
+pub struct TaskContext<A: Float> {
+    /// Task identifier
+    pub task_id: String,
+    
+    /// Task type
+    pub task_type: TaskType,
+    
+    /// Problem dimensions
+    pub problem_dimensions: ProblemDimensions,
+    
+    /// Task-specific features
+    pub features: HashMap<String, A>,
+    
+    /// Historical performance
+    pub historical_performance: Vec<f64>,
+    
+    /// Task constraints
+    pub constraints: TaskConstraints<A>,
+}
+
+/// Task types
+#[derive(Debug, Clone)]
+pub enum TaskType {
+    Supervised,
+    Unsupervised,
+    Reinforcement,
+    SelfSupervised,
+    MetaLearning,
+    Transfer,
+    Multitask,
+}
+
+/// Problem dimensions
+#[derive(Debug, Clone)]
+pub struct ProblemDimensions {
+    pub input_dim: usize,
+    pub output_dim: usize,
+    pub parameter_count: usize,
+    pub dataset_size: usize,
+    pub sequence_length: Option<usize>,
+}
+
+/// Task constraints
+#[derive(Debug)]
+pub struct TaskConstraints<A: Float> {
+    /// Time budget
+    pub time_budget: Option<std::time::Duration>,
+    
+    /// Memory budget
+    pub memory_budget: Option<usize>,
+    
+    /// Accuracy threshold
+    pub accuracy_threshold: Option<A>,
+    
+    /// Resource constraints
+    pub resource_constraints: HashMap<String, A>,
+}
+
+/// Optimizer state
+#[derive(Debug)]
+pub struct OptimizerState<A: Float> {
+    /// Internal parameters
+    pub parameters: HashMap<String, Array1<A>>,
+    
+    /// Hidden states
+    pub hidden_states: HashMap<String, Array2<A>>,
+    
+    /// Memory buffers
+    pub memory_buffers: HashMap<String, Array2<A>>,
+    
+    /// Step count
+    pub step_count: usize,
+    
+    /// State metadata
+    pub metadata: StateMetadata,
+}
+
+/// State metadata
+#[derive(Debug, Clone)]
+pub struct StateMetadata {
+    pub version: String,
+    pub timestamp: std::time::SystemTime,
+    pub checksum: u64,
+    pub compression_level: u8,
+}
+
+/// Neural optimizer metrics
+#[derive(Debug)]
+pub struct NeuralOptimizerMetrics<A: Float> {
+    /// Performance metrics
+    pub performance: PerformanceMetrics<A>,
+    
+    /// Efficiency metrics
+    pub efficiency: EfficiencyMetrics<A>,
+    
+    /// Robustness metrics
+    pub robustness: RobustnessMetrics<A>,
+    
+    /// Interpretability metrics
+    pub interpretability: InterpretabilityMetrics<A>,
+}
+
+/// Performance metrics
+#[derive(Debug)]
+pub struct PerformanceMetrics<A: Float> {
+    pub convergence_rate: A,
+    pub final_performance: A,
+    pub sample_efficiency: A,
+    pub generalization_gap: A,
+    pub stability_measure: A,
+}
+
+/// Efficiency metrics
+#[derive(Debug)]
+pub struct EfficiencyMetrics<A: Float> {
+    pub computation_per_step: A,
+    pub memory_usage: A,
+    pub communication_overhead: A,
+    pub energy_consumption: A,
+    pub parallelization_efficiency: A,
+}
+
+/// Robustness metrics
+#[derive(Debug)]
+pub struct RobustnessMetrics<A: Float> {
+    pub noise_tolerance: A,
+    pub hyperparameter_sensitivity: A,
+    pub distribution_shift_robustness: A,
+    pub adversarial_robustness: A,
+    pub catastrophic_forgetting_resistance: A,
+}
+
+/// Interpretability metrics
+#[derive(Debug)]
+pub struct InterpretabilityMetrics<A: Float> {
+    pub decision_transparency: A,
+    pub feature_importance_clarity: A,
+    pub uncertainty_quantification: A,
+    pub causal_attribution: A,
+    pub human_understandability: A,
+}
+
+/// Optimizer performance database
+#[derive(Debug)]
+pub struct OptimizerPerformanceDatabase<A: Float> {
+    /// Performance records
+    performance_records: HashMap<String, Vec<PerformanceRecord<A>>>,
+    
+    /// Benchmark results
+    benchmark_results: HashMap<String, BenchmarkResults<A>>,
+    
+    /// Meta-analysis results
+    meta_analysis: HashMap<String, MetaAnalysisResults<A>>,
+    
+    /// Database statistics
+    statistics: DatabaseStatistics,
+}
+
+/// Performance record
+#[derive(Debug)]
+pub struct PerformanceRecord<A: Float> {
+    /// Optimizer configuration
+    pub config: LearnedOptimizerConfig,
+    
+    /// Task context
+    pub task_context: TaskContext<A>,
+    
+    /// Performance metrics
+    pub metrics: NeuralOptimizerMetrics<A>,
+    
+    /// Timestamp
+    pub timestamp: std::time::SystemTime,
+    
+    /// Validation status
+    pub validation_status: ValidationStatus,
+}
+
+/// Validation status
+#[derive(Debug, Clone)]
+pub enum ValidationStatus {
+    Validated,
+    PendingValidation,
+    ValidationFailed,
+    NotValidated,
+}
+
+/// Benchmark results
+#[derive(Debug)]
+pub struct BenchmarkResults<A: Float> {
+    /// Benchmark suite
+    pub benchmark_suite: String,
+    
+    /// Individual results
+    pub individual_results: Vec<BenchmarkResult<A>>,
+    
+    /// Aggregate statistics
+    pub aggregate_stats: AggregateStatistics<A>,
+    
+    /// Ranking information
+    pub ranking: RankingInformation,
+}
+
+/// Benchmark result
+#[derive(Debug)]
+pub struct BenchmarkResult<A: Float> {
+    /// Test name
+    pub test_name: String,
+    
+    /// Score
+    pub score: A,
+    
+    /// Relative performance
+    pub relative_performance: A,
+    
+    /// Confidence interval
+    pub confidence_interval: (A, A),
+    
+    /// Test metadata
+    pub metadata: TestMetadata,
+}
+
+/// Test metadata
+#[derive(Debug, Clone)]
+pub struct TestMetadata {
+    pub difficulty_level: DifficultyLevel,
+    pub test_category: TestCategory,
+    pub expected_runtime: std::time::Duration,
+    pub resource_requirements: ResourceRequirements,
+}
+
+/// Difficulty levels
+#[derive(Debug, Clone)]
+pub enum DifficultyLevel {
+    Easy,
+    Medium,
+    Hard,
+    Expert,
+}
+
+/// Test categories
+#[derive(Debug, Clone)]
+pub enum TestCategory {
+    Convergence,
+    Generalization,
+    Robustness,
+    Efficiency,
+    Scalability,
+}
+
+/// Aggregate statistics
+#[derive(Debug)]
+pub struct AggregateStatistics<A: Float> {
+    pub mean_score: A,
+    pub median_score: A,
+    pub std_deviation: A,
+    pub min_score: A,
+    pub max_score: A,
+    pub percentiles: HashMap<u8, A>,
+}
+
+/// Ranking information
+#[derive(Debug, Clone)]
+pub struct RankingInformation {
+    pub overall_rank: usize,
+    pub category_ranks: HashMap<TestCategory, usize>,
+    pub elo_rating: f64,
+    pub trend: RankingTrend,
+}
+
+/// Ranking trend
+#[derive(Debug, Clone)]
+pub enum RankingTrend {
+    Improving,
+    Stable,
+    Declining,
+    Volatile,
+}
+
+/// Meta-analysis results
+#[derive(Debug)]
+pub struct MetaAnalysisResults<A: Float> {
+    /// Effect sizes
+    pub effect_sizes: HashMap<String, A>,
+    
+    /// Statistical significance
+    pub significance_tests: HashMap<String, StatisticalTest<A>>,
+    
+    /// Moderator analysis
+    pub moderator_analysis: ModeratorAnalysis<A>,
+    
+    /// Publication bias assessment
+    pub publication_bias: PublicationBiasAssessment<A>,
+}
+
+/// Statistical test
+#[derive(Debug)]
+pub struct StatisticalTest<A: Float> {
+    pub test_statistic: A,
+    pub p_value: A,
+    pub confidence_interval: (A, A),
+    pub effect_size: A,
+    pub power: A,
+}
+
+/// Moderator analysis
+#[derive(Debug)]
+pub struct ModeratorAnalysis<A: Float> {
+    /// Categorical moderators
+    pub categorical_moderators: HashMap<String, Vec<A>>,
+    
+    /// Continuous moderators
+    pub continuous_moderators: HashMap<String, A>,
+    
+    /// Interaction effects
+    pub interaction_effects: HashMap<String, A>,
+    
+    /// Explained variance
+    pub explained_variance: A,
+}
+
+/// Publication bias assessment
+#[derive(Debug)]
+pub struct PublicationBiasAssessment<A: Float> {
+    /// Funnel plot asymmetry
+    pub funnel_plot_asymmetry: A,
+    
+    /// Egger's test
+    pub eggers_test: StatisticalTest<A>,
+    
+    /// Trim and fill analysis
+    pub trim_and_fill: TrimAndFillResults<A>,
+    
+    /// File drawer number
+    pub file_drawer_number: usize,
+}
+
+/// Trim and fill results
+#[derive(Debug)]
+pub struct TrimAndFillResults<A: Float> {
+    pub trimmed_studies: usize,
+    pub filled_studies: usize,
+    pub adjusted_effect_size: A,
+    pub adjusted_confidence_interval: (A, A),
+}
+
+/// Database statistics
+#[derive(Debug, Clone)]
+pub struct DatabaseStatistics {
+    pub total_records: usize,
+    pub unique_optimizers: usize,
+    pub unique_tasks: usize,
+    pub date_range: (std::time::SystemTime, std::time::SystemTime),
+    pub update_frequency: std::time::Duration,
+}
+
+/// Auto-selection criteria
+#[derive(Debug)]
+pub struct AutoSelectionCriteria<A: Float> {
+    /// Primary objectives
+    pub primary_objectives: Vec<OptimizationObjective>,
+    
+    /// Secondary objectives
+    pub secondary_objectives: Vec<OptimizationObjective>,
+    
+    /// Constraints
+    pub constraints: Vec<OptimizationConstraint<A>>,
+    
+    /// Preferences
+    pub preferences: UserPreferences<A>,
+    
+    /// Risk tolerance
+    pub risk_tolerance: RiskTolerance,
+}
+
+/// Optimization objectives
+#[derive(Debug, Clone)]
+pub enum OptimizationObjective {
+    MaximizePerformance,
+    MinimizeTime,
+    MinimizeMemory,
+    MaximizeRobustness,
+    MaximizeInterpretability,
+    MinimizeEnergy,
+    MaximizeGeneralization,
+}
+
+/// Optimization constraints
+#[derive(Debug)]
+pub struct OptimizationConstraint<A: Float> {
+    pub constraint_type: ConstraintType,
+    pub threshold: A,
+    pub priority: ConstraintPriority,
+    pub violation_penalty: A,
+}
+
+/// Constraint types
+#[derive(Debug, Clone)]
+pub enum ConstraintType {
+    MaxMemory,
+    MaxTime,
+    MinAccuracy,
+    MaxComplexity,
+    MinRobustness,
+    MaxEnergy,
+}
+
+/// Constraint priorities
+#[derive(Debug, Clone)]
+pub enum ConstraintPriority {
+    Hard,      // Must be satisfied
+    Soft,      // Preferred but not required
+    Flexible,  // Can be relaxed if necessary
+}
+
+/// User preferences
+#[derive(Debug)]
+pub struct UserPreferences<A: Float> {
+    /// Preferred optimizer families
+    pub preferred_families: Vec<NeuralOptimizerType>,
+    
+    /// Avoided optimizer families
+    pub avoided_families: Vec<NeuralOptimizerType>,
+    
+    /// Complexity preference
+    pub complexity_preference: ComplexityPreference,
+    
+    /// Performance vs efficiency tradeoff
+    pub performance_efficiency_tradeoff: A,
+    
+    /// Novelty preference
+    pub novelty_preference: NoveltyPreference,
+}
+
+/// Complexity preferences
+#[derive(Debug, Clone)]
+pub enum ComplexityPreference {
+    Simple,
+    Moderate,
+    Complex,
+    NoPreference,
+}
+
+/// Novelty preferences
+#[derive(Debug, Clone)]
+pub enum NoveltyPreference {
+    Conservative,  // Prefer well-tested optimizers
+    Moderate,      // Balance between tested and novel
+    Innovative,    // Prefer cutting-edge optimizers
+    Experimental,  // Willing to try experimental optimizers
+}
+
+/// Risk tolerance levels
+#[derive(Debug, Clone)]
+pub enum RiskTolerance {
+    VeryLow,
+    Low,
+    Medium,
+    High,
+    VeryHigh,
+}
+
+impl<A: Float> AdvancedNeuralOptimizerFactory<A> {
+    /// Create new factory
+    pub fn new() -> Self {
+        Self {
+            available_types: vec![
+                NeuralOptimizerType::LSTM,
+                NeuralOptimizerType::Transformer,
+                NeuralOptimizerType::AttentionBased,
+                NeuralOptimizerType::MemoryAugmented,
+                NeuralOptimizerType::Hybrid,
+            ],
+            optimizer_registry: HashMap::new(),
+            performance_db: OptimizerPerformanceDatabase::new(),
+            auto_selection: AutoSelectionCriteria::default(),
+        }
+    }
+    
+    /// Register optimizer builder
+    pub fn register_builder(
+        &mut self, 
+        name: String, 
+        builder: Box<dyn NeuralOptimizerBuilder<A>>
+    ) {
+        self.optimizer_registry.insert(name, builder);
+    }
+    
+    /// Auto-select optimal optimizer
+    pub fn auto_select_optimizer(
+        &self,
+        task_context: &TaskContext<A>,
+        criteria: &AutoSelectionCriteria<A>,
+    ) -> Result<String, OptimizerError> {
+        // Implementation would use ML-based selection
+        // This is a simplified placeholder
+        Ok("LSTM".to_string())
+    }
+    
+    /// Create optimizer
+    pub fn create_optimizer(
+        &self,
+        optimizer_name: &str,
+        config: &LearnedOptimizerConfig,
+    ) -> Result<Box<dyn NeuralOptimizer<A>>, OptimizerError> {
+        let builder = self.optimizer_registry.get(optimizer_name)
+            .ok_or_else(|| OptimizerError::InvalidConfig(
+                format!("Unknown optimizer: {}", optimizer_name)
+            ))?;
+        
+        builder.build(config)
+    }
+}
+
+impl<A: Float> OptimizerPerformanceDatabase<A> {
+    pub fn new() -> Self {
+        Self {
+            performance_records: HashMap::new(),
+            benchmark_results: HashMap::new(),
+            meta_analysis: HashMap::new(),
+            statistics: DatabaseStatistics {
+                total_records: 0,
+                unique_optimizers: 0,
+                unique_tasks: 0,
+                date_range: (std::time::SystemTime::now(), std::time::SystemTime::now()),
+                update_frequency: std::time::Duration::from_hours(24),
+            },
+        }
+    }
+}
+
+impl<A: Float> Default for AutoSelectionCriteria<A> {
+    fn default() -> Self {
+        Self {
+            primary_objectives: vec![OptimizationObjective::MaximizePerformance],
+            secondary_objectives: vec![OptimizationObjective::MinimizeTime],
+            constraints: Vec::new(),
+            preferences: UserPreferences {
+                preferred_families: Vec::new(),
+                avoided_families: Vec::new(),
+                complexity_preference: ComplexityPreference::Moderate,
+                performance_efficiency_tradeoff: A::from(0.5).unwrap(),
+                novelty_preference: NoveltyPreference::Moderate,
+            },
+            risk_tolerance: RiskTolerance::Medium,
+        }
+    }
 }
 
 impl<A> LSTMOptimizer<A>

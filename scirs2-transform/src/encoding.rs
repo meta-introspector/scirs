@@ -100,8 +100,7 @@ pub struct OneHotEncoder {
     drop: Option<String>,
     /// Whether to handle unknown categories
     handle_unknown: String,
-    /// Sparse output (not implemented yet)
-    #[allow(dead_code)]
+    /// Whether to return sparse matrix output
     sparse: bool,
 }
 
@@ -111,7 +110,7 @@ impl OneHotEncoder {
     /// # Arguments
     /// * `drop` - Strategy for dropping categories ('first', 'if_binary', or None)
     /// * `handle_unknown` - How to handle unknown categories ('error' or 'ignore')
-    /// * `sparse` - Whether to return sparse arrays (not implemented)
+    /// * `sparse` - Whether to return sparse arrays
     ///
     /// # Returns
     /// * A new OneHotEncoder instance
@@ -1302,6 +1301,513 @@ impl BinaryEncoder {
 
         binary.reverse(); // Most significant bit first
         binary
+    }
+}
+
+/// FrequencyEncoder for converting categorical features to frequency counts
+///
+/// This transformer converts categorical features into their frequency of occurrence
+/// in the training data. High-frequency categories get higher values, which can be
+/// useful for models that can leverage frequency information.
+#[derive(Debug, Clone)]
+pub struct FrequencyEncoder {
+    /// Frequency mappings for each feature
+    frequency_maps_: Option<Vec<HashMap<u64, f64>>>,
+    /// Whether to normalize frequencies to [0, 1]
+    normalize: bool,
+    /// How to handle unknown categories
+    handle_unknown: String,
+    /// Value to use for unknown categories (when handle_unknown="use_encoded_value")
+    unknown_value: f64,
+    /// Whether the encoder has been fitted
+    is_fitted: bool,
+}
+
+impl FrequencyEncoder {
+    /// Creates a new FrequencyEncoder
+    ///
+    /// # Arguments
+    /// * `normalize` - Whether to normalize frequencies to [0, 1] range
+    /// * `handle_unknown` - How to handle unknown categories ('error', 'ignore', or 'use_encoded_value')
+    /// * `unknown_value` - Value to use for unknown categories (when handle_unknown="use_encoded_value")
+    ///
+    /// # Returns
+    /// * `Result<FrequencyEncoder>` - The new encoder instance
+    pub fn new(normalize: bool, handle_unknown: &str, unknown_value: f64) -> Result<Self> {
+        if !["error", "ignore", "use_encoded_value"].contains(&handle_unknown) {
+            return Err(TransformError::InvalidInput(
+                "handle_unknown must be 'error', 'ignore', or 'use_encoded_value'".to_string(),
+            ));
+        }
+
+        Ok(FrequencyEncoder {
+            frequency_maps_: None,
+            normalize,
+            handle_unknown: handle_unknown.to_string(),
+            unknown_value,
+            is_fitted: false,
+        })
+    }
+
+    /// Creates a FrequencyEncoder with default settings
+    pub fn with_defaults() -> Self {
+        Self::new(false, "error", 0.0).unwrap()
+    }
+
+    /// Creates a FrequencyEncoder with normalized frequencies
+    pub fn with_normalization() -> Self {
+        Self::new(true, "error", 0.0).unwrap()
+    }
+
+    /// Fits the FrequencyEncoder to the input data
+    ///
+    /// # Arguments
+    /// * `x` - The input categorical data, shape (n_samples, n_features)
+    ///
+    /// # Returns
+    /// * `Result<()>` - Ok if successful, Err otherwise
+    pub fn fit<S>(&mut self, x: &ArrayBase<S, Ix2>) -> Result<()>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        let x_u64 = x.mapv(|x| {
+            let val_f64 = num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0);
+            val_f64 as u64
+        });
+
+        let n_samples = x_u64.shape()[0];
+        let n_features = x_u64.shape()[1];
+
+        if n_samples == 0 || n_features == 0 {
+            return Err(TransformError::InvalidInput("Empty input data".to_string()));
+        }
+
+        let mut frequency_maps = Vec::with_capacity(n_features);
+
+        for j in 0..n_features {
+            // Count frequency of each category
+            let mut category_counts: HashMap<u64, usize> = HashMap::new();
+            for i in 0..n_samples {
+                let category = x_u64[[i, j]];
+                *category_counts.entry(category).or_insert(0) += 1;
+            }
+
+            // Convert counts to frequencies
+            let mut frequency_map = HashMap::new();
+            for (category, count) in category_counts {
+                let frequency = if self.normalize {
+                    count as f64 / n_samples as f64
+                } else {
+                    count as f64
+                };
+                frequency_map.insert(category, frequency);
+            }
+
+            frequency_maps.push(frequency_map);
+        }
+
+        self.frequency_maps_ = Some(frequency_maps);
+        self.is_fitted = true;
+        Ok(())
+    }
+
+    /// Transforms the input data using the fitted FrequencyEncoder
+    ///
+    /// # Arguments
+    /// * `x` - The input categorical data, shape (n_samples, n_features)
+    ///
+    /// # Returns
+    /// * `Result<Array2<f64>>` - The frequency-encoded data
+    pub fn transform<S>(&self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        if !self.is_fitted {
+            return Err(TransformError::TransformationError(
+                "FrequencyEncoder has not been fitted".to_string(),
+            ));
+        }
+
+        let frequency_maps = self.frequency_maps_.as_ref().unwrap();
+
+        let x_u64 = x.mapv(|x| {
+            let val_f64 = num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0);
+            val_f64 as u64
+        });
+
+        let n_samples = x_u64.shape()[0];
+        let n_features = x_u64.shape()[1];
+
+        if n_features != frequency_maps.len() {
+            return Err(TransformError::InvalidInput(format!(
+                "x has {} features, but FrequencyEncoder was fitted with {} features",
+                n_features,
+                frequency_maps.len()
+            )));
+        }
+
+        let mut transformed = Array2::zeros((n_samples, n_features));
+
+        for i in 0..n_samples {
+            for j in 0..n_features {
+                let category = x_u64[[i, j]];
+
+                if let Some(&frequency) = frequency_maps[j].get(&category) {
+                    transformed[[i, j]] = frequency;
+                } else {
+                    // Handle unknown category
+                    match self.handle_unknown.as_str() {
+                        "error" => {
+                            return Err(TransformError::InvalidInput(format!(
+                                "Unknown category {} in feature {}",
+                                category, j
+                            )));
+                        }
+                        "ignore" => {
+                            transformed[[i, j]] = 0.0;
+                        }
+                        "use_encoded_value" => {
+                            transformed[[i, j]] = self.unknown_value;
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+            }
+        }
+
+        Ok(transformed)
+    }
+
+    /// Fits the encoder and transforms the data in one step
+    ///
+    /// # Arguments
+    /// * `x` - The input categorical data
+    ///
+    /// # Returns
+    /// * `Result<Array2<f64>>` - The frequency-encoded data
+    pub fn fit_transform<S>(&mut self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        self.fit(x)?;
+        self.transform(x)
+    }
+
+    /// Returns whether the encoder has been fitted
+    pub fn is_fitted(&self) -> bool {
+        self.is_fitted
+    }
+
+    /// Returns the learned frequency mappings if fitted
+    pub fn frequency_maps(&self) -> Option<&Vec<HashMap<u64, f64>>> {
+        self.frequency_maps_.as_ref()
+    }
+}
+
+/// Weight of Evidence (WOE) Encoder for converting categorical features using target information
+///
+/// WOE encoding transforms categorical features based on the relationship between 
+/// each category and a binary target variable. It's particularly useful for credit 
+/// scoring and other binary classification tasks. 
+///
+/// WOE = ln(P(target=1|category) / P(target=0|category))
+#[derive(Debug, Clone)]
+pub struct WOEEncoder {
+    /// WOE mappings for each feature
+    woe_maps_: Option<Vec<HashMap<u64, f64>>>,
+    /// Information Value (IV) for each feature
+    information_values_: Option<Vec<f64>>,
+    /// Regularization parameter to handle categories with zero events/non-events
+    regularization: f64,
+    /// How to handle unknown categories
+    handle_unknown: String,
+    /// Value to use for unknown categories (when handle_unknown="use_encoded_value")
+    unknown_value: f64,
+    /// Global WOE value for unknown categories (computed as overall log-odds)
+    global_woe_: f64,
+    /// Whether the encoder has been fitted
+    is_fitted: bool,
+}
+
+impl WOEEncoder {
+    /// Creates a new WOEEncoder
+    ///
+    /// # Arguments
+    /// * `regularization` - Small value added to prevent division by zero (default: 0.5)
+    /// * `handle_unknown` - How to handle unknown categories ('error', 'global_woe', or 'use_encoded_value')
+    /// * `unknown_value` - Value to use for unknown categories (when handle_unknown="use_encoded_value")
+    ///
+    /// # Returns
+    /// * `Result<WOEEncoder>` - The new encoder instance
+    pub fn new(regularization: f64, handle_unknown: &str, unknown_value: f64) -> Result<Self> {
+        if regularization < 0.0 {
+            return Err(TransformError::InvalidInput(
+                "regularization must be non-negative".to_string(),
+            ));
+        }
+
+        if !["error", "global_woe", "use_encoded_value"].contains(&handle_unknown) {
+            return Err(TransformError::InvalidInput(
+                "handle_unknown must be 'error', 'global_woe', or 'use_encoded_value'".to_string(),
+            ));
+        }
+
+        Ok(WOEEncoder {
+            woe_maps_: None,
+            information_values_: None,
+            regularization,
+            handle_unknown: handle_unknown.to_string(),
+            unknown_value,
+            global_woe_: 0.0,
+            is_fitted: false,
+        })
+    }
+
+    /// Creates a WOEEncoder with default settings
+    pub fn with_defaults() -> Self {
+        Self::new(0.5, "global_woe", 0.0).unwrap()
+    }
+
+    /// Creates a WOEEncoder with custom regularization
+    pub fn with_regularization(regularization: f64) -> Result<Self> {
+        Self::new(regularization, "global_woe", 0.0)
+    }
+
+    /// Fits the WOEEncoder to the input data
+    ///
+    /// # Arguments
+    /// * `x` - The input categorical data, shape (n_samples, n_features)
+    /// * `y` - The binary target values (0 or 1), length n_samples
+    ///
+    /// # Returns
+    /// * `Result<()>` - Ok if successful, Err otherwise
+    pub fn fit<S>(&mut self, x: &ArrayBase<S, Ix2>, y: &[f64]) -> Result<()>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        let x_u64 = x.mapv(|x| {
+            let val_f64 = num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0);
+            val_f64 as u64
+        });
+
+        let n_samples = x_u64.shape()[0];
+        let n_features = x_u64.shape()[1];
+
+        if n_samples == 0 || n_features == 0 {
+            return Err(TransformError::InvalidInput("Empty input data".to_string()));
+        }
+
+        if y.len() != n_samples {
+            return Err(TransformError::InvalidInput(
+                "Number of target values must match number of samples".to_string(),
+            ));
+        }
+
+        // Validate that target is binary
+        for &target in y {
+            if target != 0.0 && target != 1.0 {
+                return Err(TransformError::InvalidInput(
+                    "Target values must be binary (0 or 1)".to_string(),
+                ));
+            }
+        }
+
+        // Calculate global statistics
+        let total_events: f64 = y.iter().sum();
+        let total_non_events = n_samples as f64 - total_events;
+
+        if total_events == 0.0 || total_non_events == 0.0 {
+            return Err(TransformError::InvalidInput(
+                "Target must contain both 0 and 1 values".to_string(),
+            ));
+        }
+
+        // Global WOE (overall log-odds)
+        self.global_woe_ = (total_events / total_non_events).ln();
+
+        let mut woe_maps = Vec::with_capacity(n_features);
+        let mut information_values = Vec::with_capacity(n_features);
+
+        for j in 0..n_features {
+            // Collect target values by category
+            let mut category_stats: HashMap<u64, (f64, f64)> = HashMap::new(); // (events, non_events)
+
+            for i in 0..n_samples {
+                let category = x_u64[[i, j]];
+                let target = y[i];
+                
+                let (events, non_events) = category_stats.entry(category).or_insert((0.0, 0.0));
+                if target == 1.0 {
+                    *events += 1.0;
+                } else {
+                    *non_events += 1.0;
+                }
+            }
+
+            // Calculate WOE and IV for each category
+            let mut woe_map = HashMap::new();
+            let mut feature_iv = 0.0;
+
+            for (category, (events, non_events)) in category_stats.iter() {
+                // Add regularization to handle zero counts
+                let reg_events = events + self.regularization;
+                let reg_non_events = non_events + self.regularization;
+                let reg_total_events = total_events + self.regularization * category_stats.len() as f64;
+                let reg_total_non_events = total_non_events + self.regularization * category_stats.len() as f64;
+
+                // Calculate distribution percentages
+                let event_rate = reg_events / reg_total_events;
+                let non_event_rate = reg_non_events / reg_total_non_events;
+
+                // Calculate WOE
+                let woe = (event_rate / non_event_rate).ln();
+                woe_map.insert(*category, woe);
+
+                // Calculate Information Value contribution
+                let iv_contribution = (event_rate - non_event_rate) * woe;
+                feature_iv += iv_contribution;
+            }
+
+            woe_maps.push(woe_map);
+            information_values.push(feature_iv);
+        }
+
+        self.woe_maps_ = Some(woe_maps);
+        self.information_values_ = Some(information_values);
+        self.is_fitted = true;
+        Ok(())
+    }
+
+    /// Transforms the input data using the fitted WOEEncoder
+    ///
+    /// # Arguments
+    /// * `x` - The input categorical data, shape (n_samples, n_features)
+    ///
+    /// # Returns
+    /// * `Result<Array2<f64>>` - The WOE-encoded data
+    pub fn transform<S>(&self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        if !self.is_fitted {
+            return Err(TransformError::TransformationError(
+                "WOEEncoder has not been fitted".to_string(),
+            ));
+        }
+
+        let woe_maps = self.woe_maps_.as_ref().unwrap();
+
+        let x_u64 = x.mapv(|x| {
+            let val_f64 = num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0);
+            val_f64 as u64
+        });
+
+        let n_samples = x_u64.shape()[0];
+        let n_features = x_u64.shape()[1];
+
+        if n_features != woe_maps.len() {
+            return Err(TransformError::InvalidInput(format!(
+                "x has {} features, but WOEEncoder was fitted with {} features",
+                n_features,
+                woe_maps.len()
+            )));
+        }
+
+        let mut transformed = Array2::zeros((n_samples, n_features));
+
+        for i in 0..n_samples {
+            for j in 0..n_features {
+                let category = x_u64[[i, j]];
+
+                if let Some(&woe_value) = woe_maps[j].get(&category) {
+                    transformed[[i, j]] = woe_value;
+                } else {
+                    // Handle unknown category
+                    match self.handle_unknown.as_str() {
+                        "error" => {
+                            return Err(TransformError::InvalidInput(format!(
+                                "Unknown category {} in feature {}",
+                                category, j
+                            )));
+                        }
+                        "global_woe" => {
+                            transformed[[i, j]] = self.global_woe_;
+                        }
+                        "use_encoded_value" => {
+                            transformed[[i, j]] = self.unknown_value;
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+            }
+        }
+
+        Ok(transformed)
+    }
+
+    /// Fits the encoder and transforms the data in one step
+    ///
+    /// # Arguments
+    /// * `x` - The input categorical data
+    /// * `y` - The binary target values
+    ///
+    /// # Returns
+    /// * `Result<Array2<f64>>` - The WOE-encoded data
+    pub fn fit_transform<S>(&mut self, x: &ArrayBase<S, Ix2>, y: &[f64]) -> Result<Array2<f64>>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        self.fit(x, y)?;
+        self.transform(x)
+    }
+
+    /// Returns whether the encoder has been fitted
+    pub fn is_fitted(&self) -> bool {
+        self.is_fitted
+    }
+
+    /// Returns the learned WOE mappings if fitted
+    pub fn woe_maps(&self) -> Option<&Vec<HashMap<u64, f64>>> {
+        self.woe_maps_.as_ref()
+    }
+
+    /// Returns the Information Values for each feature if fitted
+    /// 
+    /// Information Value interpretation:
+    /// - < 0.02: Not useful for prediction
+    /// - 0.02 - 0.1: Weak predictive power
+    /// - 0.1 - 0.3: Medium predictive power  
+    /// - 0.3 - 0.5: Strong predictive power
+    /// - > 0.5: Suspicious, too good to be true
+    pub fn information_values(&self) -> Option<&Vec<f64>> {
+        self.information_values_.as_ref()
+    }
+
+    /// Returns the global WOE value (overall log-odds)
+    pub fn global_woe(&self) -> f64 {
+        self.global_woe_
+    }
+
+    /// Returns features ranked by Information Value (descending order)
+    ///
+    /// # Returns
+    /// * `Option<Vec<(usize, f64)>>` - Vector of (feature_index, information_value) pairs
+    pub fn feature_importance_ranking(&self) -> Option<Vec<(usize, f64)>> {
+        self.information_values_.as_ref().map(|ivs| {
+            let mut ranking: Vec<(usize, f64)> = ivs
+                .iter()
+                .enumerate()
+                .map(|(idx, &iv)| (idx, iv))
+                .collect();
+            ranking.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+            ranking
+        })
     }
 }
 

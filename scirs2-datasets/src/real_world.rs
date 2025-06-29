@@ -4,13 +4,11 @@
 //! research and practice. These datasets come from various domains including finance,
 //! healthcare, natural language processing, computer vision, and more.
 
-use crate::cache::CacheManager;
+use crate::cache::{CacheKey, CacheManager};
 use crate::error::{DatasetsError, Result};
 use crate::registry::{DatasetMetadata, DatasetRegistry};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
-use std::collections::HashMap;
-use std::path::Path;
 
 /// Configuration for real-world dataset loading
 #[derive(Debug, Clone)]

@@ -25,7 +25,9 @@ pub use jackknife::{cross_spectrum_jackknife, jackknife_confidence_intervals, we
 pub use psd::{multitaper_spectrogram, pmtm};
 pub use utils::{coherence, multitaper_filtfilt};
 pub use validation::{
-    validate_multitaper_comprehensive, MultitaperValidationResult, TestSignalConfig,
+    validate_multitaper_comprehensive, validate_multitaper_robustness, 
+    MultitaperValidationResult, EnhancedMultitaperValidationResult, 
+    TestSignalConfig, PerformanceScalingMetrics, ConvergenceMetrics,
 };
 pub use windows::dpss;
 

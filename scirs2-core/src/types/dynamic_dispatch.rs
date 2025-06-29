@@ -653,12 +653,12 @@ pub mod utils {
     pub fn group_by_category(
         collection: &HeterogeneousCollection,
     ) -> HashMap<TypeCategory, Vec<&DynamicValue>> {
-        let mut groups = HashMap::new();
+        let mut groups: HashMap<TypeCategory, Vec<&DynamicValue>> = HashMap::new();
 
         for value in &collection.values {
             groups
                 .entry(value.type_info.category.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(value);
         }
 

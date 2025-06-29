@@ -240,7 +240,7 @@ impl Sobol {
         
         // Convert to floating point
         self.last_point.iter()
-            .map(|&x| (x as f64) / (1u64 << 64) as f64)
+            .map(|&x| (x as f64) / u64::MAX as f64)
             .collect()
     }
 }

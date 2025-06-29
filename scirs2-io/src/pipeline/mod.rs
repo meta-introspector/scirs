@@ -372,7 +372,7 @@ pub trait PipelineStage: Send + Sync {
     }
 
     /// Check if stage can handle the input type
-    fn can_handle(&self, input_type: &str) -> bool {
+    fn can_handle(&self, _input_type: &str) -> bool {
         true
     }
 }

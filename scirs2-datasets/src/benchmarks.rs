@@ -7,7 +7,6 @@ use crate::generators::*;
 use crate::loaders::{load_csv, load_csv_parallel, CsvConfig, StreamingConfig};
 use crate::sample::load_wine;
 use crate::toy::{load_diabetes, *};
-use crate::utils::Dataset;
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::{Duration, Instant};

@@ -131,6 +131,7 @@ pub struct GeoTiff {
     data_type: GeoTiffDataType,
     geo_transform: GeoTransform,
     crs: Option<CRS>,
+    #[allow(dead_code)]
     file_path: String,
     // Simplified - in reality would use a proper TIFF library
 }
@@ -305,10 +306,12 @@ impl GeoTiffNumeric for f64 {
 
 /// GeoTIFF writer
 pub struct GeoTiffWriter {
+    #[allow(dead_code)]
     file_path: String,
     width: u32,
     height: u32,
     bands: u16,
+    #[allow(dead_code)]
     data_type: GeoTiffDataType,
     geo_transform: GeoTransform,
     crs: Option<CRS>,

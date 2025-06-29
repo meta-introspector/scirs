@@ -1,7 +1,122 @@
 //! Airy functions
 //!
-//! This module provides implementations of Airy functions of the first kind (Ai)
+//! This module provides comprehensive implementations of Airy functions of the first kind (Ai)
 //! and second kind (Bi), along with their derivatives.
+//!
+//! ## Mathematical Theory
+//!
+//! ### The Airy Differential Equation
+//!
+//! The Airy functions are solutions to the second-order linear differential equation:
+//!
+//! **Airy's Equation**:
+//! ```text
+//! d²y/dx² - x·y = 0
+//! ```
+//!
+//! This equation appears in various physical contexts, particularly in optics and
+//! quantum mechanics when dealing with problems involving slowly varying potentials.
+//!
+//! ### The Airy Functions
+//!
+//! There are two linearly independent solutions to Airy's equation:
+//!
+//! **Ai(x)** - **Airy function of the first kind**:
+//! - Defined as the solution that decays exponentially as x → +∞
+//! - Oscillates as x → -∞
+//! - Has infinitely many zeros on the negative real axis
+//!
+//! **Bi(x)** - **Airy function of the second kind**:
+//! - Defined as the solution that grows exponentially as x → +∞
+//! - Oscillates as x → -∞ (π/2 out of phase with Ai(x))
+//! - Has infinitely many zeros on the negative real axis
+//!
+//! ### Integral Representations
+//!
+//! **Ai(x)** can be expressed as:
+//! ```text
+//! Ai(x) = (1/π) ∫₀^∞ cos(t³/3 + xt) dt
+//! ```
+//!
+//! **Bi(x)** can be expressed as:
+//! ```text
+//! Bi(x) = (1/π) ∫₀^∞ [exp(-t³/3 + xt) + sin(t³/3 + xt)] dt
+//! ```
+//!
+//! ### Asymptotic Behavior
+//!
+//! **For large positive x** (x → +∞):
+//! ```text
+//! Ai(x) ~ (1/2) π^(-1/2) x^(-1/4) exp(-2x^(3/2)/3)
+//! Bi(x) ~ π^(-1/2) x^(-1/4) exp(2x^(3/2)/3)
+//! ```
+//!
+//! **For large negative x** (x → -∞, |x| → ∞):
+//! ```text
+//! Ai(x) ~ π^(-1/2) |x|^(-1/4) sin(2|x|^(3/2)/3 + π/4)
+//! Bi(x) ~ π^(-1/2) |x|^(-1/4) cos(2|x|^(3/2)/3 + π/4)
+//! ```
+//!
+//! **Near x = 0**:
+//! ```text
+//! Ai(0) = 3^(-2/3) / Γ(2/3) ≈ 0.35502805
+//! Bi(0) = 3^(-1/6) / Γ(2/3) ≈ 0.61492663
+//! Ai'(0) = -3^(-1/3) / Γ(1/3) ≈ -0.25881940
+//! Bi'(0) = 3^(1/6) / Γ(1/3) ≈ 0.44828836
+//! ```
+//!
+//! ### Key Properties
+//!
+//! 1. **Wronskian**: W[Ai(x), Bi(x)] = Ai(x)Bi'(x) - Ai'(x)Bi(x) = 1/π
+//!    - **Significance**: Confirms linear independence of Ai and Bi
+//!
+//! 2. **Connection to Bessel functions**: For complex arguments, Airy functions
+//!    can be expressed in terms of modified Bessel functions of order ±1/3
+//!
+//! 3. **Zeros**: Both Ai(x) and Bi(x) have infinitely many zeros on the negative
+//!    real axis, with asymptotic spacing ~ π/(2|x|^(1/2))
+//!
+//! ### Derivatives
+//!
+//! The derivatives of Airy functions satisfy:
+//! ```text
+//! d/dx[Ai(x)] = Ai'(x)
+//! d/dx[Bi(x)] = Bi'(x)
+//! d/dx[Ai'(x)] = x·Ai(x)
+//! d/dx[Bi'(x)] = x·Bi(x)
+//! ```
+//!
+//! ### Physical Applications
+//!
+//! Airy functions appear in numerous physical contexts:
+//!
+//! 1. **Quantum Mechanics**: 
+//!    - Solutions to the Schrödinger equation with linear potential
+//!    - Quantum tunneling through potential barriers
+//!    - WKB approximation near turning points
+//!
+//! 2. **Optics**:
+//!    - Fresnel diffraction patterns
+//!    - Catastrophe optics (caustics)
+//!    - Beam propagation in graded-index media
+//!
+//! 3. **Fluid Mechanics**:
+//!    - Internal gravity waves in stratified fluids
+//!    - Ship wave patterns
+//!
+//! 4. **Electromagnetics**:
+//!    - Wave propagation in inhomogeneous media
+//!    - Antenna radiation patterns
+//!
+//! ### Computational Methods
+//!
+//! This implementation uses several computational strategies:
+//!
+//! 1. **Lookup tables with interpolation** for rapid evaluation
+//! 2. **Series expansions** near x = 0 for high accuracy
+//! 3. **Asymptotic expansions** for large |x| to prevent overflow/underflow
+//! 4. **Recurrence relations** for computing derivatives
+//! 5. **Connection formulas** to extend the domain of validity
 
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;

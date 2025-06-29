@@ -453,7 +453,7 @@ impl CrossModuleBenchmarkRunner {
         // Simulate FFT operations (O(n log n))
         let fft_operations = (signal_length as f64 * (signal_length as f64).log2()) as usize;
         for _ in 0..fft_operations.min(1000000) {
-            let _result = std::f64::consts::PI * 2.71828_f64.exp();
+            let _result = std::f64::consts::PI * std::f64::consts::E.exp();
         }
 
         Ok(())
@@ -708,7 +708,7 @@ impl CrossModuleBenchmarkRunner {
         // Simulate processing data larger than available memory
         let total_elements = data_size / std::mem::size_of::<f64>();
         let chunk_size = 1024; // Process 1024 elements at a time
-        let num_chunks = (total_elements + chunk_size - 1) / chunk_size;
+        let num_chunks = total_elements.div_ceil(chunk_size);
 
         for chunk_idx in 0..num_chunks {
             let start = chunk_idx * chunk_size;

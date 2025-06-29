@@ -419,6 +419,279 @@ The choice of algorithm affects numerical stability:
 
 ---
 
+## Struve Functions
+
+### Definition and Differential Equation
+
+The Struve functions $H_\nu(x)$ and $L_\nu(x)$ are solutions to the non-homogeneous Bessel equation:
+$$x^2 \frac{d^2y}{dx^2} + x\frac{dy}{dx} + (x^2 - \nu^2)y = \frac{4(\frac{x}{2})^{\nu+1}}{\sqrt{\pi}\Gamma(\nu + \frac{1}{2})}$$
+
+### Series Representation
+
+**Struve Function $H_\nu(x)$:**
+$$H_\nu(x) = \left(\frac{x}{2}\right)^{\nu+1} \sum_{k=0}^{\infty} \frac{(-1)^k}{k!\Gamma(k+\nu+\frac{3}{2})} \left(\frac{x}{2}\right)^{2k}$$
+
+**Modified Struve Function $L_\nu(x)$:**
+$$L_\nu(x) = -i e^{-i\nu\pi/2} H_\nu(ix) = \left(\frac{x}{2}\right)^{\nu+1} \sum_{k=0}^{\infty} \frac{1}{k!\Gamma(k+\nu+\frac{3}{2})} \left(\frac{x}{2}\right)^{2k}$$
+
+### Asymptotic Behavior
+
+For large $|x|$:
+$$H_\nu(x) \sim Y_\nu(x) + \frac{1}{\pi} \left(\frac{2}{x}\right)^{\nu+1} \Gamma\left(\nu + \frac{1}{2}\right)$$
+
+**Proof:** The asymptotic expansion follows from the integral representation:
+$$H_\nu(x) = \frac{2(\frac{x}{2})^\nu}{\sqrt{\pi}\Gamma(\nu+\frac{1}{2})} \int_0^1 \sin(x\sqrt{1-t^2}) (1-t^2)^{\nu-\frac{1}{2}} dt$$
+
+For large $x$, the oscillatory integral can be evaluated using stationary phase methods. □
+
+### Integral Representations
+
+$$H_\nu(x) = \frac{2(\frac{x}{2})^\nu}{\sqrt{\pi}\Gamma(\nu+\frac{1}{2})} \int_0^1 \sin(x\sqrt{1-t^2}) (1-t^2)^{\nu-\frac{1}{2}} dt$$
+
+$$L_\nu(x) = \frac{2(\frac{x}{2})^\nu}{\sqrt{\pi}\Gamma(\nu+\frac{1}{2})} \int_0^1 \sinh(x\sqrt{1-t^2}) (1-t^2)^{\nu-\frac{1}{2}} dt$$
+
+---
+
+## Parabolic Cylinder Functions
+
+### Weber's Differential Equation
+
+The parabolic cylinder functions are solutions to Weber's equation:
+$$\frac{d^2y}{dx^2} + \left(\nu + \frac{1}{2} - \frac{x^2}{4}\right)y = 0$$
+
+### Principal Solutions
+
+**Weber Function $D_\nu(x)$:**
+$$D_\nu(x) = 2^{\nu/2} e^{-x^2/4} \left[\frac{\sqrt{\pi}}{\Gamma(\frac{1-\nu}{2})} {_1F_1}\left(\frac{-\nu}{2}; \frac{1}{2}; \frac{x^2}{2}\right) - \frac{\sqrt{2\pi} x}{\Gamma(\frac{-\nu}{2})} {_1F_1}\left(\frac{1-\nu}{2}; \frac{3}{2}; \frac{x^2}{2}\right)\right]$$
+
+**Alternative Form using Hermite Functions:**
+For integer $n$:
+$$D_n(x) = 2^{-n/2} e^{-x^2/4} H_n\left(\frac{x}{\sqrt{2}}\right)$$
+
+where $H_n$ are the Hermite polynomials.
+
+### Asymptotic Expansions
+
+For large $|x|$:
+$$D_\nu(x) \sim x^\nu e^{-x^2/4} \left[1 - \frac{\nu(\nu-1)}{2x^2} + \frac{\nu(\nu-1)(\nu-2)(\nu-3)}{8x^4} + \cdots\right]$$
+
+**Derivation:** The asymptotic expansion can be derived from the integral representation:
+$$D_\nu(x) = e^{-x^2/4} \int_{-\infty}^{\infty} t^\nu e^{-t^2/2 + xt} dt$$
+
+For large $x$, the saddle point occurs at $t = x$, leading to the asymptotic series. □
+
+### Connection Formulas
+
+The parabolic cylinder functions satisfy:
+$$D_\nu(x) = e^{i\nu\pi} D_\nu(-x) + \frac{2\sqrt{2\pi}}{\Gamma(-\nu)} e^{-i\nu\pi/2} D_{-\nu-1}(ix)$$
+
+---
+
+## Coulomb Functions
+
+### Coulomb Wave Equation
+
+The Coulomb functions are solutions to the Coulomb wave equation:
+$$\frac{d^2y}{dr^2} + \left[k^2 - \frac{2\eta k}{r} - \frac{\ell(\ell+1)}{r^2}\right]y = 0$$
+
+where $\eta$ is the Sommerfeld parameter and $k$ is the wave number.
+
+### Regular and Irregular Solutions
+
+**Regular Coulomb Function $F_\ell(\eta, r)$:**
+$$F_\ell(\eta, r) = \frac{2^\ell e^{-\pi\eta/2} |\Gamma(\ell+1+i\eta)|}{(2\ell+1)!} (kr)^{\ell+1} e^{ikr} {_1F_1}(\ell+1-i\eta; 2\ell+2; -2ikr)$$
+
+**Irregular Coulomb Function $G_\ell(\eta, r)$:**
+$$G_\ell(\eta, r) = \frac{F_\ell(\eta, r) \tan(\sigma_\ell) - F_{-\ell-1}(\eta, r)}{\tan(\sigma_\ell)}$$
+
+where $\sigma_\ell = \arg[\Gamma(\ell+1+i\eta)]$ is the Coulomb phase shift.
+
+### Asymptotic Behavior
+
+For large $r$:
+$$F_\ell(\eta, r) \sim \sin\left(kr - \frac{\ell\pi}{2} + \sigma_\ell - \eta \ln(2kr)\right)$$
+$$G_\ell(\eta, r) \sim \cos\left(kr - \frac{\ell\pi}{2} + \sigma_\ell - \eta \ln(2kr)\right)$$
+
+### Wronskian Relations
+
+$$F_\ell G_\ell' - F_\ell' G_\ell = 1$$
+
+**Proof:** This follows from the linear independence of $F_\ell$ and $G_\ell$ and their normalization. The Wronskian is constant and equals unity by construction. □
+
+---
+
+## Kelvin Functions
+
+### Kelvin's Differential Equation
+
+The Kelvin functions are solutions to:
+$$x^2 \frac{d^2y}{dx^2} + x\frac{dy}{dx} - (ix^2 + \nu^2)y = 0$$
+
+This is the modified Bessel equation with purely imaginary argument.
+
+### Principal Kelvin Functions
+
+**Real Kelvin Functions:**
+- $\text{ber}_\nu(x) = \Re[J_\nu(xe^{3\pi i/4})]$
+- $\text{bei}_\nu(x) = \Im[J_\nu(xe^{3\pi i/4})]$
+- $\text{ker}_\nu(x) = \Re[K_\nu(xe^{3\pi i/4})]$
+- $\text{kei}_\nu(x) = \Im[K_\nu(xe^{3\pi i/4})]$
+
+### Series Representations
+
+For $\nu = 0$:
+$$\text{ber}(x) = \sum_{k=0}^{\infty} \frac{(-1)^k}{[(2k)!]^2} \left(\frac{x}{2}\right)^{4k}$$
+
+$$\text{bei}(x) = \sum_{k=0}^{\infty} \frac{(-1)^k}{[(2k+1)!]^2} \left(\frac{x}{2}\right)^{4k+2}$$
+
+### Asymptotic Behavior
+
+For large $x$:
+$$\text{ber}(x) + i\text{bei}(x) \sim \frac{e^{x/\sqrt{2}}}{\sqrt{2\pi x}} e^{i(x/\sqrt{2} - \pi/8)}$$
+
+$$\text{ker}(x) + i\text{kei}(x) \sim \sqrt{\frac{\pi}{2x}} e^{-x/\sqrt{2}} e^{-i(x/\sqrt{2} - \pi/8)}$$
+
+### Physical Applications
+
+Kelvin functions appear in heat conduction problems in cylindrical geometries with oscillatory boundary conditions, particularly in skin effect calculations for electromagnetic fields in cylindrical conductors.
+
+---
+
+## Information Theory Functions
+
+### Entropy Functions
+
+**Shannon Entropy:**
+$$H(p) = -\sum_{i=1}^n p_i \log p_i$$
+
+**Differential Entropy (for continuous distributions):**
+$$h(f) = -\int_{-\infty}^{\infty} f(x) \log f(x) dx$$
+
+### Kullback-Leibler Divergence
+
+**Definition:**
+$$D_{KL}(P \parallel Q) = \sum_{i} P(i) \log \frac{P(i)}{Q(i)}$$
+
+**Properties:**
+1. $D_{KL}(P \parallel Q) \geq 0$ (non-negativity)
+2. $D_{KL}(P \parallel Q) = 0$ if and only if $P = Q$
+3. $D_{KL}(P \parallel Q) \neq D_{KL}(Q \parallel P)$ (asymmetric)
+
+**Proof of Non-negativity (Gibbs' Inequality):**
+Using Jensen's inequality for the convex function $-\log x$:
+$$-\sum_i P(i) \log \frac{Q(i)}{P(i)} \geq -\log \sum_i P(i) \frac{Q(i)}{P(i)} = -\log \sum_i Q(i) = 0$$
+
+Therefore, $D_{KL}(P \parallel Q) = \sum_i P(i) \log \frac{P(i)}{Q(i)} \geq 0$. □
+
+### Cross-Entropy
+
+$$H(P,Q) = -\sum_i P(i) \log Q(i) = H(P) + D_{KL}(P \parallel Q)$$
+
+This decomposition shows that cross-entropy consists of the entropy of $P$ plus the additional "cost" of using $Q$ instead of $P$.
+
+### Mutual Information
+
+$$I(X;Y) = \sum_{x,y} p(x,y) \log \frac{p(x,y)}{p(x)p(y)} = D_{KL}(P_{X,Y} \parallel P_X \otimes P_Y)$$
+
+### Entropy Rate
+
+For a stationary stochastic process $\{X_n\}$:
+$$H_\infty = \lim_{n \to \infty} \frac{1}{n} H(X_1, X_2, \ldots, X_n)$$
+
+---
+
+## Spheroidal Wave Functions
+
+### Spheroidal Wave Equation
+
+The spheroidal wave equation in prolate spheroidal coordinates $(\xi, \eta, \phi)$ is:
+$$\frac{d}{d\xi}\left[(1-\xi^2)\frac{dy}{d\xi}\right] + \left[\lambda - c^2\xi^2 - \frac{m^2}{1-\xi^2}\right]y = 0$$
+
+### Angular Spheroidal Functions
+
+**Prolate Angular Functions $S_{mn}^{(1)}(c, \eta)$:**
+These are solutions to:
+$$\frac{d}{d\eta}\left[(1-\eta^2)\frac{dS}{d\eta}\right] + \left[\lambda_{mn}(c) - c^2\eta^2 - \frac{m^2}{1-\eta^2}\right]S = 0$$
+
+**Oblate Angular Functions $S_{mn}^{(3)}(c, \eta)$:**
+Solutions to the oblate version with $c$ replaced by $ic$.
+
+### Radial Spheroidal Functions
+
+**Prolate Radial Functions of the First Kind $R_{mn}^{(1)}(c, \xi)$:**
+$$R_{mn}^{(1)}(c, \xi) = \sum_{k=0}^{\infty} d_k^{(mn)} (\xi^2 - 1)^{m/2} \xi^{k+m} {_2F_1}\left(-k, k+2m+1; m+\frac{3}{2}; \frac{1-\xi}{2}\right)$$
+
+**Prolate Radial Functions of the Second Kind $R_{mn}^{(2)}(c, \xi)$:**
+Constructed to be linearly independent from $R_{mn}^{(1)}$ and satisfy appropriate boundary conditions.
+
+### Eigenvalue Equation
+
+The characteristic values $\lambda_{mn}(c)$ satisfy a continued fraction equation:
+$$\lambda = m^2 + 2\sum_{j=1}^{\infty} \frac{c^{2j}}{2j(2j-1)} \prod_{k=1}^{j-1} \frac{1}{(2k+2m-1)(2k+2m+1) - \lambda}$$
+
+### Applications
+
+Spheroidal wave functions are essential for:
+- Electromagnetic scattering by prolate and oblate spheroids
+- Quantum mechanics of particles in spheroidal potentials
+- Acoustic scattering problems
+- Signal processing and antenna theory
+
+---
+
+## Advanced Wright Function Theory
+
+### Wright's General Function
+
+**Definition:**
+$$\Phi(\alpha, \beta; z) = \sum_{n=0}^{\infty} \frac{z^n}{n! \Gamma(\alpha n + \beta)}$$
+
+This generalizes both the exponential function ($\alpha = 0$) and Mittag-Leffler functions.
+
+### Mellin Transform Representation
+
+$$\Phi(\alpha, \beta; z) = \frac{1}{2\pi i} \int_{\mathcal{C}} \Gamma(-s) \Gamma(\beta + \alpha s) (-z)^s ds$$
+
+where $\mathcal{C}$ is an appropriate contour in the complex plane.
+
+### Asymptotic Analysis via Saddle Points
+
+For large $|z|$ with $\alpha > 0$, the saddle point analysis of the Mellin transform yields:
+
+**Main Asymptotic Term:**
+$$\Phi(\alpha, \beta; z) \sim \frac{1}{\sqrt{2\pi\alpha}} z^{(\beta-1)/(2\alpha)} \exp\left(\frac{1}{\alpha} \left(\frac{z}{\alpha}\right)^{1/\alpha}\right) \left[1 + O(|z|^{-1/(2\alpha)})\right]$$
+
+**Derivation:** The saddle point $s_0$ satisfies:
+$$\frac{d}{ds}[\ln\Gamma(\beta + \alpha s) + s\ln(-z)] = 0$$
+
+This gives $\alpha\psi(\beta + \alpha s_0) + \ln(-z) = 0$, where $\psi$ is the digamma function.
+
+For large $|z|$, $s_0 \approx (z/\alpha)^{1/\alpha}/\alpha$, leading to the asymptotic formula. □
+
+### Special Cases and Relationships
+
+**Wright Bessel Function:**
+$$J_{\rho,\beta}(z) = \Phi\left(\rho, \beta; -z\right)$$
+
+**Mittag-Leffler Function:**
+$$E_{\alpha,\beta}(z) = \Phi(\alpha, \beta; z)$$
+
+**Generalized Exponential:**
+$$E_\alpha(z) = \Phi(\alpha, 1; z)$$
+
+### Fractional Calculus Applications
+
+Wright functions appear naturally in solutions to fractional differential equations:
+
+$$\frac{d^\alpha}{dt^\alpha} y(t) = \lambda y(t), \quad y(0) = y_0$$
+
+has the solution:
+$$y(t) = y_0 t^{\alpha-1} E_{\alpha,\alpha}(\lambda t^\alpha)$$
+
+where $E_{\alpha,\beta}$ is the two-parameter Mittag-Leffler function.
+
+---
+
 ## References
 
 1. Abramowitz, M., & Stegun, I. A. (1972). Handbook of Mathematical Functions. Dover Publications.

@@ -6,7 +6,7 @@
 use crate::error::{SignalError, SignalResult};
 use crate::parametric::{ar_spectrum, estimate_ar, ARMethod};
 use crate::parametric_arma::{estimate_arma, ArmaMethod, ArmaModel};
-use crate::parametric_enhanced::{EnhancedArResult, EnhancedArmaResult};
+use crate::parametric_enhanced::{EnhancedParametricResult, ModelSelectionResult};
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_core::simd_ops::SimdUnifiedOps;

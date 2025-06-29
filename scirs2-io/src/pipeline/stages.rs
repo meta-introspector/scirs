@@ -435,7 +435,7 @@ impl PipelineStage for CacheStage {
         // Check if cache exists
         if cache_path.exists() {
             // Try to load from cache
-            if let Ok(cache_data) = std::fs::read(&cache_path) {
+            if let Ok(_cache_data) = std::fs::read(&cache_path) {
                 // Update metadata to indicate cache hit
                 input.metadata.set("cache_hit", true);
                 input.metadata.set("cache_key", self.cache_key.clone());

@@ -455,10 +455,10 @@ pub fn wavelet_packet_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
 ) -> SignalResult<Vec<f64>> {
-    use crate::wpt::{wpt_decompose, wpt_reconstruct};
+    use crate::wpt::{wp_decompose, reconstruct_from_nodes};
 
     // Decompose using wavelet packets
-    let tree = wpt_decompose(signal, config.wavelet, config.level, None)?;
+    let tree = wp_decompose(signal, config.wavelet, config.level, None)?;
 
     // Estimate noise level
     let noise_level = estimate_noise_level(signal, config)?;
@@ -476,8 +476,9 @@ pub fn wavelet_packet_denoise(
         }
     }
 
-    // Reconstruct
-    wpt_reconstruct(&denoised_tree)
+    // Reconstruct from all leaf nodes
+    let leaf_nodes: Vec<(usize, usize)> = denoised_tree.nodes.keys().cloned().collect();
+    reconstruct_from_nodes(&denoised_tree, &leaf_nodes)
 }
 
 #[cfg(test)]

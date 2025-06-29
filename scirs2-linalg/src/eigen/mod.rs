@@ -634,66 +634,81 @@ pub fn estimate_condition_number<F>(a: &ArrayView2<F>) -> F
 where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
 {
-    // Proper condition number estimation using SVD
     let n = a.nrows();
     if n == 0 {
         return F::one();
     }
 
-    // Try to compute SVD for accurate condition number
-    if let Ok((_, s, _)) = crate::decomposition::svd(a, false, None) {
-        // Condition number is ratio of largest to smallest singular value
-        let mut max_sv = F::zero();
-        let mut min_sv = F::infinity();
-
-        for &sv in s.iter() {
-            if sv > max_sv {
-                max_sv = sv;
+    // First try direct diagonal calculation for diagonal matrices
+    let mut is_diagonal = true;
+    for i in 0..n {
+        for j in 0..a.ncols() {
+            if i != j && a[[i, j]].abs() > F::epsilon() {
+                is_diagonal = false;
+                break;
             }
-            if sv < min_sv && sv > F::epsilon() {
-                min_sv = sv;
+        }
+        if !is_diagonal {
+            break;
+        }
+    }
+
+    if is_diagonal {
+        // For diagonal matrices, condition number is max(diag) / min(diag)
+        let mut max_diag = F::zero();
+        let mut min_diag = F::infinity();
+
+        for i in 0..n.min(a.ncols()) {
+            let val = a[[i, i]].abs();
+            if val > max_diag {
+                max_diag = val;
+            }
+            if val > F::zero() && val < min_diag {
+                min_diag = val;
             }
         }
 
-        if min_sv == F::zero() || min_sv == F::infinity() {
-            F::from(1e12).unwrap_or_else(|| {
-                // Fallback for types that can't represent 1e12
-                F::max_value() / F::from(1000.0).unwrap_or(F::one())
-            }) // Matrix is singular or nearly singular
+        if min_diag <= F::zero() || min_diag == F::infinity() {
+            F::from(1e12).unwrap_or_else(|| F::max_value() / F::from(1000.0).unwrap_or(F::one()))
         } else {
-            max_sv / min_sv
+            max_diag / min_diag
         }
     } else {
-        // Fallback to norm-based estimation if SVD fails
-        if let (Ok(norm_2), Ok(norm_1)) = (
-            crate::norm::matrix_norm(a, "2", None),
-            crate::norm::matrix_norm(a, "1", None),
-        ) {
-            // Use norm-based heuristic: cond(A) ≈ ||A||_2 * ||A||_1 / n
-            let n_f = F::from(n).unwrap_or_else(|| F::one());
-            (norm_2 * norm_1) / n_f
-        } else {
-            // Final fallback to diagonal-based estimate
-            let mut max_diag = F::zero();
-            let mut min_diag = F::infinity();
+        // Try to compute SVD for accurate condition number
+        if let Ok((_, s, _)) = crate::decomposition::svd(a, false, Some(1)) {
+            // Condition number is ratio of largest to smallest singular value
+            let mut max_sv = F::zero();
+            let mut min_sv = F::infinity();
 
-            for i in 0..n.min(a.ncols()) {
-                let val = a[[i, i]].abs();
-                if val > max_diag {
-                    max_diag = val;
+            for &sv in s.iter() {
+                if sv > max_sv {
+                    max_sv = sv;
                 }
-                if val < min_diag && val > F::epsilon() {
-                    min_diag = val;
+                // Find the smallest positive singular value
+                if sv > F::zero() && sv < min_sv {
+                    min_sv = sv;
                 }
             }
 
-            if min_diag == F::zero() || min_diag == F::infinity() {
+            if min_sv <= F::zero() || min_sv == F::infinity() {
                 F::from(1e12).unwrap_or_else(|| {
-                    // Fallback for types that can't represent 1e12
                     F::max_value() / F::from(1000.0).unwrap_or(F::one())
                 })
             } else {
-                max_diag / min_diag
+                max_sv / min_sv
+            }
+        } else {
+            // Fallback to norm-based estimation if SVD fails
+            if let (Ok(norm_2), Ok(norm_1)) = (
+                crate::norm::matrix_norm(a, "2", Some(1)),
+                crate::norm::matrix_norm(a, "1", Some(1)),
+            ) {
+                // Use norm-based heuristic: cond(A) ≈ ||A||_2 * ||A||_1 / n
+                let n_f = F::from(n).unwrap_or_else(|| F::one());
+                (norm_2 * norm_1) / n_f
+            } else {
+                // Final fallback
+                F::from(1e6).unwrap_or_else(|| F::one())
             }
         }
     }
@@ -868,8 +883,16 @@ mod tests {
 
         // Ill-conditioned matrix
         let ill_conditioned = array![[1.0_f64, 0.0], [0.0, 1e-12]];
+        
+        // Let's try computing the condition number directly using diagonal elements
+        // For a diagonal matrix, condition number = max(diag) / min(diag)
+        let direct_cond = 1.0_f64 / 1e-12_f64; // Should be 1e12
+        
         let cond2 = estimate_condition_number(&ill_conditioned.view());
-        assert!(cond2 > 1e10); // Should be very large
+        
+        // If the function is working correctly, it should give a result close to direct_cond
+        // Let's be more lenient for now and check if it's at least in the right order of magnitude
+        assert!(cond2 > 1e10, "Condition number {:.2e} should be > 1e10 (expected ~{:.2e})", cond2, direct_cond);
     }
 
     #[test]

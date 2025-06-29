@@ -675,11 +675,144 @@ fn solve_symmetric_with_power_iteration<F>(
 where
     F: Float + NumAssign + Sum + 'static,
 {
+    use crate::decomposition::qr;
+    use crate::norm::vector_norm;
+    
     let n = a.nrows();
-    Err(LinalgError::NotImplementedError(format!(
-        "Symmetric eigenvalue decomposition for {}x{} matrices not fully implemented yet",
-        n, n
-    )))
+    let max_iter = 1000;
+    let tolerance = F::from(1e-10).unwrap_or_else(|| F::epsilon() * F::from(100.0).unwrap_or(F::one()));
+    
+    // Use QR algorithm for symmetric matrices
+    // This is more stable than power iteration for all eigenvalues
+    
+    // Create a working copy of the matrix
+    let mut work_matrix = a.to_owned();
+    let mut q_accumulated = Array2::eye(n);
+    
+    // Apply QR iterations with shifting for better convergence
+    for iter in 0..max_iter {
+        // Check for convergence by examining off-diagonal elements
+        let mut max_off_diag = F::zero();
+        for i in 0..n {
+            for j in 0..n {
+                if i != j {
+                    let abs_val = work_matrix[[i, j]].abs();
+                    if abs_val > max_off_diag {
+                        max_off_diag = abs_val;
+                    }
+                }
+            }
+        }
+        
+        if max_off_diag < tolerance {
+            break;
+        }
+        
+        // Apply shift to improve convergence
+        // Use Wilkinson shift: the eigenvalue of the 2x2 bottom-right submatrix
+        // that is closer to the bottom-right element
+        let shift = if n >= 2 {
+            let a_nn = work_matrix[[n-1, n-1]];
+            let a_n1n1 = work_matrix[[n-2, n-2]];
+            let a_nn1 = work_matrix[[n-1, n-2]];
+            
+            let b = a_nn + a_n1n1;
+            let c = a_nn * a_n1n1 - a_nn1 * a_nn1;
+            let discriminant = b * b - F::from(4.0).unwrap_or(F::one()) * c;
+            
+            if discriminant >= F::zero() {
+                let sqrt_disc = discriminant.sqrt();
+                let lambda1 = (b + sqrt_disc) / F::from(2.0).unwrap_or(F::one());
+                let lambda2 = (b - sqrt_disc) / F::from(2.0).unwrap_or(F::one());
+                
+                // Choose the eigenvalue closer to a_nn
+                if (lambda1 - a_nn).abs() < (lambda2 - a_nn).abs() {
+                    lambda1
+                } else {
+                    lambda2
+                }
+            } else {
+                a_nn
+            }
+        } else {
+            work_matrix[[n-1, n-1]]
+        };
+        
+        // Apply shift: A' = A - σI
+        for i in 0..n {
+            work_matrix[[i, i]] -= shift;
+        }
+        
+        // Perform QR decomposition
+        let (q, r) = qr(&work_matrix.view(), None).map_err(|_| {
+            LinalgError::ConvergenceError(format!(
+                "QR decomposition failed in symmetric eigenvalue computation at iteration {}",
+                iter
+            ))
+        })?;
+        
+        // Update: A = RQ + σI
+        work_matrix = r.dot(&q);
+        for i in 0..n {
+            work_matrix[[i, i]] += shift;
+        }
+        
+        // Accumulate transformation
+        q_accumulated = q_accumulated.dot(&q);
+        
+        // Early termination for well-conditioned problems
+        if iter > 10 && max_off_diag < tolerance * F::from(10.0).unwrap_or(F::one()) {
+            break;
+        }
+    }
+    
+    // Extract eigenvalues from diagonal
+    let mut eigenvalues = Array1::zeros(n);
+    for i in 0..n {
+        eigenvalues[i] = work_matrix[[i, i]];
+    }
+    
+    // Sort eigenvalues and eigenvectors in descending order
+    let mut indices: Vec<usize> = (0..n).collect();
+    indices.sort_by(|&i, &j| {
+        eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap_or(std::cmp::Ordering::Equal)
+    });
+    
+    let sorted_eigenvalues = Array1::from_iter(indices.iter().map(|&i| eigenvalues[i]));
+    let mut sorted_eigenvectors = Array2::zeros((n, n));
+    
+    for (new_idx, &old_idx) in indices.iter().enumerate() {
+        for i in 0..n {
+            sorted_eigenvectors[[i, new_idx]] = q_accumulated[[i, old_idx]];
+        }
+    }
+    
+    // Normalize eigenvectors
+    for j in 0..n {
+        let mut col = sorted_eigenvectors.column_mut(j);
+        let norm = vector_norm(&col.to_owned().view(), 2)?;
+        
+        if norm > F::epsilon() {
+            col.mapv_inplace(|x| x / norm);
+        }
+        
+        // Ensure consistent sign convention (largest component positive)
+        let mut max_idx = 0;
+        let mut max_abs = F::zero();
+        for i in 0..n {
+            let abs_val = col[i].abs();
+            if abs_val > max_abs {
+                max_abs = abs_val;
+                max_idx = i;
+            }
+        }
+        
+        if col[max_idx] < F::zero() {
+            col.mapv_inplace(|x| x * (-F::one()));
+        }
+    }
+    
+    Ok((sorted_eigenvalues, sorted_eigenvectors))
 }
 
 #[cfg(test)]

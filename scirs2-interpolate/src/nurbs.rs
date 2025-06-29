@@ -1862,9 +1862,8 @@ where
             if i == 1 {
                 derivatives[i][0] = self.derivative_u(u, v)?;
             } else {
-                // Higher order u derivatives would need more complex implementation
-                // For now, return zeros as placeholder
-                derivatives[i][0] = Array1::zeros(self.dimension);
+                // Higher order u derivatives using generalized quotient rule
+                derivatives[i][0] = self.compute_higher_order_u_derivative(u, v, i)?;
             }
         }
 
@@ -1873,9 +1872,8 @@ where
             if j == 1 {
                 derivatives[0][j] = self.derivative_v(u, v)?;
             } else {
-                // Higher order v derivatives would need more complex implementation
-                // For now, return zeros as placeholder
-                derivatives[0][j] = Array1::zeros(self.dimension);
+                // Higher order v derivatives using generalized quotient rule
+                derivatives[0][j] = self.compute_higher_order_v_derivative(u, v, j)?;
             }
         }
 
@@ -1885,9 +1883,8 @@ where
                 if i == 1 && j == 1 {
                     derivatives[i][j] = self.mixed_derivative(u, v)?;
                 } else {
-                    // Higher order mixed derivatives would need more complex implementation
-                    // For now, return zeros as placeholder
-                    derivatives[i][j] = Array1::zeros(self.dimension);
+                    // Higher order mixed derivatives using generalized quotient rule
+                    derivatives[i][j] = self.compute_higher_order_mixed_derivative(u, v, i, j)?;
                 }
             }
         }
@@ -1944,7 +1941,7 @@ where
         v_max: T,
         tolerance: Option<T>,
     ) -> InterpolateResult<T> {
-        let tol = tolerance.unwrap_or_else(|| T::from(1e-6).unwrap());
+        let _tol = tolerance.unwrap_or_else(|| T::from(1e-6).unwrap());
 
         // Check bounds
         let u_domain_min = self.knots_u[self.degree_u];
@@ -2190,6 +2187,255 @@ where
         Err(InterpolateError::ComputationError(
             "Contour point refinement did not converge".to_string(),
         ))
+    }
+
+    /// Compute higher-order partial derivative in u direction using generalized quotient rule
+    fn compute_higher_order_u_derivative(&self, u: T, v: T, order: usize) -> InterpolateResult<Array1<T>> {
+        if order == 0 {
+            return self.evaluate(u, v);
+        }
+        if order == 1 {
+            return self.derivative_u(u, v);
+        }
+
+        // Compute all needed basis derivatives in u direction
+        let mut basis_u_derivs = Vec::new();
+        for k in 0..=order {
+            basis_u_derivs.push(self.compute_basis_derivatives_u(u, k)?);
+        }
+        let basis_v = self.compute_basis_values_v(v)?;
+
+        // Compute derivatives of weighted control points A^(k) and weights w^(k)
+        let mut a_derivs = vec![Array1::<T>::zeros(self.dimension); order + 1];
+        let mut w_derivs = vec![T::zero(); order + 1];
+
+        for k in 0..=order {
+            for i in 0..self.n_u {
+                for j in 0..self.n_v {
+                    let idx = i * self.n_v + j;
+                    let basis_product = basis_u_derivs[k][i] * basis_v[j];
+                    let weight = self.weights[idx];
+                    
+                    w_derivs[k] = w_derivs[k] + weight * basis_product;
+                    for dim in 0..self.dimension {
+                        a_derivs[k][dim] = a_derivs[k][dim] + weight * self.control_points[[idx, dim]] * basis_product;
+                    }
+                }
+            }
+        }
+
+        // Apply generalized quotient rule for NURBS surfaces
+        // S^(k) = (1/w) * [A^(k) - sum_{i=1}^k (k choose i) * w^(i) * S^(k-i)]
+        let mut s_derivs = vec![Array1::<T>::zeros(self.dimension); order + 1];
+
+        // Base case: S^(0) = A^(0) / w^(0)
+        if w_derivs[0] > T::epsilon() {
+            for dim in 0..self.dimension {
+                s_derivs[0][dim] = a_derivs[0][dim] / w_derivs[0];
+            }
+        }
+
+        // Recursive computation for higher orders
+        for k in 1..=order {
+            let mut temp = a_derivs[k].clone();
+            
+            for i in 1..=k {
+                let binom_coeff = T::from(Self::binomial_coefficient(k, i)).unwrap();
+                for dim in 0..self.dimension {
+                    temp[dim] = temp[dim] - binom_coeff * w_derivs[i] * s_derivs[k - i][dim];
+                }
+            }
+            
+            if w_derivs[0] > T::epsilon() {
+                for dim in 0..self.dimension {
+                    s_derivs[k][dim] = temp[dim] / w_derivs[0];
+                }
+            }
+        }
+
+        Ok(s_derivs[order].clone())
+    }
+
+    /// Compute higher-order partial derivative in v direction using generalized quotient rule
+    fn compute_higher_order_v_derivative(&self, u: T, v: T, order: usize) -> InterpolateResult<Array1<T>> {
+        if order == 0 {
+            return self.evaluate(u, v);
+        }
+        if order == 1 {
+            return self.derivative_v(u, v);
+        }
+
+        // Compute all needed basis derivatives in v direction
+        let basis_u = self.compute_basis_values_u(u)?;
+        let mut basis_v_derivs = Vec::new();
+        for k in 0..=order {
+            basis_v_derivs.push(self.compute_basis_derivatives_v(v, k)?);
+        }
+
+        // Compute derivatives of weighted control points A^(k) and weights w^(k)
+        let mut a_derivs = vec![Array1::<T>::zeros(self.dimension); order + 1];
+        let mut w_derivs = vec![T::zero(); order + 1];
+
+        for k in 0..=order {
+            for i in 0..self.n_u {
+                for j in 0..self.n_v {
+                    let idx = i * self.n_v + j;
+                    let basis_product = basis_u[i] * basis_v_derivs[k][j];
+                    let weight = self.weights[idx];
+                    
+                    w_derivs[k] = w_derivs[k] + weight * basis_product;
+                    for dim in 0..self.dimension {
+                        a_derivs[k][dim] = a_derivs[k][dim] + weight * self.control_points[[idx, dim]] * basis_product;
+                    }
+                }
+            }
+        }
+
+        // Apply generalized quotient rule for NURBS surfaces
+        // S^(k) = (1/w) * [A^(k) - sum_{i=1}^k (k choose i) * w^(i) * S^(k-i)]
+        let mut s_derivs = vec![Array1::<T>::zeros(self.dimension); order + 1];
+
+        // Base case: S^(0) = A^(0) / w^(0)
+        if w_derivs[0] > T::epsilon() {
+            for dim in 0..self.dimension {
+                s_derivs[0][dim] = a_derivs[0][dim] / w_derivs[0];
+            }
+        }
+
+        // Recursive computation for higher orders
+        for k in 1..=order {
+            let mut temp = a_derivs[k].clone();
+            
+            for i in 1..=k {
+                let binom_coeff = T::from(Self::binomial_coefficient(k, i)).unwrap();
+                for dim in 0..self.dimension {
+                    temp[dim] = temp[dim] - binom_coeff * w_derivs[i] * s_derivs[k - i][dim];
+                }
+            }
+            
+            if w_derivs[0] > T::epsilon() {
+                for dim in 0..self.dimension {
+                    s_derivs[k][dim] = temp[dim] / w_derivs[0];
+                }
+            }
+        }
+
+        Ok(s_derivs[order].clone())
+    }
+
+    /// Compute higher-order mixed partial derivative using generalized quotient rule
+    fn compute_higher_order_mixed_derivative(&self, u: T, v: T, order_u: usize, order_v: usize) -> InterpolateResult<Array1<T>> {
+        if order_u == 0 && order_v == 0 {
+            return self.evaluate(u, v);
+        }
+        if order_u == 1 && order_v == 0 {
+            return self.derivative_u(u, v);
+        }
+        if order_u == 0 && order_v == 1 {
+            return self.derivative_v(u, v);
+        }
+        if order_u == 1 && order_v == 1 {
+            return self.mixed_derivative(u, v);
+        }
+
+        // Compute all needed basis derivatives in both directions
+        let mut basis_u_derivs = Vec::new();
+        for i in 0..=order_u {
+            basis_u_derivs.push(self.compute_basis_derivatives_u(u, i)?);
+        }
+        let mut basis_v_derivs = Vec::new();
+        for j in 0..=order_v {
+            basis_v_derivs.push(self.compute_basis_derivatives_v(v, j)?);
+        }
+
+        // Compute mixed derivatives of weighted control points A^(p,q) and weights w^(p,q)
+        let mut a_derivs = vec![vec![Array1::<T>::zeros(self.dimension); order_v + 1]; order_u + 1];
+        let mut w_derivs = vec![vec![T::zero(); order_v + 1]; order_u + 1];
+
+        for p in 0..=order_u {
+            for q in 0..=order_v {
+                for i in 0..self.n_u {
+                    for j in 0..self.n_v {
+                        let idx = i * self.n_v + j;
+                        let basis_product = basis_u_derivs[p][i] * basis_v_derivs[q][j];
+                        let weight = self.weights[idx];
+                        
+                        w_derivs[p][q] = w_derivs[p][q] + weight * basis_product;
+                        for dim in 0..self.dimension {
+                            a_derivs[p][q][dim] = a_derivs[p][q][dim] + weight * self.control_points[[idx, dim]] * basis_product;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Apply generalized quotient rule for mixed derivatives
+        // S^(p,q) = (1/w) * [A^(p,q) - sum_{i=1}^p sum_{j=1}^q (p choose i)(q choose j) * w^(i,j) * S^(p-i,q-j)]
+        let mut s_derivs = vec![vec![Array1::<T>::zeros(self.dimension); order_v + 1]; order_u + 1];
+
+        // Base case: S^(0,0) = A^(0,0) / w^(0,0)
+        if w_derivs[0][0] > T::epsilon() {
+            for dim in 0..self.dimension {
+                s_derivs[0][0][dim] = a_derivs[0][0][dim] / w_derivs[0][0];
+            }
+        }
+
+        // Compute derivatives iteratively by order
+        for total_order in 1..=(order_u + order_v) {
+            for p in 0..=order_u.min(total_order) {
+                let q = total_order - p;
+                if q > order_v {
+                    continue;
+                }
+
+                let mut temp = a_derivs[p][q].clone();
+                
+                // Subtract correction terms
+                for i in 0..=p {
+                    for j in 0..=q {
+                        if i == 0 && j == 0 {
+                            continue; // Skip the base case
+                        }
+                        if i > p || j > q {
+                            continue;
+                        }
+                        
+                        let binom_coeff_u = T::from(Self::binomial_coefficient(p, i)).unwrap();
+                        let binom_coeff_v = T::from(Self::binomial_coefficient(q, j)).unwrap();
+                        let combined_coeff = binom_coeff_u * binom_coeff_v;
+                        
+                        for dim in 0..self.dimension {
+                            temp[dim] = temp[dim] - combined_coeff * w_derivs[i][j] * s_derivs[p - i][q - j][dim];
+                        }
+                    }
+                }
+                
+                if w_derivs[0][0] > T::epsilon() {
+                    for dim in 0..self.dimension {
+                        s_derivs[p][q][dim] = temp[dim] / w_derivs[0][0];
+                    }
+                }
+            }
+        }
+
+        Ok(s_derivs[order_u][order_v].clone())
+    }
+
+    /// Compute binomial coefficient (n choose k)
+    fn binomial_coefficient(n: usize, k: usize) -> usize {
+        if k > n {
+            return 0;
+        }
+        if k == 0 || k == n {
+            return 1;
+        }
+        
+        let k = k.min(n - k); // Take advantage of symmetry
+        let mut result = 1;
+        for i in 0..k {
+            result = result * (n - i) / (i + 1);
+        }
+        result
     }
 }
 

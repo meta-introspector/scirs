@@ -718,8 +718,8 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> BroadcastOps<
         drop(temp_file); // Close the file before memory-mapping it
 
         // Create the output memory-mapped array with zeros to initialize the header
-        // First create with Write mode to initialize
-        let zeros = ndarray::ArrayD::zeros(ndarray::IxDyn(&self.shape));
+        // Use the calculated output shape instead of self.shape
+        let zeros = ndarray::ArrayD::zeros(ndarray::IxDyn(&output_shape));
         {
             let _ = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
                 Some(&zeros),

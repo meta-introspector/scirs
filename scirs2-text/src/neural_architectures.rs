@@ -4,8 +4,9 @@
 //! text processing tasks, including RNNs, CNNs, attention mechanisms, and hybrid models.
 
 use crate::error::{Result, TextError};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_traits::Float;
+use rand::prelude::*;
 use std::collections::HashMap;
 use scirs2_core::parallel_ops::*;
 
@@ -110,29 +111,29 @@ impl LSTMCell {
         
         // Initialize weights with Xavier initialization
         let w_i = Array2::from_shape_fn((hidden_size, input_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_f = Array2::from_shape_fn((hidden_size, input_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_o = Array2::from_shape_fn((hidden_size, input_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_c = Array2::from_shape_fn((hidden_size, input_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         let u_i = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let u_f = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let u_o = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let u_c = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         // Initialize biases (forget gate bias to 1.0 for better gradient flow)
@@ -232,23 +233,23 @@ impl GRUCell {
         
         // Initialize weights with Xavier initialization
         let w_z = Array2::from_shape_fn((hidden_size, input_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_r = Array2::from_shape_fn((hidden_size, input_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_h = Array2::from_shape_fn((hidden_size, input_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         let u_z = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let u_r = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let u_h = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         // Initialize biases
@@ -427,7 +428,7 @@ impl Conv1D {
         
         // Initialize filters with Xavier initialization
         let filters = Array3::from_shape_fn((num_filters, input_channels, kernel_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         let bias = Array1::zeros(num_filters);
@@ -545,7 +546,7 @@ impl ResidualBlock1D {
         let skip_projection = if input_channels != output_channels {
             let scale = (2.0 / input_channels as f64).sqrt();
             Some(Array2::from_shape_fn((output_channels, input_channels), |_| {
-                (rand::random::<f64>() - 0.5) * 2.0 * scale
+                (random::<f64>() - 0.5) * 2.0 * scale
             }))
         } else {
             None
@@ -659,7 +660,7 @@ impl MultiScaleCNN {
         let total_features = kernel_sizes.len() * num_filters_per_scale;
         let scale = (2.0 / total_features as f64).sqrt();
         let combination_weights = Array2::from_shape_fn((output_size, total_features), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         let global_pool = MaxPool1D::new(2, 2);
@@ -748,23 +749,23 @@ impl AdditiveAttention {
         let scale = (2.0 / attention_dim as f64).sqrt();
         
         let w_a = Array2::from_shape_fn((attention_dim, encoder_dim + decoder_dim), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         let w_q = Array2::from_shape_fn((attention_dim, decoder_dim), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         let w_k = Array2::from_shape_fn((attention_dim, encoder_dim), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         let w_v = Array2::from_shape_fn((encoder_dim, encoder_dim), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         let v_a = Array1::from_shape_fn(attention_dim, |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         Self { w_a, w_q, w_k, w_v, v_a }
@@ -836,16 +837,16 @@ impl SelfAttention {
         let scale = (2.0 / d_model as f64).sqrt();
         
         let w_q = Array2::from_shape_fn((d_model, d_k), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_k = Array2::from_shape_fn((d_model, d_k), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_v = Array2::from_shape_fn((d_model, d_k), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_o = Array2::from_shape_fn((d_k, d_model), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         Self {
@@ -952,16 +953,16 @@ impl CrossAttention {
         let scale = (2.0 / d_model as f64).sqrt();
         
         let w_q = Array2::from_shape_fn((d_model, d_k), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_k = Array2::from_shape_fn((d_model, d_k), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_v = Array2::from_shape_fn((d_model, d_k), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let w_o = Array2::from_shape_fn((d_k, d_model), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         
         Self {
@@ -1066,10 +1067,10 @@ impl PositionwiseFeedForward {
         let scale2 = (2.0 / d_ff as f64).sqrt();
         
         let w1 = Array2::from_shape_fn((d_ff, d_model), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale1
+            (random::<f64>() - 0.5) * 2.0 * scale1
         });
         let w2 = Array2::from_shape_fn((d_model, d_ff), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale2
+            (random::<f64>() - 0.5) * 2.0 * scale2
         });
         let b1 = Array1::zeros(d_ff);
         let b2 = Array1::zeros(d_model);
@@ -1145,7 +1146,7 @@ impl TextCNN {
         let scale = (2.0 / fc_input_size as f64).sqrt();
         
         let fc_weights = Array2::from_shape_fn((num_classes, fc_input_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let fc_bias = Array1::zeros(num_classes);
         
@@ -1242,7 +1243,7 @@ impl CNNLSTMHybrid {
         let scale = (2.0 / classifier_input_size as f64).sqrt();
         
         let classifier = Array2::from_shape_fn((num_classes, classifier_input_size), |_| {
-            (rand::random::<f64>() - 0.5) * 2.0 * scale
+            (random::<f64>() - 0.5) * 2.0 * scale
         });
         let classifier_bias = Array1::zeros(num_classes);
         
@@ -1275,6 +1276,251 @@ impl CNNLSTMHybrid {
         let output = self.classifier.dot(&final_hidden) + &self.classifier_bias;
         
         Ok(output)
+    }
+}
+
+/// Layer normalization for neural networks
+pub struct LayerNorm {
+    /// Learnable scale parameters
+    weight: Array1<f64>,
+    /// Learnable bias parameters
+    bias: Array1<f64>,
+    /// Small epsilon for numerical stability
+    eps: f64,
+}
+
+impl LayerNorm {
+    /// Create new layer normalization layer
+    pub fn new(normalized_shape: usize) -> Self {
+        Self {
+            weight: Array1::ones(normalized_shape),
+            bias: Array1::zeros(normalized_shape),
+            eps: 1e-6,
+        }
+    }
+    
+    /// Forward pass with layer normalization
+    pub fn forward(&self, x: ArrayView2<f64>) -> Result<Array2<f64>> {
+        let mut output = Array2::zeros(x.raw_dim());
+        
+        // Normalize along the last dimension for each sample
+        for (i, row) in x.outer_iter().enumerate() {
+            let mean = row.mean().unwrap_or(0.0);
+            let variance = row.mapv(|v| (v - mean).powi(2)).mean().unwrap_or(0.0);
+            let std = (variance + self.eps).sqrt();
+            
+            // Apply normalization and learned parameters
+            for (j, &val) in row.iter().enumerate() {
+                let normalized = (val - mean) / std;
+                output[[i, j]] = normalized * self.weight[j] + self.bias[j];
+            }
+        }
+        
+        Ok(output)
+    }
+}
+
+/// Dropout layer for regularization
+pub struct Dropout {
+    /// Dropout probability
+    p: f64,
+    /// Whether the layer is in training mode
+    training: bool,
+}
+
+impl Dropout {
+    /// Create new dropout layer
+    pub fn new(p: f64) -> Self {
+        Self {
+            p: p.clamp(0.0, 1.0),
+            training: true,
+        }
+    }
+    
+    /// Set training mode
+    pub fn set_training(&mut self, training: bool) {
+        self.training = training;
+    }
+    
+    /// Forward pass with dropout
+    pub fn forward(&self, x: ArrayView2<f64>) -> Array2<f64> {
+        if !self.training || self.p == 0.0 {
+            return x.to_owned();
+        }
+        
+        let mut output = x.to_owned();
+        let scale = 1.0 / (1.0 - self.p);
+        
+        for elem in output.iter_mut() {
+            if random::<f64>() < self.p {
+                *elem = 0.0; // Drop the element
+            } else {
+                *elem *= scale; // Scale to maintain expected value
+            }
+        }
+        
+        output
+    }
+}
+
+/// Multi-head attention mechanism
+pub struct MultiHeadAttention {
+    /// Number of attention heads
+    num_heads: usize,
+    /// Model dimension
+    d_model: usize,
+    /// Dimension per head
+    d_k: usize,
+    /// Query projection weights
+    w_q: Array2<f64>,
+    /// Key projection weights
+    w_k: Array2<f64>,
+    /// Value projection weights
+    w_v: Array2<f64>,
+    /// Output projection weights
+    w_o: Array2<f64>,
+    /// Dropout layer
+    dropout: Dropout,
+}
+
+impl MultiHeadAttention {
+    /// Create new multi-head attention layer
+    pub fn new(d_model: usize, num_heads: usize, dropout_p: f64) -> Result<Self> {
+        if d_model % num_heads != 0 {
+            return Err(TextError::InvalidInput(
+                "Model dimension must be divisible by number of heads".to_string()
+            ));
+        }
+        
+        let d_k = d_model / num_heads;
+        let scale = (2.0 / d_model as f64).sqrt();
+        
+        let w_q = Array2::from_shape_fn((d_model, d_model), |_| {
+            (random::<f64>() - 0.5) * 2.0 * scale
+        });
+        let w_k = Array2::from_shape_fn((d_model, d_model), |_| {
+            (random::<f64>() - 0.5) * 2.0 * scale
+        });
+        let w_v = Array2::from_shape_fn((d_model, d_model), |_| {
+            (random::<f64>() - 0.5) * 2.0 * scale
+        });
+        let w_o = Array2::from_shape_fn((d_model, d_model), |_| {
+            (random::<f64>() - 0.5) * 2.0 * scale
+        });
+        
+        Ok(Self {
+            num_heads,
+            d_model,
+            d_k,
+            w_q,
+            w_k,
+            w_v,
+            w_o,
+            dropout: Dropout::new(dropout_p),
+        })
+    }
+    
+    /// Forward pass through multi-head attention
+    pub fn forward(
+        &self,
+        query: ArrayView2<f64>,
+        key: ArrayView2<f64>,
+        value: ArrayView2<f64>,
+        mask: Option<ArrayView2<bool>>,
+    ) -> Result<Array2<f64>> {
+        let seq_len = query.shape()[0];
+        let batch_size = 1; // Simplified for single sequence
+        
+        // Linear projections
+        let q = query.dot(&self.w_q);
+        let k = key.dot(&self.w_k);
+        let v = value.dot(&self.w_v);
+        
+        // Reshape for multi-head attention [seq_len, d_model] -> [seq_len, num_heads, d_k]
+        let mut q_heads = Array3::zeros((seq_len, self.num_heads, self.d_k));
+        let mut k_heads = Array3::zeros((seq_len, self.num_heads, self.d_k));
+        let mut v_heads = Array3::zeros((seq_len, self.num_heads, self.d_k));
+        
+        for i in 0..seq_len {
+            for h in 0..self.num_heads {
+                let start = h * self.d_k;
+                let end = start + self.d_k;
+                
+                for j in 0..self.d_k {
+                    q_heads[[i, h, j]] = q[[i, start + j]];
+                    k_heads[[i, h, j]] = k[[i, start + j]];
+                    v_heads[[i, h, j]] = v[[i, start + j]];
+                }
+            }
+        }
+        
+        // Apply scaled dot-product attention for each head
+        let mut attention_outputs = Array3::zeros((seq_len, self.num_heads, self.d_k));
+        
+        for h in 0..self.num_heads {
+            let q_h = q_heads.slice(s![.., h, ..]);
+            let k_h = k_heads.slice(s![.., h, ..]);
+            let v_h = v_heads.slice(s![.., h, ..]);
+            
+            // Compute attention scores: Q * K^T / sqrt(d_k)
+            let scores = q_h.dot(&k_h.t()) / (self.d_k as f64).sqrt();
+            
+            // Apply mask if provided
+            let mut masked_scores = scores;
+            if let Some(mask) = mask {
+                for i in 0..seq_len {
+                    for j in 0..seq_len {
+                        if mask[[i, j]] {
+                            masked_scores[[i, j]] = f64::NEG_INFINITY;
+                        }
+                    }
+                }
+            }
+            
+            // Apply softmax
+            let mut attention_weights = Array2::zeros((seq_len, seq_len));
+            for i in 0..seq_len {
+                let row = masked_scores.row(i);
+                let max_val = row.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x));
+                let exp_sum: f64 = row.iter().map(|&x| (x - max_val).exp()).sum();
+                
+                for j in 0..seq_len {
+                    attention_weights[[i, j]] = (masked_scores[[i, j]] - max_val).exp() / exp_sum;
+                }
+            }
+            
+            // Apply dropout to attention weights
+            let attention_weights_dropped = self.dropout.forward(attention_weights.view());
+            
+            // Apply attention to values
+            let attended = attention_weights_dropped.dot(&v_h);
+            
+            // Store result for this head
+            for i in 0..seq_len {
+                for j in 0..self.d_k {
+                    attention_outputs[[i, h, j]] = attended[[i, j]];
+                }
+            }
+        }
+        
+        // Concatenate heads and reshape back to [seq_len, d_model]
+        let mut concatenated = Array2::zeros((seq_len, self.d_model));
+        for i in 0..seq_len {
+            for h in 0..self.num_heads {
+                let start = h * self.d_k;
+                for j in 0..self.d_k {
+                    concatenated[[i, start + j]] = attention_outputs[[i, h, j]];
+                }
+            }
+        }
+        
+        // Final output projection
+        Ok(concatenated.dot(&self.w_o))
+    }
+    
+    /// Set training mode for dropout
+    pub fn set_training(&mut self, training: bool) {
+        self.dropout.set_training(training);
     }
 }
 

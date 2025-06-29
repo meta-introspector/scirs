@@ -528,7 +528,7 @@ where
 ///
 /// This is a basic implementation for correctness. Production code should
 /// use optimized LAPACK routines.
-fn solve_dense_system<T>(
+pub(crate) fn solve_dense_system<T>(
     matrix: &ArrayView2<T>,
     rhs: &ArrayView1<T>,
 ) -> InterpolateResult<Array1<T>>

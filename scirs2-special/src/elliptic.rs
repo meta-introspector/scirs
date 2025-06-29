@@ -1,13 +1,167 @@
 //! Elliptic integrals and elliptic functions module
 //!
-//! This module implements common elliptic integrals and elliptic functions
+//! This module implements comprehensive elliptic integrals and elliptic functions
 //! following the conventions used in SciPy's special module.
 //!
-//! ## Notation:
+//! ## Mathematical Theory
 //!
-//! - The parameter m is related to the modulus k by m = k²
-//! - Complete elliptic integrals depend only on the parameter m
-//! - Incomplete elliptic integrals depend on both phi (amplitude) and m
+//! ### Historical Context
+//!
+//! Elliptic integrals originated from the problem of calculating the arc length
+//! of an ellipse, hence their name. They were first studied by Fagnano and Euler
+//! in the 18th century, with major contributions by Legendre, Jacobi, Abel, and
+//! Weierstrass in the 19th century.
+//!
+//! ### Geometric Motivation
+//!
+//! The arc length of an ellipse with semi-major axis a and semi-minor axis b
+//! from 0 to angle φ is given by:
+//! ```text
+//! s = a ∫₀^φ √(1 - e² sin²(t)) dt
+//! ```
+//! where e = √(1 - b²/a²) is the eccentricity. This integral cannot be expressed
+//! in terms of elementary functions, leading to the development of elliptic integrals.
+//!
+//! ### Complete Elliptic Integrals
+//!
+//! **Complete Elliptic Integral of the First Kind**:
+//! ```text
+//! K(m) = ∫₀^(π/2) dt / √(1 - m sin²(t))
+//! ```
+//!
+//! **Complete Elliptic Integral of the Second Kind**:
+//! ```text
+//! E(m) = ∫₀^(π/2) √(1 - m sin²(t)) dt
+//! ```
+//!
+//! **Complete Elliptic Integral of the Third Kind**:
+//! ```text
+//! Π(n,m) = ∫₀^(π/2) dt / [(1 - n sin²(t)) √(1 - m sin²(t))]
+//! ```
+//!
+//! ### Incomplete Elliptic Integrals
+//!
+//! **Incomplete Elliptic Integral of the First Kind**:
+//! ```text
+//! F(φ,m) = ∫₀^φ dt / √(1 - m sin²(t))
+//! ```
+//!
+//! **Incomplete Elliptic Integral of the Second Kind**:
+//! ```text
+//! E(φ,m) = ∫₀^φ √(1 - m sin²(t)) dt
+//! ```
+//!
+//! **Incomplete Elliptic Integral of the Third Kind**:
+//! ```text
+//! Π(φ,n,m) = ∫₀^φ dt / [(1 - n sin²(t)) √(1 - m sin²(t))]
+//! ```
+//!
+//! ### Notation and Conventions
+//!
+//! - **Parameter m**: Related to the modulus k by m = k²
+//!   - m = 0: Integrals reduce to elementary functions
+//!   - m = 1: Integrals have logarithmic singularities
+//!   - 0 < m < 1: Normal range for most applications
+//!
+//! - **Amplitude φ**: Upper limit of integration in incomplete integrals
+//!
+//! - **Characteristic n**: Additional parameter in third-kind integrals
+//!
+//! ### Key Properties and Identities
+//!
+//! **Legendre's Relation**:
+//! ```text
+//! K(m)E(1-m) + E(m)K(1-m) - K(m)K(1-m) = π/2
+//! ```
+//!
+//! **Complementary Modulus Identities**:
+//! ```text
+//! K(1-m) = K'(m)  (complementary integral)
+//! E(1-m) = E'(m)
+//! ```
+//!
+//! **Series Expansions** (for small m):
+//! ```text
+//! K(m) = π/2 [1 + (1/2)²m + (1·3/2·4)²m²/3 + (1·3·5/2·4·6)²m³/5 + ...]
+//! E(m) = π/2 [1 - (1/2)²m/1 - (1·3/2·4)²m²/3 - (1·3·5/2·4·6)²m³/5 - ...]
+//! ```
+//!
+//! **Asymptotic Behavior** (as m → 1):
+//! ```text
+//! K(m) ~ (1/2) ln(16/(1-m))
+//! E(m) ~ 1
+//! ```
+//!
+//! ### Jacobi Elliptic Functions
+//!
+//! The Jacobi elliptic functions are the inverse functions of elliptic integrals.
+//! If u = F(φ,m), then:
+//!
+//! - **sn(u,m)** = sin(φ)  (sine amplitude)
+//! - **cn(u,m)** = cos(φ)  (cosine amplitude)  
+//! - **dn(u,m)** = √(1 - m sin²(φ))  (delta amplitude)
+//!
+//! **Fundamental Identity**:
+//! ```text
+//! sn²(u,m) + cn²(u,m) = 1
+//! m sn²(u,m) + dn²(u,m) = 1
+//! ```
+//!
+//! **Periodicity**:
+//! - sn and cn have period 4K(m)
+//! - dn has period 2K(m)
+//!
+//! ### Theta Functions Connection
+//!
+//! Elliptic functions are intimately related to Jacobi theta functions:
+//! ```text
+//! θ₁(z,τ) = 2q^(1/4) Σ_{n=0}^∞ (-1)ⁿ q^(n(n+1)) sin((2n+1)z)
+//! ```
+//! where q = exp(iπτ) and τ is related to the modulus.
+//!
+//! ### Applications
+//!
+//! **Physics**:
+//! - Pendulum motion with large amplitude
+//! - Dynamics of rigid bodies (Euler's equations)
+//! - Wave propagation in nonlinear media
+//! - Quantum field theory (instanton solutions)
+//!
+//! **Engineering**:
+//! - Antenna design and analysis
+//! - Mechanical vibrations
+//! - Control systems with nonlinear elements
+//! - Signal processing (elliptic filters)
+//!
+//! **Mathematics**:
+//! - Algebraic geometry (elliptic curves)
+//! - Number theory (modular forms)
+//! - Complex analysis (doubly periodic functions)
+//! - Differential geometry (surfaces of constant curvature)
+//!
+//! ### Computational Methods
+//!
+//! This implementation employs several computational strategies:
+//!
+//! 1. **Arithmetic-Geometric Mean (AGM)**:
+//!    - Fastest method for complete elliptic integrals
+//!    - Quadratic convergence
+//!
+//! 2. **Landen's Transformation**:
+//!    - Reduces parameter values for better convergence
+//!    - Handles near-singular cases (m ≈ 1)
+//!
+//! 3. **Series Expansions**:
+//!    - Taylor series for small parameters
+//!    - Asymptotic series for large parameters
+//!
+//! 4. **Numerical Integration**:
+//!    - Adaptive quadrature for incomplete integrals
+//!    - Gauss-Kronrod rules for high accuracy
+//!
+//! 5. **Special Values**:
+//!    - Cached values for common parameters
+//!    - Rational approximations for rapid evaluation
 
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;

@@ -484,7 +484,7 @@ impl NetCDFFile {
 
             // Store compression metadata as attributes
             if has_compression {
-                if let Ok(dataset) = hdf5.get_dataset(name) {
+                if let Ok(_dataset) = hdf5.get_dataset(name) {
                     // In a full implementation, we'd add the compression attributes to the dataset
                 }
             }

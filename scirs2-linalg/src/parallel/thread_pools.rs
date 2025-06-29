@@ -22,6 +22,20 @@ pub enum ThreadPoolProfile {
     LowLatency,
     /// High-throughput profile for bulk operations
     HighThroughput,
+    /// Linear algebra specific optimizations
+    LinearAlgebra,
+    /// Matrix multiplication optimized
+    MatrixMultiplication,
+    /// Eigenvalue computation optimized
+    EigenComputation,
+    /// Decomposition algorithms optimized
+    Decomposition,
+    /// Iterative solver optimized
+    IterativeSolver,
+    /// NUMA-aware parallel processing
+    NumaOptimized,
+    /// GPU-CPU hybrid processing
+    HybridComputing,
     /// Custom profile with specific parameters
     Custom(String),
 }
@@ -85,6 +99,156 @@ impl Default for ThreadPoolConfig {
             stack_size: None,
         }
     }
+}
+
+impl ThreadPoolConfig {
+    /// Create optimized configuration for matrix multiplication workloads
+    pub fn for_matrix_multiplication(matrix_size: (usize, usize)) -> Self {
+        let num_cpus = thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+        let (m, n) = matrix_size;
+        let total_ops = m * n;
+        
+        // Optimize based on problem size
+        let (threads, stack_size, queue_capacity) = if total_ops > 1_000_000 {
+            // Large matrices: use all cores with larger stacks and queues
+            (num_cpus, Some(8 * 1024 * 1024), 4096)
+        } else if total_ops > 100_000 {
+            // Medium matrices: moderate parallelism
+            ((num_cpus * 3) / 4, Some(4 * 1024 * 1024), 2048)
+        } else {
+            // Small matrices: limited parallelism to avoid overhead
+            (num_cpus / 2, None, 512)
+        };
+
+        Self {
+            profile: ThreadPoolProfile::MatrixMultiplication,
+            min_threads: 1,
+            max_threads: threads,
+            active_threads: threads,
+            idle_timeout: Duration::from_secs(30),
+            affinity: AffinityStrategy::NumaSpread,
+            numa_aware: true,
+            work_stealing: true,
+            queue_capacity,
+            stack_size,
+        }
+    }
+
+    /// Create optimized configuration for eigenvalue computation
+    pub fn for_eigenvalue_computation(matrix_order: usize) -> Self {
+        let num_cpus = thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+        
+        // Eigenvalue problems benefit from fewer threads due to synchronization
+        let threads = if matrix_order > 1000 {
+            num_cpus
+        } else if matrix_order > 100 {
+            (num_cpus * 2) / 3
+        } else {
+            num_cpus / 2
+        };
+
+        Self {
+            profile: ThreadPoolProfile::EigenComputation,
+            min_threads: 1,
+            max_threads: threads,
+            active_threads: threads,
+            idle_timeout: Duration::from_secs(120), // Longer timeout for iterative methods
+            affinity: AffinityStrategy::NumaCompact,
+            numa_aware: true,
+            work_stealing: false, // Less beneficial for eigenvalue algorithms
+            queue_capacity: 1024,
+            stack_size: Some(4 * 1024 * 1024),
+        }
+    }
+
+    /// Create optimized configuration for decomposition algorithms
+    pub fn for_decomposition(decomp_type: DecompositionType, matrix_size: (usize, usize)) -> Self {
+        let num_cpus = thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+        let (m, n) = matrix_size;
+        let size = m.max(n);
+
+        let (threads, work_stealing, affinity) = match decomp_type {
+            DecompositionType::LU => {
+                // LU benefits from sequential processing with some parallelism
+                ((num_cpus * 2) / 3, false, AffinityStrategy::Pinned(vec![0, 1, 2, 3]))
+            },
+            DecompositionType::QR => {
+                // QR can use more parallelism due to independent Householder reflections
+                (num_cpus, true, AffinityStrategy::NumaSpread)
+            },
+            DecompositionType::SVD => {
+                // SVD is compute-intensive and benefits from all cores
+                (num_cpus, true, AffinityStrategy::NumaSpread)
+            },
+            DecompositionType::Cholesky => {
+                // Cholesky is inherently sequential but can parallelize column operations
+                ((num_cpus + 1) / 2, false, AffinityStrategy::NumaCompact)
+            },
+        };
+
+        Self {
+            profile: ThreadPoolProfile::Decomposition,
+            min_threads: 1,
+            max_threads: threads,
+            active_threads: threads,
+            idle_timeout: Duration::from_secs(45),
+            affinity,
+            numa_aware: size > 500,
+            work_stealing,
+            queue_capacity: if size > 1000 { 2048 } else { 1024 },
+            stack_size: Some(6 * 1024 * 1024),
+        }
+    }
+
+    /// Create optimized configuration for iterative solvers
+    pub fn for_iterative_solver(problem_size: usize, solver_type: IterativeSolverType) -> Self {
+        let num_cpus = thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+        
+        let (threads, queue_capacity, affinity) = match solver_type {
+            IterativeSolverType::ConjugateGradient => {
+                // CG benefits from moderate parallelism
+                ((num_cpus * 3) / 4, 1024, AffinityStrategy::NumaSpread)
+            },
+            IterativeSolverType::GMRES => {
+                // GMRES needs more memory and moderate parallelism
+                (num_cpus / 2, 2048, AffinityStrategy::NumaCompact)
+            },
+            IterativeSolverType::BiCGSTAB => {
+                // BiCGSTAB can use more parallelism
+                (num_cpus, 1024, AffinityStrategy::NumaSpread)
+            },
+        };
+
+        Self {
+            profile: ThreadPoolProfile::IterativeSolver,
+            min_threads: 1,
+            max_threads: threads,
+            active_threads: threads,
+            idle_timeout: Duration::from_secs(180), // Long timeout for iterative methods
+            affinity,
+            numa_aware: problem_size > 10_000,
+            work_stealing: true,
+            queue_capacity,
+            stack_size: Some(8 * 1024 * 1024), // Large stack for deep recursion
+        }
+    }
+}
+
+/// Decomposition algorithm types for configuration optimization
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DecompositionType {
+    LU,
+    QR,
+    SVD,
+    Cholesky,
+}
+
+/// Iterative solver types for configuration optimization
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IterativeSolverType {
+    ConjugateGradient,
+    GMRES,
+    BiCGSTAB,
 }
 
 impl ThreadPoolConfig {
@@ -186,6 +350,146 @@ impl ThreadPoolConfig {
         self.work_stealing = enabled;
         self
     }
+
+    /// Create configuration optimized for linear algebra operations
+    pub fn linear_algebra() -> Self {
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+
+        Self {
+            profile: ThreadPoolProfile::LinearAlgebra,
+            min_threads: num_cpus,
+            max_threads: num_cpus,
+            active_threads: num_cpus,
+            affinity: AffinityStrategy::Pinned((0..num_cpus).collect()),
+            numa_aware: true,
+            work_stealing: true,
+            stack_size: Some(4 * 1024 * 1024), // 4MB stack for recursive algorithms
+            queue_capacity: 1024,
+            ..Default::default()
+        }
+    }
+
+    /// Create configuration optimized for matrix multiplication
+    pub fn matrix_multiplication() -> Self {
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+
+        Self {
+            profile: ThreadPoolProfile::MatrixMultiplication,
+            min_threads: num_cpus,
+            max_threads: num_cpus,
+            active_threads: num_cpus,
+            affinity: AffinityStrategy::NumaSpread,
+            numa_aware: true,
+            work_stealing: false, // Less effective for regular matrix blocks
+            stack_size: Some(2 * 1024 * 1024), // 2MB stack
+            queue_capacity: 512,
+            ..Default::default()
+        }
+    }
+
+    /// Create configuration optimized for eigenvalue computations
+    pub fn eigen_computation() -> Self {
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+
+        Self {
+            profile: ThreadPoolProfile::EigenComputation,
+            min_threads: num_cpus / 2,
+            max_threads: num_cpus,
+            active_threads: num_cpus,
+            affinity: AffinityStrategy::Pinned((0..num_cpus).collect()),
+            numa_aware: true,
+            work_stealing: true,
+            stack_size: Some(8 * 1024 * 1024), // 8MB stack for iterative methods
+            queue_capacity: 256,
+            idle_timeout: Duration::from_secs(120), // Longer timeout for iterative methods
+        }
+    }
+
+    /// Create configuration optimized for matrix decompositions
+    pub fn decomposition() -> Self {
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+
+        Self {
+            profile: ThreadPoolProfile::Decomposition,
+            min_threads: num_cpus,
+            max_threads: num_cpus,
+            active_threads: num_cpus,
+            affinity: AffinityStrategy::NumaCompact,
+            numa_aware: true,
+            work_stealing: true,
+            stack_size: Some(6 * 1024 * 1024), // 6MB stack
+            queue_capacity: 768,
+            ..Default::default()
+        }
+    }
+
+    /// Create configuration optimized for iterative solvers
+    pub fn iterative_solver() -> Self {
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+
+        Self {
+            profile: ThreadPoolProfile::IterativeSolver,
+            min_threads: num_cpus / 2,
+            max_threads: num_cpus * 2,
+            active_threads: num_cpus,
+            affinity: AffinityStrategy::NumaSpread,
+            numa_aware: true,
+            work_stealing: true,
+            stack_size: Some(4 * 1024 * 1024), // 4MB stack
+            queue_capacity: 2048, // Large queue for convergence iterations
+            idle_timeout: Duration::from_secs(180)
+        }
+    }
+
+    /// Create NUMA-optimized configuration
+    pub fn numa_optimized() -> Self {
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+
+        Self {
+            profile: ThreadPoolProfile::NumaOptimized,
+            min_threads: num_cpus,
+            max_threads: num_cpus,
+            active_threads: num_cpus,
+            affinity: AffinityStrategy::NumaSpread,
+            numa_aware: true,
+            work_stealing: false, // NUMA-aware scheduling instead
+            stack_size: Some(3 * 1024 * 1024),
+            queue_capacity: 1024,
+            ..Default::default()
+        }
+    }
+
+    /// Create hybrid GPU-CPU configuration
+    pub fn hybrid_computing() -> Self {
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+
+        Self {
+            profile: ThreadPoolProfile::HybridComputing,
+            min_threads: num_cpus / 4, // Reserve some cores for GPU coordination
+            max_threads: num_cpus / 2,
+            active_threads: num_cpus / 2,
+            affinity: AffinityStrategy::Custom(vec![Some(0), Some(1), None, None]), // Pin some, leave others free
+            numa_aware: true,
+            work_stealing: true,
+            stack_size: Some(2 * 1024 * 1024),
+            queue_capacity: 512,
+            ..Default::default()
+        }
+    }
 }
 
 /// Thread pool statistics
@@ -273,6 +577,13 @@ impl ThreadPoolManager {
             ThreadPoolProfile::LowLatency => ThreadPoolConfig::low_latency(),
             ThreadPoolProfile::HighThroughput => ThreadPoolConfig::high_throughput(),
             ThreadPoolProfile::Balanced => ThreadPoolConfig::default(),
+            ThreadPoolProfile::LinearAlgebra => ThreadPoolConfig::linear_algebra(),
+            ThreadPoolProfile::MatrixMultiplication => ThreadPoolConfig::matrix_multiplication(),
+            ThreadPoolProfile::EigenComputation => ThreadPoolConfig::eigen_computation(),
+            ThreadPoolProfile::Decomposition => ThreadPoolConfig::decomposition(),
+            ThreadPoolProfile::IterativeSolver => ThreadPoolConfig::iterative_solver(),
+            ThreadPoolProfile::NumaOptimized => ThreadPoolConfig::numa_optimized(),
+            ThreadPoolProfile::HybridComputing => ThreadPoolConfig::hybrid_computing(),
             ThreadPoolProfile::Custom(_) => {
                 // Use global config for custom profiles
                 self.global_config.lock().map_err(|_| {
@@ -321,25 +632,64 @@ impl ThreadPoolManager {
     pub fn recommend_profile(&self, 
         matrix_size: usize, 
         operation_type: OperationType,
-        _memory_usage: Option<usize>,
+        memory_usage: Option<usize>,
     ) -> ThreadPoolProfile {
+        // Advanced recommendation logic based on matrix size and operation type
         match operation_type {
-            OperationType::MatrixMultiplication if matrix_size > 1000 => {
-                ThreadPoolProfile::CpuIntensive
+            OperationType::MatrixMultiplication => {
+                if matrix_size > 2000 {
+                    ThreadPoolProfile::MatrixMultiplication
+                } else if matrix_size > 500 {
+                    ThreadPoolProfile::LinearAlgebra
+                } else {
+                    ThreadPoolProfile::LowLatency
+                }
             }
-            OperationType::Decomposition if matrix_size > 500 => {
-                ThreadPoolProfile::CpuIntensive
+            OperationType::Decomposition => {
+                if matrix_size > 1000 {
+                    ThreadPoolProfile::Decomposition
+                } else if matrix_size > 200 {
+                    ThreadPoolProfile::LinearAlgebra
+                } else {
+                    ThreadPoolProfile::CpuIntensive
+                }
+            }
+            OperationType::EigenSolver => {
+                if matrix_size > 500 {
+                    ThreadPoolProfile::EigenComputation
+                } else {
+                    ThreadPoolProfile::LinearAlgebra
+                }
             }
             OperationType::Solve if matrix_size < 100 => {
                 ThreadPoolProfile::LowLatency
             }
+            OperationType::Solve => {
+                ThreadPoolProfile::LinearAlgebra
+            }
             OperationType::IterativeSolver => {
-                ThreadPoolProfile::MemoryBound
+                if memory_usage.is_some_and(|mem| mem > 1_000_000_000) { // > 1GB
+                    ThreadPoolProfile::IterativeSolver
+                } else {
+                    ThreadPoolProfile::MemoryBound
+                }
             }
             OperationType::BatchOperations => {
                 ThreadPoolProfile::HighThroughput
             }
-            _ => ThreadPoolProfile::Balanced,
+            OperationType::ElementWise => {
+                if matrix_size > 10000 {
+                    ThreadPoolProfile::NumaOptimized
+                } else {
+                    ThreadPoolProfile::CpuIntensive
+                }
+            }
+            OperationType::Reduction => {
+                ThreadPoolProfile::CpuIntensive
+            }
+            OperationType::HybridGpuCpu => {
+                ThreadPoolProfile::HybridComputing
+            }
         }
     }
 }
@@ -355,11 +705,13 @@ impl Default for ThreadPoolManager {
 pub enum OperationType {
     MatrixMultiplication,
     Decomposition,
+    EigenSolver,
     Solve,
     IterativeSolver,
     BatchOperations,
     ElementWise,
     Reduction,
+    HybridGpuCpu,
 }
 
 /// Individual thread pool implementation
@@ -562,7 +914,7 @@ mod tests {
             OperationType::MatrixMultiplication, 
             None
         );
-        assert_eq!(profile, ThreadPoolProfile::CpuIntensive);
+        assert_eq!(profile, ThreadPoolProfile::LinearAlgebra);
         
         let profile = manager.recommend_profile(
             50, 

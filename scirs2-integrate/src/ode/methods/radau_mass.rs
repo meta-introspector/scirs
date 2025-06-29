@@ -385,77 +385,98 @@ where
                 //
                 // For numerical stability, we use a block-diagonal approximation
 
-                // Helper function to compute M^(-1) * J safely
-                let compute_mass_jacobian_product = |mass_mat: &Option<Array2<F>>, jacobian: &Array2<F>| -> Array2<F> {
+                // For mass matrix systems, we use a more robust Newton approach
+                // Instead of computing M^(-1)*J explicitly, we solve the Newton system directly
+                // This avoids numerical issues with computing the inverse of potentially ill-conditioned mass matrices
+
+                // Helper function to solve Newton correction for each stage
+                let solve_newton_stage = |mass_mat: &Option<Array2<F>>, 
+                                        residual: &Array1<F>, 
+                                        jacobian: &Array2<F>, 
+                                        a_coeff: F| -> IntegrateResult<Array1<F>> {
                     match mass_mat {
                         Some(m) => {
-                            // Solve M * X = J for X (i.e., X = M^(-1) * J)
-                            let mut result = Array2::<F>::zeros((n_dim, n_dim));
-                            for j in 0..n_dim {
-                                let jac_col = jacobian.column(j).to_owned();
-                                match solve_linear_system(&m.view(), &jac_col.view()) {
-                                    Ok(x_col) => {
+                            // For mass matrix DAEs, solve: (M - h*a_ii*J) * dk = r
+                            // where r is the residual and dk is the Newton correction
+                            let mut newton_matrix = m.clone();
+                            
+                            // Subtract h*a_ii*J from M
+                            for i in 0..n_dim {
+                                for j in 0..n_dim {
+                                    newton_matrix[[i, j]] -= h * a_coeff * jacobian[[i, j]];
+                                }
+                            }
+                            
+                            // Solve with iterative improvement for better numerical stability
+                            let solve_with_conditioning = |matrix: &Array2<F>, b: &Array1<F>| -> IntegrateResult<Array1<F>> {
+                                // First attempt with original matrix
+                                match solve_linear_system(&matrix.view(), &b.view()) {
+                                    Ok(solution) => {
+                                        // Verify solution quality by checking residual
+                                        let mut check_residual = Array1::<F>::zeros(n_dim);
                                         for i in 0..n_dim {
-                                            result[[i, j]] = x_col[i];
+                                            for j in 0..n_dim {
+                                                check_residual[i] += matrix[[i, j]] * solution[j];
+                                            }
+                                            check_residual[i] -= b[i];
+                                        }
+                                        
+                                        let residual_norm = check_residual.iter().fold(F::zero(), |acc, &x| acc + x*x).sqrt();
+                                        let b_norm = b.iter().fold(F::zero(), |acc, &x| acc + x*x).sqrt();
+                                        
+                                        if residual_norm < F::from_f64(1e-10).unwrap() * (F::one() + b_norm) {
+                                            Ok(solution)
+                                        } else {
+                                            // Solution not accurate enough, try with regularization
+                                            Err(crate::error::IntegrateError::ComputationError("Solution accuracy insufficient".to_string()))
                                         }
                                     }
-                                    Err(_) => {
-                                        // Fall back to diagonal approximation for ill-conditioned mass matrices
-                                        for i in 0..n_dim {
-                                            let m_ii = m[[i, i]];
-                                            if m_ii.abs() > F::from_f64(1e-12).unwrap() {
-                                                result[[i, j]] = jacobian[[i, j]] / m_ii;
-                                            } else {
-                                                // Use identity for near-singular diagonal elements
-                                                result[[i, j]] = if i == j { F::one() } else { F::zero() };
+                                    Err(e) => Err(e),
+                                }
+                            };
+                            
+                            match solve_with_conditioning(&newton_matrix, residual) {
+                                Ok(solution) => Ok(solution),
+                                Err(_) => {
+                                    // Apply Tikhonov regularization for better conditioning
+                                    let mut regularized = newton_matrix.clone();
+                                    let reg_param = F::from_f64(1e-10).unwrap() * h;
+                                    
+                                    for i in 0..n_dim {
+                                        regularized[[i, i]] += reg_param;
+                                    }
+                                    
+                                    match solve_linear_system(&regularized.view(), &residual.view()) {
+                                        Ok(solution) => Ok(solution),
+                                        Err(_) => {
+                                            // Last resort: stronger regularization
+                                            let strong_reg = F::from_f64(1e-8).unwrap() * h;
+                                            for i in 0..n_dim {
+                                                regularized[[i, i]] += strong_reg;
                                             }
+                                            solve_linear_system(&regularized.view(), &residual.view())
                                         }
                                     }
                                 }
                             }
-                            result
                         }
-                        None => jacobian.clone(), // Identity mass matrix
-                    }
-                };
-
-                // Compute M^(-1) * J for each stage
-                let s1 = compute_mass_jacobian_product(&m1, jac);
-                let s2 = compute_mass_jacobian_product(&m2, jac);
-                let s3 = compute_mass_jacobian_product(&m3, jac);
-
-                // Build the Newton system matrices for each stage (diagonal approximation)
-                let mut j1_matrix = Array2::<F>::eye(n_dim);
-                let mut j2_matrix = Array2::<F>::eye(n_dim);
-                let mut j3_matrix = Array2::<F>::eye(n_dim);
-
-                for i in 0..n_dim {
-                    for j in 0..n_dim {
-                        j1_matrix[[i, j]] -= h * a11 * s1[[i, j]];
-                        j2_matrix[[i, j]] -= h * a22 * s2[[i, j]];
-                        j3_matrix[[i, j]] -= h * a33 * s3[[i, j]];
-                    }
-                }
-
-                // Solve the Newton corrections with regularization for numerical stability
-                let solve_with_regularization = |matrix: &Array2<F>, rhs: &Array1<F>| -> IntegrateResult<Array1<F>> {
-                    match solve_linear_system(&matrix.view(), &rhs.view()) {
-                        Ok(solution) => Ok(solution),
-                        Err(_) => {
-                            // Add small regularization to diagonal and retry
-                            let mut regularized = matrix.clone();
-                            let reg_param = F::from_f64(1e-8).unwrap();
+                        None => {
+                            // For identity mass matrix, use standard Newton system: (I - h*a_ii*J) * dk = r
+                            let mut newton_matrix = Array2::<F>::eye(n_dim);
                             for i in 0..n_dim {
-                                regularized[[i, i]] += reg_param;
+                                for j in 0..n_dim {
+                                    newton_matrix[[i, j]] -= h * a_coeff * jacobian[[i, j]];
+                                }
                             }
-                            solve_linear_system(&regularized.view(), &rhs.view())
+                            solve_linear_system(&newton_matrix.view(), &residual.view())
                         }
                     }
                 };
 
-                let dk1 = solve_with_regularization(&j1_matrix, &r1)?;
-                let dk2 = solve_with_regularization(&j2_matrix, &r2)?;
-                let dk3 = solve_with_regularization(&j3_matrix, &r3)?;
+                // Solve Newton corrections for each stage
+                let dk1 = solve_newton_stage(&m1, &r1, jac, a11)?;
+                let dk2 = solve_newton_stage(&m2, &r2, jac, a22)?;
+                let dk3 = solve_newton_stage(&m3, &r3, jac, a33)?;
                 n_lu += 3;
 
                 // Apply adaptive damping based on Newton iteration progress

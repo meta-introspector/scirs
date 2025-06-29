@@ -384,8 +384,11 @@ pub use traits::{
 mod descriptive;
 mod descriptive_simd;
 mod dispersion_simd;
+mod moments_simd;
+mod property_based_tests_extended;
 mod memory_efficient;
 mod memory_optimized_v2;
+mod memory_optimized_advanced;
 mod memory_profiler_v3;
 mod memory_profiling;
 mod parallel_advanced_v3;
@@ -404,12 +407,26 @@ pub use dispersion_simd::{
     coefficient_of_variation_simd, gini_simd, iqr_simd, mad_simd, median_abs_deviation_simd,
     percentile_range_simd, range_simd, sem_simd,
 };
+pub use moments_simd::{
+    skewness_simd, kurtosis_simd, moment_simd, moments_batch_simd,
+};
+
+// Property-based testing framework
+#[cfg(test)]
+pub use property_based_tests_extended::{
+    StatisticalTestData, MatrixTestData, SimdConsistencyTester, ParallelConsistencyTester,
+    MathematicalInvariantTester, MemoryOptimizationTester, BatchProcessingTester,
+};
 pub use memory_efficient::{
     covariance_chunked, normalize_inplace, quantile_quickselect, streaming_mean, welford_variance,
     StreamingHistogram,
 };
 pub use memory_optimized_v2::{
     mean_zero_copy, variance_cache_aware, LazyStats, MemoryConfig, MemoryPool, StreamingCovariance,
+};
+pub use memory_optimized_advanced::{
+    corrcoef_memory_aware, cache_oblivious_matrix_mult, streaming_covariance_matrix,
+    pca_memory_efficient, AdaptiveMemoryManager as AdvancedMemoryManager, MemoryConstraints, MemoryStatistics, PCAResult,
 };
 pub use memory_profiler_v3::{
     AdaptiveMemoryManager, AlgorithmChoice as MemoryAlgorithmChoice, AllocationStats, CacheStats,
@@ -424,7 +441,7 @@ pub use parallel_advanced_v3::{
     ParallelMonteCarlo,
 };
 pub use parallel_enhanced_v2::{
-    bootstrap_parallel_enhanced, corrcoef_parallel_enhanced, mean_parallel_enhanced,
+    bootstrap_parallel_enhanced, mean_parallel_enhanced,
     variance_parallel_enhanced, ParallelConfig,
 };
 pub use parallel_stats::{
@@ -456,9 +473,8 @@ pub use simd_enhanced_v4::{
     ComprehensiveStats, RobustStats, SlidingWindowStats,
 };
 pub use simd_enhanced_v5::{
-    bootstrap_confidence_interval_simd, kernel_density_estimation_simd, matrix_statistics_simd,
-    rolling_statistics_simd, AdaptiveMetropolisResult, BootstrapResult, BootstrapStatistic,
-    HMCResult, KernelType, MatrixOperation, MatrixStatsResult, NUTSResult, ParallelTemperingResult,
+    rolling_statistics_simd, BootstrapResult, BootstrapStatistic,
+    KernelType, MatrixOperation, MatrixStatsResult,
     RollingStatistic, RollingStatsResult,
 };
 
@@ -479,12 +495,17 @@ pub use tests::*;
 // Correlation measures
 mod correlation;
 mod correlation_simd;
+mod correlation_parallel_enhanced;
 pub use correlation::intraclass::icc;
 pub use correlation::{
     corrcoef, kendall_tau, kendalltau, partial_corr, partial_corrr, pearson_r, pearsonr,
     point_biserial, point_biserialr, spearman_r, spearmanr,
 };
 pub use correlation_simd::{corrcoef_simd, covariance_simd, pearson_r_simd};
+pub use correlation_parallel_enhanced::{
+    corrcoef_parallel_enhanced, pearson_r_simd_enhanced, batch_correlations_parallel,
+    rolling_correlation_parallel, ParallelCorrelationConfig,
+};
 
 // Dispersion and variability measures
 mod dispersion;

@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let upper_bounds = Array1::from_vec(vec![10.0, 10.0]);
 
     // Create a PRM planner with a circle obstacle at (5,5) with radius 2
-    let mut planner = PRMPlanner::new(config, lower_bounds, upper_bounds);
+    let mut planner = PRMPlanner::new(config, lower_bounds, upper_bounds)?;
 
     planner.set_collision_checker(Box::new(|p: &Array1<f64>| {
         let dx = p[0] - 5.0;

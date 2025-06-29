@@ -85,6 +85,8 @@ pub mod batch_conversions;
 pub mod cache;
 pub mod config;
 pub mod constants;
+pub mod distributed;
+pub mod ecosystem;
 pub mod error;
 #[cfg(feature = "gpu")]
 pub mod gpu;
@@ -104,6 +106,7 @@ pub mod numeric;
 pub mod parallel;
 #[cfg(feature = "parallel")]
 pub mod parallel_ops;
+pub mod performance;
 pub mod performance_optimization;
 #[cfg(feature = "profiling")]
 pub mod profiling;

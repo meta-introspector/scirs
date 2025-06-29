@@ -55,7 +55,8 @@ pub use cleansing::{
 pub use distance::{cosine_similarity, jaccard_similarity, levenshtein_distance};
 pub use domain_processors::{
     Domain, DomainProcessorConfig, FinancialTextProcessor, LegalTextProcessor, MedicalTextProcessor, 
-    ProcessedDomainText, ScientificTextProcessor, UnifiedDomainProcessor,
+    NewsTextProcessor, PatentTextProcessor, ProcessedDomainText, ScientificTextProcessor, 
+    SocialMediaTextProcessor, UnifiedDomainProcessor,
 };
 pub use embeddings::{Word2Vec, Word2VecAlgorithm, Word2VecConfig};
 pub use enhanced_vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer};
@@ -85,8 +86,8 @@ pub use multilingual::{
 };
 pub use neural_architectures::{
     ActivationFunction, AdditiveAttention, BiLSTM, CNNLSTMHybrid, Conv1D, CrossAttention, 
-    GRUCell, LSTMCell, MaxPool1D, MultiScaleCNN, PositionwiseFeedForward, ResidualBlock1D, 
-    SelfAttention, TextCNN,
+    Dropout, GRUCell, LayerNorm, LSTMCell, MaxPool1D, MultiHeadAttention, MultiScaleCNN, 
+    PositionwiseFeedForward, ResidualBlock1D, SelfAttention, TextCNN,
 };
 pub use parallel::{
     ParallelCorpusProcessor, ParallelTextProcessor, ParallelTokenizer, ParallelVectorizer,
@@ -141,7 +142,8 @@ pub use topic_modeling::{
 };
 pub use transformer::{
     FeedForward, LayerNorm, MultiHeadAttention, PositionalEncoding, TokenEmbedding,
-    TransformerConfig, TransformerEncoder, TransformerEncoderLayer, TransformerModel,
+    TransformerConfig, TransformerDecoder, TransformerDecoderLayer, TransformerEncoder, 
+    TransformerEncoderLayer, TransformerModel,
 };
 pub use vectorize::{CountVectorizer, TfidfVectorizer, Vectorizer};
 pub use vocabulary::Vocabulary;

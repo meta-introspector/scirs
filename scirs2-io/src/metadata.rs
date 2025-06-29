@@ -1401,7 +1401,7 @@ impl MetadataExtractor {
         // NetCDF metadata extractor
         self.register(
             "netcdf",
-            Box::new(|path| {
+            Box::new(|_path| {
                 let metadata = Metadata::new();
 
                 // Extract NetCDF global attributes

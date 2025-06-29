@@ -152,6 +152,7 @@ impl Default for FortranConfig {
 pub struct FortranFile<R> {
     reader: R,
     config: FortranConfig,
+    #[allow(dead_code)]
     current_record_pos: u64,
 }
 

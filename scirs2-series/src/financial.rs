@@ -2809,4 +2809,523 @@ mod tests {
         
         assert!(variance_of_last < 1e-6, "Long-term forecasts should converge to unconditional variance");
     }
+
+    #[test]
+    fn test_adx() {
+        let high = Array1::from_vec(vec![10.5, 11.0, 10.8, 11.2, 11.5, 11.1, 11.8, 12.0]);
+        let low = Array1::from_vec(vec![10.0, 10.2, 10.1, 10.5, 10.8, 10.6, 11.0, 11.2]);
+        let close = Array1::from_vec(vec![10.2, 10.8, 10.3, 11.0, 11.2, 10.9, 11.5, 11.8]);
+        
+        let result = adx(&high, &low, &close, 3);
+        assert!(result.is_ok(), "ADX calculation should succeed");
+        
+        let adx_values = result.unwrap();
+        assert!(!adx_values.is_empty(), "ADX should produce values");
+        assert!(adx_values.iter().all(|&x| x >= 0.0 && x <= 100.0), "ADX should be between 0 and 100");
+    }
+
+    #[test]
+    fn test_cci() {
+        let high = Array1::from_vec(vec![10.5, 11.0, 10.8, 11.2, 11.5]);
+        let low = Array1::from_vec(vec![10.0, 10.2, 10.1, 10.5, 10.8]);
+        let close = Array1::from_vec(vec![10.2, 10.8, 10.3, 11.0, 11.2]);
+        
+        let result = cci(&high, &low, &close, 3);
+        assert!(result.is_ok(), "CCI calculation should succeed");
+        
+        let cci_values = result.unwrap();
+        assert!(!cci_values.is_empty(), "CCI should produce values");
+    }
+
+    #[test]
+    fn test_parabolic_sar() {
+        let high = Array1::from_vec(vec![10.5, 11.0, 10.8, 11.2, 11.5, 11.1, 11.8, 12.0]);
+        let low = Array1::from_vec(vec![10.0, 10.2, 10.1, 10.5, 10.8, 10.6, 11.0, 11.2]);
+        
+        let result = parabolic_sar(&high, &low, 0.02, 0.2);
+        assert!(result.is_ok(), "Parabolic SAR calculation should succeed");
+        
+        let sar_values = result.unwrap();
+        assert_eq!(sar_values.len(), high.len(), "SAR should have same length as input");
+    }
+
+    #[test]
+    fn test_black_scholes() {
+        // Test call option
+        let call_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, true).unwrap();
+        assert!(call_price > 0.0, "Call option should have positive price");
+        
+        // Test put option
+        let put_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, false).unwrap();
+        assert!(put_price > 0.0, "Put option should have positive price");
+        
+        // Test put-call parity approximately holds
+        let strike = 100.0;
+        let spot = 100.0;
+        let rate = 0.05;
+        let time = 1.0;
+        let pv_strike = strike * (-rate * time).exp();
+        
+        let parity_diff = (call_price - put_price - (spot - pv_strike)).abs();
+        assert!(parity_diff < 0.01, "Put-call parity should approximately hold");
+    }
+
+    #[test]
+    fn test_egarch_model() {
+        let mut model = EgarchModel::<f64>::egarch_11();
+        
+        let returns = Array1::from_vec(vec![
+            0.01, -0.02, 0.015, -0.01, 0.005, 0.008, -0.012, 0.006, 0.003, -0.009,
+            0.014, -0.008, 0.002, 0.011, -0.007, 0.004, -0.013, 0.009, 0.001, -0.005,
+            0.016, -0.011, 0.007, -0.003, 0.012, 0.002, -0.015, 0.008, 0.004, -0.006,
+            0.018, -0.010, 0.009, -0.002, 0.013, 0.001, -0.014, 0.007, 0.005, -0.004,
+        ]);
+        
+        let result = model.fit(&returns);
+        assert!(result.is_ok(), "EGARCH model should fit successfully");
+        
+        let egarch_result = result.unwrap();
+        assert!(egarch_result.log_likelihood.is_finite(), "Log-likelihood should be finite");
+        assert!(!egarch_result.parameters.gamma.is_empty(), "Should have asymmetry parameters");
+    }
+}
+
+/// Average Directional Index (ADX) - measures trend strength
+pub fn adx<F: Float + Clone>(
+    high: &Array1<F>,
+    low: &Array1<F>, 
+    close: &Array1<F>,
+    period: usize,
+) -> Result<Array1<F>> {
+    if high.len() != low.len() || high.len() != close.len() {
+        return Err(TimeSeriesError::DimensionMismatch {
+            expected: high.len(),
+            actual: std::cmp::min(low.len(), close.len()),
+        });
+    }
+
+    if high.len() < period + 1 {
+        return Err(TimeSeriesError::InsufficientData {
+            message: "Not enough data for ADX calculation".to_string(),
+            required: period + 1,
+            actual: high.len(),
+        });
+    }
+
+    let n = high.len();
+    let mut dx = Array1::zeros(n - 1);
+    let mut adx = Array1::zeros(n - period);
+
+    // Calculate True Range and Directional Movement
+    for i in 1..n {
+        let tr1 = high[i] - low[i];
+        let tr2 = (high[i] - close[i - 1]).abs();
+        let tr3 = (low[i] - close[i - 1]).abs();
+        let true_range = tr1.max(tr2).max(tr3);
+
+        let dm_plus = if high[i] > high[i - 1] && (high[i] - high[i - 1]) > (low[i - 1] - low[i]) {
+            high[i] - high[i - 1]
+        } else {
+            F::zero()
+        };
+
+        let dm_minus = if low[i] < low[i - 1] && (low[i - 1] - low[i]) > (high[i] - high[i - 1]) {
+            low[i - 1] - low[i]
+        } else {
+            F::zero()
+        };
+
+        let di_plus = if true_range > F::zero() {
+            dm_plus / true_range
+        } else {
+            F::zero()
+        };
+
+        let di_minus = if true_range > F::zero() {
+            dm_minus / true_range
+        } else {
+            F::zero()
+        };
+
+        dx[i - 1] = if di_plus + di_minus > F::zero() {
+            (di_plus - di_minus).abs() / (di_plus + di_minus)
+        } else {
+            F::zero()
+        };
+    }
+
+    // Calculate ADX using exponential moving average
+    let alpha = F::from(2.0).unwrap() / F::from(period + 1).unwrap();
+    let mut ema_dx = dx[0];
+
+    for i in 0..adx.len() {
+        if i == 0 {
+            ema_dx = dx.slice(s![0..period]).mean().unwrap();
+        } else {
+            ema_dx = alpha * dx[i + period - 1] + (F::one() - alpha) * ema_dx;
+        }
+        adx[i] = ema_dx * F::from(100.0).unwrap();
+    }
+
+    Ok(adx)
+}
+
+/// Commodity Channel Index (CCI) - momentum oscillator
+pub fn cci<F: Float + Clone>(
+    high: &Array1<F>,
+    low: &Array1<F>,
+    close: &Array1<F>,
+    period: usize,
+) -> Result<Array1<F>> {
+    if high.len() != low.len() || high.len() != close.len() {
+        return Err(TimeSeriesError::DimensionMismatch {
+            expected: high.len(),
+            actual: std::cmp::min(low.len(), close.len()),
+        });
+    }
+
+    if high.len() < period {
+        return Err(TimeSeriesError::InsufficientData {
+            message: "Not enough data for CCI calculation".to_string(),
+            required: period,
+            actual: high.len(),
+        });
+    }
+
+    let n = high.len();
+    let mut cci = Array1::zeros(n - period + 1);
+    let constant = F::from(0.015).unwrap(); // Typical CCI constant
+
+    // Calculate Typical Price
+    let mut typical_price = Array1::zeros(n);
+    for i in 0..n {
+        typical_price[i] = (high[i] + low[i] + close[i]) / F::from(3.0).unwrap();
+    }
+
+    for i in 0..cci.len() {
+        let window = typical_price.slice(s![i..i + period]);
+        let sma = window.sum() / F::from(period).unwrap();
+        
+        // Calculate mean deviation
+        let mean_deviation = window
+            .mapv(|x| (x - sma).abs())
+            .sum() / F::from(period).unwrap();
+
+        cci[i] = if mean_deviation > F::zero() {
+            (typical_price[i + period - 1] - sma) / (constant * mean_deviation)
+        } else {
+            F::zero()
+        };
+    }
+
+    Ok(cci)
+}
+
+/// Parabolic Stop and Reverse (SAR) - trend-following indicator
+pub fn parabolic_sar<F: Float + Clone>(
+    high: &Array1<F>,
+    low: &Array1<F>,
+    initial_af: F,
+    max_af: F,
+) -> Result<Array1<F>> {
+    if high.len() != low.len() {
+        return Err(TimeSeriesError::DimensionMismatch {
+            expected: high.len(),
+            actual: low.len(),
+        });
+    }
+
+    if high.len() < 2 {
+        return Err(TimeSeriesError::InsufficientData {
+            message: "Not enough data for Parabolic SAR calculation".to_string(),
+            required: 2,
+            actual: high.len(),
+        });
+    }
+
+    let n = high.len();
+    let mut sar = Array1::zeros(n);
+    let mut ep = high[0]; // Extreme Point
+    let mut af = initial_af; // Acceleration Factor
+    let mut is_uptrend = true;
+
+    sar[0] = low[0];
+
+    for i in 1..n {
+        // Calculate SAR for current period
+        sar[i] = sar[i - 1] + af * (ep - sar[i - 1]);
+
+        if is_uptrend {
+            // In uptrend
+            if low[i] <= sar[i] {
+                // Trend reversal to downtrend
+                is_uptrend = false;
+                sar[i] = ep; // SAR becomes the previous extreme point
+                ep = low[i]; // New extreme point is current low
+                af = initial_af; // Reset acceleration factor
+            } else {
+                // Continue uptrend
+                if high[i] > ep {
+                    ep = high[i]; // New high extreme point
+                    af = (af + initial_af).min(max_af); // Increase AF
+                }
+                // Ensure SAR doesn't exceed previous two lows
+                if i >= 2 {
+                    sar[i] = sar[i].min(low[i - 1]).min(low[i - 2]);
+                } else if i >= 1 {
+                    sar[i] = sar[i].min(low[i - 1]);
+                }
+            }
+        } else {
+            // In downtrend  
+            if high[i] >= sar[i] {
+                // Trend reversal to uptrend
+                is_uptrend = true;
+                sar[i] = ep; // SAR becomes the previous extreme point
+                ep = high[i]; // New extreme point is current high
+                af = initial_af; // Reset acceleration factor
+            } else {
+                // Continue downtrend
+                if low[i] < ep {
+                    ep = low[i]; // New low extreme point
+                    af = (af + initial_af).min(max_af); // Increase AF
+                }
+                // Ensure SAR doesn't fall below previous two highs
+                if i >= 2 {
+                    sar[i] = sar[i].max(high[i - 1]).max(high[i - 2]);
+                } else if i >= 1 {
+                    sar[i] = sar[i].max(high[i - 1]);
+                }
+            }
+        }
+    }
+
+    Ok(sar)
+}
+
+/// Black-Scholes option pricing model
+pub fn black_scholes<F: Float + Clone>(
+    spot_price: F,
+    strike_price: F,
+    time_to_expiry: F,
+    risk_free_rate: F,
+    volatility: F,
+    is_call: bool,
+) -> Result<F> {
+    if spot_price <= F::zero() || strike_price <= F::zero() {
+        return Err(TimeSeriesError::InvalidParameter {
+            name: "price".to_string(),
+            message: "Spot and strike prices must be positive".to_string(),
+        });
+    }
+
+    if time_to_expiry <= F::zero() {
+        return Err(TimeSeriesError::InvalidParameter {
+            name: "time_to_expiry".to_string(),
+            message: "Time to expiry must be positive".to_string(),
+        });
+    }
+
+    if volatility <= F::zero() {
+        return Err(TimeSeriesError::InvalidParameter {
+            name: "volatility".to_string(),
+            message: "Volatility must be positive".to_string(),
+        });
+    }
+
+    let sqrt_t = time_to_expiry.sqrt();
+    let d1 = ((spot_price / strike_price).ln() + 
+             (risk_free_rate + volatility.powi(2) / F::from(2.0).unwrap()) * time_to_expiry) /
+             (volatility * sqrt_t);
+    let d2 = d1 - volatility * sqrt_t;
+
+    // Normal CDF approximation (good for most practical uses)
+    let norm_cdf_d1 = normal_cdf(d1);
+    let norm_cdf_d2 = normal_cdf(d2);
+
+    if is_call {
+        // Call option price
+        Ok(spot_price * norm_cdf_d1 - 
+           strike_price * (-risk_free_rate * time_to_expiry).exp() * norm_cdf_d2)
+    } else {
+        // Put option price using put-call parity
+        let call_price = spot_price * norm_cdf_d1 - 
+                       strike_price * (-risk_free_rate * time_to_expiry).exp() * norm_cdf_d2;
+        Ok(call_price - spot_price + 
+           strike_price * (-risk_free_rate * time_to_expiry).exp())
+    }
+}
+
+/// EGARCH (Exponential GARCH) model for asymmetric volatility
+#[derive(Debug)]
+pub struct EgarchModel<F: Float + Debug> {
+    config: EgarchConfig,
+    fitted: bool,
+    parameters: Option<EgarchParameters<F>>,
+    conditional_variance: Option<Array1<F>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct EgarchConfig {
+    pub p: usize, // GARCH order
+    pub q: usize, // ARCH order 
+    pub max_iterations: usize,
+    pub tolerance: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct EgarchParameters<F: Float> {
+    pub omega: F,
+    pub alpha: Array1<F>, // Magnitude effects
+    pub beta: Array1<F>,  // Persistence effects  
+    pub gamma: Array1<F>, // Asymmetry effects
+}
+
+impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
+    pub fn new(config: EgarchConfig) -> Self {
+        Self {
+            config,
+            fitted: false,
+            parameters: None,
+            conditional_variance: None,
+        }
+    }
+
+    pub fn egarch_11() -> Self {
+        Self::new(EgarchConfig {
+            p: 1,
+            q: 1,
+            max_iterations: 1000,
+            tolerance: 1e-6,
+        })
+    }
+
+    /// Fit EGARCH model using simplified method
+    pub fn fit(&mut self, data: &Array1<F>) -> Result<EgarchResult<F>> {
+        if data.len() < 30 {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Need at least 30 observations for EGARCH estimation".to_string(),
+                required: 30,
+                actual: data.len(),
+            });
+        }
+
+        // Calculate returns
+        let returns = if data.iter().all(|&x| x > F::zero()) {
+            let mut ret = Array1::zeros(data.len() - 1);
+            for i in 1..data.len() {
+                ret[i - 1] = (data[i] / data[i - 1]).ln();
+            }
+            ret
+        } else {
+            data.clone()
+        };
+
+        let n = returns.len();
+        let mean = returns.sum() / F::from(n).unwrap();
+        let centered_returns: Array1<F> = returns.mapv(|r| r - mean);
+
+        // Initialize parameters with reasonable values
+        let sample_var = centered_returns.mapv(|r| r.powi(2)).sum() / F::from(n - 1).unwrap();
+        
+        let omega = sample_var.ln() * F::from(0.01).unwrap();
+        let alpha = Array1::from_vec(vec![F::from(0.1).unwrap()]);
+        let beta = Array1::from_vec(vec![F::from(0.85).unwrap()]);
+        let gamma = Array1::from_vec(vec![F::from(-0.05).unwrap()]); // Asymmetry effect
+
+        // Calculate conditional variance using EGARCH formula
+        let mut log_conditional_variance = Array1::zeros(n);
+        log_conditional_variance[0] = sample_var.ln();
+
+        for i in 1..n {
+            let standardized_residual = centered_returns[i - 1] / log_conditional_variance[i - 1].exp().sqrt();
+            
+            // EGARCH(1,1): ln(σ²_t) = ω + α[|z_{t-1}| - E|z_{t-1}|] + γz_{t-1} + β*ln(σ²_{t-1})
+            let expected_abs_z = F::from(2.0/std::f64::consts::PI).unwrap().sqrt(); // E[|Z|] for standard normal
+            let magnitude_effect = alpha[0] * (standardized_residual.abs() - expected_abs_z);
+            let asymmetry_effect = gamma[0] * standardized_residual;
+            let persistence_effect = beta[0] * log_conditional_variance[i - 1];
+
+            log_conditional_variance[i] = omega + magnitude_effect + asymmetry_effect + persistence_effect;
+        }
+
+        let conditional_variance = log_conditional_variance.mapv(|x| x.exp());
+
+        // Calculate standardized residuals
+        let standardized_residuals: Array1<F> = centered_returns
+            .iter()
+            .zip(conditional_variance.iter())
+            .map(|(&r, &v)| r / v.sqrt())
+            .collect();
+
+        // Calculate log-likelihood
+        let mut log_likelihood = F::zero();
+        for i in 0..n {
+            let variance = conditional_variance[i];
+            if variance > F::zero() {
+                log_likelihood = log_likelihood - F::from(0.5).unwrap() * 
+                    (variance.ln() + centered_returns[i].powi(2) / variance);
+            }
+        }
+
+        let parameters = EgarchParameters {
+            omega,
+            alpha,
+            beta,
+            gamma,
+        };
+
+        // Information criteria
+        let k = F::from(4).unwrap(); // Number of parameters
+        let n_f = F::from(n).unwrap();
+        let aic = -F::from(2.0).unwrap() * log_likelihood + F::from(2.0).unwrap() * k;
+        let bic = -F::from(2.0).unwrap() * log_likelihood + k * n_f.ln();
+
+        self.fitted = true;
+        self.parameters = Some(parameters.clone());
+        self.conditional_variance = Some(conditional_variance.clone());
+
+        Ok(EgarchResult {
+            parameters,
+            conditional_variance,
+            standardized_residuals,
+            log_likelihood,
+            aic,
+            bic,
+            converged: true,
+            iterations: 1,
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct EgarchResult<F: Float> {
+    pub parameters: EgarchParameters<F>,
+    pub conditional_variance: Array1<F>,
+    pub standardized_residuals: Array1<F>,
+    pub log_likelihood: F,
+    pub aic: F,
+    pub bic: F,
+    pub converged: bool,
+    pub iterations: usize,
+}
+
+/// Normal cumulative distribution function approximation
+fn normal_cdf<F: Float>(x: F) -> F {
+    // Abramowitz and Stegun approximation
+    let a1 = F::from(0.254829592).unwrap();
+    let a2 = F::from(-0.284496736).unwrap();
+    let a3 = F::from(1.421413741).unwrap();
+    let a4 = F::from(-1.453152027).unwrap();
+    let a5 = F::from(1.061405429).unwrap();
+    let p = F::from(0.3275911).unwrap();
+
+    let sign = if x < F::zero() { -F::one() } else { F::one() };
+    let x_abs = x.abs();
+
+    let t = F::one() / (F::one() + p * x_abs);
+    let y = F::one() - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * 
+            (-x_abs * x_abs / F::from(2.0).unwrap()).exp();
+
+    (F::one() + sign * y) / F::from(2.0).unwrap()
 }

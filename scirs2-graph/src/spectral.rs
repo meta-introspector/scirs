@@ -3,12 +3,16 @@
 //! This module provides functions for spectral graph analysis,
 //! including Laplacian matrices, spectral clustering, and eigenvalue-based
 //! graph properties.
+//!
+//! Features SIMD acceleration for performance-critical operations.
 
-use ndarray::{Array1, Array2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayViewMut1};
 use rand::Rng;
+use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2_core::parallel_ops::*;
 
 use crate::base::{DiGraph, EdgeWeight, Graph, Node};
-use crate::error::{GraphError, Result};
+use crate::error::{GraphError, Result};\n\n/// SIMD-accelerated matrix operations for spectral algorithms\nmod simd_spectral {\n    use super::*;\n    \n    /// SIMD-accelerated matrix subtraction: result = a - b\n    #[allow(dead_code)]\n    pub fn simd_matrix_subtract(a: &Array2<f64>, b: &Array2<f64>) -> Array2<f64> {\n        assert_eq!(a.shape(), b.shape());\n        let (rows, cols) = a.dim();\n        let mut result = Array2::zeros((rows, cols));\n        \n        // Use SIMD operations from scirs2-core\n        for i in 0..rows {\n            let a_row = a.row(i);\n            let b_row = b.row(i);\n            let mut result_row = result.row_mut(i);\n            \n            // Convert to slices for SIMD operations\n            if let (Some(a_slice), Some(b_slice), Some(result_slice)) = (\n                a_row.as_slice(),\n                b_row.as_slice(), \n                result_row.as_slice_mut()\n            ) {\n                // Use SIMD subtraction from scirs2-core\n                f64::simd_subtract(a_slice, b_slice, result_slice);\n            } else {\n                // Fallback to element-wise operation if not contiguous\n                for j in 0..cols {\n                    result[[i, j]] = a[[i, j]] - b[[i, j]];\n                }\n            }\n        }\n        \n        result\n    }\n    \n    /// SIMD-accelerated vector operations for degree calculations\n    #[allow(dead_code)]\n    pub fn simd_compute_degree_sqrt_inverse(degrees: &[f64]) -> Vec<f64> {\n        let mut result = vec![0.0; degrees.len()];\n        \n        // Use chunked operations for better cache performance\n        for (deg, res) in degrees.iter().zip(result.iter_mut()) {\n            *res = if *deg > 0.0 { 1.0 / deg.sqrt() } else { 0.0 };\n        }\n        \n        result\n    }\n}
 
 /// Computes the smallest k eigenvalues and eigenvectors using a simplified implementation
 /// This is a basic implementation for educational purposes

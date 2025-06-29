@@ -88,7 +88,8 @@ pub mod monitoring;
 // Re-export important types and functions
 pub use decomposition::{DictionaryLearning, NMF};
 pub use encoding::{
-    BinaryEncoder, EncodedOutput, OneHotEncoder, OrdinalEncoder, SparseMatrix, TargetEncoder,
+    BinaryEncoder, EncodedOutput, FrequencyEncoder, OneHotEncoder, OrdinalEncoder, SparseMatrix, 
+    TargetEncoder, WOEEncoder,
 };
 pub use error::{Result, TransformError};
 pub use features::{
@@ -137,7 +138,8 @@ pub use out_of_core::{
     OutOfCoreTransformer,
 };
 pub use streaming::{
-    StreamingMinMaxScaler, StreamingQuantileTracker, StreamingStandardScaler, StreamingTransformer,
+    OutlierMethod, StreamingFeatureSelector, StreamingMinMaxScaler, StreamingOutlierDetector,
+    StreamingPCA, StreamingQuantileTracker, StreamingStandardScaler, StreamingTransformer,
     WindowedStreamingTransformer,
 };
 pub use text::{CountVectorizer, HashingVectorizer, StreamingCountVectorizer, TfidfVectorizer};

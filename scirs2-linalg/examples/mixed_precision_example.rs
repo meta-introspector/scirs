@@ -6,7 +6,6 @@
 use ndarray::{array, Array1, Array2};
 use scirs2_linalg::mixed_precision::conversions::convert;
 use scirs2_linalg::mixed_precision::*;
-use scirs2_linalg::prelude::*;
 
 // Simple benchmark function to compare execution times
 fn benchmark_fn<F>(name: &str, mut f: F) -> std::time::Duration

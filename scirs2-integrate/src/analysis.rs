@@ -6,6 +6,7 @@
 use crate::error::{IntegrateError, IntegrateResult as Result};
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
+use crate::analysis::advanced_analysis::LyapunovCalculator;
 
 /// Bifurcation point information
 #[derive(Debug, Clone)]
@@ -2011,7 +2012,7 @@ impl StabilityAnalyzer {
         // Look for approximate returns
         for period in 1..std::cmp::min(return_points.len() / 2, 10) {
             let mut is_periodic = true;
-            let mut max_error = 0.0;
+            let mut max_error: f64 = 0.0;
             
             for i in 0..(return_points.len() - period) {
                 let error = (&return_points[i] - &return_points[i + period])
@@ -2173,7 +2174,7 @@ impl StabilityAnalyzer {
 
     /// Remove duplicate periodic orbits based on spatial proximity
     fn remove_duplicate_periodic_orbits(&self, orbits: Vec<PeriodicOrbit>) -> Vec<PeriodicOrbit> {
-        let mut filtered = Vec::new();
+        let mut filtered: Vec<PeriodicOrbit> = Vec::new();
         let tolerance = 1e-4;
         
         for orbit in orbits {

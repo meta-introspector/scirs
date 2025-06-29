@@ -12,7 +12,7 @@ use crate::error::{GraphError, Result};
 ///
 /// # Arguments
 /// * `graph` - The graph to traverse
-/// * `start` - The starting node
+/// * `source` - The source node
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in BFS order
@@ -23,16 +23,16 @@ use crate::error::{GraphError, Result};
 ///
 /// # Space Complexity
 /// O(V) for the visited set and queue.
-pub fn breadth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, start: &N) -> Result<Vec<N>>
+pub fn breadth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !graph.has_node(start) {
+    if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Start node {:?} not found",
-            start
+            "Source node {:?} not found",
+            source
         )));
     }
 
@@ -44,7 +44,7 @@ where
     let start_idx = graph
         .inner()
         .node_indices()
-        .find(|&idx| graph.inner()[idx] == *start)
+        .find(|&idx| graph.inner()[idx] == *source)
         .unwrap();
 
     queue.push_back(start_idx);
@@ -69,7 +69,7 @@ where
 ///
 /// # Arguments
 /// * `graph` - The directed graph to traverse
-/// * `start` - The starting node
+/// * `source` - The source node
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in BFS order
@@ -82,17 +82,17 @@ where
 /// O(V) for the visited set and queue.
 pub fn breadth_first_search_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
-    start: &N,
+    source: &N,
 ) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !graph.has_node(start) {
+    if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Start node {:?} not found",
-            start
+            "Source node {:?} not found",
+            source
         )));
     }
 
@@ -104,7 +104,7 @@ where
     let start_idx = graph
         .inner()
         .node_indices()
-        .find(|&idx| graph.inner()[idx] == *start)
+        .find(|&idx| graph.inner()[idx] == *source)
         .unwrap();
 
     queue.push_back(start_idx);
@@ -132,7 +132,7 @@ where
 ///
 /// # Arguments
 /// * `graph` - The graph to traverse
-/// * `start` - The starting node
+/// * `source` - The source node
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in DFS order
@@ -144,16 +144,16 @@ where
 /// # Space Complexity
 /// O(V) for the visited set and stack. In the worst case, the stack
 /// can contain all vertices (e.g., in a linear graph).
-pub fn depth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, start: &N) -> Result<Vec<N>>
+pub fn depth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !graph.has_node(start) {
+    if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Start node {:?} not found",
-            start
+            "Source node {:?} not found",
+            source
         )));
     }
 
@@ -165,7 +165,7 @@ where
     let start_idx = graph
         .inner()
         .node_indices()
-        .find(|&idx| graph.inner()[idx] == *start)
+        .find(|&idx| graph.inner()[idx] == *source)
         .unwrap();
 
     stack.push(start_idx);
@@ -193,20 +193,20 @@ where
 ///
 /// # Arguments
 /// * `graph` - The directed graph to traverse
-/// * `start` - The starting node
+/// * `source` - The source node
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in DFS order
-pub fn depth_first_search_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>, start: &N) -> Result<Vec<N>>
+pub fn depth_first_search_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !graph.has_node(start) {
+    if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Start node {:?} not found",
-            start
+            "Source node {:?} not found",
+            source
         )));
     }
 
@@ -218,7 +218,7 @@ where
     let start_idx = graph
         .inner()
         .node_indices()
-        .find(|&idx| graph.inner()[idx] == *start)
+        .find(|&idx| graph.inner()[idx] == *source)
         .unwrap();
 
     stack.push(start_idx);
@@ -285,14 +285,14 @@ impl<N: Node, P: PartialOrd> Ord for PriorityState<N, P> {
 ///
 /// # Arguments
 /// * `graph` - The graph to traverse
-/// * `start` - The starting node
+/// * `source` - The source node
 /// * `priority_fn` - Function that assigns priority to each node (lower values visited first)
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in priority order
 pub fn priority_first_search<N, E, Ix, P, F>(
     graph: &Graph<N, E, Ix>,
-    start: &N,
+    source: &N,
     priority_fn: F,
 ) -> Result<Vec<N>>
 where
@@ -302,10 +302,10 @@ where
     P: PartialOrd + Clone + Copy,
     F: Fn(&N) -> P,
 {
-    if !graph.has_node(start) {
+    if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Start node {:?} not found",
-            start
+            "Source node {:?} not found",
+            source
         )));
     }
 
@@ -317,12 +317,12 @@ where
     let _start_idx = graph
         .inner()
         .node_indices()
-        .find(|&idx| graph.inner()[idx] == *start)
+        .find(|&idx| graph.inner()[idx] == *source)
         .unwrap();
 
     priority_queue.push(PriorityState {
-        node: start.clone(),
-        priority: priority_fn(start),
+        node: source.clone(),
+        priority: priority_fn(source),
     });
 
     while let Some(current_state) = priority_queue.pop() {
@@ -361,14 +361,14 @@ where
 ///
 /// # Arguments
 /// * `graph` - The directed graph to traverse
-/// * `start` - The starting node
+/// * `source` - The source node
 /// * `priority_fn` - Function that assigns priority to each node (lower values visited first)
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in priority order
 pub fn priority_first_search_digraph<N, E, Ix, P, F>(
     graph: &DiGraph<N, E, Ix>,
-    start: &N,
+    source: &N,
     priority_fn: F,
 ) -> Result<Vec<N>>
 where
@@ -378,10 +378,10 @@ where
     P: PartialOrd + Clone + Copy,
     F: Fn(&N) -> P,
 {
-    if !graph.has_node(start) {
+    if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Start node {:?} not found",
-            start
+            "Source node {:?} not found",
+            source
         )));
     }
 
@@ -390,8 +390,8 @@ where
     let mut result = Vec::new();
 
     priority_queue.push(PriorityState {
-        node: start.clone(),
-        priority: priority_fn(start),
+        node: source.clone(),
+        priority: priority_fn(source),
     });
 
     while let Some(current_state) = priority_queue.pop() {
@@ -437,14 +437,14 @@ where
 ///
 /// # Arguments
 /// * `graph` - The graph to search
-/// * `start` - The starting node
+/// * `source` - The source node
 /// * `goal` - The goal node
 ///
 /// # Returns
 /// * `Result<Option<Vec<N>>>` - The path from start to goal, or None if no path exists
 pub fn bidirectional_search<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
-    start: &N,
+    source: &N,
     goal: &N,
 ) -> Result<Option<Vec<N>>>
 where
@@ -454,19 +454,19 @@ where
 {
     if !graph.has_node(start) || !graph.has_node(goal) {
         return Err(GraphError::InvalidGraph(
-            "Start or goal node not found".to_string(),
+            "Source or goal node not found".to_string(),
         ));
     }
 
-    if start == goal {
-        return Ok(Some(vec![start.clone()]));
+    if source == goal {
+        return Ok(Some(vec![source.clone()]));
     }
 
     // Find node indices
     let start_idx = graph
         .inner()
         .node_indices()
-        .find(|&idx| graph.inner()[idx] == *start)
+        .find(|&idx| graph.inner()[idx] == *source)
         .unwrap();
     let goal_idx = graph
         .inner()
@@ -501,7 +501,7 @@ where
             if backward_visited.contains(&current) {
                 return Ok(Some(reconstruct_bidirectional_path(
                     graph,
-                    start_idx,
+                    source_idx,
                     goal_idx,
                     current,
                     &forward_parent,
@@ -526,7 +526,7 @@ where
             if forward_visited.contains(&current) {
                 return Ok(Some(reconstruct_bidirectional_path(
                     graph,
-                    start_idx,
+                    source_idx,
                     goal_idx,
                     current,
                     &forward_parent,
@@ -550,7 +550,7 @@ where
 /// Bidirectional search for directed graphs
 pub fn bidirectional_search_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
-    start: &N,
+    source: &N,
     goal: &N,
 ) -> Result<Option<Vec<N>>>
 where
@@ -560,19 +560,19 @@ where
 {
     if !graph.has_node(start) || !graph.has_node(goal) {
         return Err(GraphError::InvalidGraph(
-            "Start or goal node not found".to_string(),
+            "Source or goal node not found".to_string(),
         ));
     }
 
-    if start == goal {
-        return Ok(Some(vec![start.clone()]));
+    if source == goal {
+        return Ok(Some(vec![source.clone()]));
     }
 
     // Find node indices
     let start_idx = graph
         .inner()
         .node_indices()
-        .find(|&idx| graph.inner()[idx] == *start)
+        .find(|&idx| graph.inner()[idx] == *source)
         .unwrap();
     let goal_idx = graph
         .inner()
@@ -607,7 +607,7 @@ where
             if backward_visited.contains(&current) {
                 return Ok(Some(reconstruct_bidirectional_path_digraph(
                     graph,
-                    start_idx,
+                    source_idx,
                     goal_idx,
                     current,
                     &forward_parent,
@@ -635,7 +635,7 @@ where
             if forward_visited.contains(&current) {
                 return Ok(Some(reconstruct_bidirectional_path_digraph(
                     graph,
-                    start_idx,
+                    source_idx,
                     goal_idx,
                     current,
                     &forward_parent,

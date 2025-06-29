@@ -7,10 +7,9 @@
 //! - Export functionality for exploration results
 
 use std::collections::HashMap;
-use std::fmt;
 use std::io::{self, Write};
 
-use ndarray::{Array1, Array2, Axis};
+use ndarray::Array2;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{DatasetsError, Result};
@@ -44,7 +43,7 @@ impl Default for ExploreConfig {
 }
 
 /// Output format for exploration results
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum OutputFormat {
     /// Plain text table format
     Table,
@@ -651,7 +650,7 @@ impl DatasetExplorer {
 
     fn assess_quality(
         &self,
-        dataset: &Dataset,
+        _dataset: &Dataset,
         statistics: &FeatureStatistics,
         missing_data: &MissingDataAnalysis,
     ) -> Result<QualityAssessment> {
@@ -1044,7 +1043,7 @@ impl DatasetExplorer {
         Ok(())
     }
 
-    fn display_feature_detail(&self, feature: &FeatureStats, dataset: &Dataset) -> Result<()> {
+    fn display_feature_detail(&self, feature: &FeatureStats, _dataset: &Dataset) -> Result<()> {
         println!("\n📊 Feature: {}", feature.name);
         println!("==================");
         println!("Type: {:?}", feature.data_type);
@@ -1180,11 +1179,12 @@ pub mod convenience {
     pub fn export_summary(dataset: &Dataset, format: OutputFormat, filename: &str) -> Result<()> {
         let mut config = ExploreConfig::default();
         config.output_format = format;
+        let output_format = config.output_format;
 
         let explorer = DatasetExplorer::new(config);
         let summary = explorer.summarize(dataset)?;
 
-        let content = match config.output_format {
+        let content = match output_format {
             OutputFormat::Json => serde_json::to_string_pretty(&summary)
                 .map_err(|e| DatasetsError::SerdeError(e.to_string()))?,
             _ => {

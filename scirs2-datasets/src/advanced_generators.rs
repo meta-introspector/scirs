@@ -4,7 +4,7 @@
 //! for complex scenarios including adversarial examples, anomaly detection,
 //! multi-task learning, and domain adaptation.
 
-use crate::error::{DatasetsError, Result};
+use crate::error::Result;
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, Axis};
 
@@ -205,7 +205,7 @@ impl AdvancedGenerator {
         config: AdversarialConfig,
     ) -> Result<Dataset> {
         let n_samples = base_dataset.n_samples();
-        let n_features = base_dataset.n_features();
+        let _n_features = base_dataset.n_features();
 
         println!(
             "Generating adversarial examples using {:?}",
@@ -238,7 +238,7 @@ impl AdvancedGenerator {
         };
 
         let mut metadata = base_dataset.metadata.clone();
-        let old_description = metadata.get("description").cloned().unwrap_or_default();
+        let _old_description = metadata.get("description").cloned().unwrap_or_default();
         let old_name = metadata.get("name").cloned().unwrap_or_default();
         
         metadata.insert("description".to_string(), format!(

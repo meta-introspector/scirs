@@ -108,6 +108,7 @@ pub struct DistributedReader {
     file_path: PathBuf,
     partition_strategy: PartitionStrategy,
     num_workers: usize,
+    #[allow(dead_code)]
     worker_pool: Option<ThreadPool>,
     progress_callback: Option<Arc<dyn Fn(&[WorkerInfo]) + Send + Sync>>,
 }
@@ -525,6 +526,7 @@ impl DistributedWriter {
 pub struct DistributedArray {
     partitions: Vec<ArrayPartition>,
     shape: Vec<usize>,
+    #[allow(dead_code)]
     distribution: Distribution,
 }
 

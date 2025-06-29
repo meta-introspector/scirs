@@ -887,9 +887,9 @@ impl Rotation {
 
         // Generate random quaternion using method from:
         // http://planning.cs.uiuc.edu/node198.html
-        let u1 = rng.random_range(0.0..1.0);
-        let u2 = rng.random_range(0.0..1.0);
-        let u3 = rng.random_range(0.0..1.0);
+        let u1 = rng.gen_range(0.0..1.0);
+        let u2 = rng.gen_range(0.0..1.0);
+        let u3 = rng.gen_range(0.0..1.0);
 
         let sqrt_u1 = u1.sqrt();
         let sqrt_1_minus_u1 = (1.0 - u1).sqrt();
@@ -918,7 +918,7 @@ mod tests {
     fn test_rotation_identity() {
         let identity = Rotation::identity();
         let vec = array![1.0, 2.0, 3.0];
-        let rotated = identity.apply(&vec.view());
+        let rotated = identity.apply(&vec.view()).unwrap();
 
         assert_relative_eq!(rotated[0], vec[0], epsilon = 1e-10);
         assert_relative_eq!(rotated[1], vec[1], epsilon = 1e-10);
@@ -937,7 +937,7 @@ mod tests {
         let rot = Rotation::from_quat(&quat.view()).unwrap();
 
         let vec = array![0.0, 1.0, 0.0];
-        let rotated = rot.apply(&vec.view());
+        let rotated = rot.apply(&vec.view()).unwrap();
 
         // Should rotate [0, 1, 0] to [0, 0, 1]
         assert_relative_eq!(rotated[0], 0.0, epsilon = 1e-10);
@@ -952,7 +952,7 @@ mod tests {
         let rot = Rotation::from_matrix(&matrix.view()).unwrap();
 
         let vec = array![1.0, 0.0, 0.0];
-        let rotated = rot.apply(&vec.view());
+        let rotated = rot.apply(&vec.view()).unwrap();
 
         // Should rotate [1, 0, 0] to [0, 1, 0]
         assert_relative_eq!(rotated[0], 0.0, epsilon = 1e-10);
@@ -967,7 +967,7 @@ mod tests {
         let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
 
         let vec = array![0.0, 1.0, 0.0];
-        let rotated = rot.apply(&vec.view());
+        let rotated = rot.apply(&vec.view()).unwrap();
 
         // Should rotate [0, 1, 0] to [0, 0, 1]
         assert_relative_eq!(rotated[0], 0.0, epsilon = 1e-10);
@@ -982,7 +982,7 @@ mod tests {
         let rot = Rotation::from_rotvec(&rotvec.view()).unwrap();
 
         let vec = array![0.0, 1.0, 0.0];
-        let rotated = rot.apply(&vec.view());
+        let rotated = rot.apply(&vec.view()).unwrap();
 
         // Should rotate [0, 1, 0] to [0, 0, 1]
         assert_relative_eq!(rotated[0], 0.0, epsilon = 1e-10);
@@ -999,7 +999,7 @@ mod tests {
         let composed = rot_x.compose(&rot_y);
 
         let vec = array![0.0, 0.0, 1.0];
-        let rotated = composed.apply(&vec.view());
+        let rotated = composed.apply(&vec.view()).unwrap();
 
         // Should rotate [0, 0, 1] to [1, 0, 0]
         assert_relative_eq!(rotated[0], 1.0, epsilon = 1e-10);
@@ -1014,8 +1014,8 @@ mod tests {
         let rot_inv = rot.inv();
 
         let vec = array![1.0, 0.0, 0.0];
-        let rotated = rot.apply(&vec.view());
-        let rotated_back = rot_inv.apply(&rotated.view());
+        let rotated = rot.apply(&vec.view()).unwrap();
+        let rotated_back = rot_inv.apply(&rotated.view()).unwrap();
 
         // Should get back the original vector
         assert_relative_eq!(rotated_back[0], vec[0], epsilon = 1e-10);
@@ -1036,8 +1036,8 @@ mod tests {
 
         // Allow for different but equivalent representations
         let vec = array![1.0, 2.0, 3.0];
-        let rotated1 = rot.apply(&vec.view());
-        let rotated2 = rot_from_matrix.apply(&vec.view());
+        let rotated1 = rot.apply(&vec.view()).unwrap();
+        let rotated2 = rot_from_matrix.apply(&vec.view()).unwrap();
 
         assert_relative_eq!(rotated1[0], rotated2[0], epsilon = 1e-10);
         assert_relative_eq!(rotated1[1], rotated2[1], epsilon = 1e-10);
@@ -1046,7 +1046,7 @@ mod tests {
         // Convert to axis-angle and back
         let rotvec = rot.as_rotvec();
         let rot_from_rotvec = Rotation::from_rotvec(&rotvec.view()).unwrap();
-        let rotated3 = rot_from_rotvec.apply(&vec.view());
+        let rotated3 = rot_from_rotvec.apply(&vec.view()).unwrap();
 
         assert_relative_eq!(rotated1[0], rotated3[0], epsilon = 1e-10);
         assert_relative_eq!(rotated1[1], rotated3[1], epsilon = 1e-10);

@@ -3472,8 +3472,8 @@ mod tests {
     }
 }
 
-/// Test frequency domain analysis capabilities
-fn test_frequency_domain_analysis(
+/// Test frequency domain analysis capabilities (extended)
+fn test_frequency_domain_analysis_extended(
     implementation: &str,
     tolerance: f64,
 ) -> SignalResult<FrequencyDomainAnalysisResults> {
@@ -3591,8 +3591,8 @@ fn test_frequency_domain_analysis(
     Ok(result)
 }
 
-/// Test cross-validation capabilities
-fn test_cross_validation(
+/// Test cross-validation capabilities (extended)
+fn test_cross_validation_extended(
     implementation: &str,
     tolerance: f64,
 ) -> SignalResult<CrossValidationResults> {

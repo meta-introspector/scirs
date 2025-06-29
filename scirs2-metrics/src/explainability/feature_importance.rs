@@ -283,8 +283,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     /// Compute gain-based importance (for tree-like models)
     pub fn gain_importance<M>(
         &self,
-        model: &M,
-        x_test: &Array2<F>,
+        _model: &M,
+        _x_test: &Array2<F>,
         feature_names: &[String],
         tree_splits: &[TreeSplit<F>],
     ) -> Result<HashMap<String, F>>
@@ -312,7 +312,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         model: &M,
         x_instance: &ArrayView1<F>,
         x_background: &Array2<F>,
-        score_fn: S,
+        _score_fn: S,
         feature_names: &[String],
         n_samples: usize,
     ) -> Result<HashMap<String, F>>
@@ -321,7 +321,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         S: Fn(&Array1<F>, &Array1<F>) -> F,
     {
         let mut lime_scores = HashMap::new();
-        let n_features = x_instance.len();
+        let _n_features = x_instance.len();
 
         // Generate perturbed samples around the instance
         let perturbed_samples = self.generate_lime_samples(x_instance, x_background, n_samples)?;
@@ -480,7 +480,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         model: &M,
         x_test: &Array2<F>,
         x_background: &Array2<F>,
-        score_fn: &S,
+        _score_fn: &S,
         coalition: &[bool],
         feature_idx: usize,
     ) -> Result<F>
@@ -897,9 +897,9 @@ fn compute_mutual_information_improved<F: Float + num_traits::FromPrimitive + st
     let y_bins = create_bins(&y.view(), n_bins)?;
     
     // Compute joint and marginal histograms
-    let joint_hist = compute_joint_histogram(&x_bins, &y_bins, n_bins)?;
-    let x_hist = compute_marginal_histogram(&x_bins, n_bins)?;
-    let y_hist = compute_marginal_histogram(&y_bins, n_bins)?;
+    let joint_hist = compute_joint_histogram::<F>(&x_bins, &y_bins, n_bins)?;
+    let x_hist: Vec<F> = compute_marginal_histogram(&x_bins, n_bins)?;
+    let y_hist: Vec<F> = compute_marginal_histogram(&y_bins, n_bins)?;
     
     // Compute mutual information
     let mut mi = F::zero();
@@ -907,12 +907,13 @@ fn compute_mutual_information_improved<F: Float + num_traits::FromPrimitive + st
     
     for i in 0..n_bins {
         for j in 0..n_bins {
-            let p_xy = joint_hist[(i, j)] / n_total;
+            let p_xy: F = joint_hist[(i, j)] / n_total;
             let p_x = x_hist[i] / n_total;
             let p_y = y_hist[j] / n_total;
             
             if p_xy > F::zero() && p_x > F::zero() && p_y > F::zero() {
-                mi = mi + p_xy * (p_xy / (p_x * p_y)).ln();
+                let ratio: F = p_xy / (p_x * p_y);
+                mi = mi + p_xy * ratio.ln();
             }
         }
     }

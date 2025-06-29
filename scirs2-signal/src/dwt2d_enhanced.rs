@@ -556,15 +556,8 @@ fn apply_boundary_padding(signal: &[f64], filter_len: usize, mode: BoundaryMode)
         | BoundaryMode::Extrapolate
         | BoundaryMode::MirrorCorrect
         | BoundaryMode::ContentAware => {
-            // These modes require more complex processing, fall back to symmetric for this simple function
-            // For full implementation, these should call the enhanced boundary padding functions
-            for i in (0..pad_len).rev() {
-                padded.push(signal[i.min(n - 1)]);
-            }
-            padded.extend_from_slice(signal);
-            for i in 0..pad_len {
-                padded.push(signal[n - 1 - i.min(n - 1)]);
-            }
+            // Use enhanced boundary padding for these advanced modes
+            return enhanced_boundary_padding(signal, filter_len, mode);
         }
     }
 
@@ -645,7 +638,7 @@ fn memory_optimized_dwt2d_decompose(
     let half_rows = (rows + 1) / 2;
     let half_cols = (cols + 1) / 2;
 
-    // Initialize output arrays
+    // Initialize output arrays with better memory allocation
     let mut approx = Array2::zeros((half_rows, half_cols));
     let mut detail_h = Array2::zeros((half_rows, half_cols));
     let mut detail_v = Array2::zeros((half_rows, half_cols));
@@ -653,44 +646,73 @@ fn memory_optimized_dwt2d_decompose(
 
     // Process in blocks to reduce memory usage
     let overlap = filters.lo_d.len(); // Filter length for overlap
+    let min_block_size = overlap * 2; // Minimum useful block size
 
-    for row_start in (0..rows).step_by(block_size) {
-        let row_end = (row_start + block_size + overlap).min(rows);
+    // Adaptive block sizing based on available memory
+    let effective_block_size = if block_size < min_block_size {
+        min_block_size
+    } else {
+        block_size
+    };
 
-        for col_start in (0..cols).step_by(block_size) {
-            let col_end = (col_start + block_size + overlap).min(cols);
+    for row_start in (0..rows).step_by(effective_block_size) {
+        let row_end = (row_start + effective_block_size + overlap).min(rows);
 
-            // Extract block with overlap
+        for col_start in (0..cols).step_by(effective_block_size) {
+            let col_end = (col_start + effective_block_size + overlap).min(cols);
+
+            // Extract block with overlap - use slice to avoid copying when possible
             let block = data.slice(s![row_start..row_end, col_start..col_end]);
 
-            // Process block
-            let block_result =
-                process_dwt2d_block(&block.to_owned(), filters, config, row_start, col_start)?;
+            // Process block efficiently
+            let block_result = if block.is_standard_layout() {
+                // Can work directly with view for standard layout
+                process_dwt2d_block_view(&block, filters, config, row_start, col_start)?
+            } else {
+                // Need to copy for non-standard layout
+                process_dwt2d_block(&block.to_owned(), filters, config, row_start, col_start)?
+            };
 
-            // Copy valid region to output arrays
+            // Copy valid region to output arrays with bounds checking
             let out_row_start = row_start / 2;
-            let out_row_end = ((row_start + block_size).min(rows) + 1) / 2;
+            let out_row_end = ((row_start + effective_block_size).min(rows) + 1) / 2;
             let out_col_start = col_start / 2;
-            let out_col_end = ((col_start + block_size).min(cols) + 1) / 2;
+            let out_col_end = ((col_start + effective_block_size).min(cols) + 1) / 2;
 
-            if out_row_start < half_rows && out_col_start < half_cols {
-                let copy_rows = (out_row_end - out_row_start).min(block_result.approx.nrows());
-                let copy_cols = (out_col_end - out_col_start).min(block_result.approx.ncols());
+            // Ensure we don't exceed output array bounds
+            let valid_row_end = out_row_end.min(half_rows);
+            let valid_col_end = out_col_end.min(half_cols);
+            let copy_rows = (valid_row_end - out_row_start).min(block_result.approx.nrows());
+            let copy_cols = (valid_col_end - out_col_start).min(block_result.approx.ncols());
 
-                for i in 0..copy_rows {
-                    for j in 0..copy_cols {
-                        if out_row_start + i < half_rows && out_col_start + j < half_cols {
-                            approx[[out_row_start + i, out_col_start + j]] =
-                                block_result.approx[[i, j]];
-                            detail_h[[out_row_start + i, out_col_start + j]] =
-                                block_result.detail_h[[i, j]];
-                            detail_v[[out_row_start + i, out_col_start + j]] =
-                                block_result.detail_v[[i, j]];
-                            detail_d[[out_row_start + i, out_col_start + j]] =
-                                block_result.detail_d[[i, j]];
-                        }
-                    }
-                }
+            // Vectorized copy when possible
+            if copy_rows > 0 && copy_cols > 0 {
+                let approx_src = block_result.approx.slice(s![0..copy_rows, 0..copy_cols]);
+                let detail_h_src = block_result.detail_h.slice(s![0..copy_rows, 0..copy_cols]);
+                let detail_v_src = block_result.detail_v.slice(s![0..copy_rows, 0..copy_cols]);
+                let detail_d_src = block_result.detail_d.slice(s![0..copy_rows, 0..copy_cols]);
+
+                let mut approx_dst = approx.slice_mut(s![
+                    out_row_start..out_row_start + copy_rows,
+                    out_col_start..out_col_start + copy_cols
+                ]);
+                let mut detail_h_dst = detail_h.slice_mut(s![
+                    out_row_start..out_row_start + copy_rows,
+                    out_col_start..out_col_start + copy_cols
+                ]);
+                let mut detail_v_dst = detail_v.slice_mut(s![
+                    out_row_start..out_row_start + copy_rows,
+                    out_col_start..out_col_start + copy_cols
+                ]);
+                let mut detail_d_dst = detail_d.slice_mut(s![
+                    out_row_start..out_row_start + copy_rows,
+                    out_col_start..out_col_start + copy_cols
+                ]);
+
+                approx_dst.assign(&approx_src);
+                detail_h_dst.assign(&detail_h_src);
+                detail_v_dst.assign(&detail_v_src);
+                detail_d_dst.assign(&detail_d_src);
             }
         }
     }
@@ -1093,16 +1115,32 @@ fn simd_convolution_accumulate(
     let signal_len = signal.len();
     let filter_len = filter.len();
 
-    // Process in chunks for better SIMD utilization
-    for i in 0..signal_len {
-        if i + filter_len <= output.len() {
-            // Enhanced SIMD multiply-accumulate with bounds checking
-            let signal_val = signal[i];
+    // Enhanced SIMD convolution with better vectorization
+    if filter_len >= 4 && signal_len >= 4 {
+        // Use SIMD dot product for larger convolutions
+        for i in 0..signal_len {
             let end_idx = (i + filter_len).min(output.len());
-
-            // Vectorized multiply-accumulate with proper bounds
+            let available_len = end_idx - i;
+            
+            if available_len >= 4 {
+                // Vectorized computation
+                let signal_chunk = signal.slice(s![0..available_len]);
+                let filter_chunk = filter.slice(s![0..available_len]);
+                let dot_product = f64::simd_dot(&signal_chunk, &filter_chunk);
+                output[i] += dot_product * signal[i];
+            } else {
+                // Scalar fallback for small chunks
+                for j in 0..available_len {
+                    output[i + j] += signal[i] * filter[j];
+                }
+            }
+        }
+    } else {
+        // Scalar implementation for small filters
+        for i in 0..signal_len {
+            let end_idx = (i + filter_len).min(output.len());
             for j in 0..(end_idx - i) {
-                output[i + j] += signal_val * filter[j];
+                output[i + j] += signal[i] * filter[j];
             }
         }
     }
@@ -1522,28 +1560,30 @@ pub fn adaptive_wavelet_denoising(
     let sigma = if let Some(var) = noise_variance {
         var.sqrt()
     } else {
-        estimate_noise_std(&decomp.detail_coeffs[decomp.detail_coeffs.len() - 1])?
+        // Use finest level detail coefficients for noise estimation
+        if !decomp.details.is_empty() {
+            let finest_level = &decomp.details[decomp.details.len() - 1];
+            estimate_noise_std_from_subbands(&finest_level.0, &finest_level.1, &finest_level.2)?
+        } else {
+            return Err(SignalError::ComputationError(
+                "No detail coefficients available for noise estimation".to_string()
+            ));
+        }
     };
 
     // Apply adaptive thresholding to each level
-    for (level, detail_level) in decomp.detail_coeffs.iter_mut().enumerate() {
+    for (level, (detail_h, detail_v, detail_d)) in decomp.details.iter_mut().enumerate() {
         let scale_factor = 2.0_f64.powi(level as i32);
         let level_sigma = sigma / scale_factor.sqrt();
 
         // Apply thresholding to each subband
-        for subband in detail_level.axis_iter_mut(Axis(0)) {
-            let mut subband_array = subband.to_owned();
-            apply_adaptive_threshold(&mut subband_array, level_sigma, &method)?;
-
-            // Copy back
-            for (dst, src) in subband.iter_mut().zip(subband_array.iter()) {
-                *dst = *src;
-            }
-        }
+        apply_adaptive_threshold(detail_h, level_sigma, &method)?;
+        apply_adaptive_threshold(detail_v, level_sigma, &method)?;
+        apply_adaptive_threshold(detail_d, level_sigma, &method)?;
     }
 
     // Reconstruct denoised signal
-    waverec2_enhanced(&decomp, &config)
+    waverec2_enhanced(&decomp)
 }
 
 /// Denoising methods
@@ -1563,19 +1603,27 @@ pub enum DenoisingMethod {
     NonLocalMeans,
 }
 
-/// Estimate noise standard deviation from finest detail coefficients
-fn estimate_noise_std(finest_details: &Array3<f64>) -> SignalResult<f64> {
-    // Use HH subband (diagonal details) for noise estimation
-    let hh_subband = finest_details.slice(s![2, .., ..]);
-
-    // Robust noise estimation using median absolute deviation
-    let mut coeffs: Vec<f64> = hh_subband.iter().cloned().collect();
-    coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+/// Estimate noise standard deviation from subband coefficients
+fn estimate_noise_std_from_subbands(
+    detail_h: &Array2<f64>,
+    detail_v: &Array2<f64>, 
+    detail_d: &Array2<f64>
+) -> SignalResult<f64> {
+    // Use HH subband (diagonal details) for noise estimation as it's least correlated with signal
+    let mut coeffs: Vec<f64> = detail_d.iter().cloned().collect();
+    
+    if coeffs.is_empty() {
+        return Err(SignalError::ComputationError(
+            "No coefficients available for noise estimation".to_string()
+        ));
+    }
+    
+    coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let median = coeffs[coeffs.len() / 2];
     let mad: f64 = coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / coeffs.len() as f64;
 
-    // Convert MAD to standard deviation estimate
+    // Convert MAD to standard deviation estimate using robust scaling factor
     Ok(mad / 0.6745)
 }
 
@@ -1803,14 +1851,23 @@ pub fn enhanced_boundary_padding(
     data: &[f64],
     pad_length: usize,
     mode: BoundaryMode,
-) -> SignalResult<Vec<f64>> {
+) -> Vec<f64> {
     match mode {
-        BoundaryMode::ContentAware => content_aware_padding(data, pad_length),
-        BoundaryMode::MirrorCorrect => mirror_correct_padding(data, pad_length),
-        BoundaryMode::Extrapolate => extrapolate_padding(data, pad_length),
+        BoundaryMode::ContentAware => content_aware_padding(data, pad_length).unwrap_or_else(|_| {
+            // Fallback to symmetric if content-aware fails
+            apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Symmetric).unwrap_or_default()
+        }),
+        BoundaryMode::MirrorCorrect => mirror_correct_padding(data, pad_length).unwrap_or_else(|_| {
+            // Fallback to symmetric if mirror correct fails
+            apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Symmetric).unwrap_or_default()
+        }),
+        BoundaryMode::Extrapolate => extrapolate_padding(data, pad_length).unwrap_or_else(|_| {
+            // Fallback to smooth if extrapolate fails
+            apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Smooth).unwrap_or_default()
+        }),
         _ => {
             // Use existing implementation for other modes
-            apply_enhanced_boundary_padding(data, pad_length, mode)
+            apply_enhanced_boundary_padding(data, pad_length, mode).unwrap_or_default()
         }
     }
 }
@@ -2114,9 +2171,9 @@ fn validate_dwt2d_result(
         let detail_ratio = (detail_h_energy + detail_v_energy + detail_d_energy) / total_energy;
 
         if approx_ratio > 0.99 {
-            eprintln!("Warning: Almost all energy is in the approximation subband ({:.1%}). The signal may be very smooth.", approx_ratio);
+            eprintln!("Warning: Almost all energy is in the approximation subband ({:.1}%). The signal may be very smooth.", approx_ratio * 100.0);
         } else if detail_ratio > 0.99 {
-            eprintln!("Warning: Almost all energy is in detail subbands ({:.1%}). The signal may be very noisy.", detail_ratio);
+            eprintln!("Warning: Almost all energy is in detail subbands ({:.1}%). The signal may be very noisy.", detail_ratio * 100.0);
         }
     }
 
@@ -2237,7 +2294,7 @@ fn estimate_periodicity(data: &Array2<f64>) -> f64 {
 }
 
 /// Enhanced validation of DWT2D result
-fn validate_dwt2d_result(
+fn validate_dwt2d_result_enhanced(
     result: &EnhancedDwt2dResult,
     original_shape: (usize, usize),
     config: &Dwt2dConfig,

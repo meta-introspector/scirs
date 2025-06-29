@@ -7,6 +7,7 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast, Zero, One};
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*, parallel_ops::*};
+use rand::Rng;
 
 /// SIMD-optimized rolling statistics with configurable functions
 ///
@@ -32,20 +33,10 @@ where
     let n_windows = data.len() - window_size + 1;
     let mut results = RollingStatsResult::new(n_windows, statistics);
     
-    // Use parallel processing for large datasets
-    if n_windows > 1000 {
-        parallel_for(0..n_windows, |chunk| {
-            for i in chunk {
-                let window = data.slice(ndarray::s![i..i + window_size]);
-                compute_window_statistics(&window, &statistics, &mut results, i);
-            }
-        });
-    } else {
-        // Sequential processing for smaller datasets
-        for i in 0..n_windows {
-            let window = data.slice(ndarray::s![i..i + window_size]);
-            compute_window_statistics(&window, &statistics, &mut results, i);
-        }
+    // Sequential processing for all datasets (parallel version needs different implementation)
+    for i in 0..n_windows {
+        let window = data.slice(ndarray::s![i..i + window_size]);
+        compute_window_statistics(&window, &statistics, &mut results, i);
     }
 
     Ok(results)

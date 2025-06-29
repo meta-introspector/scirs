@@ -27,7 +27,7 @@ impl SharedBackbone {
         for &layer_size in layer_sizes {
             // Create dense layer
             let dense_layer =
-                Dense::<f32>::new(current_dim, layer_size, Some("relu"), &mut rand::rng())?;
+                Dense::<f32>::new(current_dim, layer_size, Some("relu"), &mut rand::thread_rng())?;
             layers.push(Box::new(dense_layer));
             current_dim = layer_size;
         }
@@ -96,8 +96,13 @@ impl SharedBackbone {
             .layers
             .iter()
             .map(|layer| {
-                // Extract output size from layer (simplified)
-                128 // Placeholder - in practice would extract actual sizes
+                // Extract output size from Dense layer
+                if let Some(dense_layer) = layer.as_any().downcast_ref::<Dense<f32>>() {
+                    dense_layer.output_dim()
+                } else {
+                    // Fallback for non-Dense layers
+                    128
+                }
             })
             .collect();
 
@@ -153,7 +158,7 @@ impl TaskSpecificHead {
         // Add hidden layers
         for &layer_size in layer_sizes {
             let dense_layer =
-                Dense::<f32>::new(current_dim, layer_size, Some("relu"), &mut rand::rng())?;
+                Dense::<f32>::new(current_dim, layer_size, Some("relu"), &mut rand::thread_rng())?;
             layers.push(Box::new(dense_layer));
             current_dim = layer_size;
         }
@@ -167,7 +172,7 @@ impl TaskSpecificHead {
         };
 
         let output_layer =
-            Dense::<f32>::new(current_dim, output_dim, output_activation, &mut rand::rng())?;
+            Dense::<f32>::new(current_dim, output_dim, output_activation, &mut rand::thread_rng())?;
         layers.push(Box::new(output_layer));
 
         Ok(Self {
@@ -315,14 +320,23 @@ impl TaskSpecificHead {
     ) -> Result<f32> {
         let diff = predictions - targets;
         let squared_diff = diff.mapv(|x| x * x);
-        Ok(squared_diff.mean().unwrap())
+        squared_diff.mean().ok_or_else(|| {
+            NeuralError::InferenceError("Failed to compute mean of squared differences".to_string())
+        })
     }
 
     /// Clone the task head
     pub fn clone_head(&self) -> Result<Self> {
-        // Extract layer sizes (simplified)
+        // Extract layer sizes from actual Dense layers
         let layer_sizes: Vec<usize> = self.layers[..self.layers.len()-1].iter()
-            .map(|_| 128) // Placeholder
+            .map(|layer| {
+                if let Some(dense_layer) = layer.as_any().downcast_ref::<Dense<f32>>() {
+                    dense_layer.output_dim()
+                } else {
+                    // Fallback for non-Dense layers
+                    128
+                }
+            })
             .collect();
 
         let mut cloned = Self::new(
@@ -595,17 +609,17 @@ mod tests {
 
         match classification {
             TaskType::Classification { num_classes } => assert_eq!(num_classes, 10),
-            _ => panic!("Wrong task type"),
+            _ => unreachable!("Expected Classification task type"),
         }
 
         match regression {
             TaskType::Regression { output_dim } => assert_eq!(output_dim, 5),
-            _ => panic!("Wrong task type"),
+            _ => unreachable!("Expected Regression task type"),
         }
 
         match multi_label {
             TaskType::MultiLabel { num_labels } => assert_eq!(num_labels, 8),
-            _ => panic!("Wrong task type"),
+            _ => unreachable!("Expected MultiLabel task type"),
         }
     }
 }

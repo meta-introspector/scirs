@@ -976,7 +976,7 @@ impl EcosystemTestRunner {
 
         // Try to build the module
         let output = Command::new("cargo")
-            .args(&["check", "--quiet"])
+            .args(["check", "--quiet"])
             .current_dir(module_path)
             .output();
 
@@ -997,7 +997,7 @@ impl EcosystemTestRunner {
                 // Quick test check (don't run full tests to save time)
                 let tests_pass = if builds {
                     let test_output = Command::new("cargo")
-                        .args(&["test", "--quiet", "--", "--nocapture", "--test-threads=1"])
+                        .args(["test", "--quiet", "--", "--nocapture", "--test-threads=1"])
                         .current_dir(module_path)
                         .output();
 
@@ -1109,7 +1109,7 @@ impl EcosystemTestRunner {
             score *= 0.8 + 0.2 * feature_compatibility;
         }
 
-        Ok(score.min(1.0).max(0.0))
+        Ok(score.clamp(0.0, 1.0))
     }
 
     /// Run ecosystem performance tests

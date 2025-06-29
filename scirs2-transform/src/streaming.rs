@@ -5,6 +5,7 @@
 
 use ndarray::{Array1, Array2};
 use std::collections::VecDeque;
+use scirs2_linalg::eigen::standard::SymmetricEigendecomposition;
 
 use crate::error::{Result, TransformError};
 
@@ -469,5 +470,587 @@ impl<T: StreamingTransformer> WindowedStreamingTransformer<T> {
     /// Transform data using the windowed statistics
     pub fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>> {
         self.transformer.transform(x)
+    }
+}
+
+/// Streaming Principal Component Analysis using incremental SVD
+pub struct StreamingPCA {
+    /// Current mean of the data
+    mean: Array1<f64>,
+    /// Principal components (loading vectors)
+    components: Option<Array2<f64>>,
+    /// Explained variance for each component
+    explained_variance: Option<Array1<f64>>,
+    /// Number of components to keep
+    n_components: usize,
+    /// Number of features
+    n_features: usize,
+    /// Number of samples seen
+    n_samples: usize,
+    /// Forgetting factor for incremental updates (0 < alpha <= 1)
+    alpha: f64,
+    /// Minimum number of samples before PCA is computed
+    min_samples: usize,
+    /// Accumulated covariance matrix
+    cov_matrix: Array2<f64>,
+}
+
+impl StreamingPCA {
+    /// Create a new streaming PCA
+    pub fn new(n_features: usize, n_components: usize, alpha: f64, min_samples: usize) -> Result<Self> {
+        if n_components > n_features {
+            return Err(TransformError::InvalidInput(
+                "n_components cannot be larger than n_features".to_string(),
+            ));
+        }
+        if alpha <= 0.0 || alpha > 1.0 {
+            return Err(TransformError::InvalidInput(
+                "alpha must be in (0, 1]".to_string(),
+            ));
+        }
+
+        Ok(StreamingPCA {
+            mean: Array1::zeros(n_features),
+            components: None,
+            explained_variance: None,
+            n_components,
+            n_features,
+            n_samples: 0,
+            alpha,
+            min_samples,
+            cov_matrix: Array2::zeros((n_features, n_features)),
+        })
+    }
+
+    /// Update PCA with new batch of data
+    pub fn update(&mut self, x: &Array2<f64>) -> Result<()> {
+        if x.shape()[1] != self.n_features {
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} features, got {}",
+                self.n_features,
+                x.shape()[1]
+            )));
+        }
+
+        let batch_size = x.shape()[0];
+        
+        // Update mean using exponential moving average
+        for sample in x.rows() {
+            self.n_samples += 1;
+            let weight = if self.n_samples == 1 { 1.0 } else { self.alpha };
+            
+            for (i, &value) in sample.iter().enumerate() {
+                self.mean[i] = (1.0 - weight) * self.mean[i] + weight * value;
+            }
+        }
+
+        // Update covariance matrix
+        if self.n_samples >= self.min_samples {
+            for sample in x.rows() {
+                let centered = &sample.to_owned() - &self.mean;
+                let outer_product = centered.insert_axis(ndarray::Axis(1)).dot(&centered.insert_axis(ndarray::Axis(0)));
+                
+                let weight = self.alpha;
+                self.cov_matrix = (1.0 - weight) * &self.cov_matrix + weight * outer_product;
+            }
+
+            // Compute PCA from covariance matrix
+            self.compute_pca()?;
+        }
+
+        Ok(())
+    }
+
+    fn compute_pca(&mut self) -> Result<()> {
+        // Perform proper eigendecomposition of covariance matrix
+        let eigen_decomp = SymmetricEigendecomposition::new(&self.cov_matrix.view())
+            .map_err(|e| TransformError::ComputationError(format!("Eigendecomposition failed: {}", e)))?;
+        
+        let eigenvalues = eigen_decomp.eigenvalues();
+        let eigenvectors = eigen_decomp.eigenvectors();
+
+        // Sort by eigenvalues in descending order
+        let mut eigen_pairs: Vec<(f64, Array1<f64>)> = eigenvalues
+            .iter()
+            .zip(eigenvectors.columns())
+            .map(|(&val, vec)| (val, vec.to_owned()))
+            .collect();
+        
+        eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Take top n_components
+        let mut components = Array2::zeros((self.n_components, self.n_features));
+        let mut explained_var = Array1::zeros(self.n_components);
+
+        for (i, (eigenval, eigenvec)) in eigen_pairs.iter().take(self.n_components).enumerate() {
+            components.row_mut(i).assign(eigenvec);
+            explained_var[i] = eigenval.max(0.0);
+        }
+
+        self.components = Some(components);
+        self.explained_variance = Some(explained_var);
+        Ok(())
+    }
+
+
+    /// Transform data using current PCA
+    pub fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>> {
+        if let Some(ref components) = self.components {
+            if x.shape()[1] != self.n_features {
+                return Err(TransformError::InvalidInput(format!(
+                    "Expected {} features, got {}",
+                    self.n_features,
+                    x.shape()[1]
+                )));
+            }
+
+            let mut result = Array2::zeros((x.shape()[0], self.n_components));
+            
+            for (i, sample) in x.rows().enumerate() {
+                let centered = &sample.to_owned() - &self.mean;
+                let transformed = components.dot(&centered);
+                result.row_mut(i).assign(&transformed);
+            }
+
+            Ok(result)
+        } else {
+            Err(TransformError::TransformationError(
+                "PCA not computed yet, need more samples".to_string(),
+            ))
+        }
+    }
+
+    /// Get explained variance ratio
+    pub fn explained_variance_ratio(&self) -> Option<Array1<f64>> {
+        self.explained_variance.as_ref().map(|var| {
+            let total_var = var.sum();
+            if total_var > 0.0 {
+                var / total_var
+            } else {
+                Array1::zeros(var.len())
+            }
+        })
+    }
+
+    /// Reset the PCA to initial state
+    pub fn reset(&mut self) {
+        self.mean.fill(0.0);
+        self.components = None;
+        self.explained_variance = None;
+        self.n_samples = 0;
+        self.cov_matrix.fill(0.0);
+    }
+}
+
+/// Streaming outlier detector using statistical methods
+pub struct StreamingOutlierDetector {
+    /// Running statistics for each feature
+    means: Array1<f64>,
+    variances: Array1<f64>,
+    /// Number of samples seen
+    n_samples: usize,
+    /// Number of features
+    n_features: usize,
+    /// Threshold for outlier detection (standard deviations)
+    threshold: f64,
+    /// Method for outlier detection
+    method: OutlierMethod,
+}
+
+#[derive(Debug, Clone)]
+pub enum OutlierMethod {
+    /// Z-score based detection
+    ZScore,
+    /// Modified Z-score using median absolute deviation
+    ModifiedZScore,
+    /// Isolation forest-like scoring
+    IsolationScore,
+}
+
+impl StreamingOutlierDetector {
+    /// Create a new streaming outlier detector
+    pub fn new(n_features: usize, threshold: f64, method: OutlierMethod) -> Self {
+        StreamingOutlierDetector {
+            means: Array1::zeros(n_features),
+            variances: Array1::zeros(n_features),
+            n_samples: 0,
+            n_features,
+            threshold,
+            method,
+        }
+    }
+
+    /// Update statistics with new data
+    pub fn update(&mut self, x: &Array2<f64>) -> Result<()> {
+        if x.shape()[1] != self.n_features {
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} features, got {}",
+                self.n_features,
+                x.shape()[1]
+            )));
+        }
+
+        // Update running statistics using Welford's algorithm
+        for sample in x.rows() {
+            self.n_samples += 1;
+            let n = self.n_samples as f64;
+
+            for (i, &value) in sample.iter().enumerate() {
+                let delta = value - self.means[i];
+                self.means[i] += delta / n;
+                let delta2 = value - self.means[i];
+                self.variances[i] += delta * delta2;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Detect outliers in new data
+    pub fn detect_outliers(&self, x: &Array2<f64>) -> Result<Array1<bool>> {
+        if x.shape()[1] != self.n_features {
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} features, got {}",
+                self.n_features,
+                x.shape()[1]
+            )));
+        }
+
+        if self.n_samples < 2 {
+            // Not enough data for outlier detection
+            return Ok(Array1::from_elem(x.shape()[0], false));
+        }
+
+        let mut outliers = Array1::from_elem(x.shape()[0], false);
+
+        match self.method {
+            OutlierMethod::ZScore => {
+                let stds = self.get_standard_deviations();
+                
+                for (i, sample) in x.rows().enumerate() {
+                    let mut is_outlier = false;
+                    for (j, &value) in sample.iter().enumerate() {
+                        if stds[j] > 1e-8 {
+                            let z_score = (value - self.means[j]).abs() / stds[j];
+                            if z_score > self.threshold {
+                                is_outlier = true;
+                                break;
+                            }
+                        }
+                    }
+                    outliers[i] = is_outlier;
+                }
+            }
+            OutlierMethod::ModifiedZScore => {
+                // Simplified modified z-score using running estimates
+                for (i, sample) in x.rows().enumerate() {
+                    let mut is_outlier = false;
+                    for (j, &value) in sample.iter().enumerate() {
+                        let mad_estimate = (self.variances[j] / (self.n_samples - 1) as f64).sqrt() * 0.6745;
+                        if mad_estimate > 1e-8 {
+                            let modified_z = 0.6745 * (value - self.means[j]).abs() / mad_estimate;
+                            if modified_z > self.threshold {
+                                is_outlier = true;
+                                break;
+                            }
+                        }
+                    }
+                    outliers[i] = is_outlier;
+                }
+            }
+            OutlierMethod::IsolationScore => {
+                // Enhanced isolation forest-like scoring using path length estimation
+                for (i, sample) in x.rows().enumerate() {
+                    let anomaly_score = self.compute_isolation_score(sample);
+                    outliers[i] = anomaly_score > self.threshold;
+                }
+            }
+        }
+
+        Ok(outliers)
+    }
+
+    fn get_standard_deviations(&self) -> Array1<f64> {
+        if self.n_samples <= 1 {
+            Array1::ones(self.n_features)
+        } else {
+            self.variances.mapv(|v| (v / (self.n_samples - 1) as f64).sqrt().max(1e-8))
+        }
+    }
+    
+    /// Compute isolation score using path length estimation
+    fn compute_isolation_score(&self, sample: ndarray::ArrayView1<f64>) -> f64 {
+        let mut path_length = 0.0;
+        let mut current_sample = sample.to_owned();
+        
+        // Simulate isolation tree path length with statistical approximation
+        let max_depth = ((self.n_samples as f64).log2().ceil() as usize).min(20);
+        
+        for depth in 0..max_depth {
+            let mut min_split_distance = f64::INFINITY;
+            
+            // Find the most isolating dimension
+            for j in 0..self.n_features {
+                let std_dev = (self.variances[j] / (self.n_samples - 1) as f64).sqrt();
+                if std_dev > 1e-8 {
+                    // Distance from mean normalized by standard deviation
+                    let normalized_distance = (current_sample[j] - self.means[j]).abs() / std_dev;
+                    
+                    // Estimate how "isolating" this split would be
+                    let split_effectiveness = normalized_distance * (1.0 + depth as f64 * 0.1);
+                    min_split_distance = min_split_distance.min(split_effectiveness);
+                }
+            }
+            
+            // If sample is well-isolated in any dimension, break early
+            if min_split_distance > 3.0 {
+                path_length += depth as f64 + min_split_distance / 3.0;
+                break;
+            }
+            
+            path_length += 1.0;
+            
+            // Adjust sample position for next iteration (simulating tree traversal)
+            for j in 0..self.n_features {
+                let adjustment = (current_sample[j] - self.means[j]) * 0.1;
+                current_sample[j] -= adjustment;
+            }
+        }
+        
+        // Shorter path lengths indicate anomalies
+        // Normalize by expected path length for a dataset of this size
+        let expected_path_length = if self.n_samples > 2 {
+            2.0 * ((self.n_samples - 1) as f64).ln() + (std::f64::consts::E * 0.57721566) - 2.0 * (self.n_samples - 1) as f64 / self.n_samples as f64
+        } else {
+            1.0
+        };
+        
+        // Return anomaly score (higher = more anomalous)
+        2.0_f64.powf(-path_length / expected_path_length)
+    }
+
+    /// Get anomaly scores for samples
+    pub fn anomaly_scores(&self, x: &Array2<f64>) -> Result<Array1<f64>> {
+        if x.shape()[1] != self.n_features {
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} features, got {}",
+                self.n_features,
+                x.shape()[1]
+            )));
+        }
+
+        if self.n_samples < 2 {
+            return Ok(Array1::zeros(x.shape()[0]));
+        }
+
+        let mut scores = Array1::zeros(x.shape()[0]);
+        let stds = self.get_standard_deviations();
+
+        for (i, sample) in x.rows().enumerate() {
+            let mut score = 0.0;
+            for (j, &value) in sample.iter().enumerate() {
+                if stds[j] > 1e-8 {
+                    let z_score = (value - self.means[j]).abs() / stds[j];
+                    score += z_score;
+                }
+            }
+            scores[i] = score / self.n_features as f64;
+        }
+
+        Ok(scores)
+    }
+
+    /// Reset detector to initial state
+    pub fn reset(&mut self) {
+        self.means.fill(0.0);
+        self.variances.fill(0.0);
+        self.n_samples = 0;
+    }
+}
+
+/// Streaming feature selector based on variance or correlation thresholds
+pub struct StreamingFeatureSelector {
+    /// Feature variances
+    variances: Array1<f64>,
+    /// Feature means
+    means: Array1<f64>,
+    /// Correlation matrix (upper triangular)
+    correlations: Array2<f64>,
+    /// Number of samples seen
+    n_samples: usize,
+    /// Number of features
+    n_features: usize,
+    /// Variance threshold for feature selection
+    variance_threshold: f64,
+    /// Correlation threshold for removing highly correlated features
+    correlation_threshold: f64,
+    /// Selected feature indices
+    selected_features: Option<Vec<usize>>,
+}
+
+impl StreamingFeatureSelector {
+    /// Create a new streaming feature selector
+    pub fn new(n_features: usize, variance_threshold: f64, correlation_threshold: f64) -> Self {
+        StreamingFeatureSelector {
+            variances: Array1::zeros(n_features),
+            means: Array1::zeros(n_features),
+            correlations: Array2::zeros((n_features, n_features)),
+            n_samples: 0,
+            n_features,
+            variance_threshold,
+            correlation_threshold,
+            selected_features: None,
+        }
+    }
+
+    /// Update statistics with new data
+    pub fn update(&mut self, x: &Array2<f64>) -> Result<()> {
+        if x.shape()[1] != self.n_features {
+            return Err(TransformError::InvalidInput(format!(
+                "Expected {} features, got {}",
+                self.n_features,
+                x.shape()[1]
+            )));
+        }
+
+        // Update running statistics
+        for sample in x.rows() {
+            self.n_samples += 1;
+            let n = self.n_samples as f64;
+
+            // Update means and variances
+            for (i, &value) in sample.iter().enumerate() {
+                let delta = value - self.means[i];
+                self.means[i] += delta / n;
+                let delta2 = value - self.means[i];
+                self.variances[i] += delta * delta2;
+            }
+
+            // Update correlations (simplified running correlation)
+            if self.n_samples > 1 {
+                for i in 0..self.n_features {
+                    for j in (i + 1)..self.n_features {
+                        let val_i = sample[i] - self.means[i];
+                        let val_j = sample[j] - self.means[j];
+                        let covar_update = val_i * val_j / (n - 1.0);
+                        self.correlations[[i, j]] = 
+                            (self.correlations[[i, j]] * (n - 2.0) + covar_update) / (n - 1.0);
+                    }
+                }
+            }
+        }
+
+        // Update selected features based on current statistics
+        if self.n_samples >= 10 {  // Minimum samples for stable statistics
+            self.update_selected_features();
+        }
+
+        Ok(())
+    }
+
+    fn update_selected_features(&mut self) {
+        let mut selected = Vec::new();
+        let current_variances = self.get_current_variances();
+        
+        // First pass: select features based on variance threshold
+        for i in 0..self.n_features {
+            if current_variances[i] > self.variance_threshold {
+                selected.push(i);
+            }
+        }
+
+        // Second pass: remove highly correlated features
+        let mut final_selected = Vec::new();
+        for &i in &selected {
+            let mut should_include = true;
+            
+            for &j in &final_selected {
+                if i != j {
+                    let corr = self.get_correlation(i, j, &current_variances);
+                    if corr.abs() > self.correlation_threshold {
+                        // Keep feature with higher variance
+                        if current_variances[i] <= current_variances[j] {
+                            should_include = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if should_include {
+                final_selected.push(i);
+            }
+        }
+
+        self.selected_features = Some(final_selected);
+    }
+
+    fn get_current_variances(&self) -> Array1<f64> {
+        if self.n_samples <= 1 {
+            Array1::zeros(self.n_features)
+        } else {
+            self.variances.mapv(|v| v / (self.n_samples - 1) as f64)
+        }
+    }
+
+    fn get_correlation(&self, i: usize, j: usize, variances: &Array1<f64>) -> f64 {
+        let var_i = variances[i];
+        let var_j = variances[j];
+        
+        if var_i > 1e-8 && var_j > 1e-8 {
+            let idx = if i < j { (i, j) } else { (j, i) };
+            self.correlations[idx] / (var_i * var_j).sqrt()
+        } else {
+            0.0
+        }
+    }
+
+    /// Transform data by selecting features
+    pub fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>> {
+        if let Some(ref selected) = self.selected_features {
+            if x.shape()[1] != self.n_features {
+                return Err(TransformError::InvalidInput(format!(
+                    "Expected {} features, got {}",
+                    self.n_features,
+                    x.shape()[1]
+                )));
+            }
+
+            if selected.is_empty() {
+                return Ok(Array2::zeros((x.shape()[0], 0)));
+            }
+
+            let mut result = Array2::zeros((x.shape()[0], selected.len()));
+            
+            for (row_idx, sample) in x.rows().enumerate() {
+                for (col_idx, &feature_idx) in selected.iter().enumerate() {
+                    result[[row_idx, col_idx]] = sample[feature_idx];
+                }
+            }
+
+            Ok(result)
+        } else {
+            // No features selected yet, return original data
+            Ok(x.to_owned())
+        }
+    }
+
+    /// Get indices of selected features
+    pub fn get_selected_features(&self) -> Option<&Vec<usize>> {
+        self.selected_features.as_ref()
+    }
+
+    /// Get number of selected features
+    pub fn n_features_selected(&self) -> usize {
+        self.selected_features.as_ref().map_or(self.n_features, |s| s.len())
+    }
+
+    /// Reset selector to initial state
+    pub fn reset(&mut self) {
+        self.variances.fill(0.0);
+        self.means.fill(0.0);
+        self.correlations.fill(0.0);
+        self.n_samples = 0;
+        self.selected_features = None;
     }
 }

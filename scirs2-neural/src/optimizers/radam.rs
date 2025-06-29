@@ -28,7 +28,7 @@ use std::fmt::Debug;
 /// let mut radam = RAdam::<f64>::default_with_lr(0.001).unwrap();
 ///
 /// // or with custom configuration
-/// let mut radam_custom = RAdam::new(0.001, 0.9, 0.999, 1e-8, 0.01);
+/// let mut radam_custom = RAdam::new(0.001, 0.9, 0.999, 1e-8, 0.01).unwrap();
 /// ```
 #[derive(Debug, Clone)]
 pub struct RAdam<F: Float + ScalarOperand + Debug> {
@@ -62,12 +62,14 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
     /// * `beta2` - Exponential decay rate for the second moment estimates (default: 0.999)
     /// * `epsilon` - Small constant for numerical stability (default: 1e-8)
     /// * `weight_decay` - Weight decay factor (default: 0.0)
-    pub fn new(learning_rate: F, beta1: F, beta2: F, epsilon: F, weight_decay: F) -> Self {
+    pub fn new(learning_rate: F, beta1: F, beta2: F, epsilon: F, weight_decay: F) -> Result<Self> {
         // Calculate rho_inf (used in the rectification term)
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 2.0 to the appropriate floating point type".to_string())
+        })?;
         let rho_inf = two / (F::one() - beta2) - F::one();
 
-        Self {
+        Ok(Self {
             learning_rate,
             beta1,
             beta2,
@@ -77,7 +79,7 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
             v: Vec::new(),
             t: 0,
             rho_inf,
-        }
+        })
     }
 
     /// Creates a new RAdam optimizer with default hyperparameters
@@ -86,26 +88,26 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
     ///
     /// * `learning_rate` - The learning rate for parameter updates
     pub fn default_with_lr(learning_rate: F) -> Result<Self> {
-        let beta1 = F::from(0.9).unwrap_or_else(|| {
-            panic!("Failed to convert 0.9 to the appropriate floating point type")
-        });
-        let beta2 = F::from(0.999).unwrap_or_else(|| {
-            panic!("Failed to convert 0.999 to the appropriate floating point type")
-        });
-        let epsilon = F::from(1e-8).unwrap_or_else(|| {
-            panic!("Failed to convert 1e-8 to the appropriate floating point type")
-        });
-        let weight_decay = F::from(0.0).unwrap_or_else(|| {
-            panic!("Failed to convert 0.0 to the appropriate floating point type")
-        });
+        let beta1 = F::from(0.9).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 0.9 to the appropriate floating point type".to_string())
+        })?;
+        let beta2 = F::from(0.999).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 0.999 to the appropriate floating point type".to_string())
+        })?;
+        let epsilon = F::from(1e-8).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 1e-8 to the appropriate floating point type".to_string())
+        })?;
+        let weight_decay = F::from(0.0).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 0.0 to the appropriate floating point type".to_string())
+        })?;
 
-        Ok(Self::new(
+        Self::new(
             learning_rate,
             beta1,
             beta2,
             epsilon,
             weight_decay,
-        ))
+        )
     }
 
     /// Gets the beta1 parameter
@@ -191,20 +193,32 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for RAdam<F> {
         let bias_correction1 = F::one() - beta1_pow_t;
 
         // RAdam-specific calculations
-        let two = F::from(2.0).unwrap();
-        let four = F::from(4.0).unwrap();
-        let _five = F::from(5.0).unwrap(); // Unused but keep for reference
+        let two = F::from(2.0).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 2.0 to floating point type".to_string())
+        })?;
+        let four = F::from(4.0).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 4.0 to floating point type".to_string())
+        })?;
+        let _five = F::from(5.0).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 5.0 to floating point type".to_string())
+        })?; // Unused but keep for reference
 
         // Compute rho_t
         // All calculations in f64 first
-        let rho_inf_f64 = self.rho_inf.to_f64().unwrap();
-        let beta2_pow_t_f64 = beta2_pow_t.to_f64().unwrap();
+        let rho_inf_f64 = self.rho_inf.to_f64().ok_or_else(|| {
+            NeuralError::ComputationError("Failed to convert rho_inf to f64".to_string())
+        })?;
+        let beta2_pow_t_f64 = beta2_pow_t.to_f64().ok_or_else(|| {
+            NeuralError::ComputationError("Failed to convert beta2_pow_t to f64".to_string())
+        })?;
         let t_f64 = self.t as f64;
 
         let rho_t_f64 = rho_inf_f64 - 2.0 * t_f64 * beta2_pow_t_f64 / (1.0 - beta2_pow_t_f64);
 
         // Convert to F type
-        let rho_t = F::from(rho_t_f64).unwrap();
+        let rho_t = F::from(rho_t_f64).ok_or_else(|| {
+            NeuralError::ComputationError("Failed to convert rho_t from f64".to_string())
+        })?;
 
         // Rectification term calculation
         let rect_term;

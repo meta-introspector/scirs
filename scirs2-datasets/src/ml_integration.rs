@@ -403,7 +403,7 @@ impl MLPipeline {
         })
     }
 
-    fn random_oversample(&self, dataset: &Dataset, random_state: Option<u64>) -> Result<Dataset> {
+    fn random_oversample(&self, dataset: &Dataset, _random_state: Option<u64>) -> Result<Dataset> {
         // Simplified oversampling (in practice, you'd implement proper SMOTE or other techniques)
         Ok(dataset.clone())
     }

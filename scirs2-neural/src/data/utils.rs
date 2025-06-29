@@ -49,7 +49,7 @@ pub fn train_val_split<F: Float + Debug + ScalarOperand>(
     if shuffle {
         // Create shuffled indices
         let mut indices: Vec<usize> = (0..n_samples).collect();
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         indices.shuffle(&mut rng);
 
         // Split indices
@@ -127,13 +127,17 @@ impl KFold {
     }
 
     /// Generate train/test indices for each fold
-    pub fn split(&self, n_samples: usize) -> Vec<(Vec<usize>, Vec<usize>)> {
+    pub fn split(&self, n_samples: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
         if self.n_splits < 2 {
-            panic!("n_splits must be >= 2");
+            return Err(crate::error::NeuralError::InvalidArgument(
+                "n_splits must be >= 2".to_string(),
+            ));
         }
 
         if self.n_splits > n_samples {
-            panic!("n_splits must be <= n_samples");
+            return Err(crate::error::NeuralError::InvalidArgument(
+                "n_splits must be <= n_samples".to_string(),
+            ));
         }
 
         // Create indices
@@ -146,7 +150,7 @@ impl KFold {
                 let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
                 indices.shuffle(&mut rng);
             } else {
-                let mut rng = rand::rng();
+                let mut rng = rand::thread_rng();
                 indices.shuffle(&mut rng);
             }
         }
@@ -183,7 +187,7 @@ impl KFold {
             current = end;
         }
 
-        result
+        Ok(result)
     }
 }
 
@@ -202,7 +206,7 @@ pub fn create_batches<F: Float + Debug + ScalarOperand>(
 
     // Shuffle if needed
     if shuffle {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         indices.shuffle(&mut rng);
     }
 

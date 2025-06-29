@@ -86,46 +86,45 @@ where
     let (n, _) = matrix.shape();
     let mut y = Array1::zeros(n);
 
-    // Process rows in parallel chunks
-    const ROW_CHUNK_SIZE: usize = 64;
+    // Determine optimal chunk size based on matrix size
+    let chunk_size = std::cmp::max(1, n / rayon::current_num_threads()).min(256);
 
-    // Use parallel iteration over rows
-    let results: Vec<_> = (0..n)
-        .step_by(ROW_CHUNK_SIZE)
-        .map(|start_row| {
-            let end_row = std::cmp::min(start_row + ROW_CHUNK_SIZE, n);
-            let mut local_y = Array1::zeros(n);
-            
-            for row_i in start_row..end_row {
-                let row_start = matrix.indptr[row_i];
-                let row_end = matrix.indptr[row_i + 1];
+    // Use scirs2-core parallel operations for better performance
+    let chunks: Vec<_> = (0..n).collect::<Vec<_>>().chunks(chunk_size).map(|chunk| chunk.to_vec()).collect();
+    
+    let results: Vec<_> = parallel_map(&chunks, |row_chunk| {
+        let mut local_y = Array1::zeros(n);
+        
+        for &row_i in row_chunk {
+            let row_start = matrix.indptr[row_i];
+            let row_end = matrix.indptr[row_i + 1];
 
-                // Compute the dot product for this row
-                let mut sum = T::zero();
-                for j in row_start..row_end {
-                    let col = matrix.indices[j];
-                    let val = matrix.data[j];
-                    
-                    sum = sum + val * x[col];
-                    
-                    // For symmetric matrices, also add the symmetric contribution
-                    // if we're below the diagonal
-                    if row_i != col {
-                        local_y[col] = local_y[col] + val * x[row_i];
-                    }
+            // Compute the dot product for this row
+            let mut sum = T::zero();
+            for j in row_start..row_end {
+                let col = matrix.indices[j];
+                let val = matrix.data[j];
+                
+                sum = sum + val * x[col];
+                
+                // For symmetric matrices, also add the symmetric contribution
+                // if we're below the diagonal
+                if row_i != col {
+                    local_y[col] = local_y[col] + val * x[row_i];
                 }
-                local_y[row_i] = local_y[row_i] + sum;
             }
-            local_y
-        })
-        .collect();
-
-    // Sum up the results from all chunks
-    for local_y in results {
-        for i in 0..n {
-            y[i] = y[i] + local_y[i];
+            local_y[row_i] = local_y[row_i] + sum;
         }
-    }
+        local_y
+    });
+
+    // Parallel reduction of results
+    parallel_reduce(&results, Array1::zeros(n), |mut acc, local_y| {
+        for i in 0..n {
+            acc[i] = acc[i] + local_y[i];
+        }
+        acc
+    }, &mut y);
 
     Ok(y)
 }

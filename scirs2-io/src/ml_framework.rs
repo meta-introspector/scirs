@@ -584,7 +584,7 @@ pub mod converters {
     }
 
     /// Convert between different ML frameworks
-    pub fn convert_model(model: &MLModel, from: MLFramework, to: MLFramework) -> Result<MLModel> {
+    pub fn convert_model(model: &MLModel, _from: MLFramework, to: MLFramework) -> Result<MLModel> {
         // For now, just copy the model with new framework metadata
         let mut new_model = MLModel::new(to);
         new_model.metadata = model.metadata.clone();

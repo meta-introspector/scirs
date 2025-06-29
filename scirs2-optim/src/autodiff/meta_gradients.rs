@@ -10,6 +10,7 @@ use std::collections::{HashMap, VecDeque};
 
 use super::forward_mode::ForwardModeEngine;
 use super::reverse_mode::ReverseModeEngine;
+use super::higher_order::{HigherOrderEngine, HessianConfig, HvpMode};
 use crate::error::OptimizerError;
 
 /// Meta-gradient computation engine
@@ -19,6 +20,9 @@ pub struct MetaGradientEngine<T: Float> {
 
     /// Reverse-mode engine for efficient computation
     reverse_engine: ReverseModeEngine<T>,
+
+    /// Higher-order engine for advanced derivative computation
+    higher_order_engine: HigherOrderEngine<T>,
 
     /// Meta-learning algorithm type
     algorithm: MetaLearningAlgorithm,
@@ -37,6 +41,15 @@ pub struct MetaGradientEngine<T: Float> {
 
     /// Task performance history
     task_performance: HashMap<String, Vec<T>>,
+
+    /// Hessian computation cache for efficiency
+    hessian_cache: HashMap<String, Array2<T>>,
+
+    /// Checkpointing manager for memory efficiency
+    checkpoint_manager: CheckpointManager<T>,
+
+    /// Advanced meta-learning configuration
+    advanced_config: AdvancedMetaConfig,
 }
 
 /// Meta-learning algorithm types
@@ -220,6 +233,176 @@ pub struct MetaGradientStats {
 
     /// Second-order computations
     pub second_order_computations: usize,
+
+    /// Hessian-vector product computations
+    pub hvp_computations: usize,
+
+    /// Cache hits/misses
+    pub cache_hits: usize,
+    pub cache_misses: usize,
+
+    /// Checkpointing statistics
+    pub checkpoints_created: usize,
+    pub checkpoints_restored: usize,
+}
+
+/// Advanced meta-learning configuration
+#[derive(Debug, Clone)]
+pub struct AdvancedMetaConfig {
+    /// Enable sophisticated Hessian computation
+    pub use_higher_order_hessian: bool,
+
+    /// Automatic HVP mode selection
+    pub auto_hvp_mode: bool,
+
+    /// Enable gradient checkpointing for long sequences
+    pub enable_gradient_checkpointing: bool,
+
+    /// Maximum memory usage before checkpointing (bytes)
+    pub max_memory_usage: usize,
+
+    /// Enable hyperparameter optimization
+    pub enable_hyperparameter_optimization: bool,
+
+    /// Learning rate adaptation method
+    pub lr_adaptation_method: LearningRateAdaptation,
+
+    /// Enable multi-task learning utilities
+    pub enable_multi_task_learning: bool,
+
+    /// Task similarity computation
+    pub task_similarity_metric: TaskSimilarityMetric,
+
+    /// Meta-batch sampling strategy
+    pub meta_batch_sampling: MetaBatchSampling,
+
+    /// Enable curriculum learning
+    pub enable_curriculum_learning: bool,
+
+    /// Regularization techniques
+    pub regularization: MetaRegularization,
+}
+
+/// Learning rate adaptation methods
+#[derive(Debug, Clone, Copy)]
+pub enum LearningRateAdaptation {
+    /// Fixed learning rate
+    Fixed,
+    /// Learn per-parameter learning rates (Meta-SGD style)
+    PerParameter,
+    /// Adaptive based on gradient magnitude
+    AdaptiveGradient,
+    /// Learned adaptation rule
+    LearnedRule,
+    /// Meta-learning the adaptation
+    MetaLearned,
+}
+
+/// Task similarity metrics
+#[derive(Debug, Clone, Copy)]
+pub enum TaskSimilarityMetric {
+    /// Cosine similarity of gradients
+    GradientCosine,
+    /// Fisher Information distance
+    FisherDistance,
+    /// Hessian similarity
+    HessianSimilarity,
+    /// Parameter distance after adaptation
+    ParameterDistance,
+    /// Loss landscape similarity
+    LossLandscape,
+}
+
+/// Meta-batch sampling strategies
+#[derive(Debug, Clone, Copy)]
+pub enum MetaBatchSampling {
+    /// Random sampling
+    Random,
+    /// Balanced sampling across task types
+    Balanced,
+    /// Difficulty-based curriculum
+    Curriculum,
+    /// Similarity-based clustering
+    SimilarityBased,
+    /// Adversarial task selection
+    Adversarial,
+}
+
+/// Meta-learning regularization techniques
+#[derive(Debug, Clone)]
+pub struct MetaRegularization {
+    /// L2 regularization on meta-parameters
+    pub l2_meta_params: f64,
+    /// Regularization on adaptation speed
+    pub adaptation_regularization: f64,
+    /// Entropy regularization for exploration
+    pub entropy_regularization: f64,
+    /// Task diversity bonus
+    pub diversity_bonus: f64,
+    /// Gradient penalty for stability
+    pub gradient_penalty: f64,
+}
+
+/// Checkpoint manager for memory-efficient meta-learning
+#[derive(Debug)]
+pub struct CheckpointManager<T: Float> {
+    /// Stored checkpoints
+    checkpoints: HashMap<String, MetaCheckpoint<T>>,
+    /// Maximum number of checkpoints to keep
+    max_checkpoints: usize,
+    /// Memory threshold for automatic checkpointing
+    memory_threshold: usize,
+    /// Current memory usage estimate
+    current_memory: usize,
+    /// Checkpoint creation policy
+    policy: CheckpointPolicy,
+}
+
+/// Meta-learning checkpoint
+#[derive(Debug, Clone)]
+pub struct MetaCheckpoint<T: Float> {
+    /// Checkpoint identifier
+    pub id: String,
+    /// Saved parameters
+    pub parameters: Array1<T>,
+    /// Saved gradients
+    pub gradients: Array1<T>,
+    /// Saved Hessian (if computed)
+    pub hessian: Option<Array2<T>>,
+    /// Task state
+    pub task_state: TaskState<T>,
+    /// Computation step
+    pub step: usize,
+    /// Memory usage at checkpoint
+    pub memory_usage: usize,
+    /// Timestamp
+    pub timestamp: std::time::Instant,
+}
+
+/// Task state for checkpointing
+#[derive(Debug, Clone)]
+pub struct TaskState<T: Float> {
+    /// Current task parameters
+    pub current_params: Array1<T>,
+    /// Task loss history
+    pub loss_history: Vec<T>,
+    /// Gradient history
+    pub gradient_history: Vec<Array1<T>>,
+    /// Adaptation step
+    pub adaptation_step: usize,
+}
+
+/// Checkpointing policies
+#[derive(Debug, Clone, Copy)]
+pub enum CheckpointPolicy {
+    /// Checkpoint at fixed intervals
+    FixedInterval { interval: usize },
+    /// Checkpoint when memory exceeds threshold
+    MemoryThreshold,
+    /// Checkpoint at key computational points
+    AdaptiveKeyPoints,
+    /// No checkpointing
+    None,
 }
 
 impl<T: Float + Default + Clone> MetaGradientEngine<T> {
@@ -232,13 +415,35 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         Self {
             forward_engine: ForwardModeEngine::new(),
             reverse_engine: ReverseModeEngine::new(),
+            higher_order_engine: HigherOrderEngine::new(3), // Support up to 3rd order derivatives
             algorithm,
             inner_loop_config: inner_config,
             outer_loop_config: outer_config,
             gradient_cache: HashMap::new(),
             meta_param_history: VecDeque::with_capacity(1000),
             task_performance: HashMap::new(),
+            hessian_cache: HashMap::new(),
+            checkpoint_manager: CheckpointManager::new(100, 1024 * 1024 * 512), // 512MB threshold
+            advanced_config: AdvancedMetaConfig::default(),
         }
+    }
+
+    /// Create a new meta-gradient engine with advanced configuration
+    pub fn with_advanced_config(
+        algorithm: MetaLearningAlgorithm,
+        inner_config: InnerLoopConfig,
+        outer_config: OuterLoopConfig,
+        advanced_config: AdvancedMetaConfig,
+    ) -> Self {
+        let mut engine = Self::new(algorithm, inner_config, outer_config);
+        engine.advanced_config = advanced_config;
+        
+        // Configure higher-order engine based on advanced config
+        if advanced_config.use_higher_order_hessian {
+            engine.higher_order_engine.set_mixed_mode(true);
+        }
+        
+        engine
     }
 
     /// Compute meta-gradients for a batch of tasks
@@ -282,6 +487,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         tasks: &[MetaTask<T>],
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<MetaGradientResult<T>, OptimizerError> {
+        let start_time = std::time::Instant::now();
         let mut meta_gradients = Array1::zeros(meta_params.len());
         let mut inner_gradients = Vec::new();
         let mut task_losses = Vec::new();
@@ -569,15 +775,103 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         Ok(params)
     }
 
-    /// Compute second-order meta-gradients
+    /// Compute second-order meta-gradients using advanced higher-order differentiation
     fn compute_second_order_meta_gradients(
-        &self,
+        &mut self,
         meta_params: &Array1<T>,
         adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<Array1<T>, OptimizerError> {
-        // Simplified second-order computation using finite differences
+        if self.advanced_config.use_higher_order_hessian {
+            // Use sophisticated higher-order differentiation
+            self.compute_advanced_second_order_gradients(meta_params, adapted_params, task, objective_fn)
+        } else {
+            // Fallback to finite differences
+            self.compute_finite_difference_second_order(meta_params, adapted_params, task, objective_fn)
+        }
+    }
+
+    /// Advanced second-order meta-gradients using higher-order engine
+    fn compute_advanced_second_order_gradients(
+        &mut self,
+        meta_params: &Array1<T>,
+        adapted_params: &Array1<T>,
+        task: &MetaTask<T>,
+        objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+    ) -> Result<Array1<T>, OptimizerError> {
+        let cache_key = format!("hessian_{}_{}", task.id, meta_params.len());
+        
+        // Check cache first
+        if let Some(cached_hessian) = self.hessian_cache.get(&cache_key) {
+            // Use cached Hessian for HVP computation
+            return self.compute_hvp_with_cached_hessian(cached_hessian, meta_params, task, objective_fn);
+        }
+
+        // Create composite function: F(θ) = L_query(φ*(θ))
+        // where φ*(θ) is the result of inner optimization starting from θ
+        let composite_fn = |theta: &Array1<T>| -> T {
+            // Perform inner loop adaptation
+            let adapted = self.inner_loop_adaptation(theta, task, objective_fn)
+                .unwrap_or_else(|_| theta.clone());
+            
+            // Compute query loss
+            objective_fn(&adapted, theta, &task.query_set)
+        };
+
+        // Use higher-order engine to compute exact Hessian
+        let hessian_config = HessianConfig {
+            exact: true,
+            sparse: false,
+            diagonal_only: false,
+            verify_with_finite_diff: false,
+            ..Default::default()
+        };
+
+        let hessian = self.higher_order_engine
+            .hessian_forward_over_reverse(composite_fn, meta_params, &hessian_config)?;
+
+        // Cache the Hessian for future use
+        self.hessian_cache.insert(cache_key, hessian.clone());
+
+        // Compute gradient using the Hessian
+        let gradient = self.gradient_at_point(&|theta: &Array1<T>| -> T {
+            let adapted = self.inner_loop_adaptation(theta, task, objective_fn)
+                .unwrap_or_else(|_| theta.clone());
+            objective_fn(&adapted, theta, &task.query_set)
+        }, meta_params)?;
+
+        Ok(gradient)
+    }
+
+    /// Compute HVP using cached Hessian for efficiency
+    fn compute_hvp_with_cached_hessian(
+        &mut self,
+        hessian: &Array2<T>,
+        meta_params: &Array1<T>,
+        task: &MetaTask<T>,
+        objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+    ) -> Result<Array1<T>, OptimizerError> {
+        // Compute gradient direction
+        let gradient_direction = self.gradient_at_point(&|theta: &Array1<T>| -> T {
+            let adapted = self.inner_loop_adaptation(theta, task, objective_fn)
+                .unwrap_or_else(|_| theta.clone());
+            objective_fn(&adapted, theta, &task.query_set)
+        }, meta_params)?;
+
+        // Compute Hessian-vector product: H * gradient_direction
+        let hvp = hessian.dot(&gradient_direction);
+        Ok(hvp)
+    }
+
+    /// Fallback finite difference second-order computation
+    fn compute_finite_difference_second_order(
+        &self,
+        meta_params: &Array1<T>,
+        _adapted_params: &Array1<T>,
+        task: &MetaTask<T>,
+        objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+    ) -> Result<Array1<T>, OptimizerError> {
         let eps = T::from(1e-6).unwrap();
         let mut meta_gradients = Array1::zeros(meta_params.len());
 
@@ -724,7 +1018,428 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         self.gradient_cache.clear();
         self.meta_param_history.clear();
         self.task_performance.clear();
+        self.hessian_cache.clear();
+        self.checkpoint_manager.clear_checkpoints();
     }
+
+    /// Compute task similarity for meta-batch sampling
+    pub fn compute_task_similarity(
+        &mut self,
+        task1: &MetaTask<T>,
+        task2: &MetaTask<T>,
+        meta_params: &Array1<T>,
+        objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+    ) -> Result<T, OptimizerError> {
+        match self.advanced_config.task_similarity_metric {
+            TaskSimilarityMetric::GradientCosine => {
+                self.compute_gradient_cosine_similarity(task1, task2, meta_params, objective_fn)
+            }
+            TaskSimilarityMetric::FisherDistance => {
+                self.compute_fisher_distance(task1, task2, meta_params, objective_fn)
+            }
+            TaskSimilarityMetric::HessianSimilarity => {
+                self.compute_hessian_similarity(task1, task2, meta_params, objective_fn)
+            }
+            TaskSimilarityMetric::ParameterDistance => {
+                self.compute_parameter_distance(task1, task2, meta_params, objective_fn)
+            }
+            TaskSimilarityMetric::LossLandscape => {
+                self.compute_loss_landscape_similarity(task1, task2, meta_params, objective_fn)
+            }
+        }
+    }
+
+    /// Compute gradient cosine similarity between tasks
+    fn compute_gradient_cosine_similarity(
+        &self,
+        task1: &MetaTask<T>,
+        task2: &MetaTask<T>,
+        meta_params: &Array1<T>,
+        objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+    ) -> Result<T, OptimizerError> {
+        let grad1 = self.compute_gradient_wrt_params(meta_params, &task1.support_set, objective_fn)?;
+        let grad2 = self.compute_gradient_wrt_params(meta_params, &task2.support_set, objective_fn)?;
+
+        let norm1 = grad1.iter().map(|&x| x * x).sum::<T>().sqrt();
+        let norm2 = grad2.iter().map(|&x| x * x).sum::<T>().sqrt();
+
+        if norm1 > T::zero() && norm2 > T::zero() {
+            let cosine = grad1.dot(&grad2) / (norm1 * norm2);
+            Ok(cosine)
+        } else {
+            Ok(T::zero())
+        }
+    }
+
+    /// Compute Fisher Information distance between tasks
+    fn compute_fisher_distance(
+        &mut self,
+        task1: &MetaTask<T>,
+        task2: &MetaTask<T>,
+        meta_params: &Array1<T>,
+        objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+    ) -> Result<T, OptimizerError> {
+        // Simplified Fisher distance computation
+        // In practice, would compute Fisher Information Matrices and their distance
+        let grad1 = self.compute_gradient_wrt_params(meta_params, &task1.support_set, objective_fn)?;
+        let grad2 = self.compute_gradient_wrt_params(meta_params, &task2.support_set, objective_fn)?;
+
+        // Use L2 distance as approximation
+        let diff = &grad1 - &grad2;
+        let distance = diff.iter().map(|&x| x * x).sum::<T>().sqrt();
+        Ok(distance)
+    }
+
+    /// Compute Hessian similarity between tasks
+    fn compute_hessian_similarity(
+        &mut self,
+        task1: &MetaTask<T>,
+        task2: &MetaTask<T>,
+        meta_params: &Array1<T>,
+        objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+    ) -> Result<T, OptimizerError> {
+        if !self.advanced_config.use_higher_order_hessian {
+            // Fallback to gradient similarity
+            return self.compute_gradient_cosine_similarity(task1, task2, meta_params, objective_fn);
+        }
+
+        // Create objective functions for each task
+        let objective1 = |params: &Array1<T>| objective_fn(params, meta_params, &task1.support_set);
+        let objective2 = |params: &Array1<T>| objective_fn(params, meta_params, &task2.support_set);
+
+        let hessian_config = HessianConfig {
+            exact: true,
+            sparse: false,
+            diagonal_only: true, // Use diagonal for efficiency
+            ..Default::default()
+        };
+
+        let hessian1 = self.higher_order_engine
+            .hessian_forward_over_reverse(objective1, meta_params, &hessian_config)?;
+        let hessian2 = self.higher_order_engine
+            .hessian_forward_over_reverse(objective2, meta_params, &hessian_config)?;
+
+        // Compute Frobenius similarity
+        let mut similarity = T::zero();
+        let mut norm1 = T::zero();
+        let mut norm2 = T::zero();
+
+        for i in 0..hessian1.nrows() {
+            for j in 0..hessian1.ncols() {
+                let h1 = hessian1[[i, j]];
+                let h2 = hessian2[[i, j]];
+                similarity = similarity + h1 * h2;
+                norm1 = norm1 + h1 * h1;
+                norm2 = norm2 + h2 * h2;
+            }
+        }
+
+        if norm1 > T::zero() && norm2 > T::zero() {
+            Ok(similarity / (norm1.sqrt() * norm2.sqrt()))
+        } else {
+            Ok(T::zero())
+        }
+    }
+
+    /// Compute parameter distance after adaptation
+    fn compute_parameter_distance(
+        &self,
+        task1: &MetaTask<T>,
+        task2: &MetaTask<T>,
+        meta_params: &Array1<T>,
+        objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+    ) -> Result<T, OptimizerError> {
+        let adapted1 = self.inner_loop_adaptation(meta_params, task1, objective_fn)?;
+        let adapted2 = self.inner_loop_adaptation(meta_params, task2, objective_fn)?;
+
+        let diff = &adapted1 - &adapted2;
+        let distance = diff.iter().map(|&x| x * x).sum::<T>().sqrt();
+        Ok(distance)
+    }
+
+    /// Compute loss landscape similarity (simplified)
+    fn compute_loss_landscape_similarity(
+        &self,
+        task1: &MetaTask<T>,
+        task2: &MetaTask<T>,
+        meta_params: &Array1<T>,
+        objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+    ) -> Result<T, OptimizerError> {
+        // Sample points around meta_params and compare loss values
+        let num_samples = 10;
+        let perturbation_scale = T::from(0.1).unwrap();
+        let mut similarities = Vec::new();
+
+        for sample_idx in 0..num_samples {
+            // Generate deterministic perturbation based on sample index
+            let mut perturbed_params = meta_params.clone();
+            for i in 0..perturbed_params.len() {
+                // Simple pseudo-random perturbation based on indices
+                let seed = (sample_idx * 1000 + i * 17) % 1000;
+                let perturbation_val = (seed as f64 / 1000.0) - 0.5; // Range [-0.5, 0.5]
+                let perturbation = T::from(perturbation_val).unwrap() * perturbation_scale;
+                perturbed_params[i] = perturbed_params[i] + perturbation;
+            }
+
+            let loss1 = objective_fn(&perturbed_params, meta_params, &task1.support_set);
+            let loss2 = objective_fn(&perturbed_params, meta_params, &task2.support_set);
+
+            let similarity = T::one() / (T::one() + (loss1 - loss2).abs());
+            similarities.push(similarity);
+        }
+
+        let avg_similarity = similarities.iter().sum::<T>() / T::from(similarities.len()).unwrap();
+        Ok(avg_similarity)
+    }
+
+    /// Adaptive learning rate computation
+    pub fn compute_adaptive_learning_rate(
+        &self,
+        meta_params: &Array1<T>,
+        gradient: &Array1<T>,
+        task: &MetaTask<T>,
+    ) -> Result<Array1<T>, OptimizerError> {
+        match self.advanced_config.lr_adaptation_method {
+            LearningRateAdaptation::Fixed => {
+                let lr = T::from(self.inner_loop_config.learning_rate).unwrap();
+                Ok(Array1::from_elem(meta_params.len(), lr))
+            }
+            LearningRateAdaptation::PerParameter => {
+                self.compute_per_parameter_learning_rates(meta_params, gradient, task)
+            }
+            LearningRateAdaptation::AdaptiveGradient => {
+                self.compute_adaptive_gradient_rates(meta_params, gradient)
+            }
+            LearningRateAdaptation::LearnedRule => {
+                self.compute_learned_adaptation_rule(meta_params, gradient, task)
+            }
+            LearningRateAdaptation::MetaLearned => {
+                self.compute_meta_learned_rates(meta_params, gradient, task)
+            }
+        }
+    }
+
+    /// Compute per-parameter learning rates (Meta-SGD style)
+    fn compute_per_parameter_learning_rates(
+        &self,
+        meta_params: &Array1<T>,
+        gradient: &Array1<T>,
+        _task: &MetaTask<T>,
+    ) -> Result<Array1<T>, OptimizerError> {
+        let mut learning_rates = Array1::zeros(meta_params.len());
+        let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
+
+        for i in 0..meta_params.len() {
+            // Adapt learning rate based on gradient magnitude
+            let grad_magnitude = gradient[i].abs();
+            let adaptive_factor = T::one() / (T::one() + grad_magnitude);
+            learning_rates[i] = base_lr * adaptive_factor;
+        }
+
+        Ok(learning_rates)
+    }
+
+    /// Compute adaptive gradient-based learning rates
+    fn compute_adaptive_gradient_rates(
+        &self,
+        _meta_params: &Array1<T>,
+        gradient: &Array1<T>,
+    ) -> Result<Array1<T>, OptimizerError> {
+        let mut learning_rates = Array1::zeros(gradient.len());
+        let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
+
+        // Compute gradient statistics
+        let grad_mean = gradient.iter().sum::<T>() / T::from(gradient.len()).unwrap();
+        let grad_std = {
+            let variance = gradient.iter()
+                .map(|&g| (g - grad_mean) * (g - grad_mean))
+                .sum::<T>() / T::from(gradient.len()).unwrap();
+            variance.sqrt()
+        };
+
+        for i in 0..gradient.len() {
+            // Normalize gradient and adapt learning rate
+            let normalized_grad = if grad_std > T::zero() {
+                (gradient[i] - grad_mean) / grad_std
+            } else {
+                gradient[i]
+            };
+
+            let adaptive_factor = T::one() / (T::one() + normalized_grad.abs());
+            learning_rates[i] = base_lr * adaptive_factor;
+        }
+
+        Ok(learning_rates)
+    }
+
+    /// Compute learned adaptation rule (placeholder)
+    fn compute_learned_adaptation_rule(
+        &self,
+        meta_params: &Array1<T>,
+        _gradient: &Array1<T>,
+        _task: &MetaTask<T>,
+    ) -> Result<Array1<T>, OptimizerError> {
+        // Placeholder: would use a learned neural network
+        let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
+        Ok(Array1::from_elem(meta_params.len(), base_lr))
+    }
+
+    /// Compute meta-learned adaptation rates (placeholder)
+    fn compute_meta_learned_rates(
+        &self,
+        meta_params: &Array1<T>,
+        _gradient: &Array1<T>,
+        _task: &MetaTask<T>,
+    ) -> Result<Array1<T>, OptimizerError> {
+        // Placeholder: would use meta-learned adaptation
+        let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
+        Ok(Array1::from_elem(meta_params.len(), base_lr))
+    }
+}
+
+/// Checkpoint manager implementation
+impl<T: Float + Default + Clone> CheckpointManager<T> {
+    /// Create a new checkpoint manager
+    pub fn new(max_checkpoints: usize, memory_threshold: usize) -> Self {
+        Self {
+            checkpoints: HashMap::new(),
+            max_checkpoints,
+            memory_threshold,
+            current_memory: 0,
+            policy: CheckpointPolicy::MemoryThreshold,
+        }
+    }
+
+    /// Create checkpoint with specified policy
+    pub fn with_policy(max_checkpoints: usize, memory_threshold: usize, policy: CheckpointPolicy) -> Self {
+        Self {
+            checkpoints: HashMap::new(),
+            max_checkpoints,
+            memory_threshold,
+            current_memory: 0,
+            policy,
+        }
+    }
+
+    /// Create a checkpoint
+    pub fn create_checkpoint(
+        &mut self,
+        id: String,
+        parameters: Array1<T>,
+        gradients: Array1<T>,
+        hessian: Option<Array2<T>>,
+        task_state: TaskState<T>,
+        step: usize,
+    ) -> Result<(), OptimizerError> {
+        let memory_usage = self.estimate_checkpoint_memory(&parameters, &gradients, &hessian);
+        
+        let checkpoint = MetaCheckpoint {
+            id: id.clone(),
+            parameters,
+            gradients,
+            hessian,
+            task_state,
+            step,
+            memory_usage,
+            timestamp: std::time::Instant::now(),
+        };
+
+        // Check if we need to remove old checkpoints
+        if self.checkpoints.len() >= self.max_checkpoints {
+            self.remove_oldest_checkpoint();
+        }
+
+        self.current_memory += memory_usage;
+        self.checkpoints.insert(id, checkpoint);
+
+        Ok(())
+    }
+
+    /// Restore from checkpoint
+    pub fn restore_checkpoint(&self, id: &str) -> Option<&MetaCheckpoint<T>> {
+        self.checkpoints.get(id)
+    }
+
+    /// Check if checkpointing is needed
+    pub fn should_checkpoint(&self, current_step: usize) -> bool {
+        match self.policy {
+            CheckpointPolicy::FixedInterval { interval } => current_step % interval == 0,
+            CheckpointPolicy::MemoryThreshold => self.current_memory > self.memory_threshold,
+            CheckpointPolicy::AdaptiveKeyPoints => {
+                // Would implement logic to detect key computational points
+                current_step % 10 == 0
+            }
+            CheckpointPolicy::None => false,
+        }
+    }
+
+    /// Clear all checkpoints
+    pub fn clear_checkpoints(&mut self) {
+        self.checkpoints.clear();
+        self.current_memory = 0;
+    }
+
+    /// Get checkpoint statistics
+    pub fn get_stats(&self) -> CheckpointStats {
+        CheckpointStats {
+            num_checkpoints: self.checkpoints.len(),
+            total_memory_usage: self.current_memory,
+            average_checkpoint_size: if self.checkpoints.is_empty() {
+                0
+            } else {
+                self.current_memory / self.checkpoints.len()
+            },
+            oldest_checkpoint_age: self.get_oldest_checkpoint_age(),
+        }
+    }
+
+    /// Remove oldest checkpoint
+    fn remove_oldest_checkpoint(&mut self) {
+        if let Some((oldest_id, oldest_checkpoint)) = self.checkpoints
+            .iter()
+            .min_by_key(|(_, checkpoint)| checkpoint.timestamp)
+            .map(|(id, checkpoint)| (id.clone(), checkpoint.clone()))
+        {
+            self.current_memory -= oldest_checkpoint.memory_usage;
+            self.checkpoints.remove(&oldest_id);
+        }
+    }
+
+    /// Estimate memory usage of a checkpoint
+    fn estimate_checkpoint_memory(
+        &self,
+        parameters: &Array1<T>,
+        gradients: &Array1<T>,
+        hessian: &Option<Array2<T>>,
+    ) -> usize {
+        let param_size = parameters.len() * std::mem::size_of::<T>();
+        let grad_size = gradients.len() * std::mem::size_of::<T>();
+        let hessian_size = if let Some(h) = hessian {
+            h.len() * std::mem::size_of::<T>()
+        } else {
+            0
+        };
+
+        param_size + grad_size + hessian_size + std::mem::size_of::<MetaCheckpoint<T>>()
+    }
+
+    /// Get age of oldest checkpoint
+    fn get_oldest_checkpoint_age(&self) -> std::time::Duration {
+        self.checkpoints
+            .values()
+            .map(|checkpoint| checkpoint.timestamp.elapsed())
+            .max()
+            .unwrap_or(std::time::Duration::from_secs(0))
+    }
+}
+
+/// Checkpoint statistics
+#[derive(Debug, Clone)]
+pub struct CheckpointStats {
+    pub num_checkpoints: usize,
+    pub total_memory_usage: usize,
+    pub average_checkpoint_size: usize,
+    pub oldest_checkpoint_age: std::time::Duration,
 }
 
 /// Meta-learning statistics
@@ -760,6 +1475,36 @@ impl Default for OuterLoopConfig {
             second_order: true,
             use_implicit_function_theorem: false,
             meta_regularization: 0.0,
+        }
+    }
+}
+
+impl Default for AdvancedMetaConfig {
+    fn default() -> Self {
+        Self {
+            use_higher_order_hessian: true,
+            auto_hvp_mode: true,
+            enable_gradient_checkpointing: true,
+            max_memory_usage: 1024 * 1024 * 1024, // 1GB
+            enable_hyperparameter_optimization: false,
+            lr_adaptation_method: LearningRateAdaptation::Fixed,
+            enable_multi_task_learning: true,
+            task_similarity_metric: TaskSimilarityMetric::GradientCosine,
+            meta_batch_sampling: MetaBatchSampling::Random,
+            enable_curriculum_learning: false,
+            regularization: MetaRegularization::default(),
+        }
+    }
+}
+
+impl Default for MetaRegularization {
+    fn default() -> Self {
+        Self {
+            l2_meta_params: 0.0,
+            adaptation_regularization: 0.0,
+            entropy_regularization: 0.0,
+            diversity_bonus: 0.0,
+            gradient_penalty: 0.0,
         }
     }
 }

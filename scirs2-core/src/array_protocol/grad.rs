@@ -292,6 +292,11 @@ impl GradientTensor {
         Self { node }
     }
 
+    /// Set the value of the tensor (for updating variables during optimization).
+    pub fn set_value(&self, new_value: Rc<dyn ArrayProtocol>) {
+        self.node.borrow_mut().value = new_value;
+    }
+
     /// Backward pass to compute gradients.
     pub fn backward(&self) -> CoreResult<()> {
         // Initialize gradient as ones with the same shape as value
@@ -962,6 +967,12 @@ impl Variable {
         Ok(())
     }
 
+    /// Set the value of the variable (for updating during optimization).
+    pub fn set_value(&self, new_value: Box<dyn ArrayProtocol>) {
+        let new_value_rc = self.box_to_rc(new_value);
+        self.tensor.set_value(new_value_rc);
+    }
+
     /// Helper to convert Box<dyn ArrayProtocol> to Rc<dyn ArrayProtocol>
     fn box_to_rc(&self, boxed: Box<dyn ArrayProtocol>) -> Rc<dyn ArrayProtocol> {
         // Extract data and create new Rc
@@ -1080,7 +1091,8 @@ impl Optimizer for SGD {
                 };
 
                 // Update variable: var = var - update
-                subtract_from(var_value.as_ref(), update.as_ref())?;
+                let updated_value = subtract_arrays(var_value.as_ref(), update.as_ref())?;
+                var.set_value(updated_value);
             }
         }
 
@@ -1211,7 +1223,8 @@ impl Optimizer for Adam {
                 let update = multiply_by_scalar(update_dir.as_ref(), self.learning_rate)?;
 
                 // Update variable: var = var - update
-                subtract_from(var_value.as_ref(), update.as_ref())?;
+                let updated_value = subtract_arrays(var_value.as_ref(), update.as_ref())?;
+                var.set_value(updated_value);
             }
         }
 
@@ -1255,13 +1268,9 @@ fn multiply_by_scalar(a: &dyn ArrayProtocol, scalar: f64) -> CoreResult<Box<dyn 
     }
 }
 
-/// Subtract one array from another in-place.
-fn subtract_from(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<()> {
-    // We need to modify 'a' in-place. Since ArrayProtocol might not provide mutable access,
-    // we'll use a workaround specific to our implementation.
-
-    // Try to get the underlying Rc<RefCell<...>> if our array protocol supports it
-    // For now, we'll create a new array and update the reference
+/// Subtract one array from another, returning a new array.
+fn subtract_arrays(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
+    // Perform element-wise subtraction and return a new array
     if let (Some(a_wrapper), Some(b_array)) = (
         a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
         b.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
@@ -1273,21 +1282,11 @@ fn subtract_from(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<()>
         // Compute the result
         let result = a_arr - b_arr;
 
-        // Now we need to update 'a' with the result
-        // Since we can't modify through the trait, we'll use unsafe code
-        // to cast and modify the underlying data
-        unsafe {
-            // This is a hack for the prototype - in production, we'd need proper mutable access
-            let a_mut = a as *const dyn ArrayProtocol as *mut NdarrayWrapper<f64, IxDyn>;
-            if !a_mut.is_null() {
-                (*a_mut).update_array(result);
-            }
-        }
-
-        Ok(())
+        // Return a new ArrayProtocol object with the result
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
     } else {
         Err(CoreError::NotImplementedError(ErrorContext::new(
-            "subtract_from not implemented for these array types".to_string(),
+            "subtract_arrays not implemented for these array types".to_string(),
         )))
     }
 }

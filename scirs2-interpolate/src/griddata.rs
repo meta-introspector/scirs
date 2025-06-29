@@ -1016,7 +1016,7 @@ where
         let y = query[1];
 
         // Find nearest neighbors for local interpolation
-        let mut neighbors = find_nearest_neighbors(points, &[x, y], 6.min(n_points))?;
+        let neighbors = find_nearest_neighbors(points, &[x, y], 6.min(n_points))?;
 
         if neighbors.len() < 3 {
             result[i] = default_fill;

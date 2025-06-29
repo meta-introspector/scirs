@@ -43,6 +43,8 @@ pub struct NodeInfo {
     pub id: NodeId,
     /// Network address
     pub address: String,
+    /// Network port
+    pub port: u16,
     /// Available memory in GB
     pub memory_gb: f64,
     /// Number of CPU cores
@@ -205,13 +207,19 @@ impl DistributedCoordinator {
         
         // Execute the task based on type
         let result = match task {
-            DistributedTask::Fit { task_id, data, .. } => {
-                Self::execute_fit_task(data).await?
+            DistributedTask::Fit { task_id: _, transformer_type: _, parameters: _, data_partition } => {
+                let serialized_data = bincode::serialize(data_partition).map_err(|e| {
+                    TransformError::DistributedError(format!("Failed to serialize fit data: {}", e))
+                })?;
+                Self::execute_fit_task(&serialized_data).await?
             }
-            DistributedTask::Transform { task_id, data, params, .. } => {
-                Self::execute_transform_task(data, params).await?
+            DistributedTask::Transform { task_id: _, transformer_state, data_partition } => {
+                let serialized_data = bincode::serialize(data_partition).map_err(|e| {
+                    TransformError::DistributedError(format!("Failed to serialize transform data: {}", e))
+                })?;
+                Self::execute_transform_task(&serialized_data, transformer_state).await?
             }
-            DistributedTask::Aggregate { task_id, partial_results, .. } => {
+            DistributedTask::Aggregate { task_id: _, partial_results } => {
                 Self::execute_aggregate_task(partial_results).await?
             }
         };
@@ -311,6 +319,9 @@ impl DistributedCoordinator {
 
         let execution_time = start_time.elapsed();
 
+        // Estimate memory usage based on data size and task type
+        let memory_used_mb = Self::estimate_memory_usage(task, &result);
+        
         Ok(TaskResult {
             task_id: match task {
                 DistributedTask::Fit { task_id, .. } => task_id.clone(),
@@ -320,10 +331,38 @@ impl DistributedCoordinator {
             node_id: node.id.clone(),
             result,
             execution_time_ms: execution_time.as_millis() as u64,
-            memory_used_mb: 100.0, // Placeholder
+            memory_used_mb,
         })
     }
 
+    /// Estimate memory usage based on task type and data size
+    fn estimate_memory_usage(task: &DistributedTask, result: &[u8]) -> f64 {
+        let base_overhead = 10.0; // Base overhead in MB
+        let result_size_mb = result.len() as f64 / (1024.0 * 1024.0);
+        
+        match task {
+            DistributedTask::Fit { data_partition, .. } => {
+                // Estimate memory for fit operations (data + intermediate computations)
+                let data_size_mb = (data_partition.len() * std::mem::size_of::<Vec<f64>>()) as f64 / (1024.0 * 1024.0);
+                let computation_overhead = data_size_mb * 2.5; // 2.5x for covariance matrix and stats
+                base_overhead + data_size_mb + computation_overhead + result_size_mb
+            }
+            DistributedTask::Transform { data_partition, transformer_state, .. } => {
+                // Memory for data + transformer state + output
+                let data_size_mb = (data_partition.len() * std::mem::size_of::<Vec<f64>>()) as f64 / (1024.0 * 1024.0);
+                let state_size_mb = transformer_state.len() as f64 / (1024.0 * 1024.0);
+                base_overhead + data_size_mb + state_size_mb + result_size_mb
+            }
+            DistributedTask::Aggregate { partial_results, .. } => {
+                // Memory for aggregating partial results
+                let input_size_mb = partial_results.iter()
+                    .map(|r| r.len() as f64 / (1024.0 * 1024.0))
+                    .sum::<f64>();
+                base_overhead + input_size_mb + result_size_mb
+            }
+        }
+    }
+    
     /// Submit a task for distributed execution
     pub async fn submit_task(&self, task: DistributedTask) -> Result<()> {
         self.task_sender.send(task).map_err(|e| {

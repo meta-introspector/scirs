@@ -562,7 +562,7 @@ impl PatternRecognizer {
                 let block_col = col / block_width;
 
                 let block_id = (block_row, block_col);
-                let entry = block_accesses.entry(block_id).or_insert_with(Vec::new);
+                let entry: &mut Vec<usize> = block_accesses.entry(block_id).or_default();
                 entry.push(idx);
             }
 

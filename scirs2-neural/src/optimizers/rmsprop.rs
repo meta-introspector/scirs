@@ -23,7 +23,7 @@ use std::fmt::Debug;
 /// use scirs2_neural::optimizers::{RMSprop, Optimizer};
 ///
 /// // Create a simple RMSprop optimizer
-/// let mut rmsprop = RMSprop::<f64>::new(0.001);
+/// let mut rmsprop = RMSprop::<f64>::new(0.001).unwrap();
 ///
 /// // or with custom decay rate and epsilon
 /// let mut rmsprop_custom = RMSprop::new_with_config(0.001, 0.9, 1e-8, 0.0);
@@ -48,21 +48,21 @@ impl<F: Float + ScalarOperand + Debug> RMSprop<F> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learning_rate: F) -> Self {
-        let rho = F::from(0.9).unwrap_or_else(|| {
-            panic!("Failed to convert 0.9 to the appropriate floating point type")
-        });
-        let epsilon = F::from(1e-8).unwrap_or_else(|| {
-            panic!("Failed to convert 1e-8 to the appropriate floating point type")
-        });
+    pub fn new(learning_rate: F) -> Result<Self> {
+        let rho = F::from(0.9).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 0.9 to the appropriate floating point type".to_string())
+        })?;
+        let epsilon = F::from(1e-8).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 1e-8 to the appropriate floating point type".to_string())
+        })?;
 
-        Self {
+        Ok(Self {
             learning_rate,
             rho,
             epsilon,
             weight_decay: F::zero(),
             v: Vec::new(),
-        }
+        })
     }
 
     /// Creates a new RMSprop optimizer with the full configuration

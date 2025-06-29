@@ -9,7 +9,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::{LtiSystem, StateSpace, TransferFunction};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -716,7 +716,7 @@ fn select_arx_orders(
 
 /// Solve regularized least squares with enhanced numerical stability
 fn solve_regularized_ls(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    use ndarray_linalg::{Norm, Solve, SVD};
+    // use ndarray_linalg::{Norm, Solve, SVD}; // TODO: Add ndarray-linalg dependency
 
     // Check condition number
     let cond = compute_matrix_condition_number(a)?;
@@ -738,7 +738,7 @@ fn solve_regularized_ls(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1
 
 /// Solve using SVD decomposition for numerical stability
 fn solve_using_svd(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    use ndarray_linalg::SVD;
+    // use ndarray_linalg::SVD; // TODO: Add ndarray-linalg dependency
 
     let (u, s, vt) = a
         .svd(true, true)
@@ -767,7 +767,7 @@ fn solve_using_svd(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>
 
 /// Compute matrix condition number
 fn compute_matrix_condition_number(matrix: &Array2<f64>) -> SignalResult<f64> {
-    use ndarray_linalg::{Norm, SVD};
+    // use ndarray_linalg::{Norm, SVD}; // TODO: Add ndarray-linalg dependency
 
     let (_, s, _) = matrix.svd(false, false).map_err(|e| {
         SignalError::ComputationError(format!("SVD for condition number failed: {}", e))
@@ -1169,7 +1169,7 @@ fn compute_stability_margin(model: &SystemModel) -> SignalResult<f64> {
         }
         SystemModel::StateSpace(ss) => {
             // Check eigenvalues of A matrix
-            use ndarray_linalg::Eig;
+            // use ndarray_linalg::Eig; // TODO: Add ndarray-linalg dependency
             let eigenvalues = ss.a.eig().map_err(|e| {
                 SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
             })?;
@@ -1210,7 +1210,7 @@ fn compute_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>
     }
 
     // Compute eigenvalues (roots)
-    use ndarray_linalg::Eig;
+    // use ndarray_linalg::Eig; // TODO: Add ndarray-linalg dependency
     match companion.eig() {
         Ok((eigenvals, _)) => Ok(eigenvals.to_vec()),
         Err(_) => {
@@ -1584,7 +1584,7 @@ impl AdaptiveIdentifier {
 
 /// Compute condition number
 fn compute_condition_number(params: &ParameterEstimate) -> f64 {
-    use ndarray_linalg::Norm;
+    // use ndarray_linalg::Norm; // TODO: Add ndarray-linalg dependency
 
     if let Ok(inv) = params.covariance.inv() {
         params.covariance.norm() * inv.norm()
@@ -2181,7 +2181,7 @@ fn identify_narx_complete(
 }
 
 /// MIMO system identification function
-pub fn mimo_system_identification(
+pub fn mimo_system_identification_advanced(
     inputs: &Array2<f64>,
     outputs: &Array2<f64>,
     config: &EnhancedSysIdConfig,
@@ -2218,7 +2218,7 @@ pub fn mimo_system_identification(
 }
 
 /// Advanced model selection function
-pub fn advanced_model_selection(
+pub fn advanced_model_selection_enhanced(
     input: &Array1<f64>,
     output: &Array1<f64>,
     candidates: &[ModelStructure],
@@ -2360,8 +2360,8 @@ fn robust_outlier_removal(
     let mut valid_indices = Vec::new();
 
     // Compute robust statistics using median absolute deviation
-    let input_median = median(&input.to_vec());
-    let output_median = median(&output.to_vec());
+    let input_median = median_helper(&input.to_vec());
+    let output_median = median_helper(&output.to_vec());
 
     let input_mad = mad(&input.to_vec(), input_median);
     let output_mad = mad(&output.to_vec(), output_median);
@@ -2485,8 +2485,8 @@ fn enhanced_order_selection(
     Ok(best_orders)
 }
 
-/// Median calculation
-fn median(data: &[f64]) -> f64 {
+/// Median calculation (helper)
+fn median_helper(data: &[f64]) -> f64 {
     let mut sorted = data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let n = sorted.len();
@@ -2501,7 +2501,7 @@ fn median(data: &[f64]) -> f64 {
 /// Median Absolute Deviation calculation
 fn mad(data: &[f64], median_val: f64) -> f64 {
     let deviations: Vec<f64> = data.iter().map(|&x| (x - median_val).abs()).collect();
-    median(&deviations) * 1.4826 // Scale factor for normal distribution
+    median_helper(&deviations) * 1.4826 // Scale factor for normal distribution
 }
 
 /// Simplified ARX model identification for order selection
@@ -2579,8 +2579,8 @@ fn identify_arx_model(
     })
 }
 
-/// Solve least squares problem
-fn solve_least_squares(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
+/// Solve least squares problem (helper)
+fn solve_least_squares_helper(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Use normal equations: theta = (A^T A)^{-1} A^T b
     let at = a.t();
     let ata = at.dot(a);

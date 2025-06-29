@@ -7,11 +7,9 @@
 //! - MapReduce-style operations on datasets
 
 use std::collections::HashMap;
-use std::path::Path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use std::time::Duration;
 
 use ndarray::{Array1, Array2, Axis};
 use serde::{Deserialize, Serialize};

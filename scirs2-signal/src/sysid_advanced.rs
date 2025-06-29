@@ -8,7 +8,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::lti::{LtiSystem, StateSpace, TransferFunction};
 use crate::sysid_enhanced::{SystemModel, ParameterEstimate, NonlinearFunction};
 use ndarray::{Array1, Array2, ArrayView1, Axis, s};
-use ndarray_linalg::{Solve, Eig, SVD, Norm};
+// use ndarray_linalg::{Solve, Eig, SVD, Norm}; // TODO: Add ndarray-linalg dependency
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -309,13 +309,13 @@ pub fn identify_state_space_complete(
     let (a, b, c, d, x0) = n4sid_algorithm(input, output, order)?;
     
     // Create state-space model
-    let ss = StateSpace {
-        a: a.clone(),
-        b: b.clone(),
-        c: c.clone(),
-        d: d.clone(),
-        dt: Some(1.0), // Discrete-time
-    };
+    let ss = StateSpace::new(
+        a.clone().into_raw_vec(),
+        b.clone().into_raw_vec(),
+        c.clone().into_raw_vec(),
+        d.clone().into_raw_vec(),
+        Some(true), // Discrete-time
+    )?;
     
     // Simulate to compute residuals
     let y_sim = simulate_state_space(&ss, input, &x0)?;

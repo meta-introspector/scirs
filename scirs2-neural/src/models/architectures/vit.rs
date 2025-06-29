@@ -105,8 +105,53 @@ impl ViTConfig {
     }
 }
 
+/// MLP with GELU activation for transformer blocks
+#[derive(Clone, Debug)]
+struct TransformerMlp<F: Float + Debug + ScalarOperand + Send + Sync> {
+    dense1: Dense<F>,
+    dense2: Dense<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for TransformerMlp<F> {
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        let mut x = self.dense1.forward(input)?;
+
+        // Apply GELU activation inline
+        x = x.mapv(|v| {
+            // GELU approximation: x * 0.5 * (1 + tanh(x + 0.044715 * x^3))
+            let x3 = v * v * v;
+            v * F::from(0.5).unwrap() * (F::one() + (v + F::from(0.044715).unwrap() * x3).tanh())
+        });
+
+        x = self.dense2.forward(&x)?;
+        Ok(x)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        Ok(grad_output.clone())
+    }
+
+    fn update(&mut self, learning_rate: F) -> Result<()> {
+        self.dense1.update(learning_rate)?;
+        self.dense2.update(learning_rate)?;
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
 /// Transformer encoder block for ViT
-// We can't derive Debug and Clone due to dyn Layer in mlp, so we implement them manually
+#[derive(Clone, Debug)]
 struct TransformerEncoderBlock<F: Float + Debug + ScalarOperand + Clone + Send + Sync> {
     /// Layer normalization 1
     norm1: LayerNorm<F>,
@@ -114,35 +159,14 @@ struct TransformerEncoderBlock<F: Float + Debug + ScalarOperand + Clone + Send +
     attention: MultiHeadAttention<F>,
     /// Layer normalization 2
     norm2: LayerNorm<F>,
-    /// MLP layers - can't implement Clone/Debug for trait objects
-    mlp: Box<dyn Layer<F> + Send + Sync>,
+    /// MLP layers - now using concrete type for clonability
+    mlp: TransformerMlp<F>,
     /// Dropout for attention
     attn_dropout: Dropout<F>,
     /// Dropout for MLP
     mlp_dropout: Dropout<F>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> std::fmt::Debug
-    for TransformerEncoderBlock<F>
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("TransformerEncoderBlock")
-            .field("norm1", &self.norm1)
-            .field("attention", &self.attention)
-            .field("norm2", &self.norm2)
-            .field("mlp", &"<dyn Layer>")
-            .field("attn_dropout", &self.attn_dropout)
-            .field("mlp_dropout", &self.mlp_dropout)
-            .finish()
-    }
-}
-
-// We can't actually clone a Box<dyn Layer>, so we'll just panic if someone tries to clone this
-impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> Clone for TransformerEncoderBlock<F> {
-    fn clone(&self) -> Self {
-        panic!("Cannot clone TransformerEncoderBlock due to Box<dyn Layer>");
-    }
-}
 
 impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> TransformerEncoderBlock<F> {
     /// Create a new transformer encoder block
@@ -172,56 +196,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> TransformerEncoderB
         // Layer normalization for MLP
         let norm2 = LayerNorm::new(dim, 1e-6, &mut ln_rng)?;
 
-        // MLP with GELU activation
-        // Note: We're creating a simple 2-layer MLP with GELU activation
-        struct Mlp<F: Float + Debug + ScalarOperand + Send + Sync> {
-            dense1: Dense<F>,
-            dense2: Dense<F>,
-            act_fn: Box<dyn Fn(F) -> F + Send + Sync>,
-        }
-
-        impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Mlp<F> {
-            fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
-                let mut x = self.dense1.forward(input)?;
-
-                // Apply GELU activation
-                x = x.mapv(|v| (*self.act_fn)(v));
-
-                x = self.dense2.forward(&x)?;
-                Ok(x)
-            }
-
-            fn backward(
-                &self,
-                _input: &Array<F, IxDyn>,
-                grad_output: &Array<F, IxDyn>,
-            ) -> Result<Array<F, IxDyn>> {
-                Ok(grad_output.clone())
-            }
-
-            fn update(&mut self, learning_rate: F) -> Result<()> {
-                self.dense1.update(learning_rate)?;
-                self.dense2.update(learning_rate)?;
-                Ok(())
-            }
-
-            fn as_any(&self) -> &dyn std::any::Any {
-                self
-            }
-
-            fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-                self
-            }
-        }
-
-        // GELU activation function
-        let gelu: Box<dyn Fn(F) -> F + Send + Sync> = Box::new(|x: F| {
-            // Approximation of GELU
-            let x3 = x * x * x;
-            x * F::from(0.5).unwrap() * (F::one() + (x + F::from(0.044715).unwrap() * x3).tanh())
-        });
-
-        let mlp = Box::new(Mlp {
+        let mlp = TransformerMlp {
             dense1: {
                 let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
                 Dense::new(dim, mlp_dim, None, &mut rng)?
@@ -230,8 +205,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> TransformerEncoderB
                 let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
                 Dense::new(mlp_dim, dim, None, &mut rng)?
             },
-            act_fn: gelu,
-        });
+        };
 
         // Dropouts
         let dropout_rate_f64 = dropout_rate.to_f64().unwrap();
@@ -345,10 +319,19 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> std::fmt::Debug
     }
 }
 
-// We can't actually clone the TransformerEncoderBlock, so we panic if anyone tries to clone this
+// VisionTransformer can now be cloned since TransformerEncoderBlock is cloneable
 impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> Clone for VisionTransformer<F> {
     fn clone(&self) -> Self {
-        panic!("Cannot clone VisionTransformer due to TransformerEncoderBlock limitations");
+        Self {
+            patch_embed: self.patch_embed.clone(),
+            cls_token: self.cls_token.clone(),
+            pos_embed: self.pos_embed.clone(),
+            dropout: self.dropout.clone(),
+            encoder_blocks: self.encoder_blocks.clone(),
+            norm: self.norm.clone(),
+            classifier: self.classifier.clone(),
+            config: self.config.clone(),
+        }
     }
 }
 

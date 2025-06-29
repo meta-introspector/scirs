@@ -7,7 +7,7 @@
 use crate::error::{SignalError, SignalResult};
 use crate::lti::{StateSpace, TransferFunction};
 use ndarray::{s, Array1, Array2, ArrayView2, Axis};
-use ndarray_linalg::{Eig, Eigh, Norm, Solve, SVD, UPLO};
+// use ndarray_linalg::{Eig, Eigh, Norm, Solve, SVD, UPLO}; // TODO: Add ndarray-linalg dependency
 use num_complex::Complex64;
 use scirs2_core::validation::{check_finite, check_shape};
 use std::f64::consts::PI;

@@ -1112,7 +1112,7 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
     }
 
     /// Adaptive arc length integration using Simpson's rule
-    fn adaptive_arc_length_integration(&self, a: F, b: F, tolerance: F) -> InterpolateResult<F> {
+    fn adaptive_arc_length_integration(&self, a: F, b: F, _tolerance: F) -> InterpolateResult<F> {
         // Simple implementation using composite Simpson's rule
         let n = 100; // Number of subdivisions
         let n_f = F::from_usize(n).ok_or_else(|| {
@@ -1284,7 +1284,7 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
         // f''(x) = 2*c + 6*d*dx
         // f'''(x) = 6*d
         for i in 0..n_segments {
-            let a = self.coeffs[[i, 0]];
+            let _a = self.coeffs[[i, 0]];
             let b = self.coeffs[[i, 1]];
             let c = self.coeffs[[i, 2]];
             let d = self.coeffs[[i, 3]];
@@ -1391,7 +1391,7 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
             let a = self.coeffs[[i, 0]];
             let b = self.coeffs[[i, 1]];
             let c = self.coeffs[[i, 2]];
-            let d = self.coeffs[[i, 3]];
+            let _d = self.coeffs[[i, 3]];
 
             // Integrate coefficients
             antideriv_coeffs[[i, 0]] = F::zero(); // Will be set based on continuity

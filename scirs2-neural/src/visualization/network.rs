@@ -127,6 +127,10 @@ pub enum ConnectionType {
     Attention,
     /// Recurrent connection
     Recurrent,
+    /// Sequential connection
+    Sequential,
+    /// Lateral connection
+    Lateral,
     /// Custom connection
     Custom(String),
 }
@@ -181,6 +185,8 @@ pub struct DataFlowInfo {
     pub data_type: String,
     /// Estimated memory usage in bytes
     pub memory_usage: usize,
+    /// Batch size for data flow
+    pub batch_size: Option<usize>,
     /// Throughput information
     pub throughput: Option<ThroughputInfo>,
 }
@@ -1601,7 +1607,7 @@ mod tests {
 
         match custom {
             ConnectionType::Custom(name) => assert_eq!(name, "test"),
-            _ => panic!("Expected custom connection type"),
+            _ => unreachable!("Expected custom connection type"),
         }
     }
 

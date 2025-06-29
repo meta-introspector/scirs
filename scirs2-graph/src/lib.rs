@@ -245,8 +245,8 @@ pub use layout::{circular_layout, hierarchical_layout, spectral_layout, spring_l
 stable!("graph_measures", "0.1.0-beta.1");
 pub use measures::{
     centrality, clustering_coefficient, graph_density, hits_algorithm, katz_centrality,
-    katz_centrality_digraph, pagerank_centrality, pagerank_centrality_digraph, CentralityType,
-    HitsScores,
+    katz_centrality_digraph, pagerank_centrality, pagerank_centrality_digraph, 
+    parallel_pagerank_centrality, CentralityType, HitsScores,
 };
 
 // Memory optimization - stable for 1.0

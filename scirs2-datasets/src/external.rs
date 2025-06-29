@@ -7,14 +7,14 @@
 //! - Remote file systems
 
 use std::collections::HashMap;
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::io::Read;
+use std::path::Path;
 use std::time::Duration;
 
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize};
 
-use crate::cache::{CacheManager, DatasetCache};
+use crate::cache::DatasetCache;
 use crate::error::{DatasetsError, Result};
 use crate::loaders::{load_csv, CsvConfig};
 use crate::utils::Dataset;

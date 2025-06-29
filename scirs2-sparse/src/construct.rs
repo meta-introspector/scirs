@@ -17,6 +17,9 @@ use crate::error::{SparseError, SparseResult};
 use crate::lil_array::LilArray;
 use crate::sparray::SparseArray;
 
+// Import parallel operations from scirs2-core
+use scirs2_core::parallel_ops::*;
+
 /// Creates a sparse identity array of size n x n
 ///
 /// # Arguments
@@ -427,6 +430,170 @@ where
         "dok" => DokArray::from_triplets(&rows, &cols, &data, shape)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "lil" => LilArray::from_triplets(&rows, &cols, &data, shape)
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        _ => Err(SparseError::ValueError(format!(
+            "Unknown sparse format: {}. Supported formats are 'csr', 'coo', 'dok', and 'lil'",
+            format
+        ))),
+    }
+}
+
+/// Creates a large sparse random array using parallel processing
+///
+/// This function uses parallel construction for improved performance when creating
+/// large sparse arrays with many non-zero elements.
+///
+/// # Arguments
+/// * `shape` - Shape of the array (rows, cols)
+/// * `density` - Density of non-zero elements (0.0 to 1.0)
+/// * `seed` - Optional random seed for reproducibility
+/// * `format` - Format of the output array ("csr" or "coo")
+/// * `parallel_threshold` - Minimum number of elements to use parallel construction
+///
+/// # Returns
+/// A sparse array with randomly distributed non-zero elements
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_sparse::construct::random_array_parallel;
+///
+/// // Create a large random sparse array
+/// let large_random = random_array_parallel::<f64>((1000, 1000), 0.01, Some(42), "csr", 10000).unwrap();
+/// assert_eq!(large_random.shape(), (1000, 1000));
+/// assert!(large_random.nnz() > 5000); // Approximately 10000 non-zeros expected
+/// ```
+pub fn random_array_parallel<T>(
+    shape: (usize, usize),
+    density: f64,
+    seed: Option<u64>,
+    format: &str,
+    parallel_threshold: usize,
+) -> SparseResult<Box<dyn SparseArray<T>>>
+where
+    T: Float
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + Debug
+        + Copy
+        + Send
+        + Sync
+        + 'static,
+{
+    if density < 0.0 || density > 1.0 {
+        return Err(SparseError::ValueError(
+            "Density must be between 0.0 and 1.0".to_string(),
+        ));
+    }
+
+    let (rows, cols) = shape;
+    if rows == 0 || cols == 0 {
+        return Err(SparseError::ValueError(
+            "Matrix dimensions must be positive".to_string(),
+        ));
+    }
+
+    let total_elements = rows * cols;
+    let expected_nnz = (total_elements as f64 * density) as usize;
+
+    // Use parallel construction for large matrices
+    if total_elements >= parallel_threshold && expected_nnz >= 1000 {
+        parallel_random_construction(shape, density, seed, format)
+    } else {
+        // Fall back to sequential construction for small matrices
+        random_array(shape, density, seed, format)
+    }
+}
+
+/// Internal parallel construction function
+fn parallel_random_construction<T>(
+    shape: (usize, usize),
+    density: f64,
+    seed: Option<u64>,
+    format: &str,
+) -> SparseResult<Box<dyn SparseArray<T>>>
+where
+    T: Float
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + Debug
+        + Copy
+        + Send
+        + Sync
+        + 'static,
+{
+    let (rows, cols) = shape;
+    let total_elements = rows * cols;
+    let expected_nnz = (total_elements as f64 * density) as usize;
+
+    // Determine number of chunks based on available parallelism
+    let num_chunks = std::cmp::min(rayon::current_num_threads(), rows.min(cols));
+    let chunk_size = std::cmp::max(1, rows / num_chunks);
+
+    // Create row chunks for parallel processing
+    let row_chunks: Vec<_> = (0..rows).collect::<Vec<_>>().chunks(chunk_size).map(|chunk| chunk.to_vec()).collect();
+
+    // Generate random elements in parallel
+    let results: Vec<_> = parallel_map_with_index(&row_chunks, |chunk_idx, row_chunk| {
+        let mut local_rows = Vec::new();
+        let mut local_cols = Vec::new();
+        let mut local_data = Vec::new();
+
+        // Use a different seed for each chunk to ensure good randomization
+        let chunk_seed = seed.unwrap_or(42) + chunk_idx as u64 * 1000007; // Large prime offset
+        let mut rng = rand::rngs::StdRng::seed_from_u64(chunk_seed);
+
+        for &row in row_chunk {
+            // Determine how many elements to generate for this row
+            let row_elements = cols;
+            let row_expected_nnz = std::cmp::max(1, (row_elements as f64 * density) as usize);
+
+            // Generate random column indices for this row
+            let mut col_indices: Vec<usize> = (0..cols).collect();
+            col_indices.shuffle(&mut rng);
+
+            // Take the first row_expected_nnz columns
+            for &col in col_indices.iter().take(row_expected_nnz) {
+                // Generate random value
+                let mut val = rng.random_range(-1.0..1.0);
+                // Make sure the value is not zero
+                while val.abs() < 1e-10 {
+                    val = rng.random_range(-1.0..1.0);
+                }
+
+                local_rows.push(row);
+                local_cols.push(col);
+                local_data.push(T::from(val).unwrap());
+            }
+        }
+
+        (local_rows, local_cols, local_data)
+    });
+
+    // Combine results from all chunks
+    let mut all_rows = Vec::new();
+    let mut all_cols = Vec::new();
+    let mut all_data = Vec::new();
+
+    for (mut rows_chunk, mut cols_chunk, mut data_chunk) in results {
+        all_rows.append(&mut rows_chunk);
+        all_cols.append(&mut cols_chunk);
+        all_data.append(&mut data_chunk);
+    }
+
+    // Create the output array
+    match format.to_lowercase().as_str() {
+        "csr" => CsrArray::from_triplets(&all_rows, &all_cols, &all_data, shape, false)
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        "coo" => CooArray::from_triplets(&all_rows, &all_cols, &all_data, shape, false)
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        "dok" => DokArray::from_triplets(&all_rows, &all_cols, &all_data, shape)
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        "lil" => LilArray::from_triplets(&all_rows, &all_cols, &all_data, shape)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {}. Supported formats are 'csr', 'coo', 'dok', and 'lil'",

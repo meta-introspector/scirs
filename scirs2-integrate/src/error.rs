@@ -17,6 +17,10 @@ pub enum IntegrateError {
     #[error("Value error: {0}")]
     ValueError(String),
 
+    /// Invalid input error
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
     /// Not implemented error
     #[error("Not implemented: {0}")]
     NotImplementedError(String),

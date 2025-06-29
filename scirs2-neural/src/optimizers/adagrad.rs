@@ -22,7 +22,7 @@ use std::fmt::Debug;
 /// use scirs2_neural::optimizers::{Adagrad, Optimizer};
 ///
 /// // Create a simple Adagrad optimizer
-/// let mut adagrad = Adagrad::<f64>::new(0.01);
+/// let mut adagrad = Adagrad::<f64>::new(0.01).unwrap();
 ///
 /// // or with custom epsilon
 /// let mut adagrad_custom = Adagrad::new_with_config(0.01, 1e-10, 0.0);
@@ -45,17 +45,17 @@ impl<F: Float + ScalarOperand + Debug> Adagrad<F> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learning_rate: F) -> Self {
-        let epsilon = F::from(1e-10).unwrap_or_else(|| {
-            panic!("Failed to convert 1e-10 to the appropriate floating point type")
-        });
+    pub fn new(learning_rate: F) -> Result<Self> {
+        let epsilon = F::from(1e-10).ok_or_else(|| {
+            NeuralError::InvalidArgument("Failed to convert 1e-10 to the appropriate floating point type".to_string())
+        })?;
 
-        Self {
+        Ok(Self {
             learning_rate,
             epsilon,
             weight_decay: F::zero(),
             g_sum: Vec::new(),
-        }
+        })
     }
 
     /// Creates a new Adagrad optimizer with the full configuration
